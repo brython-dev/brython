@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-10 17:48:23.429347"
-__BRYTHON__.timestamp=1605026903429
+__BRYTHON__.compiled_date="2020-11-11 09:08:22.053866"
+__BRYTHON__.timestamp=1605082102053
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -2267,7 +2267,6 @@ var ctx=C
 while(ctx.parent &&
 (ctx.parent.type=='op' ||
 (ctx.parent.type=="expr" && ctx.parent.name=="operand"))){ctx=ctx.parent}
-console.log("create ternary of ctx",C,ctx)
 return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
 case 'eol':
 if(C.tree.length==2 &&
@@ -3318,9 +3317,10 @@ res1.push('['+res2.join(',')+']')}
 var line_num=$get_node(this).line_num
 switch(this.real){case 'list_comp':
 var lc=$B.$list_comp(items),
-py=lc[0],ix=lc[1],listcomp_name='lc'+$B.lambda_magic+ix,save_pos=$pos,line_info=line_num+','+module_name
+py=lc[0],ix=lc[1],listcomp_name='comp_result_'+$B.lambda_magic+ix,save_pos=$pos,line_info=line_num+','+module_name
 var root=$B.py2js(
 {src:py,is_comp:true,line_info:line_info},module_name,listcomp_name,scope,1)
+var has_yield=root.yields_func_check !==undefined
 var outermost_expr=root.outermost_expr
 if($get_node(this).has_yield){outermost_expr=this.tree[0].tree[0].tree[1]}
 if(outermost_expr===undefined){outermost_expr=root.first_for.tree[1]}
@@ -3330,8 +3330,9 @@ var js=root.to_js()
 root=null
 $B.clear_ns(listcomp_name)
 delete $B.$py_src[listcomp_name]
-js+='return $locals_'+listcomp_name+'["x'+ix+'"]'
-js=`function(expr){${js}})(${outer_most})`
+js+='return '+listcomp_name
+js="function"+(has_yield ? "*" :"")+
+`(expr){${js}})(${outer_most})`
 if(this.is_await){js='async '+js}
 return '('+js
 case 'dict_or_set_comp':
@@ -4206,8 +4207,7 @@ C.parent=this
 this.tree=[C]
 ternaries.push(this)}
 $TernaryCtx.prototype.toString=function(){return '(ternary) '+this.tree}
-$TernaryCtx.prototype.transition=function(token,value){console.log("transition from ternary, parent type",this.parent.type)
-var C=this
+$TernaryCtx.prototype.transition=function(token,value){var C=this
 if(token=='else'){C.in_else=true
 return new $AbstractExprCtx(C,false)}else if(! C.in_else){$_SyntaxError(C,'token '+token+' after '+C)}else if(token==","){
 if(["assign","augm_assign","node","return"].
@@ -6064,12 +6064,12 @@ return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.$infos.__name__}}
 $B.$list_comp=function(items){
-var ix=$B.UUID(),py="x"+ix+" = []\n",indent=0
+var ix=$B.UUID(),res="comp_result_"+$B.lambda_magic+ix,py=res+" = []\n",indent=0
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
 py+=" ".repeat(indent)+item+":\n"
 indent+=4}
 py+=" ".repeat(indent)
-py+="x"+ix+".append("+items[0]+")\n"
+py+=res+".append("+items[0]+")\n"
 return[py,ix]}
 $B.$dict_comp=function(module_name,parent_scope,items,line_num){
 var ix=$B.UUID(),res="comp_result_"+$B.lambda_magic+ix,py=res+" = {}\n",

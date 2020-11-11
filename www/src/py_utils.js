@@ -277,7 +277,8 @@ $B.$list_comp = function(items){
     // For instance in [ x * 2 for x in A if x > 2 ],
     // items is ["x * 2", "for x in A", "if x > 2"]
     var ix = $B.UUID(),
-        py = "x" + ix + " = []\n",
+        res = "comp_result_" + $B.lambda_magic + ix,
+        py = res + " = []\n",
         indent = 0
     for(var i = 1, len = items.length; i < len; i++){
         var item = items[i].replace(/\s+$/, "").replace(/\n/g, "")
@@ -285,7 +286,7 @@ $B.$list_comp = function(items){
         indent += 4
     }
     py += " ".repeat(indent)
-    py += "x" + ix + ".append(" + items[0] + ")\n"
+    py += res + ".append(" + items[0] + ")\n"
 
     return [py, ix]
 }

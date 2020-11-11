@@ -4443,7 +4443,6 @@ $ExprCtx.prototype.transition = function(token, value){
                    (ctx.parent.type == "expr" && ctx.parent.name == "operand"))){
               ctx = ctx.parent
           }
-          console.log("create ternary of ctx", context, ctx)
           return new $AbstractExprCtx(new $TernaryCtx(ctx), true)
       case 'eol':
           // Special case for print and exec
@@ -6821,12 +6820,13 @@ $ListOrTupleCtx.prototype.to_js = function(){
                     var lc = $B.$list_comp(items), // defined in py_utils.js
                         py = lc[0],
                         ix = lc[1],
-                        listcomp_name = 'lc' + $B.lambda_magic + ix,
+                        listcomp_name = 'comp_result_' + $B.lambda_magic + ix,
                         save_pos = $pos,
                         line_info = line_num + ',' + module_name
                     var root = $B.py2js(
                         {src: py, is_comp: true, line_info: line_info},
                         module_name, listcomp_name, scope, 1)
+                    var has_yield = root.yields_func_check !== undefined
 
                     var outermost_expr = root.outermost_expr
 
@@ -6851,8 +6851,9 @@ $ListOrTupleCtx.prototype.to_js = function(){
                     $B.clear_ns(listcomp_name)
                     delete $B.$py_src[listcomp_name]
 
-                    js += 'return $locals_' + listcomp_name + '["x' + ix + '"]'
-                    js = `function(expr){${js}})(${outer_most})`
+                    js += 'return ' + listcomp_name
+                    js = "function" + (has_yield ? "*" : "") + 
+                        `(expr){${js}})(${outer_most})`
                     if(this.is_await){
                         js = 'async ' + js
                     }
@@ -8511,7 +8512,6 @@ $TernaryCtx.prototype.toString = function(){
 }
 
 $TernaryCtx.prototype.transition = function(token, value){
-    console.log("transition from ternary, parent type", this.parent.type)
     var context = this
     if(token == 'else'){
         context.in_else = true

@@ -2778,6 +2778,15 @@ try:
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
     assert exc.args[0] == "can't use starred expression here"
+
+# issue 1538
+def g(x):
+    if isinstance(x, int):
+        return x
+    return [g(y) for y in x]
+
+assert g([1, [3, 4]]) == [1, [3, 4]]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
