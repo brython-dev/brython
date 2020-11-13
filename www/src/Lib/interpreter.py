@@ -332,7 +332,7 @@ class Interpreter:
         self.zone.value += trace.format()
 
     def syntax_error(self, args):
-        info, filename, lineno, offset, line = args
+        info, [filename, lineno, offset, line] = args
         print(f"  File {filename}, line {lineno}")
         print("    " + line)
         print("    " + offset * " " + "^")

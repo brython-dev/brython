@@ -102,8 +102,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-11 09:08:22.053866"
-__BRYTHON__.timestamp=1605082102053
+__BRYTHON__.compiled_date="2020-11-13 13:33:45.311436"
+__BRYTHON__.timestamp=1605270825311
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5401,7 +5401,7 @@ $B.has_indexedDB=self.indexedDB !==undefined
 $B.handle_error=function(err){
 if($B.debug > 1){console.log("handle error",err.__class__,err.args)}
 if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
-if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[3]
+if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[1][2]
 trace+='\n    '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name
 if(err.args[0]&& err.args[0]!==_b_.None){trace+=': '+_b_.str.$factory(err.args[0])}}}else{console.log(err)
@@ -7801,7 +7801,7 @@ throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive 
 $B.$syntax_err_line=function(exc,module,src,pos,line_num){
 var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" :module
 if(src===undefined){exc.$line_info=line_num+','+module
-exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,0,0])}else{var line_pos={1:0}
+exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,0,0])])}else{var line_pos={1:0}
 for(var i=0,len=src.length;i < len;i++){pos2line[i]=lnum
 if(src.charAt(i)=="\n"){line_pos[++lnum]=i}}
 while(line_num===undefined){line_num=pos2line[pos]
@@ -7814,7 +7814,7 @@ if(lpos < 0){lpos=0}
 while(line.charAt(0)==' '){line=line.substr(1)
 if(lpos > 0){lpos--}}
 exc.offset=lpos
-exc.args=_b_.tuple.$factory([$B.$getitem(exc.args,0),module,line_num,lpos,line])}
+exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,lpos,line])])}
 exc.lineno=line_num
 exc.msg=exc.args[0]
 exc.filename=module}
@@ -7956,8 +7956,8 @@ if(name.startsWith("lc"+$B.lambda_magic)){info+=',in <listcomp>'}else{info+=', i
 if(src !==undefined && ! is_exec){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
 if(line){line=line.replace(/^[ ]+/g,"")}
 info+="\n    "+line}}
-if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1]+", line "+exc.args[2]+
-"\n    "+exc.args[4]}
+if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1][0]+", line "+
+exc.args[1][1]+"\n    "+exc.args[1][3]}
 return info}
 BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="__traceback__"){
 if(self.$traceback !==undefined){return self.$traceback}

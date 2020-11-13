@@ -413,7 +413,7 @@ $B.handle_error = function(err){
         var name = $B.class_name(err),
             trace = $B.$getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
-            var offset = err.args[3]
+            var offset = err.args[1][2]
             trace += '\n    ' + ' '.repeat(offset) + '^' +
                 '\n' + name + ': '+err.args[0]
         }else{
