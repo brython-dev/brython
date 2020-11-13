@@ -464,7 +464,7 @@ VFSLoader.exec_module = function(self, modobj){
         if(elts.length > 1){
             elts.pop()
         }
-        if($B.$options.indexedDB && self.indexedDB &&
+        if($B.$options.indexedDB && $B.indexedDB &&
                 $B.idb_name){
             // Store the compiled Javascript in indexedDB cache
             // $B.idb_name may not be defined if we are in a web worker

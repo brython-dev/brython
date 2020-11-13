@@ -35,6 +35,7 @@ var href = _window.location.href
 $B.protocol = href.split(':')[0]
 
 $B.BigInt = _window.BigInt
+$B.indexedDB = _window.indexedDB
 
 var $path
 
