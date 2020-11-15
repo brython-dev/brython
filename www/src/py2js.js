@@ -6852,7 +6852,7 @@ $ListOrTupleCtx.prototype.to_js = function(){
                     delete $B.$py_src[listcomp_name]
 
                     js += 'return ' + listcomp_name
-                    js = "function" + (has_yield ? "*" : "") + 
+                    js = "function" + (has_yield ? "*" : "") +
                         `(expr){${js}})(${outer_most})`
                     if(this.is_await){
                         js = 'async ' + js
@@ -9637,6 +9637,135 @@ for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
+
+function test_num(context, num_lit){
+    var len = num_lit.length,
+        pos = 0,
+        char,
+        elt = null,
+        subtypes = {b: 'binary', o: 'octal', x: 'hexadecimal'},
+        digits_re = /[_\d]/
+
+    function error(message){
+        $pos += pos
+        $_SyntaxError(context, [message])
+    }
+    function check(elt){
+      if(elt.value.length == 0){
+        var t = subtypes[elt.subtype] || 'decimal'
+        error("invalid " + t + " literal")
+      }else if(elt.value[elt.value.length - 1].match(/[\-+_]/)){
+        var t = subtypes[elt.subtype] || 'decimal'
+        error("invalid " + t + " literal")
+      }else{
+        // remove underscores
+        elt.value = elt.value.replace(/_/g, "")
+        // set length
+        elt.length = pos
+        return elt
+      }
+    }
+
+    while(pos < len){
+      var char = num_lit[pos]
+      if(char.match(digits_re)){
+        if(elt === null){
+            elt = {value: char}
+        }else{
+            if(char == '_' && elt.value.match(/[._+\-]$/)){
+                // consecutive underscores
+                error('consecutive _ at ' + pos)
+            }else if(char == '_' && elt.subtype == 'float' &&
+                    elt.value.match(/e$/i)){
+                // consecutive underscores
+                error('syntax error')
+            }else if(elt.subtype == 'b' && !(char.match(/[01_]/))){
+              error(`invalid digit '${char}' in binary literal`)
+            }else if(elt.subtype == 'o' && !(char.match(/[0-7_]/))){
+              error(`invalid digit '${char}' in octal literal`)
+            }else if(elt.subtype === undefined && elt.value.startsWith("0") &&
+                !char.match(/[0_]/)){
+              error("leading zeros in decimal integer literals are not" +
+                " permitted; use an 0o prefix for octal integers")
+            }
+            elt.value += char
+        }
+        pos++
+      }else if(char.match(/[oxb]/i)){
+        if(elt.value == "0"){
+          elt.subtype = char.toLowerCase()
+          if(elt.subtype == "x"){
+              digits_re = /[_\da-fA-F]/
+          }
+          elt.value = ''
+          pos++
+        }else{
+          error("invalid char " + char)
+        }
+      }else if(char == '.'){
+        if(elt === null){
+          error("invalid char in " + num_lit + " pos " + pos + ": " + char)
+        }else if(elt.subtype === undefined){
+          elt.subtype = "float"
+          if(elt.value.endsWith('_')){
+            error("invalid decimal literal")
+          }
+          elt.value = elt.value.replace(/_/g, "") + char
+          pos++
+        }else{
+          return check(elt)
+        }
+      }else if(char.match(/e/i)){
+        if(num_lit[pos + 1] === undefined){
+          error("nothing after e")
+        }else if(elt && subtypes[elt.subtype] !== undefined){
+          // 0b01e5 is invalid
+          error("syntax error")
+        }else if(elt && elt.value.endsWith('_')){
+            // 1_e2 is invalid
+            error("syntax error")
+        }else if(num_lit[pos + 1].match(/[+\-0-9_]/)){
+          if(elt && elt.value){
+            if(elt.exp){
+              elt.length = pos
+              return elt
+            }
+            elt.subtype = 'float'
+            elt.value += char
+            elt.exp = true
+            pos++
+          }else{
+            error("unexpected e")
+          }
+        }else{
+          return check(elt)
+        }
+      }else if(char.match(/[\+\-]/i)){
+          if(elt === null){
+            elt = {value: char}
+            pos++
+          }else if(elt.value.search(/e$/i) > -1){
+            elt.value += char
+            pos++
+          }else{
+            return check(elt)
+          }
+      }else if(char.match(/j/i)){
+          if(elt && (! elt.subtype || elt.subtype == "float")){
+            elt.imaginary = true
+            check(elt)
+            elt.length++ // for "j"
+            return elt
+          }else{
+            error("invalid syntax")
+          }
+      }else{
+        break
+      }
+    }
+    return check(elt)
+}
+
 var $tokenize = $B.parser.$tokenize = function(root, src) {
     var br_close = {")": "(", "]": "[", "}": "{"},
         br_stack = "",
@@ -9653,14 +9782,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         "class", "def", "for", "condition", "single_kw", "try", "except",
         "with"
     ]
-    // from https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words
-
-    var int_pattern = /^(\d[0-9_]*)(j|J)?/,
-        float_pattern1 = /^(\d[\d_]*)\.(\d+(_\d+)*)?([eE][+-]?\d+(_\d+)*)?(j|J)?/,
-        float_pattern2 = /^(\d[\d_]*)([eE][+-]?\d+(_\d+)*)(j|J)?/,
-        hex_pattern = /^0[xX]([\da-fA-F_]+)/,
-        octal_pattern = /^0[oO]([0-7_]+)/,
-        binary_pattern = /^0[bB]([01_]+)/
 
     var context = null
     var new_node = new $Node(),
@@ -10036,34 +10157,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             }
         }
 
-        function rmuf(numeric_literal){
-            // Remove underscores inside a numeric literal (PEP 515)
-            // Raises SyntaxError for consecutive or trailing underscore
-            if(numeric_literal.search("__") > -1){
-                // consecutive underscores is a syntax error
-                $_SyntaxError(context, "invalid literal")
-            }else if(numeric_literal.endsWith("_")){
-                // trailing underscore is a syntax error
-                $_SyntaxError(context, "invalid literal")
-            }
-            return numeric_literal.replace(/_/g, "")
-        }
-
-        function check_int(numeric_literal){
-            // Check that the integer in numeric_literal is valid :
-            // same control as rmuf above + special case for integers
-            // starting with 0
-            rmuf(numeric_literal)
-            if(numeric_literal.startsWith("0")){
-                if(numeric_literal.substr(1).search(/[^0_]/) > -1){
-                    // 007 or 0_7 is invalid, only 0_0 is ok
-                    $_SyntaxError(context, "invalid literal")
-                }else{
-                    return "0"
-                }
-            }
-        }
-
         function rmu(numeric_literal){
             return numeric_literal.replace(/_/g, "")
         }
@@ -10097,39 +10190,22 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 break
             case '0':
               // octal, hexadecimal, binary
-              var res = hex_pattern.exec(src.substr(pos))
-              if(res){
-                  rmuf(res[1])
-                  context = $transition(context, 'int', [16, rmu(res[1])])
-                  pos += res[0].length
+              var num = test_num(context, src.substr(pos)),
+                  base
+              if(num.subtype === undefined){
+                  if(num.value != "0"){
+                      base = 10
+                  }
+              }else{
+                  base = {'b': 2, 'o': 8, 'x': 16}[num.subtype]
+              }
+              if(base !== undefined){
+                  context = $transition(context, 'int',
+                      [base, num.value])
+                  pos += num.length
                   break
               }
-              var res = octal_pattern.exec(src.substr(pos))
-              if(res){
-                  context = $transition(context, 'int', [8, rmuf(res[1])])
-                  pos += res[0].length
-                  break
-              }
-              var res = binary_pattern.exec(src.substr(pos))
-              if(res){
-                  context = $transition(context, 'int', [2, rmuf(res[1])])
-                  pos += res[0].length
-                  break
-              }
-              // literal like "077" is not valid in Python3
-              if(src.charAt(pos + 1).search(/\d/) > -1){
-                  // literal like "000" is valid in Python3
-                  if(parseInt(src.substr(pos)) === 0){
-                      res = int_pattern.exec(src.substr(pos))
-                      $pos = pos
-                      check_int(res[0])
-                      context = $transition(context, 'int',
-                          [10, rmu(res[0])])
-                      pos += res[0].length
-                      break
-                  }else{$_SyntaxError(context,
-                      'invalid literal starting with 0')}
-              }
+
             case '0':
             case '1':
             case '2':
@@ -10141,39 +10217,20 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             case '8':
             case '9':
                 // digit
-                var res = float_pattern1.exec(src.substr(pos))
-                if(res){
-                    check_int(res[1]) // check that the part before "." is ok
-                    if(res[2]){rmuf(res[2])} // same for the part after "."
-                    $pos = pos
-                    if($B.last(res) !== undefined){
-                        context = $transition(context, 'imaginary',
-                            rmuf(res[0].substr(0, res[0].length - 1)))
-                    }else{context = $transition(context, 'float', rmuf(res[0]))}
+                $pos = pos
+                var num = test_num(context, src.substr(pos))
+                if(num.subtype == "float"){
+                   context = $transition(context,
+                       num.imaginary ? 'imaginary' : 'float',
+                       num.value)
                 }else{
-                    res = float_pattern2.exec(src.substr(pos))
-                    if(res){
-                        check_int(res[1]) // check the part before "e"
-                        $pos = pos
-                        if($B.last(res) !== undefined){
-                            context = $transition(context, 'imaginary',
-                                rmuf(res[0].substr(0,res[0].length - 1)))
-                        }else{context = $transition(context, 'float', rmuf(res[0]))}
-                    }else{
-                        res = int_pattern.exec(src.substr(pos))
-                        check_int(res[1])
-                        $pos = pos
-                        if(res[2] !== undefined){
-                            context = $transition(context, 'imaginary',
-                                rmu(res[1]))
-                        }else{
-                            context = $transition(context, 'int',
-                                [10, rmu(res[0])])
-                         }
-                    }
-                }
-                pos += res[0].length
-                break
+                    context = $transition(context,
+                       num.imaginary ? 'imaginary' : 'int',
+                       num.imaginary ? num.value :
+                           [10, num.value])
+               }
+               pos += num.length
+               break
             case '\n':
                 // line end
                lnum++
