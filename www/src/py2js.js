@@ -4439,6 +4439,7 @@ $ExprCtx.prototype.transition = function(token, value){
           var ctx = context
           while(ctx.parent &&
                   (ctx.parent.type == 'op' ||
+                   ctx.parent.type == 'not' ||
                    (ctx.parent.type == "expr" && ctx.parent.name == "operand"))){
               ctx = ctx.parent
           }
