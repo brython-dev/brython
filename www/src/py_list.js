@@ -799,7 +799,9 @@ list.$factory = function(){
         try{
             res[pos++] = next_func()
         }catch(err){
-            if(!isinstance(err, _b_.StopIteration)){throw err}
+            if(!isinstance(err, _b_.StopIteration)){
+                throw err
+            }
             break
         }
     }

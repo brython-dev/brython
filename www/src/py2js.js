@@ -1972,7 +1972,6 @@ $CallArgCtx.prototype.transition = function(token, value){
                 return $transition(context.parent, token, value)
             }
     }
-    console.log('token ', token, ' after ' , context)
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
@@ -7066,7 +7065,7 @@ $NodeCtx.prototype.to_js = function(){
     }
     this.js = ""
     if(this.tree[0]){
-        var is_not_def = this.scope.ntype != "def"
+        var is_not_def = ["def", "generator"].indexOf(this.scope.ntype) == -1
         if(this.tree[0].annotation){
             // Node is annotation
             if(is_not_def){

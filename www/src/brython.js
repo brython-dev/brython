@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-15 09:29:34.305017"
-__BRYTHON__.timestamp=1605428974305
+__BRYTHON__.compiled_date="2020-11-15 15:24:18.510249"
+__BRYTHON__.timestamp=1605450258494
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1041,7 +1041,6 @@ if(C.expect==','){if(C.parent.kwargs &&
 ['kwarg','star_arg','double_star_arg'].
 indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
 return $transition(C.parent,token,value)}}
-console.log('token ',token,' after ' ,C)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $CallArgCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
@@ -3482,7 +3481,7 @@ new_node.indent=node.indent+4
 this.tree.pop()
 node.add(new_node)}
 this.js=""
-if(this.tree[0]){var is_not_def=this.scope.ntype !="def"
+if(this.tree[0]){var is_not_def=["def","generator"].indexOf(this.scope.ntype)==-1
 if(this.tree[0].annotation){
 if(is_not_def){if(this.tree[0].type=="expr" &&
 ! this.tree[0].$in_parens &&
