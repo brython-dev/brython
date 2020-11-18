@@ -163,7 +163,7 @@ class _TestResult(TestResult):
         self.error_count += 1
         TestResult.addError(self, test, err)
         row = html.TR(self.ident(test), Class="method")
-        row <= html.TD('fail', Class="report_cell")
+        row <= html.TD('error', Class="report_cell")
         row <= (html.TD(x) for x in self.excInfos(test, err))
         document['report'] <= row
 
