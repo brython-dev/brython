@@ -893,8 +893,14 @@ $AssertCtx.prototype.transform = function(node, rank){
     }
     if(this.tree[0].type == "expr" && this.tree[0].name == "tuple" &&
             this.tree[0].tree[0].tree.length > 1){
-        SyntaxWarning(this, "assertion is always true, perhaps " +
-            "remove parentheses?")
+        var warning = _b_.SyntaxWarning.$factory(
+            "assertion is always true, perhaps remove parentheses?")
+        var module = $get_module(this)
+        // set warning attributes filename, lineno, offset, line
+        $B.$syntax_err_line(warning, module.filename, module.src,
+            $pos, $get_node(this).line_num)
+        // module _warning is in builtin_modules.js
+        $B.imported._warnings.warn(warning)
     }
     // transform "assert cond" into "if not cond: throw AssertionError"
     var new_ctx = new $ConditionCtx(node.context, 'if')
@@ -10465,6 +10471,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     root.imports = {}
     if(typeof src == "object"){
         root.is_comp = src.is_comp
+        root.filename = src.filename
         if(src.has_annotations){
             root.binding.__annotations__ = true
         }
@@ -10497,12 +10504,14 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         is_comp = false,
         has_annotations = true, // determine if __annotations__ is created
         line_info, // set for generator expression
-        ix // used for generator expressions
+        ix, // used for generator expressions
+        filename
     if(typeof src == 'object'){
         var is_comp = src.is_comp,
             has_annotations = src.has_annotations,
             line_info = src.line_info,
-            ix = src.ix
+            ix = src.ix,
+            filename = src.filename
         if(line_info !== undefined){
             line_num = parseInt(line_info.split(",")[0])
         }
@@ -10530,7 +10539,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
     var root = $create_root_node(
-        {src: src, is_comp: is_comp, has_annotations: has_annotations},
+        {src: src, is_comp: is_comp, has_annotations: has_annotations, filename: filename},
         module, locals_id, parent_scope, line_num)
 
     $tokenize(root, src)

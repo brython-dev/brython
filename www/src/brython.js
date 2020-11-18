@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-15 15:32:26.510516"
-__BRYTHON__.timestamp=1605450746510
+__BRYTHON__.compiled_date="2020-11-18 13:43:39.770653"
+__BRYTHON__.timestamp=1605703419770
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -482,8 +482,11 @@ var condition=this.tree[0]
 var message=this.tree[1]}else{var condition=this.tree[0]
 var message=null}
 if(this.tree[0].type=="expr" && this.tree[0].name=="tuple" &&
-this.tree[0].tree[0].tree.length > 1){SyntaxWarning(this,"assertion is always true, perhaps "+
-"remove parentheses?")}
+this.tree[0].tree[0].tree.length > 1){var warning=_b_.SyntaxWarning.$factory(
+"assertion is always true, perhaps remove parentheses?")
+var module=$get_module(this)
+$B.$syntax_err_line(warning,module.filename,module.src,$pos,$get_node(this).line_num)
+$B.imported._warnings.warn(warning)}
 var new_ctx=new $ConditionCtx(node.C,'if')
 var not_ctx=new $NotCtx(new_ctx)
 not_ctx.tree=[condition]
@@ -5073,6 +5076,7 @@ root.indent=-1
 root.comments=[]
 root.imports={}
 if(typeof src=="object"){root.is_comp=src.is_comp
+root.filename=src.filename
 if(src.has_annotations){root.binding.__annotations__=true}
 src=src.src}
 root.src=src
@@ -5084,8 +5088,9 @@ module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
 var t0=new Date().getTime(),is_comp=false,has_annotations=true,
 line_info,
-ix 
-if(typeof src=='object'){var is_comp=src.is_comp,has_annotations=src.has_annotations,line_info=src.line_info,ix=src.ix
+ix,
+filename
+if(typeof src=='object'){var is_comp=src.is_comp,has_annotations=src.has_annotations,line_info=src.line_info,ix=src.ix,filename=src.filename
 if(line_info !==undefined){line_num=parseInt(line_info.split(",")[0])}
 src=src.src}
 src=src.replace(/\r\n/gm,"\n")
@@ -5097,7 +5102,7 @@ var internal=locals_id.charAt(0)=='$'
 var local_ns='$locals_'+locals_id.replace(/\./g,'_')
 var global_ns='$locals_'+module.replace(/\./g,'_')
 var root=$create_root_node(
-{src:src,is_comp:is_comp,has_annotations:has_annotations},module,locals_id,parent_scope,line_num)
+{src:src,is_comp:is_comp,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 $tokenize(root,src)
 root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
@@ -6716,7 +6721,7 @@ var interactive=$.mode=="single" &&($.flags & 0x200)
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
-$B.py2js($.source,module_name,module_name)
+$B.py2js({src:$.source,filename:$.filename},module_name,module_name)
 return $}
 var __debug__=$B.debug > 0
 function delattr(obj,attr){
@@ -14172,6 +14177,25 @@ else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only proper
 modules._sys.__breakpointhook__=modules._sys.breakpointhook
 modules._sys.stderr.write=function(data){return $B.$getattr(_sys.stderr.__get__(),"write")(data)}
 modules._sys.stdout.write=function(data){return $B.$getattr(_sys.stdout.__get__(),"write")(data)}
+var WarningMessage=$B.make_class("WarningMessage",function(){var $=$B.make_args("WarningMessage",8,{message:null,category:null,filename:null,lineno:null,file:null,line:null,source:null},['message','category','filename','lineno','file','line','source'],arguments,{file:_b_.None,line:_b_.None,source:_b_.None},null,null)
+return{
+__class__:WarningMessage,message:$.message,category:$.category,filename:$.filename,lineno:$.lineno,file:$.file,line:$.line,source:$.source,_category_name:_b_.bool.$factory($.category)?
+$B.$getattr($.category,"__name__"):_b_.None}}
+)
+modules._warnings={_defaultaction:"default",_filters_mutated:function(){},_onceregistry:$B.empty_dict(),filters:[$B.fast_tuple(['default',_b_.None,_b_.DeprecationWarning,'__main__',0]),$B.fast_tuple(['ignore',_b_.None,_b_.DeprecationWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.PendingDeprecationWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.ImportWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.ResourceWarning,_b_.None,0])
+],warn:function(message){
+if($B.imported.warnings){var filters=$B.imported.warnings.filters
+if(filters[0][0]=='error'){var syntax_error=_b_.SyntaxError.$factory(message.args[0])
+syntax_error.args[1]=[message.filename,message.lineno,message.offset,message.line]
+syntax_error.filename=message.filename
+syntax_error.lineno=message.lineno
+syntax_error.offset=message.offset
+syntax_error.line=message.line
+throw syntax_error}
+var frame=$B.imported._sys.Getframe()
+warning_message={__class__:WarningMessage,$$message:message,category:message.__class__,filename:message.filename ||frame.f_code.co_filename,lineno:message.lineno ||frame.f_lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:message.__class__.__name__}
+$B.imported.warnings._showwarnmsg_impl(warning_message)}else{console.log("warnings not imported")}},warn_explicit:function(){
+console.log("warn_explicit",arguments)}}
 function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name

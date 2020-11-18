@@ -495,7 +495,7 @@ var getExceptionTrace = function(exc, includeInternal) {
         }
     }
     if(exc.__class__ === _b_.SyntaxError){
-        info += "\n  File " + exc.args[1][0] + ", line " + 
+        info += "\n  File " + exc.args[1][0] + ", line " +
             exc.args[1][1] + "\n    " + exc.args[1][3]
 
     }
