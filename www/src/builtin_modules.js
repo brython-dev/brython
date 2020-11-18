@@ -623,6 +623,79 @@
         return $B.$getattr(_sys.stdout.__get__(), "write")(data)
     }
 
+    var WarningMessage = $B.make_class("WarningMessage",
+        function(){
+            var $ = $B.make_args("WarningMessage", 8,
+                {message: null, category: null, filename: null, lineno: null,
+                 file: null, line:null, source: null},
+                 ['message', 'category', 'filename', 'lineno', 'file',
+                  'line', 'source'],
+                 arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
+                 null, null)
+            return {
+                __class__: WarningMessage,
+                message: $.message,
+                category: $.category,
+                filename: $.filename,
+                lineno: $.lineno,
+                file: $.file,
+                line: $.line,
+                source: $.source,
+                _category_name: _b_.bool.$factory($.category) ?
+                    $B.$getattr($.category, "__name__") : _b_.None
+            }
+        }
+    )
+    // _warnings provides basic warning filtering support.
+    modules._warnings = {
+        _defaultaction: "default",
+        _filters_mutated: function(){
+        },
+        _onceregistry: $B.empty_dict(),
+        filters: [
+            $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
+            $B.fast_tuple(['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0]),
+            $B.fast_tuple(['ignore', _b_.None, _b_.PendingDeprecationWarning, _b_.None, 0]),
+            $B.fast_tuple(['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0]),
+            $B.fast_tuple(['ignore', _b_.None, _b_.ResourceWarning, _b_.None, 0])
+        ],
+        warn: function(message){
+            // Issue a warning, or maybe ignore it or raise an exception.
+            if($B.imported.warnings){
+                var filters = $B.imported.warnings.filters
+                if(filters[0][0] == 'error'){
+                    var syntax_error = _b_.SyntaxError.$factory(message.args[0])
+                    syntax_error.args[1] = [message.filename, message.lineno,
+                        message.offset, message.line]
+                    syntax_error.filename = message.filename
+                    syntax_error.lineno = message.lineno
+                    syntax_error.offset = message.offset
+                    syntax_error.line = message.line
+                    throw syntax_error
+                }
+                var frame = $B.imported._sys.Getframe()
+                    warning_message = {
+                        __class__: WarningMessage,
+                        $$message: message,
+                        category: message.__class__,
+                        filename: message.filename || frame.f_code.co_filename,
+                        lineno: message.lineno || frame.f_lineno,
+                        file: _b_.None,
+                        line: _b_.None,
+                        source: _b_.None,
+                        _category_name: message.__class__.__name__
+                    }
+                $B.imported.warnings._showwarnmsg_impl(warning_message)
+            }else{
+                console.log("warnings not imported")
+            }
+        },
+        warn_explicit: function(){
+            // Low-level interface to warnings functionality.
+            console.log("warn_explicit", arguments)
+        }
+    }
+
     function load(name, module_obj){
         // add class and __str__
         module_obj.__class__ = $B.module

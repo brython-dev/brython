@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_ast'
+stdlib_name = '_warnings'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 
