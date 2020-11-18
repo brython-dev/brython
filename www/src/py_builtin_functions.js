@@ -336,7 +336,7 @@ function compile() {
     }
 
     // Run py2js to detect potential syntax errors
-    $B.py2js($.source, module_name, module_name)
+    $B.py2js({src: $.source, filename: $.filename}, module_name, module_name)
     return $
 }
 
