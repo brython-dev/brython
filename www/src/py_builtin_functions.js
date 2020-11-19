@@ -587,10 +587,10 @@ function $$eval(src, _globals, _locals){
                 binding: {}
             }
             for(var attr in _globals.$string_dict){
-                grandparent_scope.binding[attr] = true
+                grandparent_scope.binding[$B.to_alias(attr)] = true
             }
             for(var attr in _locals.$string_dict){
-                parent_scope.binding[attr] = true
+                parent_scope.binding[$B.to_alias(attr)] = true
             }
         }
     }
@@ -625,7 +625,7 @@ function $$eval(src, _globals, _locals){
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
-                eval('$locals_' + globals_id + '["' + item + '"] = items.' + item)
+                eval('$locals_' + globals_id + '["' + item1 + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -662,7 +662,7 @@ function $$eval(src, _globals, _locals){
         for(var item in items){
             var item1 = $B.to_alias(item)
             try{
-                eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)
+                eval('$locals_' + locals_id + '["' + item1 + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)

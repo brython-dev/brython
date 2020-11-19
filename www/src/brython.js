@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-18 13:43:39.770653"
-__BRYTHON__.timestamp=1605703419770
+__BRYTHON__.compiled_date="2020-11-19 16:21:30.917816"
+__BRYTHON__.timestamp=1605799290917
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_warnings","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","hashlib","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -6811,8 +6811,8 @@ if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
 parent_scope=$B.builtins_scope}else{
 var grandparent_scope={id:globals_id,parent_block:$B.builtins_scope,binding:{}}
 parent_scope={id:locals_id,parent_block:grandparent_scope,binding:{}}
-for(var attr in _globals.$string_dict){grandparent_scope.binding[attr]=true}
-for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
+for(var attr in _globals.$string_dict){grandparent_scope.binding[$B.to_alias(attr)]=true}
+for(var attr in _locals.$string_dict){parent_scope.binding[$B.to_alias(attr)]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+
 locals_id+' = {}')
@@ -6826,7 +6826,7 @@ _globals.$jsobj=items
 globals_is_dict=true}
 eval("$locals_"+globals_id+" = _globals.$jsobj")
 for(var item in items){var item1=$B.to_alias(item)
-try{eval('$locals_'+globals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
+try{eval('$locals_'+globals_id+'["'+item1+'"] = items.'+item)}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
 _globals.$is_namespace=true
@@ -6838,7 +6838,7 @@ if(_locals.$jsobj){var items=_locals.$jsobj}else{locals_id_dict=true
 var items=_b_.dict.$to_obj(_locals)
 _locals.$jsobj=items}
 for(var item in items){var item1=$B.to_alias(item)
-try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
+try{eval('$locals_'+locals_id+'["'+item1+'"] = items.'+item)}catch(err){console.log(err)
 console.log('error setting',item)
 break}}
 eval("$locals_"+locals_id+".$exec_locals = true")}
