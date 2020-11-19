@@ -1,21 +1,21 @@
 # A revised version of CPython's turtle module written for Brython
-# 
+#
 
 # Note: This version is not intended to be used in interactive mode,
 # nor use help() to look up methods/functions definitions. The docstrings
 # have thus been shortened considerably as compared with the CPython's version.
-# 
+#
 # All public methods/functions of the CPython version should exist, if only
 # to print out a warning that they are not implemented. The intent is to make
 # it easier to "port" any existing turtle program from CPython to the browser.
-# 
+#
 # IMPORTANT: We use SVG for drawing turtles. If we have a turtle at an angle
 # of 350 degrees and we rotate it by an additional 20 degrees, we will have
-# a turtle at an angle of 370 degrees.  For turtles drawn periodically on 
+# a turtle at an angle of 370 degrees.  For turtles drawn periodically on
 # a screen (like typical animations, including the CPython turtle module),
 # drawing a turtle with a rotation of 370 degrees is the same as a rotation of
-# 10 degrees.  However, using SVG, if we "slowly" animate an object, 
-# rotating it from 350 to 370 degrees, the result will not be the same 
+# 10 degrees.  However, using SVG, if we "slowly" animate an object,
+# rotating it from 350 to 370 degrees, the result will not be the same
 # as rotating it from 350 to 10 degrees. For this reason, we did not use the
 # Vec2D class from the CPython module and handle the rotations quite differently.
 
@@ -27,7 +27,7 @@ from math import cos, sin
 
 from browser import console, document, html, timer
 import _svg as svg
-import copy
+#import copy
 
 # Even though it is a private object, use the same name for the configuration
 # dict as the CPython's module.
@@ -43,7 +43,7 @@ _CFG = {
         "mode": "standard",
         # "colormode": 1.0,
         # "delay": 10,
-        # "undobuffersize": 1000, 
+        # "undobuffersize": 1000,
         "shape": "classic",
         "pencolor" : "black",
         "fillcolor" : "black",
@@ -61,7 +61,7 @@ _CFG = {
         "min_duration": "1ms"
         }
 
-_cfg_copy = copy.copy(_CFG)
+_cfg_copy = _CFG.copy()
 
 
 def set_defaults(**params):
@@ -89,13 +89,13 @@ def create_polygon(points):
     points = ["%s,%s " % (x, y) for x, y in points]
     polygon = svg.polygon(points=points, stroke="black", fill="black")
     polygon.setAttribute("stroke-width", 1)
-    return polygon 
+    return polygon
 
 
 def create_rectangle(width=2, height=2, rx=None, ry=None):
     '''Creates a rectangle centered at the origin. rx and ry can be
        used to have rounded corners'''
-    rectangle = svg.rect(x=-width/2, y=-height/2, width=width, 
+    rectangle = svg.rect(x=-width / 2, y=-height / 2, width=width,
                          height=height, stroke="black", fill="black")
     rectangle.setAttribute("stroke-width", 1)
     if rx is not None:
@@ -137,7 +137,7 @@ class Screen(metaclass=Singleton):
                         (2, 14))),
             'classic': (create_polygon, ((0, 0), (-5, -9), (0, -7), (5, -9))),
             'triangle': (create_polygon, ((10, -5.77), (0, 11.55), (-10, -5.77))),
-            'square': (create_square, 20), 
+            'square': (create_square, 20),
             'circle': (create_circle, 10)
         }
         self.reset()
@@ -153,8 +153,8 @@ class Screen(metaclass=Singleton):
         width = _CFG['canvwidth']
         height = _CFG['canvheight']
         if self.mode() in ['logo', 'standard']:
-            x = -width//2 
-            y = -height//2 
+            x = -width // 2
+            y = -height // 2
         else:
             x = 0
             y = -height
@@ -164,22 +164,22 @@ class Screen(metaclass=Singleton):
                             style={'display': 'none'})
         an = svg.animate(Id="animation_frame%s" % self.frame_index,
                               attributeName="display", attributeType="CSS",
-                              From="block", to="block", dur=_CFG["min_duration"],
-                              fill='freeze')
-        an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index-1))
+                              From="block", to="block",
+                              dur=_CFG["min_duration"], fill='freeze')
+        an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index - 1))
         rect <= an
 
-        self.background_canvas <=rect
+        self.background_canvas <= rect
 
     def _convert_coordinates(self, x, y):
-        """In the browser, the increasing y-coordinate is towards the 
-           bottom of the screen; this is the opposite of what is assumed 
+        """In the browser, the increasing y-coordinate is towards the
+           bottom of the screen; this is the opposite of what is assumed
            normally for the methods in the CPython turtle module.
 
            This method makes the necessary orientation. It should be called
            just prior to creating any SVG element.
         """
-        return x*self.yscale, self.y_points_down * y*self.yscale
+        return x * self.yscale, self.y_points_down * y * self.yscale
 
 
     def create_svg_turtle(self, _turtle, name):
@@ -211,9 +211,9 @@ class Screen(metaclass=Singleton):
                             style={'display': 'none'})
         an = svg.animate(Id="animation_frame%s" % self.frame_index,
                               attributeName="display", attributeType="CSS",
-                              From="block", to="block", dur=_CFG["min_duration"],
-                              fill='freeze')
-        an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index-1))
+                              From="block", to="block",
+                              dur=_CFG["min_duration"], fill='freeze')
+        an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index - 1))
         circle <= an
         self.canvas <= circle
 
@@ -249,7 +249,7 @@ class Screen(metaclass=Singleton):
             else:
                 duration = "%6.3fs" % duration
 
-        drawing = _turtle._drawing 
+        drawing = _turtle._drawing
 
         _line = svg.line(x1=x0, y1=y0, x2=x0, y2=y0,
                           style={'stroke': outline, 'stroke-width': width})
@@ -264,7 +264,7 @@ class Screen(metaclass=Singleton):
                             From=x0, to=x1, dur=duration, fill='freeze',
                             begin=begin)
         _line <= _an1
-        
+
         ## But, do not bother adding animations that will not be shown.
         if drawing:
             _an2 = svg.animate(attributeName="y2", attributeType="XML",
@@ -273,7 +273,7 @@ class Screen(metaclass=Singleton):
             _line <= _an2
 
             if width > 2:
-                _line_cap = svg.set(attributeName="stroke-linecap", 
+                _line_cap = svg.set(attributeName="stroke-linecap",
                     begin=begin,
                     attributeType="xml", to="round", dur=duration, fill='freeze')
                 _line <= _line_cap
@@ -297,16 +297,16 @@ class Screen(metaclass=Singleton):
         if outline is not None:
             style['stroke'] = outline
             if width is not None:
-                style['stroke-width'] = width 
+                style['stroke-width'] = width
             else:
-                style['stroke-width'] = 1 
+                style['stroke-width'] = 1
 
         polygon = svg.polygon(points=" ".join(shape), style=style)
 
         an = svg.animate(Id="animation_frame%s" % self.frame_index,
                               attributeName="display", attributeType="CSS",
-                              From="block", to="block", dur=_CFG["min_duration"],
-                              fill='freeze')
+                              From="block", to="block",
+                              dur=_CFG["min_duration"], fill='freeze')
 
         an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index-1))
         polygon <= an
@@ -324,13 +324,13 @@ class Screen(metaclass=Singleton):
     def mode(self, _mode=None):
         if _mode is None:
             return self._mode
-        _CFG['mode'] = _mode 
+        _CFG['mode'] = _mode
         self.reset()
 
 
     def reset(self):
         self._turtles = []
-        self.frame_index = 0        
+        self.frame_index = 0
         self.background_color = "white"
         self._set_geometry()
 
@@ -343,13 +343,13 @@ class Screen(metaclass=Singleton):
         self.y_points_down = -1
         self._mode = _CFG["mode"].lower()
         if self._mode in ['logo', 'standard']:
-            self.translate_canvas = (self.width//2, self.height//2)      
+            self.translate_canvas = (self.width // 2, self.height // 2)
         elif self._mode == 'world':
             self.translate_canvas = (0, self.height)
         self._setup_canvas()
 
     def _setup_canvas(self):
-        self.svg_scene = svg.svg(Id=_CFG["turtle_canvas_id"], width=self.width, 
+        self.svg_scene = svg.svg(Id=_CFG["turtle_canvas_id"], width=self.width,
                              height=self.height)
         translate = "translate(%d %d)" % self.translate_canvas
 
@@ -357,7 +357,7 @@ class Screen(metaclass=Singleton):
         self.svg_scene <= svg.animate(
             Id="animation_frame%s" % self.frame_index,
             attributeName="width", attributeType="CSS",
-            From=self.width, to=self.width, begin="0s", 
+            From=self.width, to=self.width, begin="0s",
             dur=_CFG["min_duration"], fill='freeze')
 
         # Unlike html elements, svg elements have no concept of a z-index: each
@@ -367,7 +367,7 @@ class Screen(metaclass=Singleton):
         self.canvas = svg.g(transform=translate)
         self.writing_canvas = svg.g(transform=translate)
         self.turtle_canvas = svg.g(transform=translate)
-        
+
         self.svg_scene <= self.background_canvas
         self.svg_scene <= self.canvas
         self.svg_scene <= self.writing_canvas
@@ -385,13 +385,13 @@ class Screen(metaclass=Singleton):
 
         Note: llx must be less than urx in this version.
 
-        Warning: in user-defined coordinate systems angles may appear distorted. 
+        Warning: in user-defined coordinate systems angles may appear distorted.
         """
         self._mode = "world"
 
         if urx < llx:
             sys.stderr.write("Warning: urx must be greater than llx; your choice will be reversed")
-            urx, llx = llx, urx 
+            urx, llx = llx, urx
         xspan = urx - llx
         yspan = abs(ury - lly)
 
@@ -403,14 +403,14 @@ class Screen(metaclass=Singleton):
         else:
             self.y_points_down = -1
         self.y_offset = self.y_points_down * lly * self.yscale
-        self.translate_canvas = (self.x_offset, self.height-self.y_offset)
+        self.translate_canvas = (self.x_offset, self.height - self.y_offset)
         self._setup_canvas()
 
     def show_scene(self):
         '''Ends the creation of a "scene" and has it displayed'''
 
         for t in self._turtles:
-            self.turtle_canvas <= t.svg 
+            self.turtle_canvas <= t.svg
         if _CFG["turtle_canvas_wrapper"] is None:
             _CFG["turtle_canvas_wrapper"] = html.DIV(Id="turtle-canvas-wrapper")
             document <= _CFG["turtle_canvas_wrapper"]
@@ -419,7 +419,7 @@ class Screen(metaclass=Singleton):
         def set_svg():
         # need to have a delay for chrome so that first few draw commands are viewed properly.
             _CFG["turtle_canvas_wrapper"].html = _CFG["turtle_canvas_wrapper"].html
-        timer.set_timeout(set_svg, 1)  
+        timer.set_timeout(set_svg, 1)
 
 
     def turtles(self):
@@ -434,7 +434,7 @@ class Screen(metaclass=Singleton):
             stroke = color[0]
             fill = color[1]
         else:
-            fill = color 
+            fill = color
             stroke = None
         x, y = self._convert_coordinates(pos[0], pos[1])
         text = svg.text(txt, x=x, y=y, fill=fill,
@@ -455,11 +455,11 @@ class Screen(metaclass=Singleton):
         self.frame_index += 1
         an = svg.animate(Id="animation_frame%s" % self.frame_index,
                               attributeName="display", attributeType="CSS",
-                              From="block", to="block", dur=_CFG["min_duration"],
-                              fill='freeze')
-        an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index-1))
+                              From="block", to="block", 
+                              dur=_CFG["min_duration"], fill='freeze')
+        an.setAttribute('begin', "animation_frame%s.end" % (self.frame_index - 1))
         text <= an
-        self.writing_canvas <= text        
+        self.writing_canvas <= text
 
     def addshape(self, *args, **kwargs):
         sys.stderr.write("Warning: Screen.addshape() is not implemented.\n")
@@ -543,7 +543,7 @@ class Screen(metaclass=Singleton):
         sys.stderr.write("Warning: Screen.window_height() is not implemented.\n")
 
     def window_width(self, *args, **kwargs):
-        sys.stderr.write("Warning: Screen.window_width() is not implemented.\n")        
+        sys.stderr.write("Warning: Screen.window_width() is not implemented.\n")
 
 
 class TNavigator:
@@ -574,7 +574,7 @@ class TNavigator:
         The derived class, which will call it directly and add its own
         """
         self._position = (0.0, 0.0)
-        self._x = 0 
+        self._x = 0
         self._y = 0
         self._angle = 0
         self._old_heading = 0
@@ -592,13 +592,13 @@ class TNavigator:
             self._angleOffset = 0
             self._angleOrient = 1
         else:  # mode == "logo":
-            self._angleOffset = -self._fullcircle/4.
+            self._angleOffset = -self._fullcircle / 4.
             self._angleOrient = 1
 
     def _setDegreesPerAU(self, fullcircle):
         """Helper function for degrees() and radians()"""
         self._fullcircle = fullcircle
-        self._degreesPerAU = 360/fullcircle
+        self._degreesPerAU = 360 / fullcircle
 
     def degrees(self, fullcircle=360.0):
         """ Set angle measurement units to degrees, or possibly other system.
@@ -608,7 +608,7 @@ class TNavigator:
     def radians(self):
         """ Set the angle measurement units to radians.
         """
-        self._setDegreesPerAU(2*math.pi)
+        self._setDegreesPerAU(2 * math.pi)
 
     def _rotate(self, angle):
         """Turn turtle counterclockwise by specified angle if angle > 0."""
@@ -623,7 +623,7 @@ class TNavigator:
         x1 = distance * cos(self._angle * self.degree_to_radians)
         y1 = distance * sin(self._angle * self.degree_to_radians)
         self._distance = distance
-        self._goto(self._x + x1, self._y + y1)        
+        self._goto(self._x + x1, self._y + y1)
     fd = forward
 
     def back(self, distance):
@@ -632,23 +632,23 @@ class TNavigator:
         x1 = -distance * cos(self._angle * self.degree_to_radians)
         y1 = -distance * sin(self._angle * self.degree_to_radians)
         self._distance = distance
-        self._goto(self._x + x1, self._y + y1)   
-    backward = back 
+        self._goto(self._x + x1, self._y + y1)
+    backward = back
     bk = back
 
     def right(self, angle):
         """Turn turtle right by angle units.
         """
-        angle*=self._degreesPerAU
-        self._angle += self.screen.y_points_down*angle
+        angle *= self._degreesPerAU
+        self._angle += self.screen.y_points_down * angle
         self._rotate_image(-angle)
-    rt = right 
+    rt = right
 
     def left(self, angle):
         """Turn turtle left by angle units.
         """
-        angle*=self._degreesPerAU
-        self._angle += -self.screen.y_points_down*angle
+        angle *= self._degreesPerAU
+        self._angle += -self.screen.y_points_down * angle
         self._rotate_image(angle)
     lt = left
 
@@ -656,7 +656,7 @@ class TNavigator:
         """Return the turtle's current location (x,y), as a formatted tuple
         """
         return FormattedTuple(self._x, self._y)
-    position = pos 
+    position = pos
 
     def xcor(self):
         """ Return the turtle's x coordinate.
@@ -674,17 +674,17 @@ class TNavigator:
         if y is None:
             x, y = x[0], x[1] # "*x" here raises SyntaxError
         # distance only needed to calculate the duration of
-        # the animation which is based on "distance" and "speed" as well. 
-        # We use the Manhattan distance here as it is *much* faster on Chrome, 
+        # the animation which is based on "distance" and "speed" as well.
+        # We use the Manhattan distance here as it is *much* faster on Chrome,
         # than using the proper distance with calls to math.sqrt, while
         # giving acceptable results
-        # 
+        #
         # forward, backward, etc., call _goto directly with the distance
         # given by the user
         self._distance = abs(self._x - x) + abs(self._y - y)
         self._goto(x, y)
-    setpos = goto 
-    setposition = goto 
+    setpos = goto
+    setposition = goto
 
 
     def home(self):
@@ -712,7 +712,7 @@ class TNavigator:
         if y is None:
             assert isinstance(x, tuple)
             x, y = x
-        return math.sqrt((self._x - x)**2 + (self._y - y)**2)
+        return math.sqrt((self._x - x) ** 2 + (self._y - y) ** 2)
 
     def towards(self, x, y=None):
         """Return the angle of the line from the turtle's position to (x, y).
@@ -720,15 +720,15 @@ class TNavigator:
         if y is None:
             assert isinstance(x, tuple)
             x, y = x
-        x, y = x - self._x, y - self._y 
-        result = round(math.atan2(y, x)*180.0/math.pi, 10) % 360.0
+        x, y = x - self._x, y - self._y
+        result = round(math.atan2(y, x) * 180.0 / math.pi, 10) % 360.0
         result /= self._degreesPerAU
-        return (self._angleOffset + self._angleOrient*result) % self._fullcircle
+        return (self._angleOffset + self._angleOrient * result) % self._fullcircle
 
     def heading(self):
         """ Return the turtle's current heading.
         """
-        angle = self._angle / self._degreesPerAU 
+        angle = self._angle / self._degreesPerAU
         return (self._angleOffset + self._angleOrient*angle) % self._fullcircle
 
     def setheading(self, to_angle):
@@ -764,10 +764,10 @@ class TNavigator:
             extent = self._fullcircle
         if steps is None:
             frac = abs(extent)/self._fullcircle
-            steps = 1+int(min(11+abs(radius)/6.0, 59.0)*frac)
+            steps = 1+int(min(11 + abs(radius) / 6.0, 59.0) * frac)
         w = 1.0 * extent / steps
         w2 = 0.5 * w
-        l = 2.0 * radius * math.sin(w2*math.pi/180.0*self._degreesPerAU)
+        l = 2.0 * radius * math.sin(w2 * math.pi / 180.0 * self._degreesPerAU)
         if radius < 0:
             l, w, w2 = -l, -w, -w2
         self._rotate(w2)
@@ -790,7 +790,7 @@ class TPen:
                fillcolor=_CFG["fillcolor"]):
         self._pensize = 1
         self._shown = True
-        self._drawing = True        
+        self._drawing = True
         self._pencolor = 'black'
         self._fillcolor = 'black'
         self._speed = 3
@@ -814,8 +814,8 @@ class TPen:
         if self._drawing:
             return
         self.pen(pendown=True)
-    pd = pendown 
-    down = pendown 
+    pd = pendown
+    down = pendown
 
     def penup(self):
         """Pull the pen up -- no drawing when moving.
@@ -823,7 +823,7 @@ class TPen:
         if not self._drawing:
             return
         self.pen(pendown=False)
-    pu = penup 
+    pu = penup
     up = penup
 
     def isdown(self):
@@ -901,7 +901,7 @@ class TPen:
 
     def pencolor(self, color=None):
         """ Return or set the pencolor.
-        
+
         IMPORTANT: this is very different than the CPython's version.
 
         Colors are using strings in any format recognized by a browser
@@ -918,7 +918,7 @@ class TPen:
 
     def fillcolor(self, color=None):
         """ Return or set the fillcolor.
-        
+
         IMPORTANT: this is very different than the CPython's version.
 
         Colors are using strings in any format recognized by a browser
@@ -997,7 +997,7 @@ class TPen:
             old_color = self._pencolor
             self._pencolor = p["pencolor"]
             previous_end, new_frame_id = self.screen._new_frame()
-            anim = svg.animate(Id=new_frame_id, begin=previous_end, 
+            anim = svg.animate(Id=new_frame_id, begin=previous_end,
                                dur=_CFG["min_duration"], fill="freeze",
                                attributeName="stroke", attributeType="XML",
                                From=old_color, to=self._pencolor)
@@ -1008,7 +1008,7 @@ class TPen:
             old_color = self._fillcolor
             self._fillcolor = p["fillcolor"]
             previous_end, new_frame_id = self.screen._new_frame()
-            anim = svg.animate(Id=new_frame_id, begin=previous_end, 
+            anim = svg.animate(Id=new_frame_id, begin=previous_end,
                                dur=_CFG["min_duration"], fill="freeze",
                                attributeName="fill", attributeType="XML",
                                From=old_color, to=self._fillcolor)
@@ -1024,7 +1024,7 @@ class TPen:
                 opacity = 1
                 old_opacity = 0
             previous_end, new_frame_id = self.screen._new_frame()
-            anim = svg.animate(Id=new_frame_id, begin=previous_end, 
+            anim = svg.animate(Id=new_frame_id, begin=previous_end,
                                dur=_CFG["min_duration"], fill="freeze",
                                attributeName="opacity", attributeType="XML",
                                From=old_opacity, to=opacity)
@@ -1080,18 +1080,18 @@ class Turtle(TPen, TNavigator):
         sys.stderr.write("Warning: Turtle.clear() is not implemented.\n")
 
     def shape(self, name=None):
-        """Set turtle shape to shape with given name 
+        """Set turtle shape to shape with given name
         / return current shapename if no name is provided
         """
         if name is None:
-            return self.name 
+            return self.name
         _turtle = self._make_copy(name=name)
 
         visible = self.isvisible()
         if visible:
             self.hideturtle()
         self.screen.turtle_canvas <= self.svg
-        self.svg = _turtle 
+        self.svg = _turtle
         self.screen._turtles.append(self)
         if visible:
             self.showturtle()
@@ -1150,7 +1150,7 @@ class Turtle(TPen, TNavigator):
 
         begin, duration, _from, _to = self.screen._drawline(self,
                                   ((self._x, self._y), (x, y)),
-                                  (self._pencolor, self._fillcolor), 
+                                  (self._pencolor, self._fillcolor),
                                   self._pensize, self._speed)
         if self._shown:
             self.svg <= svg.animateMotion(begin=begin, dur=_CFG["min_duration"],
@@ -1163,38 +1163,38 @@ class Turtle(TPen, TNavigator):
         if self._fillpath is not None:
             self._fillpath.append((x, y))
         self._position = (x, y)
-        self._x = x 
-        self._y = y 
+        self._x = x
+        self._y = y
 
 
     def _rotate(self, angle):
         """Turns pen clockwise by angle.
         """
         angle*=self._degreesPerAU
-        self._angle += -self.screen.y_points_down*angle
+        self._angle += -self.screen.y_points_down * angle
         self._rotate_image(angle)
 
     def _rotate_image(self, angle):
         new_heading = self._old_heading - angle
-        
+
         if self.isvisible():
             previous_end, new_frame_id = self.screen._new_frame()
             if self._speed == 0:
                 duration = _CFG["min_duration"]
             else:
-                duration = (abs(angle)/(self._speed * 360))
+                duration = (abs(angle) / (self._speed * 360))
                 if duration < 0.001:
                     duration = _CFG["min_duration"]
                 else:
                     duration = "%6.3fs" % duration
 
-            self.svg <= svg.animateMotion(begin=previous_end, 
+            self.svg <= svg.animateMotion(begin=previous_end,
                                           dur=_CFG["min_duration"], fill="remove")
             self.svg <= svg.animateTransform(attributeName="transform",
                                              Id = new_frame_id,
                                              type="rotate",
                                              From=(self._old_heading, 0, 0),
-                                             to=(new_heading, 0, 0), 
+                                             to=(new_heading, 0, 0),
                                              begin=previous_end,
                                     dur=duration, fill="freeze")
         self._old_heading = new_heading
@@ -1276,7 +1276,7 @@ class Turtle(TPen, TNavigator):
 
     def _make_copy(self, name=None):
         '''makes a copy of the current svg turtle, but possibly using a
-           different shape. This copy is then ready to be inserted 
+           different shape. This copy is then ready to be inserted
            into a canvas.'''
 
         if name is None:
@@ -1294,21 +1294,21 @@ class Turtle(TPen, TNavigator):
         # We use timed animations to get it with the proper location, orientation
         # and appear at the desired time.
         previous_end, new_frame_id = self.screen._new_frame()
-        x, y = self.screen._convert_coordinates(self._x, self._y)        
+        x, y = self.screen._convert_coordinates(self._x, self._y)
         _turtle <= svg.animateMotion(begin=previous_end, dur=_CFG["min_duration"],
                                           fill="remove")
 
         _turtle <= svg.animateMotion(Id=new_frame_id,
                                      From="%s,%s" % (x, y), to="%s,%s" % (x, y),
-                                     dur=_CFG["min_duration"], begin=previous_end, 
+                                     dur=_CFG["min_duration"], begin=previous_end,
                                      fill="freeze")
         _turtle <= svg.animateTransform(attributeName="transform",
                                         type="rotate",
                                         From=(self._old_heading, 0, 0),
-                                        to=(self._old_heading, 0, 0), 
+                                        to=(self._old_heading, 0, 0),
                                         begin=previous_end,
                                         dur=_CFG["min_duration"], fill="freeze")
-        _turtle <= svg.animate(begin=previous_end, 
+        _turtle <= svg.animate(begin=previous_end,
                            dur=_CFG["min_duration"], fill="freeze",
                            attributeName="opacity", attributeType="XML",
                            From=0, to=1)
@@ -1355,15 +1355,15 @@ def replay_scene():
     if (_CFG["turtle_canvas_id"] in document and
             document[_CFG["turtle_canvas_id"]] is not None):
         element = document[_CFG["turtle_canvas_id"]]
-        element.parentNode.removeChild(element)  
-    show_scene()  
+        element.parentNode.removeChild(element)
+    show_scene()
 
 
 def restart():
     "For Brython turtle: clears the existing drawing and canvas"
     _CFG.update(_cfg_copy)
     Screen().reset()
-    Turtle._pen = None 
+    Turtle._pen = None
 
     if (_CFG["turtle_canvas_id"] in document and
             document[_CFG["turtle_canvas_id"]] is not None):
@@ -1371,38 +1371,6 @@ def restart():
         element.parentNode.removeChild(element)
 
 ### Creating functions based
-
-import inspect
-def getmethparlist(ob):
-    """Get strings describing the arguments for the given object
-
-    Returns a pair of strings representing function parameter lists
-    including parenthesis.  The first string is suitable for use in
-    function definition and the second is suitable for use in function
-    call.  The "self" parameter is not included.
-    """
-    defText = callText = ""
-    # bit of a hack for methods - turn it into a function
-    # but we drop the "self" param.
-    # Try and build one for Python defined functions
-    args, varargs, varkw = inspect.getargs(ob.__code__)
-    items2 = args[1:]
-    realArgs = args[1:]
-    defaults = ob.__defaults__ or []
-    defaults = ["=%r" % (value,) for value in defaults]
-    defaults = [""] * (len(realArgs)-len(defaults)) + defaults
-    items1 = [arg + dflt for arg, dflt in zip(realArgs, defaults)]
-    if varargs is not None:
-        items1.append("*" + varargs)
-        items2.append("*" + varargs)
-    if varkw is not None:
-        items1.append("**" + varkw)
-        items2.append("**" + varkw)
-    defText = ", ".join(items1)
-    defText = "(%s)" % defText
-    callText = ", ".join(items2)
-    callText = "(%s)" % callText
-    return defText, callText
 
 _tg_screen_functions = ['addshape', 'bgcolor', 'bgpic', 'bye',
         'clearscreen', 'colormode', 'delay', 'exitonclick', 'getcanvas',
@@ -1435,21 +1403,20 @@ __all__ = (_tg_screen_functions + _tg_turtle_functions +
 ## classes and do not need to change anything here.
 
 __func_body = """\
-def {name}{paramslist}:
+def {name}(*args, **kw):
     if {obj} is None:
         {obj} = {init}
-    return {obj}.{name}{argslist}
+    return {obj}.{name}(*args, **kw)
 """
+
 def _make_global_funcs(functions, cls, obj, init):
     for methodname in functions:
         try:
-            method = getattr(cls, methodname)          
+            method = getattr(cls, methodname)
         except AttributeError:
             print("methodname missing:", methodname)
             continue
-        pl1, pl2 = getmethparlist(method)
-        defstr = __func_body.format(obj=obj, init=init, name=methodname,
-                                    paramslist=pl1, argslist=pl2)
+        defstr = __func_body.format(obj=obj, init=init, name=methodname)
         exec(defstr, globals())
 
 _make_global_funcs(_tg_turtle_functions, Turtle, 'Turtle._pen', 'Turtle()')
