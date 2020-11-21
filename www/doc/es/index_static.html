@@ -12,6 +12,7 @@
 
 <script type="text/python3">
 from browser import window, document, html, highlight
+import html_parser
 
 import header
 header.show('es')
@@ -52,6 +53,31 @@ for elt in document[target].select('.python'):
     h.className = "pycode"
     elt.clear()
     elt <= h
+for elt in document[target].select('.xml'):
+    text = elt.text
+    elt.text = ""
+    script = False
+    for item in html_parser.tokenize(text):
+        if item.nodeType == html_parser.TEXT_NODE and item.text:
+            if script:
+                h = highlight.highlight(item.text)
+                h.style.margin = 0
+                h.classList.add("python-in-html")
+                elt <= h
+            else:
+                elt <= item.text
+        elif item.nodeType == html_parser.ELEMENT_NODE:
+            script = item.tagName == "SCRIPT" and not item.closing
+            if item.closing:
+                tag = item.text[1:len(item.tagName) + 2]
+                attrs = item.text[len(item.tagName) + 2:-1]
+            else:
+                tag = item.text[1:len(item.tagName) + 1]
+                attrs = item.text[len(item.tagName) + 1:-1]
+
+            elt <= (html.SPAN("&lt;" + tag, Class="html-tag") +
+                    html.SPAN(attrs, Class="html-attrs") +
+                    html.SPAN("&gt;", Class="html-tag"))
 </script>
 
 </head>

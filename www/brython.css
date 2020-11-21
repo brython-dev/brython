@@ -274,6 +274,23 @@ span.python-builtin{
     color: #963;
 }
 
+/* colors for highlighted html */
+
+span.html-tag{
+  color: blue;
+}
+
+span.html-attrs{
+  color: green;
+}
+
+/* style for Python code inside HTML tag <script> */
+
+.python-in-html{
+  background-color: var(--clear-2)
+}
+
+
 code {
   color:var(--dark-3);
   font-family: Consolas;
@@ -308,5 +325,4 @@ strong {
   min-width:200px;
   padding:5px
 }
-
 
