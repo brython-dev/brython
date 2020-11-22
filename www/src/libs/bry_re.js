@@ -42,6 +42,20 @@ var MatchObject = $B.make_class("MatchObject",
     }
 )
 
+MatchObject.__getitem__ = function(){
+    var $ = $B.args("__getitem__", 2, {self: null, group: null},
+                ['self', 'group'], arguments, {group: 0}, null, null)
+    return group($.self.res, $.group)
+}
+
+MatchObject.__iter__ = function(self){
+    return _b_.iter(_b_.list.$factory(MatchObject.groupdict(self)))
+}
+
+MatchObject.__setitem__ = function(){
+    throw _b_.TypeError.$factory("MatchObject is readonly")
+}
+
 MatchObject.__str__ = function(self){
     var match = self.string.substring(self.start, self.end)
     return `<re.Match object; span=${_b_.str.$factory(self.span)}, match='${match}'>`
@@ -50,7 +64,15 @@ MatchObject.__str__ = function(self){
 function group(res, rank){
     if(typeof rank == "number"){
         if(rank < 0 || rank >= res.length){
-            throw _b_.IndexError.$factory(rank)
+            throw _b_.IndexError.$factory("no such group")
+        }else if(res[rank] === undefined){
+            return _b_.None
+        }
+        return res[rank]
+    }else if(_b_.isinstance(rank, _b_.int)){
+        if($B.rich_comp('__lt__', rank, 0) ||
+                $B.rich_comp('__ge__', rank, res.length)){
+            throw _b_.IndexError.$factory("no such group")
         }else if(res[rank] === undefined){
             return _b_.None
         }
@@ -63,8 +85,15 @@ function group(res, rank){
                 return res.groups[rank]
             }
         }else{
-            throw _b_.IndexError.$factory(rank)
+            throw _b_.IndexError.$factory("no such group")
         }
+    }else{
+        try{
+            var rank = $B.$GetInt(rank)
+        }catch(err){
+            throw _b_.IndexError.$factory("no such group")
+        }
+        return group(res, rank)
     }
 }
 
@@ -78,19 +107,9 @@ function to_bytes(mo){
     })
 }
 
-MatchObject.groups = function(self, _default){
-    var groups = self.res.slice(1)
-    groups.forEach(function(item, rank){
-        if(item === undefined){
-            groups[rank] = _default === undefined ? _b_.None : _default
-        }
-    })
-    return $B.fast_tuple(groups)
-}
-
 MatchObject.group = function(){
     var $ = $B.args("group", 2, {self: null, rank: null}, ['self', 'rank'],
-                    arguments, {}, 'ranks', null),
+                    arguments, {rank: 0}, 'ranks', null),
             self = $.self,
             rank = $.rank,
             ranks = $.ranks
@@ -104,6 +123,34 @@ MatchObject.group = function(){
         }
         return $B.fast_tuple(result)
     }
+}
+
+MatchObject.groupdict = function(){
+    var $ = $B.args("group", 2, {self: null, default: null}, ['self', 'default'],
+                    arguments, {default: _b_.None}, null, null),
+            self = $.self,
+            _default = $.default
+    var d = $B.empty_dict()
+    if(self.res.groups){
+        for(var key in self.res.groups){
+            if(self.res.groups[key] === undefined){
+                _b_.dict.$setitem(d, key, _default)
+            }else{
+                _b_.dict.$setitem(d, key, self.res.groups[key])
+            }
+        }
+    }
+    return d
+}
+
+MatchObject.groups = function(self, _default){
+    var groups = self.res.slice(1)
+    groups.forEach(function(item, rank){
+        if(item === undefined){
+            groups[rank] = _default === undefined ? _b_.None : _default
+        }
+    })
+    return $B.fast_tuple(groups)
 }
 
 MatchObject.span = function(){
