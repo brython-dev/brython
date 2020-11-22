@@ -1212,9 +1212,28 @@ $B.split_format = function(self){
 }
 
 str.format = function(self) {
-    var $ = $B.args("format", 1, {self: null}, ["self"],
-        arguments, {}, "$args", "$kw")
-
+    // Special management of keyword arguments if str.format is called by
+    // str.format_map(mapping) : the argument "mapping" might not be a
+    // dictionary
+    var last_arg = $B.last(arguments)
+    if(last_arg.$nat == "mapping"){
+        var mapping = last_arg.mapping,
+            getitem = $B.$getattr(mapping, "__getitem__")
+        // Get the rest of the arguments
+        var args = []
+        for(var i = 0, len = arguments.length - 1; i < len; i++){
+            args.push(arguments[i])
+        }
+        var $ = $B.args("format", 1, {self: null}, ["self"],
+                args, {}, "$args", null)
+    }else{
+        var $ = $B.args("format", 1, {self: null}, ["self"],
+                arguments, {}, "$args", "$kw"),
+            mapping = $.$kw, // dictionary
+            getitem = function(key){
+                return _b_.dict.$getitem(mapping, key)
+            }
+    }
     var parts = $B.split_format($.self)
 
     // Apply formatting to the values passed to format()
@@ -1252,7 +1271,7 @@ str.format = function(self) {
                 value = _b_.tuple.__getitem__($.$args, pos)
         }else{
             // Use keyword arguments
-            var value = _b_.dict.__getitem__($.$kw, fmt.name)
+            var value = getitem(fmt.name)
         }
         // If name has extensions (attributes or subscriptions)
         for(var j = 0; j < fmt.name_ext.length; j++){
@@ -1286,9 +1305,10 @@ str.format = function(self) {
     return res
 }
 
-str.format_map = function(self) {
-  throw NotImplementedError.$factory(
-      "function format_map not implemented yet")
+str.format_map = function(self, mapping){
+    var $ = $B.args("format_map", 2, {self: null, mapping: null},
+                ['self', 'mapping'], arguments, {}, null, null)
+    return str.format(self, {$nat: 'mapping', mapping})
 }
 
 str.index = function(self){
@@ -2159,6 +2179,7 @@ for(var $attr in str){
         })($attr)
     }
 }
+
 StringSubclass.__new__ = function(cls){
     return {__class__: cls}
 }
