@@ -98,9 +98,15 @@ class Tester:
         context = _AssertRaisesContext(excClass, self, callableObj)
         return context.handle('assertRaises', callableObj, args, kwargs)
 
-    def assertIs(self, a, b):
+    def assertRaisesRegex(self, excClass, expected_regexp,
+            callableObj=None, *args, **kwargs):
+        context = _AssertRaisesContext(excClass, self, callableObj,
+            expected_regexp)
+        return context.handle('assertRaises', callableObj, args, kwargs)
+
+    def assertIs(self, a, b, msg=None):
         if not a is b:
-            raise AssertionError('%s is %s should be true' %(a,b))
+            raise AssertionError(msg or '%s is %s should be true' %(a, b))
 
     def assertIsInstance(self, obj, klass):
         if not isinstance(obj, klass):
