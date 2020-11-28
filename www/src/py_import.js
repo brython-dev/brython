@@ -130,8 +130,8 @@ function run_js(module_contents, path, _module){
         if(typeof $module[attr] == "function"){
             $module[attr].$infos = {
                 __module__: _module.__name__,
-                __name__: attr,
-                __qualname__: attr
+                __name__: $B.from_alias(attr),
+                __qualname__: $B.from_alias(attr)
             }
         }
     }

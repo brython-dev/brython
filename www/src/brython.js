@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-22 15:05:16.608067"
-__BRYTHON__.timestamp=1606053916608
+__BRYTHON__.compiled_date="2020-11-28 08:27:59.863347"
+__BRYTHON__.timestamp=1606548479863
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -1657,10 +1657,11 @@ node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
 var __name__=this.name
 if(this.name.substr(0,2)=="$$"){__name__=__name__.substr(2)}
 if(__name__.substr(0,15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
-js='    __name__:"'+__name__+'",'
+js='    __name__:"'+$B.from_alias(__name__)+'",'
 node.parent.insert(rank+offset++,$NodeJS(js))
 var __qualname__=__name__
-if(this.class_name){__qualname__=this.class_name+'.'+__name__}
+if(this.class_name){__qualname__=this.class_name+'.'+
+$B.from_alias(__name__)}
 js='    __qualname__:"'+__qualname__+'",'
 node.parent.insert(rank+offset++,$NodeJS(js))
 if(this.otherdefaults.length > 0){var def_names=[]
@@ -9367,7 +9368,7 @@ try{$module}
 catch(err){console.log("no $module")
 throw _b_.ImportError.$factory("name '$module' not defined in module")}
 $module.__name__=_module.__name__
-for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}}}
+for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$infos={__module__:_module.__name__,__name__:$B.from_alias(attr),__qualname__:$B.from_alias(attr)}}}
 if(_module !==undefined){
 for(var attr in $module){_module[attr]=$module[attr]}
 $module=_module

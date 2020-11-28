@@ -393,7 +393,7 @@ $B.set_func_names(ajax)
 return {
     ajax: ajax,
     Ajax: ajax,
-    delete: _delete,
+    $$delete: _delete,
     file_upload: file_upload,
     get: get,
     head: head,

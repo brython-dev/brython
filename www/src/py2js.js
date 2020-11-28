@@ -3295,12 +3295,13 @@ $DefCtx.prototype.transform = function(node, rank){
         if(__name__.substr(0, 15) == 'lambda_' + $B.lambda_magic){
             __name__ = "<lambda>"
         }
-        js = '    __name__:"' + __name__ + '",'
+        js = '    __name__:"' + $B.from_alias(__name__) + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
 
         // Add attribute __qualname__
         var __qualname__ = __name__
-        if(this.class_name){__qualname__ = this.class_name + '.' + __name__}
+        if(this.class_name){__qualname__ = this.class_name + '.' + 
+            $B.from_alias(__name__)}
         js = '    __qualname__:"' + __qualname__ + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
 
