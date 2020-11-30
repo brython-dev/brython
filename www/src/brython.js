@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-30 10:20:45.491053"
-__BRYTHON__.timestamp=1606728045491
+__BRYTHON__.compiled_date="2020-11-30 17:22:05.849046"
+__BRYTHON__.timestamp=1606753325849
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -3101,7 +3101,8 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 $LambdaCtx.prototype.to_js=function(){this.js_processed=true
 var C=this.parent,node=this.node,module=$get_module(this),src=$get_src(C),args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\\\n/g,' ')
-body=body.replace(/\n/g,' ')
+var lines=body.split("\n"),body=''
+for(var line of lines){if(! line.match(/^\s*#/)){body+=line+' '}}
 var scope=$get_scope(this)
 var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):'
 py+='    return '+body
@@ -5799,7 +5800,8 @@ if(getattr !==undefined){return getattr(klass,attr)}}}}
 if(res !==undefined){if($test){console.log("res",res)}
 if(res.__class__===_b_.property){return res}
 if(res.__get__){if(res.__class__===method){var result=res.__get__(res.__func__,klass)
-result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
+result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}
+result.$type=res.$type}else{result=res.__get__(klass)}
 return result}else if(res.__class__ && res.__class__.__get__){
 if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
 if(typeof res=="function"){
@@ -6706,6 +6708,7 @@ method.$infos={__self__:cls,__func__:f,__name__:func.$infos.__name__,__qualname_
 return method}
 f.__get__.__class__=$B.method_wrapper
 f.__get__.$infos=func.$infos
+f.$type="classmethod"
 return f}
 )
 $B.set_func_names(classmethod,"builtins")
@@ -7052,8 +7055,7 @@ if($test){console.log("attr_func is odga",attr_func,attr_func===odga,obj[attr])}
 if(attr_func===odga){var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
-if(res===null){return null}
-else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}
+if(res===null){return null}else if(res===undefined && obj.hasOwnProperty(attr)){return res}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}
 if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,res+'',res.__set__,res.$is_class)}
 return res}}}
 try{var res=attr_func(obj,attr)
@@ -7495,6 +7497,7 @@ return _list}
 var staticmethod=$B.make_class("staticmethod",function(func){var f={$infos:func.$infos,__get__:function(){return func}}
 f.__get__.__class__=$B.method_wrapper
 f.__get__.$infos=func.$infos
+func.$type="staticmethod"
 return f}
 )
 $B.set_func_names(staticmethod,"builtins")

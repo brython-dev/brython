@@ -671,4 +671,13 @@ assert list[str] == list[str]
 # issue 1535
 assert [x for x in "abc" if "xyz"[0 if 1 else 2] < "z"] == ['a', 'b', 'c']
 
+# issue 1545
+assert (lambda:
+    # A greeting.
+    'hi')() == 'hi'
+assert (lambda: (
+    # A greeting.
+    "hi"
+))() == 'hi'
+
 print('passed all tests...')

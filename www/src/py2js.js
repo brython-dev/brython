@@ -3300,7 +3300,7 @@ $DefCtx.prototype.transform = function(node, rank){
 
         // Add attribute __qualname__
         var __qualname__ = __name__
-        if(this.class_name){__qualname__ = this.class_name + '.' + 
+        if(this.class_name){__qualname__ = this.class_name + '.' +
             $B.from_alias(__name__)}
         js = '    __qualname__:"' + __qualname__ + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
@@ -6391,7 +6391,14 @@ $LambdaCtx.prototype.to_js = function(){
         body = src.substring(this.body_start + 1, this.body_end)
         body = body.replace(/\\\n/g, ' ') // cf issue 582
 
-    body = body.replace(/\n/g, ' ')
+    var lines = body.split("\n"),
+        body = ''
+    // remove comment lines (issue #1545) and replace \n by ' '
+    for(var line of lines){
+        if(! line.match(/^\s*#/)){
+            body += line + ' '
+        }
+    }
 
     var scope = $get_scope(this)
 
