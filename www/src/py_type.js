@@ -762,7 +762,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
             return new klass(...arguments)
         }
     }
-   
+
     // The class may not be instanciable if it has at least one abstract method
     if(klass.$instanciable !== undefined){
         return function(){throw _b_.TypeError.$factory(

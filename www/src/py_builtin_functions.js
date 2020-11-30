@@ -996,7 +996,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__dict__" // && obj === $B // "Point"
+    var $test = false // attr == "load" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1226,8 +1226,9 @@ $B.$getattr = function(obj, attr, _default){
             // Special case for list subclasses. Cf issue 1081.
             res = undefined
         }
-        if(res === null){return null}
-        else if(res === undefined && obj.hasOwnProperty(attr)){
+        if(res === null){
+            return null
+        }else if(res === undefined && obj.hasOwnProperty(attr)){
             return res
         }else if(res !== undefined){
             if($test){console.log(obj, attr, obj[attr],
