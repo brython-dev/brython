@@ -2474,10 +2474,11 @@ $B.parse_fstring = function(string){
                         last_char_re = ('()'.indexOf(last_char) > -1 ? "\\" : "") + last_char
 
                     if(ce.length == 0 ||
+                            nb_paren > 0 ||
                             string.charAt(i + 1) == "=" ||
-                                "=!<>:".search(last_char_re) > -1){
-                        current.expression += car + string.charAt(i + 1)
-                        i += 2
+                            "=!<>:".search(last_char_re) > -1){
+                        current.expression += car //+ string.charAt(i + 1)
+                        i += 1
                     }else{
                         // add debug string
                         tail = car

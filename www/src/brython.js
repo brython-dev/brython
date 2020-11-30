@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-11-30 17:22:05.849046"
-__BRYTHON__.timestamp=1606753325849
+__BRYTHON__.compiled_date="2020-11-30 17:45:56.593278"
+__BRYTHON__.timestamp=1606754756593
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","random","unicodedata"]
 ;
 
@@ -5800,8 +5800,7 @@ if(getattr !==undefined){return getattr(klass,attr)}}}}
 if(res !==undefined){if($test){console.log("res",res)}
 if(res.__class__===_b_.property){return res}
 if(res.__get__){if(res.__class__===method){var result=res.__get__(res.__func__,klass)
-result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}
-result.$type=res.$type}else{result=res.__get__(klass)}
+result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
 return result}else if(res.__class__ && res.__class__.__get__){
 if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
 if(typeof res=="function"){
@@ -6708,7 +6707,6 @@ method.$infos={__self__:cls,__func__:f,__name__:func.$infos.__name__,__qualname_
 return method}
 f.__get__.__class__=$B.method_wrapper
 f.__get__.$infos=func.$infos
-f.$type="classmethod"
 return f}
 )
 $B.set_func_names(classmethod,"builtins")
@@ -7497,7 +7495,6 @@ return _list}
 var staticmethod=$B.make_class("staticmethod",function(func){var f={$infos:func.$infos,__get__:function(){return func}}
 f.__get__.__class__=$B.method_wrapper
 f.__get__.$infos=func.$infos
-func.$type="staticmethod"
 return f}
 )
 $B.set_func_names(staticmethod,"builtins")
@@ -12799,9 +12796,10 @@ current.expression+=car
 i++}else if(car=="="){
 var ce=current.expression,last_char=ce.charAt(ce.length-1),last_char_re=('()'.indexOf(last_char)>-1 ? "\\" :"")+last_char
 if(ce.length==0 ||
+nb_paren > 0 ||
 string.charAt(i+1)=="=" ||
-"=!<>:".search(last_char_re)>-1){current.expression+=car+string.charAt(i+1)
-i+=2}else{
+"=!<>:".search(last_char_re)>-1){current.expression+=car 
+i+=1}else{
 tail=car
 while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
 i++}
