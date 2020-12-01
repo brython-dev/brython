@@ -803,6 +803,17 @@ DOMNode.__getattribute__ = function(self, attr){
     if(property === undefined && $B.aliased_names[attr]){
         property = self["$$" + attr]
     }
+    if(property !== undefined && self.__class__){
+        var from_class = $B.$getattr(self.__class__, attr, _b_.None)
+        if(from_class){
+            var frame = $B.last($B.frames_stack),
+                line_info = frame[1].$line_info,
+                line = line_info.split(',')[0]
+            console.info(`Warning: line ${line}, ${self.tagName} element ` +
+                `has instance attribute '${attr}' set, attribute of class` +
+                ` ${$B.class_name(self)} is ignored`)
+        }
+    }
 
     if(property === undefined){
         // If custom element, search in the associated class
