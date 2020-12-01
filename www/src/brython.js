@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-01 11:30:33.473203"
-__BRYTHON__.timestamp=1606818633473
+__BRYTHON__.compiled_date="2020-12-01 12:25:37.598943"
+__BRYTHON__.timestamp=1606821937598
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -13564,9 +13564,10 @@ if(property !==undefined && self.__class__ &&
 self.__class__.__module__ !="browser.html"){
 var from_class=$B.$getattr(self.__class__,attr,_b_.None)
 if(from_class){var frame=$B.last($B.frames_stack),line_info=frame[1].$line_info,line=line_info.split(',')[0]
-console.info(`Warning:line ${line},${self.tagName}element `+
-`has instance attribute '${attr}' set. Attribute of class`+
-` ${$B.class_name(self)}is ignored.`)}}
+console.info("Warning: line "+line+", "+self.tagName+
+" element has instance attribute '"+attr+"' set."+
+" Attribute of class "+$B.class_name(self)+
+" is ignored.")}}
 if(property===undefined){
 if(self.tagName){var ce=customElements.get(self.tagName.toLowerCase())
 if(ce !==undefined && ce.$cls !==undefined){
