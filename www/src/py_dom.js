@@ -803,7 +803,9 @@ DOMNode.__getattribute__ = function(self, attr){
     if(property === undefined && $B.aliased_names[attr]){
         property = self["$$" + attr]
     }
-    if(property !== undefined && self.__class__){
+    if(property !== undefined && self.__class__ &&
+            self.__class__.__module__ != "browser.html"){
+        console.log(self.__class__)
         var from_class = $B.$getattr(self.__class__, attr, _b_.None)
         if(from_class){
             var frame = $B.last($B.frames_stack),
