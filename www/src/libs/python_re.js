@@ -2,89 +2,10 @@
 
 var MAXGROUPS = 2147483647
 
-function Pattern(states, groups){
-    this.states = states
+function Pattern(text, items, groups){
+    this.text = text
+    this.items = items
     this.groups = groups
-}
-
-Pattern.prototype.search = function(text, debug){
-    var current = 0,
-        pos = 0,
-        matches = {},
-        group_matches = {},
-        states = this.states,
-        start,
-        end
-
-    if(states[current]["^"]){
-        // Transition from string start
-        current = 1
-    }
-    while(pos < text.length){
-        if(debug){
-            console.log(text, pos, text[pos], states[current])
-        }
-        var char = text[pos],
-            offset = states[current][char]
-        if(offset === undefined){
-            if(states[current]['.'] !== undefined){
-                // . matches everything other than newline
-                if(char != '\n'){
-                    offset = states[current]['.']
-                }
-            }else if(current == states.length - 2 &&
-                    (!states[current].repeat ||
-                     states[current].repeat.tag != '+' ||
-                     matches[current])){
-                // the RE is consumed
-                end = pos
-                return new MatchObject(text, this, start, end, group_matches)
-            }else{
-                if(debug){
-                    console.log("no match for char", char, "current", states[current])
-                }
-                if(states[0]['^'] !== undefined){
-                    return false
-                }
-                // search reg exp at next position
-                start = undefined
-                current = 0
-                pos++
-                continue
-            }
-        }
-        if(start === undefined){
-            start = pos
-        }
-        next = current + offset
-        matches[current] = matches[current] || ''
-        matches[current] += char
-        for(const group of states[current].groups){
-            var group_id = group.num
-            group_matches[group_id] = group_matches[group_id] || ''
-            group_matches[group_id] += char
-        }
-        if(next == current){
-            // loop
-            if(states[current].repeat &&
-                    states[current].repeat.tag == '?'
-                    && matches[current].length > 1){
-                console.log("too many repeats with ?", current, matches[current])
-                return false
-            }
-        }else if(states[current].repeat == "+" && !matches[current]){
-            console.log("no repeat with +", current, matches[current])
-            return false
-        }
-        if(states[next] === true){
-            end = pos
-            return new MatchObject(text, this, start, end, group_matches)
-        }
-        current = next
-        pos++
-     }
-     end = pos
-     return new MatchObject(text, this, start, end, group_matches)
 }
 
 var BackReference = function(type, value){
@@ -95,7 +16,9 @@ var BackReference = function(type, value){
     Char = function(char){
         this.char = char
         this.str = ''
-        this.match = function(other){
+        this.nb_success = 0
+        this.match = function(s, pos){
+            var char = s[pos]
             if(this.repeat){
                 if(this.repeat.op == "?" && this.str.length == 1){
                     return false
@@ -103,12 +26,18 @@ var BackReference = function(type, value){
                     console.log(this.repeat.op)
                 }
             }
-            if(this.char == other){
-                for(var group of this.groups){
-                    group.str += other
+            if(this.char == char){
+                if(this.repeat){
+                    this.nb_success++
+                    if(! this.test_repeat_success()){
+                        return false
+                    }
                 }
-                this.str += other
-                return true
+                for(var group of this.groups){
+                    group.str += char
+                }
+                this.str += char
+                return char
             }
             return false
         }
@@ -121,9 +50,19 @@ var BackReference = function(type, value){
         this.items = []
         this.str = ''
         this.extension = extension
-        this.match = function(char){
-            console.log("group match", this, char)
-            return false
+        this.nb_success = 0
+        this.match = function(s, pos){
+            var group_match = match(this, s, pos)
+            if(group_match){
+                this.nb_success++
+                if(this.repeat){
+                    // test if repeat condition is still ok
+                    if(! this.test_repeat_success()){
+                        return false
+                    }
+                }
+            }
+            return group_match
         }
     },
     Or = {},
@@ -132,6 +71,49 @@ var BackReference = function(type, value){
         this.greedy = greedy !== undefined
     }
 
+Group.prototype.test_repeat_success = function(){
+    // Called when a repeated model succeeded.
+    // Return true if the string currently matching the model is
+    // compatible with the repeat option
+    if(this.repeat.op == '?' && this.nb_success > 1){
+        return false
+    }else if(this.repeat.op == '+' && this.nb_success == 0){
+        // group with the '+' repeat and no string matched
+        return false
+    }else if(Array.isArray(this.repeat.op)){
+        // test fails if there are too many repeats
+        if(this.repeat.op.length == 1 &&
+                this.nb_success > this.repeat.op[0]){
+            return false
+        }else if(this.nb_success > this.repeat.op[1]){
+            return false
+        }
+    }
+    return true
+}
+
+Group.prototype.test_repeat_fail = function(){
+    // Called when a repeated model failed.
+    // Return true if the string currently matching the model is
+    // compatible with the repeat option
+    if(this.repeat.op == '+' && this.nb_success == 0){
+        // group with the '+' repeat and no string matched
+        return false
+    }else if(Array.isArray(this.repeat.op)){
+        // test fails if the number of repeats is not correct
+        if(this.repeat.op.length == 1 &&
+                this.nb_success != this.repeat.op[0]){
+            return false
+        }else if(this.nb_success < this.repeat.op[0] ||
+                this.nb_success > this.repeat.op[1]){
+            return false
+        }
+    }
+    return true
+}
+
+Char.prototype.test_repeat_fail = Group.prototype.test_repeat_fail
+Char.prototype.test_repeat_success = Group.prototype.test_repeat_success
 
 function read(name, pos){
     var code = name.charCodeAt(pos),
@@ -398,7 +380,7 @@ function validate_code_point(cp){
     }
 }
 
-function checkPattern(pattern){
+function compile(pattern){
     var group_num = 0,
         group_stack = [],
         items = [],
@@ -492,14 +474,12 @@ function checkPattern(pattern){
     if(group_stack.length > 0){
         throw Error("missing ), unterminated subpattern")
     }
-    items.groups = groups
-    items.pattern = pattern
-    return {items, groups}
+    return new Pattern(pattern, items, groups)
 }
 
 function checkPatternError(pattern, msg){
     try{
-        checkPattern(pattern)
+        compile(pattern)
     }catch(err){
         if(err.message !== msg){
             console.log("pattern:  ", pattern,
@@ -769,7 +749,7 @@ function* tokenize(pattern){
     }
 }
 
-function matcher(pattern, s, pos){
+function match(pattern, s, pos){
 
     function* PatternReader(items){
         var pos = 0,
@@ -779,227 +759,63 @@ function matcher(pattern, s, pos){
             if((item instanceof Char || item instanceof Group)
                     && item.repeat){
                 item.str = ''
+                item.nb_success = 0
             }
             yield item
             pos++
         }
     }
 
-    function test_repeat(model){
-        // Test for a model with a repeat sign (+*?{n})
-        // Return true if the string currently matching the model is
-        // compatible with the repeat option
-        if(model.repeat.op == '+' && model.str.length == 0){
-            // model with the '+' repeat and no string matched
-            return false
-        }else if(Array.isArray(model.repeat.op)){
-            var len = model.str.length
-            if(model.repeat.op.length == 1 &&
-                    len !== model.repeat.op[0]){
-                // model with an exact number of repeats, and the current
-                // match is not of the expected length
-                return false
-            }else if(len < model.repeat.op[0] ||
-                    len > model.repeat.op[1]){
-                // model with a minimum and maximum number of repeats, and
-                // the current match is not in this range
-                return false
-            }
-        }
-        return true
-    }
-
     var pos = pos || 0,
         items
     if(typeof pattern == "string"){
-        items = checkPattern(pattern)
+        items = compile(pattern)
     }else{
-        items = pattern // called by a group
+        items = pattern // instance of Pattern
     }
-    console.log('items', items)
     var pattern_reader = PatternReader(items.items)
     var model = pattern_reader.next().value,
         char,
-        match = ''
+        match_string = ''
     while(true){
         char = s[pos]
+        //console.log("match char", char, "against model", model)
         if(char === undefined){
             // end of string before end of pattern
             return false
         }
-        if(model instanceof Group){
-            var group_match = matcher(model, s, pos)
+        if(model instanceof Group || model instanceof Char){
+            var group_match = model.match(s, pos)
             if(group_match){
-                // consume chars from string reader
-                match += group_match
+                match_string += group_match
                 pos += group_match.length
-                if(model.repeat && ! test_repeat(model)){
-                    return false
-                }
-                model = pattern_reader.next().value
-                if(model === undefined){
-                    return match
+                if(! model.repeat){
+                    model = pattern_reader.next().value
+                    if(model === undefined){
+                        return match_string
+                    }
                 }
                 if(pos == s.length){
                     return false
                 }
             }else{
                 if(model.repeat){
-                    if(! test_repeat(model)){
+                    // test if repeat condition is ok
+                    if(! model.test_repeat_fail()){
                         return false
                     }
                     model = pattern_reader.next().value
                 }else{
+                    if(pos < s.length - 1){
+                        // start again at next position in string
+                        return match(pattern, s, pos + 1)
+                    }
                     return false
                 }
             }
-        }else if(model.match(char)){
-            match += char
-            if(! model.repeat){
-                model = pattern_reader.next().value
-                if(model === undefined){
-                    return match
-                }
-            }
-            pos++
-        }else{
-            if(model.repeat){
-                if(! test_repeat(model)){
-                    return false
-                }
-                model = pattern_reader.next().value
-            }else{
-                if(pos < s.length - 1){
-                    // start again at next position in string
-                    return matcher(pattern, s, pos + 1)
-                }
-                return false
-            }
         }
     }
-    return match
-}
-
-function compile(pattern){
-    var states = [],
-        state,
-        pos = 0,
-        group_count = 0,
-        group_stack = [],
-        groups = []
-
-    function char_or_set(){
-        var mo = pattern[pos].match(/[\w\.\^$]/)
-        if(mo){
-            return pattern[pos]
-        }else if(pattern[pos] == '['){
-            // Set of characters
-            // Search end of set = ] not following an odd number of \
-            var end = pos + 1,
-                escapes = 0,
-                set
-            while(end < pattern.length){
-              if(pattern[end] == '\\'){
-                escapes++
-              }else{
-                if(pattern[end] == ']' && escapes % 2 == 0){
-                  set = pattern.substring(pos, end + 1)
-                  break
-                }
-                escapes = 0
-              }
-              end++
-            }
-            if(set){
-              return set
-            }else{
-              throw Error(pattern + " : invalid character set at pos " + pos)
-            }
-        }else if(pattern[pos].match(/[()]/)){
-            return pattern[pos]
-        }else if(pattern[pos] == '\\'){
-            // special sequence ?
-            var mo = /\d+/.exec(pattern.substr(pos + 1))
-            if(mo){
-                return {group_num: mo[0], length: 1 + mo[0].length}
-            }
-            if('AbBdDsSwWZ'.indexOf(pattern[pos + 1])){
-                return {special: pattern[pos + 1], length: 2}
-            }else if(pattern[pos + 1].match(/[a-zA-Z]/)){
-                throw Error("invalid escaped char " + pattern[pos + 1])
-            }else{
-                return {special: pattern[pos + 1], length: 2}
-            }
-        }
-    }
-
-    function repeater(_pos){
-        var next = pattern[_pos]
-        if('+*?'.indexOf(next) > -1){
-            return {
-                tag: next,
-                len: 1,
-                greedy: pattern[_pos + 1] == '?'
-            }
-        }else if(next == '{'){
-            var mo = /\{(\d+)(,\d+)?\}/.exec(pattern.substr(pos + char.length))
-            if(mo === null){
-              throw Error("invalid repeat at position " + pos)
-            }
-            return {
-                tag: mo.slice(1).map(parseInt),
-                len: mo[0].length,
-                greedy: pattern[_pos + mo[0].length] == '?'
-            }
-        }
-    }
-
-    while(pos < pattern.length){
-        var char = char_or_set()
-        if(char === undefined){
-            throw Error(pattern + " : unknown character " + pattern[pos] +
-                " at position " + pos)
-        }
-        if(char == '('){
-            // start group
-            group_count++
-            group_stack.push({num: group_count})
-            pos++
-            continue
-        }else if(char == ')'){
-            if(group_stack.length == 0){
-                throw Error("unexpected group end at pos " + pos)
-            }
-            var group = group_stack.pop()
-            var repeat = repeater(pos + 1)
-            if(repeat){
-                group.repeat = repeat
-                pos += repeat.len
-            }
-            groups.push(group)
-            pos++
-            continue
-        }
-        state = {pos: pos, groups: group_stack.slice()}
-        var repeat = repeater(pos + char.length)
-        if(repeat){
-            state[char] = 0
-            state.repeat = repeat
-            pos += char.length + repeat.len + (repeat.greedy ? 1 : 0)
-        }else{
-          if(states.length > 0 && states[states.length - 1].repeat){
-              // If the expression can be repeated, the transition with char
-              // returns the same state
-              state = states.pop()
-          }
-          state[char] = 1
-          pos += char.length
-        }
-        states.push(state)
-    }
-    states.push(true)
-    groups.sort(function(a, b){return a.num < b.num ? -1 : 1})
-    return new Pattern(states, groups)
+    return match_string
 }
 
 function MatchObject(string, re, start, end, groups){
@@ -1023,88 +839,8 @@ MatchObject.prototype.groups = function(_default){
     return result
 }
 
-function search(pattern, text, debug){
-    var re = compile(pattern)
-    var current = 0,
-        pos = 0,
-        matches = {},
-        group_matches = {},
-        states = re.states,
-        start,
-        end
-
-    if(states[current]["^"]){
-        // Transition from string start
-        current = 1
-    }
-    while(pos < text.length){
-        if(debug){
-            console.log(text, pos, text[pos], states[current])
-        }
-        var char = text[pos],
-            offset = states[current][char]
-        if(offset === undefined){
-            if(states[current]['.'] !== undefined){
-                // . matches everything other than newline
-                if(char != '\n'){
-                    offset = states[current]['.']
-                }
-            }else if(current == states.length - 2 &&
-                    (!states[current].repeat ||
-                     states[current].repeat.tag != '+' ||
-                     matches[current])){
-                // the RE is consumed
-                end = pos
-                return new MatchObject(text, re, start, end, group_matches)
-            }else{
-                if(debug){
-                    console.log("no match for char", char, "current", states[current])
-                }
-                if(states[0]['^'] !== undefined){
-                    return false
-                }
-                // search reg exp at next position
-                start = undefined
-                current = 0
-                pos++
-                continue
-            }
-        }
-        if(start === undefined){
-            start = pos
-        }
-        next = current + offset
-        matches[current] = matches[current] || ''
-        matches[current] += char
-        for(const group of states[current].groups){
-            var group_id = group.num
-            group_matches[group_id] = group_matches[group_id] || ''
-            group_matches[group_id] += char
-        }
-        if(next == current){
-            // loop
-            if(states[current].repeat &&
-                    states[current].repeat.tag == '?'
-                    && matches[current].length > 1){
-                console.log("too many repeats with ?", current, matches[current])
-                return false
-            }
-        }else if(states[current].repeat == "+" && !matches[current]){
-            console.log("no repeat with +", current, matches[current])
-            return false
-        }
-        if(states[next] === true){
-            end = pos
-            return new MatchObject(text, re, start, end, group_matches)
-        }
-        current = next
-        pos++
-     }
-     end = pos
-     return new MatchObject(text, re, start, end, group_matches)
-}
 
 var $module = {
     compile: compile,
-    match: matcher
+    match: match
 }
