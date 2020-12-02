@@ -1,12 +1,33 @@
 // Regular expression
 
+var $B = __BRYTHON__,
+    _b_ = $B.builtins
+
 var MAXGROUPS = 2147483647
 
-function Pattern(text, items, groups){
+function Pattern(text, node){
     this.text = text
-    this.items = items
-    this.groups = groups
+    this.node = node
 }
+
+var BPattern = $B.make_class("Pattern",
+    function(pattern){
+        return {
+            __class__: BPattern,
+            pattern
+        }
+    }
+)
+
+BPattern.match = function(self, string){
+    var mo = match(self.pattern, string)
+    if(mo === false){
+        return _b_.None
+    }
+    return BMatchObject.$factory(mo)
+}
+
+$B.set_func_names(BPattern, "re")
 
 var BackReference = function(type, value){
         // for "\number"
@@ -42,6 +63,13 @@ var BackReference = function(type, value){
             return false
         }
     },
+    Choice = function(){
+        this.items = []
+        this.add = function(option){
+            this.items.push(option)
+            option.parent = this
+        }
+    },
     Flags = function(flags){
         this.flags = flags
     },
@@ -51,25 +79,30 @@ var BackReference = function(type, value){
         this.str = ''
         this.extension = extension
         this.nb_success = 0
-        this.match = function(s, pos){
-            var group_match = match(this, s, pos)
-            if(group_match){
-                this.nb_success++
-                if(this.repeat){
-                    // test if repeat condition is still ok
-                    if(! this.test_repeat_success()){
-                        return false
-                    }
-                }
-            }
-            return group_match
-        }
     },
     Or = {},
     Repeater = function(op, greedy){
         this.op = op
         this.greedy = greedy !== undefined
     }
+
+Group.prototype.add = function(item){
+    this.items.push(item)
+    item.parent = this
+}
+Group.prototype.match = function(s, pos){
+    var group_match = match(this, s, pos)
+    if(group_match){
+        this.nb_success++
+        if(this.repeat){
+            // test if repeat condition is still ok
+            if(! this.test_repeat_success()){
+                return false
+            }
+        }
+    }
+    return group_match
+}
 
 Group.prototype.test_repeat_success = function(){
     // Called when a repeated model succeeded.
@@ -380,20 +413,28 @@ function validate_code_point(cp){
     }
 }
 
+function Node(parent){
+    this.parent = parent
+    this.items = []
+    this.add = function(item){
+        this.items.push(item)
+        item.parent = this
+    }
+}
+
 function compile(pattern){
     var group_num = 0,
         group_stack = [],
-        items = [],
-        groups = {}
+        groups = {},
+        node = new Node()
     for(var item of tokenize(pattern)){
         if(item instanceof Group){
             group_stack.push(item)
-            items.push(item)
+            node.add(item)
             group_num++
             item.state = "open"
             item.num = group_num
-            item.parent_items = items // save to restore at group end
-            items = item.items // next items will be stored as group's items
+            node = item // next items will be stored as group's items
             if(item.extension){
                 if(item.extension.type == "name_def"){
                     var value = item.extension.value
@@ -429,7 +470,7 @@ function compile(pattern){
             }
             var item = group_stack.pop()
             item.state = 'closed'
-            items = item.parent_items
+            node = node.parent
         }else if(item instanceof BackReference){
             if(item.type == "num" && item.value > 99){
                 var head = item.value.toString().substr(0, 2)
@@ -444,18 +485,18 @@ function compile(pattern){
             }else if(item.type == "num"){
                 throw Error(`invalid group reference ${item.value}`)
             }
-            items.push(item)
+            node.add(item)
         }else if(item instanceof Char){
             item.groups = []
             for(var group of group_stack){
                 item.groups.push(group)
             }
-            items.push(item)
+            node.add(item)
         }else if(item instanceof Repeater){
-            if(items.length == 0){
+            if(node.items.length == 0){
                 throw Error("nothing to repeat")
             }
-            var previous = items[items.length - 1]
+            var previous = node.items[node.items.length - 1]
             if(previous instanceof Char ||
                     previous instanceof Group){
                 if(previous.repeat){
@@ -466,7 +507,19 @@ function compile(pattern){
                 throw Error("nothing to repeat")
             }
         }else if(item === Or){
-            items.push(item)
+            if(node.items.length == 0){
+                throw Error("unexpected |")
+            }
+            var previous = node.items[node.items.length - 1]
+            if(previous instanceof Choice){
+                node = previous
+            }else{
+                var choice = new Choice()
+                var first = node.items.pop()
+                node.add(choice)
+                choice.add(first)
+                node = choice
+            }
         }else{
             throw Error("unknown item type " + item)
         }
@@ -474,7 +527,12 @@ function compile(pattern){
     if(group_stack.length > 0){
         throw Error("missing ), unterminated subpattern")
     }
-    return new Pattern(pattern, items, groups)
+    while(node.parent){
+        node = node.parent
+    }
+    node.groups = groups
+    node.text = pattern
+    return node
 }
 
 function checkPatternError(pattern, msg){
@@ -751,29 +809,31 @@ function* tokenize(pattern){
 
 function match(pattern, s, pos){
 
-    function* PatternReader(items){
-        var pos = 0,
-            len = items.length
-        while(pos < len){
-            var item = items[pos]
-            if((item instanceof Char || item instanceof Group)
-                    && item.repeat){
-                item.str = ''
-                item.nb_success = 0
+    function* PatternReader(pattern){
+        if(pattern instanceof Char){
+            yield pattern
+        }else{
+            var pos = 0,
+                len = pattern.items.length
+            while(pos < len){
+                var item = pattern.items[pos]
+                if((item instanceof Char || item instanceof Group)
+                        && item.repeat){
+                    item.str = ''
+                    item.nb_success = 0
+                }
+                yield item
+                pos++
             }
-            yield item
-            pos++
         }
     }
 
     var pos = pos || 0,
-        items
+        start = pos
     if(typeof pattern == "string"){
-        items = compile(pattern)
-    }else{
-        items = pattern // instance of Pattern
+        pattern = compile(pattern)
     }
-    var pattern_reader = PatternReader(items.items)
+    var pattern_reader = PatternReader(pattern)
     var model = pattern_reader.next().value,
         char,
         match_string = ''
@@ -787,12 +847,15 @@ function match(pattern, s, pos){
         if(model instanceof Group || model instanceof Char){
             var group_match = model.match(s, pos)
             if(group_match){
-                match_string += group_match
-                pos += group_match.length
+                var ms = (group_match instanceof MatchObject) ?
+                         group_match.match_string : group_match
+                match_string += ms
+                pos += ms.length
                 if(! model.repeat){
                     model = pattern_reader.next().value
                     if(model === undefined){
-                        return match_string
+                        return new MatchObject(s, match_string, pattern,
+                            start)
                     }
                 }
                 if(pos == s.length){
@@ -813,34 +876,112 @@ function match(pattern, s, pos){
                     return false
                 }
             }
+        }else if(model instanceof Choice){
+            var found = false
+            for(var option of model.items){
+                var mo = match(option, s, pos)
+                if(mo){
+                    found = true
+                    match_string += mo.match_string
+                    pos += mo.match_string.length
+                    break
+                }
+            }
+            if(found){
+                model = pattern_reader.next().value
+                if(model === undefined){
+                    return new MatchObject(s, match_string, pattern, start)
+                }
+            }else{
+                return false
+            }
         }
     }
-    return match_string
+    return new MatchObject(s, match_string, pattern, start)
 }
 
-function MatchObject(string, re, start, end, groups){
+function MatchObject(string, match_string, re, start, groups){
     this.string = string
+    this.match_string = match_string
     this.start = start
-    this.end = end
+    this.end = start + match_string.length
     this.re = re
     this._groups = groups
 }
 
+MatchObject.prototype.group = function(group_num){
+    if(group_num == 0){
+        return this.match_string
+    }else if(this.re.groups[group_num] !== undefined){
+        return this.re.groups[group_num].item.str
+    }else{
+        return _b_.None
+    }
+}
+
 MatchObject.prototype.groups = function(_default){
     var result = []
-    for(var i = 0, len = this.re.groups.length; i < len; i++){
-        var group_num = this.re.groups[i].num
-        if(this._groups[group_num] === undefined){
+    for(var i = 0, len = this.re._groups.length; i < len; i++){
+        var group_num = this.re._groups[i].num
+        if(this.re._groups[group_num] === undefined){
             result.push(_default)
         }else{
-            result.push(this._groups[group_num])
+            result.push(this.re._groups[group_num])
         }
     }
     return result
 }
 
+var BMatchObject = $B.make_class("MatchObject",
+    function(mo){
+        return {
+            __class__: BMatchObject,
+            mo
+        }
+    }
+)
+
+BMatchObject.__str__ = function(self){
+    var mo = self.mo
+    return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
+        `match='${mo.match_string}'>`
+}
+
+BMatchObject.group = function(self, group_num){
+    var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
+                {}, 'args', null),
+            self = $.self,
+            args = $.args
+    if(args.length == 0){
+        args[0] = 0
+    }
+    var res = [],
+        groups = self.mo.re.groups || []
+    for(var i = 0, len = args.length; i < len; i++){
+        var group_num = args[i]
+        try{
+            group_num = $B.$GetInt(group_num)
+        }catch(err){
+            throw _b_.IndexError.$factory(group_num)
+        }
+        if($B.rich_comp('__lt__', group_num, 0) ||
+                $B.rich_comp('__ge__', group_num,
+                    1 + Object.keys(groups).length)){
+            throw _b_.IndexError.$factory(group_num)
+        }
+        res.push(self.mo.group.call(self.mo, group_num))
+    }
+    return len == 1 ? res[0] : _b_.tuple.$factory(res)
+
+}
+
+$B.set_func_names(BMatchObject, "re")
 
 var $module = {
-    compile: compile,
-    match: match
+    compile: function(){
+        return BPattern.$factory(compile.apply(null, arguments))
+    },
+    match: function(){
+        return BMatchObject.$factory(match.apply(null, arguments))
+    }
 }
