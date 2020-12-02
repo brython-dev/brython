@@ -217,6 +217,7 @@ class ModulesFinder:
             if module in self.modules:
                 continue
             found = False
+            print(self.user_modules)
             for module_dict in [self.stdlib, self.user_modules]:
                 if module in module_dict:
                     found = True
@@ -294,6 +295,8 @@ class ModulesFinder:
                     if package is not None and \
                             package.startswith(site_packages):
                         package = package[len('Lib/site-packages/'):]
+
+                    # print(path)
                     with open(path, encoding="utf-8") as fobj:
                         try:
                             imports |= self.get_imports(fobj.read(), package)
@@ -488,16 +491,17 @@ def load_stdlib_sitepackages():
     :return:
 
     """
+    stdlib_dir = None
     for dirname, dirnames, filenames in os.walk(os.getcwd()):
         for filename in filenames:
             if filename == "brython_stdlib.js":
                 stdlib_dir = dirname
                 stdlib = parse_stdlib(stdlib_dir)
                 break
-    else:
-        if stdlib_dir is None:
-            raise FileNotFoundError("Could not find brython_stdlib.js in this"
-                                    " directory or below")
+
+    if not stdlib_dir:
+        raise FileNotFoundError("Could not find brython_stdlib.js in this"
+                                " directory or below")
 
     # search in site-packages
     sp_dir = os.path.join(stdlib_dir, "Lib", "site-packages")
@@ -690,4 +694,4 @@ class VFSReplacementParser(html.parser.HTMLParser):
 if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
-    print(sorted(list(finder.modules)))
+    # print(sorted(list(finder.modules)))
