@@ -202,9 +202,12 @@ class ImportsFinder:
 
 class ModulesFinder:
 
-    def __init__(self, directory=os.getcwd()):
+    def __init__(self, directory=os.getcwd(), stdlib={}, user_modules={}):
         self.directory = directory
         self.modules = set()
+
+        self.stdlib = stdlib
+        self.user_modules = user_modules
 
     def get_imports(self, src, package=None):
         """Get all imports in source code src."""
@@ -214,7 +217,7 @@ class ModulesFinder:
             if module in self.modules:
                 continue
             found = False
-            for module_dict in [stdlib, user_modules]:
+            for module_dict in [self.stdlib, self.user_modules]:
                 if module in module_dict:
                     found = True
                     self.modules.add(module)
@@ -298,13 +301,13 @@ class ModulesFinder:
                             print('syntax error', path)
                             traceback.print_exc(file=sys.stderr)
 
-    def make_brython_modules(self):
+    def make_brython_modules(self, path):
         """Build brython_modules.js from the list of modules needed by the
         application.
         """
         vfs = {"$timestamp": int(1000 * time.time())}
         for module in self.modules:
-            dico = stdlib if module in stdlib else user_modules
+            dico = self.stdlib if module in self.stdlib else self.user_modules
             vfs[module] = dico[module]
             elts = module.split('.')
             for i in range(1, len(elts)):
@@ -312,7 +315,6 @@ class ModulesFinder:
                 if not pkg in vfs:
                     vfs[pkg] = dico[pkg]
         # save in brython_modules.js
-        path = os.path.join(stdlib_dir, "brython_modules.js")
         if os.path.exists(path):
             # If brython_modules.js already exists, check if there have been
             # changes. Cf. issue #1471.
@@ -464,30 +466,39 @@ class ModulesFinder:
         with open(path, "w", encoding="utf-8") as out:
             out.write(app.format(**info))
 
-# User-defined Python modules and packages
-user_modules = {}
 
 # Get all modules in the Brython standard distribution.
 # They must be in brython_stdlib.js somewhere in the current directory
 # or below.
-print('searching brython_stdlib.js...')
-stdlib = {}
-stdlib_dir = None
-for dirname, dirnames, filenames in os.walk(os.getcwd()):
-    for filename in filenames:
-        if filename == "brython_stdlib.js":
-            stdlib_dir = dirname
-            path = os.path.join(dirname, filename)
-            with open(path, encoding="utf-8") as fobj:
-                modules = fobj.read()
-                modules = modules[modules.find('{'):
-                        modules.find('__BRYTHON__.update_VFS(')]
-                stdlib = json.loads(modules)
+def parse_stdlib(stdlib_dir, js_name='brython_stdlib.js'):
+    path = os.path.join(stdlib_dir, js_name)
+    with open(path, encoding="utf-8") as fobj:
+        modules = fobj.read()
+        modules = modules[modules.find('{'):
+                          modules.find('__BRYTHON__.update_VFS(')]
+        stdlib = json.loads(modules)
 
-if stdlib_dir is None:
-    raise FileNotFoundError("Could not find brython_stdlib.js in this"
-        " directory or below")
-else:
+    return stdlib
+
+
+def load_stdlib_sitepackages():
+    """
+    Search brython_stdlib.js, and load it
+    Load site-packages from the current directory
+    :return:
+
+    """
+    for dirname, dirnames, filenames in os.walk(os.getcwd()):
+        for filename in filenames:
+            if filename == "brython_stdlib.js":
+                stdlib_dir = dirname
+                stdlib = parse_stdlib(stdlib_dir)
+                break
+    else:
+        if stdlib_dir is None:
+            raise FileNotFoundError("Could not find brython_stdlib.js in this"
+                                    " directory or below")
+
     # search in site-packages
     sp_dir = os.path.join(stdlib_dir, "Lib", "site-packages")
     if os.path.exists(sp_dir):
@@ -519,6 +530,8 @@ else:
                 if is_package:
                     stdlib[module].append(1)
 
+    return stdlib_dir, stdlib
+
 packages = {os.getcwd(), os.getcwd() + '/Lib/site-packages'}
 
 def is_package(folder):
@@ -537,38 +550,42 @@ def is_package(folder):
             packages.add(folder)
             return True
 
-print('finding packages...')
-for dirname, dirnames, filenames in os.walk(os.getcwd()):
-    for filename in filenames:
-        name, ext = os.path.splitext(filename)
-        if not ext == ".py" or filename == "list_modules.py":
-            continue
-        if dirname == os.getcwd():
-            # modules in the same directory
-            path = os.path.join(dirname, filename)
-            with open(path, encoding="utf-8") as fobj:
-                src = fobj.read()
-            mf = ModulesFinder(dirname)
-            imports = sorted(list(mf.get_imports(src)))
-            user_modules[name] = [ext, src, imports]
-        elif is_package(dirname):
-            # modules in packages below current directory
-            path = os.path.join(dirname, filename)
-            package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
-            if package.startswith('Lib.site-packages.'):
-                package = package[len('Lib.site-packages.'):]
-            if filename == "__init__.py":
-                module_name = package
-            else:
-                module_name = "{}.{}".format(package, name)
-            with open(path, encoding="utf-8") as fobj:
-                src = fobj.read()
-            #mf = ModulesFinder(dirname)
-            #imports = mf.get_imports(src, package or None)
-            #imports = sorted(list(imports))
-            user_modules[module_name] = [ext, src, None]
-            if module_name == package:
-                user_modules[module_name].append(1)
+
+def load_user_modules(module_dir=os.getcwd()):
+    user_modules = {}
+    for dirname, dirnames, filenames in os.walk(module_dir):
+        for filename in filenames:
+            name, ext = os.path.splitext(filename)
+            if not ext == ".py" or filename == "list_modules.py":
+                continue
+            if dirname == os.getcwd():
+                # modules in the same directory
+                path = os.path.join(dirname, filename)
+                with open(path, encoding="utf-8") as fobj:
+                    src = fobj.read()
+                mf = ModulesFinder(dirname)
+                imports = sorted(list(mf.get_imports(src)))
+                user_modules[name] = [ext, src, imports]
+            elif is_package(dirname):
+                # modules in packages below current directory
+                path = os.path.join(dirname, filename)
+                package = dirname[len(os.getcwd()) + 1:].replace(os.sep, '.')
+                if package.startswith('Lib.site-packages.'):
+                    package = package[len('Lib.site-packages.'):]
+                if filename == "__init__.py":
+                    module_name = package
+                else:
+                    module_name = "{}.{}".format(package, name)
+                with open(path, encoding="utf-8") as fobj:
+                    src = fobj.read()
+                #mf = ModulesFinder(dirname)
+                #imports = mf.get_imports(src, package or None)
+                #imports = sorted(list(imports))
+                user_modules[module_name] = [ext, src, None]
+                if module_name == package:
+                    user_modules[module_name].append(1)
+
+    return user_modules
 
 
 class CharsetDetector(html.parser.HTMLParser):
@@ -674,4 +691,3 @@ if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
     print(sorted(list(finder.modules)))
-
