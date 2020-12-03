@@ -55,7 +55,9 @@ var BackReference = function(type, value){
                     }
                 }
                 for(var group of this.groups){
-                    group.str += char
+                    if(group.num !== undefined){
+                        group.str += char
+                    }
                 }
                 this.str += char
                 return char
@@ -64,6 +66,7 @@ var BackReference = function(type, value){
         }
     },
     Choice = function(){
+        this.type = "choice"
         this.items = []
         this.add = function(option){
             this.items.push(option)
@@ -75,6 +78,7 @@ var BackReference = function(type, value){
     },
     GroupEnd = {},
     Group = function(extension){
+        this.type = "group"
         this.items = []
         this.str = ''
         this.extension = extension
@@ -129,7 +133,9 @@ Group.prototype.test_repeat_fail = function(){
     // Called when a repeated model failed.
     // Return true if the string currently matching the model is
     // compatible with the repeat option
-    if(this.repeat.op == '+' && this.nb_success == 0){
+    if(this.repeat.op == '?' && this.nb_success > 1){
+        return false
+    }if(this.repeat.op == '+' && this.nb_success == 0){
         // group with the '+' repeat and no string matched
         return false
     }else if(Array.isArray(this.repeat.op)){
@@ -436,14 +442,17 @@ function compile(pattern){
             item.num = group_num
             node = item // next items will be stored as group's items
             if(item.extension){
-                if(item.extension.type == "name_def"){
+                if(item.extension.non_capturing){
+                    group_num--
+                    delete item.num
+                }else if(item.extension.type == "name_def"){
                     var value = item.extension.value
                     validate(value)
                     if(groups[value] !== undefined){
                         throw Error(`redefinition of group name '${value}' as group` +
                             ` ${group_num}; was group ${groups[value].num}`)
                     }
-                    groups[value] = {num: group_num, item}
+                    groups[value] = groups[group_num] = {num: group_num, item}
                 }else if(item.extension.type == "test_value"){
                     var value = item.extension.value
                     if(typeof value == "number"){
@@ -460,6 +469,9 @@ function compile(pattern){
                     }else{
                         throw Error(`unknown group name '${value}'`)
                     }
+                }else{
+                    console.log("extension", item.extension)
+                    groups[group_num] = {num: group_num, item}
                 }
             }else{
                 groups[group_num] = {num: group_num, item}
@@ -532,6 +544,7 @@ function compile(pattern){
     }
     node.groups = groups
     node.text = pattern
+    node.nb_groups = group_num
     return node
 }
 
@@ -811,16 +824,18 @@ function match(pattern, s, pos){
 
     function* PatternReader(pattern){
         if(pattern instanceof Char){
+            pattern.str = ''
             yield pattern
         }else{
             var pos = 0,
                 len = pattern.items.length
             while(pos < len){
                 var item = pattern.items[pos]
-                if((item instanceof Char || item instanceof Group)
-                        && item.repeat){
+                if(item instanceof Char || item instanceof Group){
                     item.str = ''
-                    item.nb_success = 0
+                    if(item.repeat){
+                        item.nb_success = 0
+                    }
                 }
                 yield item
                 pos++
@@ -839,10 +854,20 @@ function match(pattern, s, pos){
         match_string = ''
     while(true){
         char = s[pos]
-        //console.log("match char", char, "against model", model)
+        // console.log("match char", char, "pos", pos, "against model", model, "str", model.str)
         if(char === undefined){
             // end of string before end of pattern
-            return false
+            // if the next models accept an empty match, continue
+            if(model.repeat && model.test_repeat_fail()){
+                model = pattern_reader.next().value
+                if(model === undefined){
+                    return new MatchObject(s, match_string, pattern,
+                            start)
+                }
+                continue
+            }else{
+                return false
+            }
         }
         if(model instanceof Group || model instanceof Char){
             var group_match = model.match(s, pos)
@@ -857,9 +882,6 @@ function match(pattern, s, pos){
                         return new MatchObject(s, match_string, pattern,
                             start)
                     }
-                }
-                if(pos == s.length){
-                    return false
                 }
             }else{
                 if(model.repeat){
@@ -879,6 +901,7 @@ function match(pattern, s, pos){
         }else if(model instanceof Choice){
             var found = false
             for(var option of model.items){
+                option.str = ''
                 var mo = match(option, s, pos)
                 if(mo){
                     found = true
@@ -900,22 +923,23 @@ function match(pattern, s, pos){
     return new MatchObject(s, match_string, pattern, start)
 }
 
-function MatchObject(string, match_string, re, start, groups){
+function MatchObject(string, match_string, re, start){
     this.string = string
     this.match_string = match_string
     this.start = start
     this.end = start + match_string.length
     this.re = re
-    this._groups = groups
 }
 
 MatchObject.prototype.group = function(group_num){
     if(group_num == 0){
         return this.match_string
     }else if(this.re.groups[group_num] !== undefined){
-        return this.re.groups[group_num].item.str
+        return this.re.groups[group_num].item.str || _b_.None
+    }else if(_b_.isinstance(group_num, _b_.str)){
+        throw _b_.IndexError.$factory("no such group")
     }else{
-        return _b_.None
+        throw _b_.IndexError.$factory(group_num)
     }
 }
 
@@ -941,6 +965,22 @@ var BMatchObject = $B.make_class("MatchObject",
     }
 )
 
+BMatchObject.__getitem__ = function(){
+    var $ = $B.args("__getitem__", 2, {self: null, key: null},
+                ['self', 'key'], arguments, {}, null, null),
+        self = $.self,
+        key = $.key
+    if(Array.isArray(key)){
+        throw _b_.IndexError.$factory("no such group")
+    }
+    return BMatchObject.$group(self, [key])
+}
+
+BMatchObject.__setitem__ = function(){
+    throw _b_.TypeError.$factory("'re.Match' object does not " +
+        "support item assignment")
+}
+
 BMatchObject.__str__ = function(self){
     var mo = self.mo
     return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
@@ -955,33 +995,49 @@ BMatchObject.group = function(self, group_num){
     if(args.length == 0){
         args[0] = 0
     }
+    return BMatchObject.$group(self, args)
+}
+
+BMatchObject.$group = function(self, args){
     var res = [],
         groups = self.mo.re.groups || []
     for(var i = 0, len = args.length; i < len; i++){
         var group_num = args[i]
-        try{
-            group_num = $B.$GetInt(group_num)
-        }catch(err){
-            throw _b_.IndexError.$factory(group_num)
-        }
-        if($B.rich_comp('__lt__', group_num, 0) ||
-                $B.rich_comp('__ge__', group_num,
-                    1 + Object.keys(groups).length)){
-            throw _b_.IndexError.$factory(group_num)
+        if(!_b_.isinstance(group_num, _b_.str)){
+            try{
+                group_num = $B.$GetInt(group_num)
+            }catch(err){
+                throw _b_.IndexError.$factory(group_num)
+            }
+            if($B.rich_comp('__lt__', group_num, 0) ||
+                $B.rich_comp('__gt__', group_num,
+                        self.mo.re.nb_groups)){
+                throw _b_.IndexError.$factory("no such group")
+            }
         }
         res.push(self.mo.group.call(self.mo, group_num))
     }
     return len == 1 ? res[0] : _b_.tuple.$factory(res)
-
 }
 
 $B.set_func_names(BMatchObject, "re")
 
 var $module = {
     compile: function(){
-        return BPattern.$factory(compile.apply(null, arguments))
+        var $ = $B.args("compile", 2, {pattern: null, flags: null},
+                    ['pattern', 'flags'], arguments, {flags: 0},
+                    null, null)
+        return BPattern.$factory(compile($.pattern))
     },
     match: function(){
-        return BMatchObject.$factory(match.apply(null, arguments))
+        var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
+                    ['pattern', 'string', 'flags'], arguments, {flags: 0},
+                    null, null),
+                pattern = $.pattern,
+                string = $.string
+        if(pattern.__class__ === BPattern){
+            pattern = pattern.pattern
+        }
+        return BMatchObject.$factory(match(pattern, string))
     }
 }
