@@ -43,7 +43,7 @@ class Visitor(ast.NodeVisitor):
                     self.imports.add(module + "." + alias.name)
 
 
-def make(package_name, package_path, exclude_dirs=None):
+def make(package_name, package_path, exclude_dirs=None, output_path=None):
     if not package_name:
         raise ValueError("package name is not specified")
     print("Generating package {}".format(package_name))
@@ -105,8 +105,9 @@ def make(package_name, package_path, exclude_dirs=None):
         print("No Python file found in current directory")
     else:
         print('{} files'.format(nb))
-        with open(os.path.join(package_path, package_name + ".brython.js"),
-                "w", encoding="utf-8") as out:
+
+        output_path = output_path or os.path.join(package_path, package_name + ".brython.js")
+        with open(output_path, "w", encoding="utf-8") as out:
             out.write('__BRYTHON__.use_VFS = true;\n')
             out.write('var scripts = {}\n'.format(json.dumps(VFS)))
             out.write('__BRYTHON__.update_VFS(scripts)\n')
