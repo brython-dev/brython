@@ -290,7 +290,11 @@ function escaped_char(text, pos){
                 length: mo[0].length
             }
         }
-        throw Error("invalid escaped char " + special)
+        if(special.match(/[a-zA-Z]/)){
+            throw Error("invalid escape " + special)
+        }else{
+            return special
+        }
     }
 }
 
@@ -854,7 +858,11 @@ function match(pattern, s, pos){
         match_string = ''
     while(true){
         char = s[pos]
-        // console.log("match char", char, "pos", pos, "against model", model, "str", model.str)
+        // console.log("match char", char, "pos", pos, "against model", model)
+        if(model === undefined){
+            // Nothing more in pattern: match is successful
+            return new MatchObject(s, match_string, pattern, start)
+        }
         if(char === undefined){
             // end of string before end of pattern
             // if the next models accept an empty match, continue
@@ -878,22 +886,22 @@ function match(pattern, s, pos){
                 pos += ms.length
                 if(! model.repeat){
                     model = pattern_reader.next().value
-                    if(model === undefined){
-                        return new MatchObject(s, match_string, pattern,
-                            start)
-                    }
                 }
             }else{
                 if(model.repeat){
                     // test if repeat condition is ok
                     if(! model.test_repeat_fail()){
+                        if(pos < s.length - 1){
+                            // start again at next position in string
+                            // return match(pattern, s, pos + 1)
+                        }
                         return false
                     }
                     model = pattern_reader.next().value
                 }else{
                     if(pos < s.length - 1){
                         // start again at next position in string
-                        return match(pattern, s, pos + 1)
+                        //return match(pattern, s, pos + 1)
                     }
                     return false
                 }
@@ -902,6 +910,8 @@ function match(pattern, s, pos){
             var found = false
             for(var option of model.items){
                 option.str = ''
+            }
+            for(var option of model.items){
                 var mo = match(option, s, pos)
                 if(mo){
                     found = true
@@ -912,9 +922,6 @@ function match(pattern, s, pos){
             }
             if(found){
                 model = pattern_reader.next().value
-                if(model === undefined){
-                    return new MatchObject(s, match_string, pattern, start)
-                }
             }else{
                 return false
             }
@@ -998,6 +1005,28 @@ BMatchObject.group = function(self, group_num){
     return BMatchObject.$group(self, args)
 }
 
+BMatchObject.groups = function(self, group_num){
+    var $ = $B.args("group", 2, {self: null, default: null},
+                ['self', 'default'], arguments,
+                {default: _b_.None}, null, null),
+            self = $.self,
+            _default = $.default
+    var result = []
+    if(self.mo === false){
+        throw _b_.AttributeError.$factory("no attr groups")
+    }
+    for(var i = 1; i <= self.mo.re.nb_groups;i++){
+        var s = self.mo.re.groups[i].item.str
+        if(s == ''){
+            s = _default
+        }else if(self.mo.data_type === _b_.bytes){
+            s = string2bytes(s)
+        }
+        result.push(s)
+    }
+    return $B.fast_tuple(result)
+}
+
 BMatchObject.$group = function(self, args){
     var res = [],
         groups = self.mo.re.groups || []
@@ -1015,12 +1044,73 @@ BMatchObject.$group = function(self, args){
                 throw _b_.IndexError.$factory("no such group")
             }
         }
-        res.push(self.mo.group.call(self.mo, group_num))
+        var item = self.mo.group.call(self.mo, group_num)
+        if(self.mo.data_type === _b_.bytes){
+            item = string2bytes(item)
+        }
+        res.push(item)
     }
     return len == 1 ? res[0] : _b_.tuple.$factory(res)
 }
 
+BMatchObject.span = function(){
+    var $ = $B.args("span", 2, {self: null, group: null},
+                ['self', 'group'], arguments,
+                {group: 0}, null, null),
+            self = $.self,
+            group = $.group
+    if(group == 0){
+        return $B.fast_tuple([self.mo.start, self.mo.end])
+    }else{
+        console.log(self.mo.re.groups[group])
+        return $B.fast_tuple([-1, -1])
+    }
+}
+
 $B.set_func_names(BMatchObject, "re")
+
+function str_or_bytes(string, pattern){
+    // Check that string and pattern are of the same type : (subclass of) str
+    // or (subclass of) bytes
+    // Return an object with attributes:
+    // - type: str or bytes
+    // - string and pattern : strings
+    if(typeof string == "string" || _b_.isinstance(string, _b_.str)){
+        string = string + '' // for string subclasses
+        if(typeof pattern == "string" || _b_.isinstance(pattern, _b_.str)){
+            pattern = pattern + ''
+        }else{
+            throw _b_.TypeError.$factory(`cannot use a `+
+                `${$B.class_name(pattern)} pattern on a string-like object`)
+        }
+        return {
+            type: _b_.str,
+            string,
+            pattern
+        }
+    }else if(_b_.isinstance(string, [_b_.bytes, _b_.bytearray, _b_.memoryview])){
+        if(! _b_.isinstance(pattern, [_b_.bytes, _b_.bytearray, _b_.memoryview])){
+            throw _b_.TypeError(`cannot use a ${$B.class_name(pattern)}` +
+                ' pattern on a bytes-like object')
+        }
+        return {
+            type: _b_.bytes,
+            string: _b_.bytes.decode(_b_.bytes.$factory(string), 'latin1'),
+            pattern: _b_.bytes.decode(_b_.bytes.$factory(pattern), 'latin1')
+        }
+    }else{
+        throw _b_.TypeError.$factory("invalid string type: " +
+            $B.class_name(string))
+    }
+}
+
+function string2bytes(s){
+    var t = []
+    for(var i = 0, len = s.length; i < len; i++){
+        t.push(s.charCodeAt(i))
+    }
+    return _b_.bytes.$factory(t)
+}
 
 var $module = {
     compile: function(){
@@ -1028,6 +1118,52 @@ var $module = {
                     ['pattern', 'flags'], arguments, {flags: 0},
                     null, null)
         return BPattern.$factory(compile($.pattern))
+    },
+    findall: function(){
+        var $ = $B.args("findall", 3, {pattern: null, string: null, flags: null},
+                    ['pattern', 'string', 'flags'], arguments, {flags: 0},
+                    null, null),
+                pattern = $.pattern,
+                string = $.string
+        var result = [],
+            pos = 0
+        if(pattern.__class__ === BPattern){
+            pattern = pattern.pattern
+        }
+        var data = str_or_bytes(string, pattern),
+            pattern = data.pattern,
+            string = data.string
+        if(data.type === _b_.str){
+            function conv(s){
+                return s
+            }
+        }else{
+            function conv(s){
+                return string2bytes(s)
+            }
+        }
+        while(pos < string.length){
+            var mo = match(pattern, string, pos)
+            if(mo){
+                if(mo.re.nb_groups){
+                    if(mo.re.nb_groups == 1){
+                        result.push(conv(mo.re.groups[1].item.str))
+                    }else{
+                        var groups = []
+                        for(var i = 1, len = mo.re.nb_groups; i <= len; i++){
+                            groups.push(conv(mo.re.groups[i].item.str))
+                        }
+                        result.push($B.fast_tuple(groups))
+                    }
+                }else{
+                    result.push(conv(mo.match_string))
+                }
+                pos += mo.match_string.length + 1
+            }else{
+                pos++
+            }
+        }
+        return result
     },
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
@@ -1038,6 +1174,39 @@ var $module = {
         if(pattern.__class__ === BPattern){
             pattern = pattern.pattern
         }
-        return BMatchObject.$factory(match(pattern, string))
+        var data = str_or_bytes(string, pattern),
+            string = data.string,
+            pattern = data.pattern
+        var mo = match(pattern, string)
+        if(mo === false){
+            return _b_.None
+        }
+        mo.data_type = data.type
+        return BMatchObject.$factory(mo)
+    },
+    search: function(){
+        var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
+                    ['pattern', 'string', 'flags'], arguments, {flags: 0},
+                    null, null),
+                pattern = $.pattern,
+                string = $.string
+        if(pattern.__class__ === BPattern){
+            pattern = pattern.pattern
+        }
+        var data = str_or_bytes(string, pattern),
+            string = data.string,
+            pattern = data.pattern
+        var pos = 0
+        while(pos < string.length){
+            var mo = match(pattern, string, pos)
+            mo.data_type = data.type
+            if(mo){
+                return BMatchObject.$factory(mo)
+            }else{
+                pos++
+            }
+        }
+        return _b_.None
     }
+
 }
