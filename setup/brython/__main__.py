@@ -118,16 +118,29 @@ def main():
             'application')
         from . import list_modules
 
-        finder = list_modules.ModulesFinder()
+        print('searching brython_stdlib.js...')
+        stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
+
+        print('finding packages...')
+        user_modules = list_modules.load_user_modules()
+        finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
         finder.inspect()
-        finder.make_brython_modules()
+        path = os.path.join(stdlib_dir, "brython_modules.js")
+        finder.make_brython_modules(path)
 
     if args.make_dist:
         print('Make a Python distribution for the application')
         from . import list_modules
-        finder = list_modules.ModulesFinder()
+
+        print('searching brython_stdlib.js...')
+        stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
+
+        print('finding packages...')
+        user_modules = list_modules.load_user_modules()
+        finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
         finder.inspect()
-        finder.make_brython_modules()
+        path = os.path.join(stdlib_dir, "brython_modules.js")
+        finder.make_brython_modules(path)
         finder.make_setup()
         print('done')
 
