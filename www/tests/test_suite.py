@@ -680,4 +680,15 @@ assert (lambda: (
     "hi"
 ))() == 'hi'
 
+assert (lambda: (
+    '''
+    # not a comment
+    hi
+    '''
+))() == "\n    # not a comment\n    hi\n    "
+
+assert lambda:(  # A greeter.
+    print('hi')  # Short for "Hello".
+)() == 'hi'
+
 print('passed all tests...')

@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-01 12:25:37.598943"
-__BRYTHON__.timestamp=1606821937598
+__BRYTHON__.compiled_date="2020-12-04 09:49:46.792158"
+__BRYTHON__.timestamp=1607071786792
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -3101,11 +3101,9 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 $LambdaCtx.prototype.to_js=function(){this.js_processed=true
 var C=this.parent,node=this.node,module=$get_module(this),src=$get_src(C),args=src.substring(this.args_start,this.body_start),body=src.substring(this.body_start+1,this.body_end)
 body=body.replace(/\\\n/g,' ')
-var lines=body.split("\n"),body=''
-for(var line of lines){if(! line.match(/^\s*#/)){body+=line+' '}}
 var scope=$get_scope(this)
-var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):'
-py+='    return '+body
+var rand=$B.UUID(),func_name='lambda_'+$B.lambda_magic+'_'+rand,py='def '+func_name+'('+args+'):\n'
+py+='    return ('+body+'\n)'
 var lambda_name='lambda'+rand,module_name=module.id.replace(/\./g,'_')
 var root=$B.py2js(py,module_name,lambda_name,scope,node.line_num)
 var js=root.to_js()
