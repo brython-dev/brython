@@ -34,6 +34,14 @@ var BackReference = function(type, value){
         this.type = type // "name" or "num"
         this.value = value
     },
+    Case = function(){
+        this.name = "Case"
+        this.items = []
+        this.add = function(item){
+            this.items.push(item)
+            item.parent = this
+        }
+    },
     Char = function(char, groups){
         this.char = char
         this.str = ''
@@ -123,7 +131,7 @@ var BackReference = function(type, value){
     Flags = function(flags){
         this.flags = flags
     },
-    GroupEnd = {},
+    GroupEnd = {name: "GroupEnd"},
     Group = function(extension){
         this.type = "group"
         this.items = []
@@ -137,7 +145,7 @@ var BackReference = function(type, value){
             this.nb_options = 1
         }
     },
-    Or = {},
+    Or = {name: "Or"},
     Repeater = function(op, greedy){
         this.op = op
         this.greedy = greedy !== undefined
@@ -580,7 +588,7 @@ function compile(pattern){
                 }
             }
             item.state = 'closed'
-            node = node.parent
+            node = item.parent
         }else if(item instanceof ConditionalBackref){
             var group_ref = item.group_ref
             if(typeof group_ref == "number"){
@@ -648,16 +656,27 @@ function compile(pattern){
                 }
             }else if(node.items.length == 0){
                 throw Error("unexpected |")
+            }else if(node instanceof Case){
+                var new_case = new Case()
+                node.parent.add(new_case)
+                node = new_case
             }else{
                 var previous = node.items[node.items.length - 1]
-                if(previous instanceof Choice){
-                    node = previous
+                if(previous instanceof Case){
+                    var new_case = new Case()
+                    previous.add(new_case)
+                    node = new_case
                 }else{
-                    var choice = new Choice()
-                    var first = node.items.pop()
+                    var choice = new Choice(),
+                        case1 = new Case()
+                    while(node.items.length > 0){
+                        case1.add(node.items.shift())
+                    }
+                    choice.add(case1)
                     node.add(choice)
-                    choice.add(first)
-                    node = choice
+                    var case2 = new Case()
+                    choice.add(case2)
+                    node = case2
                 }
             }
         }else{
@@ -955,7 +974,8 @@ function* tokenize(pattern){
 function match(pattern, s, pos){
 
     function* PatternReader(pattern){
-        if(pattern instanceof Char){
+        if(pattern instanceof Char ||
+                pattern instanceof ConditionalBackref){
             pattern.str = ''
             pattern.nb_success = 0
             yield pattern
