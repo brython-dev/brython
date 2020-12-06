@@ -807,13 +807,13 @@ DOMNode.__getattribute__ = function(self, attr){
             self.__class__.__module__ != "browser.html"){
         // cf. issue #1543
         var from_class = $B.$getattr(self.__class__, attr, _b_.None)
-        if(from_class){
+        if(from_class !== _b_.None){
             var frame = $B.last($B.frames_stack),
                 line_info = frame[1].$line_info,
                 line = line_info.split(',')[0]
             console.info("Warning: line " + line + ", " + self.tagName +
                 " element has instance attribute '" + attr + "' set." +
-                " Attribute of class " + $B.class_name(self) + 
+                " Attribute of class " + $B.class_name(self) +
                 " is ignored.")
         }
     }
