@@ -5,6 +5,22 @@ var $B = __BRYTHON__,
 
 var MAXGROUPS = 2147483647
 
+var $error_2 = {
+    $name: "error",
+    $qualname: "error",
+    $is_class: true,
+    __module__: "re"
+}
+var error = $B.$class_constructor("error", $error_2, _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
+error.__doc__ = _b_.None
+error.$factory = $B.$instance_creator(error)
+
+function fail(message, pos){
+    var err = error.$factory(message)
+    err.pos = pos
+    throw err
+}
+
 function Pattern(text, node){
     this.text = text
     this.node = node
@@ -29,8 +45,10 @@ BPattern.match = function(self, string){
 
 $B.set_func_names(BPattern, "re")
 
-var BackReference = function(type, value){
+var BackReference = function(pos, type, value){
         // for "\number"
+        this.name = "BackReference"
+        this.pos = pos
         this.type = type // "name" or "num"
         this.value = value
     },
@@ -42,7 +60,8 @@ var BackReference = function(type, value){
             item.parent = this
         }
     },
-    Char = function(char, groups){
+    Char = function(pos, char, groups){
+        this.pos = pos
         this.char = char
         this.str = ''
         this.nb_success = 0
@@ -113,8 +132,9 @@ var BackReference = function(type, value){
             option.parent = this
         }
     },
-    ConditionalBackref = function(group_ref){
+    ConditionalBackref = function(pos, group_ref){
         this.type = "conditional backref"
+        this.pos = pos
         this.group_ref = group_ref
         this.str = ''
         this.nb_success = 0
@@ -131,9 +151,13 @@ var BackReference = function(type, value){
     Flags = function(flags){
         this.flags = flags
     },
-    GroupEnd = {name: "GroupEnd"},
-    Group = function(extension){
+    GroupEnd = function(pos){
+        this.name = "GroupEnd",
+        this.pos = pos
+    },
+    Group = function(pos, extension){
         this.type = "group"
+        this.pos = pos
         this.items = []
         this.str = ''
         this.nb_success = 0
@@ -145,8 +169,13 @@ var BackReference = function(type, value){
             this.nb_options = 1
         }
     },
-    Or = {name: "Or"},
-    Repeater = function(op, greedy){
+    Or = function(pos){
+        this.name = "Or"
+        this.pos = pos
+    },
+    Repeater = function(pos, op, greedy){
+        this.name = "Repeater"
+        this.pos = pos
         this.op = op
         this.greedy = greedy !== undefined
     }
@@ -262,9 +291,9 @@ function read(name, pos){
 
 function validate(name){
     if(name == ''){
-        throw Error("missing group name")
+        fail("missing group name")
     }else if(name[0].match(/\d/) || name.match(/\./)){
-        throw Error(`bad character in group name '${name}'`)
+        fail(`bad character in group name '${name}'`)
     }
 
     var $B = window.__BRYTHON__,
@@ -281,17 +310,17 @@ function validate(name){
         }
         if(pos != name.length){
             console.log("bad character", pos, name, name.charCodeAt(pos))
-            throw Error(`bad character in group name '${name}'`)
+            fail(`bad character in group name '${name}'`)
         }
     }else{
-        throw Error(`bad character in group name '${name}'`)
+        fail(`bad character in group name '${name}'`)
     }
 }
 
 function escaped_char(text, pos){
     var special = text[pos + 1]
     if(special === undefined){
-        throw Error('bad escape (end of pattern)')
+        fail('bad escape (end of pattern)', pos)
     }
     if('AbBdDsSwWZ'.indexOf(special) > -1){
         return {
@@ -302,7 +331,7 @@ function escaped_char(text, pos){
         }
     }else if(special == 'N'){
         if(text[pos + 2] != '{'){
-            throw Error('missing {')
+            fail('missing {', pos)
         }
         var i = pos + 3,
             description = ''
@@ -314,10 +343,10 @@ function escaped_char(text, pos){
             i++
         }
         if(description == ''){
-            throw Error("missing character name")
+            fail("missing character name", pos)
         }
         if(i == text.length){
-            throw Error("missing }, unterminated name")
+            fail("missing }, unterminated name", pos)
         }
         return {
             type: 'N',
@@ -335,7 +364,7 @@ function escaped_char(text, pos){
                 length: mo[0].length
             }
         }
-        throw Error('incomplete escape \\x' + hh)
+        fail('incomplete escape \\x' + hh, pos)
     }else if(special == 'u'){
         // \uxxxx = character with 16-bit hex value xxxx
         var mo = /^[0-9a-fA-F]{0,4}/.exec(text.substr(pos + 2)),
@@ -347,7 +376,7 @@ function escaped_char(text, pos){
                 length: mo[0].length
             }
         }
-        throw Error('incomplete escape \\u' + xx)
+        fail('incomplete escape \\u' + xx, pos)
     }else if(special == 'U'){
         // \Uxxxxxxxx = character with 32-bit hex value xxxxxxxx
         var mo = /^[0-9a-fA-F]{0,8}/.exec(text.substr(pos + 2)),
@@ -359,15 +388,15 @@ function escaped_char(text, pos){
                 length: mo[0].length
             }
         }
-        throw Error('incomplete escape \\U' + xx)
+        fail('incomplete escape \\U' + xx, pos)
     }else{
         // octal ?
         var mo = /^[0-7]{3}/.exec(text.substr(pos + 1))
         if(mo){
             var octal_value = eval('0o' + mo[0])
             if(octal_value > 0o377){
-                throw Error(`octal escape value \\` +
-                    `${mo[0]} outside of range 0-0o377`)
+                fail(`octal escape value \\` +
+                    `${mo[0]} outside of range 0-0o377`, pos)
             }
             return {
                 type: 'o',
@@ -384,7 +413,7 @@ function escaped_char(text, pos){
             }
         }
         if(special.match(/[a-zA-Z]/)){
-            throw Error("invalid escape " + special)
+            fail("invalid escape " + special, pos)
         }else{
             return special
         }
@@ -396,9 +425,9 @@ function check_character_range(t){
     var start = t[t.length - 2],
         end = t[t.length - 1]
     if(start.character_class || end.character_class){
-        throw Error(`bad character range ${start}-${end}`)
+        fail(`bad character range ${start}-${end}`)
     }else if(end < start){
-        throw Error(`bad character range ${start}-${end}`)
+        fail(`bad character range ${start}-${end}`)
     }
     t.splice(t.length - 2, 2, {
         type: 'character_range',
@@ -428,7 +457,8 @@ function parse_character_set(text, pos){
             var escape = escaped_char(text, pos)
             if(escape.type == "num"){
                 // [\9] is invalid
-                throw Error("bad escape \\" + escape.value.toString()[0])
+                fail("bad escape \\" +
+                    escape.value.toString()[0], pos)
             }
             result.items.push(escape)
             if(range){
@@ -438,7 +468,7 @@ function parse_character_set(text, pos){
         }else if(char == '-'){
             // Character range
             if(result.items.length == 0){
-                throw Error("bad character range")
+                fail("bad character range", pos)
             }else{
                 range = true
                 pos++
@@ -452,7 +482,7 @@ function parse_character_set(text, pos){
             pos++
         }
     }
-    throw Error("unterminated character set")
+    fail("unterminated character set", pos)
 }
 
 function open_unicode_db(){
@@ -478,7 +508,7 @@ function validate_named_char(description){
     // validate that \N{<description>} is in the Unicode db
     // Load unicode table if not already loaded
     if(description.length == 0){
-        throw Error("missing character name")
+        fail("missing character name")
     }
     open_unicode_db()
     if($B.unicodedb !== undefined){
@@ -486,13 +516,13 @@ function validate_named_char(description){
             description + ";.*$", "m")
         search = re.exec($B.unicodedb)
         if(search === null){
-            throw Error(`undefined character name '${description}'`)
+            fail(`undefined character name '${description}'`)
         }
         var cp = "0x" + search[1], // code point
             result = String.fromCodePoint(eval(cp))
         return result
     }else{
-        throw Error("could not load unicode.txt")
+        fail("could not load unicode.txt")
     }
 }
 
@@ -508,11 +538,11 @@ function validate_code_point(cp){
         var re = new RegExp("^" + stripped +";")
         search = re.exec($B.unicodedb)
         if(search === null){
-            throw Error(`bad escape \\U${cp}`)
+            fail(`bad escape \\U${cp}`)
         }
         return String.fromCodePoint(eval(parseInt(cp, 16)))
     }else{
-        throw Error("could not load unicode.txt")
+        fail("could not load unicode.txt")
     }
 }
 
@@ -529,6 +559,8 @@ function compile(pattern){
     var group_num = 0,
         group_stack = [],
         groups = {},
+        subitems = [],
+        pos,
         node = new Node()
     for(var item of tokenize(pattern)){
         if(item instanceof Group){
@@ -537,73 +569,80 @@ function compile(pattern){
             item.state = "open"
             item.num = group_num
             node = item // next items will be stored as group's items
+            pos = item.pos
             if(item.extension){
                 if(item.extension.non_capturing){
                     delete item.num
                 }else if(item.extension.type == "name_def"){
+                    subitems.push(item)
                     group_num++
                     var value = item.extension.value
                     validate(value)
                     if(groups[value] !== undefined){
-                        throw Error(`redefinition of group name '${value}' as group` +
-                            ` ${group_num}; was group ${groups[value].num}`)
+                        fail(`redefinition of group name ` +
+                            ` '${value}' as group ${group_num}; was group ` +
+                            ` ${groups[value].num}`, pos)
                     }
                     groups[value] = groups[group_num] = {num: group_num, item}
                 }else if(item.extension.type == "test_value"){
                     var value = item.extension.value
                     if(typeof value == "number"){
                         if(value == 0){
-                            throw Error(`bad group number`)
+                            fail(`bad group number`, pos + 3)
                         }
                         if(value > group_num || value >= MAXGROUPS){
-                            throw Error(`invalid group reference ${value}`)
+                            fail(`invalid group reference ${value}`, pos)
                         }
                     }else if(groups[value] !== undefined){
                         if(groups[value].item.state == "open"){
-                            throw Error("cannot refer to an open group")
+                            fail("cannot refer to an open group", pos)
                         }
                     }else{
-                        throw Error(`unknown group name '${value}'`)
+                        fail(`unknown group name '${value}'`, pos)
                     }
                 }else{
+                    subitems.push(item)
                     group_num++
                     groups[group_num] = {num: group_num, item}
                 }
             }else{
+                subitems.push(item)
                 group_num++
                 groups[group_num] = {num: group_num, item}
             }
-        }else if(item === GroupEnd){
+        }else if(item instanceof GroupEnd){
+            pos = item.pos
             if(group_stack.length == 0){
-                throw Error("unbalanced parenthesis")
+                fail("unbalanced parenthesis", pos)
             }
             var item = group_stack.pop()
             if(item instanceof Group && item.items.length == 0){
-                item.add(new Char(EmptyString, group_stack.concat([item])))
+                item.add(new Char(pos, EmptyString, group_stack.concat([item])))
             }else if(item instanceof ConditionalBackref){
                 if(item.re_if_exists.items.length == 0){
-                    item.re_if_exists.add(new Char(EmptyString, group_stack))
+                    item.re_if_exists.add(new Char(pos, EmptyString, group_stack))
                 }else if(item.re_if_not_exists.items.length == 0){
-                    item.re_if_not_exists.add(new Char(EmptyString, group_stack))
+                    item.re_if_not_exists.add(new Char(pos, EmptyString, group_stack))
                 }
             }
             item.state = 'closed'
             node = item.parent
         }else if(item instanceof ConditionalBackref){
-            var group_ref = item.group_ref
+            var pos = item.pos,
+                group_ref = item.group_ref
             if(typeof group_ref == "number"){
                 if(group_ref == 0){
-                    throw Error(`bad group number`)
+                    fail(`bad group number`, pos + 3)
                 }
                 if(group_ref > group_num || group_ref >= MAXGROUPS){
-                    throw Error(`invalid group reference ${group_ref}`)
+                    fail(`invalid group reference ${group_ref}`, pos)
                 }
             }else if(groups[group_ref] !== undefined){
                 if(groups[group_ref].item.state == "open"){
-                    throw Error("cannot refer to an open group")
+                    fail("cannot refer to an open group", pos)
                 }
             }else{
-                throw Error(`unknown group name '${group_ref}'`)
+                fail(`unknown group name '${group_ref}'`, pos)
             }
             group_stack.push(item)
             node.add(item)
@@ -611,51 +650,55 @@ function compile(pattern){
             item.num = group_num
             node = item // next items will be stored as group's items
         }else if(item instanceof BackReference){
+            pos = item.pos
             if(item.type == "num" && item.value > 99){
                 var head = item.value.toString().substr(0, 2)
-                throw Error(`invalid group reference ${head}`)
+                fail(`invalid group reference ${head}`, pos)
             }
             if(groups[item.value] !== undefined){
                 if(groups[item.value].item.state == "open"){
-                    throw Error("cannot refer to an open group")
+                    fail("cannot refer to an open group", pos)
                 }
             }else if(item.type == "name"){
-                throw Error(`unknown group name '${item.value}'`)
+                fail(`unknown group name '${item.value}'`, pos)
             }else if(item.type == "num"){
-                throw Error(`invalid group reference ${item.value}`)
+                fail(`invalid group reference ${item.value}`, pos)
             }
             node.add(item)
         }else if(item instanceof Char){
+            subitems.push(item)
             item.groups = []
             for(var group of group_stack){
                 item.groups.push(group)
             }
             node.add(item)
         }else if(item instanceof Repeater){
+            pos = item.pos
             if(node.items.length == 0){
-                throw Error("nothing to repeat")
+                fail("nothing to repeat", pos)
             }
             var previous = node.items[node.items.length - 1]
             if(previous instanceof Char ||
                     previous instanceof Group){
                 if(previous.repeat){
-                    throw Error("multiple repeat")
+                    fail("multiple repeat", pos)
                 }
                 previous.repeat = item
             }else{
-                throw Error("nothing to repeat")
+                fail("nothing to repeat", pos)
             }
-        }else if(item === Or){
+        }else if(item instanceof Or){
+            pos = item.pos
             if(node instanceof ConditionalBackref){
                 // case '(?(num)a|'
                 if(node.nb_options == 1){
                     node.nb_options++
                 }else{
-                    throw Error('conditional backref with more than ' +
-                       'two branches')
+                    fail('conditional backref with more than ' +
+                       'two branches', pos)
                 }
             }else if(node.items.length == 0){
-                throw Error("unexpected |")
+                fail("unexpected |", pos)
             }else if(node instanceof Case){
                 var new_case = new Case()
                 node.parent.add(new_case)
@@ -680,15 +723,17 @@ function compile(pattern){
                 }
             }
         }else{
-            throw Error("unknown item type " + item)
+            fail("unknown item type " + item, pos)
         }
     }
     if(group_stack.length > 0){
-        throw Error("missing ), unterminated subpattern")
+        var last = group_stack[group_stack.length - 1]
+        fail("missing ), unterminated subpattern", last.pos)
     }
     while(node.parent){
         node = node.parent
     }
+    node.subitems = subitems
     node.groups = groups
     node.text = pattern
     node.nb_groups = group_num
@@ -705,7 +750,7 @@ function checkPatternError(pattern, msg){
         }
         return
     }
-    throw Error(pattern + " should have raised Error")
+    fail(pattern + " should have raised Error")
 }
 
 function* tokenize(pattern){
@@ -722,16 +767,16 @@ function* tokenize(pattern){
                             if(pattern[i] == '>'){
                                 break
                             }else if(pattern[i] == ')'){
-                                throw Error("missing >, unterminated name")
+                                fail("missing >, unterminated name", pos)
                             }
                             name += pattern[i]
                             i++
                         }
                         validate(name)
                         if(i == pattern.length){
-                            throw Error("missing >, unterminated name")
+                            fail("missing >, unterminated name", pos)
                         }
-                        yield new Group({type: 'name_def', value: name})
+                        yield new Group(pos, {type: 'name_def', value: name})
                         pos = i + 1
                         continue
                     }else if(pattern[pos + 3] == '='){
@@ -746,15 +791,15 @@ function* tokenize(pattern){
                         }
                         validate(name)
                         if(i == pattern.length){
-                            throw Error("missing ), unterminated name")
+                            fail("missing ), unterminated name", pos)
                         }
-                        yield new BackReference('name', name)
+                        yield new BackReference(pos, 'name', name)
                         pos = i + 1
                         continue
                     }else if(pattern[pos + 3] === undefined){
-                        throw Error("unexpected end of pattern")
+                        fail("unexpected end of pattern", pos)
                     }else{
-                        throw Error("unknown extension ?P" + pattern[pos + 3])
+                        fail("unknown extension ?P" + pattern[pos + 3], pos)
                     }
                 }else if(pattern[pos + 2] == '('){
                     var ref = '',
@@ -772,43 +817,43 @@ function* tokenize(pattern){
                         validate(ref)
                     }
                     if(i == pattern.length){
-                        throw Error("missing ), unterminated name")
+                        fail("missing ), unterminated name", pos)
                     }
-                    yield new ConditionalBackref(ref)
+                    yield new ConditionalBackref(pos, ref)
                     pos = i + 1
                     continue
                 }else if(pattern[pos + 2] == '='){
                     // (?=...) : lookahead assertion
-                    yield new Group({type: 'lookahead_assertion'})
+                    yield new Group(pos, {type: 'lookahead_assertion'})
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] == '!'){
                     // (?!...) : negative lookahead assertion
-                    yield new Group({type: 'negative_lookahead_assertion'})
+                    yield new Group(pos, {type: 'negative_lookahead_assertion'})
                     pos += 3
                     continue
                 }else if(pattern.substr(pos + 2, 2) == '<!'){
                     // (?<!...) : negative lookbehind
-                    yield new Group({type: 'negative_lookbehind'})
+                    yield new Group(pos, {type: 'negative_lookbehind'})
                     pos += 4
                     continue
                 }else if(pattern.substr(pos + 2, 2) == '<='){
                     // (?<=...) : positive lookbehind
-                    yield new Group({type: 'positive_lookbehind'})
+                    yield new Group(pos, {type: 'positive_lookbehind'})
                     pos += 4
                     continue
                 }else if(pattern[pos + 2] == '<'){
                     pos += 3
                     if(pos == pattern.length){
-                        throw Error("unexpected end of pattern")
+                        fail("unexpected end of pattern", pos)
                     }
-                    throw Error("unknown extension ?<" + pattern[pos])
+                    fail("unknown extension ?<" + pattern[pos], pos)
                 }else if(pattern[pos + 2] == ':'){
-                    yield new Group({non_capturing: true})
+                    yield new Group(pos, {non_capturing: true})
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] === undefined){
-                    throw Error("unexpected end of pattern")
+                    fail("unexpected end of pattern", pos)
                 }
 
                 var flags = 'aiLmsux'
@@ -831,8 +876,8 @@ function* tokenize(pattern){
                                 if('auL'.indexOf(pattern[pos]) > -1){
                                     auL++
                                     if(auL > 1){
-                                        throw Error("bad inline flags: flags 'a', 'u'" +
-                                            " and 'L' are incompatible")
+                                        fail("bad inline flags: flags 'a', 'u'" +
+                                            " and 'L' are incompatible", pos)
                                     }
                                 }
                                 on_flags += pattern[pos]
@@ -843,49 +888,49 @@ function* tokenize(pattern){
                                 pos++
                                 break
                             }else if(pattern[pos].match(/[a-zA-Z]/)){
-                                throw Error("unknown flag")
+                                fail("unknown flag", pos)
                             }else if(':)'.indexOf(pattern[pos]) > -1){
                                 closed = true
                                 break
                             }else{
-                                throw Error("missing -, : or )")
+                                fail("missing -, : or )", pos)
                             }
                         }
                         if(! closed){
-                            throw Error("missing -, : or )")
+                            fail("missing -, : or )", pos)
                         }
                     }
                     if(has_off){
                         while(pos < pattern.length){
                             if(flags.indexOf(pattern[pos]) > -1){
                                 if('auL'.indexOf(pattern[pos]) > -1){
-                                    throw Error("bad inline flags: cannot turn off " +
-                                        "flags 'a', 'u' and 'L'")
+                                    fail("bad inline flags: cannot turn off " +
+                                        "flags 'a', 'u' and 'L'", pos)
                                 }
                                 if(on_flags.indexOf(pattern[pos]) > -1){
-                                    throw Error("bad inline flags: flag turned on and off")
+                                    fail("bad inline flags: flag turned on and off", pos)
                                 }
                                 off_flags += pattern[pos]
                                 pos++
                             }else if(pattern[pos] == ':'){
                                 break
                             }else if(pattern[pos].match(/[a-zA-Z]/)){
-                                throw Error("unknown flag")
+                                fail("unknown flag", pos)
                             }else if(off_flags == ''){
-                                throw Error("missing flag")
+                                fail("missing flag", pos)
                             }else{
-                                throw Error("missing :")
+                                fail("missing :", pos)
                             }
                         }
                         if(off_flags == ''){
-                            throw Error("missing flag")
+                            fail("missing flag", pos)
                         }
                     }
                     if(has_off && pattern[pos] != ':'){
-                        throw Error("missing :")
+                        fail("missing :", pos)
                     }
                     if(on_flags == '' && off_flags == ''){
-                        throw Error("missing flag")
+                        fail("missing flag", pos)
                     }
                 }else if(pattern[pos + 2] == '#'){
                     pos += 3
@@ -896,33 +941,33 @@ function* tokenize(pattern){
                         pos++
                     }
                     if(pos == pattern.length){
-                        throw Error("missing ), unterminated comment")
+                        fail("missing ), unterminated comment", pos)
                     }
                     pos++
                     continue
                 }else{
-                    throw Error("unknown extension ?" + pattern[pos + 2])
+                    fail("unknown extension ?" + pattern[pos + 2], pos)
                 }
-                yield new Group({type: 'flags', on_flags, off_flags})
+                yield new Group(pos, {type: 'flags', on_flags, off_flags})
                 pos++
             }else{
-                yield new Group()
+                yield new Group(pos)
                 pos++
             }
         }else if(char == ')'){
-            yield GroupEnd
+            yield new GroupEnd(pos)
             pos++
         }else if(char == '\\'){
             var escape = escaped_char(pattern, pos)
             if(typeof escape.value == "number"){
-                yield new BackReference("num", escape.value)
+                yield new BackReference(pos, "num", escape.value)
                 pos += escape.length
             }else if(typeof escape == "string"){
                 // eg "\."
-                yield new Char(escape)
+                yield new Char(pos, escape)
                 pos += 2
             }else{
-                yield new Char(escape)
+                yield new Char(pos, escape)
                 pos += escape.length
             }
         }else if(char == '['){
@@ -930,14 +975,14 @@ function* tokenize(pattern){
             var set,
                 end_pos
             [set, end_pos] = parse_character_set(pattern, pos + 1)
-             yield new Char(set)
+             yield new Char(pos, set)
              pos = end_pos + 1
         }else if('+?*'.indexOf(char) > -1){
             if(pattern[pos + 1] == '?'){
-                yield new Repeater(char, true)
+                yield new Repeater(pos, char, true)
                 pos += 2
             }else{
-                yield new Repeater(char)
+                yield new Repeater(pos, char)
                 pos++
             }
         }else if(char == '{'){
@@ -947,25 +992,25 @@ function* tokenize(pattern){
                 if(reps[4] !== undefined){
                     var max = parseInt(reps[4])
                     if(max < limits[0]){
-                        throw Error('min repeat greater than max repeat')
+                        fail('min repeat greater than max repeat', pos)
                     }
                     limits.push(max)
                 }
                 pos += reps[0].length
                 if(pattern[pos + 1] == '?'){
-                    yield new Repeater(limits, true)
+                    yield new Repeater(pos, limits, true)
                     pos++
                 }else{
-                    yield new Repeater(limits)
+                    yield new Repeater(pos, limits)
                 }
             }else{
-                throw Error('{ not terminated')
+                fail('{ not terminated', pos)
             }
        }else if(char == '|'){
-           yield Or
+           yield new Or(pos)
            pos++
        }else{
-            yield new Char(char)
+            yield new Char(pos, char)
             pos++
         }
     }
@@ -1001,6 +1046,12 @@ function match(pattern, s, pos){
         start = pos
     if(typeof pattern == "string"){
         pattern = compile(pattern)
+    }
+    if(pattern.subitems){
+        for(var subitem of pattern.subitems){
+            subitem.str = ''
+            subitem.nb_success = 0
+        }
     }
     var pattern_reader = PatternReader(pattern)
     var model = pattern_reader.next().value,
@@ -1267,6 +1318,7 @@ var $module = {
                     null, null)
         return BPattern.$factory(compile($.pattern))
     },
+    error: error,
     findall: function(){
         var $ = $B.args("findall", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments, {flags: 0},
