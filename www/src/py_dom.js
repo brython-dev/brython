@@ -1452,12 +1452,6 @@ DOMNode.select_one = function(self, selector){
     return DOMNode.$factory(res)
 }
 
-DOMNode.style = function(self){
-    // set attribute "float" for cross-browser compatibility
-    self.style.float = self.style.cssFloat || self.styleFloat
-    return $B.JSObj.$factory(self.style)
-}
-
 DOMNode.setSelectionRange = function(self){ // for TEXTAREA
     if(this["setSelectionRange"] !== undefined){
         return (function(obj){
