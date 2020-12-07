@@ -128,7 +128,7 @@ class Tester:
             raise AssertionError('%s should not be in %s' %(item, container))
 
     def assertTrue(self, item, msg=None):
-        if item is not True:
+        if not item:
             raise AssertionError(msg or '%s is not True' %item)
 
     def assertFalse(self, item, msg=None):
