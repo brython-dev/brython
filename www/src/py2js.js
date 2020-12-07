@@ -6390,14 +6390,14 @@ $LambdaCtx.prototype.to_js = function(){
         args = src.substring(this.args_start, this.body_start),
         body = src.substring(this.body_start + 1, this.body_end)
         body = body.replace(/\\\n/g, ' ') // cf issue 582
-    
+
     var scope = $get_scope(this)
 
     var rand = $B.UUID(),
         func_name = 'lambda_' + $B.lambda_magic + '_' + rand,
         py = 'def ' + func_name + '(' + args + '):\n'
     py += '    return (' + body + '\n)'
-    
+
     var lambda_name = 'lambda' + rand,
         module_name = module.id.replace(/\./g, '_')
 
@@ -11024,13 +11024,15 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                     src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
-                    $B.run_script(src, module_name)
+                    $B.tasks.push([$B.run_script, src, module_name, true])
                 }
             }
         }
     }
 
-    if(options.ipy_id === undefined){$B.loop()}
+    if(options.ipy_id === undefined){
+        $B.loop()
+    }
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)

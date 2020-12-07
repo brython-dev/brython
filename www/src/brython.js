@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-06 09:44:49.205972"
-__BRYTHON__.timestamp=1607244289205
+__BRYTHON__.compiled_date="2020-12-07 09:12:04.955545"
+__BRYTHON__.timestamp=1607328724955
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -5264,7 +5264,7 @@ if(elt.src){
 $B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src}])}else{
 src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
-$B.run_script(src,module_name)}}}}
+$B.tasks.push([$B.run_script,src,module_name,true])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node
@@ -13804,9 +13804,6 @@ if(self.querySelector===undefined){throw _b_.TypeError.$factory("DOMNode object 
 var res=self.querySelector(selector)
 if(res===null){return _b_.None}
 return DOMNode.$factory(res)}
-DOMNode.style=function(self){
-self.style.float=self.style.cssFloat ||self.styleFloat
-return $B.JSObj.$factory(self.style)}
 DOMNode.setSelectionRange=function(self){
 if(this["setSelectionRange"]!==undefined){return(function(obj){return function(){return obj.setSelectionRange.apply(obj,arguments)}})(this)}else if(this["createTextRange"]!==undefined){return(function(obj){return function(start_pos,end_pos){if(end_pos==undefined){end_pos=start_pos}
 var range=obj.createTextRange()
