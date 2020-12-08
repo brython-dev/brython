@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-07 09:12:04.955545"
-__BRYTHON__.timestamp=1607328724955
+__BRYTHON__.compiled_date="2020-12-08 11:57:33.235553"
+__BRYTHON__.timestamp=1607425053235
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -7322,8 +7322,13 @@ return bin_hex_oct(8,obj)}
 function ord(c){check_no_kw('ord',c)
 check_nb_args('ord',1,arguments)
 if(typeof c=='string'){if(c.length==1){return c.charCodeAt(0)}
-throw _b_.TypeError.$factory('ord() expected a character, but '+
+if((0xD800 <=c[0]&& c[0]<=0xDBFF)||
+(0xDC00 <=c[1]&& c[1]<=0xDFFF)){throw _b_.TypeError.$factory('ord() expected a character, but '+
 'string of length '+c.length+' found')}
+var code=0x10000
+code+=(c.charCodeAt(0)& 0x03FF)<< 10
+code+=(c.charCodeAt(1)& 0x03FF)
+return code}
 switch($B.get_class(c)){case _b_.str:
 if(c.length==1){return c.charCodeAt(0)}
 throw _b_.TypeError.$factory('ord() expected a character, but '+
@@ -12165,9 +12170,12 @@ replace(new RegExp("\r","g"),"\\r").
 replace(new RegExp("\t","g"),"\\t")
 res=res.replace(combining_re,"\u200B$1")
 var repl=''
-for(var i=0;i < res.length;i++){if($B.is_unicode_cn(res.codePointAt(i))){var s=res.codePointAt(i).toString(16)
+for(var i=0;i < res.length;i++){var cp=res.codePointAt(i)
+if($B.is_unicode_cn(cp)){var s=cp.toString(16)
 while(s.length < 4){s='0'+s}
-repl+='\\u'+s}else{repl+=res.charAt(i)}}
+repl+='\\u'+s}else if(cp < 0x20){cp=cp+''
+if(cp.length < 2){cp='0'+cp}
+repl+='\\x'+cp}else{repl+=res.charAt(i)}}
 res=repl
 if(res.search('"')==-1 && res.search("'")==-1){return "'"+res+"'"}else if(self.search('"')==-1){return '"'+res+'"'}
 var qesc=new RegExp("'","g")
@@ -13506,9 +13514,9 @@ DOMNode.__eq__=function(self,other){return self==other}
 DOMNode.__getattribute__=function(self,attr){if(attr.substr(0,2)=="$$"){attr=attr.substr(2)}
 switch(attr){case "attrs":
 return Attributes.$factory(self)
+case "children":
 case "class_name":
 case "html":
-case "id":
 case "parent":
 case "text":
 return DOMNode[attr](self)
@@ -13518,8 +13526,10 @@ case "top":
 case "width":
 if(self.tagName=="CANVAS" && self[attr]){return self[attr]}
 if(self instanceof SVGElement){return self[attr].baseVal.value}
-if(self.style[attr]){return parseInt(self.style[attr])}else{var computed=window.getComputedStyle(self)[attr]
-if(computed !==undefined){return Math.floor(parseFloat(computed)+0.5)}
+if(self.style[attr]){return parseInt(self.style[attr])}else{var computed=window.getComputedStyle(self).
+getPropertyValue(attr)
+if(computed !==undefined){var prop=Math.floor(parseFloat(computed)+0.5)
+return isNaN(prop)? computed :prop}
 throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
 case "x":
@@ -13528,7 +13538,7 @@ if(!(self instanceof SVGElement)){var pos=$getPosition(self)
 return attr=="x" ? pos.left :pos.top}
 case "clear":
 case "closest":
-return function(){return DOMNode[attr](self,arguments[0])}
+return function(){return DOMNode[attr].call(null,self,...arguments)}
 case "headers":
 if(self.nodeType==9){
 var req=new XMLHttpRequest();
@@ -13643,7 +13653,7 @@ var res=TagSum.$factory()
 var txt=DOMNode.$factory(document.createTextNode(other))
 res.children=[txt,self]
 return res}
-DOMNode.__str__=DOMNode.__repr__=function(self){var attrs=self.attributes,attrs_str=""
+DOMNode.__str__=DOMNode.__repr__=function(self){var attrs=self.attributes,attrs_str="",items=[]
 if(attrs !==undefined){var items=[]
 for(var i=0;i < attrs.length;i++){items.push(attrs[i].name+'="'+
 self.getAttributeNS(null,attrs[i].name)+'"')}}
@@ -13714,6 +13724,7 @@ if(self.nodeType==9){self=self.body}
 self.childNodes.forEach(function(child){res.push(DOMNode.$factory(child))})
 return res}
 DOMNode.clear=function(self){
+var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 if(self.nodeType==9){self=self.body}
 while(self.firstChild){self.removeChild(self.firstChild)}}
 DOMNode.Class=function(self){if(self.className !==undefined){return self.className}
@@ -13726,6 +13737,7 @@ evt_list.forEach(function(evt){var func=evt[0]
 DOMNode.bind(res,event,func)})}
 return res}
 DOMNode.closest=function(self,selector){
+var $=$B.args("closest",2,{self:null,selector:null},["self","selector"],arguments,{},null,null)
 var res=self.closest(selector)
 if(res===null){throw _b_.KeyError.$factory("no parent with selector "+selector)}
 return DOMNode.$factory(res)}
@@ -13733,8 +13745,6 @@ DOMNode.events=function(self,event){self.$events=self.$events ||{}
 var evt_list=self.$events[event]=self.$events[event]||[],callbacks=[]
 evt_list.forEach(function(evt){callbacks.push(evt[1])})
 return callbacks}
-DOMNode.focus=function(self){return(function(obj){return function(){
-setTimeout(function(){obj.focus()},10)}})(self)}
 function make_list(node_list){var res=[]
 for(var i=0;i < node_list.length;i++){res.push(DOMNode.$factory(node_list[i]))}
 return res}
@@ -13770,8 +13780,6 @@ DOMNode.html=function(self){var res=self.innerHTML
 if(res===undefined){if(self.nodeType==9){res=self.body.innerHTML}
 else{res=_b_.None}}
 return res}
-DOMNode.id=function(self){if(self.id !==undefined){return self.id}
-return _b_.None}
 DOMNode.index=function(self,selector){var items
 if(selector===undefined){items=self.parentElement.childNodes}else{items=self.parentElement.querySelectorAll(selector)}
 var rank=-1
@@ -13780,7 +13788,7 @@ return rank}
 DOMNode.inside=function(self,other){
 var elt=self
 while(true){if(other===elt){return true}
-elt=elt.parentElement
+elt=elt.parentNode
 if(! elt){return false}}}
 DOMNode.options=function(self){
 return new $OptionsClass(self)}

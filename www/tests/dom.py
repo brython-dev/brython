@@ -104,3 +104,10 @@ assert not hasattr(y, "myattr")
 
 # chained insertions
 html.P() <= html.B() <= html.I("coucou")
+
+# Brython-specific attributes
+document <= (s := html.SPAN(style=dict(position="absolute", height="10px")))
+for attr in ['abs_left', 'abs_top', 'top', 'width', 'height', 'width',
+             'scrolled_left', 'scrolled_top']:
+    assert isinstance(getattr(s, attr), int), getattr(s, attr)
+assert s.inside(document)
