@@ -840,12 +840,19 @@ str.__repr__ = function(self){
     // Uses function $B.is_unicode_cn() in unicode_data.js
     var repl = ''
     for(var i = 0; i < res.length; i++){
-        if($B.is_unicode_cn(res.codePointAt(i))){
-            var s = res.codePointAt(i).toString(16)
+        var cp = res.codePointAt(i)
+        if($B.is_unicode_cn(cp)){
+            var s = cp.toString(16)
             while(s.length < 4){
                 s = '0' + s
             }
             repl += '\\u' + s
+        }else if(cp < 0x20){
+            cp = cp + ''
+            if(cp.length < 2){
+                cp = '0' + cp
+            }
+            repl += '\\x' + cp
         }else{
             repl += res.charAt(i)
         }
