@@ -11,7 +11,9 @@ var $error_2 = {
     $is_class: true,
     __module__: "re"
 }
-var error = $B.$class_constructor("error", $error_2, _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
+
+var error = $B.$class_constructor("error", $error_2,
+    _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
 error.__doc__ = _b_.None
 error.$factory = $B.$instance_creator(error)
 
@@ -20,6 +22,26 @@ function fail(message, pos){
     err.pos = pos
     throw err
 }
+
+var Flag = $B.make_class("Flag",
+    function(name, value){
+        return {
+            __class__: Flag,
+            name,
+            value
+        }
+    }
+)
+
+Flag.__index__ = function(self){
+    return self.value
+}
+
+Flag.__str__ = function(self){
+    return `re.${self.name}`
+}
+
+$B.set_func_names(Flag, "re")
 
 function Pattern(text, node){
     this.text = text
@@ -72,7 +94,6 @@ var BackReference = function(pos, type, value){
             }
         }
         this.match = function(s, pos){
-            var char = s[pos]
             if(this.repeat){
                 if(this.repeat.op == "?" && this.str.length == 1){
                     return false
@@ -81,17 +102,33 @@ var BackReference = function(pos, type, value){
                 }
             }
             var test = false
-            if(char === undefined && this.char !== EmptyString){
+            var char = s[pos]
+            if(0xD800 <= s.charCodeAt(pos) && s.charCodeAt(pos) <= 0xDBFF){
+                char = 0x10000
+                char += (s.charCodeAt(pos) & 0x03FF) << 10
+                pos++
+                char += (s.charCodeAt(pos) & 0x03FF)
+                test = this.char.ord === char
+                var repr = '\\U000' + char.toString(16)
+                char = {
+                    length: 2,
+                    toString: function(){return repr}
+                }
+            }else if(char === undefined && this.char !== EmptyString){
                 // end of string matches $
                 // if true, don't return the empty string (it would be tested
                 // like false) but as an object coerced to ''
                 return this.char == "$" ? EmptyString : false
-            }
-            if(this.char == "^"){
+            }else if(this.char == "^"){
                 return pos == 0 ? EmptyString : false
-            }
-            if(this.char.character_class){
+            }else if(this.char.character_class){
                 test = char.match(new RegExp(this.char + ''))
+            }else if(this.char.type){
+                if(this.char.ord !== undefined){
+                    test = this.char.ord == char.codePointAt(0)
+                }else{
+                    test = char == this.char.value
+                }
             }else if(this.char == '.'){
                 test = this.char == char
             }else if(this.char.items){
@@ -324,6 +361,7 @@ function escaped_char(text, pos){
     }
     if('AbBdDsSwWZ'.indexOf(special) > -1){
         return {
+            pos,
             value: special,
             length: 2,
             character_class: true,
@@ -361,7 +399,8 @@ function escaped_char(text, pos){
             return {
                 type: 'x',
                 value: String.fromCharCode(parseInt(mo[0], 16)),
-                length: mo[0].length
+                ord: eval("0x" + mo[0]),
+                length: 2 + mo[0].length
             }
         }
         fail('incomplete escape \\x' + hh, pos)
@@ -373,7 +412,8 @@ function escaped_char(text, pos){
             return {
                 type: 'u',
                 value: String.fromCharCode(parseInt(mo[0], 16)),
-                length: mo[0].length
+                ord: eval("0x" + mo[0]),
+                length: 2 + mo[0].length
             }
         }
         fail('incomplete escape \\u' + xx, pos)
@@ -382,16 +422,24 @@ function escaped_char(text, pos){
         var mo = /^[0-9a-fA-F]{0,8}/.exec(text.substr(pos + 2)),
             xx = mo ? mo[0] : ''
         if(mo && mo[0].length == 8){
+            var value = validate_code_point(mo[0])
             return {
                 type: 'U',
-                value: validate_code_point(mo[0]),
-                length: mo[0].length
+                str: mo[0],
+                ord: value,
+                length: 2 + mo[0].length
             }
         }
         fail('incomplete escape \\U' + xx, pos)
     }else{
         // octal ?
+        // If the first digit of number is 0, or number is 3 octal digits
+        // long, it will not be interpreted as a group match, but as the
+        // character with octal value number
         var mo = /^[0-7]{3}/.exec(text.substr(pos + 1))
+        if(mo == null){
+            mo = /^0[0-7]*/.exec(text.substr(pos + 1))
+        }
         if(mo){
             var octal_value = eval('0o' + mo[0])
             if(octal_value > 0o377){
@@ -401,13 +449,14 @@ function escaped_char(text, pos){
             return {
                 type: 'o',
                 value: String.fromCharCode(octal_value),
-                length: mo[0].length
+                ord: octal_value,
+                length: 1 + mo[0].length
             }
         }
         var mo = /^\d+/.exec(text.substr(pos + 1))
         if(mo){
             return {
-                type: 'num',
+                type: 'backref',
                 value: parseInt(mo[0]),
                 length: mo[0].length
             }
@@ -420,49 +469,56 @@ function escaped_char(text, pos){
     }
 }
 
-function check_character_range(t){
+function check_character_range(t, positions){
     // Check if last 2 items in t are a valid character range
     var start = t[t.length - 2],
         end = t[t.length - 1]
     if(start.character_class || end.character_class){
-        fail(`bad character range ${start}-${end}`)
+        fail(`bad character range ${start}-${end}`,
+            positions[positions.length - 2])
     }else if(end < start){
-        fail(`bad character range ${start}-${end}`)
+        fail(`bad character range ${start}-${end}`,
+            positions[positions.length - 2])
     }
     t.splice(t.length - 2, 2, {
         type: 'character_range',
-        start: start,
-        end: end
+        start: start[0],
+        end: end[0]
     })
 }
 
 function parse_character_set(text, pos){
     // Parse character set starting at position "pos" in "text"
-    var result = {items: []}
+    var start = pos,
+        result = {items: []},
+        positions = []
+    pos++
     if(text[pos] == '^'){
         result.neg = true
         pos++
     }else if(text[pos] == ']'){
         // a leading ] is the character "]", not the set end
         result.items.push(']')
+        positions.push(pos)
         pos++
     }
     var range = false
     while(pos < text.length){
         var char = text[pos]
         if(char == ']'){
-            return [result, pos]
+            return [result, pos + 1]
         }
         if(char == '\\'){
             var escape = escaped_char(text, pos)
             if(escape.type == "num"){
                 // [\9] is invalid
-                fail("bad escape \\" +
+                fail("bad escape 1 \\" +
                     escape.value.toString()[0], pos)
             }
             result.items.push(escape)
+            positions.push(pos)
             if(range){
-                check_character_range(result.items)
+                check_character_range(result.items, positions)
             }
             pos += escape.length
         }else if(char == '-'){
@@ -474,15 +530,16 @@ function parse_character_set(text, pos){
                 pos++
             }
         }else{
+            positions.push(pos)
             result.items.push(char)
             if(range){
-                check_character_range(result.items)
+                check_character_range(result.items, positions)
             }
             range = false
             pos++
         }
     }
-    fail("unterminated character set", pos)
+    fail("unterminated character set", start)
 }
 
 function open_unicode_db(){
@@ -528,19 +585,21 @@ function validate_named_char(description){
 
 function validate_code_point(cp){
     // validate that the 8-hex digit cp is in the Unicode db
+    var value = eval("0x" + cp)
+    if(0x100000 > value){
+        return value
+    }
+
     // Load unicode table if not already loaded
     open_unicode_db()
-    var stripped = cp
-    while(stripped.startsWith('0')){
-        stripped = stripped.substr(1)
-    }
+
     if($B.unicodedb !== undefined){
-        var re = new RegExp("^" + stripped +";")
+        var re = new RegExp("^0*" + cp +";", "mi")
         search = re.exec($B.unicodedb)
         if(search === null){
-            fail(`bad escape \\U${cp}`)
+            fail(`bad escape 2 \\U${cp}`)
         }
-        return String.fromCodePoint(eval(parseInt(cp, 16)))
+        return value
     }else{
         fail("could not load unicode.txt")
     }
@@ -591,7 +650,7 @@ function compile(pattern){
                             fail(`bad group number`, pos + 3)
                         }
                         if(value > group_num || value >= MAXGROUPS){
-                            fail(`invalid group reference ${value}`, pos)
+                            fail(`invalid group reference ${value}`, pos + 1)
                         }
                     }else if(groups[value] !== undefined){
                         if(groups[value].item.state == "open"){
@@ -635,7 +694,7 @@ function compile(pattern){
                     fail(`bad group number`, pos + 3)
                 }
                 if(group_ref > group_num || group_ref >= MAXGROUPS){
-                    fail(`invalid group reference ${group_ref}`, pos)
+                    fail(`invalid group reference ${group_ref}`, pos + 1)
                 }
             }else if(groups[group_ref] !== undefined){
                 if(groups[group_ref].item.state == "open"){
@@ -653,7 +712,7 @@ function compile(pattern){
             pos = item.pos
             if(item.type == "num" && item.value > 99){
                 var head = item.value.toString().substr(0, 2)
-                fail(`invalid group reference ${head}`, pos)
+                fail(`invalid group reference ${head}`, pos + 1)
             }
             if(groups[item.value] !== undefined){
                 if(groups[item.value].item.state == "open"){
@@ -959,7 +1018,10 @@ function* tokenize(pattern){
             pos++
         }else if(char == '\\'){
             var escape = escaped_char(pattern, pos)
-            if(typeof escape.value == "number"){
+            if(escape.ord !== undefined){
+                yield new Char(pos, escape)
+                pos += escape.length
+            }else if(escape.type == "backref"){
                 yield new BackReference(pos, "num", escape.value)
                 pos += escape.length
             }else if(typeof escape == "string"){
@@ -974,7 +1036,7 @@ function* tokenize(pattern){
             // Set of characters
             var set,
                 end_pos
-            [set, end_pos] = parse_character_set(pattern, pos + 1)
+            [set, end_pos] = parse_character_set(pattern, pos)
              yield new Char(pos, set)
              pos = end_pos + 1
         }else if('+?*'.indexOf(char) > -1){
@@ -1189,7 +1251,7 @@ BMatchObject.__setitem__ = function(){
 BMatchObject.__str__ = function(self){
     var mo = self.mo
     return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
-        `match='${mo.match_string}'>`
+        `match=${_b_.repr(mo.match_string)}>`
 }
 
 BMatchObject.group = function(self, group_num){
@@ -1312,12 +1374,14 @@ function string2bytes(s){
 }
 
 var $module = {
+    ASCII: Flag.$factory("ASCII", 256),
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
                     ['pattern', 'flags'], arguments, {flags: 0},
                     null, null)
         return BPattern.$factory(compile($.pattern))
     },
+    DOTALL: Flag.$factory("DOTALL", 16),
     error: error,
     findall: function(){
         var $ = $B.args("findall", 3, {pattern: null, string: null, flags: null},
@@ -1365,6 +1429,9 @@ var $module = {
         }
         return result
     },
+    IGNORECASE: Flag.$factory("IGNORECASE", 2),
+    LOCALE: Flag.$factory("LOCALE", 4),
+    MULTILINE: Flag.$factory("MULTILINE", 8),
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments, {flags: 0},
@@ -1407,6 +1474,15 @@ var $module = {
             }
         }
         return _b_.None
-    }
+    },
+    U: Flag.$factory("U", 32),
+    VERBOSE: Flag.$factory("VERBOSE", 64)
 
 }
+$module.A = $module.ASCII
+$module.I = $module.IGNORECASE
+$module.L = $module.LOCALE
+$module.M = $module.MULTILINE
+$module.S = $module.DOTALL
+$module.X = $module.VERBOSE
+
