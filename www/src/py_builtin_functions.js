@@ -1935,8 +1935,15 @@ function ord(c) {
         if(c.length == 1){
             return c.charCodeAt(0)
         }
-        throw _b_.TypeError.$factory('ord() expected a character, but ' +
-            'string of length ' + c.length + ' found')
+        if((0xD800 <= c[0] && c[0] <= 0xDBFF) ||
+                (0xDC00 <= c[1] && c[1] <= 0xDFFF)){
+            throw _b_.TypeError.$factory('ord() expected a character, but ' +
+                'string of length ' + c.length + ' found')
+        }
+        var code = 0x10000
+        code += (c.charCodeAt(0) & 0x03FF) << 10
+        code += (c.charCodeAt(1) & 0x03FF)
+        return code
     }
     switch($B.get_class(c)){
       case _b_.str:
