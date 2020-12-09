@@ -8281,6 +8281,7 @@ $StringCtx.prototype.to_js = function(){
 
     function prepare(value){
         value = value.replace(/\n/g,'\\n\\\n')
+        value = value.replace(/\r/g,'\\r\\\r')
         value = value.replace(/\\U([A-Fa-f0-9]{8})/gm,
                     function(mo){
                         return String.fromCharCode("0x"+mo.slice(2))
@@ -9642,6 +9643,71 @@ for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
+function SurrogatePair(value){
+    // value is a code point between 0x10000 and 0x10FFFF
+    // attribute "str" is a Javascript string of 2 characters
+    this.name = "SurrogatePair"
+    value =  value - 0x10000
+    this.str = String.fromCharCode(0xD800 | (value >> 10)) +
+        String.fromCharCode(0xDC00 | (value & 0x3FF))
+}
+
+function test_escape(context, text, pos){
+    // Test if the escape sequence starting at position "pos" in text is
+    // is valid
+    // $pos is set at the position before the string quote
+    var seq_start = pos - $pos - 2,
+        seq_end,
+        mo
+    // 1 to 3 octal digits = Unicode char
+    mo = /^[0-7]{1,3}/.exec(text.substr(pos + 1))
+    if(mo){
+        return [String.fromCharCode(parseInt(mo[0], 8)), mo[0].length]
+    }
+    switch(text[pos + 1]){
+        case "x":
+            var mo = /^[0-9A-F]{2}/i.exec(text.substr(pos + 2))
+            if(mo === null){
+                seq_end = Math.min(seq_start + 2, text.length - pos - 3)
+                $_SyntaxError(context,
+                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
+                     "\\xXX escape"])
+            }else{
+                return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
+            }
+        case "u":
+            var mo = /^[0-9A-F]{4}/i.exec(text.substr(pos + 2))
+            if(mo === null){
+                seq_end = Math.min(seq_start + 4, text.length - pos - 3)
+                $_SyntaxError(context,
+                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
+                     "\\uXXXX escape"])
+            }else{
+                return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
+            }
+        case "U":
+            var mo = /^[0-9A-F]{8}/i.exec(text.substr(pos + 2))
+            if(mo === null){
+                seq_end = Math.min(seq_start + 8, text.length - pos - 3)
+                $_SyntaxError(context,
+                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
+                     "\\uXXXX escape"])
+            }else{
+                var value = parseInt(mo[0], 16)
+                if(value > 0x10FFFF){
+                    $_SyntaxError('invalid unicode escape ' + mo[0])
+                }else if(value >= 0x10000){
+                    return [new SurrogatePair(value), 2 + mo[0].length]
+                }else{
+                    [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
+                }
+            }
+    }
+
+}
 
 function test_num(context, num_lit){
     var len = num_lit.length,
@@ -9997,13 +10063,23 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                                 end++
                             }
                         }else{
-                            if(end < src.length - 1 &&
-                                is_escaped[src.charAt(end + 1)] === undefined){
-                                    zone += '\\'
+                            var esc = test_escape(context, src, end)
+                            if(esc){
+                                if(! (esc[0] instanceof SurrogatePair)){
+                                    zone += esc[0]
+                                }else{
+                                    zone += esc[0].str
+                                }
+                                end += esc[1]
+                            }else{
+                                if(end < src.length - 1 &&
+                                    is_escaped[src.charAt(end + 1)] === undefined){
+                                        zone += '\\'
+                                }
+                                zone += '\\'
+                                escaped = true
+                                end++
                             }
-                            zone += '\\'
-                            escaped = true
-                            end++
                         }
                     }
                 }else if(src.charAt(end) == '\n' && _type != 'triple_string'){

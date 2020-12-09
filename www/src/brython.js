@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-09 09:42:21.244548"
-__BRYTHON__.timestamp=1607503341244
+__BRYTHON__.compiled_date="2020-12-09 17:06:40.232118"
+__BRYTHON__.timestamp=1607530000232
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -4091,6 +4091,7 @@ has_surrogate=has_surrogate ||_has_surrogate(elt)
 elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
 function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
+value=value.replace(/\r/g,'\\r\\\r')
 value=value.replace(/\\U([A-Fa-f0-9]{8})/gm,function(mo){return String.fromCharCode("0x"+mo.slice(2))})
 return value}
 for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){
@@ -4690,6 +4691,34 @@ $B.forbidden=["alert","arguments","case","catch","const","constructor","Date","d
 $B.aliased_names=$B.list2obj($B.forbidden)
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
+function SurrogatePair(value){
+this.name="SurrogatePair"
+value=value-0x10000
+this.str=String.fromCharCode(0xD800 |(value >> 10))+
+String.fromCharCode(0xDC00 |(value & 0x3FF))}
+function test_escape(C,text,pos){
+var seq_start=pos-$pos-2,seq_end,mo
+mo=/^[0-7]{1,3}/.exec(text.substr(pos+1))
+if(mo){return[String.fromCharCode(parseInt(mo[0],8)),mo[0].length]}
+switch(text[pos+1]){case "x":
+var mo=/^[0-9A-F]{2}/i.exec(text.substr(pos+2))
+if(mo===null){seq_end=Math.min(seq_start+2,text.length-pos-3)
+$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
+`bytes in position ${seq_start}-${seq_end}:truncated `+
+"\\xXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
+case "u":
+var mo=/^[0-9A-F]{4}/i.exec(text.substr(pos+2))
+if(mo===null){seq_end=Math.min(seq_start+4,text.length-pos-3)
+$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
+`bytes in position ${seq_start}-${seq_end}:truncated `+
+"\\uXXXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
+case "U":
+var mo=/^[0-9A-F]{8}/i.exec(text.substr(pos+2))
+if(mo===null){seq_end=Math.min(seq_start+8,text.length-pos-3)
+$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
+`bytes in position ${seq_start}-${seq_end}:truncated `+
+"\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
+if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}}}}
 function test_num(C,num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
 function error(message){$pos+=pos
 $_SyntaxError(C,[message])}
@@ -4836,11 +4865,13 @@ if(search===null){$_SyntaxError(C,"(unicode error) "+
 "unknown Unicode character name")}
 var cp="0x"+search[1]
 zone+=String.fromCodePoint(eval(cp))
-end=end_lit+1}else{end++}}else{if(end < src.length-1 &&
+end=end_lit+1}else{end++}}else{var esc=test_escape(C,src,end)
+if(esc){if(!(esc[0]instanceof SurrogatePair)){zone+=esc[0]}else{zone+=esc[0].str}
+end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
 zone+='\\'
 escaped=true
-end++}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
+end++}}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
 console.log(pos,end,src.substring(pos,end))
 $pos=end
 $_SyntaxError(C,["EOL while scanning string literal"])}else if(src.charAt(end)==car){if(_type=="triple_string" &&
