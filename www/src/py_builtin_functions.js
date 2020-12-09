@@ -996,11 +996,12 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "load" // && obj === $B // "Point"
+    var $test = false // attr == "x" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
     if(klass !== undefined && klass.__bases__ &&
+            klass.__getattribute__ === undefined &&
             (klass.__bases__.length == 0 ||
                 (klass.__bases__.length == 1 &&
                  klass.__bases__[0] === _b_.object))){
@@ -1218,7 +1219,7 @@ $B.$getattr = function(obj, attr, _default){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
     var odga = _b_.object.__getattribute__
-    if($test){console.log("attr_func is odga", attr_func,
+    if($test){console.log("attr_func is odga ?", attr_func,
         attr_func === odga, obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]

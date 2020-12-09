@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-08 21:37:34.581969"
-__BRYTHON__.timestamp=1607459854581
+__BRYTHON__.compiled_date="2020-12-09 09:42:21.244548"
+__BRYTHON__.timestamp=1607503341244
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -6961,6 +6961,7 @@ var klass=obj.__class__
 var $test=false 
 if($test){console.log("$getattr",attr,obj,klass)}
 if(klass !==undefined && klass.__bases__ &&
+klass.__getattribute__===undefined &&
 (klass.__bases__.length==0 ||
 (klass.__bases__.length==1 &&
 klass.__bases__[0]===_b_.object))){if($test){console.log("class without parent")}
@@ -7047,7 +7048,7 @@ for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
 var odga=_b_.object.__getattribute__
-if($test){console.log("attr_func is odga",attr_func,attr_func===odga,obj[attr])}
+if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,obj[attr])}
 if(attr_func===odga){var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}

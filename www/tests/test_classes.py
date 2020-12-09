@@ -635,5 +635,20 @@ a.message = "test"
 assert a.__dict__["message"] == "test"
 assert a.length == 0
 
+# issue 1551
+class MyClass:
+
+    def __init__(self):
+       self.x = 1
+
+    def __getattribute__(self, name):
+        raise Exception("This will never happen")
+
+
+m = MyClass()
+try:
+    m.x
+except Exception as exc:
+    assert exc.args[0] == "This will never happen"
 
 print('passed all tests..')
