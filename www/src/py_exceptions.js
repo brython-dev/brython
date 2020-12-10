@@ -575,7 +575,6 @@ BaseException.$factory = function (){
     err.__class__ = _b_.BaseException
     err.$py_error = true
     $B.freeze(err)
-    //err.$traceback = traceback.$factory(err)
     eval("//placeholder//")
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me

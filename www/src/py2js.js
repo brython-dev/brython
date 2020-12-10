@@ -8160,27 +8160,27 @@ $StringCtx.prototype.transition = function(token, value){
     return $transition(context.parent, token, value)
 }
 
+$B.has_surrogate = function(s){
+    for(var i = 0; i < s.length; i++){
+        try{
+            code = s.charCodeAt(i)
+        }catch(err){
+            console.log("err for s", s)
+            throw err
+        }
+        if(code >= 0xD800 && code <= 0xDBFF){
+            return true
+        }
+    }
+    return false
+}
+
 $StringCtx.prototype.to_js = function(){
     this.js_processed = true
     var res = '',
         type = null,
         scope = $get_scope(this),
         has_surrogate = false
-
-    function _has_surrogate(s){
-        for(var i = 0; i < s.length; i++){
-            try{
-                code = s.charCodeAt(i)
-            }catch(err){
-                console.log("err for s", s)
-                throw err
-            }
-            if(code >= 0xD800 && code <= 0xDBFF){
-                return true
-            }
-        }
-        return false
-    }
 
     function fstring(parsed_fstring){
         // generate code for a f-string
@@ -8272,7 +8272,7 @@ $StringCtx.prototype.to_js = function(){
                 var re = new RegExp("'", "g")
                 var elt = parsed_fstring[i].replace(re, "\\'")
                                            .replace(/\n/g, "\\n")
-                has_surrogate = has_surrogate || _has_surrogate(elt)
+                has_surrogate = has_surrogate || $B.has_surrogate(elt)
                 elts.push("'" + elt + "'")
             }
         }
@@ -8282,10 +8282,6 @@ $StringCtx.prototype.to_js = function(){
     function prepare(value){
         value = value.replace(/\n/g,'\\n\\\n')
         value = value.replace(/\r/g,'\\r\\\r')
-        value = value.replace(/\\U([A-Fa-f0-9]{8})/gm,
-                    function(mo){
-                        return String.fromCharCode("0x"+mo.slice(2))
-                    })
         return value
     }
 
@@ -8315,7 +8311,7 @@ $StringCtx.prototype.to_js = function(){
                 if(is_fstring){
                     res += fstring(value)
                 }else{
-                    has_surrogate = has_surrogate || _has_surrogate(value)
+                    has_surrogate = has_surrogate || $B.has_surrogate(value)
                     res += prepare(value)
                 }
             }else{
@@ -9662,7 +9658,7 @@ function test_escape(context, text, pos){
     // 1 to 3 octal digits = Unicode char
     mo = /^[0-7]{1,3}/.exec(text.substr(pos + 1))
     if(mo){
-        return [String.fromCharCode(parseInt(mo[0], 8)), mo[0].length]
+        return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
     }
     switch(text[pos + 1]){
         case "x":
@@ -9700,9 +9696,9 @@ function test_escape(context, text, pos){
                 if(value > 0x10FFFF){
                     $_SyntaxError('invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
-                    return [new SurrogatePair(value), 2 + mo[0].length]
+                    return ["\\u{" + mo[0] + "}", 2 + mo[0].length]
                 }else{
-                    [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
+                    return ["\\u{" + mo[0] + "}", 2 + mo[0].length]
                 }
             }
     }

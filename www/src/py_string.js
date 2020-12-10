@@ -805,6 +805,9 @@ str.__mod__ = function(self, args) {
         throw _b_.TypeError.$factory(
             "not all arguments converted during string formatting")
     }
+    if($B.has_surrogate(ret)){
+        return str.$surrogate.$factory(ret)
+    }
     return ret
 }
 

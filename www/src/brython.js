@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-09 17:06:40.232118"
-__BRYTHON__.timestamp=1607530000232
+__BRYTHON__.compiled_date="2020-12-10 15:43:03.838023"
+__BRYTHON__.timestamp=1607611383838
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -4040,12 +4040,12 @@ case 'str':
 C.tree.push(value)
 return C}
 return $transition(C.parent,token,value)}
-$StringCtx.prototype.to_js=function(){this.js_processed=true
-var res='',type=null,scope=$get_scope(this),has_surrogate=false
-function _has_surrogate(s){for(var i=0;i < s.length;i++){try{code=s.charCodeAt(i)}catch(err){console.log("err for s",s)
+$B.has_surrogate=function(s){for(var i=0;i < s.length;i++){try{code=s.charCodeAt(i)}catch(err){console.log("err for s",s)
 throw err}
 if(code >=0xD800 && code <=0xDBFF){return true}}
 return false}
+$StringCtx.prototype.to_js=function(){this.js_processed=true
+var res='',type=null,scope=$get_scope(this),has_surrogate=false
 function fstring(parsed_fstring){
 var elts=[]
 for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
@@ -4087,12 +4087,11 @@ elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='_b_.str.$fac
 elts.push(expr1)}}else{var re=new RegExp("'","g")
 var elt=parsed_fstring[i].replace(re,"\\'")
 .replace(/\n/g,"\\n")
-has_surrogate=has_surrogate ||_has_surrogate(elt)
+has_surrogate=has_surrogate ||$B.has_surrogate(elt)
 elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
 function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
-value=value.replace(/\\U([A-Fa-f0-9]{8})/gm,function(mo){return String.fromCharCode("0x"+mo.slice(2))})
 return value}
 for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){
 var js='(function(){throw _b_.TypeError.$factory("'+"'str'"+
@@ -4101,7 +4100,7 @@ return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=f
 if(!is_fstring){is_bytes=value.charAt(0)=='b'}
 if(type==null){type=is_bytes
 if(is_bytes){res+='_b_.bytes.$new(_b_.bytes, '}}else if(type !=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
-if(!is_bytes){if(is_fstring){res+=fstring(value)}else{has_surrogate=has_surrogate ||_has_surrogate(value)
+if(!is_bytes){if(is_fstring){res+=fstring(value)}else{has_surrogate=has_surrogate ||$B.has_surrogate(value)
 res+=prepare(value)}}else{res+=prepare(value.substr(1))}
 if(i < this.tree.length-1){res+='+'}}}
 if(is_bytes){res+=',"ISO-8859-1")'}
@@ -4699,7 +4698,7 @@ String.fromCharCode(0xDC00 |(value & 0x3FF))}
 function test_escape(C,text,pos){
 var seq_start=pos-$pos-2,seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(pos+1))
-if(mo){return[String.fromCharCode(parseInt(mo[0],8)),mo[0].length]}
+if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
 switch(text[pos+1]){case "x":
 var mo=/^[0-9A-F]{2}/i.exec(text.substr(pos+2))
 if(mo===null){seq_end=Math.min(seq_start+2,text.length-pos-3)
@@ -4718,7 +4717,7 @@ if(mo===null){seq_end=Math.min(seq_start+8,text.length-pos-3)
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${seq_start}-${seq_end}:truncated `+
 "\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
-if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[new SurrogatePair(value),2+mo[0].length]}else{[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}}}}
+if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return["\\u{"+mo[0]+"}",2+mo[0].length]}else{return["\\u{"+mo[0]+"}",2+mo[0].length]}}}}
 function test_num(C,num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
 function error(message){$pos+=pos
 $_SyntaxError(C,[message])}
@@ -7102,8 +7101,8 @@ res.$is_namespace=true
 return res}
 function hasattr(obj,attr){check_no_kw('hasattr',obj,attr)
 check_nb_args('hasattr',2,arguments)
-try{$B.$getattr(obj,attr);return true}
-catch(err){return false}}
+try{$B.$getattr(obj,attr)
+return true}catch(err){return false}}
 var hash_cache={}
 function hash(obj){check_no_kw('hash',obj)
 check_nb_args('hash',1,arguments)
@@ -12181,6 +12180,7 @@ if(argpos !==null){if(args.length > argpos){throw _b_.TypeError.$factory(
 "not enough arguments for format string")}else if(args.length < argpos){throw _b_.TypeError.$factory(
 "not all arguments converted during string formatting")}}else if(nbph==0){throw _b_.TypeError.$factory(
 "not all arguments converted during string formatting")}
+if($B.has_surrogate(ret)){return str.$surrogate.$factory(ret)}
 return ret}
 str.__mro__=[object]
 str.__mul__=function(){var $=$B.args("__mul__",2,{self:null,other:null},["self","other"],arguments,{},null,null)

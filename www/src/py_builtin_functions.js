@@ -996,7 +996,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "x" // && obj === $B // "Point"
+    var $test = false // attr == "pos" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1278,8 +1278,12 @@ function globals(){
 function hasattr(obj,attr){
     check_no_kw('hasattr', obj, attr)
     check_nb_args('hasattr', 2, arguments)
-    try{$B.$getattr(obj,attr); return true}
-    catch(err){return false}
+    try{
+        $B.$getattr(obj,attr)
+        return true
+    }catch(err){
+        return false
+    }
 }
 
 var hash_cache = {}
