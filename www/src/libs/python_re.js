@@ -83,6 +83,10 @@ var BackReference = function(pos, type, value){
         }
     },
     Char = function(pos, char, groups){
+        // character in a regular expression or in a character set
+        // pos : position of the character in the pattern string
+        // char : the character
+        // groups (optional) : the groups that contain the character
         this.pos = pos
         this.char = char
         this.str = ''
@@ -103,18 +107,7 @@ var BackReference = function(pos, type, value){
             }
             var test = false
             var char = s[pos]
-            if(0xD800 <= s.charCodeAt(pos) && s.charCodeAt(pos) <= 0xDBFF){
-                char = 0x10000
-                char += (s.charCodeAt(pos) & 0x03FF) << 10
-                pos++
-                char += (s.charCodeAt(pos) & 0x03FF)
-                test = this.char.ord === char
-                var repr = '\\U000' + char.toString(16)
-                char = {
-                    length: 2,
-                    toString: function(){return repr}
-                }
-            }else if(char === undefined && this.char !== EmptyString){
+            if(char === undefined && this.char !== EmptyString){
                 // end of string matches $
                 // if true, don't return the empty string (it would be tested
                 // like false) but as an object coerced to ''
@@ -156,6 +149,13 @@ var BackReference = function(pos, type, value){
                     }
                 }
                 this.str += char
+                if(char.length > 1){
+                    // surrogate pair
+                    return {
+                        toString: function(){return char},
+                        length: 1
+                    }
+                }
                 return char
             }
             return false
@@ -388,7 +388,7 @@ function escaped_char(text, pos){
         }
         return {
             type: 'N',
-            value: validate_named_char(description),
+            ord: validate_named_char(description),
             length: i - pos
         }
     }else if(special == 'x'){
@@ -575,9 +575,7 @@ function validate_named_char(description){
         if(search === null){
             fail(`undefined character name '${description}'`)
         }
-        var cp = "0x" + search[1], // code point
-            result = String.fromCodePoint(eval(cp))
-        return result
+        return eval("0x" + search[1])
     }else{
         fail("could not load unicode.txt")
     }
@@ -586,9 +584,10 @@ function validate_named_char(description){
 function validate_code_point(cp){
     // validate that the 8-hex digit cp is in the Unicode db
     var value = eval("0x" + cp)
-    if(0x100000 > value){
+    if(0x10FFFF >= value){
         return value
     }
+    fail(`bad escape \\U${cp}`)
 
     // Load unicode table if not already loaded
     open_unicode_db()
@@ -597,7 +596,7 @@ function validate_code_point(cp){
         var re = new RegExp("^0*" + cp +";", "mi")
         search = re.exec($B.unicodedb)
         if(search === null){
-            fail(`bad escape 2 \\U${cp}`)
+            fail(`bad escape \\U${cp}`)
         }
         return value
     }else{
@@ -621,6 +620,9 @@ function compile(pattern){
         subitems = [],
         pos,
         node = new Node()
+    if(pattern.__class__ === _b_.str.$surrogate){
+        pattern = pattern.items
+    }
     for(var item of tokenize(pattern)){
         if(item instanceof Group){
             group_stack.push(item)
@@ -647,6 +649,7 @@ function compile(pattern){
                     var value = item.extension.value
                     if(typeof value == "number"){
                         if(value == 0){
+                            console.log("bad group num", pos)
                             fail(`bad group number`, pos + 3)
                         }
                         if(value > group_num || value >= MAXGROUPS){
@@ -1079,26 +1082,22 @@ function* tokenize(pattern){
 }
 
 function match(pattern, s, pos){
-
     function* PatternReader(pattern){
         if(pattern instanceof Char ||
                 pattern instanceof ConditionalBackref){
-            pattern.str = ''
-            pattern.nb_success = 0
             yield pattern
+        }else if(pattern.surrogate){
+            var pos = 0,
+                len = pattern.length
+            while(pos < len){
+                yield pattern[pos]
+                pos++
+            }
         }else{
             var pos = 0,
                 len = pattern.items.length
             while(pos < len){
-                var item = pattern.items[pos]
-                if(item instanceof Char || item instanceof Group){
-                    item.str = ''
-                    item.nb_success = 0
-                    if(item.repeat){
-                        item.nb_success = 0
-                    }
-                }
-                yield item
+                yield pattern.items[pos]
                 pos++
             }
         }
@@ -1106,7 +1105,7 @@ function match(pattern, s, pos){
 
     var pos = pos || 0,
         start = pos
-    if(typeof pattern == "string"){
+    if(typeof pattern == "string" || pattern.__class__ === _b_.str.$surrogate){
         pattern = compile(pattern)
     }
     if(pattern.subitems){
@@ -1121,7 +1120,7 @@ function match(pattern, s, pos){
         match_string = ''
     while(true){
         char = s[pos]
-        // console.log("match char", char, "against model", model)
+        // console.log("match char", char, "at pos", pos, "against model", model)
         if(model === undefined){
             // Nothing more in pattern: match is successful
             return new MatchObject(s, match_string, pattern, start)
@@ -1143,10 +1142,11 @@ function match(pattern, s, pos){
                 model instanceof ConditionalBackref){
             var group_match = model.match(s, pos)
             if(group_match){
-                var ms = (group_match instanceof MatchObject) ?
-                         group_match.match_string : group_match
+                var len = group_match.length,
+                    ms = (group_match instanceof MatchObject) ?
+                             group_match.match_string : group_match
                 match_string += ms
-                pos += ms.length
+                pos += len
                 if(! model.repeat){
                     model = pattern_reader.next().value
                 }
@@ -1163,10 +1163,6 @@ function match(pattern, s, pos){
             }
         }else if(model instanceof Choice){
             var found = false
-            for(var option of model.items){
-                option.str = ''
-                option.nb_success = 0
-            }
             for(var option of model.items){
                 var mo = match(option, s, pos)
                 if(mo){
@@ -1222,6 +1218,20 @@ MatchObject.prototype.groups = function(_default){
     }
     return result
 }
+
+Object.defineProperty(MatchObject.prototype, 'length', {
+    get() {
+        // The length of the match object is that of its match_string, except
+        // if it has surrogate pairs
+        var len = 0
+        for(const char of this.match_string){
+            len++
+        }
+        return len
+    },
+    set() {
+        }
+})
 
 var BMatchObject = $B.make_class("MatchObject",
     function(mo){
@@ -1337,9 +1347,18 @@ function str_or_bytes(string, pattern){
     // - type: str or bytes
     // - string and pattern : strings
     if(typeof string == "string" || _b_.isinstance(string, _b_.str)){
-        string = string + '' // for string subclasses
+        if(string.__class__ === _b_.str.$surrogate){
+            string = string.items
+            string.charCodeAt = function(pos){
+                return string[pos].charCodeAt(0)
+            }
+        }else{
+            string = string + '' // for string subclasses
+        }
         if(typeof pattern == "string" || _b_.isinstance(pattern, _b_.str)){
-            pattern = pattern + ''
+            if(pattern.__class__ !== _b_.str.$surrogate){
+                pattern = pattern + ''
+            }
         }else{
             throw _b_.TypeError.$factory(`cannot use a `+
                 `${$B.class_name(pattern)} pattern on a string-like object`)
@@ -1422,7 +1441,7 @@ var $module = {
                 }else{
                     result.push(conv(mo.match_string))
                 }
-                pos += mo.match_string.length + 1
+                pos += mo.length + 1
             }else{
                 pos++
             }
