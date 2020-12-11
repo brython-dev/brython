@@ -9696,9 +9696,9 @@ function test_escape(context, text, pos){
                 if(value > 0x10FFFF){
                     $_SyntaxError('invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
-                    return ["\\u{" + mo[0] + "}", 2 + mo[0].length]
+                    return [String.fromCharCode(value), 2 + mo[0].length]
                 }else{
-                    return ["\\u{" + mo[0] + "}", 2 + mo[0].length]
+                    return [String.fromCharCode(value), 2 + mo[0].length]
                 }
             }
     }

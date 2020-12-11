@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-10 15:43:03.838023"
-__BRYTHON__.timestamp=1607611383838
+__BRYTHON__.compiled_date="2020-12-11 14:46:20.328352"
+__BRYTHON__.timestamp=1607694380328
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -4717,7 +4717,7 @@ if(mo===null){seq_end=Math.min(seq_start+8,text.length-pos-3)
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${seq_start}-${seq_end}:truncated `+
 "\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
-if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return["\\u{"+mo[0]+"}",2+mo[0].length]}else{return["\\u{"+mo[0]+"}",2+mo[0].length]}}}}
+if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[String.fromCharCode(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
 function test_num(C,num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
 function error(message){$pos+=pos
 $_SyntaxError(C,[message])}
@@ -6721,8 +6721,11 @@ check_no_kw('callable',obj)
 return hasattr(obj,'__call__')}
 function chr(i){check_nb_args('chr',1,arguments)
 check_no_kw('chr',i)
-if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}
-return String.fromCodePoint(i)}
+if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
+return _b_.str.$surrogate.$factory(
+String.fromCodePoint(0xD800 |(code >> 10))+
+String.fromCodePoint(0xDC00 |(code & 0x3FF))
+)}else{return String.fromCodePoint(i)}}
 var classmethod=$B.make_class("classmethod",function(func){check_nb_args('classmethod',1,arguments)
 check_no_kw('classmethod',func)
 var f=function(){return func.apply(null,arguments)}
@@ -12860,6 +12863,12 @@ items.push(String.fromCodePoint(code))}
 return{
 __class__:str.$surrogate,items:items}})
 surrogate.__mro__=[str,object]
+surrogate.__add__=function(self,other){if(other.__class__===str.$surrogate){var res=str.$surrogate.$factory('')
+res.items=self.items.concat(other.items)
+return res}else if(_b_.isinstance(other,str)){var res=str.$surrogate.$factory('')
+res.items=self.items
+for(const char of other+''){res.items.push(char)}
+return res}}
 surrogate.__contains__=function(self,other){return str.__contains__(self.items.join(''),other)}
 surrogate.__getitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos+=self.items.length}
