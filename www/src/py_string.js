@@ -48,7 +48,7 @@ function check_str(obj){
     }
 }
 
-str.__add__ = function(self,other){
+str.__add__ = function(self, other){
     if(!(typeof other === "string")){
         try{return getattr(other, "__radd__")(self)}
         catch(err){
@@ -2541,6 +2541,21 @@ var surrogate = str.$surrogate = $B.make_class("surrogate_string", function(s){
 })
 
 surrogate.__mro__ = [str, object]
+
+surrogate.__add__ = function(self, other){
+    if(other.__class__ === str.$surrogate){
+        var res = str.$surrogate.$factory('')
+        res.items = self.items.concat(other.items)
+        return res
+    }else if(_b_.isinstance(other, str)){
+        var res = str.$surrogate.$factory('')
+        res.items = self.items
+        for(const char of other + ''){
+            res.items.push(char)
+        }
+        return res
+    }
+}
 
 surrogate.__contains__ = function(self, other){
     return str.__contains__(self.items.join(''), other)
