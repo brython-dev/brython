@@ -250,8 +250,15 @@ function chr(i) {
 
     if(i < 0 || i > 1114111){
         throw _b_.ValueError.$factory('Outside valid range')
+    }else if(i >= 0x10000 && i <= 0x10FFFF){
+        var code = (i - 0x10000)
+        return _b_.str.$surrogate.$factory(
+            String.fromCodePoint(0xD800 | (code >> 10)) +
+            String.fromCodePoint(0xDC00 | (code & 0x3FF))
+            )
+    }else{
+        return String.fromCodePoint(i)
     }
-    return String.fromCodePoint(i)
 }
 
 //classmethod() (built in class)
