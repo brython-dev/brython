@@ -113,7 +113,7 @@ class Tester:
             raise AssertionError('%s is not an instance of %s' %(obj, klass))
 
     def assertIsNone(self, obj, msg=None):
-        assert obj == None, value
+        assert obj == None, obj
 
     def assertIsNot(self, a, b):
         if a is b:
