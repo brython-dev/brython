@@ -8230,8 +8230,12 @@ $StringCtx.prototype.to_js = function(){
                             // set to the Javascript translation
                             var expr1 = node.children[k].js
                             // Remove trailing newline and ;
-                            while("\n;".indexOf(expr1.charAt(expr1.length - 1)) > -1){
-                                expr1 = expr1.substr(0, expr1.length - 1)
+                            if(expr1.length > 0){
+                                while("\n;".indexOf(expr1.charAt(expr1.length - 1)) > -1){
+                                    expr1 = expr1.substr(0, expr1.length - 1)
+                                }
+                            }else{
+                                console.log("f-string: empty expression not allowed")
                             }
                             break
                         }
@@ -10125,7 +10129,10 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                                     string_no_bs = string.replace(re, car)
                                 var elts = $B.parse_fstring(string_no_bs) // in py_string.js
                             }catch(err){
-                                $_SyntaxError(context, [err.toString()])
+                                if(err.position){
+                                    $pos += err.position
+                                }
+                                $_SyntaxError(context, [err.message])
                             }
                         }
 

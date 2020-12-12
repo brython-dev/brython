@@ -2329,6 +2329,12 @@ function fstring_expression(){
     this.fmt = null
 }
 
+function fstring_error(msg, pos){
+    error = Error(msg)
+    error.position = pos
+    throw error
+}
+
 $B.parse_fstring = function(string){
     // Parse a f-string
     var elts = [],
@@ -2357,7 +2363,8 @@ $B.parse_fstring = function(string){
                     current = "}"
                     pos += 2
                 }else{
-                    throw Error(" f-string: single '}' is not allowed")
+                    fstring_error(" f-string: single '}' is not allowed",
+                        pos)
                 }
             }else{
                 ctype = "string"
@@ -2384,7 +2391,8 @@ $B.parse_fstring = function(string){
                         current += car
                         i += 2
                     }else{
-                        throw Error(" f-string: single '}' is not allowed")
+                        fstring_error(" f-string: single '}' is not allowed",
+                            pos)
                     }
                 }else{
                     current += car
@@ -2420,6 +2428,10 @@ $B.parse_fstring = function(string){
                     nb_braces -= 1
                     if(nb_braces == 0){
                         // end of expression
+                        if(current.expression == ""){
+                            fstring_error("f-string: empty expression not allowed",
+                                pos)
+                        }
                         elts.push(current)
                         ctype = null
                         current = ""
@@ -2457,7 +2469,7 @@ $B.parse_fstring = function(string){
                     if(string.substr(i, 3) == '"""'){
                         var end = string.indexOf('"""', i + 3)
                         if(end == -1){
-                            throw Error("f-string: unterminated string")
+                            fstring_error("f-string: unterminated string", pos)
                         }else{
                             var trs = string.substring(i, end + 3)
                             trs = trs.replace("\n", "\\n\\")
@@ -2467,7 +2479,7 @@ $B.parse_fstring = function(string){
                     }else{
                         var end = string.indexOf('"', i + 1)
                         if(end == -1){
-                            throw Error("f-string: unterminated string")
+                            fstring_error("f-string: unterminated string", pos)
                         }else{
                             current.expression += string.substring(i, end + 1)
                             i = end + 1
@@ -2511,7 +2523,7 @@ $B.parse_fstring = function(string){
                 }
             }
             if(nb_braces > 0){
-                throw Error("f-string: expected '}'")
+                fstring_error("f-string: expected '}'", pos)
             }
         }
     }

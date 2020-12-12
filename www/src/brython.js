@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-11 14:46:20.328352"
-__BRYTHON__.timestamp=1607694380328
+__BRYTHON__.compiled_date="2020-12-12 09:34:42.023900"
+__BRYTHON__.timestamp=1607762082023
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -4065,7 +4065,7 @@ node.C.tree[0]=="try"){
 for(var k=0;k < node.children.length;k++){
 if(node.children[k].is_line_num){continue}
 var expr1=node.children[k].js
-while("\n;".indexOf(expr1.charAt(expr1.length-1))>-1){expr1=expr1.substr(0,expr1.length-1)}
+if(expr1.length > 0){while("\n;".indexOf(expr1.charAt(expr1.length-1))>-1){expr1=expr1.substr(0,expr1.length-1)}}else{console.log("f-string: empty expression not allowed")}
 break}
 break}}
 switch(parsed_fstring[i].conversion){case "a":
@@ -4886,7 +4886,8 @@ while($string.charAt(j)=='\\'){j--}
 if((i-j-1)% 2==0){string+='\\'}}}
 string+=$car}
 if(fstring){try{var re=new RegExp("\\\\"+car,"g"),string_no_bs=string.replace(re,car)
-var elts=$B.parse_fstring(string_no_bs)}catch(err){$_SyntaxError(C,[err.toString()])}}
+var elts=$B.parse_fstring(string_no_bs)}catch(err){if(err.position){$pos+=err.position}
+$_SyntaxError(C,[err.message])}}
 if(bytes){C=$transition(C,'str','b'+car+string+car)}else if(fstring){$pos-=sm_length
 C=$transition(C,'str',elts)
 $pos+=sm_length}else{C=$transition(C,'str',car+string+car)}
@@ -12775,6 +12776,9 @@ function fstring_expression(){this.type="expression"
 this.expression=""
 this.conversion=null
 this.fmt=null}
+function fstring_error(msg,pos){error=Error(msg)
+error.position=pos
+throw error}
 $B.parse_fstring=function(string){
 var elts=[],pos=0,current="",ctype=null,nb_braces=0,car
 while(pos < string.length){if(ctype===null){car=string.charAt(pos)
@@ -12784,7 +12788,7 @@ pos+=2}else{ctype="expression"
 nb_braces=1
 pos++}}else if(car=="}"){if(string.charAt(pos+1)==car){ctype="string"
 current="}"
-pos+=2}else{throw Error(" f-string: single '}' is not allowed")}}else{ctype="string"
+pos+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{ctype="string"
 current=car
 pos++}}else if(ctype=="string"){
 var i=pos
@@ -12794,7 +12798,7 @@ i+=2}else{elts.push(current)
 ctype="expression"
 pos=i+1
 break}}else if(car=="}"){if(string.charAt(i+1)==car){current+=car
-i+=2}else{throw Error(" f-string: single '}' is not allowed")}}else{current+=car
+i+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{current+=car
 i++}}
 pos=i+1}else if(ctype=="debug"){
 while(string.charAt(i)==" "){i++}
@@ -12809,6 +12813,7 @@ if(car=="{" && nb_paren==0){nb_braces++
 current.expression+=car
 i++}else if(car=="}" && nb_paren==0){nb_braces-=1
 if(nb_braces==0){
+if(current.expression==""){fstring_error("f-string: empty expression not allowed",pos)}
 elts.push(current)
 ctype=null
 current=""
@@ -12827,11 +12832,11 @@ i++}else if(car==")"){nb_paren--
 current.expression+=car
 i++}else if(car=='"'){
 if(string.substr(i,3)=='"""'){var end=string.indexOf('"""',i+3)
-if(end==-1){throw Error("f-string: unterminated string")}else{var trs=string.substring(i,end+3)
+if(end==-1){fstring_error("f-string: unterminated string",pos)}else{var trs=string.substring(i,end+3)
 trs=trs.replace("\n","\\n\\")
 current.expression+=trs
 i=end+3}}else{var end=string.indexOf('"',i+1)
-if(end==-1){throw Error("f-string: unterminated string")}else{current.expression+=string.substring(i,end+1)
+if(end==-1){fstring_error("f-string: unterminated string",pos)}else{current.expression+=string.substring(i,end+1)
 i=end+1}}}else if(nb_paren==0 && car==":"){current.fmt=true
 current.expression+=car
 i++}else if(car=="="){
@@ -12850,7 +12855,7 @@ current.expression=ce
 ctype="debug"
 i++}}else{current.expression+=car
 i++}}
-if(nb_braces > 0){throw Error("f-string: expected '}'")}}}
+if(nb_braces > 0){fstring_error("f-string: expected '}'",pos)}}}
 if(current.length > 0){elts.push(current)}
 return elts}
 var surrogate=str.$surrogate=$B.make_class("surrogate_string",function(s){
