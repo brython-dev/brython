@@ -98,6 +98,7 @@ var BackReference = function(pos, type, value){
         if(groups){
             for(var group of groups){
                 this.groups.push(group)
+                group.chars.push(this)
             }
         }
     },
@@ -113,6 +114,7 @@ var BackReference = function(pos, type, value){
         this.type = "conditional backref"
         this.pos = pos
         this.group_ref = group_ref
+        this.chars = []
         this.match_codepoints = []
         this.nb_success = 0
         this.re_if_exists = new Node()
@@ -136,6 +138,7 @@ var BackReference = function(pos, type, value){
         this.type = "group"
         this.pos = pos
         this.items = []
+        this.chars = []
         this.match_codepoints = []
         this.nb_success = 0
         this.extension = extension
@@ -176,7 +179,21 @@ Char.prototype.match = function(string, pos){
     }else if(this.char == "^"){
         return pos == 0 ? EmptyString : false
     }else if(this.char.character_class){
-        test = char.match(new RegExp(this.char + ''))
+        switch(this.char.value){
+            case 's':
+                test = $B.unicode_tables.Zs[cp] !== undefined ||
+                            $B.unicode_bidi_whitespace.indexOf(cp) > -1
+                break
+            case '.':
+                test = cp != 10 && cp != 13
+                break
+            case 'd':
+                test = $B.unicode_tables.numeric[cp] !== undefined
+                break
+            case 'D':
+                test = $B.unicode_tables.numeric[cp] === undefined
+                break
+        }
     }else if(this.char.type){
         if(this.char.ord !== undefined){
             test = this.char.ord == cp
@@ -211,7 +228,7 @@ Char.prototype.match = function(string, pos){
     if(test){
         if(this.repeat){
             this.nb_success++
-            if(! this.test_repeat_success()){
+            if(! this.accepts_success()){
                 return false
             }
         }
@@ -274,7 +291,7 @@ Group.prototype.match = function(s, pos){
     if(group_match){
         if(this.repeat){
             // test if repeat condition is still ok
-            if(! this.test_repeat_success()){
+            if(! this.accepts_success()){
                 return false
             }
         }
@@ -286,7 +303,7 @@ Group.prototype.match_string = function(){
     return from_codepoint_list(this.match_codepoints)
 }
 
-Group.prototype.test_repeat_success = function(){
+Group.prototype.accepts_success = function(){
     // Called when a repeated model succeeded.
     // Return true if the string currently matching the model is
     // compatible with the repeat option
@@ -307,7 +324,7 @@ Group.prototype.test_repeat_success = function(){
     return true
 }
 
-Group.prototype.test_repeat_fail = function(){
+Group.prototype.accepts_failure = function(){
     // Called when a repeated model failed.
     // Return true if the string currently matching the model is
     // compatible with the repeat option
@@ -329,8 +346,8 @@ Group.prototype.test_repeat_fail = function(){
     return true
 }
 
-Char.prototype.test_repeat_fail = Group.prototype.test_repeat_fail
-Char.prototype.test_repeat_success = Group.prototype.test_repeat_success
+Char.prototype.accepts_failure = Group.prototype.accepts_failure
+Char.prototype.accepts_success = Group.prototype.accepts_success
 
 function read(name, pos){
     var code = name.charCodeAt(pos),
@@ -417,7 +434,6 @@ function escaped_char(text, pos){
         if(mo && mo[0].length == 2){
             return {
                 type: 'x',
-                value: String.fromCharCode(parseInt(mo[0], 16)),
                 ord: eval("0x" + mo[0]),
                 length: 2 + mo[0].length
             }
@@ -430,7 +446,6 @@ function escaped_char(text, pos){
         if(mo && mo[0].length == 4){
             return {
                 type: 'u',
-                value: String.fromCharCode(parseInt(mo[0], 16)),
                 ord: eval("0x" + mo[0]),
                 length: 2 + mo[0].length
             }
@@ -444,7 +459,6 @@ function escaped_char(text, pos){
             var value = validate_code_point(mo[0])
             return {
                 type: 'U',
-                str: mo[0],
                 ord: value,
                 length: 2 + mo[0].length
             }
@@ -467,7 +481,6 @@ function escaped_char(text, pos){
             }
             return {
                 type: 'o',
-                value: String.fromCharCode(octal_value),
                 ord: octal_value,
                 length: 1 + mo[0].length
             }
@@ -501,9 +514,9 @@ function check_character_range(t, positions){
     }
     t.splice(t.length - 2, 2, {
         type: 'character_range',
-        start: start[0],
-        end: end[0],
-        ord: [start[0].ord, end[0].ord]
+        start: start,
+        end: end,
+        ord: [start.ord, end.ord]
     })
 }
 
@@ -526,7 +539,7 @@ function parse_character_set(text, pos){
     while(pos < text.length){
         var char = text[pos]
         if(char == ']'){
-            return [result, pos + 1]
+            return [result, pos]
         }
         if(char == '\\'){
             var escape = escaped_char(text, pos)
@@ -707,11 +720,13 @@ function compile(pattern){
                 groups[group_num] = {num: group_num, item}
             }
         }else if(item instanceof GroupEnd){
-            pos = item.pos
+            end_pos = item.pos
             if(group_stack.length == 0){
                 fail("unbalanced parenthesis", pos)
             }
             var item = group_stack.pop()
+            item.end_pos = end_pos
+            item.text = pattern.substring(item.pos, end_pos)
             if(item instanceof Group && item.items.length == 0){
                 item.add(new Char(pos, EmptyString, group_stack.concat([item])))
             }else if(item instanceof ConditionalBackref){
@@ -766,6 +781,10 @@ function compile(pattern){
             item.groups = []
             for(var group of group_stack){
                 item.groups.push(group)
+                if(group.chars === undefined){
+                    console.log("no chars", group)
+                }
+                group.chars.push(item)
             }
             node.add(item)
         }else if(item instanceof Repeater){
@@ -1085,8 +1104,10 @@ function* tokenize(pattern){
                 pos++
             }
         }else if(char == '{'){
+            console.log("tokenize, char", char)
             var reps = /\{(\d+)((,)(\d+))?\}/.exec(pattern.substr(pos))
             if(reps){
+                console.log("reps", reps)
                 var limits = [parseInt(reps[1])]
                 if(reps[4] !== undefined){
                     var max = parseInt(reps[4])
@@ -1102,13 +1123,25 @@ function* tokenize(pattern){
                 }else{
                     yield new Repeater(pos, limits)
                 }
+                console.log("yielded a repeater, pos", pos, pattern.substr(pos))
             }else{
                 fail('{ not terminated', pos)
             }
-       }else if(char == '|'){
-           yield new Or(pos)
-           pos++
-       }else{
+        }else if(char == '|'){
+            yield new Or(pos)
+            pos++
+        }else if(char == '.'){
+            yield new Char(pos,
+                {
+                    pos,
+                    value: char,
+                    length: 1,
+                    character_class: true,
+                    toString: function(){return '\\.'}
+                }
+            )
+            pos++
+        }else{
             yield new Char(pos, char)
             pos++
         }
@@ -1121,7 +1154,6 @@ function CodePoints(s){
 }
 
 function match(pattern, string, pos){
-
     function* PatternReader(pattern){
         if(pattern instanceof Char ||
                 pattern instanceof ConditionalBackref){
@@ -1174,7 +1206,7 @@ function match(pattern, string, pos){
         if(cp === undefined){
             // end of string before end of pattern
             // if the next models accept an empty match, continue
-            if(model.repeat && model.test_repeat_fail()){
+            if(model.repeat && model.accepts_failure()){
                 model = pattern_reader.next().value
                 if(model === undefined){
                     return new MatchObject(string, match_codepoints, pattern,
@@ -1193,15 +1225,66 @@ function match(pattern, string, pos){
                 if(! model.repeat){
                     model = pattern_reader.next().value
                 }
+            }else if(model.repeat && model.accepts_failure()){
+                model = pattern_reader.next().value
             }else{
-                if(model.repeat){
-                    // test if repeat condition is ok
-                    if(! model.test_repeat_fail()){
+                // If the previous model is repeated, test if a part of the
+                // match would also match this model (backtracking)
+                var previous,
+                    backtracking = false
+                if(model.parent !== undefined &&
+                        model.parent.items !== undefined){
+                    for(var m of model.parent.items){
+                        if(m === model){
+                            break
+                        }
+                        previous = m
+                    }
+                }
+                if(previous){
+                    if(previous.chars){
+                        previous = previous.chars[previous.chars.length - 1]
+                    }
+                    if(pos > 0 &&
+                            previous.repeat &&
+                            previous.match_codepoints &&
+                            previous.match_codepoints.length > 0){
+                        var mcps = previous.match_codepoints.slice(),
+                            prev_pos = pos - 1,
+                            nb_match = 0,
+                            parent = model.parent,
+                            mo
+                        while(prev_pos >= pos - mcps.length){
+                            model.match_codepoints = []
+                            model.nb_success = 0
+                            mo = match({items: [model]}, string, prev_pos)
+                            if(mo && mo.match_codepoints.length >= nb_match){
+                                prev_pos--
+                                backtracking = true
+                                nb_match++
+                            }else{
+                                break
+                            }
+                        }
+                        if(prev_pos < pos - 1){
+                            previous.match_codepoints = mcps.slice(0,
+                                mcps.length - nb_match)
+                            model.match_codepoints = mcps.slice(mcps.length -
+                                nb_match)
+                            model.nb_success = nb_match
+                        }
+                    }
+                }
+                if(! backtracking){
+                    if(model.repeat){
+                        // test if repeat condition is ok
+                        if(! model.accepts_failure()){
+                            return false
+                        }
+                        model = pattern_reader.next().value
+                    }else{
                         return false
                     }
-                    model = pattern_reader.next().value
-                }else{
-                    return false
                 }
             }
         }else if(model instanceof Choice){
