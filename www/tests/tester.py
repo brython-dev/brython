@@ -160,6 +160,8 @@ class Tester:
                         round((time.time()-t0)*1000), 'skipped')
                 except Exception as exc:
                     tb.print_exc()
+                    report.add(method[5:], lineno,
+                        round((time.time()-t0)*1000), 'failed')
         return report
 
 class MethodReport:
@@ -207,9 +209,11 @@ class TestReport:
         res = 'Class %s\n' %self.class_name
         methods = list(self.records.keys())
         methods.sort()
+        ncars = min(40, max(len(method) for method in methods))
         for method in methods:
             report = self.records[method]
-            res += '{:15} {1.status} {1.lineno}\n'.format(method, report)
+            fmt = f'  {{:{ncars}}} {{1.lineno:4}} {{1.status}}\n'
+            res += fmt.format(method, report)
             if report.args:
                 res += '    {0.args[0]}\n'.format(report)
         return res
