@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-12 09:34:42.023900"
-__BRYTHON__.timestamp=1607762082023
+__BRYTHON__.compiled_date="2020-12-14 16:49:31.631433"
+__BRYTHON__.timestamp=1607960971631
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -6016,7 +6016,7 @@ var has_kw_args=false,nb_pos=args.length,filled=0,extra_kw,only_positional
 var end_positional=var_names.indexOf("/")
 if(end_positional !=-1){var_names.splice(end_positional,1)
 only_positional=var_names.slice(0,end_positional)}
-if(nb_pos > 0 && args[nb_pos-1].$nat){nb_pos--
+if(nb_pos > 0 && args[nb_pos-1]&& args[nb_pos-1].$nat){nb_pos--
 if(Object.keys(args[nb_pos].kw).length > 0){has_kw_args=true
 var kw_args=args[nb_pos].kw
 if(Array.isArray(kw_args)){var kwa=kw_args[0]
@@ -12668,7 +12668,7 @@ return self.charAt(0)+
 default:
 return "0".repeat(width-self.length)+self}}
 str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
-if(arg===undefined){return $B.UndefinedClass.__str__()}
+if(arg===undefined){return $B.UndefinedClass.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
 switch(typeof arg){case "string":

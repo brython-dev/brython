@@ -39,7 +39,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
 
     // If the function call had keywords arguments, they are in the last
     // element of $args
-    if(nb_pos > 0 && args[nb_pos - 1].$nat){
+    if(nb_pos > 0 && args[nb_pos - 1] && args[nb_pos - 1].$nat){
         nb_pos--
         if(Object.keys(args[nb_pos].kw).length > 0){
             has_kw_args = true

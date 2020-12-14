@@ -83,7 +83,8 @@ tableau suivant :
 <tr><td>Evénement DOM</td><td>instance de `DOMEvent`</td></tr>
 <tr><td>Collection d’éléments DOM</td><td>liste d'instances de `DOMNode`</td>
 </tr>
-<tr><td>`null, true, false`</td><td>`None, True, False`</td></tr>
+<tr><td>`true, false`</td><td>`True, False`</td></tr>
+<tr><td>`null`</td><td>inchangé (affiché comme '<Javascript null>')</td></tr>
 <tr><td>entier (Integer)</td><td>instance de `int`</td></tr>
 <tr><td>réel (Float)</td><td>instance de `float`</td></tr>
 <tr><td>chaîne (String)</td><td>instance de `str`</td></tr>

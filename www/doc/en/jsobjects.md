@@ -79,7 +79,8 @@ Javascript objects are converted into their Python equivalent in this way :
 <tr><td>DOM event</td><td>instance of `DOMEvent`</td></tr>
 <tr><td>Collection of DOM elements</td><td>list of `DOMNode` instances</td>
 </tr>
-<tr><td>`null, true, false`</td><td>`None, True, False`</td></tr>
+<tr><td>`true, false`</td><td>`True, False`</td></tr>
+<tr><td>`null`</td><td>unchanged (printed as '<Javascript null>')</td></tr>
 <tr><td>Integer</td><td>instance of `int`</td></tr>
 <tr><td>Float</td><td>instance of `float`</td></tr>
 <tr><td>String</td><td>instance of `str`</td></tr>

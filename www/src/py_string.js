@@ -2091,6 +2091,8 @@ str.$factory = function(arg, encoding, errors){
     if(arguments.length == 0){return ""}
     if(arg === undefined){
         return $B.UndefinedClass.__str__()
+    }else if(arg === null){
+        return '<Javascript null>'
     }
     if(encoding !== undefined){
         // Arguments may be passed as keywords (cf. issue #1060)

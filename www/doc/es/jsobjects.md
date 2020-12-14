@@ -84,7 +84,8 @@ siguiente forma:
 <tr><td>Evento DOM</td><td>instancia de `DOMEvent`</td></tr>
 <tr><td>Colección de elementos DOM</td><td>lista de instancias de `DOMNode`</td>
 </tr>
-<tr><td>`null, true, false`</td><td>`None, True, False`</td></tr>
+<tr><td>`true, false`</td><td>`None, True, False`</td></tr>
+<tr><td>`null`</td><td>sin cambios (aparece como '<Javascript null>')</td></tr>
 <tr><td>Integer</td><td>instancia de `int`</td></tr>
 <tr><td>Float</td><td>instancia de `float`</td></tr>
 <tr><td>String</td><td>instancia de `str`</td></tr>
