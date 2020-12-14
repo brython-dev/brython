@@ -39,6 +39,10 @@ print(date.toDateString())
 **javascript**.`Math` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math)
 > Object for mathematical functions and constants.
 
+**javascript**.`NULL`
+> the Javascript object `null`. Can be used to test if a Javascript
+> object is `null`.
+
 **javascript**.`Number` [doc](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number)
 > Constructor for objects of type "number".
 
@@ -68,4 +72,6 @@ print(String.new("test33").search(re))
 ```
 </blockquote>
 
-
+**javascript**.`UNDEFINED`
+> the Javascript object `undefined`. Can be used to test if a Javascript
+> object is `undefined`.

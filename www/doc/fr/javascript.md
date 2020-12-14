@@ -38,7 +38,11 @@ print(date.toDateString())
 >> `parse`: conversion d'une chaine de caractères en un objet simple
 
 **javascript**.`Math` [doc](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Math)
-> Objet pour les fonctions et constantes mathématiques.
+> objet pour les fonctions et constantes mathématiques.
+
+**javascript**.`NULL`
+> l'objet Javascript `null`. Peut servir à tester si un objet Javascript est
+> `null`.
 
 **javascript**.`Number` [doc](https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Number)
 > Constructeur pour les objets de type "number".
@@ -70,4 +74,8 @@ re = RegExp.new(r"^test(\d+)$")
 print(String.new("test33").search(re))
 ```
 </blockquote>
+
+**javascript**.`UNDEFINED`
+> l'objet Javascript `undefined`. Peut servir à tester si un objet Javascript
+> est `undefined`.
 
