@@ -37,11 +37,19 @@ Flag.__index__ = function(self){
     return self.value
 }
 
+Flag.__or__ = function(self, other){
+    console.log(self, other)
+    return Flag.$factory(`${self.name} ${other.name}`,
+        self.value | other.value)
+}
+
 Flag.__str__ = function(self){
     return `re.${self.name}`
 }
 
 $B.set_func_names(Flag, "re")
+
+var no_flag = Flag.$factory('none', 0)
 
 function Pattern(text, node){
     this.text = text
@@ -58,7 +66,7 @@ var BPattern = $B.make_class("Pattern",
 )
 
 BPattern.match = function(self, string){
-    var mo = match(self.pattern, string)
+    var mo = match(self.pattern, string, 0)
     if(mo === false){
         return _b_.None
     }
@@ -68,13 +76,38 @@ BPattern.match = function(self, string){
 $B.set_func_names(BPattern, "re")
 
 var BackReference = function(pos, type, value){
-        // for "\number"
-        this.name = "BackReference"
-        this.pos = pos
-        this.type = type // "name" or "num"
-        this.value = value
-    },
-    Case = function(){
+    // for "\number"
+    this.name = "BackReference"
+    this.pos = pos
+    this.type = type // "name" or "num"
+    this.value = value
+    this.groups = []
+}
+
+BackReference.prototype.match = function(string, pos){
+    var top = this.parent
+    while(top.parent){
+        top = top.parent
+    }
+    var group = top.groups[this.value]
+    if(group){
+        // compare string codepoints starting at pos with the group codepoints
+        var group_cps = group.item.match_codepoints
+        for(var i = 0, len = group_cps.length; i < len; i++){
+            if(group_cps[i] != string.codepoints[pos + i]){
+                return false
+            }
+        }
+        var cps = group_cps.slice()
+        for(var group of this.groups){
+            group.match_codepoints = group.match_codepoints.concat(cps)
+        }
+        return cps
+    }
+    return false
+}
+
+var Case = function(){
         this.name = "Case"
         this.items = []
         this.add = function(item){
@@ -82,24 +115,11 @@ var BackReference = function(pos, type, value){
             item.parent = this
         }
     },
-    Char = function(pos, char, groups){
-        // character in a regular expression or in a character set
-        // pos : position of the character in the pattern string
-        // char : the character
-        // groups (optional) : the groups that contain the character
-        this.pos = pos
+    CharItem = function(char){
         this.char = char
-        if(typeof char == "string"){
-            this.ord = _b_.ord(char)
-        }
-        this.match_codepoints = []
-        this.nb_success = 0
-        this.groups = []
-        if(groups){
-            for(var group of groups){
-                this.groups.push(group)
-                group.chars.push(this)
-            }
+        this.ord = _b_.ord(char)
+        this.toString = function(){
+            return this.char
         }
     },
     Choice = function(){
@@ -109,17 +129,6 @@ var BackReference = function(pos, type, value){
             this.items.push(option)
             option.parent = this
         }
-    },
-    ConditionalBackref = function(pos, group_ref){
-        this.type = "conditional backref"
-        this.pos = pos
-        this.group_ref = group_ref
-        this.chars = []
-        this.match_codepoints = []
-        this.nb_success = 0
-        this.re_if_exists = new Node()
-        this.re_if_not_exists = new Node()
-        this.nb_options = 1
     },
     EmptyString = {
         toString: function(){
@@ -134,21 +143,6 @@ var BackReference = function(pos, type, value){
         this.name = "GroupEnd",
         this.pos = pos
     },
-    Group = function(pos, extension){
-        this.type = "group"
-        this.pos = pos
-        this.items = []
-        this.chars = []
-        this.match_codepoints = []
-        this.nb_success = 0
-        this.extension = extension
-        if(extension && extension.type == "test_value"){
-            this.re_if_exists = new Node()
-            this.re_if_exists.info = "test if exists"
-            this.re_if_not_exists = new Node()
-            this.nb_options = 1
-        }
-    },
     Or = function(pos){
         this.name = "Or"
         this.pos = pos
@@ -159,6 +153,98 @@ var BackReference = function(pos, type, value){
         this.op = op
         this.greedy = greedy !== undefined
     }
+
+function alt_case(char){
+    // if argument is a number, convert to string
+    if(typeof char == "number"){
+        char = _b_.chr(char)
+        if(char.items){ // surrogate pair
+            char = char.items[0]
+        }
+    }
+    // if char is cased, create items
+    var upper = char.toUpperCase(),
+        lower = char.toLowerCase(),
+        res
+    if(upper != char){
+        res = new CharItem(upper)
+    }else if(lower != char){
+        res = new CharItem(lower)
+    }
+    return res
+}
+
+var Char = function(pos, char, groups){
+    // character in a regular expression or in a character set
+    // pos : position of the character in the pattern string
+    // char : the character
+    // groups (optional) : the groups that contain the character
+    this.pos = pos
+    if(typeof char == "string"){
+        this.char = {
+            items: [new CharItem(char)]
+        }
+    }else{
+        this.char = char
+    }
+    this.match_codepoints = []
+    this.nb_success = 0
+    this.groups = []
+    if(groups){
+        for(var group of groups){
+            this.groups.push(group)
+            group.chars.push(this)
+        }
+    }
+}
+
+Char.prototype.apply_flags = function(flags){
+    if(flags.value == 0){ // no flag
+        return
+    }
+    if(flags.value | IGNORECASE.value){
+        if(this.char.character_class){
+            // to do
+        }else if(this.char.type){
+            var alt = alt_case(this.char.ord)
+            if(alt){
+                this.char = {items: [this.char, alt]}
+            }
+        }else if(this.char.items){
+            var new_items = []
+            for(var item of this.char.items){
+                if(Array.isArray(item.ord)){
+                    var start1 = alt_case(item.ord[0]),
+                        end1 = alt_case(item.ord[1])
+                    if(start1 && end1){
+                        new_items.push({
+                            type: "character_range",
+                            start: start1,
+                            end: end1,
+                            ord: [start1.ord, end1.ord]
+                        })
+                    }else if(start1 || end1){
+                        console.log("bizarre", item, start1, end1)
+                    }
+                }else{
+                    var alt = alt_case(item.ord)
+                    if(alt){
+                        new_items.push(alt)
+                    }
+                }
+            }
+            this.char.items = this.char.items.concat(new_items)
+        }else if(this.char === EmptyString){
+            // nothing to do
+        }else{
+            // if char is cased, create items
+            var alt = alt_case(this.char)
+            if(alt){
+                this.char = {items: [this.char, alt]}
+            }
+        }
+    }
+}
 
 Char.prototype.match = function(string, pos){
     if(this.repeat){
@@ -249,6 +335,18 @@ Char.prototype.match = function(string, pos){
     return false
 }
 
+var ConditionalBackref = function(pos, group_ref){
+    this.type = "conditional backref"
+    this.pos = pos
+    this.group_ref = group_ref
+    this.chars = []
+    this.match_codepoints = []
+    this.nb_success = 0
+    this.re_if_exists = new Node()
+    this.re_if_not_exists = new Node()
+    this.nb_options = 1
+}
+
 ConditionalBackref.prototype.add = function(item){
     if(this.nb_options == 1){
         this.re_if_exists.add(item)
@@ -270,7 +368,23 @@ ConditionalBackref.prototype.match = function(s, pos){
     }else{
         test = match(this.re_if_not_exists, s, pos)
     }
-    return test
+    return test.match_codepoints
+}
+
+var Group = function(pos, extension){
+    this.type = "group"
+    this.pos = pos
+    this.items = []
+    this.chars = []
+    this.match_codepoints = []
+    this.nb_success = 0
+    this.extension = extension
+    if(extension && extension.type == "test_value"){
+        this.re_if_exists = new Node()
+        this.re_if_exists.info = "test if exists"
+        this.re_if_not_exists = new Node()
+        this.nb_options = 1
+    }
 }
 
 Group.prototype.add = function(item){
@@ -346,8 +460,47 @@ Group.prototype.accepts_failure = function(){
     return true
 }
 
+Group.prototype.done = function(){
+    // Return true if a repeated model that succeeded does not allow any
+    // additional character.
+    if(this.repeat.op == '?' && this.nb_success == 1){
+        return true
+    }else if(Array.isArray(this.repeat.op)){
+        // test fails if the number of repeats is not correct
+        if(this.repeat.op.length == 1 &&
+                this.nb_success == this.repeat.op[0]){
+            return true
+        }else if(this.nb_success == this.repeat.op[1]){
+            return true
+        }
+    }
+    return false
+}
+
+
 Char.prototype.accepts_failure = Group.prototype.accepts_failure
 Char.prototype.accepts_success = Group.prototype.accepts_success
+Char.prototype.done = Group.prototype.done
+
+BackReference.prototype.accepts_failure = Group.prototype.accepts_failure
+BackReference.prototype.accepts_success = Group.prototype.accepts_success
+BackReference.prototype.done = Group.prototype.done
+
+function StringStart(pos){
+    this.pos = pos
+}
+
+StringStart.prototype.match = function(string, pos){
+    return pos == 0 ? [] : false
+}
+
+function StringEnd(pos){
+    this.pos = pos
+}
+
+StringEnd.prototype.match = function(string, pos){
+    return pos > string.codepoints.length - 1 ? [] : false
+}
 
 function read(name, pos){
     var code = name.charCodeAt(pos),
@@ -490,7 +643,7 @@ function escaped_char(text, pos){
             return {
                 type: 'backref',
                 value: parseInt(mo[0]),
-                length: mo[0].length
+                length: 1 + mo[0].length
             }
         }
         if(special.match(/[a-zA-Z]/)){
@@ -660,7 +813,7 @@ function Node(parent){
     }
 }
 
-function compile(pattern){
+function compile(pattern, flags){
     var group_num = 0,
         group_stack = [],
         groups = {},
@@ -775,15 +928,17 @@ function compile(pattern){
             }else if(item.type == "num"){
                 fail(`invalid group reference ${item.value}`, pos)
             }
+            item.groups = []
+            for(var group of group_stack){
+                item.groups.push(group)
+            }
             node.add(item)
         }else if(item instanceof Char){
+            item.apply_flags(flags)
             subitems.push(item)
             item.groups = []
             for(var group of group_stack){
                 item.groups.push(group)
-                if(group.chars === undefined){
-                    console.log("no chars", group)
-                }
                 group.chars.push(item)
             }
             node.add(item)
@@ -794,7 +949,8 @@ function compile(pattern){
             }
             var previous = node.items[node.items.length - 1]
             if(previous instanceof Char ||
-                    previous instanceof Group){
+                    previous instanceof Group ||
+                    previous instanceof BackReference){
                 if(previous.repeat){
                     fail("multiple repeat", pos)
                 }
@@ -837,6 +993,9 @@ function compile(pattern){
                     node = case2
                 }
             }
+        }else if(item instanceof StringStart ||
+                 item instanceof StringEnd){
+            node.add(item)
         }else{
             fail("unknown item type " + item, pos)
         }
@@ -852,6 +1011,7 @@ function compile(pattern){
     node.groups = groups
     node.text = pattern
     node.nb_groups = group_num
+    node.flags = flags
     return node
 }
 
@@ -1104,10 +1264,8 @@ function* tokenize(pattern){
                 pos++
             }
         }else if(char == '{'){
-            console.log("tokenize, char", char)
             var reps = /\{(\d+)((,)(\d+))?\}/.exec(pattern.substr(pos))
             if(reps){
-                console.log("reps", reps)
                 var limits = [parseInt(reps[1])]
                 if(reps[4] !== undefined){
                     var max = parseInt(reps[4])
@@ -1123,7 +1281,6 @@ function* tokenize(pattern){
                 }else{
                     yield new Repeater(pos, limits)
                 }
-                console.log("yielded a repeater, pos", pos, pattern.substr(pos))
             }else{
                 fail('{ not terminated', pos)
             }
@@ -1141,6 +1298,12 @@ function* tokenize(pattern){
                 }
             )
             pos++
+        }else if(char == '^'){
+            yield new StringStart(pos)
+            pos++
+        }else if(char == '$'){
+            yield new StringEnd(pos)
+            pos++
         }else{
             yield new Char(pos, char)
             pos++
@@ -1153,7 +1316,7 @@ function CodePoints(s){
     this.length = this.codepoints.length
 }
 
-function match(pattern, string, pos){
+function match(pattern, string, pos, flags){
     function* PatternReader(pattern){
         if(pattern instanceof Char ||
                 pattern instanceof ConditionalBackref){
@@ -1178,7 +1341,7 @@ function match(pattern, string, pos){
     var pos = pos || 0,
         start = pos
     if(typeof pattern == "string" || pattern.__class__ === _b_.str.$surrogate){
-        pattern = compile(pattern)
+        pattern = compile(pattern, flags)
     }
 
     if(typeof string == "string" || string.__class__ === _b_.str.$surrogate){
@@ -1217,12 +1380,15 @@ function match(pattern, string, pos){
         }
         if(model instanceof Group ||
                 model instanceof Char ||
-                model instanceof ConditionalBackref){
+                model instanceof ConditionalBackref ||
+                model instanceof BackReference ||
+                model instanceof StringStart ||
+                model instanceof StringEnd){
             var cps = model.match(string, pos)
             if(cps){
                 match_codepoints = match_codepoints.concat(cps)
                 pos += cps.length
-                if(! model.repeat){
+                if((! model.repeat) || model.done()){
                     model = pattern_reader.next().value
                 }
             }else if(model.repeat && model.accepts_failure()){
@@ -1257,7 +1423,8 @@ function match(pattern, string, pos){
                         while(prev_pos >= pos - mcps.length){
                             model.match_codepoints = []
                             model.nb_success = 0
-                            mo = match({items: [model]}, string, prev_pos)
+                            mo = match({items: [model]}, string, prev_pos,
+                                flags)
                             if(mo && mo.match_codepoints.length >= nb_match){
                                 prev_pos--
                                 backtracking = true
@@ -1290,7 +1457,7 @@ function match(pattern, string, pos){
         }else if(model instanceof Choice){
             var found = false
             for(var option of model.items){
-                var mo = match(option, string, pos)
+                var mo = match(option, string, pos, flags)
                 if(mo){
                     found = true
                     match_codepoints = match_codepoints.concat(mo.match_codepoints)
@@ -1423,7 +1590,6 @@ BMatchObject.__setitem__ = function(){
 
 BMatchObject.__str__ = function(self){
     var mo = self.mo
-    console.log("mo", mo)
     return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
         `match=${_b_.repr(mo.match_string())}>`
 }
@@ -1552,21 +1718,20 @@ function string2bytes(s){
 }
 
 var $module = {
-    ASCII: Flag.$factory("ASCII", 256),
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
-                    ['pattern', 'flags'], arguments, {flags: 0},
+                    ['pattern', 'flags'], arguments, {flags: no_flag},
                     null, null)
-        return BPattern.$factory(compile($.pattern))
+        return BPattern.$factory(compile($.pattern, $.flags))
     },
-    DOTALL: Flag.$factory("DOTALL", 16),
     error: error,
     findall: function(){
         var $ = $B.args("findall", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: 0},
+                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
                     null, null),
                 pattern = $.pattern,
-                string = $.string
+                string = $.string,
+                flags = $.flags
         var result = [],
             pos = 0
         if(pattern.__class__ === BPattern){
@@ -1585,7 +1750,7 @@ var $module = {
             }
         }
         while(pos < string.length){
-            var mo = match(pattern, string, pos)
+            var mo = match(pattern, string, pos, flags)
             if(mo){
                 if(mo.re.nb_groups){
                     if(mo.re.nb_groups == 1){
@@ -1607,22 +1772,20 @@ var $module = {
         }
         return result
     },
-    IGNORECASE: Flag.$factory("IGNORECASE", 2),
-    LOCALE: Flag.$factory("LOCALE", 4),
-    MULTILINE: Flag.$factory("MULTILINE", 8),
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: 0},
+                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
                     null, null),
                 pattern = $.pattern,
-                string = $.string
+                string = $.string,
+                flags = $.flags
         if(pattern.__class__ === BPattern){
             pattern = pattern.pattern
         }
         var data = str_or_bytes(string, pattern),
             string = data.string,
             pattern = data.pattern
-        var mo = match(pattern, string)
+        var mo = match(pattern, string, 0, flags)
         if(mo === false){
             return _b_.None
         }
@@ -1631,10 +1794,11 @@ var $module = {
     },
     search: function(){
         var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: 0},
+                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
                     null, null),
                 pattern = $.pattern,
-                string = $.string
+                string = $.string,
+                flags = $.flags
         if(pattern.__class__ === BPattern){
             pattern = pattern.pattern
         }
@@ -1643,7 +1807,7 @@ var $module = {
             pattern = data.pattern
         var pos = 0
         while(pos < string.length){
-            var mo = match(pattern, string, pos)
+            var mo = match(pattern, string, pos, flags)
             mo.data_type = data.type
             if(mo){
                 return BMatchObject.$factory(mo)
@@ -1652,15 +1816,13 @@ var $module = {
             }
         }
         return _b_.None
-    },
-    U: Flag.$factory("U", 32),
-    VERBOSE: Flag.$factory("VERBOSE", 64)
-
+    }
 }
-$module.A = $module.ASCII
-$module.I = $module.IGNORECASE
-$module.L = $module.LOCALE
-$module.M = $module.MULTILINE
-$module.S = $module.DOTALL
-$module.X = $module.VERBOSE
 
+var ASCII = $module.A = $module.ASCII = Flag.$factory("ASCII", 256)
+var IGNORECASE = $module.I = $module.IGNORECASE = Flag.$factory("IGNORECASE", 2)
+var LOCALE = $module.L = $module.LOCALE = Flag.$factory("LOCALE", 4)
+var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory("MULTILINE", 8)
+var DOTALL = $module.S = $module.DOTALL = Flag.$factory("DOTALL", 16)
+var U = $module.U = Flag.$factory("U", 32)
+var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory("VERBOSE", 64)
