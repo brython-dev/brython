@@ -751,16 +751,20 @@ $B.$setitem = function(obj, item, value){
     }
     $B.$getattr(obj, "__setitem__")(item, value)
 }
+
 // augmented item
 $B.augm_item_add = function(obj, item, incr){
     if(Array.isArray(obj) && typeof item == "number" &&
             obj[item] !== undefined){
         if(Array.isArray(obj[item]) && Array.isArray(incr)){
-            for(var i  =0, len = incr.length; i < len; i++){
+            for(var i = 0, len = incr.length; i < len; i++){
                 obj[item].push(incr[i])
             }
             return
         }else if(typeof obj[item] == "string" && typeof incr == "string"){
+            obj[item] += incr
+            return
+        }else if(typeof obj[item] == "number" && typeof incr == "number"){
             obj[item] += incr
             return
         }
@@ -775,6 +779,7 @@ $B.augm_item_add = function(obj, item, incr){
     }
     augm_func(incr)
 }
+
 var augm_item_src = "" + $B.augm_item_add
 var augm_ops = [["-=", "sub"], ["*=", "mul"]]
 for(var i  =0, len = augm_ops.length; i < len; i++){
