@@ -125,6 +125,7 @@ var Case = function(){
     Choice = function(){
         this.type = "choice"
         this.items = []
+        this.groups = []
         this.add = function(option){
             this.items.push(option)
             option.parent = this
@@ -155,6 +156,8 @@ var Case = function(){
     }
 
 function alt_case(char){
+    // Return a list of characters that match char in case-insensitive
+    // regular expressions
     // if argument is a number, convert to string
     if(typeof char == "number"){
         char = _b_.chr(char)
@@ -162,14 +165,36 @@ function alt_case(char){
             char = char.items[0]
         }
     }
-    // if char is cased, create items
     var upper = char.toUpperCase(),
         lower = char.toLowerCase(),
-        res
+        res = []
     if(upper != char){
-        res = new CharItem(upper)
-    }else if(lower != char){
-        res = new CharItem(lower)
+        res.push(new CharItem(upper))
+    }
+    if(lower != char){
+        res.push(new CharItem(lower))
+    }
+    // special cases
+    if(char == "K"){
+        // ‘K’ (U+212A, Kelvin sign) matches "K" and "k"
+        res.push(new CharItem("k"))
+        res.push(new CharItem("K"))
+    }else if(char.toUpperCase() == "K"){
+        res.push(new CharItem("K"))
+    }else if(char == "İ" || char == "ı"){
+        // ‘İ’ (U+0130, Latin capital letter I with dot above) and
+        // ‘ı’ (U+0131, Latin small letter dotless i) match "i" and "I"
+        res.push(new CharItem("i"))
+        res.push(new CharItem("I"))
+    }else if(char.toUpperCase() == "I"){
+        res.push(new CharItem("İ"))
+        res.push(new CharItem("ı"))
+    }else if(char == "ſ"){
+        // ‘ſ’ (U+017F, Latin small letter long s) matches "s" and "S"
+        res.push(new CharItem("S"))
+        res.push(new CharItem("s"))
+    }else if(char.toUpperCase() == "S"){
+        res.push(new CharItem("ſ"))
     }
     return res
 }
@@ -180,12 +205,14 @@ var Char = function(pos, char, groups){
     // char : the character
     // groups (optional) : the groups that contain the character
     this.pos = pos
-    if(typeof char == "string"){
-        this.char = {
-            items: [new CharItem(char)]
+    this.char = char
+    try{
+        if(! char.items && char !== EmptyString && ! char.character_class){
+            this.ord = _b_.ord(char)
         }
-    }else{
-        this.char = char
+    }catch(err){
+        console.log("no ord", char)
+        throw err
     }
     this.match_codepoints = []
     this.nb_success = 0
@@ -207,8 +234,8 @@ Char.prototype.apply_flags = function(flags){
             // to do
         }else if(this.char.type){
             var alt = alt_case(this.char.ord)
-            if(alt){
-                this.char = {items: [this.char, alt]}
+            if(alt.length){
+                this.char = {items: [this.char].concat(alt)}
             }
         }else if(this.char.items){
             var new_items = []
@@ -216,20 +243,22 @@ Char.prototype.apply_flags = function(flags){
                 if(Array.isArray(item.ord)){
                     var start1 = alt_case(item.ord[0]),
                         end1 = alt_case(item.ord[1])
-                    if(start1 && end1){
+                    if(start1.length && end1.length){
                         new_items.push({
                             type: "character_range",
-                            start: start1,
-                            end: end1,
-                            ord: [start1.ord, end1.ord]
+                            start: start1[0],
+                            end: end1[0],
+                            ord: [start1[0].ord, end1[0].ord]
                         })
-                    }else if(start1 || end1){
+                    }else if(start1.length || end1.length){
                         console.log("bizarre", item, start1, end1)
                     }
                 }else{
                     var alt = alt_case(item.ord)
-                    if(alt){
-                        new_items.push(alt)
+                    if(alt.length){
+                        for(var _alt of alt){
+                            new_items.push(_alt)
+                        }
                     }
                 }
             }
@@ -239,14 +268,15 @@ Char.prototype.apply_flags = function(flags){
         }else{
             // if char is cased, create items
             var alt = alt_case(this.char)
-            if(alt){
-                this.char = {items: [this.char, alt]}
+            if(alt.length){
+                this.char = {items: [this.char].concat(alt)}
             }
         }
     }
 }
 
 Char.prototype.match = function(string, pos){
+    // console.log("char match", this, string.codepoints[pos])
     if(this.repeat){
         if(this.repeat.op == "?" && this.str.length == 1){
             return false
@@ -262,6 +292,9 @@ Char.prototype.match = function(string, pos){
         // if true, don't return the empty string (it would be tested
         // like false) but as an object coerced to ''
         return this.char == "$" ? EmptyString : false
+    }else if(this.char === EmptyString){
+        test = true
+        cp = EmptyString
     }else if(this.char == "^"){
         return pos == 0 ? EmptyString : false
     }else if(this.char.character_class){
@@ -280,11 +313,19 @@ Char.prototype.match = function(string, pos){
                 test = $B.unicode_tables.numeric[cp] === undefined
                 break
         }
-    }else if(this.char.type){
-        if(this.char.ord !== undefined){
-            test = this.char.ord == cp
+    }else if(this.char && ! this.char.items){
+        if(this.flags && this.flags.value | IGNORECASE.value){
+            var char = ord_to_char(cp)
+            this.char.toUpperCase()
+            test = (char.toUpperCase() == this.char.toUpperCase()) ||
+                (char.toLowerCase() == this.char.toLowerCase())
         }else{
-            test = cp == this.char.value
+            try{
+                test = this.char == ord_to_char(cp)
+            }catch(err){
+                console.log("no ord", cp)
+                throw err
+            }
         }
     }else if(this.char == '.'){
         test = this.ord == cp
@@ -304,9 +345,6 @@ Char.prototype.match = function(string, pos){
         if(this.char.neg){
             test = ! test
         }
-    }else if(this.char === EmptyString){
-        test = true
-        cp = EmptyString
     }else{
         // compare codepoints
         test = this.ord === cp
@@ -543,6 +581,14 @@ function validate(name){
     }
 }
 
+function ord_to_char(ord){
+    char = _b_.chr(ord)
+    if(char.__class__ === _b_.str.$surrogate){
+        char = char.items[0]
+    }
+    return char
+}
+
 function escaped_char(text, pos){
     var special = text[pos + 1]
     if(special === undefined){
@@ -575,9 +621,11 @@ function escaped_char(text, pos){
         if(i == text.length){
             fail("missing }, unterminated name", pos)
         }
+        var ord = validate_named_char(description)
         return {
             type: 'N',
-            ord: validate_named_char(description),
+            ord,
+            char: ord_to_char(ord),
             length: i - pos
         }
     }else if(special == 'x'){
@@ -585,9 +633,11 @@ function escaped_char(text, pos){
         var mo = /^[0-9a-fA-F]{0,2}/.exec(text.substr(pos + 2)),
             hh = mo ? mo[0] : ''
         if(mo && mo[0].length == 2){
+            var ord = eval("0x" + mo[0])
             return {
                 type: 'x',
-                ord: eval("0x" + mo[0]),
+                ord,
+                char: ord_to_char(ord),
                 length: 2 + mo[0].length
             }
         }
@@ -597,9 +647,11 @@ function escaped_char(text, pos){
         var mo = /^[0-9a-fA-F]{0,4}/.exec(text.substr(pos + 2)),
             xx = mo ? mo[0] : ''
         if(mo && mo[0].length == 4){
+            var ord = eval("0x" + mo[0])
             return {
                 type: 'u',
-                ord: eval("0x" + mo[0]),
+                ord,
+                char: ord_to_char(ord),
                 length: 2 + mo[0].length
             }
         }
@@ -609,10 +661,11 @@ function escaped_char(text, pos){
         var mo = /^[0-9a-fA-F]{0,8}/.exec(text.substr(pos + 2)),
             xx = mo ? mo[0] : ''
         if(mo && mo[0].length == 8){
-            var value = validate_code_point(mo[0])
+            var ord = validate_code_point(mo[0])
             return {
                 type: 'U',
-                ord: value,
+                ord,
+                char: ord_to_char(ord),
                 length: 2 + mo[0].length
             }
         }
@@ -635,6 +688,7 @@ function escaped_char(text, pos){
             return {
                 type: 'o',
                 ord: octal_value,
+                char: ord_to_char(octal_value),
                 length: 1 + mo[0].length
             }
         }
@@ -934,7 +988,9 @@ function compile(pattern, flags){
             }
             node.add(item)
         }else if(item instanceof Char){
-            item.apply_flags(flags)
+            if(flags !== no_flag){
+                item.flags = flags
+            }
             subitems.push(item)
             item.groups = []
             for(var group of group_stack){
@@ -985,6 +1041,9 @@ function compile(pattern, flags){
                         case1 = new Case()
                     while(node.items.length > 0){
                         case1.add(node.items.shift())
+                    }
+                    for(var group of group_stack){
+                        choice.groups.push(group)
                     }
                     choice.add(case1)
                     node.add(choice)
@@ -1234,8 +1293,8 @@ function* tokenize(pattern){
             pos++
         }else if(char == '\\'){
             var escape = escaped_char(pattern, pos)
-            if(escape.ord !== undefined){
-                yield new Char(pos, escape)
+            if(escape.char !== undefined){
+                yield new Char(pos, escape.char)
                 pos += escape.length
             }else if(escape.type == "backref"){
                 yield new BackReference(pos, "num", escape.value)
@@ -1361,7 +1420,7 @@ function match(pattern, string, pos, flags){
         match_codepoints = []
     while(true){
         cp = codepoints[pos]
-        // console.log("match codepoint", cp, "at pos", pos, "against model", model)
+        // console.log("match char", cp, "against model", model, "pos", pos)
         if(model === undefined){
             // Nothing more in pattern: match is successful
             return new MatchObject(string, match_codepoints, pattern, start)
@@ -1377,6 +1436,7 @@ function match(pattern, string, pos, flags){
                 }
                 continue
             }
+
         }
         if(model instanceof Group ||
                 model instanceof Char ||
@@ -1384,6 +1444,7 @@ function match(pattern, string, pos, flags){
                 model instanceof BackReference ||
                 model instanceof StringStart ||
                 model instanceof StringEnd){
+
             var cps = model.match(string, pos)
             if(cps){
                 match_codepoints = match_codepoints.concat(cps)
@@ -1443,11 +1504,7 @@ function match(pattern, string, pos, flags){
                     }
                 }
                 if(! backtracking){
-                    if(model.repeat){
-                        // test if repeat condition is ok
-                        if(! model.accepts_failure()){
-                            return false
-                        }
+                    if(model.repeat && model.accepts_failure()){
                         model = pattern_reader.next().value
                     }else{
                         return false
@@ -1455,14 +1512,28 @@ function match(pattern, string, pos, flags){
                 }
             }
         }else if(model instanceof Choice){
+            // save groups, they may be modified by unsuccessful matches
+            // among the options
+            var save_groups = []
+            for(var group of model.groups){
+                save_groups.push([group,
+                               group.match_codepoints.slice(),
+                               group.nb_success])
+            }
             var found = false
             for(var option of model.items){
                 var mo = match(option, string, pos, flags)
                 if(mo){
                     found = true
-                    match_codepoints = match_codepoints.concat(mo.match_codepoints)
+                    match_codepoints = match_codepoints.concat(
+                        mo.match_codepoints)
                     pos += mo.match_codepoints.length
                     break
+                }
+                // restore groups
+                for(var i = 0, len = save_groups.length; i < len; i++){
+                    save_groups[i][0].match_codepoints = save_groups[i][1]
+                    save_groups[i][0].nb_success = save_groups[i][2]
                 }
             }
             if(found){
