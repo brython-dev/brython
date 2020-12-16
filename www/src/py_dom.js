@@ -1492,6 +1492,7 @@ DOMNode.set_style = function(self, style){ // style is a dict
                 case "top":
                 case "left":
                 case "width":
+                case "height":
                 case "borderWidth":
                     if(_b_.isinstance(value,_b_.int)){value = value + "px"}
             }
