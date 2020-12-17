@@ -691,4 +691,12 @@ assert lambda:(  # A greeter.
     print('hi')  # Short for "Hello".
 )() == 'hi'
 
+# issue 1557
+assertRaises(SyntaxError, exec, "a, b += 1")
+assertRaises(SyntaxError, exec, "(a, b) += 1")
+assertRaises(SyntaxError, exec, "[a, b] += 1")
+assertRaises(SyntaxError, exec, "{a, b} += 1")
+assertRaises(SyntaxError, exec, "{a: 0, b: 1} += 1")
+assertRaises(SyntaxError, exec, "{} += 1")
+
 print('passed all tests...')

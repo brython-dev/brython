@@ -4275,13 +4275,22 @@ $ExprCtx.prototype.transition = function(token, value){
           var new_op = new $OpCtx(repl,op) // replace old operation
           return new $AbstractExprCtx(new_op,false)
       case 'augm_assign':
-          var parent = context.parent
+          var parent = context
           while(parent){
               if(parent.type == "assign" || parent.type == "augm_assign"){
                   $_SyntaxError(context,
                       "augmented assignment inside assignment")
               }else if(parent.type == "op"){
                   $_SyntaxError(context, ["cannot assign to operator"])
+              }else if(parent.type == "list_or_tuple"){
+                  $_SyntaxError(context, [`'${parent.real}' is an illegal` +
+                      " expression for augmented assignment"])
+              }else if(['list', 'tuple'].indexOf(parent.name) > -1){
+                  $_SyntaxError(context, [`'${parent.name}' is an illegal` +
+                      " expression for augmented assignment"])
+              }else if(['dict_or_set'].indexOf(parent.name) > -1){
+                  $_SyntaxError(context, [`'${parent.tree[0].real } display'` +
+                      " is an illegal expression for augmented assignment"])
               }
               parent = parent.parent
           }
@@ -9623,7 +9632,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    //console.log("context", context, "token", token, value)
+    // console.log("context", context, "token", token, value)
     return context.transition(token, value)
 }
 
