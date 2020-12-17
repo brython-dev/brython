@@ -1082,6 +1082,32 @@ long_int.to_base = function(self, base){
     return res
 }
 
+long_int.to_bytes = function(self, len, byteorder, signed){
+    // The integer is represented using len bytes. An OverflowError is raised
+    // if the integer is not representable with the given number of bytes.
+    var res = [],
+        v = self.value
+    if(! $B.$bool(signed) && ! self.pos){
+        throw _b_.OverflowError.$factory("can't convert negative int to unsigned")
+    }
+    while(v > 0){
+        var dm = divmod_pos(v, 256)
+        v = parseInt(dm[0].value)
+        res.push(parseInt(dm[1].value))
+        if(res.length > len){
+            throw _b_.OverflowError.$factory("int too big to convert")
+        }
+    }
+    while(res.length < len){
+        res.push(0)
+    }
+    if(byteorder == 'big'){
+        res.reverse()
+    }
+    return _b_.bytes.$factory(res)
+}
+
+
 function digits(base){
     // Return an object where keys are all the digits valid in specified base
     // and value is "true"

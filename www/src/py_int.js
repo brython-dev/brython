@@ -39,97 +39,97 @@ int.as_integer_ratio = function(){
 }
 
 int.from_bytes = function() {
-  var $ = $B.args("from_bytes", 3,
-      {bytes:null, byteorder:null, signed:null},
-      ["bytes", "byteorder", "signed"],
-      arguments, {signed: false}, null, null)
+    var $ = $B.args("from_bytes", 3,
+        {bytes:null, byteorder:null, signed:null},
+        ["bytes", "byteorder", "signed"],
+        arguments, {signed: false}, null, null)
 
-  var x = $.bytes,
-      byteorder = $.byteorder,
-      signed = $.signed,
-      _bytes, _len
-  if(_b_.isinstance(x, [_b_.bytes, _b_.bytearray])){
-      _bytes = x.source
-      _len = x.source.length
-  }else{
-      _bytes = _b_.list.$factory(x)
-      _len = _bytes.length
-      for(var i = 0; i < _len; i++){
-          _b_.bytes.$factory([_bytes[i]])
-      }
-  }
-  switch(byteorder) {
-      case "big":
-          var num = _bytes[_len - 1]
-          var _mult = 256
-          for(var i = _len - 2; i >= 0; i--){
-              // For operations, use the functions that can take or return
-              // big integers
-              num = $B.add($B.mul(_mult, _bytes[i]), num)
-              _mult = $B.mul(_mult,256)
-          }
-          if(! signed){return num}
-          if(_bytes[0] < 128){return num}
-          return $B.sub(num, _mult)
-      case "little":
-          var num = _bytes[0]
-          if(num >= 128){num = num - 256}
-          var _mult = 256
-          for(var i = 1;  i < _len; i++){
-              num = $B.add($B.mul(_mult, _bytes[i]), num)
-              _mult = $B.mul(_mult, 256)
-          }
-          if(! signed){return num}
-          if(_bytes[_len - 1] < 128){return num}
-          return $B.sub(num, _mult)
-  }
-
-  throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")
+    var x = $.bytes,
+        byteorder = $.byteorder,
+        signed = $.signed,
+        _bytes, _len
+    if(_b_.isinstance(x, [_b_.bytes, _b_.bytearray])){
+        _bytes = x.source
+        _len = x.source.length
+    }else{
+        _bytes = _b_.list.$factory(x)
+        _len = _bytes.length
+        for(var i = 0; i < _len; i++){
+            _b_.bytes.$factory([_bytes[i]])
+        }
+    }
+    if(byteorder == "big"){
+        _bytes.reverse()
+    }else if(byteorder != "little"){
+        throw _b_.ValueError.$factory(
+            "byteorder must be either 'little' or 'big'")
+    }
+    var num = _bytes[0]
+    if(signed && num >= 128){
+        num = num - 256
+    }
+    var _mult = 256
+    for(var i = 1;  i < _len; i++){
+        num = $B.add($B.mul(_mult, _bytes[i]), num)
+        _mult = $B.mul(_mult, 256)
+    }
+    if(! signed){
+        return num
+    }
+    if(_bytes[_len - 1] < 128){
+        return num
+    }
+    return $B.sub(num, _mult)
 }
 
 int.to_bytes = function(){
     var $ = $B.args("to_bytes", 3,
-        {self: null, len: null, byteorder: null},
-        ["self", "len", "byteorder"],
-        arguments, {}, "args", "kw"),
+        {self: null, len: null, byteorder: null, signed: null},
+        ["self", "len", "byteorder", "*", "signed"],
+        arguments, {signed: false}, null, null),
         self = $.self,
         len = $.len,
         byteorder = $.byteorder,
-        kwargs = $.kw
+        signed = $.signed
     if(! _b_.isinstance(len, _b_.int)){
         throw _b_.TypeError.$factory("integer argument expected, got " +
             $B.class_name(len))
     }
     if(["little", "big"].indexOf(byteorder) == -1){
-        throw _b_.ValueError.$factory("byteorder must be either 'little' or 'big'")
+        throw _b_.ValueError.$factory(
+            "byteorder must be either 'little' or 'big'")
     }
-    var signed = kwargs.$string_dict["signed"] || false,
-        res = []
+
+    if(_b_.isinstance(self, $B.long_int)){
+        return $B.long_int.to_bytes(self, len, byteorder, signed)
+    }
 
     if(self < 0){
         if(! signed){
-            throw _b_.OverflowError.$factory("can't convert negative int to unsigned")
+            throw _b_.OverflowError.$factory(
+                "can't convert negative int to unsigned")
         }
         self = Math.pow(256, len) + self
     }
-    var value = self
-    while(true){
+
+    var res = [],
+        value = self
+
+    while(value > 0){
         var quotient = Math.floor(value / 256),
             rest = value - 256 * quotient
         res.push(rest)
-        if(quotient == 0){
-            break
+        if(res.length > len){
+            throw _b_.OverflowError.$factory("int too big to convert")
         }
         value = quotient
     }
-    if(res.length > len){
-        throw _b_.OverflowError.$factory("int too big to convert")
-    }else{
-        while(res.length < len){
-            res = res.concat([0])
-        }
+    while(res.length < len){
+        res.push(0)
     }
-    if(byteorder == "big"){res = res.reverse()}
+    if(byteorder == "big"){
+        res.reverse()
+    }
     return {
         __class__: _b_.bytes,
         source: res

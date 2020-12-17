@@ -564,4 +564,24 @@ class Float(float):
 
 assert 10 // Float(2) == 5.0
 
+# issue 1558
+values = [
+    [
+        76840139,
+        b'\x00\x00\x00\x00\x00\x00\x00\x00\x04\x94|\xcb',
+        b'\xcb|\x94\x04\x00\x00\x00\x00\x00\x00\x00\x00'
+    ],
+    [
+        7684013976526520320,
+        b'\x00\x00\x00\x00j\xa3\x1a\x00\x00\x00\x00\x00',
+        b'\x00\x00\x00\x00\x00\x1a\xa3j\x00\x00\x00\x00'
+    ]
+]
+
+for value in values:
+    for i, byteorder in enumerate(["big", "little"]):
+        b = int.to_bytes(value[0], 12, byteorder)
+        assert b == value[1 + i]
+        assert int.from_bytes(b, byteorder) == value[0]
+        
 print('passed all tests...')
