@@ -150,6 +150,7 @@ class Tester:
                 if hasattr(self, 'setUp'):
                     self.setUp()
                 t0 = time.time()
+                print("run test", method)
                 try:
                     f()
                     report.add(method[5:], lineno,
