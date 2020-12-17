@@ -38,7 +38,6 @@ Flag.__index__ = function(self){
 }
 
 Flag.__or__ = function(self, other){
-    console.log(self, other)
     return Flag.$factory(`${self.name} ${other.name}`,
         self.value | other.value)
 }
@@ -51,11 +50,6 @@ $B.set_func_names(Flag, "re")
 
 var no_flag = Flag.$factory('none', 0)
 
-function Pattern(text, node){
-    this.text = text
-    this.node = node
-}
-
 var BPattern = $B.make_class("Pattern",
     function(pattern){
         return {
@@ -64,6 +58,10 @@ var BPattern = $B.make_class("Pattern",
         }
     }
 )
+
+BPattern.findall = function(self){
+    return $module.findall.apply(null, arguments)
+}
 
 BPattern.match = function(self, string){
     var mo = match(self.pattern, string, 0)
@@ -1546,7 +1544,6 @@ function match(pattern, string, pos, flags){
     return new MatchObject(string, match_string, pattern, start)
 }
 
-
 function to_codepoint_list(s){
     var items = []
     if(s.__class__ === _b_.str.$surrogate){
@@ -1752,7 +1749,9 @@ function str_or_bytes(string, pattern){
             if(pattern.__class__ !== _b_.str.$surrogate){
                 pattern = pattern + ''
             }
-        }else{
+        }else if(! (pattern instanceof Node) ||
+                ! (typeof pattern.text == "string")){
+            console.log(pattern instanceof Node, pattern.text)
             throw _b_.TypeError.$factory(`cannot use a `+
                 `${$B.class_name(pattern)} pattern on a string-like object`)
         }
@@ -1797,6 +1796,80 @@ var $module = {
     },
     error: error,
     findall: function(){
+        var $ = $B.args("findall", 3,
+                    {pattern: null, string: null, flags: null},
+                    ['pattern', 'string', 'flags'], arguments,
+                    {flags: no_flag}, null, null),
+                pattern = $.pattern,
+                string = $.string,
+                flags = $.flags
+
+        if(pattern.__class__ === BPattern){
+            pattern = pattern.pattern
+        }
+        var data = str_or_bytes(string, pattern)
+
+        if(data.type === _b_.str){
+            function conv(s){
+                return s === EmptyString ? '' : s
+            }
+        }else{
+            function conv(s){
+                return string2bytes(s)
+            }
+        }
+
+        var iter = $module.finditer.apply(null, arguments),
+            res = []
+
+        while(true){
+            var next = iter.next()
+            if(next.done){
+                return res
+            }
+            var mo = next.value
+            if(mo.re.nb_groups){
+                if(mo.re.nb_groups == 1){
+                    res.push(conv(mo.re.groups[1].item.match_string()))
+                }else{
+                    var groups = []
+                    for(var i = 1, len = mo.re.nb_groups; i <= len; i++){
+                        groups.push(conv(mo.re.groups[i].item.match_string()))
+                    }
+                    res.push($B.fast_tuple(groups))
+                }
+            }else{
+                res.push(conv(mo.match_string()))
+            }
+
+        }
+    },
+    finditer: function* (){
+        var $ = $B.args("finditer", 3, {pattern: null, string: null, flags: null},
+                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
+                    null, null),
+                pattern = $.pattern,
+                string = $.string,
+                flags = $.flags
+        var result = [],
+            pos = 0
+        if(pattern.__class__ === BPattern){
+            pattern = pattern.pattern
+        }
+        var data = str_or_bytes(string, pattern),
+            pattern = data.pattern,
+            string = data.string
+        while(pos < string.length){
+            var mo = match(pattern, string, pos, flags)
+            if(mo){
+                yield mo
+                pos += mo.length + 1
+            }else{
+                pos++
+            }
+        }
+    },
+    finditer_kozh: function* (){
         var $ = $B.args("findall", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
                     null, null),
@@ -1825,23 +1898,22 @@ var $module = {
             if(mo){
                 if(mo.re.nb_groups){
                     if(mo.re.nb_groups == 1){
-                        result.push(conv(mo.re.groups[1].item.match_string()))
+                        yield conv(mo.re.groups[1].item.match_string())
                     }else{
                         var groups = []
                         for(var i = 1, len = mo.re.nb_groups; i <= len; i++){
                             groups.push(conv(mo.re.groups[i].item.match_string()))
                         }
-                        result.push($B.fast_tuple(groups))
+                        yield $B.fast_tuple(groups)
                     }
                 }else{
-                    result.push(conv(mo.match_string()))
+                    yield conv(mo.match_string())
                 }
                 pos += mo.length + 1
             }else{
                 pos++
             }
         }
-        return result
     },
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
@@ -1887,6 +1959,30 @@ var $module = {
             }
         }
         return _b_.None
+    },
+    sub : function(){
+        var $ = $B.args("sub", 5,
+                {pattern: null, repl: null, string: null, count: null, flags: null},
+                ['pattern', 'repl', 'string', 'count', 'flags'],
+                arguments, {count: 0, flags: no_flag}, null, null),
+            pattern = $.pattern,
+            repl = $.repl,
+            string = $.string,
+            count = $.count,
+            flags = $.flags
+        console.log("string", string)
+        var res = '',
+            pos = 0,
+            data = str_or_bytes(string, pattern)
+        console.log("after str_or_bytes", data.string)
+        for(var mo of $module.finditer(pattern, string, flags)){
+            console.log("mo", mo)
+            res += string.substring(pos, mo.start)
+            res += repl
+            pos = mo.end
+        }
+        res += string.substr(pos)
+        return res
     }
 }
 
