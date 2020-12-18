@@ -73,6 +73,16 @@ BPattern.match = function(self, string){
 
 $B.set_func_names(BPattern, "re")
 
+function Node(parent){
+    this.parent = parent
+    this.items = []
+}
+
+Node.prototype.add = function(item){
+    this.items.push(item)
+    item.parent = this
+}
+
 var BackReference = function(pos, type, value){
     // for "\number"
     this.name = "BackReference"
@@ -153,49 +163,6 @@ var Case = function(){
         this.greedy = greedy !== undefined
     }
 
-function alt_case(char){
-    // Return a list of characters that match char in case-insensitive
-    // regular expressions
-    // if argument is a number, convert to string
-    if(typeof char == "number"){
-        char = _b_.chr(char)
-        if(char.items){ // surrogate pair
-            char = char.items[0]
-        }
-    }
-    var upper = char.toUpperCase(),
-        lower = char.toLowerCase(),
-        res = []
-    if(upper != char){
-        res.push(new CharItem(upper))
-    }
-    if(lower != char){
-        res.push(new CharItem(lower))
-    }
-    // special cases
-    if(char == "K"){
-        // ‘K’ (U+212A, Kelvin sign) matches "K" and "k"
-        res.push(new CharItem("k"))
-        res.push(new CharItem("K"))
-    }else if(char.toUpperCase() == "K"){
-        res.push(new CharItem("K"))
-    }else if(char == "İ" || char == "ı"){
-        // ‘İ’ (U+0130, Latin capital letter I with dot above) and
-        // ‘ı’ (U+0131, Latin small letter dotless i) match "i" and "I"
-        res.push(new CharItem("i"))
-        res.push(new CharItem("I"))
-    }else if(char.toUpperCase() == "I"){
-        res.push(new CharItem("İ"))
-        res.push(new CharItem("ı"))
-    }else if(char == "ſ"){
-        // ‘ſ’ (U+017F, Latin small letter long s) matches "s" and "S"
-        res.push(new CharItem("S"))
-        res.push(new CharItem("s"))
-    }else if(char.toUpperCase() == "S"){
-        res.push(new CharItem("ſ"))
-    }
-    return res
-}
 
 var Char = function(pos, char, groups){
     // character in a regular expression or in a character set
@@ -219,56 +186,6 @@ var Char = function(pos, char, groups){
         for(var group of groups){
             this.groups.push(group)
             group.chars.push(this)
-        }
-    }
-}
-
-Char.prototype.apply_flags = function(flags){
-    if(flags.value == 0){ // no flag
-        return
-    }
-    if(flags.value | IGNORECASE.value){
-        if(this.char.character_class){
-            // to do
-        }else if(this.char.type){
-            var alt = alt_case(this.char.ord)
-            if(alt.length){
-                this.char = {items: [this.char].concat(alt)}
-            }
-        }else if(this.char.items){
-            var new_items = []
-            for(var item of this.char.items){
-                if(Array.isArray(item.ord)){
-                    var start1 = alt_case(item.ord[0]),
-                        end1 = alt_case(item.ord[1])
-                    if(start1.length && end1.length){
-                        new_items.push({
-                            type: "character_range",
-                            start: start1[0],
-                            end: end1[0],
-                            ord: [start1[0].ord, end1[0].ord]
-                        })
-                    }else if(start1.length || end1.length){
-                        console.log("bizarre", item, start1, end1)
-                    }
-                }else{
-                    var alt = alt_case(item.ord)
-                    if(alt.length){
-                        for(var _alt of alt){
-                            new_items.push(_alt)
-                        }
-                    }
-                }
-            }
-            this.char.items = this.char.items.concat(new_items)
-        }else if(this.char === EmptyString){
-            // nothing to do
-        }else{
-            // if char is cased, create items
-            var alt = alt_case(this.char)
-            if(alt.length){
-                this.char = {items: [this.char].concat(alt)}
-            }
         }
     }
 }
@@ -312,7 +229,7 @@ Char.prototype.match = function(string, pos){
                 break
         }
     }else if(this.char && ! this.char.items){
-        if(this.flags && this.flags.value | IGNORECASE.value){
+        if(this.flags && this.flags.value & IGNORECASE.value){
             var char = ord_to_char(cp)
             this.char.toUpperCase()
             test = (char.toUpperCase() == this.char.toUpperCase()) ||
@@ -423,18 +340,7 @@ var Group = function(pos, extension){
     }
 }
 
-Group.prototype.add = function(item){
-    if(this.extension && this.extension.type == "test_value"){
-        if(this.nb_options == 1){
-            this.re_if_exists.add(item)
-        }else if(this.nb_options == 2){
-            this.re_if_not_exists.add(item)
-        }
-    }else{
-        this.items.push(item)
-    }
-    item.parent = this
-}
+Group.prototype.add = Node.prototype.add
 
 Group.prototype.match = function(s, pos){
     var group_match = match(this, s, pos)
@@ -521,6 +427,15 @@ Char.prototype.done = Group.prototype.done
 BackReference.prototype.accepts_failure = Group.prototype.accepts_failure
 BackReference.prototype.accepts_success = Group.prototype.accepts_success
 BackReference.prototype.done = Group.prototype.done
+
+function SetFlags(pos, flags){
+    this.pos = pos
+    this.on_flags = flags.on_flags
+    this.off_flags = flags.off_flags
+    this.items = []
+}
+
+SetFlags.prototype.add = Node.prototype.add
 
 function StringStart(pos){
     this.pos = pos
@@ -659,7 +574,10 @@ function escaped_char(text, pos){
         var mo = /^[0-9a-fA-F]{0,8}/.exec(text.substr(pos + 2)),
             xx = mo ? mo[0] : ''
         if(mo && mo[0].length == 8){
-            var ord = validate_code_point(mo[0])
+            var ord = eval("0x" + mo[0])
+            if(ord > 0x10FFFF){
+                fail(`bad escape \\U${mo[0]}`)
+            }
             return {
                 type: 'U',
                 ord,
@@ -804,8 +722,8 @@ function open_unicode_db(){
                 if(this.status == 200){
                     $B.unicodedb = this.responseText
                 }else{
-                    console.log("Warning - could not " +
-                        "load unicode.txt")
+                    console.log(
+                        "Warning - could not load unicode.txt")
                 }
             }
         }
@@ -830,38 +748,6 @@ function validate_named_char(description){
         return eval("0x" + search[1])
     }else{
         fail("could not load unicode.txt")
-    }
-}
-
-function validate_code_point(cp){
-    // validate that the 8-hex digit cp is in the Unicode db
-    var value = eval("0x" + cp)
-    if(0x10FFFF >= value){
-        return value
-    }
-    fail(`bad escape \\U${cp}`)
-
-    // Load unicode table if not already loaded
-    open_unicode_db()
-
-    if($B.unicodedb !== undefined){
-        var re = new RegExp("^0*" + cp +";", "mi")
-        search = re.exec($B.unicodedb)
-        if(search === null){
-            fail(`bad escape \\U${cp}`)
-        }
-        return value
-    }else{
-        fail("could not load unicode.txt")
-    }
-}
-
-function Node(parent){
-    this.parent = parent
-    this.items = []
-    this.add = function(item){
-        this.items.push(item)
-        item.parent = this
     }
 }
 
@@ -986,9 +872,7 @@ function compile(pattern, flags){
             }
             node.add(item)
         }else if(item instanceof Char){
-            if(flags !== no_flag){
-                item.flags = flags
-            }
+            item.flags = flags
             subitems.push(item)
             item.groups = []
             for(var group of group_stack){
@@ -1053,6 +937,18 @@ function compile(pattern, flags){
         }else if(item instanceof StringStart ||
                  item instanceof StringEnd){
             node.add(item)
+        }else if(item instanceof SetFlags){
+            if(item.items.length == 0){
+                if(item.pos != 0){
+                    fail("Flags not at the start of the expression '" +
+                        `${pattern}`)
+                }
+                for(var on_flag of item.on_flags){
+                    flags.value |= inline_flags[on_flag].value
+                }
+            }else{
+                node.add(item)
+            }
         }else{
             fail("unknown item type " + item, pos)
         }
@@ -1188,7 +1084,8 @@ function* tokenize(pattern){
                     fail("unexpected end of pattern", pos)
                 }
 
-                var flags = 'aiLmsux'
+                var flags = 'aiLmsux',
+                    flags_start = pos
                 if(pattern[pos + 2] == '-' ||
                         flags.indexOf(pattern[pos + 2]) > -1){
                     if(pattern[pos + 2] == '-'){
@@ -1221,8 +1118,10 @@ function* tokenize(pattern){
                                 break
                             }else if(pattern[pos].match(/[a-zA-Z]/)){
                                 fail("unknown flag", pos)
-                            }else if(':)'.indexOf(pattern[pos]) > -1){
+                            }else if(pattern[pos] == ')'){
                                 closed = true
+                                break
+                            }else if(pattern[pos] == ':'){
                                 break
                             }else{
                                 fail("missing -, : or )", pos)
@@ -1264,6 +1163,13 @@ function* tokenize(pattern){
                     if(on_flags == '' && off_flags == ''){
                         fail("missing flag", pos)
                     }
+                    var set_flags = new SetFlags(flags_start,
+                        {on_flags, off_flags})
+                    yield set_flags
+                    if(! closed){
+                        node = set_flags
+                    }
+                    pos++
                 }else if(pattern[pos + 2] == '#'){
                     pos += 3
                     while(pos < pattern.length){
@@ -1280,8 +1186,6 @@ function* tokenize(pattern){
                 }else{
                     fail("unknown extension ?" + pattern[pos + 2], pos)
                 }
-                yield new Group(pos, {type: 'flags', on_flags, off_flags})
-                pos++
             }else{
                 yield new Group(pos)
                 pos++
@@ -1369,8 +1273,19 @@ function* tokenize(pattern){
 }
 
 function CodePoints(s){
+    this.string = s
+    this.getitem = $B.$call($B.$getattr(s, "__getitem__"))
     this.codepoints = to_codepoint_list(s)
     this.length = this.codepoints.length
+}
+
+CodePoints.prototype.substring = function(start, end){
+    // returns the string from start to end
+    if(end === undefined){
+        return this.string.substring(start)
+    }else{
+        return this.string.substring(start, end)
+    }
 }
 
 function match(pattern, string, pos, flags){
@@ -1539,6 +1454,9 @@ function match(pattern, string, pos, flags){
             }else{
                 return false
             }
+        }else{
+            console.log(model)
+            throw Error("unknown model")
         }
     }
     return new MatchObject(string, match_string, pattern, start)
@@ -1738,12 +1656,13 @@ BMatchObject.span = function(){
 
 $B.set_func_names(BMatchObject, "re")
 
-function str_or_bytes(string, pattern){
+function str_or_bytes(string, pattern, repl){
     // Check that string and pattern are of the same type : (subclass of) str
     // or (subclass of) bytes
     // Return an object with attributes:
     // - type: str or bytes
     // - string and pattern : strings
+    var bytes_like = [_b_.bytes, _b_.bytearray, _b_.memoryview]
     if(typeof string == "string" || _b_.isinstance(string, _b_.str)){
         if(typeof pattern == "string" || _b_.isinstance(pattern, _b_.str)){
             if(pattern.__class__ !== _b_.str.$surrogate){
@@ -1751,9 +1670,18 @@ function str_or_bytes(string, pattern){
             }
         }else if(! (pattern instanceof Node) ||
                 ! (typeof pattern.text == "string")){
-            console.log(pattern instanceof Node, pattern.text)
             throw _b_.TypeError.$factory(`cannot use a `+
                 `${$B.class_name(pattern)} pattern on a string-like object`)
+        }
+        if(repl !== undefined){
+            if(typeof repl == "string" || _b_.isinstance(repl, _b_.str)){
+                if(repl.__class__ !== _b_.str.$surrogate){
+                    repl = repl + ''
+                }
+            }else if(typeof repl !== "function"){
+                throw _b_.TypeError.$factory(`cannot use a `+
+                    `${$B.class_name(repl)} repl on a string-like object`)
+            }
         }
         if(string.__class__ !== _b_.str.$surrogate){
             string += '' // for string subclasses
@@ -1761,18 +1689,33 @@ function str_or_bytes(string, pattern){
         return {
             type: _b_.str,
             string: new CodePoints(string),
-            pattern
+            pattern,
+            repl
         }
-    }else if(_b_.isinstance(string, [_b_.bytes, _b_.bytearray, _b_.memoryview])){
-        if(! _b_.isinstance(pattern, [_b_.bytes, _b_.bytearray, _b_.memoryview])){
-            throw _b_.TypeError(`cannot use a ${$B.class_name(pattern)}` +
+    }else if(_b_.isinstance(string, bytes_like)){
+        if(! _b_.isinstance(pattern, bytes_like) &&
+                (! pattern instanceof Node)){
+            throw _b_.TypeError.$factory(`cannot use a ${$B.class_name(pattern)}` +
                 ' pattern on a bytes-like object')
         }
-        return {
-            type: _b_.bytes,
-            string: _b_.bytes.decode(_b_.bytes.$factory(string), 'latin1'),
-            pattern: _b_.bytes.decode(_b_.bytes.$factory(pattern), 'latin1')
+        if(repl &&
+                ! _b_.isinstance(repl, bytes_like)){
+            throw _b_.TypeError.$factory(`cannot use a ${$B.class_name(repl)}` +
+                ' repl on a bytes-like object')
         }
+        var res = {
+            type: _b_.bytes,
+            string: _b_.bytes.decode(_b_.bytes.$factory(string), 'latin1')
+        }
+        if(pattern instanceof Node){
+            res.pattern = pattern.text
+        }else{
+            res.pattern = _b_.bytes.decode(_b_.bytes.$factory(pattern), 'latin1')
+        }
+        if(repl){
+            res.repl = _b_.bytes.decode(_b_.bytes.$factory(repl), 'latin1')
+        }
+        return res
     }else{
         throw _b_.TypeError.$factory("invalid string type: " +
             $B.class_name(string))
@@ -1869,52 +1812,6 @@ var $module = {
             }
         }
     },
-    finditer_kozh: function* (){
-        var $ = $B.args("findall", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
-                    null, null),
-                pattern = $.pattern,
-                string = $.string,
-                flags = $.flags
-        var result = [],
-            pos = 0
-        if(pattern.__class__ === BPattern){
-            pattern = pattern.pattern
-        }
-        var data = str_or_bytes(string, pattern),
-            pattern = data.pattern,
-            string = data.string
-        if(data.type === _b_.str){
-            function conv(s){
-                return s === EmptyString ? '' : s
-            }
-        }else{
-            function conv(s){
-                return string2bytes(s)
-            }
-        }
-        while(pos < string.length){
-            var mo = match(pattern, string, pos, flags)
-            if(mo){
-                if(mo.re.nb_groups){
-                    if(mo.re.nb_groups == 1){
-                        yield conv(mo.re.groups[1].item.match_string())
-                    }else{
-                        var groups = []
-                        for(var i = 1, len = mo.re.nb_groups; i <= len; i++){
-                            groups.push(conv(mo.re.groups[i].item.match_string()))
-                        }
-                        yield $B.fast_tuple(groups)
-                    }
-                }else{
-                    yield conv(mo.match_string())
-                }
-                pos += mo.length + 1
-            }else{
-                pos++
-            }
-        }
-    },
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
@@ -1970,18 +1867,36 @@ var $module = {
             string = $.string,
             count = $.count,
             flags = $.flags
-        console.log("string", string)
         var res = '',
             pos = 0,
-            data = str_or_bytes(string, pattern)
-        console.log("after str_or_bytes", data.string)
-        for(var mo of $module.finditer(pattern, string, flags)){
-            console.log("mo", mo)
-            res += string.substring(pos, mo.start)
-            res += repl
-            pos = mo.end
+            data = str_or_bytes(string, pattern, repl),
+            nb_sub = 0
+        if(! (data.pattern instanceof Node)){
+            pattern = compile(data.pattern, flags)
         }
-        res += string.substr(pos)
+        if(typeof data.repl == "string"){
+            data.repl = data.repl.replace(/\\n/g, '\n')
+            data.repl = data.repl.replace(/\\r/g, '\r')
+            data.repl = data.repl.replace(/\\t/g, '\t')
+            data.repl = data.repl.replace(/\\b/g, '\b')
+        }
+        for(var mo of $module.finditer(pattern, string)){
+            res += data.string.substring(pos, mo.start)
+            if(typeof data.repl == "function"){
+                res += $B.$call(data.repl)(BMatchObject.$factory(mo))
+            }else{
+                res += data.repl
+            }
+            pos = mo.end
+            nb_sub++
+            if(count != 0 && nb_sub >= count){
+                break
+            }
+        }
+        res += data.string.substring(pos)
+        if(data.type === _b_.bytes){
+            res = _b_.str.encode(res, "latin-1")
+        }
         return res
     }
 }
@@ -1993,3 +1908,13 @@ var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory("MULTILINE", 8)
 var DOTALL = $module.S = $module.DOTALL = Flag.$factory("DOTALL", 16)
 var U = $module.U = Flag.$factory("U", 32)
 var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory("VERBOSE", 64)
+
+var inline_flags = {
+    a: ASCII,
+    i: IGNORECASE,
+    L: LOCALE,
+    m: MULTILINE,
+    s: DOTALL,
+    u: U,
+    x: VERBOSE
+}
