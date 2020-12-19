@@ -1520,12 +1520,13 @@ MatchObject.prototype.group = function(group_num){
 
 MatchObject.prototype.groups = function(_default){
     var result = []
-    for(var i = 0, len = this.re._groups.length; i < len; i++){
-        var group_num = this.re._groups[i].num
-        if(this.re._groups[group_num] === undefined){
+    console.log("MO groups", this.re.groups, this.re.groups.length)
+    for(var key in this.re.groups){
+        var group_num = this.re.groups[key].num
+        if(this.re.groups[group_num] === undefined){
             result.push(_default)
         }else{
-            result.push(this.re._groups[group_num])
+            result.push(this.re.groups[group_num].item.match_string())
         }
     }
     return result
@@ -1806,7 +1807,7 @@ var $module = {
             var mo = match(pattern, string, pos, flags)
             if(mo){
                 yield mo
-                pos += mo.length + 1
+                pos = mo.end || 1 // at least 1, else infinite loop
             }else{
                 pos++
             }
@@ -1879,13 +1880,84 @@ var $module = {
             data.repl = data.repl.replace(/\\r/g, '\r')
             data.repl = data.repl.replace(/\\t/g, '\t')
             data.repl = data.repl.replace(/\\b/g, '\b')
+            data.repl = data.repl.replace(/\\v/g, '\v')
+            data.repl = data.repl.replace(/\\f/g, '\f')
+            data.repl = data.repl.replace(/\\a/g, '\a')
+            // detect backreferences
+            var pos = 0,
+                escaped = false,
+                br = false,
+                repl1 = "",
+                has_backref = false
+            while(pos < data.repl.length){
+                br = false
+                if(data.repl[pos] == "\\"){
+                    escaped = ! escaped
+                    if(escaped){
+                        pos++
+                        continue
+                    }
+                }else if(escaped){
+                    var mo = /^\d+/.exec(data.repl.substr(pos))
+                    if(mo){
+                        if(! has_backref){
+                            var parts = [data.repl.substr(0, pos - 1),
+                                    parseInt(mo[0])]
+                        }else{
+                            parts.push(data.repl.substring(next_pos, pos - 1))
+                            parts.push(parseInt(mo[0]))
+                        }
+                        has_backref = true
+                        var next_pos = pos + mo[0].length
+                        br = true
+                        pos += mo[0].length
+                    }else{
+                        mo = /g<(.*?)>/.exec(data.repl.substr(pos))
+                        if(mo){
+                            if(! has_backref){
+                                var parts = [data.repl.substr(0, pos - 1),
+                                        mo[1]]
+                            }else{
+                                parts.push(data.repl.substring(next_pos, pos - 1))
+                                parts.push(mo[1])
+                            }
+                            has_backref = true
+                            var next_pos = pos + mo[0].length
+                            br = true
+                            pos = next_pos
+                        }else{
+                            if(/[a-zA-Z]/.exec(data.repl[pos])){
+                                fail("unknown escape", pos)
+                            }
+                            repl1 += data.repl[pos]
+                        }
+                    }
+                    escaped = false
+                }
+                if(! br){
+                    repl1 += data.repl[pos]
+                    pos ++
+                }
+            }
+            if(has_backref){
+                parts.push(data.repl.substr(next_pos))
+                data.repl = function(mo){
+                    var res = parts[0]
+                    for(var i = 1, len = parts.length; i < len; i += 2){
+                        res += mo.mo.re.groups[parts[i]].item.match_string()
+                        res += parts[i + 1]
+                    }
+                    return res
+                }
+            }
         }
+        pos = 0
         for(var mo of $module.finditer(pattern, string)){
             res += data.string.substring(pos, mo.start)
             if(typeof data.repl == "function"){
                 res += $B.$call(data.repl)(BMatchObject.$factory(mo))
             }else{
-                res += data.repl
+                res += repl1
             }
             pos = mo.end
             nb_sub++
