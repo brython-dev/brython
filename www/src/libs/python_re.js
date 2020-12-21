@@ -48,7 +48,9 @@ Flag.__str__ = function(self){
 
 $B.set_func_names(Flag, "re")
 
-var no_flag = Flag.$factory('none', 0)
+function no_flag(){
+    return Flag.$factory('none', 0)
+}
 
 var BPattern = $B.make_class("Pattern",
     function(pattern){
@@ -615,6 +617,11 @@ function escaped_char(text, pos){
                 value: parseInt(mo[0]),
                 length: 1 + mo[0].length
             }
+        }
+        var trans = {f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'},
+            res = trans[special]
+        if(res){
+            return res
         }
         if(special.match(/[a-zA-Z]/)){
             fail("invalid escape " + special, pos)
@@ -1731,11 +1738,23 @@ function string2bytes(s){
     return _b_.bytes.$factory(t)
 }
 
+function check_pattern_flags(pattern, flags){
+    if(pattern.__class__ === BPattern){
+        if(flags.value !== 0){
+            throw _b_.ValueError.$factory(
+                "cannot process flags argument with a compiled pattern")
+        }
+        pattern = pattern.pattern
+    }
+    return pattern
+}
+
 var $module = {
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
-                    ['pattern', 'flags'], arguments, {flags: no_flag},
+                    ['pattern', 'flags'], arguments, {flags: no_flag()},
                     null, null)
+        $.pattern = check_pattern_flags($.pattern, $.flags)
         return BPattern.$factory(compile($.pattern, $.flags))
     },
     error: error,
@@ -1743,14 +1762,11 @@ var $module = {
         var $ = $B.args("findall", 3,
                     {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag}, null, null),
+                    {flags: no_flag()}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
-
-        if(pattern.__class__ === BPattern){
-            pattern = pattern.pattern
-        }
+        pattern = check_pattern_flags(pattern, flags)
         var data = str_or_bytes(string, pattern)
 
         if(data.type === _b_.str){
@@ -1788,41 +1804,44 @@ var $module = {
 
         }
     },
-    finditer: function* (){
+    finditer: function (){
         var $ = $B.args("finditer", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
-                    null, null),
+                    ['pattern', 'string', 'flags'], arguments,
+                    {flags: no_flag()}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
-        var result = [],
-            pos = 0
-        if(pattern.__class__ === BPattern){
-            pattern = pattern.pattern
+        if(_b_.isinstance(string, [_b_.bytearray, _b_.memoryview])){
+            string.in_iteration = true
         }
+        var original_string = string
+        pattern = check_pattern_flags(pattern, flags)
         var data = str_or_bytes(string, pattern),
             pattern = data.pattern,
-            string = data.string
-        while(pos < string.length){
-            var mo = match(pattern, string, pos, flags)
-            if(mo){
-                yield mo
-                pos = mo.end || 1 // at least 1, else infinite loop
-            }else{
-                pos++
+            string1 = data.string
+        return $B.generator.$factory(function*(pattern, string, flags, original_string){
+            var result = [],
+                pos = 0
+            while(pos < string.length){
+                var mo = match(pattern, string, pos, flags)
+                if(mo){
+                    yield mo
+                    pos = mo.end || 1 // at least 1, else infinite loop
+                }else{
+                    pos++
+                }
             }
-        }
+            delete original_string.in_iteration
+        })(pattern, string1, flags, original_string)
     },
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
-                    null, null),
+                    ['pattern', 'string', 'flags'], arguments,
+                    {flags: no_flag()}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
-        if(pattern.__class__ === BPattern){
-            pattern = pattern.pattern
-        }
+        pattern = check_pattern_flags(pattern, flags)
         var data = str_or_bytes(string, pattern),
             string = data.string,
             pattern = data.pattern
@@ -1835,14 +1854,12 @@ var $module = {
     },
     search: function(){
         var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments, {flags: no_flag},
-                    null, null),
+                    ['pattern', 'string', 'flags'], arguments,
+                    {flags: no_flag()}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
-        if(pattern.__class__ === BPattern){
-            pattern = pattern.pattern
-        }
+        pattern = check_pattern_flags(pattern, flags)
         var data = str_or_bytes(string, pattern),
             string = data.string,
             pattern = data.pattern
@@ -1862,7 +1879,7 @@ var $module = {
         var $ = $B.args("sub", 5,
                 {pattern: null, repl: null, string: null, count: null, flags: null},
                 ['pattern', 'repl', 'string', 'count', 'flags'],
-                arguments, {count: 0, flags: no_flag}, null, null),
+                arguments, {count: 0, flags: no_flag()}, null, null),
             pattern = $.pattern,
             repl = $.repl,
             string = $.string,
