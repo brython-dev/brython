@@ -141,6 +141,11 @@ bytearray.append = function(self, b){
 }
 
 bytearray.extend = function(self, b){
+    if(self.in_iteration){
+        // happens in re.finditer()
+        throw _b_.BufferError.$factory("Existing exports of data: object " +
+            "cannot be re-sized")
+    }
     if(b.__class__ === bytearray || b.__class__ === bytes){
         b.source.forEach(function(item){
             self.source.push(item)
