@@ -1180,4 +1180,8 @@ def g():
 
 assert list(g()) == [1, 2, 3]
 
+# issue 1564
+def spam() -> str: 
+  yield 'eggs'
+
 print('passed all tests...')

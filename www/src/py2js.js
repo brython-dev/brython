@@ -2966,6 +2966,7 @@ $DefCtx.prototype.transition = function(token, value){
 }
 
 $DefCtx.prototype.transform = function(node, rank){
+
     if(this.is_comp){
         $get_node(this).is_comp = true
     }
@@ -3379,7 +3380,6 @@ $DefCtx.prototype.transform = function(node, rank){
 
         node.parent.insert(rank + offset++, $NodeJS(js))
     }
-
 
     // Close anonymous function with defaults as argument
     this.default_str = '{' + defs1.join(', ') + '}'
@@ -7101,7 +7101,8 @@ $NodeCtx.prototype.to_js = function(){
                     return js + "_b_.dict.$setitem($locals.__annotations__, '" +
                         this.tree[0].tree[0].value + "', " +
                         this.tree[0].annotation.to_js() + ");"
-                }else if(this.tree[0].type == "def"){
+                }else if(this.tree[0].type == "def" ||
+                        this.tree[0].type == "generator"){
                     // Evaluate annotation
                     this.js = this.tree[0].annotation.to_js() + ";"
                 }else{
@@ -7109,7 +7110,7 @@ $NodeCtx.prototype.to_js = function(){
                     this.js = ""
                     this.tree = []
                 }
-            }else if(this.tree[0].type != "def"){
+            }else if(["def", "generator"].indexOf(this.tree[0].type) == -1){
                 // Avoid evaluation
                 this.tree = []
             }
@@ -8400,14 +8401,12 @@ $SubCtx.prototype.transition = function(token, value){
             if(context.tree[0].tree.length > 0){
                 return context.parent
             }
-            console.log("bizarre", context, token, value)
             break
         case ':':
             return new $AbstractExprCtx(new $SliceCtx(context), false)
         case ',':
             return new $AbstractExprCtx(context, false)
     }
-    console.log("syntax error", context, token, value)
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 

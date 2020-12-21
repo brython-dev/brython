@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-21 14:12:57.321787"
-__BRYTHON__.timestamp=1608556377321
+__BRYTHON__.compiled_date="2020-12-21 15:50:40.412967"
+__BRYTHON__.timestamp=1608562240412
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -3500,10 +3500,11 @@ this.tree[0].tree[0].type=="id"){var js=""
 if(this.create_annotations){js+="$locals.__annotations__ = $B.empty_dict();"}
 return js+"_b_.dict.$setitem($locals.__annotations__, '"+
 this.tree[0].tree[0].value+"', "+
-this.tree[0].annotation.to_js()+");"}else if(this.tree[0].type=="def"){
+this.tree[0].annotation.to_js()+");"}else if(this.tree[0].type=="def" ||
+this.tree[0].type=="generator"){
 this.js=this.tree[0].annotation.to_js()+";"}else{
 this.js=""
-this.tree=[]}}else if(this.tree[0].type !="def"){
+this.tree=[]}}else if(["def","generator"].indexOf(this.tree[0].type)==-1){
 this.tree=[]}}else if(this.tree[0].type=="assign" &&
 ! this.tree[0].tree[0].$in_parens &&
 this.tree[0].tree[0].annotation){
@@ -4151,13 +4152,11 @@ return $transition(expr,token,value)
 case ']':
 if(C.parent.packed){return C.parent }
 if(C.tree[0].tree.length > 0){return C.parent}
-console.log("bizarre",C,token,value)
 break
 case ':':
 return new $AbstractExprCtx(new $SliceCtx(C),false)
 case ',':
 return new $AbstractExprCtx(C,false)}
-console.log("syntax error",C,token,value)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $SubCtx.prototype.to_js=function(){this.js_processed=true
 if(this.func=='getitem' && this.value.type=='id'){var type=$get_node(this).locals[this.value.value],val=this.value.to_js()
