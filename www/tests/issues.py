@@ -2822,6 +2822,16 @@ except SyntaxError:
 x = *-Spam(),
 assert x == ('s', 'p', 'a', 'm')
 
+x = 1, *'two'
+assert x == (1, 't', 'w', 'o')
+
+y = *b'abc',
+assert y == (97, 98, 99)
+
+z = [*'spam']
+assert z == ['s', 'p', 'a', 'm']
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
