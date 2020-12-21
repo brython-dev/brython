@@ -1,4 +1,6 @@
 import sys
+import builtins
+
 import tb as traceback
 
 from browser import console, document, window, html, DOMNode
@@ -63,7 +65,11 @@ class Info:
 editor_ns = {
     'credits': Info(_credits),
     'copyright': Info(_copyright),
-    'license': Info(_license)
+    'license': Info(_license),
+    '__annotations__': {},
+    '__builtins__': builtins,
+    '__doc__': None,
+    '__name__': '__main__'
 }
 
 # default style for console textarea
