@@ -2787,6 +2787,41 @@ def g(x):
 
 assert g([1, [3, 4]]) == [1, [3, 4]]
 
+# issue 1562
+t = *['a', 'b'],
+assert t == ('a', 'b')
+s = *"cde",
+assert s == ('c', 'd', 'e')
+
+try:
+    exec('t = *["a", "b"]')
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+try:
+    exec('s = *"abcd"')
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+spam = ['spam']
+x = *spam[0],
+assert x == ('s', 'p', 'a', 'm')
+
+class Spam:
+  def __neg__(self):
+    return 'spam'
+
+try:
+    exec('x = *-Spam()')
+    raise Exception("should have raised SyntaxError")
+except SyntaxError:
+    pass
+
+x = *-Spam(),
+assert x == ('s', 'p', 'a', 'm')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

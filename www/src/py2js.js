@@ -4085,6 +4085,7 @@ $ExprCtx.prototype.transition = function(token, value){
         case 'lambda':
         case 'pass':
         case 'str':
+            console.log("syntax error", context, token, value)
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
             break
@@ -4468,10 +4469,13 @@ $ExprCtx.prototype.transition = function(token, value){
               $_SyntaxError(context, ["Missing parentheses in call " +
                   "to '" + context.tree[0].value + "'."])
           }
-          if(["dict_or_set", "list_or_tuple"].indexOf(context.parent.type) == -1){
+          if(["dict_or_set", "list_or_tuple", "str"].indexOf(context.parent.type) == -1){
               var t = context.tree[0]
-              if(t.type == "packed" ||
-                      (t.type == "call" && t.func.type == "packed")){
+              if(t.type == "packed"){
+                  $pos = t.pos
+                  $_SyntaxError(context, ["can't use starred expression here"])
+              }else if(t.type == "call" && t.func.type == "packed"){
+                  $pos = t.func.pos
                   $_SyntaxError(context, ["can't use starred expression here"])
               }
           }
@@ -4513,6 +4517,9 @@ $ExprCtx.prototype.to_js = function(arg){
         }
         res = "($locals_" + scope.id.replace(/\./g, '_') + '["' +
             this.assign.value + '"] = ' + res + ')'
+    }
+    if(this.name == "call"){ // case for unary
+        res += '()'
     }
     return res
 }
@@ -7786,6 +7793,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     }
     this.parent = context
     this.tree = []
+    this.pos = $pos - 1 // for SyntaxError reporting
     context.tree[context.tree.length] = this
 }
 
@@ -7812,13 +7820,24 @@ $PackedCtx.prototype.transition = function(token, value){
         case "(":
             context.parent.expect = ','
             return new $ListOrTupleCtx(context, "tuple")
+        case 'str':
+            context.parent.expect = ","
+            return new $StringCtx(context, value)
         case "]":
             return $transition(context.parent, token, value)
         case "{":
             context.parent.expect = ','
             return new $DictOrSetCtx(context)
         case 'op':
-            $_SyntaxError(context, ["can't use starred expression here"])
+            switch(value){
+                case '+':
+                case '-':
+                case '~':
+                    context.parent.expect = ','
+                    return new $UnaryCtx(context, value)
+                default:
+                    $_SyntaxError(context, ["can't use starred expression here"])
+            }
     }
     return context.parent.transition(token, context)
 }
@@ -8376,17 +8395,19 @@ $SubCtx.prototype.transition = function(token, value){
             return $transition(expr, token, value)
         case ']':
             if(context.parent.packed){
-                return context.parent.tree[0]
+                return context.parent //.tree[0]
             }
             if(context.tree[0].tree.length > 0){
                 return context.parent
             }
+            console.log("bizarre", context, token, value)
             break
         case ':':
             return new $AbstractExprCtx(new $SliceCtx(context), false)
         case ',':
             return new $AbstractExprCtx(context, false)
     }
+    console.log("syntax error", context, token, value)
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
@@ -8743,6 +8764,10 @@ $UnaryCtx.prototype.transition = function(token, value){
             // we remove the $ExprCtx and trigger a transition
             // from the $AbstractExpCtx with an integer or float
             // of the correct value
+            if(context.parent.type == "packed"){
+                $_SyntaxError(context,
+                    ["can't use starred expression here"])
+            }
             var expr = context.parent
             context.parent.parent.tree.pop()
             if(context.op == '-'){value = "-" + value}
@@ -8750,15 +8775,27 @@ $UnaryCtx.prototype.transition = function(token, value){
             return $transition(context.parent.parent, token, value)
         case 'id':
             // replace by x.__neg__(), x.__invert__ or x.__pos__
-            context.parent.parent.tree.pop()
-            var expr = new $ExprCtx(context.parent.parent, 'call',
-                false)
+            var p = context.parent.parent.tree.pop()
+            if(p.type == "packed"){
+                // keep PackedCtx object
+                context.parent.parent.tree.push(p)
+                // remove packed child, replace by new expression
+                p.tree.pop()
+                var expr = new $ExprCtx(p, 'call', false)
+            }else{
+                var expr = new $ExprCtx(context.parent.parent, 'call',
+                    false)
+            }
             var expr1 = new $ExprCtx(expr, 'id', false)
-            new $IdCtx(expr1,value) // create id
+            new $IdCtx(expr1, value) // create id
             var repl = new $AttrCtx(expr)
-            if(context.op == '+'){repl.name = '__pos__'}
-            else if(context.op == '-'){repl.name = '__neg__'}
-            else{repl.name = '__invert__'}
+            if(context.op == '+'){
+                repl.name = '__pos__'
+            }else if(context.op == '-'){
+                repl.name = '__neg__'
+            }else{
+                repl.name = '__invert__'
+            }
             // new context is the expression above the id
             return expr1
         case 'op':
@@ -8771,7 +8808,7 @@ $UnaryCtx.prototype.transition = function(token, value){
     return $transition(context.parent, token, value)
 }
 
-this.to_js = function(){
+$UnaryCtx.prototype.to_js = function(){
     this.js_processed = true
     return this.op
 }

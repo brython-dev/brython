@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-17 11:42:24.215277"
-__BRYTHON__.timestamp=1608201744215
+__BRYTHON__.compiled_date="2020-12-21 13:59:18.665432"
+__BRYTHON__.timestamp=1608555558665
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -2093,6 +2093,7 @@ case 'int':
 case 'lambda':
 case 'pass':
 case 'str':
+console.log("syntax error",C,token,value)
 $_SyntaxError(C,'token '+token+' after '+
 C)
 break
@@ -2281,9 +2282,10 @@ if(C.tree.length==2 &&
 C.tree[0].type=="id" &&
 ["print","exec"].indexOf(C.tree[0].value)>-1){$_SyntaxError(C,["Missing parentheses in call "+
 "to '"+C.tree[0].value+"'."])}
-if(["dict_or_set","list_or_tuple"].indexOf(C.parent.type)==-1){var t=C.tree[0]
-if(t.type=="packed" ||
-(t.type=="call" && t.func.type=="packed")){$_SyntaxError(C,["can't use starred expression here"])}}}
+if(["dict_or_set","list_or_tuple","str"].indexOf(C.parent.type)==-1){var t=C.tree[0]
+if(t.type=="packed"){$pos=t.pos
+$_SyntaxError(C,["can't use starred expression here"])}else if(t.type=="call" && t.func.type=="packed"){$pos=t.func.pos
+$_SyntaxError(C,["can't use starred expression here"])}}}
 return $transition(C.parent,token)}
 $ExprCtx.prototype.to_js=function(arg){var res
 this.js_processed=true
@@ -2299,6 +2301,8 @@ scope.nonlocals[this.assign.value]){
 scope=scope.parent_block}
 res="($locals_"+scope.id.replace(/\./g,'_')+'["'+
 this.assign.value+'"] = '+res+')'}
+if(this.name=="call"){
+res+='()'}
 return res}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
@@ -3852,6 +3856,7 @@ if(child.type=='expr' && child.tree.length > 0
 && child.tree[0].type=='packed'){$_SyntaxError(C,["two starred expressions in assignment"])}}}
 this.parent=C
 this.tree=[]
+this.pos=$pos-1 
 C.tree[C.tree.length]=this}
 $PackedCtx.prototype.toString=function(){return '(packed) '+this.tree}
 $PackedCtx.prototype.transition=function(token,value){var C=this
@@ -3869,13 +3874,22 @@ return new $ListOrTupleCtx(C,"list")
 case "(":
 C.parent.expect=','
 return new $ListOrTupleCtx(C,"tuple")
+case 'str':
+C.parent.expect=","
+return new $StringCtx(C,value)
 case "]":
 return $transition(C.parent,token,value)
 case "{":
 C.parent.expect=','
 return new $DictOrSetCtx(C)
 case 'op':
-$_SyntaxError(C,["can't use starred expression here"])}
+switch(value){case '+':
+case '-':
+case '~':
+C.parent.expect=','
+return new $UnaryCtx(C,value)
+default:
+$_SyntaxError(C,["can't use starred expression here"])}}
 return C.parent.transition(token,C)}
 $PackedCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
@@ -4135,13 +4149,15 @@ case 'lambda':
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case ']':
-if(C.parent.packed){return C.parent.tree[0]}
+if(C.parent.packed){return C.parent }
 if(C.tree[0].tree.length > 0){return C.parent}
+console.log("bizarre",C,token,value)
 break
 case ':':
 return new $AbstractExprCtx(new $SliceCtx(C),false)
 case ',':
 return new $AbstractExprCtx(C,false)}
+console.log("syntax error",C,token,value)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $SubCtx.prototype.to_js=function(){this.js_processed=true
 if(this.func=='getitem' && this.value.type=='id'){var type=$get_node(this).locals[this.value.value],val=this.value.to_js()
@@ -4314,27 +4330,29 @@ $UnaryCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'int':
 case 'float':
 case 'imaginary':
+if(C.parent.type=="packed"){$_SyntaxError(C,["can't use starred expression here"])}
 var expr=C.parent
 C.parent.parent.tree.pop()
 if(C.op=='-'){value="-"+value}
 else if(C.op=='~'){value=~value}
 return $transition(C.parent.parent,token,value)
 case 'id':
-C.parent.parent.tree.pop()
-var expr=new $ExprCtx(C.parent.parent,'call',false)
+var p=C.parent.parent.tree.pop()
+if(p.type=="packed"){
+C.parent.parent.tree.push(p)
+p.tree.pop()
+var expr=new $ExprCtx(p,'call',false)}else{var expr=new $ExprCtx(C.parent.parent,'call',false)}
 var expr1=new $ExprCtx(expr,'id',false)
 new $IdCtx(expr1,value)
 var repl=new $AttrCtx(expr)
-if(C.op=='+'){repl.name='__pos__'}
-else if(C.op=='-'){repl.name='__neg__'}
-else{repl.name='__invert__'}
+if(C.op=='+'){repl.name='__pos__'}else if(C.op=='-'){repl.name='__neg__'}else{repl.name='__invert__'}
 return expr1
 case 'op':
 if('+'==value ||'-'==value){if(C.op===value){C.op='+'}
 else{C.op='-'}
 return C}}
 return $transition(C.parent,token,value)}
-this.to_js=function(){this.js_processed=true
+$UnaryCtx.prototype.to_js=function(){this.js_processed=true
 return this.op}
 var $WithCtx=$B.parser.$WithCtx=function(C){
 this.type='with'
@@ -8332,7 +8350,10 @@ bytearray.append=function(self,b){if(arguments.length !=2){throw _b_.TypeError.$
 if(! _b_.isinstance(b,_b_.int)){throw _b_.TypeError.$factory("an integer is required")}
 if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
 self.source[self.source.length]=b}
-bytearray.extend=function(self,b){if(b.__class__===bytearray ||b.__class__===bytes){b.source.forEach(function(item){self.source.push(item)})
+bytearray.extend=function(self,b){if(self.in_iteration){
+throw _b_.BufferError.$factory("Existing exports of data: object "+
+"cannot be re-sized")}
+if(b.__class__===bytearray ||b.__class__===bytes){b.source.forEach(function(item){self.source.push(item)})
 return _b_.None}
 var it=_b_.iter(b)
 while(true){try{bytearray.__add__(self,_b_.next(it))}catch(err){if(err===_b_.StopIteration){break}
