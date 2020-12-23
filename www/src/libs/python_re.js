@@ -1915,8 +1915,34 @@ var $module = {
                         continue
                     }
                 }else if(escaped){
+                    escaped = false
                     var mo = /^\d+/.exec(data.repl.substr(pos))
                     if(mo){
+                        var escape = escaped_char(data.repl, pos - 1)
+                        if(escape.type == "o"){
+                            if(escape.ord > 0o377){
+                                fail(`octal escape value \\${mo[0]} ` +
+                                    " outside of range 0-0o377", pos)
+                            }
+                            repl1 += escape.char
+                            pos += escape.length - 1
+                            continue
+                        }else if(escape.type != "backref"){
+                            var group_num = mo[0].substr(0,
+                                Math.min(2, mo[0].length))
+                            fail(`invalid group reference ${group_num}`, pos)
+                        }else{
+                            // only keep first 2 digits
+                            var group_num = mo[0].substr(0,
+                                Math.min(2, mo[0].length))
+                            // check that pattern has the specified group num
+                            if(pattern.groups[group_num] === undefined){
+                                fail(`invalid group reference ${group_num}`,
+                                    pos)
+                            }else{
+                                mo[0] = group_num
+                            }
+                        }
                         if(! has_backref){
                             var parts = [data.repl.substr(0, pos - 1),
                                     parseInt(mo[0])]
@@ -1946,10 +1972,9 @@ var $module = {
                             if(/[a-zA-Z]/.exec(data.repl[pos])){
                                 fail("unknown escape", pos)
                             }
-                            repl1 += data.repl[pos]
+                            pos += data.repl[pos]
                         }
                     }
-                    escaped = false
                 }
                 if(! br){
                     repl1 += data.repl[pos]
@@ -1961,6 +1986,11 @@ var $module = {
                 data.repl = function(mo){
                     var res = parts[0]
                     for(var i = 1, len = parts.length; i < len; i += 2){
+                        if(mo.mo.re.groups[parts[i]] === undefined){
+                            pos++
+                            var group_num = parts[i].toString().substr(0, 2)
+                            fail(`invalid group reference ${group_num}`, pos)
+                        }
                         res += mo.mo.re.groups[parts[i]].item.match_string()
                         res += parts[i + 1]
                     }
