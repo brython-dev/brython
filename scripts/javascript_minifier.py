@@ -6,7 +6,7 @@ def minify(src):
     _res, pos = '', 0
     while pos < len(src):
         if src[pos] in ('"', "'") or \
-            (src[pos]=='/' and src[pos-1]=='('):
+                (src[pos] == '/' and src[pos - 1] == '('):
             # the end of the string is the next quote if it is not
             # after an odd number of backslashes
             start = pos
@@ -19,14 +19,14 @@ def minify(src):
                 else:
                     # count number of backslashes before the quote
                     nb = 0
-                    while src[end-nb-1] == '\\':
+                    while src[end - nb - 1] == '\\':
                         nb += 1
                     if not nb % 2:
                         break
                     else:
-                        start = end+1
-            _res += src[pos:end+1]
-            pos = end+1
+                        start = end
+            _res += src[pos:end + 1]
+            pos = end + 1
         elif src[pos] == '\r':
             pos += 1
         elif src[pos] == ' ':
