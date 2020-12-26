@@ -220,6 +220,10 @@ Char.prototype.match = function(string, pos){
                 test = $B.unicode_tables.Zs[cp] !== undefined ||
                             $B.unicode_bidi_whitespace.indexOf(cp) > -1
                 break
+            case 'S':
+                test = $B.unicode_tables.Zs[cp] === undefined &&
+                            $B.unicode_bidi_whitespace.indexOf(cp) == -1
+                break
             case '.':
                 test = cp != 10 && cp != 13
                 break
@@ -767,6 +771,9 @@ function compile(pattern, flags){
         node = new Node()
     if(pattern.__class__ === _b_.str.$surrogate){
         pattern = pattern.items
+        pattern.substring = function(start, stop){
+            return this.slice(start, stop).join('')
+        }
     }
     for(var item of tokenize(pattern)){
         if(item instanceof Group){
@@ -785,8 +792,8 @@ function compile(pattern, flags){
                     var value = item.extension.value
                     validate(value)
                     if(groups[value] !== undefined){
-                        fail(`redefinition of group name ` +
-                            ` '${value}' as group ${group_num}; was group ` +
+                        fail(`redefinition of group name` +
+                            ` '${value}' as group ${group_num}; was group` +
                             ` ${groups[value].num}`, pos)
                     }
                     groups[value] = groups[group_num] = {num: group_num, item}
@@ -824,7 +831,12 @@ function compile(pattern, flags){
             }
             var item = group_stack.pop()
             item.end_pos = end_pos
-            item.text = pattern.substring(item.pos, end_pos)
+            try{
+                item.text = pattern.substring(item.pos, end_pos)
+            }catch(err){
+                console.log("err avec pattern substring", pattern)
+                throw err
+            }
             if(item instanceof Group && item.items.length == 0){
                 item.add(new Char(pos, EmptyString, group_stack.concat([item])))
             }else if(item instanceof ConditionalBackref){
@@ -1577,16 +1589,18 @@ BMatchObject.__getitem__ = function(){
     return BMatchObject.$group(self, [key])
 }
 
+BMatchObject.__repr__ = function(self){
+    var mo = self.mo
+    return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
+        `match=${_b_.repr(mo.match_string())}>`
+}
+
 BMatchObject.__setitem__ = function(){
     throw _b_.TypeError.$factory("'re.Match' object does not " +
         "support item assignment")
 }
 
-BMatchObject.__str__ = function(self){
-    var mo = self.mo
-    return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
-        `match=${_b_.repr(mo.match_string())}>`
-}
+BMatchObject.__str__ = BMatchObject.__repr__
 
 BMatchObject.group = function(self, group_num){
     var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
@@ -1676,7 +1690,7 @@ function str_or_bytes(string, pattern, repl){
             if(pattern.__class__ !== _b_.str.$surrogate){
                 pattern = pattern + ''
             }
-        }else if(! (pattern instanceof Node) ||
+        }else if(! (pattern instanceof Node) &&
                 ! (typeof pattern.text == "string")){
             throw _b_.TypeError.$factory(`cannot use a `+
                 `${$B.class_name(pattern)} pattern on a string-like object`)
@@ -1749,6 +1763,190 @@ function check_pattern_flags(pattern, flags){
     return pattern
 }
 
+function subn(string, pattern, repl, count, flags){
+    var res = '',
+        pos = 0,
+        data = str_or_bytes(string, pattern, repl),
+        nb_sub = 0
+    if(! (data.pattern instanceof Node)){
+        pattern = compile(data.pattern, flags)
+    }
+    if(data.repl.__class__ === _b_.str.$surrogate){
+        data.repl = data.repl.items.join('')
+    }
+    if(typeof data.repl == "string"){
+        data.repl = data.repl.replace(/\\n/g, '\n')
+        data.repl = data.repl.replace(/\\r/g, '\r')
+        data.repl = data.repl.replace(/\\t/g, '\t')
+        data.repl = data.repl.replace(/\\b/g, '\b')
+        data.repl = data.repl.replace(/\\v/g, '\v')
+        data.repl = data.repl.replace(/\\f/g, '\f')
+        data.repl = data.repl.replace(/\\a/g, '\a')
+        // detect backreferences
+        var pos = 0,
+            escaped = false,
+            br = false,
+            repl1 = "",
+            has_backref = false
+        while(pos < data.repl.length){
+            br = false
+            if(data.repl[pos] == "\\"){
+                escaped = ! escaped
+                if(escaped){
+                    pos++
+                    continue
+                }
+            }else if(escaped){
+                escaped = false
+                var mo = /^\d+/.exec(data.repl.substr(pos))
+                if(mo){
+                    var escape = escaped_char(data.repl, pos - 1)
+                    if(escape.type == "o"){
+                        if(escape.ord > 0o377){
+                            fail(`octal escape value \\${mo[0]} ` +
+                                " outside of range 0-0o377", pos)
+                        }
+                        repl1 += escape.char
+                        pos += escape.length - 1
+                        continue
+                    }else if(escape.type != "backref"){
+                        var group_num = mo[0].substr(0,
+                            Math.min(2, mo[0].length))
+                        fail(`invalid group reference ${group_num}`, pos)
+                    }else{
+                        // only keep first 2 digits
+                        var group_num = mo[0].substr(0,
+                            Math.min(2, mo[0].length))
+                        // check that pattern has the specified group num
+                        if(pattern.groups[group_num] === undefined){
+                            fail(`invalid group reference ${group_num}`,
+                                pos)
+                        }else{
+                            mo[0] = group_num
+                        }
+                    }
+                    if(! has_backref){
+                        var parts = [data.repl.substr(0, pos - 1),
+                                parseInt(mo[0])]
+                    }else{
+                        parts.push(data.repl.substring(next_pos, pos - 1))
+                        parts.push(parseInt(mo[0]))
+                    }
+                    has_backref = true
+                    var next_pos = pos + mo[0].length
+                    br = true
+                    pos += mo[0].length
+                }else if(data.repl[pos] == "g"){
+                    pos++
+                    if(data.repl[pos] != '<'){
+                        fail("missing <", pos)
+                    }
+                    pos++
+                    mo = /(.*?)>/.exec(data.repl.substr(pos))
+                    if(mo){
+                        if(mo[1] == ""){
+                            pos += mo[0].length
+                            fail("missing group name", pos - 1)
+                        }
+                        var group_name = mo[1]
+                        if(/^\d+$/.exec(group_name)){
+                            if(pattern.groups[group_name] === undefined){
+                                fail(`invalid group reference ${group_name}`,
+                                    pos)
+                            }
+                        }else{
+                            if(! _b_.str.isidentifier(group_name)){
+                                var cps = to_codepoint_list(group_name)
+                                if($B.unicode_tables.XID_Start[cps[0]] === undefined){
+                                    fail("bad character in group name '" +
+                                        group_name + "'", pos)
+                                }else{
+                                    for(cp of cps.slice(1)){
+                                        if($B.unicode_tables.XID_Continue[cp] === undefined){
+                                            fail("bad character in group name '" +
+                                                group_name + "'", pos)
+                                        }
+                                    }
+                                }
+                            }
+                            if(pattern.groups[group_name] === undefined){
+                                throw _b_.IndexError.$factory(
+                                    `unknown group name '${group_name}'`,
+                                    pos)
+                            }
+                        }
+                        if(! has_backref){
+                            var parts = [data.repl.substr(0, pos - 3),
+                                    mo[1]]
+                        }else{
+                            parts.push(data.repl.substring(next_pos, pos - 3))
+                            parts.push(mo[1])
+                        }
+                        has_backref = true
+                        var next_pos = pos + mo[0].length
+                        br = true
+                        pos = next_pos
+                    }else{
+                        if(data.repl.substr(pos).length > 0){
+                            fail("missing >, unterminated name", pos)
+                        }else{
+                            fail("missing group name", pos)
+                        }
+                    }
+                }else{
+                    if(/[a-zA-Z]/.exec(data.repl[pos])){
+                        fail("unknown escape", pos)
+                    }
+                    pos += data.repl[pos]
+                }
+            }
+            if(! br){
+                repl1 += data.repl[pos]
+                pos ++
+            }
+        }
+        if(has_backref){
+            parts.push(data.repl.substr(next_pos))
+            data.repl = function(mo){
+                var res = parts[0]
+                for(var i = 1, len = parts.length; i < len; i += 2){
+                    if(mo.mo.re.groups[parts[i]] === undefined){
+                        pos++
+                        var group_num = parts[i].toString().substr(0, 2)
+                        fail(`invalid group reference ${group_num}`, pos)
+                    }
+                    res += mo.mo.re.groups[parts[i]].item.match_string()
+                    res += parts[i + 1]
+                }
+                return res
+            }
+        }
+    }
+    pos = 0
+    for(var bmo of $module.finditer(pattern, string)){
+        var mo = bmo.mo // finditer returns instances of BMatchObject
+        res += data.string.substring(pos, mo.start)
+        if(typeof data.repl == "function"){
+            res += $B.$call(data.repl)(BMatchObject.$factory(mo))
+        }else{
+            res += repl1
+        }
+        nb_sub++
+        pos = mo.end
+        if(pos >= string.length){
+            break
+        }
+        if(count != 0 && nb_sub >= count){
+            break
+        }
+    }
+    res += data.string.substring(pos)
+    if(data.type === _b_.bytes){
+        res = _b_.str.encode(res, "latin-1")
+    }
+    return [res, nb_sub]
+}
+
 var $module = {
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
@@ -1787,7 +1985,8 @@ var $module = {
             if(next.done){
                 return res
             }
-            var mo = next.value
+            var bmo = next.value,
+                mo = bmo.mo
             if(mo.re.nb_groups){
                 if(mo.re.nb_groups == 1){
                     res.push(conv(mo.re.groups[1].item.match_string()))
@@ -1822,11 +2021,15 @@ var $module = {
         return $B.generator.$factory(function*(pattern, string, flags, original_string){
             var result = [],
                 pos = 0
-            while(pos < string.length){
+            while(pos <= string.length){
                 var mo = match(pattern, string, pos, flags)
                 if(mo){
-                    yield mo
-                    pos = mo.end || 1 // at least 1, else infinite loop
+                    yield BMatchObject.$factory(mo)
+                    if(mo.end == pos){
+                        pos++ // at least 1, else infinite loop
+                    }else{
+                        pos = mo.end
+                    }
                 }else{
                     pos++
                 }
@@ -1875,7 +2078,7 @@ var $module = {
         }
         return _b_.None
     },
-    sub : function(){
+    sub: function(){
         var $ = $B.args("sub", 5,
                 {pattern: null, repl: null, string: null, count: null, flags: null},
                 ['pattern', 'repl', 'string', 'count', 'flags'],
@@ -1885,139 +2088,21 @@ var $module = {
             string = $.string,
             count = $.count,
             flags = $.flags
-        var res = '',
-            pos = 0,
-            data = str_or_bytes(string, pattern, repl),
-            nb_sub = 0
-        if(! (data.pattern instanceof Node)){
-            pattern = compile(data.pattern, flags)
-        }
-        if(typeof data.repl == "string"){
-            data.repl = data.repl.replace(/\\n/g, '\n')
-            data.repl = data.repl.replace(/\\r/g, '\r')
-            data.repl = data.repl.replace(/\\t/g, '\t')
-            data.repl = data.repl.replace(/\\b/g, '\b')
-            data.repl = data.repl.replace(/\\v/g, '\v')
-            data.repl = data.repl.replace(/\\f/g, '\f')
-            data.repl = data.repl.replace(/\\a/g, '\a')
-            // detect backreferences
-            var pos = 0,
-                escaped = false,
-                br = false,
-                repl1 = "",
-                has_backref = false
-            while(pos < data.repl.length){
-                br = false
-                if(data.repl[pos] == "\\"){
-                    escaped = ! escaped
-                    if(escaped){
-                        pos++
-                        continue
-                    }
-                }else if(escaped){
-                    escaped = false
-                    var mo = /^\d+/.exec(data.repl.substr(pos))
-                    if(mo){
-                        var escape = escaped_char(data.repl, pos - 1)
-                        if(escape.type == "o"){
-                            if(escape.ord > 0o377){
-                                fail(`octal escape value \\${mo[0]} ` +
-                                    " outside of range 0-0o377", pos)
-                            }
-                            repl1 += escape.char
-                            pos += escape.length - 1
-                            continue
-                        }else if(escape.type != "backref"){
-                            var group_num = mo[0].substr(0,
-                                Math.min(2, mo[0].length))
-                            fail(`invalid group reference ${group_num}`, pos)
-                        }else{
-                            // only keep first 2 digits
-                            var group_num = mo[0].substr(0,
-                                Math.min(2, mo[0].length))
-                            // check that pattern has the specified group num
-                            if(pattern.groups[group_num] === undefined){
-                                fail(`invalid group reference ${group_num}`,
-                                    pos)
-                            }else{
-                                mo[0] = group_num
-                            }
-                        }
-                        if(! has_backref){
-                            var parts = [data.repl.substr(0, pos - 1),
-                                    parseInt(mo[0])]
-                        }else{
-                            parts.push(data.repl.substring(next_pos, pos - 1))
-                            parts.push(parseInt(mo[0]))
-                        }
-                        has_backref = true
-                        var next_pos = pos + mo[0].length
-                        br = true
-                        pos += mo[0].length
-                    }else{
-                        mo = /g<(.*?)>/.exec(data.repl.substr(pos))
-                        if(mo){
-                            if(! has_backref){
-                                var parts = [data.repl.substr(0, pos - 1),
-                                        mo[1]]
-                            }else{
-                                parts.push(data.repl.substring(next_pos, pos - 1))
-                                parts.push(mo[1])
-                            }
-                            has_backref = true
-                            var next_pos = pos + mo[0].length
-                            br = true
-                            pos = next_pos
-                        }else{
-                            if(/[a-zA-Z]/.exec(data.repl[pos])){
-                                fail("unknown escape", pos)
-                            }
-                            pos += data.repl[pos]
-                        }
-                    }
-                }
-                if(! br){
-                    repl1 += data.repl[pos]
-                    pos ++
-                }
-            }
-            if(has_backref){
-                parts.push(data.repl.substr(next_pos))
-                data.repl = function(mo){
-                    var res = parts[0]
-                    for(var i = 1, len = parts.length; i < len; i += 2){
-                        if(mo.mo.re.groups[parts[i]] === undefined){
-                            pos++
-                            var group_num = parts[i].toString().substr(0, 2)
-                            fail(`invalid group reference ${group_num}`, pos)
-                        }
-                        res += mo.mo.re.groups[parts[i]].item.match_string()
-                        res += parts[i + 1]
-                    }
-                    return res
-                }
-            }
-        }
-        pos = 0
-        for(var mo of $module.finditer(pattern, string)){
-            res += data.string.substring(pos, mo.start)
-            if(typeof data.repl == "function"){
-                res += $B.$call(data.repl)(BMatchObject.$factory(mo))
-            }else{
-                res += repl1
-            }
-            pos = mo.end
-            nb_sub++
-            if(count != 0 && nb_sub >= count){
-                break
-            }
-        }
-        res += data.string.substring(pos)
-        if(data.type === _b_.bytes){
-            res = _b_.str.encode(res, "latin-1")
-        }
-        return res
+        return subn(string, pattern, repl, count, flags)[0]
+    },
+    subn: function(){
+        var $ = $B.args("sub", 5,
+                {pattern: null, repl: null, string: null, count: null, flags: null},
+                ['pattern', 'repl', 'string', 'count', 'flags'],
+                arguments, {count: 0, flags: no_flag()}, null, null),
+            pattern = $.pattern,
+            repl = $.repl,
+            string = $.string,
+            count = $.count,
+            flags = $.flags
+        return $B.fast_tuple(subn(string, pattern, repl, count, flags))
     }
+
 }
 
 var ASCII = $module.A = $module.ASCII = Flag.$factory("ASCII", 256)
