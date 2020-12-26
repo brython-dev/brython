@@ -1425,8 +1425,9 @@ str.isidentifier = function(self){
     var $ = $B.args("isidentifier", 1, {self: null}, ["self"],
         arguments, {}, null, null),
         char
-    if(self.length == 0){return false}
-    else if(unicode_tables.XID_Start[self.charCodeAt(0)] === undefined){
+    if(self.length == 0){
+        return false
+    }else if(unicode_tables.XID_Start[self.charCodeAt(0)] === undefined){
         return false
     }else{
         for(var i = 1, len = self.length; i < len; i++){

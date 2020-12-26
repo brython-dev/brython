@@ -10220,14 +10220,34 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             // XID_Start and XID_Continue are objects with keys = the code
             // points of valid characters for identifiers.
             // Cf. https://docs.python.org/3/reference/lexical_analysis.html#identifiers
-            if($B.unicode_tables.XID_Start[car.charCodeAt(0)]){
-                name = car // identifier start
+            var cp = src.charCodeAt(pos),
+                has_surrogate = false,
+                name = ''
+            if(cp >= 0xD800 && cp <= 0xDBFF){
+                cp = _b_.ord(src.substr(pos, 2))
+                car = src.substr(pos, 2)
+                has_surrogate = true
+                pos++
+            }
+            if($B.unicode_tables.XID_Start[cp]){
+                name = car
                 var p0 = pos
                 pos++
-                while(pos < src.length &&
-                        $B.unicode_tables.XID_Continue[src.charCodeAt(pos)]){
-                    name += src.charAt(pos)
-                    pos++
+                while(pos < src.length){
+                    car = src[pos]
+                    cp = src.charCodeAt(pos)
+                    if(cp >= 0xD800 && cp <= 0xDBFF){
+                        cp = _b_.ord(src.substr(pos, 2))
+                        car = src.substr(pos, 2)
+                        has_surrogate = true
+                        pos++
+                    }
+                    if($B.unicode_tables.XID_Continue[cp]){
+                        name += car
+                        pos++
+                    }else{
+                        break
+                    }
                 }
             }
             if(name){
