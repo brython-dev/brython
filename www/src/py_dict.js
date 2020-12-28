@@ -110,42 +110,48 @@ dict_view_op = {
 }
 
 $B.make_view = function(name){
-    var klass = $B.make_class(name, function(items, set_like){
+    var klass = $B.make_class(name, function(d, items, set_like){
         return {
             __class__: klass,
             __dict__: $B.empty_dict(),
             counter: -1,
+            dict: d,
             items: items,
             len: items.length,
             set_like: set_like
         }
     })
 
-        for(var i = 0, len = set_ops.length; i < len; i++){
-            var op = "__" + set_ops[i] + "__"
-            klass[op] = (function(op){
-                return function(self, other){
-                    // compare set of items to other
-                    if(self.set_like){
-                        return _b_.set[op](_b_.set.$factory(self),
-                            _b_.set.$factory(other))
-                    }else{
-                        // Non-set like views can only be compared to
-                        // instances of the same class
-                        if(other.__class__ !== klass){
-                            return false
-                        }
-                        var other_items = _b_.list.$factory(other)
-                        return dict_view_op[op](self.items, other_items)
+    for(var i = 0, len = set_ops.length; i < len; i++){
+        var op = "__" + set_ops[i] + "__"
+        klass[op] = (function(op){
+            return function(self, other){
+                // compare set of items to other
+                if(self.set_like){
+                    return _b_.set[op](_b_.set.$factory(self),
+                        _b_.set.$factory(other))
+                }else{
+                    // Non-set like views can only be compared to
+                    // instances of the same class
+                    if(other.__class__ !== klass){
+                        return false
                     }
+                    var other_items = _b_.list.$factory(other)
+                    return dict_view_op[op](self.items, other_items)
                 }
-            })(op)
-        }
+            }
+        })(op)
+    }
+
     klass.__iter__ = function(self){
         var it = klass.$iterator.$factory(self.items)
-        it.len_func = self.len_func
+        it.test_change = function(){
+            return self.dict.$version != self.dict_version
+        }
         return it
     }
+
+    klass.__next__ = dict_iterator_next
 
     klass.__len__ = function(self){
         return self.len
@@ -161,7 +167,9 @@ $B.make_view = function(name){
 
 // Special version of __next__ for iterators on dict keys / values / items.
 // Checks that the dictionary size didn't change during iteration.
+$B.it_count = 0
 function dict_iterator_next(self){
+    $B.it_count++
     if(self.len_func() != self.len){
         throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
     }
@@ -195,6 +203,7 @@ dict.$to_obj = function(d){
 }
 
 function to_list(d, ix){
+        var t0 = new Date()
     var items = [],
         item
 
@@ -213,13 +222,16 @@ function to_list(d, ix){
             items.push([parseFloat(k), d.$numeric_dict[k]])
         }
 
-        for(var k in d.$string_dict){items.push([k, d.$string_dict[k]])}
+        for(var k in d.$string_dict){
+            items.push([k, d.$string_dict[k]])
+        }
 
         for(var k in d.$object_dict){
             d.$object_dict[k].forEach(function(item){
                 items.push(item)
             })
         }
+
         // sort by insertion order
         items.sort(function(a, b){
             return a[1][1] - b[1][1]
@@ -227,7 +239,8 @@ function to_list(d, ix){
         items = items.map(function(item){return [item[0], item[1][0]]})
     }
     if(ix !== undefined){
-        return items.map(function(item){return item[ix]})
+        res = items.map(function(item){return item[ix]})
+        return res
     }else{
         items.__class__ = _b_.tuple
         return items.map(function(item){
@@ -451,6 +464,8 @@ dict.__getitem__ = function(){
     return dict.$getitem(self, arg)
 }
 
+$B.string_count = 0
+$B.num_count = 0
 dict.$getitem = function(self, arg){
     if(self.$jsobj){
         if(self.$jsobj[arg] === undefined){
@@ -464,12 +479,15 @@ dict.$getitem = function(self, arg){
 
     switch(typeof arg){
         case "string":
-            if(self.$string_dict[arg] !== undefined){
-                return self.$string_dict[arg][0]
+            var x = self.$string_dict[arg]
+            if(x !== undefined){
+                $B.string_count++
+                return x[0]
             }
             break
         case "number":
             if(self.$numeric_dict[arg] !== undefined){
+                $B.num_count++
                 return self.$numeric_dict[arg][0]
             }
             break
@@ -960,10 +978,12 @@ dict.items = function(self){
             break
         }
     }
-    var it = dict_items.$factory(to_list(self), set_like)
-    it.len_func = function(){return dict.__len__(self)}
+    var values = to_list(self)
+    var it = dict_items.$factory(self, values, set_like)
+    it.dict_version = self.$version
     return it
 }
+
 
 var dict_keys = $B.make_view("dict_keys")
 dict_keys.$iterator = $B.make_iterator_class("dict_keyiterator")
@@ -974,8 +994,8 @@ dict.$$keys = function(self){
            _msg = "keys() takes no arguments (" + _len + " given)"
        throw _b_.TypeError.$factory(_msg)
     }
-    var it = dict_keys.$factory(to_list(self, 0), true)
-    it.len_func = function(){return dict.__len__(self)}
+    var it = dict_keys.$factory(self, to_list(self, 0), true)
+    it.dict_version = self.$version
     return it
 }
 
@@ -1095,8 +1115,8 @@ dict.values = function(self){
        throw _b_.TypeError.$factory(_msg)
     }
     var values = to_list(self, 1)
-    var it = dict_values.$factory(to_list(self, 1), false)
-    it.len_func = function(){return dict.__len__(self)}
+    var it = dict_values.$factory(self, values, false)
+    it.dict_version = self.$version
     return it
 }
 

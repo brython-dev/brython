@@ -154,14 +154,17 @@ list.__getitem__ = function(self, key){
 list.$getitem = function(self, key){
     var factory = (self.__class__ || $B.get_class(self)).$factory
 
-    if(isinstance(key, _b_.int)){
+    try{
+        var int_key = $B.$GetInt(key)
+
         var items = self.valueOf(),
-            pos = key
-        if(key < 0){pos = items.length + pos}
+            pos = int_key
+        if(int_key < 0){pos = items.length + pos}
         if(pos >= 0 && pos < items.length){return items[pos]}
 
         throw _b_.IndexError.$factory($B.class_name(self) +
             " index out of range")
+    }catch(err){
     }
     if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
         // Find integer values for start, stop and step
@@ -192,7 +195,6 @@ list.$getitem = function(self, key){
             return factory(res)
         }
     }
-
     if(_b_.hasattr(key, "__int__") || _b_.hasattr(key, "__index__")){
        return list.__getitem__(self, _b_.int.$factory(key))
     }
@@ -770,6 +772,7 @@ list.sort = function(self){
 // function used for list literals
 $B.$list = function(t){
     t.__brython__ = true
+    t.__class__ = _b_.list
     return t
 }
 

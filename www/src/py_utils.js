@@ -584,21 +584,25 @@ function index_error(obj){
 }
 
 $B.$getitem = function(obj, item){
-    var is_list = Array.isArray(obj) && obj.__class__ === _b_.list
+    var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
+        is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
+
     if(typeof item == "number"){
         if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item
             if(obj[item] !== undefined){return obj[item]}
             else{index_error(obj)}
+        }else if(is_dict){
+            if(obj.$numeric_dict[item] !== undefined){
+                return obj.$numeric_dict[item][0]
+            }
         }
-    }
-
-    try{item = $B.$GetInt(item)}catch(err){}
-    if((is_list || typeof obj == "string")
-        && typeof item == "number"){
-        item = item >=0 ? item : obj.length + item
-        if(obj[item] !== undefined){return obj[item]}
-        else{index_error(obj)}
+    }else if(typeof item == "string" && is_dict){
+        var res = obj.$string_dict[item]
+        if(res !== undefined){
+            return res[0]
+        }
+        throw _b_.KeyError.$factory(item)
     }
 
     // PEP 560
@@ -620,6 +624,9 @@ $B.$getitem = function(obj, item){
 
     if(is_list){
         return _b_.list.$getitem(obj, item)
+    }
+    if(is_dict){
+        return _b_.dict.$getitem(obj, item)
     }
 
     var gi = $B.$getattr(obj, "__getitem__", _b_.None)
@@ -985,6 +992,7 @@ $B.stdin = {
     }
 }
 
+$B.it_kount = 0
 $B.make_iterator_class = function(name){
     // Builds a class to iterate over items
 
@@ -1016,11 +1024,13 @@ $B.make_iterator_class = function(name){
         },
 
         __next__: function(self){
-            if(typeof self.len_func == "function" &&
-                    self.len_func() != self.len){
+            $B.it_kount++
+            if(typeof self.test_change == "function" &&
+                    self.test_change()){
                 throw _b_.RuntimeError.$factory(
                     "dictionary changed size during iteration")
             }
+
             self.counter++
             if(self.counter < self.items.length){
                 var item = self.items[self.counter]
