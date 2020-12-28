@@ -396,7 +396,7 @@ BaseException.__init__ = function(self){
 
 BaseException.__repr__ = function(self){
     var res =  self.__class__.$infos.__name__
-    if(self.args[0]){
+    if(self.args[0] !== undefined){
         res += '(' + repr(self.args[0])
     }
     if(self.args.length > 1){

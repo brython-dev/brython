@@ -415,10 +415,10 @@ $B.handle_error = function(err){
         if(name == 'SyntaxError' || name == 'IndentationError'){
             var offset = err.args[1][2]
             trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name + ': '+err.args[0]
+                '\n' + name + ': '+ err.args[0]
         }else{
             trace += '\n' + name
-            if(err.args[0] && err.args[0] !== _b_.None){
+            if(err.args[0] !== undefined && err.args[0] !== _b_.None){
                 trace += ': ' + _b_.str.$factory(err.args[0])
             }
         }
