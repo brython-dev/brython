@@ -5,6 +5,17 @@ var $B = __BRYTHON__,
 
 var MAXGROUPS = 2147483647
 
+var is_word = {}
+var word_gcs = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo',
+                'Nd',
+                'Mc', 'Me', 'Mn',
+                'Pc']
+for(var word_gc of word_gcs){
+    for(var cp in $B.unicode_tables[word_gc]){
+        is_word[cp] = true
+    }
+}
+
 var $error_2 = {
     $name: "error",
     $qualname: "error",
@@ -208,6 +219,9 @@ Char.prototype.match = function(string, pos){
         // end of string matches $
         // if true, don't return the empty string (it would be tested
         // like false) but as an object coerced to ''
+        if(this.char.character_class && this.char.value == 'b'){
+            return is_word[string.codepoints[pos - 1]] ? [] : false
+        }
         return this.char == "$" ? EmptyString : false
     }else if(this.char === EmptyString){
         test = true
@@ -232,6 +246,15 @@ Char.prototype.match = function(string, pos){
                 break
             case 'D':
                 test = $B.unicode_tables.numeric[cp] === undefined
+                break
+            case 'b':
+                console.log("test \\b", pos, cp, string.codepoints.length)
+
+                test = (pos == 0 && is_word[cp]) ||
+                       (pos == string.codepoints.length &&
+                           is_word[string.codepoints[pos - 1]]) ||
+                        is_word[cp] != is_word[string.codepoints[pos - 1]]
+                return test ? [] : false
                 break
         }
     }else if(this.char && ! this.char.items){
@@ -832,7 +855,7 @@ function compile(pattern, flags){
             var item = group_stack.pop()
             item.end_pos = end_pos
             try{
-                item.text = pattern.substring(item.pos, end_pos)
+                item.text = pattern.substring(item.pos + 1, end_pos)
             }catch(err){
                 console.log("err avec pattern substring", pattern)
                 throw err
@@ -2077,6 +2100,74 @@ var $module = {
             }
         }
         return _b_.None
+    },
+    split: function(){
+        var $ = $B.args("split", 4,
+                    {pattern: null, string: null, maxsplit: null, flags: null},
+                    ['pattern', 'string', 'maxsplit', 'flags'],
+                    arguments, {maxsplit: 0, flags: no_flag()}, null, null)
+        var res = [],
+            pos = 0,
+            data = str_or_bytes($.string, $.pattern),
+            nb_split = 0
+        if(! (data.pattern instanceof Node)){
+            pattern = compile(data.pattern, $.flags)
+        }
+        var groups = pattern.groups
+        for(var bmo of $module.finditer($.pattern, $.string)){
+            var mo = bmo.mo // finditer returns instances of BMatchObject
+            console.log("split, mo", mo, pos, mo.start)
+            res.push(data.string.substring(pos, mo.start))
+            var s = '',
+                groups = mo.re.groups,
+                cps,
+                has_groups =false
+            for(var key in groups){
+                has_groups = true
+                if(groups[key].num == key){
+                    if(groups[key].item.nb_success == 0){
+                        console.log(groups[key].item.text,
+                            groups[key].item, groups[key].item.match_string())
+
+                        if(groups[key].item.repeat && groups[key].item.accepts_failure()){
+                            console.log("push empty")
+                            res.push(_b_.None)
+                        }else{
+                            var m = _b_.None
+                            for(var char of groups[key].item.chars){
+                                if(char.repeat && char.accepts_failure()){
+                                    console.log("changed from None to empty")
+                                    m = ''
+                                    break
+                                }
+                            }
+                            res.push(m)
+                        }
+                    }else{
+                        cps = groups[key].item.match_codepoints
+                        if(groups[key].item.repeat){
+                            cps = [cps[cps.length - 1]]
+                        }
+                        res.push(from_codepoint_list(cps))
+                    }
+                }
+            }
+            nb_split++
+            pos = mo.end
+            if(pos >= $.string.length){
+                console.log("break because end of string")
+                break
+            }
+            if($.maxsplit != 0 && nb_split >= $.maxsplit){
+                break
+            }
+            console.log("res after mo", res)
+        }
+        res.push(data.string.substring(pos))
+        if(data.type === _b_.bytes){
+            res = res.map(function(x){return _b_.str.encode(x, "latin-1")})
+        }
+        return res
     },
     sub: function(){
         var $ = $B.args("sub", 5,
