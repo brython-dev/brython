@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-28 14:16:31.895900"
-__BRYTHON__.timestamp=1609161391895
+__BRYTHON__.compiled_date="2020-12-28 14:41:33.579245"
+__BRYTHON__.timestamp=1609162893579
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -6410,14 +6410,12 @@ return _b_.None}
 if(console.error !==undefined){$B.stderr=$io.$factory("error")}else{$B.stderr=$io.$factory("log")}
 $B.stdout=$io.$factory("log")
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
-$B.it_kount=0
 $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
 __class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
 self.len=self.items.length
-return self},__len__:function(self){return self.items.length},__next__:function(self){$B.it_kount++
-if(typeof self.test_change=="function" &&
-self.test_change()){throw _b_.RuntimeError.$factory(
+return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.test_change=="function" && self.test_change()){
+throw _b_.RuntimeError.$factory(
 "dictionary changed size during iteration")}
 self.counter++
 if(self.counter < self.items.length){var item=self.items[self.counter]
@@ -12964,17 +12962,10 @@ return dict_view_op[op](self.items,other_items)}}})(op)}
 klass.__iter__=function(self){var it=klass.$iterator.$factory(self.items)
 it.test_change=function(){return self.dict.$version !=self.dict_version}
 return it}
-klass.__next__=dict_iterator_next
 klass.__len__=function(self){return self.len}
 klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
 $B.set_func_names(klass,"builtins")
 return klass}
-$B.it_count=0
-function dict_iterator_next(self){$B.it_count++
-if(self.len_func()!=self.len){throw _b_.RuntimeError.$factory("dictionary changed size during iteration")}
-self.counter++
-if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration")}
 var dict={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true}
 dict.$to_obj=function(d){
 var res={}
@@ -12996,10 +12987,6 @@ return res}else{items.__class__=_b_.tuple
 return items.map(function(item){item.__class__=_b_.tuple;return item}
 )}}
 $B.dict_to_list=to_list 
-function dict_iterator_next(self){if(self.len_func()!=self.len){throw _b_.RuntimeError.$factory("dictionary changed size during iteration")}
-self.counter++
-if(self.counter < self.items.length){return self.items[self.counter]}
-throw _b_.StopIteration.$factory("StopIteration")}
 var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem
 right.$version=right.$version ||0
 var right_version=right.$version ||0

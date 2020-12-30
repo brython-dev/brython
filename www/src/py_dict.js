@@ -151,8 +151,6 @@ $B.make_view = function(name){
         return it
     }
 
-    klass.__next__ = dict_iterator_next
-
     klass.__len__ = function(self){
         return self.len
     }
@@ -163,21 +161,6 @@ $B.make_view = function(name){
 
     $B.set_func_names(klass, "builtins")
     return klass
-}
-
-// Special version of __next__ for iterators on dict keys / values / items.
-// Checks that the dictionary size didn't change during iteration.
-$B.it_count = 0
-function dict_iterator_next(self){
-    $B.it_count++
-    if(self.len_func() != self.len){
-        throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
-    }
-    self.counter++
-    if(self.counter < self.items.length){
-        return self.items[self.counter]
-    }
-    throw _b_.StopIteration.$factory("StopIteration")
 }
 
 var dict = {
@@ -203,7 +186,6 @@ dict.$to_obj = function(d){
 }
 
 function to_list(d, ix){
-        var t0 = new Date()
     var items = [],
         item
 
@@ -250,19 +232,6 @@ function to_list(d, ix){
 }
 
 $B.dict_to_list = to_list // used in py_types.js
-
-// Special version of __next__ for iterators on dict keys / values / items.
-// Checks that the dictionary size didn't change during iteration.
-function dict_iterator_next(self){
-    if(self.len_func() != self.len){
-        throw _b_.RuntimeError.$factory("dictionary changed size during iteration")
-    }
-    self.counter++
-    if(self.counter < self.items.length){
-        return self.items[self.counter]
-    }
-    throw _b_.StopIteration.$factory("StopIteration")
-}
 
 var $copy_dict = function(left, right){
     var _l = to_list(right),
