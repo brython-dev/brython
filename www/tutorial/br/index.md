@@ -4,7 +4,7 @@ Ezhomm ho peus eus ur skridtreterezh, hag eveljust ur merdeer kevreet gant ar ge
 
 Evit heuliañ ar gentel-mañ ez eo ret gouzout un nebeut traoù diwar-benn HTML (penaos e vez stummet ur bajenn, ar balizennoù a implijer ar muiañ), folennoù-stil (CSS) hag ar yezh Python.
 
-E-barzh ar skridtreterezh, krouit ur bajenn HTML, enni ar kod a-dreñv:
+E-barzh ar skridtreterezh, krouit ur bajenn HTML, enni ar c'hod a-dreñv:
 
 ```xml
 <!doctype html>
