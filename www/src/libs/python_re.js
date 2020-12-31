@@ -105,12 +105,25 @@ var BackReference = function(pos, type, value){
     this.groups = []
 }
 
-BackReference.prototype.match = function(string, pos){
+BackReference.prototype.fixed_length = function(){
+    // Return length of referenced group if it is fixed, else undefined
+    if(this.repeat){
+        return undefined
+    }
+    var group = this.get_group()
+    return group === undefined ? undefined : group.fixed_length()
+}
+
+BackReference.prototype.get_group = function(){
     var top = this.parent
     while(top.parent){
         top = top.parent
     }
-    var group = top.groups[this.value]
+    return top.groups[this.value]
+}
+
+BackReference.prototype.match = function(string, pos){
+    var group = this.get_group()
     if(group){
         // compare string codepoints starting at pos with the group codepoints
         var group_cps = group.item.match_codepoints
@@ -129,30 +142,52 @@ BackReference.prototype.match = function(string, pos){
 }
 
 var Case = function(){
-        this.name = "Case"
-        this.items = []
-        this.add = function(item){
-            this.items.push(item)
-            item.parent = this
+    this.name = "Case"
+    this.items = []
+}
+
+Case.prototype.add = Node.prototype.add
+
+var Choice = function(){
+    this.type = "choice"
+    this.items = []
+    this.groups = []
+}
+
+Case.prototype.fixed_length = function(){
+    // Return sum of items lengths if they are fixed, else undefined
+    var len = 0
+    for(var item of this.items){
+        var sublen = item.fixed_length()
+        if(sublen === undefined){
+            return undefined
         }
-    },
-    CharItem = function(char){
-        this.char = char
-        this.ord = _b_.ord(char)
-        this.toString = function(){
-            return this.char
+        len += sublen
+    }
+    return len
+}
+
+Choice.prototype.add = Node.prototype.add
+
+Choice.prototype.fixed_length = function(){
+    // Return a length if all options have the same fixed_length, otherwise
+    // return undefined
+    var len
+    for(var _case of this.items){
+        var sublen = _case.fixed_length()
+        if(sublen === undefined){
+            return undefined
         }
-    },
-    Choice = function(){
-        this.type = "choice"
-        this.items = []
-        this.groups = []
-        this.add = function(option){
-            this.items.push(option)
-            option.parent = this
+        if(len === undefined){
+            len = sublen
+        }else if(sublen != len){
+            return undefined
         }
-    },
-    EmptyString = {
+    }
+    return len
+}
+
+var EmptyString = {
         toString: function(){
             return ''
         },
@@ -203,6 +238,13 @@ var Char = function(pos, char, groups){
     }
 }
 
+Char.prototype.fixed_length = function(){
+    if(this.repeat){
+        return undefined
+    }
+    return this.char === EmptyString ? 0 : 1
+}
+
 Char.prototype.match = function(string, pos){
     // console.log("char match", this, string.codepoints[pos])
     if(this.repeat){
@@ -248,8 +290,6 @@ Char.prototype.match = function(string, pos){
                 test = $B.unicode_tables.numeric[cp] === undefined
                 break
             case 'b':
-                console.log("test \\b", pos, cp, string.codepoints.length)
-
                 test = (pos == 0 && is_word[cp]) ||
                        (pos == string.codepoints.length &&
                            is_word[string.codepoints[pos - 1]]) ||
@@ -361,18 +401,28 @@ var Group = function(pos, extension){
     this.match_codepoints = []
     this.nb_success = 0
     this.extension = extension
-    if(extension && extension.type == "test_value"){
-        this.re_if_exists = new Node()
-        this.re_if_exists.info = "test if exists"
-        this.re_if_not_exists = new Node()
-        this.nb_options = 1
-    }
 }
 
 Group.prototype.add = Node.prototype.add
 
 Group.prototype.match = function(s, pos){
-    var group_match = match(this, s, pos)
+    var group_match
+    if(this.extension && this.extension.type == "lookahead_assertion"){
+        group_match = match(this, s, pos)
+        if(group_match){
+            return []
+        }
+    }else if(this.extension && this.extension.type == "positive_lookbehind"){
+        var start = pos - this.length,
+            s1 = new CodePoints(s.substring(start, pos)),
+            group_match = match(this, s1, 0)
+        if(group_match && group_match.length == pos - start){
+            return []
+        }
+        return false
+    }else{
+        group_match = match(this, s, pos)
+    }
     if(group_match){
         if(this.repeat){
             // test if repeat condition is still ok
@@ -448,6 +498,21 @@ Group.prototype.done = function(){
     return false
 }
 
+Group.prototype.fixed_length = function(){
+    // Return the sum of items lengths if fixed, else undefined
+    if(this.repeat){
+        return undefined
+    }
+    var len = 0
+    for(var item of this.items){
+        var sublen = item.fixed_length()
+        if(sublen === undefined){
+            return undefined
+        }
+        len += sublen
+    }
+    return len
+}
 
 Char.prototype.accepts_failure = Group.prototype.accepts_failure
 Char.prototype.accepts_success = Group.prototype.accepts_success
@@ -820,23 +885,15 @@ function compile(pattern, flags){
                             ` ${groups[value].num}`, pos)
                     }
                     groups[value] = groups[group_num] = {num: group_num, item}
-                }else if(item.extension.type == "test_value"){
-                    var value = item.extension.value
-                    if(typeof value == "number"){
-                        if(value == 0){
-                            console.log("bad group num", pos)
-                            fail(`bad group number`, pos + 3)
-                        }
-                        if(value > group_num || value >= MAXGROUPS){
-                            fail(`invalid group reference ${value}`, pos + 1)
-                        }
-                    }else if(groups[value] !== undefined){
-                        if(groups[value].item.state == "open"){
-                            fail("cannot refer to an open group", pos)
-                        }
-                    }else{
-                        fail(`unknown group name '${value}'`, pos)
+                }else if(item.extension.type.indexOf("lookahead") > -1 ||
+                        item.extension.type.indexOf("lookbehind") > -1){
+                    // a lookahead or lookbehind assertion is relative to the
+                    // previous regexp
+                    while(node.items.length > 0){
+                        item.add(node.items.shift())
                     }
+                    node = item
+                    subitems.push(item)
                 }else{
                     subitems.push(item)
                     group_num++
@@ -859,6 +916,14 @@ function compile(pattern, flags){
             }catch(err){
                 console.log("err avec pattern substring", pattern)
                 throw err
+            }
+            if(item instanceof Group && item.extension &&
+                    item.extension.type &&
+                    item.extension.type.indexOf("lookbehind") > -1){
+                item.length = item.fixed_length()
+                if(item.length === undefined){
+                    fail("look-behind requires fixed-width pattern", pos)
+                }
             }
             if(item instanceof Group && item.items.length == 0){
                 item.add(new Char(pos, EmptyString, group_stack.concat([item])))
@@ -918,11 +983,30 @@ function compile(pattern, flags){
             subitems.push(item)
             item.groups = []
             for(var group of group_stack){
+                if(group.extension && group.extension.type &&
+                        group.extension.type.indexOf('lookbehind') > -1){
+                    var parent = node
+                    while(parent){
+                        if(parent === group){
+                            break
+                        }
+                        parent = parent.parent
+                    }
+                }
                 item.groups.push(group)
                 group.chars.push(item)
             }
             node.add(item)
         }else if(item instanceof Repeater){
+            // check that item is not in a lookbehind group
+            var pnode = node
+            while(pnode){
+                if(pnode.extension && pnode.extension.type &&
+                        pnode.extension.type.indexOf("lookbehind") > -1){
+                    fail("look-behind requires fixed-width pattern", pos)
+                }
+                pnode = pnode.parent
+            }
             pos = item.pos
             if(node.items.length == 0){
                 fail("nothing to repeat", pos)
@@ -935,6 +1019,12 @@ function compile(pattern, flags){
                     fail("multiple repeat", pos)
                 }
                 previous.repeat = item
+                // mark all parents of item as no fixed length
+                var parent = item
+                while(parent){
+                    parent.fixed_length = false
+                    parent = parent.parent
+                }
             }else{
                 fail("nothing to repeat", pos)
             }
@@ -949,7 +1039,14 @@ function compile(pattern, flags){
                        'two branches', pos)
                 }
             }else if(node.items.length == 0){
-                fail("unexpected |", pos)
+                var choice = new Choice(),
+                    case1 = new Case()
+                case1.add(new Char(pos, EmptyString))
+                choice.add(case1)
+                node.add(choice)
+                var case2 = new Case()
+                choice.add(case2)
+                node = case2
             }else if(node instanceof Case){
                 var new_case = new Case()
                 node.parent.add(new_case)
@@ -1375,7 +1472,7 @@ function match(pattern, string, pos, flags){
         match_codepoints = []
     while(true){
         cp = codepoints[pos]
-        // console.log("match char", cp, "against model", model, "pos", pos)
+        //console.log("match char", cp, "against model", model, "pos", pos)
         if(model === undefined){
             // Nothing more in pattern: match is successful
             return new MatchObject(string, match_codepoints, pattern, start)
@@ -2107,16 +2204,16 @@ var $module = {
                     ['pattern', 'string', 'maxsplit', 'flags'],
                     arguments, {maxsplit: 0, flags: no_flag()}, null, null)
         var res = [],
+            pattern = $.pattern,
             pos = 0,
-            data = str_or_bytes($.string, $.pattern),
+            data = str_or_bytes($.string, pattern),
             nb_split = 0
         if(! (data.pattern instanceof Node)){
             pattern = compile(data.pattern, $.flags)
         }
         var groups = pattern.groups
-        for(var bmo of $module.finditer($.pattern, $.string)){
+        for(var bmo of $module.finditer(pattern, $.string)){
             var mo = bmo.mo // finditer returns instances of BMatchObject
-            console.log("split, mo", mo, pos, mo.start)
             res.push(data.string.substring(pos, mo.start))
             var s = '',
                 groups = mo.re.groups,
@@ -2126,17 +2223,12 @@ var $module = {
                 has_groups = true
                 if(groups[key].num == key){
                     if(groups[key].item.nb_success == 0){
-                        console.log(groups[key].item.text,
-                            groups[key].item, groups[key].item.match_string())
-
                         if(groups[key].item.repeat && groups[key].item.accepts_failure()){
-                            console.log("push empty")
                             res.push(_b_.None)
                         }else{
                             var m = _b_.None
                             for(var char of groups[key].item.chars){
                                 if(char.repeat && char.accepts_failure()){
-                                    console.log("changed from None to empty")
                                     m = ''
                                     break
                                 }
@@ -2155,13 +2247,11 @@ var $module = {
             nb_split++
             pos = mo.end
             if(pos >= $.string.length){
-                console.log("break because end of string")
                 break
             }
             if($.maxsplit != 0 && nb_split >= $.maxsplit){
                 break
             }
-            console.log("res after mo", res)
         }
         res.push(data.string.substring(pos))
         if(data.type === _b_.bytes){
