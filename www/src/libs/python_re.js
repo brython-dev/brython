@@ -48,27 +48,36 @@ Flag.__index__ = function(self){
     return self.value
 }
 
+Flag.__eq__ = function(self, other){
+    return self.value == other.value
+}
+
 Flag.__or__ = function(self, other){
     return Flag.$factory(`${self.name} ${other.name}`,
         self.value | other.value)
 }
 
 Flag.__str__ = function(self){
-    return `re.${self.name}`
+    if(self.value == 0){
+        return "re.none"
+    }
+    var t = []
+    for(var flag of 'iLmsuxa'){
+        if(self.value & inline_flags[flag].value){
+            t.push(inline_flags[flag].name)
+        }
+    }
+    return 're.' + t.join(' ')
 }
 
 $B.set_func_names(Flag, "re")
 
-function no_flag(){
-    return Flag.$factory('none', 0)
-}
+var no_flag = {}
 
 var BPattern = $B.make_class("Pattern",
     function(pattern){
-        return {
-            __class__: BPattern,
-            pattern
-        }
+        pattern.__class__ = BPattern
+        return pattern
     }
 )
 
@@ -76,8 +85,39 @@ BPattern.findall = function(self){
     return $module.findall.apply(null, arguments)
 }
 
+var gi = $B.make_class("GroupIndex",
+    function(self){
+        var res = $B.empty_dict()
+        res.__class__ = gi
+        for(var key in self.$groups){
+            if(isNaN(parseInt(key))){
+                res.$string_dict[key] = [self.$groups[key].num,
+                    res.$version++]
+            }
+        }
+        return res
+    }
+)
+gi.__mro__ = [_b_.dict, _b_.object]
+gi.__setitem__ = function(){
+    throw _b_.TypeError.$factory("read only")
+}
+
+BPattern.groupindex = {
+    __get__: function(self){
+        return gi.$factory(self)
+    }
+}
+
 BPattern.match = function(self, string){
-    var mo = match(self.pattern, string, 0)
+    var $ = $B.args("match", 4,
+                    {self: null, string: null, pos: null, endpos: null},
+                    ["self", "string", "pos", "endpos"], arguments,
+                    {pos: 0, endpos: _b_.None}, null, null)
+    if($.endpos === _b_.None){
+        $.endpos = $.string.length
+    }
+    var mo = match($.self, $.string, $.pos, no_flag, $.endpos)
     if(mo === false){
         return _b_.None
     }
@@ -96,6 +136,26 @@ Node.prototype.add = function(item){
     item.parent = this
 }
 
+Node.prototype.fixed_length = function(){
+    // Return the sum of items lengths if fixed, else undefined
+    if(this.repeat){
+        return undefined
+    }
+    var len = 0
+    for(var item of this.items){
+        if(item.fixed_length === undefined){
+            console.log("pas de fixed length", item)
+            alert()
+        }
+        var sublen = item.fixed_length()
+        if(sublen === undefined){
+            return undefined
+        }
+        len += sublen
+    }
+    return len
+}
+
 var BackReference = function(pos, type, value){
     // for "\number"
     this.name = "BackReference"
@@ -111,6 +171,10 @@ BackReference.prototype.fixed_length = function(){
         return undefined
     }
     var group = this.get_group()
+    if(group.fixed_length === undefined){
+        console.log("group", group, "no fixed length")
+        alert()
+    }
     return group === undefined ? undefined : group.fixed_length()
 }
 
@@ -119,7 +183,7 @@ BackReference.prototype.get_group = function(){
     while(top.parent){
         top = top.parent
     }
-    return top.groups[this.value]
+    return top.$groups[this.value]
 }
 
 BackReference.prototype.match = function(string, pos){
@@ -378,6 +442,17 @@ ConditionalBackref.prototype.add = function(item){
     item.parent = this
 }
 
+ConditionalBackref.prototype.fixed_length = function(){
+    var fl1 = this.re_if_exists.fixed_length(),
+        fl2 = this.re_if_not_exists.fixed_length()
+    if(fl1 === undefined || fl2 === undefined ||
+            fl1 != fl2){
+        return undefined
+    }
+    return fl1
+}
+
+
 ConditionalBackref.prototype.match = function(s, pos){
     var group_ref = this.group_ref
     var re = this.parent
@@ -385,7 +460,7 @@ ConditionalBackref.prototype.match = function(s, pos){
         re = re.parent
     }
     var test
-    if(re.groups[group_ref] && re.groups[group_ref].item.nb_success != 0){
+    if(re.$groups[group_ref] && re.$groups[group_ref].item.nb_success != 0){
         test = match(this.re_if_exists, s, pos)
     }else{
         test = match(this.re_if_not_exists, s, pos)
@@ -498,20 +573,15 @@ Group.prototype.done = function(){
     return false
 }
 
-Group.prototype.fixed_length = function(){
-    // Return the sum of items lengths if fixed, else undefined
-    if(this.repeat){
-        return undefined
-    }
-    var len = 0
-    for(var item of this.items){
-        var sublen = item.fixed_length()
-        if(sublen === undefined){
-            return undefined
-        }
-        len += sublen
-    }
-    return len
+Group.prototype.fixed_length = Node.prototype.fixed_length
+
+function GroupRef(group_num, item){
+    this.num = group_num
+    this.item = item
+}
+
+GroupRef.prototype.fixed_length = function(){
+    return this.item.fixed_length()
 }
 
 Char.prototype.accepts_failure = Group.prototype.accepts_failure
@@ -539,12 +609,20 @@ StringStart.prototype.match = function(string, pos){
     return pos == 0 ? [] : false
 }
 
+StringStart.prototype.fixed_length = function(){
+    return 0
+}
+
 function StringEnd(pos){
     this.pos = pos
 }
 
 StringEnd.prototype.match = function(string, pos){
     return pos > string.codepoints.length - 1 ? [] : false
+}
+
+StringEnd.prototype.fixed_length = function(){
+    return 0
 }
 
 function read(name, pos){
@@ -857,6 +935,9 @@ function compile(pattern, flags){
         subitems = [],
         pos,
         node = new Node()
+    if(flags === no_flag){
+        flags = Flag.$factory("", 32) // default is Unicode
+    }
     if(pattern.__class__ === _b_.str.$surrogate){
         pattern = pattern.items
         pattern.substring = function(start, stop){
@@ -884,7 +965,7 @@ function compile(pattern, flags){
                             ` '${value}' as group ${group_num}; was group` +
                             ` ${groups[value].num}`, pos)
                     }
-                    groups[value] = groups[group_num] = {num: group_num, item}
+                    groups[value] = groups[group_num] = new GroupRef(group_num, item)
                 }else if(item.extension.type.indexOf("lookahead") > -1 ||
                         item.extension.type.indexOf("lookbehind") > -1){
                     // a lookahead or lookbehind assertion is relative to the
@@ -897,12 +978,12 @@ function compile(pattern, flags){
                 }else{
                     subitems.push(item)
                     group_num++
-                    groups[group_num] = {num: group_num, item}
+                    groups[group_num] = new GroupRef(group_num, item)
                 }
             }else{
                 subitems.push(item)
                 group_num++
-                groups[group_num] = {num: group_num, item}
+                groups[group_num] = new GroupRef(group_num, item)
             }
         }else if(item instanceof GroupEnd){
             end_pos = item.pos
@@ -1100,9 +1181,9 @@ function compile(pattern, flags){
         node = node.parent
     }
     node.subitems = subitems
-    node.groups = groups
-    node.text = pattern
-    node.nb_groups = group_num
+    node.$groups = groups
+    node.pattern = pattern
+    node.groups = group_num
     node.flags = flags
     return node
 }
@@ -1427,7 +1508,7 @@ CodePoints.prototype.substring = function(start, end){
     }
 }
 
-function match(pattern, string, pos, flags){
+function match(pattern, string, pos, flags, endpos){
     function* PatternReader(pattern){
         if(pattern instanceof Char ||
                 pattern instanceof ConditionalBackref){
@@ -1450,15 +1531,19 @@ function match(pattern, string, pos, flags){
     }
 
     var pos = pos || 0,
-        start = pos
+        start = pos,
+        original_string = string
     if(typeof pattern == "string" || pattern.__class__ === _b_.str.$surrogate){
         pattern = compile(pattern, flags)
     }
 
     if(typeof string == "string" || string.__class__ === _b_.str.$surrogate){
         string = new CodePoints(string)
+    }else if(string instanceof CodePoints){
+        original_string = string.string
     }
-    codepoints = string.codepoints
+    endpos = endpos === undefined ? string.codepoints.length : endpos
+    codepoints = string.codepoints.slice(0, endpos)
 
     if(pattern.subitems){
         for(var subitem of pattern.subitems){
@@ -1475,7 +1560,8 @@ function match(pattern, string, pos, flags){
         //console.log("match char", cp, "against model", model, "pos", pos)
         if(model === undefined){
             // Nothing more in pattern: match is successful
-            return new MatchObject(string, match_codepoints, pattern, start)
+            return new MatchObject(original_string, match_codepoints, pattern,
+                                   start, endpos)
         }
         if(cp === undefined){
             // end of string before end of pattern
@@ -1483,8 +1569,8 @@ function match(pattern, string, pos, flags){
             if(model.repeat && model.accepts_failure()){
                 model = pattern_reader.next().value
                 if(model === undefined){
-                    return new MatchObject(string, match_codepoints, pattern,
-                            start)
+                    return new MatchObject(original_string, match_codepoints,
+                                           pattern, start, endpos)
                 }
                 continue
             }
@@ -1598,7 +1684,8 @@ function match(pattern, string, pos, flags){
             throw Error("unknown model")
         }
     }
-    return new MatchObject(string, match_string, pattern, start)
+    return new MatchObject(original_string, match_string, pattern, start,
+                           endpos)
 }
 
 function to_codepoint_list(s){
@@ -1633,8 +1720,10 @@ function from_codepoint_list(codepoints){
     return chars.join('')
 }
 
-function MatchObject(string, match_codepoints, re, start){
+function MatchObject(string, match_codepoints, re, start, endpos){
     this.string = string
+    this.pos = start
+    this.endpos = endpos
     this.match_codepoints = match_codepoints
     this.start = start
     this.end = start + match_codepoints.length
@@ -1644,8 +1733,8 @@ function MatchObject(string, match_codepoints, re, start){
 MatchObject.prototype.group = function(group_num){
     if(group_num == 0){
         return this.match_string()
-    }else if(this.re.groups[group_num] !== undefined){
-        var item = this.re.groups[group_num].item
+    }else if(this.re.$groups[group_num] !== undefined){
+        var item = this.re.$groups[group_num].item
         if(item.nb_success == 0){
             return _b_.None
         }
@@ -1659,13 +1748,13 @@ MatchObject.prototype.group = function(group_num){
 
 MatchObject.prototype.groups = function(_default){
     var result = []
-    console.log("MO groups", this.re.groups, this.re.groups.length)
-    for(var key in this.re.groups){
-        var group_num = this.re.groups[key].num
-        if(this.re.groups[group_num] === undefined){
+    console.log("MO groups", this.re.$groups, this.re.$groups.length)
+    for(var key in this.re.$groups){
+        var group_num = this.re.$groups[key].num
+        if(this.re.$groups[group_num] === undefined){
             result.push(_default)
         }else{
-            result.push(this.re.groups[group_num].item.match_string())
+            result.push(this.re.$groups[group_num].item.match_string())
         }
     }
     return result
@@ -1722,6 +1811,12 @@ BMatchObject.__setitem__ = function(){
 
 BMatchObject.__str__ = BMatchObject.__repr__
 
+BMatchObject.endpos = {
+    __get__: function(self){
+        return self.mo.endpos
+    }
+}
+
 BMatchObject.group = function(self, group_num){
     var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
                 {}, 'args', null),
@@ -1743,8 +1838,8 @@ BMatchObject.groups = function(self){
     if(self.mo === false){
         throw _b_.AttributeError.$factory("no attr groups")
     }
-    for(var i = 1; i <= self.mo.re.nb_groups; i++){
-        var group = self.mo.re.groups[i],
+    for(var i = 1; i <= self.mo.re.groups; i++){
+        var group = self.mo.re.$groups[i],
             s = group.item.match_string()
         if(group.item.nb_success == 0){
             s = _default
@@ -1757,8 +1852,7 @@ BMatchObject.groups = function(self){
 }
 
 BMatchObject.$group = function(self, args){
-    var res = [],
-        groups = self.mo.re.groups || []
+    var res = []
     for(var i = 0, len = args.length; i < len; i++){
         var group_num = args[i]
         if(!_b_.isinstance(group_num, _b_.str)){
@@ -1769,7 +1863,7 @@ BMatchObject.$group = function(self, args){
             }
             if($B.rich_comp('__lt__', group_num, 0) ||
                 $B.rich_comp('__gt__', group_num,
-                        self.mo.re.nb_groups)){
+                        self.mo.re.groups)){
                 throw _b_.IndexError.$factory("no such group")
             }
         }
@@ -1782,6 +1876,32 @@ BMatchObject.$group = function(self, args){
     return len == 1 ? res[0] : _b_.tuple.$factory(res)
 }
 
+BMatchObject.pos = {
+    __get__: function(self){
+        return self.mo.start
+    }
+}
+
+BMatchObject.re = {
+    __get__: function(self){
+        return self.mo.re.pattern
+    }
+}
+
+BMatchObject.regs = {
+    __get__: function(self){
+        var res = [$B.fast_tuple([self.mo.start, self.mo.end])]
+        for(var group_num in self.mo.re.$groups){
+            if(! isNaN(parseInt(group_num))){
+                var group = self.mo.re.$groups[group_num].item
+                res.push($B.fast_tuple([group.pos,
+                    group.pos + group.match_codepoints.length]))
+            }
+        }
+        return $B.fast_tuple(res)
+    }
+}
+
 BMatchObject.span = function(){
     var $ = $B.args("span", 2, {self: null, group: null},
                 ['self', 'group'], arguments,
@@ -1791,8 +1911,14 @@ BMatchObject.span = function(){
     if(group == 0){
         return $B.fast_tuple([self.mo.start, self.mo.end])
     }else{
-        console.log(self.mo.re.groups[group])
+        console.log(self.mo.re.$groups[group])
         return $B.fast_tuple([-1, -1])
+    }
+}
+
+BMatchObject.string = {
+    __get__: function(self){
+        return self.mo.string
     }
 }
 
@@ -1850,7 +1976,7 @@ function str_or_bytes(string, pattern, repl){
             string: _b_.bytes.decode(_b_.bytes.$factory(string), 'latin1')
         }
         if(pattern instanceof Node){
-            res.pattern = pattern.text
+            res.pattern = pattern.pattern
         }else{
             res.pattern = _b_.bytes.decode(_b_.bytes.$factory(pattern), 'latin1')
         }
@@ -1874,11 +2000,10 @@ function string2bytes(s){
 
 function check_pattern_flags(pattern, flags){
     if(pattern.__class__ === BPattern){
-        if(flags.value !== 0){
+        if(flags !== no_flag){
             throw _b_.ValueError.$factory(
                 "cannot process flags argument with a compiled pattern")
         }
-        pattern = pattern.pattern
     }
     return pattern
 }
@@ -1938,7 +2063,7 @@ function subn(string, pattern, repl, count, flags){
                         var group_num = mo[0].substr(0,
                             Math.min(2, mo[0].length))
                         // check that pattern has the specified group num
-                        if(pattern.groups[group_num] === undefined){
+                        if(pattern.$groups[group_num] === undefined){
                             fail(`invalid group reference ${group_num}`,
                                 pos)
                         }else{
@@ -1970,7 +2095,7 @@ function subn(string, pattern, repl, count, flags){
                         }
                         var group_name = mo[1]
                         if(/^\d+$/.exec(group_name)){
-                            if(pattern.groups[group_name] === undefined){
+                            if(pattern.$groups[group_name] === undefined){
                                 fail(`invalid group reference ${group_name}`,
                                     pos)
                             }
@@ -1989,7 +2114,7 @@ function subn(string, pattern, repl, count, flags){
                                     }
                                 }
                             }
-                            if(pattern.groups[group_name] === undefined){
+                            if(pattern.$groups[group_name] === undefined){
                                 throw _b_.IndexError.$factory(
                                     `unknown group name '${group_name}'`,
                                     pos)
@@ -2030,12 +2155,12 @@ function subn(string, pattern, repl, count, flags){
             data.repl = function(mo){
                 var res = parts[0]
                 for(var i = 1, len = parts.length; i < len; i += 2){
-                    if(mo.mo.re.groups[parts[i]] === undefined){
+                    if(mo.mo.re.$groups[parts[i]] === undefined){
                         pos++
                         var group_num = parts[i].toString().substr(0, 2)
                         fail(`invalid group reference ${group_num}`, pos)
                     }
-                    res += mo.mo.re.groups[parts[i]].item.match_string()
+                    res += mo.mo.re.$groups[parts[i]].item.match_string()
                     res += parts[i + 1]
                 }
                 return res
@@ -2070,7 +2195,7 @@ function subn(string, pattern, repl, count, flags){
 var $module = {
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
-                    ['pattern', 'flags'], arguments, {flags: no_flag()},
+                    ['pattern', 'flags'], arguments, {flags: no_flag},
                     null, null)
         $.pattern = check_pattern_flags($.pattern, $.flags)
         return BPattern.$factory(compile($.pattern, $.flags))
@@ -2080,7 +2205,7 @@ var $module = {
         var $ = $B.args("findall", 3,
                     {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag()}, null, null),
+                    {flags: no_flag}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
@@ -2107,13 +2232,13 @@ var $module = {
             }
             var bmo = next.value,
                 mo = bmo.mo
-            if(mo.re.nb_groups){
-                if(mo.re.nb_groups == 1){
-                    res.push(conv(mo.re.groups[1].item.match_string()))
+            if(mo.re.groups){
+                if(mo.re.groups == 1){
+                    res.push(conv(mo.re.$groups[1].item.match_string()))
                 }else{
                     var groups = []
-                    for(var i = 1, len = mo.re.nb_groups; i <= len; i++){
-                        groups.push(conv(mo.re.groups[i].item.match_string()))
+                    for(var i = 1, len = mo.re.groups; i <= len; i++){
+                        groups.push(conv(mo.re.$groups[i].item.match_string()))
                     }
                     res.push($B.fast_tuple(groups))
                 }
@@ -2124,9 +2249,10 @@ var $module = {
         }
     },
     finditer: function (){
-        var $ = $B.args("finditer", 3, {pattern: null, string: null, flags: null},
+        var $ = $B.args("finditer", 3,
+                    {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag()}, null, null),
+                    {flags: no_flag}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
@@ -2160,7 +2286,7 @@ var $module = {
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag()}, null, null),
+                    {flags: no_flag}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
@@ -2178,7 +2304,7 @@ var $module = {
     search: function(){
         var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag()}, null, null),
+                    {flags: no_flag}, null, null),
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
@@ -2202,7 +2328,7 @@ var $module = {
         var $ = $B.args("split", 4,
                     {pattern: null, string: null, maxsplit: null, flags: null},
                     ['pattern', 'string', 'maxsplit', 'flags'],
-                    arguments, {maxsplit: 0, flags: no_flag()}, null, null)
+                    arguments, {maxsplit: 0, flags: no_flag}, null, null)
         var res = [],
             pattern = $.pattern,
             pos = 0,
@@ -2211,12 +2337,11 @@ var $module = {
         if(! (data.pattern instanceof Node)){
             pattern = compile(data.pattern, $.flags)
         }
-        var groups = pattern.groups
         for(var bmo of $module.finditer(pattern, $.string)){
             var mo = bmo.mo // finditer returns instances of BMatchObject
             res.push(data.string.substring(pos, mo.start))
             var s = '',
-                groups = mo.re.groups,
+                groups = mo.re.$groups,
                 cps,
                 has_groups =false
             for(var key in groups){
@@ -2263,7 +2388,7 @@ var $module = {
         var $ = $B.args("sub", 5,
                 {pattern: null, repl: null, string: null, count: null, flags: null},
                 ['pattern', 'repl', 'string', 'count', 'flags'],
-                arguments, {count: 0, flags: no_flag()}, null, null),
+                arguments, {count: 0, flags: no_flag}, null, null),
             pattern = $.pattern,
             repl = $.repl,
             string = $.string,
@@ -2275,7 +2400,7 @@ var $module = {
         var $ = $B.args("sub", 5,
                 {pattern: null, repl: null, string: null, count: null, flags: null},
                 ['pattern', 'repl', 'string', 'count', 'flags'],
-                arguments, {count: 0, flags: no_flag()}, null, null),
+                arguments, {count: 0, flags: no_flag}, null, null),
             pattern = $.pattern,
             repl = $.repl,
             string = $.string,
@@ -2295,11 +2420,11 @@ var U = $module.U = Flag.$factory("U", 32)
 var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory("VERBOSE", 64)
 
 var inline_flags = {
-    a: ASCII,
     i: IGNORECASE,
     L: LOCALE,
     m: MULTILINE,
     s: DOTALL,
     u: U,
-    x: VERBOSE
+    x: VERBOSE,
+    a: ASCII
 }
