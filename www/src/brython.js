@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2020-12-28 14:41:33.579245"
-__BRYTHON__.timestamp=1609162893579
+__BRYTHON__.compiled_date="2021-01-03 10:24:31.874718"
+__BRYTHON__.timestamp=1609665871874
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -12971,8 +12971,7 @@ dict.$to_obj=function(d){
 var res={}
 for(var key in d.$string_dict){res[key]=d.$string_dict[key][0]}
 return res}
-function to_list(d,ix){var t0=new Date()
-var items=[],item
+function to_list(d,ix){var items=[],item
 if(d.$jsobj){items=[]
 for(var attr in d.$jsobj){if(attr.charAt(0)!="$"){var val=d.$jsobj[attr]
 if(val===undefined){val=_b_.NotImplemented}
