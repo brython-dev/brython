@@ -86,7 +86,7 @@ BPattern.findall = function(self){
 }
 
 var gi = $B.make_class("GroupIndex",
-    function(self){
+    function(self, _default){
         var res = $B.empty_dict()
         res.__class__ = gi
         for(var key in self.$groups){
@@ -191,6 +191,10 @@ BackReference.prototype.match = function(string, pos){
     if(group){
         // compare string codepoints starting at pos with the group codepoints
         var group_cps = group.item.match_codepoints
+        console.log("group_cps", group_cps, string, pos, string.codepoints[pos])
+        if(group_cps.length == 0){
+            return false
+        }
         for(var i = 0, len = group_cps.length; i < len; i++){
             if(group_cps[i] != string.codepoints[pos + i]){
                 return false
@@ -200,6 +204,7 @@ BackReference.prototype.match = function(string, pos){
         for(var group of this.groups){
             group.match_codepoints = group.match_codepoints.concat(cps)
         }
+        console.log("match backref ok", group, cps)
         return cps
     }
     return false
@@ -300,6 +305,25 @@ var Char = function(pos, char, groups){
             group.chars.push(this)
         }
     }
+}
+
+Char.prototype.accepts_backtracking = function(){
+    // Called when a repeated model succeeded.
+    // Return true if the string currently matching the model is
+    // compatible with the repeat option
+    if(this.repeat.op == '+' && this.nb_success == 1){
+        // group with the '+' repeat and no string matched
+        return false
+    }else if(Array.isArray(this.repeat.op)){
+        // test fails if there are too many repeats
+        if(this.repeat.op.length == 1 &&
+                this.nb_success == this.repeat.op[0]){
+            return false
+        }else if(this.nb_success == this.repeat.op[1]){
+            return false
+        }
+    }
+    return true
 }
 
 Char.prototype.fixed_length = function(){
@@ -573,6 +597,7 @@ Group.prototype.done = function(){
     return false
 }
 
+Group.prototype.accepts_backtracking = Char.prototype.accepts_backtracking
 Group.prototype.fixed_length = Node.prototype.fixed_length
 
 function GroupRef(group_num, item){
@@ -1557,7 +1582,8 @@ function match(pattern, string, pos, flags, endpos){
         match_codepoints = []
     while(true){
         cp = codepoints[pos]
-        //console.log("match char", cp, "against model", model, "pos", pos)
+        //console.log("pattern", pattern, "\nstring", string,
+        //    "\nmatch char", cp, "against model", model, "pos", pos)
         if(model === undefined){
             // Nothing more in pattern: match is successful
             return new MatchObject(original_string, match_codepoints, pattern,
@@ -1619,12 +1645,18 @@ function match(pattern, string, pos, flags, endpos){
                             nb_match = 0,
                             parent = model.parent,
                             mo
-                        while(prev_pos >= pos - mcps.length){
+                        while(previous.accepts_backtracking()){
                             model.match_codepoints = []
                             model.nb_success = 0
                             mo = match({items: [model]}, string, prev_pos,
                                 flags)
                             if(mo && mo.match_codepoints.length >= nb_match){
+                                previous.match_codepoints.pop()
+                                previous.nb_success--
+                                for(var group of previous.groups){
+                                    group.match_codepoints.pop()
+                                    group.nb_success--
+                                }
                                 prev_pos--
                                 backtracking = true
                                 nb_match++
@@ -1633,8 +1665,6 @@ function match(pattern, string, pos, flags, endpos){
                             }
                         }
                         if(prev_pos < pos - 1){
-                            previous.match_codepoints = mcps.slice(0,
-                                mcps.length - nb_match)
                             model.match_codepoints = mcps.slice(mcps.length -
                                 nb_match)
                             model.nb_success = nb_match
@@ -1646,6 +1676,10 @@ function match(pattern, string, pos, flags, endpos){
                         model = pattern_reader.next().value
                     }else{
                         return false
+                    }
+                }else{
+                    if((! model.repeat) || model.done()){
+                        model = pattern_reader.next().value
                     }
                 }
             }
@@ -1817,6 +1851,20 @@ BMatchObject.endpos = {
     }
 }
 
+BMatchObject.expand = function(){
+    var $ = $B.args("expand", 2, {self: null, template: null},
+                ['self', 'template'], arguments, {}, null, null)
+    var data = {
+        repl: $.template,
+    }
+    data = transform_repl(data, $.self.mo.re)
+    if(typeof data.repl == "function"){
+        return $B.$call(data.repl)(BMatchObject.$factory($.self.mo))
+    }else{
+        return data.repl1
+    }
+}
+
 BMatchObject.group = function(self, group_num){
     var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
                 {}, 'args', null),
@@ -1826,6 +1874,38 @@ BMatchObject.group = function(self, group_num){
         args[0] = 0
     }
     return BMatchObject.$group(self, args)
+}
+
+var GroupDict = $B.make_class("GroupDict",
+    function(self, _default){
+        var res = $B.empty_dict()
+        res.__class__ = GroupDict
+        for(var key in self.$groups){
+            if(isNaN(parseInt(key))){
+                var item = self.$groups[key].item,
+                    match = item === false ? _default : item.match_string()
+
+                res.$string_dict[key] = [match, res.$version++]
+            }
+        }
+        return res
+    }
+)
+GroupDict.__mro__ = [_b_.dict, _b_.object]
+GroupDict.__setitem__ = function(){
+    throw _b_.TypeError.$factory("read only")
+}
+
+BMatchObject.groupdict = function(){
+    /*
+    Return a dictionary containing all the named subgroups of the match, keyed
+    by the subgroup name. The default argument is used for groups that did not
+    participate in the match; it defaults to None.
+    */
+    var $ = $B.args("groupdict", 2, {self: null, default: null},
+                ['self', 'default'], arguments, {default: _b_.None},
+                null, null)
+    return GroupDict.$factory($.self.mo.re, $.default)
 }
 
 BMatchObject.groups = function(self){
@@ -2008,6 +2088,157 @@ function check_pattern_flags(pattern, flags){
     return pattern
 }
 
+function transform_repl(data, pattern){
+    data.repl = data.repl.replace(/\\n/g, '\n')
+    data.repl = data.repl.replace(/\\r/g, '\r')
+    data.repl = data.repl.replace(/\\t/g, '\t')
+    data.repl = data.repl.replace(/\\b/g, '\b')
+    data.repl = data.repl.replace(/\\v/g, '\v')
+    data.repl = data.repl.replace(/\\f/g, '\f')
+    data.repl = data.repl.replace(/\\a/g, '\a')
+    // detect backreferences
+    var pos = 0,
+        escaped = false,
+        br = false,
+        repl1 = "",
+        has_backref = false
+    while(pos < data.repl.length){
+        br = false
+        if(data.repl[pos] == "\\"){
+            escaped = ! escaped
+            if(escaped){
+                pos++
+                continue
+            }
+        }else if(escaped){
+            escaped = false
+            var mo = /^\d+/.exec(data.repl.substr(pos))
+            if(mo){
+                var escape = escaped_char(data.repl, pos - 1)
+                if(escape.type == "o"){
+                    if(escape.ord > 0o377){
+                        fail(`octal escape value \\${mo[0]} ` +
+                            " outside of range 0-0o377", pos)
+                    }
+                    repl1 += escape.char
+                    pos += escape.length - 1
+                    continue
+                }else if(escape.type != "backref"){
+                    var group_num = mo[0].substr(0,
+                        Math.min(2, mo[0].length))
+                    fail(`invalid group reference ${group_num}`, pos)
+                }else{
+                    // only keep first 2 digits
+                    var group_num = mo[0].substr(0,
+                        Math.min(2, mo[0].length))
+                    // check that pattern has the specified group num
+                    if(pattern.$groups[group_num] === undefined){
+                        fail(`invalid group reference ${group_num}`,
+                            pos)
+                    }else{
+                        mo[0] = group_num
+                    }
+                }
+                if(! has_backref){
+                    var parts = [data.repl.substr(0, pos - 1),
+                            parseInt(mo[0])]
+                }else{
+                    parts.push(data.repl.substring(next_pos, pos - 1))
+                    parts.push(parseInt(mo[0]))
+                }
+                has_backref = true
+                var next_pos = pos + mo[0].length
+                br = true
+                pos += mo[0].length
+            }else if(data.repl[pos] == "g"){
+                pos++
+                if(data.repl[pos] != '<'){
+                    fail("missing <", pos)
+                }
+                pos++
+                mo = /(.*?)>/.exec(data.repl.substr(pos))
+                if(mo){
+                    if(mo[1] == ""){
+                        pos += mo[0].length
+                        fail("missing group name", pos - 1)
+                    }
+                    var group_name = mo[1]
+                    if(/^\d+$/.exec(group_name)){
+                        if(pattern.$groups[group_name] === undefined){
+                            fail(`invalid group reference ${group_name}`,
+                                pos)
+                        }
+                    }else{
+                        if(! _b_.str.isidentifier(group_name)){
+                            var cps = to_codepoint_list(group_name)
+                            if($B.unicode_tables.XID_Start[cps[0]] === undefined){
+                                fail("bad character in group name '" +
+                                    group_name + "'", pos)
+                            }else{
+                                for(cp of cps.slice(1)){
+                                    if($B.unicode_tables.XID_Continue[cp] === undefined){
+                                        fail("bad character in group name '" +
+                                            group_name + "'", pos)
+                                    }
+                                }
+                            }
+                        }
+                        if(pattern.$groups[group_name] === undefined){
+                            throw _b_.IndexError.$factory(
+                                `unknown group name '${group_name}'`,
+                                pos)
+                        }
+                    }
+                    if(! has_backref){
+                        var parts = [data.repl.substr(0, pos - 3),
+                                mo[1]]
+                    }else{
+                        parts.push(data.repl.substring(next_pos, pos - 3))
+                        parts.push(mo[1])
+                    }
+                    has_backref = true
+                    var next_pos = pos + mo[0].length
+                    br = true
+                    pos = next_pos
+                }else{
+                    if(data.repl.substr(pos).length > 0){
+                        fail("missing >, unterminated name", pos)
+                    }else{
+                        fail("missing group name", pos)
+                    }
+                }
+            }else{
+                if(/[a-zA-Z]/.exec(data.repl[pos])){
+                    fail("unknown escape", pos)
+                }
+                pos += data.repl[pos]
+            }
+        }
+        if(! br){
+            repl1 += data.repl[pos]
+            pos ++
+        }
+    }
+    data.repl1 = repl1
+    if(has_backref){
+        parts.push(data.repl.substr(next_pos))
+        data.repl = function(mo){
+            var res = parts[0]
+            for(var i = 1, len = parts.length; i < len; i += 2){
+                if(mo.mo.re.$groups[parts[i]] === undefined){
+                    pos++
+                    var group_num = parts[i].toString().substr(0, 2)
+                    fail(`invalid group reference ${group_num}`, pos)
+                }
+                res += mo.mo.re.$groups[parts[i]].item.match_string()
+                res += parts[i + 1]
+            }
+            return res
+        }
+    }
+    return data
+}
+
 function subn(string, pattern, repl, count, flags){
     var res = '',
         pos = 0,
@@ -2020,152 +2251,8 @@ function subn(string, pattern, repl, count, flags){
         data.repl = data.repl.items.join('')
     }
     if(typeof data.repl == "string"){
-        data.repl = data.repl.replace(/\\n/g, '\n')
-        data.repl = data.repl.replace(/\\r/g, '\r')
-        data.repl = data.repl.replace(/\\t/g, '\t')
-        data.repl = data.repl.replace(/\\b/g, '\b')
-        data.repl = data.repl.replace(/\\v/g, '\v')
-        data.repl = data.repl.replace(/\\f/g, '\f')
-        data.repl = data.repl.replace(/\\a/g, '\a')
-        // detect backreferences
-        var pos = 0,
-            escaped = false,
-            br = false,
-            repl1 = "",
-            has_backref = false
-        while(pos < data.repl.length){
-            br = false
-            if(data.repl[pos] == "\\"){
-                escaped = ! escaped
-                if(escaped){
-                    pos++
-                    continue
-                }
-            }else if(escaped){
-                escaped = false
-                var mo = /^\d+/.exec(data.repl.substr(pos))
-                if(mo){
-                    var escape = escaped_char(data.repl, pos - 1)
-                    if(escape.type == "o"){
-                        if(escape.ord > 0o377){
-                            fail(`octal escape value \\${mo[0]} ` +
-                                " outside of range 0-0o377", pos)
-                        }
-                        repl1 += escape.char
-                        pos += escape.length - 1
-                        continue
-                    }else if(escape.type != "backref"){
-                        var group_num = mo[0].substr(0,
-                            Math.min(2, mo[0].length))
-                        fail(`invalid group reference ${group_num}`, pos)
-                    }else{
-                        // only keep first 2 digits
-                        var group_num = mo[0].substr(0,
-                            Math.min(2, mo[0].length))
-                        // check that pattern has the specified group num
-                        if(pattern.$groups[group_num] === undefined){
-                            fail(`invalid group reference ${group_num}`,
-                                pos)
-                        }else{
-                            mo[0] = group_num
-                        }
-                    }
-                    if(! has_backref){
-                        var parts = [data.repl.substr(0, pos - 1),
-                                parseInt(mo[0])]
-                    }else{
-                        parts.push(data.repl.substring(next_pos, pos - 1))
-                        parts.push(parseInt(mo[0]))
-                    }
-                    has_backref = true
-                    var next_pos = pos + mo[0].length
-                    br = true
-                    pos += mo[0].length
-                }else if(data.repl[pos] == "g"){
-                    pos++
-                    if(data.repl[pos] != '<'){
-                        fail("missing <", pos)
-                    }
-                    pos++
-                    mo = /(.*?)>/.exec(data.repl.substr(pos))
-                    if(mo){
-                        if(mo[1] == ""){
-                            pos += mo[0].length
-                            fail("missing group name", pos - 1)
-                        }
-                        var group_name = mo[1]
-                        if(/^\d+$/.exec(group_name)){
-                            if(pattern.$groups[group_name] === undefined){
-                                fail(`invalid group reference ${group_name}`,
-                                    pos)
-                            }
-                        }else{
-                            if(! _b_.str.isidentifier(group_name)){
-                                var cps = to_codepoint_list(group_name)
-                                if($B.unicode_tables.XID_Start[cps[0]] === undefined){
-                                    fail("bad character in group name '" +
-                                        group_name + "'", pos)
-                                }else{
-                                    for(cp of cps.slice(1)){
-                                        if($B.unicode_tables.XID_Continue[cp] === undefined){
-                                            fail("bad character in group name '" +
-                                                group_name + "'", pos)
-                                        }
-                                    }
-                                }
-                            }
-                            if(pattern.$groups[group_name] === undefined){
-                                throw _b_.IndexError.$factory(
-                                    `unknown group name '${group_name}'`,
-                                    pos)
-                            }
-                        }
-                        if(! has_backref){
-                            var parts = [data.repl.substr(0, pos - 3),
-                                    mo[1]]
-                        }else{
-                            parts.push(data.repl.substring(next_pos, pos - 3))
-                            parts.push(mo[1])
-                        }
-                        has_backref = true
-                        var next_pos = pos + mo[0].length
-                        br = true
-                        pos = next_pos
-                    }else{
-                        if(data.repl.substr(pos).length > 0){
-                            fail("missing >, unterminated name", pos)
-                        }else{
-                            fail("missing group name", pos)
-                        }
-                    }
-                }else{
-                    if(/[a-zA-Z]/.exec(data.repl[pos])){
-                        fail("unknown escape", pos)
-                    }
-                    pos += data.repl[pos]
-                }
-            }
-            if(! br){
-                repl1 += data.repl[pos]
-                pos ++
-            }
-        }
-        if(has_backref){
-            parts.push(data.repl.substr(next_pos))
-            data.repl = function(mo){
-                var res = parts[0]
-                for(var i = 1, len = parts.length; i < len; i += 2){
-                    if(mo.mo.re.$groups[parts[i]] === undefined){
-                        pos++
-                        var group_num = parts[i].toString().substr(0, 2)
-                        fail(`invalid group reference ${group_num}`, pos)
-                    }
-                    res += mo.mo.re.$groups[parts[i]].item.match_string()
-                    res += parts[i + 1]
-                }
-                return res
-            }
-        }
+        data = transform_repl(data, pattern)
+        repl1 = data.repl1
     }
     pos = 0
     for(var bmo of $module.finditer(pattern, string)){
