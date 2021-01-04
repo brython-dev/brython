@@ -111,10 +111,10 @@ for arc, wfunc in ((dist1, dist1.add), (dist2, dist2.add),
 print('Write changelog file...')
 try:
     first = 'Changes in Brython version {}'.format(vname)
-    with open(os.path.join(pdir, 'setup', 'changelog.txt')) as f:
+    with open(os.path.join(pdir, 'setup', 'changelog.txt'), encoding="utf-8") as f:
         input_changelog_data_string = f.read()
     with open(os.path.join(release_dir,
-            'changelog_{}.txt'.format(vname)), 'w') as out:
+            'changelog_{}.txt'.format(vname)), 'w', encoding="utf-8") as out:
         out.write('%s\n' % first)
         out.write('%s\n\n' % ('=' * len(first)))
         out.write(input_changelog_data_string)
