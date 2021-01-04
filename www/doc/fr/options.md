@@ -30,9 +30,10 @@ lancer la fonction `brython()` au chargement de la page.
   défaut
 - *pythonpath* : une liste de chemins dans lesquels chercher les modules
   importés
-- *ipy_id* : par défaut, la fonction `brython()` exécute tous les scripts de
+- *ids* : par défaut, la fonction `brython()` exécute tous les scripts de
   la page. Cette option spécifie la liste des identifiants des balises dont le
-  contenu texte doit être exécuté (attribut `id` de la balise). Voir
+  contenu texte doit être exécuté (attribut `id` de la balise)
+- *ipy_id* : identique à *ids*. Voir
   [brythonmagic](https://github.com/kikocorreoso/brythonmagic) pour plus
   d'informations
 - *indexedDB* : indique si le programme peut utiliser la base indexedDB pour
@@ -42,7 +43,7 @@ lancer la fonction `brython()` au chargement de la page.
 Exemple
 -------
 
->    brython({debug:1, ipy_id:['hello']})
+>    brython({debug:1, ids:['hello']})
 
 exécutera le contenu de l'élement dont l'identifiant est "hello" avec le niveau de débogage 1
 

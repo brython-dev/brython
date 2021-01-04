@@ -27,9 +27,10 @@ on page load.
   or packages from the standard library, the static mapping table in the
   script __stdlib\_paths.js__ should be used. Defaults to `true`
 - *pythonpath* : a list of paths where imported modules should be searched
-- *ipy_id* : by default, the function `brython()` runs all the scripts in the
+- *ids* : by default, the function `brython()` runs all the scripts in the
   page. This option specifies a list of element identifiers (tag attribute
-  `id`) whose text content must be run as Python code. See
+  `id`) whose text content must be run as Python code
+- *ipy_id": same as *ids*. See
   [brythonmagic](https://github.com/kikocorreoso/brythonmagic) for more
   information
 - *indexedDB* : specifies if the program can use the indexedDB database to
@@ -39,6 +40,6 @@ on page load.
 Example of `brython` options usage:
 -----------------------------------
 
->    brython({debug:1, ipy_id:['hello']})
+>    brython({debug:1, ids:['hello']})
 
 will run the content of the element with id "hello" with debug level 1
