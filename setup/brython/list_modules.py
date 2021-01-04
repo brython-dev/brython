@@ -217,7 +217,6 @@ class ModulesFinder:
             if module in self.modules:
                 continue
             found = False
-            print(self.user_modules)
             for module_dict in [self.stdlib, self.user_modules]:
                 if module in module_dict:
                     found = True
