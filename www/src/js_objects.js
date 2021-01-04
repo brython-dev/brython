@@ -251,7 +251,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                     if(arguments[i] === undefined){args.push(_b_.None)}
                     else{args.push(jsobj2pyobj(arguments[i]))}
                 }
-                if(pyobj.prototype.constructor === pyobj){
+                if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
                     var res = new pyobj(...args)
                 }else{
                     var res = pyobj.apply(this, args)

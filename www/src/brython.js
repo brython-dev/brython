@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,0,'final',0]
 __BRYTHON__.__MAGIC__="3.9.0"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-03 10:24:31.874718"
-__BRYTHON__.timestamp=1609665871874
+__BRYTHON__.compiled_date="2021-01-04 14:22:46.869378"
+__BRYTHON__.timestamp=1609766566869
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -9255,7 +9255,7 @@ return pyobj}
 return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
-if(pyobj.prototype.constructor===pyobj){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
+if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
 return pyobj2jsobj(res)}catch(err){console.log(err)
 console.log($B.$getattr(err,'info'))
 console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )
