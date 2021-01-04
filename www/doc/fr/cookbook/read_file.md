@@ -31,23 +31,23 @@ Noter la chaine de requête (query string) avec une valeur aléatoire à la fin 
 
 L'exemple suivant ajoute une fonction de dépassement de délai qui affiche un message au cas où le fichier n'aurait pas été trouvé au bout de 4 secondes :
 
-```python
-from browser import document as doc
+```exec
+from browser import ajax, document
 import time
 
 def on_complete(req):
     if req.status==200 or req.status==0:
-        doc["zone"].value = req.text
+        document["zone"].value = req.text
     else:
-        doc["zone"].value = "error "+req.text
+        document["zone"].value = "error "+req.text
 
 def err_msg():
-    doc["zone"].text = "le serveur n'a pas répondu après %s secondes" %timeout
+    document["zone"].text = "le serveur n'a pas répondu après %s secondes" %timeout
 
 timeout = 4
 
 def go(url):
-    req = ajax()
+    req = ajax.Ajax()
     req.bind("complete", on_complete)
     req.set_timeout(timeout,err_msg)
     req.open('GET',url,True)

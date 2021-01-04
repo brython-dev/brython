@@ -29,16 +29,16 @@ document['zone'].value = open('file.txt'+fake_qs).read()
 </table>
 
 
-Fíjate en el valor aleatorio de la cadena de consulta (query) al final del 
-nombre del fichero : Será necesario refrescar el resultado si el fichero 
+Fíjate en el valor aleatorio de la cadena de consulta (query) al final del
+nombre del fichero : Será necesario refrescar el resultado si el fichero
 fuente ha sido modificado entre dos llamadas diferentes
 
-El siguiente ejemplo añade un *timeout* para mostrar un mensaje en caso de 
+El siguiente ejemplo añade un *timeout* para mostrar un mensaje en caso de
 que el fichero no haya sido encontrado después de 4 segundos :
 
 ```exec
 import time
-from browser import document
+from browser import ajax, document
 
 def on_complete(req):
     if req.status==200 or req.status==0:
@@ -53,7 +53,7 @@ def err_msg():
 timeout = 4
 
 def go(url):
-    req = ajax()
+    req = ajax.Ajax()
     req.bind("complete", on_complete)
     req.set_timeout(timeout,err_msg)
     req.open('GET',url,True)

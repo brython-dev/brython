@@ -34,9 +34,9 @@ required to refresh the result if the source file is changed between two calls
 The next example adds a timeout function to print a message in case the file 
 was not found after 4 seconds :
 
-```python
+```exec
 import time
-from browser import document 
+from browser import ajax, document 
 
 def on_complete(req):
     if req.status==200 or req.status==0:
@@ -50,7 +50,7 @@ def err_msg():
 timeout = 4
 
 def go(url):
-    req = ajax()
+    req = ajax.Ajax()
     req.bind("complete", on_complete)
     req.set_timeout(timeout,err_msg)
     req.open('GET',url,True)
