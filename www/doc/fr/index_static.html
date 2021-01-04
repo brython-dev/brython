@@ -62,7 +62,8 @@ for elt in document[target].select('.xml'):
             if script and item.text.strip():
                 h = highlight.highlight(item.text.strip())
                 h.style.margin = 0
-                h.classList.add("python-in-html")
+                h.classList.add("pycode")
+                h.style.display = "block"
                 elt <= h
             else:
                 elt <= item.text

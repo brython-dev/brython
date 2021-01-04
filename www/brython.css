@@ -210,13 +210,7 @@ select.language {
 }
 
 .pycode-in-html{
-    font-size: 0.9em;
     display: block;
-    background-color:var(--clear-2);
-    color: var(--dark-1);
-    width:auto;
-    padding:0px 8px 8px 8px;
-    font-family: "Consolas";
 }
 
 .xml{
