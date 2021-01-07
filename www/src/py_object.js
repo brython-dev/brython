@@ -112,7 +112,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == "$$length"
+    var $test = false // attr == "__ceil__"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass

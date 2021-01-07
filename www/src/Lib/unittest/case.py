@@ -598,7 +598,7 @@ class TestCase(object):
             self.doCleanups()
             for test, reason in outcome.skipped:
                 self._addSkip(result, test, reason)
-            
+
             self._feedErrorsToResult(result, outcome.errors)
             if outcome.success:
                 if expecting_failure:

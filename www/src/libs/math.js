@@ -9,12 +9,14 @@ eval($s.join(';'))
 //for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
 var float_check = function(x) {
-    if(x.__class__ === $B.long_int){return parseInt(x.value)}
+    if(x.__class__ === $B.long_int){
+        return parseInt(x.value)
+    }
     return _b_.float.$factory(x)
 }
 
 function check_int(x){
-    if(! _b_.isinstance(x, int)){
+    if((typeof x !== "number") || ! _b_.isinstance(x, int)){
         throw _b_.TypeError.$factory("'" + $B.class_name(x) +
             "' object cannot be interpreted as an integer")
     }
@@ -81,20 +83,50 @@ var _mod = {
     acos: function(x){
         $B.check_nb_args('acos', 1, arguments)
         $B.check_no_kw('acos', x)
-        return float.$factory(Math.acos(float_check(x)))
+        if(_mod.isinf(x)){
+            throw _b_.ValueError.$factory("math domain error")
+        }else if(_mod.isnan(x)){
+            return _mod.nan
+        }else{
+            x = float_check(x)
+            if(x > 1 || x < -1){
+                throw _b_.ValueError.$factory("math domain error")
+            }
+            return float.$factory(Math.acos(x))
+        }
     },
     acosh: function(x){
         $B.check_nb_args('acosh', 1, arguments)
         $B.check_no_kw('acosh', x)
 
-        if(_b_.$isinf(x)){return float.$factory('inf')}
+        if(_b_.$isinf(x)){
+            if(_b_.$isninf(x)){
+                throw _b_.ValueError.$factory("math domain error")
+            }
+            return _mod.inf
+        }else if(_mod.isnan(x)){
+            return _mod.nan
+        }
         var y = float_check(x)
+        if(y <= 0){
+            throw _b_.ValueError.$factory("math domain error")
+        }
         return float.$factory(Math.log(y + Math.sqrt(y * y - 1)))
     },
     asin: function(x){
         $B.check_nb_args('asin', 1, arguments)
         $B.check_no_kw('asin', x)
-        return float.$factory(Math.asin(float_check(x)))
+        if(_mod.isinf(x)){
+            throw _b_.ValueError.$factory("math domain error")
+        }else if(_mod.isnan(x)){
+            return _mod.nan
+        }else{
+            x = float_check(x)
+            if(x > 1 || x < -1){
+                throw _b_.ValueError.$factory("math domain error")
+            }
+            return float.$factory(Math.asin(x))
+        }
     },
     asinh: function(x){
         $B.check_nb_args('asinh', 1, arguments)
@@ -125,28 +157,52 @@ var _mod = {
     atanh: function(x){
         $B.check_nb_args('atanh', 1, arguments)
         $B.check_no_kw('atanh', x)
-
-       var y = float_check(x)
-       if(y == 0){return 0}
-       return float.$factory(0.5 * Math.log((1 / y + 1)/(1 / y - 1)));
+        if(_b_.$isinf(x)){
+            throw _b_.ValueError.$factory("math domain error")
+        }
+        var y = float_check(x)
+        if(y == 0){
+            return 0
+        }else if(y <= -1 || y >= 1){
+            throw _b_.ValueError.$factory("math domain error")
+        }
+        return float.$factory(0.5 * Math.log((1 / y + 1)/(1 / y - 1)));
     },
     ceil: function(x){
         $B.check_nb_args('ceil', 1, arguments)
         $B.check_no_kw('ceil', x)
 
-       try{return getattr(x, '__ceil__')()}catch(err){}
+        var res
 
-       if(_b_.$isninf(x)){return float.$factory('-inf')}
-       if(_b_.$isinf(x)){return float.$factory('inf')}
-       if(isNaN(x)){return float.$factory('nan')}
+        if(x instanceof Number){
+            x = _b_.float.numerator(x)
+            if(_b_.$isinf(x) || _mod.isnan(x)){
+                return x
+            }
+            return _b_.int.$factory(Math.ceil(x))
+        }
 
-       var y = float_check(x)
-       if(! isNaN(parseFloat(y)) && isFinite(y)){
-           return int.$factory(Math.ceil(y))
-       }
+        try{
+            // Use attribute of the object's class, not of the object
+            // itself (special method)
+            return $B.$call($B.$getattr(x.__class__, '__ceil__'))(x)
+        }catch(err){
+            if(! $B.is_exc(err, [_b_.AttributeError])){
+                throw err
+            }
+        }
 
-       throw _b_.ValueError.$factory(
-           'object is not a number and does not contain __ceil__')
+        try{
+            x = $B.$call($B.$getattr(x.__class__, '__float__'))(x)
+        }catch(err){
+            if(! $B.is_exc(err, [_b_.AttributeError])){
+                throw err
+            }else{
+                throw _b_.TypeError.$factory("must be real number, not " +
+                   $B.class_name(x))
+            }
+        }
+        return _mod.ceil(x)
     },
     comb: function(n, k){
         $B.check_nb_args('comb', 2, arguments)
@@ -205,43 +261,111 @@ var _mod = {
     dist: function(p, q){
         $B.check_nb_args('dist', 2, arguments)
         $B.check_no_kw('dist', p, q)
-        var itp = _b_.iter(p),
-            itq = _b_.iter(q),
-            res = 0
-        while(true){
-            try{
-                var next_p = _b_.next(itp)
-            }catch(err){
-                if(err.__class__ === _b_.StopIteration){
-                    // check that the other iterator is also exhausted
-                    try{
-                        var next_q = _b_.next(itq)
+
+        function test(x){
+            if(typeof x === "number" || x instanceof Number){
+                return x
+            }
+            var y = $B.$getattr(x, '__float__', null)
+            if(y === null){
+                throw _b_.TypeError.$factory('not a float')
+            }
+            return $B.$call(y)()
+        }
+
+        // build list of differences (as floats) between coordinates of p and q
+        var diffs = [],
+            diff
+
+        if(Array.isArray(p) && Array.isArray(q)){
+            // simple case : p and q are lists of tuples
+            if(p.length != q.length){
+                throw _b_.ValueError.$factory("both points must have " +
+                    "the same number of dimensions")
+            }
+            for(var i = 0, len = p.length; i < len; i++){
+                var next_p = test(p[i]),
+                    next_q = test(q[i]),
+                    diff = Math.abs(next_p - next_q)
+                if(_b_.$isinf(diff)){
+                    return _mod.inf
+                }
+                diffs.push(diff)
+            }
+        }else{
+            var itp = _b_.iter(p),
+                itq = _b_.iter(q),
+                res = 0
+
+            while(true){
+                try{
+                    var next_p = _b_.next(itp)
+                }catch(err){
+                    if(err.__class__ === _b_.StopIteration){
+                        // check that the other iterator is also exhausted
+                        try{
+                            var next_q = _b_.next(itq)
+                            throw _b_.ValueError.$factory("both points must have " +
+                                "the same number of dimensions")
+                        }catch(err){
+                            if(err.__class__ === _b_.StopIteration){
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                    throw err
+                }
+                next_p = test(next_p)
+                try{
+                    var next_q = _b_.next(itq)
+                }catch(err){
+                    if(err.__class__ === _b_.StopIteration){
                         throw _b_.ValueError.$factory("both points must have " +
                             "the same number of dimensions")
-                    }catch(err){
-                        if(err.__class__ === _b_.StopIteration){
-                            if(typeof res == "number" || res instanceof Number){
-                                return Math.sqrt(res)
-                            }else{
-                                return Math.sqrt(parseInt(res.value))
-                            }
-                        }
-                        throw err
                     }
+                    throw err
                 }
-                throw err
-            }
-            try{
-                var next_q = _b_.next(itq),
-                    diff = $B.sub(next_p, next_q)
-                res = $B.add(res, $B.mul(diff, diff))
-            }catch(err){
-                if(err.__class__ === _b_.StopIteration){
-                    throw _b_.ValueError.$factory("both points must have " +
-                        "the same number of dimensions")
+                next_q = test(next_q)
+                diff = Math.abs(next_p - next_q)
+                if(_b_.$isinf(diff)){
+                    return _mod.inf
                 }
-                throw err
+                diffs.push(diff)
             }
+        }
+
+        var res = 0,
+            scale = 1,
+            max_diff = Math.max(...diffs),
+            min_diff = Math.min(...diffs)
+            max_value = Math.sqrt(Number.MAX_VALUE) / p.length,
+            min_value = Math.sqrt(Number.MIN_VALUE) * p.length
+        if(max_diff > max_value){
+            while(max_diff > max_value){
+                scale *= 2
+                max_diff /= 2
+            }
+            for(var diff of diffs){
+                diff = diff / scale
+                res += diff * diff
+            }
+            return scale * _mod.sqrt(res)
+        }else if(min_diff < min_value){
+            while(min_diff < min_value){
+                scale *= 2
+                min_diff *= 2
+            }
+            for(var diff of diffs){
+                diff = diff * scale
+                res += diff * diff
+            }
+            return _mod.sqrt(res) / scale
+        }else{
+            for(var diff of diffs){
+                res += Math.pow(diff, 2)
+            }
+            return _mod.sqrt(res)
         }
     },
     e: float.$factory(Math.E),
@@ -318,22 +442,52 @@ var _mod = {
         $B.check_nb_args('factorial', 1, arguments)
         $B.check_no_kw('factorial', x)
 
-         //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
-         if(! check_int_or_round_float(x)){
-             throw _b_.ValueError.$factory("factorial() only accepts integral values")
-         }else if($B.rich_comp("__lt__", x, 0)){
-             throw _b_.ValueError.$factory("factorial() not defined for negative values")
+        if(x instanceof Number || _b_.isinstance(x, float)){
+            var warning = _b_.DeprecationWarning.$factory(
+                "Using factorial() with floats is deprecated")
+            // module _warning is in builtin_modules.js
+            $B.imported._warnings.warn(warning)
          }
-         var r = 1
-         for(var i = 2; i <= x; i++){
-             r = $B.mul(r, i)
-         }
-         return r
+
+        if(! _b_.isinstance(x, [_b_.float, _b_.int])){
+            throw _b_.TypeError.$factory(`'${$B.class_name(x)}' object ` +
+                "cannot be interpreted as an integer")
+        }
+
+        //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
+        if(! check_int_or_round_float(x)){
+            throw _b_.ValueError.$factory("factorial() only accepts integral values")
+        }else if($B.rich_comp("__lt__", x, 0)){
+            throw _b_.ValueError.$factory("factorial() not defined for negative values")
+        }
+        var r = 1
+        for(var i = 2; i <= x; i++){
+            r = $B.mul(r, i)
+        }
+        return r
     },
     floor: function(x){
         $B.check_nb_args('floor', 1, arguments)
         $B.check_no_kw('floor', x)
-        return Math.floor(float_check(x))
+        if(typeof x == "number" ||
+                x instanceof Number){
+            return Math.floor(float_check(x))
+        }
+        try{
+            return $B.$call($B.$getattr(x, "__floor__"))()
+        }catch(err){
+            if($B.is_exc(err, [_b_.AttributeError])){
+                try{
+                    var f = $B.$call($B.$getattr(x, "__float__"))()
+                    return _mod.floor(f)
+                }catch(err){
+                    if($B.is_exc(err, [_b_.AttributeError])){
+                        throw _b_.TypeError.$factory("no __float__")
+                    }
+                    throw err
+                }
+            }
+        }
     },
     fmod: function(x,y){
         $B.check_nb_args('fmod', 2, arguments)
@@ -470,7 +624,7 @@ var _mod = {
     },
     inf: float.$factory('inf'),
     isclose: function(){
-        var $ns = $B.args("isclose",
+        var $ = $B.args("isclose",
                           4,
                           {a: null, b: null, rel_tol: null, abs_tol: null},
                           ['a', 'b', 'rel_tol', 'abs_tol'],
@@ -478,32 +632,43 @@ var _mod = {
                           {rel_tol: 1e-09, abs_tol: 0.0},
                           '*',
                           null)
-        var a = $ns['a'],
-            b = $ns['b'],
-            rel_tol = $ns['rel_tol'],
-            abs_tol = $ns['abs_tol']
+        var a = $.a,
+            b = $.b,
+            rel_tol = $.rel_tol,
+            abs_tol = $.abs_tol
         if(rel_tol < 0.0 || abs_tol < 0.0){
             throw ValueError.$factory('tolerances must be non-negative')
         }
-        if(typeof a !== "number" || typeof b !== "number"){
-            if(! _b_.isinstance(a, [_b_.float, _b_.int]) ||
-                    ! _b_.isinstance(b, [_b_.float, _b_.int])){
-                throw _b_.TypeError.$factory("must be real number, not str")
-            }
-        }
+
         if(a == b){
             return True
         }
         if(_b_.$isinf(a) || _b_.$isinf(b)){
             return a === b
         }
-        var diff = _b_.$fabs(b - a)
-        var result = (
-            (diff <= _b_.$fabs(rel_tol * b)) ||
-                (diff <= _b_.$fabs(rel_tol * a))
-            ) || (diff <= _b_.$fabs(abs_tol)
-        )
-        return result
+        // isclose(a, b, rel_tol, abs_tol) is the same as
+        // abs_diff = abs(a - b)
+        // max_ab = max(abs(a), abs(b))
+        // abs_diff <= abs_tol or abs_diff / max_ab <= rel_tol
+        // This is more correct than in Python docs:
+        // "abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)"
+        // because this fails for Decimal instances, which do not support
+        // multiplication by floats
+
+        var diff = $B.$call($B.$getattr(b, '__sub__'))(a),
+            abs_diff = $B.$call($B.$getattr(diff, "__abs__"))()
+        if($B.rich_comp("__le__", abs_diff, abs_tol)){
+            return true
+        }
+        var abs_a = $B.$call($B.$getattr(a, '__abs__'))(),
+            abs_b = $B.$call($B.$getattr(b, '__abs__'))(),
+            max_ab = abs_a
+        if($B.rich_comp("__gt__", abs_b, abs_a)){
+            max_ab = abs_b
+        }
+        return $B.rich_comp("__le__",
+            $B.$call($B.$getattr(abs_diff, "__truediv__"))(max_ab),
+            rel_tol)
     },
     isfinite: function(x){
         $B.check_nb_args('isfinite', 1, arguments)

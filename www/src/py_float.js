@@ -83,6 +83,10 @@ float.as_integer_ratio = function(self){
         _b_.int.$factory(denominator)])
 }
 
+float.__abs__ = function(self){
+    return new Number(Math.abs(float_value(self)))
+}
+
 float.__bool__ = function(self){
     self = float_value(self)
     return _b_.bool.$factory(self.valueOf())
@@ -342,7 +346,9 @@ _b_.$isninf = function(x) {
 
 _b_.$isinf = function(x) {
     var x1 = x
-    if(isinstance(x, float)){x1 = float.numerator(x)}
+    if((! x instanceof Number) && isinstance(x, float)){
+        x1 = float.numerator(x)
+    }
     return x1 == Infinity || x1 == -Infinity ||
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
@@ -808,7 +814,9 @@ float.$factory = function (value){
     if(typeof value == "number"){
         return new Number(value)
     }
-    if(isinstance(value, float)){return float_value(value)}
+    if(isinstance(value, float)){
+        return float_value(value)
+    }
     if(isinstance(value, bytes)){
       var s = getattr(value, "decode")("latin-1")
       return float.$factory(getattr(value, "decode")("latin-1"))
@@ -847,6 +855,9 @@ float.$factory = function (value){
     var klass = value.__class__ || $B.get_class(value),
         num_value = $B.to_num(value, ["__float__", "__index__"])
 
+    if(value !== Number.POSITIVE_INFINITY && ! isFinite(num_value)){
+        throw _b_.OverflowError.$factory('int too large to convert to float')
+    }
     if(num_value !== null){
         return num_value
     }

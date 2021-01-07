@@ -3156,9 +3156,10 @@ $DefCtx.prototype.transform = function(node, rank){
         // are positional, not keyword arguments
         // In calls, keyword arguments are passed as the last
         // argument, an object with attribute $nat set to "kw"
-
         var new_node = new $Node()
-        var js = 'if($len > 0 && arguments[$len - 1].$nat !== undefined)'
+        var js = 'var last_arg;if($len > 0 && ((last_arg = ' +
+            'arguments[$len - 1]) !== undefined) && last_arg.$nat ' +
+            '!== undefined)'
         new $NodeJSCtx(new_node,js)
         nodes.push(new_node)
 

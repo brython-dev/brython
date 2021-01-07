@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-04 17:16:14.255913"
-__BRYTHON__.timestamp=1609776974255
+__BRYTHON__.compiled_date="2021-01-07 13:06:10.739437"
+__BRYTHON__.timestamp=1610021170739
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -1598,7 +1598,9 @@ this.after_star.length==0 && !has_end_pos){
 only_positional=true
 nodes.push($NodeJS('var $len = arguments.length;'))
 var new_node=new $Node()
-var js='if($len > 0 && arguments[$len - 1].$nat !== undefined)'
+var js='var last_arg;if($len > 0 && ((last_arg = '+
+'arguments[$len - 1]) !== undefined) && last_arg.$nat '+
+'!== undefined)'
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 make_args_nodes.forEach(function(item){new_node.add(item)})
@@ -7373,6 +7375,7 @@ throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 var NotImplementedType=$B.make_class("NotImplementedType",function(){return NotImplemented}
 )
 NotImplementedType.__repr__=NotImplementedType.__str__=function(self){return "NotImplemented"}
+$B.set_func_names(NotImplementedType,"builtins")
 var NotImplemented={__class__:NotImplementedType}
 function $not(obj){return !$B.$bool(obj)}
 function oct(obj){check_no_kw('oct',obj)
@@ -7724,17 +7727,26 @@ res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
 return res}else{throw _b_.TypeError.$factory("invalid argument for open(): "+
 _b_.str.$factory(file))}}
 var zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
-if(arguments.length==0)return res
+if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args']
-var args=[]
-for(var i=0;i < _args.length;i++){args.push(iter(_args[i]))}
+var args=[],nexts=[],only_lists=true,min_len
+for(var i=0;i < _args.length;i++){if(only_lists && Array.isArray(_args[i])){if(min_len===undefined ||_args[i].length < min_len){min_len=_args[i].length}}else{only_lists=false}
+var _next=$B.$call($B.$getattr(iter(_args[i]),"__next__"))
+args.push(_next)}
 var rank=0,items=[]
+if(only_lists){$B.nb_zip_list=$B.nb_zip_list===undefined ?
+1 :$B.nb_zip_list+1
+for(var i=0;i < min_len;i++){var line=[]
+for(var j=0;j < _args.length;j++){line.push(_args[j][i])}
+items.push($B.fast_tuple(line))}
+res.items=items
+return res}
 while(1){var line=[],flag=true
-for(var i=0;i < args.length;i++){try{line.push(next(args[i]))}catch(err){if(err.__class__==_b_.StopIteration){flag=false
+for(var i=0;i < args.length;i++){try{line.push(args[i]())}catch(err){if(err.__class__==_b_.StopIteration){flag=false
 break}else{throw err}}}
-if(!flag){break}
-items[rank++]=_b_.tuple.$factory(line)}
+if(! flag){break}
+items.push($B.fast_tuple(line))}
 res.items=items
 return res}
 )
@@ -9893,6 +9905,7 @@ denominator=1
 py_exponent=_b_.getattr(_b_.int.$factory(denominator),"__lshift__")(py_exponent)
 if(exponent > 0){numerator=numerator*py_exponent}else{denominator=py_exponent}
 return _b_.tuple.$factory([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
+float.__abs__=function(self){return new Number(Math.abs(float_value(self)))}
 float.__bool__=function(self){self=float_value(self)
 return _b_.bool.$factory(self.valueOf())}
 float.__eq__=function(self,other){self=float_value(self)
@@ -10006,7 +10019,7 @@ _b_.$isninf=function(x){var x1=x
 if(isinstance(x,float)){x1=float.numerator(x)}
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
 _b_.$isinf=function(x){var x1=x
-if(isinstance(x,float)){x1=float.numerator(x)}
+if((! x instanceof Number)&& isinstance(x,float)){x1=float.numerator(x)}
 return x1==Infinity ||x1==-Infinity ||
 x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
 _b_.$isnan=function(x){var x1=x
@@ -10245,6 +10258,7 @@ throw _b_.ValueError.$factory(
 "Could not convert to float(): '"+
 _b_.str.$factory(value)+"'")}}}
 var klass=value.__class__ ||$B.get_class(value),num_value=$B.to_num(value,["__float__","__index__"])
+if(value !==Number.POSITIVE_INFINITY && ! isFinite(num_value)){throw _b_.OverflowError.$factory('int too large to convert to float')}
 if(num_value !==null){return num_value}
 throw _b_.TypeError.$factory("float() argument must be a string or a "+
 "number, not '"+$B.class_name(value)+"'")}
@@ -10606,6 +10620,7 @@ bool[method]=(function(op){return function(self,other){var value=self ? 1 :0
 if(int[op]!==undefined){return int[op](value,other)}}})(method)}
 bool.__and__=function(self,other){if(_b_.isinstance(other,bool)){return self && other}else if(_b_.isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
+bool.__float__=function(self){return self ? new Number(1):new Number(0)}
 bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
 return 0}
 bool.__neg__=function(self){return-$B.int_or_bool(self)}
@@ -10852,7 +10867,8 @@ dm[1]=long_int.__sub__(self,long_int.__mul__(other,long_int.$factory(dm[0])))}}
 return $B.fast_tuple([intOrLong(dm[0]),intOrLong(dm[1])])}
 long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 return self.value==other.value && self.pos==other.pos}
-long_int.__float__=function(self){return new Number(parseFloat(self.value))}
+long_int.__float__=function(self){if(! isFinite(parseFloat(self.value))){throw _b_.OverflowError.$factory("int too big to convert to float")}
+return new Number(parseFloat(self.value))}
 long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(parseInt(self.value)/other)}
 if(typeof other=="number"){var t=self.value,res=divmod_by_safe_int(t,other),pos=other > 0 ? self.pos :!self.pos
 return{__class__:long_int,value:res[0],pos:pos}}
@@ -14281,7 +14297,8 @@ $B.$getattr($.category,"__name__"):_b_.None}}
 )
 modules._warnings={_defaultaction:"default",_filters_mutated:function(){},_onceregistry:$B.empty_dict(),filters:[$B.fast_tuple(['default',_b_.None,_b_.DeprecationWarning,'__main__',0]),$B.fast_tuple(['ignore',_b_.None,_b_.DeprecationWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.PendingDeprecationWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.ImportWarning,_b_.None,0]),$B.fast_tuple(['ignore',_b_.None,_b_.ResourceWarning,_b_.None,0])
 ],warn:function(message){
-if($B.imported.warnings){var filters=$B.imported.warnings.filters
+var filters
+if($B.imported.warnings){filters=$B.imported.warnings.filters}else{filters=modules._warnings.filters}
 if(filters[0][0]=='error'){var syntax_error=_b_.SyntaxError.$factory(message.args[0])
 syntax_error.args[1]=[message.filename,message.lineno,message.offset,message.line]
 syntax_error.filename=message.filename
@@ -14291,7 +14308,10 @@ syntax_error.line=message.line
 throw syntax_error}
 var frame=$B.imported._sys.Getframe()
 warning_message={__class__:WarningMessage,$$message:message,category:message.__class__,filename:message.filename ||frame.f_code.co_filename,lineno:message.lineno ||frame.f_lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:message.__class__.__name__}
-$B.imported.warnings._showwarnmsg_impl(warning_message)}else{console.log("warnings not imported")}},warn_explicit:function(){
+if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var trace=$B.class_name(message)+': '+message.args[0]
+$B.$getattr($B.stderr,'write')(trace+'\n')
+var flush=$B.$getattr($B.stderr,'flush',_b_.None)
+if(flush !==_b_.None){flush()}}},warn_explicit:function(){
 console.log("warn_explicit",arguments)}}
 function load(name,module_obj){
 module_obj.__class__=$B.module

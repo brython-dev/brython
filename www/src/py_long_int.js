@@ -639,6 +639,9 @@ long_int.__eq__ = function(self, other){
 }
 
 long_int.__float__ = function(self){
+    if(! isFinite(parseFloat(self.value))){
+        throw _b_.OverflowError.$factory("int too big to convert to float")
+    }
     return new Number(parseFloat(self.value))
 }
 

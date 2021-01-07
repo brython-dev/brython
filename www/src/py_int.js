@@ -842,6 +842,7 @@ var bool = {
 
 var methods = $B.op2method.subset("operations", "binary", "comparisons",
         "boolean")
+
 for(var op in methods){
     var method = "__" + methods[op] + "__"
     bool[method] = (function(op){
@@ -861,6 +862,10 @@ bool.__and__ = function(self, other){
         return int.__and__(bool.__index__(self), int.__index__(other))
     }
     return _b_.NotImplemented
+}
+
+bool.__float__ = function(self){
+    return self ? new Number(1) : new Number(0)
 }
 
 bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
