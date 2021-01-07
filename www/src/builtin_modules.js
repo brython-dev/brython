@@ -661,33 +661,43 @@
         ],
         warn: function(message){
             // Issue a warning, or maybe ignore it or raise an exception.
+            var filters
             if($B.imported.warnings){
-                var filters = $B.imported.warnings.filters
-                if(filters[0][0] == 'error'){
-                    var syntax_error = _b_.SyntaxError.$factory(message.args[0])
-                    syntax_error.args[1] = [message.filename, message.lineno,
-                        message.offset, message.line]
-                    syntax_error.filename = message.filename
-                    syntax_error.lineno = message.lineno
-                    syntax_error.offset = message.offset
-                    syntax_error.line = message.line
-                    throw syntax_error
+                filters = $B.imported.warnings.filters
+            }else{
+                filters = modules._warnings.filters
+            }
+            if(filters[0][0] == 'error'){
+                var syntax_error = _b_.SyntaxError.$factory(message.args[0])
+                syntax_error.args[1] = [message.filename, message.lineno,
+                    message.offset, message.line]
+                syntax_error.filename = message.filename
+                syntax_error.lineno = message.lineno
+                syntax_error.offset = message.offset
+                syntax_error.line = message.line
+                throw syntax_error
+            }
+            var frame = $B.imported._sys.Getframe()
+                warning_message = {
+                    __class__: WarningMessage,
+                    $$message: message,
+                    category: message.__class__,
+                    filename: message.filename || frame.f_code.co_filename,
+                    lineno: message.lineno || frame.f_lineno,
+                    file: _b_.None,
+                    line: _b_.None,
+                    source: _b_.None,
+                    _category_name: message.__class__.__name__
                 }
-                var frame = $B.imported._sys.Getframe()
-                    warning_message = {
-                        __class__: WarningMessage,
-                        $$message: message,
-                        category: message.__class__,
-                        filename: message.filename || frame.f_code.co_filename,
-                        lineno: message.lineno || frame.f_lineno,
-                        file: _b_.None,
-                        line: _b_.None,
-                        source: _b_.None,
-                        _category_name: message.__class__.__name__
-                    }
+            if($B.imported.warnings){
                 $B.imported.warnings._showwarnmsg_impl(warning_message)
             }else{
-                console.log("warnings not imported")
+                var trace = $B.class_name(message) + ': ' + message.args[0]
+                $B.$getattr($B.stderr, 'write')(trace + '\n')
+                var flush = $B.$getattr($B.stderr, 'flush', _b_.None)
+                if(flush !== _b_.None){
+                    flush()
+                }
             }
         },
         warn_explicit: function(){
