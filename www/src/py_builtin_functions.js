@@ -975,7 +975,6 @@ function in_mro(klass, attr){
 }
 
 $B.$getattr = function(obj, attr, _default){
-
     // Used internally to avoid having to parse the arguments
 
     attr = $B.to_alias(attr)
@@ -1003,7 +1002,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "pos" // && obj === $B // "Point"
+    var $test = false // attr == "__ceil__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1926,6 +1925,8 @@ var NotImplementedType = $B.make_class("NotImplementedType",
 NotImplementedType.__repr__ = NotImplementedType.__str__ = function(self){
     return "NotImplemented"
 }
+$B.set_func_names(NotImplementedType, "builtins")
+
 var NotImplemented = {
     __class__: NotImplementedType
 }
@@ -2923,18 +2924,49 @@ var zip = $B.make_class("zip",
             __class__:zip,
             items:[]
         }
-        if(arguments.length == 0) return res
+        if(arguments.length == 0){
+            return res
+        }
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
         var _args = $ns['args']
-        var args = []
-        for(var i = 0; i < _args.length; i++){args.push(iter(_args[i]))}
+        var args = [],
+            nexts = [],
+            only_lists = true,
+            min_len
+
+        for(var i = 0; i < _args.length; i++){
+            if(only_lists && Array.isArray(_args[i])){
+                if(min_len === undefined || _args[i].length < min_len){
+                    min_len = _args[i].length
+                }
+            }else{
+                only_lists = false
+            }
+            var _next = $B.$call($B.$getattr(iter(_args[i]), "__next__"))
+            args.push(_next)
+        }
+
         var rank = 0,
             items = []
+        if(only_lists){
+            $B.nb_zip_list = $B.nb_zip_list === undefined ?
+                1 : $B.nb_zip_list + 1
+            for(var i = 0; i < min_len; i++){
+                var line = []
+                for(var j = 0; j < _args.length; j++){
+                    line.push(_args[j][i])
+                }
+                items.push($B.fast_tuple(line))
+            }
+            res.items = items
+            return res
+        }
         while(1){
-            var line = [], flag = true
+            var line = [],
+                flag = true
             for(var i = 0; i < args.length; i++){
                 try{
-                    line.push(next(args[i]))
+                    line.push(args[i]())
                 }catch(err){
                     if(err.__class__ == _b_.StopIteration){
                         flag = false
@@ -2942,8 +2974,10 @@ var zip = $B.make_class("zip",
                     }else{throw err}
                 }
             }
-            if(!flag){break}
-            items[rank++] = _b_.tuple.$factory(line)
+            if(! flag){
+                break
+            }
+            items.push($B.fast_tuple(line))
         }
         res.items = items
         return res
