@@ -891,9 +891,11 @@ var _mod = {
         return $B.floordiv(fn, fn_k)
     },
     pi : float.$factory(Math.PI),
-    pow: function(x, y){
-        $B.check_nb_args('pow', 2, arguments)
-        $B.check_no_kw('pow', x,y)
+    pow: function(){
+        var $ = $B.args("pow", 2, {base: null, exp: null}, ['base', 'exp'],
+                    arguments, {}, null, null),
+            x = $.base,
+            y = $.exp
 
         var x1 = float_check(x)
         var y1 = float_check(y)
