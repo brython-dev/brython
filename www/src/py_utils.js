@@ -1431,6 +1431,9 @@ $B.mul = function(x, y){
 }
 
 $B.sub = function(x, y){
+    if(x instanceof Number && y instanceof Number){
+        return x - y
+    }
     var z = (typeof x != "number" || typeof y != "number") ?
                 new Number(x - y) : x - y
     if(x > min_int && x < max_int && y > min_int && y < max_int

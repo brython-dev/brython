@@ -454,6 +454,10 @@ function to_BigInt(x){
     return -res
 }
 
+function to_int(long_int){
+    return long_int.pos ? parseInt(long_int.value) : -parseInt(long_int.value)
+}
+
 function from_BigInt(y){
     var pos = y >= 0
     y = y.toString()
@@ -493,7 +497,7 @@ long_int.__abs__ = function(self){
 
 long_int.__add__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float.$factory(parseInt(self.value) + other.value)
+        return _b_.float.$factory(to_int(self) + other)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
@@ -647,7 +651,7 @@ long_int.__float__ = function(self){
 
 long_int.__floordiv__ = function(self, other){
     if(isinstance(other, _b_.float)){
-        return _b_.float.$factory(parseInt(self.value) / other)
+        return _b_.float.$factory(to_int(self) / other)
     }
     if(typeof other == "number"){
         var t = self.value,
@@ -800,7 +804,7 @@ long_int.__mul__ = function(self, other){
             else{return -self}
     }
     if(isinstance(other, _b_.float)){
-        return _b_.float.$factory(parseInt(self.value) * other)
+        return _b_.float.$factory(to_int(self) * other)
     }
     if(typeof other == "number"){
         other = long_int.$factory(other)
@@ -987,7 +991,7 @@ long_int.__str__ = long_int.__repr__ = function(self){
 long_int.__sub__ = function(self, other){
     if(isinstance(other, _b_.float)){
         other = other instanceof Number ? other : other.$brython_value
-        return _b_.float.$factory(parseInt(self.value) - other)
+        return _b_.float.$factory(to_int(self) - other)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
@@ -1035,11 +1039,11 @@ long_int.__sub__ = function(self, other){
 
 long_int.__truediv__ = function(self, other){
     if(isinstance(other, long_int)){
-        return _b_.float.$factory(parseInt(self.value) / parseInt(other.value))
+        return _b_.float.$factory(to_int(self) / to_int(other))
     }else if(isinstance(other,_b_.int)){
-        return _b_.float.$factory(parseInt(self.value) / other)
+        return _b_.float.$factory(to_int(self) / other)
     }else if(isinstance(other,_b_.float)){
-        return _b_.float.$factory(parseInt(self.value)/other)
+        return _b_.float.$factory(to_int(self) / other)
     }else{throw TypeError.$factory(
         "unsupported operand type(s) for /: 'int' and '" +
         $B.class_name(other) + "'")}

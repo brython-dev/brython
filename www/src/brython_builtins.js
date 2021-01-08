@@ -144,6 +144,9 @@ if($B.isWebWorker){
 $B.max_int = Math.pow(2, 53) - 1
 $B.min_int = -$B.max_int
 
+$B.max_float = new Number(Number.MAX_VALUE)
+$B.min_float = new Number(Number.MIN_VALUE)
+
 // Used to compute the hash value of some objects (see
 // py_builtin_functions.js)
 $B.$py_next_hash = Math.pow(2, 53) - 1

@@ -521,8 +521,8 @@ float.__ne__ = function(self, other){
     return res === _b_.NotImplemented ? res : ! res
 }
 
-float.__neg__ = function(self, other){
-    return float.$factory(-float_value(self))
+float.__neg__ = function(self){
+    return new Number(-float_value(self))
 }
 
 float.__new__ = function(cls, value){

@@ -251,7 +251,7 @@ class _float_info:
         self.dig = 15
         self.epsilon = 2 ** -52
         self.mant_dig = 53
-        self.max = javascript.Number.MAX_VALUE
+        self.max = __BRYTHON__.max_float
         self.max_exp = 2 ** 10
         self.max_10_exp = 308
         self.min = 2 ** (-1022)

@@ -33,39 +33,73 @@ var isOdd = function(x) {return isWholeNumber(x) && 2 * Math.floor(x / 2) != x}
 
 var isNegZero = function(x) {return x === 0 && Math.atan2(x,x) < 0}
 
-var EPSILON = Math.pow(2, -52);
-var MAX_VALUE = (2 - EPSILON) * Math.pow(2, 1023);
-var MIN_VALUE = Math.pow(2, -1022);
+var EPSILON = Math.pow(2, -52),
+    MAX_VALUE = (2 - EPSILON) * Math.pow(2, 1023);
+    MIN_VALUE = Math.pow(2, -1022);
 
 function nextUp(x){
     if(x !== x){
         return x
     }
-    if(x === -1 / 0){
+    if(_b_.$isinf(x)){
+        if(_b_.$isninf(x)){
+            return -MAX_VALUE
+        }
+        return _mod.inf
+    }
+    /*
+    if(x == -1 / 0){
         return -MAX_VALUE
     }
-    if(x === +1 / 0){
+    if(x == +1 / 0){
         return +1 / 0
     }
-    if(x === +MAX_VALUE){
+    */
+    if(x == +MAX_VALUE){
         return +1 / 0
     }
-    var y = x * (x < 0 ? 1 - EPSILON / 2 : 1 + EPSILON)
-    if(y === x){
-        y = MIN_VALUE * EPSILON > 0 ? x + MIN_VALUE * EPSILON : x + MIN_VALUE
+    if(typeof x == "number" || x instanceof Number){
+        var y = x * (x < 0 ? 1 - EPSILON / 2 : 1 + EPSILON)
+        if(y == x){
+            y = MIN_VALUE * EPSILON > 0 ? x + MIN_VALUE * EPSILON : x + MIN_VALUE
+        }
+        if(y === +1 / 0){
+            y = +MAX_VALUE
+        }
+        var b = x + (y - x) / 2
+        if(x < b && b < y){
+            y = b;
+        }
+        var c = (y + x) / 2
+        if(x < c && c < y){
+            y = c;
+        }
+        return y === 0 ? -0 : y
+    }else{
+        var factor = $B.rich_comp('__lt__', x, 0) ? 1 - EPSILON / 2 :
+                                                   1 + EPSILON
+        var y = $B.rich_op("mul", x , factor)
+        if(y == x){
+            y = MIN_VALUE * EPSILON > 0 ?
+                    $B.rich_op('add', x, MIN_VALUE * EPSILON) :
+                    $B.rich_op('add', x, MIN_VALUE)
+        }
+        if(y === +1 / 0){
+            y = +MAX_VALUE
+        }
+        var y_minus_x = $B.rich_op('sub', y, x)
+        var z = $B.rich_op('truediv', y_minus_x, 2) // (y - x) / 2
+
+        var b = $B.rich_op('add', x, z)
+        if($B.rich_comp('__lt__', x, b) && $B.rich_comp('__lt__', b, y)){
+            y = b;
+        }
+        var c = $B.rich_op('truediv', $B.rich_op('add', y, x), 2)
+        if($B.rich_comp('__lt__', x, c) && $B.rich_comp('__lt__', c, y)){
+            y = c;
+        }
+        return y === 0 ? -0 : y
     }
-    if(y === +1 / 0){
-        y = +MAX_VALUE
-    }
-    var b = x + (y - x) / 2
-    if(x < b && b < y){
-        y = b;
-    }
-    var c = (y + x) / 2
-    if(x < c && c < y){
-        y = c;
-    }
-    return y === 0 ? -0 : y
 }
 
 function gcd2(a, b){
@@ -825,7 +859,6 @@ var _mod = {
                     arguments, {}, null, null),
             x = $.x,
             y = $.y
-
         return y < x ? -nextUp(-x) : (y > x ? nextUp(x) : (x !== x ? x : y))
     },
     perm: function(n, k){
@@ -993,7 +1026,22 @@ var _mod = {
     ulp: function(){
         var $ = $B.args("ulp", 1, {x: null}, ['x'], arguments, {}, null, null),
             x = $.x
-        return x > 0 ? nextUp(x) - x : x - (-nextUp(-x))
+        if(x == MAX_VALUE){
+            return MAX_VALUE - _mod.nextafter(MAX_VALUE, 0)
+        }else if(_b_.$isinf(x)){
+            return _mod.inf
+        }
+        if(typeof x == "number" || x instanceof Number){
+            return x > 0 ? nextUp(x) - x : x - (-nextUp(-x))
+        }else{
+            if($B.rich_comp('__gt__', x, 0)){
+                return $B.rich_op('sub', nextUp(x), x)
+            }else{
+                var neg_x = $B.$call($B.$getattr(x, "__neg__"))()
+                return $B.rich_op('sub', x,
+                    $B.$call($B.$getattr(nextUp(neg_x), '__neg__'))())
+            }
+        }
     }
 }
 
