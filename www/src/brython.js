@@ -103,8 +103,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-07 13:06:10.739437"
-__BRYTHON__.timestamp=1610021170739
+__BRYTHON__.compiled_date="2021-01-08 09:16:01.563327"
+__BRYTHON__.timestamp=1610093761563
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -4712,25 +4712,25 @@ this.name="SurrogatePair"
 value=value-0x10000
 this.str=String.fromCharCode(0xD800 |(value >> 10))+
 String.fromCharCode(0xDC00 |(value & 0x3FF))}
-function test_escape(C,text,pos){
-var seq_start=pos-$pos-2,seq_end,mo
-mo=/^[0-7]{1,3}/.exec(text.substr(pos+1))
+function test_escape(C,text,string_start,antislash_pos){
+var seq_start=antislash_pos-string_start-1,seq_end,mo
+mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
 if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
-switch(text[pos+1]){case "x":
-var mo=/^[0-9A-F]{2}/i.exec(text.substr(pos+2))
-if(mo===null){seq_end=Math.min(seq_start+2,text.length-pos-3)
+switch(text[antislash_pos+1]){case "x":
+var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
+if(mo[0].length !=2){seq_end=seq_start+mo[0].length+1
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${seq_start}-${seq_end}:truncated `+
 "\\xXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "u":
-var mo=/^[0-9A-F]{4}/i.exec(text.substr(pos+2))
-if(mo===null){seq_end=Math.min(seq_start+4,text.length-pos-3)
+var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
+if(mo[0].length !=4){seq_end=seq_start+mo[0].length+1
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${seq_start}-${seq_end}:truncated `+
 "\\uXXXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "U":
-var mo=/^[0-9A-F]{8}/i.exec(text.substr(pos+2))
-if(mo===null){seq_end=Math.min(seq_start+8,text.length-pos-3)
+var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
+if(mo[0].length !=8){seq_end=seq_start+mo[0].length+1
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${seq_start}-${seq_end}:truncated `+
 "\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
@@ -4824,7 +4824,7 @@ if(end==-1){end=src.length-1}
 root.comments.push([pos,end])
 pos+=end+1
 continue}
-if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,bytes=false,fstring=false,sm_length,
+if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,string_start=pos,bytes=false,fstring=false,sm_length,
 end=null;
 if(string_modifier){switch(string_modifier){case 'r':
 raw=true
@@ -4881,7 +4881,7 @@ if(search===null){$_SyntaxError(C,"(unicode error) "+
 "unknown Unicode character name")}
 var cp="0x"+search[1]
 zone+=String.fromCodePoint(eval(cp))
-end=end_lit+1}else{end++}}else{var esc=test_escape(C,src,end)
+end=end_lit+1}else{end++}}else{var esc=test_escape(C,src,string_start,end)
 if(esc){if(!(esc[0]instanceof SurrogatePair)){zone+=esc[0]}else{zone+=esc[0].str}
 end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
@@ -6469,7 +6469,8 @@ return item.$brython_value}
 var method=$B.$getattr(item,"__index__",_b_.None)
 if(method !==_b_.None){method=typeof method=="function" ?
 method :$B.$getattr(method,"__call__")
-return $B.int_or_bool(method())}
+return $B.int_or_bool(method())}else{throw _b_.TypeError.$factory("'"+$B.class_name(item)+
+"' object cannot be interpreted as an integer")}
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(item)+
 "' object cannot be interpreted as an integer")}}

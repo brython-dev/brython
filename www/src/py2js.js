@@ -9698,23 +9698,23 @@ function SurrogatePair(value){
         String.fromCharCode(0xDC00 | (value & 0x3FF))
 }
 
-function test_escape(context, text, pos){
+function test_escape(context, text, string_start, antislash_pos){
     // Test if the escape sequence starting at position "pos" in text is
     // is valid
     // $pos is set at the position before the string quote
-    var seq_start = pos - $pos - 2,
+    var seq_start = antislash_pos - string_start - 1,
         seq_end,
         mo
     // 1 to 3 octal digits = Unicode char
-    mo = /^[0-7]{1,3}/.exec(text.substr(pos + 1))
+    mo = /^[0-7]{1,3}/.exec(text.substr(antislash_pos + 1))
     if(mo){
         return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
     }
-    switch(text[pos + 1]){
+    switch(text[antislash_pos + 1]){
         case "x":
-            var mo = /^[0-9A-F]{2}/i.exec(text.substr(pos + 2))
-            if(mo === null){
-                seq_end = Math.min(seq_start + 2, text.length - pos - 3)
+            var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
+            if(mo[0].length != 2){
+                seq_end = seq_start + mo[0].length + 1
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${seq_start}-${seq_end}: truncated ` +
@@ -9723,9 +9723,9 @@ function test_escape(context, text, pos){
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
         case "u":
-            var mo = /^[0-9A-F]{4}/i.exec(text.substr(pos + 2))
-            if(mo === null){
-                seq_end = Math.min(seq_start + 4, text.length - pos - 3)
+            var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
+            if(mo[0].length != 4){
+                seq_end = seq_start + mo[0].length + 1
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${seq_start}-${seq_end}: truncated ` +
@@ -9734,9 +9734,9 @@ function test_escape(context, text, pos){
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
         case "U":
-            var mo = /^[0-9A-F]{8}/i.exec(text.substr(pos + 2))
-            if(mo === null){
-                seq_end = Math.min(seq_start + 8, text.length - pos - 3)
+            var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
+            if(mo[0].length != 8){
+                seq_end = seq_start + mo[0].length + 1
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${seq_start}-${seq_end}: truncated ` +
@@ -9994,6 +9994,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         // string
         if(car == '"' || car == "'"){
             var raw = context.type == 'str' && context.raw,
+                string_start = pos,
                 bytes = false,
                 fstring = false,
                 sm_length, // length of string modifier
@@ -10109,7 +10110,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                                 end++
                             }
                         }else{
-                            var esc = test_escape(context, src, end)
+                            var esc = test_escape(context, src, string_start,
+                                                  end)
                             if(esc){
                                 if(! (esc[0] instanceof SurrogatePair)){
                                     zone += esc[0]
