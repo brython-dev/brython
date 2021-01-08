@@ -1156,6 +1156,9 @@ $B.PyNumber_Index = function(item){
                 method = typeof method == "function" ?
                             method : $B.$getattr(method, "__call__")
                 return $B.int_or_bool(method())
+            }else{
+                throw _b_.TypeError.$factory("'" + $B.class_name(item) +
+                    "' object cannot be interpreted as an integer")
             }
         default:
             throw _b_.TypeError.$factory("'" + $B.class_name(item) +

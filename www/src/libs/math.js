@@ -16,7 +16,7 @@ var float_check = function(x) {
 }
 
 function check_int(x){
-    if((typeof x !== "number") || ! _b_.isinstance(x, int)){
+    if(! _b_.isinstance(x, int)){
         throw _b_.TypeError.$factory("'" + $B.class_name(x) +
             "' object cannot be interpreted as an integer")
     }
@@ -66,6 +66,25 @@ function nextUp(x){
         y = c;
     }
     return y === 0 ? -0 : y
+}
+
+function gcd2(a, b){
+    // GCD of 2 factors
+    if($B.rich_comp("__gt__", b, a)){
+        var temp = a
+        a = b
+        b = temp
+    }
+    while(true){
+        if(b == 0){
+            return a
+        }
+        a = $B.rich_op("mod", a, b)
+        if(a == 0){
+            return b
+        }
+        b = $B.rich_op("mod", b, a)
+    }
 }
 
 var _mod = {
@@ -591,29 +610,21 @@ var _mod = {
         return drop_imag(y)
     },
     gcd: function(){
-        var $ = $B.args("gcd", 2, {a: null, b: null}, ['a', 'b'],
-                arguments, {}, null, null),
-            a = $B.PyNumber_Index($.a),
-            b = $B.PyNumber_Index($.b)
-        if(a == 0 && b == 0){return 0}
+        var $ = $B.args("gcd", 0, {}, [], arguments, {}, 'args', null)
+        var args = $.args.map($B.PyNumber_Index)
+
+        if(args.length == 0){
+            return 0
+        }else if(args.length == 1){
+            return _b_.abs(args[0])
+        }
         // https://stackoverflow.com/questions/17445231/js-how-to-find-the-greatest-common-divisor
-        a = _b_.abs(a)
-        b = _b_.abs(b)
-        if($B.rich_comp("__gt__", b, a)){
-            var temp = a
-            a = b
-            b = temp
+        var a = _b_.abs(args[0]),
+            b
+        for(var i = 1, len = args.length; i < len; i++){
+            a = gcd2(a, _b_.abs(args[i]))
         }
-        while(true){
-            if(b == 0){
-                return a
-            }
-            a = $B.rich_op("mod", a, b)
-            if(a == 0){
-                return b
-            }
-            b = $B.rich_op("mod", b, a)
-        }
+        return a
     },
     hypot: function(x, y){
         var $ = $B.args("hypot", 2, {x: null, y:null}, ['x', 'y'],
@@ -720,11 +731,26 @@ var _mod = {
     lcm: function(){
         var $ = $B.args("lcm", 0, {}, [], arguments, {}, 'args', null),
             product = 1
-        for(var arg of $.args){
-            product = $B.mul(product, $B.PyNumber_Index(arg))
+
+        var args = $.args.map($B.PyNumber_Index)
+        if(args.length == 0){
+            return 1
+        }else if(args.length == 1){
+            return _b_.abs(args[0])
         }
-        var gcd = $module.gcd.apply(null, arguments)
-        return $B.$getattr(product, "__floordiv__")(gcd)
+        var a = _b_.abs(args[0]),
+            b,
+            product, gcd
+        for(var i = 0, len = args.length; i < len; i++){
+            b = _b_.abs(args[i])
+            if(b == 0){
+                return 0
+            }
+            gcd = gcd2(a, b)
+            product = $B.mul(a, b)
+            a = $B.$getattr(product, "__floordiv__")(gcd)
+        }
+        return a
     },
     ldexp: function(x, i){
         $B.check_nb_args('ldexp', 2, arguments)
