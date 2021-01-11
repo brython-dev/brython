@@ -29,6 +29,8 @@ var long_int = {
     }
 }
 
+var max_safe_divider = $B.max_int / 9
+
 function add_pos(v1, v2){
     // Add two positive numbers
     // v1, v2 : strings
@@ -160,63 +162,39 @@ function divmod_by_safe_int(t, n){
 
     if(n == 1){return [t, 0]}
 
-    // Number of digits such that each intermediate result is a safe integer
-    var len = (Math.floor((Math.pow(2, 53) - 1) / n) + '').length - 1,
-        nb_chunks = Math.ceil(t.length / len), // number of items after split
-        chunks = [],
-        pos,
-        start,
-        nb,
-        in_base = []
+    // Manual division algorithm for Q = A / B
+    // L is the length of B
+    // First take the L first digits in A : gives number A0
+    // First quotient digit Q0 = A0 // B
+    // Rest R0 = A0 - B * Q0
+    // A1 is R0 + the next digit in A
+    // Continue until all digits in A are read
 
-    // Split string into chunks of at most len digits
-    for(var i = 0; i < nb_chunks; i++){
-        pos = t.length - (i + 1) * len
-        start = Math.max(0, pos)
-        nb = pos - start
-        chunks.push(t.substr(start, len + nb))
+    var T = t.toString(),
+        L = n.toString().length,
+        a = parseInt(T.substr(0, L)),
+        next_pos = L - 1,
+        quotient = '',
+        q,
+        rest
+
+    while(true){
+        q = Math.floor(a / n)
+        rest = a - q * n
+        quotient += q
+        next_pos++
+        if(next_pos >= T.length){
+            return [quotient, rest]
+        }
+        a = 10 * rest + parseInt(T[next_pos])
     }
-    chunks = chunks.reverse()
-
-    // Transform into (safe) integers
-    chunks.forEach(function(chunk, i){
-        chunks[i] = parseInt(chunk)
-    })
-
-    var rest,
-        carry = Math.pow(10, len),
-        x
-
-    chunks.forEach(function(chunk, i){
-        rest = chunk % n
-        chunks[i] = Math.floor(chunk / n)
-        if(i < chunks.length - 1){
-            // len is such that that this number is a safe integer
-            chunks[i + 1] += carry * rest
-        }
-    })
-    while(chunks[0] == 0){
-        chunks.shift()
-        if(chunks.length == 0){
-            return [0, rest]
-        }
-    }
-
-    // Build result string
-    x = chunks[0] + ''
-    chunks.forEach(function(chunk, i){
-        if(i > 0){ // Pad with 0 if required
-            x += "0".repeat(len - chunk.toString().length) + chunk
-        }
-    })
-    return [x, rest]
 }
 
 function divmod_pos(v1, v2){
     // v1, v2 : strings, represent 2 positive integers A and B
     // Return [a, b] where a and b are instances of long_int
     // a = A // B, b = A % B
-    if(window.BigInt){
+    if($B.BigInt){
         var a = {
             __class__: long_int,
             value: (BigInt(v1) / BigInt(v2)).toString(),
@@ -241,7 +219,7 @@ function divmod_pos(v1, v2){
             {__class__:long_int, value: rest.toString(), pos: true}
         ]
         return res1
-    }else if(iv2 < $B.max_int){
+    }else if(iv2 < max_safe_divider){
         var res_safe = divmod_by_safe_int(v1, iv2)
         return [long_int.$factory(res_safe[0]), long_int.$factory(res_safe[1])]
     }
@@ -324,11 +302,9 @@ function split_chunks(s, size){
 }
 
 function mul_pos(x, y){
-    if(window.BigInt){
-        return {__class__: long_int,
-                value: (BigInt(x) * BigInt(y)).toString(),
-                pos: true
-        }
+    if($B.BigInt){
+        // always return a long int
+        return long_int.$factory(from_BigInt(BigInt(x) * BigInt(y)))
     }
     var ix = parseInt(x),
         iy = parseInt(y),
@@ -512,7 +488,7 @@ long_int.__add__ = function(self, other){
         }
     }
     if($B.BigInt){
-        //return from_BigInt(to_BigInt(self) + to_BigInt(other))
+        return from_BigInt(to_BigInt(self) + to_BigInt(other))
     }
 
     // Addition of "self" and "other"
@@ -653,7 +629,7 @@ long_int.__floordiv__ = function(self, other){
     if(isinstance(other, _b_.float)){
         return _b_.float.$factory(to_int(self) / other)
     }
-    if(typeof other == "number"){
+    if(typeof other == "number" && Math.abs(other) < $B.max_safe_divider){
         var t = self.value,
             res = divmod_by_safe_int(t, other),
             pos = other > 0 ? self.pos : !self.pos
@@ -661,7 +637,8 @@ long_int.__floordiv__ = function(self, other){
                 value: res[0],
                 pos: pos}
     }
-    return intOrLong(long_int.__divmod__(self, other)[0])
+    var res = intOrLong(long_int.__divmod__(self, other)[0])
+    return res
 }
 
 long_int.__ge__ = function(self, other){

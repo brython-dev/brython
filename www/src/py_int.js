@@ -786,13 +786,15 @@ int.$factory = function(value, base){
         return int.$factory($B.$getattr(value, "decode")("latin-1"), base)
     }
 
-    var num_value = $B.to_num(value, ["__int__", "__index__", "__trunc__"])
-    if(num_value === null){
-        throw _b_.TypeError.$factory(
-            "int() argument must be a string, a bytes-like " +
-            "object or a number, not '" + $B.class_name(value) + "'")
+    for(var special_method of ["__int__", "__index__", "__trunc__"]){
+        var num_value = $B.$getattr(value, special_method, _b_.None)
+        if(num_value !== _b_.None){
+            return $B.$call(num_value)()
+        }
     }
-    return num_value
+    throw _b_.TypeError.$factory(
+        "int() argument must be a string, a bytes-like " +
+        "object or a number, not '" + $B.class_name(value) + "'")
 }
 
 $B.set_func_names(int, "builtins")

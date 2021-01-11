@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-08 16:12:53.298793"
-__BRYTHON__.timestamp=1610118773298
+__BRYTHON__.compiled_date="2021-01-11 15:09:45.002663"
+__BRYTHON__.timestamp=1610374185002
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -9894,6 +9894,7 @@ float.denominator=function(self){return _b_.int.$factory(1)}
 float.imag=function(self){return _b_.int.$factory(0)}
 float.real=function(self){return float_value(self)}
 float.__float__=function(self){return float_value(self)}
+$B.shift1_cache={}
 float.as_integer_ratio=function(self){self=float_value(self)
 if(self.valueOf()==Number.POSITIVE_INFINITY ||
 self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
@@ -9903,12 +9904,15 @@ if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass
 var tmp=_b_.$frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
 for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp*=2
 exponent--}}
-numerator=float.$factory(fp)
+numerator=_b_.int.$factory(fp)
 py_exponent=abs(exponent)
 denominator=1
-py_exponent=_b_.getattr(_b_.int.$factory(denominator),"__lshift__")(py_exponent)
-if(exponent > 0){numerator=numerator*py_exponent}else{denominator=py_exponent}
-return _b_.tuple.$factory([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
+var x
+if($B.shift1_cache[py_exponent]!==undefined){x=$B.shift1_cache[py_exponent]}else{x=$B.$getattr(1,"__lshift__")(py_exponent)
+$B.shift1_cache[py_exponent]=x}
+py_exponent=x
+if(exponent > 0){numerator=$B.rich_op("mul",numerator,py_exponent)}else{denominator=py_exponent}
+return $B.fast_tuple([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
 float.__abs__=function(self){return new Number(Math.abs(float_value(self)))}
 float.__bool__=function(self){self=float_value(self)
 return _b_.bool.$factory(self.valueOf())}
@@ -9945,8 +9949,11 @@ case "-nan":
 return $FloatClass(-Number.NaN)
 case "":
 throw _b_.ValueError.$factory("could not convert string to float")}
-var _m=/^(\d*\.?\d*)$/.exec(value)
-if(_m !==null){return $FloatClass(parseFloat(_m[1]))}
+var mo=/^(\d*)(\.?)(\d*)$/.exec(value)
+if(mo !==null){var res=parseFloat(mo[1]),coef=16
+if(mo[2]){for(var digit of mo[3]){res+=parseInt(digit,16)/coef
+coef*=16}}
+return $FloatClass(res)}
 var _m=/^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
 if(_m==null){throw _b_.ValueError.$factory("invalid hexadecimal floating-point string")}
 var _sign=_m[1],_int=parseInt(_m[3]||'0',16),_fraction=_m[4]||'.0',_exponent=_m[5]||'p0'
@@ -10033,8 +10040,7 @@ _b_.$fabs=function(x){if(x==0){return new Number(0)}
 return x > 0 ? float.$factory(x):float.$factory(-x)}
 _b_.$frexp=function(x){var x1=x
 if(isinstance(x,float)){x1=x.valueOf()}
-if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}
-if(x1==0){return[0,0]}
+if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}else if(x1==0){return[0,0]}
 var sign=1,ex=0,man=x1
 if(man < 0.){sign=-sign
 man=-man}
@@ -10594,11 +10600,11 @@ var res=parseInt(value,base)
 if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}
 if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
-var num_value=$B.to_num(value,["__int__","__index__","__trunc__"])
-if(num_value===null){throw _b_.TypeError.$factory(
+for(var special_method of["__int__","__index__","__trunc__"]){var num_value=$B.$getattr(value,special_method,_b_.None)
+if(num_value !==_b_.None){return $B.$call(num_value)()}}
+throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like "+
 "object or a number, not '"+$B.class_name(value)+"'")}
-return num_value}
 $B.set_func_names(int,"builtins")
 _b_.int=int
 $B.$bool=function(obj){
@@ -10647,6 +10653,7 @@ var bltns=$B.InjectBuiltins()
 eval(bltns)
 try{eval("window")}catch(err){window=self}
 var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+var max_safe_divider=$B.max_int/9
 function add_pos(v1,v2){
 if(window.BigInt){return{
 __class__:long_int,value:(BigInt(v1)+BigInt(v2)).toString(),pos:true}}
@@ -10704,33 +10711,21 @@ else if(v1 < v2){return-1}}
 return 0}
 function divmod_by_safe_int(t,n){
 if(n==1){return[t,0]}
-var len=(Math.floor((Math.pow(2,53)-1)/n)+'').length-1,nb_chunks=Math.ceil(t.length/len),
-chunks=[],pos,start,nb,in_base=[]
-for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
-start=Math.max(0,pos)
-nb=pos-start
-chunks.push(t.substr(start,len+nb))}
-chunks=chunks.reverse()
-chunks.forEach(function(chunk,i){chunks[i]=parseInt(chunk)})
-var rest,carry=Math.pow(10,len),x
-chunks.forEach(function(chunk,i){rest=chunk % n
-chunks[i]=Math.floor(chunk/n)
-if(i < chunks.length-1){
-chunks[i+1]+=carry*rest}})
-while(chunks[0]==0){chunks.shift()
-if(chunks.length==0){return[0,rest]}}
-x=chunks[0]+''
-chunks.forEach(function(chunk,i){if(i > 0){
-x+="0".repeat(len-chunk.toString().length)+chunk}})
-return[x,rest]}
+var T=t.toString(),L=n.toString().length,a=parseInt(T.substr(0,L)),next_pos=L-1,quotient='',q,rest
+while(true){q=Math.floor(a/n)
+rest=a-q*n
+quotient+=q
+next_pos++
+if(next_pos >=T.length){return[quotient,rest]}
+a=10*rest+parseInt(T[next_pos])}}
 function divmod_pos(v1,v2){
-if(window.BigInt){var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
+if($B.BigInt){var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
 return[a,b]}
 var iv1=parseInt(v1),iv2=parseInt(v2),res1
 if(iv1 < $B.max_int && iv2 < $B.max_int){var rest=iv1 % iv2,quot=Math.floor(iv1/iv2).toString()
 var res1=[{__class__:long_int,value:quot.toString(),pos:true},{__class__:long_int,value:rest.toString(),pos:true}
 ]
-return res1}else if(iv2 < $B.max_int){var res_safe=divmod_by_safe_int(v1,iv2)
+return res1}else if(iv2 < max_safe_divider){var res_safe=divmod_by_safe_int(v1,iv2)
 return[long_int.$factory(res_safe[0]),long_int.$factory(res_safe[1])]}
 var quotient,mod
 if(comp_pos(v1,v2)==-1){
@@ -10761,7 +10756,8 @@ for(var i=0;i < nb;i++){var pos=len-size*(i+1)
 if(pos < 0){size+=pos;pos=0}
 chunks.push(parseInt(s.substr(pos,size)))}
 return chunks}
-function mul_pos(x,y){if(window.BigInt){return{__class__:long_int,value:(BigInt(x)*BigInt(y)).toString(),pos:true}}
+function mul_pos(x,y){if($B.BigInt){
+return long_int.$factory(from_BigInt(BigInt(x)*BigInt(y)))}
 var ix=parseInt(x),iy=parseInt(y),z=ix*iy
 if(z < $B.max_int){return{
 __class__:long_int,value:z.toString(),pos:true}}
@@ -10818,7 +10814,7 @@ long_int.__abs__=function(self){return{__class__:long_int,value:self.value,pos:t
 long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)+other)}
 if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 :0)}else if(isinstance(other,int)){
 other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}else{return _b_.NotImplemented}}
-if($B.BigInt){}
+if($B.BigInt){return from_BigInt(to_BigInt(self)+to_BigInt(other))}
 var res
 if(self.pos && other.pos){
 return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
@@ -10875,9 +10871,10 @@ return self.value==other.value && self.pos==other.pos}
 long_int.__float__=function(self){if(! isFinite(parseFloat(self.value))){throw _b_.OverflowError.$factory("int too big to convert to float")}
 return new Number(parseFloat(self.value))}
 long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)/other)}
-if(typeof other=="number"){var t=self.value,res=divmod_by_safe_int(t,other),pos=other > 0 ? self.pos :!self.pos
+if(typeof other=="number" && Math.abs(other)< $B.max_safe_divider){var t=self.value,res=divmod_by_safe_int(t,other),pos=other > 0 ? self.pos :!self.pos
 return{__class__:long_int,value:res[0],pos:pos}}
-return intOrLong(long_int.__divmod__(self,other)[0])}
+var res=intOrLong(long_int.__divmod__(self,other)[0])
+return res}
 long_int.__ge__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 if(self.pos !=other.pos){return ! other.pos}
 if(self.value.length > other.value.length){return self.pos}

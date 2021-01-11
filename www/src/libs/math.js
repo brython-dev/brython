@@ -970,6 +970,29 @@ var _mod = {
 
         return float.$factory(float_check(x) * Math.PI / 180)
     },
+    remainder: function(x, y){
+        $B.check_nb_args('remainder', 2, arguments)
+        $B.check_no_kw('remainder', x, y)
+        if(_mod.isnan(x) || _mod.isnan(y)){
+            return _mod.nan
+        }
+        if(_b_.$isinf(x) || y == 0){
+            throw _b_.ValueError.$factory("math domain error")
+        }
+        x = float_check(x)
+        y = float_check(y)
+        var quotient = x / y,
+            rounded = _b_.round(quotient)
+        if(rounded == 0){
+            return _b_.float.$factory(x)
+        }
+        var res = _b_.float.$factory(x - rounded * y)
+        if(_b_.$isinf(res)){
+            // happens if rounded * y is infinite
+            res = _b_.float.$factory(rounded * (x / rounded - y))
+        }
+        return res
+    },
     sin : function(x){
         $B.check_nb_args('sin ', 1, arguments)
         $B.check_no_kw('sin ', x)

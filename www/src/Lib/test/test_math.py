@@ -1287,7 +1287,7 @@ class MathTests(unittest.TestCase):
         self.ftest('radians(0)', math.radians(0), 0)
 
     @requires_IEEE_754
-    def _testRemainder(self): # too long (first one takes 20 minutes !)
+    def testRemainder(self):
         from fractions import Fraction
 
         def validate_spec(x, y, r):

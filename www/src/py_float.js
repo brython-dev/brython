@@ -41,6 +41,9 @@ float.imag = function(self){return _b_.int.$factory(0)}
 float.real = function(self){return float_value(self)}
 float.__float__ = function(self){return float_value(self)}
 
+// cache lshifts of 1
+$B.shift1_cache = {}
+
 float.as_integer_ratio = function(self){
     self = float_value(self)
 
@@ -67,19 +70,24 @@ float.as_integer_ratio = function(self){
         }
     }
 
-    numerator = float.$factory(fp)
+    numerator = _b_.int.$factory(fp)
     py_exponent = abs(exponent)
     denominator = 1
-
-    py_exponent = _b_.getattr(_b_.int.$factory(denominator),
-        "__lshift__")(py_exponent)
+    var x
+    if($B.shift1_cache[py_exponent] !== undefined){
+        x = $B.shift1_cache[py_exponent]
+    }else{
+        x = $B.$getattr(1, "__lshift__")(py_exponent)
+        $B.shift1_cache[py_exponent] = x
+    }
+    py_exponent = x
     if(exponent > 0){
-        numerator = numerator * py_exponent
+        numerator = $B.rich_op("mul", numerator, py_exponent)
     }else{
         denominator = py_exponent
     }
 
-    return _b_.tuple.$factory([_b_.int.$factory(numerator),
+    return $B.fast_tuple([_b_.int.$factory(numerator),
         _b_.int.$factory(denominator)])
 }
 
@@ -149,9 +157,19 @@ float.fromhex = function(arg){
           throw _b_.ValueError.$factory("could not convert string to float")
    }
 
-   var _m = /^(\d*\.?\d*)$/.exec(value)
+   var mo = /^(\d*)(\.?)(\d*)$/.exec(value)
 
-   if(_m !== null){return $FloatClass(parseFloat(_m[1]))}
+   if(mo !== null){
+       var res = parseFloat(mo[1]),
+           coef = 16
+       if(mo[2]){
+           for(var digit of mo[3]){
+               res += parseInt(digit, 16) / coef
+               coef *= 16
+           }
+       }
+       return $FloatClass(res)
+   }
 
    // lets see if this is a hex string.
    var _m = /^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
@@ -368,10 +386,15 @@ _b_.$fabs = function(x){
 
 _b_.$frexp = function(x){
     var x1 = x
-    if(isinstance(x, float)){x1 = x.valueOf()}
+    if(isinstance(x, float)){
+        x1 = x.valueOf()
+    }
 
-    if(isNaN(x1) || _b_.$isinf(x1)){return [x1, -1]}
-    if (x1 == 0){return [0, 0]}
+    if(isNaN(x1) || _b_.$isinf(x1)){
+        return [x1, -1]
+    }else if (x1 == 0){
+        return [0, 0]
+    }
 
     var sign = 1,
         ex = 0,
