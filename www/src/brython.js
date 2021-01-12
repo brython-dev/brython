@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-12 10:20:07.588624"
-__BRYTHON__.timestamp=1610443207588
+__BRYTHON__.compiled_date="2021-01-12 10:30:03.270935"
+__BRYTHON__.timestamp=1610443803270
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -7313,7 +7313,7 @@ break
 default:
 throw _b_.TypeError.$factory("'"+attr+
 "' is an invalid keyword argument for this function")}}}
-if(!func){func=function(x){return x}}
+if((! func)||func===_b_.None){func=function(x){return x}}
 if(nb_args==0){throw _b_.TypeError.$factory($op_name+" expected 1 argument, got 0")}else if(nb_args==1){
 var $iter=iter(args[0]),res=null
 while(true){try{var x=next($iter)

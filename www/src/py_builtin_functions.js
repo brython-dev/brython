@@ -1738,7 +1738,9 @@ function $extreme(args, op){ // used by min() and max()
             }
         }
     }
-    if(!func){func = function(x){return x}}
+    if((! func) || func === _b_.None){
+        func = function(x){return x}
+    }
     if(nb_args == 0){
         throw _b_.TypeError.$factory($op_name + " expected 1 argument, got 0")
     }else if(nb_args == 1){

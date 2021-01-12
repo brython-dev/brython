@@ -2831,6 +2831,9 @@ assert y == (97, 98, 99)
 z = [*'spam']
 assert z == ['s', 'p', 'a', 'm']
 
+# issue 1582
+assert max([1, 2, 3], key=None) == 3
+assert min([1, 2, 3], key=None) == 1
 
 # ==========================================
 # Finally, report that all tests have passed
