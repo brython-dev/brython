@@ -583,5 +583,17 @@ for value in values:
         b = int.to_bytes(value[0], 12, byteorder)
         assert b == value[1 + i]
         assert int.from_bytes(b, byteorder) == value[0]
-        
+
+# issue 1578
+assert str(1e-6) == "1e-06"
+assert str(1e-7) == "1e-07"
+assert str(1e-8) == "1e-08"
+assert str(1e-12) == "1e-12"
+assert str(1.2e-123) == "1.2e-123"
+assert str(1e6) == "1000000.0"
+assert str(1e7) == "10000000.0"
+assert str(1e8) == "100000000.0"
+assert str(1e12) == "1000000000000.0"
+assert str(1.2e123) == "1.2e+123"
+
 print('passed all tests...')

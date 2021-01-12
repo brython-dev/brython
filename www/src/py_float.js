@@ -615,10 +615,13 @@ float.__pow__ = function(self, other){
 
 float.__repr__ = float.__str__ = function(self){
     self = float_value(self).valueOf()
-    if(self == Infinity){return 'inf'}
-    if(self == -Infinity){return '-inf'}
-    if(isNaN(self)){return 'nan'}
-    if(self === 0){
+    if(self == Infinity){
+        return 'inf'
+    }else if(self == -Infinity){
+        return '-inf'
+    }else if(isNaN(self)){
+        return 'nan'
+    }else if(self === 0){
         if(1 / self === -Infinity){
             return '-0.0'
         }
@@ -628,6 +631,18 @@ float.__repr__ = float.__str__ = function(self){
     var res = self + "" // coerce to string
     if(res.indexOf(".") == -1){
         res += ".0"
+    }
+    var split_e = res.split(/e/i)
+    if(split_e.length == 2){
+        var mant = split_e[0],
+            exp = split_e[1]
+        if(exp.startsWith('-')){
+            exp_str = parseInt(exp.substr(1)) + ''
+            if(exp_str.length < 2){
+                exp_str = '0' + exp_str
+            }
+            return mant + 'e-' + exp_str
+        }
     }
     var x, y
     [x, y] = res.split('.')

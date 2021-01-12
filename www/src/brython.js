@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-11 15:09:45.002663"
-__BRYTHON__.timestamp=1610374185002
+__BRYTHON__.compiled_date="2021-01-12 10:20:07.588624"
+__BRYTHON__.timestamp=1610443207588
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -10142,13 +10142,15 @@ return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
 if(hasattr(other,"__rpow__")){return getattr(other,"__rpow__")(self)}
 $err("** or pow()",other)}
 float.__repr__=float.__str__=function(self){self=float_value(self).valueOf()
-if(self==Infinity){return 'inf'}
-if(self==-Infinity){return '-inf'}
-if(isNaN(self)){return 'nan'}
-if(self===0){if(1/self===-Infinity){return '-0.0'}
+if(self==Infinity){return 'inf'}else if(self==-Infinity){return '-inf'}else if(isNaN(self)){return 'nan'}else if(self===0){if(1/self===-Infinity){return '-0.0'}
 return '0.0'}
 var res=self+"" 
 if(res.indexOf(".")==-1){res+=".0"}
+var split_e=res.split(/e/i)
+if(split_e.length==2){var mant=split_e[0],exp=split_e[1]
+if(exp.startsWith('-')){exp_str=parseInt(exp.substr(1))+''
+if(exp_str.length < 2){exp_str='0'+exp_str}
+return mant+'e-'+exp_str}}
 var x,y
 [x,y]=res.split('.')
 if(x.length > 16){var exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
@@ -10600,8 +10602,8 @@ var res=parseInt(value,base)
 if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
 return res}
 if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
-for(var special_method of["__int__","__index__","__trunc__"]){var num_value=$B.$getattr(value,special_method,_b_.None)
-if(num_value !==_b_.None){return $B.$call(num_value)()}}
+for(var special_method of["__int__","__index__","__trunc__"]){var num_value=$B.$getattr(value.__class__ ||$B.get_class(value),special_method,_b_.None)
+if(num_value !==_b_.None){return $B.$call(num_value)(value)}}
 throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like "+
 "object or a number, not '"+$B.class_name(value)+"'")}
