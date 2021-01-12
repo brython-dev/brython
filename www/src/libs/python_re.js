@@ -191,7 +191,6 @@ BackReference.prototype.match = function(string, pos){
     if(group){
         // compare string codepoints starting at pos with the group codepoints
         var group_cps = group.item.match_codepoints
-        console.log("group_cps", group_cps, string, pos, string.codepoints[pos])
         if(group_cps.length == 0){
             return false
         }
@@ -204,7 +203,6 @@ BackReference.prototype.match = function(string, pos){
         for(var group of this.groups){
             group.match_codepoints = group.match_codepoints.concat(cps)
         }
-        console.log("match backref ok", group, cps)
         return cps
     }
     return false
@@ -384,6 +382,12 @@ Char.prototype.match = function(string, pos){
                         is_word[cp] != is_word[string.codepoints[pos - 1]]
                 return test ? [] : false
                 break
+            case 'w':
+                test = is_word[cp]
+                break
+            case 'W':
+                test = ! is_word[cp]
+                break
         }
     }else if(this.char && ! this.char.items){
         if(this.flags && this.flags.value & IGNORECASE.value){
@@ -521,6 +525,10 @@ Group.prototype.match = function(s, pos){
         return false
     }else{
         group_match = match(this, s, pos)
+        if(group_match){
+            this.match_start = group_match.start
+            this.match_end = group_match.end
+        }
     }
     if(group_match){
         if(this.repeat){
@@ -1122,14 +1130,19 @@ function compile(pattern, flags){
                     previous instanceof Group ||
                     previous instanceof BackReference){
                 if(previous.repeat){
-                    fail("multiple repeat", pos)
-                }
-                previous.repeat = item
-                // mark all parents of item as no fixed length
-                var parent = item
-                while(parent){
-                    parent.fixed_length = false
-                    parent = parent.parent
+                    if(previous.repeat.op != "?" && ! previous.repeat.greedy){
+                        previous.repeat.greedy = true
+                    }else{
+                        fail("multiple repeat", pos)
+                    }
+                }else{
+                    previous.repeat = item
+                    // mark all parents of item as no fixed length
+                    var parent = item
+                    while(parent){
+                        parent.fixed_length = false
+                        parent = parent.parent
+                    }
                 }
             }else{
                 fail("nothing to repeat", pos)
@@ -1487,6 +1500,10 @@ function* tokenize(pattern){
                 }else{
                     yield new Repeater(pos, limits)
                 }
+            }else if(pattern[pos + 1] == '}'){
+                // {} is the characters "{" and "}"
+                yield new Char(pos, '{')
+                pos++
             }else{
                 fail('{ not terminated', pos)
             }
@@ -1771,6 +1788,10 @@ MatchObject.prototype.group = function(group_num){
         var item = this.re.$groups[group_num].item
         if(item.nb_success == 0){
             return _b_.None
+        }
+        if(item.repeat){
+            return this.string.substring(item.match_start,
+                item.match_end)
         }
         return from_codepoint_list(item.match_codepoints)
     }else if(_b_.isinstance(group_num, _b_.str)){
@@ -2448,11 +2469,9 @@ var $module = {
                             res.push(m)
                         }
                     }else{
-                        cps = groups[key].item.match_codepoints
-                        if(groups[key].item.repeat){
-                            cps = [cps[cps.length - 1]]
-                        }
-                        res.push(from_codepoint_list(cps))
+                        var item = groups[key].item
+                        res.push(data.string.substring(item.match_start,
+                            item.match_end))
                     }
                 }
             }
