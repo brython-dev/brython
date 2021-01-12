@@ -787,9 +787,10 @@ int.$factory = function(value, base){
     }
 
     for(var special_method of ["__int__", "__index__", "__trunc__"]){
-        var num_value = $B.$getattr(value, special_method, _b_.None)
+        var num_value = $B.$getattr(value.__class__ || $B.get_class(value), 
+            special_method, _b_.None)
         if(num_value !== _b_.None){
-            return $B.$call(num_value)()
+            return $B.$call(num_value)(value)
         }
     }
     throw _b_.TypeError.$factory(
