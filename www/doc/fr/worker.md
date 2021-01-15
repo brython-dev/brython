@@ -73,7 +73,7 @@ worker.bind("message", callback)
 > on peut utiliser la fonction `bind()` du module **browser** comme décorateur:
 <blockquote>
 ```python
-frow browser import bind
+from browser import bind
 
 @bind(worker, "message")
 def callback(evt):
@@ -122,7 +122,7 @@ self.bind("message", callback)
 > on peut utiliser la fonction `bind()` du module **browser** comme décorateur:
 <blockquote>
 ```python
-frow browser import bind, self
+from browser import bind, self
 
 @bind(self, "message")
 def callback(evt):
