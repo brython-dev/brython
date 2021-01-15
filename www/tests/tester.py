@@ -132,7 +132,7 @@ class Tester:
             raise AssertionError(msg or '%s is not True' %item)
 
     def assertFalse(self, item, msg=None):
-        if item is not False:
+        if item:
             raise AssertionError(msg or '%s is not False' %item)
 
     def fail(self, *args):
@@ -164,6 +164,18 @@ class Tester:
                     report.add(method[5:], lineno,
                         round((time.time()-t0)*1000), 'failed')
         return report
+
+    def subTest(self, *args):
+
+        class Manager:
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                pass
+
+        return Manager()
 
 class MethodReport:
     """Stores the results on a method : line number, execution time, status
