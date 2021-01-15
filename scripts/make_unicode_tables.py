@@ -1,7 +1,7 @@
 import os
 import urllib.request
 
-unicode_url = "https://www.unicode.org/Public/5.2.0/ucd/"
+unicode_url = "https://www.unicode.org/Public/UCD/latest/ucd/"
 
 # Load required files from unicode.org
 if not os.path.exists("ucd"):
@@ -9,7 +9,7 @@ if not os.path.exists("ucd"):
 
 for path in ["UnicodeData.txt", "CaseFolding.txt", "DerivedCoreProperties.txt"]:
     abs_path = os.path.join("ucd", path)
-    if not os.path.exists(abs_path):
+    if True: #not os.path.exists(abs_path):
         f = urllib.request.urlopen(unicode_url + path)
         print(f)
         with open(abs_path, "wb") as out:
