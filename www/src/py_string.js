@@ -84,10 +84,7 @@ str.__delitem__ = function(){
 // builtin classes doesn't use __mro__
 str.__dir__ = object.__dir__
 
-str.__eq__ = function(self,other){
-    if(other === undefined){ // compare object "self" to class "str"
-        return self === str
-    }
+str.__eq__ = function(self, other){
     if(_b_.isinstance(other, _b_.str)){
        return other.valueOf() == self.valueOf()
     }
@@ -824,7 +821,9 @@ str.__mul__ = function(){
     return $res
 }
 
-str.__ne__ = function(self,other){return other !== self.valueOf()}
+str.__ne__ = function(self, other){
+    return other !== self.valueOf()
+}
 
 str.__repr__ = function(self){
     var res = self
@@ -850,8 +849,8 @@ str.__repr__ = function(self){
                 s = '0' + s
             }
             repl += '\\u' + s
-        }else if(cp < 0x20){
-            cp = cp + ''
+        }else if(cp < 0x20 || (cp >= 0x7f && cp < 0xa0)){
+            cp = cp.toString(16)
             if(cp.length < 2){
                 cp = '0' + cp
             }
@@ -2576,6 +2575,23 @@ surrogate.__contains__ = function(self, other){
     return str.__contains__(self.items.join(''), other)
 }
 
+surrogate.__eq__ = function(self, other){
+    if(other.__class__ !== surrogate){
+        return _b_.NotImplemented
+    }
+    var res = true
+    if(self.items.length == other.items.length){
+        for(var i = 0, len = self.items.length; i < len; i++){
+            if(self.items[i] != other.items[i]){
+                return false
+            }
+        }
+        return true
+    }else{
+        return false
+    }
+}
+
 surrogate.__getitem__ = function(self, arg){
     if(isinstance(arg, _b_.int)){
         var pos = arg
@@ -2626,6 +2642,26 @@ surrogate.__iter__ = function(self){
 
 surrogate.__len__ = function(self){
     return self.items.length
+}
+
+surrogate.__mul__ = function(self, num){
+    try{
+        num = _b_.int.$factory(num)
+    }catch(err){
+        return _b_.NotImplemented
+    }
+    var items = []
+    for(var i = 0; i < num; i++){
+        items = items.concat(self.items)
+    }
+    return {
+        __class__: surrogate,
+        items
+    }
+}
+
+surrogate.__ne__ = function(self, other){
+    return ! surrogate.__eq__(self, other)
 }
 
 surrogate.__repr__ = function(self){

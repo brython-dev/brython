@@ -9746,7 +9746,7 @@ function test_escape(context, text, string_start, antislash_pos){
                 if(value > 0x10FFFF){
                     $_SyntaxError('invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
-                    return [String.fromCharCode(value), 2 + mo[0].length]
+                    return [new SurrogatePair(value), 2 + mo[0].length]
                 }else{
                     return [String.fromCharCode(value), 2 + mo[0].length]
                 }
