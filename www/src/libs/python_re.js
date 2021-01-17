@@ -372,7 +372,11 @@ Char.prototype.match = function(string, pos){
                             $B.unicode_bidi_whitespace.indexOf(cp) == -1
                 break
             case '.':
-                test = cp != 10 && cp != 13
+                if(this.flags && this.flags.value & DOTALL.value){
+                    test = true
+                }else{
+                    test = cp != 10
+                }
                 break
             case 'd':
                 test = $B.unicode_tables.numeric[cp] !== undefined
@@ -425,6 +429,7 @@ Char.prototype.match = function(string, pos){
             }
         }
     }else if(this.cp == ord('.')){
+        console.log("cp is dot", this.cp, cp)
         test = this.cp == cp
     }else if(this.cp.items){
         // character set
@@ -525,21 +530,48 @@ var Group = function(pos, extension){
     this.match_codepoints = []
     this.nb_success = 0
     this.extension = extension
+    if(extension && extension.type){
+        if(extension.type.indexOf('lookahead') > -1){
+            this.is_lookahead = true
+        }else if(extension.type.indexOf('lookbehind') > -1){
+            this.is_lookbehind = true
+        }
+    }
 }
 
 Group.prototype.add = Node.prototype.add
 
 Group.prototype.match = function(s, pos){
     var group_match
-    if(this.extension && this.extension.type == "lookahead_assertion"){
-        group_match = match(this, s, pos)
-        if(group_match){
-            return []
+    if(this.is_lookahead){
+        var save_cps
+        if(this.parent.match_codepoints !== undefined){
+            save_cps = this.parent.match_codepoints.slice()
         }
-    }else if(this.extension && this.extension.type == "positive_lookbehind"){
+        group_match = match(this, s, pos)
+        if(save_cps !== undefined){
+            // restore parents matches
+            var nb_cps = this.parent.match_codepoints.length - save_cps.length,
+                parent = this.parent
+            while(parent.parent !== undefined){
+                for(var i = 0; i < nb_cps; i++){
+                    parent.match_codepoints.pop()
+                }
+                parent = parent.parent
+            }
+        }
+        if(this.extension.type == "lookahead_assertion"){
+            return group_match ? [] : false
+        }else{
+            return group_match ? false : []
+        }
+    }else if(this.is_lookbehind){
+        // pos is the position after the item that must not be preceded
+        // by this
         var start = pos - this.length,
             s1 = new StringObj(s.substring(start, pos)),
             group_match = match(this, s1, 0)
+        console.log("substring", s1, "group match", group_match)
         if(group_match && group_match.length == pos - start){
             return []
         }
@@ -1025,7 +1057,6 @@ function compile(data, flags){
     type = data.type
     var is_bytes = type !== "str"
     if(is_bytes){
-        //pattern = _b_.bytes.decode(pattern, 'latin-1')
         flags.value |= ASCII.value
     }
     var group_num = 0,
@@ -1033,7 +1064,9 @@ function compile(data, flags){
         groups = {},
         subitems = [],
         pos,
+        lookbehind,
         node = new Node()
+    node.$groups = groups
     if(flags === no_flag){
         flags = Flag.$factory("", 32) // default is Unicode
     }
@@ -1043,7 +1076,13 @@ function compile(data, flags){
             return this.slice(start, stop).join('')
         }
     }
+    var tokenized = []
     for(var item of tokenize(pattern, type)){
+        if(lookbehind){
+            item.lookbehind = lookbehind
+            lookbehind.parent = item
+            lookbehind = false
+        }
         if(item instanceof Group){
             group_stack.push(item)
             node.add(item)
@@ -1066,15 +1105,19 @@ function compile(data, flags){
                     }
                     groups[value.string] = groups[group_num] =
                         new GroupRef(group_num, item)
-                }else if(item.extension.type.indexOf("lookahead") > -1 ||
-                        item.extension.type.indexOf("lookbehind") > -1){
-                    // a lookahead or lookbehind assertion is relative to the
-                    // previous regexp
+                }else if(item.is_lookahead){
+                    // a lookahead assertion is relative to the previous regexp
                     while(node.items.length > 0){
                         item.add(node.items.shift())
                     }
                     node = item
                     subitems.push(item)
+                }else if(item.is_lookbehind){
+                    // a lookbehind assertion is relative to the next regexp
+                    node.parent.items.pop() // remove from node items
+                    // temporarily create a group
+                    group_num++
+                    groups[group_num] = new GroupRef(group_num, item)
                 }else{
                     subitems.push(item)
                     group_num++
@@ -1099,13 +1142,17 @@ function compile(data, flags){
                 console.log("err avec pattern substring", pattern)
                 throw err
             }
-            if(item instanceof Group && item.extension &&
-                    item.extension.type &&
-                    item.extension.type.indexOf("lookbehind") > -1){
+            if(item.is_lookbehind){
+                // check that all elements have a fixed length
+                delete groups[group_num]
+                group_num--
                 item.length = item.fixed_length()
                 if(item.length === undefined){
                     fail("look-behind requires fixed-width pattern", pos)
                 }
+                item.non_capturing = true
+                // store in variable "lookbehind", will be applied to next item
+                lookbehind = item
             }
             if(item instanceof Group && item.items.length == 0){
                 item.add(new Char(pos, EmptyString, group_stack.concat([item])))
@@ -1124,9 +1171,11 @@ function compile(data, flags){
             if(typeof group_ref == "number"){
                 if(group_ref == 0){
                     fail(`bad group number`, pos + 3)
-                }
-                if(group_ref > group_num || group_ref >= MAXGROUPS){
+                }else if(group_ref >= MAXGROUPS){
                     fail(`invalid group reference ${group_ref}`, pos + 1)
+                }else if(groups[group_ref] &&
+                        groups[group_ref].item.state == "open"){
+                    fail("cannot refer to an open group", pos)
                 }
             }else if(groups[group_ref] !== undefined){
                 if(groups[group_ref].item.state == "open"){
@@ -1149,6 +1198,13 @@ function compile(data, flags){
             if(groups[item.value] !== undefined){
                 if(groups[item.value].item.state == "open"){
                     fail("cannot refer to an open group", pos)
+                }
+                var ref_item = groups[item.value].item.parent
+                while(ref_item){
+                    if(ref_item.is_lookbehind){
+                        fail("cannot refer to group defined in the same lookbehind subpattern", pos)
+                    }
+                    ref_item = ref_item.parent
                 }
             }else if(item.type == "name"){
                 fail(`unknown group name '${item.value}'`, pos)
@@ -1287,10 +1343,16 @@ function compile(data, flags){
         node = node.parent
     }
     node.subitems = subitems
-    node.$groups = groups
     node.pattern = from_codepoint_list(pattern)
     node.groups = group_num
     node.flags = flags
+    if(lookbehind){
+        console.log("remaining lookbehind")
+        var es = new Char(pos, EmptyString)
+        es.lookbehind = lookbehind
+        lookbehind.parent = es
+        node.add(es)
+    }
     return node
 }
 
@@ -1408,8 +1470,6 @@ function* tokenize(pattern, type){
                     pos += 4
                     continue
                 }else if(pattern[pos + 2] == ord('<')){
-                    console.log("error", pattern, pos, pattern.slice(pos + 2, pos + 4))
-                    console.log(from_codepoint_list(pattern.slice(pos + 2, 2)))
                     pos += 3
                     if(pos == pattern.length){
                         fail("unexpected end of pattern", pos)
@@ -1717,7 +1777,25 @@ function match(pattern, string, pos, flags, endpos){
                 model instanceof BackReference ||
                 model instanceof StringStart ||
                 model instanceof StringEnd){
-
+            if(model.lookbehind){
+                // check if the previous part of the string matches the
+                // lookbehind regexp
+                var negative = model.lookbehind.extension.type == "negative_lookbehind",
+                    start1 = pos - model.lookbehind.length,
+                    s1 = new StringObj(string.substring(start1, pos)),
+                    group_match1 = match(model.lookbehind, s1, 0)
+                if((negative && group_match1 &&
+                        group_match1.length == pos - start1) ||
+                        (! negative && (! group_match1 ||
+                            group_match1.length != pos - start1))){
+                    return false
+                }else if(group_match1){
+                    var nb = group_match1.match_codepoints.length
+                    for(var i = 0; i < nb; i++){
+                        match_codepoints.pop()
+                    }
+                }
+            }
             var cps = model.match(string, pos)
             if(cps){
                 match_codepoints = match_codepoints.concat(cps)
@@ -1742,7 +1820,7 @@ function match(pattern, string, pos, flags, endpos){
                     }
                 }
                 if(previous){
-                    if(previous.chars){
+                    if(previous.chars && previous.chars.length > 0){
                         previous = previous.chars[previous.chars.length - 1]
                     }
                     if(pos > 0 &&
