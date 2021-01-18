@@ -410,6 +410,7 @@ Char.prototype.match = function(string, pos){
                 break
         }
     }else if(this.cp !== undefined && ! this.cp.items){
+        // character set
         if(this.flags && this.flags.value & IGNORECASE.value){
             var char = ord_to_char(cp)
             try{
@@ -429,19 +430,29 @@ Char.prototype.match = function(string, pos){
             }
         }
     }else if(this.cp == ord('.')){
-        console.log("cp is dot", this.cp, cp)
         test = this.cp == cp
     }else if(this.cp.items){
         // character set
-        for(var item of this.cp.items){
-            if(Array.isArray(item.ord) &&
-                    cp >= item.ord[0] &&
-                    cp <= item.ord[1]){
-                test = true
-                break
-            }else if(item.ord == cp){
-                test = true
-                break
+        var cps
+        if(this.flags && this.flags.value & IGNORECASE.value){
+            var char = chr(cp),
+                cps = new Set([cp, ord(char.toLowerCase()),
+                    ord(char.toUpperCase())])
+        }else{
+            cps = [cp]
+        }
+        console.log("char set", this.cp.items, cps)
+        for(var cp1 of cps){
+            for(var item of this.cp.items){
+                if(Array.isArray(item.ord) &&
+                        cp1 >= item.ord[0] &&
+                        cp1 <= item.ord[1]){
+                    test = true
+                    break
+                }else if(item.ord == cp1){
+                    test = true
+                    break
+                }
             }
         }
         if(this.cp.neg){
@@ -864,6 +875,7 @@ function escaped_char(args){
             if(cp > 0x10FFFF){
                 fail(`bad escape \\U${mo[0]}`)
             }
+            console.log("escape", cp, chr(cp))
             return {
                 type: 'U',
                 ord: cp,
@@ -955,6 +967,7 @@ function parse_character_set(text, pos, is_bytes){
         var cp = text[pos],
             char = chr(cp)
         if(char == ']'){
+            console.log("rsult of charset", result)
             return [result, pos]
         }
         if(char == '\\'){
