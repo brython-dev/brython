@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-15 17:43:03.291202"
-__BRYTHON__.timestamp=1610728983291
+__BRYTHON__.compiled_date="2021-01-18 09:18:49.605342"
+__BRYTHON__.timestamp=1610957929605
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re_kozh","random","unicodedata"]
 ;
 
@@ -1612,7 +1612,8 @@ nodes.push(else_node)
 var pos_len=this.slots.length
 var test_node=$NodeJS('if($len == '+pos_len+')')
 else_node.add(test_node)
-test_node.add($NodeJS(local_ns+' = $locals = '+slot_init))
+test_node.add($NodeJS(local_ns+' = $locals = $B.conv_undef('+
+slot_init+')'))
 else_node.add($NodeJS('else if($len > '+pos_len+
 '){$B.wrong_nb_args("'+this.name+'", $len, '+
 pos_len+', ['+slot_list+'])}'))
@@ -1622,7 +1623,8 @@ pos_len+'){$B.wrong_nb_args("'+this.name+
 '", $len, '+pos_len+', ['+slot_list+'])}'))
 subelse_node=$NodeJS("else")
 else_node.add(subelse_node)
-subelse_node.add($NodeJS(local_ns+' = $locals = '+slot_init))
+subelse_node.add($NodeJS(local_ns+' = $locals = '+
+'$B.conv_undef('+slot_init+')'))
 subelse_node.add($NodeJS("var defparams = ["+slot_list+"]"))
 subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
 "; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
@@ -6382,6 +6384,10 @@ if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
 if((a===_b_.int && b==$B.long_int)||
 (a===$B.long_int && b===_b_.int)){return true}
 return a===b}
+$B.conv_undef=function(obj){
+var res={}
+for(var key in obj){res[key]=obj[key]===undefined ? $B.Undefined :obj[key]}
+return res}
 $B.$is_member=function(item,_set){
 var f,_iter,method
 try{method=$B.$getattr(_set.__class__ ||$B.get_class(_set),"__contains__")}
@@ -12952,6 +12958,20 @@ __class__:surrogate,items}}
 surrogate.__ne__=function(self,other){return ! surrogate.__eq__(self,other)}
 surrogate.__repr__=function(self){return str.__repr__(self.items.join(''))}
 surrogate.__str__=function(self){return str.__str__(self.items.join(''))}
+function _chr(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
+return String.fromCodePoint(0xD800 |(code >> 10))+
+String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
+function _ord(c){if(c.length==1){return c.charCodeAt(0)}
+var code=0x10000
+code+=(c.charCodeAt(0)& 0x03FF)<< 10
+code+=(c.charCodeAt(1)& 0x03FF)
+return code}
+surrogate.lower=function(self){var res=surrogate.$factory('')
+for(var char of self.items){res.items.push(_chr(_ord(char.toLowerCase())))}
+return res}
+surrogate.upper=function(self){var res=surrogate.$factory('')
+for(var char of self.items){res.items.push(_chr(_ord(char.toUpperCase())))}
+return res}
 $B.set_func_names(surrogate,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){

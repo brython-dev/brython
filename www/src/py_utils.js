@@ -874,6 +874,16 @@ $B.$is = function(a, b){
     return a === b
 }
 
+$B.conv_undef = function(obj){
+    // Used inside functions to convert Javascript undefined to $B.Undefined
+    // defined in builtin_modules.js
+    var res = {}
+    for(var key in obj){
+        res[key] = obj[key] === undefined ? $B.Undefined : obj[key]
+    }
+    return res
+}
+
 $B.$is_member = function(item, _set){
     // used for "item in _set"
     var f, _iter, method

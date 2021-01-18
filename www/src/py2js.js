@@ -3179,7 +3179,8 @@ $DefCtx.prototype.transform = function(node, rank){
         var test_node = $NodeJS('if($len == ' + pos_len + ')')
         else_node.add(test_node)
 
-        test_node.add($NodeJS(local_ns + ' = $locals = ' + slot_init))
+        test_node.add($NodeJS(local_ns + ' = $locals = $B.conv_undef(' +
+            slot_init + ')'))
 
         // Too many arguments
         else_node.add($NodeJS('else if($len > ' + pos_len +
@@ -3196,7 +3197,8 @@ $DefCtx.prototype.transform = function(node, rank){
             subelse_node = $NodeJS("else")
             else_node.add(subelse_node)
 
-            subelse_node.add($NodeJS(local_ns + ' = $locals = ' + slot_init))
+            subelse_node.add($NodeJS(local_ns + ' = $locals = ' +
+                '$B.conv_undef(' + slot_init + ')'))
             subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
             subelse_node.add($NodeJS("for(var i = $len; i < defparams.length" +
                 "; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
