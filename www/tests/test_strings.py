@@ -340,4 +340,9 @@ assert repr(chr(888)) == r"'\u0378'"
 s = 'abc'
 assert s.isprintable()
 
+# upper and lower of surrogate strings
+assert '𐐀'.lower() == '𐐨'
+assert '𐐨'.upper() == '𐐀'
+
+
 print("passed all tests...")

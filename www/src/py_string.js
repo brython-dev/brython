@@ -2672,6 +2672,41 @@ surrogate.__str__ = function(self){
     return str.__str__(self.items.join(''))
 }
 
+function _chr(i){
+    if(i >= 0x10000 && i <= 0x10FFFF){
+        var code = (i - 0x10000)
+        return String.fromCodePoint(0xD800 | (code >> 10)) +
+            String.fromCodePoint(0xDC00 | (code & 0x3FF))
+    }else{
+        return String.fromCodePoint(i)
+    }
+}
+function _ord(c){
+    if(c.length == 1){
+        return c.charCodeAt(0)
+    }
+    var code = 0x10000
+    code += (c.charCodeAt(0) & 0x03FF) << 10
+    code += (c.charCodeAt(1) & 0x03FF)
+    return code
+}
+
+surrogate.lower = function(self){
+    var res = surrogate.$factory('')
+    for(var char of self.items){
+        res.items.push(_chr(_ord(char.toLowerCase())))
+    }
+    return res
+}
+
+surrogate.upper = function(self){
+    var res = surrogate.$factory('')
+    for(var char of self.items){
+        res.items.push(_chr(_ord(char.toUpperCase())))
+    }
+    return res
+}
+
 $B.set_func_names(surrogate, "builtins")
 
 
