@@ -2672,7 +2672,7 @@ surrogate.__str__ = function(self){
     return str.__str__(self.items.join(''))
 }
 
-function _chr(i){
+var _chr = $B.codepoint2jsstring = function(i){
     if(i >= 0x10000 && i <= 0x10FFFF){
         var code = (i - 0x10000)
         return String.fromCodePoint(0xD800 | (code >> 10)) +
@@ -2681,7 +2681,8 @@ function _chr(i){
         return String.fromCodePoint(i)
     }
 }
-function _ord(c){
+
+var _ord= $B.jsstring2codepoint = function(c){
     if(c.length == 1){
         return c.charCodeAt(0)
     }

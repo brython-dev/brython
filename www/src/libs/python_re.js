@@ -410,7 +410,7 @@ Char.prototype.match = function(string, pos){
                 break
         }
     }else if(this.cp !== undefined && ! this.cp.items){
-        // character set
+        // not a character set
         if(this.flags && this.flags.value & IGNORECASE.value){
             var char = ord_to_char(cp)
             try{
@@ -433,22 +433,71 @@ Char.prototype.match = function(string, pos){
         test = this.cp == cp
     }else if(this.cp.items){
         // character set
-        var cps
-        if(this.flags && this.flags.value & IGNORECASE.value){
-            var char = chr(cp),
-                cps = new Set([cp, ord(char.toLowerCase()),
-                    ord(char.toUpperCase())])
+        var cps,
+            ignore_case = this.flags && this.flags.value & IGNORECASE.value
+        if(ignore_case){
+            var char = $B.codepoint2jsstring(cp),
+                char_up = char.toUpperCase(),
+                char_low = char.toLowerCase(),
+                cps = new Set([cp, $B.jsstring2codepoint(char_low),
+                    $B.jsstring2codepoint(char_up)])
+            // special cases
+            if(char.toLowerCase() == "k"){
+                cps.add(0x212a) // Kelvin sign
+            }
+            if(cp == 0x212a){
+                cps.add(ord('k'))
+                cps.add(ord('K'))
+            }
+            if(char.toLowerCase() == "s"){
+                cps.add(0x017f) // ‘ſ’ (Latin small letter long s)
+            }
+            if(cp == 0x017f){
+                cps.add(ord('s'))
+                cps.add(ord('S'))
+            }
+            if(char.toLowerCase() == 'i'){
+                cps.add(0x0130) // ‘İ’ (Latin capital letter I with dot above)
+                cps.add(0x0131) // ‘ı’ (Latin small letter dotless i)
+            }
+            if(cp == 0x0130 || cp == 0x0131){
+                cps.add(ord('i'))
+                cps.add(ord('I'))
+            }
+            var char_is_cased = cps.size > 1
         }else{
             cps = [cp]
         }
-        console.log("char set", this.cp.items, cps)
         for(var cp1 of cps){
             for(var item of this.cp.items){
-                if(Array.isArray(item.ord) &&
-                        cp1 >= item.ord[0] &&
-                        cp1 <= item.ord[1]){
-                    test = true
-                    break
+                if(Array.isArray(item.ord)){
+                    if(cp1 >= item.ord[0] &&
+                            cp1 <= item.ord[1]){
+                        test = true
+                        break
+                    }else{
+                        var ignore_case1 = ignore_case
+                        if(this.flags.value & ASCII.value){
+                            // only test ASCII letters
+                            ignore_case1 = ignore_case && (
+                                (char >= 'a' && char <= 'z') ||
+                                (char >= 'A' && char <= 'Z'))
+                        }
+                        if(ignore_case1 && char_is_cased){
+                            var start1 = chr(item.ord[0]).toUpperCase(),
+                                end1 = chr(item.ord[1]).toUpperCase(),
+                                char1 = char.toUpperCase()
+                            if(char1 >= start1 && char1 <= end1){
+                                test = true
+                            }
+                            var start1 = chr(item.ord[0]).toLowerCase(),
+                                end1 = chr(item.ord[1]).toLowerCase(),
+                                char1 = char.toLowerCase()
+                            if(char1 >= start1 && char1 <= end1){
+                                test = true
+                            }
+                        }
+                    }
                 }else if(item.ord == cp1){
                     test = true
                     break
@@ -875,7 +924,6 @@ function escaped_char(args){
             if(cp > 0x10FFFF){
                 fail(`bad escape \\U${mo[0]}`)
             }
-            console.log("escape", cp, chr(cp))
             return {
                 type: 'U',
                 ord: cp,
@@ -967,7 +1015,6 @@ function parse_character_set(text, pos, is_bytes){
         var cp = text[pos],
             char = chr(cp)
         if(char == ']'){
-            console.log("rsult of charset", result)
             return [result, pos]
         }
         if(char == '\\'){
@@ -1070,7 +1117,7 @@ function compile(data, flags){
     type = data.type
     var is_bytes = type !== "str"
     if(is_bytes){
-        flags.value |= ASCII.value
+        flags = Flag.$factory('', flags.value | ASCII.value)
     }
     var group_num = 0,
         group_stack = [],
