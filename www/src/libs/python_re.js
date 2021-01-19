@@ -34,6 +34,13 @@ function fail(message, pos){
     throw err
 }
 
+function warn(klass, message, pos){
+    var warning = klass.$factory(message)
+    warning.pos = pos
+    // module _warning is in builtin_modules.js
+    $B.imported._warnings.warn(warning)
+}
+
 var Flag = $B.make_class("Flag",
     function(name, value){
         return {
@@ -331,6 +338,7 @@ Char.prototype.fixed_length = function(){
 }
 
 Char.prototype.match = function(string, pos){
+    //console.log("char match", this, string, pos)
     if(this.repeat){
         if(this.repeat.op == "?" && this.str.length == 1){
             return false
@@ -340,6 +348,57 @@ Char.prototype.match = function(string, pos){
     }
     var test = false
     var cp = string.codepoints[pos]
+
+    function match_charclass(value, cp, string, pos, flags){
+        var test
+        switch(value){
+            case 'A':
+                return pos == 0 ? [] : false
+            case 's':
+                test = $B.unicode_tables.Zs[cp] !== undefined ||
+                            $B.unicode_bidi_whitespace.indexOf(cp) > -1
+                break
+            case 'S':
+                test = $B.unicode_tables.Zs[cp] === undefined &&
+                            $B.unicode_bidi_whitespace.indexOf(cp) == -1
+                break
+            case '.':
+                if(flags && flags.value & DOTALL.value){
+                    test = true
+                }else{
+                    test = cp != 10
+                }
+                break
+            case 'd':
+                test = $B.unicode_tables.numeric[cp] !== undefined
+                break
+            case 'D':
+                test = $B.unicode_tables.numeric[cp] === undefined
+                break
+            case 'b':
+                test = (pos == 0 && is_word[cp]) ||
+                       (pos == string.codepoints.length &&
+                           is_word[string.codepoints[pos - 1]]) ||
+                        is_word[cp] != is_word[string.codepoints[pos - 1]]
+                return test ? [] : false
+            case 'B':
+                test = (pos == 0 && is_word[cp]) ||
+                       (pos == string.codepoints.length &&
+                           is_word[string.codepoints[pos - 1]]) ||
+                        is_word[cp] != is_word[string.codepoints[pos - 1]]
+                return test ? false : []
+            case 'w':
+                test = is_word[cp]
+                break
+            case 'W':
+                test = ! is_word[cp]
+                break
+            case 'Z':
+                test = pos > string.codepoints.length
+                break
+         }
+         return test
+    }
 
     if(cp === undefined && this.cp !== EmptyString){
         // end of string matches $
@@ -360,54 +419,9 @@ Char.prototype.match = function(string, pos){
     }else if(this.cp == ord("^")){
         return pos == 0 ? EmptyString : false
     }else if(this.cp.character_class){
-        switch(this.cp.value){
-            case 'A':
-                return pos == 0 ? [] : false
-            case 's':
-                test = $B.unicode_tables.Zs[cp] !== undefined ||
-                            $B.unicode_bidi_whitespace.indexOf(cp) > -1
-                break
-            case 'S':
-                test = $B.unicode_tables.Zs[cp] === undefined &&
-                            $B.unicode_bidi_whitespace.indexOf(cp) == -1
-                break
-            case '.':
-                if(this.flags && this.flags.value & DOTALL.value){
-                    test = true
-                }else{
-                    test = cp != 10
-                }
-                break
-            case 'd':
-                test = $B.unicode_tables.numeric[cp] !== undefined
-                break
-            case 'D':
-                test = $B.unicode_tables.numeric[cp] === undefined
-                break
-            case 'b':
-                test = (pos == 0 && is_word[cp]) ||
-                       (pos == string.codepoints.length &&
-                           is_word[string.codepoints[pos - 1]]) ||
-                        is_word[cp] != is_word[string.codepoints[pos - 1]]
-                return test ? [] : false
-                break
-            case 'B':
-                test = (pos == 0 && is_word[cp]) ||
-                       (pos == string.codepoints.length &&
-                           is_word[string.codepoints[pos - 1]]) ||
-                        is_word[cp] != is_word[string.codepoints[pos - 1]]
-                return test ? false : []
-                break
-
-            case 'w':
-                test = is_word[cp]
-                break
-            case 'W':
-                test = ! is_word[cp]
-                break
-            case 'Z':
-                test = pos > string.codepoints.length
-                break
+        test = match_charclass(this.cp.value, cp, string, pos, this.flags)
+        if(Array.isArray(test) && test.length == 0){
+            return []
         }
     }else if(this.cp !== undefined && ! this.cp.items){
         // not a character set
@@ -434,10 +448,16 @@ Char.prototype.match = function(string, pos){
     }else if(this.cp.items){
         // character set
         var cps,
+            char = $B.codepoint2jsstring(cp),
             ignore_case = this.flags && this.flags.value & IGNORECASE.value
+        if(this.flags.value & ASCII.value){
+            // only test ASCII letters
+            ignore_case = ignore_case && (
+                (char >= 'a' && char <= 'z') ||
+                (char >= 'A' && char <= 'Z'))
+        }
         if(ignore_case){
-            var char = $B.codepoint2jsstring(cp),
-                char_up = char.toUpperCase(),
+            var char_up = char.toUpperCase(),
                 char_low = char.toLowerCase(),
                 cps = new Set([cp, $B.jsstring2codepoint(char_low),
                     $B.jsstring2codepoint(char_up)])
@@ -476,14 +496,7 @@ Char.prototype.match = function(string, pos){
                         test = true
                         break
                     }else{
-                        var ignore_case1 = ignore_case
-                        if(this.flags.value & ASCII.value){
-                            // only test ASCII letters
-                            ignore_case1 = ignore_case && (
-                                (char >= 'a' && char <= 'z') ||
-                                (char >= 'A' && char <= 'Z'))
-                        }
-                        if(ignore_case1 && char_is_cased){
+                        if(ignore_case && char_is_cased){
                             var start1 = chr(item.ord[0]).toUpperCase(),
                                 end1 = chr(item.ord[1]).toUpperCase(),
                                 char1 = char.toUpperCase()
@@ -498,9 +511,20 @@ Char.prototype.match = function(string, pos){
                             }
                         }
                     }
-                }else if(item.ord == cp1){
-                    test = true
-                    break
+                }else if(item.character_class){
+                    test = match_charclass(item.value, cp1, string, pos,
+                        this.flags)
+                }else{
+                    if(item.ord == cp1){
+                        test = true
+                        break
+                    }
+                    if(ignore_case && char_is_cased &&
+                            (char.toUpperCase() == chr(item.ord).toUpperCase() ||
+                            char.toLowerCase() == chr(item.ord).toLowerCase())){
+                        test = true
+                        break
+                    }
                 }
             }
         }
@@ -997,6 +1021,7 @@ function check_character_range(t, positions){
 
 function parse_character_set(text, pos, is_bytes){
     // Parse character set starting at position "pos" in "text"
+    // pos is the position of the leading "["
     var start = pos,
         result = {items: []},
         positions = []
@@ -1009,6 +1034,9 @@ function parse_character_set(text, pos, is_bytes){
         result.items.push(']')
         positions.push(pos)
         pos++
+    }else if(text[pos] == ord('[')){
+        // send FutureWarning
+        warn(_b_.FutureWarning, "Possible nested set", pos)
     }
     var range = false
     while(pos < text.length){
@@ -1045,11 +1073,33 @@ function parse_character_set(text, pos, is_bytes){
             }
             pos += escape.length
         }else if(char == '-'){
-            // Character range
-            if(result.items.length == 0){
-                fail("bad character range", pos)
+            // Character range, or character "-"
+            if(pos == start + 1 ||
+                    pos == text.length - 1 ||
+                    range ||
+                    (result.items.length > 0 &&
+                    result.items[result.items.length - 1].type ==
+                        "character_range")){
+                result.items.push({
+                    ord: cp,
+                    char,
+                    toString: function(){
+                        return this.char
+                    }
+                })
+                if(text[pos + 1] == cp){
+                    warn(_b_.FutureWarning, "Possible set difference", pos)
+                }
+                pos++
+                if(range){
+                    check_character_range(result.items, positions)
+                }
+                range = false
             }else{
                 range = true
+                if(text[pos + 1] == cp){
+                    warn(_b_.FutureWarning, "Possible set difference", pos)
+                }
                 pos++
             }
         }else{
@@ -1065,6 +1115,15 @@ function parse_character_set(text, pos, is_bytes){
                 check_character_range(result.items, positions)
             }
             range = false
+            // FutureWarning for consecutive "&", "|" or "~"
+            if(char == "&" && text[pos + 1] == cp){
+                warn(_b_.FutureWarning, "Possible set intersection", pos)
+            }else if(char == "|" && text[pos + 1] == cp){
+                warn(_b_.FutureWarning, "Possible set union", pos)
+            }else if(char == "~" && text[pos + 1] == cp){
+                warn(_b_.FutureWarning, "Possible set symmetric difference",
+                    pos)
+            }
             pos++
         }
     }
