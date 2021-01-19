@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-18 09:18:49.605342"
-__BRYTHON__.timestamp=1610957929605
+__BRYTHON__.compiled_date="2021-01-19 10:19:03.182323"
+__BRYTHON__.timestamp=1611047943182
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re_kozh","random","unicodedata"]
 ;
 
@@ -12958,10 +12958,10 @@ __class__:surrogate,items}}
 surrogate.__ne__=function(self,other){return ! surrogate.__eq__(self,other)}
 surrogate.__repr__=function(self){return str.__repr__(self.items.join(''))}
 surrogate.__str__=function(self){return str.__str__(self.items.join(''))}
-function _chr(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
+var _chr=$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
 return String.fromCodePoint(0xD800 |(code >> 10))+
 String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
-function _ord(c){if(c.length==1){return c.charCodeAt(0)}
+var _ord=$B.jsstring2codepoint=function(c){if(c.length==1){return c.charCodeAt(0)}
 var code=0x10000
 code+=(c.charCodeAt(0)& 0x03FF)<< 10
 code+=(c.charCodeAt(1)& 0x03FF)
