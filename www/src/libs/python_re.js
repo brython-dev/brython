@@ -338,7 +338,6 @@ Char.prototype.fixed_length = function(){
 }
 
 Char.prototype.match = function(string, pos){
-    //console.log("char match", this, string, pos)
     if(this.repeat){
         if(this.repeat.op == "?" && this.str.length == 1){
             return false
@@ -416,8 +415,6 @@ Char.prototype.match = function(string, pos){
     }else if(this.cp === EmptyString){
         test = true
         cp = EmptyString
-    }else if(this.cp == ord("^")){
-        return pos == 0 ? EmptyString : false
     }else if(this.cp.character_class){
         test = match_charclass(this.cp.value, cp, string, pos, this.flags)
         if(Array.isArray(test) && test.length == 0){
@@ -2712,6 +2709,11 @@ function subn(data, count, flags){
     return [res, nb_sub]
 }
 
+// escaped chars : '\t\n\x0b\x0c\r #$&()*+-.?[\\]^{|}~'
+var escaped = [9, 10, 11, 12, 13, 32, 35, 36, 38, 40, 41, 42, 43, 45, 46, 63,
+               91, 92, 93, 94, 123, 124, 125, 126]
+
+
 var $module = {
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
@@ -2722,6 +2724,24 @@ var $module = {
         return BPattern.$factory(compile(data, $.flags))
     },
     error: error,
+    escape: function(){
+        var $ = $B.args("escape", 1, {pattern: null}, ['pattern'], arguments,
+                    {}, null, null),
+            data = prepare({pattern: $.pattern}),
+            pattern = data.pattern,
+            res = []
+        for(var cp of pattern.codepoints){
+            if(escaped.indexOf(cp) > -1){
+                res.push(ord('\\'))
+            }
+            res.push(cp)
+        }
+        res = StringObj.from_codepoints(res).string
+        if(data.type == "bytes"){
+            res = _b_.str.encode(res, 'latin1')
+        }
+        return res
+    },
     findall: function(){
         var $ = $B.args("findall", 3,
                     {pattern: null, string: null, flags: null},
@@ -2812,6 +2832,19 @@ var $module = {
             }
             delete original_string.in_iteration
         })(pattern, data.string, flags, original_string)
+    },
+    fullmatch: function(){
+        var bmo = $module.match.apply(null, arguments)
+        if(bmo !== _b_.None){
+            var mo = bmo.mo,
+                string = new StringObj(mo.string)
+            if(string.codepoints.length != mo.match_codepoints.length){
+                return _b_.None
+            }else{
+                return BMatchObject.$factory(mo)
+            }
+        }
+        return _b_.None
     },
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
@@ -2988,7 +3021,7 @@ var IGNORECASE = $module.I = $module.IGNORECASE = Flag.$factory("IGNORECASE", 2)
 var LOCALE = $module.L = $module.LOCALE = Flag.$factory("LOCALE", 4)
 var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory("MULTILINE", 8)
 var DOTALL = $module.S = $module.DOTALL = Flag.$factory("DOTALL", 16)
-var U = $module.U = Flag.$factory("U", 32)
+var U = $module.U = $module.UNICODE = Flag.$factory("U", 32)
 var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory("VERBOSE", 64)
 
 var inline_flags = {
