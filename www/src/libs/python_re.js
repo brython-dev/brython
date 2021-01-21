@@ -132,6 +132,10 @@ BPattern.match = function(self, string){
     return BMatchObject.$factory(mo)
 }
 
+BPattern.sub = function(){
+    return $module.sub.apply(null, arguments)
+}
+
 $B.set_func_names(BPattern, "re")
 
 function Node(parent){
@@ -292,6 +296,57 @@ var EmptyString = {
         this.greedy = greedy !== undefined
     }
 
+function cased_cps(cp, ignore_case, ascii){
+    // If cp is the codepoint of a cased Unicode character, return the list
+    // of the codepoints that match the character in a case-insensitive way
+
+    // ignore_case = this.flags && this.flags.value & IGNORECASE.value
+    // ascii = this.flags.value & ASCII.value
+    var cps,
+        char = $B.codepoint2jsstring(cp)
+    if(! ignore_case){
+        return [cp]
+    }
+    if(ascii){
+        // only test ASCII letters
+        ignore_case = ignore_case && (
+            (char >= 'a' && char <= 'z') ||
+            (char >= 'A' && char <= 'Z'))
+    }
+    if(ignore_case){
+        var char_up = char.toUpperCase(),
+            char_low = char.toLowerCase(),
+            cps = new Set([cp, $B.jsstring2codepoint(char_low),
+                $B.jsstring2codepoint(char_up)])
+        // special cases
+        if(char.toLowerCase() == "k"){
+            cps.add(0x212a) // Kelvin sign
+        }
+        if(cp == 0x212a){
+            cps.add(ord('k'))
+            cps.add(ord('K'))
+        }
+        if(char.toLowerCase() == "s"){
+            cps.add(0x017f) // ‘ſ’ (Latin small letter long s)
+        }
+        if(cp == 0x017f){
+            cps.add(ord('s'))
+            cps.add(ord('S'))
+        }
+        if(char.toLowerCase() == 'i'){
+            cps.add(0x0130) // ‘İ’ (Latin capital letter I with dot above)
+            cps.add(0x0131) // ‘ı’ (Latin small letter dotless i)
+        }
+        if(cp == 0x0130 || cp == 0x0131){
+            cps.add(ord('i'))
+            cps.add(ord('I'))
+        }
+        return Array.from(cps) //var char_is_cased = cps.size > 1
+    }else{
+        cps = [cp]
+    }
+    return cps
+}
 
 var Char = function(pos, cp, groups){
     // character in a regular expression or in a character set
@@ -338,153 +393,46 @@ Char.prototype.fixed_length = function(){
 }
 
 Char.prototype.match = function(string, pos){
+    var nb
     if(this.repeat){
         if(this.repeat.op == "?" && this.str.length == 1){
             return false
         }else if(this.repeat.op.start){
             console.log(this.repeat.op)
+        }else if(Array.isArray(this.repeat.op)){
+            if(this.repeat.op.length == 1){
+                nb = this.repeat.op[0]
+            }
         }
     }
     var test = false
     var cp = string.codepoints[pos]
 
-    function match_charclass(value, cp, string, pos, flags){
-        var test
-        switch(value){
-            case 'A':
-                return pos == 0 ? [] : false
-            case 's':
-                test = $B.unicode_tables.Zs[cp] !== undefined ||
-                            $B.unicode_bidi_whitespace.indexOf(cp) > -1
-                break
-            case 'S':
-                test = $B.unicode_tables.Zs[cp] === undefined &&
-                            $B.unicode_bidi_whitespace.indexOf(cp) == -1
-                break
-            case '.':
-                if(flags && flags.value & DOTALL.value){
-                    test = true
-                }else{
-                    test = cp != 10
-                }
-                break
-            case 'd':
-                test = $B.unicode_tables.numeric[cp] !== undefined
-                break
-            case 'D':
-                test = $B.unicode_tables.numeric[cp] === undefined
-                break
-            case 'b':
-                test = (pos == 0 && is_word[cp]) ||
-                       (pos == string.codepoints.length &&
-                           is_word[string.codepoints[pos - 1]]) ||
-                        is_word[cp] != is_word[string.codepoints[pos - 1]]
-                return test ? [] : false
-            case 'B':
-                test = (pos == 0 && is_word[cp]) ||
-                       (pos == string.codepoints.length &&
-                           is_word[string.codepoints[pos - 1]]) ||
-                        is_word[cp] != is_word[string.codepoints[pos - 1]]
-                return test ? false : []
-            case 'w':
-                test = is_word[cp]
-                break
-            case 'W':
-                test = ! is_word[cp]
-                break
-            case 'Z':
-                test = pos > string.codepoints.length
-                break
-         }
-         return test
-    }
-
     if(cp === undefined && this.cp !== EmptyString){
         // end of string matches $
         // if true, don't return the empty string (it would be tested
-        // like false) but as an object coerced to ''
-        if(this.cp.character_class && this.cp.value == 'b'){
-            return is_word[string.codepoints[pos - 1]] ? [] : false
-        }else if(this.cp.character_class && this.cp.value == 'B'){
-            return ! is_word[string.codepoints[pos - 1]] ? [] : false
-        }else if(this.cp.character_class && this.cp.value == 'Z'){
-            // \Z = end of string
-            return []
-        }
+        // as false) but as an object coerced to ''
         return this.cp == ord("$") ? EmptyString : false
     }else if(this.cp === EmptyString){
         test = true
         cp = EmptyString
-    }else if(this.cp.character_class){
-        test = match_charclass(this.cp.value, cp, string, pos, this.flags)
-        if(Array.isArray(test) && test.length == 0){
-            return []
-        }
-    }else if(this.cp !== undefined && ! this.cp.items){
+    }else if(! this.cp.items){
         // not a character set
         if(this.flags && this.flags.value & IGNORECASE.value){
-            var char = ord_to_char(cp)
-            try{
-                this.char = chr(this.cp)
-            }catch(err){
-                console.log("this.cp", this.cp)
-                throw err
-            }
+            var char = chr(cp)
+            this.char = chr(this.cp)
             test = (char.toUpperCase() == this.char.toUpperCase()) ||
                 (char.toLowerCase() == this.char.toLowerCase())
         }else{
-            try{
-                test = this.cp == cp
-            }catch(err){
-                console.log("no ord", cp)
-                throw err
-            }
+            test = this.cp == cp
         }
-    }else if(this.cp == ord('.')){
-        test = this.cp == cp
     }else if(this.cp.items){
         // character set
-        var cps,
-            char = $B.codepoint2jsstring(cp),
-            ignore_case = this.flags && this.flags.value & IGNORECASE.value
-        if(this.flags.value & ASCII.value){
-            // only test ASCII letters
-            ignore_case = ignore_case && (
-                (char >= 'a' && char <= 'z') ||
-                (char >= 'A' && char <= 'Z'))
-        }
-        if(ignore_case){
-            var char_up = char.toUpperCase(),
-                char_low = char.toLowerCase(),
-                cps = new Set([cp, $B.jsstring2codepoint(char_low),
-                    $B.jsstring2codepoint(char_up)])
-            // special cases
-            if(char.toLowerCase() == "k"){
-                cps.add(0x212a) // Kelvin sign
-            }
-            if(cp == 0x212a){
-                cps.add(ord('k'))
-                cps.add(ord('K'))
-            }
-            if(char.toLowerCase() == "s"){
-                cps.add(0x017f) // ‘ſ’ (Latin small letter long s)
-            }
-            if(cp == 0x017f){
-                cps.add(ord('s'))
-                cps.add(ord('S'))
-            }
-            if(char.toLowerCase() == 'i'){
-                cps.add(0x0130) // ‘İ’ (Latin capital letter I with dot above)
-                cps.add(0x0131) // ‘ı’ (Latin small letter dotless i)
-            }
-            if(cp == 0x0130 || cp == 0x0131){
-                cps.add(ord('i'))
-                cps.add(ord('I'))
-            }
-            var char_is_cased = cps.size > 1
-        }else{
-            cps = [cp]
-        }
+        var char = $B.codepoint2jsstring(cp),
+            ignore_case = this.flags && (this.flags.value & IGNORECASE.value),
+            cps = cased_cps(cp, ignore_case, this.flags.value & ASCII.value),
+            char_is_cased = cps.length > 1
+
         for(var cp1 of cps){
             for(var item of this.cp.items){
                 if(Array.isArray(item.ord)){
@@ -508,9 +456,8 @@ Char.prototype.match = function(string, pos){
                             }
                         }
                     }
-                }else if(item.character_class){
-                    test = match_charclass(item.value, cp1, string, pos,
-                        this.flags)
+                }else if(item instanceof CharacterClass){
+                    test = item.match(string, pos)
                 }else{
                     if(item.ord == cp1){
                         test = true
@@ -528,9 +475,6 @@ Char.prototype.match = function(string, pos){
         if(this.cp.neg){
             test = ! test
         }
-    }else{
-        // compare codepoints
-        test = this.ord === cp
     }
     if(test){
         if(this.repeat){
@@ -555,6 +499,205 @@ Char.prototype.match = function(string, pos){
     }
     return false
 }
+
+function CharacterClass(pos, cp, length, groups){
+    this.cp = cp
+    this.value = chr(cp)
+    this.length = length
+    this.pos = pos
+
+    this.match_codepoints = []
+    this.nb_success = 0
+    this.groups = []
+    if(groups){
+        for(var group of groups){
+            this.groups.push(group)
+            group.chars.push(this)
+        }
+    }
+}
+
+CharacterClass.prototype.accepts_backtracking = Char.prototype.accepts_backtracking
+
+CharacterClass.prototype.match = function(string, pos){
+    var flags = this.flags,
+        test,
+        cp = string.codepoints[pos]
+    if(pos >= string.codepoints.length){
+        cp = EmptyString
+    }
+    switch(this.value){
+        case 'A':
+            return pos == 0 ? [] : false
+        case 's':
+            test = $B.unicode_tables.Zs[cp] !== undefined ||
+                        $B.unicode_bidi_whitespace.indexOf(cp) > -1
+            break
+        case 'S':
+            test = $B.unicode_tables.Zs[cp] === undefined &&
+                        $B.unicode_bidi_whitespace.indexOf(cp) == -1
+            break
+        case '.':
+            if(flags && flags.value & DOTALL.value){
+                test = true
+            }else{
+                test = cp != 10
+            }
+            break
+        case 'd':
+            test = $B.unicode_tables.numeric[cp] !== undefined
+            break
+        case 'D':
+            test = $B.unicode_tables.numeric[cp] === undefined
+            break
+        case 'b':
+            test = (pos == 0 && is_word[cp]) ||
+                   (pos == string.codepoints.length &&
+                       is_word[string.codepoints[pos - 1]]) ||
+                    is_word[cp] != is_word[string.codepoints[pos - 1]]
+            return test ? [] : false
+        case 'B':
+            test = (pos == 0 && is_word[cp]) ||
+                   (pos == string.codepoints.length &&
+                       is_word[string.codepoints[pos - 1]]) ||
+                    is_word[cp] != is_word[string.codepoints[pos - 1]]
+            return test ? false : []
+        case 'w':
+            test = is_word[cp]
+            break
+        case 'W':
+            test = ! is_word[cp]
+            break
+        case 'Z':
+            test = pos >= string.codepoints.length
+            break
+    }
+    if(test){
+        if(this.repeat){
+            this.nb_success++
+            if(! this.accepts_success()){
+                return false
+            }
+        }
+        for(var group of this.groups){
+            if(group.num !== undefined){
+                if(cp !== EmptyString){
+                    group.match_codepoints.push(cp)
+                }
+                group.nb_success++
+            }
+        }
+        if(cp !== EmptyString){
+            this.match_codepoints.push(cp)
+            return [cp]
+        }
+        return []
+    }
+    return false
+}
+
+CharacterClass.prototype.toString = function(){
+    return '\\' + this.value
+}
+
+var CharacterSet = function(pos, set, groups){
+    // character set
+    this.pos = pos
+    this.items = set.items
+    this.neg = set.neg
+
+    this.match_codepoints = []
+    this.nb_success = 0
+    this.groups = []
+    if(groups){
+        for(var group of groups){
+            this.groups.push(group)
+            group.chars.push(this)
+        }
+    }
+}
+
+CharacterSet.prototype.accepts_backtracking = Char.prototype.accepts_backtracking
+
+CharacterSet.prototype.match = function(string, pos){
+    var flags = this.flags,
+        test,
+        cp = string.codepoints[pos]
+    if(pos >= string.codepoints.length){
+        cp = EmptyString
+    }
+
+    var char = $B.codepoint2jsstring(cp),
+        ignore_case = this.flags && (this.flags.value & IGNORECASE.value),
+        cps = cased_cps(cp, ignore_case, this.flags.value & ASCII.value),
+        char_is_cased = cps.length > 1
+
+    for(var cp1 of cps){
+        for(var item of this.items){
+            if(Array.isArray(item.ord)){
+                if(cp1 >= item.ord[0] &&
+                        cp1 <= item.ord[1]){
+                    test = true
+                    break
+                }else{
+                    if(ignore_case && char_is_cased){
+                        var start1 = chr(item.ord[0]).toUpperCase(),
+                            end1 = chr(item.ord[1]).toUpperCase(),
+                            char1 = char.toUpperCase()
+                        if(char1 >= start1 && char1 <= end1){
+                            test = true
+                        }
+                        var start1 = chr(item.ord[0]).toLowerCase(),
+                            end1 = chr(item.ord[1]).toLowerCase(),
+                            char1 = char.toLowerCase()
+                        if(char1 >= start1 && char1 <= end1){
+                            test = true
+                        }
+                    }
+                }
+            }else if(item instanceof CharacterClass){
+                test = item.match(string, pos)
+            }else{
+                if(item.ord == cp1){
+                    test = true
+                    break
+                }
+                if(ignore_case && char_is_cased &&
+                        (char.toUpperCase() == chr(item.ord).toUpperCase() ||
+                        char.toLowerCase() == chr(item.ord).toLowerCase())){
+                    test = true
+                    break
+                }
+            }
+        }
+    }
+    if(this.neg){
+        test = ! test
+    }
+    if(test){
+        if(this.repeat){
+            this.nb_success++
+            if(! this.accepts_success()){
+                return false
+            }
+        }
+        for(var group of this.groups){
+            if(group.num !== undefined){
+                if(cp !== EmptyString){
+                    group.match_codepoints.push(cp)
+                }
+                group.nb_success++
+            }
+        }
+        if(cp !== EmptyString){
+            this.match_codepoints.push(cp)
+            return [cp]
+        }
+        return []
+    }
+    return false
+}
+
 
 var ConditionalBackref = function(pos, group_ref){
     this.type = "conditional backref"
@@ -586,7 +729,6 @@ ConditionalBackref.prototype.fixed_length = function(){
     }
     return fl1
 }
-
 
 ConditionalBackref.prototype.match = function(s, pos){
     var group_ref = this.group_ref
@@ -751,13 +893,11 @@ GroupRef.prototype.fixed_length = function(){
     return this.item.fixed_length()
 }
 
-Char.prototype.accepts_failure = Group.prototype.accepts_failure
-Char.prototype.accepts_success = Group.prototype.accepts_success
-Char.prototype.done = Group.prototype.done
-
-BackReference.prototype.accepts_failure = Group.prototype.accepts_failure
-BackReference.prototype.accepts_success = Group.prototype.accepts_success
-BackReference.prototype.done = Group.prototype.done
+for(klass of [BackReference, Char, CharacterClass, CharacterSet]){
+    klass.prototype.accepts_failure = Group.prototype.accepts_failure
+    klass.prototype.accepts_success = Group.prototype.accepts_success
+    klass.prototype.done = Group.prototype.done
+}
 
 function SetFlags(pos, flags){
     this.pos = pos
@@ -790,11 +930,13 @@ function StringEnd(pos){
 
 StringEnd.prototype.match = function(string, pos){
     var top = get_top(this)
-    if(top.flags.value && MULTILINE.value){
+    if(top.flags.value & MULTILINE.value){
         return (pos > string.codepoints.length - 1 ||
             string.string[pos] == '\n') ? [] : false
     }
-    return pos > string.codepoints.length - 1 ? [] : false
+    return pos > string.codepoints.length - 1 ? [] :
+           (pos == string.codepoints.length - 1 &&
+               string.codepoints[pos] == 10) ? [] : false
 }
 
 StringEnd.prototype.fixed_length = function(){
@@ -871,6 +1013,8 @@ function escaped_char(args){
     }
     var key = in_charset ? 'in_charset' : 'in_re'
     if(character_classes[key].indexOf(special) > -1){
+        return new CharacterClass(pos, special, 2)
+        /*
         return {
             pos,
             ord: special,
@@ -879,6 +1023,7 @@ function escaped_char(args){
             value: chr(special),
             toString: function(){return '\\' + chr(special)}
         }
+        */
     }else if(special == ord('N') && ! is_bytes){
         if(cps[pos + 2] != ord('{')){
             fail('missing {', pos)
@@ -1001,7 +1146,7 @@ function check_character_range(t, positions){
     // Check if last 2 items in t are a valid character range
     var start = t[t.length - 2],
         end = t[t.length - 1]
-    if(start.character_class || end.character_class){
+    if(start instanceof CharacterClass || end instanceof CharacterClass){
         fail(`bad character range ${start}-${end}`,
             positions[positions.length - 2])
     }else if(end < start){
@@ -1332,7 +1477,9 @@ function compile(data, flags){
                 item.groups.push(group)
             }
             node.add(item)
-        }else if(item instanceof Char){
+        }else if(item instanceof Char ||
+                item instanceof CharacterClass ||
+                item instanceof CharacterSet){
             item.flags = flags
             subitems.push(item)
             item.groups = []
@@ -1367,6 +1514,8 @@ function compile(data, flags){
             }
             var previous = node.items[node.items.length - 1]
             if(previous instanceof Char ||
+                    previous instanceof CharacterClass ||
+                    previous instanceof CharacterSet ||
                     previous instanceof Group ||
                     previous instanceof BackReference){
                 if(previous.repeat){
@@ -1714,7 +1863,10 @@ function* tokenize(pattern, type){
             pos++
         }else if(cp == ord('\\')){
             var escape = escaped_char({codepoints: pattern, pos, is_bytes})
-            if(escape.char !== undefined){
+            if(escape instanceof CharacterClass){
+                yield escape
+                pos += escape.length
+            }else if(escape.char !== undefined){
                 yield new Char(pos, escape.ord)
                 pos += escape.length
             }else if(escape.type == "backref"){
@@ -1733,7 +1885,7 @@ function* tokenize(pattern, type){
             var set,
                 end_pos
             [set, end_pos] = parse_character_set(pattern, pos, is_bytes)
-            yield new Char(pos, set)
+            yield new CharacterSet(pos, set)
             pos = end_pos + 1
         }else if('+?*'.indexOf(char) > -1){
             if(pattern[pos + 1] == ord('?')){
@@ -1773,15 +1925,7 @@ function* tokenize(pattern, type){
             yield new Or(pos)
             pos++
         }else if(cp == ord('.')){
-            yield new Char(pos,
-                {
-                    pos,
-                    value: char,
-                    length: 1,
-                    character_class: true,
-                    toString: function(){return '\\.'}
-                }
-            )
+            yield new CharacterClass(pos, cp, 1)
             pos++
         }else if(cp == ord('^')){
             yield new StringStart(pos)
@@ -1889,6 +2033,8 @@ function match(pattern, string, pos, flags, endpos){
         }
         if(model instanceof Group ||
                 model instanceof Char ||
+                model instanceof CharacterClass ||
+                model instanceof CharacterSet ||
                 model instanceof ConditionalBackref ||
                 model instanceof BackReference ||
                 model instanceof StringStart ||
