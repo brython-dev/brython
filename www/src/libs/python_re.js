@@ -355,6 +355,7 @@ var Char = function(pos, cp, groups){
     // groups (optional) : the groups that contain the character
     this.pos = pos
     this.cp = cp
+    this.char = chr(this.cp)
     this.match_codepoints = []
     this.nb_success = 0
     this.groups = []
@@ -393,90 +394,31 @@ Char.prototype.fixed_length = function(){
 }
 
 Char.prototype.match = function(string, pos){
-    var nb
-    if(this.repeat){
-        if(this.repeat.op == "?" && this.str.length == 1){
-            return false
-        }else if(this.repeat.op.start){
-            console.log(this.repeat.op)
-        }else if(Array.isArray(this.repeat.op)){
-            if(this.repeat.op.length == 1){
-                nb = this.repeat.op[0]
-            }
-        }
-    }
-    var test = false
-    var cp = string.codepoints[pos]
+
+    var match = false,
+        cp = string.codepoints[pos]
 
     if(cp === undefined && this.cp !== EmptyString){
-        // end of string matches $
-        // if true, don't return the empty string (it would be tested
-        // as false) but as an object coerced to ''
-        return this.cp == ord("$") ? EmptyString : false
+        // end of string
+        return false
     }else if(this.cp === EmptyString){
         test = true
         cp = EmptyString
-    }else if(! this.cp.items){
+        match = []
+    }else{
         // not a character set
         if(this.flags && this.flags.value & IGNORECASE.value){
             var char = chr(cp)
-            this.char = chr(this.cp)
-            test = (char.toUpperCase() == this.char.toUpperCase()) ||
-                (char.toLowerCase() == this.char.toLowerCase())
-        }else{
-            test = this.cp == cp
-        }
-    }else if(this.cp.items){
-        // character set
-        var char = $B.codepoint2jsstring(cp),
-            ignore_case = this.flags && (this.flags.value & IGNORECASE.value),
-            cps = cased_cps(cp, ignore_case, this.flags.value & ASCII.value),
-            char_is_cased = cps.length > 1
-
-        for(var cp1 of cps){
-            for(var item of this.cp.items){
-                if(Array.isArray(item.ord)){
-                    if(cp1 >= item.ord[0] &&
-                            cp1 <= item.ord[1]){
-                        test = true
-                        break
-                    }else{
-                        if(ignore_case && char_is_cased){
-                            var start1 = chr(item.ord[0]).toUpperCase(),
-                                end1 = chr(item.ord[1]).toUpperCase(),
-                                char1 = char.toUpperCase()
-                            if(char1 >= start1 && char1 <= end1){
-                                test = true
-                            }
-                            var start1 = chr(item.ord[0]).toLowerCase(),
-                                end1 = chr(item.ord[1]).toLowerCase(),
-                                char1 = char.toLowerCase()
-                            if(char1 >= start1 && char1 <= end1){
-                                test = true
-                            }
-                        }
-                    }
-                }else if(item instanceof CharacterClass){
-                    test = item.match(string, pos)
-                }else{
-                    if(item.ord == cp1){
-                        test = true
-                        break
-                    }
-                    if(ignore_case && char_is_cased &&
-                            (char.toUpperCase() == chr(item.ord).toUpperCase() ||
-                            char.toLowerCase() == chr(item.ord).toLowerCase())){
-                        test = true
-                        break
-                    }
-                }
+            if(char.toUpperCase() == this.char.toUpperCase() ||
+                    char.toLowerCase() == this.char.toLowerCase()){
+                match = [cp]
             }
-        }
-        if(this.cp.neg){
-            test = ! test
+        }else if(this.cp == cp){
+            match = [cp]
         }
     }
-    if(test){
+
+    if(match){
         if(this.repeat){
             this.nb_success++
             if(! this.accepts_success()){
@@ -485,18 +427,14 @@ Char.prototype.match = function(string, pos){
         }
         for(var group of this.groups){
             if(group.num !== undefined){
-                if(cp !== EmptyString){
-                    group.match_codepoints.push(cp)
-                }
+                group.match_codepoints = group.match_codepoints.concat(match)
                 group.nb_success++
             }
         }
-        if(cp !== EmptyString){
-            this.match_codepoints.push(cp)
-            return [cp]
-        }
-        return []
+        this.match_codepoints = this.match_codepoints.concat(match)
+        return match
     }
+
     return false
 }
 
@@ -521,58 +459,80 @@ CharacterClass.prototype.accepts_backtracking = Char.prototype.accepts_backtrack
 
 CharacterClass.prototype.match = function(string, pos){
     var flags = this.flags,
-        test,
-        cp = string.codepoints[pos]
+        cp = string.codepoints[pos],
+        match = false
     if(pos >= string.codepoints.length){
         cp = EmptyString
     }
     switch(this.value){
         case 'A':
-            return pos == 0 ? [] : false
+            if(pos == 0){
+                match = []
+            }
+            break
         case 's':
-            test = $B.unicode_tables.Zs[cp] !== undefined ||
-                        $B.unicode_bidi_whitespace.indexOf(cp) > -1
+            if($B.unicode_tables.Zs[cp] !== undefined ||
+                    $B.unicode_bidi_whitespace.indexOf(cp) > -1){
+                match = [cp]
+            }
             break
         case 'S':
-            test = $B.unicode_tables.Zs[cp] === undefined &&
-                        $B.unicode_bidi_whitespace.indexOf(cp) == -1
+            if($B.unicode_tables.Zs[cp] === undefined &&
+                    $B.unicode_bidi_whitespace.indexOf(cp) == -1){
+                match = [cp]
+            }
             break
         case '.':
             if(flags && flags.value & DOTALL.value){
-                test = true
-            }else{
-                test = cp != 10
+                match = [cp]
+            }else if(cp != 10){
+                match = [cp]
             }
             break
         case 'd':
-            test = $B.unicode_tables.numeric[cp] !== undefined
+            if($B.unicode_tables.numeric[cp] !== undefined){
+                match = [cp]
+            }
             break
         case 'D':
-            test = $B.unicode_tables.numeric[cp] === undefined
+            if($B.unicode_tables.numeric[cp] === undefined){
+                match = [cp]
+            }
             break
         case 'b':
-            test = (pos == 0 && is_word[cp]) ||
+            if((pos == 0 && is_word[cp]) ||
                    (pos == string.codepoints.length &&
                        is_word[string.codepoints[pos - 1]]) ||
-                    is_word[cp] != is_word[string.codepoints[pos - 1]]
-            return test ? [] : false
+                    is_word[cp] != is_word[string.codepoints[pos - 1]]){
+                match = []
+            }
+            break
         case 'B':
-            test = (pos == 0 && is_word[cp]) ||
+            var test = (pos == 0 && is_word[cp]) ||
                    (pos == string.codepoints.length &&
                        is_word[string.codepoints[pos - 1]]) ||
                     is_word[cp] != is_word[string.codepoints[pos - 1]]
-            return test ? false : []
+            if(! test){
+                match = []
+            }
+            break
         case 'w':
-            test = is_word[cp]
+            if(is_word[cp]){
+                match = [cp]
+            }
             break
         case 'W':
-            test = ! is_word[cp]
+            if(! is_word[cp]){
+                match = [cp]
+            }
             break
         case 'Z':
-            test = pos >= string.codepoints.length
+            if(pos >= string.codepoints.length){
+                match = []
+            }
             break
     }
-    if(test){
+    if(match){
         if(this.repeat){
             this.nb_success++
             if(! this.accepts_success()){
@@ -581,17 +541,12 @@ CharacterClass.prototype.match = function(string, pos){
         }
         for(var group of this.groups){
             if(group.num !== undefined){
-                if(cp !== EmptyString){
-                    group.match_codepoints.push(cp)
-                }
+                group.match_codepoints = group.match_codepoints.concat(match)
                 group.nb_success++
             }
         }
-        if(cp !== EmptyString){
-            this.match_codepoints.push(cp)
-            return [cp]
-        }
-        return []
+        this.match_codepoints = this.match_codepoints.concat(match)
+        return match
     }
     return false
 }
@@ -622,7 +577,9 @@ CharacterSet.prototype.accepts_backtracking = Char.prototype.accepts_backtrackin
 CharacterSet.prototype.match = function(string, pos){
     var flags = this.flags,
         test,
-        cp = string.codepoints[pos]
+        cp = string.codepoints[pos],
+        match = false
+
     if(pos >= string.codepoints.length){
         cp = EmptyString
     }
@@ -637,44 +594,42 @@ CharacterSet.prototype.match = function(string, pos){
             if(Array.isArray(item.ord)){
                 if(cp1 >= item.ord[0] &&
                         cp1 <= item.ord[1]){
-                    test = true
+                    match = [cp]
                     break
-                }else{
-                    if(ignore_case && char_is_cased){
-                        var start1 = chr(item.ord[0]).toUpperCase(),
-                            end1 = chr(item.ord[1]).toUpperCase(),
-                            char1 = char.toUpperCase()
-                        if(char1 >= start1 && char1 <= end1){
-                            test = true
-                        }
-                        var start1 = chr(item.ord[0]).toLowerCase(),
-                            end1 = chr(item.ord[1]).toLowerCase(),
-                            char1 = char.toLowerCase()
-                        if(char1 >= start1 && char1 <= end1){
-                            test = true
-                        }
+                }else if(ignore_case && char_is_cased){
+                    var start1 = chr(item.ord[0]).toUpperCase(),
+                        end1 = chr(item.ord[1]).toUpperCase(),
+                        char1 = char.toUpperCase()
+                    if(char1 >= start1 && char1 <= end1){
+                        match = [cp]
+                    }
+                    var start1 = chr(item.ord[0]).toLowerCase(),
+                        end1 = chr(item.ord[1]).toLowerCase(),
+                        char1 = char.toLowerCase()
+                    if(char1 >= start1 && char1 <= end1){
+                        match = [cp]
                     }
                 }
             }else if(item instanceof CharacterClass){
-                test = item.match(string, pos)
+                match = item.match(string, pos)
             }else{
                 if(item.ord == cp1){
-                    test = true
+                    match = [cp]
                     break
                 }
                 if(ignore_case && char_is_cased &&
                         (char.toUpperCase() == chr(item.ord).toUpperCase() ||
                         char.toLowerCase() == chr(item.ord).toLowerCase())){
-                    test = true
+                    match = [cp]
                     break
                 }
             }
         }
     }
     if(this.neg){
-        test = ! test
+        match = match ? false : [cp]
     }
-    if(test){
+    if(match){
         if(this.repeat){
             this.nb_success++
             if(! this.accepts_success()){
@@ -683,19 +638,13 @@ CharacterSet.prototype.match = function(string, pos){
         }
         for(var group of this.groups){
             if(group.num !== undefined){
-                if(cp !== EmptyString){
-                    group.match_codepoints.push(cp)
-                }
+                group.match_codepoints = group.match_codepoints.concat(match)
                 group.nb_success++
             }
         }
-        if(cp !== EmptyString){
-            this.match_codepoints.push(cp)
-            return [cp]
-        }
-        return []
+        this.match_codepoints = this.match_codepoints.concat(match)
     }
-    return false
+    return match
 }
 
 
