@@ -1,11 +1,11 @@
 from browser import console, window
 
-def wrap(func):
+def wrap(func, *args):
     # Transforms a function f into another function that prints a
     # traceback in case of exception
-    def f(*args, **kw):
+    def f():
         try:
-            return func(*args, **kw)
+            return func(*args)
         except Exception as exc:
             msg = ''
             try:
@@ -24,11 +24,11 @@ clear_interval = window.clearInterval
 
 clear_timeout = window.clearTimeout
 
-def set_interval(func, interval):
-    return window.setInterval(wrap(func), interval)
+def set_interval(func, interval, *args):
+    return window.setInterval(wrap(func, *args), interval)
 
 def set_timeout(func, interval, *args):
-    return int(window.setTimeout(wrap(func), interval, *args))
+    return int(window.setTimeout(wrap(func, *args), interval))
 
 def request_animation_frame(func):
     return int(window.requestAnimationFrame(func))
