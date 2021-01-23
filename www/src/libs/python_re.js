@@ -395,6 +395,49 @@ Char.prototype.fixed_length = function(){
 
 Char.prototype.match = function(string, pos){
 
+    if(this.repeat){
+        var n1,
+            n2,
+            len = this.codepoints.length
+        if(Array.isArray(this.repeat.op)){
+            n1 = this.repeat.op[0],
+            n2 = this.repeat.op[1]
+        }else if(this.repeat.op == "?"){
+            n1 = 0
+            n2 = 1
+        }else if(this.repeat.op == "+"){
+            n1 = 1
+            n2 = len
+        }else if(this.repeat.op == "*"){
+            n1 = 1 // case 0 is handled in accept_failure()
+            n2 = len
+        }
+        if(this.cp !== EmptyString &&
+                (! this.flags || !(this.flags.value & IGNORECASE.value))){
+            var i = pos,
+                n = n2 === undefined ? n1 : n2
+            while(string.codepoints[i] == this.cp && i - pos < n){
+                i++
+            }
+            var nb = i - pos
+            if((n2 === undefined && nb == n) ||
+                    (n2 !== undefined && nb >= n1 && nb <= n2)){
+                this.nb_success += nb
+                var cps = string.codepoints.slice(pos, i)
+                for(var group of this.groups){
+                    if(group.num !== undefined){
+                        group.match_codepoints = group.match_codepoints.concat(cps)
+                        group.nb_success++
+                    }
+                }
+                this.match_codepoints = this.match_codepoints.concat(cps)
+                return cps
+            }else{
+                return false
+            }
+        }
+    }
+
     var match = false,
         cp = string.codepoints[pos]
 
@@ -3018,7 +3061,7 @@ var $module = {
             var s = '',
                 groups = mo.re.$groups,
                 cps,
-                has_groups =false
+                has_groups = false
             for(var key in groups){
                 has_groups = true
                 if(groups[key].num == key){
