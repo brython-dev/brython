@@ -172,6 +172,17 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
        return _b_.float.$factory(jsobj)
     }
 
+    if(typeof jsobj == "function"){
+        // transform Python arguments to equivalent JS arguments
+        return function(){
+            var args = []
+            for(var i = 0, len = arguments.length; i < len; i++){
+                args.push(pyobj2jsobj(arguments[i]))
+            }
+            return jsobj2pyobj(jsobj.apply(null, args))
+        }
+    }
+
     if(jsobj.$nat === 'kw') {
         return jsobj
     }
@@ -265,7 +276,6 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 throw err
             }
         }
-
     }else{
         // other types are left unchanged
 
