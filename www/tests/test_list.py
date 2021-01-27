@@ -314,4 +314,11 @@ L = [P(7), P(3), P(5), P(1), P(3)]
 L.sort()
 assert L == [P(1), P(3), P(3), P(5), P(7)]
 
+# issue 1593
+t = [1, 2, 3]
+try:
+    t[1.1]
+    raise Exception("should have raised TypeError")
+except TypeError:
+    pass
 print("passed all tests..")

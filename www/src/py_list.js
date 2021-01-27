@@ -155,7 +155,7 @@ list.$getitem = function(self, key){
     var factory = (self.__class__ || $B.get_class(self)).$factory
 
     try{
-        var int_key = $B.$GetInt(key)
+        var int_key = $B.PyNumber_Index(key)
 
         var items = self.valueOf(),
             pos = int_key
@@ -165,6 +165,7 @@ list.$getitem = function(self, key){
         throw _b_.IndexError.$factory($B.class_name(self) +
             " index out of range")
     }catch(err){
+
     }
     if(key.__class__ === _b_.slice || isinstance(key, _b_.slice)){
         // Find integer values for start, stop and step
@@ -194,9 +195,6 @@ list.$getitem = function(self, key){
             }
             return factory(res)
         }
-    }
-    if(_b_.hasattr(key, "__int__") || _b_.hasattr(key, "__index__")){
-       return list.__getitem__(self, _b_.int.$factory(key))
     }
 
     throw _b_.TypeError.$factory($B.class_name(self) +

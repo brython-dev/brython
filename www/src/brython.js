@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-27 10:41:33.096559"
-__BRYTHON__.timestamp=1611740493096
+__BRYTHON__.compiled_date="2021-01-27 15:32:01.734923"
+__BRYTHON__.timestamp=1611757921734
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re_kozh","random","unicodedata"]
 ;
 
@@ -11649,7 +11649,7 @@ $B.check_no_kw("__getitem__",self,key)
 $B.check_nb_args("__getitem__",2,arguments)
 return list.$getitem(self,key)}
 list.$getitem=function(self,key){var factory=(self.__class__ ||$B.get_class(self)).$factory
-try{var int_key=$B.$GetInt(key)
+try{var int_key=$B.PyNumber_Index(key)
 var items=self.valueOf(),pos=int_key
 if(int_key < 0){pos=items.length+pos}
 if(pos >=0 && pos < items.length){return items[pos]}
@@ -11665,7 +11665,6 @@ for(var i=start;i < stop;i+=step){res[pos++]=items[i]}
 return factory(res)}else{if(stop > start){return factory(res)}
 for(var i=start;i > stop;i+=step){res[pos++]=items[i]}
 return factory(res)}}
-if(_b_.hasattr(key,"__int__")||_b_.hasattr(key,"__index__")){return list.__getitem__(self,_b_.int.$factory(key))}
 throw _b_.TypeError.$factory($B.class_name(self)+
 " indices must be integer, not "+$B.class_name(key))}
 list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
