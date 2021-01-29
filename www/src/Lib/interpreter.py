@@ -196,12 +196,12 @@ class Interpreter:
                 return
             src = self.zone.value
             if self._status == "main":
-                currentLine = src[src.rfind('>>>') + 4:]
+                currentLine = src[src.rfind('\n>>>') + 5:]
             elif self._status == "3string":
-                currentLine = src[src.rfind('>>>') + 4:]
+                currentLine = src[src.rfind('\n>>>') + 5:]
                 currentLine = currentLine.replace('\n... ', '\n')
             else:
-                currentLine = src[src.rfind('...') + 4:]
+                currentLine = src[src.rfind('\n...') + 5:]
             if self._status == 'main' and not currentLine.strip():
                 self.zone.value += '\n>>> '
                 event.preventDefault()
