@@ -694,7 +694,6 @@ class RawConfigParser(MutableMapping):
         for filename in filenames:
             try:
                 with open(filename, encoding=encoding) as fp:
-                    print("configparser 697, open", fp)
                     self._read(fp, filename)
             except OSError:
                 continue
@@ -1087,10 +1086,7 @@ class RawConfigParser(MutableMapping):
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
                         if not optname:
-                            print("configparser, error 1090", line)
                             e = self._handle_error(e, fpname, lineno, line)
-                        else:
-                            print("configparser, re ok", value)
                         optname = self.optionxform(optname.rstrip())
                         if (self._strict and
                             (sectname, optname) in elements_added):
@@ -1110,8 +1106,6 @@ class RawConfigParser(MutableMapping):
                         # exception but keep going. the exception will be
                         # raised at the end of the file and will contain a
                         # list of all bogus lines
-                        print("configparser 1111, no re match", self._optcre,
-                            value)
                         e = self._handle_error(e, fpname, lineno, line)
         self._join_multiline_values()
         # if any parsing errors occurred, raise an exception
