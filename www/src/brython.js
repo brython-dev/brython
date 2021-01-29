@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-29 16:12:40.618470"
-__BRYTHON__.timestamp=1611933160618
+__BRYTHON__.compiled_date="2021-01-29 17:12:51.400741"
+__BRYTHON__.timestamp=1611936771400
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re1","python_re_kozh","random","unicodedata"]
 ;
 
@@ -6219,6 +6219,8 @@ $B.from_alias(name)+"' referenced before assignment")}}
 $B.$check_def=function(name,value){
 if(value !==undefined){return value}else if(_b_[name]!==undefined){
 return _b_[name]}else{var frame=$B.last($B.frames_stack)
+if(frame[1].$is_not_dict){
+try{return $B.$getitem(frame[1],name)}catch(err){if(! $B.is_exc(err,[_b_.KeyError])){throw err}}}else if(frame[1][name]!==undefined){return frame[1][name]}
 if(frame[3][name]!==undefined){return frame[3][name]}}
 throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
 "' is not defined")}
@@ -6952,7 +6954,7 @@ gns=eval("$locals_"+globals_id)
 if($B.frames_stack[$B.frames_stack.length-1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length-1][3]}
 if(_locals !==_b_.None){lns=eval("$locals_"+locals_id)
 for(var attr in lns){var attr1=$B.from_alias(attr)
-if(attr1.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}else{_b_.dict.$setitem(_locals,attr1,lns[attr])}}}}else{for(var attr in lns){if(attr !=="$src"){current_frame[1][attr]=lns[attr]}}}
+if(attr1.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}else if(_locals.__class__ !==_b_.dict){$B.$setitem(_locals,attr1,lns[attr])}else{_b_.dict.$setitem(_locals,attr1,lns[attr])}}}}else{for(var attr in lns){if(attr !=="$src"){current_frame[1][attr]=lns[attr]}}}
 if(_globals !==_b_.None){
 if(globals_is_dict){var jsobj=_globals.$jsobj
 delete _globals.$jsobj}
@@ -13112,7 +13114,8 @@ dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self:null,arg:null},[
 return dict.$getitem(self,arg)}
 $B.string_count=0
 $B.num_count=0
-dict.$getitem=function(self,arg){if(self.$jsobj){if(self.$jsobj[arg]===undefined){if(self.$jsobj.hasOwnProperty(arg)){return $B.Undefined}
+dict.$getitem=function(self,arg,ignore_missing){
+if(self.$jsobj){if(self.$jsobj[arg]===undefined){if(self.$jsobj.hasOwnProperty(arg)){return $B.Undefined}
 throw _b_.KeyError.$factory(arg)}
 return self.$jsobj[arg]}
 switch(typeof arg){case "string":
@@ -13134,8 +13137,8 @@ var res=self.$string_dict[arg.valueOf()]
 if(res !==undefined){return res[0]}}
 var ix=rank(self,hash,arg)
 if(ix >-1){return self.$object_dict[hash][ix][1][0]}
-if(self.__class__ !==dict){try{var missing_method=getattr(self.__class__,"__missing__",_b_.None)}catch(err){console.log(err)}
-if(missing_method !==_b_.None){return missing_method(self,arg)}}
+if(! ignore_missing){if(self.__class__ !==dict && ! ignore_missing){try{var missing_method=getattr(self.__class__,"__missing__",_b_.None)}catch(err){console.log(err)}
+if(missing_method !==_b_.None){return missing_method(self,arg)}}}
 throw _b_.KeyError.$factory(arg)}
 dict.__hash__=_b_.None
 function init_from_list(self,args){var i=-1,stop=args.length-1,si=dict.__setitem__
@@ -13325,8 +13328,8 @@ dict.popitem=function(self){try{var itm=_b_.next(_b_.iter(dict.items(self)))
 dict.__delitem__(self,itm[0])
 return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")}}}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
-try{return dict.__getitem__(self,key)}
-catch(err){if(err.__class__ !==_b_.KeyError){throw err}
+try{
+return dict.$getitem(self,key,true)}catch(err){if(err.__class__ !==_b_.KeyError){throw err}
 if(_default===undefined){_default=$N}
 var hash=key.$hash
 key.$hash=undefined

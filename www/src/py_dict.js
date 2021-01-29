@@ -435,7 +435,8 @@ dict.__getitem__ = function(){
 
 $B.string_count = 0
 $B.num_count = 0
-dict.$getitem = function(self, arg){
+dict.$getitem = function(self, arg, ignore_missing){
+    // ignore_missing is only set in dict.setdefault
     if(self.$jsobj){
         if(self.$jsobj[arg] === undefined){
             if(self.$jsobj.hasOwnProperty(arg)){
@@ -488,16 +489,18 @@ dict.$getitem = function(self, arg){
         return self.$object_dict[hash][ix][1][0]
     }
 
-    if(self.__class__ !== dict){
-        try{
-            var missing_method = getattr(self.__class__, "__missing__",
-                _b_.None)
-        }catch(err){
-            console.log(err)
+    if(! ignore_missing){
+        if(self.__class__ !== dict && ! ignore_missing){
+            try{
+                var missing_method = getattr(self.__class__, "__missing__",
+                    _b_.None)
+            }catch(err){
+                console.log(err)
 
-        }
-        if(missing_method !== _b_.None){
-            return missing_method(self, arg)
+            }
+            if(missing_method !== _b_.None){
+                return missing_method(self, arg)
+            }
         }
     }
     throw _b_.KeyError.$factory(arg)
@@ -1009,9 +1012,11 @@ dict.setdefault = function(){
         self = $.self,
         key = $.key,
         _default = $._default
-
-    try{return dict.__getitem__(self, key)}
-    catch(err){
+    try{
+        // Pass 3rd argument to dict.$getitem to avoid using __missing__
+        // Cf. issue #1598
+        return dict.$getitem(self, key, true)
+    }catch(err){
         if(err.__class__ !== _b_.KeyError){
             throw err
         }

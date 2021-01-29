@@ -609,7 +609,6 @@ CharacterClass.prototype.match = function(string, pos){
                         return false
                     }
                     match = string.codepoints.slice(pos, i)
-                    console.log(this, "dot repeat", match)
                 }
             }else{
                 if(cp != 10 || (flags && flags.value & DOTALL.value)){
@@ -878,7 +877,7 @@ Group.prototype.match = function(s, pos){
         if(this.parent.match_codepoints !== undefined){
             save_cps = this.parent.match_codepoints.slice()
         }
-        group_match = match(this, s, pos)
+        group_match = match1(this, s, pos)
         if(save_cps !== undefined){
             // restore parents matches
             var nb_cps = this.parent.match_codepoints.length - save_cps.length,
@@ -900,14 +899,15 @@ Group.prototype.match = function(s, pos){
         // by this
         var start = pos - this.length,
             s1 = new StringObj(s.substring(start, pos)),
-            group_match = match(this, s1, 0)
+            group_match = match1(this, s1, 0)
         console.log("substring", s1, "group match", group_match)
         if(group_match && group_match.length == pos - start){
             return []
         }
         return false
     }else{
-        group_match = match(this, s, pos)
+        group_match = match1(this, s, pos)
+        console.log("group", this, "group_match", group_match)
         if(group_match){
             this.match_start = group_match.start
             this.match_end = group_match.end
@@ -922,7 +922,7 @@ Group.prototype.match = function(s, pos){
             }
         }
     }
-    return group_match.match_codepoints
+    return group_match.codepoints
 }
 
 Group.prototype.match_string = function(){
@@ -1524,6 +1524,7 @@ function compile(data, flags){
         }else if(item instanceof GroupEnd){
             end_pos = item.pos
             if(group_stack.length == 0){
+                console.log("pattern", from_codepoint_list(pattern))
                 fail("unbalanced parenthesis", pos)
             }
             var item = group_stack.pop()
@@ -2359,6 +2360,129 @@ function match(pattern, string, pos, flags, endpos){
                            endpos)
 }
 
+function match1(pattern, string, pos, flags, endpos){
+    if(! string instanceof CodePoints){
+        console.log('string should be codepoints', string)
+        throw Error('string is not a codepoints')
+    }
+    if(! pattern instanceof Node){
+        console.log('pattern not compiled', pattern)
+        throw Error('pattern not compiled')
+    }
+    function* PatternReader(pattern){
+        if(pattern instanceof Char ||
+                pattern instanceof ConditionalBackref){
+            yield pattern
+        }else if(pattern.surrogate){
+            var pos = 0,
+                len = pattern.length
+            while(pos < len){
+                yield pattern[pos]
+                pos++
+            }
+        }else{
+            var pos = 0,
+                len = pattern.items.length
+            while(pos < len){
+                yield pattern.items[pos]
+                pos++
+            }
+        }
+    }
+
+    var pos = pos || 0,
+        start = pos,
+        original_string = string
+
+    var debug = false
+    if(debug){
+        console.log("enter match1 loop, pattern", pattern)
+    }
+
+    endpos = endpos === undefined ? string.codepoints.length : endpos
+    codepoints = string.codepoints.slice(0, endpos)
+
+    if(pattern.subitems){
+        for(var subitem of pattern.subitems){
+            if(debug){
+                console.log("reset subitem", subitem)
+            }
+            subitem.match_codepoints = []
+            subitem.nb_success = 0
+        }
+    }
+    pattern.group_match_indices = []
+    var pattern_reader = PatternReader(pattern)
+    var models = []
+    for(var model of pattern_reader){
+        models.push(model)
+        model.rank = models.length - 1
+    }
+    var model = models[0],
+        cp,
+        match_codepoints = [],
+        states = [[pos, model]],
+        mo,
+        new_states = [],
+        nb = 0,
+        state,
+        string,
+        pos
+    while(true){
+        /* Loop on the list of current states
+           A state is a tuple (position in string, model)
+           If the model matches at the given position:
+           - if there is no next model, return the match object
+           - if it is not repeated, add (pos + 1, next_model) to new states
+             for the next loop
+           - if it is repeated, the match object has the interval [n1, n2]
+             such that the model matches all the substrings between
+             pos + n1 and pos + n2. Each of these positions is a candidate
+             for a match with the next model. So add (pos + n, next_model)
+             with n1 <= n <= n2 to new states
+           If the model doesn't match, do nothing
+         */
+        new_states = []
+        for(state of states){
+            //console.log("match with model", model, "at pos", pos)
+            [pos, model] = state
+            mo = model.match(string, pos)
+            if(mo){
+                var next_model = models[model.rank + 1]
+                if(next_model == undefined){
+                    return BMatchObject1.$factory(string, pattern, state, mo)
+                }
+                if(model.repeat && model.accepts_success()){
+                    for(var i = 1; i <= mo.length; i++){
+                        var new_state = [pos + i, next_model]
+                        new_state.previous = state
+                        new_states.push(new_state)
+                    }
+                }else{
+                    var new_state = [pos + mo.length, next_model]
+                    new_state.previous = state
+                    new_states.push(new_state)
+                }
+            }
+        }
+        //console.log("new states", new_states)
+        nb++
+        if(! new_states){
+            console.log("match")
+            return "ok"
+        }
+        if(new_states.length == 0){
+            return _b_.None
+        }
+        if(nb > 10){
+            console.log("overflow")
+            break
+        }
+        states = new_states
+    }
+    return "ok"
+}
+
 function to_codepoint_list(s){
     var items = []
     if(s.__class__ === _b_.str.$surrogate){
@@ -2471,6 +2595,95 @@ MatchObject.prototype.match_string = function(){
     return from_codepoint_list(this.match_codepoints)
 }
 
+var BMatchObject1 = $B.make_class("MatchObject",
+    function(string, pattern, state, mo){
+        var items = [],
+            item
+        console.log(state, mo)
+        item = state[1]
+        item.start = state[0]
+        var end = item.end = item.start + mo.length,
+            last_end = end
+        state = state.previous
+        items = [item]
+        while(state){
+            item = state[1]
+            item.start = state[0]
+            item.end = end
+            end = item.start
+            items.splice(0, 0, item)
+            state = state.previous
+        }
+        console.log("items", items)
+        return {
+            __class__: BMatchObject1,
+            items,
+            string,
+            pattern,
+            start: item.start,
+            end: last_end,
+            codepoints: string.codepoints.slice(item.start, last_end)
+        }
+    }
+)
+
+BMatchObject1.__repr__ = function(self){
+    var s = BMatchObject1.match_string(self).substr(0, 50)
+    return `<re.Match object; span=(${self.start}, ${self.end}), ` +
+        `match=${_b_.repr(s)}>`
+}
+
+BMatchObject1.group = function(){
+    var $ = $B.args("group", 1, {self: null}, ['self'],
+                arguments, {group: 0}, 'groups', null),
+        self = $.self,
+        groups = $.groups,
+        res = []
+    if(groups.length == 0){
+        groups = [0]
+    }
+    for(var group of groups){
+        if(group == 0){
+            res.push(from_codepoint_list(self.codepoints.slice(self.start, self.end)))
+        }
+        for(var item of self.items){
+            if(item.type == "group" && item.num == group){
+                res.push(from_codepoint_list(self.string.codepoints.slice(
+                    item.start, item.end)))
+            }
+        }
+    }
+    if(res.length == 0){
+        return _b_.None
+    }else if(groups.length == 1){
+        return groups[0]
+    }else{
+        return $B.fast_tuple(res)
+    }
+}
+
+BMatchObject1.groups = function(self){
+    var groups = []
+    for(var item of self.items){
+        console.log("item", item)
+        if(item.type == "group"){
+            groups.push(from_codepoint_list(self.string.codepoints.slice(
+                item.start, item.end)))
+        }
+    }
+    return $B.fast_tuple(groups)
+}
+
+BMatchObject1.match_string = function(self){
+    console.log("match string", self)
+    var start = self.items[0].start,
+        end = self.items[self.items.length - 1].end
+    return from_codepoint_list(self.string.codepoints.slice(start, end))
+}
+
+
+$B.set_func_names(BMatchObject1, "re")
+
 var BMatchObject = $B.make_class("MatchObject",
     function(mo){
         return {
@@ -2492,9 +2705,10 @@ BMatchObject.__getitem__ = function(){
 }
 
 BMatchObject.__repr__ = function(self){
-    var mo = self.mo
+    var mo = self.mo,
+        s = mo.match_string().substr(0, 50)
     return `<re.Match object; span=(${mo.start}, ${mo.end}), ` +
-        `match=${_b_.repr(mo.match_string())}>`
+        `match=${_b_.repr(s)}>`
 }
 
 BMatchObject.__setitem__ = function(){
@@ -3244,12 +3458,7 @@ var $module = {
             data = prepare({pattern, string})
             pattern = compile(data, flags)
         }
-        var mo = match(pattern, data.string, 0, flags)
-        if(mo === false){
-            return _b_.None
-        }
-        mo.data_type = data.type
-        return BMatchObject.$factory(mo)
+        return match1(pattern, data.string, 0, flags)
     },
     purge: function(){
         var $ = $B.args("purge", 0, {}, [], arguments, {}, null, null)

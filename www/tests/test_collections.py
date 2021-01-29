@@ -89,3 +89,11 @@ assert n.b == 4
 N = collections.namedtuple('N', 'x y')
 N.x.__doc__ = """my doc."""
 assert f'doc={N.x.__doc__}' == "doc=my doc."
+
+# issue 1598
+from collections import defaultdict
+d = defaultdict(int)
+d.setdefault("bar", []).extend([123])  # assign a different type at run-time
+assert d["bar"] == [123]
+
+print("passed all tests...")
