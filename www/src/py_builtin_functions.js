@@ -658,12 +658,13 @@ function $$eval(src, _globals, _locals){
             eval('$locals_' + locals_id + " = obj")
         }
     }else{
-        var locals_is_dict = false
+        var items
         if(_locals.$jsobj){
-            var items = _locals.$jsobj
+            items = _locals.$jsobj
+        }else if(_locals.__class__ !== _b_.dict){
+            items = _locals
         }else{
-            locals_id_dict = true
-            var items = _b_.dict.$to_obj(_locals)
+            items = _b_.dict.$to_obj(_locals)
             _locals.$jsobj = items
         }
         for(var item in items){
@@ -679,6 +680,9 @@ function $$eval(src, _globals, _locals){
         // Attribute $exec_locals is used in py_utils.$search to raise
         // NameError instead of UnboundLocalError
         eval("$locals_" + locals_id + ".$exec_locals = true")
+        eval("$locals_" + locals_id + ".$is_not_dict = " +
+            (_locals.__class__ !== _b_.dict))
+
     }
     _locals.$is_namespace = true
 
@@ -780,6 +784,7 @@ function $$eval(src, _globals, _locals){
             var res = eval(js)
         }
 
+
         if($.src.filename == "<console>" && $.src.mode == "single" &&
                 res !== undefined && res !== _b_.None){
             _b_.print(res)
@@ -798,6 +803,8 @@ function $$eval(src, _globals, _locals){
                 if(attr1.charAt(0) != '$'){
                     if(_locals.$jsobj){
                         _locals.$jsobj[attr] = lns[attr]
+                    }else if(_locals.__class__ !== _b_.dict){
+                        $B.$setitem(_locals, attr1, lns[attr])
                     }else{
                         _b_.dict.$setitem(_locals, attr1, lns[attr])
                     }

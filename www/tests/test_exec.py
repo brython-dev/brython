@@ -134,4 +134,17 @@ assert 'var' in g
 # bug 2 -- var is undefined when f is called
 assert g['f']() == 123
 
+# issue 1597 (locals can be any mapping type)
+import collections
+
+x = eval("a", {}, collections.defaultdict(list))
+assert x == []
+
+y = eval("a", {}, collections.defaultdict(list, a=1))
+assert y == 1
+
+z = eval("a", {}, collections.UserDict(a=2))
+assert z == 2
+
+
 print("passed all tests...")

@@ -422,16 +422,27 @@ $B.$search = function(name, global_ns){
 $B.$global_search = function(name, search_ids){
     // search in all namespaces above current stack frame
     var ns = {}
-
-    for(var i = 0; i< $B.frames_stack.length; i++){
+    for(var i = 0; i < $B.frames_stack.length; i++){
         var frame = $B.frames_stack[i]
-        if(search_ids.indexOf(frame[0]) > -1 &&
-                frame[1][name] !== undefined){
-            return frame[1][name]
+        if(search_ids.indexOf(frame[0]) > -1){
+            if(frame[1].$is_not_dict){
+                // locals is not a dictionary (might be the case with exec(),
+                // cf. issue #1597
+                try{
+                    return $B.$getitem(frame[1], name)
+                }catch(err){
+                    if(! $B.is_exc(err, [_b_.KeyError])){
+                        throw err
+                    }
+                }
+            }else if(frame[1][name] !== undefined){
+                return frame[1][name]
+            }
         }
-        if(search_ids.indexOf(frame[2]) > -1 &&
-                frame[3][name] !== undefined){
-            return frame[3][name]
+        if(search_ids.indexOf(frame[2]) > -1){
+            if(frame[3][name] !== undefined){
+                return frame[3][name]
+            }
         }
     }
     for(var i = 0; i < search_ids.length; i++){
@@ -462,6 +473,18 @@ $B.$check_def = function(name, value){
         return _b_[name]
     }else{
         var frame = $B.last($B.frames_stack)
+        if(frame[1].$is_not_dict){
+            // Cf. issue #1597
+            try{
+                return $B.$getitem(frame[1], name)
+            }catch(err){
+                if(! $B.is_exc(err, [_b_.KeyError])){
+                    throw err
+                }
+            }
+        }else if(frame[1][name] !== undefined){
+            return frame[1][name]
+        }
         if(frame[3][name] !== undefined){
             return frame[3][name]
         }
@@ -629,9 +652,10 @@ $B.$getitem = function(obj, item){
         return _b_.dict.$getitem(obj, item)
     }
 
-    var gi = $B.$getattr(obj, "__getitem__", _b_.None)
+    var gi = $B.$getattr(obj.__class__ || $B.get_class(obj),
+        "__getitem__", _b_.None)
     if(gi !== _b_.None){
-        return gi(item)
+        return gi(obj, item)
     }
 
     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
