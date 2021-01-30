@@ -42,6 +42,9 @@ The syntax to create an object (e.g. a hyperlink) is :
 > such as a string, a number, etc., or an instance of another class in
 > the **html** module
 
+> If *content* is a string, it is interpreted as HTML code. To specify the
+> text content of an element, set it as the value of property `text`.
+
 > *attributes* is a sequence of keywords corresponding to the
 > [attributes](http://www.w3.org/TR/html5-author/index.html#attributes-1) of
 > the HTML tag. If the attribute contains a hyphen (-) it must be replaced by

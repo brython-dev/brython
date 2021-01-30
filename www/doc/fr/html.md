@@ -40,6 +40,10 @@ La syntaxe pour créer un objet (par exemple un lien hypertexte) est :
 > comme une chaîne de caractères, un nombre, etc., ou bien une
 > instance d'une autre classe du module **html**.
 
+> Si *content* est une chaine de caractères, elle est interprétée comme du
+> code HTML. Pour spécifier le contenu texte d'un élément il faut attribuer la
+> valeur à sa propriété `text`.
+
 > *attributes* est une suite de mots-clés correspondant aux
 > [attributs](http://www.w3.org/TR/html5-author/index.html#attributes-1) de la
 > balise HTML. Les traits d'union (-) doivent être remplacés par des soulignés
