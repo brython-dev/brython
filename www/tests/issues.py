@@ -2835,6 +2835,18 @@ assert z == ['s', 'p', 'a', 'm']
 assert max([1, 2, 3], key=None) == 3
 assert min([1, 2, 3], key=None) == 1
 
+# issue 1596
+x = 0
+y = 0
+def f():
+    x = 1
+    y = 1
+    class C:
+        assert x == 0 # local to a class, unbound : search at module level
+        assert y == 1 # not local, unbound : search in all enclosing scopes
+        x = 2
+f()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

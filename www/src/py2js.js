@@ -5801,7 +5801,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "Bar"
+    var $test = false // val == "xfc" || val == "y"
 
     if($test){
         console.log("this", this)
@@ -5861,6 +5861,9 @@ $IdCtx.prototype.to_js = function(arg){
         scope = innermost,
         found = []
 
+    if($test){
+        console.log("innermost", innermost)
+    }
     var search_ids = ['"' + innermost.id + '"']
     // get global scope
     var gs = innermost
@@ -5871,11 +5874,16 @@ $IdCtx.prototype.to_js = function(arg){
             console.log(gs.id, gs)
         }
         if(gs.parent_block){
-            if(gs.parent_block == $B.builtins_scope){break}
-            else if(gs.parent_block.id === undefined){break}
+            if(gs.parent_block == $B.builtins_scope){
+                break
+            }else if(gs.parent_block.id === undefined){
+                break
+            }
             gs = gs.parent_block
         }
-        search_ids.push('"' + gs.id + '"')
+        if(innermost.ntype != "class" || gs.parent_block === $B.builtins_scope){
+            search_ids.push('"' + gs.id + '"')
+        }
     }
     search_ids = "[" + search_ids.join(", ") + "]"
 
@@ -5969,7 +5977,16 @@ $IdCtx.prototype.to_js = function(arg){
             if(scope.binding === undefined){
                 console.log("scope", scope, val, "no binding", innermost)
             }
-            if(scope.binding[val]){
+            if(innermost.binding[val] && innermost.ntype == "class"){
+                // If the name is bound in a class definition, it can be
+                // resolved only in the class, or in the global namespace
+                // Cf. issue #1596
+                if(scope.binding[val] &&
+                        (! scope.parent_block ||
+                         scope.parent_block.id == "__builtins__")){
+                    found.push(scope)
+                }
+            }else if(scope.binding[val]){
                 found.push(scope)
             }
         }
@@ -5978,7 +5995,7 @@ $IdCtx.prototype.to_js = function(arg){
     }
     this.found = found
     if($test){
-        console.log("found", found)
+        console.log(val, "found", found)
         found.forEach(function(item){
             console.log(item.id)
         })

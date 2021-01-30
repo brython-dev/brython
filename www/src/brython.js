@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-01-29 17:14:46.894955"
-__BRYTHON__.timestamp=1611936886894
+__BRYTHON__.compiled_date="2021-01-30 09:08:40.991600"
+__BRYTHON__.timestamp=1611994120991
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re1","python_re_kozh","random","unicodedata"]
 ;
 
@@ -2900,13 +2900,13 @@ this.scope.C.tree[0].name==val){
 return '$B.$search("'+val+'")'}
 if(this.unbound && !this.nonlocal){if(this.scope.ntype=='def' ||this.scope.ntype=='generator'){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
 var innermost=$get_scope(this),scope=innermost,found=[]
+if($test){console.log("innermost",innermost)}
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
 while(true){if($test){console.log(gs.id,gs)}
-if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}
-else if(gs.parent_block.id===undefined){break}
+if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
-search_ids.push('"'+gs.id+'"')}
+if(innermost.ntype !="class" ||gs.parent_block===$B.builtins_scope){search_ids.push('"'+gs.id+'"')}}
 search_ids="["+search_ids.join(", ")+"]"
 if(innermost.globals && innermost.globals.has(val)){search_ids=['"'+gs.id+'"']
 innermost=gs}
@@ -2936,11 +2936,14 @@ if(!scope.is_comp &&
 found.push(scope)}}else{found.push(scope)
 break}
 if($test){console.log(val,"found in",scope.id)}}}}else{if(scope.binding===undefined){console.log("scope",scope,val,"no binding",innermost)}
-if(scope.binding[val]){found.push(scope)}}
+if(innermost.binding[val]&& innermost.ntype=="class"){
+if(scope.binding[val]&&
+(! scope.parent_block ||
+scope.parent_block.id=="__builtins__")){found.push(scope)}}else if(scope.binding[val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}
 else{break}}
 this.found=found
-if($test){console.log("found",found)
+if($test){console.log(val,"found",found)
 found.forEach(function(item){console.log(item.id)})}
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
