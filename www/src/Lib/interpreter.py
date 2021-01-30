@@ -106,7 +106,8 @@ class Interpreter:
 
     def __init__(self, elt_id=None, title="Interactive Interpreter",
                  globals=None, locals=None,
-                 rows=30, cols=84, default_css=True):
+                 rows=30, cols=84, default_css=True,
+                 clear_zone=True, banner=True):
         """
         Create the interpreter.
         - "elt_id" is the id of a textarea in the document. If not set, a new
@@ -147,8 +148,15 @@ class Interpreter:
                 raise ValueError("element should be a string or " +
                     f"a TEXTAREA, got '{elt_id.__class__.__name__}'")
         v = sys.implementation.version
-        self.zone.value = (f"Brython {v[0]}.{v[1]}.{v[2]} on " +
-            f"{window.navigator.appName} {window.navigator.appVersion}\n>>> ")
+        if clear_zone:
+            self.zone.value = ''
+        if banner:
+            self.zone.value += (
+                f"Brython {v[0]}.{v[1]}.{v[2]} on "
+                f"{window.navigator.appName} {window.navigator.appVersion}"
+                "\n"
+            )
+        self.zone.value += ">>> "
         self.cursor_to_end()
         self._status = "main"
         self.current = 0
