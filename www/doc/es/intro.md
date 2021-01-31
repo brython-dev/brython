@@ -24,14 +24,14 @@ Un ejemplo simple :
 from browser import document
 from browser.widgets.dialog import InfoDialog
 
-def click(ev):
+def echo(ev):
     InfoDialog("Hello", f"Hola, {document['zone'].value} !")
 
 # bind event 'click' on button to function echo
-document["echo"].bind("click", click)
+document["echo"].bind("click", echo)
 </script>
 <input id="zone">
-<button id="mybutton">click !</button>
+<button id="echo">click !</button>
 </body>
 </html>
 ```

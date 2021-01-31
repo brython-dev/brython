@@ -30,7 +30,7 @@ def click(ev):
 document["echo"].bind("click", click)
 </script>
 <input id="zone">
-<button id="mybutton">click !</button>
+<button id="echo">click !</button>
 </body>
 </html>
 ```
