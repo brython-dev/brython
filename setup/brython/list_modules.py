@@ -15,6 +15,9 @@ import time
 import io
 import tokenize
 import token
+import logging
+
+logger = logging.getLoger(__name__)
 
 # Template for application setup.py script
 setup = """from setuptools import setup, find_packages
@@ -565,7 +568,10 @@ def load_user_modules(module_dir=os.getcwd()):
                 # modules in the same directory
                 path = os.path.join(dirname, filename)
                 with open(path, encoding="utf-8") as fobj:
-                    src = fobj.read()
+                    try:
+                        src = fobj.read()
+                    except:
+                        logger.error("Unable to read %s", path)
                 mf = ModulesFinder(dirname)
                 imports = sorted(list(mf.get_imports(src)))
                 user_modules[name] = [ext, src, imports]
