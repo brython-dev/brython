@@ -269,9 +269,10 @@ $B.idb_open = function(obj){
 $B.ajax_load_script = function(script){
     var url = script.url,
         name = script.name
+        console.log("load script", script)
     if($B.files && $B.files.hasOwnProperty(name)){
         $B.tasks.splice(0, 0, [$B.run_script, $B.files[name],
-            name, true])
+            name, url, true])
     }else if($B.protocol != "file"){
         var req = new XMLHttpRequest(),
             qs = $B.$options.cache ? '' :
@@ -284,7 +285,8 @@ $B.ajax_load_script = function(script){
                     if(script.is_ww){
                         $B.webworkers[name] = src
                     }else{
-                        $B.tasks.splice(0, 0, [$B.run_script, src, name, true])
+                        $B.tasks.splice(0, 0, [$B.run_script, src, name, 
+                            url, true])
                     }
                     loop()
                 }else if(this.status == 404){

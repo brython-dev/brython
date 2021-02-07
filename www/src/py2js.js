@@ -10947,7 +10947,7 @@ var brython = $B.parser.brython = function(options){
 }
 
 
-$B.run_script = function(src, name, run_loop){
+$B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
     $B.$py_module_path[name] = $B.script_path
@@ -10959,8 +10959,7 @@ $B.run_script = function(src, name, run_loop){
                 js: js,
                 __name__: name,
                 $src: src,
-                __file__: $B.script_path +
-                    ($B.script_path.endsWith("/") ? "" : "/") + name
+                __file__: url
             }
             $B.file_cache[script.__file__] = src
             if($B.debug > 1){
@@ -11190,7 +11189,8 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                     src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
-                    $B.tasks.push([$B.run_script, src, module_name, true])
+                    $B.tasks.push([$B.run_script, src, elt.src, 
+                        $B.script_path + "#" + module_name, true])
                 }
             }
         }
