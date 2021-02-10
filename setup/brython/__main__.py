@@ -13,7 +13,8 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--add_package',
-        help="Add a CPython package in Lib/site-packages")
+        help="Add an already-installed, pure-Python package from current CPython environment "
+            "into current Brython project's ./Lib/site-packages")
 
     parser.add_argument('--install', help='Install Brython in an empty directory',
         action="store_true")
