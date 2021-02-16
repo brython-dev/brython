@@ -2953,10 +2953,7 @@ function match(pattern, string, pos, flags, endpos){
                 groups[group_num] = {
                     start: pos,
                     rank,
-                    model,
-                    group_stack: group_stack.slice(),
-                    stack: stack.slice(),
-                    groups: copy(groups)
+                    model
                 }
                 if(model.name !== undefined){
                     groups[model.name] = groups[group_num]
@@ -2984,16 +2981,15 @@ function match(pattern, string, pos, flags, endpos){
                     // start
                     group_stack.push(group)
                     rank = groups[group].rank + 1
+                    continue
                 }else{
                     rank++
+                    console.log('cannot repeat group, go to next rank', rank)
+                    continue
                 }
             }
         }else if(model instanceof Or){
             // If we reach a "|", one of the previous options succeeded
-            // Set group end for all current groups in stack
-            for(var num in groups){
-                groups[num].end = pos
-            }
             // Skip the next options
             var or_group = group_stack[group_stack.length - 1]
             while(true){
@@ -3101,6 +3097,36 @@ function match(pattern, string, pos, flags, endpos){
                             choice_parent = choice_parent.parent
                         }
                         console.log("choice in group", choice_group, groups[choice_group])
+                        var group = groups[choice_group]
+                        // restore
+                        console.log("choice in gropu", group,
+                            "restore from choice", stack)
+                        alert()
+                        while(true){
+                            if(stack.length == 0){
+                                break
+                            }
+                            state = stack.pop()
+                            if(state.pos == group.start){
+                                // remove all the groups that started
+                                // after choice group start
+                                var remove = []
+                                for(var num in groups){
+                                    if(groups[num].start >= group.start &&
+                                            num != choice_group){
+                                        console.log(num, choice_group, num == choice_group)
+                                        remove.push(num)
+                                    }
+                                }
+                                console.log("remove groups", remove)
+                                for(var num of remove){
+                                    delete groups[num]
+                                }
+                                pos = group.end === undefined ?
+                                    group.start : group.end
+                                break
+                            }
+                        }
                         // get option number inside choice
                         while(true){
                             if(choice.items[i] === parent){
@@ -3114,17 +3140,15 @@ function match(pattern, string, pos, flags, endpos){
                         }
                         if(i < choice.items.length - 1){
                             // try next choice
+                            // set rank to next option start
                             var _case = choice.items[i + 1],
-                                group = groups[choice_group]
-                            rank = _case.items[0].rank
-                            // restore
-                            stack = group.stack
-                            group_stack = group.group_stack
-                            pos = group.end === undefined ? group.start : 
-                                group.end
-                            groups = copy(group.groups)
-                            groups[choice_group] = group
+                                rank = _case.items[0].rank
                             is_option = true
+                        }else{
+                            // all options have been tried: backtrack from
+                            // group start
+                            console.log("no option left", choice_group, "fails")
+                            this_group = choice_group
                         }
                         break
                     }
@@ -3169,6 +3193,7 @@ function match(pattern, string, pos, flags, endpos){
                     if(this_group > 0){
                         //console.log("this_group", this_group, groups[this_group])
                         rank = groups[this_group].model.end_rank
+                        pos++
                     }else{
                         // Backtracking: if one of the previous matches was
                         // repeated, try more or less repetitions
