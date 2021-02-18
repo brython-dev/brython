@@ -7097,14 +7097,6 @@ $NodeCtx.prototype.transition = function(token, value){
 $NodeCtx.prototype.to_js = function(){
     if(this.js !== undefined){return this.js}
     this.js_processed = true
-    if(this.tree.length > 1){
-        var new_node = new $Node()
-        var ctx = new $NodeCtx(new_node)
-        ctx.tree = [this.tree[1]]
-        new_node.indent = node.indent + 4
-        this.tree.pop()
-        node.add(new_node)
-    }
     this.js = ""
     if(this.tree[0]){
         var is_not_def = ["def", "generator"].indexOf(this.scope.ntype) == -1
@@ -8925,7 +8917,6 @@ $WithCtx.prototype.set_alias = function(ctx){
 }
 
 $WithCtx.prototype.transform = function(node, rank){
-
     while(this.tree.length > 1){
         /*
         with A() as a, B() as b:
@@ -9064,11 +9055,16 @@ $WithCtx.prototype.transform = function(node, rank){
     new $NodeJSCtx(try_node, 'try')
     top_try_node.add(try_node)
 
-    // if there is an alias, insert the value
+    // if there is an alias, simulate VAR = value
+    // VAR can be anything valid at the left of the equal sign
+    // cf. issue #1608
     if(this.tree[0].alias){
-        var alias = this.tree[0].alias.tree[0].tree[0].value
-        try_node.add($NodeJS('$locals' + '["' + alias + '"] = ' +
-            this.val_name))
+        var new_node = new $Node(),
+            ctx = new $NodeCtx(new_node)
+        try_node.add(new_node)
+        this.tree[0].alias.tree[0].parent = ctx
+        var assign = new $AssignCtx(this.tree[0].alias.tree[0])
+        assign.tree.push(new $RawJSCtx(ctx, this.val_name))
     }
 
     // place block inside a try clause
@@ -11189,7 +11185,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                     src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
-                    $B.tasks.push([$B.run_script, src, elt.src, 
+                    $B.tasks.push([$B.run_script, src, elt.src,
                         $B.script_path + "#" + module_name, true])
                 }
             }

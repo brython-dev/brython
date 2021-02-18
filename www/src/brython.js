@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-02-18 21:57:30.201143"
-__BRYTHON__.timestamp=1613681850201
+__BRYTHON__.compiled_date="2021-02-18 22:45:14.024481"
+__BRYTHON__.timestamp=1613684714024
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re1","python_re_kozh","python_re_v3","python_re_v4","random","unicodedata"]
 ;
 
@@ -3489,12 +3489,6 @@ return C}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $NodeCtx.prototype.to_js=function(){if(this.js !==undefined){return this.js}
 this.js_processed=true
-if(this.tree.length > 1){var new_node=new $Node()
-var ctx=new $NodeCtx(new_node)
-ctx.tree=[this.tree[1]]
-new_node.indent=node.indent+4
-this.tree.pop()
-node.add(new_node)}
 this.js=""
 if(this.tree[0]){var is_not_def=["def","generator"].indexOf(this.scope.ntype)==-1
 if(this.tree[0].annotation){
@@ -4453,9 +4447,11 @@ node.children=[]
 var try_node=new $Node()
 new $NodeJSCtx(try_node,'try')
 top_try_node.add(try_node)
-if(this.tree[0].alias){var alias=this.tree[0].alias.tree[0].tree[0].value
-try_node.add($NodeJS('$locals'+'["'+alias+'"] = '+
-this.val_name))}
+if(this.tree[0].alias){var new_node=new $Node(),ctx=new $NodeCtx(new_node)
+try_node.add(new_node)
+this.tree[0].alias.tree[0].parent=ctx
+var assign=new $AssignCtx(this.tree[0].alias.tree[0])
+assign.tree.push(new $RawJSCtx(ctx,this.val_name))}
 block.forEach(function(elt){try_node.add(elt)})
 var catch_node=new $Node()
 new $NodeJSCtx(catch_node,'catch('+this.err_name+')')
