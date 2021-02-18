@@ -320,7 +320,7 @@ class Interpreter:
         elif event.ctrlKey and event.keyCode == 65: # ctrl+a
             src = self.zone.value
             pos = self.zone.selectionStart
-            col = get_col()
+            col = self.get_col()
             self.zone.setSelectionRange(pos - col + 4, len(src))
             event.preventDefault()
         elif event.keyCode in [33, 34]: # page up, page down
