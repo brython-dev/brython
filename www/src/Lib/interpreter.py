@@ -317,12 +317,6 @@ class Interpreter:
             if (lstart == -1 and len(src) < 5) or (len(src) - lstart < 6):
                 event.preventDefault()
                 event.stopPropagation()
-        elif event.ctrlKey and event.keyCode == 65: # ctrl+a
-            src = self.zone.value
-            pos = self.zone.selectionStart
-            col = get_col()
-            self.zone.setSelectionRange(pos - col + 4, len(src))
-            event.preventDefault()
         elif event.keyCode in [33, 34]: # page up, page down
             event.preventDefault()
 

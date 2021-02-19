@@ -2847,6 +2847,18 @@ def f():
         x = 2
 f()
 
+# issue 1608
+class Test():
+    def __enter__(self):
+        return (42, 43)
+
+    def __exit__(self, type, value, traceback):
+        pass
+
+with Test() as (a, b):
+    assert type(a) == int
+    assert b == 43
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
