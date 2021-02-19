@@ -3083,6 +3083,8 @@ function match(pattern, string, pos, flags, endpos){
                         // If there is another choice, restore the stack,
                         // group_stack and position in string as they were
                         // when entering the group
+                        is_option = true
+
                         var choice = parent.parent,
                             i = 0
                         console.log("choice", choice)
@@ -3143,12 +3145,15 @@ function match(pattern, string, pos, flags, endpos){
                             // set rank to next option start
                             var _case = choice.items[i + 1],
                                 rank = _case.items[0].rank
-                            is_option = true
                         }else{
                             // all options have been tried: backtrack from
                             // group start
                             console.log("no option left", choice_group, "fails")
-                            this_group = choice_group
+                            if(group.nb_repeats >= group.model.repeat.min &&
+                                    group.nb_repeats < group.model.repeat.max){
+                                // failure is accepted: skip to next RE
+                                rank = group.next_rank + 1
+                            }
                         }
                         break
                     }
