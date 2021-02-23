@@ -1559,6 +1559,11 @@ function compile(data, flags){
                 fail("nothing to repeat", pos)
             }
         }else if(item instanceof Or){
+            if(group_stack.length > 0){
+                item.group = group_stack[group_stack.length - 1]
+            }else{
+                item.group = false
+            }
             pos = item.pos
             if(node instanceof ConditionalBackref){
                 // case '(?(num)a|'
@@ -1642,7 +1647,7 @@ function compile(data, flags){
         lookbehind.parent = es
         node.add(es)
     }
-    return {path, groups}
+    return {path, groups, text: from_codepoint_list(pattern)}
 }
 
 function checkPatternError(pattern, msg){
@@ -2044,26 +2049,33 @@ function from_codepoint_list(codepoints, type){
     return chars.join('')
 }
 
-function MatchObject(pattern, string, stack, groups, endpos){
+function MatchObject(pattern, string, stack, endpos){
     this.pattern = pattern
     this.string = string
     this.stack = stack
-    this.groups = groups
     var first = stack[0]
     if(first === undefined){
         console.log("bizarre, satck", stack)
     }
-    this.start = first.pos
+    this.start = first.start
     var last = stack[stack.length - 1]
-    this.end = last.pos + last.ix
+    if(last.type == "group"){
+        if(last.matches.length == 0){
+            this.end = last.start
+        }else{
+            this.end = last.matches[last.matches.length - 1].end
+        }
+    }else{
+        this.end = last.start + last.ix
+    }
     this.endpos = endpos
 }
 
 MatchObject.prototype.toString = function(){
     var stack = this.stack,
-        start = stack[0].pos,
+        start = this.start,
         last = stack[stack.length - 1],
-        end = last.pos + last.ix,
+        end = this.end,
         cps = this.string.codepoints.slice(start, end),
         s = _b_.repr(from_codepoint_list(cps, this.string.type))
     return `<re.Match object, span=(${start}, ${end}), match=${s}>`
@@ -2094,6 +2106,7 @@ MatchObject.prototype.groups = function(_default){
        Groups that didn't contribute to the match are not included.
     */
     var result = {}
+    console.log("groups", this)
     for(var state of this.stack){
         if(state.model instanceof Group){
             if(state.ix == 0){ // 0 repetition
@@ -2125,8 +2138,8 @@ MatchObject.prototype.last_matched_group = function(){
         named_group
     for(var state of this.stack){
         if(state.model instanceof Group){
-            if(state.ix > 0){
-                group_end = state.mo.matches[state.ix].end
+            if(state.matches.length > 0){
+                group_end = state.matches[state.matches.length - 1].end
                 if(group_end > last_pos){
                     last_pos = group_end
                     group = state.model.num
@@ -2180,9 +2193,22 @@ MatchObject.prototype.spans = function(){
 var BMatchObject = $B.make_class("MatchObject",
     function(mo){
         if(mo){
+            var group_obj = {}
+            for(var state of mo.stack){
+                if(state.type == "group" && ! state.model.non_capturing){
+                    var matches = state.matches
+                    if(matches.length > 0){
+                        group_obj[state.model.num] = matches[matches.length - 1]
+                        if(state.model.name !== undefined){
+                            group_obj[state.model.name] = group_obj[state.model.num]
+                        }
+                    }
+                }
+            }
             return {
                 __class__: BMatchObject,
                 mo,
+                group_obj,
                 endpos: mo.endpos,
                 string: mo.string.substring(0)
             }
@@ -2217,12 +2243,13 @@ BMatchObject.end = function(){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
     var group = BMatchObject.group($.self, $.group)
+    console.log("end", group)
     if(group === _b_.None){
         return -1
     }else if($.group == 0){
-        return $.self.mo.end - 1
+        return $.self.mo.end
     }else{
-        return $.self.mo.$groups[$.group].end - 1
+        return $.self.mo.$groups[$.group].end
     }
     return group.start
 }
@@ -2241,7 +2268,7 @@ BMatchObject.expand = function(){
     }
 }
 
-BMatchObject.group = function(self, group_num){
+BMatchObject.group = function(self){
     var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
                 {}, 'args', null),
             self = $.self,
@@ -2249,24 +2276,23 @@ BMatchObject.group = function(self, group_num){
     if(args.length == 0){
         args[0] = 0
     }
-    console.log("BMO group", self, group_num)
     var groups = self.mo.pattern.groups,
         result = []
-    for(var group_num of args){
-        if(group_num == 0){
+    for(var group_id of args){
+        if(group_id == 0){
             result.push(self.mo.string.substring(self.mo.start, self.mo.end))
             continue
         }
         try{
-            // Convert group_num to int if possible
-            group_num = $B.PyNumber_Index(group_num) // in py_utils.js
+            // Convert group_id to int if possible
+            group_id = $B.PyNumber_Index(group_id) // in py_utils.js
         }catch(err){
+            // group_id can be an identifier
+        }
+        if(self.mo.pattern.groups[group_id] === undefined){
             throw _b_.IndexError.$factory("no such group")
         }
-        if(self.mo.pattern.groups[group_num] === undefined){
-            throw _b_.IndexError.$factory("no such group")
-        }
-        var group = self.mo.groups[group_num] // found in match
+        var group = self.group_obj[group_id] // found in match
         result.push(group === undefined ?
             _b_.None :
             self.mo.string.substring(group.start, group.end))
@@ -2315,7 +2341,7 @@ BMatchObject.groups = function(self){
     if(self.mo === false){
         throw _b_.AttributeError.$factory("no attr groups")
     }
-    var groups = self.mo.groups
+    var groups = self.group_obj
     for(var num in self.mo.pattern.groups){
         if(isFinite(num)){
             if(groups[num] === undefined){
@@ -2683,7 +2709,7 @@ function transform_repl(data, pattern){
         data.repl = function(bmo){
             var mo = bmo.mo,
                 res = parts[0],
-                groups = mo.groups,
+                groups = bmo.group_obj,
                 s = mo.string,
                 group
             for(var i = 1, len = parts.length; i < len; i += 2){
@@ -2691,16 +2717,17 @@ function transform_repl(data, pattern){
                     if(mo.pattern.groups[parts[i]] !== undefined){
                         // group is defined in the RE, but didn't contribute
                         // to the match
-                        groups[parts[i]] = ''
+                        // groups[parts[i]] = ''
                     }else{
                         // group is not defined in the RE
                         pos++
                         group_num = parts[i].toString().substr(0, 2)
                         fail(`invalid group reference ${group_num}`, pos)
                     }
+                }else{
+                    group = groups[parts[i]]
+                    res += s.substring(group.start, group.end)
                 }
-                group = groups[parts[i]]
-                res += s.substring(group.start, group.end)
                 res += parts[i + 1]
             }
             return res
@@ -2846,31 +2873,45 @@ function subn(data, count, flags){
 var escaped = [9, 10, 11, 12, 13, 32, 35, 36, 38, 40, 41, 42, 43, 45, 46, 63,
                91, 92, 93, 94, 123, 124, 125, 126]
 
-function backtrack(stack){
+function backtrack(stack, debug){
+    var pos
     while(true){
         if(stack.length == 0){
             return false
         }
         var state = stack.pop()
-        if(state.model.greedy &&
-                state.ix < state.mo.nb_max - 1){
-            state.ix++
-        }else if(! state.model.greedy &&
-                state.ix > state.mo.nb_min){
-            state.ix--
-        }else{
-            // No alternative number of repeats
-            continue
+        if(debug){
+            console.log("in backtrack, state", state)
         }
-        // Set rank to the following model
-        var rank = state.rank + 1
-        // Restore group stack
-        var group_stack = state.group_stack.slice()
+        if(state.type == "group"){
+            if(state.matches.length > state.model.repeat.min){
+                // remove last match
+                state.matches.pop()
+                // reset to position of last try
+                pos = state.start
+                // set rank to next RE after group
+                rank = state.model.end_rank + 1
+            }else{
+                continue
+            }
+        }else{
+            if(state.model.greedy &&
+                    state.ix < state.model.repeat.max - 1){
+                state.ix++
+            }else if(! state.model.greedy &&
+                    state.ix > state.model.repeat.min){
+                state.ix--
+            }else{
+                // No alternative number of repeats
+                continue
+            }
+            pos = state.start + state.ix
+            // Set rank to the following model
+            var rank = state.rank + 1
+        }
         // Put state back on the stack
         stack.push(state)
-        // Set position after the new match
-        var pos = state.pos + state.ix
-        return {rank, pos, group_stack}
+        return {rank, pos}
     }
 }
 
@@ -2892,7 +2933,7 @@ function match(pattern, string, pos, flags, endpos){
         throw Error('pattern not compiled')
     }
 
-    var debug = true
+    var debug = false
     if(debug){
         console.log("enter match1 loop, pattern", pattern,
             "string", string, "pos", pos)
@@ -2903,11 +2944,11 @@ function match(pattern, string, pos, flags, endpos){
         path[i].rank = i
     }
 
-    var rank = 0,
-        groups = {},
+    var start = pos,
+        rank = 0,
+        groups = {0: {start}},
         group_num = 0,
         group,
-        group_stack = [0],
         mo,
         state,
         stack = [],
@@ -2918,7 +2959,9 @@ function match(pattern, string, pos, flags, endpos){
     while(true){
         model = path[rank]
         if(debug){
-            console.log("rank", rank, "model", model, "groups", groups, "group_stack", group_stack.slice())
+            console.log("rank", rank, "pos", pos,
+                "char", string.codepoints[pos],
+                "model", model, "stack", stack)
             alert()
         }
         if(model === undefined){
@@ -2926,7 +2969,7 @@ function match(pattern, string, pos, flags, endpos){
             if(debug){
                 console.log("groups", groups)
             }
-            return new MatchObject(pattern, string, stack, groups, endpos)
+            return new MatchObject(pattern, string, stack, endpos)
         }
         if(! model.repeat){
             model.repeat = {min: 1, max: 1}
@@ -2944,74 +2987,85 @@ function match(pattern, string, pos, flags, endpos){
             rank++
         }else if(model instanceof Group){
             if(model.is_lookahead){
-                lookahead = {model, pos, group_stack: group_stack.slice()}
-                group_stack.push([model, pos])
-            }else if(! model.non_capturing){
-                group_num++
-                group_stack.push(group_num)
-                model.num = group_num
-                groups[group_num] = {
-                    start: pos,
-                    rank,
-                    model
-                }
-                if(model.name !== undefined){
-                    groups[model.name] = groups[group_num]
-                }
+                lookahead = {model, pos}
             }
+            // If group is repeated, .start is the position of the last
+            // tried match
+            stack.push({
+                type: "group",
+                start: pos,
+                model,
+                rank,
+                matches: []
+            })
             rank++
         }else if(model instanceof GroupEnd){
-            group = group_stack.pop()
-            if(debug){
-                console.log("GroupEnd", group, "pos", pos)
+            var i = stack.length - 1
+            while(stack[i].model !== model.group){
+                if(stack[i].type != "group"){
+                    if((state.model.greedy &&
+                            state.ix >= state.model.repeat.max - 1) ||
+                       (! stack[i].model.greedy &&
+                            stack[i].ix == stack[i].model.repeat.min)){
+                        stack.splice(i, 1)
+                    }
+                }
+                i--
+                if(i < 0){
+                    console.log("pattern", pattern, "string", string,
+                        "satck", stack, "model", model)
+                    throw Error("group start not found")
+                }
             }
-            if(Array.isArray(group)){
+            state = stack[i]
+            if(debug){
+                console.log("GroupEnd", state.model, "pos", pos, "mo", mo)
+                alert()
+            }
+            if(state.model.type == "lookahead_assertion"){
                 // lookahead doesn't consume the string: reset pos
-                pos = group[1]
+                pos = state.start
                 lookahead = false
+                stack.splice(i, 1)
                 rank++
             }else{
-                // set information for group
-                groups[group].end = pos
-                groups[group].next_rank = rank + 1
-                groups[group].nb_repeats = groups[group_num].nb_repeats || 0
-                groups[group].nb_repeats++
-                if(groups[group].nb_repeats < model.group.repeat.max){
+                // .last_match is the [start, end] of the last successful
+                // match
+                state.matches.push({start: state.start, end: pos})
+                if(state.matches.length < state.model.repeat.max){
                     // group can be repeated at least once: go back to group
                     // start
-                    group_stack.push(group)
-                    rank = groups[group].rank + 1
+                    state.start = pos
+                    rank = state.model.rank + 1
                     continue
                 }else{
                     rank++
-                    console.log('cannot repeat group, go to next rank', rank)
+                    if(debug){
+                        console.log('group end', state,
+                            'cannot repeat group, go to next rank', rank)
+                    }
                     continue
                 }
             }
         }else if(model instanceof Or){
             // If we reach a "|", one of the previous options succeeded
             // Skip the next options
-            var or_group = group_stack[group_stack.length - 1]
-            while(true){
-                rank++
-                model = path[rank]
-                if(model === undefined){
-                    break
-                }else if(model instanceof Group){
-                    group_num++
-                    group_stack.push(group_num)
-                }else if(model instanceof GroupEnd){
-                    if(group_stack.pop() == or_group){
-                        rank++
-                        break
-                    }
-                }
+
+            var or_group = model.group
+            if(model.group){
+                rank = model.group.end_rank
+            }else{
+                rank = path.length
             }
         }else if(model instanceof ConditionalBackref){
-            group_num++
-            model.num = group_num
-            group_stack.push(group_num)
-            groups[group_num] = {start: pos, rank, model}
+            groups[model.num] = {start: pos, rank, model}
+            stack.push({
+                type: "group",
+                start: pos,
+                model,
+                rank,
+                matches: []
+            })
             if(groups[model.group_ref] !== undefined){
                 // use first option
                 rank++
@@ -3026,11 +3080,22 @@ function match(pattern, string, pos, flags, endpos){
             }
         }else{
             if(model instanceof BackReference){
-                var group = groups[model.value]
-                if(group === undefined){
+                group = false
+                for(var state of stack){
+                    if(state.type == "group" &&
+                            (state.model.num == model.value ||
+                             state.model.name == model.value)){
+                        group = state.matches[state.matches.length - 1]
+                    }
+                }
+                if(! group){
                     fail("unknown group " + model.value)
                 }else{
                     mo = model.match(string, pos, group)
+                    if(debug){
+                        console.log("backref", group, "mo", mo)
+                        alert()
+                    }
                 }
             }else{
                 if(model.match === undefined){
@@ -3043,8 +3108,7 @@ function match(pattern, string, pos, flags, endpos){
             // {nb_min, nb_max}, or a list of such objects
             // If model is a group, mo has key `group_num`
             if(debug){
-                console.log("model", model, "group stack", group_stack.slice(),
-                     "pos", pos, "mo", mo)
+                console.log("model", model, "pos", pos, "mo", mo)
             }
             if(mo){
                 // Create a state, based on the model, the current position in
@@ -3055,24 +3119,27 @@ function match(pattern, string, pos, flags, endpos){
                 ix = model.greedy ? mo.nb_min : mo.nb_max
                 state = {
                     model,
-                    pos,
+                    start: pos,
                     rank,
                     mo, // list of match objects, of the form {nb_min, nb_max}
-                    ix, // the state represents the match of mo[num] with
+                    ix // the state represents the match of mo[num] with
                        // string[pos:pos + ix]
-                    group_stack: group_stack.slice() // used in backtracking
                 }
                 stack.push(state)
                 pos += ix
+                if(groups[0].end === undefined | pos > groups[0].end){
+                    groups[0].end = pos
+                }
                 rank++
             }else{
                 if(debug){
-                    console.log("model doesn't match", model, "lookahead", lookahead)
+                    console.log("model doesn't match", model,
+                        "lookahead", lookahead,
+                        "stack", stack)
+                    alert()
                 }
-
                 // Is the current model an option in a "|" ?
-                var this_group = group_stack[group_stack.length - 1],
-                    is_option = false,
+                var is_option = false,
                     parent = model.parent
 
                 while(parent){
@@ -3080,79 +3147,80 @@ function match(pattern, string, pos, flags, endpos){
                         // The model that failed was inside a choice.
                         // The choice is inside a group, or at the upper RE
                         // level
-                        // If there is another choice, restore the stack,
-                        // group_stack and position in string as they were
+                        // If there is another choice, restore the stack
+                        // and the position in string as they were
                         // when entering the group
                         is_option = true
 
                         var choice = parent.parent,
                             i = 0
-                        console.log("choice", choice)
                         // group of choice
                         var choice_group = 0,
                             choice_parent = choice.parent
                         while(choice_parent){
                             if(choice_parent instanceof Group){
-                                choice_group = choice_parent.num
+                                choice_group = choice_parent
                                 break
                             }
                             choice_parent = choice_parent.parent
                         }
-                        console.log("choice in group", choice_group, groups[choice_group])
-                        var group = groups[choice_group]
-                        // restore
-                        console.log("choice in gropu", group,
-                            "restore from choice", stack)
-                        alert()
-                        while(true){
-                            if(stack.length == 0){
-                                break
-                            }
-                            state = stack.pop()
-                            if(state.pos == group.start){
-                                // remove all the groups that started
-                                // after choice group start
-                                var remove = []
-                                for(var num in groups){
-                                    if(groups[num].start >= group.start &&
-                                            num != choice_group){
-                                        console.log(num, choice_group, num == choice_group)
-                                        remove.push(num)
+                        if(debug){
+                            console.log("choice in group", choice_group)
+                            console.log("stack", stack)
+                            alert()
+                        }
+                        if(choice_group == 0){
+                            match_start = start
+                        }else{
+
+                            group = false
+                            state = false
+                            for(i = 0, len = stack.length; i < len; i++){
+                                state = stack[i]
+                                if(state.model == choice_group){
+                                    while(stack[i + 1] !== undefined){
+                                        stack.pop()
                                     }
+                                    break
                                 }
-                                console.log("remove groups", remove)
-                                for(var num of remove){
-                                    delete groups[num]
-                                }
-                                pos = group.end === undefined ?
-                                    group.start : group.end
-                                break
                             }
+                            var match_start = state.matches.length > 0 ?
+                                    state.matches[states.matches - 1].end :
+                                    state.start
                         }
                         // get option number inside choice
+                        i = 0
                         while(true){
                             if(choice.items[i] === parent){
                                 break
                             }
                             i++
-                            if(i > choice.items.length){
-                                console.log("bizarre", parent, choice)
-                                alert()
-                            }
                         }
                         if(i < choice.items.length - 1){
+                            // reset position in string
+                            if(debug){
+                                console.log("next option", choice.items[i + 1],
+                                    "reset pos to", match_start)
+                            }
+                            pos = match_start
                             // try next choice
                             // set rank to next option start
                             var _case = choice.items[i + 1],
                                 rank = _case.items[0].rank
                         }else{
-                            // all options have been tried: backtrack from
-                            // group start
-                            console.log("no option left", choice_group, "fails")
-                            if(group.nb_repeats >= group.model.repeat.min &&
-                                    group.nb_repeats < group.model.repeat.max){
+                            // all options have been tried
+                            if(debug){
+                                console.log("no option left", choice_group, "fails")
+                                console.log("stack", stack)
+                                alert()
+                            }
+                            if(choice_group != 0 &&
+                                    state.matches.length >= state.model.repeat.min &&
+                                    state.matches.length < state.model.repeat.max){
                                 // failure is accepted: skip to next RE
-                                rank = group.next_rank + 1
+                                rank = state.model.end_rank + 1
+                            }else{
+                                is_option = false
                             }
                         }
                         break
@@ -3167,15 +3235,26 @@ function match(pattern, string, pos, flags, endpos){
                     }
                 }else{
                     if(debug){
-                        console.log("no more option", model, "group", this_group)
+                        console.log("no more option", model)
                     }
-                    if(lookahead){
+                    if(model.groups.length > 0){
+                        // group fails
+                        group = model.groups[model.groups.length - 1]
+                        for(var state of stack){
+                            if(state.model === group){
+                                break
+                            }
+                        }
+                        if(state.matches.length >= state.model.repeat.min){
+                            rank = state.model.end_rank + 1
+                            continue
+                        }
+                    }else if(lookahead){
                         if(lookahead.model.type == "negative_lookahead_assertion"){
                             // failure of a negative lookahead is ok: proceed to the
                             // item after lookahead RE
                             // reset pos and group_stack to those of lookahead start
                             pos = lookahead.pos
-                            group_stack = lookahead.group_stack
                             // jump to rank after lookahead end
                             rank = lookahead.model.end_rank + 1
                             lookahead = false
@@ -3184,7 +3263,6 @@ function match(pattern, string, pos, flags, endpos){
                             // positive lookahead fails
                             var bt = backtrack(stack)
                             if(bt){
-                                group_stack = bt.group_stack
                                 rank = bt.rank
                                 pos = bt.pos
                                 continue
@@ -3193,18 +3271,22 @@ function match(pattern, string, pos, flags, endpos){
                             }
                         }
                     }
-
-                    // Is the model inside a group ?
-                    if(this_group > 0){
-                        //console.log("this_group", this_group, groups[this_group])
-                        rank = groups[this_group].model.end_rank
-                        pos++
+                    if(stack.length == 0){
+                        return false
+                    }
+                    var state = stack[stack.length - 1]
+                    if(model === state.model &&
+                            (state.type == "group" &&
+                            state.matches.length >= state.model.repeat.min)){
+                        rank = state.model.end_rank + 1
                     }else{
                         // Backtracking: if one of the previous matches was
                         // repeated, try more or less repetitions
-                        var bt = backtrack(stack)
+                        if(debug){
+                            console.log("backtrack")
+                        }
+                        var bt = backtrack(stack, debug)
                         if(bt){
-                            group_stack = bt.group_stack
                             rank = bt.rank
                             pos = bt.pos
                         }else{
@@ -3305,7 +3387,7 @@ var $module = {
             }
         }
     },
-    finditer: function (){
+    finditer: function(){
         var $ = $B.args("finditer", 3,
                     {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
@@ -3347,8 +3429,6 @@ var $module = {
     },
     fullmatch: function(){
         var bmo = $module.match.apply(null, arguments)
-        console.log("fullmatch, bmo", bmo)
-        alert()
         if(bmo !== _b_.None){
             if(bmo.string.length != bmo.match_end - bmo.match_start){
                 return _b_.None
