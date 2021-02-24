@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-02-18 22:45:14.024481"
-__BRYTHON__.timestamp=1613684714024
+__BRYTHON__.compiled_date="2021-02-24 18:34:05.088319"
+__BRYTHON__.timestamp=1614188045088
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re1","python_re_kozh","python_re_v3","python_re_v4","random","unicodedata"]
 ;
 
@@ -11638,7 +11638,8 @@ if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__delitem__(se
 return $N}
 throw _b_.TypeError.$factory($B.class_name(self)+
 " indices must be integer, not "+$B.class_name(arg))}
-list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{var klass=tuple}
+list.__eq__=function(self,other){var klass=(self.__class__=list ||_b_.isinstance(self,list))? 
+list :tuple
 if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
 while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
 return true}}
@@ -12950,7 +12951,14 @@ return res}
 if(isinstance(arg,_b_.bool)){return surrogate.__getitem__(self,_b_.int.$factory(arg))}
 throw _b_.TypeError.$factory("string indices must be integers")}
 surrogate.__hash__=function(self){return str.__hash__(self.items.join(''))}
-surrogate.__iter__=function(self){return str_iterator.$factory(self.items)}
+var surrogate_iterator=$B.make_class("str_iterator",function(s){return{
+__class__:surrogate_iterator,items:s.items,counter:-1}})
+surrogate_iterator.__next__=function(self){self.counter++
+if(self.counter >=self.items.length){throw _b_.StopIteration.$factory("")}
+var cp=$B.jsstring2codepoint(self.items[self.counter])
+return _b_.chr(cp)}
+$B.set_func_names(surrogate_iterator,"builtins")
+surrogate.__iter__=function(self){return surrogate_iterator.$factory(self)}
 surrogate.__len__=function(self){return self.items.length}
 surrogate.__mul__=function(self,num){try{num=_b_.int.$factory(num)}catch(err){return _b_.NotImplemented}
 var items=[]

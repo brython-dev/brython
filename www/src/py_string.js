@@ -2636,8 +2636,28 @@ surrogate.__hash__ = function(self){
     return str.__hash__(self.items.join(''))
 }
 
+var surrogate_iterator = $B.make_class("str_iterator",
+    function(s){
+        return {
+            __class__: surrogate_iterator,
+            items: s.items,
+            counter: -1
+        }
+    })
+
+surrogate_iterator.__next__ = function(self){
+    self.counter++
+    if(self.counter >= self.items.length){
+        throw _b_.StopIteration.$factory("")
+    }
+    var cp = $B.jsstring2codepoint(self.items[self.counter])
+    return _b_.chr(cp)
+}
+
+$B.set_func_names(surrogate_iterator, "builtins")
+
 surrogate.__iter__ = function(self){
-    return str_iterator.$factory(self.items)
+    return surrogate_iterator.$factory(self)
 }
 
 surrogate.__len__ = function(self){

@@ -128,12 +128,15 @@ list.__delitem__ = function(self, arg){
 }
 
 list.__eq__ = function(self, other){
-    if(isinstance(self, list)){var klass = list}else{var klass = tuple}
+    var klass = (self.__class__ = list || _b_.isinstance(self, list)) ? 
+                list : tuple
     if(isinstance(other, klass)){
        if(other.length == self.length){
             var i = self.length
             while(i--){
-                if(! $B.rich_comp("__eq__", self[i], other[i])){return false}
+                if(! $B.rich_comp("__eq__", self[i], other[i])){
+                    return false
+                }
             }
             return true
        }
