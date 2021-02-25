@@ -28,6 +28,10 @@ var error = $B.$class_constructor("error", $error_2,
 error.__doc__ = _b_.None
 error.$factory = $B.$instance_creator(error)
 
+function $last(t){
+    return t[t.length - 1]
+}
+
 function fail(message, pos){
     var err = error.$factory(message)
     err.pos = pos
@@ -100,7 +104,8 @@ var BPattern = $B.make_class("Pattern",
             pattern: pattern.text,
             groups: nb_groups,
             flags: pattern.flags,
-            $groups: pattern.groups
+            $groups: pattern.groups,
+            $pattern: pattern
         }
     }
 )
@@ -142,7 +147,7 @@ BPattern.match = function(self, string){
         $.endpos = $.string.length
     }
     var data = prepare({string: $.string})
-    return BMatchObject.$factory(match($.self, data.string, $.pos,
+    return BMatchObject.$factory(match($.self.$pattern, data.string, $.pos,
         no_flag, $.endpos))
 }
 
@@ -611,7 +616,7 @@ CharacterClass.prototype.match = function(string, pos, flags){
     var nb = i
     if(nb >= this.repeat.min){
         // Number of repeats ok
-        if(this.value == 'b' || this.value == 'B'){
+        if('bBAZ'.indexOf(this.value) > -1 ){
             return {nb_min: 0, nb_max: 0}
         }
         return {
@@ -741,13 +746,7 @@ ConditionalBackref.prototype.add = function(item){
 }
 
 ConditionalBackref.prototype.fixed_length = function(){
-    var fl1 = this.re_if_exists.fixed_length(),
-        fl2 = this.re_if_not_exists.fixed_length()
-    if(fl1 === undefined || fl2 === undefined ||
-            fl1 != fl2){
-        return undefined
-    }
-    return fl1
+    return 0
 }
 
 ConditionalBackref.prototype.match = function(s, pos){
@@ -918,10 +917,11 @@ function StringStart(pos){
 }
 
 StringStart.prototype.match = function(string, pos, flags){
-    if(flags.value && MULTILINE.value){
-        return (pos == 0 || string.codepoints[pos - 1] == 10) ? [] : false
+    var ok = {nb_min:0, nb_max: 0}
+    if(flags.value & MULTILINE.value){
+        return (pos == 0 || string.codepoints[pos - 1] == 10) ? ok : false
     }
-    return pos == 0 ? {nb_min:0, nb_max: 0} : false
+    return pos == 0 ? ok : false
 }
 
 StringStart.prototype.fixed_length = function(){
@@ -1453,7 +1453,7 @@ function compile(data, flags){
                     fail(`invalid group reference ${group_ref}`, pos + 1)
                 }else if(groups[group_ref] &&
                         groups[group_ref].item.state == "open"){
-                    //fail("cannot refer to an open group", pos)
+                    fail("cannot refer to an open group", pos)
                 }
             }else if(groups[group_ref] !== undefined){
                 if(groups[group_ref].item.state == "open"){
@@ -1949,7 +1949,7 @@ function* tokenize(pattern, type){
         }else if(cp == ord('{')){
             var reps = /\{(\d*)((,)(\d+))?\}/.exec(
                     from_codepoint_list(pattern.slice(pos)))
-            if(reps){
+            if(reps && reps[0] != '{}'){
                 if(reps[1] == ""){
                     var limits = [0]
                 }else{
@@ -2251,6 +2251,9 @@ BMatchObject.__getitem__ = function(){
     if(Array.isArray(key)){
         throw _b_.IndexError.$factory("no such group")
     }
+    if(key == 0){
+        return self.string.substring(self.mo.start, self.mo.end)
+    }
     var match = self.group_obj[key]
     if(match !== undefined){
         return self.string.substring(match.start, match.end)
@@ -2275,7 +2278,6 @@ BMatchObject.end = function(){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
     var group = BMatchObject.group($.self, $.group)
-    console.log("end", group)
     if(group === _b_.None){
         return -1
     }else if($.group == 0){
@@ -2495,7 +2497,6 @@ BMatchObject.start = function(){
     var $ = $B.args('start', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
     var group = BMatchObject.group($.self, $.group)
-    console.log("in start, group", group, $.self)
     if(group === _b_.None){
         return -1
     }
@@ -2958,6 +2959,17 @@ function copy(obj){
     return res
 }
 
+function in_choice(model){
+    var parent = model.parent
+    while(parent){
+        if(parent instanceof Case){
+            return parent
+        }
+        parent = parent.parent
+    }
+    return false
+}
+
 function match(pattern, string, pos, flags, endpos){
     if(! string instanceof CodePoints){
         console.log('string should be codepoints', string)
@@ -2989,7 +3001,8 @@ function match(pattern, string, pos, flags, endpos){
         stack = [],
         ix,
         candidate, // for choices
-        lookahead = false
+        lookahead = false,
+        lookbehind = false
     pos = pos || 0
     endpos = endpos === undefined ? string.codepoints.length : endpos
     while(true){
@@ -3035,8 +3048,18 @@ function match(pattern, string, pos, flags, endpos){
                 lookahead = {model, pos}
             }else if(model.is_lookbehind){
                 // evaluate content of lookbehind RE
-                var len = 0
+                var len = 0,
+                    choices = []
                 for(var item of path.slice(rank + 1, model.end_rank)){
+                    if(item instanceof GroupEnd){
+                        if(item.group === $last(choices)){
+                            choices.pop()
+                        }
+                        continue
+                    }
+                    if(choices.length > 0){
+                        continue
+                    }
                     if(item instanceof BackReference){
                         // get codepoints matched by group
                         var br_state
@@ -3053,10 +3076,18 @@ function match(pattern, string, pos, flags, endpos){
                                 end = br_state.matches[br_state.matches.length - 1].end
                             len += end - start
                         }
+                    }else if(item instanceof Or){
+                        // all options have the same length: ignore all items
+                        // until group end
+                        choices.push(item.group)
                     }else{
+                        if(item.fixed_length === undefined){
+                            console.log("no fixed length", item)
+                        }
                         len += item.fixed_length()
                     }
                 }
+                lookbehind = {model, pos}
                 pos -= len // go back by length of lookbehind RE
             }
             rank++
@@ -3095,8 +3126,22 @@ function match(pattern, string, pos, flags, endpos){
                     console.log("end of lookbehind, pos", pos)
                     alert()
                 }
-                pos++
+                lookbehind = false
                 rank++
+            }else if(state.model.type == "negative_lookbehind"){
+                // negative lookbehind succeeds: backtrack
+                if(debug){
+                    console.log("negative lookbehind succeeds, backtrack")
+                    alert()
+                }
+                var bt = backtrack(stack)
+                if(bt){
+                    rank = bt.rank
+                    pos = bt.pos
+                    continue
+                }else{
+                    return false
+                }
             }else{
                 // .last_match is the [start, end] of the last successful
                 // match
@@ -3165,17 +3210,33 @@ function match(pattern, string, pos, flags, endpos){
             }
         }else{
             if(model instanceof BackReference){
-                group = false
+                var br_group = pattern.groups[model.value]
+                if(br_group === undefined){
+                    fail("unknown group " + model.value)
+                }
+                br_group = br_group.item
+                var group_state = false
                 for(var state of stack){
-                    if(state.type == "group" &&
-                            (state.model.num == model.value ||
-                             state.model.name == model.value)){
-                        group = state.matches[state.matches.length - 1]
+                    if(state.type == "group" && state.model == br_group){
+                        group_state = state
+                        break
                     }
                 }
-                if(! group){
-                    fail("unknown group " + model.value)
+                if(! group_state){
+                    mo = false
+                }else if(group_state.matches.length == 0){
+                    // The referenced group matched with 0 repetition.
+                    // Add BackReference to stack and set mo to false.
+                    stack.push({
+                        type: "group",
+                        start: pos,
+                        model,
+                        rank,
+                        matches: []
+                    })
+                    mo = false
                 }else{
+                    group = $last(group_state.matches)
                     mo = model.match(string, pos, group)
                     if(debug){
                         console.log("backref", group, "mo", mo)
@@ -3322,23 +3383,11 @@ function match(pattern, string, pos, flags, endpos){
                     if(debug){
                         console.log("no more option", model)
                     }
-                    if(model.groups && model.groups.length > 0){
-                        // group fails
-                        group = model.groups[model.groups.length - 1]
-                        for(var state of stack){
-                            if(state.model === group){
-                                break
-                            }
-                        }
-                        if(state.matches.length >= state.model.repeat.min){
-                            rank = state.model.end_rank + 1
-                            continue
-                        }
-                    }else if(lookahead){
+                    if(lookahead){
                         if(lookahead.model.type == "negative_lookahead_assertion"){
                             // failure of a negative lookahead is ok: proceed to the
                             // item after lookahead RE
-                            // reset pos and group_stack to those of lookahead start
+                            // reset pos to lookahead start
                             pos = lookahead.pos
                             // jump to rank after lookahead end
                             rank = lookahead.model.end_rank + 1
@@ -3354,6 +3403,41 @@ function match(pattern, string, pos, flags, endpos){
                             }else{
                                 return false
                             }
+                        }
+                    }
+                    if(lookbehind){
+                        if(lookbehind.model.type == "negative_lookbehind"){
+                            // failure of a negative lookbehind is ok: proceed to the
+                            // item after lookahead RE
+                            // reset pos to lookbehind start
+                            pos = lookbehind.pos
+                            // jump to rank after lookahead end
+                            rank = lookbehind.model.end_rank + 1
+                            lookbehind = false
+                            continue
+                        }else{
+                            // positive lookbehind fails
+                            var bt = backtrack(stack)
+                            if(bt){
+                                rank = bt.rank
+                                pos = bt.pos
+                                continue
+                            }else{
+                                return false
+                            }
+                        }
+                    }
+                    if(model.groups && model.groups.length > 0){
+                        // group fails
+                        group = model.groups[model.groups.length - 1]
+                        for(var state of stack){
+                            if(state.model === group){
+                                break
+                            }
+                        }
+                        if(state.matches.length >= state.model.repeat.min){
+                            rank = state.model.end_rank + 1
+                            continue
                         }
                     }
                     if(stack.length == 0){
@@ -3406,7 +3490,7 @@ var $module = {
             }
             res.push(cp)
         }
-        res = StringObj.from_codepoints(res).string
+        res = from_codepoint_list(res, data.type)
         if(data.type == "bytes"){
             res = _b_.str.encode(res, 'latin1')
         }
@@ -3433,7 +3517,7 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
-            pattern = compile(data, flags)
+            pattern = BPattern.$factory(compile(data, flags))
         }
         if(data.type === "str"){
             function conv(s){
@@ -3490,7 +3574,7 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
-            pattern = compile(data, flags)
+            pattern = BPattern.$factory(compile(data, flags))
         }
         return $B.generator.$factory(function*(pattern, string, flags,
                 original_string){
@@ -3510,12 +3594,12 @@ var $module = {
                 }
             }
             delete original_string.in_iteration
-        })(pattern, data.string, flags, original_string)
+        })(pattern.$pattern, data.string, flags, original_string)
     },
     fullmatch: function(){
         var bmo = $module.match.apply(null, arguments)
         if(bmo !== _b_.None){
-            if(bmo.string.length != bmo.match_end - bmo.match_start){
+            if(bmo.mo.string.codepoints.length != bmo.mo.end - bmo.mo.start){
                 return _b_.None
             }else{
                 return bmo
@@ -3557,13 +3641,12 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
-            pattern = compile(data, flags)
+            pattern = BPattern.$factory(compile(data, flags))
         }
         data.pattern = pattern
         var pos = 0
         while(pos < data.string.codepoints.length){
-            var mo = match(data.pattern, data.string, pos, flags)
-            mo.data_type = data.type
+            var mo = match(data.pattern.$pattern, data.string, pos, flags)
             if(mo){
                 return BMatchObject.$factory(mo)
             }else{
@@ -3586,8 +3669,7 @@ var $module = {
             data
         if(pattern.__class__ !== BPattern){
             data = prepare({pattern, string})
-            pattern = BPattern.$factory(
-                compile(data, flags))
+            pattern = BPattern.$factory(compile(data, flags))
         }
         for(var bmo of $module.finditer(pattern, $.string)){
             var mo = bmo.mo // finditer returns instances of BMatchObject
