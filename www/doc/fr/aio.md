@@ -88,9 +88,20 @@ Les instances de la classe `Request`, retournées par `await ajax()`,
 > Exécute une coroutine, c'est-à-dire le résultat de l'appel d'une fonction
 > asynchrone. Cette fonction est _non bloquante_ : elle n'attend pas que la
 > fonction appelée soit terminée pour exécuter les instructions sur les lignes
-> suivantes. Le moment où la ligne suivante est exécutée n'est pas 
+> suivantes. Le moment où la ligne suivante est exécutée n'est pas
 > (facilement) prévisible.
 
+### Futures
+
+`aio` implemente une class `Future` qui s'inspire de la class du même nom dans
+`asyncio`. Celle-ci vous permet de convertir des fonctions utilisant des
+callbacks en fonctions asynchrones pouvant être utilisées avec le mot clef
+`await`.
+
+La version de Brython est basique, elle n'implémente à l'heure actuelle que les
+méthodes `set_result` et `set_exception`. Veuillez vous réferer à [la
+documentation de asyncio](https://docs.python.org/3/library/asyncio-future.html)
+pour les détails.
 
 ### Exemples
 
@@ -127,6 +138,21 @@ async def main():
     print(len(req.data))
     req = await aio.get("eraser.png", format="dataURL")
     document <= html.IMG(src=req.data)
+
+aio.run(main())
+```
+
+Utiliser une fonction avec des callbacks
+
+```python
+from browser import timer, aio
+
+async def main():
+    fut = aio.Future()
+    timer.set_timeout(lambda: fut.set_result("timeout!"), 2000)
+    print("awaiting...")
+    result = await fut
+    print(f"future awaited, result: {result}")
 
 aio.run(main())
 ```

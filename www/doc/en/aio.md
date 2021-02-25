@@ -90,6 +90,17 @@ Instances of class `Request`, as returned by `await ajax()`, `await get()` or
 > in the following lines. The time when the next instructions are run is
 > not (easily) predictable.
 
+### Futures
+
+`ao` implements a `Future` class which is inspired by the class of the same name
+in `asyncio`. This allows you to convert functions using callbacks to
+asynchronous functions that can be used with the keyword `await`.
+
+The version of Brython is basic, it currently implements only the methods
+`set_result` and `set_exception`. Please refer to [the asyncio
+documentation](https://docs.python.org/3/library/asyncio-future.html) for
+details.
+
 ### Examples
 
 Entering text in an INPUT element (customised `input()` function)
@@ -129,6 +140,21 @@ async def main():
     req = await aio.get("eraser.png", format="dataURL")
     # display the image in an IMG tag
     document <= html.IMG(src=req.data)
+
+aio.run(main())
+```
+
+Use a function with callbacks
+
+```python
+from browser import timer, aio
+
+async def main():
+    fut = aio.Future()
+    timer.set_timeout(lambda: fut.set_result("timeout!"), 2000)
+    print("awaiting...")
+    result = await fut
+    print(f"future awaited, result: {result}")
 
 aio.run(main())
 ```

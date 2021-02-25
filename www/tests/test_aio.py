@@ -1,4 +1,4 @@
-from browser import aio
+from browser import aio, timer
 
 results = []
 
@@ -165,6 +165,24 @@ async def test_async_gen(throw, close, expected):
   assert result == expected,(close, result, expected)
   print(throw, close, "async generator ok")
 
+async def test_async_future():
+    """Future is returning value from set_result"""
+    fut = aio.Future()
+    timer.set_timeout(lambda: fut.set_result("OK"), 10)
+    result = await fut
+    assert result == "OK", "Result has not the expected value"
+
+async def test_async_future_exc():
+    """Future is raising exception from set_exception"""
+    fut = aio.Future()
+    timer.set_timeout(lambda: fut.set_exception(ValueError("EXPECTED_ERROR")), 10)
+    try:
+        await fut
+    except ValueError as e:
+        assert str(e) == "EXPECTED_ERROR"
+        return
+    assert False, "Error has not been raised"
+
 async def main(secs, urls):
     print(f"wait {secs} seconds...")
     await aio.sleep(secs)
@@ -183,6 +201,9 @@ async def main(secs, urls):
             [False, True, [1, 2]],
             [True, True, [1, 2, ZeroDivisionError]]]:
         await test_async_gen(throw, close, expected)
+
+    await test_async_future()
+    await test_async_future_exc()
 
     await raise_error()
 
