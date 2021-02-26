@@ -2993,8 +2993,14 @@ function match(pattern, string, pos, flags, endpos){
                                 break
                             }
                         }
+                        if(debug){
+                            console.log("failing model in group", group,
+                                "state", state)
+                            alert()
+                        }
                         if(state.matches.length >= state.model.repeat.min){
                             rank = state.model.end_rank + 1
+                            pos = state.start
                             continue
                         }
                     }
