@@ -9684,7 +9684,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    // console.log("context", context, "token", token, value)
+    //console.log("context", context, "token", token, value)
     return context.transition(token, value)
 }
 
