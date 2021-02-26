@@ -609,7 +609,6 @@ function index_error(obj){
 $B.$getitem = function(obj, item){
     var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
-
     if(typeof item == "number"){
         if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item

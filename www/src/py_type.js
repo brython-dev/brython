@@ -979,17 +979,23 @@ $B.GenericAlias.__parameters__ = {
 }
 
 $B.GenericAlias.__repr__ = function(self){
-    var items = self.items
-    for(var i = 0, len = items.length; i < len; i++){
-        if(items[i] === _b_.Ellipsis){
-            items[i] = '...'
+    var items = []
+    for(var i = 0, len = self.items.length; i < len; i++){
+        if(self.items[i] === _b_.Ellipsis){
+            items.push('...')
         }else{
-            items[i] = items[i].$infos.__name__
+            if(self.items[i].$is_class){
+                items.push(self.items[i].$infos.__name__)
+            }else{
+                items.push(_b_.repr(self.items[i])) //.$infos.__name__
+            }
         }
     }
     return self.origin_class.$infos.__qualname__ + '[' +
         items.join(", ") + ']'
 }
+
+$B.set_func_names($B.GenericAlias, "builtins")
 
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type

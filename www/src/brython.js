@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-02-26 11:23:03.331745"
-__BRYTHON__.timestamp=1614334983331
+__BRYTHON__.compiled_date="2021-02-26 11:44:27.899916"
+__BRYTHON__.timestamp=1614336267899
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","math1","modulefinder","posix","python_re","python_re1","python_re_kozh","python_re_v3","python_re_v4","random","unicodedata"]
 ;
 
@@ -6029,10 +6029,11 @@ $B.class_name(item)+"' object")}
 $B.GenericAlias.__origin__={__get__:function(self){return self.origin_class}}
 $B.GenericAlias.__parameters__={__get__:function(self){
 return $B.fast_tuple([])}}
-$B.GenericAlias.__repr__=function(self){var items=self.items
-for(var i=0,len=items.length;i < len;i++){if(items[i]===_b_.Ellipsis){items[i]='...'}else{items[i]=items[i].$infos.__name__}}
+$B.GenericAlias.__repr__=function(self){var items=[]
+for(var i=0,len=self.items.length;i < len;i++){if(self.items[i]===_b_.Ellipsis){items.push('...')}else{if(self.items[i].$is_class){items.push(self.items[i].$infos.__name__)}else{items.push(_b_.repr(self.items[i]))}}}
 return self.origin_class.$infos.__qualname__+'['+
 items.join(", ")+']'}
+$B.set_func_names($B.GenericAlias,"builtins")
 _b_.object.__class__=type})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&

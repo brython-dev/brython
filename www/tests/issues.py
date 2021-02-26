@@ -2858,7 +2858,10 @@ class Test():
 with Test() as (a, b):
     assert type(a) == int
     assert b == 43
-    
+
+# issue 1618
+assert repr(list[0]) == 'list[0]'
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
