@@ -128,8 +128,7 @@ list.__delitem__ = function(self, arg){
 }
 
 list.__eq__ = function(self, other){
-    var klass = (self.__class__ = list || _b_.isinstance(self, list)) ? 
-                list : tuple
+    if(isinstance(self, list)){var klass = list}else{var klass = tuple}
     if(isinstance(other, klass)){
        if(other.length == self.length){
             var i = self.length
