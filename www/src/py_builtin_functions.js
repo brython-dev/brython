@@ -2968,7 +2968,7 @@ var zip = $B.make_class("zip",
                 items.push($B.fast_tuple(line))
             }
             res.items = items
-            return res
+            return zip_iterator.$factory(items)
         }
         while(1){
             var line = [],
@@ -2980,7 +2980,9 @@ var zip = $B.make_class("zip",
                     if(err.__class__ == _b_.StopIteration){
                         flag = false
                         break
-                    }else{throw err}
+                    }else{
+                        throw err
+                    }
                 }
             }
             if(! flag){
@@ -2989,11 +2991,11 @@ var zip = $B.make_class("zip",
             items.push($B.fast_tuple(line))
         }
         res.items = items
-        return res
+        return zip_iterator.$factory(items)
     }
 )
 
-var zip_iterator = $B.make_iterator_class('zip_iterator')
+var zip_iterator = $B.make_iterator_class('zip')
 
 zip.__iter__ = function(self){
     return zip_iterator.$factory(self.items)

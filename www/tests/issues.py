@@ -2862,6 +2862,21 @@ with Test() as (a, b):
 # issue 1618
 assert repr(list[0]) == 'list[0]'
 
+# issue 1621
+english = ["one", "two", "three"]
+español = ["uno", "dos", "tres"]
+
+zip_iter = zip(english, español)
+
+eng, esp = next(zip_iter)
+assert eng == "one"
+assert esp == "uno"
+
+rest = []
+for eng, esp in zip_iter:
+    rest.append([eng, esp])
+assert rest == [["two", "dos"], ["three", "tres"]]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
