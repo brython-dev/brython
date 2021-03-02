@@ -2472,6 +2472,13 @@ function backtrack(stack, debug){
                 pos = state.start
                 // set rank to next RE after group
                 rank = state.model.end_rank + 1
+            }else if(state.matches.length == 0 && ! state.has_matched &&
+                    state.model.repeat.min == 0){
+                state.has_matched = true
+                // reset to position of last try
+                pos = state.start
+                // set rank to next RE after group
+                rank = state.model.end_rank + 1
             }else{
                 continue
             }
@@ -2665,7 +2672,7 @@ function match(pattern, string, pos, flags, endpos){
             }
             state = stack[i]
             if(debug){
-                console.log("GroupEnd", state.model, "pos", pos, "mo", mo)
+                console.log("GroupEnd", state, "pos", pos, "mo", mo)
                 alert()
             }
             if(state.model.type == "lookahead_assertion"){
@@ -2699,6 +2706,7 @@ function match(pattern, string, pos, flags, endpos){
             }else{
                 // .last_match is the [start, end] of the last successful
                 // match
+                state.has_matched = true
                 state.matches.push({start: state.start, end: pos})
                 if(state.matches.length == 65535){
                     // Python issue 9669
@@ -2998,7 +3006,11 @@ function match(pattern, string, pos, flags, endpos){
                                 "state", state)
                             alert()
                         }
-                        if(state.matches.length >= state.model.repeat.min){
+                        if(state.matches.length >= state.model.repeat.min &&
+                                state.has_matched){
+                            // If the model is in a group that has already
+                            // matched, and has the minimal number of
+                            // repetitions, proceed to next RE after group
                             rank = state.model.end_rank + 1
                             pos = state.start
                             continue
