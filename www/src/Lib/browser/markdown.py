@@ -351,7 +351,7 @@ def apply_markdown(src):
     # the random string has a word end. E.g. <h2>_italic_</h2> is replaced
     # by something like " agFyf_italic_ agFyf" so that the markdown for
     # _italic_ can be applied.
-    rstr = ' '+''.join(random.choice(letters) for i in range(16)) + ' '
+    rstr = ' ' + ''.join(random.choice(letters) for i in range(16)) + ' '
 
     i = 0
     state = None
@@ -380,20 +380,24 @@ def apply_markdown(src):
                 elif state == '"' or state == "'":
                     data += src[j]
                 elif src[j] == '\n':
-                    # if a sign < is not followed by > in the same ligne, it
+                    # if a sign < is not followed by > in the same line, it
                     # is the sign "lesser than"
                     src = src[:i] + '&lt;' + src[i + 1:]
                     j = i + 4
                     break
                 j += 1
-        elif src[i] == '`' and i > 0 and src[i - 1] != '\\':
-            # ignore the content of inline code
-            j = i + 1
-            while j < len(src):
-                if src[j] == '`' and src[j - 1] != '\\':
-                    break
-                j += 1
-            i = j
+        elif src[i] == '`' and i > 0:
+            if src[i - 1] != '\\':
+                # ignore the content of inline code
+                j = i + 1
+                while j < len(src):
+                    if src[j] == '`' and src[j - 1] != '\\':
+                        break
+                    j += 1
+                i = j
+            else:
+                # replace escaped ` by &#96;
+                src = src[:i - 1] + "&#96;" + src[i + 1:]
         i += 1
 
     # escape "<", ">", "&" and "_" in inline code
