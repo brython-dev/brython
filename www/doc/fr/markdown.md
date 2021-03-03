@@ -6,10 +6,17 @@ Internet, plus simple que HTML.
 
 Une description complète est fournie sur
 [le site de markdown](http://daringfireball.net/projects/markdown/). Le
-module **markdown** en fournit une implémentation légèrement adaptée : pour
-enrichir le rendu, les balises markdown \_texte\_ et \*texte\* correspondent à
-deux balises HTML différentes : `<I>` et `<EM>`, de même \_\_texte\_\_ et
-\*\*texte\*\* correspondent à `<B>` et `<STRONG>`.
+module **markdown** en fournit une implémentation légèrement adaptée pour
+enrichir le rendu:
+
+- les balises markdown \_texte\_ et \*texte\* correspondent à
+deux balises HTML différentes : `<I>` et `<EM>`
+- \_\_texte\_\_ et \*\*texte\*\* correspondent à `<B>` et `<STRONG>`
+- le signe souligné à l'intérieur d'un mot est conservé tel quel
+
+Les lignes qui commencent par \`\`\` suivi d'un texte (par ex. _\`\`\`python_)
+sont traduites en un élément `<PRE>` avec le texte comme nom de classe
+(`<PRE class="python">`).
 
 Le module définit une fonction :
 

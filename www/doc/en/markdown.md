@@ -5,10 +5,16 @@ module **browser.markdown**
 simple to edit than HTML.
 
 A complete description is available on [the mardown site](http://daringfireball.net/projects/markdown/).
-The module **markdown** is a slightly adapted version : to enrich the rendering
-options, the markdown tags \_text\_ and \*text\* match two different HTML
-tags: `<I>` and `<EM>`, as well as \_\_text\_\_ and \*\*text\*\* that match
-`<B>` and `<STRONG>`.
+The module **markdown** is a slightly adapted version to enrich the rendering
+options:
+
+- the markdown tags \_text\_ and \*text\* match two different HTML tags: `<I>`
+  and `<EM>`
+- \_\_text\_\_ and \*\*text\*\* match `<B>` and `<STRONG>`
+- underscores inside a word are left unchanged
+
+Lines that start with \`\`\` followed by a text (eg. _\`\`\`python_) 
+are translated to a `<PRE>` element with the text as class name (`<PRE class="python">`)
 
 The module exposes a single function :
 
@@ -23,12 +29,11 @@ _url_, fill a zone in the document with the matching HTML code, and run all
 the scripts in the page. This technique is used in these documentation pages.
 
 ```python
-from browser import document as doc
-from browser import markdown
+from browser import document, markdown
 
 mk, scripts = markdown.mark(open(url).read())
-doc['zone'].html = mk
+document['zone'].html = mk
 for script in scripts:
-    exec(script,globals())
+    exec(script, globals())
 </blockquote>
 ```
