@@ -276,6 +276,8 @@ assert format(123.456, "^-09.3f") == "0123.4560"
 # issue 1396
 assert '|{0:.4}|'.format("Hello") == "|Hell|"
 
-
+# issue 1624
+assert "{:016X}".format(2**52) == '0010000000000000'
+assert "{:016X}".format(2**53) == '0020000000000000'
 
 print("passed all tests...")
