@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-02 20:43:57.743356"
-__BRYTHON__.timestamp=1614714237743
+__BRYTHON__.compiled_date="2021-03-03 13:46:00.844395"
+__BRYTHON__.timestamp=1614775560844
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -1421,7 +1421,7 @@ if(token=='id' && C.tree.length==0){return $transition(new $AbstractExprCtx(C,fa
 if(token=='eol'){return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $DecoratorCtx.prototype.transform=function(node,rank){var func_rank=rank+1,children=node.parent.children,decorators=[this.tree]
-while(1){if(func_rank >=children.length){$_SyntaxError(C,['decorator expects function'])}
+while(1){if(func_rank >=children.length){$_SyntaxError(node.C,['decorator expects function'])}
 else if(children[func_rank].C.type=='node_js'){func_rank++}else if(children[func_rank].C.tree[0].type==
 'decorator'){decorators.push(children[func_rank].C.tree[0].tree)
 children.splice(func_rank,1)}else{break}}

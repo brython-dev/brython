@@ -2723,7 +2723,7 @@ $DecoratorCtx.prototype.transform = function(node, rank){
         decorators = [this.tree]
     while(1){
         if(func_rank >= children.length){
-            $_SyntaxError(context, ['decorator expects function'])
+            $_SyntaxError(node.context, ['decorator expects function'])
         }
         else if(children[func_rank].context.type == 'node_js'){
             func_rank++
