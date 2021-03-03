@@ -127,4 +127,9 @@ assert ch1 == ch2
 # issue 1268
 random.choices('abc', k=2)
 
+# issue 1622
+from random import sample
+M = sample(range(100), k=4).sort()
+assert M is None
+
 print("passed all tests...")

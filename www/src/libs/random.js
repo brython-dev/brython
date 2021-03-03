@@ -824,7 +824,7 @@ Random.sample = function(){
                             _b_.getattr(population, '__getitem__')(j)
         }
     }
-    return result
+    return $B.$list(result) // not "return result", cf. issue #1622
 }
 
 Random.seed = function(){
