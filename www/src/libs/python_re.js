@@ -2994,7 +2994,8 @@ function match(pattern, string, pos, flags, endpos){
                         }
                     }
                     if(model.groups && model.groups.length > 0){
-                        // group fails
+                        // The model that fails is in a group
+                        // Get first enclosing group
                         group = model.groups[model.groups.length - 1]
                         for(var state of stack){
                             if(state.model === group){
@@ -3008,35 +3009,26 @@ function match(pattern, string, pos, flags, endpos){
                         }
                         if(state.matches.length >= state.model.repeat.min &&
                                 state.has_matched){
-                            // If the model is in a group that has already
-                            // matched, and has the minimal number of
+                            // If the model that fails is in a group that has
+                            // already matched, and has the minimal number of
                             // repetitions, proceed to next RE after group
                             rank = state.model.end_rank + 1
                             pos = state.start
                             continue
                         }
                     }
-                    if(stack.length == 0){
-                        return false
+
+                    // Backtracking: if one of the previous matches was
+                    // repeated, try more or less repetitions
+                    if(debug){
+                        console.log("backtrack")
                     }
-                    var state = stack[stack.length - 1]
-                    if(model === state.model &&
-                            (state.type == "group" &&
-                            state.matches.length >= state.model.repeat.min)){
-                        rank = state.model.end_rank + 1
+                    var bt = backtrack(stack, debug)
+                    if(bt){
+                        rank = bt.rank
+                        pos = bt.pos
                     }else{
-                        // Backtracking: if one of the previous matches was
-                        // repeated, try more or less repetitions
-                        if(debug){
-                            console.log("backtrack")
-                        }
-                        var bt = backtrack(stack, debug)
-                        if(bt){
-                            rank = bt.rank
-                            pos = bt.pos
-                        }else{
-                            return false
-                        }
+                        return false
                     }
                 }
             }
