@@ -290,12 +290,20 @@ var EmptyString = {
         this.flags = flags
     },
     GroupEnd = function(pos){
-        this.name = "GroupEnd",
+        this.name = "GroupEnd"
         this.pos = pos
+        this.text = ')'
+        this.toString = function(){
+            return '<end of group #' + this.group.num + '>'
+        }
     },
     Or = function(pos){
         this.name = "Or"
         this.pos = pos
+        this.text = '|'
+        this.toString = function(){
+            return '|'
+        }
     },
     Repeater = function(pos, op){
         this.name = "Repeater"
@@ -363,6 +371,7 @@ var Char = function(pos, cp, groups){
     this.pos = pos
     this.cp = cp
     this.char = chr(this.cp)
+    this.text = this.char
 }
 
 Char.prototype.fixed_length = function(){
@@ -410,6 +419,10 @@ Char.prototype.match = function(string, pos, flags){
     }else{
         return false
     }
+}
+
+Char.prototype.toString = function(){
+    return '/' + this.text + '/'
 }
 
 function CharacterClass(pos, cp, length, groups){
@@ -682,6 +695,10 @@ var Group = function(pos, extension){
 
 Group.prototype.add = Node.prototype.add
 
+Group.prototype.toString = function(){
+    return '#' + this.num + ':' + this.pattern
+}
+
 BackReference.prototype.nb_repeats = Group.prototype.nb_repeats
 
 Group.prototype.fixed_length = Node.prototype.fixed_length
@@ -720,6 +737,10 @@ StringStart.prototype.fixed_length = function(){
     return 0
 }
 
+StringStart.prototype.toString = function(){
+    return '^'
+}
+
 function StringEnd(pos){
     this.pos = pos
 }
@@ -737,6 +758,10 @@ StringEnd.prototype.match = function(string, pos, flags){
 
 StringEnd.prototype.fixed_length = function(){
     return 0
+}
+
+StringEnd.prototype.toString = function(){
+    return '$'
 }
 
 function validate(name){
@@ -1174,7 +1199,7 @@ function compile(data, flags){
             item.end_pos = end_pos
             try{
                 item.pattern = from_codepoint_list(
-                    pattern.slice(item.pos + 1, end_pos))
+                    pattern.slice(item.pos, end_pos + 1))
             }catch(err){
                 console.log("err avec pattern substring", pattern)
                 throw err
@@ -2543,7 +2568,7 @@ function match(pattern, string, pos, flags, endpos){
         throw Error('pattern not compiled')
     }
 
-    var debug = false
+    var debug = true
     if(debug){
         console.log("enter match1 loop, pattern", pattern,
             "string", string, "pos", pos)
@@ -2569,9 +2594,16 @@ function match(pattern, string, pos, flags, endpos){
     while(true){
         model = path[rank]
         if(debug){
+            console.log(pos,
+                string.codepoints[pos] === undefined ? undefined :
+                    chr(string.codepoints[pos]),
+                model.toString(),
+                stack, model)
+            /*
             console.log("rank", rank, "pos", pos,
                 "char", string.codepoints[pos],
                 "model", model, "stack", stack)
+            */
             alert()
         }
         if(model === undefined){
@@ -2820,7 +2852,12 @@ function match(pattern, string, pos, flags, endpos){
             // {nb_min, nb_max}, or a list of such objects
             // If model is a group, mo has key `group_num`
             if(debug){
-                console.log("model", model, "pos", pos, "mo", mo)
+                if(mo){
+                    console.log("match", mo.nb_min, mo.nb_max,
+                        string.substring(pos, pos + mo.nb_max))
+                }else{
+                    console.log("no match")
+                }
             }
             if(mo){
                 // Create a state, based on the model, the current position in
@@ -2876,11 +2913,6 @@ function match(pattern, string, pos, flags, endpos){
                             }
                             choice_parent = choice_parent.parent
                         }
-                        if(debug){
-                            console.log("choice in group", choice_group)
-                            console.log("stack", stack)
-                            alert()
-                        }
                         if(choice_group == 0){
                             match_start = start
                         }else{
@@ -2910,10 +2942,6 @@ function match(pattern, string, pos, flags, endpos){
                         }
                         if(i < choice.items.length - 1){
                             // reset position in string
-                            if(debug){
-                                console.log("next option", choice.items[i + 1],
-                                    "reset pos to", match_start)
-                            }
                             pos = match_start
                             // try next choice
                             // set rank to next option start
