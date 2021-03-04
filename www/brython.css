@@ -129,7 +129,7 @@ a.glink {
   text-decoration:underline;
 }
 
-a.navig:link,a:link,a:hover,a:visited,a.navig:visited {
+a.navig:link,a.navig:visited {
   color:var(--dark-1);
   text-decoration:none;
 }
