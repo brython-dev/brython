@@ -467,6 +467,69 @@ long_int.$from_float = function(value){
     return {__class__: long_int, value: v, pos: value >= 0}
 }
 
+function preformat(self, fmt){
+    if(fmt.empty){return _b_.str.$factory(self)}
+    if(fmt.type && 'bcdoxXn'.indexOf(fmt.type) == -1){
+        throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
+            "' for object of type 'int'")
+    }
+    var res
+    switch(fmt.type){
+        case undefined:
+        case "d":
+            res = self.toString()
+            break
+        case "b":
+            res = (fmt.alternate ? "0b" : "") + BigInt(self.value).toString(2)
+            break
+        case "c":
+            res = _b_.chr(self)
+            break
+        case "o":
+            res = (fmt.alternate ? "0o" : "") + BigInt(self.value).toString(8)
+            break
+        case "x":
+            res = (fmt.alternate ? "0x" : "") + BigInt(self.value).toString(16)
+            break
+        case "X":
+            res = (fmt.alternate ? "0X" : "") + BigInt(self.value).toString(16).toUpperCase()
+            break
+        case "n":
+            return self // fix me
+    }
+
+    if(fmt.sign !== undefined){
+        if((fmt.sign == " " || fmt.sign == "+" ) && self >= 0){
+            res = fmt.sign + res
+        }
+    }
+    return res
+}
+
+
+long_int.__format__ = function(self, format_spec){
+    var fmt = new $B.parse_format_spec(format_spec)
+    if(fmt.type && 'eEfFgG%'.indexOf(fmt.type) != -1){
+        // Call __format__ on float(self)
+        return _b_.float.__format__(self, format_spec)
+    }
+    fmt.align = fmt.align || ">"
+    var res = preformat(self, fmt)
+    if(fmt.comma){
+        var sign = res[0] == "-" ? "-" : "",
+            rest = res.substr(sign.length),
+            len = rest.length,
+            nb = Math.ceil(rest.length/3),
+            chunks = []
+        for(var i = 0; i < nb; i++){
+            chunks.push(rest.substring(len - 3 * i - 3, len - 3 * i))
+        }
+        chunks.reverse()
+        res = sign + chunks.join(",")
+    }
+    return $B.format_width(res, fmt)
+}
+
 long_int.__abs__ = function(self){
     return {__class__: long_int, value: self.value, pos: true}
 }
