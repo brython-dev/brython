@@ -132,4 +132,7 @@ from random import sample
 M = sample(range(100), k=4).sort()
 assert M is None
 
+# issue 1627
+random.randint(2 ** 63, 2 ** 64 - 1)
+
 print("passed all tests...")

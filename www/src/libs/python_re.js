@@ -294,7 +294,7 @@ var EmptyString = {
         this.pos = pos
         this.text = ')'
         this.toString = function(){
-            return '<end of group #' + this.group.num + '>'
+            return '[end of group #' + this.group.num + ']'
         }
     },
     Or = function(pos){
@@ -2101,8 +2101,9 @@ BMatchObject.regs = {
         for(var group_num in self.mo.pattern.groups){
             if(isFinite(group_num)){
                 var group = self.mo.pattern.groups[group_num].item
+                // group.pattern includes the opening and closing brackets
                 res.push($B.fast_tuple([group.pos,
-                    group.pos + group.pattern.length]))
+                    group.pos + group.pattern.length - 2]))
             }
         }
         return $B.fast_tuple(res)
@@ -2568,10 +2569,21 @@ function match(pattern, string, pos, flags, endpos){
         throw Error('pattern not compiled')
     }
 
-    var debug = true
+    var debug = false
     if(debug){
         console.log("enter match1 loop, pattern", pattern,
             "string", string, "pos", pos)
+        document.write("Pattern <b>" + pattern.text+"</b> string <b>" +
+            string.string +"</b>")
+        var table = document.createElement('TABLE')
+        document.body.appendChild(table)
+        var row = document.createElement('TR'),
+            line = []
+        for(var title of ['stack', 'pos', 'char', 'model']){
+            line.push('<th>' + title + '</th>')
+        }
+        row.innerHTML = line.join('')
+        table.appendChild(row)
     }
 
     var path = pattern.path
@@ -2597,8 +2609,31 @@ function match(pattern, string, pos, flags, endpos){
             console.log(pos,
                 string.codepoints[pos] === undefined ? undefined :
                     chr(string.codepoints[pos]),
-                model.toString(),
+                model + '',
                 stack, model)
+            var row = document.createElement('TR'),
+                cell = document.createElement('TD')
+            table.appendChild(row)
+            row.appendChild(cell)
+            var s = []
+            for(var state of stack){
+                if(state.type == "group"){
+                    s.push("Gr#" + state.model.num)
+                }else{
+                    s.push(state.model.toString())
+                }
+            }
+            cell.innerText = '{' + s.join(', ') + '}'
+            cell = document.createElement('TD')
+            cell.innerText = pos
+            row.appendChild(cell)
+            cell = document.createElement('TD')
+            cell.innerText = string.codepoints[pos] === undefined ? '∅' :
+                    chr(string.codepoints[pos])
+            row.appendChild(cell)
+            cell = document.createElement('TD')
+            cell.innerText = model + ''
+            row.appendChild(cell)
             /*
             console.log("rank", rank, "pos", pos,
                 "char", string.codepoints[pos],
@@ -2855,8 +2890,11 @@ function match(pattern, string, pos, flags, endpos){
                 if(mo){
                     console.log("match", mo.nb_min, mo.nb_max,
                         string.substring(pos, pos + mo.nb_max))
+                    document.write(string.substring(pos, pos + mo.nb_max) +
+                        '<br>')
                 }else{
                     console.log("no match")
+                    document.write("no match</br>")
                 }
             }
             if(mo){
@@ -2871,8 +2909,11 @@ function match(pattern, string, pos, flags, endpos){
                     start: pos,
                     rank,
                     mo, // list of match objects, of the form {nb_min, nb_max}
-                    ix // the state represents the match of mo[num] with
+                    ix, // the state represents the match of mo[num] with
                        // string[pos:pos + ix]
+                    toString: function(){
+                        return model + ' ' + pos + '-' + ix
+                    }
                 }
                 stack.push(state)
                 pos += ix
@@ -2914,14 +2955,15 @@ function match(pattern, string, pos, flags, endpos){
                             choice_parent = choice_parent.parent
                         }
                         if(choice_group == 0){
+                            // choice is at global RE level
                             match_start = start
                         }else{
-
                             group = false
                             state = false
                             for(i = 0, len = stack.length; i < len; i++){
                                 state = stack[i]
                                 if(state.model == choice_group){
+                                    // remove all elements after group start
                                     while(stack[i + 1] !== undefined){
                                         stack.pop()
                                     }
