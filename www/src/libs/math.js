@@ -164,6 +164,9 @@ var _mod = {
         if(y <= 0){
             throw _b_.ValueError.$factory("math domain error")
         }
+        if(y > Math.pow(2, 28)){ // issue 1590
+            return float.$factory(_mod.log(y) + _mod.log(2))
+        }
         return float.$factory(Math.log(y + Math.sqrt(y * y - 1)))
     },
     asin: function(x){
