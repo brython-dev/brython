@@ -223,6 +223,9 @@ assert (abs(x), int(x), math.sin(x), math.log(x)) == \
 # issue 1590
 assert math.acosh(1e155) == 357.593836594637
 
+# issue 1591
+assert math.lgamma(1e3) == 5905.220423209181
+
 # issue 1594
 for x in [-1, -1.0, 0, 0.0, float('-inf')]:
     assertRaises(ValueError, math.gamma, x)
