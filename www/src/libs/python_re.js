@@ -787,7 +787,7 @@ function validate(name){
             }
         }
         if(pos != name.length){
-            console.log("bad character", pos, name, name.charCodeAt(pos))
+            console.log("bad character", pos, name)
             fail(`bad character in group name '${sname}'`)
         }
     }else{
@@ -795,15 +795,7 @@ function validate(name){
     }
 }
 
-function ord_to_char(ord){
-    char = _b_.chr(ord)
-    if(char.__class__ === _b_.str.$surrogate){
-        char = char.items[0]
-    }
-    return char
-}
-
-var chr = ord_to_char
+var chr = _b_.chr
 
 var character_classes = {
     in_charset: to_codepoint_list('bdDsSwW'),
@@ -915,7 +907,7 @@ function escaped_char(args){
             return {
                 type: 'o',
                 ord: octal_value,
-                char: ord_to_char(octal_value),
+                char: chr(octal_value),
                 length: 1 + mo[0].length
             }
         }
@@ -1129,12 +1121,6 @@ function compile(data, flags){
     node.$groups = groups
     if(flags === no_flag){
         flags = Flag.$factory("", 32) // default is Unicode
-    }
-    if(pattern.__class__ === _b_.str.$surrogate){
-        pattern = pattern.items
-        pattern.substring = function(start, stop){
-            return this.slice(start, stop).join('')
-        }
     }
     var tokenized = []
     for(var item of tokenize(pattern, type)){
@@ -1760,12 +1746,7 @@ function* tokenize(pattern, type){
 
 function to_codepoint_list(s){
     var items = []
-    if(s.__class__ === _b_.str.$surrogate){
-        for(const item of s.items){
-            items.push(_b_.ord(item))
-        }
-        items.type = "unicode"
-    }else if(typeof s == "string" || _b_.isinstance(s, _b_.str)){
+    if(typeof s == "string" || _b_.isinstance(s, _b_.str)){
         if(typeof s != "string"){
             s = s.valueOf()
         }
@@ -1787,27 +1768,15 @@ function to_codepoint_list(s){
 }
 
 function from_codepoint_list(codepoints, type){
-    // Return a string, or an instance of str.$surrogate
-    var chars = [],
-        has_surrogate
+    // Return a string
     if(type == "bytes"){
         return _b_.bytes.$factory(codepoints)
     }
+    var s = ''
     for(const cp of codepoints){
-        var char = _b_.chr(cp)
-        if(char.__class__ === _b_.str.$surrogate){
-            has_surrogate = true
-            chars.push(char.items[0])
-        }else{
-            chars.push(char)
-        }
+        s += _b_.chr(cp)
     }
-    if(has_surrogate){
-        var res = _b_.str.$surrogate.$factory('')
-        res.items = chars
-        return res
-    }
-    return chars.join('')
+    return s
 }
 
 function MatchObject(pattern, string, stack, endpos){
@@ -2356,14 +2325,13 @@ function StringObj(obj){
         // Python object represented as a Javascript string
         this.string = obj
         for(var i = 0, len = obj.length; i < len; i++){
-            this.codepoints.push(obj.codePointAt(i))
+            var cp = obj.codePointAt(i)
+            this.codepoints.push(cp)
+            if(cp >= 0x10000){
+                i++
+            }
         }
-    }else if(obj.__class__ === _b_.str.$surrogate){
-        this.string = obj.items.join('')
-        for(var i = 0, len = obj.items.length; i < len; i++){
-            this.codepoints.push(_b_.ord(obj.items[i]))
-        }
-    }else if(_b_.isinstance(obj, _b_.str)){
+    }else if(_b_.isinstance(obj, _b_.str)){ // str subclass
         var so = new StringObj(obj.valueOf())
         this.string = so.string
         this.codepoints = so.codepoints
@@ -2404,12 +2372,7 @@ StringObj.from_codepoints = function(cps){
     var res = new StringObj('')
     res.codepoints = cps
     for(var cp of cps){
-        var char = _b_.chr(cp)
-        if(char.__class__ === _b_.str.$surrogate){
-            res.string += char.items[0]
-        }else{
-            res.string += char
-        }
+        res.string += _b_.chr(cp)
     }
     return res
 }
