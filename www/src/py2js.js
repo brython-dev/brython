@@ -8201,27 +8201,11 @@ $StringCtx.prototype.transition = function(token, value){
     return $transition(context.parent, token, value)
 }
 
-$B.has_surrogate = function(s){
-    for(var i = 0; i < s.length; i++){
-        try{
-            code = s.charCodeAt(i)
-        }catch(err){
-            console.log("err for s", s)
-            throw err
-        }
-        if(code >= 0xD800 && code <= 0xDBFF){
-            return true
-        }
-    }
-    return false
-}
-
 $StringCtx.prototype.to_js = function(){
     this.js_processed = true
     var res = '',
         type = null,
-        scope = $get_scope(this),
-        has_surrogate = false
+        scope = $get_scope(this)
 
     function fstring(parsed_fstring){
         // generate code for a f-string
@@ -8317,7 +8301,6 @@ $StringCtx.prototype.to_js = function(){
                 var re = new RegExp("'", "g")
                 var elt = parsed_fstring[i].replace(re, "\\'")
                                            .replace(/\n/g, "\\n")
-                has_surrogate = has_surrogate || $B.has_surrogate(elt)
                 elts.push("'" + elt + "'")
             }
         }
@@ -8356,7 +8339,6 @@ $StringCtx.prototype.to_js = function(){
                 if(is_fstring){
                     res += fstring(value)
                 }else{
-                    has_surrogate = has_surrogate || $B.has_surrogate(value)
                     res += prepare(value)
                 }
             }else{
@@ -8365,10 +8347,11 @@ $StringCtx.prototype.to_js = function(){
             if(i < this.tree.length - 1){res += '+'}
         }
     }
-    if(is_bytes){res += ',"ISO-8859-1")'}
-    if(res.length == 0){res = '""'}
-    if(has_surrogate){
-        res = "_b_.str.$surrogate.$factory(" + res + ")"
+    if(is_bytes){
+        res += ',"ISO-8859-1")'
+    }
+    if(res.length == 0){
+        res = '""'
     }
     return res
 }
@@ -9707,9 +9690,8 @@ for(var i = 0; i < s_escaped.length; i++){
 function SurrogatePair(value){
     // value is a code point between 0x10000 and 0x10FFFF
     // attribute "str" is a Javascript string of 2 characters
-    this.name = "SurrogatePair"
     value =  value - 0x10000
-    this.str = String.fromCharCode(0xD800 | (value >> 10)) +
+    return String.fromCharCode(0xD800 | (value >> 10)) +
         String.fromCharCode(0xDC00 | (value & 0x3FF))
 }
 
@@ -9761,7 +9743,7 @@ function test_escape(context, text, string_start, antislash_pos){
                 if(value > 0x10FFFF){
                     $_SyntaxError('invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
-                    return [new SurrogatePair(value), 2 + mo[0].length]
+                    return [SurrogatePair(value), 2 + mo[0].length]
                 }else{
                     return [String.fromCharCode(value), 2 + mo[0].length]
                 }
@@ -10128,11 +10110,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             var esc = test_escape(context, src, string_start,
                                                   end)
                             if(esc){
-                                if(! (esc[0] instanceof SurrogatePair)){
-                                    zone += esc[0]
-                                }else{
-                                    zone += esc[0].str
-                                }
+                                zone += esc[0]
                                 end += esc[1]
                             }else{
                                 if(end < src.length - 1 &&
@@ -10239,12 +10217,10 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
             // points of valid characters for identifiers.
             // Cf. https://docs.python.org/3/reference/lexical_analysis.html#identifiers
             var cp = src.charCodeAt(pos),
-                has_surrogate = false,
                 name = ''
             if(cp >= 0xD800 && cp <= 0xDBFF){
                 cp = _b_.ord(src.substr(pos, 2))
                 car = src.substr(pos, 2)
-                has_surrogate = true
                 pos++
             }
             if($B.unicode_tables.XID_Start[cp]){
@@ -10257,7 +10233,6 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                     if(cp >= 0xD800 && cp <= 0xDBFF){
                         cp = _b_.ord(src.substr(pos, 2))
                         car = src.substr(pos, 2)
-                        has_surrogate = true
                         pos++
                     }
                     if($B.unicode_tables.XID_Continue[cp]){

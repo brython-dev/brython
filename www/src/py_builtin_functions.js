@@ -252,10 +252,8 @@ function chr(i) {
         throw _b_.ValueError.$factory('Outside valid range')
     }else if(i >= 0x10000 && i <= 0x10FFFF){
         var code = (i - 0x10000)
-        return _b_.str.$surrogate.$factory(
-            String.fromCodePoint(0xD800 | (code >> 10)) +
+        return String.fromCodePoint(0xD800 | (code >> 10)) +
             String.fromCodePoint(0xDC00 | (code & 0x3FF))
-            )
     }else{
         return String.fromCodePoint(i)
     }
@@ -1969,18 +1967,16 @@ function ord(c) {
     }
     switch($B.get_class(c)){
       case _b_.str:
-        if(c.length == 1){return c.charCodeAt(0)} // <= strobj.charCodeAt(index)
-        throw _b_.TypeError.$factory('ord() expected a character, but ' +
-            'string of length ' + c.length + ' found')
-      case _b_.str.$surrogate:
-        if(c.items.length == 1){
-            return c.items[0].codePointAt(0)
+        if(c.length == 1){
+            return c.charCodeAt(0)
         }
         throw _b_.TypeError.$factory('ord() expected a character, but ' +
-            'string of length ' + c.items.length + ' found')
+            'string of length ' + c.length + ' found')
       case _b_.bytes:
       case _b_.bytearray:
-        if(c.source.length == 1){return c.source[0]} // <= strobj.charCodeAt(index)
+        if(c.source.length == 1){
+            return c.source[0]
+        }
         throw _b_.TypeError.$factory('ord() expected a character, but ' +
             'string of length ' + c.source.length + ' found')
       default:
@@ -2014,16 +2010,17 @@ function $print(){
     var end = (ks['end'] === undefined || ks['end'] === None) ? '\n' : ks['end'][0],
         sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'][0],
         file = ks['file'] === undefined ? $B.stdout : ks['file'][0],
-        args = $ns['args']
+        args = $ns['args'],
+        writer = $B.$getattr(file, 'write')
     var items = []
-    args.forEach(function(arg){
-        items.push(_b_.str.$factory(arg))
-    })
-    // Special handling of \a and \b
-    var res = items.join(sep) + end
-    res = res.replace(new RegExp("\u0007", "g"), "").
-              replace(new RegExp("(.)\b", "g"), "")
-    $B.$getattr(file, 'write')(res)
+    for(var i = 0, len = args.length; i < len; i++){
+        var arg = _b_.str.$factory(args[i])
+        writer(arg)
+        if(i < len - 1){
+            writer(sep)
+        }
+    }
+    writer(end)
     var flush = $B.$getattr(file, 'flush', None)
     if(flush !== None){
         flush()

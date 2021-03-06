@@ -344,5 +344,45 @@ assert s.isprintable()
 assert '𐐀'.lower() == '𐐨'
 assert '𐐨'.upper() == '𐐀'
 
+# issue 1626
+class Lamb:
+    species_name = "Lamb"
+    scientific_name = "Lambius lambalot"
+
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "🐑 : " + self.name
+
+lil = Lamb("lil")
+
+import sys
+
+t = []
+
+class Output:
+
+    def write(self, x):
+        t.append(str(x))
+
+save_stdout = sys.stdout
+sys.stdout = Output()
+
+print(str(lil))
+print(lil)
+
+sys.stdout = save_stdout
+assert t[0] == '🐑 : lil'
+assert t[2] == '🐑 : lil'
+
+assert '🐑 : lil'.replace('🐑 ', 'lamb') == 'lamb: lil'
+assert '🐑 : lil'.count('l') == 2
+assert '🐑 : lil'.count('🐑 ') == 1
+assert '🐑 : lil'.find('🐑 : lil') == 0
+assert '🐑 : lil'.find('🐑 ') == 0
+
+lamb = '🐑 '
+assert f'{lamb}: lil' == '🐑 : lil'
 
 print("passed all tests...")

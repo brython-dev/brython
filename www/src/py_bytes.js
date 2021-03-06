@@ -1283,8 +1283,7 @@ function load_encoder(enc){
 var decode = $B.decode = function(obj, encoding, errors){
     var s = "",
         b = obj.source,
-        enc = normalise(encoding),
-        has_surrogate = false
+        enc = normalise(encoding)
     switch(enc) {
       case "utf_8":
       case "utf-8":
@@ -1363,7 +1362,6 @@ var decode = $B.decode = function(obj, encoding, errors){
                   }
               }else if((byte >> 3) == 30){
                   // 4 bytes, 1st of the form 11110xxx and 3 next 10xxxxxx
-                  has_surrogate = true
                   if(b[pos + 1] === undefined){
                       err_info = [byte, pos, "end", pos + 1]
                   }else if((b[pos + 1] & 0xc0) != 0x80){
@@ -1418,9 +1416,6 @@ var decode = $B.decode = function(obj, encoding, errors){
                           ": invalid start byte")
                   }
               }
-          }
-          if(has_surrogate){
-              return _b_.str.$surrogate.$factory(s)
           }
           return s
       case "latin_1":

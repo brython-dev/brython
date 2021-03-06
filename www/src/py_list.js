@@ -459,8 +459,6 @@ list.$setitem = function(self, arg, value){
         $B.class_name(arg))
 }
 
-// there is no list.__str__
-
 // add "reflected" methods
 $B.make_rmethods(list)
 

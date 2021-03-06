@@ -610,7 +610,9 @@ $B.$getitem = function(obj, item){
     var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
-        if(is_list || typeof obj == "string"){
+        if(is_list ||
+                (typeof obj == "string" && 
+                 ! $B.has_surrogate(obj))){
             item = item >=0 ? item : obj.length + item
             if(obj[item] !== undefined){return obj[item]}
             else{index_error(obj)}
@@ -994,13 +996,17 @@ var $io = $B.make_class("io",
     }
 )
 
-$io.flush = function(){
-    // do nothing
+$io.flush = function(self){
+    console[self.out].apply(null, self.buf)
+    self.buf = []
 }
 
 $io.write = function(self, msg){
     // Default to printing to browser console
-    console[self.out](msg)
+    if(self.buf === undefined){
+        self.buf = []
+    }
+    self.buf.push(msg)
     return _b_.None
 }
 
