@@ -600,8 +600,14 @@ var _mod = {
         $B.check_nb_args('gamma', 1, arguments)
         $B.check_no_kw('gamma', x)
 
-        if(_b_.isinstance(x, int)){
-            if(i < 1){
+        if(x === Number.POSITIVE_INFINITY){
+            return _mod.inf
+        }else if(x === Number.NEGATIVE_INFINITY){
+            throw _b_.ValueError.$factory("math domain error")
+        }
+        if(_b_.isinstance(x, _b_.int) ||
+                (_b_.isinstance(x, _b_.float) && x == _b_.int.$factory(x))){
+            if(x < 1){
                 throw _b_.ValueError.$factory("math domain error")
             }
             var res = 1
@@ -627,7 +633,16 @@ var _mod = {
             return z
         }
         var z = x
-        if(z < 0.5){
+        if(z < 0){
+            // Use formula Γ(z) = Γ(z + n + 1) / z (z + 1) ... (z + n)
+            // with n such that z + n + 1 > 0
+            var n = Math.ceil(-z - 1),
+                g = _mod.gamma(new Number(z + n + 1))
+            for(var i = 0; i <= n; i++){
+                g = g / (z + i)
+            }
+            return g
+        }else if(z < 0.5){
             var y = Math.PI / (Math.sin(Math.PI * z) * _mod.gamma(1-z)) // Reflection formula
         }else{
             z -= 1

@@ -220,4 +220,8 @@ assert (x, x + y, x < y, x ** 0.5) == (36.9, 90.0, True, 6.074537019394976)
 assert (abs(x), int(x), math.sin(x), math.log(x)) == \
        (36.9, 36, -0.7167370231606575, 3.6082115510464816)
 
+# issue 1594
+for x in [-1, -1.0, 0, 0.0, float('-inf')]:
+    assertRaises(ValueError, math.gamma, x)
+    
 print("passed all tests..")
