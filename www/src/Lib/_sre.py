@@ -368,6 +368,10 @@ class SRE_Match:
     def __deepcopy__():
         raise TypeError("cannot copy this pattern object")
 
+    def __str__(self):
+        start, end = self.start(0), self.end(0)
+        return (f"<re.Match object; span=({start},{end}), match='" +
+            self.string[start:end][:50] + "'>")
 
 class _State:
 
