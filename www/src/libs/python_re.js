@@ -16,6 +16,12 @@ for(var word_gc of word_gcs){
     }
 }
 
+var is_ascii = []
+
+for(var cp = 0; cp <= 127; cp++){
+    is_ascii[cp] = true
+}
+
 var $error_2 = {
     $name: "error",
     $qualname: "error",
@@ -68,6 +74,17 @@ Flag.__or__ = function(self, other){
         self.value | other.value)
 }
 
+Flag.__ror__ = function(self, other){
+    if(typeof other == "number" || _b_.isinstance(other, int)){
+        if(other == 0){
+            return Flag.$factory(self.name, self.value)
+        }
+        return Flag.$factory(`${self.name} other`,
+            self.value | other)
+    }
+    return _b_.NotImplemented
+}
+
 Flag.__str__ = function(self){
     if(self.value == 0){
         return "re.none"
@@ -110,6 +127,15 @@ var BPattern = $B.make_class("Pattern",
     }
 )
 
+BPattern.__str__ = function(self){
+    console.log("str", self)
+    var res = `<re.compile(${_b_.repr(self.pattern)}`
+    if(self.flags.value != 0){
+        res += `, ${_b_.str.$factory(self.flags)}`
+    }
+    return res + ')>'
+}
+
 BPattern.findall = function(self){
     return $module.findall.apply(null, arguments)
 }
@@ -148,7 +174,7 @@ BPattern.match = function(self, string){
     }
     var data = prepare({string: $.string})
     return BMatchObject.$factory(match($.self.$pattern, data.string, $.pos,
-        no_flag, $.endpos))
+        $.self.flags, $.endpos))
 }
 
 BPattern.sub = function(){
@@ -384,7 +410,6 @@ Char.prototype.fixed_length = function(){
 Char.prototype.match = function(string, pos, flags){
     // Returns {pos1, pos2} such that "this" matches all the substrings
     // string[pos:i] with pos1 <= i < pos2, or false if no match
-
     this.repeat = this.repeat || {min: 1, max: 1}
 
     var len = string.codepoints.length,
@@ -392,17 +417,29 @@ Char.prototype.match = function(string, pos, flags){
 
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
-    if(flags && (flags.value & IGNORECASE.value)){
-        // flag IGNORECASE set
-        var char_upper = this.char.toUpperCase(),
-            char_lower = this.char.toLowerCase()
-        while(i < this.repeat.max && pos + i < len){
-            var char = chr(string.codepoints[pos + i])
-            if(char.toUpperCase() != char_upper &&
-                    char.toLowerCase() != char_lower){
-               break
+    if(flags){
+        if(flags.value & ASCII.value){
+            if(! /[a-zA-Z]/.exec(this.char)){
+                return false
             }
-            i++
+        }
+        if(flags.value & IGNORECASE.value){
+            // flag IGNORECASE set
+            var char_upper = this.char.toUpperCase(),
+                char_lower = this.char.toLowerCase()
+            while(i < this.repeat.max && pos + i < len){
+                var char = chr(string.codepoints[pos + i])
+                if(char.toUpperCase() != char_upper &&
+                        char.toLowerCase() != char_lower){
+                   break
+                }
+                i++
+            }
+        }else{
+            while(string.codepoints[pos + i] == this.cp &&
+                    i < this.repeat.max){
+                i++
+            }
         }
     }else{
         while(string.codepoints[pos + i] == this.cp && i < this.repeat.max){
@@ -481,12 +518,16 @@ function CharacterClass(pos, cp, length, groups){
             }
             break
         case 'b':
-            this.test_func = function(string, pos){
+            this.test_func = function(string, pos, flags){
+                var table = is_word
+                if(flags && (flags.value & ASCII.value)){
+                    table = is_ascii
+                }
                 var cp = string.codepoints[pos]
                 if((pos == 0 && is_word[cp]) ||
                        (pos == string.codepoints.length &&
-                        is_word[string.codepoints[pos - 1]]) ||
-                        is_word[cp] != is_word[string.codepoints[pos - 1]]){
+                        table[string.codepoints[pos - 1]]) ||
+                        table[cp] != is_word[string.codepoints[pos - 1]]){
                     return {nb_min: 0, nb_max: 0}
                 }else{
                     return false
@@ -494,25 +535,37 @@ function CharacterClass(pos, cp, length, groups){
             }
             break
         case 'B':
-            this.test_func = function(string, pos){
+            this.test_func = function(string, pos, flags){
+                var table = is_word
+                if(flags && (flags.value & ASCII.value)){
+                    table = is_ascii
+                }
                 var cp = string.codepoints[pos],
                     test = (pos == 0 && is_word[cp]) ||
                        (pos == string.codepoints.length &&
-                        is_word[string.codepoints[pos - 1]]) ||
-                        is_word[cp] != is_word[string.codepoints[pos - 1]]
+                        table[string.codepoints[pos - 1]]) ||
+                        table[cp] != is_word[string.codepoints[pos - 1]]
                 if(! test){
                     return [true, 0]
                 }
             }
             break
         case 'w':
-            this.test_func = function(string, pos){
-                return is_word[string.codepoints[pos]]
+            this.test_func = function(string, pos, flags){
+                var table = is_word
+                if(flags && (flags.value & ASCII.value)){
+                    table = is_ascii
+                }
+                return table[string.codepoints[pos]]
             }
             break
         case 'W':
-            this.test_func = function(string, pos){
-                return ! is_word[string.codepoints[pos]]
+            this.test_func = function(string, pos, flags){
+                var table = is_word
+                if(flags && flags.value & ASCII.value){
+                    table = is_ascii
+                }
+                return ! table[string.codepoints[pos]]
             }
             break
         case 'Z':
@@ -535,7 +588,7 @@ CharacterClass.prototype.match = function(string, pos, flags){
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
     while(pos + i <= len &&
-            this.test_func(string, pos + i) &&
+            this.test_func(string, pos + i, flags) &&
             i < this.repeat.max){
         i++
     }
@@ -1361,6 +1414,7 @@ function compile(data, flags){
                        'two branches', pos)
                 }
             }else if(node.items.length == 0){
+                // token "|" in  "(|...)" : first option is the empty string
                 var choice = new Choice(),
                     case1 = new Case()
                 case1.add(new Char(pos, EmptyString))
@@ -1370,10 +1424,12 @@ function compile(data, flags){
                 choice.add(case2)
                 node = case2
             }else if(node instanceof Case){
+                // node.parent is already a Choice
                 var new_case = new Case()
                 node.parent.add(new_case)
                 node = new_case
             }else{
+                // token "|" in "(ab|...)"
                 var previous = node.items[node.items.length - 1]
                 if(previous instanceof Case){
                     var new_case = new Case()
@@ -2347,7 +2403,11 @@ function StringObj(obj){
         // list of codepoints
         this.codepoints = obj
     }else{
-        throw Error($B.class_name(obj) + ' cannot be interpreted as a string')
+        try{
+            this.codepoints = _b_.list.$factory(obj)
+        }catch(err){
+            throw Error($B.class_name(obj) + ' cannot be interpreted as a string')
+        }
     }
     this.length = this.codepoints.length
 }
@@ -2628,13 +2688,24 @@ function match(pattern, string, pos, flags, endpos){
         }else if(model instanceof Group){
             // If group is repeated, .start is the position of the last
             // tried match
-            stack.push({
-                type: "group",
-                start: pos,
-                model,
-                rank,
-                matches: []
-            })
+            var group_in_stack = false
+            for(var state of stack){
+                if(state.model === model){
+                    group_in_stack = state
+                    break
+                }
+            }
+            if(! group_in_stack){
+                stack.push({
+                    type: "group",
+                    start: pos,
+                    model,
+                    rank,
+                    matches: []
+                })
+            }else{
+                group_in_stack.start = pos
+            }
             if(model.is_lookahead){
                 lookahead = {model, pos}
             }else if(model.is_lookbehind){
@@ -2923,16 +2994,41 @@ function match(pattern, string, pos, flags, endpos){
                         }else{
                             group = false
                             state = false
-                            for(i = 0, len = stack.length; i < len; i++){
-                                state = stack[i]
-                                if(state.model == choice_group){
-                                    // remove all elements after group start
-                                    while(stack[i + 1] !== undefined){
-                                        stack.pop()
-                                    }
+                            var choice_state
+                            for(var state of stack){
+                                if(state.model === choice_group){
+                                    choice_state = state
                                     break
                                 }
                             }
+                            // XXX same as in GroupEnd
+                            var i = stack.length - 1
+                            while(stack[i].model !== choice_group){
+                                if(stack[i].type != "group"){
+                                    if((state.model.greedy &&
+                                            state.ix >= state.model.repeat.max - 1) ||
+                                       (! stack[i].model.greedy &&
+                                            stack[i].ix == stack[i].model.repeat.min)){
+                                        stack.splice(i, 1)
+                                    }
+                                }else{
+                                    // remove group if choice_group didn't match
+                                    if(! choice_state.has_matched){
+                                        if(debug){
+                                            console.log("choice_group", choice_group,
+                                            "remove state", stack[i])
+                                        }
+                                        stack.splice(i, 1)
+                                    }
+                                }
+                                i--
+                                if(i < 0){
+                                    console.log("pattern", pattern, "string", string,
+                                        "satck", stack, "model", model)
+                                    throw Error("group start not found")
+                                }
+                            }
+                            state = stack[i]
                             var match_start = state.matches.length > 0 ?
                                     state.matches[state.matches.length - 1].end :
                                     state.start
@@ -3076,6 +3172,9 @@ var $module = {
                     null, null)
         $.pattern = check_pattern_flags($.pattern, $.flags)
         var data = prepare({pattern: $.pattern})
+        if(typeof $.flags == "number"){
+            $.flags = Flag.$factory($.flags, $.flags)
+        }
         return BPattern.$factory(compile(data, $.flags))
     },
     error: error,
@@ -3180,7 +3279,8 @@ var $module = {
         return $B.generator.$factory(function*(pattern, string, flags,
                 original_string){
             var result = [],
-                pos = 0
+                pos = 0,
+                last_mo
             while(pos <= string.length){
                 var mo = match(pattern, string, pos, flags)
                 if(mo){
