@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-06 17:59:56.292183"
-__BRYTHON__.timestamp=1615049996292
+__BRYTHON__.compiled_date="2021-03-08 21:13:16.101703"
+__BRYTHON__.timestamp=1615234396101
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -2918,8 +2918,8 @@ val+'"]'}else if(this.bound){return "$locals_"+innermost.id.replace(/\./g,"_")+
 '["'+val+'"]'}}
 var global_ns='$locals_'+gs.id.replace(/\./g,'_')
 while(1){if(scope.globals !==undefined &&
-scope.globals.has(val)){if($test){console.log("in globals of",scope.id)}
-if(this.boundBefore(gs)){if($test){console.log("bound before in gs",gs)}
+scope.globals.has(val)){if($test){console.log("in globals of",scope.id,'globals',gs)}
+if(this.boundBefore(gs)){if($test){console.log("bound before in gs",gs,global_ns)}
 return global_ns+'["'+val+'"]'}else{if($test){console.log("use global search",this)}
 if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'", '+
 search_ids+')'}}}
@@ -5314,7 +5314,7 @@ if(elt.src){
 $B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src}])}else{
 src=(elt.innerHTML ||elt.textContent)
 src=src.replace(/^\n/,'')
-$B.tasks.push([$B.run_script,src,elt.src,$B.script_path+"#"+module_name,true])}}}}
+$B.tasks.push([$B.run_script,src,module_name,$B.script_path+"#"+module_name,true])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.$operators=$operators
 $B.$Node=$Node

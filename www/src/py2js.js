@@ -5801,7 +5801,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "xfc" || val == "y"
+    var $test = false // val == "myGlob"
 
     if($test){
         console.log("this", this)
@@ -5917,7 +5917,7 @@ $IdCtx.prototype.to_js = function(arg){
         if(scope.globals !== undefined &&
                 scope.globals.has(val)){
             if($test){
-                console.log("in globals of", scope.id)
+                console.log("in globals of", scope.id, 'globals', gs)
             }
             // Variable is declared as global. If the name is bound in the
             // global scope, use it ; if the name is being bound, bind it
@@ -5925,7 +5925,7 @@ $IdCtx.prototype.to_js = function(arg){
             // Else return a call to a function that searches the name in
             // globals, and throws NameError if not found.
             if(this.boundBefore(gs)){
-                if($test){console.log("bound before in gs", gs)}
+                if($test){console.log("bound before in gs", gs, global_ns)}
                 return global_ns + '["' + val + '"]'
             }else{
                 if($test){console.log("use global search", this)}
@@ -10757,7 +10757,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }
 
     $B.compile_time += t1 - t0
-
+    
     return root
 }
 
@@ -11160,7 +11160,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                     src = (elt.innerHTML || elt.textContent)
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
-                    $B.tasks.push([$B.run_script, src, elt.src,
+                    $B.tasks.push([$B.run_script, src, module_name,
                         $B.script_path + "#" + module_name, true])
                 }
             }

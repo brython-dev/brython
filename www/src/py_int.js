@@ -561,9 +561,13 @@ var $op_func = function(self, other){
         }
         return self - other
     }
-    if(_b_.isinstance(other, _b_.bool)){return self - other}
+    if(_b_.isinstance(other, _b_.bool)){
+        return self - other
+    }
     var rsub = $B.$getattr(other, "__rsub__", _b_.None)
-    if(rsub !== _b_.None){return rsub(self)}
+    if(rsub !== _b_.None){
+        return rsub(self)
+    }
     $err("-", other)
 }
 
@@ -787,7 +791,7 @@ int.$factory = function(value, base){
     }
 
     for(var special_method of ["__int__", "__index__", "__trunc__"]){
-        var num_value = $B.$getattr(value.__class__ || $B.get_class(value), 
+        var num_value = $B.$getattr(value.__class__ || $B.get_class(value),
             special_method, _b_.None)
         if(num_value !== _b_.None){
             return $B.$call(num_value)(value)
