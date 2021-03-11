@@ -52,10 +52,9 @@ function warn(klass, message, pos){
 }
 
 var Flag = $B.make_class("Flag",
-    function(name, value){
+    function(value){
         return {
             __class__: Flag,
-            name,
             value
         }
     }
@@ -70,17 +69,15 @@ Flag.__eq__ = function(self, other){
 }
 
 Flag.__or__ = function(self, other){
-    return Flag.$factory(`${self.name} ${other.name}`,
-        self.value | other.value)
+    return Flag.$factory(self.value | other.value)
 }
 
 Flag.__ror__ = function(self, other){
     if(typeof other == "number" || _b_.isinstance(other, int)){
         if(other == 0){
-            return Flag.$factory(self.name, self.value)
+            return Flag.$factory(self.value)
         }
-        return Flag.$factory(`${self.name} other`,
-            self.value | other)
+        return Flag.$factory(self.value | other)
     }
     return _b_.NotImplemented
 }
@@ -90,17 +87,16 @@ Flag.__str__ = function(self){
         return "re.none"
     }
     var t = []
-    for(var flag of 'iLmsuxa'){
+    for(var flag in inline_flags){
         if(self.value & inline_flags[flag].value){
-            t.push(inline_flags[flag].name)
+            t.push(flag_names[flag])
         }
     }
     return 're.' + t.join(' ')
 }
 
 Flag.__xor__ = function(self, other){
-    return Flag.$factory(`${self.name} ^ ${other.name}`,
-        self.value ^ other.value)
+    return Flag.$factory(self.value ^ other.value)
 }
 
 $B.set_func_names(Flag, "re")
@@ -129,15 +125,27 @@ var BPattern = $B.make_class("Pattern",
 
 BPattern.__str__ = function(self){
     console.log("str", self)
-    var res = `<re.compile(${_b_.repr(self.pattern)}`
+    var res = `re.compile(${_b_.repr(self.pattern)}`
     if(self.flags.value != 0){
         res += `, ${_b_.str.$factory(self.flags)}`
     }
-    return res + ')>'
+    return res + ')'
 }
 
 BPattern.findall = function(self){
     return $module.findall.apply(null, arguments)
+}
+
+BPattern.finditer = function(self){
+    var $ = $B.args("finditer", 4,
+            {self: null, string: null, pos: null, endpos: null},
+            'self string pos endpos'.split(' '), arguments,
+            {pos: 0, endpos: -1}, null, null)
+    var original_string = $.string,
+        data = prepare({string: $.string})
+
+    return $B.generator.$factory(iterator)($.self, data.string,
+            no_flag, $.string, $.pos, $.endpos)
 }
 
 var gi = $B.make_class("GroupIndex",
@@ -178,7 +186,11 @@ BPattern.match = function(self, string){
 }
 
 BPattern.sub = function(){
-    return $module.sub.apply(null, arguments)
+    var $ = $B.args("match", 4,
+                    {self: null, repl: null, string: null, count: null},
+                    "self repl string count".split(' '), arguments,
+                    {count: 0}, null, null)
+    return $module.sub($.self, $.repl, $.string, $.count)
 }
 
 $B.set_func_names(BPattern, "re")
@@ -802,7 +814,7 @@ StringEnd.prototype.match = function(string, pos, flags){
     var ok = {nb_min:0, nb_max: 0}
     if(flags.value & MULTILINE.value){
         return (pos > string.codepoints.length - 1 ||
-            string.string[pos] == '\n') ? ok : false
+            string.codepoints[pos] == 10) ? ok : false
     }
     return pos > string.codepoints.length - 1 ? ok :
            (pos == string.codepoints.length - 1 &&
@@ -1157,12 +1169,24 @@ function validate_named_char(description){
 function compile(data, flags){
     // data has attributes "pattern" (instance of StringObj)
     // and "type" ("str" or "bytes")
+    if(data.pattern.__class__ === BPattern){
+        return data.pattern
+    }
     var path = []
     pattern = data.pattern.codepoints
     type = data.type
     var is_bytes = type !== "str"
+    if(is_bytes && flags && (flags.value & U.value)){
+        throw _b_.ValueError.$factory("cannot use UNICODE flag with " +
+            "a bytes pattern")
+    }
+    if(flags && (flags.value & U.value) &&
+            (flags.value & ASCII.value)){
+        throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+            "are incompatible")
+    }
     if(is_bytes){
-        flags = Flag.$factory('', flags.value | ASCII.value)
+        flags = Flag.$factory(flags.value | ASCII.value)
     }
     var group_num = 0,
         group_stack = [],
@@ -1172,9 +1196,6 @@ function compile(data, flags){
         lookbehind,
         node = new Node()
     node.$groups = groups
-    if(flags === no_flag){
-        flags = Flag.$factory("", 32) // default is Unicode
-    }
     var tokenized = []
     for(var item of tokenize(pattern, type)){
         path.push(item)
@@ -1457,6 +1478,30 @@ function compile(data, flags){
                  item instanceof StringEnd){
             node.add(item)
         }else if(item instanceof SetFlags){
+            // copy flags, otherwise re.ASCII etc might be modified
+            flags = Flag.$factory(flags.value)
+            if(item.on_flags.indexOf('u') > -1){
+                if(is_bytes){
+                    fail("re.error: bad inline flags: cannot use 'u' flag " +
+                        "with a bytes pattern", pos)
+                }
+                if(flags && flags.value & ASCII.value){
+                    throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+                        "are incompatible")
+                }
+                if(item.on_flags.indexOf('a') > -1){
+                    fail("bad inline falgs", pos)
+                }
+                if(item.on_flags.indexOf('u') > -1 && is_bytes){
+                    fail("bad inline flags: cannot use 'u' flag with a bytes " +
+                        "pattern", pos)
+                }
+            }else if(item.on_flags.indexOf('a') > -1){
+                if(flags && flags.value & U.value){
+                    throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
+                        "are incompatible")
+                }
+            }
             if(item.items.length == 0){
                 if(item.pos != 0){
                     fail("Flags not at the start of the expression '" +
@@ -2406,7 +2451,8 @@ function StringObj(obj){
         try{
             this.codepoints = _b_.list.$factory(obj)
         }catch(err){
-            throw Error($B.class_name(obj) + ' cannot be interpreted as a string')
+            throw _b_.TypeError.$factory($B.class_name(obj) +
+                ' cannot be interpreted as a string')
         }
     }
     this.length = this.codepoints.length
@@ -2565,6 +2611,26 @@ function in_choice(model){
     return false
 }
 
+function* iterator(pattern, string, flags, original_string, pos, endpos){
+    var result = [],
+        pos = pos | 0,
+        last_mo
+    while(pos <= string.length){
+        var mo = match(pattern, string, pos, flags, endpos)
+        if(mo){
+            yield BMatchObject.$factory(mo)
+            if(mo.end == pos){
+                pos++ // at least 1, else infinite loop
+            }else{
+                pos = mo.end
+            }
+        }else{
+            pos++
+        }
+    }
+    delete original_string.in_iteration
+}
+
 function match(pattern, string, pos, flags, endpos){
     /* Main algorithm
     pattern is the result of compile(). It has the attributes
@@ -2626,6 +2692,12 @@ function match(pattern, string, pos, flags, endpos){
         lookbehind = false
     pos = pos || 0
     endpos = endpos === undefined ? string.codepoints.length : endpos
+    if(endpos < pos){
+        return false
+    }
+    var string0 = string
+    string = new StringObj('')
+    string.codepoints = string0.codepoints.slice(0, endpos)
     while(true){
         model = path[rank]
         if(debug){
@@ -2669,14 +2741,14 @@ function match(pattern, string, pos, flags, endpos){
             if(debug){
                 console.log("groups", groups)
             }
-            return new MatchObject(pattern, string, stack, endpos)
+            return new MatchObject(pattern, string0, stack, endpos)
         }
         if(! model.repeat){
             model.repeat = {min: 1, max: 1}
         }
         if(model instanceof SetFlags){
             if(flags === no_flag){
-                flags = Flag.$factory('', 0)
+                flags = Flag.$factory(0)
             }
             for(var id of model.on_flags){
                 flags = Flag.__or__(flags, inline_flags[id])
@@ -3170,10 +3242,13 @@ var $module = {
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
                     ['pattern', 'flags'], arguments, {flags: no_flag},
                     null, null)
+        if($.pattern && $.pattern.__class__ === BPattern){
+            return $.pattern
+        }
         $.pattern = check_pattern_flags($.pattern, $.flags)
         var data = prepare({pattern: $.pattern})
         if(typeof $.flags == "number"){
-            $.flags = Flag.$factory($.flags, $.flags)
+            $.flags = Flag.$factory($.flags)
         }
         return BPattern.$factory(compile(data, $.flags))
     },
@@ -3276,26 +3351,8 @@ var $module = {
             data = prepare({string, pattern})
             pattern = BPattern.$factory(compile(data, flags))
         }
-        return $B.generator.$factory(function*(pattern, string, flags,
-                original_string){
-            var result = [],
-                pos = 0,
-                last_mo
-            while(pos <= string.length){
-                var mo = match(pattern, string, pos, flags)
-                if(mo){
-                    yield BMatchObject.$factory(mo)
-                    if(mo.end == pos){
-                        pos++ // at least 1, else infinite loop
-                    }else{
-                        pos = mo.end
-                    }
-                }else{
-                    pos++
-                }
-            }
-            delete original_string.in_iteration
-        })(pattern.$pattern, data.string, flags, original_string)
+        return $B.generator.$factory(iterator)(pattern.$pattern, data.string,
+            flags, original_string)
     },
     fullmatch: function(){
         var bmo = $module.match.apply(null, arguments)
@@ -3325,6 +3382,7 @@ var $module = {
         }
         return BMatchObject.$factory(match(pattern, data.string, 0, flags))
     },
+    Pattern: BPattern,
     purge: function(){
         var $ = $B.args("purge", 0, {}, [], arguments, {}, null, null)
         return _b_.None
@@ -3411,12 +3469,14 @@ var $module = {
             count = $.count,
             flags = $.flags,
             data
+        check_pattern_flags(pattern, flags)
         if(typeof repl != "function"){
             if(pattern.__class__ != BPattern){
                 data = prepare({pattern, string, repl})
                 pattern = compile(data, flags)
             }else{
                 data = prepare({string, repl})
+                flags = pattern.flags
             }
             data = transform_repl(data, pattern)
         }else{
@@ -3425,6 +3485,7 @@ var $module = {
                 pattern = compile(data, flags)
             }else{
                 data = prepare({string})
+                flags = pattern.flags
             }
             data.repl = repl
         }
@@ -3454,13 +3515,14 @@ var $module = {
 
 }
 
-var ASCII = $module.A = $module.ASCII = Flag.$factory("ASCII", 256)
-var IGNORECASE = $module.I = $module.IGNORECASE = Flag.$factory("IGNORECASE", 2)
-var LOCALE = $module.L = $module.LOCALE = Flag.$factory("LOCALE", 4)
-var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory("MULTILINE", 8)
-var DOTALL = $module.S = $module.DOTALL = Flag.$factory("DOTALL", 16)
-var U = $module.U = $module.UNICODE = Flag.$factory("U", 32)
-var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory("VERBOSE", 64)
+var ASCII = $module.A = $module.ASCII = Flag.$factory(256)
+var IGNORECASE = $module.I = $module.IGNORECASE = Flag.$factory(2)
+var LOCALE = $module.L = $module.LOCALE = Flag.$factory(4)
+var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory(8)
+var DOTALL = $module.S = $module.DOTALL = Flag.$factory(16)
+var U = $module.U = $module.UNICODE = Flag.$factory(32)
+var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory(64)
+
 
 var inline_flags = {
     i: IGNORECASE,
@@ -3471,3 +3533,14 @@ var inline_flags = {
     x: VERBOSE,
     a: ASCII
 }
+
+var flag_names = {
+    i: 'IGNORECASE',
+    L: 'LOCALE',
+    m: 'MULTILINE',
+    s: 'DOTALL',
+    u: 'U',
+    x: 'VERBOSE',
+    a: 'ASCII'
+}
+
