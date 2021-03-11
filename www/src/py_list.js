@@ -403,13 +403,14 @@ list.__repr__ = function(self){
 }
 
 list.__setattr__ = function(self, attr, value){
-    if(self.__class__ === list){
+    if(self.__class__ === list || self.__class__ === tuple){
+        var cl_name = $B.class_name(self)
         if(list.hasOwnProperty(attr)){
-            throw _b_.AttributeError.$factory("'list' object attribute '" +
-                attr + "' is read-only")
+            throw _b_.AttributeError.$factory("'" + cl_name +
+                "' object attribute '" + attr + "' is read-only")
         }else{
             throw _b_.AttributeError.$factory(
-                "'list' object has no attribute '" + attr + "'")
+                "'" + cl_name + " object has no attribute '" + attr + "'")
         }
     }
     // list subclass : use __dict__

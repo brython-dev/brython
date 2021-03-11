@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-08 21:13:16.101703"
-__BRYTHON__.timestamp=1615234396101
+__BRYTHON__.compiled_date="2021-03-11 21:35:09.815231"
+__BRYTHON__.timestamp=1615494909815
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -11766,9 +11766,10 @@ for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
 if(self.__class__===tuple){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
 $B.repr.leave(self)
 return res}
-list.__setattr__=function(self,attr,value){if(self.__class__===list){if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'list' object attribute '"+
-attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
-"'list' object has no attribute '"+attr+"'")}}
+list.__setattr__=function(self,attr,value){if(self.__class__===list ||self.__class__===tuple){var cl_name=$B.class_name(self)
+if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'"+cl_name+
+"' object attribute '"+attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
+"'"+cl_name+" object has no attribute '"+attr+"'")}}
 _b_.dict.$setitem(self.__dict__,attr,value)
 return $N}
 list.__setitem__=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value

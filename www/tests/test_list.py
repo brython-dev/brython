@@ -321,4 +321,13 @@ try:
     raise Exception("should have raised TypeError")
 except TypeError:
     pass
+
+# issue 1630
+t = (1, 2)
+try:
+    t.first = 1
+    raise AssertionError("should have raised AttributeError")
+except AttributeError:
+    pass
+
 print("passed all tests..")
