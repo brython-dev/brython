@@ -1527,6 +1527,7 @@ function compile(data, flags){
     node.subitems = subitems
     node.pattern = from_codepoint_list(pattern)
     node.groups = group_num
+    flags = flags === no_flag ? 32 : flags
     node.flags = flags
     if(lookbehind){
         var es = new Char(pos, EmptyString)
@@ -3250,7 +3251,8 @@ var $module = {
         if(typeof $.flags == "number"){
             $.flags = Flag.$factory($.flags)
         }
-        return BPattern.$factory(compile(data, $.flags))
+        var jspat = compile(data, $.flags)
+        return BPattern.$factory(jspat)
     },
     error: error,
     escape: function(){
