@@ -138,18 +138,18 @@ class Tester:
     def assertWarns(self, exc):
       import warnings
       class Manager:
-    
+
           def __init__(self, expected, expected_regex=None):
               self.expected = expected
               self.expected_regex = expected_regex
               self.obj_name = None
-    
+
           def __enter__(self):
               self.warnings_manager = warnings.catch_warnings(record=True)
               self.warnings = self.warnings_manager.__enter__()
               warnings.simplefilter("always", self.expected)
               return self
-    
+
           def __exit__(self, exc_type, exc_value, tb):
               self.warnings_manager.__exit__(exc_type, exc_value, tb)
               if exc_type is not None:
@@ -183,7 +183,7 @@ class Tester:
                                                                      self.obj_name))
               else:
                   self._raiseFailure("{} not triggered".format(exc_name))
-    
+
       return Manager(exc)
     def fail(self, *args):
         raise Exception(str(args))
@@ -279,6 +279,16 @@ class TestReport:
             res += fmt.format(method, report)
             if report.args:
                 res += '    {0.args[0]}\n'.format(report)
+        results = {}
+        for method in self.records:
+            status = self.records[method].status
+            if status in results:
+                results[status] += 1
+            else:
+                results[status] = 1
+        for status in sorted(results):
+            res += f'{status}: {results[status]}\n'
+
         return res
 
 TestCase = Tester # unittest interface
