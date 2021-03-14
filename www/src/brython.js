@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-11 21:35:09.815231"
-__BRYTHON__.timestamp=1615494909815
+__BRYTHON__.compiled_date="2021-03-14 22:24:33.431718"
+__BRYTHON__.timestamp=1615757073431
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -2675,9 +2675,9 @@ this.type='func_arg_id'
 this.name=name
 this.parent=C
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
-var node=$get_node(this)
+if(C.parent.type !="lambda"){var node=$get_node(this)
 if(node.binding[name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
-$bind(name,node,this)
+$bind(name,node,this)}
 this.tree=[]
 C.tree[C.tree.length]=this
 var ctx=C
@@ -2738,8 +2738,8 @@ return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $FuncStarArgCtx.prototype.set_name=function(name){this.name=name
-if(this.node.binding[name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
-$bind(name,this.node,this)
+if(this.parent.parent.type !="lambda"){if(this.node.binding[name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
+$bind(name,this.node,this)}
 var ctx=this.parent
 while(ctx.parent !==undefined){if(ctx.type=='def'){ctx.locals.push(name)
 break}
@@ -3098,7 +3098,6 @@ this.args_start=$pos+6
 this.vars=[]
 this.locals=[]
 this.node=$get_node(this)
-this.node.binding={}
 this.positional_list=[]
 this.default_list=[]
 this.other_args=null

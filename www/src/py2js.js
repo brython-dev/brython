@@ -5326,13 +5326,14 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context,name){
         context.parent.positional_list.push(name)
     }
     // bind name to function scope
-    var node = $get_node(this)
-    if(node.binding[name]){
-        $_SyntaxError(context,
-            ["duplicate argument '" + name + "' in function definition"])
+    if(context.parent.type != "lambda"){
+        var node = $get_node(this)
+        if(node.binding[name]){
+            $_SyntaxError(context,
+                ["duplicate argument '" + name + "' in function definition"])
+        }
+        $bind(name, node, this)
     }
-    $bind(name, node, this)
-
     this.tree = []
     context.tree[context.tree.length] = this
     // add to locals of function
@@ -5456,11 +5457,13 @@ $FuncStarArgCtx.prototype.set_name = function(name){
     this.name = name
 
     // bind name to function scope
-    if(this.node.binding[name]){
-        $_SyntaxError(context,
-            ["duplicate argument '" + name + "' in function definition"])
+    if(this.parent.parent.type != "lambda"){
+        if(this.node.binding[name]){
+            $_SyntaxError(context,
+                ["duplicate argument '" + name + "' in function definition"])
+        }
+        $bind(name, this.node, this)
     }
-    $bind(name, this.node, this)
 
     // add to locals of function
     var ctx = this.parent
@@ -6384,7 +6387,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
 
     // initialize object for names bound in the function
     this.node = $get_node(this)
-    this.node.binding = {}
+    // this.node.binding = {}
 
     // Arrays for arguments
     this.positional_list = []
@@ -10757,7 +10760,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }
 
     $B.compile_time += t1 - t0
-    
+
     return root
 }
 

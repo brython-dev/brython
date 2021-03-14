@@ -2877,6 +2877,15 @@ for eng, esp in zip_iter:
     rest.append([eng, esp])
 assert rest == [["two", "dos"], ["three", "tres"]]
 
+# issue 1632
+def add_seen_k(k, f=lambda x: 0):
+    def inner(z):
+        return k
+    return inner
+
+a = add_seen_k(3)
+assert a(4) == 3
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
