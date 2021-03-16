@@ -929,6 +929,21 @@ str.__repr__ = function(self){
     return res
 }
 
+str.__setattr__ = function(self, attr, value){
+    if(typeof self === "string"){
+        if(str.hasOwnProperty(attr)){
+            throw _b_.AttributeError.$factory("'str' object attribute '" + 
+                attr + "' is read-only")
+        }else{
+            throw _b_.AttributeError.$factory(
+                "'str' object has no attribute '" + attr + "'")
+        }
+    }
+    // str subclass : use __dict__
+    _b_.dict.$setitem(self.__dict__, attr, value)
+    return $N
+}
+
 str.__setitem__ = function(self, attr, value){
     throw _b_.TypeError.$factory(
         "'str' object does not support item assignment")

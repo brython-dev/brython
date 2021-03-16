@@ -385,4 +385,24 @@ assert '🐑 : lil'.find('🐑 ') == 0
 lamb = '🐑 '
 assert f'{lamb}: lil' == '🐑 : lil'
 
+# issue 1637
+try:
+    ''.x = 0
+    raise AssertionError('should have raised AttributeError')
+except AttributeError as exc:
+    assert exc.args[0] == "'str' object has no attribute 'x'"
+
+try:
+    ''.x
+    raise AssertionError('should have raised AttributeError')
+except AttributeError as exc:
+    assert exc.args[0] == "'str' object has no attribute 'x'"
+
+try:
+    ''.__dict__
+    raise AssertionError('should have raised AttributeError')
+except AttributeError as exc:
+    assert exc.args[0] == "'str' object has no attribute '__dict__'"
+
+
 print("passed all tests...")
