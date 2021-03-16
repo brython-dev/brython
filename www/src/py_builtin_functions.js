@@ -692,7 +692,8 @@ function $$eval(src, _globals, _locals){
 
     var root = $B.py2js(src, globals_id, locals_id, parent_scope),
         js, gns, lns
-    if(_globals !== _b_.None && _locals == _b_.None){
+    if(_globals !== _b_.None &&
+            (_locals === _b_.None || _locals === _globals)){
         for(var attr in _globals.$string_dict){
             root.binding[attr] = true
         }
@@ -763,7 +764,6 @@ function $$eval(src, _globals, _locals){
             }else{
                 current_globals_obj = current_frame[3]
                 current_locals_obj = current_frame[1]
-
                 var res = new Function("$locals_" + globals_id,
                     "$locals_" + locals_id,
                     "$locals_" + current_globals_id,
@@ -855,6 +855,9 @@ function $$eval(src, _globals, _locals){
         err.module = globals_id
         if(err.$py_error === undefined){
             throw $B.exception(err)
+        }
+        if(globals_is_dict){
+            delete _globals.$jsobj
         }
         throw err
     }finally{

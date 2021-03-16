@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-14 22:24:33.431718"
-__BRYTHON__.timestamp=1615757073431
+__BRYTHON__.compiled_date="2021-03-16 17:40:17.722762"
+__BRYTHON__.timestamp=1615912817722
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -6908,7 +6908,8 @@ _locals.$is_namespace=true
 if(_globals===_b_.None && _locals===_b_.None &&
 current_frame[0]==current_frame[2]){}else{eval("$locals_"+locals_id+".$src = src")}
 var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
-if(_globals !==_b_.None && _locals==_b_.None){for(var attr in _globals.$string_dict){root.binding[attr]=true}}
+if(_globals !==_b_.None &&
+(_locals===_b_.None ||_locals===_globals)){for(var attr in _globals.$string_dict){root.binding[attr]=true}}
 try{
 var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
 var type=instr.C.tree[0].type
@@ -6954,6 +6955,7 @@ if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
 if(err.$py_error===undefined){throw $B.exception(err)}
+if(globals_is_dict){delete _globals.$jsobj}
 throw err}finally{
 if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}
 root=null
@@ -9396,7 +9398,7 @@ var pylist=['VFS_import','__future__','_abcoll','_codecs','_codecs_jp','_collect
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_base64','_binascii','_cmath','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre1','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
