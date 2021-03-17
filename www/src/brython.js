@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-16 21:49:06.582814"
-__BRYTHON__.timestamp=1615927746582
+__BRYTHON__.compiled_date="2021-03-17 22:06:11.471587"
+__BRYTHON__.timestamp=1616015171471
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -7740,13 +7740,12 @@ for(var j=0;j < _args.length;j++){line.push(_args[j][i])}
 items.push($B.fast_tuple(line))}
 res.items=items
 return zip_iterator.$factory(items)}
-while(1){var line=[],flag=true
-for(var i=0;i < args.length;i++){try{line.push(args[i]())}catch(err){if(err.__class__==_b_.StopIteration){flag=false
+function*iterator(args){while(true){var line=[],flag=true
+for(var i=0;i < args.length;i++){try{line.push($B.$call(args[i])())}catch(err){if(err.__class__==_b_.StopIteration){flag=false
 break}else{throw err}}}
-if(! flag){break}
-items.push($B.fast_tuple(line))}
-res.items=items
-return zip_iterator.$factory(items)}
+if(! flag){return}
+yield $B.fast_tuple(line)}}
+return $B.generator.$factory(iterator,'zip')(args)}
 )
 var zip_iterator=$B.make_iterator_class('zip')
 zip.__iter__=function(self){return zip_iterator.$factory(self.items)}
@@ -14058,8 +14057,9 @@ var bltns=$B.InjectBuiltins()
 eval(bltns)
 var $GeneratorReturn={}
 $B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
-$B.generator=$B.make_class("generator",function(func){var res=function(){var gen=func.apply(null,arguments)
-gen.$name=func.name
+$B.generator=$B.make_class("generator",function(func,name){
+var res=function(){var gen=func.apply(null,arguments)
+gen.$name=name ||'generator'
 gen.$func=func
 gen.$has_run=false
 gen.__class__=$B.generator
@@ -14069,10 +14069,12 @@ locals.$close_generators.push(gen)}
 return gen}
 res.$infos=func.$infos
 res.$is_genfunc=true
+res.$name=name
 return res}
 )
 $B.generator.__iter__=function(self){return self}
 $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
+$B.generator.__str__=function(self){return '<'+self.$name+' object>'}
 $B.generator.close=function(self){try{$B.generator.$$throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
 $B.generator.send=function(self,value){
 self.$has_run=true

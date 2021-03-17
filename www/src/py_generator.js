@@ -30,10 +30,13 @@ $B.generator_return = function(value){
 }
 
 $B.generator = $B.make_class("generator",
-    function(func){
+    function(func, name){
+        // func is a Javascript generator, created by "function* "
+        // name is the optional generator name (eg "zip" in 
+        // py_builtin_functions.js)
         var res = function(){
             var gen = func.apply(null, arguments)
-            gen.$name = func.name
+            gen.$name = name || 'generator'
             gen.$func = func
             gen.$has_run = false
             gen.__class__ = $B.generator
@@ -46,6 +49,7 @@ $B.generator = $B.make_class("generator",
         }
         res.$infos = func.$infos
         res.$is_genfunc = true
+        res.$name = name
         return res
     }
 )
@@ -56,6 +60,10 @@ $B.generator.__iter__ = function(self){
 
 $B.generator.__next__ = function(self){
     return $B.generator.send(self, _b_.None)
+}
+
+$B.generator.__str__ = function(self){
+    return '<' + self.$name + ' object>'
 }
 
 $B.generator.close = function(self){

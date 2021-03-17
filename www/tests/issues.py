@@ -2886,6 +2886,19 @@ def add_seen_k(k, f=lambda x: 0):
 a = add_seen_k(3)
 assert a(4) == 3
 
+# issue 1638
+def fib_gen():
+    yield from [0, 1]
+    a = fib_gen()
+    next(a)
+    for x, y in zip(a, fib_gen()):
+        yield x + y
+
+fg = fib_gen()
+t = [next(fg) for _ in range(7)]
+assert t == [0, 1, 1, 2, 3, 5, 8]
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

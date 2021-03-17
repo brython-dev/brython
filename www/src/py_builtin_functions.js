@@ -2970,28 +2970,29 @@ var zip = $B.make_class("zip",
             res.items = items
             return zip_iterator.$factory(items)
         }
-        while(1){
-            var line = [],
-                flag = true
-            for(var i = 0; i < args.length; i++){
-                try{
-                    line.push(args[i]())
-                }catch(err){
-                    if(err.__class__ == _b_.StopIteration){
-                        flag = false
-                        break
-                    }else{
-                        throw err
+        function* iterator(args){
+            while(true){
+                var line = [],
+                    flag = true
+                for(var i = 0; i < args.length; i++){
+                    try{
+                        line.push($B.$call(args[i])())
+                    }catch(err){
+                        if(err.__class__ == _b_.StopIteration){
+                            flag = false
+                            break
+                        }else{
+                            throw err
+                        }
                     }
                 }
+                if(! flag){
+                    return
+                }
+                yield $B.fast_tuple(line)
             }
-            if(! flag){
-                break
-            }
-            items.push($B.fast_tuple(line))
         }
-        res.items = items
-        return zip_iterator.$factory(items)
+        return $B.generator.$factory(iterator, 'zip')(args)
     }
 )
 
