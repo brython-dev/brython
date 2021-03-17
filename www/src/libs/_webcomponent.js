@@ -29,16 +29,24 @@ function define(tag_name, cls){
         var init = $B.$getattr(cls, "__init__", _b_.None)
         if(init !== _b_.None){
             try{
-                var _self = $B.DOMNode.$factory(this)
+                var _self = $B.DOMNode.$factory(this),
+                    attrs_before_init = []
+                for(var i = 0, len = _self.attributes.length; i < len; i++){
+                    attrs_before_init.push(_self.attributes.item(i))
+                }
                 _self.__class__ = cls
                 $B.$call(init)(_self)
                 if(WebComponent.initialized){
-                    var nb_attrs = _self.attributes.length
-                    for(var i = 0; i < nb_attrs; i++){
+                    // Check that init() did not introduce new attributes,
+                    // which is illegal
+                    // cf. https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-conformance
+                    for(var i = 0, len = _self.attributes.length; i < len; i++){
                         var item = _self.attributes.item(i)
-                        throw _b_.TypeError.$factory("Custom element must not " +
-                            "have attributes, found: " + item.name + '="' +
-                            item.value + '"')
+                        if(attrs_before_init.indexOf(item) == -1){
+                            throw _b_.TypeError.$factory("Custom element " +
+                                "must not create attributes, found: " + 
+                                item.name + '="' + item.value + '"')
+                        }
                     }
                 }
             }catch(err){
