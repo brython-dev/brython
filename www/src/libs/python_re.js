@@ -133,21 +133,67 @@ BPattern.__str__ = function(self){
 }
 
 BPattern.findall = function(self){
-    return $module.findall.apply(null, arguments)
+    var iter = BPattern.finditer.apply(null, arguments),
+        res = []
+
+    while(true){
+        var next = iter.next()
+        if(next.done){
+            return res
+        }
+        var bmo = next.value,
+            mo = bmo.mo,
+            groups = BMatchObject.groups(bmo)
+
+        // replace None by the empty string
+        for(var i = 0, len = groups.length; i < len; i++){
+            groups[i] = groups[i] === _b_.None ? "" : groups[i]
+        }
+        if(groups.length > 0){
+            if(groups.length == 1){
+                res.push(groups[0])
+            }else{
+                res.push($B.fast_tuple(groups))
+            }
+        }else{
+            res.push(mo.string.substring(mo.start, mo.end))
+        }
+    }
 }
 
 BPattern.finditer = function(self){
     var $ = $B.args("finditer", 4,
             {self: null, string: null, pos: null, endpos: null},
             'self string pos endpos'.split(' '), arguments,
-            {pos: 0, endpos: -1}, null, null)
+            {pos: 0, endpos: _b_.None}, null, null)
     var original_string = $.string,
         data = prepare({string: $.string})
-
-    return $B.generator.$factory(iterator)($.self, data.string,
-            no_flag, $.string, $.pos, $.endpos)
+    var endpos = $.endpos === _b_.None ? data.string.length : $.endpos
+    return $B.generator.$factory(iterator)(self.$pattern, data.string,
+            no_flag, $.string, $.pos, endpos)
 }
 
+BPattern.fullmatch = function(self, string){
+    var $ = $B.args("match", 4,
+                    {self: null, string: null, pos: null, endpos: null},
+                    ["self", "string", "pos", "endpos"], arguments,
+                    {pos: 0, endpos: _b_.None}, null, null)
+    if($.endpos === _b_.None){
+        $.endpos = $.string.length
+    }
+    var data = prepare({string: $.string})
+    if(self.$pattern.type != data.string.type){
+        throw _b_.TypeError.$factory("not the same type for pattern " +
+            "and string")
+    }
+    var mo = match($.self.$pattern, data.string, $.pos, $.self.flags,
+        $.endpos)
+    if(mo && mo.end - mo.start == $.endpos - $.pos){
+        return BMatchObject.$factory(mo)
+    }else{
+        return _b_.None
+    }
+}
 var gi = $B.make_class("GroupIndex",
     function(self, _default){
         var res = $B.empty_dict()
@@ -181,8 +227,41 @@ BPattern.match = function(self, string){
         $.endpos = $.string.length
     }
     var data = prepare({string: $.string})
+    if(self.$pattern.type != data.string.type){
+        throw _b_.TypeError.$factory("not the same type for pattern " +
+            "and string")
+    }
     return BMatchObject.$factory(match($.self.$pattern, data.string, $.pos,
         $.self.flags, $.endpos))
+}
+
+BPattern.search = function(self, string){
+    var $ = $B.args("match", 4,
+                    {self: null, string: null, pos: null, endpos: null},
+                    ["self", "string", "pos", "endpos"], arguments,
+                    {pos: 0, endpos: _b_.None}, null, null)
+    if($.endpos === _b_.None){
+        $.endpos = $.string.length
+    }
+    var data = prepare({string: $.string})
+    if(self.$pattern.type != data.string.type){
+        throw _b_.TypeError.$factory("not the same type for pattern " +
+            "and string")
+    }
+    var pos = $.pos
+    while(pos < $.endpos){
+        var mo = match(self.$pattern, data.string, pos, self.flags)
+        if(mo){
+            return BMatchObject.$factory(mo)
+        }else{
+            pos++
+        }
+    }
+    return _b_.None
+}
+
+BPattern.split = function(){
+    return $module.split.apply(null, arguments)
 }
 
 BPattern.sub = function(){
@@ -190,6 +269,12 @@ BPattern.sub = function(){
                     {self: null, repl: null, string: null, count: null},
                     "self repl string count".split(' '), arguments,
                     {count: 0}, null, null)
+    var data = prepare({string: $.string})
+    if($.self.$pattern.type != data.string.type){
+        throw _b_.TypeError.$factory("not the same type for pattern " +
+            "and string")
+    }
+
     return $module.sub($.self, $.repl, $.string, $.count)
 }
 
@@ -1194,10 +1279,29 @@ function compile(data, flags){
         subitems = [],
         pos,
         lookbehind,
-        node = new Node()
+        node = new Node(),
+        accept_inline_flag = true,
+        comment_in_verbose = false
     node.$groups = groups
     var tokenized = []
     for(var item of tokenize(pattern, type)){
+        if(comment_in_verbose){
+            if(item instanceof Char && item.cp == 10){
+                comment_in_verbose = false
+            }
+            continue
+        }
+        if(item instanceof Char && flags.value & VERBOSE.value){
+            if([9, 10, 11, 12, 13, 32].indexOf(item.cp) > -1 &&
+                    ! item.escaped){
+                // ignore whitespace in VERBOSE mode
+                continue
+            }else if(item.cp == ord("#") && ! item.escaped){
+                // ignore until line end
+                comment_in_verbose = true
+                continue
+            }
+        }
         path.push(item)
         if(lookbehind){
             item.lookbehind = lookbehind
@@ -1503,9 +1607,12 @@ function compile(data, flags){
                 }
             }
             if(item.items.length == 0){
-                if(item.pos != 0){
-                    fail("Flags not at the start of the expression '" +
-                        `${pattern}`)
+                if(! accept_inline_flag){
+                    console.log("not at the start", pattern)
+                    var s = from_codepoint_list(pattern)
+                    warn(_b_.DeprecationWarning,
+                        `Flags not at the start of the expression '${s}'`,
+                        pos)
                 }
                 for(var on_flag of item.on_flags){
                     flags.value |= inline_flags[on_flag].value
@@ -1515,6 +1622,9 @@ function compile(data, flags){
             }
         }else{
             fail("unknown item type " + item, pos)
+        }
+        if(! (item instanceof SetFlags)){
+            accept_inline_flag = false
         }
     }
     if(group_stack.length > 0){
@@ -1542,7 +1652,8 @@ function compile(data, flags){
         path,
         groups,
         flags,
-        text: from_codepoint_list(pattern)
+        text: from_codepoint_list(pattern),
+        type // "str" or "bytes"
     }
 }
 
@@ -1786,7 +1897,9 @@ function* tokenize(pattern, type){
                 pos += escape.length
             }else if(typeof escape == "number"){
                 // eg "\."
-                yield new Char(pos, escape)
+                var esc = new Char(pos, escape)
+                esc.escaped = true
+                yield esc
                 pos += 2
             }else{
                 yield new Char(pos, escape)
@@ -1885,25 +1998,29 @@ function MatchObject(pattern, string, stack, endpos){
     this.pattern = pattern
     this.string = string
     this.stack = stack
-    var first = stack[0]
-    if(first.type == "group"){
-        if(first.matches.length > 0){
-            this.start = first.matches[0].start
+    if(stack.length > 0){
+        var first = stack[0]
+        if(first.type == "group"){
+            if(first.matches.length > 0){
+                this.start = first.matches[0].start
+            }else{
+                this.start = first.start
+            }
         }else{
             this.start = first.start
         }
-    }else{
-        this.start = first.start
-    }
-    var last = stack[stack.length - 1]
-    if(last.type == "group"){
-        if(last.matches.length == 0){
-            this.end = last.start
+        var last = stack[stack.length - 1]
+        if(last.type == "group"){
+            if(last.matches.length == 0){
+                this.end = last.start
+            }else{
+                this.end = last.matches[last.matches.length - 1].end
+            }
         }else{
-            this.end = last.matches[last.matches.length - 1].end
+            this.end = last.start + last.ix
         }
     }else{
-        this.end = last.start + last.ix
+        this.start = this.end = stack.start
     }
     this.endpos = endpos
 }
@@ -2445,6 +2562,11 @@ function StringObj(obj){
         this.string = _b_.bytes.decode(obj.obj, 'latin1')
         this.codepoints = obj.obj.source
         this.type = "bytes"
+    }else if(obj.__class__ && obj.__class__.$buffer_protocol){
+        // eg array.array
+        this.codepoints = _b_.list.$factory(obj)
+        this.string = from_codepoint_list(this.codepoints, "bytes")
+        this.type = "bytes"
     }else if(Array.isArray(obj)){
         // list of codepoints
         this.codepoints = obj
@@ -2496,7 +2618,7 @@ function prepare(args){
     for(var key of keys.slice(1)){
         res[key] = new StringObj(args[key])
         if(res[key].type != res.type){
-            throw Error(`not the same type for ${first} and ${key}`)
+            throw _b_.TypeError.$factory(`not the same type for ${first} and ${key}`)
         }
     }
     return res
@@ -2654,11 +2776,10 @@ function match(pattern, string, pos, flags, endpos){
     this position.
     */
 
-    if(! pattern instanceof Node){
-        console.log('pattern not compiled', pattern)
-        throw Error('pattern not compiled')
+    if(pattern.__class__ === BPattern){
+        throw Error('pattern is a Python instance')
     }
-
+    
     var debug = false
     if(debug){
         console.log("enter match1 loop, pattern", pattern,
@@ -2741,6 +2862,9 @@ function match(pattern, string, pos, flags, endpos){
             // match succeeds
             if(debug){
                 console.log("groups", groups)
+            }
+            if(stack.length == 0){
+                stack.start = pos
             }
             return new MatchObject(pattern, string0, stack, endpos)
         }
@@ -3431,6 +3555,8 @@ var $module = {
         if(pattern.__class__ !== BPattern){
             data = prepare({pattern, string})
             pattern = BPattern.$factory(compile(data, flags))
+        }else{
+            data = {pattern, string}
         }
         for(var bmo of $module.finditer(pattern, $.string)){
             var mo = bmo.mo // finditer returns instances of BMatchObject
