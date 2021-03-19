@@ -16,10 +16,12 @@ for(var word_gc of word_gcs){
     }
 }
 
-var is_ascii = []
+var is_ascii_word = {}
 
 for(var cp = 0; cp <= 127; cp++){
-    is_ascii[cp] = true
+    if(is_word[cp]){
+        is_ascii_word[cp] = true
+    }
 }
 
 var $error_2 = {
@@ -618,40 +620,61 @@ function CharacterClass(pos, cp, length, groups){
             this.test_func = function(string, pos, flags){
                 var table = is_word
                 if(flags && (flags.value & ASCII.value)){
-                    table = is_ascii
+                    table = is_ascii_word
                 }
-                var cp = string.codepoints[pos]
-                if((pos == 0 && is_word[cp]) ||
-                       (pos == string.codepoints.length &&
-                        table[string.codepoints[pos - 1]]) ||
-                        table[cp] != is_word[string.codepoints[pos - 1]]){
-                    return {nb_min: 0, nb_max: 0}
-                }else{
-                    return false
+                var cp = string.codepoints[pos],
+                    len = string.codepoints.length,
+                    ok = {nb_min: 0, nb_max: 0}
+
+                // test is true if char at pos is at the beginning or start
+                // of a word
+                if(pos == 0 && table[cp]){
+                    return ok
                 }
+                if(pos == len && table[string.codepoints[pos - 1]]){
+                    return ok
+                }
+                if(pos > 0 && pos < len){
+                    if((table[string.codepoints[pos - 1]]) !==
+                            table[cp]){
+                        return ok
+                    }
+                }
+                return false
             }
             break
         case 'B':
             this.test_func = function(string, pos, flags){
                 var table = is_word
                 if(flags && (flags.value & ASCII.value)){
-                    table = is_ascii
+                    table = is_ascii_word
                 }
+
                 var cp = string.codepoints[pos],
-                    test = (pos == 0 && is_word[cp]) ||
-                       (pos == string.codepoints.length &&
-                        table[string.codepoints[pos - 1]]) ||
-                        table[cp] != is_word[string.codepoints[pos - 1]]
-                if(! test){
-                    return [true, 0]
+                    len = string.codepoints.length,
+                    ok = {nb_min: 0, nb_max: 0}
+                // test is true if char at pos is not at the beginning or 
+                // start of a word
+                if(pos == 0 && table[cp]){
+                    return false
                 }
+                if(pos == len && table[string.codepoints[pos - 1]]){
+                    return false
+                }
+                if(pos > 0 && pos < len){
+                    if((table[string.codepoints[pos - 1]]) !==
+                            table[cp]){
+                        return false
+                    }
+                }
+                return ok
             }
             break
         case 'w':
             this.test_func = function(string, pos, flags){
                 var table = is_word
                 if(flags && (flags.value & ASCII.value)){
-                    table = is_ascii
+                    table = is_ascii_word
                 }
                 return table[string.codepoints[pos]]
             }
@@ -660,7 +683,7 @@ function CharacterClass(pos, cp, length, groups){
             this.test_func = function(string, pos, flags){
                 var table = is_word
                 if(flags && flags.value & ASCII.value){
-                    table = is_ascii
+                    table = is_ascii_word
                 }
                 return ! table[string.codepoints[pos]]
             }
@@ -668,7 +691,7 @@ function CharacterClass(pos, cp, length, groups){
         case 'Z':
             this.test_func = function(string, pos){
                 if(pos >= string.codepoints.length){
-                    return [true, 0]
+                    return {nb_min: 0, nb_max: 0}
                 }
             }
             break
@@ -1605,6 +1628,9 @@ function compile(data, flags){
                     throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
                         "are incompatible")
                 }
+            }
+            if(flags.value === undefined){
+                flags.value = 32
             }
             if(item.items.length == 0){
                 if(! accept_inline_flag){
@@ -2779,7 +2805,7 @@ function match(pattern, string, pos, flags, endpos){
     if(pattern.__class__ === BPattern){
         throw Error('pattern is a Python instance')
     }
-    
+
     var debug = false
     if(debug){
         console.log("enter match1 loop, pattern", pattern,
