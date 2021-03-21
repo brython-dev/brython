@@ -2752,7 +2752,7 @@ function backtrack(stack, debug){
             }
         }else{
             if(state.model.non_greedy &&
-                    state.ix < state.model.repeat.max - 1){
+                    state.ix < state.model.repeat.max){
                 state.ix++
             }else if(! state.model.non_greedy &&
                     state.ix > state.model.repeat.min){
