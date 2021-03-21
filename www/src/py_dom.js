@@ -990,7 +990,7 @@ DOMNode.__le__ = function(self, other){
                 $B.class_name(other) + "' object to DOMNode instance")
         }
     }
-    return true // to allow chained appends
+    return self // to allow chained appends
 }
 
 DOMNode.__len__ = function(self){return self.length}
