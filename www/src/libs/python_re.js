@@ -596,11 +596,14 @@ function CharacterClass(pos, cp, length, groups){
             }
             break
         case '.':
-            this.test_func = function(string, pos){
+            this.test_func = function(string, pos, flags){
+                if(string.codepoints[pos] === undefined){
+                    return false
+                }
                 if(flags && flags.value & DOTALL.value){
                     return true
                 }else{
-                    return string.codepoints[i] != 10
+                    return string.codepoints[pos] != 10
                 }
             }
             break
@@ -626,7 +629,7 @@ function CharacterClass(pos, cp, length, groups){
                     len = string.codepoints.length,
                     ok = {nb_min: 0, nb_max: 0}
 
-                // test is true if char at pos is at the beginning or start
+                // return true if char at pos is at the beginning or start
                 // of a word
                 if(pos == 0 && table[cp]){
                     return ok
@@ -653,7 +656,7 @@ function CharacterClass(pos, cp, length, groups){
                 var cp = string.codepoints[pos],
                     len = string.codepoints.length,
                     ok = {nb_min: 0, nb_max: 0}
-                // test is true if char at pos is not at the beginning or 
+                // test is true if char at pos is not at the beginning or
                 // start of a word
                 if(pos == 0 && table[cp]){
                     return false
@@ -2727,10 +2730,10 @@ function backtrack(stack, debug){
                 continue
             }
         }else{
-            if(state.model.greedy &&
+            if(state.model.non_greedy &&
                     state.ix < state.model.repeat.max - 1){
                 state.ix++
-            }else if(! state.model.greedy &&
+            }else if(! state.model.non_greedy &&
                     state.ix > state.model.repeat.min){
                 state.ix--
             }else{
@@ -2980,9 +2983,9 @@ function match(pattern, string, pos, flags, endpos){
             var i = stack.length - 1
             while(stack[i].model !== model.group){
                 if(stack[i].type != "group"){
-                    if((state.model.greedy &&
+                    if((state.model.non_greedy &&
                             state.ix >= state.model.repeat.max - 1) ||
-                       (! stack[i].model.greedy &&
+                       (! stack[i].model.non_greedy &&
                             stack[i].ix == stack[i].model.repeat.min)){
                         stack.splice(i, 1)
                     }
@@ -2990,7 +2993,7 @@ function match(pattern, string, pos, flags, endpos){
                 i--
                 if(i < 0){
                     console.log("pattern", pattern, "string", string,
-                        "satck", stack, "model", model)
+                        "stack", stack, "model", model)
                     throw Error("group start not found")
                 }
             }
@@ -3160,7 +3163,7 @@ function match(pattern, string, pos, flags, endpos){
                 // model.match(string, pos)
                 // A state represents a part of the string that is matched by
                 // one of the match objects.
-                ix = model.greedy ? mo.nb_min : mo.nb_max
+                ix = model.non_greedy ? mo.nb_min : mo.nb_max
                 state = {
                     model,
                     start: pos,
@@ -3228,9 +3231,9 @@ function match(pattern, string, pos, flags, endpos){
                             var i = stack.length - 1
                             while(stack[i].model !== choice_group){
                                 if(stack[i].type != "group"){
-                                    if((state.model.greedy &&
+                                    if((state.model.non_greedy &&
                                             state.ix >= state.model.repeat.max - 1) ||
-                                       (! stack[i].model.greedy &&
+                                       (! stack[i].model.non_greedy &&
                                             stack[i].ix == stack[i].model.repeat.min)){
                                         stack.splice(i, 1)
                                     }
@@ -3379,6 +3382,9 @@ function match(pattern, string, pos, flags, endpos){
                     if(bt){
                         rank = bt.rank
                         pos = bt.pos
+                        if(pos > string.codepoints.length){
+                            return false
+                        }
                     }else{
                         return false
                     }
@@ -3458,7 +3464,6 @@ var $module = {
 
         var iter = $module.finditer.apply(null, arguments),
             res = []
-
         while(true){
             var next = iter.next()
             if(next.done){
@@ -3482,6 +3487,7 @@ var $module = {
                 res.push(mo.string.substring(mo.start, mo.end))
             }
         }
+        console.log("end findall")
     },
     finditer: function(){
         var $ = $B.args("finditer", 3,
