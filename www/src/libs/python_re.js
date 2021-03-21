@@ -35,14 +35,36 @@ var error = $B.$class_constructor("error", $error_2,
     _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
 error.__doc__ = _b_.None
 error.$factory = $B.$instance_creator(error)
+error.__str__ = function(self){
+    var s = self.msg + ' at position ' + self.pos
+    if(self.lineno > 1){
+        s += ` (line ${self.lineno}, column ${self.colno})`
+    }
+    return s
+}
+
+$B.set_func_names(error, "re")
 
 function $last(t){
     return t[t.length - 1]
 }
 
-function fail(message, pos){
+function fail(message, pos, pattern){
     var err = error.$factory(message)
+    err.msg = message
     err.pos = pos
+    if(pattern){
+        err.pattern = pattern.py_obj // Python object passed to compile()
+        err.lineno = 1
+        var linestart = 0
+        for(var i = 0, len = pattern.string.length; i < pos; i++){
+            if(pattern.string[i] == '\n'){
+                err.lineno++
+                linestart = i + 1
+            }
+        }
+        err.colno = pos - linestart + 1
+    }
     throw err
 }
 
@@ -1277,15 +1299,16 @@ function validate_named_char(description){
     }
 }
 
-function compile(data, flags){
+function compile(pattern, flags){
     // data has attributes "pattern" (instance of StringObj)
     // and "type" ("str" or "bytes")
-    if(data.pattern.__class__ === BPattern){
-        return data.pattern
+    if(pattern.__class__ === BPattern){
+        return pattern
     }
-    var path = []
-    pattern = data.pattern.codepoints
-    type = data.type
+    var path = [],
+        original_pattern = pattern,
+        type = pattern.type
+    pattern = pattern.codepoints
     var is_bytes = type !== "str"
     if(is_bytes && flags && (flags.value & U.value)){
         throw _b_.ValueError.$factory("cannot use UNICODE flag with " +
@@ -1378,8 +1401,7 @@ function compile(data, flags){
         }else if(item instanceof GroupEnd){
             end_pos = item.pos
             if(group_stack.length == 0){
-                console.log("pattern", from_codepoint_list(pattern))
-                fail("unbalanced parenthesis", pos)
+                fail("unbalanced parenthesis", end_pos, original_pattern)
             }
             var item = group_stack.pop()
             // GroupEnd is in path. Associate it with group
@@ -2567,6 +2589,7 @@ function StringObj(obj){
     // object and Javascript
     // obj is the Python object
     // this.string is a Javascript string
+    this.py_obj = obj
     this.codepoints = []
     this.type = "str"
     if(typeof obj == "string"){
@@ -2653,30 +2676,28 @@ function prepare(args){
     return res
 }
 
-function subn(data, count, flags){
-    var string = data.string,
-        pattern = data.pattern,
-        repl = data.repl
+function subn(pattern, repl, string, count, flags){
+    // string is a StringObj instance
+    // pattern is either a Pattern instance or a StringObj instance
     var res = '',
         pos = 0,
         nb_sub = 0
-    if(! pattern instanceof Node){
-        throw Error("pattern not compiled in subn")
-    }
-    pattern = BPattern.$factory(pattern)
 
+    if(pattern instanceof StringObj){
+        pattern = compile(pattern, flags)
+    }
     if(typeof repl != "function"){
         var data1 = transform_repl({repl}, pattern)
         repl1 = data1.repl1
     }
     pos = 0
-    for(var bmo of $module.finditer(pattern, string.to_str())){
+    for(var bmo of $module.finditer(BPattern.$factory(pattern), string.to_str())){
         // finditer yields instances of BMatchObject
         var mo = bmo.mo // instance of MatchObject
         res += from_codepoint_list(string.codepoints.slice(pos, mo.start),
             string.type)
         if(typeof repl == "function"){
-            res += $B.$call(data.repl)(bmo)
+            res += $B.$call(repl)(bmo)
         }else{
             res += repl1
         }
@@ -2691,7 +2712,7 @@ function subn(data, count, flags){
     }
     res += from_codepoint_list(string.codepoints.slice(pos),
         string.type)
-    if(data.type === "bytes"){
+    if(pattern.type === "bytes"){
         res = _b_.str.encode(res, "latin-1")
     }
     return [res, nb_sub]
@@ -3407,7 +3428,7 @@ var $module = {
         if(typeof $.flags == "number"){
             $.flags = Flag.$factory($.flags)
         }
-        var jspat = compile(data, $.flags)
+        var jspat = compile(data.pattern, $.flags)
         return BPattern.$factory(jspat)
     },
     error: error,
@@ -3450,7 +3471,7 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
-            pattern = BPattern.$factory(compile(data, flags))
+            pattern = BPattern.$factory(compile(data.pattern, flags))
         }
         if(data.type === "str"){
             function conv(s){
@@ -3507,7 +3528,10 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
-            pattern = BPattern.$factory(compile(data, flags))
+            pattern = BPattern.$factory(compile(data.pattern, flags))
+        }
+        if(pattern.__class__ !== BPattern){
+            throw Error("pattern not a Python object")
         }
         return $B.generator.$factory(iterator)(pattern.$pattern, data.string,
             flags, original_string)
@@ -3536,7 +3560,7 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({pattern, string})
-            pattern = compile(data, flags)
+            pattern = compile(data.pattern, flags)
         }
         return BMatchObject.$factory(match(pattern, data.string, 0, flags))
     },
@@ -3558,7 +3582,7 @@ var $module = {
             data = prepare({string})
         }else{
             data = prepare({string, pattern})
-            pattern = BPattern.$factory(compile(data, flags))
+            pattern = BPattern.$factory(compile(data.pattern, flags))
         }
         data.pattern = pattern
         var pos = 0
@@ -3586,7 +3610,7 @@ var $module = {
             data
         if(pattern.__class__ !== BPattern){
             data = prepare({pattern, string})
-            pattern = BPattern.$factory(compile(data, flags))
+            pattern = BPattern.$factory(compile(data.pattern, flags))
         }else{
             data = {pattern, string}
         }
@@ -3633,24 +3657,25 @@ var $module = {
         if(typeof repl != "function"){
             if(pattern.__class__ != BPattern){
                 data = prepare({pattern, string, repl})
-                pattern = compile(data, flags)
+                pattern = compile(data.pattern, flags)
             }else{
                 data = prepare({string, repl})
                 flags = pattern.flags
+                pattern = pattern.$pattern
             }
             data = transform_repl(data, pattern)
         }else{
             if(pattern.__class__ != BPattern){
                 data = prepare({pattern, string})
-                pattern = compile(data, flags)
+                pattern = compile(data.pattern, flags)
             }else{
                 data = prepare({string})
                 flags = pattern.flags
+                pattern = pattern.$pattern
             }
             data.repl = repl
         }
-        data.pattern = pattern
-        return subn(data, count, flags)[0]
+        return subn(pattern, data.repl, data.string, count, flags)[0]
     },
     subn: function(){
         var $ = $B.args("sub", 5,
@@ -3663,14 +3688,15 @@ var $module = {
             count = $.count,
             flags = $.flags,
             data
+        console.log("subn pattern", pattern)
         if(pattern.__class__ != BPattern){
             data = prepare({pattern, repl, string})
-            pattern = compile(data, flags)
         }else{
             data = prepare({repl, string})
+            data.pattern = pattern.$pattern
         }
-        data.pattern = pattern
-        return $B.fast_tuple(subn(data, count, flags))
+        return $B.fast_tuple(subn(data.pattern, data.repl, data.string, count,
+            flags))
     }
 
 }
