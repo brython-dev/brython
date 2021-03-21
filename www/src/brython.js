@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-21 08:33:40.132719"
-__BRYTHON__.timestamp=1616312020132
+__BRYTHON__.compiled_date="2021-03-21 18:28:54.424120"
+__BRYTHON__.timestamp=1616347734424
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -8660,7 +8660,7 @@ var len=$.sep.source.length,src=$.self.source,i=bytes.rfind($.self,$.sep)
 return _b_.tuple.$factory([bytes.$factory(src.slice(0,i)),bytes.$factory(src.slice(i,i+len)),bytes.$factory(src.slice(i+len))
 ])}
 bytes.rstrip=function(self,cars){return _strip(self,cars,'r')}
-bytes.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{},null,null),res=[],start=0,stop=0
+bytes.split=function(){var $=$B.args('split',2,{self:null,sep:null},['self','sep'],arguments,{sep:bytes.$factory([32])},null,null),res=[],start=0,stop=0
 if(! $.sep.__class__ ){throw _b_.TypeError.$factory("a bytes-like object is required, "+
 "not '"+$B.class_name($.sep)+"'")}else if(! $.sep.__class__.$buffer_protocol){throw _b_.TypeError.$factory("a bytes-like object is required, "+
 "not '"+$B.class_name($.sep)+"'")}

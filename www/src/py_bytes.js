@@ -1037,7 +1037,7 @@ bytes.rstrip = function(self, cars){return _strip(self, cars, 'r')}
 
 bytes.split = function(){
     var $ = $B.args('split', 2, {self:null, sep:null}, ['self', 'sep'],
-        arguments, {}, null, null),
+        arguments, {sep: bytes.$factory([32])}, null, null),
         res = [],
         start = 0,
         stop = 0
