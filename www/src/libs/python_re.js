@@ -1318,6 +1318,10 @@ function compile(pattern, flags){
     // data has attributes "pattern" (instance of StringObj)
     // and "type" ("str" or "bytes")
     if(pattern.__class__ === BPattern){
+        console.log("compile compiled", flags)
+        if(flags !== no_flag){
+            throw _b_.ValueError.$factory("no flags")
+        }
         return pattern
     }
     if(cache.has(pattern.py_obj)){
@@ -3458,6 +3462,10 @@ var $module = {
                     ['pattern', 'flags'], arguments, {flags: no_flag},
                     null, null)
         if($.pattern && $.pattern.__class__ === BPattern){
+            if($.flags !== no_flag){
+                throw _b_.ValueError.$factory(
+                    "cannot process flags argument with a compiled pattern")
+            }
             return $.pattern
         }
         $.pattern = check_pattern_flags($.pattern, $.flags)
