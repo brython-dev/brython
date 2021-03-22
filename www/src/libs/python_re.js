@@ -147,8 +147,20 @@ var BPattern = $B.make_class("Pattern",
     }
 )
 
+BPattern.__eq__ = function(self, other){
+    if(self.$pattern.type != other.$pattern.$type){
+        warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
+    }
+    return self.pattern == other.pattern &&
+        self.flags.value == other.flags.value
+}
+
+BPattern.__hash__ = function(self){
+    // best effort ;-)
+    return _b_.hash(self.pattern) + self.flags.value
+}
+
 BPattern.__str__ = function(self){
-    console.log("str", self)
     var res = `re.compile(${_b_.repr(self.pattern)}`
     if(self.flags.value != 0){
         res += `, ${_b_.str.$factory(self.flags)}`
@@ -2752,10 +2764,10 @@ function backtrack(stack, debug){
             }
         }else{
             if(state.model.non_greedy &&
-                    state.ix < state.model.repeat.max){
+                    state.ix < state.mo.nb_max){
                 state.ix++
             }else if(! state.model.non_greedy &&
-                    state.ix > state.model.repeat.min){
+                    state.ix > state.mo.nb_min){
                 state.ix--
             }else{
                 // No alternative number of repeats
@@ -3403,9 +3415,6 @@ function match(pattern, string, pos, flags, endpos){
                     if(bt){
                         rank = bt.rank
                         pos = bt.pos
-                        if(pos > string.codepoints.length){
-                            return false
-                        }
                     }else{
                         return false
                     }
