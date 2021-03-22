@@ -3101,7 +3101,12 @@ function match(pattern, string, pos, flags, endpos){
                 state.matches.push({start: state.start, end: pos})
                 if(state.matches.length == 65535){
                     // Python issue 9669
-                    return false
+                    if(state.matches[0].start == $last(state.matches).end){
+                        // only empty matches
+                        return false
+                    }
+                    rank++
+                    continue
                 }
                 if(state.matches.length < state.model.repeat.max){
                     // group can be repeated at least once: go back to group
