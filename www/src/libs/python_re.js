@@ -3,7 +3,8 @@
 var $B = __BRYTHON__,
     _b_ = $B.builtins
 
-var MAXGROUPS = 2147483647
+var MAXGROUPS = 2147483647,
+    MAXREPEAT = 2147483648
 
 var is_word = {}
 var word_gcs = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo',
@@ -1311,14 +1312,22 @@ function validate_named_char(description){
     }
 }
 
+var cache = new Map()
+
 function compile(pattern, flags){
     // data has attributes "pattern" (instance of StringObj)
     // and "type" ("str" or "bytes")
     if(pattern.__class__ === BPattern){
         return pattern
     }
+    if(cache.has(pattern.py_obj)){
+        if(cache.get(pattern.py_obj).has(flags.value || 0)){
+            return cache.get(pattern.py_obj).get(flags.value || 0)
+        }
+    }
     var path = [],
         original_pattern = pattern,
+        original_flags = flags,
         type = pattern.type
     pattern = pattern.codepoints
     var is_bytes = type !== "str"
@@ -1560,7 +1569,18 @@ function compile(pattern, flags){
                         max = 1
                     if(Array.isArray(item.op)){
                         min = item.op[0]
+                        if(min >= MAXREPEAT){
+                            throw _b_.OverflowError.$factory(
+                                "the repetition number is too large")
+                        }
                         max = item.op[1] === undefined ? min : item.op[1]
+                        if(isFinite(max) && max >= MAXREPEAT){
+                            throw _b_.OverflowError.$factory(
+                                "the repetition number is too large")
+                        }
+                        if(max < min){
+                            fail('min repeat greater than max repeat', pos)
+                        }
                     }else if(item.op == "?"){
                         min = 0
                         max = 1
@@ -1711,13 +1731,18 @@ function compile(pattern, flags){
     if(path.length == 0){
         path = [EmptyString]
     }
-    return {
+    var res = {
         path,
         groups,
         flags,
         text: from_codepoint_list(pattern),
         type // "str" or "bytes"
     }
+    if(! cache.has(original_pattern.py_obj)){
+        cache.set(original_pattern.py_obj, new Map())
+    }
+    cache.get(original_pattern.py_obj).set(original_flags.value || 0, res)
+    return res
 }
 
 function ord(char){
@@ -1988,9 +2013,10 @@ function* tokenize(pattern, type){
                     var limits = [parseInt(reps[1])]
                 }
                 if(reps[4] !== undefined){
-                    var max = parseInt(reps[4])
-                    if(max < limits[0]){
-                        fail('min repeat greater than max repeat', pos)
+                    if(reps[4] == ""){
+                        var max = Number.POSITIVE_INFINITY
+                    }else{
+                        var max = parseInt(reps[4])
                     }
                     limits.push(max)
                 }
@@ -2094,6 +2120,7 @@ MatchObject.prototype.toString = function(){
         end = this.end,
         cps = this.string.codepoints.slice(start, end),
         s = _b_.repr(from_codepoint_list(cps, this.string.type))
+    s = s.substr(0, 50)
     return `<re.Match object, span=(${start}, ${end}), match=${s}>`
 }
 
@@ -3425,6 +3452,7 @@ function match(pattern, string, pos, flags, endpos){
 }
 
 var $module = {
+    cache: cache,
     compile: function(){
         var $ = $B.args("compile", 2, {pattern: null, flags: null},
                     ['pattern', 'flags'], arguments, {flags: no_flag},
@@ -3576,6 +3604,7 @@ var $module = {
     Pattern: BPattern,
     purge: function(){
         var $ = $B.args("purge", 0, {}, [], arguments, {}, null, null)
+        cache.clear()
         return _b_.None
     },
     search: function(){
@@ -3717,7 +3746,7 @@ var MULTILINE = $module.M = $module.MULTILINE = Flag.$factory(8)
 var DOTALL = $module.S = $module.DOTALL = Flag.$factory(16)
 var U = $module.U = $module.UNICODE = Flag.$factory(32)
 var VERBOSE = $module.X = $module.VERBOSE = Flag.$factory(64)
-
+$module.cache = cache
 
 var inline_flags = {
     i: IGNORECASE,
