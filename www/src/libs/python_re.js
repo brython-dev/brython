@@ -150,7 +150,7 @@ var BPattern = $B.make_class("Pattern",
 
 BPattern.__eq__ = function(self, other){
     if(self.$pattern.type != other.$pattern.$type){
-        warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
+        // warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
     }
     return self.pattern == other.pattern &&
         self.flags.value == other.flags.value
@@ -1408,6 +1408,11 @@ function compile(pattern, flags){
                     new GroupRef(group_num, item)
             }else if(item.is_lookahead){
                 // a lookahead assertion is relative to the previous regexp
+                if(path.length == 1){
+                    // If the RE starts with a lookahead, insert EmptyString
+                    // as the first model
+                    path.splice(0, 0, EmptyString)
+                }
                 group_num--
                 while(node.items.length > 0){
                     item.add(node.items.shift())
@@ -2087,6 +2092,17 @@ function from_codepoint_list(codepoints, type){
     return s
 }
 
+function in_lookahead(state){
+    var model = state.model
+    while(model.parent){
+        if(model.parent.is_lookahead){
+            return true
+        }
+        model = model.parent
+    }
+    return false
+}
+
 function MatchObject(pattern, string, stack, endpos){
     this.pattern = pattern
     this.string = string
@@ -2102,7 +2118,11 @@ function MatchObject(pattern, string, stack, endpos){
         }else{
             this.start = first.start
         }
-        var last = stack[stack.length - 1]
+        var last_ix = stack.length - 1
+        while(in_lookahead(stack[last_ix])){
+            last_ix--
+        }
+        var last = stack[last_ix]
         if(last.type == "group"){
             if(last.matches.length == 0){
                 this.end = last.start
@@ -2928,7 +2948,11 @@ function match(pattern, string, pos, flags, endpos){
             var s = []
             for(var state of stack){
                 if(state.type == "group"){
-                    s.push("Gr#" + state.model.num)
+                    if(state.model.is_lookahead){
+                        s.push("LookA#" + state.model.num)
+                    }else{
+                        s.push("Gr#" + state.model.num)
+                    }
                 }else{
                     s.push(state.model.toString())
                 }
@@ -3086,6 +3110,7 @@ function match(pattern, string, pos, flags, endpos){
                     console.log("negative lookbehind succeeds, backtrack")
                     alert()
                 }
+                console.log("backtrack 3114")
                 var bt = backtrack(stack)
                 if(bt){
                     rank = bt.rank
@@ -3371,7 +3396,8 @@ function match(pattern, string, pos, flags, endpos){
                     }
                 }else{
                     if(debug){
-                        console.log("no more option", model)
+                        console.log("no more option", model, "lookahead",
+                            lookahead)
                     }
                     if(lookahead){
                         if(lookahead.model.type == "negative_lookahead_assertion"){
@@ -3385,11 +3411,14 @@ function match(pattern, string, pos, flags, endpos){
                             continue
                         }else{
                             // positive lookahead fails
-                            var bt = backtrack(stack)
+                            if(debug){
+                                console.log("lookahead fails, backtrack, stack", stack)
+                                alert()
+                            }
+                            var bt = backtrack(stack, debug)
                             if(bt){
                                 rank = bt.rank
                                 pos = bt.pos
-                                continue
                             }else{
                                 return false
                             }
@@ -3407,6 +3436,7 @@ function match(pattern, string, pos, flags, endpos){
                             continue
                         }else{
                             // positive lookbehind fails
+                            console.log("backtrack 3443")
                             var bt = backtrack(stack)
                             if(bt){
                                 rank = bt.rank
