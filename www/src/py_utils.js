@@ -1068,6 +1068,10 @@ $io.write = function(self, msg){
     if(self.buf === undefined){
         self.buf = []
     }
+    if(typeof msg != "string"){
+        throw _b_.TypeError.$factory("write() argument must be str, not " +
+            $B.class_name(msg))
+    }
     self.buf.push(msg)
     return _b_.None
 }
