@@ -2816,10 +2816,10 @@ function backtrack(stack, debug){
         }else{
             if(state.model.non_greedy &&
                     state.ix < state.mo.nb_max){
-                state.ix++
+                state.ix += state.len
             }else if(! state.model.non_greedy &&
                     state.ix > state.mo.nb_min){
-                state.ix--
+                state.ix -= state.len
             }else{
                 // No alternative number of repeats
                 continue
