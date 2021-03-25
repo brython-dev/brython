@@ -27,7 +27,7 @@ Supón que queremos definir una etiqueta personalizada `<bold-italic>` con un at
 "`data-val`":
 
 ```
-<bold-italic data-val="hello"></bold_italic>
+<bold-italic data-val="hello"></bold-italic>
 ```
 
 Lo que sucede pasa cuando se encuentra una etiqueta en el documento HTML será definido

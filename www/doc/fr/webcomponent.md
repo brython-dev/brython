@@ -28,7 +28,7 @@ Supposons que nous voulions définir une balise personnalisée `<bold-italic>`
 qui possède un attribut "`data-val`":
 
 ```
-<bold-italic data-val="salut"></bold_italic>
+<bold-italic data-val="salut"></bold-italic>
 ```
 
 Ce qui se produit quand la balise apparait dans le document HTML est défini

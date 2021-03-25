@@ -30,7 +30,7 @@ Suppose we want to define a custom tag `<bold-italic>` with an attribute
 "`data-val`":
 
 ```
-<bold-italic data-val="hello"></bold_italic>
+<bold-italic data-val="hello"></bold-italic>
 ```
 
 What happens when the tag is found in the HTML document is defined by the method
