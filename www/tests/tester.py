@@ -8,7 +8,7 @@ If the test failed, print the exception, and the line in the script where the
 exception happened.
 """
 
-import _jsre as re
+import python_re as re
 import sys
 import time
 import tb
@@ -185,6 +185,7 @@ class Tester:
                   self._raiseFailure("{} not triggered".format(exc_name))
 
       return Manager(exc)
+
     def fail(self, *args):
         raise Exception(str(args))
 
@@ -204,15 +205,16 @@ class Tester:
                 try:
                     f()
                     report.add(method[5:], lineno,
-                        round((time.time()-t0)*1000), 'ok')
+                        round((time.time() - t0) * 1000), 'ok')
                 except SkipTest as exc:
                     print('skip test', exc)
                     report.add(method[5:], lineno,
-                        round((time.time()-t0)*1000), 'skipped')
+                        round((time.time() - t0) * 1000), 'skipped')
                 except Exception as exc:
+                    print("exc", exc)
                     tb.print_exc()
                     report.add(method[5:], lineno,
-                        round((time.time()-t0)*1000), 'failed')
+                        round((time.time() - t0) * 1000), 'failed')
         return report
 
     def subTest(self, *args):
