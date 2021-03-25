@@ -699,4 +699,9 @@ assertRaises(SyntaxError, exec, "{a, b} += 1")
 assertRaises(SyntaxError, exec, "{a: 0, b: 1} += 1")
 assertRaises(SyntaxError, exec, "{} += 1")
 
+# issue 1642
+assertRaises(SyntaxError, exec, "(=)")
+assertRaises(SyntaxError, exec, "(=0)")
+assertRaises(SyntaxError, exec, '(=")')
+
 print('passed all tests...')
