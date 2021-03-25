@@ -2867,6 +2867,8 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
     delete original_string.in_iteration
 }
 
+var _debug = {value: false}
+
 function match(pattern, string, pos, flags, endpos){
     /* Main algorithm
     pattern is the result of compile(). It has the attributes
@@ -2893,7 +2895,7 @@ function match(pattern, string, pos, flags, endpos){
         throw Error('pattern is a Python instance')
     }
 
-    var debug = false
+    var debug = _debug.value
     if(debug){
         console.log("enter match1 loop, pattern", pattern,
             "string", string, "pos", pos)
@@ -3262,15 +3264,16 @@ function match(pattern, string, pos, flags, endpos){
                     model,
                     start: pos,
                     rank,
-                    mo, // list of match objects, of the form {nb_min, nb_max}
+                    mo, // form {nb_min, nb_max}
                     ix, // the state represents the match of mo[num] with
                        // string[pos:pos + ix]
                     toString: function(){
                         return model + ' ' + pos + '-' + ix
-                    }
+                    },
+                    len: model instanceof BackReference ? mo.group_len : 1
                 }
                 stack.push(state)
-                pos += ix
+                pos += ix * state.len
                 if(groups[0].end === undefined | pos > groups[0].end){
                     groups[0].end = pos
                 }
@@ -3419,6 +3422,7 @@ function match(pattern, string, pos, flags, endpos){
                             if(bt){
                                 rank = bt.rank
                                 pos = bt.pos
+                                continue
                             }else{
                                 return false
                             }
@@ -3481,6 +3485,7 @@ function match(pattern, string, pos, flags, endpos){
                     if(bt){
                         rank = bt.rank
                         pos = bt.pos
+                        console.log("after backtrack, pos", pos)
                     }else{
                         return false
                     }
@@ -3676,6 +3681,9 @@ var $module = {
             }
         }
         return _b_.None
+    },
+    set_debug: function(){
+        _debug.value = true
     },
     split: function(){
         var $ = $B.args("split", 4,
