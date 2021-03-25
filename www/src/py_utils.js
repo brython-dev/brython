@@ -611,7 +611,7 @@ $B.$getitem = function(obj, item){
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
         if(is_list ||
-                (typeof obj == "string" && 
+                (typeof obj == "string" &&
                  ! $B.has_surrogate(obj))){
             item = item >=0 ? item : obj.length + item
             if(obj[item] !== undefined){return obj[item]}
@@ -781,7 +781,69 @@ $B.$setitem = function(obj, item, value){
     }else if(obj.__class__ === _b_.list){
         return _b_.list.$setitem(obj, item, value)
     }
-    $B.$getattr(obj, "__setitem__")(item, value)
+    var si = $B.$getattr(obj.__class__ || $B.get_class(obj), "__setitem__",
+        null)
+    if(si === null){
+        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+            "' object does not support item assignment")
+    }
+    return si(obj, item, value)
+}
+
+// item deletion
+$B.$delitem = function(obj, item){
+    if(Array.isArray(obj) && obj.__class__ === undefined &&
+            typeof item == "number" &&
+            !_b_.isinstance(obj, _b_.tuple)){
+        if(item < 0){item += obj.length}
+        if(obj[item] === undefined){
+            throw _b_.IndexError.$factory("list deletion index out of range")
+        }
+        obj.splice(item, 1)
+        return
+    }else if(obj.__class__ === _b_.dict){
+        _b_.dict.__delitem__(obj, item)
+        return
+    }else if(obj.__class__ === _b_.list){
+        return _b_.list.__delitem__(obj, item)
+    }
+    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
+        null)
+    if(di === null){
+        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+            "' object doesn't support item deletion")
+    }
+    return di(obj, item)
+}
+
+$B.delitem_slice = function(obj, slice){
+    if(Array.isArray(obj)){
+        if(slice.start === _b_.None && slice.stop === _b_.None){
+            if(slice.step === _b_.None || slice.step == 1 ||
+                    slice.step == -1){
+                while(obj.length > 0){
+                    obj.pop()
+                }
+            }
+        }else if(slice.step === _b_.None){
+            if(slice.start === _b_.None){slice.start = 0}
+            if(slice.stop === _b_.None){slice.stop = obj.length}
+            if(typeof slice.start == "number" &&
+                    typeof slice.stop == "number"){
+                if(slice.start < 0){slice.start += obj.length}
+                if(slice.stop < 0){slice.stop += obj.length}
+                obj.splice(slice.start, slice.stop - slice.start)
+            }
+        }
+    }
+    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
+        null)
+
+    if(di === null){
+        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+            "' object doesn't support item deletion")
+    }
+    return di(obj, slice)
 }
 
 // augmented item

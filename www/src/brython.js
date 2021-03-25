@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-21 18:28:54.424120"
-__BRYTHON__.timestamp=1616347734424
+__BRYTHON__.compiled_date="2021-03-25 11:59:38.570235"
+__BRYTHON__.timestamp=1616669978570
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -4161,6 +4161,10 @@ if(this.func=='getitem' && this.tree.length==1){if(this.tree[0].type=="slice"){r
 `${this.tree[0].to_js()})`}
 return '$B.$getitem('+this.value.to_js()+','+
 this.tree[0].to_js()+')'}
+if(this.func=='delitem' && this.tree.length==1){if(this.tree[0].type=="slice"){return `$B.delitem_slice(${this.value.to_js()},`+
+`${this.tree[0].to_js()})`}
+return '$B.$delitem('+this.value.to_js()+','+
+this.tree[0].to_js()+')'}
 var res='',shortcut=false
 if(this.func !=='delitem' &&
 this.tree.length==1 && !this.in_sub){var expr='',x=this
@@ -6269,7 +6273,7 @@ function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 throw _b_.IndexError.$factory(type+" index out of range")}
 $B.$getitem=function(obj,item){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
 if(typeof item=="number"){if(is_list ||
-(typeof obj=="string" && 
+(typeof obj=="string" &&
 ! $B.has_surrogate(obj))){item=item >=0 ? item :obj.length+item
 if(obj[item]!==undefined){return obj[item]}
 else{index_error(obj)}}else if(is_dict){if(obj.$numeric_dict[item]!==undefined){return obj.$numeric_dict[item][0]}}}else if(typeof item=="string" && is_dict){var res=obj.$string_dict[item]
@@ -6332,7 +6336,32 @@ if(obj[item]===undefined){throw _b_.IndexError.$factory("list assignment index o
 obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
 return}else if(obj.__class__===_b_.list){return _b_.list.$setitem(obj,item,value)}
-$B.$getattr(obj,"__setitem__")(item,value)}
+var si=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__setitem__",null)
+if(si===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object does not support item assignment")}
+return si(obj,item,value)}
+$B.$delitem=function(obj,item){if(Array.isArray(obj)&& obj.__class__===undefined &&
+typeof item=="number" &&
+!_b_.isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
+if(obj[item]===undefined){throw _b_.IndexError.$factory("list deletion index out of range")}
+obj.splice(item,1)
+return}else if(obj.__class__===_b_.dict){_b_.dict.__delitem__(obj,item)
+return}else if(obj.__class__===_b_.list){return _b_.list.__delitem__(obj,item)}
+var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
+if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object doesn't support item deletion")}
+return di(obj,item)}
+$B.delitem_slice=function(obj,slice){if(Array.isArray(obj)){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1 ||
+slice.step==-1){while(obj.length > 0){obj.pop()}}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
+if(slice.stop===_b_.None){slice.stop=obj.length}
+if(typeof slice.start=="number" &&
+typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
+if(slice.stop < 0){slice.stop+=obj.length}
+obj.splice(slice.start,slice.stop-slice.start)}}}
+var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
+if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+"' object doesn't support item deletion")}
+return di(obj,slice)}
 $B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
 obj[item]!==undefined){if(Array.isArray(obj[item])&& Array.isArray(incr)){for(var i=0,len=incr.length;i < len;i++){obj[item].push(incr[i])}
 return}else if(typeof obj[item]=="string" && typeof incr=="string"){obj[item]+=incr
@@ -7505,6 +7534,9 @@ if($test){console.log("obj is class",metaclass,metaclass[attr])}
 if(metaclass && metaclass[attr]&& metaclass[attr].__get__ &&
 metaclass[attr].__set__){metaclass[attr].__set__(obj,value)
 return None}
+if(obj.$infos && obj.$infos.__module__=="builtins"){throw _b_.TypeError.$factory(
+"can't set attributes of built-in/extension type '"+
+obj.$infos.__name__+"'")}
 obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
 obj.$factory=$B.$instance_creator(obj)}else if(attr=="__bases__"){
@@ -11621,8 +11653,10 @@ return list.$factory.apply(null,arguments)}
 var list={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"list"},$is_class:true,$native:true,__dir__:object.__dir__}
 list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var radd=getattr(other,"__radd__",_b_.NotImplemented)
 if(radd !==_b_.NotImplemented){return radd(self)}
-throw _b_.TypeError.$factory('can only concatenate list (not "'+
-$B.class_name(other)+'") to list')}
+var this_name=$B.class_name(self)
+throw _b_.TypeError.$factory('can only concatenate '+
+this_name+' (not "'+$B.class_name(other)+
+'") to '+this_name)}
 var res=self.slice(),is_js=other.$brython_class=="js" 
 for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
 res.__brython__=true

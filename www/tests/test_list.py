@@ -330,4 +330,21 @@ try:
 except AttributeError:
     pass
 
+# issue 1641
+tup = (1, 2, 3)
+
+try:
+    tup[0] = 0
+    raise AssertionError("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == \
+      "'tuple' object does not support item assignment"
+
+try:
+    tuple.__setitem__ = 0
+    raise AssertionError("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == \
+        "can't set attributes of built-in/extension type 'tuple'"
+        
 print("passed all tests..")

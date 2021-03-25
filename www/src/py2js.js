@@ -8437,6 +8437,14 @@ $SubCtx.prototype.to_js = function(){
         return '$B.$getitem(' + this.value.to_js() + ',' +
             this.tree[0].to_js() + ')'
     }
+    if(this.func == 'delitem' && this.tree.length == 1){
+        if(this.tree[0].type == "slice"){
+            return `$B.delitem_slice(${this.value.to_js()}, ` +
+                `${this.tree[0].to_js()})`
+        }
+        return '$B.$delitem(' + this.value.to_js() + ',' +
+            this.tree[0].to_js() + ')'
+    }
     var res = '',
         shortcut = false
     if(this.func !== 'delitem' &&

@@ -2268,6 +2268,11 @@ $B.$setattr = function(obj, attr, value){
             metaclass[attr].__set__(obj, value)
             return None
         }
+        if(obj.$infos && obj.$infos.__module__ == "builtins"){
+            throw _b_.TypeError.$factory(
+                "can't set attributes of built-in/extension type '" + 
+                    obj.$infos.__name__ + "'")
+        }
         obj[attr] = value
         if(attr == "__init__" || attr == "__new__"){
             // redefine the function that creates instances of the class

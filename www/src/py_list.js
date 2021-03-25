@@ -36,8 +36,10 @@ list.__add__ = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
         var radd = getattr(other, "__radd__", _b_.NotImplemented)
         if(radd !== _b_.NotImplemented){return radd(self)}
-        throw _b_.TypeError.$factory('can only concatenate list (not "' +
-            $B.class_name(other) + '") to list')
+        var this_name = $B.class_name(self) // can be tuple
+        throw _b_.TypeError.$factory('can only concatenate ' +
+            this_name + ' (not "' + $B.class_name(other) + 
+            '") to ' + this_name)
     }
     var res = self.slice(),
         is_js = other.$brython_class == "js" // list of JS objects
@@ -964,6 +966,7 @@ tuple.__new__ = function(cls, ...args){
     }
     return self
 }
+
 // set method names
 $B.set_func_names(tuple, "builtins")
 

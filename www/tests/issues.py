@@ -427,13 +427,6 @@ assert n == 4
 #issue 297
 assert type((1,) * 2) == tuple
 
-t = 1, 2
-try:
-    t[0] = 1
-    raise Exception('should have raised AttributeError')
-except AttributeError:
-    pass
-
 # issue 298
 n = 1
 for n in range(n):
