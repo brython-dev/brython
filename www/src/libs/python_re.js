@@ -128,6 +128,35 @@ $B.set_func_names(Flag, "re")
 
 var no_flag = {}
 
+var Scanner = $B.make_class("Scanner",
+    function(pattern, string){
+        return {
+            __class__: Scanner,
+            $string: string,
+            pattern
+        }
+    }
+)
+
+Scanner.match = function(self){
+    return BPattern.match(self.pattern, self.$string)
+}
+
+Scanner.search = function(self){
+    if(! self.$iterator){
+        self.$iterator = $module.finditer(self.pattern, self.$string)
+    }
+    try{
+        var nxt = _b_.next(self.$iterator)
+    }catch(err){
+        if($B.is_exc(err, [_b_.StopIteration])){
+            return _b_.None
+        }
+        throw err
+    }
+    return nxt
+}
+
 var BPattern = $B.make_class("Pattern",
     function(pattern){
         var nb_groups = 0
@@ -270,6 +299,10 @@ BPattern.match = function(self, string){
     }
     return BMatchObject.$factory(match($.self.$pattern, data.string, $.pos,
         $.self.flags, $.endpos))
+}
+
+BPattern.scanner = function(self, string){
+    return Scanner.$factory(self, string)
 }
 
 BPattern.search = function(self, string){
