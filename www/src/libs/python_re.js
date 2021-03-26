@@ -600,7 +600,7 @@ Char.prototype.match = function(string, pos, flags){
     // matches is above the maximum allowed
     if(flags){
         if(flags.value & ASCII.value){
-            if(! /[a-zA-Z]/.exec(this.char)){
+            if(this.cp > 127){
                 return false
             }
         }
@@ -3662,6 +3662,7 @@ var $module = {
         pattern = check_pattern_flags(pattern, flags)
         if(pattern.__class__ === BPattern){
             data = prepare({string})
+            flags = pattern.flags
         }else{
             data = prepare({string, pattern})
             pattern = BPattern.$factory(compile(data.pattern, flags))
