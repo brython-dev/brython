@@ -65,4 +65,32 @@ assert isinstance(FunctionType.__code__, GetSetDescriptorType)
 MemberDescriptorType = type(FunctionType.__globals__)
 assert isinstance(FunctionType.__globals__, MemberDescriptorType)
 
+# found at https://www.cs.cmu.edu/~112/notes/notes-oop-part1.html
+
+from types import SimpleNamespace
+
+# Now we can create new object representing dogs:
+
+dog1 = SimpleNamespace(name='Dino', age=10, breed='shepherd')
+assert str(dog1) == "namespace(name='Dino', age=10, breed='shepherd')", str(dog1)
+assert dog1.name == "Dino"
+
+# Next, let's show that this is in fact mutable:
+
+dog1.name = 'Fred'
+assert str(dog1) == "namespace(name='Fred', age=10, breed='shepherd')", str(dog1)
+assert dog1.name == "Fred"
+
+# Now let's show that == works properly:
+
+dog2 = SimpleNamespace(name='Spot', age=12, breed='poodle')
+dog3 = SimpleNamespace(name='Fred', age=10, breed='shepherd')
+
+assert dog1 != dog2
+assert dog1 == dog3
+
+# Finally, let's see what the type of a dog object is:
+
+assert str(type(dog1)) == "<class 'types.SimpleNamespace'>"
+
 print("Passed all tests...")

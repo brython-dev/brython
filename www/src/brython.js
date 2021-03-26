@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-25 15:20:48.208582"
-__BRYTHON__.timestamp=1616682048208
+__BRYTHON__.compiled_date="2021-03-26 14:21:54.835952"
+__BRYTHON__.timestamp=1616764914835
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -7537,6 +7537,8 @@ if($test){console.log("obj is class",metaclass,metaclass[attr])}
 if(metaclass && metaclass[attr]&& metaclass[attr].__get__ &&
 metaclass[attr].__set__){metaclass[attr].__set__(obj,value)
 return None}
+if(attr=="__module__"){obj.$infos.__module__=value
+return _b_.None}
 if(obj.$infos && obj.$infos.__module__=="builtins"){throw _b_.TypeError.$factory(
 "can't set attributes of built-in/extension type '"+
 obj.$infos.__name__+"'")}
