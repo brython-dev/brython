@@ -25,6 +25,20 @@ for(var cp = 0; cp <= 127; cp++){
     }
 }
 
+var is_digit = {}
+
+for(var cp in $B.unicode_tables['Nd']){
+    is_digit[cp] = true
+}
+
+var is_ascii_digit = {}
+
+for(var cp = 0; cp <= 127; cp++){
+    if(is_digit[cp]){
+        is_ascii_digit[cp] = true
+    }
+}
+
 var $error_2 = {
     $name: "error",
     $qualname: "error",
@@ -676,15 +690,19 @@ function CharacterClass(pos, cp, length, groups){
             }
             break
         case 'd':
-            this.test_func = function(string, pos){
-                var cp = string.codepoints[pos]
-                return $B.unicode_tables.numeric[cp] !== undefined
+            this.test_func = function(string, pos, flags){
+                var cp = string.codepoints[pos],
+                    table = (flags && (flags.value & ASCII.value)) ?
+                        is_ascii_digit : is_digit
+                return table[cp]
             }
             break
         case 'D':
             this.test_func = function(string, pos){
-                var cp = string.codepoints[pos]
-                return $B.unicode_tables.numeric[cp] === undefined
+                var cp = string.codepoints[pos],
+                    table = (flags && (flags.value & ASCII.value)) ?
+                        is_ascii_digit : is_digit
+                return ! table[cp]
             }
             break
         case 'b':
