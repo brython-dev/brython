@@ -17,9 +17,17 @@ dico = {
         'es':'Directorio'
     },
     'both': {
-        'en':'Files in both distributions',
-        'fr':'Fichiers communs aux deux distributions',
-        'es':'Archivos comunes en ambas distribuciones'
+        'en':'Files in both distributions<br><i>' + \
+            '* indicates that Brython version is different from CPython</i>',
+        'fr':'Fichiers communs aux deux distributions <br><i>' + \
+            '* indique que la version Brython est différente de CPython</i>',
+        'es':'Archivos comunes en ambas distribuciones <br><i>' + \
+            '* indica que la versión de Brython es diferente de CPython'
+    },
+    'replacements': {
+        'en': 'Replacement for CPython module',
+        'fr': 'Remplacement de modules CPython',
+        'es': 'Reemplazando módulos de CPython'
     },
     'specific': {
         'en':'Brython-specific',
@@ -27,19 +35,17 @@ dico = {
         'es':'Especificos de Brython'
     },
     'not_yet': {
-        'en':'In CPython but not (yet) in Brython',
-        'fr':'Dans CPython mais pas (encore) dans Brython',
-        'es':'En CPython pero no (todavía) en Brython'
+        'en':'In CPython but not (yet) in Brython<br><i>' + \
+            '*: replaced by a Javascript module in /libs</i>',
+        'fr':'Dans CPython mais pas (encore) dans Brython<br><i>' + \
+            '*: remplacé par un module Javascript dans /libs</i>',
+        'es':'En CPython pero no (todavía) en Brython<br><i>' + \
+            '*: reemplazado por un módulo javascript en /libs</i>'
     },
     'missing': {
         'en':'Directories in CPython distribution missing in Brython',
         'fr':'Répertoires de la distribution CPython absents de Brython',
         'es':'Directorios en CPython ausentes en la distribución en Brython'
-    },
-    'diff': {
-        'en': '* indicates that Brython version is different from CPython',
-        'fr': '* indique que la version Brython est différente de CPython',
-        'es': '* indica que la versión de Brython es diferente de CPython'
     }
 }
 
@@ -67,14 +73,18 @@ for lang in 'en','es','fr':
 
         html = '<h1>%s %s'\
             '</h1>\n<div style="padding-left:30px;">' %(dico['title'][lang], version)
-        html += '\n<div>%s</div>' %dico["diff"][lang]
         html += '<table border=1>\n'
         html += '<tr>\n<th>%s</th>\n'\
             '<th>%s</th>\n'\
             '<th>%s</th>\n'\
+            '<th>%s</th>\n'\
             '<th>%s</th></tr>\n'\
-            %(dico['dir'][lang],dico['both'][lang],dico['specific'][lang],
+            %(dico['dir'][lang],
+                dico['both'][lang],
+                dico['replacements'][lang],
+                dico['specific'][lang],
                 dico['not_yet'][lang])
+
         for dirpath, dirnames, filenames in os.walk(brython_stdlib_folder):
 
             if 'dist' in dirnames:
@@ -112,11 +122,31 @@ for lang in 'en','es','fr':
                 if valid:
                     common = [v for v in valid
                         if os.path.exists(os.path.join(python_path, v))]
+                    brython_specific = [v for v in valid if not v in common]
+                    replacements = []
+                    r1 = []
+                    for v in brython_specific:
+                        try:
+                            mod_name = os.path.splitext(v)[0]
+                            if path.startswith("Lib") and path != "Lib":
+                                mod_name = '.'.join(path[4:].split(os.sep) + \
+                                    [mod_name])
+                            print(v, mod_name)
+                            m = __import__(mod_name)
+                            r1.append(v)
+                            if hasattr(m, "__file__"):
+                                replacements.append(
+                                    f'{v} <i>({m.__file__[len(python_stdlib_folder):]})</i>')
+                            else:
+                                replacements.append(f'{v} <i>(built-in)</i>')
+                        except ModuleNotFoundError:
+                            pass
+                    brython_specific = [v for v in brython_specific
+                        if v not in r1]
                     for i, f in enumerate(common):
                         if os.stat(os.path.join(dirpath, f)).st_size != \
                                 os.stat(os.path.join(python_path, f)).st_size:
                             common[i] = "*" + common[i]
-                    brython_specific = [v for v in valid if not v in common]
                     if os.path.exists(python_path):
                         missing = [f for f in os.listdir(python_path)
                             if f!='__pycache__' and
@@ -124,8 +154,15 @@ for lang in 'en','es','fr':
                                 and not f in valid]
                     else:
                         missing = []
+                    if path == "Lib":
+                        brython_libs_folder = os.path.join(brython_stdlib_folder, 'libs')
+                        brython_libs = [os.path.splitext(v)[0]
+                            for v in os.listdir(brython_libs_folder)]
+                        for i, m in enumerate(missing):
+                            if os.path.splitext(m)[0] in brython_libs:
+                                missing[i] = '*' + m
                     html += '<tr><td valign="top">%s</td>\n' %path
-                    for files in common, brython_specific, missing:
+                    for files in common, replacements, brython_specific, missing:
                         html += '<td style="vertical-align:top;">'+\
                             '\n<br>'.join(files)+'</td>\n'
                     html += '</tr>\n'
