@@ -1794,7 +1794,8 @@ function compile(pattern, flags){
                     // switch to Unicode
                     flags.value ^= ASCII.value
                 }
-                if(original_flags && original_flags.value & ASCII.value){
+                if(group_stack.length == 0 &&
+                        original_flags && original_flags.value & ASCII.value){
                     throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
                         "are incompatible")
                 }
@@ -1803,7 +1804,8 @@ function compile(pattern, flags){
                         "are incompatible")
                 }
             }else if(item.on_flags.indexOf('a') > -1){
-                if(original_flags && original_flags.value & U.value){
+                if(group_stack.length == 0 && 
+                        original_flags && original_flags.value & U.value){
                     throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
                         "are incompatible")
                 }
