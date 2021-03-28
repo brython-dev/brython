@@ -291,6 +291,8 @@ gi.__setitem__ = function(){
     throw _b_.TypeError.$factory("read only")
 }
 
+$B.set_func_names(gi, "re")
+
 BPattern.groupindex = {
     __get__: function(self){
         return gi.$factory(self)
@@ -479,6 +481,18 @@ var Case = function(){
 
 Case.prototype.add = Node.prototype.add
 
+Case.prototype.fixed_length = function(){
+    var len
+    for(var item of this.items){
+        var fl = item.fixed_length()
+        if(! isFinite(fl)){
+            return false
+        }
+        len += fl
+    }
+    return len
+}
+
 var Choice = function(){
     this.type = "choice"
     this.items = []
@@ -486,6 +500,21 @@ var Choice = function(){
 }
 
 Choice.prototype.add = Node.prototype.add
+
+Choice.prototype.fixed_length = function(){
+    var len
+    for(var item of this.items){
+        var fl = item.fixed_length()
+        if(! isFinite(fl)){
+            return false
+        }else if(len === undefined){
+            len = fl
+        }else if(len != fl){
+            return false
+        }
+     }
+     return len
+}
 
 var EmptyString = {
         toString: function(){
@@ -796,6 +825,10 @@ function CharacterClass(pos, cp, length, groups){
     }
 }
 
+CharacterClass.prototype.fixed_length = function(){
+    return 1
+}
+
 CharacterClass.prototype.match = function(string, pos){
     // Returns {pos1, pos2} such that "this" matches all the substrings
     // string[pos:i] with pos1 <= i < pos2, or false if no match
@@ -836,6 +869,10 @@ var CharacterSet = function(pos, set, groups){
     this.pos = pos
     this.items = set.items
     this.neg = set.neg
+}
+
+CharacterSet.prototype.fixed_length = function(){
+    return 1
 }
 
 CharacterSet.prototype.match = function(string, pos){
@@ -1836,7 +1873,8 @@ function compile(pattern, flags){
         groups,
         flags,
         text: from_codepoint_list(pattern),
-        type // "str" or "bytes"
+        type, // "str" or "bytes"
+        fixed_length: node.fixed_length()
     }
     if(! cache.has(original_pattern.py_obj)){
         cache.set(original_pattern.py_obj, new Map())
@@ -2227,7 +2265,7 @@ function MatchObject(pattern, string, stack, endpos){
                         last.matches[last.matches.length - 1].end)
                 }
             }else{
-                this.end = Math.max(this.end, 
+                this.end = Math.max(this.end,
                     last.start + last.ix * last.len)
             }
             ix--
@@ -2307,8 +2345,7 @@ var BMatchObject = $B.make_class("MatchObject",
                 __class__: BMatchObject,
                 mo,
                 group_obj,
-                endpos: mo.endpos,
-                string: mo.string.substring(0)
+                endpos: mo.endpos
             }
         }
         return _b_.None
@@ -2323,6 +2360,9 @@ BMatchObject.__getitem__ = function(){
     if(Array.isArray(key)){
         throw _b_.IndexError.$factory("no such group")
     }
+    self.string = self.string === undefined ?
+        BMatchObject.string.__get__(self) :
+        self.string
     if(key == 0){
         return self.string.substring(self.mo.start, self.mo.end)
     }
@@ -2424,14 +2464,18 @@ BMatchObject.groupdict = function(){
     var $ = $B.args("groupdict", 2, {self: null, default: null},
                 ['self', 'default'], arguments, {default: _b_.None},
                 null, null),
+        self = $.self,
         groups = $.self.group_obj,
         d = $B.empty_dict()
     for(var key in $.self.mo.pattern.groups){
         if(! isFinite(key)){
-            var num = $.self.mo.pattern.groups[key].num,
+            var num = self.mo.pattern.groups[key].num,
                 value = groups[num] === undefined ? $.default : groups[num]
             if(value !== $.default){
-                value = $.self.string.substring(value.start, value.end)
+                self.string = self.string === undefined ?
+                    BMatchObject.string.__get__(self) :
+                    self.string
+                value = self.string.substring(value.start, value.end)
             }
             _b_.dict.$setitem(d, key, value)
         }
@@ -2538,13 +2582,16 @@ BMatchObject.start = function(){
     var group = BMatchObject.group($.self, $.group)
     if(group === _b_.None){
         return -1
+    }else if($.group == 0){
+        return $.self.mo.start
+    }else{
+        return $.self.mo.$groups[$.group].start
     }
-    return group.start
 }
 
 BMatchObject.string = {
     __get__: function(self){
-        return self.mo.string
+        return self.mo.string.substring(0)
     }
 }
 
@@ -3779,6 +3826,14 @@ var $module = {
             pattern = BPattern.$factory(compile(data.pattern, flags))
         }
         data.pattern = pattern
+        // optimization
+        if(isFinite(pattern.$pattern.fixed_length) &&
+                pattern.pattern.endsWith('$') &&
+                ! (pattern.flags.value & MULTILINE.value)){
+            var mo = match(pattern.$pattern, data.string,
+                data.string.length - pattern.$pattern.fixed_length)
+            return BMatchObject.$factory(mo)
+        }
         var pos = 0
         while(pos < data.string.codepoints.length){
             var mo = match(data.pattern.$pattern, data.string, pos)
