@@ -104,6 +104,9 @@ class Tester:
             expected_regexp)
         return context.handle('assertRaises', callableObj, args, kwargs)
 
+    def assertRegex(self, text, regex, msg=None):
+        assert re.match(regex, text), msg
+
     def assertIs(self, a, b, msg=None):
         if not a is b:
             raise AssertionError(msg or '%s is %s should be true' %(a, b))
