@@ -82,6 +82,11 @@ class _AssertRaisesContext(_AssertRaisesBaseContext):
 
 class Tester:
 
+    def addCleanup(self, function, *args, **kw):
+        if not hasattr(self, "cleanups"):
+            self.cleanups = []
+        self.cleanups.append([function, args, kw])
+
     def assertEqual(self, result, expected, msg=None):
         if result != expected:
             if msg is not None:
