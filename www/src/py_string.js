@@ -241,16 +241,9 @@ str.__iter__ = function(self){
 }
 
 str.__len__ = function(self){
-    var len = self.length,
-        res = len,
-        code
-    for(var i = 0; i < len; i++){
-        code = self.charCodeAt(i)
-        if(code >= 0xD800 && code <= 0xDBFF){
-            res--
-        }
-    }
-    return res
+    // found at
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
+    return [...self].length
 }
 
 // Start of section for legacy formatting (with %)
@@ -872,11 +865,7 @@ str.__mul__ = function(){
     if(! isinstance($.other, _b_.int)){throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
             $B.class_name($.other) + "'")}
-    var res = ""
-    for(var i = 0; i < $.other; i++){
-        res += $.self.valueOf()
-    }
-    return res
+    return $.self.valueOf().repeat($.other)
 }
 
 str.__ne__ = function(self, other){
@@ -932,7 +921,7 @@ str.__repr__ = function(self){
 str.__setattr__ = function(self, attr, value){
     if(typeof self === "string"){
         if(str.hasOwnProperty(attr)){
-            throw _b_.AttributeError.$factory("'str' object attribute '" + 
+            throw _b_.AttributeError.$factory("'str' object attribute '" +
                 attr + "' is read-only")
         }else{
             throw _b_.AttributeError.$factory(
