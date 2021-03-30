@@ -273,10 +273,10 @@ BPattern.fullmatch = function(self, string){
         return _b_.None
     }
 }
-var gi = $B.make_class("GroupIndex",
+var GroupIndex = $B.make_class("GroupIndex",
     function(self, _default){
         var res = $B.empty_dict()
-        res.__class__ = gi
+        res.__class__ = GroupIndex
         for(var key in self.$groups){
             if(isNaN(parseInt(key))){
                 res.$string_dict[key] = [self.$groups[key].num,
@@ -286,16 +286,16 @@ var gi = $B.make_class("GroupIndex",
         return res
     }
 )
-gi.__mro__ = [_b_.dict, _b_.object]
-gi.__setitem__ = function(){
+GroupIndex.__mro__ = [_b_.dict, _b_.object]
+GroupIndex.__setitem__ = function(){
     throw _b_.TypeError.$factory("read only")
 }
 
-$B.set_func_names(gi, "re")
+$B.set_func_names(GroupIndex, "re")
 
 BPattern.groupindex = {
     __get__: function(self){
-        return gi.$factory(self)
+        return GroupIndex.$factory(self)
     }
 }
 
@@ -1283,7 +1283,12 @@ function parse_character_set(text, pos, is_bytes){
         var cp = text[pos],
             char = chr(cp)
         if(char == ']'){
-            return [result, pos]
+            if(pos == start + 2 && result.neg){
+                // in "[^]]", the first ] is the character "]"
+                result.items.push(']')
+            }else{
+                return [result, pos]
+            }
         }
         if(char == '\\'){
             var escape = escaped_char({
@@ -1453,27 +1458,9 @@ function compile(pattern, flags){
         lookbehind,
         node = new Node(),
         accept_inline_flag = true,
-        comment_in_verbose = false
+        verbose = (flags.value || 0) & VERBOSE.value
     node.$groups = groups
-    var tokenized = []
-    for(var item of tokenize(pattern, type)){
-        if(comment_in_verbose){
-            if(item instanceof Char && item.cp == 10){
-                comment_in_verbose = false
-            }
-            continue
-        }
-        if(item instanceof Char && flags.value & VERBOSE.value){
-            if([9, 10, 11, 12, 13, 32].indexOf(item.cp) > -1 &&
-                    ! item.escaped){
-                // ignore whitespace in VERBOSE mode
-                continue
-            }else if(item.cp == ord("#") && ! item.escaped){
-                // ignore until line end
-                comment_in_verbose = true
-                continue
-            }
-        }
+    for(var item of tokenize(pattern, type, verbose)){
         item.flags = flags
         item.is_bytes = is_bytes
         path.push(item)
@@ -1804,7 +1791,7 @@ function compile(pattern, flags){
                         "are incompatible")
                 }
             }else if(item.on_flags.indexOf('a') > -1){
-                if(group_stack.length == 0 && 
+                if(group_stack.length == 0 &&
                         original_flags && original_flags.value & U.value){
                     throw _b_.ValueError.$factory("ASCII and UNICODE flags " +
                         "are incompatible")
@@ -1889,13 +1876,34 @@ function ord(char){
     return char.charCodeAt(0)
 }
 
-function* tokenize(pattern, type){
+function* tokenize(pattern, type, _verbose){
     // pattern is a list of codepoints
     var is_bytes = type == "bytes"
+    // verbose_stack is the stack of verbose state for each group in the regex
+    var verbose_stack = [_verbose],
+        verbose = _verbose
     var pos = 0
     while(pos < pattern.length){
         var cp = pattern[pos],
             char = String.fromCharCode(cp)
+        if(verbose){
+            // current group is in verbose mode
+            if(char == "#"){
+                // skip until next line feed
+                while(pos < pattern.length && pattern[pos] != 10){
+                    pos++
+                }
+                pos++
+                continue
+            }else{
+                while(pos < pattern.length &&
+                        [9, 10, 11, 12, 13, 32].indexOf(pattern[pos]) > -1){
+                    pos++
+                }
+            }
+            cp = pattern[pos]
+            char = String.fromCharCode(cp)
+        }
         if(char == '('){
             if(pattern[pos + 1] == ord('?')){
                 if(pattern[pos + 2] == ord('P')){
@@ -1917,6 +1925,7 @@ function* tokenize(pattern, type){
                             fail("missing >, unterminated name", pos)
                         }
                         yield new Group(pos, {type: 'name_def', value: name})
+                        verbose_stack.push(verbose)
                         pos = i + 1
                         continue
                     }else if(pattern[pos + 3] == ord('=')){
@@ -1968,21 +1977,25 @@ function* tokenize(pattern, type){
                 }else if(pattern[pos + 2] == ord('=')){
                     // (?=...) : lookahead assertion
                     yield new Group(pos, {type: 'lookahead_assertion'})
+                    verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] == ord('!')){
                     // (?!...) : negative lookahead assertion
                     yield new Group(pos, {type: 'negative_lookahead_assertion'})
+                    verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(from_codepoint_list(pattern.slice(pos + 2, pos + 4)) == '<!'){
                     // (?<!...) : negative lookbehind
                     yield new Group(pos, {type: 'negative_lookbehind'})
+                    verbose_stack.push(verbose)
                     pos += 4
                     continue
                 }else if(from_codepoint_list(pattern.slice(pos + 2, pos + 4)) == '<='){
                     // (?<=...) : positive lookbehind
                     yield new Group(pos, {type: 'positive_lookbehind'})
+                    verbose_stack.push(verbose)
                     pos += 4
                     continue
                 }else if(pattern[pos + 2] == ord('<')){
@@ -1990,9 +2003,10 @@ function* tokenize(pattern, type){
                     if(pos == pattern.length){
                         fail("unexpected end of pattern", pos)
                     }
-                    fail("unknown extension ?<" + pattern[pos], pos)
+                    fail("unknown extension ?<" + _b_.chr(pattern[pos]), pos)
                 }else if(pattern[pos + 2] == ord(':')){
                     yield new Group(pos, {non_capturing: true})
+                    verbose_stack.push(verbose)
                     pos += 3
                     continue
                 }else if(pattern[pos + 2] === undefined){
@@ -2041,6 +2055,7 @@ function* tokenize(pattern, type){
                                 break
                             }else if(pattern[pos] == ord(':')){
                                 yield new Group(pos, {name: "Group", type: "flags"})
+                                verbose_stack.push(verbose)
                                 closed = true
                                 break
                             }else{
@@ -2065,6 +2080,7 @@ function* tokenize(pattern, type){
                                 pos++
                             }else if(pattern[pos] == ord(':')){
                                 yield new Group(pos, {name: "Group", type: "flags"})
+                                verbose_stack.push(verbose)
                                 break
                             }else if(String.fromCharCode(pattern[pos]).
                                     match(/[a-zA-Z]/)){
@@ -2088,6 +2104,13 @@ function* tokenize(pattern, type){
                     var set_flags = new SetFlags(flags_start,
                         {on_flags, off_flags})
                     yield set_flags
+                    // reset verbose
+                    if(on_flags.indexOf('x') > -1){
+                        verbose = true
+                    }
+                    if(off_flags.indexOf('x') > -1){
+                        verbose = false
+                    }
                     if(! closed){
                         node = set_flags
                     }
@@ -2106,14 +2129,18 @@ function* tokenize(pattern, type){
                     pos++
                     continue
                 }else{
-                    fail("unknown extension ?" + pattern[pos + 2], pos)
+                    fail("unknown extension ?" + _b_.chr(pattern[pos + 2]),
+                        pos)
                 }
             }else{
                 yield new Group(pos)
+                verbose_stack.push(verbose)
                 pos++
             }
         }else if(cp == ord(')')){
             yield new GroupEnd(pos)
+            verbose_stack.pop()
+            verbose = $last(verbose_stack)
             pos++
         }else if(cp == ord('\\')){
             var escape = escaped_char({codepoints: pattern, pos, is_bytes})
@@ -3242,7 +3269,8 @@ function match(pattern, string, pos, endpos){
             }
             state = stack[i]
             if(debug){
-                console.log("GroupEnd", state, "pos", pos, "mo", mo)
+                console.log("GroupEnd", state, "pos", pos, "mo", mo,
+                    "lookahead", lookahead)
                 alert()
             }
             if(state.model.type == "lookahead_assertion"){
@@ -3259,7 +3287,23 @@ function match(pattern, string, pos, endpos){
                 }
                 lookbehind = false
                 rank++
-            }else if(state.model.type == "negative_lookbehind"){
+            }else if(state.model.type == "negative_lookahead_assertion" ||
+                    lookahead && lookahead.model.type == "negative_lookahead_assertion"){
+                // negative lookahead succeeds: backtrack
+                if(debug){
+                    console.log("negative lookahead succeeds, backtrack")
+                    alert()
+                }
+                var bt = backtrack(stack)
+                if(bt){
+                    rank = bt.rank
+                    pos = bt.pos
+                    continue
+                }else{
+                    return false
+                }
+            }else if(state.model.type == "negative_lookbehind" ||
+                    lookahead && lookahead.model.type == "negative_lookbehind"){
                 // negative lookbehind succeeds: backtrack
                 if(debug){
                     console.log("negative lookbehind succeeds, backtrack")
@@ -3401,7 +3445,7 @@ function match(pattern, string, pos, endpos){
             if(debug){
                 if(mo){
                     console.log("match", mo.nb_min, mo.nb_max,
-                        string.substring(pos, pos + mo.nb_max))
+                        string.substring(pos, pos + mo.nb_max), "lookahead", lookahead)
                     document.write(string.substring(pos, pos + mo.nb_max) +
                         '<br>')
                 }else{
@@ -3596,7 +3640,6 @@ function match(pattern, string, pos, endpos){
                             continue
                         }else{
                             // positive lookbehind fails
-                            console.log("backtrack 3443")
                             var bt = backtrack(stack)
                             if(bt){
                                 rank = bt.rank
@@ -3800,6 +3843,7 @@ var $module = {
         var data
         if(pattern.__class__ === BPattern){
             data = prepare({string})
+            pattern = pattern.$pattern
         }else{
             data = prepare({pattern, string})
             pattern = compile(data.pattern, flags)
@@ -3942,7 +3986,6 @@ var $module = {
             count = $.count,
             flags = $.flags,
             data
-        console.log("subn pattern", pattern)
         if(pattern.__class__ != BPattern){
             data = prepare({pattern, repl, string})
         }else{
