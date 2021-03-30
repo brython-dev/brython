@@ -60,6 +60,17 @@ $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.max_float=new Number(Number.MAX_VALUE)
 $B.min_float=new Number(Number.MIN_VALUE)
+var nb=Math.pow(2,29)
+while(true){try{'a'.repeat(nb)
+nb*=2}catch(err){
+var lo=nb/2,hi=nb,mid
+while(hi-lo > 1){try{mid=lo+(hi-lo)/2
+'a'.repeat(mid)
+lo=mid}catch(err){hi=mid}}
+try{'a'.repeat(hi)
+$B.max_string_length=hi
+break}catch(err){$B.max_string_length=lo
+break}}}
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=0
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
@@ -105,8 +116,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-03-27 12:37:49.740049"
-__BRYTHON__.timestamp=1616845069740
+__BRYTHON__.compiled_date="2021-03-30 22:26:25.397990"
+__BRYTHON__.timestamp=1617135985391
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 
@@ -12127,10 +12138,8 @@ self.toString=function(){return arg}
 return _b_.None}
 var str_iterator=$B.make_iterator_class("str_iterator")
 str.__iter__=function(self){return str_iterator.$factory(to_chars(self))}
-str.__len__=function(self){var len=self.length,res=len,code
-for(var i=0;i < len;i++){code=self.charCodeAt(i)
-if(code >=0xD800 && code <=0xDBFF){res--}}
-return res}
+str.__len__=function(self){
+return[...self].length}
 var kwarg_key=new RegExp("([^\\)]*)\\)")
 var NotANumber=function(){this.name="NotANumber"}
 var number_check=function(s){if(! isinstance(s,[_b_.int,_b_.float])){throw new NotANumber()}}
@@ -12325,9 +12334,7 @@ str.__mul__=function(){var $=$B.args("__mul__",2,{self:null,other:null},["self",
 if(! isinstance($.other,_b_.int)){throw _b_.TypeError.$factory(
 "Can't multiply sequence by non-int of type '"+
 $B.class_name($.other)+"'")}
-var res=""
-for(var i=0;i < $.other;i++){res+=$.self.valueOf()}
-return res}
+return $.self.valueOf().repeat($.other)}
 str.__ne__=function(self,other){return other !==self.valueOf()}
 str.__repr__=function(self){
 var t={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r",92:"\\\\"}
@@ -14329,7 +14336,8 @@ hook=$B.$getattr($B.imported[modname],funcname)}catch(err){console.warn("cannot 
 return _b_.None}
 return $B.$call(hook).apply(null,arguments)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},gettrace:function(){return $B.tracefunc ||_b_.None},modules:_b_.property.$factory(
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},gettrace:function(){return $B.tracefunc ||_b_.None},max_string_length:$B.max_string_length,
+modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,obj,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
 function(){return $B.path},function(self,obj,value){$B.path=value;}

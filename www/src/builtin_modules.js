@@ -540,6 +540,7 @@
         gettrace: function(){
             return $B.tracefunc || _b_.None
         },
+        max_string_length: $B.max_string_length, // in brython_builtins.js
         modules: _b_.property.$factory(
             function(){
                 return $B.obj_dict($B.imported)
