@@ -3025,28 +3025,21 @@ function backtrack(stack, debug){
     }
 }
 
-function in_choice(model){
-    // If the model is inside a Choice (set of RE joined by "|"), return the
-    // Case instance (the RE where the model belongs)
-    var parent = model.parent
-    while(parent){
-        if(parent instanceof Case){
-            return parent
-        }
-        parent = parent.parent
-    }
-    return false
-}
-
 function* iterator(pattern, string, flags, original_string, pos, endpos){
     var result = [],
-        pos = pos | 0,
-        last_mo
+        pos = pos | 0
     while(pos <= string.length){
         var mo = match(pattern, string, pos, endpos)
         if(mo){
             yield BMatchObject.$factory(mo)
-            if(mo.end == pos){
+            if(mo.end == mo.start){
+                console.log("zero width")
+                // If match has zero with, retry at the same position but
+                // with the flag no_zero_width set
+                mo = match(pattern, string, pos, endpos, true)
+                if(mo){
+                    yield BMatchObject.$factory(mo)
+                }
                 pos++ // at least 1, else infinite loop
             }else{
                 pos = mo.end
@@ -3060,7 +3053,7 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
 
 var _debug = {value: false}
 
-function match(pattern, string, pos, endpos){
+function match(pattern, string, pos, endpos, no_zero_width){
     /* Main algorithm
     pattern is the result of compile(). It has the attributes
     - path: a list of model: characters, groups
@@ -3076,10 +3069,11 @@ function match(pattern, string, pos, endpos){
 
     pos is the position in the string where the match starts.
 
-    flags is the argument flags passed to re.match(), .search() etc.
-
     endpos is the position where the match ends, as if the string ended at
     this position.
+
+    no_zero_width indicates if a match with width = 0 is allowed. Cf.
+    https://bugs.python.org/issue1647489
     */
 
     if(pattern.__class__ === BPattern){
@@ -3161,11 +3155,6 @@ function match(pattern, string, pos, endpos){
             cell = document.createElement('TD')
             cell.innerText = model + ''
             row.appendChild(cell)
-            /*
-            console.log("rank", rank, "pos", pos,
-                "char", string.codepoints[pos],
-                "model", model, "stack", stack)
-            */
             alert()
         }
         if(model === undefined){
@@ -3176,7 +3165,23 @@ function match(pattern, string, pos, endpos){
             if(stack.length == 0){
                 stack.start = pos
             }
-            return new MatchObject(pattern, string0, stack, endpos)
+            // No more model in the pattern : the match succeeds. Return a
+            // Javascript object
+            var MO = new MatchObject(pattern, string0, stack, endpos)
+            if(MO.end == MO.start && no_zero_width){
+                // zero-width match not allowed : backtrack
+                console.log("zero width not allowed, backtrack")
+                var bt = backtrack(stack)
+                console.log("bt", bt)
+                if(bt){
+                    rank = bt.rank
+                    pos = bt.pos
+                    continue
+                }else{
+                    return false
+                }
+            }
+            return MO
         }
         if(! model.repeat){
             model.repeat = {min: 1, max: 1}
@@ -3184,13 +3189,7 @@ function match(pattern, string, pos, endpos){
         if(model instanceof Group){
             // If group is repeated, .start is the position of the last
             // tried match
-            var group_in_stack = false
-            for(var state of stack){
-                if(state.model === model){
-                    group_in_stack = state
-                    break
-                }
-            }
+            var group_in_stack = get_state(stack, model)
             if(! group_in_stack){
                 stack.push({
                     type: "group",
@@ -3231,7 +3230,7 @@ function match(pattern, string, pos, endpos){
                         }
                         if(br_state.matches.length > 0){
                             var start = br_state.matches[0].start,
-                                end = br_state.matches[br_state.matches.length - 1].end
+                                end = $last(br_state.matches).end
                             len += end - start
                         }
                     }else if(item instanceof Or){
@@ -3239,9 +3238,6 @@ function match(pattern, string, pos, endpos){
                         // until group end
                         choices.push(item.group)
                     }else{
-                        if(item.fixed_length === undefined){
-                            console.log("no fixed length", item)
-                        }
                         len += item.fixed_length()
                     }
                 }
@@ -3250,6 +3246,8 @@ function match(pattern, string, pos, endpos){
             }
             rank++
         }else if(model instanceof GroupEnd){
+            // If we reach the end of the group, remove all the states in
+            // the stack that represent non repeated characters
             var i = stack.length - 1
             while(stack[i].model !== model.group){
                 if(stack[i].type != "group"){
@@ -3267,6 +3265,7 @@ function match(pattern, string, pos, endpos){
                     throw Error("group start not found")
                 }
             }
+            // Set state to that of the ended group
             state = stack[i]
             if(debug){
                 console.log("GroupEnd", state, "pos", pos, "mo", mo,
@@ -3277,10 +3276,9 @@ function match(pattern, string, pos, endpos){
                 // lookahead doesn't consume the string: reset pos
                 pos = state.start
                 lookahead = false
-                //stack.splice(i, 1)
                 rank++
             }else if(state.model.type == "positive_lookbehind"){
-                // lookbehind
+                // lookbehind succeeds
                 if(debug){
                     console.log("end of lookbehind, pos", pos)
                     alert()
@@ -3322,10 +3320,6 @@ function match(pattern, string, pos, endpos){
                 // match
                 state.has_matched = true
                 state.matches.push({start: state.start, end: pos})
-                if(state.model.type == "flags"){
-                    // reset flags
-                    // flags = Flag.$factory(state.model.flags_before.value)
-                }
                 if(state.matches.length == 65535){
                     // Python issue 9669
                     if(state.matches[0].start == $last(state.matches).end){
@@ -3336,12 +3330,12 @@ function match(pattern, string, pos, endpos){
                     continue
                 }
                 if(state.matches.length < state.model.repeat.max){
-                    // group can be repeated at least once: go back to group
-                    // start
+                    // Try the same group again
                     state.start = pos
                     rank = state.model.rank + 1
                     continue
                 }else{
+                    // Try the regexp after group end
                     rank++
                     if(debug){
                         console.log('group end', state,
@@ -3353,8 +3347,6 @@ function match(pattern, string, pos, endpos){
         }else if(model instanceof Or){
             // If we reach a "|", one of the previous options succeeded
             // Skip the next options
-
-            var or_group = model.group
             if(model.group){
                 rank = model.group.end_rank
             }else{
@@ -3433,10 +3425,6 @@ function match(pattern, string, pos, endpos){
                     }
                 }
             }else{
-                if(model.match === undefined){
-                    console.log("no match", model)
-                    throw _b_.AttributeError.$factory('match')
-                }
                 mo = model.match(string, pos)
             }
             // Method match() of models return a JS object with
@@ -3455,22 +3443,29 @@ function match(pattern, string, pos, endpos){
             }
             if(mo){
                 // Create a state, based on the model, the current position in
-                // the string, and all the match objects returned by
+                // the string, and the match object returned by
                 // model.match(string, pos)
-                // A state represents a part of the string that is matched by
-                // one of the match objects.
+                // The match object .mo is of the form {nb_min, nb_max}. If
+                // the model is a back reference to a group, it also has the
+                // key group_len (length of the part of the string matched by
+                // the group).
+                // The attribute .len is the length of the string matched by
+                // the model : 1 for characters, .mo.group_len for a back
+                // reference.
+                // The attribute .ix identifies the number of repetitions of
+                // the model. It can be any of the integers between
+                // .mo.nb_min and .mo.nb_max.
                 ix = model.non_greedy ? mo.nb_min : mo.nb_max
                 state = {
                     model,
                     start: pos,
                     rank,
-                    mo, // form {nb_min, nb_max}
-                    ix, // the state represents the match of mo[num] with
-                       // string[pos:pos + ix]
+                    mo,
+                    len: model instanceof BackReference ? mo.group_len : 1,
+                    ix,
                     toString: function(){
                         return model + ' ' + pos + '-' + ix
-                    },
-                    len: model instanceof BackReference ? mo.group_len : 1
+                    }
                 }
                 stack.push(state)
                 pos += ix * state.len
