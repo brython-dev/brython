@@ -687,9 +687,9 @@ assert (lambda: (
     '''
 ))() == "\n    # not a comment\n    hi\n    "
 
-assert lambda:(  # A greeter.
-    print('hi')  # Short for "Hello".
-)() == 'hi'
+assert (lambda: (  # A greeter.
+    'hi'           # Short for "Hello".
+))() == 'hi'
 
 # issue 1557
 assertRaises(SyntaxError, exec, "a, b += 1")
