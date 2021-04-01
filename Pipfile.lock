@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1b045f842187c772de16b13a120a51b15fd52e31eed6472425aa16f650793366"
+            "sha256": "b20aaa9718024ec28b53570df5a504bc1765bb9490e31099da47c34bd616c357"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,14 +16,5 @@
         ]
     },
     "default": {},
-    "develop": {
-        "plumbum": {
-            "hashes": [
-                "sha256:16b9e19d96c80f2e9d051ef5f04927b834a6ac0ce5d2768eb8662b5cd53e43df",
-                "sha256:91418dcc66b58ab9d2e3b04b3d1e0d787dc45923154fb8b4a826bd9316dba0d6"
-            ],
-            "index": "pypi",
-            "version": "==1.6.9"
-        }
-    }
+    "develop": {}
 }
