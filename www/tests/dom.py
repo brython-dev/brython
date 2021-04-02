@@ -111,3 +111,20 @@ for attr in ['abs_left', 'abs_top', 'top', 'width', 'height', 'width',
              'scrolled_left', 'scrolled_top']:
     assert isinstance(getattr(s, attr), int), getattr(s, attr)
 assert s.inside(document)
+
+# issue 1647
+style={"background-color":"yellow", "display": "none"}
+d = html.DIV("Hello world", style=style, id="mydiv")
+document <= d
+
+assert dict(d.attrs.items()) == {
+  'style': 'background-color: yellow; display: none;',
+  'id': 'mydiv'
+}
+assert set(d.attrs) == {"style", "id"}
+assert set(d.attrs.keys()) == {"style", "id"}
+assert set(d.attrs.values()) == {
+    'background-color: yellow; display: none;',
+    'mydiv'
+}
+assert "id" in d.attrs

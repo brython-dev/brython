@@ -258,14 +258,14 @@ Attributes.get = function(){
     }
 }
 
-Attributes.keys = function(){
+Attributes.$$keys = function(){
     return Attributes.__iter__.apply(null, arguments)
 }
 
 Attributes.items = function(){
     var $ = $B.args("values", 1, {self: null},
         ["self"], arguments, {}, null, null),
-        attrs = $.self.attributes,
+        attrs = $.self.elt.attributes,
         values = []
     for(var i = 0; i < attrs.length; i++){
         values.push([attrs[i].name, attrs[i].value])
@@ -276,7 +276,7 @@ Attributes.items = function(){
 Attributes.values = function(){
     var $ = $B.args("values", 1, {self: null},
         ["self"], arguments, {}, null, null),
-        attrs = $.self.attributes,
+        attrs = $.self.elt.attributes,
         values = []
     for(var i = 0; i < attrs.length; i++){
         values.push(attrs[i].value)
