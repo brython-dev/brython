@@ -3366,13 +3366,17 @@ $DefCtx.prototype.transform = function(node, rank){
         js = '    __code__:{' + h + '    co_argcount:' + this.argcount
         var h1 = ',' + h + ' '.repeat(4)
         var module = $get_module(this).module
+        var co_name = this.name
+        if(co_name.startsWith("lambda_" + $B.lambda_magic)){
+            co_name = '<lambda>'
+        }
         js += h1 + 'co_filename:$locals_' + module.replace(/\./g,'_') +
             '["__file__"] || "<string>"' +
             h1 + 'co_firstlineno:' + node.line_num +
             h1 + 'co_flags:' + flags +
             h1 + 'co_freevars: [' + free_vars + ']' +
             h1 + 'co_kwonlyargcount:' + this.kwonlyargcount +
-            h1 + 'co_name: "' + this.name + '"' +
+            h1 + 'co_name: "' + co_name + '"' +
             h1 + 'co_nlocals: ' + co_varnames.length +
             h1 + 'co_posonlyargcount: ' + (this.pos_only || 0) +
             h1 + 'co_varnames: $B.fast_tuple([' + co_varnames.join(', ') + '])' +
@@ -6408,7 +6412,8 @@ $LambdaCtx.prototype.transition = function(token, value){
         context.tree = []
         context.body_start = $pos
         return new $AbstractExprCtx(context, false)
-    }if(context.args !== undefined){ // returning from expression
+    }
+    if(context.args !== undefined){ // returning from expression
         context.body_end = $pos
         return $transition(context.parent, token)
     }
@@ -6440,6 +6445,7 @@ $LambdaCtx.prototype.to_js = function(){
     var lambda_name = 'lambda' + rand,
         module_name = module.id.replace(/\./g, '_')
 
+    node.line_num-- // issue #1645
     var root = $B.py2js(py, module_name, lambda_name, scope, node.line_num)
     var js = root.to_js()
 
@@ -9459,16 +9465,22 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
             flag = true,
             pnode = node,
             _line_info
-        while(pnode.parent !== undefined){pnode = pnode.parent}
-        var mod_id = pnode.id
+        while(pnode.parent !== undefined){
+            pnode = pnode.parent
+        }
+        var mod_id = node.module || pnode.id
         // ignore lines added in transform()
         var line_num = node.line_num
-        if(line_num === undefined){flag = false}
+        if(line_num === undefined){
+            flag = false
+        }
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
-        if(elt.type == 'condition' && elt.token == 'elif'){flag = false}
-        else if(elt.type == 'except'){flag = false}
-        else if(elt.type == 'single_kw'){flag = false}
+        if((elt.type == 'condition' && elt.token == 'elif') ||
+                elt.type == 'except' ||
+                elt.type == 'single_kw'){
+            flag = false
+        }
         if(flag){
 
             _line_info = line_info === undefined ? line_num + ',' + mod_id :
@@ -9476,7 +9488,6 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
             var js = ';$locals.$line_info = "' + _line_info +
                 '";if($locals.$f_trace !== _b_.None){$B.trace_line()};' +
                 '_b_.None;'
-
             var new_node = new $Node()
             new_node.is_line_num = true // used in generators
             new $NodeJSCtx(new_node, js)
@@ -9597,7 +9608,7 @@ var $get_scope = $B.parser.$get_scope = function(context, flag){
 var $get_line_num = $B.parser.$get_line_num = function(context){
     var ctx_node = $get_node(context),
         line_num = ctx_node.line_num
-    if(ctx_node.line_num===undefined){
+    if(ctx_node.line_num === undefined){
         ctx_node = ctx_node.parent
         while(ctx_node && ctx_node.line_num === undefined){
             ctx_node = ctx_node.parent
@@ -9921,7 +9932,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
 
     var module = root.module
 
-    var lnum = root.line_num || 1
+    var lnum = root.line_num === undefined ? 1 : root.line_num
     while(pos < src.length){
         var car = src.charAt(pos)
         // build tree structure from indentation

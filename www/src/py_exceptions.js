@@ -193,15 +193,18 @@ traceback.__getattribute__ = function(self, attr){
                     var fr = self.$stack[i]
                     if(fr[2] == info[1].replace(/\./g, '_')){
                         file = fr[3].__file__
+                        src = fr[3].$src
                         break
                     }
                 }
                 if(src === undefined){
                     if($B.file_cache.hasOwnProperty(file)){
                         src = $B.file_cache[file]
-                    }else if($B.imported[info[1]] && $B.imported[info[1]].__file__ ){
+                    }else if($B.imported[info[1]] &&
+                            $B.imported[info[1]].__file__ ){
                         src = $B.file_cache[$B.imported[info[1]].__file__]
-                        console.log("from filecache", line_info, $B.imported[info[1]].__file__)
+                        console.log("from filecache", line_info,
+                            $B.imported[info[1]].__file__)
                     }
                 }
                 if(src !== undefined){
@@ -213,6 +216,7 @@ traceback.__getattribute__ = function(self, attr){
                         throw err
                     }
                 }else{
+                    console.log('stack', self.$stack)
                     console.log(file)
                     console.log("no src for", info)
                     return ""
@@ -466,7 +470,9 @@ var getExceptionTrace = function(exc, includeInternal) {
             if(frame[4].$infos){
                 var name = frame[4].$infos.__name__
                 if(name.startsWith("lc" + $B.lambda_magic)){
-                    info += ',in <listcomp>'
+                    info += ', in <listcomp>'
+                }else if(name.startsWith("lambda_" + $B.lambda_magic)){
+                    info += ', in <lambda>'
                 }else{
                     info += ', in ' + name
                 }
