@@ -404,5 +404,50 @@ try:
 except AttributeError as exc:
     assert exc.args[0] == "'str' object has no attribute '__dict__'"
 
+# tests for partition
+assert ''.partition('.') == ('', '', '')
+assert 'a'.partition('.') == ('a', '', '')
+assert '.'.partition('.') == ('', '.', '')
+assert 'a.'.partition('.') == ('a', '.', '')
+assert 'a.b'.partition('.') == ('a', '.', 'b')
+assert 'a.b.c'.partition('.') == ('a', '.', 'b.c')
+assert 'a__b'.partition('__') == ('a', '__', 'b')
+assert 'a'.partition('__') == ('a', '', '')
+assert 'a__b__c'.partition('__') == ('a', '__', 'b__c')
+
+try:
+    ''.partition('')
+    raise AssertionError('should have raised ValueError')
+except ValueError as exc:
+    assert exc.args[0] == 'empty separator'
+
+try:
+    ''.partition(5)
+    raise AssertionError('should have raised TypeError')
+except TypeError as exc:
+    assert exc.args[0] == "can't convert 'int' object to str implicitly"
+
+# tests for rpartition
+assert ''.rpartition('.') == ('', '', '')
+assert 'a'.rpartition('.') == ('', '', 'a')
+assert '.'.rpartition('.') == ('', '.', '')
+assert 'a.'.rpartition('.') == ('a', '.', '')
+assert 'a.b'.rpartition('.') == ('a', '.', 'b')
+assert 'a.b.c'.rpartition('.') == ('a.b', '.', 'c')
+assert 'a__b'.rpartition('__') == ('a', '__', 'b')
+assert 'a'.rpartition('__') == ('', '', 'a')
+assert 'a__b__c'.rpartition('__') == ('a__b', '__', 'c')
+
+try:
+    ''.rpartition('')
+    raise AssertionError('should have raised ValueError')
+except ValueError as exc:
+    assert exc.args[0] == 'empty separator'
+
+try:
+    ''.rpartition(5)
+    raise AssertionError('should have raised TypeError')
+except TypeError as exc:
+    assert exc.args[0] == "can't convert 'int' object to str implicitly"
 
 print("passed all tests...")
