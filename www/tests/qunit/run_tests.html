@@ -113,7 +113,7 @@ def testTraceback(qunit):
         trace = traceback.format_exc()
         assert "line 9, in f" in trace
         assert "line 6, in h" in trace
-        assert "line 5, in lambda" in trace
+        assert "line 5, in <lambda>" in trace
         assert "line 2, in g" in trace
 
     # issue 976
