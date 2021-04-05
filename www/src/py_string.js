@@ -1814,8 +1814,8 @@ str.partition = function() {
         throw _b_.ValueError.$factory("empty separator")
     }
     check_str($.sep)
-    var chars = to_chars(self),
-        i = chars.indexOf($.sep)
+    var chars = to_chars($.self),
+        i = $.self.indexOf($.sep)
     if(i == -1){
         return _b_.tuple.$factory([$.self, "", ""])
     }
