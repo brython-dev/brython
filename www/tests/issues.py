@@ -2891,6 +2891,13 @@ fg = fib_gen()
 t = [next(fg) for _ in range(7)]
 assert t == [0, 1, 1, 2, 3, 5, 8]
 
+# issue 1652
+try:
+    ()[0]
+    raise Exception("should have raised IndexError")
+except IndexError as exc:
+    assert exc.args[0] == "tuple index out of range"
+
 
 # ==========================================
 # Finally, report that all tests have passed
