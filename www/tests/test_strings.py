@@ -425,7 +425,7 @@ try:
     ''.partition(5)
     raise AssertionError('should have raised TypeError')
 except TypeError as exc:
-    assert exc.args[0] == "can't convert 'int' object to str implicitly"
+    assert exc.args[0] == "must be str, not int"
 
 # tests for rpartition
 assert ''.rpartition('.') == ('', '', '')
@@ -448,6 +448,6 @@ try:
     ''.rpartition(5)
     raise AssertionError('should have raised TypeError')
 except TypeError as exc:
-    assert exc.args[0] == "can't convert 'int' object to str implicitly"
+    assert exc.args[0] == "must be str, not int"
 
 print("passed all tests...")

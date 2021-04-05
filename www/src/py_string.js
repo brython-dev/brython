@@ -52,10 +52,10 @@ function reverse(s){
     return s.split("").reverse().join("")
 }
 
-function check_str(obj){
+function check_str(obj, prefix){
     if(! _b_.isinstance(obj, str)){
-        throw _b_.TypeError.$factory("can't convert '" +
-            $B.class_name(obj) + "' object to str implicitly")
+        throw _b_.TypeError.$factory((prefix || '') +
+            "must be str, not " + $B.class_name(obj))
     }
 }
 
@@ -1871,8 +1871,8 @@ str.replace = function(self, old, _new, count) {
         old = $.old,
         _new = $.$$new
     // Validate type of old
-    check_str(old)
-    check_str(_new)
+    check_str(old, "replace() argument 1 ")
+    check_str(_new, "replace() argument 2 ")
     // Validate instance type of 'count'
     if(! isinstance(count,[_b_.int, _b_.float])){
         throw _b_.TypeError.$factory("'" + $B.class_name(count) +
