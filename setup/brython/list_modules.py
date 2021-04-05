@@ -17,7 +17,7 @@ import tokenize
 import token
 import logging
 
-logger = logging.getLoger(__name__)
+logger = logging.getLogger(__name__)
 
 # Template for application setup.py script
 setup = """from setuptools import setup, find_packages
