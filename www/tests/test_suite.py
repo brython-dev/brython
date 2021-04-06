@@ -704,4 +704,17 @@ assertRaises(SyntaxError, exec, "(=)")
 assertRaises(SyntaxError, exec, "(=0)")
 assertRaises(SyntaxError, exec, '(=")')
 
+# issue 1654
+class MyClass(list):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for index in range(len(self)):
+            argument = self[index]
+            if type(argument) == list:
+                argument = self.__class__(argument)
+                self[index] = argument
+
+a = MyClass([1, 2, [3, 4, 5]])
+assert type(a[2]) is MyClass
+
 print('passed all tests...')

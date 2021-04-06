@@ -38,7 +38,7 @@ list.__add__ = function(self, other){
         if(radd !== _b_.NotImplemented){return radd(self)}
         var this_name = $B.class_name(self) // can be tuple
         throw _b_.TypeError.$factory('can only concatenate ' +
-            this_name + ' (not "' + $B.class_name(other) + 
+            this_name + ' (not "' + $B.class_name(other) +
             '") to ' + this_name)
     }
     var res = self.slice(),

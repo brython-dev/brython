@@ -2481,6 +2481,7 @@ $B.missing_super2 = function(obj){
 
 var $$super = $B.make_class("super",
     function (_type, object_or_type){
+        var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
             var frame = $B.last($B.frames_stack),
                 pyframe = $B.imported["_sys"].Getframe()
@@ -2494,7 +2495,7 @@ var $$super = $B.make_class("super",
                 throw _b_.RuntimeError.$factory("super(): no arguments")
             }
         }
-        if(Array.isArray(object_or_type)){
+        if(! no_object_or_type && Array.isArray(object_or_type)){
             object_or_type = object_or_type[0]
         }
 
