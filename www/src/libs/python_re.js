@@ -2253,6 +2253,26 @@ function from_codepoint_list(codepoints, type){
     return s
 }
 
+function in_choice(state){
+    // If the state model is in a choice, and it is not the last
+    // option, return the rank of next choice
+    var model = state.model
+    while(model.parent){
+        if(model.parent instanceof Choice){
+            for(var i = 0, len = model.parent.items.length; i < len; i++){
+                if(model.parent.items[i] === model){
+                    if(i < len - 1){
+                        var next_rank = model.parent.items[i + 1].items[0].rank
+                        return {rank: next_rank}
+                    }
+                }
+            }
+        }
+        model = model.parent
+    }
+    return false
+}
+
 function in_lookahead(state){
     var model = state.model
     while(model.parent){
@@ -2980,6 +3000,21 @@ function backtrack(stack, debug){
         if(debug){
             console.log("in backtrack, state", state)
         }
+        var next_choice = in_choice(state)
+        if(next_choice){
+            var result = {
+                rank: next_choice.rank,
+                pos: state.start
+            }
+            if(stack.length > 0){
+                result.lookahead = $last(stack).lookahead
+                result.lookbehind = $last(stack).lookbehind
+            }else{
+                result.lookahead = false
+                result.lookbehind = false
+            }
+            return result
+        }
         if(state.type == "group"){
             if(state.matches.length > state.model.repeat.min){
                 // remove last match
@@ -3021,7 +3056,12 @@ function backtrack(stack, debug){
         }
         // Put state back on the stack
         stack.push(state)
-        return {rank, pos}
+        return {
+            rank,
+            pos,
+            lookahead: state.lookahead,
+            lookbehind: state.lookbehind
+        }
     }
 }
 
@@ -3033,14 +3073,15 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
         if(mo){
             yield BMatchObject.$factory(mo)
             if(mo.end == mo.start){
-                console.log("zero width")
                 // If match has zero with, retry at the same position but
                 // with the flag no_zero_width set
                 mo = match(pattern, string, pos, endpos, true)
                 if(mo){
                     yield BMatchObject.$factory(mo)
+                    pos = mo.end
+                }else{
+                    pos++ // at least 1, else infinite loop
                 }
-                pos++ // at least 1, else infinite loop
             }else{
                 pos = mo.end
             }
@@ -3170,12 +3211,12 @@ function match(pattern, string, pos, endpos, no_zero_width){
             var MO = new MatchObject(pattern, string0, stack, endpos)
             if(MO.end == MO.start && no_zero_width){
                 // zero-width match not allowed : backtrack
-                console.log("zero width not allowed, backtrack")
                 var bt = backtrack(stack)
-                console.log("bt", bt)
                 if(bt){
                     rank = bt.rank
                     pos = bt.pos
+                    lookahead = bt.lookahead
+                    lookbehind = bt.lookbehind
                     continue
                 }else{
                     return false
@@ -3196,7 +3237,9 @@ function match(pattern, string, pos, endpos, no_zero_width){
                     start: pos,
                     model,
                     rank,
-                    matches: []
+                    matches: [],
+                    lookahead,
+                    lookbehind
                 })
             }else{
                 group_in_stack.start = pos
@@ -3296,6 +3339,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                 if(bt){
                     rank = bt.rank
                     pos = bt.pos
+                    lookahead = bt.lookahead
+                    lookbehind = bt.lookbehind
                     continue
                 }else{
                     return false
@@ -3311,6 +3356,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                 if(bt){
                     rank = bt.rank
                     pos = bt.pos
+                    lookahead = bt.lookahead
+                    lookbehind = bt.lookbehind
                     continue
                 }else{
                     return false
@@ -3358,6 +3405,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                 start: pos,
                 model,
                 rank,
+                lookahead,
+                lookbehind,
                 matches: []
             })
             var cb_group = false
@@ -3413,6 +3462,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                         start: pos,
                         model,
                         rank,
+                        lookahead,
+                        lookbehind,
                         matches: []
                     })
                     mo = false
@@ -3463,6 +3514,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                     mo,
                     len: model instanceof BackReference ? mo.group_len : 1,
                     ix,
+                    lookahead,
+                    lookbehind,
                     toString: function(){
                         return model + ' ' + pos + '-' + ix
                     }
@@ -3479,6 +3532,18 @@ function match(pattern, string, pos, endpos, no_zero_width){
                         "lookahead", lookahead,
                         "stack", stack)
                     alert()
+                }
+
+                if(lookahead &&
+                        lookahead.model.type == "negative_lookahead_assertion"){
+                    // failure of a negative lookahead is ok: proceed to the
+                    // item after lookahead RE
+                    // reset pos to lookahead start
+                    pos = lookahead.pos
+                    // jump to rank after lookahead end
+                    rank = lookahead.model.end_rank + 1
+                    lookahead = false
+                    continue
                 }
                 // Is the current model an option in a "|" ?
                 var is_option = false,
@@ -3598,29 +3663,21 @@ function match(pattern, string, pos, endpos, no_zero_width){
                             lookahead)
                     }
                     if(lookahead){
-                        if(lookahead.model.type == "negative_lookahead_assertion"){
-                            // failure of a negative lookahead is ok: proceed to the
-                            // item after lookahead RE
-                            // reset pos to lookahead start
-                            pos = lookahead.pos
-                            // jump to rank after lookahead end
-                            rank = lookahead.model.end_rank + 1
-                            lookahead = false
+                        // The case "negative_lookahead_assertion" is handled
+                        // above: here, a positive lookahead fails
+                        if(debug){
+                            console.log("lookahead fails, backtrack, stack", stack)
+                            alert()
+                        }
+                        var bt = backtrack(stack, debug)
+                        if(bt){
+                            rank = bt.rank
+                            pos = bt.pos
+                            lookahead = bt.lookahead
+                            lookbehind = bt.lookbehind
                             continue
                         }else{
-                            // positive lookahead fails
-                            if(debug){
-                                console.log("lookahead fails, backtrack, stack", stack)
-                                alert()
-                            }
-                            var bt = backtrack(stack, debug)
-                            if(bt){
-                                rank = bt.rank
-                                pos = bt.pos
-                                continue
-                            }else{
-                                return false
-                            }
+                            return false
                         }
                     }
                     if(lookbehind){
@@ -3639,6 +3696,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                             if(bt){
                                 rank = bt.rank
                                 pos = bt.pos
+                                lookahead = bt.lookahead
+                                lookbehind = bt.lookbehind
                                 continue
                             }else{
                                 return false
@@ -3679,6 +3738,8 @@ function match(pattern, string, pos, endpos, no_zero_width){
                     if(bt){
                         rank = bt.rank
                         pos = bt.pos
+                        lookahead = bt.lookahead
+                        lookbehind = bt.lookbehind
                         // console.log("after backtrack, pos", pos)
                     }else{
                         return false
