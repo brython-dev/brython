@@ -94,6 +94,11 @@ class Tester:
             raise AssertionError('assertEqual, expected %s, got %s'
                 %(expected, result))
 
+    def assertLess(self, result, value):
+        if result >= value:
+            raise AssertionError('%s not less than %s'
+                %(result, value))
+
     def assertNotEqual(self, result, expected):
         if result == expected:
             raise AssertionError('assertNotEqual, expected %s, got %s'
