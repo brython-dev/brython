@@ -103,12 +103,21 @@ Flag.__index__ = function(self){
     return self.value
 }
 
+Flag.__invert__ = function(self){
+    return Flag.$factory(~self.value)
+}
+
 Flag.__eq__ = function(self, other){
     return self.value == other.value
 }
 
 Flag.__or__ = function(self, other){
-    return Flag.$factory(self.value | other.value)
+    if(other.__class__ === Flag){
+        return Flag.$factory(self.value | other.value)
+    }else if(typeof other == "number"){
+        return Flag.$factory(self.value | other)
+    }
+    return _b_.NotImplemented
 }
 
 Flag.__ror__ = function(self, other){
@@ -121,17 +130,32 @@ Flag.__ror__ = function(self, other){
     return _b_.NotImplemented
 }
 
-Flag.__str__ = function(self){
+Flag.__repr__ = Flag.__str__ = function(self){
     if(self.value == 0){
         return "re.none"
     }
-    var t = []
+    var inverted = self.value < 0
+
+    var t = [],
+        value = inverted ? ~self.value : self.value
     for(var flag in inline_flags){
-        if(self.value & inline_flags[flag].value){
-            t.push(flag_names[flag])
+        if(value & inline_flags[flag].value){
+            t.push('re.' + flag_names[flag])
+            value &= ~inline_flags[flag].value
         }
     }
-    return 're.' + t.join(' ')
+    if(value > 0){
+        t.push('0x' + value.toString(16))
+    }
+    var res = t.join('|')
+    if(inverted){
+        if(t.length > 1){
+            return '~(' + res + ')'
+        }else{
+            return '~' + res
+        }
+    }
+    return res
 }
 
 Flag.__xor__ = function(self, other){
@@ -204,10 +228,30 @@ BPattern.__hash__ = function(self){
     return _b_.hash(self.pattern) + self.flags.value
 }
 
-BPattern.__str__ = function(self){
-    var res = `re.compile(${_b_.repr(self.pattern)}`
-    if(self.flags.value != 0){
-        res += `, ${_b_.str.$factory(self.flags)}`
+BPattern.__repr__ = BPattern.__str__ = function(self){
+    var text = self.$pattern.text,
+        s = text
+    if(self.$pattern.type == "bytes"){
+        s = _b_.str.$factory(_b_.str.encode(s, 'latin-1'))
+    }else{
+        s = _b_.repr(s)
+    }
+    s = s.substr(0, 200)
+    var res = `re.compile(${s}`,
+        flags = self.$pattern.flags
+    if(flags === no_flag){
+        return res + ')'
+    }
+    // mask UNICODE flag
+    if(flags.__class__ === Flag){
+        // copy flag, otherwise U.value would become 0
+        flags = Flag.$factory(flags.value)
+        flags.value &= ~U.value
+    }else if(typeof flags == "number"){
+        flags &= ~U.value
+    }
+    if(flags != 0 && flags.value != 0){
+        res += `, ${_b_.str.$factory(flags)}`
     }
     return res + ')'
 }
@@ -581,15 +625,15 @@ function cased_cps(cp, ignore_case, ascii){
             cps.add(ord('K'))
         }
         if(char.toLowerCase() == "s"){
-            cps.add(0x017f) // ‘ſ’ (Latin small letter long s)
+            cps.add(0x017f) // â€˜Å¿â€™ (Latin small letter long s)
         }
         if(cp == 0x017f){
             cps.add(ord('s'))
             cps.add(ord('S'))
         }
         if(char.toLowerCase() == 'i'){
-            cps.add(0x0130) // ‘İ’ (Latin capital letter I with dot above)
-            cps.add(0x0131) // ‘ı’ (Latin small letter dotless i)
+            cps.add(0x0130) // â€˜Ä°â€™ (Latin capital letter I with dot above)
+            cps.add(0x0131) // â€˜Ä±â€™ (Latin small letter dotless i)
         }
         if(cp == 0x0130 || cp == 0x0131){
             cps.add(ord('i'))
@@ -1448,7 +1492,7 @@ function compile(pattern, flags){
     if(is_bytes){
         // bytes patterns ignore re.ASCII flag
         flags = Flag.$factory(flags.value || 0)
-        flags.value &= ~ASCII.value
+        //flags.value &= ~ASCII.value
     }
     var group_num = 0,
         group_stack = [],
@@ -1861,6 +1905,7 @@ function compile(pattern, flags){
         path,
         groups,
         flags,
+        original_flags,
         text: from_codepoint_list(pattern),
         type, // "str" or "bytes"
         fixed_length: node.fixed_length()
@@ -2570,7 +2615,7 @@ BMatchObject.lastindex = {
 
 BMatchObject.lastgroup = {
     /* The name of the last matched capturing group, or None if the group
-       didn’t have a name, or if no group was matched at all.
+       didnâ€™t have a name, or if no group was matched at all.
     */
     __get__: function(self){
         var last = self.mo.last_matched_group()
@@ -3190,7 +3235,7 @@ function match(pattern, string, pos, endpos, no_zero_width){
             cell.innerText = pos
             row.appendChild(cell)
             cell = document.createElement('TD')
-            cell.innerText = string.codepoints[pos] === undefined ? '∅' :
+            cell.innerText = string.codepoints[pos] === undefined ? 'âˆ…' :
                     chr(string.codepoints[pos])
             row.appendChild(cell)
             cell = document.createElement('TD')
@@ -4082,4 +4127,3 @@ var flag_names = {
     x: 'VERBOSE',
     a: 'ASCII'
 }
-
