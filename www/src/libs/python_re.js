@@ -3592,9 +3592,18 @@ function match(pattern, string, pos, endpos, no_zero_width){
                 }
                 // Is the current model an option in a "|" ?
                 var is_option = false,
+                    in_group = false,
                     parent = model.parent
 
                 while(parent){
+                    if(parent instanceof Group){
+                        var group_state = get_state(stack, parent)
+                        if(group_state &&
+                                group_state.matches.length == 0 &&
+                                group_state.model.repeat.min == 0){
+                            in_group = true
+                        }
+                    }
                     if(parent instanceof Case){
                         // The model that failed was inside a choice.
                         // The choice is inside a group, or at the upper RE
@@ -3696,9 +3705,16 @@ function match(pattern, string, pos, endpos, no_zero_width){
                     }
                     parent = parent.parent
                 }
+
                 if(is_option){
                     // The model that failed was in a '|' with a remaining
                     // option
+                    if(in_group){
+                        // model was in a group that had enough repetitions
+                        pos = group_state.start
+                        rank = group_state.model.end_rank + 1
+                        continue
+                    }
                     if(debug){
                         console.log("next option", path[rank])
                     }
