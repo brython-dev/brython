@@ -10040,7 +10040,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                         fstring = true
                         sm_length = 1
                         break
-                    case 'fr', 'rf':
+                    case 'fr':
+                    case 'rf':
                         fstring = true
                         sm_length = 2
                         raw = true
