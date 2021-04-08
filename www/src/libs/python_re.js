@@ -1947,6 +1947,9 @@ function* tokenize(pattern, type, _verbose){
                 }
             }
             cp = pattern[pos]
+            if(cp === undefined){
+                break
+            }
             char = String.fromCharCode(cp)
         }
         if(char == '('){
@@ -2242,7 +2245,8 @@ function* tokenize(pattern, type, _verbose){
                 yield new Char(pos, ord('{'))
                 pos++
             }else{
-                fail('{ not terminated', pos)
+                yield new Char(pos, ord('{'))
+                pos++
             }
         }else if(cp == ord('|')){
             yield new Or(pos)
@@ -2927,12 +2931,8 @@ function StringObj(obj){
         // list of codepoints
         this.codepoints = obj
     }else{
-        try{
-            this.codepoints = _b_.list.$factory(obj)
-        }catch(err){
-            throw _b_.TypeError.$factory($B.class_name(obj) +
-                ' cannot be interpreted as a string')
-        }
+        throw _b_.TypeError.$factory(
+            'expected string or bytes-like object')
     }
     this.length = this.codepoints.length
 }
