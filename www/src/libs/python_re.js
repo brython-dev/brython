@@ -267,7 +267,7 @@ BPattern.findall = function(self){
         }
         var bmo = next.value,
             mo = bmo.mo,
-            groups = BMatchObject.groups(bmo)
+            groups = BMO.groups(bmo)
 
         // replace None by the empty string
         for(var i = 0, len = groups.length; i < len; i++){
@@ -312,7 +312,7 @@ BPattern.fullmatch = function(self, string){
     }
     var mo = match($.self.$pattern, data.string, $.pos, $.endpos)
     if(mo && mo.end - mo.start == $.endpos - $.pos){
-        return BMatchObject.$factory(mo)
+        return BMO.$factory(mo)
     }else{
         return _b_.None
     }
@@ -356,7 +356,7 @@ BPattern.match = function(self, string){
         throw _b_.TypeError.$factory("not the same type for pattern " +
             "and string")
     }
-    return BMatchObject.$factory(match($.self.$pattern, data.string, $.pos,
+    return BMO.$factory(match($.self.$pattern, data.string, $.pos,
         $.endpos))
 }
 
@@ -381,7 +381,7 @@ BPattern.search = function(self, string){
     while(pos < $.endpos){
         var mo = match(self.$pattern, data.string, pos)
         if(mo){
-            return BMatchObject.$factory(mo)
+            return BMO.$factory(mo)
         }else{
             pos++
         }
@@ -422,7 +422,7 @@ Node.prototype.add = function(item){
 Node.prototype.fixed_length = function(){
     // Return the sum of items lengths if fixed, else undefined
     if(this.repeat){
-        return undefined
+        return false
     }
     var len = 0
     for(var item of this.items){
@@ -431,8 +431,8 @@ Node.prototype.fixed_length = function(){
             alert()
         }
         var sublen = item.fixed_length()
-        if(sublen === undefined){
-            return undefined
+        if(sublen === false){
+            return false
         }
         len += sublen
     }
@@ -466,7 +466,7 @@ BackReference.prototype.fixed_length = function(){
         console.log("group", group, "no fixed length")
         alert()
     }
-    return group === undefined ? undefined : group.fixed_length()
+    return group === undefined ? false : group.fixed_length()
 }
 
 BackReference.prototype.get_group = function(){
@@ -474,8 +474,10 @@ BackReference.prototype.get_group = function(){
     return top.$groups[this.value]
 }
 
-BackReference.prototype.match = function(string, pos, group){
+BackReference.prototype.match = function(string, pos, groups){
     this.repeat = this.repeat || {min: 1, max: 1}
+
+    var group = groups[this.value]
 
     // Get the codepoints matched by the referenced group
     group_cps = string.codepoints.slice(group.start, group.end)
@@ -521,20 +523,32 @@ var Case = function(){
     this.name = "Case"
     this.items = []
     this.groups = []
+    this.text = 'Case '
 }
 
-Case.prototype.add = Node.prototype.add
+Case.prototype.add = function(item){
+    this.items.push(item)
+    item.parent = this
+    this.text += item.text
+}
 
 Case.prototype.fixed_length = function(){
     var len
     for(var item of this.items){
         var fl = item.fixed_length()
-        if(! isFinite(fl)){
+        if(fl === false){
             return false
+        }else if(len === undefined){
+            len = fl
+        }else{
+            len += fl
         }
-        len += fl
     }
     return len
+}
+
+Case.prototype.toString = function(){
+    return 'Case'
 }
 
 var Choice = function(){
@@ -549,7 +563,7 @@ Choice.prototype.fixed_length = function(){
     var len
     for(var item of this.items){
         var fl = item.fixed_length()
-        if(! isFinite(fl)){
+        if(fl === false){
             return false
         }else if(len === undefined){
             len = fl
@@ -558,6 +572,10 @@ Choice.prototype.fixed_length = function(){
         }
      }
      return len
+}
+
+Choice.prototype.toString = function(){
+    return 'Choice'
 }
 
 var EmptyString = {
@@ -625,21 +643,21 @@ function cased_cps(cp, ignore_case, ascii){
             cps.add(ord('K'))
         }
         if(char.toLowerCase() == "s"){
-            cps.add(0x017f) // â€˜Å¿â€™ (Latin small letter long s)
+            cps.add(0x017f) //  (Latin small letter long s)
         }
         if(cp == 0x017f){
             cps.add(ord('s'))
             cps.add(ord('S'))
         }
         if(char.toLowerCase() == 'i'){
-            cps.add(0x0130) // â€˜Ä°â€™ (Latin capital letter I with dot above)
-            cps.add(0x0131) // â€˜Ä±â€™ (Latin small letter dotless i)
+            cps.add(0x0130) //  (Latin capital letter I with dot above)
+            cps.add(0x0131) //  (Latin small letter dotless i)
         }
         if(cp == 0x0130 || cp == 0x0131){
             cps.add(ord('i'))
             cps.add(ord('I'))
         }
-        return Array.from(cps) //var char_is_cased = cps.size > 1
+        return Array.from(cps)
     }else{
         cps = [cp]
     }
@@ -719,7 +737,38 @@ Char.prototype.match = function(string, pos){
 }
 
 Char.prototype.toString = function(){
-    return '/' + this.text + '/'
+    var res = 'Char ' + this.text
+    if(this.repeat !== undefined){
+        res += ' repeat {' + this.repeat.min + ',' + this.repeat.max + '}'
+        if(this.non_greedy){
+            res += '?'
+        }
+    }
+    return res
+}
+
+function AnyCharAndChar(any_char, char){
+    // special class for sequence ".*?<char>"
+    this.any_char = any_char
+    this.char = char
+}
+
+AnyCharAndChar.prototype.fixed_length = function(){
+    return false
+}
+
+AnyCharAndChar.prototype.match = function(string, pos){
+    // match all the characters until char_item
+    var mo = this.any_char.match(string, pos),
+        i = 0
+    // scan string from mo.min to mo.max until char is found
+    while(i < mo.nb_max){
+        if(this.char.match(string, pos)){
+            return {nb_min: pos + 1, nb_max: pos + 1}
+        }
+        pos++
+    }
+    return false
 }
 
 function CharacterClass(pos, cp, length, groups){
@@ -911,7 +960,7 @@ CharacterClass.prototype.toString = function(){
 var CharacterSet = function(pos, set, groups){
     // character set
     this.pos = pos
-    this.items = set.items
+    this.set = set
     this.neg = set.neg
 }
 
@@ -942,7 +991,7 @@ CharacterSet.prototype.match = function(string, pos){
             char_is_cased = cps.length > 1
 
         for(var cp1 of cps){
-            for(var item of this.items){
+            for(var item of this.set.items){
                 if(Array.isArray(item.ord)){
                     if(cp1 >= item.ord[0] &&
                             cp1 <= item.ord[1]){
@@ -1010,7 +1059,7 @@ var ConditionalBackref = function(pos, group_ref){
     this.match_codepoints = []
     this.nb_success = 0
     this.re_if_exists = new Group(pos)
-    this.re_if_not_exists = new Group()
+    this.re_if_not_exists = new Group(pos)
     this.nb_options = 1
 }
 
@@ -1024,7 +1073,23 @@ ConditionalBackref.prototype.add = function(item){
 }
 
 ConditionalBackref.prototype.fixed_length = function(){
-    return 0
+    var len = this.re_if_exists.fixed_length()
+    if(len !== false && len == this.re_if_not_exists.fixed_length()){
+        return len
+    }
+    return false
+}
+
+ConditionalBackref.prototype.match = function(string, pos, groups){
+    var re = groups[this.group_ref] ? this.re_if_exists :
+            this.re_if_not_exists,
+        pattern = {node: re, text: re + ''}
+    return match(pattern, string, pos, undefined,
+            false, groups)
+}
+
+ConditionalBackref.prototype.toString = function(){
+    return 'ConditionalBackref'
 }
 
 var Group = function(pos, extension){
@@ -1048,7 +1113,14 @@ var Group = function(pos, extension){
 Group.prototype.add = Node.prototype.add
 
 Group.prototype.toString = function(){
-    return '#' + this.num + ':' + this.pattern
+    var res = 'Group #' + this.num + ' ' + this.pattern
+    if(this.repeat !== undefined){
+        res += ' repeat {' + this.repeat.min + ',' + this.repeat.max + '}'
+        if(this.non_greedy){
+            res += '?'
+        }
+    }
+    return res
 }
 
 BackReference.prototype.nb_repeats = Group.prototype.nb_repeats
@@ -1062,6 +1134,32 @@ function GroupRef(group_num, item){
 
 GroupRef.prototype.fixed_length = function(){
     return this.item.fixed_length()
+}
+
+function Lookbehind(item){
+    this.re = item
+    this.neg = this.re.type == "negative_lookbehind"
+}
+
+Lookbehind.prototype.match = function(string, pos, groups){
+    var ok = {nb_min: 0, nb_max: 0},
+        pattern = {node: this.re, text: this.re + ''},
+        length = this.re.length
+    var mo = match(pattern, string, pos - length, undefined,
+        false, groups)
+    if(mo){
+        return this.neg ? false : ok
+    }else{
+        return this.neg ? ok : false
+    }
+}
+
+Lookbehind.prototype.fixed_length = function(){
+    return this.re.fixed_length()
+}
+
+Lookbehind.prototype.toString = function(){
+    return "Lookbehind"
 }
 
 function SetFlags(pos, flags){
@@ -1113,7 +1211,7 @@ StringEnd.prototype.fixed_length = function(){
 }
 
 StringEnd.prototype.toString = function(){
-    return '$'
+    return '$<end>'
 }
 
 function validate(name){
@@ -1477,7 +1575,8 @@ function compile(pattern, flags){
     var path = [],
         original_pattern = pattern,
         original_flags = flags,
-        type = pattern.type
+        type = pattern.type,
+        choices
     pattern = pattern.codepoints
     var is_bytes = type !== "str"
     if(is_bytes && flags && (flags.value & U.value)){
@@ -1581,13 +1680,14 @@ function compile(pattern, flags){
                 throw err
             }
             if(item.is_lookbehind){
-                // check that all elements have a fixed length
                 delete groups[group_num]
                 group_num--
+                // check that all elements have a fixed length
                 item.length = item.fixed_length()
-                if(item.length === undefined){
+                if(item.length === false){
                     fail("look-behind requires fixed-width pattern", pos)
                 }
+                item.parent.add(new Lookbehind(item))
                 item.non_capturing = true
                 // store in variable "lookbehind", will be applied to next item
                 lookbehind = item
@@ -1661,27 +1761,43 @@ function compile(pattern, flags){
                 item instanceof CharacterClass ||
                 item instanceof CharacterSet){
             if(item instanceof CharacterSet){
-                for(var elt of item.items){
+                for(var elt of item.set.items){
                     elt.flags = flags
                 }
             }
-            subitems.push(item)
-            item.groups = []
-            for(var group of group_stack){
-                if(group.extension && group.extension.type &&
-                        group.extension.type.indexOf('lookbehind') > -1){
-                    var parent = node
-                    while(parent){
-                        if(parent === group){
-                            break
-                        }
-                        parent = parent.parent
-                    }
+            if(item instanceof Char && node.items && node.items.length){
+                // create special object for sequence ".*?<char>"
+                var previous = $last(node.items),
+                    anychar_and_char = false
+                if(previous instanceof CharacterClass &&
+                        previous.value == '.' &&
+                        previous.non_greedy &&
+                        previous.repeater &&
+                        previous.repeater.op == '*'){
+                    node.items.pop()
+                    node.add(new AnyCharAndChar(previous, item))
+                    anychar_and_char = true
                 }
-                item.groups.push(group)
-                group.chars.push(item)
             }
-            node.add(item)
+            if(! anychar_and_char){
+                subitems.push(item)
+                item.groups = []
+                for(var group of group_stack){
+                    if(group.extension && group.extension.type &&
+                            group.extension.type.indexOf('lookbehind') > -1){
+                        var parent = node
+                        while(parent){
+                            if(parent === group){
+                                break
+                            }
+                            parent = parent.parent
+                        }
+                    }
+                    item.groups.push(group)
+                    group.chars.push(item)
+                }
+                node.add(item)
+            }
         }else if(item instanceof Repeater){
             // check that item is not in a lookbehind group
             var pnode = node
@@ -1892,16 +2008,11 @@ function compile(pattern, flags){
     node.groups = group_num
     flags = flags === no_flag ? 32 : flags
     node.flags = flags
-    if(lookbehind){
-        var es = new Char(pos, EmptyString)
-        es.lookbehind = lookbehind
-        lookbehind.parent = es
-        node.add(es)
-    }
     if(path.length == 0){
         path = [EmptyString]
     }
     var res = {
+        node,
         path,
         groups,
         flags,
@@ -1914,7 +2025,21 @@ function compile(pattern, flags){
         cache.set(original_pattern.py_obj, new Map())
     }
     cache.get(original_pattern.py_obj).set(original_flags.value || 0, res)
+    show(node)
     return res
+}
+
+function show(node, indent){
+    indent = indent === undefined ? 0 : indent
+    if(indent == 0){
+        log('root', node)
+    }
+    log(' '.repeat(indent) + node)
+    if(node.items !== undefined){
+        for(var item of node.items){
+            show(item, indent + 1)
+        }
+    }
 }
 
 function ord(char){
@@ -2302,25 +2427,6 @@ function from_codepoint_list(codepoints, type){
     return s
 }
 
-function in_choice(state){
-    // If the state model is in a choice, and it is not the last
-    // option, return the rank of next choice
-    var model = state.model
-    while(model.parent){
-        if(model.parent instanceof Choice){
-            for(var i = 0, len = model.parent.items.length; i < len; i++){
-                if(model.parent.items[i] === model){
-                    if(i < len - 1){
-                        var next_rank = model.parent.items[i + 1].items[0].rank
-                        return {rank: next_rank}
-                    }
-                }
-            }
-        }
-        model = model.parent
-    }
-    return false
-}
 
 function in_lookahead(state){
     var model = state.model
@@ -2619,7 +2725,7 @@ BMatchObject.lastindex = {
 
 BMatchObject.lastgroup = {
     /* The name of the last matched capturing group, or None if the group
-       didnâ€™t have a name, or if no group was matched at all.
+       didnÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢t have a name, or if no group was matched at all.
     */
     __get__: function(self){
         var last = self.mo.last_matched_group()
@@ -2863,12 +2969,12 @@ function transform_repl(data, pattern){
         data.repl = function(bmo){
             var mo = bmo.mo,
                 res = parts[0],
-                groups = bmo.group_obj,
+                groups = mo.$groups,
                 s = mo.string,
                 group
             for(var i = 1, len = parts.length; i < len; i += 2){
                 if(groups[parts[i]] === undefined){
-                    if(mo.pattern.groups[parts[i]] !== undefined){
+                    if(mo.node.$groups[parts[i]] !== undefined){
                         // group is defined in the RE, but didn't contribute
                         // to the match
                         // groups[parts[i]] = ''
@@ -2950,7 +3056,7 @@ StringObj.prototype.substring = function(start, end){
 }
 
 StringObj.prototype.to_str = function(){
-    return this.string
+    return from_codepoint_list(this.codepoints, this.type)
 }
 
 StringObj.from_codepoints = function(cps){
@@ -3026,103 +3132,19 @@ function subn(pattern, repl, string, count, flags){
 var escaped = [9, 10, 11, 12, 13, 32, 35, 36, 38, 40, 41, 42, 43, 45, 46, 63,
                91, 92, 93, 94, 123, 124, 125, 126]
 
-function get_state(stack, group){
-    // Find the state in stack related to the group
-    for(var state of stack){
-        if(state.model === group){
-            return state
-        }
-    }
-}
-
-function backtrack(stack, debug){
-    var pos
-    while(true){
-        if(stack.length == 0){
-            return false
-        }
-        var state = stack.pop()
-        if(debug){
-            console.log("in backtrack, state", state)
-        }
-        var next_choice = in_choice(state)
-        if(next_choice){
-            var result = {
-                rank: next_choice.rank,
-                pos: state.start
-            }
-            if(stack.length > 0){
-                result.lookahead = $last(stack).lookahead
-                result.lookbehind = $last(stack).lookbehind
-            }else{
-                result.lookahead = false
-                result.lookbehind = false
-            }
-            return result
-        }
-        if(state.type == "group"){
-            if(state.matches.length > state.model.repeat.min){
-                // remove last match
-                state.matches.pop()
-                // reset to position of last try
-                pos = state.start
-                // set rank to next RE after group
-                rank = state.model.end_rank + 1
-            }else if(state.matches.length == 0 && ! state.has_matched &&
-                    state.model.repeat.min == 0){
-                state.has_matched = true
-                // reset to position of last try
-                pos = state.start
-                // set rank to next RE after group
-                rank = state.model.end_rank + 1
-            }else{
-                continue
-            }
-        }else{
-            if(state.model.non_greedy &&
-                    state.ix < state.mo.nb_max){
-                state.ix += state.len
-                for(var group of state.model.groups){
-                    get_state(stack, group).matches.pop()
-                }
-            }else if(! state.model.non_greedy &&
-                    state.ix > state.mo.nb_min){
-                state.ix -= state.len
-                for(var group of state.model.groups){
-                    get_state(stack, group).matches.pop()
-                }
-            }else{
-                // No alternative number of repeats
-                continue
-            }
-            pos = state.start + state.ix
-            // Set rank to the following model
-            var rank = state.rank + 1
-        }
-        // Put state back on the stack
-        stack.push(state)
-        return {
-            rank,
-            pos,
-            lookahead: state.lookahead,
-            lookbehind: state.lookbehind
-        }
-    }
-}
-
 function* iterator(pattern, string, flags, original_string, pos, endpos){
     var result = [],
         pos = pos | 0
     while(pos <= string.length){
         var mo = match(pattern, string, pos, endpos)
         if(mo){
-            yield BMatchObject.$factory(mo)
+            yield BMO.$factory(mo)
             if(mo.end == mo.start){
                 // If match has zero with, retry at the same position but
-                // with the flag no_zero_width set
+                // with the flag no_zero_width set, to avoid infinite loops
                 mo = match(pattern, string, pos, endpos, true)
                 if(mo){
-                    yield BMatchObject.$factory(mo)
+                    yield BMO.$factory(mo)
                     pos = mo.end
                 }else{
                     pos++ // at least 1, else infinite loop
@@ -3139,674 +3161,308 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
 
 var _debug = {value: false}
 
-function match(pattern, string, pos, endpos, no_zero_width){
-    /* Main algorithm
-    pattern is the result of compile(). It has the attributes
-    - path: a list of model: characters, groups
-    - groups: a JS object mapping group numbers and names to an object
-      {num, item} where num is the group number and item the group model
-    - flags: the flags passed as argument to re.compile()
-    - text: the pattern string
+function MO(node, pos, mo, len){
+    this.node = node
+    this.start = pos
+    this.nb_min = mo.nb_min
+    this.nb_max = mo.nb_max
+    this.len = len
+    this.nb = this.node.non_greedy ? mo.nb_min : mo.nb_max
+    this.end = pos + len * this.nb
+}
 
-    string is an instance of StringObj, a representation of Python strings as
-    a sequence of Unicode code points. It is used instead of Javascript
-    strings because of the code points > 0x10000, represented as a string of
-    length 2 in Javascript.
-
-    pos is the position in the string where the match starts.
-
-    endpos is the position where the match ends, as if the string ended at
-    this position.
-
-    no_zero_width indicates if a match with width = 0 is allowed. Cf.
-    https://bugs.python.org/issue1647489
-    */
-
-    if(pattern.__class__ === BPattern){
-        throw Error('pattern is a Python instance')
-    }
-
-    var debug = _debug.value
-    if(debug){
-        console.log("enter match1 loop, pattern", pattern,
-            "string", string, "pos", pos)
-        document.write("Pattern <b>" + pattern.text+"</b> string <b>" +
-            string.string +"</b>")
-        var table = document.createElement('TABLE')
-        document.body.appendChild(table)
-        var row = document.createElement('TR'),
-            line = []
-        for(var title of ['stack', 'pos', 'char', 'model']){
-            line.push('<th>' + title + '</th>')
-        }
-        row.innerHTML = line.join('')
-        table.appendChild(row)
-    }
-
-    var path = pattern.path
-    for(var i = 0, len = path.length; i < len; i++){
-        path[i].rank = i
-    }
-
-    var start = pos,
-        rank = 0,
-        groups = {0: {start}},
-        group,
-        mo,
-        state,
-        stack = [],
-        ix,
-        lookahead = false,
-        lookbehind = false
-    pos = pos || 0
-    endpos = endpos === undefined ? string.codepoints.length : endpos
-    if(endpos < pos){
+MO.prototype.backtrack = function(){
+    if(this.node.non_greedy && this.nb < this.nb_max){
+        this.nb++
+        this.end = this.start + this.len * this.nb
+        return true
+    }else if(! this.node.non_greedy && this.nb > this.nb_min){
+        this.nb--
+        this.end = this.start + this.len * this.nb
+        return true
+    }else{
         return false
     }
-    var string0 = string
-    string = new StringObj('')
-    string.codepoints = string0.codepoints.slice(0, endpos)
-    while(true){
-        model = path[rank]
-        if(debug){
-            console.log(pos,
-                string.codepoints[pos] === undefined ? undefined :
-                    chr(string.codepoints[pos]),
-                model + '',
-                stack, model)
-            var row = document.createElement('TR'),
-                cell = document.createElement('TD')
-            table.appendChild(row)
-            row.appendChild(cell)
-            var s = []
-            for(var state of stack){
-                if(state.type == "group"){
-                    if(state.model.is_lookahead){
-                        s.push("LookA#" + state.model.num)
-                    }else{
-                        s.push("Gr#" + state.model.num)
-                    }
-                }else{
-                    s.push(state.model.toString())
+}
+
+function GroupMO(node, start, matches, string, groups){
+    this.node = node
+    this.start = start
+    this.matches = matches
+    this.string = string
+    this.end = matches.length > 0 ? $last(matches).end : start
+    this.$groups = groups
+}
+
+GroupMO.prototype.backtrack = function(){
+    if(this.matches.length > this.node.repeat.min &&
+            this.matches.length > 1){
+        this.matches.pop()
+        this.end = $last(this.matches).end
+        return true
+    }
+    return false
+}
+
+GroupMO.prototype.toString = function(){
+    var repr = _b_.repr(this.string.substring(this.start, this.end))
+    repr = repr.substring(0, 50)
+    return '<re.Match object; span=(' + this.start + ', ' + this.end +
+        '), match=' + repr + '>'
+}
+
+GroupMO.prototype.groups = function(_default){
+    var res = [],
+        groupobj = this.$groups
+
+    for(var key in this.node.$groups){
+        if(isFinite(key)){
+            res[key] = groupobj[key] === undefined ? _default :
+                this.string.substring(groupobj[key].start, groupobj[key].end)
+        }
+    }
+    res.shift()
+    return $B.fast_tuple(res)
+}
+
+var BMO = $B.make_class("MatchObject",
+    function(mo){
+        return {
+            __class__: BMO,
+            mo
+        }
+    }
+)
+
+BMO.__repr__ = BMO.__str__ =  function(self){
+    return self.mo.toString()
+}
+
+BMO.end = function(self){
+    var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
+                arguments, {group: 0}, null, null)
+    var group = BMO.group(self, $.group)
+    if(group === _b_.None){
+        return -1
+    }else if($.group == 0){
+        return self.mo.end
+    }else{
+        return self.mo.$groups[$.group].end
+    }
+}
+
+BMO.group = function(self){
+    var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
+                {}, 'args', null),
+            self = $.self,
+            args = $.args
+    if(args.length == 0){
+        args[0] = 0
+    }
+    var groupobj = self.mo.$groups,
+        result = []
+    for(var group_id of args){
+        if(group_id == 0){
+            result.push(self.mo.string.substring(self.mo.start, self.mo.end))
+            continue
+        }
+        try{
+            // Convert group_id to int if possible
+            group_id = $B.PyNumber_Index(group_id) // in py_utils.js
+        }catch(err){
+            // group_id can be an identifier
+        }
+        if(self.mo.node.$groups[group_id] === undefined){
+            throw _b_.IndexError.$factory("no such group")
+        }
+        var group = groupobj[group_id] // found in match
+        result.push(group === undefined ?
+            _b_.None :
+            self.mo.string.substring(group.start, group.end))
+    }
+    if(args.length == 1){
+        return result[0]
+    }
+    return $B.fast_tuple(result)
+}
+
+BMO.groups = function(self){
+    var $ = $B.args("group", 2, {self: null, default: null},
+                ['self', 'default'], arguments,
+                {default: _b_.None}, null, null),
+            self = $.self,
+            _default = $.default
+    return self.mo.groups(_default)
+}
+
+BMO.span = function(){
+    /*
+    Match.span([group])
+
+    For a match m, return the 2-tuple (m.start(group), m.end(group)). Note
+    that if group did not contribute to the match, this is (-1, -1). group
+    defaults to zero, the entire match.
+    */
+    var $ = $B.args("span", 2, {self: null, group: null},
+                ['self', 'group'], arguments,
+                {group: 0}, null, null),
+            self = $.self,
+            group = $.group
+    if(group == 0){
+        return $B.fast_tuple([self.mo.start, self.mo.end])
+    }
+    var span = self.mo.$groups[group]
+    if(span === undefined){
+        return $B.fast_tuple([-1, -1])
+    }
+    return $B.fast_tuple([span.start, span.end])
+}
+
+$B.set_func_names(BMO, 're')
+
+function log(){
+    if(_debug.value){
+        console.log.apply(null, arguments)
+    }
+}
+
+function match(pattern, string, pos, endpos, no_zero_width, groups){
+    // Follow the pattern tree structure
+    log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
+    if(pattern.node instanceof Node){
+        show(pattern.node)
+    }
+    if(groups === undefined){
+        groups = {}
+    }
+    if(pattern.text === undefined){
+        console.log('pas de texte', pattern)
+    }
+    var node = pattern.node,
+        mo
+    if(node.items){
+        // node is either a Choice between several items, or a sequence of
+        // items
+        if(node instanceof Choice){
+            mo = false
+            for(var _case of node.items){
+                mo = match({node: _case, text: _case.text}, string, pos,
+                    endpos, no_zero_width, groups)
+                if(mo){
+                    return mo
                 }
             }
-            cell.innerText = '{' + s.join(', ') + '}'
-            cell = document.createElement('TD')
-            cell.innerText = pos
-            row.appendChild(cell)
-            cell = document.createElement('TD')
-            cell.innerText = string.codepoints[pos] === undefined ? 'âˆ…' :
-                    chr(string.codepoints[pos])
-            row.appendChild(cell)
-            cell = document.createElement('TD')
-            cell.innerText = model + ''
-            row.appendChild(cell)
+            return false
+        }else{
+            // sequence of items
+            node.repeat = node.repeat === undefined ? {min: 1, max: 1} :
+                node.repeat
+            var start = pos,
+                nb_repeat = 0,
+                nb_zerolength_repeat = 0,
+                matches = [],
+                mos,
+                match_start
+            // loop until we get enough repetitions
+            while(true){
+                mos = []
+                match_start = pos
+                log("pattern", pattern.text, "loop in group match, match start", match_start)
+                var i = 0
+                while(i < node.items.length){
+                    var item = node.items[i]
+                    log('item', i, '/', node.items.length - 1,
+                        'of pattern', pattern.text)
+                    var mo = match({node: item, text: item + ''}, string, pos,
+                        endpos, no_zero_width, groups)
+                    if(mo){
+                        if(item instanceof Group &&
+                                item.type == "lookahead_assertion"){
+                            log("lookahead assertion", item, "succeeds")
+                        }else{
+                            mos.push(mo)
+                            log('item ' + item, 'succeeds, mos', mos)
+                            pos = mo.end
+                        }
+                        i++
+                    }else if(item instanceof Group &&
+                            item.type == "negative_lookahead_assertion"){
+                        log("negative lookahead assertion", item, "fails : ok !")
+                        i++
+                    }else{
+                        log('item ' + item, 'of group fails, nb_repeat',
+                            nb_repeat, 'node repeat', node.repeat)
+                        if(nb_repeat >= node.repeat.min){
+                            log("enough repetitions")
+                            return new GroupMO(node, start, matches, string, groups)
+                        }
+                        var backtrack = false
+                        while(mos.length > 0){
+                            var mo = mos.pop()
+                            if(mo.backtrack === undefined){
+                                log('pas de backtrack pour', mo)
+                            }
+                            if(mo.backtrack()){
+                                log('can backtrack, mo', mo)
+                                mos.push(mo)
+                                i = mos.length
+                                log('mos', mos, 'restart at item', i)
+                                pos = mo.end
+                                backtrack = true
+                                break
+                            }
+                        }
+                        if(backtrack){
+                            log('backtrack ok')
+                            continue
+                        }
+                        return false
+                    }
+                }
+                nb_repeat++
+                if(pos > match_start){
+                    nb_zerolength_repeat = 0
+                }else{
+                    nb_zerolength_repeat++
+                }
+                matches.push({start: match_start, end: pos, mos})
+                if(node.num !== undefined){
+                    groups[node.num] = $last(matches)
+                    if(node.name !== undefined){
+                        groups[node.name] = groups[node.num]
+                    }
+                }
+                if(nb_repeat >= node.repeat.max){
+                    var res = new GroupMO(node, start, matches, string, groups)
+                    if(res.start == res.end && no_zero_width){
+                        // no_zero_width is set when previous match in
+                        // iterator() had length 0; avoids infinite loops
+                        return false
+                    }
+                    return res
+                }
+                log('loop on group', pattern.text, 'nb repeats', nb_repeat,
+                    'nb zero length', nb_zerolength_repeat)
+                if(nb_zerolength_repeat == 65535){
+                    return matches.length == 0 ? false :
+                       new GroupMO(node, start, matches, string, groups)
+                }
+            }
+        }
+    }else{
+        if(node.match === undefined){
+            console.log('pas de match', node)
             alert()
         }
-        if(model === undefined){
-            // match succeeds
-            if(debug){
-                console.log("groups", groups)
-            }
-            if(stack.length == 0){
-                stack.start = pos
-            }
-            // No more model in the pattern : the match succeeds. Return a
-            // Javascript object
-            var MO = new MatchObject(pattern, string0, stack, endpos)
-            if(MO.end == MO.start && no_zero_width){
-                // zero-width match not allowed : backtrack
-                var bt = backtrack(stack)
-                if(bt){
-                    rank = bt.rank
-                    pos = bt.pos
-                    lookahead = bt.lookahead
-                    lookbehind = bt.lookbehind
-                    continue
-                }else{
-                    return false
-                }
-            }
-            return MO
-        }
-        if(! model.repeat){
-            model.repeat = {min: 1, max: 1}
-        }
-        if(model instanceof Group){
-            // If group is repeated, .start is the position of the last
-            // tried match
-            var group_in_stack = get_state(stack, model)
-            if(! group_in_stack){
-                stack.push({
-                    type: "group",
-                    start: pos,
-                    model,
-                    rank,
-                    matches: [],
-                    lookahead,
-                    lookbehind
-                })
-            }else{
-                group_in_stack.start = pos
-            }
-            if(model.is_lookahead){
-                lookahead = {model, pos}
-            }else if(model.is_lookbehind){
-                // evaluate content of lookbehind RE
-                var len = 0,
-                    choices = []
-                for(var item of path.slice(rank + 1, model.end_rank)){
-                    if(item instanceof GroupEnd){
-                        if(item.group === $last(choices)){
-                            choices.pop()
-                        }
-                        continue
-                    }
-                    if(choices.length > 0){
-                        continue
-                    }
-                    if(item instanceof BackReference){
-                        // get codepoints matched by group
-                        var br_state
-                        for(var state of stack){
-                            if(state.type == "group" &&
-                                    (state.model.num == item.value ||
-                                     state.model.name == item.value)){
-                                 br_state = state
-                                 break
-                            }
-                        }
-                        if(br_state.matches.length > 0){
-                            var start = br_state.matches[0].start,
-                                end = $last(br_state.matches).end
-                            len += end - start
-                        }
-                    }else if(item instanceof Or){
-                        // all options have the same length: ignore all items
-                        // until group end
-                        choices.push(item.group)
-                    }else{
-                        len += item.fixed_length()
-                    }
-                }
-                lookbehind = {model, pos}
-                pos -= len // go back by length of lookbehind RE
-            }
-            rank++
-        }else if(model instanceof GroupEnd){
-            // If we reach the end of the group, remove all the states in
-            // the stack that represent non repeated characters
-            var i = stack.length - 1
-            while(stack[i].model !== model.group){
-                if(stack[i].type != "group"){
-                    if((state.model.non_greedy &&
-                            state.ix >= state.model.repeat.max - 1) ||
-                       (! stack[i].model.non_greedy &&
-                            stack[i].ix == stack[i].model.repeat.min)){
-                        stack.splice(i, 1)
-                    }
-                }
-                i--
-                if(i < 0){
-                    console.log("pattern", pattern, "string", string,
-                        "stack", stack, "model", model)
-                    throw Error("group start not found")
-                }
-            }
-            // Set state to that of the ended group
-            state = stack[i]
-            if(debug){
-                console.log("GroupEnd", state, "pos", pos, "mo", mo,
-                    "lookahead", lookahead)
-                alert()
-            }
-            if(state.model.type == "lookahead_assertion"){
-                // lookahead doesn't consume the string: reset pos
-                pos = state.start
-                lookahead = false
-                rank++
-            }else if(state.model.type == "positive_lookbehind"){
-                // lookbehind succeeds
-                if(debug){
-                    console.log("end of lookbehind, pos", pos)
-                    alert()
-                }
-                lookbehind = false
-                rank++
-            }else if(state.model.type == "negative_lookahead_assertion" ||
-                    lookahead && lookahead.model.type == "negative_lookahead_assertion"){
-                // negative lookahead succeeds: backtrack
-                if(debug){
-                    console.log("negative lookahead succeeds, backtrack")
-                    alert()
-                }
-                var bt = backtrack(stack)
-                if(bt){
-                    rank = bt.rank
-                    pos = bt.pos
-                    lookahead = bt.lookahead
-                    lookbehind = bt.lookbehind
-                    continue
-                }else{
-                    return false
-                }
-            }else if(state.model.type == "negative_lookbehind" ||
-                    lookahead && lookahead.model.type == "negative_lookbehind"){
-                // negative lookbehind succeeds: backtrack
-                if(debug){
-                    console.log("negative lookbehind succeeds, backtrack")
-                    alert()
-                }
-                var bt = backtrack(stack)
-                if(bt){
-                    rank = bt.rank
-                    pos = bt.pos
-                    lookahead = bt.lookahead
-                    lookbehind = bt.lookbehind
-                    continue
-                }else{
-                    return false
-                }
-            }else{
-                // .last_match is the [start, end] of the last successful
-                // match
-                state.has_matched = true
-                state.matches.push({start: state.start, end: pos})
-                if(state.matches.length == 65535){
-                    // Python issue 9669
-                    if(state.matches[0].start == $last(state.matches).end){
-                        // only empty matches
-                        return false
-                    }
-                    rank++
-                    continue
-                }
-                if(state.matches.length < state.model.repeat.max){
-                    // Try the same group again
-                    state.start = pos
-                    rank = state.model.rank + 1
-                    continue
-                }else{
-                    // Try the regexp after group end
-                    rank++
-                    if(debug){
-                        console.log('group end', state,
-                            'cannot repeat group, go to next rank', rank)
-                    }
-                    continue
-                }
-            }
-        }else if(model instanceof Or){
-            // If we reach a "|", one of the previous options succeeded
-            // Skip the next options
-            if(model.group){
-                rank = model.group.end_rank
-            }else{
-                rank = path.length
-            }
-        }else if(model instanceof ConditionalBackref){
-            stack.push({
-                type: "group",
-                start: pos,
-                model,
-                rank,
-                lookahead,
-                lookbehind,
-                matches: []
-            })
-            var cb_group = false
-            for(state of stack){
-                if(state.type == "group" &&
-                        (state.model.num == model.group_ref ||
-                         state.model.name == model.group_ref)){
-                     cb_group = state
-                     if(debug){
-                         console.log("conditional backref group", cb_group)
-                     }
-                     break
-                }
-            }
-            if(cb_group && cb_group.matches.length > 0){
-                // use first option
-                rank++
-            }else{
-                while(true){
-                    rank++
-                    if(path[rank] instanceof Or){
-                        // ready to read RE if group doesn't exist
-                        break
-                    }else if(path[rank] instanceof GroupEnd &&
-                            path[rank].group === model){
-                        // no alternative
-                        break
-                    }
-                }
-                rank++
-            }
+        var mo = node.match(string, pos, groups)
+        log(node, "mo", mo)
+        if(mo){
+            var len = mo.group_len === undefined ? 1 : mo.group_len,
+                ix = node.non_greedy ? mo.nb_min : mo.nb_max,
+                end = pos + len * ix
+            return new MO(node, pos, mo, len)
         }else{
-            if(model instanceof BackReference){
-                var br_group = pattern.groups[model.value]
-                if(br_group === undefined){
-                    fail("unknown group " + model.value)
-                }
-                br_group = br_group.item
-                var group_state = false
-                for(var state of stack){
-                    if(state.type == "group" && state.model == br_group){
-                        group_state = state
-                        break
-                    }
-                }
-                if(! group_state){
-                    mo = false
-                }else if(group_state.matches.length == 0){
-                    // The referenced group matched with 0 repetition.
-                    // Add BackReference to stack and set mo to false.
-                    stack.push({
-                        type: "group",
-                        start: pos,
-                        model,
-                        rank,
-                        lookahead,
-                        lookbehind,
-                        matches: []
-                    })
-                    mo = false
-                }else{
-                    group = $last(group_state.matches)
-                    mo = model.match(string, pos, group)
-                    if(debug){
-                        console.log("backref", group, "mo", mo)
-                        alert()
-                    }
-                }
-            }else{
-                mo = model.match(string, pos)
-            }
-            // Method match() of models return a JS object with
-            // {nb_min, nb_max}, or a list of such objects
-            // If model is a group, mo has key `group_num`
-            if(debug){
-                if(mo){
-                    console.log("match", mo.nb_min, mo.nb_max,
-                        string.substring(pos, pos + mo.nb_max), "lookahead", lookahead)
-                    document.write(string.substring(pos, pos + mo.nb_max) +
-                        '<br>')
-                }else{
-                    console.log("no match")
-                    document.write("no match</br>")
-                }
-            }
-            if(mo){
-                // Create a state, based on the model, the current position in
-                // the string, and the match object returned by
-                // model.match(string, pos)
-                // The match object .mo is of the form {nb_min, nb_max}. If
-                // the model is a back reference to a group, it also has the
-                // key group_len (length of the part of the string matched by
-                // the group).
-                // The attribute .len is the length of the string matched by
-                // the model : 1 for characters, .mo.group_len for a back
-                // reference.
-                // The attribute .ix identifies the number of repetitions of
-                // the model. It can be any of the integers between
-                // .mo.nb_min and .mo.nb_max.
-                ix = model.non_greedy ? mo.nb_min : mo.nb_max
-                state = {
-                    model,
-                    start: pos,
-                    rank,
-                    mo,
-                    len: model instanceof BackReference ? mo.group_len : 1,
-                    ix,
-                    lookahead,
-                    lookbehind,
-                    toString: function(){
-                        return model + ' ' + pos + '-' + ix
-                    }
-                }
-                stack.push(state)
-                pos += ix * state.len
-                if(groups[0].end === undefined | pos > groups[0].end){
-                    groups[0].end = pos
-                }
-                rank++
-            }else{
-                if(debug){
-                    console.log("model doesn't match", model,
-                        "lookahead", lookahead,
-                        "stack", stack)
-                    alert()
-                }
-
-                if(lookahead &&
-                        lookahead.model.type == "negative_lookahead_assertion"){
-                    // failure of a negative lookahead is ok: proceed to the
-                    // item after lookahead RE
-                    // reset pos to lookahead start
-                    pos = lookahead.pos
-                    // jump to rank after lookahead end
-                    rank = lookahead.model.end_rank + 1
-                    lookahead = false
-                    continue
-                }
-                // Is the current model an option in a "|" ?
-                var is_option = false,
-                    in_group = false,
-                    parent = model.parent
-
-                while(parent){
-                    if(parent instanceof Group){
-                        var group_state = get_state(stack, parent)
-                        if(group_state &&
-                                group_state.matches.length == 0 &&
-                                group_state.model.repeat.min == 0){
-                            in_group = true
-                        }
-                    }
-                    if(parent instanceof Case){
-                        // The model that failed was inside a choice.
-                        // The choice is inside a group, or at the upper RE
-                        // level
-                        // If there is another choice, restore the stack
-                        // and the position in string as they were
-                        // when entering the group
-                        is_option = true
-
-                        var choice = parent.parent,
-                            i = 0
-                        // group of choice
-                        var choice_group = 0,
-                            choice_parent = choice.parent
-                        while(choice_parent){
-                            if(choice_parent instanceof Group){
-                                choice_group = choice_parent
-                                break
-                            }
-                            choice_parent = choice_parent.parent
-                        }
-                        if(choice_group == 0){
-                            // choice is at global RE level
-                            match_start = start
-                        }else{
-                            group = false
-                            state = false
-                            var choice_state
-                            for(var state of stack){
-                                if(state.model === choice_group){
-                                    choice_state = state
-                                    break
-                                }
-                            }
-                            // XXX same as in GroupEnd
-                            var i = stack.length - 1
-                            while(stack[i].model !== choice_group){
-                                if(stack[i].type != "group"){
-                                    if((state.model.non_greedy &&
-                                            state.ix >= state.model.repeat.max - 1) ||
-                                       (! stack[i].model.non_greedy &&
-                                            stack[i].ix == stack[i].model.repeat.min)){
-                                        stack.splice(i, 1)
-                                    }
-                                }else{
-                                    // remove group if choice_group didn't match
-                                    if(! choice_state.has_matched){
-                                        if(debug){
-                                            console.log("choice_group", choice_group,
-                                            "remove state", stack[i])
-                                        }
-                                        stack.splice(i, 1)
-                                    }
-                                }
-                                i--
-                                if(i < 0){
-                                    console.log("pattern", pattern, "string", string,
-                                        "satck", stack, "model", model)
-                                    throw Error("group start not found")
-                                }
-                            }
-                            state = stack[i]
-                            var match_start = state.matches.length > 0 ?
-                                    state.matches[state.matches.length - 1].end :
-                                    state.start
-                        }
-                        // get option number inside choice
-                        i = 0
-                        while(true){
-                            if(choice.items[i] === parent){
-                                break
-                            }
-                            i++
-                        }
-                        if(i < choice.items.length - 1){
-                            // reset position in string
-                            pos = match_start
-                            // try next choice
-                            // set rank to next option start
-                            var _case = choice.items[i + 1],
-                                rank = _case.items[0].rank
-                        }else{
-                            // all options have been tried
-                            if(debug){
-                                console.log("no option left", choice_group, "fails")
-                                console.log("stack", stack)
-                                alert()
-                            }
-                            if(choice_group != 0 &&
-                                    state.matches.length >= state.model.repeat.min &&
-                                    state.matches.length < state.model.repeat.max){
-                                // failure is accepted: skip to next RE
-                                rank = state.model.end_rank + 1
-                            }else{
-                                is_option = false
-                            }
-                        }
-                        break
-                    }
-                    parent = parent.parent
-                }
-
-                if(is_option){
-                    // The model that failed was in a '|' with a remaining
-                    // option
-                    if(in_group){
-                        // model was in a group that had enough repetitions
-                        pos = group_state.start
-                        rank = group_state.model.end_rank + 1
-                        continue
-                    }
-                    if(debug){
-                        console.log("next option", path[rank])
-                    }
-                }else{
-                    if(debug){
-                        console.log("no more option", model, "lookahead",
-                            lookahead)
-                    }
-                    if(lookahead){
-                        // The case "negative_lookahead_assertion" is handled
-                        // above: here, a positive lookahead fails
-                        if(debug){
-                            console.log("lookahead fails, backtrack, stack", stack)
-                            alert()
-                        }
-                        var bt = backtrack(stack, debug)
-                        if(bt){
-                            rank = bt.rank
-                            pos = bt.pos
-                            lookahead = bt.lookahead
-                            lookbehind = bt.lookbehind
-                            continue
-                        }else{
-                            return false
-                        }
-                    }
-                    if(lookbehind){
-                        if(lookbehind.model.type == "negative_lookbehind"){
-                            // failure of a negative lookbehind is ok: proceed to the
-                            // item after lookahead RE
-                            // reset pos to lookbehind start
-                            pos = lookbehind.pos
-                            // jump to rank after lookahead end
-                            rank = lookbehind.model.end_rank + 1
-                            lookbehind = false
-                            continue
-                        }else{
-                            // positive lookbehind fails
-                            var bt = backtrack(stack)
-                            if(bt){
-                                rank = bt.rank
-                                pos = bt.pos
-                                lookahead = bt.lookahead
-                                lookbehind = bt.lookbehind
-                                continue
-                            }else{
-                                return false
-                            }
-                        }
-                    }
-                    if(model.groups && model.groups.length > 0){
-                        // The model that fails is in a group
-                        // Get first enclosing group
-                        group = model.groups[model.groups.length - 1]
-                        for(var state of stack){
-                            if(state.model === group){
-                                break
-                            }
-                        }
-                        if(debug){
-                            console.log("failing model in group", group,
-                                "state", state)
-                            alert()
-                        }
-                        if(state.matches.length >= state.model.repeat.min &&
-                                state.has_matched){
-                            // If the model that fails is in a group that has
-                            // already matched, and has the minimal number of
-                            // repetitions, proceed to next RE after group
-                            rank = state.model.end_rank + 1
-                            pos = state.start
-                            continue
-                        }
-                    }
-
-                    // Backtracking: if one of the previous matches was
-                    // repeated, try more or less repetitions
-                    if(debug){
-                        console.log("backtrack")
-                    }
-                    var bt = backtrack(stack, debug)
-                    if(bt){
-                        rank = bt.rank
-                        pos = bt.pos
-                        lookahead = bt.lookahead
-                        lookbehind = bt.lookbehind
-                        // console.log("after backtrack, pos", pos)
-                    }else{
-                        return false
-                    }
-                }
-            }
+            return false
         }
     }
 }
@@ -3893,7 +3549,7 @@ var $module = {
             }
             var bmo = next.value,
                 mo = bmo.mo,
-                groups = BMatchObject.groups(bmo)
+                groups = BMO.groups(bmo)
 
             // replace None by the empty string
             for(var i = 0, len = groups.length; i < len; i++){
@@ -3965,7 +3621,8 @@ var $module = {
             data = prepare({pattern, string})
             pattern = compile(data.pattern, flags)
         }
-        return BMatchObject.$factory(match(pattern, data.string, 0))
+        var res = match(pattern, data.string, 0)
+        return res === false ? _b_.None : BMO.$factory(res)
     },
     Pattern: BPattern,
     purge: function(){
@@ -3995,13 +3652,13 @@ var $module = {
                 ! (pattern.flags.value & MULTILINE.value)){
             var mo = match(pattern.$pattern, data.string,
                 data.string.length - pattern.$pattern.fixed_length)
-            return BMatchObject.$factory(mo)
+            return BMO.$factory(mo)
         }
         var pos = 0
         while(pos < data.string.codepoints.length){
             var mo = match(data.pattern.$pattern, data.string, pos)
             if(mo){
-                return BMatchObject.$factory(mo)
+                return BMO.$factory(mo)
             }else{
                 pos++
             }
@@ -4030,13 +3687,14 @@ var $module = {
             data = {pattern, string}
         }
         for(var bmo of $module.finditer(pattern, $.string)){
-            var mo = bmo.mo // finditer returns instances of BMatchObject
+            var mo = bmo.mo, // finditer returns instances of BMO
+                groupobj = mo.$groups
             res.push(data.string.substring(pos, mo.start))
-            for(var key in mo.pattern.groups){
+            for(var key in mo.node.$groups){
                 if(isFinite(key)){
-                    if(bmo.group_obj[key] !== undefined){
-                        res.push(data.string.substring(bmo.group_obj[key].start,
-                            bmo.group_obj[key].end))
+                    if(groupobj[key] !== undefined){
+                        res.push(data.string.substring(groupobj[key].start,
+                            groupobj[key].end))
                     }else{
                         res.push(_b_.None)
                     }
