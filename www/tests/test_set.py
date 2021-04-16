@@ -280,4 +280,11 @@ class Foo:
 s1.add(Foo())
 assert str(s1) == "{Foo(s1=set(...))}", str(s1)
 
+# issue 1656
+s = set()
+s.add(1)
+s.clear()
+s.add(1)
+assert s == {1}
+
 print("passed all tests..")

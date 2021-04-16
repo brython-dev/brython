@@ -33,7 +33,7 @@ var set = {
     $native: true
 }
 
-set.__add__ = function(self,other){
+set.__add__ = function(self, other){
     throw _b_.TypeError.$factory(
         "unsupported operand type(s) for +: 'set' and " + typeof other)
 }
@@ -387,7 +387,9 @@ set.add = function(){
 set.clear = function(){
     var $ = $B.args("clear", 1, {self: null}, ["self"],
         arguments, {}, null, null)
+    $.self.$simple = true
     $.self.$items = []
+    $.self.$numbers = []
     $.self.$hashes = {}
     return $N
 }
