@@ -356,8 +356,9 @@ BPattern.match = function(self, string){
         throw _b_.TypeError.$factory("not the same type for pattern " +
             "and string")
     }
-    return BMO.$factory(match($.self.$pattern, data.string, $.pos,
-        $.endpos))
+    var mo = match($.self.$pattern, data.string, $.pos,
+        $.endpos)
+    return mo ? BMO.$factory(mo) : _b_.None
 }
 
 BPattern.scanner = function(self, string){
@@ -593,6 +594,9 @@ var EmptyString = {
         },
         match: function(string, pos){
             return {nb_min: 0, nb_max: 0}
+        },
+        fixed_length: function(){
+            return 1
         },
         length: 0
     },
@@ -1092,9 +1096,13 @@ ConditionalBackref.prototype.fixed_length = function(){
 ConditionalBackref.prototype.match = function(string, pos, groups){
     var re = groups[this.group_ref] ? this.re_if_exists :
             this.re_if_not_exists,
-        pattern = {node: re, text: re + ''}
-    return match(pattern, string, pos, undefined,
+        pattern = {node: re, text: re + ''},
+        mo = match(pattern, string, pos, undefined,
             false, groups)
+    if(mo){
+        return {nb_min: mo.end - mo.start, nb_max: mo.end - mo.start}
+    }
+    return false
 }
 
 ConditionalBackref.prototype.toString = function(){
@@ -1700,15 +1708,17 @@ function compile(pattern, flags){
                 item.non_capturing = true
                 // store in variable "lookbehind", will be applied to next item
                 lookbehind = item
+            }else if(item.is_lookahead){
+                delete item.num
             }
             if(item instanceof Group && item.items.length == 0){
                 item.add(new Char(pos, EmptyString, group_stack.concat([item])))
             }else if(item instanceof ConditionalBackref){
                 if(item.re_if_exists.items.length == 0){
-                    item.re_if_exists.add(new Char(pos, EmptyString, group_stack))
+                    item.re_if_exists.add(EmptyString)
                 }else if(item.re_if_not_exists.items.length == 0){
                     item.re_if_not_exists.pos = pos
-                    item.re_if_not_exists.add(new Char(pos, EmptyString, group_stack))
+                    item.re_if_not_exists.add(EmptyString)
                 }
             }else if(item.type == "flags"){
                 // restore flags when entering the group
@@ -3334,6 +3344,32 @@ BMO.group = function(self){
     return $B.fast_tuple(result)
 }
 
+BMO.groupdict = function(){
+    /*
+    Return a dictionary containing all the named subgroups of the match, keyed
+    by the subgroup name. The default argument is used for groups that did not
+    participate in the match; it defaults to None.
+    */
+    var $ = $B.args("groupdict", 2, {self: null, default: null},
+                ['self', 'default'], arguments, {default: _b_.None},
+                null, null),
+        self = $.self,
+        groupobj = $.self.mo.$groups,
+        d = $B.empty_dict()
+    for(var key in $.self.mo.node.$groups){
+        if(! isFinite(key)){
+            var value = groupobj[key] === undefined ? $.default :
+                    groupobj[key]
+            if(value !== $.default){
+                value = self.mo.string.substring(value.start, value.end)
+            }
+            _b_.dict.$setitem(d, key, value)
+        }
+    }
+    d.__class__ = GroupDict
+    return d
+}
+
 BMO.groups = function(self){
     var $ = $B.args("group", 2, {self: null, default: null},
                 ['self', 'default'], arguments,
@@ -3464,6 +3500,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                 match_start
             // loop until we get enough repetitions
             while(true){
+                var initial_groups = Object.keys(groups)
                 mos = []
                 match_start = pos
                 log("pattern", pattern.text, "loop in group match, match start", match_start)
@@ -3480,7 +3517,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                             log("lookahead assertion", item, "succeeds")
                         }else{
                             mos.push(mo)
-                            log('item ' + item, 'succeeds, mos', mos, 'groups', groups)
+                            log('item ' + item, 'succeeds, mo', mo, mos, 'groups', groups)
                             pos = mo.end
                         }
                         i++
@@ -3491,10 +3528,6 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                     }else{
                         log('item ' + item, 'of group fails, nb_repeat',
                             nb_repeat, 'node repeat', node.repeat)
-                        if(nb_repeat >= node.repeat.min){
-                            log("enough repetitions")
-                            return new GroupMO(node, start, matches, string, groups)
-                        }
                         var backtrack = false
                         while(mos.length > 0){
                             var mo = mos.pop()
@@ -3514,6 +3547,18 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                         if(backtrack){
                             log('backtrack ok')
                             continue
+                        }else if(nb_repeat >= node.repeat.min){
+                            log("enough repetitions for node", node)
+                            if(nb_repeat == 0){
+                                // remove the groups introduced before
+                                // reaching this point
+                                for(var key in groups){
+                                    if(initial_groups.indexOf(key) == -1){
+                                        delete groups[key]
+                                    }
+                                }
+                            }
+                            return new GroupMO(node, start, matches, string, groups)
                         }
                         return false
                     }
