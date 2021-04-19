@@ -1828,7 +1828,7 @@ function compile(pattern, flags){
                         previous.non_greedy = true
                         if(previous instanceof CharacterClass &&
                                 previous.value == '.'){
-                            previous.any_char_non_greedy = true
+                            previous.min_repeat_one = true
                         }
                     }else{
                         fail("multiple repeat", pos)
@@ -2903,7 +2903,7 @@ GroupMO.prototype.groups = function(_default){
     return $B.fast_tuple(res)
 }
 
-var BMO = $B.make_class("MatchObject",
+var BMO = $B.make_class("Match",
     function(mo){
         return {
             __class__: BMO,
@@ -3137,6 +3137,11 @@ BMO.string = {
 }
 
 $B.set_func_names(BMO, 're')
+
+function test_after_min_repeat_one(items, pattern, string, pos,
+                            endpos, no_zero_width, groups){
+
+}
 
 function log(){
     if(_debug.value){
