@@ -2898,6 +2898,33 @@ try:
 except IndexError as exc:
     assert exc.args[0] == "tuple index out of range"
 
+# issue 1661
+class A():
+    pass
+
+o = A()
+o.x = 1
+
+t = []
+def f():
+    for o.x in range(5):
+        t.append(o.x)
+
+f()
+assert t == [0, 1, 2, 3, 4]
+
+class A():
+    pass
+
+t = []
+def f():
+    o = A()
+    o.x = 1
+    for o.x in range(5):
+        t.append(o.x)
+
+f()
+assert t == [0, 1, 2, 3, 4]
 
 # ==========================================
 # Finally, report that all tests have passed

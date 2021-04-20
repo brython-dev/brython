@@ -116,8 +116,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,1,'final',0]
 __BRYTHON__.__MAGIC__="3.9.1"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-04-20 09:33:41.764643"
-__BRYTHON__.timestamp=1618904021763
+__BRYTHON__.compiled_date="2021-04-20 22:28:52.118580"
+__BRYTHON__.timestamp=1618950532116
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 
@@ -510,6 +510,14 @@ if(message !==null){js='throw _b_.AssertionError.$factory(_b_.str.$factory('+
 message.to_js()+'))'}
 new $NodeJSCtx(new_node,js)
 node.add(new_node)}
+function make_assign(left,right,module){var node=new $Node()
+node.id=module
+var C=new $NodeCtx(node)
+var expr=new $ExprCtx(C,'left',true)
+expr.tree=left.tree
+var assign=new $AssignCtx(expr)
+assign.tree[1]=new $JSCode(right)
+return node}
 var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
 check_assignment(C)
 if(C.type=="expr" && C.tree[0].type=="lambda"){$_SyntaxError(C,["cannot assign to lambda"])}
@@ -1198,6 +1206,23 @@ if($B.builtin_funcs[this.func.value]!==undefined){if(classes.indexOf(this.func.v
 return func_js+args_str}else{
 return func_js+".$factory"+args_str}}}
 return default_res}}
+var $CaseCtx=$B.parser.$CaseCtx=function(node_ctx){
+this.type="case"
+node_ctx.tree=[this]
+this.parent=node_ctx
+this.tree=[]
+this.expect='as'}
+$CaseCtx.prototype.transition=function(token,value){var C=this
+console.log('transition on case',token,value)
+switch(token){case 'as':
+return new $AbstractExprCtx(new $AliasCtx(C))
+case ':':
+switch(C.expect){case 'id':
+case 'as':
+case ':':
+return $BodyCtx(C)}
+break}}
+$CaseCtx.prototype.to_js=function(){return 'if(subject == '+$to_js(this.tree)+')'}
 var $ClassCtx=$B.parser.$ClassCtx=function(C){
 this.type='class'
 this.parent=C
@@ -2350,6 +2375,8 @@ $loop_num++}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
 $ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
+for(var target_expr of C.tree[0].tree){if(target_expr.tree[0].type=='id'){var id=target_expr.tree[0]
+$bind(id.value,this.scope,id)}}
 if(C.tree[0].tree.length==0){
 $_SyntaxError(C,"missing target between 'for' and 'in'")}
 return new $AbstractExprCtx(
@@ -2406,7 +2433,8 @@ if(0 < stop < $B.max_int){shortcut=true
 var varname="$i"+$B.UUID()
 var for_node=$NodeJS("for (var "+varname+" = 0; "+
 varname+" < "+stop+"; "+varname+"++)")
-for_node.add($NodeJS(idt+" = "+varname))}}
+var assign_node=make_assign(target,varname,node.parent.module)
+for_node.add(assign_node)}}
 var start=0,stop=$range.tree[0].to_js()}else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()}
 if(!shortcut){var js='var $stop_'+num+' = $B.int_or_bool('+stop+'),'+
 h+'        $next'+num+" = "+start+','+
@@ -2419,7 +2447,8 @@ for_node.add($NodeJS('if($safe'+num+' && $next'+num+
 '>= $stop_'+num+'){break}'))
 for_node.add($NodeJS('else if(!$safe'+num+' && $B.ge($next'+
 num+', $stop_'+num+')){break}'))
-for_node.add($NodeJS(idt+' = $next'+num))
+var assign_node=make_assign(target,'$next'+num,node.parent.module)
+for_node.add(assign_node)
 for_node.add($NodeJS('if($safe'+num+'){$next'+num+
 ' += 1}'))
 for_node.add($NodeJS('else{$next'+num+' = $B.add($next'+
@@ -2826,7 +2855,6 @@ else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
 if($parent_match(C,{type:'target_list'})){
 this.no_bindings=true
-$bind(value,scope,this)
 this.bound=true}
 if(["def","generator"].indexOf(scope.ntype)>-1){
 var _ctx=this.parent
@@ -2850,7 +2878,15 @@ case 'int':
 case 'float':
 case 'imaginary':
 if(["print","exec"].indexOf(C.value)>-1 ){$_SyntaxError(C,["missing parenthesis in call to '"+
-C.value+"'"])}
+C.value+"'"])}else if(C.value=='match' &&
+C.parent.parent.type=="node"){
+console.log('pattern matching - match')
+return $transition(new $AbstractExprCtx(
+new $MatchCtx(C.parent.parent),true),token,value)}else if(C.value=='$$case' &&
+C.parent.parent.type=="node"){
+console.log('pattern matching - case')
+return $transition(new $AbstractExprCtx(
+new $CaseCtx(C.parent.parent),true),token,value)}
 $_SyntaxError(C,'token '+token+' after '+
 C)}
 if(this.parent.parent.type=="packed"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
@@ -3374,6 +3410,23 @@ var packed=this.packed_indices()
 if(packed.length > 0){return '$B.fast_tuple('+this.unpack(packed)+')'}
 if(this.tree.length==1 && this.has_comma===undefined){return this.tree[0].to_js()}
 return '$B.fast_tuple(['+$to_js(this.tree)+'])'}}
+var $MatchCtx=$B.parser.$MatchCtx=function(node_ctx){
+this.type="match"
+node_ctx.tree=[this]
+this.parent=node_ctx
+this.tree=[]
+this.expect='as'}
+$MatchCtx.prototype.transition=function(token,value){var C=this
+console.log('transition on match',token,value)
+switch(token){case 'as':
+return new $AbstractExprCtx(new $AliasCtx(C))
+case ':':
+switch(C.expect){case 'id':
+case 'as':
+case ':':
+return $BodyCtx(C)}
+break}}
+$MatchCtx.prototype.to_js=function(){return 'var subject = '+$to_js(this.tree)+';if(true)'}
 var $NodeCtx=$B.parser.$NodeCtx=function(node){
 this.node=node
 node.C=this
@@ -4790,7 +4843,7 @@ var $tokenize=$B.parser.$tokenize=function(root,src){var br_close={")":"(","]":"
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
 ]
 var unsupported=[]
-var $indented=["class","def","for","condition","single_kw","try","except","with"
+var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
 ]
 var C=null
 var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
@@ -4821,6 +4874,7 @@ if(current.is_body_node){
 current.indent=indent}
 if(indent > current.indent){
 if(C !==null){if($indented.indexOf(C.tree[0].type)==-1){$pos=pos
+console.log('type not indented',C.tree[0].type)
 $_SyntaxError(C,'unexpected indent',pos)}}
 current.add(new_node)}else if(indent <=current.indent && C && C.tree[0]&&
 $indented.indexOf(C.tree[0].type)>-1 &&
