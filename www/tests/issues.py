@@ -2926,6 +2926,25 @@ def f():
 f()
 assert t == [0, 1, 2, 3, 4]
 
+t = []
+def f():
+    d = {}
+    d['x'] = 1
+    for d['x'] in range(5):
+        t.append(d['x'])
+
+f()
+assert t == [0, 1, 2, 3, 4]
+
+t = []
+def f():
+    d = [1]
+    for d[0] in range(5):
+        t.append(d[0])
+
+f()
+assert t == [0, 1, 2, 3, 4]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
