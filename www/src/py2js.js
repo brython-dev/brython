@@ -2243,6 +2243,36 @@ $CallCtx.prototype.to_js = function(){
     }
 }
 
+var $CaseCtx = $B.parser.$CaseCtx = function(node_ctx){
+    // node already has an expression with the id "match"
+    this.type = "case"
+    node_ctx.tree = [this]
+    this.parent = node_ctx
+    this.tree = []
+    this.expect = 'as'
+}
+
+$CaseCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('transition on case', token, value)
+    switch(token){
+        case 'as':
+            return new $AbstractExprCtx(new $AliasCtx(context))
+        case ':':
+            switch(context.expect) {
+                case 'id':
+                case 'as':
+                case ':':
+                    return $BodyCtx(context)
+            }
+            break
+    }
+}
+
+$CaseCtx.prototype.to_js = function(){
+    return 'if(subject == ' + $to_js(this.tree) + ')'
+}
+
 var $ClassCtx = $B.parser.$ClassCtx = function(context){
     // Class for keyword "class"
     this.type = 'class'
@@ -5663,7 +5693,21 @@ $IdCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context,
                     ["missing parenthesis in call to '" +
                     context.value + "'"])
-            }
+            }else if(context.value == 'match' &&
+                    context.parent.parent.type == "node"){
+                // form "match <expr>"
+                console.log('pattern matching - match')
+                return $transition(new $AbstractExprCtx(
+                    new $MatchCtx(context.parent.parent), true),
+                    token, value)
+            }else if(context.value == '$$case' &&
+                    context.parent.parent.type == "node"){
+                // form "match <expr>"
+                console.log('pattern matching - case')
+                return $transition(new $AbstractExprCtx(
+                    new $CaseCtx(context.parent.parent), true),
+                    token, value)
+           }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
     }
@@ -6936,6 +6980,36 @@ $ListOrTupleCtx.prototype.to_js = function(){
             }
             return '$B.fast_tuple([' + $to_js(this.tree) + '])'
     }
+}
+
+var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
+    // node already has an expression with the id "match"
+    this.type = "match"
+    node_ctx.tree = [this]
+    this.parent = node_ctx
+    this.tree = []
+    this.expect = 'as'
+}
+
+$MatchCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('transition on match', token, value)
+    switch(token){
+        case 'as':
+            return new $AbstractExprCtx(new $AliasCtx(context))
+        case ':':
+            switch(context.expect) {
+                case 'id':
+                case 'as':
+                case ':':
+                    return $BodyCtx(context)
+            }
+            break
+    }
+}
+
+$MatchCtx.prototype.to_js = function(){
+    return 'var subject = ' + $to_js(this.tree) + ';if(true)'
 }
 
 var $NodeCtx = $B.parser.$NodeCtx = function(node){
@@ -9583,7 +9657,9 @@ var $get_scope = $B.parser.$get_scope = function(context, flag){
     // Return the instance of $Node indicating the scope of context
     // Return null for the root node
     var ctx_node = context.parent
-    while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
+    while(ctx_node.type !== 'node'){
+        ctx_node = ctx_node.parent
+    }
     var tree_node = ctx_node.node,
         scope = null
     while(tree_node.parent && tree_node.parent.type !== 'module'){
@@ -9691,7 +9767,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    // console.log("context", context, "token", token, value)
+    //console.log("context", context, "token", token, value)
     return context.transition(token, value)
 }
 
@@ -9918,7 +9994,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     var unsupported = []
     var $indented = [
         "class", "def", "for", "condition", "single_kw", "try", "except",
-        "with"
+        "with",
+        "match", "case" // PEP 622 (pattern matching)
     ]
 
     var context = null
@@ -9979,6 +10056,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 if(context !== null){
                     if($indented.indexOf(context.tree[0].type) == -1){
                         $pos = pos
+                        console.log('type not indented', context.tree[0].type)
                         $_SyntaxError(context, 'unexpected indent', pos)
                     }
                 }
