@@ -991,7 +991,12 @@ CharacterSet.prototype.match = function(string, pos){
         if(pos >= len){
             cp = EmptyString
         }
-
+        try{
+            $B.codepoint2jsstring(cp)
+        }catch(err){
+            console.log(err.message)
+            throw _b_.Exception.$factory('mauvais codepoint')
+        }
         var char = $B.codepoint2jsstring(cp),
             cps = cased_cps(cp, ignore_case, this.flags.value & ASCII.value),
             char_is_cased = cps.length > 1
@@ -1158,9 +1163,14 @@ function Lookbehind(item){
 Lookbehind.prototype.match = function(string, pos, groups){
     var ok = {nb_min: 0, nb_max: 0},
         pattern = {node: this.re, text: this.re + ''},
-        length = this.re.length
-    var mo = match(pattern, string, pos - length, undefined,
-        false, groups)
+        length = this.re.length,
+        mo
+    if(pos - length < 0){
+        mo = false
+    }else{
+        mo = match(pattern, string, pos - length, undefined,
+            false, groups)
+    }
     if(mo){
         return this.neg ? false : ok
     }else{
@@ -2080,6 +2090,9 @@ function* tokenize(pattern, type, _verbose){
                 break
             }
             char = String.fromCharCode(cp)
+            if(char == '#'){
+                continue
+            }
         }
         if(char == '('){
             if(pattern[pos + 1] == ord('?')){
@@ -3475,6 +3488,7 @@ var $module = {
         }
         return _b_.None
     },
+    Match: BMO,
     match: function(){
         var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
                     ['pattern', 'string', 'flags'], arguments,
