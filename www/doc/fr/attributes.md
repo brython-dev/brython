@@ -100,7 +100,11 @@ Par commodité, Brython définit un certain nombre de propriétés et de méthod
 </tr>
 
 <tr>
-<td>*children*</td><td>liste</td><td>les éléments "descendants" de l'élément</td><td>L</td>
+<td>*children*</td><td>liste</td><td>les "enfants" de l'élément qui sont de type élément (pas texte)</td><td>L</td>
+</tr>
+
+<tr>
+<td>*child_nodes*</td><td>liste</td><td>les "enfants" de l'élément de tout type</td><td>L</td>
 </tr>
 
 <tr>

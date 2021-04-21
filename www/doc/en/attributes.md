@@ -96,8 +96,13 @@ read + write</th>
 </tr>
 
 <tr>
-<td>*children*</td><td>list</td><td>the element's children in the document
-tree</td><td>R</td>
+<td>*children*</td><td>list</td><td>the element's children of type element (not text)</td>
+<td>R</td>
+</tr>
+
+<tr>
+<td>*child_nodes*</td><td>list</td><td>the element's children of any type</td>
+<td>R</td>
 </tr>
 
 <tr>

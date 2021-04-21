@@ -695,6 +695,7 @@ DOMNode.__getattribute__ = function(self, attr){
         case "attrs":
             return Attributes.$factory(self)
         case "children":
+        case "child_nodes":
         case "class_name":
         case "html":
         case "parent":
@@ -1218,9 +1219,19 @@ DOMNode.bind = function(self, event){
 DOMNode.children = function(self){
     var res = []
     if(self.nodeType == 9){self = self.body}
-    self.childNodes.forEach(function(child){
+    for(var child of self.children){
         res.push(DOMNode.$factory(child))
-    })
+    }
+    return res
+}
+
+
+DOMNode.child_nodes = function(self){
+    var res = []
+    if(self.nodeType == 9){self = self.body}
+    for(child of self.childNodes){
+        res.push(DOMNode.$factory(child))
+    }
     return res
 }
 

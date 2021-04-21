@@ -917,6 +917,16 @@ $AssertCtx.prototype.transform = function(node, rank){
     node.add(new_node)
 }
 
+function make_assign(left, right, module){
+    var node = new $Node()
+    node.id = module
+    var context = new $NodeCtx(node) // create ordinary node
+    var expr = new $ExprCtx(context, 'left', true)
+    expr.tree = left.tree
+    var assign = new $AssignCtx(expr) // assignment to left operand
+    assign.tree[1] = new $JSCode(right)
+    return node
+}
 
 var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     /*
@@ -2241,6 +2251,36 @@ $CallCtx.prototype.to_js = function(){
 
         return default_res
     }
+}
+
+var $CaseCtx = $B.parser.$CaseCtx = function(node_ctx){
+    // node already has an expression with the id "match"
+    this.type = "case"
+    node_ctx.tree = [this]
+    this.parent = node_ctx
+    this.tree = []
+    this.expect = 'as'
+}
+
+$CaseCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('transition on case', token, value)
+    switch(token){
+        case 'as':
+            return new $AbstractExprCtx(new $AliasCtx(context))
+        case ':':
+            switch(context.expect) {
+                case 'id':
+                case 'as':
+                case ':':
+                    return $BodyCtx(context)
+            }
+            break
+    }
+}
+
+$CaseCtx.prototype.to_js = function(){
+    return 'if(subject == ' + $to_js(this.tree) + ')'
 }
 
 var $ClassCtx = $B.parser.$ClassCtx = function(context){
@@ -4581,6 +4621,13 @@ $ForExpr.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case 'in':
+            // bind single ids in target list
+            for(var target_expr of context.tree[0].tree){
+                if(target_expr.tree[0].type == 'id'){
+                    var id = target_expr.tree[0]
+                    $bind(id.value, this.scope, id)
+                }
+            }
             if(context.tree[0].tree.length == 0){
                 // issue 1293 : "for in range(n)"
                 $_SyntaxError(context, "missing target between 'for' and 'in'")
@@ -4700,7 +4747,10 @@ $ForExpr.prototype.transform = function(node,rank){
 
                     var for_node = $NodeJS("for (var " + varname + " = 0; " +
                         varname + " < " + stop + "; " + varname + "++)")
-                    for_node.add($NodeJS(idt + " = " + varname))
+                    var assign_node = make_assign(target,
+                        varname,
+                        node.parent.module)
+                    for_node.add(assign_node)
                 }
             }
             var start = 0,
@@ -4724,7 +4774,9 @@ $ForExpr.prototype.transform = function(node,rank){
                 '>= $stop_' + num + '){break}'))
             for_node.add($NodeJS('else if(!$safe' + num + ' && $B.ge($next' +
                 num + ', $stop_' + num + ')){break}'))
-            for_node.add($NodeJS(idt + ' = $next' + num))
+            var assign_node = make_assign(target, '$next' + num,
+                node.parent.module)
+            for_node.add(assign_node)
             for_node.add($NodeJS('if($safe' + num + '){$next' + num +
                 ' += 1}'))
             for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
@@ -5555,9 +5607,8 @@ $GlobalCtx.prototype.to_js = function(){
     return ''
 }
 
-var $IdCtx = $B.parser.$IdCtx = function(context,value){
+var $IdCtx = $B.parser.$IdCtx = function(context, value){
     // Class for identifiers (variable names)
-
     this.type = 'id'
     this.value = $mangle(value, context)
     this.parent = context
@@ -5609,7 +5660,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context,value){
         // but *not* in the node bindings, because if the iterable is empty
         // the name has no value (cf. issue 1233)
         this.no_bindings = true
-        $bind(value, scope, this)
+        // $bind(value, scope, this)
         this.bound = true
     }
 
@@ -5663,7 +5714,21 @@ $IdCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context,
                     ["missing parenthesis in call to '" +
                     context.value + "'"])
-            }
+            }else if(context.value == 'match' &&
+                    context.parent.parent.type == "node"){
+                // form "match <expr>"
+                console.log('pattern matching - match')
+                return $transition(new $AbstractExprCtx(
+                    new $MatchCtx(context.parent.parent), true),
+                    token, value)
+            }else if(context.value == '$$case' &&
+                    context.parent.parent.type == "node"){
+                // form "match <expr>"
+                console.log('pattern matching - case')
+                return $transition(new $AbstractExprCtx(
+                    new $CaseCtx(context.parent.parent), true),
+                    token, value)
+           }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
     }
@@ -6936,6 +7001,36 @@ $ListOrTupleCtx.prototype.to_js = function(){
             }
             return '$B.fast_tuple([' + $to_js(this.tree) + '])'
     }
+}
+
+var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
+    // node already has an expression with the id "match"
+    this.type = "match"
+    node_ctx.tree = [this]
+    this.parent = node_ctx
+    this.tree = []
+    this.expect = 'as'
+}
+
+$MatchCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('transition on match', token, value)
+    switch(token){
+        case 'as':
+            return new $AbstractExprCtx(new $AliasCtx(context))
+        case ':':
+            switch(context.expect) {
+                case 'id':
+                case 'as':
+                case ':':
+                    return $BodyCtx(context)
+            }
+            break
+    }
+}
+
+$MatchCtx.prototype.to_js = function(){
+    return 'var subject = ' + $to_js(this.tree) + ';if(true)'
 }
 
 var $NodeCtx = $B.parser.$NodeCtx = function(node){
@@ -9583,7 +9678,9 @@ var $get_scope = $B.parser.$get_scope = function(context, flag){
     // Return the instance of $Node indicating the scope of context
     // Return null for the root node
     var ctx_node = context.parent
-    while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
+    while(ctx_node.type !== 'node'){
+        ctx_node = ctx_node.parent
+    }
     var tree_node = ctx_node.node,
         scope = null
     while(tree_node.parent && tree_node.parent.type !== 'module'){
@@ -9691,7 +9788,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    // console.log("context", context, "token", token, value)
+    //console.log("context", context, "token", token, value)
     return context.transition(token, value)
 }
 
@@ -9918,7 +10015,8 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
     var unsupported = []
     var $indented = [
         "class", "def", "for", "condition", "single_kw", "try", "except",
-        "with"
+        "with",
+        "match", "case" // PEP 622 (pattern matching)
     ]
 
     var context = null
@@ -9979,6 +10077,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                 if(context !== null){
                     if($indented.indexOf(context.tree[0].type) == -1){
                         $pos = pos
+                        console.log('type not indented', context.tree[0].type)
                         $_SyntaxError(context, 'unexpected indent', pos)
                     }
                 }
