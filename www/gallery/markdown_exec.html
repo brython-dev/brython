@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+<title>Python code in markdown</title>
+<meta charset="utf-8">
+<script type="text/javascript" src="/src/brython.js"></script>
+<script type="text/python" src="show_source.py"></script>
+
+<link rel="stylesheet" href="/brython.css">
+</head>
+
+<body onload="brython({debug:1})">
+
+<script type="text/python">
+from browser import window, document, html, highlight, markdown
+
+example = """Here is a simple example:
+
+```exec
+from browser import alert
+alert("ok")
+```
+"""
+
+# Transform markdown to html and insert in the document
+html_code, scripts = markdown.mark(example)
+document["right"] <= html.SPAN(html_code)
+
+def run(ev):
+    tg = ev.target.closest("BUTTON")
+    # run the code in the element attached to the button, set as its property
+    # .elt
+    exec(tg.elt.text.strip(), {})
+
+for elt in document.select('.exec'):
+    # make element contenteditable
+    elt.attrs["contenteditable"] = True
+    # Python code executed when user clicks on a button
+    src = elt.text.strip()
+    # create HTML element with syntax-highlighted source
+    h = highlight.highlight(src)
+    h.className = "pycode"
+    # replace original text by highlighted code
+    elt.clear()
+    elt <= h
+    elt.focus()
+    # add execution button, attach function "run" as callback
+    btn = html.BUTTON('▶')
+    btn.bind('click', run)
+    # set property "elt" to the source code, used in run()
+    btn.elt = elt
+    elt.parent.insertBefore(btn, elt)
+</script>
+
+<table width="100%">
+<tr>
+<td width="25%" style="padding-left:3%;">
+<h2>Embed executable Python code in a markdown page</h2>
+The markdown format is supported by the Brython module <a href="/static_doc/en/markdown.html">
+browser.markdown</a>.
+<p>In this example we show how a markdown page can include Python code that
+can be executed by the visitor. This can be used in online tutorials.
+<p>The code is editable, so users can modify the initial code and test
+modifications.
+
+</td>
+<td id="right">
+</td>
+</tr>
+</table>
+
+</body>
+</html>
