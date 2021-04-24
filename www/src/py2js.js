@@ -2262,6 +2262,10 @@ var $CaseCtx = $B.parser.$CaseCtx = function(node_ctx){
     this.expect = 'as'
 }
 
+$CaseCtx.prototype.set_alias = function(name){
+    this.alias = name
+}
+
 $CaseCtx.prototype.transition = function(token, value){
     var context = this
     console.log('transition on case', token, value)
@@ -2280,6 +2284,7 @@ $CaseCtx.prototype.transition = function(token, value){
 }
 
 $CaseCtx.prototype.to_js = function(){
+    console.log('to js', this)
     return 'if(subject == ' + $to_js(this.tree) + ')'
 }
 

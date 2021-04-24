@@ -205,7 +205,6 @@ var BPattern = $B.make_class("Pattern",
         }
         return {
             __class__: BPattern,
-            path: pattern.path,
             pattern: pattern.text,
             groups: nb_groups,
             flags: pattern.flags,
@@ -1596,8 +1595,7 @@ function compile(pattern, flags){
             return cache.get(pattern.py_obj).get(flags.value || 0)
         }
     }
-    var path = [],
-        original_pattern = pattern,
+    var original_pattern = pattern,
         original_flags = flags,
         type = pattern.type,
         choices
@@ -1620,7 +1618,6 @@ function compile(pattern, flags){
     var group_num = 0,
         group_stack = [],
         groups = {},
-        subitems = [],
         pos,
         lookbehind,
         node = new Node(),
@@ -1630,7 +1627,6 @@ function compile(pattern, flags){
     for(var item of tokenize(pattern, type, verbose)){
         item.flags = flags
         item.is_bytes = is_bytes
-        path.push(item)
         if(lookbehind){
             item.lookbehind = lookbehind
             lookbehind.parent = item
@@ -1642,14 +1638,12 @@ function compile(pattern, flags){
             item.state = "open"
             group_num++
             item.num = group_num
-            item.rank = path.length - 1
             node = item // next items will be stored as group's items
             pos = item.pos
             if(item.non_capturing){
                 delete item.num
                 group_num--
             }else if(item.type == "name_def"){
-                subitems.push(item)
                 var value = item.value
                 validate(value)
                 if(groups[value.string] !== undefined){
@@ -1662,17 +1656,11 @@ function compile(pattern, flags){
                     new GroupRef(group_num, item)
             }else if(item.is_lookahead){
                 // a lookahead assertion is relative to the previous regexp
-                if(path.length == 1){
-                    // If the RE starts with a lookahead, insert EmptyString
-                    // as the first model
-                    path.splice(0, 0, EmptyString)
-                }
                 group_num--
                 while(node.items.length > 0){
                     item.add(node.items.shift())
                 }
                 node = item
-                subitems.push(item)
             }else if(item.is_lookbehind){
                 // a lookbehind assertion is relative to the next regexp
                 node.parent.items.pop() // remove from node items
@@ -1682,7 +1670,6 @@ function compile(pattern, flags){
                 // save flags before a group with inline flags, eg "(?i:a)"
                 item.flags_before = Flag.$factory(flags.value | 0)
             }else{
-                subitems.push(item)
                 groups[group_num] = new GroupRef(group_num, item)
             }
         }else if(item instanceof GroupEnd){
@@ -1691,10 +1678,6 @@ function compile(pattern, flags){
                 fail("unbalanced parenthesis", end_pos, original_pattern)
             }
             var item = group_stack.pop()
-            // GroupEnd is in path. Associate it with group
-            path[path.length - 1].group = item
-            // Note the rank of group end in group start
-            item.end_rank = path.length - 1
             item.end_pos = end_pos
             try{
                 item.pattern = from_codepoint_list(
@@ -1778,10 +1761,6 @@ function compile(pattern, flags){
             }else if(item.type == "num"){
                 fail(`invalid group reference ${item.value}`, pos)
             }
-            item.groups = []
-            for(var group of group_stack){
-                item.groups.push(group)
-            }
             node.add(item)
         }else if(item instanceof Char ||
                 item instanceof CharacterClass ||
@@ -1790,22 +1769,6 @@ function compile(pattern, flags){
                 for(var elt of item.set.items){
                     elt.flags = flags
                 }
-            }
-            subitems.push(item)
-            item.groups = []
-            for(var group of group_stack){
-                if(group.extension && group.extension.type &&
-                        group.extension.type.indexOf('lookbehind') > -1){
-                    var parent = node
-                    while(parent){
-                        if(parent === group){
-                            break
-                        }
-                        parent = parent.parent
-                    }
-                }
-                item.groups.push(group)
-                group.chars.push(item)
             }
             node.add(item)
         }else if(item instanceof Repeater){
@@ -1822,12 +1785,11 @@ function compile(pattern, flags){
             if(node.items.length == 0){
                 fail("nothing to repeat", pos)
             }
-            path.pop() // remove repeater from path
-            var previous = path[path.length - 1]
+            previous = $last(node.items)
             if(previous instanceof Char ||
                     previous instanceof CharacterClass ||
                     previous instanceof CharacterSet ||
-                    previous instanceof GroupEnd ||
+                    previous instanceof Group ||
                     previous instanceof BackReference){
                 if(previous instanceof GroupEnd){
                     // associate repeat with Group
@@ -1942,8 +1904,6 @@ function compile(pattern, flags){
                  item instanceof StringEnd){
             node.add(item)
         }else if(item instanceof SetFlags){
-            // remove from path
-            path.pop()
             // copy flags, otherwise re.ASCII etc might be modified
             flags = Flag.$factory(flags.value || U.value)
             if(item.on_flags.indexOf('u') > -1){
@@ -2017,17 +1977,12 @@ function compile(pattern, flags){
     while(node.parent){
         node = node.parent
     }
-    node.subitems = subitems
     node.pattern = from_codepoint_list(pattern)
     node.groups = group_num
     flags = flags === no_flag ? 32 : flags
     node.flags = flags
-    if(path.length == 0){
-        path = [EmptyString]
-    }
     var res = {
         node,
-        path,
         groups,
         flags,
         original_flags,
