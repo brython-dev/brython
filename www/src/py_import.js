@@ -110,8 +110,10 @@ function import_js(mod, path){
 
 function run_js(module_contents, path, _module){
     // FIXME : Enhanced module isolation e.g. run_js arg names , globals ...
+    var module_id = "$locals_" + _module.__name__.replace(/\./g, '_')
+
     try{
-        var $module = new Function(module_contents + ";\nreturn $module")()
+        var $module = new Function(module_id, module_contents + ";\nreturn $module")(_module)
         if($B.$options.store){_module.$js = module_contents}
     }catch(err){
         console.log(err)
@@ -171,28 +173,6 @@ function show_ns(){
         if(kk[i].charAt(0) == "$"){console.log(eval(kk[i]))}
     }
     console.log("---")
-}
-
-function import_py(mod, path, $package){
-    // import Python module at specified path
-    var mod_name = mod.__name__,
-        module_contents = $download_module(mod, path, $package)
-    mod.$src = module_contents
-    $B.imported[mod_name].$is_package = mod.$is_package
-    $B.imported[mod_name].$last_modified = mod.$last_modified
-    if(path.substr(path.length - 12) == "/__init__.py"){
-        $B.imported[mod_name].__package__ = mod_name
-        $B.imported[mod_name].__path__ = path
-        $B.imported[mod_name].$is_package = mod.$is_package = true
-    }else if($package){
-        $B.imported[mod_name].__package__ = $package
-    }else{
-        var mod_elts = mod_name.split(".")
-        mod_elts.pop()
-        $B.imported[mod_name].__package__ = mod_elts.join(".")
-    }
-    $B.imported[mod_name].__file__ = path
-    return run_py(module_contents, path, mod)
 }
 
 function run_py(module_contents, path, module, compiled) {
@@ -894,7 +874,6 @@ function import_engine(mod_name, _path, from_stdlib){
             }
         }else{
             spec = find_spec(mod_name, _path)
-
             if(!$B.is_none(spec)){
                 module = $B.imported[spec.name]
                 if(module !== undefined){
