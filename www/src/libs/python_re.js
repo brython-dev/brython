@@ -3166,9 +3166,16 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                 nb_zerolength_repeat = 0,
                 matches = [],
                 mos,
-                match_start
+                match_start,
+                empty_matches = {}
             // loop until we get enough repetitions
             while(true){
+                if(empty_matches[pos]){
+                    // no use trying again
+                    return matches.length == 0 ? false :
+                       new GroupMO(node, start, matches, string, groups,
+                           endpos)
+                }
                 var initial_groups = Object.keys(groups)
                 mos = []
                 match_start = pos
@@ -3254,6 +3261,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
                     nb_zerolength_repeat = 0
                 }else{
                     nb_zerolength_repeat++
+                    empty_matches[pos] = true
                 }
                 matches.push({start: match_start, end: pos, mos})
                 if(node.num !== undefined){
