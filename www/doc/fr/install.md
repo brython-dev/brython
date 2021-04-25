@@ -1,16 +1,19 @@
 Sans installation
 -----------------
 On peut utiliser Brython sans avoir à installer quoi que ce soit, il suffit
-d'inclure les scripts Brython dans la page HTML depuis un CDN:
+d'inclure les scripts Brython dans la page HTML depuis un CDN.
 
 ```xml
-<script src="https://cdn.jsdelivr.net/npm/brython@3.9.2/brython.min.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
 </script>
-<script src="https://cdn.jsdelivr.net/npm/brython@3.9.2/brython_stdlib.js">
+<script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js">
 </script>
 ```
 
-ou
+On peut aussi préciser la version mineure avec `brython@3.9` et la version
+micro avec `brython@3.9.2`.
+
+Brython est également disponible sur cdnjs:
 
 ```xml
 <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.2/brython.min.js">
