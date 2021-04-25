@@ -46,6 +46,9 @@ for lang in ["en", "fr", "es"]:
     with open(install_page, "w", encoding="utf-8") as out:
         out.write(content)
 
+print("make static doc pages...")
+import make_doc
+
 # update implementation in brython/__init__.py
 print("Update CPython brython package...")
 br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
