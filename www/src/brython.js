@@ -116,8 +116,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,2,'final',0]
 __BRYTHON__.__MAGIC__="3.9.2"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-04-25 17:23:18.145722"
-__BRYTHON__.timestamp=1619364198128
+__BRYTHON__.compiled_date="2021-04-26 09:01:44.618167"
+__BRYTHON__.timestamp=1619420504612
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 
@@ -9003,20 +9003,20 @@ return res}
 var set={__class__:_b_.type,$infos:{__module__:"builtins",__name__:"set"},$is_class:true,$native:true}
 set.__add__=function(self,other){throw _b_.TypeError.$factory(
 "unsupported operand type(s) for +: 'set' and "+typeof other)}
-set.__and__=function(self,other,accept_iter){try{$test(accept_iter,other)}
-catch(err){return _b_.NotImplemented}
+set.__and__=function(self,other,accept_iter){try{$test(accept_iter,other)}catch(err){return _b_.NotImplemented}
 var res=create_type(self)
 for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
 return res}
 set.__class_getitem__=function(cls,item){
 if(! Array.isArray(item)){item=[item]}
 return $B.GenericAlias.$factory(cls,item)}
-set.__contains__=function(self,item){if(self.$simple){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
+set.__contains__=function(self,item){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
-return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}}
-if(! _b_.isinstance(item,set)){$B.$getattr(item,"__hash__")}
-var hash=_b_.hash(item)
-if(self.$hashes[hash]){for(var i=0,len=self.$hashes[hash].length;i < len;i++){if($B.rich_comp("__eq__",self.$hashes[hash][i],item)){return true}}}
+return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}
+var hash=_b_.hash(item),
+is_tuple=item.__class__===_b_.tuple
+if(self.$hashes[hash]){for(var i=0,len=self.$hashes[hash].length;i < len;i++){if(is_tuple && self.$hashes[hash][i].__class__===_b_.tuple){console.log(item,'is in set, tuple',self.$hashes[hash][i])
+return true}else if($B.rich_comp("__eq__",self.$hashes[hash][i],item)){return true}}}
 return false}
 set.__eq__=function(self,other){
 if(other===undefined){return self===set}
@@ -9055,7 +9055,7 @@ set.__len__(self)< _b_.getattr(other,"__len__")()}else{return _b_.NotImplemented
 set.__mro__=[_b_.object]
 set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 return{
-__class__:cls,$simple:true,$items:[],$numbers:[],
+__class__:cls,$items:[],$numbers:[],
 $hashes:{}}}
 set.__or__=function(self,other,accept_iter){
 var res=clone(self),func=_b_.getattr($B.$iter(other),"__next__")
@@ -9125,7 +9125,6 @@ return $N}
 set.add=function(){var $=$B.args("add",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
 return $add(self,item)}
 set.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
-$.self.$simple=true
 $.self.$items=[]
 $.self.$numbers=[]
 $.self.$hashes={}
@@ -12135,6 +12134,15 @@ for(var i=0,len=s.length;i < len;i++){var code=s.charCodeAt(i)
 if(code >=0xD800 && code <=0xDBFF){chars.push(s.substr(i,2))
 i++}else{chars.push(s.charAt(i))}}
 return chars}
+function to_codepoints(s){
+var cps=[]
+for(var i=0,len=s.length;i < len;i++){var code=s.charCodeAt(i)
+if(code >=0xD800 && code <=0xDBFF){var v=0x10000
+v+=(code & 0x03FF)<< 10
+v+=(s.charCodeAt(i+1)& 0x03FF)
+cps.push(v)
+i++}else{cps.push(code)}}
+return cps}
 str.__add__=function(self,other){if(!(typeof other==="string")){try{return getattr(other,"__radd__")(self)}
 catch(err){throw _b_.TypeError.$factory("Can't convert "+
 $B.class_name(other)+" to str implicitly")}}
@@ -12189,7 +12197,7 @@ str.$nb_str_hash_cache++
 if(str.$nb_str_hash_cache > 100000){
 str.$nb_str_hash_cache=0
 str_hash_cache={}}
-return str_hash_cache[self]=fnv(to_chars(self))}
+return str_hash_cache[self]=fnv(to_codepoints(self))}
 str.__init__=function(self,arg){self.valueOf=function(){return arg}
 self.toString=function(){return arg}
 return _b_.None}
