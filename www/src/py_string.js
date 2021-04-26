@@ -75,6 +75,24 @@ function to_chars(s){
     return chars
 }
 
+function to_codepoints(s){
+    // Transform Javascript string s into a list of codepoints
+    var cps = []
+    for(var i = 0, len = s.length; i < len; i++){
+        var code = s.charCodeAt(i)
+        if(code >= 0xD800 && code <= 0xDBFF){
+            var v = 0x10000
+            v += (code & 0x03FF) << 10
+            v += (s.charCodeAt(i + 1) & 0x03FF)
+            cps.push(v)
+            i++
+        }else{
+            cps.push(code)
+        }
+    }
+    return cps
+}
+
 str.__add__ = function(self, other){
     if(!(typeof other === "string")){
         try{return getattr(other, "__radd__")(self)}
@@ -226,7 +244,7 @@ str.__hash__ = function(self) {
         str.$nb_str_hash_cache = 0
         str_hash_cache = {}
     }
-    return str_hash_cache[self] = fnv(to_chars(self))
+    return str_hash_cache[self] = fnv(to_codepoints(self))
 }
 
 str.__init__ = function(self, arg){
