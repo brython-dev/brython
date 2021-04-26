@@ -776,6 +776,83 @@ Char.prototype.toString = function(){
     return res
 }
 
+function CharSeq(chars){
+    // sequence of consecutive characters
+    this.chars = chars
+}
+
+CharSeq.prototype.fixed_length = function(){
+    var len = 0
+    for(var char of this.chars){
+        len += char.fixed_length()
+    }
+    return len
+}
+
+CharSeq.prototype.match = function(string, pos){
+    var mos = [],
+        i = 0,
+        backtrack,
+        nb
+    for(var i = 0, len = this.chars.length; i < len; i++){
+        var char =  this.chars[i],
+            mo = char.match(string, pos) // form {nb_min, nb_max}
+        if(mo){
+            nb = char.non_greedy ? mo.nb_min : mo.nb_max
+            mos.push({nb,
+                      nb_min: mo.nb_min,
+                      nb_max: mo.nb_max,
+                      non_greedy: !!char.non_greedy
+                     })
+            pos += nb
+        }else{
+            // backtrack
+            backtrack = false
+            while(mos.length > 0){
+                i--
+                mo = mos.pop()
+                pos -= mo.nb
+                if(mo.non_greedy && nb + 1 < mo.nb_max){
+                    nb += 1
+                    backtrack = true
+                }else if(! mo.non_greedy && nb - 1 >= mo.nb_min){
+                    nb -= 1
+                    backtrack = true
+                }
+                if(backtrack){
+                    pos += nb
+                    mo.nb = nb
+                    mos.push(mo)
+                    i++
+                    break
+                }
+            }
+            if(mos.length == 0){
+                return false
+            }
+        }
+    }
+    var match_len = 0
+    for(var mo of mos){
+        match_len += mo.nb
+    }
+    return {
+        nb_min: match_len,
+        nb_max: match_len
+    }
+}
+
+
+
+
+CharSeq.prototype.toString = function(){
+    var res = ''
+    for(var char of this.chars){
+        res += char.text
+    }
+    return 'CharSeq ' + res
+}
+
 function CharacterClass(pos, cp, length, groups){
     this.cp = cp
     this.value = chr(cp)
@@ -1770,7 +1847,23 @@ function compile(pattern, flags){
                     elt.flags = flags
                 }
             }
-            node.add(item)
+            var added_to_charseq = false
+            if(item instanceof Char){
+                if(node.items && node.items.length > 0){
+                    var previous = $last(node.items)
+                    if(previous instanceof CharSeq){
+                        previous.chars.push(item)
+                        added_to_charseq = true
+                    }else if(previous instanceof Char){
+                        node.items.pop()
+                        node.items.push(new CharSeq([previous, item]))
+                        added_to_charseq = true
+                    }
+                }
+            }
+            if(! added_to_charseq){
+                node.add(item)
+            }
         }else if(item instanceof Repeater){
             // check that item is not in a lookbehind group
             var pnode = node
@@ -1787,6 +1880,7 @@ function compile(pattern, flags){
             }
             previous = $last(node.items)
             if(previous instanceof Char ||
+                    previous instanceof CharSeq ||
                     previous instanceof CharacterClass ||
                     previous instanceof CharacterSet ||
                     previous instanceof Group ||
@@ -1794,6 +1888,8 @@ function compile(pattern, flags){
                 if(previous instanceof GroupEnd){
                     // associate repeat with Group
                     previous = previous.group
+                }else if(previous instanceof CharSeq){
+                    previous = $last(previous.chars)
                 }
                 if(previous.repeater){
                     if(item.op == '?' && ! previous.non_greedy){
