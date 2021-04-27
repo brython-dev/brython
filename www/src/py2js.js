@@ -229,7 +229,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
         line_num = root.line_info
     }
     if(indent === undefined || typeof indent != "number"){
-        if(Array.isArray(msg)){
+        if(msg && Array.isArray(msg)){
             $B.$SyntaxError(module, msg[0], src, $pos, line_num, root)
         }
         if(msg === "Triple string end not found"){
@@ -240,7 +240,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
                 src, $pos, line_num, root)
         }
         var message = 'invalid syntax'
-        if(! (msg.startsWith("token "))){
+        if(msg && ! (msg.startsWith("token "))){
             message += ' (' + msg + ')'
         }
         $B.$SyntaxError(module, message, src, $pos, line_num, root)
@@ -2255,6 +2255,7 @@ $CallCtx.prototype.to_js = function(){
 
 var $CaseCtx = $B.parser.$CaseCtx = function(node_ctx){
     // node already has an expression with the id "match"
+    console.log('new case')
     this.type = "case"
     node_ctx.tree = [this]
     this.parent = node_ctx
@@ -2270,22 +2271,28 @@ $CaseCtx.prototype.transition = function(token, value){
     var context = this
     console.log('transition on case', token, value)
     switch(token){
+        case ',':
+            // create a PatternSequence, or add a new pattern to it
+            console.log(context.tree)
+            return new $PatternCtx(new $PatternSequenceCtx(context))
+            alert()
         case 'as':
             return new $AbstractExprCtx(new $AliasCtx(context))
         case ':':
             switch(context.expect) {
                 case 'id':
                 case 'as':
-                case ':':
                     return $BodyCtx(context)
             }
             break
+        default:
+            $_SyntaxError(context, ['expected :'])
     }
 }
 
 $CaseCtx.prototype.to_js = function(){
-    console.log('to js', this)
-    return 'if(subject == ' + $to_js(this.tree) + ')'
+    console.log('Case to js', this)
+    return 'if($B.pattern_match(subject, ' + $to_js(this.tree) + '))'
 }
 
 var $ClassCtx = $B.parser.$ClassCtx = function(context){
@@ -5699,6 +5706,19 @@ $IdCtx.prototype.toString = function(){
 
 $IdCtx.prototype.transition = function(token, value){
     var context = this
+    if(context.value == '$$case' &&
+            context.parent.parent.type == "node"){
+        // case at the beginning of a line : see if the line ends with a
+        // colon (:), if so it is the "soft keyword" case for pattern
+        // matching
+        var start = context.parent.parent.node.pos,
+            src = $get_module(this).src
+        if(line_ends_with_comma(src.substr(start))){
+            return $transition(new $PatternCtx(
+                new $CaseCtx(context.parent.parent)),
+                    token, value)
+        }
+    }
     switch(token) {
         case '=':
             if(context.parent.type == 'expr' &&
@@ -5726,14 +5746,7 @@ $IdCtx.prototype.transition = function(token, value){
                 return $transition(new $AbstractExprCtx(
                     new $MatchCtx(context.parent.parent), true),
                     token, value)
-            }else if(context.value == '$$case' &&
-                    context.parent.parent.type == "node"){
-                // form "match <expr>"
-                console.log('pattern matching - case')
-                return $transition(new $AbstractExprCtx(
-                    new $CaseCtx(context.parent.parent), true),
-                    token, value)
-           }
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
     }
@@ -7995,6 +8008,302 @@ $PassCtx.prototype.to_js = function(){
     return 'void(0)'
 }
 
+var $PatternCtx = $B.parser.$PatternCtx = function(context){
+    // Class for patterns in a "case" statement
+    this.type = "pattern"
+    this.parent = context
+    this.tree = []
+    context.tree.push(this)
+    this.expect = 'id'
+}
+
+$PatternCtx.prototype.transition = function(token, value){
+    var context = this
+    console.log('PatternCtx expect', context.expect, 'token', token, value)
+    switch(context.expect){
+        case 'id':
+            switch(token){
+                case 'str':
+                case 'int':
+                case 'float':
+                case 'imaginary':
+                    context.expect = ','
+                    return new $PatternLiteralCtx(context, token, value)
+                case 'op':
+                    switch(value){
+                        case '-':
+                        case '+':
+                            context.expect = 'number'
+                            context.sign = value
+                            return context
+                        default:
+                            $_SyntaxError(context)
+                    }
+                case 'id':
+                    context.expect = ','
+                    if(['None', 'True', 'False'].indexOf(value) > -1){
+                        return new $PatternLiteralCtx(context, token, value)
+                    }else{
+                        return new $PatternCaptureCtx(context, value)
+                    }
+                    break
+                case '[':
+                case '(':
+                    return new $PatternCtx(
+                        new $PatternSequenceCtx(context.parent, token))
+                case '{':
+                    return new $PatternMappingItemCtx(
+                        new $PatternMappingCtx(context.parent, token))
+            }
+        case 'number':
+            // if pattern starts with unary - or +
+            switch(token){
+                case 'int':
+                case 'float':
+                case 'imaginary':
+                    context.expect = ','
+                    return new $PatternLiteralCtx(context, token,
+                        value, context.sign)
+                default:
+                    $_SyntaxError(context)
+            }
+        case ',':
+            switch(token){
+                case ',':
+                    if(context.parent instanceof $PatternSequenceCtx){
+                        return new $PatternCtx(context.parent)
+                    }
+                    return new $PatternCtx(
+                        new $PatternSequenceCtx(context.parent))
+                case ':':
+                    return $BodyCtx(context)
+            }
+    }
+    return context.parent.transition(token, value)
+}
+
+var $PatternCaptureCtx = function(context, value){
+    // Class for capture patterns in a "case" statement
+    // context is a $PatternCtx
+    this.type = "capture_pattern"
+    this.parent = context.parent
+    context.parent.tree.pop()
+    context.parent.tree.push(this)
+    this.tree = [value]
+    this.expect = '.'
+}
+
+$PatternCaptureCtx.prototype.transition = function(token, value){
+    var context = this
+    switch(this.expect){
+        case '.':
+            if(token == '.'){
+                this.tree.push('.')
+                this.expect = 'id'
+                return context
+            }
+        case 'id':
+            if(token == 'id'){
+                this.tree.push(value)
+                this.expect = '.'
+                return context
+            }
+    }
+    return $transition(context.parent, token, value)
+}
+
+$PatternCaptureCtx.prototype.to_js = function(){
+    if(this.tree.length == 1){
+        return '{capture: "' + this.tree[0] + '"}'
+    }
+    return '{value: "' + this.tree.join('') + '"}'
+}
+
+var $PatternLiteralCtx = function(context, token, value, sign){
+    // Class for literal patterns in a "case" statement
+    // context is a $PatternCtx
+    this.type = "literal_pattern"
+    this.parent = context.parent
+    context.parent.tree.pop()
+    context.parent.tree.push(this)
+    this.tree = [{token, value, sign}]
+    this.expect = 'op'
+}
+
+$PatternLiteralCtx.prototype.transition = function(token, value){
+    var context = this
+    switch(context.expect){
+        case 'op':
+            if(token == "op"){
+                switch(value){
+                    case '+':
+                    case '-':
+                        if(['int', 'float'].indexOf(this.tree[0].token) > -1){
+                            context.expect = 'number'
+                            this.tree.push(value)
+                            context.num_sign = value
+                            return context
+                        }
+                        $_SyntaxError(context, value + 'sign only after ' +
+                            'int or float')
+                    default:
+                        $_SyntaxError(context, 'unexpected operator' +
+                            value)
+                }
+            }
+            break
+        case 'number':
+            switch(token){
+                case 'imaginary':
+                    context.tree.push({token, value, sign: context.num_sign})
+                    return context.parent
+                default:
+                    $_SyntaxError(context, 'expected imaginary')
+
+            }
+    }
+    return $transition(context.parent, token, value)
+}
+
+$PatternLiteralCtx.prototype.to_js = function(){
+    var res = '',
+        first = this.tree[0]
+    switch(first.token){
+        case 'id':
+            res = '_b_.' + first.value
+            break
+        case 'str':
+            res = first.value
+        case 'int':
+            var v = parseInt(first.value[1], first.value[0])
+            if(first.sign == '-'){
+                v = -v
+            }
+            res = v + ''
+        case 'float':
+            res = (first.sign == '-' ? '-' : '') + first.value
+            break
+        case 'imaginary':
+            res += '$B.make_complex(0, ' + first.value + ')'
+            break
+    }
+    if(this.tree.length > 1){
+        res = '$B.make_complex(' + res + ',' +
+            (this.tree[1].value == '-' ? '-' : '') +
+            this.tree[2].value + ')'
+    }
+    console.log('pattern literal to js', this, res)
+    return res
+}
+
+var $PatternMappingCtx = function(context){
+    // Class for sequence patterns in a "case" statement
+    this.type = "mapping_pattern"
+    this.parent = context
+    context.tree.pop()
+    this.tree = []
+    context.tree.push(this)
+}
+
+$PatternMappingCtx.prototype.transition = function(token, value){
+    var context = this
+    switch(token){
+        case ',':
+            return new $PatternMappingItemCtx(context)
+        case '}':
+            return context.parent
+        default:
+            $_SyntaxError(context)
+    }
+}
+
+$PatternMappingCtx.prototype.to_js = function(){
+    return '{mapping: ' + $to_js(this.tree) + '}'
+}
+
+var $PatternMappingItemCtx = function(context){
+    this.type = "mapping_pattern_item"
+    this.parent = context
+    this.tree = []
+    this.expect = 'literal'
+    context.tree.push(this)
+}
+
+$PatternMappingItemCtx.prototype.transition = function(token, value){
+    console.log('mapping item', this, token, value)
+    var context = this
+    switch(context.expect){
+        case 'literal':
+            switch(token){
+                case 'str':
+                    this.tree.push(value)
+                    this.expect = ':'
+                    return this
+                default:
+                    $_SyntaxError(this, 'expected a literal')
+            }
+        case ':':
+            switch(token){
+                case ':':
+                    this.expect = 'pattern'
+                    return new $PatternCtx(this)
+                default:
+                    $_SyntaxError('expected :')
+            }
+        case 'pattern':
+            console.log(token, value)
+    }
+    return $transition(context.parent, token, value)
+}
+
+$PatternMappingItemCtx.prototype.to_js = function(){
+    console.log('pattern mapping to js', this)
+    return '[' + this.tree[0] + ',' + this.tree[1].to_js() + ']'
+}
+
+var $PatternSequenceCtx = function(context, token){
+    // Class for sequence patterns in a "case" statement
+    this.type = "sequence_pattern"
+    this.parent = context
+    this.tree = []
+    var first_pattern = context.tree.pop()
+    if(token === undefined){
+        // implicit sequence : form "case x, y:"
+        // context.parent already has a pattern
+        this.tree = [first_pattern]
+        first_pattern.parent = this
+    }else{
+        // explicit sequence with token '[' or '('
+        this.token = token
+    }
+    this.expect = ','
+    context.tree.push(this)
+}
+
+$PatternSequenceCtx.prototype.transition = function(token, value){
+    var context = this
+    if(context.expect == ','){
+        if((this.token == '[' && token == ']') ||
+                (this.token == '(' && token == ")")){
+            return context.parent
+        }else if(token == ','){
+            context.expect = 'id'
+            return context
+        }else if(this.token === undefined){
+            return $transition(context.parent, token, value)
+        }
+        $_SyntaxError(context)
+    }else if(context.expect == 'id'){
+        context.expect = ','
+        return $transition(new $PatternCtx(context), token, value)
+    }
+}
+
+$PatternSequenceCtx.prototype.to_js = function(){
+    console.log('patternseq to_js', this.tree)
+    return '[' + $to_js(this.tree) + ']'
+}
+
 var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     // Class for keyword "raise"
     this.type = 'raise'
@@ -9757,6 +10066,7 @@ var $get_node = $B.parser.$get_node = function(context){
 
 var $to_js_map = $B.parser.$to_js_map = function(tree_element) {
     if(tree_element.to_js !== undefined){return tree_element.to_js()}
+    console.log('no to_js', tree_element)
     throw Error('no to_js() for ' + tree_element)
 }
 
@@ -10004,6 +10314,64 @@ function test_num(context, num_lit){
       }
     }
     return check(elt)
+}
+
+function* basic_tokenizer(src){
+    // basic Python code tokenizer, used by function line_ends_with_comma()
+    var pos = 0
+    while(pos < src.length){
+        if(src[pos] == '"' || src[pos] == "'"){
+            var quote = src[pos],
+                escaped = false,
+                start = pos
+            pos++
+            while(pos < src.length){
+                if(src[pos] == '\\'){
+                    escaped = ! escaped
+                }else if(src[pos] == quote && ! escaped){
+                    yield src.substring(start, pos + 1)
+                    break
+                }
+                pos++
+            }
+        }else if(src[pos] == '#'){
+            while(pos < src.length){
+                if(src[pos] == '\n'){
+                    break
+                }
+                pos++
+            }
+        }else if(src[pos] == '\\' && src[pos + 1] == '\n'){
+            // continuation line
+            pos++
+        }else if(' \t'.indexOf(src[pos]) == -1){
+            yield src[pos]
+        }
+        pos++
+    }
+}
+
+function line_ends_with_comma(src){
+    // used to check if 'match' or 'case' are the "soft keywords" for pattern
+    // matching, or ordinary ids
+    var expect = ':',
+        braces = 0
+    for(token of basic_tokenizer(src)){
+        if(expect == ':'){
+            if(token == ':' && braces == 0){
+                expect = 'eol'
+            }else if(token == '\n' && braces == 0){
+                return false
+            }else if('([{'. indexOf(token) > -1){
+                braces++
+            }else if(')]}'.indexOf(token) > -1){
+                braces--
+            }
+        }else{
+            return token == '\n'
+        }
+    }
+    return false
 }
 
 var $tokenize = $B.parser.$tokenize = function(root, src) {
