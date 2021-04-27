@@ -84,7 +84,6 @@ set.__contains__ = function(self, item){
     if(self.$hashes[hash]){
         for(var i = 0, len = self.$hashes[hash].length; i < len;i++){
             if(is_tuple && self.$hashes[hash][i].__class__ === _b_.tuple){
-                console.log(item, 'is in set, tuple', self.$hashes[hash][i])
                 return true
             }else if($B.rich_comp("__eq__", self.$hashes[hash][i], item)){
                 return true
