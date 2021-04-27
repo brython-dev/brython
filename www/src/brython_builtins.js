@@ -147,38 +147,6 @@ $B.min_int = -$B.max_int
 $B.max_float = new Number(Number.MAX_VALUE)
 $B.min_float = new Number(Number.MIN_VALUE)
 
-
-// Compute maximum string length; this is browser-dependant
-var nb = Math.pow(2, 29)
-while(true){
-    try{
-        'a'.repeat(nb)
-        nb *= 2
-    }catch(err){
-        // maximum is between 2 ** (nb - 1) and 2 ** nb
-        var lo = nb / 2,
-            hi = nb,
-            mid
-        while(hi - lo > 1){
-            try{
-                mid = lo + (hi - lo) / 2
-                'a'.repeat(mid)
-                lo = mid
-            }catch(err){
-                hi = mid
-            }
-        }
-        try{
-            'a'.repeat(hi)
-            $B.max_string_length = hi
-            break
-        }catch(err){
-            $B.max_string_length = lo
-            break
-        }
-    }
-}
-
 // Used to compute the hash value of some objects (see
 // py_builtin_functions.js)
 $B.$py_next_hash = Math.pow(2, 53) - 1

@@ -60,17 +60,6 @@ $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.max_float=new Number(Number.MAX_VALUE)
 $B.min_float=new Number(Number.MIN_VALUE)
-var nb=Math.pow(2,29)
-while(true){try{'a'.repeat(nb)
-nb*=2}catch(err){
-var lo=nb/2,hi=nb,mid
-while(hi-lo > 1){try{mid=lo+(hi-lo)/2
-'a'.repeat(mid)
-lo=mid}catch(err){hi=mid}}
-try{'a'.repeat(hi)
-$B.max_string_length=hi
-break}catch(err){$B.max_string_length=lo
-break}}}
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=0
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
@@ -116,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,2,'final',0]
 __BRYTHON__.__MAGIC__="3.9.2"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-04-27 14:04:07.682990"
-__BRYTHON__.timestamp=1619525047682
+__BRYTHON__.compiled_date="2021-04-27 14:06:17.932794"
+__BRYTHON__.timestamp=1619525177932
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 
