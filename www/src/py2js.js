@@ -2273,6 +2273,29 @@ $CaseCtx.prototype.transition = function(token, value){
             context.expect = ':'
             return new $AbstractExprCtx(new $AliasCtx(context))
         case ':':
+            // check if case is 'irrefutable' (cf. PEP 634)
+            function is_irrefutable(pattern){
+                if(pattern.type == "capture_pattern"){
+                    return true
+                }else if(pattern.type == "or_pattern"){
+                    for(var subpattern of pattern.tree){
+                        if(is_irrefutable(subpattern)){
+                            return true
+                        }
+                    }
+                }else if(pattern.type == "sequence_pattern" &&
+                        pattern.token == '(' &&
+                        pattern.tree.length == 1 &&
+                        is_irrefutable(pattern.tree[0])){
+                    return true
+                }
+                return false
+            }
+            if(is_irrefutable(this.tree[0])){
+                // mark match node as having already an irrefutable pattern,
+                // so that remaining patterns raise a SyntaxError
+                $get_node(context).parent.irrefutable = context
+            }
             switch(context.expect) {
                 case 'id':
                 case 'as':
@@ -2289,6 +2312,7 @@ $CaseCtx.prototype.transition = function(token, value){
             $_SyntaxError(context, ['expected :'])
     }
 }
+
 
 $CaseCtx.prototype.to_js = function(){
     console.log('Case to js', this)
@@ -8109,11 +8133,12 @@ var $PatternCaptureCtx = function(context, value){
 
 $PatternCaptureCtx.prototype.transition = function(token, value){
     var context = this
-    switch(this.expect){
+    switch(context.expect){
         case '.':
             if(token == '.'){
-                this.tree.push('.')
-                this.expect = 'id'
+                context.type = "value_pattern"
+                context.tree.push('.')
+                context.expect = 'id'
                 return context
             }else if(token == '('){
                 // open class pattern
@@ -8121,8 +8146,8 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             }
         case 'id':
             if(token == 'id'){
-                this.tree.push(value)
-                this.expect = '.'
+                context.tree.push(value)
+                context.expect = '.'
                 return context
             }
     }
@@ -9969,7 +9994,6 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
         if(line_num === undefined){
             flag = false
         }
-        console.log('add line num, elt.type', elt.type)
         // Don't add line num before try,finally,else,elif
         // because it would throw a syntax error in Javascript
         if((elt.type == 'condition' && elt.token == 'elif') ||
