@@ -783,11 +783,6 @@ frozenset.__hash__ = function(self) {
    return self.__hashvalue__ = _hash
 }
 
-frozenset.__init__ = function(){
-    // doesn't do anything
-    return $N
-}
-
 frozenset.__new__ = function(cls){
     if(cls === undefined){
         throw _b_.TypeError.$factory(

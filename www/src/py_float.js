@@ -613,6 +613,24 @@ float.__pow__ = function(self, other){
     $err("** or pow()", other)
 }
 
+function __newobj__(){
+    // __newobj__ is called with a generator as only argument
+    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
+        args = $.args
+    var res = args.slice(1)
+    res.__class__ = args[0]
+    return res
+}
+
+float.__reduce_ex__ = function(self){
+    return $B.fast_tuple([
+        __newobj__,
+        $B.fast_tuple([self.__class__ || int, float_value(self)]),
+        _b_.None,
+        _b_.None,
+        _b_.None])
+}
+
 float.__repr__ = float.__str__ = function(self){
     self = float_value(self).valueOf()
     if(self == Infinity){

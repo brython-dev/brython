@@ -771,11 +771,6 @@ assert False == False
 assert not (True == None)
 assert True != None
 
-# issue 451
-import copy
-assert copy.copy({1}) == {1}
-assert copy.copy({1: 2}) == {1: 2}
-
 # issue 465
 class A:
 
@@ -1168,14 +1163,6 @@ a = A()
 b = B()
 assert a != b
 assert b != a
-
-# issue 603
-import copy
-a = [[1], 2, 3]
-b = copy.copy(a)
-b[0] += [10]
-assert a == [[1, 10], 2, 3]
-assert b == [[1, 10], 2, 3]
 
 # issue 604
 class StopCompares:
@@ -1853,18 +1840,6 @@ assert regex.sub(switch, 'ba') == 'ab'
 # Broken: .finditer()
 #assert [m.group(0) for m in regex.finditer('ab')] == ['a', 'b']
 
-# issue 918
-import copy
-
-class MyClass:
-
-    def __init__(self, some_param):
-        self.x = some_param
-
-
-obj = MyClass("aaa")
-obj2 = copy.copy(obj)
-assert obj2.x == "aaa"
 
 # issue 923
 v = 1

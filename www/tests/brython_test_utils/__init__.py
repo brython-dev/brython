@@ -45,6 +45,7 @@ def discover_brython_test_modules():
           ("test_bisect.py", "bisect"),
           ("test_code.py", "code"),
           ("test_collections.py", "collections"),
+          ("test_copy.py", "copy"),
           ("test_dataclasses.py", "dataclasses"),
           ("test_datetime.py", "datetime"),
           ("test_decimals.py", "decimals"),

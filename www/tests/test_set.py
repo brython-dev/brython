@@ -226,12 +226,6 @@ assert frozenset({1, 2}) != [1, 2]
 assert (1, 2) != {1, 2}
 assert {1, 2} != [1, 2]
 
-# issue 979
-from copy import deepcopy
-a = {1}
-b = deepcopy(a)
-assert b == {1}
-
 # issue 1052
 t1 = {1, "a", (7,), 2, (8,)}
 t2 = {2, (8,), 1, "a", (7,)}

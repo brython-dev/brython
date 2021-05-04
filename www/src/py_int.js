@@ -467,9 +467,26 @@ int.__pow__ = function(self, other, z){
     $err("**", other)
 }
 
+function __newobj__(){
+    // __newobj__ is called with a generator as only argument
+    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
+        args = $.args
+    var res = args.slice(1)
+    res.__class__ = args[0]
+    return res
+}
+
+int.__reduce_ex__ = function(self){
+    return $B.fast_tuple([
+        __newobj__,
+        $B.fast_tuple([self.__class__ || int, int_value(self)]),
+        _b_.None,
+        _b_.None,
+        _b_.None])
+}
+
 int.__repr__ = function(self){
-    if(self === int){return "<class 'int'>"}
-    return self.toString()
+    return int_value(self).toString()
 }
 
 // bitwise right shift

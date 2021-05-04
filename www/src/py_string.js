@@ -1,7 +1,6 @@
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
+var _b_ = $B.builtins
 
 // build tables from data in unicode_data.js
 var unicode_tables = $B.unicode_tables
@@ -20,7 +19,7 @@ $B.has_surrogate = function(s){
 
 var str = {
     __class__: _b_.type,
-    __dir__: object.__dir__,
+    __dir__: _b_.object.__dir__,
     $infos: {
         __module__: "builtins",
         __name__: "str"
@@ -41,7 +40,7 @@ function normalize_start_end($){
         $.end = Math.max(0, $.end)
     }
 
-    if(! isinstance($.start, _b_.int) || ! isinstance($.end, _b_.int)){
+    if(! _b_.isinstance($.start, _b_.int) || ! _b_.isinstance($.end, _b_.int)){
         throw _b_.TypeError.$factory("slice indices must be integers " +
             "or None or have an __index__ method")
     }
@@ -95,7 +94,7 @@ function to_codepoints(s){
 
 str.__add__ = function(self, other){
     if(!(typeof other === "string")){
-        try{return getattr(other, "__radd__")(self)}
+        try{return $B.$getattr(other, "__radd__")(self)}
         catch(err){
             throw _b_.TypeError.$factory("Can't convert " +
                 $B.class_name(other) + " to str implicitly")}
@@ -134,7 +133,7 @@ str.__delitem__ = function(){
 
 // __dir__must be assigned explicitely because attribute resolution for
 // builtin classes doesn't use __mro__
-str.__dir__ = object.__dir__
+str.__dir__ = _b_.object.__dir__
 
 str.__eq__ = function(self, other){
     if(_b_.isinstance(other, _b_.str)){
@@ -168,7 +167,7 @@ str.__format__ = function(self, format_spec) {
 
 str.__getitem__ = function(self, arg){
     var chars = to_chars(self)
-    if(isinstance(arg, _b_.int)){
+    if(_b_.isinstance(arg, _b_.int)){
         var pos = arg
         if(arg < 0){
             pos += self.length
@@ -178,7 +177,7 @@ str.__getitem__ = function(self, arg){
         }
         throw _b_.IndexError.$factory("string index out of range")
     }
-    if(isinstance(arg, slice)){
+    if(_b_.isinstance(arg, _b_.slice)){
         var s = _b_.slice.$conv_for_seq(arg, self.length),
             start = s.start,
             stop = s.stop,
@@ -202,7 +201,7 @@ str.__getitem__ = function(self, arg){
         }
         return res
     }
-    if(isinstance(arg, _b_.bool)){
+    if(_b_.isinstance(arg, _b_.bool)){
         return self.__getitem__(_b_.int.$factory(arg))
     }
     throw _b_.TypeError.$factory("string indices must be integers")
@@ -273,7 +272,7 @@ var NotANumber = function() {
 }
 
 var number_check = function(s){
-    if(! isinstance(s, [_b_.int, _b_.float])){
+    if(! _b_.isinstance(s, [_b_.int, _b_.float])){
         throw new NotANumber()
     }
 }
@@ -385,12 +384,12 @@ var num_format = function(val, flags) {
 
 var repr_format = function(val, flags) {
     flags.pad_char = " "  // even if 0 padding is defined, don't use it
-    return format_padding(repr(val), flags)
+    return format_padding(_b_.repr(val), flags)
 }
 
 var ascii_format = function(val, flags) {
     flags.pad_char = " "  // even if 0 padding is defined, don't use it
-    return format_padding(ascii(val), flags)
+    return format_padding(_b_.ascii(val), flags)
 }
 
 // converts val to float and sets precision if missing
@@ -453,7 +452,7 @@ var floating_point_format = function(val, upper, flags){
         return format_padding(format_sign(val, flags) +
             format_float_precision(val, upper, flags,
                 function(val, precision) {
-                    return val.toFixed(min(precision, v_len - dot_idx) +
+                    return val.toFixed(_b_.min(precision, v_len - dot_idx) +
                         numzeros)
                 }),
             flags
@@ -479,7 +478,7 @@ var floating_point_format = function(val, upper, flags){
         format_float_precision(val, upper, flags,
             function(val, precision) {
                 if(!flags.decimal_point){
-                    precision = min(v_len - 1, 6)
+                    precision = _b_.min(v_len - 1, 6)
                 }else if (precision > v_len){
                     if(! flags.alternate){
                         precision = v_len
@@ -637,9 +636,9 @@ function series_of_bytes(val, flags){
 }
 
 var single_char_format = function(val, flags){
-    if(isinstance(val, str) && val.length == 1){
+    if(_b_.isinstance(val, str) && val.length == 1){
         return val
-    }else if(isinstance(val, bytes) && val.source.length == 1){
+    }else if(_b_.isinstance(val, _b_.bytes) && val.source.length == 1){
         val = val.source[0]
     }else{
         try{
@@ -648,7 +647,7 @@ var single_char_format = function(val, flags){
             throw _b_.TypeError.$factory("%c requires int or char")
         }
     }
-    return format_padding(chr(val), flags)
+    return format_padding(_b_.chr(val), flags)
 }
 
 var num_flag = function(c, flags){
@@ -746,7 +745,7 @@ str.__mod__ = function(self, args){
     if(_b_.isinstance(args, _b_.tuple)){
         argpos = 0 | 0
     }else{
-        getitem = _b_.getattr(args, "__getitem__", _b_.None)
+        getitem = $B.$getattr(args, "__getitem__", _b_.None)
     }
     var ret = ''
     var $get_kwarg_string = function(s) {
@@ -880,7 +879,7 @@ str.__mro__ = [_b_.object]
 str.__mul__ = function(){
     var $ = $B.args("__mul__", 2, {self: null, other: null},
         ["self", "other"], arguments, {}, null, null)
-    if(! isinstance($.other, _b_.int)){throw _b_.TypeError.$factory(
+    if(! _b_.isinstance($.other, _b_.int)){throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
             $B.class_name($.other) + "'")}
     return $.self.valueOf().repeat($.other)
@@ -888,6 +887,23 @@ str.__mul__ = function(){
 
 str.__ne__ = function(self, other){
     return other !== self.valueOf()
+}
+
+function __newobj__(){
+    // __newobj__ is called with a generator as only argument
+    var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
+        args = $.args
+    var res = args[1]
+    res.__class__ = args[0]
+    return res
+}
+
+str.__reduce_ex__ = function(self){
+    return $B.fast_tuple([
+        __newobj__,
+        $B.fast_tuple([self.__class__ || _b_.str, self]),
+        _b_.None,
+        _b_.None])
 }
 
 str.__repr__ = function(self){
@@ -997,7 +1013,7 @@ $B.make_rmethods(str)
 
 // unsupported operations
 var $notimplemented = function(self, other){
-    throw NotImplementedError.$factory(
+    throw _b_.NotImplementedError.$factory(
         "OPERATOR not implemented for class str")
 }
 
@@ -1127,7 +1143,7 @@ str.endswith = function(){
     normalize_start_end($)
 
     var suffixes = $.suffix
-    if(! isinstance(suffixes,_b_.tuple)){
+    if(! _b_.isinstance(suffixes,_b_.tuple)){
         suffixes = [suffixes]
     }
 
@@ -1194,7 +1210,8 @@ str.find = function(){
     check_str($.sub)
     normalize_start_end($)
 
-    if(!isinstance($.start, _b_.int)||!isinstance($.end, _b_.int)){
+    if(!_b_.isinstance($.start, _b_.int) ||
+            !_b_.isinstance($.end, _b_.int)){
         throw _b_.TypeError.$factory("slice indices must be " +
             "integers or None or have an __index__ method")}
     // Can't use string.substring(start, end) because if end < start,
@@ -1347,11 +1364,18 @@ $B.split_format = function(self){
                     }
                 }else{end++}
             }
-            if(nb > 0){throw ValueError.$factory("wrong format " + self)}
+            if(nb > 0){
+                throw _b_.ValueError.$factory("wrong format " + self)
+            }
             pos = end
-        }else{text += car; pos++}
+        }else{
+            text += car
+            pos++
+        }
     }
-    if(text){parts.push(text)}
+    if(text){
+        parts.push(text)
+    }
     return parts
 }
 
@@ -1422,13 +1446,13 @@ str.format = function(self) {
             var ext = fmt.name_ext[j]
             if(ext.charAt(0) == "."){
                 // Attribute
-                value = _b_.getattr(value, ext.substr(1))
+                value = $B.$getattr(value, ext.substr(1))
             }else{
                 // Subscription
                 var key = ext.substr(1, ext.length - 2)
                 // An index made of digits is transformed into an integer
                 if(key.charAt(0).search(/\d/) > -1){key = parseInt(key)}
-                value = _b_.getattr(value, "__getitem__")(key)
+                value = $B.$getattr(value, "__getitem__")(key)
             }
         }
 
@@ -1706,7 +1730,7 @@ str.join = function(){
     while(1){
         try{
             var obj2 = _b_.next(iterable)
-            if(! isinstance(obj2, str)){
+            if(! _b_.isinstance(obj2, str)){
                 throw _b_.TypeError.$factory("sequence item " + count +
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
@@ -1892,10 +1916,10 @@ str.replace = function(self, old, _new, count) {
     check_str(old, "replace() argument 1 ")
     check_str(_new, "replace() argument 2 ")
     // Validate instance type of 'count'
-    if(! isinstance(count,[_b_.int, _b_.float])){
+    if(! _b_.isinstance(count,[_b_.int, _b_.float])){
         throw _b_.TypeError.$factory("'" + $B.class_name(count) +
             "' object cannot be interpreted as an integer")
-    }else if(isinstance(count, _b_.float)){
+    }else if(_b_.isinstance(count, _b_.float)){
         throw _b_.TypeError.$factory("integer argument expected, got float")
     }
     if(count == 0){
@@ -2170,7 +2194,7 @@ str.startswith = function(){
     normalize_start_end($)
 
     var prefixes = $.prefix
-    if(! isinstance(prefixes, _b_.tuple)){
+    if(! _b_.isinstance(prefixes, _b_.tuple)){
         prefixes = [prefixes]
     }
 
@@ -2376,7 +2400,7 @@ $B.set_func_names(str, "builtins")
 // dictionary and factory for subclasses of string
 var StringSubclass = $B.StringSubclass = {
     __class__: _b_.type,
-    __mro__: [object],
+    __mro__: [_b_.object],
     $infos: {
         __module__: "builtins",
         __name__: "str"
