@@ -434,9 +434,11 @@ int.__pow__ = function(self, other, z){
           return result
       }
       var res = Math.pow(self.valueOf(), other.valueOf())
-      if(res > $B.min_int && res < $B.max_int){return res}
-      else if(res !== Infinity && !isFinite(res)){return res}
-      else{
+      if(res > $B.min_int && res < $B.max_int){
+          return other > 0 ? res : new Number(res)
+      }else if(res !== Infinity && !isFinite(res)){
+          return res
+      }else{
           if($B.BigInt){
               return {
                   __class__: $B.long_int,
@@ -450,8 +452,9 @@ int.__pow__ = function(self, other, z){
     }
     if(_b_.isinstance(other, _b_.float)) {
         other = _b_.float.numerator(other)
-        if(self >= 0){return new Number(Math.pow(self, other))}
-        else{
+        if(self >= 0){
+            return new Number(Math.pow(self, other))
+        }else{
             // use complex power
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }

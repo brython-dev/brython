@@ -596,4 +596,11 @@ assert str(1e8) == "100000000.0"
 assert str(1e12) == "1000000000000.0"
 assert str(1.2e123) == "1.2e+123"
 
+# issue 1666
+a = 0.1
+assert abs(a) == 0.1
+
+a = 10**(-1)
+assert abs(a) == 0.1
+
 print('passed all tests...')
