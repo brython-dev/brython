@@ -1549,7 +1549,9 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         right_is_int = (to_int > $B.min_int) && (to_int < $B.max_int)
     }
 
-    var right = right_is_int ? this.tree[1].tree[0].to_js() : '$temp'
+    var right = right_is_int ?
+        '(' + this.tree[1].tree[0].to_js() + ')' : 
+        '$temp'
 
     if(!right_is_int){
         // Create temporary variable
@@ -1645,7 +1647,10 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
     if(prefix){
         var left1 = in_class ? '$left' : left
         var new_node = new $Node()
-        if(!lnum_set){new_node.line_num = line_num; lnum_set = true}
+        if(!lnum_set){
+            new_node.line_num = line_num
+            lnum_set = true
+        }
         js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf() == "number" && '
         js += left1 + '.constructor === Number'
 

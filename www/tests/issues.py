@@ -2945,6 +2945,14 @@ def f():
 f()
 assert t == [0, 1, 2, 3, 4]
 
+# issue 1664
+x = 0
+def f():
+    global x
+    x -= -1
+    assert x == 1
+f()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
