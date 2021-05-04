@@ -1550,7 +1550,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
     }
 
     var right = right_is_int ?
-        '(' + this.tree[1].tree[0].to_js() + ')' : 
+        '(' + this.tree[1].tree[0].to_js() + ')' :
         '$temp'
 
     if(!right_is_int){
@@ -3049,7 +3049,6 @@ $DefCtx.prototype.transition = function(token, value){
 }
 
 $DefCtx.prototype.transform = function(node, rank){
-
     if(this.is_comp){
         $get_node(this).is_comp = true
     }
@@ -3436,7 +3435,9 @@ $DefCtx.prototype.transform = function(node, rank){
         node.parent.insert(rank + offset++,
             $NodeJS('    __module__ : "' + root.module + '",'))
 
-        for(var attr in this.binding){this.varnames[attr] = true}
+        for(var attr in this.parent.node.binding){
+            this.varnames[attr] = true
+        }
         var co_varnames = []
         for(var attr in this.varnames){
             co_varnames.push('"' + $B.from_alias(attr) + '"')

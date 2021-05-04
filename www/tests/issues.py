@@ -2928,6 +2928,13 @@ def f():
     assert x == 1
 f()
 
+# issue 1665
+def foo(a, b):
+    c = 10
+    return foo.__code__.co_varnames
+
+assert foo(1, 2) == ('a', 'b', 'c')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
