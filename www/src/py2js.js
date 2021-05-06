@@ -10725,7 +10725,11 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
                             var esc = test_escape(context, src, string_start,
                                                   end)
                             if(esc){
-                                zone += esc[0]
+                                if(esc[0] == '\\'){
+                                    zone += '\\\\'
+                                }else{
+                                    zone += esc[0]
+                                }
                                 end += esc[1]
                             }else{
                                 if(end < src.length - 1 &&
