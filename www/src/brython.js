@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,2,'final',0]
 __BRYTHON__.__MAGIC__="3.9.2"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-05-04 19:06:06.203196"
-__BRYTHON__.timestamp=1620147966203
+__BRYTHON__.compiled_date="2021-05-06 10:53:03.490788"
+__BRYTHON__.timestamp=1620291183489
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 
@@ -5189,7 +5189,7 @@ if(search===null){$_SyntaxError(C,"(unicode error) "+
 var cp="0x"+search[1]
 zone+=String.fromCodePoint(eval(cp))
 end=end_lit+1}else{end++}}else{var esc=test_escape(C,src,string_start,end)
-if(esc){zone+=esc[0]
+if(esc){if(esc[0]=='\\'){zone+='\\\\'}else{zone+=esc[0]}
 end+=esc[1]}else{if(end < src.length-1 &&
 is_escaped[src.charAt(end+1)]===undefined){zone+='\\'}
 zone+='\\'
@@ -7023,10 +7023,9 @@ for(var $func in None){if(typeof None[$func]=='function'){None[$func].__str__=(f
 $B.set_func_names(NoneType,"builtins")
 function abs(obj){check_nb_args('abs',1,arguments)
 check_no_kw('abs',obj)
-console.log('abs',obj,typeof obj)
 if(isinstance(obj,_b_.int)){if(obj.__class__===$B.long_int){return{
 __class__:$B.long_int,value:obj.value,pos:true}}else{return _b_.int.$factory(Math.abs(obj))}}
-if(isinstance(obj,_b_.float)){console.log('abs of float',obj)
+if(isinstance(obj,_b_.float)){
 return _b_.float.$factory(Math.abs(_b_.float.numerator(obj)))}
 var klass=obj.__class__ ||$B.get_class(obj)
 try{var method=$B.$getattr(klass,"__abs__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("Bad operand type for abs(): '"+
