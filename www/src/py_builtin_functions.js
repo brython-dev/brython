@@ -494,7 +494,6 @@ $B.to_alias = function(attr){
 
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
-
     var $ = $B.args("eval", 4,
             {src: null, globals: null, locals: null, mode: null},
             ["src", "globals", "locals", "mode"], arguments,
@@ -510,12 +509,6 @@ function $$eval(src, _globals, _locals){
         _b_.print(">", $.src.source.trim())
     }
 
-    var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
-    if(current_frame !== undefined){
-        var current_locals_id = current_frame[0].replace(/\./g, '_'),
-            current_globals_id = current_frame[2].replace(/\./g, '_')
-    }
-    var stack_len = $B.frames_stack.length
 
     if(src.__class__ === code){
         mode = src.mode
@@ -524,6 +517,14 @@ function $$eval(src, _globals, _locals){
         throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
             "or code object")
     }
+
+    var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
+    if(current_frame !== undefined){
+        var current_locals_id = current_frame[0].replace(/\./g, '_'),
+            current_globals_id = current_frame[2].replace(/\./g, '_')
+    }
+
+    var stack_len = $B.frames_stack.length
 
     // code will be run in a specific block
     var globals_id = '$exec_' + $B.UUID(),
@@ -753,7 +754,7 @@ function $$eval(src, _globals, _locals){
                 }
             }
             js = root.to_js()
-
+            
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
             if(_globals === _b_.None){

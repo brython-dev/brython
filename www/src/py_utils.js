@@ -493,6 +493,15 @@ $B.$check_def = function(name, value){
         "' is not defined")
 }
 
+$B.$check_def_global = function(name, ns){
+    var res = ns[name]
+    if(res === undefined){
+        throw _b_.NameError.$factory("name '" + name + 
+            "' is not defined")
+    }
+    return res
+}
+
 $B.$check_def_local = function(name, value){
     // Check if value is not undefined
     if(value !== undefined){return value}

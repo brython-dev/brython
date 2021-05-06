@@ -2935,6 +2935,16 @@ def foo(a, b):
 
 assert foo(1, 2) == ('a', 'b', 'c')
 
+# issue 1671
+def f():
+    global x1671
+try:
+    print(x1671)
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

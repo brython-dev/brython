@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,2,'final',0]
 __BRYTHON__.__MAGIC__="3.9.2"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-05-06 10:59:35.388935"
-__BRYTHON__.timestamp=1620291575388
+__BRYTHON__.compiled_date="2021-05-06 18:45:08.702838"
+__BRYTHON__.timestamp=1620319508702
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 
@@ -2941,8 +2941,9 @@ if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+
 return val}
 this.js_processed=true
 if(this.scope._globals && this.scope._globals[val]){this.global_module=this.scope._globals[val]}
-if(this.global_module){return '$locals_'+this.global_module.replace(/\./g,"_")+
-'["'+val+'"]'}
+if(this.global_module){if(this.bound){return '$locals_'+this.global_module.replace(/\./g,"_")+
+'["'+val+'"]'}else{return '$B.$check_def_global("'+val+'", $locals_'+
+this.global_module.replace(/\./g,"_")+')'}}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 this.nonlocal=this.scope.nonlocals &&
 this.scope.nonlocals[val]!==undefined
@@ -6523,6 +6524,10 @@ try{return $B.$getitem(frame[1],name)}catch(err){if(! $B.is_exc(err,[_b_.KeyErro
 if(frame[3][name]!==undefined){return frame[3][name]}}
 throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
 "' is not defined")}
+$B.$check_def_global=function(name,ns){var res=ns[name]
+if(res===undefined){throw _b_.NameError.$factory("name '"+name+
+"' is not defined")}
+return res}
 $B.$check_def_local=function(name,value){
 if(value !==undefined){return value}
 throw _b_.UnboundLocalError.$factory("local variable '"+
@@ -7181,16 +7186,17 @@ $B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.
 return attr}
 $B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
 return attr}
-function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
+function $$eval(src,_globals,_locals){
+var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
 _b_.print(">",$.src.source.trim())}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1]
-if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./g,'_'),current_globals_id=current_frame[2].replace(/\./g,'_')}
-var stack_len=$B.frames_stack.length
 if(src.__class__===code){mode=src.mode
 src=src.source}else if(typeof src !=='string'){throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
 "or code object")}
+var current_frame=$B.frames_stack[$B.frames_stack.length-1]
+if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./g,'_'),current_globals_id=current_frame[2].replace(/\./g,'_')}
+var stack_len=$B.frames_stack.length
 var globals_id='$exec_'+$B.UUID(),globals_name=globals_id,locals_id='$exec_'+$B.UUID(),parent_scope
 if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
 var local_scope={module:globals_id,id:locals_id,binding:{},bindings:{}}

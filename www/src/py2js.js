@@ -5945,8 +5945,13 @@ $IdCtx.prototype.to_js = function(arg){
         this.global_module = this.scope._globals[val]
     }
     if(this.global_module){
-        return '$locals_' + this.global_module.replace(/\./g, "_") +
-            '["' + val + '"]'
+        if(this.bound){
+            return '$locals_' + this.global_module.replace(/\./g, "_") +
+                '["' + val + '"]'
+        }else{
+            return '$B.$check_def_global("' + val + '", $locals_' +
+                this.global_module.replace(/\./g, "_") + ')'
+        }
     }
 
     var is_local = this.scope.binding[val] !== undefined,
