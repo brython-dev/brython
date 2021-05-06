@@ -1057,7 +1057,7 @@ DOMNode.__setattr__ = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
 
-    if(attr.substr(0,2) == "on"){ // event
+    if(attr.substr(0,2) == "on" && attr.length > 2){ // event
         if(!$B.$bool(value)){ // remove all callbacks attached to event
             DOMNode.unbind(self, attr.substr(2))
         }else{
