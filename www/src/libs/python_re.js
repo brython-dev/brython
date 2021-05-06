@@ -1558,10 +1558,12 @@ function parse_character_set(text, pos, is_bytes){
             if(range){
                 check_character_range(result.items, positions)
             }
+            range = false
             pos += escape.length
         }else if(char == '-'){
             // Character range, or character "-"
             if(pos == start + 1 ||
+                    (result.neg && pos == start + 2) ||
                     pos == text.length - 1 ||
                     range ||
                     (result.items.length > 0 &&
@@ -2039,7 +2041,7 @@ function compile(pattern, flags){
                 flags.value = 32
             }
             if(item.items.length == 0){
-                if(! accept_inline_flag){
+                if(! accept_inline_flag && group_stack.length == 0){
                     var s = from_codepoint_list(pattern)
                     warn(_b_.DeprecationWarning,
                         `Flags not at the start of the expression '${s}'`,
