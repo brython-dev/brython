@@ -1181,7 +1181,15 @@ def g():
 assert list(g()) == [1, 2, 3]
 
 # issue 1564
-def spam() -> str: 
+def spam() -> str:
   yield 'eggs'
+
+# issue 1672
+def test(lst):
+    if lst:
+        yield lst[0]
+        yield from [item for item in test(lst[1:])]
+
+assert list(test([0, 1, 2, 3, 4])) == [0, 1, 2, 3, 4]
 
 print('passed all tests...')

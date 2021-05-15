@@ -411,7 +411,7 @@ $Node.prototype.transform = function(rank){
             var new_node = new $Node()
             var new_ctx = new $NodeCtx(new_node)
             var new_expr = new $ExprCtx(new_ctx, 'js', false)
-            var _id = new $RawJSCtx(new_expr, `var _i${this.has_yield.from_num}`)
+            var _id = new $RawJSCtx(new_expr, `$locals.$expr${this.has_yield.from_num}`)
             var assign = new $AssignCtx(new_expr)
             var right = new $ExprCtx(assign)
             right.tree = this.has_yield.tree
@@ -423,7 +423,8 @@ $Node.prototype.transform = function(rank){
             var n = this.has_yield.from_num
 
             var replace_with = `$B.$import("sys", [], {})
-            _i${n} = _b_.iter(_i${n})
+            var _i${n} = _b_.iter($locals.$expr${n}),
+                _r${n}
             var $failed${n} = false
             try{
                 var _y${n} = _b_.next(_i${n})
@@ -449,7 +450,7 @@ $Node.prototype.transform = function(rank){
                         if(_e.__class__ === _b_.GeneratorExit){
                             var $failed2${n} = false
                             try{
-                                var _m${n} = $B.$geatttr(_i${n}, "close")
+                                var _m${n} = $B.$getattr(_i${n}, "close")
                             }catch(_e1){
                                 $failed2${n} = true
                                 if(_e1.__class__ !== _b_.AttributeError){
@@ -11311,21 +11312,20 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     root.transform()
 
     // Create internal variables
-    var js = ['var $B = __BRYTHON__;\n'], pos = 1
+    var js = 'var $B = __BRYTHON__,\n' +
+             '    _b_ = __BRYTHON__.builtins,\n'
+    if(is_comp){
+        js += '    ' + local_ns + ' = {},\n' +
+              '    $locals = ' + local_ns +';\n'
+    }else{
+        js += '    $locals = ' + local_ns +';\n'
+    }
 
     //js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
-    js[pos++] = 'var _b_ = __BRYTHON__.builtins;\n'
-
-    js[pos] = 'var $locals = ' + local_ns
-
-    if(is_comp){
-        js[pos] += ' = {}'
-    }
-
     var offset = 0
 
-    root.insert(0, $NodeJS(js.join('')))
+    root.insert(0, $NodeJS(js))
     offset++
 
     // package, if available

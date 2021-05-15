@@ -32,7 +32,7 @@ $B.generator_return = function(value){
 $B.generator = $B.make_class("generator",
     function(func, name){
         // func is a Javascript generator, created by "function* "
-        // name is the optional generator name (eg "zip" in 
+        // name is the optional generator name (eg "zip" in
         // py_builtin_functions.js)
         var res = function(){
             var gen = func.apply(null, arguments)
