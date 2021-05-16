@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-05-16 16:09:19.532051"
-__BRYTHON__.timestamp=1621174159532
+__BRYTHON__.compiled_date="2021-05-16 16:12:50.577853"
+__BRYTHON__.timestamp=1621174370577
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 
@@ -3458,97 +3458,7 @@ if(C.node.parent.is_match && !C.node.is_body_node){if(token !=='id' ||value !='$
 var start=C.node.pos,src=$get_module(C).src
 if(! line_ends_with_comma(src.substr(start))){$_SyntaxError(C)}
 C.node.is_case=true}}
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case 'not':
-case 'lambda':
-case '.':
-var expr=new $AbstractExprCtx(C,true)
-return $transition(expr,token,value)
-case 'op':
-switch(value){case '*':
-case '+':
-case '-':
-case '~':
-var expr=new $AbstractExprCtx(C,true)
-return $transition(expr,token,value)}
-break
-case 'async':
-return new $AsyncCtx(C)
-case 'await':
-return new $AbstractExprCtx(new $AwaitCtx(C),true)
-case 'class':
-return new $ClassCtx(C)
-case 'continue':
-return new $ContinueCtx(C)
-case '__debugger__':
-return new $DebuggerCtx(C)
-case 'break':
-return new $BreakCtx(C)
-case 'def':
-return new $DefCtx(C)
-case 'for':
-return new $TargetListCtx(new $ForExpr(C))
-case 'if':
-case 'while':
-return new $AbstractExprCtx(
-new $ConditionCtx(C,token),false)
-case 'elif':
-var previous=$previous(C)
-if(['condition'].indexOf(previous.type)==-1 ||
-previous.token=='while'){$_SyntaxError(C,'elif after '+previous.type)}
-return new $AbstractExprCtx(
-new $ConditionCtx(C,token),false)
-case 'else':
-var previous=$previous(C)
-if(['condition','except','for'].
-indexOf(previous.type)==-1){$_SyntaxError(C,'else after '+previous.type)}
-return new $SingleKwCtx(C,token)
-case 'finally':
-var previous=$previous(C)
-if(['try','except'].indexOf(previous.type)==-1 &&
-(previous.type !='single_kw' ||
-previous.token !='else')){$_SyntaxError(C,'finally after '+previous.type)}
-return new $SingleKwCtx(C,token)
-case 'try':
-return new $TryCtx(C)
-case 'except':
-var previous=$previous(C)
-if(['try','except'].indexOf(previous.type)==-1){$_SyntaxError(C,'except after '+previous.type)}
-return new $ExceptCtx(C)
-case 'assert':
-return new $AbstractExprCtx(
-new $AssertCtx(C),false,true)
-case 'from':
-return new $FromCtx(C)
-case 'import':
-return new $ImportCtx(C)
-case 'global':
-return new $GlobalCtx(C)
-case 'nonlocal':
-return new $NonlocalCtx(C)
-case 'lambda':
-return new $LambdaCtx(C)
-case 'pass':
-return new $PassCtx(C)
-case 'raise':
-return new $AbstractExprCtx(new $RaiseCtx(C),true)
-case 'return':
-return new $AbstractExprCtx(new $ReturnCtx(C),true)
-case 'with':
-return new $AbstractExprCtx(new $WithCtx(C),false)
-case 'yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
-case 'del':
-return new $AbstractExprCtx(new $DelCtx(C),true)
-case '@':
+switch(token){case '@':
 return new $DecoratorCtx(C)
 case ',':
 if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
@@ -3560,6 +3470,96 @@ implicit_tuple.implicit=0
 implicit_tuple.tree.push(first)
 first.parent=implicit_tuple
 return implicit_tuple
+case '[':
+case '(':
+case '{':
+case '.':
+case 'bytes':
+case 'float':
+case 'id':
+case 'imaginary':
+case 'int':
+case 'str':
+case 'not':
+case 'lambda':
+var expr=new $AbstractExprCtx(C,true)
+return $transition(expr,token,value)
+case 'assert':
+return new $AbstractExprCtx(
+new $AssertCtx(C),false,true)
+case 'async':
+return new $AsyncCtx(C)
+case 'await':
+return new $AbstractExprCtx(new $AwaitCtx(C),true)
+case 'break':
+return new $BreakCtx(C)
+case 'class':
+return new $ClassCtx(C)
+case 'continue':
+return new $ContinueCtx(C)
+case '__debugger__':
+return new $DebuggerCtx(C)
+case 'def':
+return new $DefCtx(C)
+case 'del':
+return new $AbstractExprCtx(new $DelCtx(C),true)
+case 'elif':
+var previous=$previous(C)
+if(['condition'].indexOf(previous.type)==-1 ||
+previous.token=='while'){$_SyntaxError(C,'elif after '+previous.type)}
+return new $AbstractExprCtx(
+new $ConditionCtx(C,token),false)
+case 'else':
+var previous=$previous(C)
+if(['condition','except','for'].
+indexOf(previous.type)==-1){$_SyntaxError(C,'else after '+previous.type)}
+return new $SingleKwCtx(C,token)
+case 'except':
+var previous=$previous(C)
+if(['try','except'].indexOf(previous.type)==-1){$_SyntaxError(C,'except after '+previous.type)}
+return new $ExceptCtx(C)
+case 'finally':
+var previous=$previous(C)
+if(['try','except'].indexOf(previous.type)==-1 &&
+(previous.type !='single_kw' ||
+previous.token !='else')){$_SyntaxError(C,'finally after '+previous.type)}
+return new $SingleKwCtx(C,token)
+case 'for':
+return new $TargetListCtx(new $ForExpr(C))
+case 'from':
+return new $FromCtx(C)
+case 'global':
+return new $GlobalCtx(C)
+case 'if':
+case 'while':
+return new $AbstractExprCtx(
+new $ConditionCtx(C,token),false)
+case 'import':
+return new $ImportCtx(C)
+case 'lambda':
+return new $LambdaCtx(C)
+case 'nonlocal':
+return new $NonlocalCtx(C)
+case 'op':
+switch(value){case '*':
+case '+':
+case '-':
+case '~':
+var expr=new $AbstractExprCtx(C,true)
+return $transition(expr,token,value)}
+break
+case 'pass':
+return new $PassCtx(C)
+case 'raise':
+return new $AbstractExprCtx(new $RaiseCtx(C),true)
+case 'return':
+return new $AbstractExprCtx(new $ReturnCtx(C),true)
+case 'try':
+return new $TryCtx(C)
+case 'with':
+return new $AbstractExprCtx(new $WithCtx(C),false)
+case 'yield':
+return new $AbstractExprCtx(new $YieldCtx(C),true)
 case 'eol':
 if(C.tree.length==0){
 C.node.parent.children.pop()

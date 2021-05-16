@@ -7141,106 +7141,6 @@ $NodeCtx.prototype.transition = function(token, value){
         }
     }
     switch(token) {
-        case 'id':
-        case 'imaginary':
-        case 'int':
-        case 'float':
-        case 'str':
-        case 'bytes':
-        case '[':
-        case '(':
-        case '{':
-        case 'not':
-        case 'lambda':
-        case '.':
-            var expr = new $AbstractExprCtx(context,true)
-            return $transition(expr,token,value)
-        case 'op':
-            switch(value) {
-                case '*':
-                case '+':
-                case '-':
-                case '~':
-                    var expr = new $AbstractExprCtx(context, true)
-                    return $transition(expr, token, value)
-            }
-            break
-        case 'async':
-            return new $AsyncCtx(context)
-        case 'await':
-            return new $AbstractExprCtx(new $AwaitCtx(context), true)
-        case 'class':
-            return new $ClassCtx(context)
-        case 'continue':
-            return new $ContinueCtx(context)
-        case '__debugger__':
-            return new $DebuggerCtx(context)
-        case 'break':
-            return new $BreakCtx(context)
-        case 'def':
-            return new $DefCtx(context)
-        case 'for':
-            return new $TargetListCtx(new $ForExpr(context))
-        case 'if':
-        case 'while':
-            return new $AbstractExprCtx(
-                new $ConditionCtx(context, token), false)
-        case 'elif':
-            var previous = $previous(context)
-            if(['condition'].indexOf(previous.type) == -1 ||
-                    previous.token == 'while'){
-                $_SyntaxError(context, 'elif after ' + previous.type)
-            }
-            return new $AbstractExprCtx(
-                new $ConditionCtx(context, token), false)
-        case 'else':
-            var previous = $previous(context)
-            if(['condition', 'except', 'for'].
-                    indexOf(previous.type) == -1){
-                $_SyntaxError(context, 'else after ' + previous.type)
-            }
-            return new $SingleKwCtx(context,token)
-        case 'finally':
-            var previous = $previous(context)
-            if(['try', 'except'].indexOf(previous.type) == -1 &&
-                    (previous.type != 'single_kw' ||
-                        previous.token != 'else')){
-                $_SyntaxError(context, 'finally after ' + previous.type)
-            }
-            return new $SingleKwCtx(context,token)
-        case 'try':
-            return new $TryCtx(context)
-        case 'except':
-            var previous = $previous(context)
-            if(['try', 'except'].indexOf(previous.type) == -1){
-                $_SyntaxError(context, 'except after ' + previous.type)
-            }
-            return new $ExceptCtx(context)
-        case 'assert':
-            return new $AbstractExprCtx(
-                new $AssertCtx(context), false, true)
-        case 'from':
-            return new $FromCtx(context)
-        case 'import':
-            return new $ImportCtx(context)
-        case 'global':
-            return new $GlobalCtx(context)
-        case 'nonlocal':
-            return new $NonlocalCtx(context)
-        case 'lambda':
-            return new $LambdaCtx(context)
-        case 'pass':
-            return new $PassCtx(context)
-        case 'raise':
-            return new $AbstractExprCtx(new $RaiseCtx(context), true)
-        case 'return':
-            return new $AbstractExprCtx(new $ReturnCtx(context),true)
-        case 'with':
-            return new $AbstractExprCtx(new $WithCtx(context),false)
-        case 'yield':
-            return new $AbstractExprCtx(new $YieldCtx(context),true)
-        case 'del':
-            return new $AbstractExprCtx(new $DelCtx(context),true)
         case '@':
             return new $DecoratorCtx(context)
         case ',':
@@ -7257,6 +7157,106 @@ $NodeCtx.prototype.transition = function(token, value){
             implicit_tuple.tree.push(first)
             first.parent = implicit_tuple
             return implicit_tuple
+        case '[':
+        case '(':
+        case '{':
+        case '.':
+        case 'bytes':
+        case 'float':
+        case 'id':
+        case 'imaginary':
+        case 'int':
+        case 'str':
+        case 'not':
+        case 'lambda':
+            var expr = new $AbstractExprCtx(context,true)
+            return $transition(expr,token,value)
+        case 'assert':
+            return new $AbstractExprCtx(
+                new $AssertCtx(context), false, true)
+        case 'async':
+            return new $AsyncCtx(context)
+        case 'await':
+            return new $AbstractExprCtx(new $AwaitCtx(context), true)
+        case 'break':
+            return new $BreakCtx(context)
+        case 'class':
+            return new $ClassCtx(context)
+        case 'continue':
+            return new $ContinueCtx(context)
+        case '__debugger__':
+            return new $DebuggerCtx(context)
+        case 'def':
+            return new $DefCtx(context)
+        case 'del':
+            return new $AbstractExprCtx(new $DelCtx(context),true)
+        case 'elif':
+            var previous = $previous(context)
+            if(['condition'].indexOf(previous.type) == -1 ||
+                    previous.token == 'while'){
+                $_SyntaxError(context, 'elif after ' + previous.type)
+            }
+            return new $AbstractExprCtx(
+                new $ConditionCtx(context, token), false)
+        case 'else':
+            var previous = $previous(context)
+            if(['condition', 'except', 'for'].
+                    indexOf(previous.type) == -1){
+                $_SyntaxError(context, 'else after ' + previous.type)
+            }
+            return new $SingleKwCtx(context,token)
+        case 'except':
+            var previous = $previous(context)
+            if(['try', 'except'].indexOf(previous.type) == -1){
+                $_SyntaxError(context, 'except after ' + previous.type)
+            }
+            return new $ExceptCtx(context)
+        case 'finally':
+            var previous = $previous(context)
+            if(['try', 'except'].indexOf(previous.type) == -1 &&
+                    (previous.type != 'single_kw' ||
+                        previous.token != 'else')){
+                $_SyntaxError(context, 'finally after ' + previous.type)
+            }
+            return new $SingleKwCtx(context,token)
+        case 'for':
+            return new $TargetListCtx(new $ForExpr(context))
+        case 'from':
+            return new $FromCtx(context)
+        case 'global':
+            return new $GlobalCtx(context)
+        case 'if':
+        case 'while':
+            return new $AbstractExprCtx(
+                new $ConditionCtx(context, token), false)
+        case 'import':
+            return new $ImportCtx(context)
+        case 'lambda':
+            return new $LambdaCtx(context)
+        case 'nonlocal':
+            return new $NonlocalCtx(context)
+        case 'op':
+            switch(value) {
+                case '*':
+                case '+':
+                case '-':
+                case '~':
+                    var expr = new $AbstractExprCtx(context, true)
+                    return $transition(expr, token, value)
+            }
+            break
+        case 'pass':
+            return new $PassCtx(context)
+        case 'raise':
+            return new $AbstractExprCtx(new $RaiseCtx(context), true)
+        case 'return':
+            return new $AbstractExprCtx(new $ReturnCtx(context),true)
+        case 'try':
+            return new $TryCtx(context)
+        case 'with':
+            return new $AbstractExprCtx(new $WithCtx(context),false)
+        case 'yield':
+            return new $AbstractExprCtx(new $YieldCtx(context),true)
         case 'eol':
             if(context.tree.length == 0){ // might be the case after a :
                 context.node.parent.children.pop()
