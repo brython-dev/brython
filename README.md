@@ -60,7 +60,7 @@ You can choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.9.2/brython.min.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.9.3/brython.min.js">
 </script>
 ```
 
@@ -70,7 +70,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.9.2/brython_stdlib.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.9.3/brython_stdlib.js">
 </script>
 ```
 
