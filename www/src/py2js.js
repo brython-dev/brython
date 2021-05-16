@@ -3277,7 +3277,7 @@ $DefCtx.prototype.transform = function(node, rank){
                 '", $len, ' + pos_len + ', [' + slot_list + '])}'))
 
             // Replace missing arguments with default values
-            subelse_node = $NodeJS("else")
+            var subelse_node = $NodeJS("else")
             else_node.add(subelse_node)
 
             subelse_node.add($NodeJS(local_ns + ' = $locals = ' +
@@ -3293,12 +3293,10 @@ $DefCtx.prototype.transform = function(node, rank){
 
     nodes = nodes.concat(enter_frame_nodes)
 
-    // nodes.push($NodeJS('$locals.$name = "' + this.name + '"'))
-
     // Handle name __class__ in methods (PEP 3135 and issue #1068)
     var is_method = scope.ntype == "class"
     if(is_method){
-        class_ref = "$locals_" + scope.parent_block.id.replace(/\./g, '_') +
+        var class_ref = "$locals_" + scope.parent_block.id.replace(/\./g, '_') +
             '.' + scope.context.tree[0].qualname
         // bind name __class__ in method
         this.parent.node.binding["__class__"] = true
@@ -11797,12 +11795,13 @@ var _run_scripts = $B.parser._run_scripts = function(options){
 
     /* Uncomment to check the names added in global Javascript namespace
     var kk1 = Object.keys(_window)
-    for (var i  =0; i < kk1.length; i++){
+    for (var i = 0; i < kk1.length; i++){
         if(kk[i] === undefined){
-            console.log(kk1[i])
+            console.log("leaking", kk1[i])
         }
     }
     */
+
 }
 
 $B.$operators = $operators

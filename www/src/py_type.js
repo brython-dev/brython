@@ -112,9 +112,9 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         cl_dict = $B.$call(prepare)(class_name, bases) // dict or dict-like
 
     if(cl_dict.__class__ !== _b_.dict){
-        set_class_item = $B.$getattr(cl_dict, "__setitem__")
+        var set_class_item = $B.$getattr(cl_dict, "__setitem__")
     }else{
-        set_class_item = function(attr, value){
+        var set_class_item = function(attr, value){
             cl_dict.$string_dict[attr] = [value, cl_dict.$order++]
         }
     }

@@ -34,7 +34,7 @@ var isOdd = function(x) {return isWholeNumber(x) && 2 * Math.floor(x / 2) != x}
 var isNegZero = function(x) {return x === 0 && Math.atan2(x,x) < 0}
 
 var EPSILON = Math.pow(2, -52),
-    MAX_VALUE = (2 - EPSILON) * Math.pow(2, 1023);
+    MAX_VALUE = (2 - EPSILON) * Math.pow(2, 1023),
     MIN_VALUE = Math.pow(2, -1022);
 
 function nextUp(x){
@@ -47,14 +47,7 @@ function nextUp(x){
         }
         return _mod.inf
     }
-    /*
-    if(x == -1 / 0){
-        return -MAX_VALUE
-    }
-    if(x == +1 / 0){
-        return +1 / 0
-    }
-    */
+
     if(x == +MAX_VALUE){
         return +1 / 0
     }
