@@ -245,7 +245,10 @@ var ajax = {
 
     set_timeout: function(self, seconds, func){
         self.js.$requestTimer = setTimeout(
-            function() {self.js.abort();func()},
+            function() {
+                self.js.abort()
+                func()
+            },
             seconds * 1000)
     }
 
@@ -265,12 +268,18 @@ ajax.$factory = function(){
             res.js.text = this.responseText
         }
         var timer = this.$requestTimer
-        if(state == 0 && this.onuninitialized){this.onuninitialized(res)}
-        else if(state == 1 && this.onloading){this.onloading(res)}
-        else if(state == 2 && this.onloaded){this.onloaded(res)}
-        else if(state == 3 && this.oninteractive){this.oninteractive(res)}
-        else if(state == 4 && this.oncomplete){
-            if(timer !== null){window.clearTimeout(timer)}
+        if(state == 0 && this.onuninitialized){
+            this.onuninitialized(res)
+        }else if(state == 1 && this.onloading){
+            this.onloading(res)
+        }else if(state == 2 && this.onloaded){
+            this.onloaded(res)
+        }else if(state == 3 && this.oninteractive){
+            this.oninteractive(res)
+        }else if(state == 4 && this.oncomplete){
+            if(timer !== null){
+                window.clearTimeout(timer)
+            }
             this.oncomplete(res)
         }
     }
