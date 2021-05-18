@@ -2,6 +2,11 @@ var debug = 0
 
 var inf = Number.POSITIVE_INFINITY
 
+var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
+    'continue', 'lambda', 'from', 'class', 'in', 'not', 'finally', 'is',
+    'except', 'global', 'case', 'return', 'raise', 'break', 'with', 'def',
+    'try', 'if', 'else', 'del', 'import', 'nonlocal', 'match', 'pass']
+
 function Parser(){
   this.state = {type: 'program', pos: 0}
 }
@@ -167,14 +172,15 @@ function eval_body_once(rule, tokens, position){
     }else if(rule.type == 'COMMIT_CHOICE'){
         // mark current option as frozen
         return {rule, start: position, end: position}
+    }else if(rule.type == 'NAME'){
+        var test = tokens[position][0] == rule.type &&
+            keywords.indexOf(tokens[position][1]) == -1 &&
+            (rule.value === undefined ? true : tokens[position][1] == rule.value)
+        return test ? {rule, start: position, end: position + 1} : FAIL
     }else{
         var test = tokens[position][0] == rule.type &&
           (rule.value === undefined ? true : tokens[position][1] == rule.value)
-        if(test){
-            return {rule, start: position, end: position + 1}
-        }else{
-            return FAIL
-        }
+        return test ? {rule, start: position, end: position + 1} : FAIL
     }
 }
 
@@ -283,7 +289,7 @@ function parse(grammar, tokens){
         }
     }
     console.log('parse succeeds !', match)
-    console.log(show(match, tokens))
+    //console.log(show(match, tokens))
 }
 
 function show(match, tokens, level){
