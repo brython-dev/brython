@@ -56,9 +56,6 @@ function eval_body(rule, tokens, position){
     if(! rule.repeat){
         result = eval_body_once(rule, tokens, position)
     }else{
-        if(rule.join){
-            console.log('rule', rule, 'has join')
-        }
         var matches = [],
             start = position
         while(matches.length < rule.repeat[1]){
@@ -197,9 +194,6 @@ function grow_lr(rule, tokens, position, m){
 
 function apply_rule(rule, tokens, position){
     // apply rule at position
-    if(rule.name == "assignment"){
-        console.log('apply rule', rule.name)
-    }
     if(debug){
         console.log('apply rule', rule, position, 'memo', memo)
     }
@@ -216,10 +210,7 @@ function apply_rule(rule, tokens, position){
         // eval_body containing rule will return FAIL, but eval_body can
         // match with another branch that doesn't contain rule
         var match = eval_body(rule, tokens, position)
-        if(match !== FAIL){
-            match.rule.name = rule.name
-        }
-
+        
         // change memo(rule, position) with result of match
         m.match = match
         m.end = match.end
@@ -261,6 +252,12 @@ function parse(grammar, tokens){
     clear_memo()
     for(rule_name in grammar){
         grammar[rule_name].name = rule_name
+        if(grammar[rule_name].choices){
+            grammar[rule_name].choices.forEach(function(item, rank){
+                item.name = rule_name
+                item.rank = rank
+            })
+        }
     }
     while(position < tokens.length){
         match = apply_rule(rule, tokens, position)
@@ -283,12 +280,6 @@ function show(match, tokens, level){
          s += prefix + match.rule.name +
              (match.rank === undefined ? '' : ' #' + match.rank) + '\n'
          level += 1
-    }
-    if(match.rank !== undefined){
-        if(grammar[match.rule.name] === undefined){
-            console.log('pas de gramamar', match.rule)
-        }
-        console.log('choice', grammar[match.rule.name].choices[match.rank])
     }
     if(match.matches){
         for(var match of match.matches){
