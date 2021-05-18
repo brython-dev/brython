@@ -1,187 +1,14 @@
-
-function make_class(name){
-  eval('function ' + name + '(value){return new ' +
-    '_' + name + '(value)}')
-  eval('function _' + name + '(value){this.name = "' + name + '";' +
-    'this.value = value; this.min = 1; this.max = 1; this.num = rule_num++}')
-  var klass = eval('_' + name)
-
-  klass.prototype.join = function(string){
-    this.join = string
-    return this
-  }
-
-  klass.prototype.match = function(tokens, pos){
-    // if the token at position pos has its first item set to the klass
-    // name, and if the class value is set, its second item equal to value,
-    // the token matches the klass, so we return 1 (the number of tokens
-    // consumed in the match). Otherwise return false
-    console.log('match', this.name, tokens[pos])
-    var matches = [],
-        start = pos
-    while(pos < tokens.length && matches.length < this.max){
-        var test = tokens[pos][0] == this.name &&
-          (this.value === undefined ? true : tokens[pos][1] == this.value)
-        if(test){
-            matches.push({rule: this, start: pos, end: pos + 1})
-            pos++
-            if(matches.length >= this.max){
-                break
-            }
-        }else if(matches.length < this.min){
-            return FAIL
-        }
-    }
-    console.log(this.name, 'match', {rule: this, start, end: pos})
-    return {rule: this, matches, start, end: pos}
-  }
-
-  klass.prototype.repeat = function(min, max){
-    this.min = min
-    this.max = max
-    return this
-  }
-
-  return eval(name)
-}
-
-var NAME = make_class('NAME'),
-    STRING = make_class('STRING'),
-    NUMBER = make_class('NUMBER'),
-    OP = make_class('OP')
-    NEWLINE = make_class('NEWLINE'),
-    ENCODING = make_class('ENCODING'),
-    ENDMARKER = make_class('ENDMARKER'),
-    TYPE_COMMENT = make_class('TYPE_COMMENT'),
-    ASYNC = make_class('ASYNC'),
-    AWAIT = make_class('AWAIT'),
-    INDENT = make_class('INDENT'),
-    DEDENT = make_class('DEDENT')
-
-function OR(...choices){
-    return new Or(choices)
-}
-
-function Or(choices){
-  this.choices = choices
-  this.type = 'OR'
-  this.min = 1
-  this.max = 1
-  this.num = rule_num++
-}
-
-Or.prototype.join = function(string){
-    this.join = string
-    return this
-}
-
-Or.prototype.repeat = function(min, max){
-    this.min = min
-    this.max = max
-    return this
-}
-
-function SEQ(...items){
-    return new Seq(items)
-}
-
-function Seq(items){
-  this.items = items
-  this.type = "SEQ"
-  this.num = rule_num++
-  this.min = 1
-  this.max = 1
-}
-
-Seq.prototype.at = function(pos){
-  return this.items[pos]
-}
-
-Seq.prototype.repeat = Or.prototype.repeat
-
-function ELT(name, min, max){
-  return new Elt(name, min, max)
-}
-
-function Elt(name){
-  this.name = name
-  this.min = 1
-  this.max = 1
-}
-
-Elt.prototype.join = Or.prototype.join
-
-Elt.prototype.repeat = Seq.prototype.repeat
+var debug = 0
 
 var inf = Number.POSITIVE_INFINITY
-
-var rule_num = 0
-
-var grammar = {
-  file: SEQ(
-               ELT('statement').repeat(0, inf),
-               ENDMARKER()
-           ),
-  statement: SEQ(
-                 OR(
-                     ELT('assignment'),
-                     ELT('return_stmt'),
-                     ELT('raise_stmt'),
-                     ELT('expression')
-                 ),
-                 NEWLINE()
-             ),
-  assignment: SEQ(NAME(), OP('='), ELT('expression')),
-  expression: OR(NAME(), STRING(), NUMBER()),
-  return_stmt: SEQ(NAME('return'), ELT('expression')),
-  raise_stmt: SEQ(NAME('raise'), ELT('expression', 0, 1))
-}
-
-var grammar = {
-  file: SEQ(
-          SEQ(
-            NUMBER(),
-            OP('+'),
-            NUMBER(),
-            NEWLINE()
-          ).repeat(0, inf),
-          ENDMARKER()
-        )
-}
-
-var grammar = {
-
-  statement: SEQ(
-                 ELT('expr'),
-                 NEWLINE(),
-                 ENDMARKER()
-             ),
-
-  expr: OR(
-            SEQ(
-                ELT('expr'),
-                OP('-'),
-                NUMBER()
-            ),
-            NUMBER()
-        )
-}
-
-for(var name in grammar){
-    grammar[name].name = grammar[name].name || name
-    grammar[name].num = rule_num++
-}
 
 function Parser(){
   this.state = {type: 'program', pos: 0}
 }
 
 Parser.prototype.feed = function(tokens){
-  if(tokens[0][0] !== 'ENCODING'){
-      throw Error('missing encoding')
-  }
-  grammar.first_rule = grammar.expr
-  return parse(grammar, tokens.slice(1))
+  console.log('grammar', grammar)
+  return parse(grammar, tokens)
 }
 
 function MemoEntry(match, end){
@@ -203,7 +30,11 @@ function get_memo(rule, position){
             memo[rule.name][position] === undefined){
         return null
     }
-    return memo[rule.name][position]
+    var m = memo[rule.name][position]
+    if(m.match === FAIL){
+        return FAIL
+    }
+    return m
 }
 
 function set_memo(rule, position, value){
@@ -211,7 +42,8 @@ function set_memo(rule, position, value){
     memo[rule.name][position] = value
 }
 
-var FAIL = {name: 'FAIL'}
+var FAIL = {name: 'FAIL'},
+    FROZEN_FAIL = {name: 'FROZEN_FAIL'}
 
 function LeftRecursion(detected){
     this.type = 'LeftRecursion'
@@ -219,38 +51,119 @@ function LeftRecursion(detected){
 }
 
 function eval_body(rule, tokens, position){
-    console.log('eval body of rule', rule, 'position', position)
-    if(rule instanceof Or){
-        for(var choice of rule.choices){
+    var result,
+        start = position
+    if(! rule.repeat){
+        result = eval_body_once(rule, tokens, position)
+    }else{
+        if(rule.join){
+            console.log('rule', rule, 'has join')
+        }
+        var matches = [],
+            start = position
+        while(matches.length < rule.repeat[1]){
+            var match = eval_body_once(rule, tokens, position)
+            if(match === FAIL){
+                if(matches.length >= rule.repeat[0]){
+                    result = {rule, matches, start, end: position}
+                }else{
+                    result = FAIL
+                }
+                break
+            }
+            matches.push(match)
+            if(rule.join && tokens[match.end][1] == rule.join){
+                position = match.end + 1
+            }else{
+                position = match.end
+            }
+        }
+        if(! result){
+            result = {rule, start, matches, end: position}
+        }
+    }
+    if(rule.lookahead){
+        switch(rule.lookahead){
+            case 'positive':
+                if(result !== FAIL){
+                    result.end = result.start // don't consume input
+                }
+                break
+            case 'negative':
+                if(result === FAIL){
+                    result = {rule, start, end: start}
+                }else{
+                    result = FAIL
+                }
+                break
+        }
+    }
+    return result
+}
+
+function eval_body_once(rule, tokens, position){
+    if(debug){
+        console.log('eval body of rule', rule, 'position', position)
+    }
+    if(rule.choices){
+        for(var i = 0, len = rule.choices.length; i < len; i++){
+            var choice = rule.choices[i]
             var match = eval_body(choice, tokens, position)
-            if(match !== FAIL){
+            if(match === FROZEN_FAIL){
+                // if a choice with a ~ fails, don't try other alternatives
+                return FAIL
+            }else if(match !== FAIL){
+                match.rank = i
                 return match
             }
         }
         return FAIL
-    }else if(rule instanceof Seq){
+    }else if(rule.items){
         var start = position,
-            matches = []
+            matches = [],
+            frozen_choice = false // set to true if we reach a COMMIT_CHOICE (~)
         for(var item of rule.items){
+            if(item.type == 'COMMIT_CHOICE'){
+                console.log('freeze choice')
+                frozen_choice = true
+            }
             var match = eval_body(item, tokens, position)
             if(match !== FAIL){
                 matches.push(match)
                 position = match.end
                 if(match.end === undefined){
-                    console.log('no end', match)
+                    console.log('no end, rule', rule, 'item', item,
+                        'result of eval_body', match)
                     alert()
                 }
             }else{
-                console.log('item', item, 'of sequence', rule, 'fails')
+                if(debug){
+                    console.log('item', item, 'of sequence', rule, 'fails')
+                }
+                if(frozen_choice){
+                    return FROZEN_FAIL
+                }
                 return FAIL
             }
         }
         return {rule, matches, start, end: position}
-    }else if(rule instanceof Elt){
-        console.log('in eval body, element', rule.name)
-        return apply_rule(rule, tokens, position)
+    }else if(rule.type == "rule"){
+        return apply_rule(grammar[rule.name], tokens, position)
+    }else if(rule.type == "string"){
+        return tokens[position][1] == rule.value ?
+            {rule, start: position, end: position + 1} :
+            FAIL
+    }else if(rule.type == 'COMMIT_CHOICE'){
+        // mark current option as frozen
+        return {rule, start: position, end: position}
     }else{
-        return rule.match(tokens, position)
+        var test = tokens[position][0] == rule.type &&
+          (rule.value === undefined ? true : tokens[position][1] == rule.value)
+        if(test){
+            return {rule, start: position, end: position + 1}
+        }else{
+            return FAIL
+        }
     }
 }
 
@@ -268,7 +181,9 @@ function grow_lr(rule, tokens, position, m){
     // which uses the MemoEntry m for the rule. This allows an
     // expression such as "1 + 2 + 3" to set a first match for "1 + 2",
     // then a second for "1 + 2 + 3"
-    console.log('grow_lr, rule', rule, position, 'current MemoEntry', m)
+    if(debug){
+        console.log('grow_lr, rule', rule, position, 'current MemoEntry', m)
+    }
     while(true){
         var match = eval_body(rule, tokens, position)
         if(match === FAIL || match.end <= m.end){
@@ -282,16 +197,12 @@ function grow_lr(rule, tokens, position, m){
 
 function apply_rule(rule, tokens, position){
     // apply rule at position
-
-    if(rule instanceof Elt){
-        rule = grammar[rule.name]
-    }else if(! grammar[rule.name]){
-        // internal check, remove when algo is ok
-        console.log('apply rule', rule)
-        throw Error('not a rule')
+    if(rule.name == "assignment"){
+        console.log('apply rule', rule.name)
     }
-    console.log('apply rule', rule.name, rule, position, 'memo', memo)
-
+    if(debug){
+        console.log('apply rule', rule, position, 'memo', memo)
+    }
     // search if result is in memo
     var memoized = get_memo(rule, position)
     if(memoized === null){
@@ -305,6 +216,9 @@ function apply_rule(rule, tokens, position){
         // eval_body containing rule will return FAIL, but eval_body can
         // match with another branch that doesn't contain rule
         var match = eval_body(rule, tokens, position)
+        if(match !== FAIL){
+            match.rule.name = rule.name
+        }
 
         // change memo(rule, position) with result of match
         m.match = match
@@ -321,33 +235,76 @@ function apply_rule(rule, tokens, position){
             return match
         }
     }else{
-        console.log('read from memo', memoized)
+        if(debug){
+            console.log('read from memo', memoized)
+        }
         if(memoized.match instanceof LeftRecursion){
-            console.log('left recursion !')
+            if(debug){
+                console.log('recursion !')
+            }
             memoized.match.detected = true
             return FAIL
         }else{
-            return memoized
+            if(memoized !== FAIL && memoized.match.start === undefined){
+                console.log('pas de start', rule, position, memoized)
+                alert()
+            }
+            return memoized === FAIL ? memoized : memoized.match
         }
     }
 }
 
 function parse(grammar, tokens){
     var position = 0,
-        rule = grammar.statement,
+        rule = grammar.file,
         match
     clear_memo()
+    for(rule_name in grammar){
+        grammar[rule_name].name = rule_name
+    }
     while(position < tokens.length){
         match = apply_rule(rule, tokens, position)
         if(match === FAIL){
             console.log('rule', rule, 'fails')
-            rule = backtrack(rule)
-            if(rule === null){
-                return FAIL
-            }
+            return
         }else{
             position = match.end
         }
     }
-    console.log('parse succeeds !')
+    console.log('parse succeeds !', match)
+    console.log(show(match, tokens))
+}
+
+function show(match, tokens, level){
+    level = level || 0
+    var s = '',
+        prefix = '  '.repeat(level)
+    if(match.rule.name !== undefined){
+         s += prefix + match.rule.name +
+             (match.rank === undefined ? '' : ' #' + match.rank) + '\n'
+         level += 1
+    }
+    if(match.rank !== undefined){
+        if(grammar[match.rule.name] === undefined){
+            console.log('pas de gramamar', match.rule)
+        }
+        console.log('choice', grammar[match.rule.name].choices[match.rank])
+    }
+    if(match.matches){
+        for(var match of match.matches){
+            s += show(match, tokens, level)
+        }
+    }else{
+        if(match.end > match.start){
+            s += prefix
+            if(['NAME', 'STRING', 'NUMBER', 'string'].indexOf(match.rule.type) > -1){
+                s += match.rule.type + ' ' + tokens[match.start][1]
+            }else{
+                s += match.rule.type + ' ' + (match.rule.value || '') +
+                    match.start + '-' + match.end
+            }
+            s += '\n'
+        }
+    }
+    return s
 }
