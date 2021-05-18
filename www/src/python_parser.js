@@ -62,6 +62,7 @@ function eval_body(rule, tokens, position){
             var match = eval_body_once(rule, tokens, position)
             if(match === FAIL){
                 if(matches.length >= rule.repeat[0]){
+                    // Enough repetitions
                     result = {rule, matches, start, end: position}
                 }else{
                     result = FAIL
@@ -69,11 +70,19 @@ function eval_body(rule, tokens, position){
                 break
             }
             matches.push(match)
-            if(rule.join && tokens[match.end][1] == rule.join){
-                position = match.end + 1
-            }else{
-                position = match.end
-            }
+            // If the rule is of the form "s.e" :
+            // - if the next token matches "s", increment position and remain
+            //   in the loop
+            // - else break
+            if(rule.join){
+                if(tokens[match.end][1] == rule.join){
+                    position = match.end + 1
+                }else{
+                    position = match.end
+                    break
+                }
+             }
+             position = match.end
         }
         if(! result){
             result = {rule, start, matches, end: position}
@@ -100,7 +109,7 @@ function eval_body(rule, tokens, position){
 
 function eval_body_once(rule, tokens, position){
     if(debug){
-        console.log('eval body of rule', rule, 'position', position)
+        console.log('eval_body_once of rule', rule, 'position', position)
     }
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
@@ -125,6 +134,11 @@ function eval_body_once(rule, tokens, position){
                 frozen_choice = true
             }
             var match = eval_body(item, tokens, position)
+            if(item.debug){
+                console.log('eval item', item, 'at position', position,
+                    tokens[position], 'previous matches', matches,
+                    'match', match)
+            }
             if(match !== FAIL){
                 matches.push(match)
                 position = match.end
@@ -210,7 +224,7 @@ function apply_rule(rule, tokens, position){
         // eval_body containing rule will return FAIL, but eval_body can
         // match with another branch that doesn't contain rule
         var match = eval_body(rule, tokens, position)
-        
+
         // change memo(rule, position) with result of match
         m.match = match
         m.end = match.end
@@ -254,7 +268,7 @@ function parse(grammar, tokens){
         grammar[rule_name].name = rule_name
         if(grammar[rule_name].choices){
             grammar[rule_name].choices.forEach(function(item, rank){
-                item.name = rule_name
+                item.parent_rule = rule_name
                 item.rank = rank
             })
         }
@@ -275,9 +289,11 @@ function parse(grammar, tokens){
 function show(match, tokens, level){
     level = level || 0
     var s = '',
-        prefix = '  '.repeat(level)
-    if(match.rule.name !== undefined){
-         s += prefix + match.rule.name +
+        prefix = '  '.repeat(level),
+        name = match.rule.name || match.rule.parent_rule
+
+    if(name !== undefined){
+         s += prefix + name +
              (match.rank === undefined ? '' : ' #' + match.rank) + '\n'
          level += 1
     }
