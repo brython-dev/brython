@@ -2,10 +2,14 @@ var debug = 0
 
 var inf = Number.POSITIVE_INFINITY
 
+// Python keywords don't match NAME rules, so that "pass = 7" is illegal
+// The list doesn't include 'case' and 'match' that are 'soft keywords'
+// in PEP 634
 var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     'continue', 'lambda', 'from', 'class', 'in', 'not', 'finally', 'is',
-    'except', 'global', 'case', 'return', 'raise', 'break', 'with', 'def',
-    'try', 'if', 'else', 'del', 'import', 'nonlocal', 'match', 'pass']
+    'except', 'global', 'return', 'raise', 'break', 'with', 'def',
+    'try', 'if', 'else', 'del', 'import', 'nonlocal', 'pass'
+    ]
 
 function Parser(){
   this.state = {type: 'program', pos: 0}
@@ -57,7 +61,8 @@ function LeftRecursion(detected){
 
 function eval_body(rule, tokens, position){
     var result,
-        start = position
+        start = position,
+        join_position = false
     if(! rule.repeat){
         result = eval_body_once(rule, tokens, position)
     }else{
@@ -66,7 +71,11 @@ function eval_body(rule, tokens, position){
         while(matches.length < rule.repeat[1]){
             var match = eval_body_once(rule, tokens, position)
             if(match === FAIL){
-                if(matches.length >= rule.repeat[0]){
+                if(join_position){
+                    result = {rule, matches, start, end: join_position - 1}
+                    join_position = false
+                    position = join_position - 1
+                }else if(matches.length >= rule.repeat[0]){
                     // Enough repetitions
                     result = {rule, matches, start, end: position}
                 }else{
@@ -77,17 +86,22 @@ function eval_body(rule, tokens, position){
             matches.push(match)
             // If the rule is of the form "s.e" :
             // - if the next token matches "s", increment position and remain
-            //   in the loop
+            //   in the loop. Keep track of the position that matches "s". If
+            //   the next tokens don't match the rule, the position will be
+            //   reset to the position of the "s" character
             // - else break
             if(rule.join){
                 if(tokens[match.end][1] == rule.join){
                     position = match.end + 1
+                    join_position = position
                 }else{
                     position = match.end
                     break
                 }
+             }else{
+                 join_position = false
+                 position = match.end
              }
-             position = match.end
         }
         if(! result){
             result = {rule, start, matches, end: position}
@@ -135,7 +149,6 @@ function eval_body_once(rule, tokens, position){
             frozen_choice = false // set to true if we reach a COMMIT_CHOICE (~)
         for(var item of rule.items){
             if(item.type == 'COMMIT_CHOICE'){
-                console.log('freeze choice')
                 frozen_choice = true
             }
             var match = eval_body(item, tokens, position)
