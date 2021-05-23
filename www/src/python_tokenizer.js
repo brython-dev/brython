@@ -1,4 +1,5 @@
-var unicode_tables = __BRYTHON__.unicode_tables
+;(function($B){
+
 
 function ord(char){
     if(char.length == 1){
@@ -44,8 +45,10 @@ function get_comment(src, pos, line_num, line_start, token_name){
     }
 }
 
-function* tokenizer(src){
-    var whitespace = ' \t\n',
+$B.tokenizer = function*(src){
+
+    var unicode_tables = $B.unicode_tables,
+        whitespace = ' \t\n',
         operators = '*+-/%&^~=<>',
         allowed_after_identifier = ',.()[]:;',
         string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
@@ -228,9 +231,18 @@ function* tokenizer(src){
                                 pos++
                                 op += char
                             }
-                            yield ['OP', op,
-                                [line_num, pos - line_start - op.length + 1],
-                                [line_num, pos - line_start + 1]]
+                            var dot_pos = pos - line_start - op.length + 1
+                            while(op.length >= 3){
+                                // pos - line_start - op.length + 1
+                                yield ['OP', '...', [line_num, dot_pos],
+                                    [line_num, dot_pos + 3]]
+                                op = op.substr(3)
+                            }
+                            for(var i = 0; i < op.length; i++){
+                                yield ['OP', '.', [line_num, dot_pos],
+                                    [line_num, dot_pos + 1]]
+                                dot_pos++
+                            }
                         }
                         break
                     case '\\':
@@ -338,7 +350,7 @@ function* tokenizer(src){
                         triple_quote = src[pos] == quote && src[pos + 1] == quote
                         prefix = name
                         escaped = false
-                        string_start = [line_num, pos - line_start - 1]
+                        string_start = [line_num, pos - line_start - name.length]
                         if(triple_quote){
                           pos += 2
                         }
@@ -372,7 +384,7 @@ function* tokenizer(src){
                                 state = null
                             }else if(char + src.substr(pos, 2) ==
                                     quote.repeat(3)){
-                                var full_string = prefix + quote.repeat(3) + 
+                                var full_string = prefix + quote.repeat(3) +
                                     string + quote.repeat(3)
                                 yield ['STRING', full_string, string_start,
                                   [line_num, pos - line_start + 3]]
@@ -451,7 +463,7 @@ function* tokenizer(src){
             yield ['NAME', name,
                 [line_num, pos - line_start - name.length + 1],
                 [line_num, pos - line_start + 1]]
-    
+
             break
         case 'NUMBER':
             yield ['NUMBER', number,
@@ -473,3 +485,4 @@ function* tokenizer(src){
     yield ['ENDMARKER', '', [line_num, 0], [line_num, 0]]
 
 }
+})(__BRYTHON__)
