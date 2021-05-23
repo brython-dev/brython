@@ -496,7 +496,7 @@ $B.$check_def = function(name, value){
 $B.$check_def_global = function(name, ns){
     var res = ns[name]
     if(res === undefined){
-        throw _b_.NameError.$factory("name '" + name + 
+        throw _b_.NameError.$factory("name '" + name +
             "' is not defined")
     }
     return res
