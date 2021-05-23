@@ -9,19 +9,8 @@ limited to the folders accessible with an Ajax request.
 Keywords and built-in functions
 -------------------------------
 
-Brython supports all the keywords and functions of Python 3 :
-
-- keywords : `and, as, assert, async, await, break, class, continue, def, del, `
-  `elif, else, except, False, finally, for, from, global, if, import, in, is, `
-  `lambda, None, nonlocal, not, or, pass, raise, return, True, try, while, with, yield`
-- built-in functions and classes : `abs, all, any, ascii, bin, bool, breakpoint, bytes,`
-  `callable, chr, classmethod, delattr, dict, dir, divmod, `
-  `enumerate, eval, exec, filter, float, frozenset, getattr, `
-  `globals, hasattr, hash, hex, id, input, int, isinstance, `
-  `iter, len, list, locals, map, max, memoryview, min, `
-  `next, object, open, ord, pow, print, property, range, `
-  `repr, reversed, round, set, setattr, slice, sorted, str, `
-  `sum, super, tuple, type, vars, zip, __import__`
+Brython supports all the keywords and functions of the Python version with the
+same version number.
 
 Here are a few features and limitations imposed by the browser and Javascript :
 
@@ -64,9 +53,14 @@ Standard library
 Brython is shipped with a part of the CPython standard library.
 
 Some of the modules that are written in C in CPython standard library have
-been written in Javascript in Brython distribution (`math`, `unicodedata`...).
-For others (module `re` or package `json` for instance), a pure-Python version
-is provided (it is not as fast !).
+been written in Javascript in Brython distribution (`math`, `random`, `re`,
+`unicodedata`...).
+
+The `json` module is also written in Javascript. It is based on the Javascript
+object `JSON`, which implies a few minor differences with the CPython
+package; the values `NaN, Infinity, -Infinity` which are recognized by 
+CPython are not in the JSON specification and as such, throw a `SynatxError`
+with the Brython module.
 
 The `xml` package is not provided because that of the CPython distribution
 uses a C module (`pyexpat`) which is available neither in Javascript nor in
