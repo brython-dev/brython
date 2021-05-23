@@ -69,7 +69,7 @@ Certains des modules qui sont écrits en C dans la distribution CPython ont ét�
 Le module `json` est également écrit en Javascript. Il s'appuie sur l'objet
 `JSON` de Javascript, ce qui implique quelques différences mineures avec le
 package CPython; les valeurs `NaN, Infinity, -Infinity` qui sont reconnues par
-CPython n'étant pas dans la spécification JSON produisent une `SynatxError`
+CPython n'étant pas dans la spécification JSON produisent une `SyntaxError`
 avec le module Brython.
 
 Le package `xml` n'est pas fourni, parce que celui de la distribution

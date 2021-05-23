@@ -59,7 +59,7 @@ been written in Javascript in Brython distribution (`math`, `random`, `re`,
 The `json` module is also written in Javascript. It is based on the Javascript
 object `JSON`, which implies a few minor differences with the CPython
 package; the values `NaN, Infinity, -Infinity` which are recognized by 
-CPython are not in the JSON specification and as such, throw a `SynatxError`
+CPython are not in the JSON specification and as such, throw a `SyntaxError`
 with the Brython module.
 
 The `xml` package is not provided because that of the CPython distribution
