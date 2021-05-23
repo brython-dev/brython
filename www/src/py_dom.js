@@ -809,16 +809,28 @@ DOMNode.__getattribute__ = function(self, attr){
     }
     if(property !== undefined && self.__class__ &&
             self.__class__.__module__ != "browser.html"){
-        // cf. issue #1543
-        var from_class = $B.$getattr(self.__class__, attr, _b_.None)
-        if(from_class !== _b_.None){
-            var frame = $B.last($B.frames_stack),
-                line_info = frame[1].$line_info,
-                line = line_info.split(',')[0]
-            console.info("Warning: line " + line + ", " + self.tagName +
-                " element has instance attribute '" + attr + "' set." +
-                " Attribute of class " + $B.class_name(self) +
-                " is ignored.")
+        // cf. issue #1543 : if an element has the attribute "attr" set and
+        // its class has an attribute of the same name, show a warning that
+        // the class attribute is ignored
+        var bases = self.__class__.__bases__
+        var show_message = true
+        for(var base of bases){
+            if(base.__module__ == "browser.html"){
+                show_message = false
+                break
+            }
+        }
+        if(show_message){
+            var from_class = $B.$getattr(self.__class__, attr, _b_.None)
+            if(from_class !== _b_.None){
+                var frame = $B.last($B.frames_stack),
+                    line_info = frame[1].$line_info,
+                    line = line_info.split(',')[0]
+                console.info("Warning: line " + line + ", " + self.tagName +
+                    " element has instance attribute '" + attr + "' set." +
+                    " Attribute of class " + $B.class_name(self) +
+                    " is ignored.")
+            }
         }
     }
 
