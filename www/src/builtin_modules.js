@@ -200,7 +200,7 @@
                                         console.log("first", first)
                                         console.log(arguments)
                                     }
-                                    $B.handle_error(err)
+                                    throw err
                                 }
                             }
                         }
@@ -270,7 +270,8 @@
                         res._wrapped = true  // marked as wrapped
                     }else{
                         if(klass.$infos.__name__ == 'SVG'){
-                            var res = $B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                            var res = $B.DOMNode.$factory(
+                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
                             var elt = document.createElement(klass.$infos.__name__),
                                 res = $B.DOMNode.$factory(elt, true)

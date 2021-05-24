@@ -223,7 +223,6 @@ class Interpreter:
                     _ = self.globals['_'] = eval(currentLine,
                                               self.globals,
                                               self.locals)
-                    self.flush()
                     if _ is not None:
                         self.write(repr(_) + '\n')
                     self.flush()
@@ -338,7 +337,8 @@ class Interpreter:
     def print_tb(self):
         trace = Trace()
         traceback.print_exc(file=trace)
-        self.zone.value += trace.format()
+        self.write(trace.format())
+        self.flush()
 
     def syntax_error(self, args):
         info, [filename, lineno, offset, line] = args

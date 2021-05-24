@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-05-24 15:57:28.948058"
-__BRYTHON__.timestamp=1621864648948
+__BRYTHON__.compiled_date="2021-05-24 18:13:15.272703"
+__BRYTHON__.timestamp=1621872795272
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 
@@ -14573,7 +14573,7 @@ var items=_b_.list.$factory(first)
 items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){if($B.debug > 1){console.log(err,err.__class__,err.args)
 console.log("first",first)
 console.log(arguments)}
-$B.handle_error(err)}}}}
+throw err}}}}
 var items=_b_.list.$factory(_b_.dict.items($ns['kw']))
 for(var i=0,len=items.length;i < len;i++){
 var arg=items[i][0],value=items[i][1]
@@ -14603,7 +14603,8 @@ function makeFactory(klass){var factory=function(){if(klass.$elt_wrap !==undefin
 var elt=klass.$elt_wrap 
 klass.$elt_wrap=undefined 
 var res=$B.DOMNode.$factory(elt,true)
-res._wrapped=true }else{if(klass.$infos.__name__=='SVG'){var res=$B.DOMNode.$factory(document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var elt=document.createElement(klass.$infos.__name__),res=$B.DOMNode.$factory(elt,true)}
+res._wrapped=true }else{if(klass.$infos.__name__=='SVG'){var res=$B.DOMNode.$factory(
+document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var elt=document.createElement(klass.$infos.__name__),res=$B.DOMNode.$factory(elt,true)}
 res._wrapped=false }
 res.__class__=klass
 klass.__init__(res,...arguments)
