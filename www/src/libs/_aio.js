@@ -114,7 +114,6 @@ function ajax(){
                     ['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(method) > -1){
                 xhr.send(args.body)
             }else{
-                console.log('send request', xhr)
                 xhr.send()
             }
         })

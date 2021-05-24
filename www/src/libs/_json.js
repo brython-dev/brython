@@ -162,7 +162,6 @@ function to_json(obj, level){
 }
 
 function from_json(s){
-    console.log('from json', s)
     var $defaults = {cls: _b_.None, object_hook: _b_.None,
             parse_float: _b_.None, parse_int: _b_.None,
             parse_constant: _b_.None, object_pairs_hook: _b_.None},
