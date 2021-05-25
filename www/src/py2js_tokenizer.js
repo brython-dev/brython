@@ -78,8 +78,7 @@ $B.op2method = {
         "<": "lt", ">": "gt", "<=": "le", ">=": "ge", "==": "eq", "!=": "ne"
     },
     boolean: {
-        "or": "or", "and": "and", "in": "in", "not": "not", "is": "is",
-        "not_in": "not_in", "is_not": "is_not" // fake
+        "or": "or", "and": "and", "in": "in", "not": "not", "is": "is"
     },
     subset: function(){
         var res = {},
@@ -7788,7 +7787,8 @@ $OpCtx.prototype.to_js = function(){
             return '$B.$is(' + this.tree[0].to_js() + ', ' +
                 this.tree[1].to_js() + ')'
         case 'is_not':
-            return this.tree[0].to_js() + '!==' + this.tree[1].to_js()
+            return '! $B.$is(' + this.tree[0].to_js() + ', ' +
+                this.tree[1].to_js() + ')'
         case '+':
             return '$B.add(' + this.tree[0].to_js() + ', ' +
                 this.tree[1].to_js() + ')'
@@ -10566,6 +10566,9 @@ function prepare_string(s, position){
     }
     if(result.raw){
         inner = inner.replace(/\\/g, '\\\\')
+    }else{
+        // remove continuation lines
+        inner = inner.replace(/\\\n/g, '')
     }
     if(triple){
         // always escape quotes in triple strings
@@ -10679,7 +10682,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
         token = token.value
         lnum = token[2][0]
         $pos = line2pos[lnum] + token[2][1]
-        // console.log('token', token, 'lnum', lnum, '$pos', $pos, src.substr($pos, 10))
+        //console.log('token', token, 'lnum', lnum, '$pos', $pos, src.substr($pos, 10))
         switch(token[0]){
             case 'ENDMARKER':
                 if(node.context.tree.length == 0){
@@ -10711,8 +10714,10 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
                             "Unsupported Python keyword '" + name + "'")
                     }
                     context = $transition(context, name)
+                }else if(name == 'not'){
+                    context = $transition(context, 'not')
                 }else if(typeof $operators[name] == 'string'){
-                    // Literal operators : "and", "or", "is", "not"
+                    // Literal operators : "and", "or", "is"
                     context = $transition(context, 'op', name)
                 }else{
                     if($B.forbidden.indexOf(name) > -1){name = '$$' + name}
@@ -10721,15 +10726,28 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
                 continue
             case 'OP':
                 var op = token[1]
-                if((op.length == 1 && '()[]{}.,:;='.indexOf(op) > -1) ||
-                        ['in'].indexOf(op) > -1){
+                if((op.length == 1 && '()[]{}.,:='.indexOf(op) > -1) ||
+                        [':='].indexOf(op) > -1){
                     context = $transition(context, token[1])
-                }else if(token[1] == '...'){
-                    context = $transition(context, 'ellipsis', token[1])
-                }else if($augmented_assigns[token[1]]){
-                    context = $transition(context, 'augm_assign', token[1])
+                }else if(op == '...'){
+                    context = $transition(context, 'ellipsis')
+                }else if(op == '->'){
+                    context = $transition(context, 'annotation')
+                }else if(op == ';'){
+                    if(context.type == 'node' && context.tree.length == 0){
+                        $_SyntaxError(context, 'statement cannot start with ;')
+                    }
+                    // same as NEWLINE
+                    $transition(context, 'eol')
+                    var new_node = new $Node()
+                    new_node.line_num = token[2][0] + 1
+                    node.parent.add(new_node)
+                    context = new $NodeCtx(new_node)
+                    node = new_node
+                }else if($augmented_assigns[op]){
+                    context = $transition(context, 'augm_assign', op)
                 }else{
-                    context = $transition(context, 'op', token[1])
+                    context = $transition(context, 'op', op)
                 }
                 continue
             case 'STRING':
@@ -10751,7 +10769,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
                 $transition(context, 'eol')
                 // Create a new node
                 var new_node = new $Node()
-                new_node.line_num = token[2][1] + 1
+                new_node.line_num = token[2][0] + 1
                 node.parent.add(new_node)
                 context = new $NodeCtx(new_node)
                 node = new_node
@@ -11317,6 +11335,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
                 pos++
                 break
             case ';':
+            console.log('case ;')
                 $transition(context, 'eol') // close previous instruction
                 // create a new node, at the same level as current's parent
                 if(current.context.tree.length == 0){
@@ -12077,3 +12096,4 @@ if (__BRYTHON__.isNode) {
     global.__BRYTHON__ = __BRYTHON__
     module.exports = { __BRYTHON__ }
 }
+
