@@ -46,7 +46,6 @@ function get_comment(src, pos, line_num, line_start, token_name){
 }
 
 $B.tokenizer = function*(src){
-
     var unicode_tables = $B.unicode_tables,
         whitespace = ' \t\n',
         operators = '*+-/%&^~=<>',
@@ -255,7 +254,9 @@ $B.tokenizer = function*(src){
                             pos += 2
                             line_start = pos + 1
                         }else{
-                            yield ['unknown', char]
+                            yield ['ERRORTOKEN', char,
+                                [line_num, pos - line_start],
+                                [line_num, pos - line_start + 1]]
                         }
                         break
                     case '\r':
@@ -332,7 +333,9 @@ $B.tokenizer = function*(src){
                           pos++
                         }else{
                             if(char != ' '){
-                                yield ['unknown', char + '(' + ord(char) + ')']
+                                yield ['ERRORTOKEN', char,
+                                    [line_num, pos - line_start],
+                                    [line_num, pos - line_start + 1]]
                             }
                         }
                         break
