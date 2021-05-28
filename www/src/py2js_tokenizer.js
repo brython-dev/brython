@@ -10863,7 +10863,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
             throw err
         }
         if(token.done){
-            throw Error('token done without ENDMARKER')
+            throw Error('token done without ENDMARKER.')
         }
         token = token.value
         if(token[2] === undefined){
