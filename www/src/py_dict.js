@@ -514,6 +514,10 @@ function init_from_list(self, args){
         si = dict.__setitem__
     while(i++ < stop){
         var item = args[i]
+        if(item.length != 2){
+            throw _b_.ValueError.$factory("dictionary " +
+                `update sequence element #${i} has length 1; 2 is required`)
+        }
         switch(typeof item[0]) {
             case 'string':
                 self.$string_dict[item[0]] = [item[1], self.$order++]

@@ -72,6 +72,14 @@ try:
 except RuntimeError:
     pass
 
+# issue 434
+pairs = ['']
+try:
+    dict(pair.split('=', 1) for pair in pairs)
+    raise AssertionError('should have raised ValueError')
+except ValueError:
+    pass
+    
 # issue 994
 d = {False: "Test", True: "Test2"}
 assert d[False] == "Test"
