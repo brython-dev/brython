@@ -74,14 +74,14 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
             line = lines[line_num - 1],
             lpos = pos - line_pos[line_num],
             len = line.length
-        exc.text = line
+        exc.text = line + '\n'
         lpos -= len - line.length
         if(lpos < 0){lpos = 0}
         while(line.charAt(0) == ' '){
             line = line.substr(1)
             if(lpos > 0){lpos--}
         }
-        exc.offset = lpos
+        exc.offset = lpos + 1 // starts at column 1, not 0
         exc.args = $B.fast_tuple([$B.$getitem(exc.args, 0),
             $B.fast_tuple([module, line_num, lpos, line])])
     }
