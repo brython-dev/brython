@@ -10495,11 +10495,15 @@ function prepare_number(n){
 }
 
 function test_escape(context, text, string_start, antislash_pos){
-    // Test if the escape sequence starting at position "pos" in text is
-    // is valid
-    // $pos is set at the position before the string quote
-    var seq_start = antislash_pos - string_start - 1,
-        seq_end,
+    // Test if the escape sequence starting at position "antislah_pos" in text
+    // is is valid
+    // $pos is set at the position before the string quote in original string
+    // string_start is the position of the first character after the quote
+    // text is the content of the string between quotes
+    // antislash_pos is the position of \ inside text
+    console.log('$pos', $pos, 'string start', string_start,
+        'antislash pos', antislash_pos, 'text', text)
+    var seq_end,
         mo
     // 1 to 3 octal digits = Unicode char
     mo = /^[0-7]{1,3}/.exec(text.substr(antislash_pos + 1))
@@ -10510,10 +10514,11 @@ function test_escape(context, text, string_start, antislash_pos){
         case "x":
             var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 2){
-                seq_end = seq_start + mo[0].length + 1
+                seq_end = antislash_pos + mo[0].length + 1
+                $pos = string_start + seq_end + 2
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
-                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
+                     `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\xXX escape"])
             }else{
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
@@ -10521,10 +10526,11 @@ function test_escape(context, text, string_start, antislash_pos){
         case "u":
             var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 4){
-                seq_end = seq_start + mo[0].length + 1
+                seq_end = antislash_pos + mo[0].length + 1
+                $pos = string_start + seq_end + 2
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
-                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
+                     `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape"])
             }else{
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
@@ -10532,10 +10538,11 @@ function test_escape(context, text, string_start, antislash_pos){
         case "U":
             var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 8){
-                seq_end = seq_start + mo[0].length + 1
+                seq_end = antislash_pos + mo[0].length + 1
+                $pos = string_start + seq_end + 2
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
-                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
+                     `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape"])
             }else{
                 var value = parseInt(mo[0], 16)
@@ -10577,7 +10584,7 @@ function prepare_string(context, s, position){
     }
 
     var raw = context.type == 'str' && context.raw,
-        string_start = 0,
+        string_start = $pos + pos + 1,
         bytes = false,
         fstring = false,
         sm_length, // length of string modifier
@@ -10968,11 +10975,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
                 }
                 continue
             case 'STRING':
-                try{
-                    var prepared = prepare_string(context, token[1], token[2])
-                }catch(err){
-                    $_SyntaxError(context, err.message)
-                }
+                var prepared = prepare_string(context, token[1], token[2])
                 context = $transition(context, 'str', prepared.value)
                 continue
             case 'NUMBER':
