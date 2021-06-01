@@ -149,18 +149,11 @@ var create_temp_name = $B.parser.create_temp_name = function(prefix) {
  */
 var replace_node = $B.parser.replace_node = function(replace_what, replace_with){
     var parent = replace_what.parent
-    var pos = get_rank_in_parent(replace_what)
+    var pos = replace_what.parent.children.indexOf(replace_what)
     parent.children[pos] = replace_with
     replace_with.parent = parent
     // Save node bindings
     replace_with.bindings = replace_what.bindings
-}
-
-/*
- * Returns n such that :param:`node` is the n-th child of its parent node.
- */
-var get_rank_in_parent = $B.parser.get_rank_in_parent = function(node) {
-    return node.parent.children.indexOf(node)
 }
 
 // Adds a new identifier node to :param:`parent` at position :param:`insert_at`.
@@ -10501,8 +10494,6 @@ function test_escape(context, text, string_start, antislash_pos){
     // string_start is the position of the first character after the quote
     // text is the content of the string between quotes
     // antislash_pos is the position of \ inside text
-    console.log('$pos', $pos, 'string start', string_start,
-        'antislash pos', antislash_pos, 'text', text)
     var seq_end,
         mo
     // 1 to 3 octal digits = Unicode char
@@ -10818,7 +10809,7 @@ function handle_errortoken(context, token){
     $_SyntaxError(context, 'unknown or invalid token ' + token[1])
 }
 
-var $tokenize = $B.parser.$tokenize = function(root, src){
+var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
     var tokenizer = $B.tokenizer(src)
     var br_close = {")": "(", "]": "[", "}": "{"},
         br_stack = "",
@@ -10877,17 +10868,21 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
             console.log('token incomplet', token, 'module', module, root)
             console.log('src', src)
         }
-        lnum = token[2][0]
-        $pos = line2pos[lnum] + token[2][1]
+        if(token.start === undefined){
+            console.log('no start', token)
+        }
+        lnum = token.start[0]
+        $pos = line2pos[lnum] + token.start[1]
         //console.log('token', token, 'lnum', lnum, '$pos', $pos, src.substr($pos, 10))
-        if(expect_indent && ['INDENT', 'COMMENT', 'NL'].indexOf(token[0]) == -1){
+        if(expect_indent &&
+                ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
             $_SyntaxError(context, "expected an indented block")
         }else{
             expect_indent = false
         }
 
-        switch(token[0]){
+        switch(token.type){
             case 'ENDMARKER':
                 // Check that all "yield"s are in a function
                 if(root.yields_func_check){
@@ -10912,7 +10907,7 @@ var $tokenize = $B.parser.$tokenize = function(root, src){
                 node.line_num++
                 continue
             case 'COMMENT':
-                var end = line2pos[token[3][0]] + token[3][1]
+                var end = line2pos[token.end[0]] + token.end[1]
                 root.comments.push([$pos, end - $pos])
                 continue
             case 'ERRORTOKEN':
@@ -11116,10 +11111,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
     var root = $create_root_node(
-        {src: src, is_comp: is_comp, has_annotations: has_annotations, filename: filename},
+        {src: src, is_comp: is_comp, has_annotations: has_annotations,
+            filename: filename},
         module, locals_id, parent_scope, line_num)
 
-    $tokenize(root, src)
+    dispatch_tokens(root, src)
 
     root.is_comp = is_comp
     if(ix != undefined){
@@ -11136,8 +11132,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }else{
         js += '    $locals = ' + local_ns +';\n'
     }
-
-    //js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
     var offset = 0
 
@@ -11170,7 +11164,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     root.insert(enter_frame_pos + 1, try_node)
 
     // Add module body to the "try" clause
-    if(children.length == 0){children = [$NodeJS('')]} // in case the script is empty
+    if(children.length == 0){
+        children = [$NodeJS('')] // in case the script is empty
+    }
     children.forEach(function(child){
         try_node.add(child)
     })
