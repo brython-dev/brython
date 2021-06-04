@@ -7525,7 +7525,6 @@ $NumberCtx.prototype.transition = function(token, value){
         case '[':
         case '(':
         case '{':
-        case 'not':
         case 'lambda':
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
@@ -10886,7 +10885,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         }
         lnum = token.start[0]
         $pos = line2pos[lnum] + token.start[1]
-        //console.log('token', token, 'lnum', lnum, '$pos', $pos, src.substr($pos, 10))
+        // console.log('token', token, 'lnum', lnum, '$pos', $pos)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
