@@ -10806,14 +10806,18 @@ function unindent(src){
 }
 
 function handle_errortoken(context, token){
+    if(token.string == "'" || token.string == '"'){
+        $_SyntaxError(context, ['unterminated string literal ' +
+            `(detected at line ${token.start[0]})`])
+    }
     $_SyntaxError(context, 'unknown or invalid token ' + token[1])
 }
 
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
     var tokenizer = $B.tokenizer(src)
-    var br_close = {")": "(", "]": "[", "}": "{"},
-        br_stack = "",
-        br_pos = []
+    var braces_close = {")": "(", "]": "[", "}": "{"},
+        braces_open = "([{",
+        braces_stack = []
     var kwdict = [
         "class", "return", "break", "for", "lambda", "try", "finally",
         "raise", "def", "from", "nonlocal", "while", "del", "global",
@@ -10857,6 +10861,15 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 context = context || new $NodeCtx(node)
                 $pos = line2pos[err.line_num]
                 $_SyntaxError(context, err.message, 'indent')
+            }else if(err instanceof SyntaxError){
+                if(braces_stack.length > 0){
+                    var last_brace = $B.last(braces_stack),
+                        start = last_brace.start
+                    $pos = line2pos[start[0]] + start[1]
+                    $_SyntaxError(context, [`'${last_brace.string} was ` +
+                       'never closed'])
+                }
+                $_SyntaxError(context, err.message)
             }
             throw err
         }
@@ -10912,7 +10925,9 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 continue
             case 'ERRORTOKEN':
                 context = context || new $NodeCtx(node)
-                handle_errortoken(context, token)
+                if(token.string != ' '){
+                    handle_errortoken(context, token)
+                }
                 continue
         }
         // create context if needed
@@ -10947,6 +10962,23 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 var op = token[1]
                 if((op.length == 1 && '()[]{}.,:='.indexOf(op) > -1) ||
                         [':='].indexOf(op) > -1){
+                    if(braces_open.indexOf(op) > -1){
+                        braces_stack.push(token)
+                    }else if(braces_close[op]){
+                        if(braces_stack.length == 0){
+                            $_SyntaxError(context, "unmatched '" + op + "'")
+                        }else{
+                            var last_brace = $B.last(braces_stack)
+                            if(last_brace.string == braces_close[op]){
+                                braces_stack.pop()
+                            }else{
+                                $_SyntaxError(context,
+                                    [`closing parenthesis '${op}' does not ` +
+                                    `match opening parenthesis '` +
+                                    `${last_brace.string}'`])
+                           }
+                       }
+                    }
                     context = $transition(context, token[1])
                 }else if(op == '...'){
                     context = $transition(context, 'ellipsis')

@@ -94,6 +94,10 @@ $B.tokenizer = function*(src){
 
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 
+    if(! src.endsWith('\n')){
+        src += '\n'
+    }
+
     while(pos < src.length){
 
         char = src[pos]
@@ -439,6 +443,30 @@ $B.tokenizer = function*(src){
                         escaped = false
                         break
                     case '\n':
+                        if(! escaped && ! triple_quote){
+                            // unterminated string
+                            // go back to yield whitespace as ERRORTOKEN
+                            var quote_pos = string_start[1] + line_start - 1,
+                                pos = quote_pos
+                            while(src[pos - 1] == ' '){
+                                pos--
+                            }
+                            while(pos < quote_pos){
+                                yield Token('ERRORTOKEN', ' ',
+                                    [line_num, pos - line_start + 1],
+                                    [line_num, pos - line_start + 2],
+                                    line)
+                                pos++
+                            }
+                            pos++
+                            yield Token('ERRORTOKEN', quote,
+                                    [line_num, pos - line_start],
+                                    [line_num, pos - line_start + 1],
+                                    line)
+                            state = null
+                            pos++
+                            break
+                        }
                         string += char
                         line_num++
                         line_start = pos + 1
@@ -496,7 +524,10 @@ $B.tokenizer = function*(src){
                 break
         }
     }
-
+    
+    if(braces.length > 0){
+        throw SyntaxError('EOF in multi-line statement')
+    }
     switch(state){
         case 'line_start':
             line_num++
@@ -515,7 +546,8 @@ $B.tokenizer = function*(src){
               line)
             break
         case 'STRING':
-            throw Error("unterminated string")
+            throw SyntaxError(
+                `unterminated string literal (detected at line ${line_num})`)
     }
     if(state != 'line_start'){
         yield Token('NEWLINE', '', [line_num, pos - line_start + 1],
