@@ -754,7 +754,7 @@ function $$eval(src, _globals, _locals){
                 }
             }
             js = root.to_js()
-            
+
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
             if(_globals === _b_.None){
@@ -2742,7 +2742,9 @@ $Reader.readline = function(self, size){
     if(self.$binary){
         var ix = self.$bytes.source.indexOf(10, self.$counter)
         if(ix == -1){
-            return _b_.bytes.$factory()
+            var rest = self.$bytes.source.slice(self.$counter)
+            self.$counter = self.$bytes.source.length
+            return _b_.bytes.$factory(rest)
         }else{
             var res = {
                 __class__: _b_.bytes,

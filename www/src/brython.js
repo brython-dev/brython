@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-05-29 16:47:26.496045"
-__BRYTHON__.timestamp=1622299646496
+__BRYTHON__.compiled_date="2021-06-04 10:10:39.397254"
+__BRYTHON__.timestamp=1622794239393
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 
@@ -8002,7 +8002,9 @@ self.$lc=self.$lc===undefined ?-1 :self.$lc
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 make_content(self)
 if(self.$binary){var ix=self.$bytes.source.indexOf(10,self.$counter)
-if(ix==-1){return _b_.bytes.$factory()}else{var res={__class__:_b_.bytes,source :self.$bytes.source.slice(self.$counter,ix+1)}
+if(ix==-1){var rest=self.$bytes.source.slice(self.$counter)
+self.$counter=self.$bytes.source.length
+return _b_.bytes.$factory(rest)}else{var res={__class__:_b_.bytes,source :self.$bytes.source.slice(self.$counter,ix+1)}
 self.$counter=ix+1
 return res}}else{var ix=self.$string.indexOf("\n",self.$counter)
 if(ix==-1){return ''}else{var res=self.$string.substring(self.$counter,ix+1)
@@ -8242,12 +8244,12 @@ while(line_num===undefined){line_num=pos2line[pos]
 pos--}
 exc.$line_info=line_num+","+module
 var lines=src.split("\n"),line=lines[line_num-1],lpos=pos-line_pos[line_num],len=line.length
-exc.text=line
+exc.text=line+'\n'
 lpos-=len-line.length
 if(lpos < 0){lpos=0}
 while(line.charAt(0)==' '){line=line.substr(1)
 if(lpos > 0){lpos--}}
-exc.offset=lpos
+exc.offset=lpos+1 
 exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,lpos,line])])}
 exc.lineno=line_num
 exc.msg=exc.args[0]
