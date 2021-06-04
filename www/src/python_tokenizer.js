@@ -31,8 +31,8 @@ function Token(type, string, start, end, line){
 }
 
 function get_line_at(src, pos){
-    var end = src.search('\n', pos)
-    return end == -1 ? src.substr(pos) : src.substring(pos, end)
+    var end = src.substr(pos).search(/[\r\n]/)
+    return end == -1 ? src.substr(pos) : src.substr(pos, end)
 }
 
 function get_comment(src, pos, line_num, line_start, token_name, line){
@@ -122,6 +122,34 @@ $B.tokenizer = function*(src){
                         line)
                     pos++
                     continue
+                }else if(char == '\r'){
+                    yield Token('NL', '\r', [line_num, 0], [line_num, 1],
+                        line)
+                    pos++
+                    continue
+                }else if(char == '\f'){
+                    // form feed : ignore (present eg in email.header)
+                    if(src.substr(pos, 2) == '\r\n'){
+                        yield Token('NL', '\f' + src[pos],
+                            [line_num, pos - line_start + 1],
+                            [line_num, pos - line_start + 3],
+                            line)
+                        pos += 2
+                        continue
+                    }else if(src[pos] == '\n' || src[pos] == '\r'){
+                        yield Token('NL', '\f' + src[pos],
+                            [line_num, pos - line_start + 1],
+                            [line_num, pos - line_start + 3],
+                            line)
+                        pos += 1
+                        continue
+                    }else{
+                        yield Token('ERRORTOKEN', char,
+                            [line_num, pos - line_start],
+                            [line_num, pos - line_start + 1],
+                            token)
+                        pos++
+                    }
                 }else if(char == '#'){
                     comment = get_comment(src, pos, line_num, line_start,
                         'NL', line)
@@ -524,7 +552,7 @@ $B.tokenizer = function*(src){
                 break
         }
     }
-    
+
     if(braces.length > 0){
         throw SyntaxError('EOF in multi-line statement')
     }
