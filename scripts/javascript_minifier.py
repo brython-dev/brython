@@ -5,7 +5,7 @@ def minify(src):
 
     _res, pos = '', 0
     while pos < len(src):
-        if src[pos] in ('"', "'") or \
+        if src[pos] in ('"', "'", '`') or \
                 (src[pos] == '/' and src[pos - 1] == '('):
             # the end of the string is the next quote if it is not
             # after an odd number of backslashes
