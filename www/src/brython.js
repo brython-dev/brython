@@ -105,9 +105,256 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-06 09:23:06.129471"
-__BRYTHON__.timestamp=1622964186125
+__BRYTHON__.compiled_date="2021-06-06 10:39:03.907344"
+__BRYTHON__.timestamp=1622968743907
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
+;
+;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
+var code=0x10000
+code+=(char.charCodeAt(0)& 0x03FF)<< 10
+code+=(char.charCodeAt(1)& 0x03FF)
+return code}
+function $last(array){return array[array.length-1]}
+var ops='.,:;+-*/%~^|&=<>[](){}@',op2=['**','//','>>','<<'],augm_op='+-*/%~^|&=<>@',closing={'}':'{',']':'[',')':'('}
+function Token(type,string,start,end,line){var res={type,string,start,end,line}
+res[0]=type
+res[1]=string
+res[2]=start
+res[3]=end
+res[4]=line
+return res}
+function get_line_at(src,pos){var end=src.substr(pos).search(/[\r\n]/)
+return end==-1 ? src.substr(pos):src.substr(pos,end)}
+function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
+var t=[]
+while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),[line_num,start-line_start],[line_num,pos-line_start+1],line))
+if(ix !==undefined){var nb=1
+if(src[pos]=='\r' && src[pos+1]=='\n'){nb++}
+t.push(Token(token_name,src.substr(pos,nb),[line_num,pos-line_start+1],[line_num,pos-line_start+nb+1],line))
+pos+=nb}
+return{t,pos}}
+pos++}}
+$B.tokenizer=function*(src){var unicode_tables=$B.unicode_tables,whitespace=' \t\n',operators='*+-/%&^~=<>',allowed_after_identifier=',.()[]:;',string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+var state="line_start",char,cp,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line_num=0,line_start=1,line
+yield Token('ENCODING','utf-8',[0,0],[0,0],'')
+if(! src.endsWith('\n')){src+='\n'}
+while(pos < src.length){char=src[pos]
+cp=src.charCodeAt(pos)
+if(cp >=0xD800 && cp <=0xDBFF){cp=ord(src.substr(pos,2))
+char=src.substr(pos,2)
+pos++}
+pos++
+switch(state){case "line_start":
+line=get_line_at(src,pos)
+line_start=pos
+line_num++
+if(char=="\n"){yield Token('NL','\n',[line_num,0],[line_num,1],line)
+continue}else if(char=='\r' && src[pos]=='\n'){yield Token('NL','\r\n',[line_num,0],[line_num,2],line)
+pos++
+continue}else if(char=='\r'){yield Token('NL','\r',[line_num,0],[line_num,1],line)
+pos++
+continue}else if(char=='\f'){
+if(src.substr(pos,2)=='\r\n'){yield Token('NL','\f'+src[pos],[line_num,pos-line_start+1],[line_num,pos-line_start+3],line)
+pos+=2
+continue}else if(src[pos]=='\n' ||src[pos]=='\r'){yield Token('NL','\f'+src[pos],[line_num,pos-line_start+1],[line_num,pos-line_start+3],line)
+pos+=1
+continue}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],token)
+pos++}}else if(char=='#'){comment=get_comment(src,pos,line_num,line_start,'NL',line)
+for(var item of comment.t){yield item}
+pos=comment.pos
+state='line_start'
+continue}
+indent=0
+if(char==' '){indent=1}else if(char=='\t'){indent=8}
+if(indent){while(pos < src.length){if(src[pos]==' '){indent++}else if(src[pos]=='\t'){indent+=8}else{break}
+pos++}
+if(pos==src.length){
+line_num--
+break}
+if(src[pos]=='#'){var comment=get_comment(src,pos+1,line_num,line_start,'NL',line)
+for(var item of comment.t){yield item}
+pos=comment.pos
+continue}else if(src[pos]=='\n'){
+yield Token('NL','',[line_num,pos-line_start+1],[line_num,pos-line_start+2],line)
+pos++
+continue}else if(src[pos]=='\r' && src[pos+1]=='\n'){yield Token('NL','',[line_num,pos-line_start+1],[line_num,pos-line_start+3],line)
+pos+=2
+continue}
+if(indents.length==0 ||indent > $last(indents)){indents.push(indent)
+yield Token('INDENT','',[line_num,0],[line_num,indent],line)}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
+if(ix==-1){throw Error('IndentationError line '+line_num)}
+for(var i=indents.length-1;i > ix;i--){indents.pop()
+yield Token('DEDENT','',[line_num,indent],[line_num,indent],line)}}
+state=null}else{
+while(indents.length > 0){indents.pop()
+yield Token('DEDENT','',[line_num,indent],[line_num,indent],line)}
+state=null
+pos--}
+break
+case null:
+switch(char){case '"':
+case "'":
+quote=char
+triple_quote=src[pos]==char && src[pos+1]==char
+string_start=[line_num,pos-line_start]
+if(triple_quote){pos+=2}
+escaped=false
+state='STRING'
+string=""
+prefix=""
+break
+case '#':
+var token_name=braces.length > 0 ? 'NL' :'NEWLINE'
+comment=get_comment(src,pos,line_num,line_start,token_name,line)
+for(var item of comment.t){yield item}
+pos=comment.pos
+if(braces.length==0){state='line_start'}else{state=null
+line_num++
+line_start=pos+1}
+break
+case '0':
+state='NUMBER'
+number=char
+num_type=''
+if(src[pos]&&
+'xbo'.indexOf(src[pos].toLowerCase())>-1){number+=src[pos]
+num_type=src[pos].toLowerCase()
+pos++}
+break
+case '.':
+if(src[pos]&& unicode_tables.Nd[ord(src[pos])]){state='NUMBER'
+num_type=''
+number=char}else{var op=char
+while(src[pos]==char){pos++
+op+=char}
+var dot_pos=pos-line_start-op.length+1
+while(op.length >=3){
+yield Token('OP','...',[line_num,dot_pos],[line_num,dot_pos+3],line)
+op=op.substr(3)}
+for(var i=0;i < op.length;i++){yield Token('OP','.',[line_num,dot_pos],[line_num,dot_pos+1],line)
+dot_pos++}}
+break
+case '\\':
+if(src[pos]=='\n'){line_num++
+pos++
+line_start=pos+1}else if(src.substr(pos,2)=='\r\n'){line_num++
+pos+=2
+line_start=pos+1}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}
+break
+case '\r':
+var token_name=braces.length > 0 ? 'NL':'NEWLINE'
+if(src[pos]=='\n'){yield Token(token_name,char+src[pos],[line_num,pos-line_start],[line_num,pos-line_start+2],line)
+pos++}else{yield Token(token_name,char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}
+if(token_name=='NEWLINE'){state='line_start'}else{line_num++
+line_start=pos+1}
+break
+case '\n':
+var token_name=braces.length > 0 ? 'NL':'NEWLINE'
+yield Token(token_name,char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+if(token_name=='NEWLINE'){state='line_start'}else{line_num++
+line_start=pos+1}
+break
+default:
+if(unicode_tables.XID_Start[ord(char)]){
+state='NAME'
+name=char}else if(unicode_tables.Nd[ord(char)]){state='NUMBER'
+num_type=''
+number=char}else if(ops.indexOf(char)>-1){var op=char
+if(op2.indexOf(char+src[pos])>-1){op=char+src[pos]
+pos++}
+if(src[pos]=='=' &&(op.length==2 ||
+augm_op.indexOf(op)>-1)){op+=src[pos]
+pos++}else if((char=='-' && src[pos]=='>')||
+(char==':' && src[pos]=='=')){op+=src[pos]
+pos++}
+if('[({'.indexOf(char)>-1){braces.push(char)}else if('])}'.indexOf(char)>-1){if(braces && $last(braces)==closing[char]){braces.pop()}else{braces.push(char)}}
+yield Token('OP',op,[line_num,pos-line_start-op.length+1],[line_num,pos-line_start+1],line)}else if(char=='!' && src[pos]=='='){yield Token('OP','!=',[line_num,pos-line_start],[line_num,pos-line_start+2],line)
+pos++}else{if(char !=' '){yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}}
+break}
+break
+case 'NAME':
+if(unicode_tables.XID_Continue[ord(char)]){name+=char}else if(char=='"' ||char=="'"){if(string_prefix.exec(name)||
+bytes_prefix.exec(name)){state='STRING'
+quote=char
+triple_quote=src[pos]==quote && src[pos+1]==quote
+prefix=name
+escaped=false
+string_start=[line_num,pos-line_start-name.length]
+if(triple_quote){pos+=2}
+string=''}else{yield Token('NAME',name,[line_num,pos-line_start-name.length],[line_num,pos-line_start],line)
+state=null
+pos--}}else{yield Token('NAME',name,[line_num,pos-line_start-name.length],[line_num,pos-line_start],line)
+state=null
+pos--}
+break
+case 'STRING':
+switch(char){case quote:
+if(! escaped){
+if(! triple_quote){var full_string=prefix+quote+string+
+quote
+yield Token('STRING',full_string,string_start,[line_num,pos-line_start+1],line)
+state=null}else if(char+src.substr(pos,2)==
+quote.repeat(3)){var full_string=prefix+quote.repeat(3)+
+string+quote.repeat(3)
+yield Token('STRING',full_string,string_start,[line_num,pos-line_start+3],line)
+pos+=2
+state=null}else{string+=char}}else{string+=char}
+escaped=false
+break
+case '\n':
+if(! escaped && ! triple_quote){
+var quote_pos=string_start[1]+line_start-1,pos=quote_pos
+while(src[pos-1]==' '){pos--}
+while(pos < quote_pos){yield Token('ERRORTOKEN',' ',[line_num,pos-line_start+1],[line_num,pos-line_start+2],line)
+pos++}
+pos++
+yield Token('ERRORTOKEN',quote,[line_num,pos-line_start],[line_num,pos-line_start+1],line)
+state=null
+pos++
+break}
+string+=char
+line_num++
+line_start=pos+1
+escaped=false
+break
+case '\\':
+string+=char
+escaped=!escaped
+break
+default:
+escaped=false
+string+=char
+break}
+break
+case 'NUMBER':
+if(num_type=='' && unicode_tables.Nd[ord(char)]){number+=char}else if(num_type=='b' && '01'.indexOf(char)>-1){number+=char}else if(num_type=='o' && '01234567'.indexOf(char)>-1){number+=char}else if(num_type=='x' &&
+'0123456789abcdef'.indexOf(char.toLowerCase())>-1){number+=char}else if(char=='_'){if(number.endsWith('_')){throw Error('SyntaxError: consecutive _ in number')}
+number+=char}else if(char=='.' && number.indexOf(char)==-1){number+=char}else if(char.toLowerCase()=='e' &&
+number.toLowerCase().indexOf('e')==-1){number+=char}else if((char=='+' ||char=='-')&&
+number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){number+=char
+yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
+state=null}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+state=null
+pos--}
+break}}
+if(braces.length > 0){throw SyntaxError('EOF in multi-line statement')}
+switch(state){case 'line_start':
+line_num++
+break
+case 'NAME':
+yield Token('NAME',name,[line_num,pos-line_start-name.length+1],[line_num,pos-line_start+1],line)
+break
+case 'NUMBER':
+yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
+break
+case 'STRING':
+throw SyntaxError(
+`unterminated string literal (detected at line ${line_num})`)}
+if(state !='line_start'){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+2],line)
+line_num++}
+while(indents.length > 0){indents.pop()
+yield Token('DEDENT','',[line_num,0],[line_num,0],line)}
+yield Token('ENDMARKER','',[line_num,0],[line_num,0],line)}})(__BRYTHON__)
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -129,7 +376,7 @@ $B.list2obj=function(list,value){var res={},i=list.length
 if(value===undefined){value=true}
 while(i--> 0){res[list[i]]=value}
 return res}
-$B.op2method={operations:{"**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","@":"matmul" },augmented_assigns:{"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"},binary:{"&":"and","|":"or","~":"invert","^":"xor"},comparisons:{"<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne"},boolean:{"or":"or","and":"and","in":"in","not":"not","is":"is","not_in":"not_in","is_not":"is_not" },subset:function(){var res={},keys=[]
+$B.op2method={operations:{"**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","@":"matmul" },augmented_assigns:{"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"},binary:{"&":"and","|":"or","~":"invert","^":"xor"},comparisons:{"<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne"},boolean:{"or":"or","and":"and","in":"in","not":"not","is":"is"},subset:function(){var res={},keys=[]
 if(arguments[0]=="all"){keys=Object.keys($B.op2method)
 keys.splice(keys.indexOf("subset"),1)}else{for(var i=0,len=arguments.length;i < len;i++){keys.push(arguments[i])}}
 for(var i=0,len=keys.length;i < len;i++){var key=keys[i],ops=$B.op2method[key]
@@ -148,11 +395,10 @@ var $loop_num=0
 var create_temp_name=$B.parser.create_temp_name=function(prefix){var _prefix=prefix ||'$temp'
 return _prefix+$loop_num++;}
 var replace_node=$B.parser.replace_node=function(replace_what,replace_with){var parent=replace_what.parent
-var pos=get_rank_in_parent(replace_what)
+var pos=replace_what.parent.children.indexOf(replace_what)
 parent.children[pos]=replace_with
 replace_with.parent=parent
 replace_with.bindings=replace_what.bindings}
-var get_rank_in_parent=$B.parser.get_rank_in_parent=function(node){return node.parent.children.indexOf(node)}
 var add_identnode=$B.parser.add_identnode=function(parent,insert_at,name,val){var new_node=new $Node()
 new_node.parent=parent
 new_node.locals=parent.locals
@@ -174,6 +420,7 @@ while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node,root=tree_node
 while(root.parent !==undefined){root=root.parent}
 var module=tree_node.module,src=root.src,line_num=tree_node.line_num
+if(C.$pos !==undefined){$pos=C.$pos}
 if(src){line_num=src.substr(0,$pos).split("\n").length}
 if(root.line_info){line_num=root.line_info}
 if(indent===undefined ||typeof indent !="number"){if(msg && Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num,root)}
@@ -186,8 +433,7 @@ function SyntaxWarning(C,msg){var node=$get_node(C),module=$get_module(C),src=mo
 '    '+lines[node.line_num-1]
 $B.$getattr($B.stderr,"write")(message)}
 function check_assignment(C){var ctx=C,forbidden=['assert','del','import','raise','return']
-while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr" &&
-ctx.tree[0].type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}
+while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr" && ctx.tree[0].type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}else if(ctx.type=="ternary"){$_SyntaxError(C,["cannot assign to conditional expression"])}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]}
@@ -394,6 +640,7 @@ case 'int':
 case 'float':
 case 'str':
 case 'bytes':
+case 'ellipsis':
 case '[':
 case '(':
 case '{':
@@ -405,9 +652,7 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.packed=packed
-C.is_await=is_await
-if(assign){console.log("set assign to parent",C)
-C.assign=assign}}}
+C.is_await=is_await}}
 switch(token){case 'await':
 return new $AwaitCtx(C)
 case 'id':
@@ -431,7 +676,7 @@ new $ExprCtx(C,'list',commas),'list')
 case '{':
 return new $DictOrSetCtx(
 new $ExprCtx(C,'dict_or_set',commas))
-case '.':
+case 'ellipsis':
 return new $EllipsisCtx(
 new $ExprCtx(C,'ellipsis',commas))
 case 'not':
@@ -461,10 +706,18 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 return new $NotCtx(
-new $ExprCtx(C,'not',commas))}
+new $ExprCtx(C,'not',commas))
+case '...':
+return new $EllipsisCtx(new $ExprCtx(C,'ellipsis',commas))}
 $_SyntaxError(C,'token '+token+' after '+
 C)
-case '=','in':
+case 'in':
+if(C.parent.type=='op' && C.parent.op=='not'){C.parent.op='not_in'
+return C}
+$_SyntaxError(C,'token '+token+' after '+
+C)
+case '=':
+if(C.parent.type=="yield"){$_SyntaxError(C,["assignment to yield expression not possible"])}
 $_SyntaxError(C,'token '+token+' after '+
 C)
 case 'yield':
@@ -575,10 +828,12 @@ this.parent=C.parent
 this.tree=[C]
 var scope=$get_scope(this)
 if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["cannot assign to function call "])}else if(C.type=='list_or_tuple' ||
-(C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
+(C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){if(C.tree[0].real=='gen_expr'){$_SyntaxError(C,['cannot assign to generator expression'])}
+C=C.tree[0]}
 C.bind_ids(scope)}else if(C.type=='assign'){C.tree.forEach(function(elt){var assigned=elt.tree[0]
 if(assigned.type=='id'){$bind(assigned.value,scope,this)}},this)}else{var assigned=C.tree[0]
-if(assigned && assigned.type=='id'){if(noassign[assigned.value]===true){$_SyntaxError(C,["cannot assign to keyword"])}
+if(assigned && assigned.type=='id'){var name=assigned.value
+if(['None','True','False','__debug__'].indexOf(name)>-1){$_SyntaxError(C,['cannot assign to '+name])}else if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}
 assigned.bound=true
 if(!scope.globals ||!scope.globals.has(assigned.value)){
 var node=$get_node(this)
@@ -586,7 +841,9 @@ node.bound_before=Object.keys(scope.binding)
 $bind(assigned.value,scope,this)}else{
 var module=$get_module(C)
 assigned.global_module=module.module
-$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}}}
+$bind(assigned.value,module,this)}}else if(["str","int","float","complex"].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}else if(assigned.type=="packed"){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
+if(['None','True','False','__debug__'].indexOf(id)>-1){$_SyntaxError(C,['cannot assign to '+id])}}
+if(assigned.parent.in_tuple===undefined){$_SyntaxError(C,["starred assignment target must be in a list or tuple"])}}}}
 $AssignCtx.prototype.guess_type=function(){return}
 $AssignCtx.prototype.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
 $AssignCtx.prototype.transition=function(token,value){var C=this
@@ -714,6 +971,7 @@ new_node.line_num=node.line_num
 node.parent.insert(rank++,new_node)
 var C=new $NodeCtx(new_node)
 left_item.parent=C
+left_item.in_tuple=true
 var assign=new $AssignCtx(left_item,false)
 var js=rlname
 if(packed==null ||i < packed){js+='['+i+']'}else if(i==packed){js+='.slice('+i+','+rlname+'.length-'+
@@ -797,7 +1055,7 @@ this.func='getattr' }
 $AttrCtx.prototype.toString=function(){return '(attr) '+this.value+'.'+this.name}
 $AttrCtx.prototype.transition=function(token,value){var C=this
 if(token==='id'){var name=value
-if(noassign[name]===true){$_SyntaxError(C,["cannot assign to "+name])}
+if(name=='__debug__'){$_SyntaxError(C,['cannot assign to __debug__'])}else if(noassign[name]===true){$_SyntaxError(C,`'${name}' cannot be an attribute`)}
 name=$mangle(name,C)
 C.name=name
 return C.parent}
@@ -829,7 +1087,8 @@ this.tree=[C]
 var scope=this.scope=$get_scope(this)
 if(C.type=='expr'){var assigned=C.tree[0]
 if(assigned.type=='id'){var name=assigned.value
-if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}else if((scope.ntype=='def' ||scope.ntype=='generator')&&
+if(['None','True','False','__debug__'].indexOf(name)>-1){$_SyntaxError(C,'cannot assign to '+name)}
+if(noassign[name]===true){$_SyntaxError(C,"cannot assign to keyword")}else if((scope.ntype=='def' ||scope.ntype=='generator')&&
 (scope.binding[name]===undefined)){if(scope.globals===undefined ||
 ! scope.globals.has(name)){
 assigned.unbound=true}}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}}
@@ -1062,6 +1321,7 @@ case '[':
 case '(':
 case '{':
 case '.':
+case 'ellipsis':
 case 'not':
 case 'lambda':
 if(C.expect=='id'){C.expect=','
@@ -1151,6 +1411,7 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
+case 'ellipsis':
 C.expect=','
 return $transition(new $CallArgCtx(C),token,value)
 case ')':
@@ -2080,16 +2341,11 @@ return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}
 var $EllipsisCtx=$B.parser.$EllipsisCtx=function(C){
 this.type='ellipsis'
 this.parent=C
-this.nbdots=1
 this.start=$pos
 C.tree[C.tree.length]=this}
 $EllipsisCtx.prototype.toString=function(){return 'ellipsis'}
 $EllipsisCtx.prototype.transition=function(token,value){var C=this
-if(token=='.'){C.nbdots++
-if(C.nbdots==3 && $pos-C.start==2){C.$complete=true}
-return C}else{if(! C.$complete){$pos--
-$_SyntaxError(C,'token '+token+' after '+
-C)}else{return $transition(C.parent,token,value)}}}
+return $transition(C.parent,token,value)}
 $EllipsisCtx.prototype.to_js=function(){this.js_processed=true
 return '$B.builtins["Ellipsis"]'}
 var $EndOfPositionalCtx=$B.parser.$EndOfConditionalCtx=function(C){
@@ -2178,6 +2434,7 @@ return 'else if('+lnum+'$B.is_exc('+this.error_name+
 var $ExprCtx=$B.parser.$ExprCtx=function(C,name,with_commas){
 this.type='expr'
 this.name=name
+this.$pos=$pos
 this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
@@ -2356,8 +2613,8 @@ $_SyntaxError(C,':= invalid, parent '+ptype)}else if(ptype=="call_arg" &&
 C.parent.parent.type=="call" &&
 C.parent.parent.parent.type=="lambda"){
 $_SyntaxError(C,':= invalid inside function arguments' )}
-if(C.tree.length==1 &&
-C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
+if(C.tree.length==1 && C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
+if(['None','True','False'].indexOf(name)>-1){$_SyntaxError(C,[`cannot use assignment expressions with ${name}`])}else if(name=='__debug__'){$_SyntaxError(C,['cannot assign to __debug__'])}
 while(scope.is_comp){scope=scope.parent_block}
 $bind(name,scope,C)
 var parent=C.parent
@@ -2449,6 +2706,7 @@ if(C.tree.length < 2
 ||C.tree[1].tree[0].type=="abstract_expr"){$_SyntaxError(C,'token '+token+' after '+
 C)}
 return $BodyCtx(C)}
+console.log('C',C,'tokan',token,value)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $ForExpr.prototype.transform=function(node,rank){
 var pnode=this.parent.node.parent
@@ -2861,7 +3119,8 @@ this.scope=$get_scope(this)
 this.scope.globals=this.scope.globals ||new Set()
 this.module=$get_module(this)
 while(this.module.module !=this.module.id){this.module=this.module.parent_block}
-this.module.binding=this.module.binding ||{}}
+this.module.binding=this.module.binding ||{}
+this.$pos=$pos}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
 $GlobalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -2880,6 +3139,8 @@ break}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $GlobalCtx.prototype.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(this,["annotated name '"+name+
 "' can't be global"])}
+if(this.scope.binding && this.scope.binding[name]){$pos=this.$pos-1
+$_SyntaxError(this,[`name '${name}' is parameter and global`])}
 this.scope.globals.add(name)
 var mod=this.scope.parent_block
 if(this.module.module.startsWith("$exec")){while(mod && mod.parent_block !==this.module){
@@ -2991,7 +3252,7 @@ $IdCtx.prototype.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 var val=this.value
 var $test=false 
-if($test){console.log("this",this)}
+if($test){console.log("ENTER IdCtx.py2js","this",this)}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
 return val}
@@ -3034,12 +3295,11 @@ if(this.boundBefore(gs)){if($test){console.log("bound before in gs",gs,global_ns
 return global_ns+'["'+val+'"]'}else{if($test){console.log("use global search",this)}
 if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'", '+
 search_ids+')'}}}
-if($test){console.log("scope",scope,"innermost",innermost,scope===innermost,"bound_before",bound_before,"found",found.slice())}
+if($test){console.log("scope",scope.id,scope,"innermost",innermost,"scope is innermost",scope===innermost,"bound_before",bound_before,"found",found.slice())}
 if(scope===innermost){
-if(bound_before){if(bound_before.indexOf(val)>-1){found.push(scope)}
-else if(scope.C &&
+if(bound_before){if(bound_before.indexOf(val)>-1){found.push(scope)}else if(scope.C &&
 scope.C.tree[0].type=='def' &&
-scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if(scope.binding[val]){
+scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if(scope.binding[val]){if($test){console.log(val,'in bindings of',scope.id,this_node.locals[val])}
 if(this_node.locals[val]===undefined){
 if(!scope.is_comp &&
 (!scope.parent_block ||
@@ -3051,8 +3311,7 @@ if(innermost.binding[val]&& innermost.ntype=="class"){
 if(scope.binding[val]&&
 (! scope.parent_block ||
 scope.parent_block.id=="__builtins__")){found.push(scope)}}else if(scope.binding[val]){found.push(scope)}}
-if(scope.parent_block){scope=scope.parent_block}
-else{break}}
+if(scope.parent_block){scope=scope.parent_block}else{break}}
 this.found=found
 if($test){console.log(val,"found",found)
 found.forEach(function(item){console.log(item.id)})}
@@ -3514,9 +3773,7 @@ if(C.node.parent.is_match && !C.node.is_body_node){if(token !=='id' ||value !='$
 var start=C.node.pos,src=$get_module(C).src
 if(! line_ends_with_comma(src.substr(start))){$_SyntaxError(C)}
 C.node.is_case=true}}
-switch(token){case '@':
-return new $DecoratorCtx(C)
-case ',':
+switch(token){case ',':
 if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
 var first=C.tree[0]
 C.tree=[]
@@ -3565,6 +3822,9 @@ if(['condition'].indexOf(previous.type)==-1 ||
 previous.token=='while'){$_SyntaxError(C,'elif after '+previous.type)}
 return new $AbstractExprCtx(
 new $ConditionCtx(C,token),false)
+case 'ellipsis':
+var expr=new $AbstractExprCtx(C,true)
+return $transition(expr,token,value)
 case 'else':
 var previous=$previous(C)
 if(['condition','except','for'].
@@ -3602,7 +3862,9 @@ case '+':
 case '-':
 case '~':
 var expr=new $AbstractExprCtx(C,true)
-return $transition(expr,token,value)}
+return $transition(expr,token,value)
+case '@':
+return new $DecoratorCtx(C)}
 break
 case 'pass':
 return new $PassCtx(C)
@@ -3621,6 +3883,7 @@ if(C.tree.length==0){
 C.node.parent.children.pop()
 return C.node.parent.C}
 return C}
+console.log('token',token,value)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $NodeCtx.prototype.to_js=function(){if(this.js !==undefined){return this.js}
 this.js_processed=true
@@ -3752,7 +4015,6 @@ case 'bytes':
 case '[':
 case '(':
 case '{':
-case 'not':
 case 'lambda':
 $_SyntaxError(C,'token '+token+' after '+
 C)}
@@ -3908,7 +4170,8 @@ case 'is':
 return '$B.$is('+this.tree[0].to_js()+', '+
 this.tree[1].to_js()+')'
 case 'is_not':
-return this.tree[0].to_js()+'!=='+this.tree[1].to_js()
+return '! $B.$is('+this.tree[0].to_js()+', '+
+this.tree[1].to_js()+')'
 case '+':
 return '$B.add('+this.tree[0].to_js()+', '+
 this.tree[1].to_js()+')'
@@ -4391,7 +4654,8 @@ this.type='str'
 this.parent=C
 this.tree=[value]
 C.tree[C.tree.length]=this
-this.raw=false}
+this.raw=false
+this.$pos=$pos}
 $StringCtx.prototype.toString=function(){return 'string '+(this.tree ||'')}
 $StringCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
@@ -4595,7 +4859,7 @@ $TryCtx.prototype.toString=function(){return '(try) '}
 $TryCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$TryCtx.prototype.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(C,["unexpected EOF while parsing"])}else{var next_ctx=node.parent.children[rank+1].C.tree[0]
+$TryCtx.prototype.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(node.C,["unexpected EOF while parsing"])}else{var next_ctx=node.parent.children[rank+1].C.tree[0]
 switch(next_ctx.type){case 'except':
 case 'finally':
 case 'single_kw':
@@ -5060,30 +5324,7 @@ function SurrogatePair(value){
 value=value-0x10000
 return String.fromCharCode(0xD800 |(value >> 10))+
 String.fromCharCode(0xDC00 |(value & 0x3FF))}
-function test_escape(C,text,string_start,antislash_pos){
-var seq_start=antislash_pos-string_start-1,seq_end,mo
-mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
-if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
-switch(text[antislash_pos+1]){case "x":
-var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
-if(mo[0].length !=2){seq_end=seq_start+mo[0].length+1
-$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
-`bytes in position ${seq_start}-${seq_end}: truncated `+
-"\\xXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
-case "u":
-var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
-if(mo[0].length !=4){seq_end=seq_start+mo[0].length+1
-$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
-`bytes in position ${seq_start}-${seq_end}: truncated `+
-"\\uXXXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
-case "U":
-var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
-if(mo[0].length !=8){seq_end=seq_start+mo[0].length+1
-$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
-`bytes in position ${seq_start}-${seq_end}: truncated `+
-"\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
-if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
-function test_num(C,num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
+function test_num(num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
 function error(message){$pos+=pos
 $_SyntaxError(C,[message])}
 function check(elt){if(elt.value.length==0){var t=subtypes[elt.subtype]||'decimal'
@@ -5134,60 +5375,55 @@ function line_ends_with_comma(src){
 var expect=':',braces=0
 for(token of basic_tokenizer(src)){if(expect==':'){if(token==':' && braces==0){expect='eol'}else if(token=='\n' && braces==0){return false}else if('([{'. indexOf(token)>-1){braces++}else if(')]}'.indexOf(token)>-1){braces--}}else{return token=='\n'}}
 return false}
-var $tokenize=$B.parser.$tokenize=function(root,src){var br_close={")":"(","]":"[","}":"{"},br_stack="",br_pos=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
-]
-var unsupported=[]
-var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
-]
-var C=null
-var new_node=new $Node(),current=root,name="",_type=null,pos=0,indent=null,string_modifier=false
-var module=root.module
-var lnum=root.line_num===undefined ? 1 :root.line_num
-while(pos < src.length){var car=src.charAt(pos)
-if(indent===null){var indent=0
-while(pos < src.length){var _s=src.charAt(pos)
-if(_s==" "){indent++;pos++}
-else if(_s=="\t"){
-indent++;pos++
-if(indent % 8 > 0){indent+=8-indent % 8}}else{break}}
-var _s=src.charAt(pos)
-if(_s=='\n'){pos++;lnum++;indent=null;
-continue}
-else if(_s=='#'){
-var offset=src.substr(pos).search(/\n/)
-if(offset==-1){break}
-pos+=offset+1
-lnum++
-indent=null
-continue}
-new_node.indent=indent
-new_node.line_num=lnum
-new_node.module=module
-new_node.pos=pos
-if(current.is_body_node){
-current.indent=indent}
-if(indent > current.indent){
-if(C !==null){if($indented.indexOf(C.tree[0].type)==-1){$pos=pos
-console.log('type not indented',C.tree[0].type)
-$_SyntaxError(C,'unexpected indent',pos)}}
-current.add(new_node)}else if(indent <=current.indent && C && C.tree[0]&&
-$indented.indexOf(C.tree[0].type)>-1 &&
-C.tree.length < 2){$pos=pos
-$_SyntaxError(C,'expected an indented block',pos)}else{
-while(indent !==current.indent){current=current.parent
-if(current===undefined ||indent > current.indent){$pos=pos
-$_SyntaxError(C,'unexpected indent',pos)}}
-current.parent.add(new_node)}
-current=new_node
-C=new $NodeCtx(new_node)
-continue}
-if(car=="#"){var end=src.substr(pos+1).search('\n')
-if(end==-1){end=src.length-1}
-root.comments.push([pos,end])
-pos+=end+1
-continue}
-if(car=='"' ||car=="'"){var raw=C.type=='str' && C.raw,string_start=pos,bytes=false,fstring=false,sm_length,
+function prepare_number(n){
+n=n.replace(/_/g,"")
+if(n.startsWith('.')){if(n.endsWith("j")){return{type:'imaginary',value:n.substr(0,n.length-1)}}else{return{type:'float',value:n}}
+pos=j}else if(n.startsWith('0')&& n !='0'){
+var num=test_num(n),base
+if(num.imaginary){return{type:'imaginary',value:num.value}}
+if(num.subtype=='float'){return{type:num.subtype,value:num.value}}
+if(num.subtype===undefined){base=10}else{base={'b':2,'o':8,'x':16}[num.subtype]}
+if(base !==undefined){return{type:'int',value:[base,num.value]}}}else{var num=test_num(n)
+if(num.subtype=="float"){return{
+type:num.imaginary ? 'imaginary' :'float',value:num.value}}else{return{
+type:num.imaginary ? 'imaginary' :'int',value:num.imaginary ? num.value :[10,num.value]}}}}
+function test_escape(C,text,string_start,antislash_pos){
+var seq_end,mo
+mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
+if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
+switch(text[antislash_pos+1]){case "x":
+var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
+if(mo[0].length !=2){seq_end=antislash_pos+mo[0].length+1
+$pos=string_start+seq_end+2
+$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
+`bytes in position ${antislash_pos}-${seq_end}: truncated `+
+"\\xXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
+case "u":
+var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
+if(mo[0].length !=4){seq_end=antislash_pos+mo[0].length+1
+$pos=string_start+seq_end+2
+$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
+`bytes in position ${antislash_pos}-${seq_end}: truncated `+
+"\\uXXXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
+case "U":
+var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
+if(mo[0].length !=8){seq_end=antislash_pos+mo[0].length+1
+$pos=string_start+seq_end+2
+$_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
+`bytes in position ${antislash_pos}-${seq_end}: truncated `+
+"\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
+if(value > 0x10FFFF){$_SyntaxError('invalid unicode escape '+mo[0])}else if(value >=0x10000){return[SurrogatePair(value),2+mo[0].length]}else{return[String.fromCharCode(value),2+mo[0].length]}}}}
+function prepare_string(C,s,position){var len=s.length,pos=0,string_modifier,_type="string"
+while(pos < len){if(s[pos]=='"' ||s[pos]=="'"){quote=s[pos]
+string_modifier=s.substr(0,pos)
+if(s.substr(pos,3)==quote.repeat(3)){_type="triple_string"
+inner=s.substring(pos+3,s.length-3)}else{inner=s.substring(pos+quote.length,len-quote.length)}
+break}
+pos++}
+var result={quote}
+var mods={r:'raw',f:'fstring',b:'bytes'}
+for(var mod of string_modifier){result[mods[mod]]=true}
+var raw=C.type=='str' && C.raw,string_start=$pos+pos+1,bytes=false,fstring=false,sm_length,
 end=null;
 if(string_modifier){switch(string_modifier){case 'r':
 raw=true
@@ -5199,7 +5435,8 @@ bytes=true
 break
 case 'rb':
 case 'br':
-bytes=true;raw=true
+bytes=true
+raw=true
 break
 case 'f':
 fstring=true
@@ -5212,20 +5449,16 @@ sm_length=2
 raw=true
 break}
 string_modifier=false}
-if(src.substr(pos,3)==car+car+car){_type="triple_string"
-end=pos+3}else{_type="string"
-end=pos+1}
-var escaped=false,zone=car,found=false
+var escaped=false,zone='',end=0,src=inner
 while(end < src.length){if(escaped){if(src.charAt(end)=="a"){zone=zone.substr(0,zone.length-1)+"\u0007"}else{zone+=src.charAt(end)
 if(raw && src.charAt(end)=='\\'){zone+='\\'}}
 escaped=false
 end++}else if(src.charAt(end)=="\\"){if(raw){if(end < src.length-1 &&
-src.charAt(end+1)==car){zone+='\\\\'+car
+src.charAt(end+1)==quote){zone+='\\\\'+quote
 end+=2}else{zone+='\\\\'
 end++}
 escaped=true}else{if(src.charAt(end+1)=='\n'){
-end+=2
-lnum++}else if(src.substr(end+1,2)=='N{'){
+end+=2}else if(src.substr(end+1,2)=='N{'){
 var end_lit=end+3,re=new RegExp("[-a-zA-Z0-9 ]+"),search=re.exec(src.substr(end_lit))
 if(search===null){$_SyntaxError(C,"(unicode error) "+
 "malformed \\N character escape",pos)}
@@ -5253,239 +5486,156 @@ zone+='\\'
 escaped=true
 end++}}}}else if(src.charAt(end)=='\n' && _type !='triple_string'){
 console.log(pos,end,src.substring(pos,end))
-$pos=end
-$_SyntaxError(C,["EOL while scanning string literal"])}else if(src.charAt(end)==car){if(_type=="triple_string" &&
-src.substr(end,3)!=car+car+car){zone+=src.charAt(end)
-end++}else{found=true
-$pos=pos
-var $string=zone.substr(1),string=''
+$_SyntaxError(C,["EOL while scanning string literal"])}else{zone+=src.charAt(end)
+end++}}
+var $string=zone,string=''
 for(var i=0;i < $string.length;i++){var $car=$string.charAt(i)
-if($car==car){if(raw ||(i==0 ||
+if($car==quote){if(raw ||(i==0 ||
 $string.charAt(i-1)!='\\')){string+='\\'}else if(_type=="triple_string"){
 var j=i-1
 while($string.charAt(j)=='\\'){j--}
 if((i-j-1)% 2==0){string+='\\'}}}
 string+=$car}
-if(fstring){try{var re=new RegExp("\\\\"+car,"g"),string_no_bs=string.replace(re,car)
+if(fstring){try{var re=new RegExp("\\\\"+quote,"g"),string_no_bs=string.replace(re,quote)
 var elts=$B.parse_fstring(string_no_bs)}catch(err){if(err.position){$pos+=err.position}
 $_SyntaxError(C,[err.message])}}
-if(bytes){C=$transition(C,'str','b'+car+string+car)}else if(fstring){$pos-=sm_length
-C=$transition(C,'str',elts)
-$pos+=sm_length}else{C=$transition(C,'str',car+string+car)}
+if(bytes){result.value='b'+quote+string+quote}else if(fstring){result.value=elts}else{result.value=quote+string+quote}
 C.raw=raw;
-pos=end+1
-if(_type=="triple_string"){pos=end+3}
-break}}else{zone+=src.charAt(end)
-if(src.charAt(end)=='\n'){lnum++}
-end++}}
-if(!found){if(_type==="triple_string"){$_SyntaxError(C,"Triple string end not found")}else{$_SyntaxError(C,"String end not found")}}
-continue}
-if(name=="" && car !='$'){
-var cp=src.charCodeAt(pos),name=''
-if(cp >=0xD800 && cp <=0xDBFF){cp=_b_.ord(src.substr(pos,2))
-car=src.substr(pos,2)
-pos++}
-if($B.unicode_tables.XID_Start[cp]){name=car
-var p0=pos
-pos++
-while(pos < src.length){car=src[pos]
-cp=src.charCodeAt(pos)
-if(cp >=0xD800 && cp <=0xDBFF){cp=_b_.ord(src.substr(pos,2))
-car=src.substr(pos,2)
-pos++}
-if($B.unicode_tables.XID_Continue[cp]){name+=car
-pos++}else{break}}}
-if(name){if(kwdict.indexOf(name)>-1){$pos=pos-name.length
-if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
-C=$transition(C,name)}else if(typeof $operators[name]=='string' &&
-['is_not','not_in'].indexOf(name)==-1){
-if(name=='is'){
-var re=/^\s+not\s+/
-var res=re.exec(src.substr(pos))
-if(res !==null){pos+=res[0].length
-$pos=pos-name.length
-C=$transition(C,'op','is_not')}else{$pos=pos-name.length
-C=$transition(C,'op',name)}}else if(name=='not'){
-var re=/^\s+in\s+/
-var res=re.exec(src.substr(pos))
-if(res !==null){pos+=res[0].length
-$pos=pos-name.length
-C=$transition(C,'op','not_in')}else{$pos=pos-name.length
-C=$transition(C,name)}}else{$pos=pos-name.length
-C=$transition(C,'op',name)}}else if((src.charAt(pos)=='"' ||src.charAt(pos)=="'")
-&&['r','b','u','rb','br','f','fr','rf'].
-indexOf(name.toLowerCase())!==-1){string_modifier=name.toLowerCase()
-name=""
-continue}else{if($B.forbidden.indexOf(name)>-1){name='$$'+name}
-$pos=pos-name.length
-C=$transition(C,'id',name)}
-name=""
-continue}}
-function rmu(numeric_literal){return numeric_literal.replace(/_/g,"")}
-switch(car){case ' ':
-case '\t':
-pos++
-break
-case '.':
-if(pos < src.length-1 &&/^\d$/.test(src.charAt(pos+1))){
-var j=pos+1
-while(j < src.length &&
-src.charAt(j).search(/\d|e|E|_/)>-1){j++}
-if(src.charAt(j)=="j"){C=$transition(C,'imaginary','0'+rmu(src.substr(pos,j-pos)))
-j++}else{C=$transition(C,'float','0'+rmu(src.substr(pos,j-pos)))}
-pos=j
-break}
-$pos=pos
-C=$transition(C,'.')
-pos++
-break
-case '0':
-var num=test_num(C,src.substr(pos)),base
-if(num.subtype===undefined){if(num.value !="0"){base=10}}else{base={'b':2,'o':8,'x':16}[num.subtype]}
-if(base !==undefined){C=$transition(C,'int',[base,num.value])
-pos+=num.length
-break}
-case '0':
-case '1':
-case '2':
-case '3':
-case '4':
-case '5':
-case '6':
-case '7':
-case '8':
-case '9':
-$pos=pos
-var num=test_num(C,src.substr(pos))
-if(num.subtype=="float"){C=$transition(C,num.imaginary ? 'imaginary' :'float',num.value)}else{C=$transition(C,num.imaginary ? 'imaginary' :'int',num.imaginary ? num.value :
-[10,num.value])}
-pos+=num.length
-break
-case '\n':
-lnum++
-if(br_stack.length > 0){
-pos++}else{if(current.C.tree.length > 0 ||current.C.async){$pos=pos
-C=$transition(C,'eol')
-indent=null
-new_node=new $Node()}else{new_node.line_num=lnum}
-pos++}
-break
-case '(':
-case '[':
-case '{':
-br_stack+=car
-br_pos[br_stack.length-1]=[C,pos]
-$pos=pos
-C=$transition(C,car)
-pos++
-break
-case ')':
-case ']':
-case '}':
-if(br_stack==""){$pos=pos
-$_SyntaxError(C,"Unexpected closing bracket")}else if(br_close[car]!=
-br_stack.charAt(br_stack.length-1)){$pos=pos
-$_SyntaxError(C,"Unbalanced bracket")}else{br_stack=br_stack.substr(0,br_stack.length-1)
-$pos=pos
-C=$transition(C,car)
-pos++}
-break
-case '=':
-if(src.charAt(pos+1)!="="){$pos=pos
-C=$transition(C,'=')
-pos++}else{$pos=pos
-C=$transition(C,'op','==')
-pos+=2}
-break
-case ',':
-case ':':
-$pos=pos
-if(src.substr(pos,2)==":="){
-C=$transition(C,":=")
-pos++}else{C=$transition(C,car)}
-pos++
-break
-case ';':
-$transition(C,'eol')
-if(current.C.tree.length==0){
-$pos=pos
-$_SyntaxError(C,'invalid syntax')}
-var pos1=pos+1
-var ends_line=false
-while(pos1 < src.length){var _s=src.charAt(pos1)
-if(_s=='\n' ||_s=='#'){ends_line=true;break}
-else if(_s==' '){pos1++}
-else{break}}
-if(ends_line){pos++;break}
-new_node=new $Node()
-new_node.indent=$get_node(C).indent
-new_node.line_num=lnum
-new_node.module=module
-$get_node(C).parent.add(new_node)
-current=new_node
-C=new $NodeCtx(new_node)
-pos++
-break
-case '/':
-case '%':
-case '&':
-case '>':
-case '<':
-case '-':
-case '+':
-case '*':
-case '@':
-case '/':
-case '^':
-case '=':
-case '|':
-case '~':
-case '!':
-if(car=='-' && src.charAt(pos+1)=='>'){C=$transition(C,'annotation')
-pos+=2
-continue}
-if(car=='@' && C.type=="node"){$pos=pos
-C=$transition(C,car)
-pos++
-break}
-var op_match=""
-for(var op_sign in $operators){if(op_sign==src.substr(pos,op_sign.length)
-&& op_sign.length > op_match.length){op_match=op_sign}}
-$pos=pos
-if(op_match.length > 0){if(op_match in $augmented_assigns){C=$transition(C,'augm_assign',op_match)}else{C=$transition(C,'op',op_match)}
-pos+=op_match.length}else{$_SyntaxError(C,'invalid character: '+car)}
-break
-case '\\':
-if(src.charAt(pos+1)=='\n'){lnum++
-pos+=2
-if(pos==src.length){$_SyntaxError(C,["unexpected EOF while parsing"])}else if(C.type=="node"){$_SyntaxError(C,'nothing before \\')}
-break}else{$pos=pos
-$_SyntaxError(C,['unexpected character after line continuation character'])}
-case String.fromCharCode(12):
-pos+=1
-break
-default:
-$pos=pos
-$_SyntaxError(C,'unknown token ['+car+']')}}
-if(br_stack.length !=0){var br_err=br_pos[0]
-$pos=br_err[1]
-var lines=src.split("\n"),id=root.id,fname=id.startsWith("$")? '<string>' :id
-$_SyntaxError(br_err[0],["unexpected EOF while parsing ("+fname+", line "+
-(lines.length-1)+")"])}
-if(C !==null){if(C.type=="async"){
-console.log("error with async",pos,src,src.substr(pos))
-$pos=pos-7
-throw $_SyntaxError(C,"car "+car+"after async",pos)}else if(C.tree[0]&&
-$indented.indexOf(C.tree[0].type)>-1){$pos=pos-1
-$_SyntaxError(C,'expected an indented block',pos)}else{var parent=current.parent
-if(parent.C && parent.C.tree &&
-parent.C.tree[0]&&
-parent.C.tree[0].type=="try"){$pos=pos-1
-$_SyntaxError(C,["unexpected EOF while parsing"])}
+return result}
+function unindent(src){
+var lines=src.split('\n'),line,global_indent,indent,unindented_lines=[]
+for(var line_num=0,len=lines.length;line_num < len;line_num++){line=lines[line_num]
+indent=line.match(/^\s*/)[0]
+if(indent !=line){
+if(global_indent===undefined){
+if(indent.length==0){
+return src}
+global_indent=indent
+var start=global_indent.length
+unindented_lines.push(line.substr(start))}else if(line.startsWith(global_indent)){unindented_lines.push(line.substr(start))}else{throw SyntaxError("first line starts at "+
+`column ${start}, line ${line_num} at column `+
+line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
+return unindented_lines.join('\n')}
+function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_SyntaxError(C,['unterminated string literal '+
+`(detected at line ${token.start[0]})`])}
+$_SyntaxError(C,'invalid token '+token[1])}
+var dispatch_tokens=$B.parser.dispatch_tokens=function(root,src){var tokenizer=$B.tokenizer(src)
+var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
+]
+var unsupported=[]
+var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
+]
+var module=root.module
+var lnum=root.line_num===undefined ? 1 :root.line_num
+var node=new $Node()
+node.line_num=lnum
+root.add(node)
+var C=null,expect_indent=false,indent=0
+var line2pos={0:0,1:0},line_num=1
+for(var pos=0,len=src.length;pos < len;pos++){if(src[pos]=='\n'){line_num++
+line2pos[line_num]=pos+1}}
+while(true){try{var token=tokenizer.next()}catch(err){if(err.type=='IndentationError'){C=C ||new $NodeCtx(node)
+$pos=line2pos[err.line_num]
+$_SyntaxError(C,err.message,'indent')}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
+$pos=line2pos[start[0]]+start[1]
+$_SyntaxError(C,[`'${last_brace.string} was `+
+'never closed'])}
+$_SyntaxError(C,err.message)}
+throw err}
+if(token.done){throw Error('token done without ENDMARKER.')}
+token=token.value
+if(token[2]===undefined){console.log('token incomplet',token,'module',module,root)
+console.log('src',src)}
+if(token.start===undefined){console.log('no start',token)}
+lnum=token.start[0]
+$pos=line2pos[lnum]+token.start[1]
+if(expect_indent &&
+['INDENT','COMMENT','NL'].indexOf(token.type)==-1){C=C ||new $NodeCtx(node)
+$_SyntaxError(C,"expected an indented block")}else{expect_indent=false}
+switch(token.type){case 'ENDMARKER':
 if(root.yields_func_check){var save_pos=$pos
 for(const _yield of root.yields_func_check){$pos=_yield[1]
 _yield[0].check_in_function()}
-$pos=save_pos}}}}
+$pos=save_pos}
+if(indent !=0){$_SyntaxError(node.C,'expected an indented block')}
+if(node.C===undefined){node.parent.children.pop()}
+return
+case 'ENCODING':
+case 'TYPE_COMMENT':
+continue
+case 'NL':
+node.line_num++
+continue
+case 'COMMENT':
+var end=line2pos[token.end[0]]+token.end[1]
+root.comments.push([$pos,end-$pos])
+continue
+case 'ERRORTOKEN':
+C=C ||new $NodeCtx(node)
+if(token.string !=' '){handle_errortoken(C,token)}
+continue}
+switch(token[0]){case 'NAME':
+case 'NUMBER':
+case 'OP':
+case 'STRING':
+C=C ||new $NodeCtx(node)}
+switch(token[0]){case 'NAME':
+var name=token[1]
+if(kwdict.indexOf(name)>-1){if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
+C=$transition(C,name)}else if(name=='not'){C=$transition(C,'not')}else if(typeof $operators[name]=='string'){
+C=$transition(C,'op',name)}else{if($B.forbidden.indexOf(name)>-1){name='$$'+name}
+C=$transition(C,'id',name)}
+continue
+case 'OP':
+var op=token[1]
+if((op.length==1 && '()[]{}.,:='.indexOf(op)>-1)||
+[':='].indexOf(op)>-1){if(braces_open.indexOf(op)>-1){braces_stack.push(token)}else if(braces_close[op]){if(braces_stack.length==0){$_SyntaxError(C,"unmatched '"+op+"'")}else{var last_brace=$B.last(braces_stack)
+if(last_brace.string==braces_close[op]){braces_stack.pop()}else{$_SyntaxError(C,[`closing parenthesis '${op}' does not `+
+`match opening parenthesis '`+
+`${last_brace.string}'`])}}}
+C=$transition(C,token[1])}else if(op=='...'){C=$transition(C,'ellipsis')}else if(op=='->'){C=$transition(C,'annotation')}else if(op==';'){if(C.type=='node' && C.tree.length==0){$_SyntaxError(C,'statement cannot start with ;')}
+$transition(C,'eol')
+var new_node=new $Node()
+new_node.line_num=token[2][0]+1
+C=new $NodeCtx(new_node)
+node.parent.add(new_node)
+node=new_node}else if($augmented_assigns[op]){C=$transition(C,'augm_assign',op)}else{C=$transition(C,'op',op)}
+continue
+case 'STRING':
+var prepared=prepare_string(C,token[1],token[2])
+C=$transition(C,'str',prepared.value)
+continue
+case 'NUMBER':
+var prepared=prepare_number(token[1])
+if(prepared===undefined){console.log('pas de prepared pour',token)}
+C=$transition(C,prepared.type,prepared.value)
+continue
+case 'NEWLINE':
+if(C && C.node && C.node.is_body_node){expect_indent=true}
+C=C ||new $NodeCtx(node)
+$transition(C,'eol')
+var new_node=new $Node()
+new_node.line_num=token[2][0]+1
+node.parent.add(new_node)
+C=null
+node=new_node
+continue
+case 'DEDENT':
+indent--
+node.parent.children.pop()
+node.parent.parent.add(node)
+continue
+case 'INDENT':
+indent++
+node.parent.children.pop()
+var previous_node=$B.last(node.parent.children)
+if(previous_node===undefined ||
+$indented.indexOf(previous_node.C.tree[0].type)==-1){$pos=pos
+C=C ||new $NodeCtx(node)
+$_SyntaxError(C,'unexpected indent',$pos)}
+previous_node.add(node)
+continue}}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id
@@ -5503,6 +5653,7 @@ root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope,line_num){
 $pos=0
+line_num=line_num ||1
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
@@ -5523,7 +5674,7 @@ var local_ns='$locals_'+locals_id.replace(/\./g,'_')
 var global_ns='$locals_'+module.replace(/\./g,'_')
 var root=$create_root_node(
 {src:src,is_comp:is_comp,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
-$tokenize(root,src)
+dispatch_tokens(root,src)
 root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
 root.transform()
@@ -5671,6 +5822,7 @@ for(var i=0,len=webworkers.length;i < len;i++){var worker=webworkers[i]
 if(worker.src){
 $B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true}])}else{
 src=(worker.innerHTML ||worker.textContent)
+src=unindent(src)
 src=src.replace(/^\n/,'')
 $B.webworkers[worker.id]=src}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
@@ -5682,6 +5834,7 @@ while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
 if(elt.src){
 $B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src}])}else{
 src=(elt.innerHTML ||elt.textContent)
+src=unindent(src)
 src=src.replace(/^\n/,'')
 $B.tasks.push([$B.run_script,src,module_name,$B.script_path+"#"+module_name,true])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
@@ -10869,7 +11022,6 @@ if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
 return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
 return _b_.NotImplemented}
 int.__setattr__=function(self,attr,value){if(typeof self=="number" ||typeof self=="boolean"){var cl_name=$B.class_name(self)
-console.log(cl_name,_b_.dir(self),attr)
 if(_b_.dir(self).indexOf(attr)>-1){var msg="attribute '"+attr+`' of '${cl_name}'`+
 "objects is not writable"}else{var msg=`'${cl_name}' object has no attribute '${attr}'`}
 throw _b_.AttributeError.$factory(msg)}

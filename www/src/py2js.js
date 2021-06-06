@@ -78,8 +78,7 @@ $B.op2method = {
         "<": "lt", ">": "gt", "<=": "le", ">=": "ge", "==": "eq", "!=": "ne"
     },
     boolean: {
-        "or": "or", "and": "and", "in": "in", "not": "not", "is": "is",
-        "not_in": "not_in", "is_not": "is_not" // fake
+        "or": "or", "and": "and", "in": "in", "not": "not", "is": "is"
     },
     subset: function(){
         var res = {},
@@ -150,18 +149,11 @@ var create_temp_name = $B.parser.create_temp_name = function(prefix) {
  */
 var replace_node = $B.parser.replace_node = function(replace_what, replace_with){
     var parent = replace_what.parent
-    var pos = get_rank_in_parent(replace_what)
+    var pos = replace_what.parent.children.indexOf(replace_what)
     parent.children[pos] = replace_with
     replace_with.parent = parent
     // Save node bindings
     replace_with.bindings = replace_what.bindings
-}
-
-/*
- * Returns n such that :param:`node` is the n-th child of its parent node.
- */
-var get_rank_in_parent = $B.parser.get_rank_in_parent = function(node) {
-    return node.parent.children.indexOf(node)
 }
 
 // Adds a new identifier node to :param:`parent` at position :param:`insert_at`.
@@ -212,7 +204,7 @@ Function called in case of SyntaxError
 ======================================
 */
 
-var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
+var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     //console.log("syntax error", context, "msg", msg, "indent", indent)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
@@ -222,6 +214,9 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function (context, msg, indent){
     var module = tree_node.module,
         src = root.src,
         line_num = tree_node.line_num
+    if(context.$pos !== undefined){
+        $pos = context.$pos
+    }
     if(src){
         line_num = src.substr(0, $pos).split("\n").length
     }
@@ -279,13 +274,14 @@ function check_assignment(context){
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'invalid syntax - assign')
-        }else if(ctx.type == "expr" &&
-                ctx.tree[0].type == "op"){
+        }else if(ctx.type == "expr" && ctx.tree[0].type == "op"){
             if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
                 $_SyntaxError(context, ["cannot assign to comparison"])
             }else{
                 $_SyntaxError(context, ["cannot assign to operator"])
             }
+        }else if(ctx.type == "ternary"){
+            $_SyntaxError(context, ["cannot assign to conditional expression"])
         }
         ctx = ctx.parent
     }
@@ -660,6 +656,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             case 'float':
             case 'str':
             case 'bytes':
+            case 'ellipsis':
             case '[':
             case '(':
             case '{':
@@ -672,10 +669,6 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                 context = context.parent
                 context.packed = packed
                 context.is_await = is_await
-                if(assign){
-                    console.log("set assign to parent", context)
-                    context.assign = assign
-                }
         }
     }
 
@@ -709,7 +702,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
         case '{':
             return new $DictOrSetCtx(
                 new $ExprCtx(context, 'dict_or_set', commas))
-        case '.':
+        case 'ellipsis':
             return new $EllipsisCtx(
                 new $ExprCtx(context, 'ellipsis', commas))
         case 'not':
@@ -750,10 +743,23 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                     context = context.parent
                     return new $NotCtx(
                         new $ExprCtx(context, 'not', commas))
+                case '...':
+                    return new $EllipsisCtx(new $ExprCtx(context, 'ellipsis', commas))
             }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
-        case '=', 'in':
+        case 'in':
+            if(context.parent.type == 'op' && context.parent.op == 'not'){
+                context.parent.op = 'not_in'
+                return context
+            }
+            $_SyntaxError(context, 'token ' + token + ' after ' +
+                context)
+        case '=':
+            if(context.parent.type == "yield"){
+                $_SyntaxError(context,
+                    ["assignment to yield expression not possible"])
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
         case 'yield':
@@ -960,7 +966,13 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
           $_SyntaxError(context, ["cannot assign to function call "])
     }else if(context.type == 'list_or_tuple' ||
             (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
-        if(context.type == 'expr'){context = context.tree[0]}
+        if(context.type == 'expr'){
+            if(context.tree[0].real == 'gen_expr'){
+                $_SyntaxError(context,
+                    ['cannot assign to generator expression'])
+            }
+            context = context.tree[0]
+        }
         // Bind all the ids in the list or tuple
         context.bind_ids(scope)
     }else if(context.type == 'assign'){
@@ -973,7 +985,10 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type == 'id'){
-            if(noassign[assigned.value] === true){
+            var name = assigned.value
+            if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
+                $_SyntaxError(context, ['cannot assign to ' + name])
+            }else if(noassign[name] === true){
                 $_SyntaxError(context,["cannot assign to keyword"])
             }
             // Attribute bound of an id indicates if it is being
@@ -1003,8 +1018,25 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             }
         }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
             $_SyntaxError(context, ["cannot assign to literal"])
+        }else if(assigned.type == "ellipsis"){
+                $_SyntaxError(context, ['cannot assign to Ellipsis'])
         }else if(assigned.type == "unary"){
             $_SyntaxError(context, ["cannot assign to operator"])
+        }else if(assigned.type == "packed"){
+            if(assigned.tree[0].name == 'id'){
+                var id = assigned.tree[0].tree[0].value
+                if(['None', 'True', 'False', '__debug__'].indexOf(id) > -1){
+                    $_SyntaxError(context,
+                        ['cannot assign to ' + id])
+                }
+            }
+            // If the packed item was in a tuple (eg "a, *b = X") the
+            // assignment is valid; in this case the attribute in_tuple
+            // is set
+            if(assigned.parent.in_tuple === undefined){
+                $_SyntaxError(context,
+                    ["starred assignment target must be in a list or tuple"])
+            }
         }
     }
 }
@@ -1237,6 +1269,7 @@ $AssignCtx.prototype.transform = function(node, rank){
             node.parent.insert(rank++, new_node)
             var context = new $NodeCtx(new_node) // create ordinary node
             left_item.parent = context
+            left_item.in_tuple = true
             // assignment to left operand
             var assign = new $AssignCtx(left_item, false)
             var js = rlname
@@ -1397,8 +1430,11 @@ $AttrCtx.prototype.transition = function(token, value){
     var context = this
     if(token === 'id'){
         var name = value
-        if(noassign[name] === true){$_SyntaxError(context,
-            ["cannot assign to " + name])}
+        if(name == '__debug__'){
+            $_SyntaxError(context, ['cannot assign to __debug__'])
+        }else if(noassign[name] === true){
+            $_SyntaxError(context, `'${name}' cannot be an attribute`)
+        }
         name = $mangle(name, context)
         context.name = name
         return context.parent
@@ -1458,8 +1494,11 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var assigned = context.tree[0]
         if(assigned.type == 'id'){
             var name = assigned.value
+            if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
+                $_SyntaxError(context, 'cannot assign to ' + name)
+            }
             if(noassign[name] === true){
-                $_SyntaxError(context, ["cannot assign to keyword"])
+                $_SyntaxError(context, "cannot assign to keyword")
             }else if((scope.ntype == 'def' || scope.ntype == 'generator') &&
                     (scope.binding[name] === undefined)){
                 if(scope.globals === undefined ||
@@ -1915,6 +1954,7 @@ $CallArgCtx.prototype.transition = function(token, value){
         case '(':
         case '{':
         case '.':
+        case 'ellipsis':
         case 'not':
         case 'lambda':
             if(context.expect == 'id'){
@@ -2058,6 +2098,7 @@ $CallCtx.prototype.transition = function(token, value){
         case '.':
         case 'not':
         case 'lambda':
+        case 'ellipsis':
             context.expect = ','
             return $transition(new $CallArgCtx(context), token,
                 value)
@@ -3957,7 +3998,6 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
     // Class for "..."
     this.type = 'ellipsis'
     this.parent = context
-    this.nbdots = 1
     this.start = $pos
     context.tree[context.tree.length] = this
 }
@@ -3968,21 +4008,7 @@ $EllipsisCtx.prototype.toString = function(){
 
 $EllipsisCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == '.'){
-        context.nbdots++
-        if(context.nbdots == 3 && $pos - context.start == 2){
-            context.$complete = true
-        }
-        return context
-    }else{
-        if(! context.$complete){
-            $pos--
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
-        }else{
-            return $transition(context.parent, token, value)
-        }
-    }
+    return $transition(context.parent, token, value)
 }
 
 $EllipsisCtx.prototype.to_js = function(){
@@ -4139,6 +4165,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     // Base class for expressions
     this.type = 'expr'
     this.name = name
+    this.$pos = $pos
     // allow expression with comma-separted values, or a single value ?
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','
@@ -4491,10 +4518,15 @@ $ExprCtx.prototype.transition = function(token, value){
               $_SyntaxError(context,
                   ':= invalid inside function arguments' )
           }
-          if(context.tree.length == 1 &&
-                  context.tree[0].type == "id"){
+          if(context.tree.length == 1 && context.tree[0].type == "id"){
               var scope = $get_scope(context),
                   name = context.tree[0].value
+              if(['None', 'True', 'False'].indexOf(name) > -1){
+                  $_SyntaxError(context,
+                      [`cannot use assignment expressions with ${name}`])
+              }else if(name == '__debug__'){
+                  $_SyntaxError(context, ['cannot assign to __debug__'])
+              }
               while(scope.is_comp){
                   scope = scope.parent_block
               }
@@ -4685,6 +4717,7 @@ $ForExpr.prototype.transition = function(token, value){
             }
             return $BodyCtx(context)
     }
+    console.log('context', context, 'tokan', token, value)
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
@@ -5591,7 +5624,7 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
         this.module = this.module.parent_block
     }
     this.module.binding = this.module.binding || {}
-
+    this.$pos = $pos
 }
 
 $GlobalCtx.prototype.toString = function(){
@@ -5628,6 +5661,10 @@ $GlobalCtx.prototype.add = function(name){
     if(this.scope.annotations && this.scope.annotations.has(name)){
         $_SyntaxError(this, ["annotated name '" + name +
             "' can't be global"])
+    }
+    if(this.scope.binding && this.scope.binding[name]){
+        $pos = this.$pos - 1
+        $_SyntaxError(this, [`name '${name}' is parameter and global`])
     }
     this.scope.globals.add(name)
     // Remove bindings between scope and module
@@ -5921,10 +5958,10 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "myGlob"
+    var $test = false // val == "xw"
 
     if($test){
-        console.log("this", this)
+        console.log("ENTER IdCtx.py2js", "this", this)
     }
 
     // Special cases
@@ -6063,8 +6100,9 @@ $IdCtx.prototype.to_js = function(arg){
             }
         }
         if($test){
-            console.log("scope", scope, "innermost", innermost,
-                scope === innermost, "bound_before", bound_before,
+            console.log("scope", scope.id, scope, "innermost", innermost,
+                "scope is innermost", scope === innermost,
+                "bound_before", bound_before,
                 "found", found.slice())
         }
         if(scope === innermost){
@@ -6072,14 +6110,20 @@ $IdCtx.prototype.to_js = function(arg){
             // of an assignment and the right side is defined in an
             // upper scope, eg "range = range"
             if(bound_before){
-                if(bound_before.indexOf(val) > -1){found.push(scope)}
-                else if(scope.context &&
+                if(bound_before.indexOf(val) > -1){
+                    found.push(scope)
+                }else if(scope.context &&
                         scope.context.tree[0].type == 'def' &&
                         scope.context.tree[0].env.indexOf(val) > -1){
                     found.push(scope)
                 }
             }else{
                 if(scope.binding[val]){
+                    if($test){
+                        console.log(val, 'in bindings of', scope.id,
+                            this_node.locals[val])
+                    }
+
                     // the name is bound somewhere in the local scope
                     if(this_node.locals[val] === undefined){
                         // the name is referenced (not bound) but it was
@@ -6115,8 +6159,11 @@ $IdCtx.prototype.to_js = function(arg){
                 found.push(scope)
             }
         }
-        if(scope.parent_block){scope = scope.parent_block}
-        else{break}
+        if(scope.parent_block){
+            scope = scope.parent_block
+        }else{
+            break
+        }
     }
     this.found = found
     if($test){
@@ -6588,7 +6635,7 @@ $LambdaCtx.prototype.to_js = function(){
     return js
 }
 
-var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context,real){
+var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
     // Class for literal lists or tuples
     // The real type (list or tuple) is set inside $transition
     // as attribute 'real'
@@ -6746,7 +6793,9 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         }
                         context.real = 'list_comp'
                     }
-                    else{context.real = 'gen_expr'}
+                    else{
+                        context.real = 'gen_expr'
+                    }
                     // remove names already referenced in list from
                     // the function references
                     context.intervals = [context.start + 1]
@@ -7141,8 +7190,6 @@ $NodeCtx.prototype.transition = function(token, value){
         }
     }
     switch(token) {
-        case '@':
-            return new $DecoratorCtx(context)
         case ',':
             if(context.tree && context.tree.length == 0){
                 $_SyntaxError(context,
@@ -7198,6 +7245,9 @@ $NodeCtx.prototype.transition = function(token, value){
             }
             return new $AbstractExprCtx(
                 new $ConditionCtx(context, token), false)
+        case 'ellipsis':
+            var expr = new $AbstractExprCtx(context, true)
+            return $transition(expr, token, value)
         case 'else':
             var previous = $previous(context)
             if(['condition', 'except', 'for'].
@@ -7243,6 +7293,8 @@ $NodeCtx.prototype.transition = function(token, value){
                 case '~':
                     var expr = new $AbstractExprCtx(context, true)
                     return $transition(expr, token, value)
+                case '@':
+                    return new $DecoratorCtx(context)
             }
             break
         case 'pass':
@@ -7264,6 +7316,7 @@ $NodeCtx.prototype.transition = function(token, value){
             }
             return context
     }
+    console.log('token', token, value)
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
@@ -7523,7 +7576,6 @@ $NumberCtx.prototype.transition = function(token, value){
         case '[':
         case '(':
         case '{':
-        case 'not':
         case 'lambda':
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
@@ -7794,7 +7846,8 @@ $OpCtx.prototype.to_js = function(){
             return '$B.$is(' + this.tree[0].to_js() + ', ' +
                 this.tree[1].to_js() + ')'
         case 'is_not':
-            return this.tree[0].to_js() + '!==' + this.tree[1].to_js()
+            return '! $B.$is(' + this.tree[0].to_js() + ', ' +
+                this.tree[1].to_js() + ')'
         case '+':
             return '$B.add(' + this.tree[0].to_js() + ', ' +
                 this.tree[1].to_js() + ')'
@@ -8718,6 +8771,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     this.tree = [value] // may be extended if consecutive strings eg 'a' 'b'
     context.tree[context.tree.length] = this
     this.raw = false
+    this.$pos = $pos
 }
 
 $StringCtx.prototype.toString = function(){
@@ -9141,7 +9195,7 @@ $TryCtx.prototype.transition = function(token, value){
 
 $TryCtx.prototype.transform = function(node, rank){
     if(node.parent.children.length == rank + 1){
-        $_SyntaxError(context, ["unexpected EOF while parsing"])
+        $_SyntaxError(node.context, ["unexpected EOF while parsing"])
     }else{
         var next_ctx = node.parent.children[rank + 1].context.tree[0]
         switch(next_ctx.type) {
@@ -10225,7 +10279,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    //console.log("context", context, "token", token, value)
+    //console.log("context", context, "token", token, value, '$pos', $pos)
     return context.transition(token, value)
 }
 
@@ -10253,64 +10307,7 @@ function SurrogatePair(value){
         String.fromCharCode(0xDC00 | (value & 0x3FF))
 }
 
-function test_escape(context, text, string_start, antislash_pos){
-    // Test if the escape sequence starting at position "pos" in text is
-    // is valid
-    // $pos is set at the position before the string quote
-    var seq_start = antislash_pos - string_start - 1,
-        seq_end,
-        mo
-    // 1 to 3 octal digits = Unicode char
-    mo = /^[0-7]{1,3}/.exec(text.substr(antislash_pos + 1))
-    if(mo){
-        return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
-    }
-    switch(text[antislash_pos + 1]){
-        case "x":
-            var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
-            if(mo[0].length != 2){
-                seq_end = seq_start + mo[0].length + 1
-                $_SyntaxError(context,
-                     ["(unicode error) 'unicodeescape' codec can't decode " +
-                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
-                     "\\xXX escape"])
-            }else{
-                return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
-            }
-        case "u":
-            var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
-            if(mo[0].length != 4){
-                seq_end = seq_start + mo[0].length + 1
-                $_SyntaxError(context,
-                     ["(unicode error) 'unicodeescape' codec can't decode " +
-                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
-                     "\\uXXXX escape"])
-            }else{
-                return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
-            }
-        case "U":
-            var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
-            if(mo[0].length != 8){
-                seq_end = seq_start + mo[0].length + 1
-                $_SyntaxError(context,
-                     ["(unicode error) 'unicodeescape' codec can't decode " +
-                     `bytes in position ${seq_start}-${seq_end}: truncated ` +
-                     "\\uXXXX escape"])
-            }else{
-                var value = parseInt(mo[0], 16)
-                if(value > 0x10FFFF){
-                    $_SyntaxError('invalid unicode escape ' + mo[0])
-                }else if(value >= 0x10000){
-                    return [SurrogatePair(value), 2 + mo[0].length]
-                }else{
-                    return [String.fromCharCode(value), 2 + mo[0].length]
-                }
-            }
-    }
-
-}
-
-function test_num(context, num_lit){
+function test_num(num_lit){
     var len = num_lit.length,
         pos = 0,
         char,
@@ -10496,10 +10493,382 @@ function line_ends_with_comma(src){
     return false
 }
 
-var $tokenize = $B.parser.$tokenize = function(root, src) {
-    var br_close = {")": "(", "]": "[", "}": "{"},
-        br_stack = "",
-        br_pos = []
+function prepare_number(n){
+    // n is a numric literal
+    // return an object {type: <int | float | imaginary>, value}
+    n = n.replace(/_/g, "")
+    if(n.startsWith('.')){
+        if(n.endsWith("j")){
+            return {type: 'imaginary', value: n.substr(0, n.length - 1)}
+        }else{
+            return {type: 'float', value: n}
+        }
+        pos = j
+    }else if(n.startsWith('0') && n != '0'){
+        // octal, hexadecimal, binary
+        var num = test_num(n),
+            base
+        if(num.imaginary){
+            return {type: 'imaginary', value: num.value}
+        }
+        if(num.subtype == 'float'){
+            return {type: num.subtype, value: num.value}
+        }
+        if(num.subtype === undefined){
+            base = 10
+        }else{
+            base = {'b': 2, 'o': 8, 'x': 16}[num.subtype]
+        }
+        if(base !== undefined){
+            return{type: 'int', value: [base, num.value]}
+        }
+    }else{
+        var num = test_num(n)
+        if(num.subtype == "float"){
+           return {
+               type: num.imaginary ? 'imaginary' : 'float',
+               value: num.value
+           }
+        }else{
+            return {
+               type: num.imaginary ? 'imaginary' : 'int',
+               value: num.imaginary ? num.value : [10, num.value]
+           }
+       }
+    }
+}
+
+function test_escape(context, text, string_start, antislash_pos){
+    // Test if the escape sequence starting at position "antislah_pos" in text
+    // is is valid
+    // $pos is set at the position before the string quote in original string
+    // string_start is the position of the first character after the quote
+    // text is the content of the string between quotes
+    // antislash_pos is the position of \ inside text
+    var seq_end,
+        mo
+    // 1 to 3 octal digits = Unicode char
+    mo = /^[0-7]{1,3}/.exec(text.substr(antislash_pos + 1))
+    if(mo){
+        return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
+    }
+    switch(text[antislash_pos + 1]){
+        case "x":
+            var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
+            if(mo[0].length != 2){
+                seq_end = antislash_pos + mo[0].length + 1
+                $pos = string_start + seq_end + 2
+                $_SyntaxError(context,
+                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                     `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
+                     "\\xXX escape"])
+            }else{
+                return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
+            }
+        case "u":
+            var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
+            if(mo[0].length != 4){
+                seq_end = antislash_pos + mo[0].length + 1
+                $pos = string_start + seq_end + 2
+                $_SyntaxError(context,
+                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                     `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
+                     "\\uXXXX escape"])
+            }else{
+                return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
+            }
+        case "U":
+            var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
+            if(mo[0].length != 8){
+                seq_end = antislash_pos + mo[0].length + 1
+                $pos = string_start + seq_end + 2
+                $_SyntaxError(context,
+                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                     `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
+                     "\\uXXXX escape"])
+            }else{
+                var value = parseInt(mo[0], 16)
+                if(value > 0x10FFFF){
+                    $_SyntaxError('invalid unicode escape ' + mo[0])
+                }else if(value >= 0x10000){
+                    return [SurrogatePair(value), 2 + mo[0].length]
+                }else{
+                    return [String.fromCharCode(value), 2 + mo[0].length]
+                }
+            }
+    }
+}
+
+function prepare_string(context, s, position){
+    var len = s.length,
+        pos = 0,
+        string_modifier,
+        _type = "string"
+    while(pos < len){
+        if(s[pos] == '"' || s[pos] == "'"){
+            quote = s[pos]
+            string_modifier = s.substr(0, pos)
+            if(s.substr(pos, 3) == quote.repeat(3)){
+                _type = "triple_string"
+                inner = s.substring(pos + 3, s.length - 3)
+            }else{
+                inner = s.substring(pos + quote.length,
+                    len - quote.length)
+            }
+            break
+        }
+        pos++
+    }
+    var result = {quote}
+    var mods = {r: 'raw', f: 'fstring', b: 'bytes'}
+    for(var mod of string_modifier){
+        result[mods[mod]] = true
+    }
+
+    var raw = context.type == 'str' && context.raw,
+        string_start = $pos + pos + 1,
+        bytes = false,
+        fstring = false,
+        sm_length, // length of string modifier
+        end = null;
+    if(string_modifier){
+        switch(string_modifier) {
+            case 'r': // raw string
+                raw = true
+                break
+            case 'u':
+                // in string literals, '\U' and '\u' escapes in raw strings
+                // are not treated specially.
+                break
+            case 'b':
+                bytes = true
+                break
+            case 'rb':
+            case 'br':
+                bytes = true
+                raw = true
+                break
+            case 'f':
+                fstring = true
+                sm_length = 1
+                break
+            case 'fr':
+            case 'rf':
+                fstring = true
+                sm_length = 2
+                raw = true
+                break
+        }
+        string_modifier = false
+    }
+
+    var escaped = false,
+        zone = '',
+        end = 0,
+        src = inner
+    while(end < src.length){
+        if(escaped){
+            if(src.charAt(end) == "a"){
+                zone = zone.substr(0, zone.length - 1) + "\u0007"
+            }else{
+                zone += src.charAt(end)
+                if(raw && src.charAt(end) == '\\'){zone += '\\'}
+            }
+            escaped = false
+            end++
+        }else if(src.charAt(end) == "\\"){
+            if(raw){
+                if(end < src.length - 1 &&
+                        src.charAt(end + 1) == quote){
+                    zone += '\\\\' + quote
+                    end += 2
+                }else{
+                    zone += '\\\\'
+                    end++
+                }
+                escaped = true
+            }else{
+                if(src.charAt(end + 1) == '\n'){
+                    // explicit line joining inside strings
+                    end += 2
+                }else if(src.substr(end + 1, 2) == 'N{'){
+                    // Unicode literal ?
+                    var end_lit = end + 3,
+                        re = new RegExp("[-a-zA-Z0-9 ]+"),
+                        search = re.exec(src.substr(end_lit))
+                    if(search === null){
+                        $_SyntaxError(context,"(unicode error) " +
+                            "malformed \\N character escape", pos)
+                    }
+                    var end_lit = end_lit + search[0].length
+                    if(src.charAt(end_lit) != "}"){
+                        $_SyntaxError(context, "(unicode error) " +
+                            "malformed \\N character escape")
+                    }
+                    var description = search[0].toUpperCase()
+                    // Load unicode table if not already loaded
+                    if($B.unicodedb === undefined){
+                        var xhr = new XMLHttpRequest
+                        xhr.open("GET",
+                            $B.brython_path + "unicode.txt", false)
+                        xhr.onreadystatechange = function(){
+                            if(this.readyState == 4){
+                                if(this.status == 200){
+                                    $B.unicodedb = this.responseText
+                                }else{
+                                    console.log("Warning - could not " +
+                                        "load unicode.txt")
+                                }
+                            }
+                        }
+                        xhr.send()
+                    }
+                    if($B.unicodedb !== undefined){
+                        var re = new RegExp("^([0-9A-F]+);" +
+                            description + ";.*$", "m")
+                        search = re.exec($B.unicodedb)
+                        if(search === null){
+                            $_SyntaxError(context, "(unicode error) " +
+                                "unknown Unicode character name")
+                        }
+                        var cp = "0x" + search[1] // code point
+                        zone += String.fromCodePoint(eval(cp))
+                        end = end_lit + 1
+                    }else{
+                        end++
+                    }
+                }else{
+                    var esc = test_escape(context, src, string_start,
+                                          end)
+                    if(esc){
+                        if(esc[0] == '\\'){
+                            zone += '\\\\'
+                        }else{
+                            zone += esc[0]
+                        }
+                        end += esc[1]
+                    }else{
+                        if(end < src.length - 1 &&
+                            is_escaped[src.charAt(end + 1)] === undefined){
+                                zone += '\\'
+                        }
+                        zone += '\\'
+                        escaped = true
+                        end++
+                    }
+                }
+            }
+        }else if(src.charAt(end) == '\n' && _type != 'triple_string'){
+            // In a string with single quotes, line feed not following
+            // a backslash raises SyntaxError
+            console.log(pos, end, src.substring(pos, end))
+            $_SyntaxError(context, ["EOL while scanning string literal"])
+        }else{
+            zone += src.charAt(end)
+            end++
+        }
+    }
+    var $string = zone,
+        string = ''
+
+    // Escape quotes inside string, except if they are
+    // already escaped.
+    // In raw mode, always escape.
+    for(var i = 0; i < $string.length; i++){
+        var $car = $string.charAt(i)
+        if($car == quote){
+            if(raw || (i == 0 ||
+                    $string.charAt(i - 1) != '\\')){
+                string += '\\'
+            }else if(_type == "triple_string"){
+                // Unescaped quotes in triple string are allowed
+                var j = i - 1
+                while($string.charAt(j) == '\\'){
+                    j--
+                }
+                if((i - j - 1) % 2 == 0){
+                    string += '\\'
+                }
+            }
+        }
+        string += $car
+    }
+
+    if(fstring){
+        try{
+            var re = new RegExp("\\\\" + quote, "g"),
+                string_no_bs = string.replace(re, quote)
+            var elts = $B.parse_fstring(string_no_bs) // in py_string.js
+        }catch(err){
+            if(err.position){
+                $pos += err.position
+            }
+            $_SyntaxError(context, [err.message])
+        }
+    }
+
+    if(bytes){
+        result.value = 'b' + quote + string + quote
+    }else if(fstring){
+        result.value = elts
+    }else{
+        result.value = quote + string + quote
+    }
+    context.raw = raw;
+    return result
+}
+
+function unindent(src){
+    // Brython supports scripts that don't start at column 0
+    // Return unindented source, or raise SyntaxError if a line starts at a
+    // column lesser than the first line.
+    var lines = src.split('\n'),
+        line,
+        global_indent,
+        indent,
+        unindented_lines = []
+
+    for(var line_num = 0, len = lines.length; line_num < len; line_num++){
+        line = lines[line_num]
+        indent = line.match(/^\s*/)[0]
+        if(indent != line){ // non whitespace-only line
+            if(global_indent === undefined){
+                // The indentation of the first non-whitespace line sets the
+                // "global indentation" for the whole script.
+                if(indent.length == 0){
+                    // Return source code unchanged if no global indentation
+                    return src
+                }
+                global_indent = indent
+                var start = global_indent.length
+                unindented_lines.push(line.substr(start))
+            }else if(line.startsWith(global_indent)){
+                unindented_lines.push(line.substr(start))
+            }else{
+                throw SyntaxError("first line starts at " +
+                   `column ${start}, line ${line_num} at column ` +
+                   line.match(/\s*/).length + '\n    ' + line)
+            }
+        }else{
+            unindented_lines.push('')
+        }
+    }
+    return unindented_lines.join('\n')
+}
+
+function handle_errortoken(context, token){
+    if(token.string == "'" || token.string == '"'){
+        $_SyntaxError(context, ['unterminated string literal ' +
+            `(detected at line ${token.start[0]})`])
+    }
+    $_SyntaxError(context, 'invalid token ' + token[1])
+}
+
+var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
+    var tokenizer = $B.tokenizer(src)
+    var braces_close = {")": "(", "]": "[", "}": "{"},
+        braces_open = "([{",
+        braces_stack = []
     var kwdict = [
         "class", "return", "break", "for", "lambda", "try", "finally",
         "raise", "def", "from", "nonlocal", "while", "del", "global",
@@ -10514,699 +10883,225 @@ var $tokenize = $B.parser.$tokenize = function(root, src) {
         "match", "case" // PEP 622 (pattern matching)
     ]
 
-    var context = null
-    var new_node = new $Node(),
-        current = root,
-        name = "",
-        _type = null,
-        pos = 0,
-        indent = null,
-        string_modifier = false
-
     var module = root.module
 
     var lnum = root.line_num === undefined ? 1 : root.line_num
-    while(pos < src.length){
-        var car = src.charAt(pos)
-        // build tree structure from indentation
-        if(indent === null){
-            var indent = 0
-            while(pos < src.length){
-                var _s = src.charAt(pos)
-                if(_s == " "){indent++; pos++}
-                else if(_s == "\t"){
-                    // tab : fill until indent is multiple of 8
-                    indent++; pos++
-                    if(indent % 8 > 0){indent += 8 - indent % 8}
-                }else{break}
+
+    var node = new $Node()
+    node.line_num = lnum
+    root.add(node)
+    var context = null,
+        expect_indent = false,
+        indent = 0
+
+    // line2pos maps line numbers to position of first character in line
+    var line2pos = {0: 0, 1: 0},
+        line_num = 1
+    for(var pos = 0, len = src.length; pos < len; pos++){
+        if(src[pos] == '\n'){
+            line_num++
+            line2pos[line_num] = pos + 1
+        }
+    }
+
+    while(true){
+        try{
+            var token = tokenizer.next()
+        }catch(err){
+            if(err.type == 'IndentationError'){
+                context = context || new $NodeCtx(node)
+                $pos = line2pos[err.line_num]
+                $_SyntaxError(context, err.message, 'indent')
+            }else if(err instanceof SyntaxError){
+                if(braces_stack.length > 0){
+                    var last_brace = $B.last(braces_stack),
+                        start = last_brace.start
+                    $pos = line2pos[start[0]] + start[1]
+                    $_SyntaxError(context, [`'${last_brace.string} was ` +
+                       'never closed'])
+                }
+                $_SyntaxError(context, err.message)
             }
-            // ignore empty lines
-            var _s = src.charAt(pos)
-            if(_s == '\n'){
-                pos++; lnum++; indent = null;
+            throw err
+        }
+        if(token.done){
+            throw Error('token done without ENDMARKER.')
+        }
+        token = token.value
+        if(token[2] === undefined){
+            console.log('token incomplet', token, 'module', module, root)
+            console.log('src', src)
+        }
+        if(token.start === undefined){
+            console.log('no start', token)
+        }
+        lnum = token.start[0]
+        $pos = line2pos[lnum] + token.start[1]
+        // console.log('token', token, 'lnum', lnum, '$pos', $pos)
+        if(expect_indent &&
+                ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
+            context = context || new $NodeCtx(node)
+            $_SyntaxError(context, "expected an indented block")
+        }else{
+            expect_indent = false
+        }
+
+        switch(token.type){
+            case 'ENDMARKER':
+                // Check that all "yield"s are in a function
+                if(root.yields_func_check){
+                    var save_pos = $pos
+                    for(const _yield of root.yields_func_check){
+                        $pos = _yield[1]
+                        _yield[0].check_in_function()
+                    }
+                    $pos = save_pos
+                }
+                if(indent != 0){
+                    $_SyntaxError(node.context, 'expected an indented block')
+                }
+                if(node.context === undefined){
+                    node.parent.children.pop()
+                }
+                return
+            case 'ENCODING':
+            case 'TYPE_COMMENT':
                 continue
-            }
-            else if(_s == '#'){ // comment
-                var offset = src.substr(pos).search(/\n/)
-                if(offset == -1){break}
-                pos += offset + 1
-                lnum++
-                indent = null
+            case 'NL':
+                node.line_num++
                 continue
-            }
-            new_node.indent = indent
-            new_node.line_num = lnum
-            new_node.module = module
-            new_node.pos = pos
-
-            if(current.is_body_node){
-                // eg in "def f(): yield from A"
-                // A "body node" starts after the ":" and has no indent
-                // initially set, so we take the number of spaces after the ":"
-                current.indent = indent
-            }
-
-            // attach new node to node with indentation immediately smaller
-            if(indent > current.indent){
-                // control that parent ended with ':'
-                if(context !== null){
-                    if($indented.indexOf(context.tree[0].type) == -1){
-                        $pos = pos
-                        console.log('type not indented', context.tree[0].type)
-                        $_SyntaxError(context, 'unexpected indent', pos)
-                    }
+            case 'COMMENT':
+                var end = line2pos[token.end[0]] + token.end[1]
+                root.comments.push([$pos, end - $pos])
+                continue
+            case 'ERRORTOKEN':
+                context = context || new $NodeCtx(node)
+                if(token.string != ' '){
+                    handle_errortoken(context, token)
                 }
-                // add a child to current node
-                current.add(new_node)
-            }else if(indent <= current.indent && context && context.tree[0] &&
-                    $indented.indexOf(context.tree[0].type) > -1 &&
-                    context.tree.length < 2){
-                $pos = pos
-                $_SyntaxError(context, 'expected an indented block',pos)
-            }else{ // same or lower level
-                while(indent !== current.indent){
-                    current = current.parent
-                    if(current === undefined || indent > current.indent){
-                        $pos = pos
-                        $_SyntaxError(context, 'unexpected indent', pos)
-                    }
-                }
-                current.parent.add(new_node)
-            }
-            current = new_node
-            context = new $NodeCtx(new_node)
-            continue
+                continue
         }
-        // comment
-        if(car == "#"){
-            var end = src.substr(pos + 1).search('\n')
-            if(end == -1){end = src.length - 1}
-            // Keep track of comment positions
-            root.comments.push([pos, end])
-            pos += end + 1
-            continue
+        // create context if needed
+        switch(token[0]){
+            case 'NAME':
+            case 'NUMBER':
+            case 'OP':
+            case 'STRING':
+                context = context || new $NodeCtx(node)
         }
-        // string
-        if(car == '"' || car == "'"){
-            var raw = context.type == 'str' && context.raw,
-                string_start = pos,
-                bytes = false,
-                fstring = false,
-                sm_length, // length of string modifier
-                end = null;
-            if(string_modifier){
-                switch(string_modifier) {
-                    case 'r': // raw string
-                        raw = true
-                        break
-                    case 'u':
-                        // in string literals, '\U' and '\u' escapes in raw strings
-                        // are not treated specially.
-                        break
-                    case 'b':
-                        bytes = true
-                        break
-                    case 'rb':
-                    case 'br':
-                        bytes = true; raw = true
-                        break
-                    case 'f':
-                        fstring = true
-                        sm_length = 1
-                        break
-                    case 'fr':
-                    case 'rf':
-                        fstring = true
-                        sm_length = 2
-                        raw = true
-                        break
-                }
-                string_modifier = false
-            }
-            if(src.substr(pos, 3) == car + car + car){
-                _type = "triple_string"
-                end = pos + 3
-            }else{
-                _type = "string"
-                end = pos + 1
-            }
-            var escaped = false,
-                zone = car,
-                found = false
-            while(end < src.length){
-                if(escaped){
-                    if(src.charAt(end) == "a"){
-                        zone = zone.substr(0, zone.length - 1) + "\u0007"
-                    }else{
-                        zone += src.charAt(end)
-                        if(raw && src.charAt(end) == '\\'){zone += '\\'}
-                    }
-                    escaped = false
-                    end++
-                }else if(src.charAt(end) == "\\"){
-                    if(raw){
-                        if(end < src.length - 1 &&
-                                src.charAt(end + 1) == car){
-                            zone += '\\\\' + car
-                            end += 2
-                        }else{
-                            zone += '\\\\'
-                            end++
-                        }
-                        escaped = true
-                    }else{
-                        if(src.charAt(end + 1) == '\n'){
-                            // explicit line joining inside strings
-                            end += 2
-                            lnum++
-                        }else if(src.substr(end + 1, 2) == 'N{'){
-                            // Unicode literal ?
-                            var end_lit = end + 3,
-                                re = new RegExp("[-a-zA-Z0-9 ]+"),
-                                search = re.exec(src.substr(end_lit))
-                            if(search === null){
-                                $_SyntaxError(context,"(unicode error) " +
-                                    "malformed \\N character escape", pos)
-                            }
-                            var end_lit = end_lit + search[0].length
-                            if(src.charAt(end_lit) != "}"){
-                                $_SyntaxError(context, "(unicode error) " +
-                                    "malformed \\N character escape")
-                            }
-                            var description = search[0].toUpperCase()
-                            // Load unicode table if not already loaded
-                            if($B.unicodedb === undefined){
-                                var xhr = new XMLHttpRequest
-                                xhr.open("GET",
-                                    $B.brython_path + "unicode.txt", false)
-                                xhr.onreadystatechange = function(){
-                                    if(this.readyState == 4){
-                                        if(this.status == 200){
-                                            $B.unicodedb = this.responseText
-                                        }else{
-                                            console.log("Warning - could not " +
-                                                "load unicode.txt")
-                                        }
-                                    }
-                                }
-                                xhr.send()
-                            }
-                            if($B.unicodedb !== undefined){
-                                var re = new RegExp("^([0-9A-F]+);" +
-                                    description + ";.*$", "m")
-                                search = re.exec($B.unicodedb)
-                                if(search === null){
-                                    $_SyntaxError(context, "(unicode error) " +
-                                        "unknown Unicode character name")
-                                }
-                                var cp = "0x" + search[1] // code point
-                                zone += String.fromCodePoint(eval(cp))
-                                end = end_lit + 1
-                            }else{
-                                end++
-                            }
-                        }else{
-                            var esc = test_escape(context, src, string_start,
-                                                  end)
-                            if(esc){
-                                if(esc[0] == '\\'){
-                                    zone += '\\\\'
-                                }else{
-                                    zone += esc[0]
-                                }
-                                end += esc[1]
-                            }else{
-                                if(end < src.length - 1 &&
-                                    is_escaped[src.charAt(end + 1)] === undefined){
-                                        zone += '\\'
-                                }
-                                zone += '\\'
-                                escaped = true
-                                end++
-                            }
-                        }
-                    }
-                }else if(src.charAt(end) == '\n' && _type != 'triple_string'){
-                    // In a string with single quotes, line feed not following
-                    // a backslash raises SyntaxError
-                    console.log(pos, end, src.substring(pos, end))
-                    $pos = end
-                    $_SyntaxError(context, ["EOL while scanning string literal"])
-                }else if(src.charAt(end) == car){
-                    if(_type == "triple_string" &&
-                            src.substr(end, 3) != car + car + car){
-                        zone += src.charAt(end)
-                        end++
-                    }else{
-                        found = true
-                        // end of string
-                        $pos = pos
-                        var $string = zone.substr(1),
-                            string = ''
 
-                        // Escape quotes inside string, except if they are
-                        // already escaped.
-                        // In raw mode, always escape.
-                        for(var i = 0; i < $string.length; i++){
-                            var $car = $string.charAt(i)
-                            if($car == car){
-                                if(raw || (i == 0 ||
-                                        $string.charAt(i - 1) != '\\')){
-                                    string += '\\'
-                                }else if(_type == "triple_string"){
-                                    // Unescaped quotes in triple string are allowed
-                                    var j = i - 1
-                                    while($string.charAt(j) == '\\'){
-                                        j--
-                                    }
-                                    if((i - j - 1) % 2 == 0){
-                                        string += '\\'
-                                    }
-                                }
-                            }
-                            string += $car
-                        }
-
-                        if(fstring){
-                            try{
-                                var re = new RegExp("\\\\" + car, "g"),
-                                    string_no_bs = string.replace(re, car)
-                                var elts = $B.parse_fstring(string_no_bs) // in py_string.js
-                            }catch(err){
-                                if(err.position){
-                                    $pos += err.position
-                                }
-                                $_SyntaxError(context, [err.message])
-                            }
-                        }
-
-                        if(bytes){
-                            context = $transition(context, 'str',
-                                'b' + car + string + car)
-                        }else if(fstring){
-                            $pos -= sm_length
-                            context = $transition(context, 'str', elts)
-                            $pos += sm_length
-                        }else{
-                            context = $transition(context, 'str',
-                                car + string + car)
-                        }
-                        context.raw = raw;
-                        pos = end + 1
-                        if(_type == "triple_string"){
-                            pos = end + 3
-                        }
-                        break
-                    }
-                }else{
-                    zone += src.charAt(end)
-                    if(src.charAt(end) == '\n'){lnum++}
-                    end++
-                }
-            }
-            if(!found){
-                if(_type === "triple_string"){
-                    $_SyntaxError(context, "Triple string end not found")
-                }else{
-                    $_SyntaxError(context, "String end not found")
-                }
-            }
-            continue
-        }
-        // identifier ?
-        if(name == "" && car != '$'){
-            // $B.unicode_tables is defined in unicode_data.js. Its attributes
-            // XID_Start and XID_Continue are objects with keys = the code
-            // points of valid characters for identifiers.
-            // Cf. https://docs.python.org/3/reference/lexical_analysis.html#identifiers
-            var cp = src.charCodeAt(pos),
-                name = ''
-            if(cp >= 0xD800 && cp <= 0xDBFF){
-                cp = _b_.ord(src.substr(pos, 2))
-                car = src.substr(pos, 2)
-                pos++
-            }
-            if($B.unicode_tables.XID_Start[cp]){
-                name = car
-                var p0 = pos
-                pos++
-                while(pos < src.length){
-                    car = src[pos]
-                    cp = src.charCodeAt(pos)
-                    if(cp >= 0xD800 && cp <= 0xDBFF){
-                        cp = _b_.ord(src.substr(pos, 2))
-                        car = src.substr(pos, 2)
-                        pos++
-                    }
-                    if($B.unicode_tables.XID_Continue[cp]){
-                        name += car
-                        pos++
-                    }else{
-                        break
-                    }
-                }
-            }
-            if(name){
+        switch(token[0]){
+            case 'NAME':
+                var name = token[1]
                 if(kwdict.indexOf(name) > -1){
-                    $pos = pos - name.length
                     if(unsupported.indexOf(name) > -1){
                         $_SyntaxError(context,
                             "Unsupported Python keyword '" + name + "'")
                     }
                     context = $transition(context, name)
-                }else if(typeof $operators[name] == 'string' &&
-                        ['is_not', 'not_in'].indexOf(name) == -1){
-                    // Literal operators : "and", "or", "is", "not"
-                    // The additional test is to exclude the name "constructor"
-                    if(name == 'is'){
-                        // if keyword is "is", see if it is followed by "not"
-                        var re = /^\s+not\s+/
-                        var res = re.exec(src.substr(pos))
-                        if(res !== null){
-                            pos += res[0].length
-                            $pos = pos - name.length
-                            context = $transition(context, 'op', 'is_not')
-                        }else{
-                            $pos = pos - name.length
-                            context = $transition(context, 'op', name)
-                        }
-                    }else if(name == 'not'){
-                        // if keyword is "not", see if it is followed by "in"
-                        var re = /^\s+in\s+/
-                        var res = re.exec(src.substr(pos))
-                        if(res !== null){
-                            pos += res[0].length
-                            $pos = pos - name.length
-                            context = $transition(context, 'op', 'not_in')
-                        }else{
-                            $pos = pos - name.length
-                            context = $transition(context, name)
-                        }
-                    }else{
-                        $pos = pos - name.length
-                        context = $transition(context, 'op', name)
-                    }
-                }else if((src.charAt(pos) == '"' || src.charAt(pos) == "'")
-                        && ['r', 'b', 'u', 'rb', 'br', 'f', 'fr', 'rf'].
-                            indexOf(name.toLowerCase()) !== -1){
-                    string_modifier = name.toLowerCase()
-                    name = ""
-                    continue
+                }else if(name == 'not'){
+                    context = $transition(context, 'not')
+                }else if(typeof $operators[name] == 'string'){
+                    // Literal operators : "and", "or", "is"
+                    context = $transition(context, 'op', name)
                 }else{
                     if($B.forbidden.indexOf(name) > -1){name = '$$' + name}
-                    $pos = pos - name.length
                     context = $transition(context, 'id', name)
                 }
-                name = ""
                 continue
-            }
-        }
-
-        function rmu(numeric_literal){
-            return numeric_literal.replace(/_/g, "")
-        }
-
-        switch(car) {
-            case ' ':
-            case '\t':
-                pos++
-                break
-            case '.':
-                // point, ellipsis (...)
-                if(pos < src.length - 1 && /^\d$/.test(src.charAt(pos + 1))){
-                    // number starting with . : add a 0 before the point
-                    var j = pos + 1
-                    while(j < src.length &&
-                        src.charAt(j).search(/\d|e|E|_/) > -1){j++}
-                    if(src.charAt(j) == "j"){
-                        context = $transition(context, 'imaginary',
-                            '0' + rmu(src.substr(pos, j - pos)))
-                        j++
-                    }else{
-                        context = $transition(context, 'float',
-                            '0' + rmu(src.substr(pos, j - pos)))
+            case 'OP':
+                var op = token[1]
+                if((op.length == 1 && '()[]{}.,:='.indexOf(op) > -1) ||
+                        [':='].indexOf(op) > -1){
+                    if(braces_open.indexOf(op) > -1){
+                        braces_stack.push(token)
+                    }else if(braces_close[op]){
+                        if(braces_stack.length == 0){
+                            $_SyntaxError(context, "unmatched '" + op + "'")
+                        }else{
+                            var last_brace = $B.last(braces_stack)
+                            if(last_brace.string == braces_close[op]){
+                                braces_stack.pop()
+                            }else{
+                                $_SyntaxError(context,
+                                    [`closing parenthesis '${op}' does not ` +
+                                    `match opening parenthesis '` +
+                                    `${last_brace.string}'`])
+                           }
+                       }
                     }
-                    pos = j
-                    break
-                }
-                $pos = pos
-                context = $transition(context, '.')
-                pos++
-                break
-            case '0':
-              // octal, hexadecimal, binary
-              var num = test_num(context, src.substr(pos)),
-                  base
-              if(num.subtype === undefined){
-                  if(num.value != "0"){
-                      base = 10
-                  }
-              }else{
-                  base = {'b': 2, 'o': 8, 'x': 16}[num.subtype]
-              }
-              if(base !== undefined){
-                  context = $transition(context, 'int',
-                      [base, num.value])
-                  pos += num.length
-                  break
-              }
-
-            case '0':
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
-                // digit
-                $pos = pos
-                var num = test_num(context, src.substr(pos))
-                if(num.subtype == "float"){
-                   context = $transition(context,
-                       num.imaginary ? 'imaginary' : 'float',
-                       num.value)
-                }else{
-                    context = $transition(context,
-                       num.imaginary ? 'imaginary' : 'int',
-                       num.imaginary ? num.value :
-                           [10, num.value])
-               }
-               pos += num.length
-               break
-            case '\n':
-                // line end
-               lnum++
-                if(br_stack.length > 0){
-                    // implicit line joining inside brackets
-                    pos++
-                }else{
-                    if(current.context.tree.length > 0 || current.context.async){
-                        $pos = pos
-                        context = $transition(context, 'eol')
-                        indent = null
-                        new_node = new $Node()
-                    }else{
-                        new_node.line_num = lnum
-                    }
-                    pos++
-                }
-                break
-            case '(':
-            case '[':
-            case '{':
-                br_stack += car
-                br_pos[br_stack.length - 1] = [context, pos]
-                $pos = pos
-                context = $transition(context, car)
-                pos++
-                break
-            case ')':
-            case ']':
-            case '}':
-                if(br_stack == ""){
-                    $pos = pos
-                    $_SyntaxError(context, "Unexpected closing bracket")
-                }else if(br_close[car] !=
-                        br_stack.charAt(br_stack.length - 1)){
-                    $pos = pos
-                    $_SyntaxError(context, "Unbalanced bracket")
-                }else{
-                    br_stack = br_stack.substr(0, br_stack.length - 1)
-                    $pos = pos
-                    context = $transition(context, car)
-                    pos++
-                }
-                break
-            case '=':
-                if(src.charAt(pos + 1) != "="){
-                    $pos = pos
-                    context = $transition(context, '=')
-                    pos++
-                }else{
-                    $pos = pos
-                    context = $transition(context, 'op', '==')
-                    pos += 2
-                }
-                break
-            case ',':
-            case ':':
-                $pos = pos
-                if(src.substr(pos, 2) == ":="){
-                    // PEP 572 : assignment expression
-                    context = $transition(context, ":=")
-                    pos++
-                }else{
-                    context = $transition(context, car)
-                }
-                pos++
-                break
-            case ';':
-                $transition(context, 'eol') // close previous instruction
-                // create a new node, at the same level as current's parent
-                if(current.context.tree.length == 0){
-                    // consecutive ; are not allowed
-                    $pos = pos
-                    $_SyntaxError(context, 'invalid syntax')
-                }
-                // if ; ends the line, ignore it
-                var pos1 = pos + 1
-                var ends_line = false
-                while(pos1 < src.length){
-                    var _s = src.charAt(pos1)
-                    if(_s == '\n' || _s == '#'){ends_line = true; break}
-                    else if(_s == ' '){pos1++}
-                    else{break}
-                }
-                if(ends_line){pos++; break}
-
-                new_node = new $Node()
-                new_node.indent = $get_node(context).indent
-                new_node.line_num = lnum
-                new_node.module = module
-                $get_node(context).parent.add(new_node)
-                current = new_node
-                context = new $NodeCtx(new_node)
-                pos++
-                break
-            case '/':
-            case '%':
-            case '&':
-            case '>':
-            case '<':
-            case '-':
-            case '+':
-            case '*':
-            case '@':
-            case '/':
-            case '^':
-            case '=':
-            case '|':
-            case '~':
-            case '!':
-                // Operators
-
-                // Special case for annotation syntax
-                if(car == '-' && src.charAt(pos + 1) == '>'){
+                    context = $transition(context, token[1])
+                }else if(op == '...'){
+                    context = $transition(context, 'ellipsis')
+                }else if(op == '->'){
                     context = $transition(context, 'annotation')
-                    pos += 2
-                    continue
-                }
-
-                // Special case for @ : decorator if it's the first character
-                // in the instruction
-                if(car == '@' && context.type == "node"){
-                    $pos = pos
-                    context = $transition(context, car)
-                    pos++
-                    break
-                }
-
-                // find longest match
-                var op_match = ""
-                for(var op_sign in $operators){
-                    if(op_sign == src.substr(pos, op_sign.length)
-                            && op_sign.length > op_match.length){
-                        op_match = op_sign
+                }else if(op == ';'){
+                    if(context.type == 'node' && context.tree.length == 0){
+                        $_SyntaxError(context, 'statement cannot start with ;')
                     }
-                }
-                $pos = pos
-                if(op_match.length > 0){
-                    if(op_match in $augmented_assigns){
-                        context = $transition(context, 'augm_assign', op_match)
-                    }else{
-                        context = $transition(context, 'op', op_match)
-                    }
-                    pos += op_match.length
+                    // same as NEWLINE
+                    $transition(context, 'eol')
+                    var new_node = new $Node()
+                    new_node.line_num = token[2][0] + 1
+                    context = new $NodeCtx(new_node)
+                    node.parent.add(new_node)
+                    node = new_node
+                }else if($augmented_assigns[op]){
+                    context = $transition(context, 'augm_assign', op)
                 }else{
-                    $_SyntaxError(context, 'invalid character: ' + car)
+                    context = $transition(context, 'op', op)
                 }
-                break
-            case '\\':
-                if(src.charAt(pos + 1) == '\n'){
-                  lnum++
-                  pos += 2
-                  if(pos == src.length){
-                      $_SyntaxError(context,
-                          ["unexpected EOF while parsing"])
-                  }else if(context.type == "node"){
-                      $_SyntaxError(context, 'nothing before \\')
-                  }
-                  break
-                }else{
+                continue
+            case 'STRING':
+                var prepared = prepare_string(context, token[1], token[2])
+                context = $transition(context, 'str', prepared.value)
+                continue
+            case 'NUMBER':
+                var prepared = prepare_number(token[1])
+                if(prepared === undefined){
+                    console.log('pas de prepared pour', token)
+                }
+                context = $transition(context, prepared.type, prepared.value)
+                continue
+            case 'NEWLINE':
+                if(context && context.node && context.node.is_body_node){
+                    expect_indent = true
+                }
+                context = context || new $NodeCtx(node)
+                $transition(context, 'eol')
+                // Create a new node
+                var new_node = new $Node()
+                new_node.line_num = token[2][0] + 1
+                node.parent.add(new_node)
+                context = null
+                node = new_node
+                continue
+            case 'DEDENT':
+                // The last node was added after a NEWLINE. It was attached
+                // to the current node's parent.
+                // Detach it
+                indent--
+                node.parent.children.pop()
+                // Attach new_node to new "current"
+                node.parent.parent.add(node)
+                continue
+            case 'INDENT':
+                // The last node was added after a NEWLINE set the context
+                // to "null". It was attached to the current parent. Detach
+                // it
+                indent++
+                node.parent.children.pop()
+                // Check that it supports indentation
+                var previous_node = $B.last(node.parent.children)
+                if(previous_node === undefined ||
+                        $indented.indexOf(previous_node.context.tree[0].type) == -1){
                     $pos = pos
-                    $_SyntaxError(context,
-                        ['unexpected character after line continuation character'])
+                    context = context || new $NodeCtx(node)
+                    $_SyntaxError(context, 'unexpected indent', $pos)
                 }
-            case String.fromCharCode(12): // Form Feed : ignore
-                pos += 1
-                break
-            default:
-                $pos = pos
-                $_SyntaxError(context, 'unknown token [' + car + ']')
-        }
-    }
-
-    if(br_stack.length != 0){
-        var br_err = br_pos[0]
-        $pos = br_err[1]
-        var lines = src.split("\n"),
-            id = root.id,
-            fname = id.startsWith("$") ? '<string>' : id
-        $_SyntaxError(br_err[0],
-            ["unexpected EOF while parsing (" + fname + ", line " +
-                (lines.length - 1) + ")"])
-    }
-    if(context !== null){
-        if(context.type == "async"){
-            // issue 941
-            console.log("error with async", pos, src, src.substr(pos))
-            $pos = pos - 7
-            throw $_SyntaxError(context, "car " + car + "after async", pos)
-        }else if(context.tree[0] &&
-                $indented.indexOf(context.tree[0].type) > -1){
-            $pos = pos - 1
-            $_SyntaxError(context, 'expected an indented block', pos)
-
-        }else{
-            var parent = current.parent
-            if(parent.context && parent.context.tree &&
-                    parent.context.tree[0] &&
-                    parent.context.tree[0].type == "try"){
-                $pos = pos - 1
-                $_SyntaxError(context, ["unexpected EOF while parsing"])
-            }
-            // Check that all "yield"s are in a function
-            if(root.yields_func_check){
-                var save_pos = $pos
-                for(const _yield of root.yields_func_check){
-                    $pos = _yield[1]
-                    _yield[0].check_in_function()
-                }
-                $pos = save_pos
-            }
+                // Attach new_node (currently empty) to current
+                previous_node.add(node)
+                continue
         }
     }
 }
@@ -11249,6 +11144,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     //
     // Returns a tree structure representing the Python source code
     $pos = 0
+    line_num = line_num || 1
 
     if(typeof module == "object"){
         var __package__ = module.__package__
@@ -11277,7 +11173,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         src = src.src
     }
 
-    // Normalise line ends
+    // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
     // Remove trailing \, cf issue 970
     // but don't hide syntax error if ends with \\, cf issue 1210
@@ -11298,10 +11194,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var global_ns = '$locals_' + module.replace(/\./g,'_')
 
     var root = $create_root_node(
-        {src: src, is_comp: is_comp, has_annotations: has_annotations, filename: filename},
+        {src: src, is_comp: is_comp, has_annotations: has_annotations,
+            filename: filename},
         module, locals_id, parent_scope, line_num)
 
-    $tokenize(root, src)
+    dispatch_tokens(root, src)
 
     root.is_comp = is_comp
     if(ix != undefined){
@@ -11318,8 +11215,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }else{
         js += '    $locals = ' + local_ns +';\n'
     }
-
-    //js[pos++] = 'var $bltns = __BRYTHON__.InjectBuiltins();eval($bltns);\n\n'
 
     var offset = 0
 
@@ -11352,7 +11247,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     root.insert(enter_frame_pos + 1, try_node)
 
     // Add module body to the "try" clause
-    if(children.length == 0){children = [$NodeJS('')]} // in case the script is empty
+    if(children.length == 0){
+        children = [$NodeJS('')] // in case the script is empty
+    }
     children.forEach(function(child){
         try_node.add(child)
     })
@@ -11741,6 +11638,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
             }else{
                 // Get source code inside the script element
                 src = (worker.innerHTML || worker.textContent)
+                src = unindent(src) // remove global indentation
                 // remove leading CR if any
                 src = src.replace(/^\n/, '')
                 $B.webworkers[worker.id] = src
@@ -11780,6 +11678,7 @@ var _run_scripts = $B.parser._run_scripts = function(options){
                 }else{
                     // Get source code inside the script element
                     src = (elt.innerHTML || elt.textContent)
+                    src = unindent(src) // remove global indentation
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
                     $B.tasks.push([$B.run_script, src, module_name,
@@ -11821,3 +11720,4 @@ if (__BRYTHON__.isNode) {
     global.__BRYTHON__ = __BRYTHON__
     module.exports = { __BRYTHON__ }
 }
+
