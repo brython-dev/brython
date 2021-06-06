@@ -33,11 +33,6 @@ var set = {
     $native: true
 }
 
-set.__add__ = function(self, other){
-    throw _b_.TypeError.$factory(
-        "unsupported operand type(s) for +: 'set' and " + typeof other)
-}
-
 set.__and__ = function(self, other, accept_iter){
     try{
         $test(accept_iter, other)
@@ -246,7 +241,7 @@ set.__reduce_ex__ = function(self, protocol){
 
 set.__rsub__ = function(self, other){
     // Used when other.__sub__(self) is NotImplemented
-    return set.__sub__(self, other)
+    return set.__sub__(other, self)
 }
 
 set.__rxor__ = function(self, other){

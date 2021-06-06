@@ -34,12 +34,14 @@ var list = {
 
 list.__add__ = function(self, other){
     if($B.get_class(self) !== $B.get_class(other)){
-        var radd = getattr(other, "__radd__", _b_.NotImplemented)
-        if(radd !== _b_.NotImplemented){return radd(self)}
         var this_name = $B.class_name(self) // can be tuple
-        throw _b_.TypeError.$factory('can only concatenate ' +
-            this_name + ' (not "' + $B.class_name(other) +
-            '") to ' + this_name)
+        var radd = $B.$getattr(other, '__radd__', null)
+        if(radd === null){
+            throw _b_.TypeError.$factory('can only concatenate ' +
+                this_name + ' (not "' + $B.class_name(other) +
+                '") to ' + this_name)
+        }
+        return _b_.NotImplemented
     }
     var res = self.slice(),
         is_js = other.$brython_class == "js" // list of JS objects
@@ -365,6 +367,11 @@ list.__mul__ = function(self, other){
        return list.__mul__(self, _b_.int.$factory(other))
     }
 
+    var rmul = $B.$getattr(other, '__rmul__', null)
+    if(rmul === null){
+        throw _b_.TypeError.$factory(`can't multiply sequence by non-int ` +
+            `of type '${$B.class_name(other)}'`)
+    }
     return _b_.NotImplemented
 }
 
@@ -423,18 +430,7 @@ list.__repr__ = function(self){
 }
 
 list.__rmul__ = function(self, other){
-    if(_b_.isinstance(other, _b_.int)){
-        other = _b_.int.numerator(other)
-        var s = self.slice(),
-            res = []
-        while(other > 0){
-            res = res.concat(s)
-            other--
-        }
-        res.__class__ = self.__class__
-        return res
-    }
-    return _b_.NotImplemented
+    return list.__mul__(self, other)
 }
 
 list.__setattr__ = function(self, attr, value){
@@ -494,11 +490,6 @@ list.$setitem = function(self, arg, value){
     throw _b_.TypeError.$factory("list indices must be integer, not " +
         $B.class_name(arg))
 }
-
-// add "reflected" methods
-$B.make_rmethods(list)
-
-var _ops = ["add", "sub"]
 
 list.append = function(self, x){
     $B.check_no_kw("append", self, x)

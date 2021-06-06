@@ -105,8 +105,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-06 10:39:03.907344"
-__BRYTHON__.timestamp=1622968743907
+__BRYTHON__.compiled_date="2021-06-06 17:01:26.089195"
+__BRYTHON__.timestamp=1622991686088
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9463,8 +9463,6 @@ res.$items=obj.$items.slice()
 for(key in obj.$hashes){res.$hashes[key]=obj.$hashes[key]}
 return res}
 var set={__class__:_b_.type,$infos:{__module__:"builtins",__name__:"set"},$is_class:true,$native:true}
-set.__add__=function(self,other){throw _b_.TypeError.$factory(
-"unsupported operand type(s) for +: 'set' and "+typeof other)}
 set.__and__=function(self,other,accept_iter){try{$test(accept_iter,other)}catch(err){return _b_.NotImplemented}
 var res=create_type(self)
 for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
@@ -9530,7 +9528,7 @@ return set.__and__(self,other)}
 set.__reduce__=function(self){return _b_.tuple.$factory([self.__class__,_b_.tuple.$factory([self.$items]),$N])}
 set.__reduce_ex__=function(self,protocol){return set.__reduce__(self)}
 set.__rsub__=function(self,other){
-return set.__sub__(self,other)}
+return set.__sub__(other,self)}
 set.__rxor__=function(self,other){
 return set.__xor__(self,other)}
 set.__str__=set.__repr__=function(self){var klass_name=$B.class_name(self)
@@ -12150,12 +12148,12 @@ function check_not_tuple(self,attr){if(self.__class__===tuple){throw _b_.Attribu
 function $list(){
 return list.$factory.apply(null,arguments)}
 var list={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"list"},$is_class:true,$native:true,__dir__:object.__dir__}
-list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var radd=getattr(other,"__radd__",_b_.NotImplemented)
-if(radd !==_b_.NotImplemented){return radd(self)}
-var this_name=$B.class_name(self)
-throw _b_.TypeError.$factory('can only concatenate '+
+list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var this_name=$B.class_name(self)
+var radd=$B.$getattr(other,'__radd__',null)
+if(radd===null){throw _b_.TypeError.$factory('can only concatenate '+
 this_name+' (not "'+$B.class_name(other)+
 '") to '+this_name)}
+return _b_.NotImplemented}
 var res=self.slice(),is_js=other.$brython_class=="js" 
 for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
 res.__brython__=true
@@ -12281,6 +12279,9 @@ for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 return res}
 if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
+var rmul=$B.$getattr(other,'__rmul__',null)
+if(rmul===null){throw _b_.TypeError.$factory(`can't multiply sequence by non-int `+
+`of type '${$B.class_name(other)}'`)}
 return _b_.NotImplemented}
 list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
@@ -12301,13 +12302,7 @@ for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
 if(_b_.isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
 $B.repr.leave(self)
 return res}
-list.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
-var s=self.slice(),res=[]
-while(other > 0){res=res.concat(s)
-other--}
-res.__class__=self.__class__
-return res}
-return _b_.NotImplemented}
+list.__rmul__=function(self,other){return list.__mul__(self,other)}
 list.__setattr__=function(self,attr,value){if(self.__class__===list ||self.__class__===tuple){var cl_name=$B.class_name(self)
 if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'"+cl_name+
 "' object attribute '"+attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
@@ -12328,8 +12323,6 @@ if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__setitem__(se
 return $N}
 throw _b_.TypeError.$factory("list indices must be integer, not "+
 $B.class_name(arg))}
-$B.make_rmethods(list)
-var _ops=["add","sub"]
 list.append=function(self,x){$B.check_no_kw("append",self,x)
 $B.check_nb_args("append",2,arguments)
 self.push(x)
