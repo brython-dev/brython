@@ -35,6 +35,20 @@ complex.__abs__ = function(self){
     return mag
 }
 
+complex.__add__ = function(self, other){
+    if(_b_.isinstance(other, complex)){
+        return make_complex(self.$real + other.$real, self.$imag + other.$imag)
+    }
+    if(_b_.isinstance(other, _b_.int)){
+        other = _b_.int.numerator(other)
+        return make_complex($B.add(self.$real, other.valueOf()), self.$imag)
+    }
+    if(_b_.isinstance(other, _b_.float)){
+        return make_complex(self.$real + other.valueOf(), self.$imag)
+    }
+    return _b_.NotImplemented
+}
+
 complex.__bool__ = function(self){
     return (self.$real != 0 || self.$imag != 0)
 }
@@ -59,10 +73,6 @@ complex.__eq__ = function(self, other){
     return _b_.NotImplemented
 }
 
-complex.__floordiv__ = function(self,other){
-    $UnsupportedOpType("//", "complex", $B.get_class(other))
-}
-
 complex.__hash__ = function(self){
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
@@ -74,10 +84,6 @@ complex.__init__ = function() {
 }
 
 complex.__invert__ = function(self){return ~self}
-
-complex.__mod__ = function(self, other) {
-    throw _b_.TypeError.$factory("TypeError: can't mod complex numbers.")
-}
 
 complex.__mro__ = [_b_.object]
 
@@ -234,6 +240,9 @@ function complex2expo(cx){
 complex.__pow__ = function(self, other){
     // complex power : use Moivre formula
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
+    if(other == 1){
+        return self
+    }
     var exp = complex2expo(self),
         angle = exp.angle,
         res = Math.pow(exp.norm, other)
@@ -253,6 +262,26 @@ complex.__pow__ = function(self, other){
             "for ** or pow(): 'complex' and '" +
             $B.class_name(other) + "'")
     }
+}
+
+complex.__radd__ = function(self, other){
+    if(_b_.isinstance(other, _b_.bool)){
+        other = other ? 1 : 0
+    }
+    if(_b_.isinstance(other, [_b_.int, _b_.float])){
+        return make_complex(other + self.$real, self.$imag)
+    }
+    return _b_.NotImplemented
+}
+
+complex.__rmul__ = function(self, other){
+    if(_b_.isinstance(other, _b_.bool)){
+        other = other ? 1 : 0
+    }
+    if(_b_.isinstance(other, [_b_.int, _b_.float])){
+        return make_complex(other * self.$real, other * self.$imag)
+    }
+    return _b_.NotImplemented
 }
 
 complex.__str__ = complex.__repr__ = function(self){
@@ -290,14 +319,28 @@ complex.__str__ = complex.__repr__ = function(self){
 }
 
 complex.__sqrt__ = function(self) {
-  if(self.$imag == 0){return complex(Math.sqrt(self.$real))}
+    if(self.$imag == 0){return complex(Math.sqrt(self.$real))}
 
-  var r = self.$real,
-      i = self.$imag,
-      _a = Math.sqrt((r + sqrt) / 2),
-      _b = Number.sign(i) * Math.sqrt((-r + sqrt) / 2)
+    var r = self.$real,
+        i = self.$imag,
+        _a = Math.sqrt((r + sqrt) / 2),
+        _b = Number.sign(i) * Math.sqrt((-r + sqrt) / 2)
 
-  return make_complex(_a, _b)
+    return make_complex(_a, _b)
+}
+
+complex.__sub__ = function(self, other){
+    if(_b_.isinstance(other, complex)){
+        return make_complex(self.$real - other.$real, self.$imag - other.$imag)
+    }
+    if(_b_.isinstance(other, _b_.int)){
+        other = _b_.int.numerator(other)
+        return make_complex($B.sub(self.$real, other.valueOf()), self.$imag)
+    }
+    if(_b_.isinstance(other, _b_.float)){
+        return make_complex(self.$real - other.valueOf(), self.$imag)
+    }
+    return _b_.NotImplemented
 }
 
 complex.__truediv__ = function(self, other){
@@ -331,44 +374,29 @@ complex.conjugate = function(self) {
     return make_complex(self.$real, -self.$imag)
 }
 
-// operators
-var $op_func = function(self, other){
-    throw _b_.TypeError.$factory("TypeError: unsupported operand type(s) " +
-        "for -: 'complex' and '" + $B.class_name(other) + "'")
-}
-$op_func += "" // source code
-var $ops = {"&": "and", "|": "ior", "<<": "lshift", ">>": "rshift",
-    "^": "xor"}
-for(var $op in $ops){
-    eval("complex.__" + $ops[$op] + "__ = " + $op_func.replace(/-/gm, $op))
-}
-
 complex.__ior__ = complex.__or__
 
-// operations
-var $op_func = function(self, other){
-    if(_b_.isinstance(other, complex)){
-        return make_complex(self.$real - other.$real, self.$imag - other.$imag)
-    }
-    if(_b_.isinstance(other, _b_.int)){
-        return make_complex($B.sub(self.$real,other.valueOf()), self.$imag)
-    }
-    if(_b_.isinstance(other, _b_.float)){
-        return make_complex(self.$real - other.valueOf(), self.$imag)
-    }
-    if(_b_.isinstance(other, _b_.bool)){
-         var bool_value = 0
-         if(other.valueOf()){bool_value = 1}
-         return make_complex(self.$real - bool_value, self.$imag)
-    }
-    throw _b_.TypeError.$factory("unsupported operand type(s) for -: " +
-        self.__repr__() + " and '" + $B.class_name(other) + "'")
-}
-complex.__sub__ = $op_func
+var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
+    "lshift", "rshift", "and", "xor", "or"]
 
-$op_func += '' // source code
-$op_func = $op_func.replace(/-/gm, "+").replace(/sub/gm, "add")
-eval("complex.__add__ = " + $op_func)
+
+for(var r_opname of r_opnames){
+    if(complex["__r" + r_opname + "__"] === undefined &&
+            complex['__' + r_opname + '__']){
+        complex["__r" + r_opname + "__"] = (function(name){
+            return function(self, other){
+                if(_b_.isinstance(other, [_b_.int, _b_.float])){
+                    other = make_complex(other, 0)
+                    return complex["__" + name + "__"](other, self)
+                }else if(_b_.isinstance(other, complex)){
+                    return complex["__" + name + "__"](other, self)
+                }
+                return _b_.NotImplemented
+            }
+        })(r_opname)
+    }
+}
+
 
 // comparison methods
 var $comp_func = function(self, other){
@@ -383,9 +411,6 @@ for(var $op in $B.$comps){
     eval("complex.__" + $B.$comps[$op] + "__ = " +
         $comp_func.replace(/>/gm, $op))
 }
-
-// add "reflected" methods
-$B.make_rmethods(complex)
 
 // Descriptors to return real and imag
 complex.real = function(self){return new Number(self.$real)}

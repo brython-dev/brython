@@ -1177,20 +1177,20 @@ function $err(op, klass, other){
 // Code to add support of "reflected" methods to built-in types
 // If a type doesn't support __add__, try method __radd__ of operand
 
-var ropnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
+var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
     "lshift", "rshift", "and", "xor", "or"]
 var ropsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^",
      "|"]
 
 $B.make_rmethods = function(klass){
-    for(var j = 0, _len_j = ropnames.length; j < _len_j; j++){
-        if(klass["__" + ropnames[j] + "__"] === undefined){
-            klass["__" + ropnames[j] + "__"] = (function(name, sign){
+    for(var r_opname of r_opnames){
+        if(klass["__r" + r_opname + "__"] === undefined &&
+                klass['__' + r_opname + '__']){
+            klass["__r" + r_opname + "__"] = (function(name){
                 return function(self, other){
-                    try{return $B.$getattr(other, "__r" + name + "__")(self)}
-                    catch(err){$err(sign, klass, other)}
+                    return klass["__" + name + "__"](other, self)
                 }
-            })(ropnames[j], ropsigns[j])
+            })(r_opname)
         }
     }
 }
@@ -1676,11 +1676,15 @@ var opname2opsign = {sub: "-", xor: "^", mul: "*"}
 $B.rich_op = function(op, x, y){
     var x_class = x.__class__ || $B.get_class(x),
         y_class = y.__class__ || $B.get_class(y),
+        special_method = '__' + op + '__',
         method
     if(x_class === y_class){
         // For objects of the same type, don't try the reversed operator
         if(x_class === _b_.int){
-            return _b_.int["__" + op + "__"](x, y)
+            return _b_.int[special_method](x, y)
+        }else if(x_class === _b_.bool){
+            return (_b_.bool[special_method] || _b_.int[special_method])
+                (x, y)
         }
         try{
             method = $B.$call($B.$getattr(x, "__" + op + "__"))
@@ -1694,6 +1698,10 @@ $B.rich_op = function(op, x, y){
             throw err
         }
         return method(y)
+    }
+    //console.log('rich op', op, x, y, 'x class', x_class, 'y class', y_class)
+    if(_b_.issubclass(y_class, x_class)){
+        console.log('right is subclass of left')
     }
     // For instances of different classes, try reversed operator
     var res

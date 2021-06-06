@@ -952,6 +952,19 @@ str.__repr__ = function(self){
     return res
 }
 
+str.__rmul__ = function(self, other){
+    if(_b_.isinstance(other, _b_.int)){
+        other = _b_.int.numerator(other)
+        var res = ''
+        while(other > 0){
+            res += self
+            other--
+        }
+        return res
+    }
+    return _b_.NotImplemented
+}
+
 str.__setattr__ = function(self, attr, value){
     if(typeof self === "string"){
         if(str.hasOwnProperty(attr)){
@@ -1007,9 +1020,6 @@ var $comps = {">": "gt", ">=": "ge", "<": "lt", "<=": "le"}
 for(var $op in $comps){
     eval("str.__" + $comps[$op] + '__ = ' + $comp_func.replace(/>/gm,$op))
 }
-
-// add "reflected" methods
-$B.make_rmethods(str)
 
 // unsupported operations
 var $notimplemented = function(self, other){

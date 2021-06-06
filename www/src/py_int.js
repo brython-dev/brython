@@ -11,6 +11,9 @@ function $err(op, other){
 function int_value(obj){
     // Instances of int subclasses that call int.__new__(cls, value)
     // have an attribute $brython_value set
+    if(typeof obj == "boolean"){
+        return obj ? 1 : 0
+    }
     return obj.$brython_value !== undefined ? obj.$brython_value : obj
 }
 
@@ -18,6 +21,7 @@ function int_value(obj){
 var int = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
+    __mro__: [_b_.object],
     $infos: {
         __module__: "builtins",
         __name__: "int"
@@ -138,6 +142,25 @@ int.to_bytes = function(){
 
 int.__abs__ = function(self){return _b_.abs(self)}
 
+int.__add__ = function(self, other){
+    self = int_value(self)
+    if(_b_.isinstance(other, int)){
+        if(other.__class__ == $B.long_int){
+            return $B.long_int.__add__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))
+        }
+        other = int_value(other)
+        var res = self + other
+        if(res > $B.min_int && res < $B.max_int){
+            return res
+        }else{
+            return $B.long_int.__add__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))
+        }
+    }
+    return _b_.NotImplemented
+}
+
 int.__bool__ = function(self){
     return int_value(self).valueOf() == 0 ? false : true
 }
@@ -145,6 +168,9 @@ int.__bool__ = function(self){
 int.__ceil__ = function(self){return Math.ceil(int_value(self))}
 
 int.__divmod__ = function(self, other){
+    if(! _b_.isinstance(other, int)){
+        return _b_.NotImplemented
+    }
     return $B.fast_tuple([int.__floordiv__(self, other),
         int.__mod__(self, other)])
 }
@@ -239,17 +265,7 @@ int.__floordiv__ = function(self, other){
         if(other == 0){throw _b_.ZeroDivisionError.$factory("division by zero")}
         return Math.floor(self / other)
     }
-    if(_b_.isinstance(other, _b_.float)){
-        other = _b_.float.numerator(other) // for float subclasses
-        if(!other.valueOf()){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
-        }
-        return new Number(Math.floor(self / other))
-    }
-    if(_b_.hasattr(other, "__rfloordiv__")){
-        return $B.$getattr(other, "__rfloordiv__")(self)
-    }
-    $err("//", other)
+    return _b_.NotImplemented
 }
 
 int.__hash__ = function(self){
@@ -277,14 +293,18 @@ int.__invert__ = function(self){return ~self}
 
 // bitwise left shift
 int.__lshift__ = function(self, other){
+    self = int_value(self)
     if(_b_.isinstance(other, int)){
         other = int_value(other)
-        return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self),
-            $B.long_int.$factory(other)))
+        try{
+            return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self),
+                $B.long_int.$factory(other)))
+        }catch(err){
+            console.log('err in lshift', self, other)
+            throw err
+        }
     }
-    var rlshift = $B.$getattr(other, "__rlshift__", _b_.None)
-    if(rlshift !== _b_.None){return rlshift(self)}
-    $err("<<", other)
+    return _b_.NotImplemented
 }
 
 int.__mod__ = function(self, other) {
@@ -293,7 +313,7 @@ int.__mod__ = function(self, other) {
     if(other.__class__ === $B.long_int){
         return $B.long_int.__mod__($B.long_int.$factory(self), other)
     }
-    if(_b_.isinstance(other, [int, _b_.float, bool])){
+    if(_b_.isinstance(other, int)){
         other = int_value(other)
         if(other === false){other = 0}
         else if(other === true){other = 1}
@@ -301,55 +321,26 @@ int.__mod__ = function(self, other) {
             "integer division or modulo by zero")}
         return (self % other + other) % other
     }
-    if(_b_.hasattr(other, "__rmod__")){
-        return $B.$getattr(other, "__rmod__")(self)
-    }
-    $err("%", other)
+    return _b_.NotImplemented
 }
 
-int.__mro__ = [_b_.object]
-
 int.__mul__ = function(self, other){
-
-    var val = self.valueOf()
-
-    // this will be quick check, so lets do it early.
-    if(typeof other === "string") {
-        return other.repeat(val)
-    }
-
+    self = int_value(self)
     if(_b_.isinstance(other, int)){
+        if(other.__class__ == $B.long_int){
+            return $B.long_int.__mul__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))
+        }
         other = int_value(other)
         var res = self * other
-        if(res > $B.min_int && res < $B.max_int){return res}
-        else{
+        if(res > $B.min_int && res < $B.max_int){
+            return res
+        }else{
             return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),
                 $B.long_int.$factory(other)))
         }
     }
-    if(_b_.isinstance(other, _b_.float)){
-        return new Number(self * _b_.float.numerator(other))
-    }
-    if(_b_.isinstance(other, _b_.bool)){
-         if(other.valueOf()){return self}
-         return int.$factory(0)
-    }
-    if(_b_.isinstance(other, _b_.complex)){
-        return $B.make_complex(int.__mul__(self, other.$real),
-            int.__mul__(self, other.$imag))
-    }
-    if(_b_.isinstance(other, [_b_.list, _b_.tuple])){
-        var res = []
-        // make temporary copy of list
-        var $temp = other.slice(0, other.length)
-        for(var i = 0; i < val; i++){res = res.concat($temp)}
-        if(_b_.isinstance(other, _b_.tuple)){res = _b_.tuple.$factory(res)}
-        return res
-    }
-    if(_b_.hasattr(other, "__rmul__")){
-        return $B.$getattr(other, "__rmul__")(self)
-    }
-    $err("*", other)
+    return _b_.NotImplemented
 }
 
 int.__ne__ = function(self, other){
@@ -386,6 +377,9 @@ function extended_euclidean(a, b){
 }
 
 int.__pow__ = function(self, other, z){
+    if(! _b_.isinstance(other, int)){
+        return _b_.NotImplemented
+    }
     if(typeof other == "number"  || _b_.isinstance(other, int)){
         other = int_value(other)
         switch(other.valueOf()) {
@@ -494,25 +488,26 @@ int.__repr__ = function(self){
 
 // bitwise right shift
 int.__rshift__ = function(self, other){
-    if(_b_.isinstance(other, int)){
+    self = int_value(self)
+    if(typeof other == "number" || _b_.isinstance(other, int)){
         other = int_value(other)
         return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),
             $B.long_int.$factory(other)))
     }
-    var rrshift = $B.$getattr(other, "__rrshift__", _b_.None)
-    if(rrshift !== _b_.None){return rrshift(self)}
-    $err('>>', other)
+    return _b_.NotImplemented
 }
 
 int.__setattr__ = function(self, attr, value){
-    if(typeof self == "number"){
-        if(int.$factory[attr] === undefined){
-            throw _b_.AttributeError.$factory(
-                "'int' object has no attribute '" + attr + "'")
+    if(typeof self == "number" || typeof self == "boolean"){
+        var cl_name = $B.class_name(self)
+        console.log(cl_name, _b_.dir(self), attr)
+        if(_b_.dir(self).indexOf(attr) > -1){
+            var msg = "attribute '" + attr + `' of '${cl_name}'` +
+                "objects is not writable"
         }else{
-            throw _b_.AttributeError.$factory(
-                "'int' object attribute '" + attr + "' is read-only")
+            var msg = `'${cl_name}' object has no attribute '${attr}'`
         }
+        throw _b_.AttributeError.$factory(msg)
     }
     // subclasses of int can have attributes set
     _b_.dict.$setitem(self.__dict__, attr, value)
@@ -520,6 +515,25 @@ int.__setattr__ = function(self, attr, value){
 }
 
 int.__str__ = int.__repr__
+
+int.__sub__ = function(self, other){
+    self = int_value(self)
+    if(_b_.isinstance(other, int)){
+        if(other.__class__ == $B.long_int){
+            return $B.long_int.__sub__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))
+        }
+        other = int_value(other)
+        var res = self - other
+        if(res > $B.min_int && res < $B.max_int){
+            return res
+        }else{
+            return $B.long_int.__sub__($B.long_int.$factory(self),
+                $B.long_int.$factory(other))
+        }
+    }
+    return _b_.NotImplemented
+}
 
 int.__truediv__ = function(self, other){
     if(_b_.isinstance(other, int)){
@@ -532,23 +546,7 @@ int.__truediv__ = function(self, other){
         }
         return new Number(self / other)
     }
-    if(_b_.isinstance(other, _b_.float)){
-        other = _b_.float.numerator(other)
-        if(!other.valueOf()){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
-        }
-        return new Number(self / other)
-    }
-    if(_b_.isinstance(other, _b_.complex)){
-        var cmod = other.$real * other.$real + other.$imag * other.$imag
-        if(cmod == 0){throw _b_.ZeroDivisionError.$factory("division by zero")}
-        return $B.make_complex(self * other.$real / cmod,
-            -self * other.$imag / cmod)
-    }
-    if(_b_.hasattr(other, "__rtruediv__")){
-        return $B.$getattr(other, "__rtruediv__")(self)
-    }
-    $err("/", other)
+    return _b_.NotImplemented
 }
 
 int.bit_length = function(self){
@@ -558,17 +556,35 @@ int.bit_length = function(self){
 }
 
 // descriptors
-int.numerator = function(self){return self}
-int.denominator = function(self){return int.$factory(1)}
-int.imag = function(self){return int.$factory(0)}
-int.real = function(self){return self}
+int.numerator = function(self){
+    return int_value(self)
+}
+int.denominator = function(self){
+    return int.$factory(1)
+}
+int.imag = function(self){
+    return int.$factory(0)
+}
+int.real = function(self){
+    return self
+}
+
+for(var attr of ['numerator', 'denominator', 'imag', 'real']){
+    int[attr].setter = (function(x){
+        return function(self, value){
+            throw _b_.AttributeError.$factory(`attribute '${x}' of ` +
+                `'${$B.class_name(self)}' objects is not writable`)
+        }
+    })(attr)
+}
 
 $B.max_int32 = (1 << 30) * 2 - 1
 $B.min_int32 = - $B.max_int32
 
 // code for operands & | ^
 var $op_func = function(self, other){
-    if(_b_.isinstance(other, int)) {
+    self = int_value(self)
+    if(typeof other == "number" || _b_.isinstance(other, int)){
         if(other.__class__ === $B.long_int){
             return $B.long_int.__sub__($B.long_int.$factory(self),
                 $B.long_int.$factory(other))
@@ -581,14 +597,7 @@ var $op_func = function(self, other){
         }
         return self - other
     }
-    if(_b_.isinstance(other, _b_.bool)){
-        return self - other
-    }
-    var rsub = $B.$getattr(other, "__rsub__", _b_.None)
-    if(rsub !== _b_.None){
-        return rsub(self)
-    }
-    $err("-", other)
+    return _b_.NotImplemented
 }
 
 $op_func += "" // source code
@@ -599,54 +608,6 @@ for(var $op in $ops){
     eval("int.__" + $ops[$op] + "__ = " + opf)
 }
 
-// code for + and -
-var $op_func = function(self, other){
-    if(_b_.isinstance(other, int)){
-        other = int_value(other)
-        if(typeof other == "number"){
-            var res = self.valueOf() - other.valueOf()
-            if(res > $B.min_int && res < $B.max_int){return res}
-            else{return $B.long_int.__sub__($B.long_int.$factory(self),
-                $B.long_int.$factory(other))}
-        }else if(typeof other == "boolean"){
-            return other ? self - 1 : self
-        }else{
-            return $B.long_int.__sub__($B.long_int.$factory(self),
-                $B.long_int.$factory(other))
-        }
-    }
-    if(_b_.isinstance(other, _b_.float)){
-        return new Number(self - _b_.float.numerator(other))
-    }
-    if(_b_.isinstance(other, _b_.complex)){
-        if(other.$imag == 0){
-            // 1 - 0.0j is complex(1, 0.0) : the imaginary part is 0.0,
-            // *not* -0.0 (cf. https://bugs.python.org/issue22548)
-            return $B.make_complex(self - other.$real, 0)
-        }
-        return $B.make_complex(self - other.$real, -other.$imag)
-    }
-    if(_b_.isinstance(other, _b_.bool)){
-         var bool_value = 0;
-         if(other.valueOf()){bool_value = 1}
-         return self - bool_value
-    }
-    if(_b_.isinstance(other, _b_.complex)){
-        return $B.make_complex(self.valueOf() - other.$real, other.$imag)
-    }
-    var rsub = $B.$getattr(other, "__rsub__", _b_.None)
-    if(rsub !== _b_.None){return rsub(self)}
-    //console.log("err", self, other)
-    //console.log($B.frames_stack.slice())
-    throw $err("-", other)
-}
-$op_func += "" // source code
-var $ops = {"+": "add", "-": "sub"}
-for(var $op in $ops){
-    var opf = $op_func.replace(/-/gm, $op)
-    opf = opf.replace(new RegExp("sub", "gm"), $ops[$op])
-    eval("int.__" + $ops[$op] + "__ = " + opf)
-}
 
 // comparison methods
 var $comp_func = function(self, other){
@@ -677,7 +638,23 @@ for(var $op in $B.$comps){
 }
 
 // add "reflected" methods
-$B.make_rmethods(int)
+var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
+    "lshift", "rshift", "and", "xor", "or", "divmod"]
+
+for(var r_opname of r_opnames){
+    if(int["__r" + r_opname + "__"] === undefined &&
+            int['__' + r_opname + '__']){
+        int["__r" + r_opname + "__"] = (function(name){
+            return function(self, other){
+                if(_b_.isinstance(other, int)){
+                    other = int_value(other)
+                    return int["__" + name + "__"](other, self)
+                }
+                return _b_.NotImplemented
+            }
+        })(r_opname)
+    }
+}
 
 var $valid_digits = function(base) {
     var digits = ""
@@ -864,22 +841,13 @@ var bool = {
         __module__: "builtins"
     },
     $is_class: true,
-    $native: true
-}
-
-var methods = $B.op2method.subset("operations", "binary", "comparisons",
-        "boolean")
-
-for(var op in methods){
-    var method = "__" + methods[op] + "__"
-    bool[method] = (function(op){
-        return function(self, other){
-            var value = self ? 1 : 0
-            if(int[op] !== undefined){
-                return int[op](value, other)
-            }
-        }
-    })(method)
+    $native: true,
+    $descriptors: {
+        "numerator": true,
+        "denominator": true,
+        "imag": true,
+        "real": true
+    }
 }
 
 bool.__and__ = function(self, other){
@@ -917,15 +885,6 @@ bool.__repr__ = bool.__str__ = function(self){
     return self ? "True" : "False"
 }
 
-bool.__setattr__ = function(self, attr){
-    if(_b_.dir(self).indexOf(attr) > -1){
-        var msg = "attribute '" + attr + "' of 'int' objects is not writable"
-    }else{
-        var msg = "'bool' object has no attribute '" + attr + "'"
-    }
-    throw _b_.AttributeError.$factory(msg)
-}
-
 bool.__xor__ = function(self, other) {
     if(_b_.isinstance(other, bool)){
         return self ^ other ? true : false
@@ -942,6 +901,11 @@ bool.$factory = function(){
         arguments,{x: false}, null, null)
     return $B.$bool($.x)
 }
+
+bool.numerator = int.numerator
+bool.denominator = int.denominator
+bool.real = int.real
+bool.imag = int.imag
 
 _b_.bool = bool
 

@@ -47,7 +47,9 @@ list.__add__ = function(self, other){
         res.push(is_js ? $B.$JS2Py(item) : item)
     }
     res.__brython__ = true
-    if(isinstance(self, tuple)){res = tuple.$factory(res)}
+    if(isinstance(self, tuple)){
+        res = tuple.$factory(res)
+    }
     return res
 }
 
@@ -255,8 +257,6 @@ list.__hash__ = $N
 list.__iadd__ = function() {
     var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
-    var radd = getattr($.x, "__radd__", _b_.NotImplemented)
-    if(radd !== _b_.NotImplemented){return radd($.self)}
     var x = list.$factory($B.$iter($.x))
     for(var i = 0; i < x.length; i++){
         $.self.push(x[i])
@@ -347,29 +347,25 @@ list.__lt__ = function(self, other){
 }
 
 list.__mul__ = function(self, other){
-    if(isinstance(other, _b_.int)) {  //this should be faster..
-       var res = [],
-           $temp = self.slice(),
-           len = $temp.length
-       for(var i = 0; i < other; i++){
-           for(var j = 0; j < len; j++){res.push($temp[j])}
-       }
-       res.__class__ = self.__class__
-       return res
+    if(isinstance(other, _b_.int)) {
+        other = _b_.int.numerator(other)
+        var res = [],
+            $temp = self.slice(),
+            len = $temp.length
+        for(var i = 0; i < other; i++){
+            for(var j = 0; j < len; j++){
+                res.push($temp[j])
+            }
+        }
+        res.__class__ = self.__class__
+        return res
     }
 
     if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")){
        return list.__mul__(self, _b_.int.$factory(other))
     }
 
-    var rmul = $B.$getattr(other, "__rmul__", _b_.NotImplemented)
-    if(rmul !== _b_.NotImplemented){
-        return rmul(self)
-    }
-
-    throw _b_.TypeError.$factory(
-        "can't multiply sequence by non-int of type '" +
-        $B.class_name(other) + "'")
+    return _b_.NotImplemented
 }
 
 list.__new__ = function(cls, ...args){
@@ -424,6 +420,21 @@ list.__repr__ = function(self){
     }
     $B.repr.leave(self)
     return res
+}
+
+list.__rmul__ = function(self, other){
+    if(_b_.isinstance(other, _b_.int)){
+        other = _b_.int.numerator(other)
+        var s = self.slice(),
+            res = []
+        while(other > 0){
+            res = res.concat(s)
+            other--
+        }
+        res.__class__ = self.__class__
+        return res
+    }
+    return _b_.NotImplemented
 }
 
 list.__setattr__ = function(self, attr, value){

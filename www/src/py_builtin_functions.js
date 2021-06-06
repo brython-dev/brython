@@ -1997,7 +1997,7 @@ function pow() {
         z = $.mod
     var klass = x.__class__ || $B.get_class(x)
     if(z === _b_.None){
-        return $B.$call($B.$getattr(klass, '__pow__'))(x, y)
+        return $B.rich_op('pow', x, y)
     }else{
         if(x != _b_.int.$factory(x) || y != _b_.int.$factory(y)){
             throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +
@@ -2464,11 +2464,13 @@ function sum(iterable, start){
     while(1){
         try{
             var _item = next(iterable)
-            res = $B.$getattr(res, '__add__')(_item)
+            res = $B.add(res, _item)
         }catch(err){
            if(err.__class__ === _b_.StopIteration){
                break
-           }else{throw err}
+           }else{
+               throw err
+           }
         }
     }
     return res

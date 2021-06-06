@@ -617,17 +617,12 @@ type.__new__ = function(meta, name, bases, cl_dict){
     return class_dict
 }
 
-type.__repr__ = type.__str__ = function(kls){
-    if(kls.$infos === undefined){
-        console.log("no $infos", kls)
+type.__or__ = function(){
+    var len = arguments.length
+    if(len != 1){
+        throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)
     }
-    var qualname = kls.$infos.__qualname__
-    if(kls.$infos.__module__    &&
-            kls.$infos.__module__ != "builtins" &&
-            !kls.$infos.__module__.startsWith("$")){
-        qualname = kls.$infos.__module__ + "." + qualname
-    }
-    return "<class '" + qualname + "'>"
+    return _b_.NotImplemented
 }
 
 type.__prepare__ = function(){
@@ -647,6 +642,27 @@ type.__qualname__ = {
     __eq__: function(self, other){
         return self.$infos.__qualname__ == other
     }
+}
+
+type.__repr__ = type.__str__ = function(kls){
+    if(kls.$infos === undefined){
+        console.log("no $infos", kls)
+    }
+    var qualname = kls.$infos.__qualname__
+    if(kls.$infos.__module__    &&
+            kls.$infos.__module__ != "builtins" &&
+            !kls.$infos.__module__.startsWith("$")){
+        qualname = kls.$infos.__module__ + "." + qualname
+    }
+    return "<class '" + qualname + "'>"
+}
+
+type.__ror__ = function(){
+    var len = arguments.length
+    if(len != 1){
+        throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)
+    }
+    return _b_.NotImplemented
 }
 
 type.mro = function(cls){

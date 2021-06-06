@@ -100,6 +100,14 @@ float.__bool__ = function(self){
     return _b_.bool.$factory(self.valueOf())
 }
 
+float.__divmod__ = function(self, other){
+    if(! _b_.isinstance(other, [int, float])){
+        return _b_.NotImplemented
+    }
+    return $B.fast_tuple([float.__floordiv__(self, other),
+        float.__mod__(self, other)])
+}
+
 float.__eq__ = function(self, other){
     self = float_value(self)
     other = float_value(other)
@@ -125,10 +133,7 @@ float.__floordiv__ = function(self, other){
       }
       return float.$factory(Math.floor(self / other))
     }
-    if(hasattr(other, "__rfloordiv__")) {
-      return getattr(other, "__rfloordiv__")(self)
-    }
-    $err("//", other)
+    return _b_.NotImplemented
 }
 
 float.fromhex = function(arg){
@@ -492,8 +497,11 @@ float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
     self = float_value(self)
     other = float_value(other)
-    if(other == 0){throw ZeroDivisionError.$factory("float modulo")}
+    if(other == 0){
+        throw ZeroDivisionError.$factory("float modulo")
+    }
     if(isinstance(other, _b_.int)){
+        other = _b_.int.numerator(other)
         return new Number((self % other + other) % other)
     }
 
@@ -504,13 +512,7 @@ float.__mod__ = function(self, other) {
             r = self - other * q
         return new Number(r)
     }
-    if(isinstance(other, _b_.bool)){
-        var bool_value = 0
-        if(other.valueOf()){bool_value = 1}
-        return new Number((self % bool_value + bool_value) % bool_value)
-    }
-    if(hasattr(other, "__rmod__")){return getattr(other, "__rmod__")(self)}
-    $err("%", other)
+    return _b_.NotImplemented
 }
 
 float.__mro__ = [object]
@@ -522,19 +524,11 @@ float.__mul__ = function(self, other){
         if(other.__class__ == $B.long_int){
             return new Number(self * parseFloat(other.value))
         }
+        other = _b_.int.numerator(other)
         return new Number(self * other)
     }
     if(isinstance(other, float)){
         return new Number(self * float_value(other))
-    }
-    if(isinstance(other, _b_.bool)){
-      var bool_value = 0
-      if(other.valueOf()){bool_value = 1}
-      return new Number(self * bool_value)
-    }
-    if(isinstance(other, _b_.complex)){
-      return $B.make_complex(float.$factory(self * other.$real),
-          float.$factory(self * other.$imag))
     }
     return _b_.NotImplemented
 }
@@ -604,13 +598,8 @@ float.__pow__ = function(self, other){
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }
         return float.$factory(Math.pow(self, other))
-    }else if(isinstance(other, _b_.complex)){
-        var preal = Math.pow(self, other.$real),
-            ln = Math.log(self)
-        return $B.make_complex(preal * Math.cos(ln), preal * Math.sin(ln))
     }
-    if(hasattr(other, "__rpow__")){return getattr(other, "__rpow__")(self)}
-    $err("** or pow()", other)
+    return _b_.NotImplemented
 }
 
 function __newobj__(){
@@ -725,18 +714,7 @@ float.__truediv__ = function(self, other){
         }
         return float.$factory(self/other)
     }
-    if(isinstance(other, _b_.complex)){
-        var cmod = other.$real * other.$real + other.$imag * other.$imag
-        if(cmod == 0){
-            throw _b_.ZeroDivisionError.$factory("division by zero")
-        }
-        return $B.make_complex(float.$factory(self * other.$real / cmod),
-                           float.$factory(-self * other.$imag / cmod))
-    }
-    if(hasattr(other, "__rtruediv__")){
-        return getattr(other, "__rtruediv__")(self)
-    }
-    $err("/",other)
+    return _b_.NotImplemented
 }
 
 // operations
@@ -753,21 +731,7 @@ var $op_func = function(self, other){
     if(isinstance(other, float)){
         return float.$factory(self - other)
     }
-    if(isinstance(other, _b_.bool)){
-        var bool_value = 0
-        if(other.valueOf()){bool_value = 1}
-        return float.$factory(self - bool_value)
-    }
-    if(isinstance(other, _b_.complex)){
-        if(other.$imag == 0){
-            // 1 - 0.0j is complex(1, 0.0) : the imaginary part is 0.0,
-            // *not* -0.0 (cf. https://bugs.python.org/issue22548)
-            return $B.make_complex(self - other.$real, 0)
-        }
-        return $B.make_complex(self - other.$real, -other.$imag)
-    }
-    if(hasattr(other, "__rsub__")){return getattr(other, "__rsub__")(self)}
-    $err("-", other)
+    return _b_.NotImplemented
 }
 $op_func += "" // source code
 var $ops = {"+": "add", "-": "sub"}
@@ -814,23 +778,24 @@ for(var $op in $B.$comps){
 }
 
 // add "reflected" methods
-$B.make_rmethods(float)
+var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
+    "lshift", "rshift", "and", "xor", "or", "divmod"]
 
-// unsupported operations
-var $notimplemented = function(self, other){
-    throw _b_.TypeError.$factory(
-        "unsupported operand types for OPERATOR: 'float' and '" +
-            $B.class_name(other) + "'")
-}
-$notimplemented += "" // coerce to string
-for(var $op in $B.$operators){
-    // use __add__ for __iadd__ etc, so don't define __iadd__ below
-    if($B.augmented_assigns[$op] === undefined){
-        var $opfunc = "__" + $B.$operators[$op] + "__"
-        if(float[$opfunc] === undefined){
-            eval("float." + $opfunc + "=" +
-                $notimplemented.replace(/OPERATOR/gm, $op))
-        }
+for(var r_opname of r_opnames){
+    if(float["__r" + r_opname + "__"] === undefined &&
+            float['__' + r_opname + '__']){
+        float["__r" + r_opname + "__"] = (function(name){
+            return function(self, other){
+                if(_b_.isinstance(other, _b_.int)){
+                    other = float_value(_b_.int.numerator(other))
+                    return float["__" + name + "__"](other, self)
+                }else if(_b_.isinstance(other, float)){
+                    other = float_value(other)
+                    return float["__" + name + "__"](other, self)
+                }
+                return _b_.NotImplemented
+            }
+        })(r_opname)
     }
 }
 
