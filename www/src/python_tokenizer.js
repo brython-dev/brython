@@ -398,7 +398,7 @@ $B.tokenizer = function*(src){
                                 yield Token('ERRORTOKEN', char,
                                     [line_num, pos - line_start],
                                     [line_num, pos - line_start + 1],
-                                    token)
+                                    line)
                             }
                         }
                         break
