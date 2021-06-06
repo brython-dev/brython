@@ -214,6 +214,9 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     var module = tree_node.module,
         src = root.src,
         line_num = tree_node.line_num
+    if(context.$pos !== undefined){
+        $pos = context.$pos
+    }
     if(src){
         line_num = src.substr(0, $pos).split("\n").length
     }
@@ -271,13 +274,14 @@ function check_assignment(context){
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'invalid syntax - assign')
-        }else if(ctx.type == "expr" &&
-                ctx.tree[0].type == "op"){
+        }else if(ctx.type == "expr" && ctx.tree[0].type == "op"){
             if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
                 $_SyntaxError(context, ["cannot assign to comparison"])
             }else{
                 $_SyntaxError(context, ["cannot assign to operator"])
             }
+        }else if(ctx.type == "ternary"){
+            $_SyntaxError(context, ["cannot assign to conditional expression"])
         }
         ctx = ctx.parent
     }
@@ -752,6 +756,10 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
         case '=':
+            if(context.parent.type == "yield"){
+                $_SyntaxError(context,
+                    ["assignment to yield expression not possible"])
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
         case 'yield':
@@ -935,6 +943,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     disabled if a new AssignCtx object is created afterwards by method
     transform()
     */
+    console.log('assign', context)
     check_assignment(context)
     if(context.type == "expr" && context.tree[0].type == "lambda"){
         $_SyntaxError(context, ["cannot assign to lambda"])
@@ -958,7 +967,13 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
           $_SyntaxError(context, ["cannot assign to function call "])
     }else if(context.type == 'list_or_tuple' ||
             (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
-        if(context.type == 'expr'){context = context.tree[0]}
+        if(context.type == 'expr'){
+            if(context.tree[0].real == 'gen_expr'){
+                $_SyntaxError(context,
+                    ['cannot assign to generator expression'])
+            }
+            context = context.tree[0]
+        }
         // Bind all the ids in the list or tuple
         context.bind_ids(scope)
     }else if(context.type == 'assign'){
@@ -971,7 +986,10 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }else{
         var assigned = context.tree[0]
         if(assigned && assigned.type == 'id'){
-            if(noassign[assigned.value] === true){
+            var name = assigned.value
+            if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
+                $_SyntaxError(context, ['cannot assign to ' + name])
+            }else if(noassign[name] === true){
                 $_SyntaxError(context,["cannot assign to keyword"])
             }
             // Attribute bound of an id indicates if it is being
@@ -1001,8 +1019,25 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             }
         }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
             $_SyntaxError(context, ["cannot assign to literal"])
+        }else if(assigned.type == "ellipsis"){
+                $_SyntaxError(context, ['cannot assign to Ellipsis'])
         }else if(assigned.type == "unary"){
             $_SyntaxError(context, ["cannot assign to operator"])
+        }else if(assigned.type == "packed"){
+            if(assigned.tree[0].name == 'id'){
+                var id = assigned.tree[0].tree[0].value
+                if(['None', 'True', 'False', '__debug__'].indexOf(id) > -1){
+                    $_SyntaxError(context,
+                        ['cannot assign to ' + id])
+                }
+            }
+            // If the packed item was in a tuple (eg "a, *b = X") the
+            // assignment is valid; in this case the attribute in_tuple
+            // is set
+            if(assigned.parent.in_tuple === undefined){
+                $_SyntaxError(context,
+                    ["starred assignment target must be in a list or tuple"])
+            }
         }
     }
 }
@@ -1235,6 +1270,7 @@ $AssignCtx.prototype.transform = function(node, rank){
             node.parent.insert(rank++, new_node)
             var context = new $NodeCtx(new_node) // create ordinary node
             left_item.parent = context
+            left_item.in_tuple = true
             // assignment to left operand
             var assign = new $AssignCtx(left_item, false)
             var js = rlname
@@ -1395,8 +1431,11 @@ $AttrCtx.prototype.transition = function(token, value){
     var context = this
     if(token === 'id'){
         var name = value
-        if(noassign[name] === true){$_SyntaxError(context,
-            ["cannot assign to " + name])}
+        if(name == '__debug__'){
+            $_SyntaxError(context, ['cannot assign to __debug__'])
+        }else if(noassign[name] === true){
+            $_SyntaxError(context, `'${name}' cannot be an attribute`)
+        }
         name = $mangle(name, context)
         context.name = name
         return context.parent
@@ -1456,8 +1495,12 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var assigned = context.tree[0]
         if(assigned.type == 'id'){
             var name = assigned.value
+            console.log('assign to', name)
+            if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
+                $_SyntaxError(context, 'cannot assign to ' + name)
+            }
             if(noassign[name] === true){
-                $_SyntaxError(context, ["cannot assign to keyword"])
+                $_SyntaxError(context, "cannot assign to keyword")
             }else if((scope.ntype == 'def' || scope.ntype == 'generator') &&
                     (scope.binding[name] === undefined)){
                 if(scope.globals === undefined ||
@@ -4124,6 +4167,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     // Base class for expressions
     this.type = 'expr'
     this.name = name
+    this.$pos = $pos
     // allow expression with comma-separted values, or a single value ?
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','
@@ -4476,10 +4520,15 @@ $ExprCtx.prototype.transition = function(token, value){
               $_SyntaxError(context,
                   ':= invalid inside function arguments' )
           }
-          if(context.tree.length == 1 &&
-                  context.tree[0].type == "id"){
+          if(context.tree.length == 1 && context.tree[0].type == "id"){
               var scope = $get_scope(context),
                   name = context.tree[0].value
+              if(['None', 'True', 'False'].indexOf(name) > -1){
+                  $_SyntaxError(context,
+                      [`cannot use assignment expressions with ${name}`])
+              }else if(name == '__debug__'){
+                  $_SyntaxError(context, ['cannot assign to __debug__'])
+              }
               while(scope.is_comp){
                   scope = scope.parent_block
               }
@@ -5577,7 +5626,7 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
         this.module = this.module.parent_block
     }
     this.module.binding = this.module.binding || {}
-
+    this.$pos = $pos
 }
 
 $GlobalCtx.prototype.toString = function(){
@@ -5614,6 +5663,10 @@ $GlobalCtx.prototype.add = function(name){
     if(this.scope.annotations && this.scope.annotations.has(name)){
         $_SyntaxError(this, ["annotated name '" + name +
             "' can't be global"])
+    }
+    if(this.scope.binding && this.scope.binding[name]){
+        $pos = this.$pos - 1
+        $_SyntaxError(this, [`name '${name}' is parameter and global`])
     }
     this.scope.globals.add(name)
     // Remove bindings between scope and module
@@ -8720,6 +8773,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     this.tree = [value] // may be extended if consecutive strings eg 'a' 'b'
     context.tree[context.tree.length] = this
     this.raw = false
+    this.$pos = $pos
 }
 
 $StringCtx.prototype.toString = function(){
@@ -10809,7 +10863,7 @@ function handle_errortoken(context, token){
         $_SyntaxError(context, ['unterminated string literal ' +
             `(detected at line ${token.start[0]})`])
     }
-    $_SyntaxError(context, 'unknown or invalid token ' + token[1])
+    $_SyntaxError(context, 'invalid token ' + token[1])
 }
 
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
