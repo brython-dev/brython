@@ -603,4 +603,17 @@ assert abs(a) == 0.1
 a = 10**(-1)
 assert abs(a) == 0.1
 
+# issue 1686
+class Squared(int):
+    def __mul__(self, other):
+        return self**2 * other
+
+    def __rmul__(self, other):
+        return self**2 * other
+
+x = Squared(4)
+y = 3
+assert x * y == 48
+assert y * x == 48
+
 print('passed all tests...')

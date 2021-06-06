@@ -1699,9 +1699,14 @@ $B.rich_op = function(op, x, y){
         }
         return method(y)
     }
-    //console.log('rich op', op, x, y, 'x class', x_class, 'y class', y_class)
+    
     if(_b_.issubclass(y_class, x_class)){
-        console.log('right is subclass of left')
+        // issue #1686
+        var reflected_left = $B.$getattr(x_class, '__r' + op + '__'),
+            reflected_right = $B.$getattr(y_class, '__r' + op + '__')
+        if(reflected_right !== reflected_left){
+            return reflected_right(y, x)
+        }
     }
     // For instances of different classes, try reversed operator
     var res
