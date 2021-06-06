@@ -500,7 +500,6 @@ int.__rshift__ = function(self, other){
 int.__setattr__ = function(self, attr, value){
     if(typeof self == "number" || typeof self == "boolean"){
         var cl_name = $B.class_name(self)
-        console.log(cl_name, _b_.dir(self), attr)
         if(_b_.dir(self).indexOf(attr) > -1){
             var msg = "attribute '" + attr + `' of '${cl_name}'` +
                 "objects is not writable"
