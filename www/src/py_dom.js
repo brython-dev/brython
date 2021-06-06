@@ -808,7 +808,8 @@ DOMNode.__getattribute__ = function(self, attr){
         property = self["$$" + attr]
     }
     if(property !== undefined && self.__class__ &&
-            self.__class__.__module__ != "browser.html"){
+            self.__class__.__module__ != "browser.html" &&
+            self.__class__.__module__ != "browser.svg"){
         // cf. issue #1543 : if an element has the attribute "attr" set and
         // its class has an attribute of the same name, show a warning that
         // the class attribute is ignored
