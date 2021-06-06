@@ -82,7 +82,11 @@ def run():
     for fname in sources:
         src = open(abs_path(fname)+'.js').read() + '\n'
         src_size += len(src)
-        mini = javascript_minifier.minify(src) + ";\n"
+        try:
+            mini = javascript_minifier.minify(src) + ";\n"
+        except:
+            print('error in', fname)
+            raise
         res += mini
         if fname == 'stdlib_paths':
             res_no_static += "__BRYTHON__.stdlib = {}\n"
