@@ -1381,8 +1381,11 @@ DOMNode.getSelectionRange = function(self){ // for TEXTAREA
 DOMNode.html = function(self){
     var res = self.innerHTML
     if(res === undefined){
-        if(self.nodeType == 9){res = self.body.innerHTML}
-        else{res = _b_.None}
+        if(self.nodeType == 9 && self.body){
+            res = self.body.innerHTML
+        }else{
+            res = _b_.None
+        }
     }
     return res
 }
