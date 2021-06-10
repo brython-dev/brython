@@ -16,6 +16,7 @@ def discover_brython_test_modules():
           ("test_descriptors.py", "descriptors"),
           ("test_dict.py", "dicts"),
           ("test_exec.py", "exec / eval"),
+          ("test_file.py", "file open/read"),
           ("test_generators.py", "generators"),
           ("test_import.py", "imports"),
           ("test_iterators.py", "iterators"),
@@ -41,6 +42,7 @@ def discover_brython_test_modules():
         ]),
         ("Modules", [
           ("test_aio.py", "browser.aio"),
+          ("test_ajax.py", "browser.ajax"),
           ("test_binascii.py", "binascii"),
           ("test_bisect.py", "bisect"),
           ("test_code.py", "code"),
