@@ -105,9 +105,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-06 17:01:26.089195"
-__BRYTHON__.timestamp=1622991686088
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
+__BRYTHON__.compiled_date="2021-06-10 23:11:44.561663"
+__BRYTHON__.timestamp=1623359504561
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -5937,7 +5937,6 @@ $B.idb_name=null
 $B.$options.indexedDB=false
 loop()}}
 $B.ajax_load_script=function(script){var url=script.url,name=script.name
-console.log("load script",script)
 if($B.files && $B.files.hasOwnProperty(name)){$B.tasks.splice(0,0,[$B.run_script,$B.files[name],name,url,true])}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options.cache ? '' :
 (url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
@@ -8198,35 +8197,28 @@ $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(self){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-make_content(self)
-var len=self.$binary ? self.$bytes.source.length :self.$string.length
-if(size < 0){size=len-self.$counter}
-if(self.$binary){res=_b_.bytes.$factory(self.$bytes.source.slice(self.$counter,self.$counter+size))}else{res=self.$string.substr(self.$counter,size)}
+if(size < 0){size=self.$length-self.$counter}
+if(self.$binary){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter,size)}
 self.$counter+=size
 return res}
 $Reader.readable=function(self){return true}
-function make_content(self){
-if(self.$binary && self.$bytes===undefined){self.$bytes=_b_.str.encode(self.$string,self.encoding)}else if((! self.$binary)&& self.$string===undefined){self.$string=_b_.bytes.decode(self.$bytes,self.encoding)}}
 function make_lines(self){
-if(self.$lines===undefined){make_content(self)
-if(! self.$binary){self.$lines=self.$string.split("\n")}else{console.log("make lines, binary")
-var lines=[],pos=0,source=self.$bytes.source
-while(true){var ix=source.indexOf(10)
-if(ix==-1){lines.push({__class__:_b_.bytes,source:source})
-break}else{lines.push({__class__:_b_.bytes,source:source.slice(0,ix+1)})
-source=source.slice(ix+1)}}
+if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")}else{var lines=[],pos=0,source=self.$content.source
+while(pos < self.$length){var ix=source.indexOf(10,pos)
+if(ix==-1){lines.push({__class__:_b_.bytes,source:source.slice(pos)})
+break}else{lines.push({__class__:_b_.bytes,source:source.slice(pos,ix+1)})
+pos=ix+1}}
 self.$lines=lines}}}
 $Reader.readline=function(self,size){var $=$B.args("readline",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 self.$lc=self.$lc===undefined ?-1 :self.$lc
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
-make_content(self)
-if(self.$binary){var ix=self.$bytes.source.indexOf(10,self.$counter)
-if(ix==-1){var rest=self.$bytes.source.slice(self.$counter)
-self.$counter=self.$bytes.source.length
-return _b_.bytes.$factory(rest)}else{var res={__class__:_b_.bytes,source :self.$bytes.source.slice(self.$counter,ix+1)}
+if(self.$binary){var ix=self.$content.source.indexOf(10,self.$counter)
+if(ix==-1){var rest=self.$content.source.slice(self.$counter)
+self.$counter=self.$content.source.length
+return _b_.bytes.$factory(rest)}else{var res={__class__:_b_.bytes,source :self.$content.source.slice(self.$counter,ix+1)}
 self.$counter=ix+1
-return res}}else{var ix=self.$string.indexOf("\n",self.$counter)
-if(ix==-1){return ''}else{var res=self.$string.substring(self.$counter,ix+1)
+return res}}else{var ix=self.$content.indexOf("\n",self.$counter)
+if(ix==-1){return ''}else{var res=self.$content.substring(self.$counter,ix+1)
 self.$counter=ix+1
 self.$lc+=1
 return res}}}
@@ -8243,9 +8235,8 @@ while(lines[lines.length-1]==''){lines.pop()}
 return lines}
 $Reader.seek=function(self,offset,whence){if(self.closed===True){throw _b_.ValueError.$factory('I/O operation on closed file')}
 if(whence===undefined){whence=0}
-if(whence===0){self.$counter=offset}
-else if(whence===1){self.$counter+=offset}
-else if(whence===2){self.$counter=self.$content.length+offset}}
+if(whence===0){self.$counter=offset}else if(whence===1){self.$counter+=offset}else if(whence===2){self.$counter=self.$length+offset}
+return None}
 $Reader.seekable=function(self){return true}
 $Reader.tell=function(self){return self.$counter}
 $Reader.writable=function(self){return false}
@@ -8262,36 +8253,38 @@ $B.Reader=$Reader
 $B.TextIOWrapper=$TextIOWrapper
 $B.BufferedReader=$BufferedReader
 function $url_open(){
-var $ns=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),$bytes,$string,$res
-for(var attr in $ns){eval('var '+attr+'=$ns["'+attr+'"]')}
-if(args.length > 0){var mode=args[0]}
-if(args.length > 1){var encoding=args[1]}
+var $=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),file=$.file,mode=$.mode,encoding=$.encoding,result={}
 if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
 if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
-if($B.file_cache.hasOwnProperty($ns.file)){$string=$B.file_cache[$ns.file]}else if($B.files && $B.files.hasOwnProperty($ns.file)){
-$res=atob($B.files[$ns.file].content)
+if($B.file_cache.hasOwnProperty($.file)){console.log('open cas 1')
+result.content=$B.file_cache[$.file]
+if(is_binary){result.content=_b_.str.encode(content,'utf-8')}}else if($B.files && $B.files.hasOwnProperty($.file)){console.log('open cas 2')
+$res=atob($B.files[$.file].content)
 var source=[]
 for(const char of $res){source.push(char.charCodeAt(0))}
 $bytes=_b_.bytes.$factory()
 $bytes.source=source}else if($B.protocol !="file"){
-if(is_binary){throw _b_.IOError.$factory(
-"open() in binary mode is not supported")}
-var req=new XMLHttpRequest();
-req.onreadystatechange=function(){try{var status=this.status
-if(status==404){$res=_b_.FileNotFoundError.$factory(file)}else if(status !=200){$res=_b_.IOError.$factory('Could not open file '+
-file+' : status '+status)}else{$res=this.responseText}}catch(err){$res=_b_.IOError.$factory('Could not open file '+
-file+' : error '+err)}}
+var req=new XMLHttpRequest()
+req.overrideMimeType('text/plain;charset=x-user-defined')
+req.onreadystatechange=function(){if(this.readyState !=4){return}
+var status=this.status
+if(status==404){result.error=_b_.FileNotFoundError.$factory(file)}else if(status !=200){result.error=_b_.IOError.$factory('Could not open file '+
+file+' : status '+status)}else{var bytes=[]
+for(var i=0,len=this.response.length;i < len;i++){var cp=this.response.codePointAt(i)
+if(cp > 0xf700){cp-=0xf700}
+bytes.push(cp)}
+result.content=_b_.bytes.$factory(bytes)
+if(! is_binary){
+try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}}
 var fake_qs=$B.$options.cache ? '' :
 '?foo='+(new Date().getTime())
 req.open('GET',file+fake_qs,false)
-req.overrideMimeType('text/plain; charset=utf-8')
-req.send()
-if($res.constructor===Error){throw $res}
-$string=$res}else{throw _b_.FileNotFoundError.$factory(
+req.send()}else{throw _b_.FileNotFoundError.$factory(
 "cannot use 'open()' with protocol 'file'")}
-if($string===undefined && $bytes===undefined){throw _b_.FileNotFoundError.$factory($ns.file)}
-var res={$binary:is_binary,$string:$string,$bytes:$bytes,$counter:0,closed:False,encoding:encoding,mode:mode,name:file}
+if(result.error !==undefined){throw result.error}
+var res={$binary:is_binary,$content:result.content,$counter:0,$encoding:encoding,$length:is_binary ? result.content.source.length :
+result.content.length,closed:False,mode,name:file}
 res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
 return res}else{throw _b_.TypeError.$factory("invalid argument for open(): "+
 _b_.str.$factory(file))}}
@@ -9973,7 +9966,7 @@ $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sreXXX','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','python_re_backtrack_choice','python_re_v5','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_ajax_nevez','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sreXXX','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','python_re_backtrack_choice','python_re_v5','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
 var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
@@ -14465,8 +14458,7 @@ return function(ctx){return $B.JSObj.$factory(self.getContext(ctx))}}
 DOMNode.getSelectionRange=function(self){
 if(self["getSelectionRange"]!==undefined){return self.getSelectionRange.apply(null,arguments)}}
 DOMNode.html=function(self){var res=self.innerHTML
-if(res===undefined){if(self.nodeType==9){res=self.body.innerHTML}
-else{res=_b_.None}}
+if(res===undefined){if(self.nodeType==9 && self.body){res=self.body.innerHTML}else{res=_b_.None}}
 return res}
 DOMNode.index=function(self,selector){var items
 if(selector===undefined){items=self.parentElement.childNodes}else{items=self.parentElement.querySelectorAll(selector)}
