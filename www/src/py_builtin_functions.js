@@ -2643,20 +2643,30 @@ function vars(){
 
 var $Reader = $B.make_class("Reader")
 
-$Reader.__enter__ = function(self){return self}
+$Reader.__enter__ = function(self){
+    return self
+}
 
-$Reader.__exit__ = function(self){return false}
+$Reader.__exit__ = function(self){
+    return false
+}
 
 $Reader.__iter__ = function(self){
     // Iteration ignores last empty lines (issue #1059)
     return iter($Reader.readlines(self))
 }
 
-$Reader.__len__ = function(self){return self.lines.length}
+$Reader.__len__ = function(self){
+    return self.lines.length
+}
 
-$Reader.close = function(self){self.closed = true}
+$Reader.close = function(self){
+    self.closed = true
+}
 
-$Reader.flush = function(self){return None}
+$Reader.flush = function(self){
+    return None
+}
 
 $Reader.read = function(){
     var $ = $B.args("read", 2, {self: null, size: null},
@@ -2666,61 +2676,45 @@ $Reader.read = function(){
     if(self.closed === true){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
-    make_content(self)
-
-    var len = self.$binary ? self.$bytes.source.length : self.$string.length
     if(size < 0){
-        size = len - self.$counter
+        size = self.$length - self.$counter
     }
 
     if(self.$binary){
-        res = _b_.bytes.$factory(self.$bytes.source.slice(self.$counter,
+        res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
             self.$counter + size))
     }else{
-        res = self.$string.substr(self.$counter, size)
+        res = self.$content.substr(self.$counter, size)
     }
     self.$counter += size
     return res
 }
 
-$Reader.readable = function(self){return true}
-
-function make_content(self){
-    // If the stream "self" is opened on text mode and does not have an
-    // attribute $string, create it from the attributes $bytes and
-    // encoding.
-    // If it is opened on binary mode and does not have an attribute $bytes,
-    // create it from attributes $string and encoding
-    if(self.$binary && self.$bytes === undefined){
-        self.$bytes = _b_.str.encode(self.$string, self.encoding)
-    }else if((! self.$binary) && self.$string === undefined){
-        self.$string = _b_.bytes.decode(self.$bytes, self.encoding)
-    }
+$Reader.readable = function(self){
+    return true
 }
 
 function make_lines(self){
     // If the stream "self" has no attribute $lines, build it as a list of
     // strings if the stream is opened on text mode, of bytes otherwise
     if(self.$lines === undefined){
-        make_content(self)
         if(! self.$binary){
-            self.$lines = self.$string.split("\n")
+            self.$lines = self.$content.split("\n")
         }else{
-            console.log("make lines, binary")
             var lines = [],
                 pos = 0,
-                source = self.$bytes.source
-            while(true){
-                var ix = source.indexOf(10)
+                source = self.$content.source
+            while(pos < self.$length){
+                var ix = source.indexOf(10, pos)
                 if(ix == -1){
-                    lines.push({__class__: _b_.bytes, source: source})
+                    lines.push({__class__: _b_.bytes, source: source.slice(pos)})
                     break
                 }else{
                     lines.push({
                         __class__: _b_.bytes,
-                        source: source.slice(0, ix + 1)
+                        source: source.slice(pos, ix + 1)
                     })
-                    source = source.slice(ix + 1)
+                    pos = ix + 1
                 }
             }
             self.$lines = lines
@@ -2740,28 +2734,28 @@ $Reader.readline = function(self, size){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
 
-    make_content(self)
+    //make_content(self)
     if(self.$binary){
-        var ix = self.$bytes.source.indexOf(10, self.$counter)
+        var ix = self.$content.source.indexOf(10, self.$counter)
         if(ix == -1){
-            var rest = self.$bytes.source.slice(self.$counter)
-            self.$counter = self.$bytes.source.length
+            var rest = self.$content.source.slice(self.$counter)
+            self.$counter = self.$content.source.length
             return _b_.bytes.$factory(rest)
         }else{
             var res = {
                 __class__: _b_.bytes,
-                source : self.$bytes.source.slice(self.$counter,
+                source : self.$content.source.slice(self.$counter,
                     ix + 1)
             }
             self.$counter = ix + 1
             return res
         }
     }else{
-        var ix = self.$string.indexOf("\n", self.$counter)
+        var ix = self.$content.indexOf("\n", self.$counter)
         if(ix == -1){
             return ''
         }else{
-            var res = self.$string.substring(self.$counter, ix + 1)
+            var res = self.$content.substring(self.$counter, ix + 1)
             self.$counter = ix + 1
             self.$lc += 1
             return res
@@ -2791,7 +2785,9 @@ $Reader.readlines = function(){
             lines.push(self.$lines[self.$lc])
         }
     }
-    while(lines[lines.length - 1] == ''){lines.pop()}
+    while(lines[lines.length - 1] == ''){
+        lines.pop()
+    }
     return lines
 }
 
@@ -2799,19 +2795,30 @@ $Reader.seek = function(self, offset, whence){
     if(self.closed === True){
         throw _b_.ValueError.$factory('I/O operation on closed file')
     }
-    if(whence === undefined){whence = 0}
-    if(whence === 0){self.$counter = offset}
-    else if(whence === 1){self.$counter += offset}
-    else if(whence === 2){self.$counter = self.$content.length + offset}
+    if(whence === undefined){
+        whence = 0
+    }
+    if(whence === 0){
+        self.$counter = offset
+    }else if(whence === 1){
+        self.$counter += offset
+    }else if(whence === 2){
+        self.$counter = self.$length + offset
+    }
+    return None
 }
 
-$Reader.seekable = function(self){return true}
+$Reader.seekable = function(self){
+    return true
+}
 
 $Reader.tell = function(self){
     return self.$counter
 }
 
-$Reader.writable = function(self){return false}
+$Reader.writable = function(self){
+    return false
+}
 
 $B.set_func_names($Reader, "builtins")
 
@@ -2850,15 +2857,13 @@ $B.BufferedReader = $BufferedReader
 
 function $url_open(){
     // first argument is file : can be a string, or an instance of a DOM File object
-    var $ns = $B.args('open', 3, {file: null, mode: null, encoding: null},
+    var $ = $B.args('open', 3, {file: null, mode: null, encoding: null},
         ['file', 'mode', 'encoding'], arguments,
         {mode: 'r', encoding: 'utf-8'}, 'args', 'kw'),
-        $bytes,
-        $string,
-        $res
-    for(var attr in $ns){eval('var ' + attr + '=$ns["' + attr + '"]')}
-    if(args.length > 0){var mode = args[0]}
-    if(args.length > 1){var encoding = args[1]}
+        file = $.file,
+        mode = $.mode,
+        encoding = $.encoding,
+        result = {}
     if(mode.search('w') > -1){
         throw _b_.IOError.$factory("Browsers cannot write on disk")
     }else if(['r', 'rb'].indexOf(mode) == -1){
@@ -2867,12 +2872,17 @@ function $url_open(){
     if(isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
         var is_binary = mode.search('b') > -1
-        if($B.file_cache.hasOwnProperty($ns.file)){
-            $string = $B.file_cache[$ns.file]
-        }else if($B.files && $B.files.hasOwnProperty($ns.file)){
+        if($B.file_cache.hasOwnProperty($.file)){
+            console.log('open cas 1')
+            result.content = $B.file_cache[$.file] // string
+            if(is_binary){
+                result.content = _b_.str.encode(content, 'utf-8')
+            }
+        }else if($B.files && $B.files.hasOwnProperty($.file)){
+            console.log('open cas 2')
             // Virtual file system created by
             // python -m brython --make_file_system
-            $res = atob($B.files[$ns.file].content)
+            $res = atob($B.files[$.file].content)
             var source = []
             for(const char of $res){
                 source.push(char.charCodeAt(0))
@@ -2881,56 +2891,64 @@ function $url_open(){
             $bytes.source = source
         }else if($B.protocol != "file"){
             // Try to load file by synchronous Ajax call
-            if(is_binary){
-                throw _b_.IOError.$factory(
-                    "open() in binary mode is not supported")
-            }
-            var req = new XMLHttpRequest();
+            var req = new XMLHttpRequest()
+            // Set mimetype so that bytes are not modified
+            req.overrideMimeType('text/plain;charset=x-user-defined')
             req.onreadystatechange = function(){
-                try{
-                    var status = this.status
-                    if(status == 404){
-                        $res = _b_.FileNotFoundError.$factory(file)
-                    }else if(status != 200){
-                        $res = _b_.IOError.$factory('Could not open file ' +
-                            file + ' : status ' + status)
-                    }else{
-                        $res = this.responseText
+                if(this.readyState != 4){
+                    return
+                }
+                var status = this.status
+                if(status == 404){
+                    result.error = _b_.FileNotFoundError.$factory(file)
+                }else if(status != 200){
+                    result.error = _b_.IOError.$factory('Could not open file ' +
+                        file + ' : status ' + status)
+                }else{
+                    var bytes = []
+                    for(var i = 0, len = this.response.length; i < len; i++){
+                        var cp = this.response.codePointAt(i)
+                        if(cp > 0xf700){
+                            cp -= 0xf700
+                        }
+                        bytes.push(cp)
                     }
-                }catch (err){
-                    $res = _b_.IOError.$factory('Could not open file ' +
-                        file + ' : error ' + err)
+                    result.content = _b_.bytes.$factory(bytes)
+                    if(! is_binary){
+                        // use encoding to restore text
+                        try{
+                            result.content = _b_.bytes.decode(result.content,
+                                encoding)
+                        }catch(error){
+                            result.error = error
+                        }
+                    }
                 }
             }
             // add fake query string to avoid caching
             var fake_qs = $B.$options.cache ? '' :
                               '?foo=' + (new Date().getTime())
             req.open('GET', file + fake_qs, false)
-            req.overrideMimeType('text/plain; charset=utf-8')
             req.send()
-
-            if($res.constructor === Error){
-                throw $res
-            }
-            $string = $res
         }else{
             throw _b_.FileNotFoundError.$factory(
                 "cannot use 'open()' with protocol 'file'")
         }
 
-        if($string === undefined && $bytes === undefined){
-            throw _b_.FileNotFoundError.$factory($ns.file)
+        if(result.error !== undefined){
+            throw result.error
         }
 
         // return the file-like object
         var res = {
             $binary: is_binary,
-            $string: $string,
-            $bytes: $bytes,
+            $content: result.content,
             $counter: 0,
+            $encoding: encoding,
+            $length: is_binary ? result.content.source.length :
+                result.content.length,
             closed: False,
-            encoding: encoding,
-            mode: mode,
+            mode,
             name: file
         }
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
