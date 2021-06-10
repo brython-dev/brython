@@ -269,7 +269,6 @@ $B.idb_open = function(obj){
 $B.ajax_load_script = function(script){
     var url = script.url,
         name = script.name
-        console.log("load script", script)
     if($B.files && $B.files.hasOwnProperty(name)){
         $B.tasks.splice(0, 0, [$B.run_script, $B.files[name],
             name, url, true])
