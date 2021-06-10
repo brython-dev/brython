@@ -40,7 +40,7 @@ a.sort_link{margin-left:10px;text-decoration:none}
 </head>
 <body onLoad="brython(1)">
 
-<div id="result">(empty)</div>
+<div id="output">(empty)</div>
 <button id="get_text">get text file</button>
 <button id="i_dont_exist">file not found</button>
 <button id="get_test">GET request</button>
@@ -51,41 +51,50 @@ import time
 
 from browser import document, ajax, bind
 
+output = document['output']
+
 def fake_qs():
     return "?foo=%s" %time.time()
 
+def log(*args):
+    output.html += ', '.join(str(arg) for arg in args)
+
 def show(req):
-    document["result"].html = req.text
+    log(req.text)
 
 @bind("#get_test", "click")
 def get(ev):
+    output.clear()
     ajax.get("/cgi-bin/get_test.py",
              oncomplete=show,
              data={"foo": 34})
 
     req = ajax.Ajax()
     req.open("GET", "/cgi-bin/get_test.py?bar=35")
-    req.bind("complete", lambda ev: print(ev.text))
+    req.bind("complete", show)
     req.send()
 
 @bind("#post_test", "click")
 def post(ev):
+    output.clear()
     ajax.post("/cgi-bin/post_test.py",
              oncomplete=show,
              data={"foo": 34})
     req = ajax.Ajax()
     req.open("POST", "/cgi-bin/post_test.py")
-    req.bind("complete", lambda ev: print(ev.text))
+    req.bind("complete", show)
     req.send({"bar": 45})
 
 @bind("#get_text", "click")
 def get_text(ev):
+    output.clear()
     ajax.get("ajax_data.txt" + fake_qs(),
              timeout=7,
              oncomplete=show)
 
 @bind("#i_dont_exist", "click")
 def i_dont_exist(ev):
+    output.clear()
     ajax.get("i_dont_exist.txt" + fake_qs(),
              timeout=7,
              oncomplete=show)
