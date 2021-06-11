@@ -367,6 +367,7 @@ function _request_without_body(method){
     }
     // Add function read() to return str or bytes according to mode
     self.js.send()
+    return _b_.None
 }
 
 function _request_with_body(method){
@@ -404,42 +405,43 @@ function _request_with_body(method){
         return _read(self)
     }
     self.js.send(data)
+    return _b_.None
 }
 
 function connect(){
-    _request_without_body.call(null, "connect", ...arguments)
+    return _request_without_body.call(null, "connect", ...arguments)
 }
 
 function _delete(){
-    _request_without_body.call(null, "delete", ...arguments)
+    return _request_without_body.call(null, "delete", ...arguments)
 }
 
 function get(){
-    _request_without_body.call(null, "get", ...arguments)
+    return _request_without_body.call(null, "get", ...arguments)
 }
 
 function head(){
-    _request_without_body.call(null, "head", ...arguments)
+    return _request_without_body.call(null, "head", ...arguments)
 }
 
 function options(){
-    _request_without_body.call(null, "options", ...arguments)
+    return _request_without_body.call(null, "options", ...arguments)
 }
 
 function patch(){
-    _request_with_body.call(null, "put", ...arguments)
+    return _request_with_body.call(null, "put", ...arguments)
 }
 
 function post(){
-    _request_with_body.call(null, "post", ...arguments)
+    return _request_with_body.call(null, "post", ...arguments)
 }
 
 function put(){
-    _request_with_body.call(null, "put", ...arguments)
+    return _request_with_body.call(null, "put", ...arguments)
 }
 
 function trace(){
-    _request_without_body.call(null, "trace", ...arguments)
+    return _request_without_body.call(null, "trace", ...arguments)
 }
 
 function file_upload(){
