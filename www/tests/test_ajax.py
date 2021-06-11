@@ -76,7 +76,6 @@ req.open("GET", "files/text-utf8.txt", False)
 req.bind("complete", lambda req: show(req, "bébé"))
 req.send()
 
-print('134')
 req = ajax.Ajax()
 req.open("GET", "files/text-utf8.txt")
 req.bind("complete", lambda req: show(req, "bébé"))
@@ -109,24 +108,25 @@ def assert_type(f, _type):
     data = f.read()
     assert isinstance(data, _type)
 
-req = ajax.get("test.html", mode="binary",
+x = ajax.get("test.html", mode="binary",
     oncomplete=lambda req: assert_type(req, bytes))
+assert x is None
 
-req = ajax.get("test.html", mode="text",
+ajax.get("test.html", mode="text",
     oncomplete=lambda req: assert_type(req, str))
 
 # XXX todo : test xml, json, file upload, error 404...
 def read_xml(req):
     print([node.text for node in req.xml.select('ARTIST')])
 
-req = ajax.get("catalog.xml", mode="document",
+ajax.get("catalog.xml", mode="document",
     oncomplete=read_xml)
 
 def read_json(req):
     assert req.json == req.read()
     assert isinstance(req.read(), dict)
 
-req = ajax.get("files/glossary.json", mode="json",
+ajax.get("files/glossary.json", mode="json",
     oncomplete=read_json)
 
 print('passed all tests...')
