@@ -47,6 +47,7 @@ def read_image(req):
     print('image', len(req.read()))
 
 ajax.get('../brython.png', mode="binary", oncomplete=read_image)
+ajax.get('../brython.png', mode="binary", oncomplete=read_image, blocking=True)
 
 # ajax.post
 ajax.post("/cgi-bin/post_test.py",
