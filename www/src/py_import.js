@@ -135,6 +135,7 @@ function run_js(module_contents, path, _module){
                 __name__: $B.from_alias(attr),
                 __qualname__: $B.from_alias(attr)
             }
+            $module[attr].$in_js_module = true
         }
     }
 

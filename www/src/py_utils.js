@@ -1045,6 +1045,13 @@ $B.$call = function(callable){
         return callable.$factory = function(){
             return new callable(...arguments)
         }
+    }else if(callable.$in_js_module){
+        // attribute $in_js_module is set for functions in modules written
+        // in Javascript, in py_import.js
+        return function(){
+            var res = callable(...arguments)
+            return res === undefined ? _b_.None : res
+        }
     }else if(callable.$is_func || typeof callable == "function"){
         return callable
     }
@@ -1699,7 +1706,7 @@ $B.rich_op = function(op, x, y){
         }
         return method(y)
     }
-    
+
     if(_b_.issubclass(y_class, x_class)){
         // issue #1686
         var reflected_left = $B.$getattr(x_class, '__r' + op + '__'),

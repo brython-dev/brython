@@ -367,7 +367,6 @@ function _request_without_body(method){
     }
     // Add function read() to return str or bytes according to mode
     self.js.send()
-    return _b_.None
 }
 
 function _request_with_body(method){
@@ -385,7 +384,6 @@ function _request_with_body(method){
     var items = handle_kwargs(self, kw, method),
         data = items.data,
         timeout = items.timeout
-    console.log('kw', kw, 'data', data)
     set_timeout(self, timeout)
     for(var key in items.headers){
         var header = items.headers[key]
@@ -405,43 +403,42 @@ function _request_with_body(method){
         return _read(self)
     }
     self.js.send(data)
-    return _b_.None
 }
 
 function connect(){
-    return _request_without_body.call(null, "connect", ...arguments)
+    _request_without_body.call(null, "connect", ...arguments)
 }
 
 function _delete(){
-    return _request_without_body.call(null, "delete", ...arguments)
+    _request_without_body.call(null, "delete", ...arguments)
 }
 
 function get(){
-    return _request_without_body.call(null, "get", ...arguments)
+    _request_without_body.call(null, "get", ...arguments)
 }
 
 function head(){
-    return _request_without_body.call(null, "head", ...arguments)
+    _request_without_body.call(null, "head", ...arguments)
 }
 
 function options(){
-    return _request_without_body.call(null, "options", ...arguments)
+    _request_without_body.call(null, "options", ...arguments)
 }
 
 function patch(){
-    return _request_with_body.call(null, "put", ...arguments)
+    _request_with_body.call(null, "put", ...arguments)
 }
 
 function post(){
-    return _request_with_body.call(null, "post", ...arguments)
+    _request_with_body.call(null, "post", ...arguments)
 }
 
 function put(){
-    return _request_with_body.call(null, "put", ...arguments)
+    _request_with_body.call(null, "put", ...arguments)
 }
 
 function trace(){
-    return _request_without_body.call(null, "trace", ...arguments)
+    _request_without_body.call(null, "trace", ...arguments)
 }
 
 function file_upload(){
