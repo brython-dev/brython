@@ -483,6 +483,7 @@ int.__reduce_ex__ = function(self){
 }
 
 int.__repr__ = function(self){
+    $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     return int_value(self).toString()
 }
 
@@ -512,8 +513,6 @@ int.__setattr__ = function(self, attr, value){
     _b_.dict.$setitem(self.__dict__, attr, value)
     return _b_.None
 }
-
-int.__str__ = int.__repr__
 
 int.__sub__ = function(self, other){
     self = int_value(self)
@@ -880,7 +879,8 @@ bool.__or__ = function(self, other){
 
 bool.__pos__ = $B.int_or_bool
 
-bool.__repr__ = bool.__str__ = function(self){
+bool.__repr__ = function(self){
+    $B.builtins_repr_check(bool, arguments) // in brython_builtins.js
     return self ? "True" : "False"
 }
 

@@ -239,18 +239,14 @@ set.__reduce_ex__ = function(self, protocol){
     return set.__reduce__(self)
 }
 
-set.__rsub__ = function(self, other){
-    // Used when other.__sub__(self) is NotImplemented
-    return set.__sub__(other, self)
+set.__repr__ = function(self){
+    $B.builtins_repr_check(set, arguments) // in brython_builtins.js
+    return set_repr(self)
 }
 
-set.__rxor__ = function(self, other){
-    // Used when other.__xor__(self) is NotImplemented
-    return set.__xor__(self, other)
-}
-
-set.__str__ = set.__repr__ = function(self){
-    var klass_name = $B.class_name(self)
+function set_repr(self){
+    // shared between set and frozenset
+    klass_name = $B.class_name(self)
     if(self.$items.length === 0){
         return klass_name + "()"
     }
@@ -270,6 +266,16 @@ set.__str__ = set.__repr__ = function(self){
     res = res.join(", ")
     $B.repr.leave(self)
     return head + res + tail
+}
+
+set.__rsub__ = function(self, other){
+    // Used when other.__sub__(self) is NotImplemented
+    return set.__sub__(other, self)
+}
+
+set.__rxor__ = function(self, other){
+    // Used when other.__xor__(self) is NotImplemented
+    return set.__xor__(self, other)
 }
 
 set.__sub__ = function(self, other, accept_iter){
@@ -790,6 +796,11 @@ frozenset.__new__ = function(cls){
         $numbers: [],
         $hashes: {}
         }
+}
+
+frozenset.__repr__ = function(self){
+    $B.builtins_repr_check(frozenset, arguments) // in brython_builtins.js
+    return set_repr(self)
 }
 
 // Singleton for empty frozensets

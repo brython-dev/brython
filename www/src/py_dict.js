@@ -699,6 +699,7 @@ dict.__reduce_ex__ = function(self, protocol){
 }
 
 dict.__repr__ = function(self){
+    $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
     if(self.$jsobj){ // wrapper around Javascript object
         return dict.__repr__(jsobj2dict(self.$jsobj))
     }
@@ -873,10 +874,6 @@ dict.$setitem = function(self, key, value, $hash){
     }
     self.$version++
     return $N
-}
-
-dict.__str__ = function(){
-    return dict.__repr__.apply(null, arguments)
 }
 
 // add "reflected" methods

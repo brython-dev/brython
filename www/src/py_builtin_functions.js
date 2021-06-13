@@ -300,7 +300,6 @@ var classmethod = $B.make_class("classmethod",
 
 $B.set_func_names(classmethod, "builtins")
 
-//compile() (built in function)
 var code = $B.code = $B.make_class("code")
 
 code.__repr__ = code.__str__ = function(self){
@@ -313,6 +312,7 @@ code.__getattribute__ = function(self, attr){
 
 $B.set_func_names(code, "builtins")
 
+//compile() (built in function)
 function compile() {
     var $ = $B.args('compile', 6,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
@@ -2089,11 +2089,8 @@ property.__init__ = function(self, fget, fset, fdel, doc) {
 }
 
 property.__repr__ = function(self){
+    $B.builtins_repr_check(property, arguments) // in brython_builtins.js
     return _b_.repr(self.fget(self))
-}
-
-property.__str__ = function(self){
-    return _b_.str.$factory(self.fget(self))
 }
 
 $B.set_func_names(property, "builtins")
@@ -2612,7 +2609,8 @@ $$super.__getattribute__ = function(self, attr){
         attr + "'")
 }
 
-$$super.__repr__ = $$super.__str__ = function(self){
+$$super.__repr__ = function(self){
+    $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
     var res = "<super: <class '" + self.__thisclass__.$infos.__name__ + "'>"
     if(self.__self_class__ !== undefined){
         res += ', <' + self.__self_class__.__class__.$infos.__name__ + ' object>'
@@ -3186,7 +3184,10 @@ $B.Function.__getattribute__ = function(self, attr){
     }
 }
 
-$B.Function.__repr__ = $B.Function.__str__ = function(self){
+$B.Function.__repr__ = function(self){
+    if(self === undefined){
+        throw _b_.TypeError.$factory('self undef')
+    }
     if(self.$infos === undefined){
         return '<function ' + self.name + '>'
     }else{

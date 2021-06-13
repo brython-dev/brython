@@ -219,6 +219,21 @@ $B.scripts = {} // for Python scripts embedded in a JS file
 
 $B.$options = {}
 
+$B.builtins_repr_check = function(builtin, args){
+    // Called when entering method __repr__ of builtin classes, to check the
+    // the number of arguments, and that the only argument is an instance of
+    // the builtin class
+    var $ = $B.args('__repr__', 1, {self: null}, ['self'], args,
+            {}, null, null),
+        self = $.self,
+        _b_ = $B.builtins
+    if(! _b_.isinstance(self, builtin)){
+        throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
+            `'${builtin.$infos.__name__}' object but received a ` +
+            `'${$B.class_name(self)}'`)
+    }
+}
+
 // Update the Virtual File System
 $B.update_VFS = function(scripts){
     $B.VFS = $B.VFS || {}

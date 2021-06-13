@@ -644,7 +644,8 @@ type.__qualname__ = {
     }
 }
 
-type.__repr__ = type.__str__ = function(kls){
+type.__repr__ = function(kls){
+    $B.builtins_repr_check(type, arguments) // in brython_builtins.js
     if(kls.$infos === undefined){
         console.log("no $infos", kls)
     }

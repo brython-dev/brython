@@ -173,7 +173,8 @@ range.__reversed__ = function(self){
         $B.mul(-1, self.step))
 }
 
-range.__repr__ = range.__str__ = function(self){
+range.__repr__ = function(self){
+    $B.builtins_repr_check(range, arguments) // in brython_builtins.js
     var res = "range(" + _b_.str.$factory(self.start) + ", " +
         _b_.str.$factory(self.stop)
     if(self.step != 1){res += ", " + _b_.str.$factory(self.step)}
@@ -319,7 +320,8 @@ slice.__eq__ = function(self, other){
         conv1[2] == conv2[2]
 }
 
-slice.__repr__ = slice.__str__ = function(self){
+slice.__repr__ = function(self){
+    $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
     return "slice(" + _b_.str.$factory(self.start) + ", " +
         _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }

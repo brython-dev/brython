@@ -274,17 +274,8 @@ complex.__radd__ = function(self, other){
     return _b_.NotImplemented
 }
 
-complex.__rmul__ = function(self, other){
-    if(_b_.isinstance(other, _b_.bool)){
-        other = other ? 1 : 0
-    }
-    if(_b_.isinstance(other, [_b_.int, _b_.float])){
-        return make_complex(other * self.$real, other * self.$imag)
-    }
-    return _b_.NotImplemented
-}
-
-complex.__str__ = complex.__repr__ = function(self){
+complex.__repr__ = function(self){
+    $B.builtins_repr_check(complex, arguments) // in brython_builtins.js
     var real = _b_.str.$factory(self.$real),
         imag = _b_.str.$factory(self.$imag)
     if(self.$real instanceof Number && self.$real == parseInt(self.$real)){
@@ -316,6 +307,16 @@ complex.__str__ = complex.__repr__ = function(self){
         return "(" + real + "+0j)"
     }
     return "(" + real + "-" + _b_.str.$factory(-self.$imag) + "j)"
+}
+
+complex.__rmul__ = function(self, other){
+    if(_b_.isinstance(other, _b_.bool)){
+        other = other ? 1 : 0
+    }
+    if(_b_.isinstance(other, [_b_.int, _b_.float])){
+        return make_complex(other * self.$real, other * self.$imag)
+    }
+    return _b_.NotImplemented
 }
 
 complex.__sqrt__ = function(self) {

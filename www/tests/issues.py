@@ -2944,6 +2944,25 @@ try:
 except NameError:
     pass
 
+# issue 1685
+assertRaises(TypeError, int.__str__)
+assertRaises(TypeError, int.__str__, 1, 2)
+
+assert int.__str__('a') == "'a'"
+assert int.__str__(int) == "<class 'int'>"
+
+assertRaises(TypeError, int.__repr__, 'x')
+assert int.__repr__(7) == '7'
+
+assertRaises(TypeError, float.__str__)
+assertRaises(TypeError, float.__str__, 1.1, 2.2)
+
+assert float.__str__('a') == "'a'"
+assert float.__str__(int) == "<class 'int'>"
+
+assertRaises(TypeError, float.__repr__, 'x')
+assertRaises(TypeError, float.__repr__, 7)
+assert float.__repr__(7.6) == '7.6'
 
 # ==========================================
 # Finally, report that all tests have passed

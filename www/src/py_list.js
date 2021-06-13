@@ -406,6 +406,12 @@ list.__reduce_ex__ = function(self){
 }
 
 list.__repr__ = function(self){
+    $B.builtins_repr_check(list, arguments) // in brython_builtins.js
+    return list_repr(self)
+}
+
+function list_repr(self){
+    // shared between list and tuple
     if($B.repr.enter(self)){ // in py_utils.js
         return '[...]'
     }
@@ -997,6 +1003,11 @@ tuple.__reduce_ex__ = function(self){
         $B.fast_tuple([self.__class__].concat(self.slice())),
         _b_.None,
         _b_.None])
+}
+
+tuple.__repr__ = function(self){
+    $B.builtins_repr_check(tuple, arguments) // in brython_builtins.js
+    return list_repr(self)
 }
 
 // set method names

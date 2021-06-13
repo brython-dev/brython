@@ -82,6 +82,11 @@ $B.globals=function(){
 return $B.frames_stack[$B.frames_stack.length-1][3]}
 $B.scripts={}
 $B.$options={}
+$B.builtins_repr_check=function(builtin,args){
+var $=$B.args('__repr__',1,{self:null},['self'],args,{},null,null),self=$.self,_b_=$B.builtins
+if(! _b_.isinstance(self,builtin)){throw _b_.TypeError.$factory("descriptor '__repr__' requires a "+
+`'${builtin.$infos.__name__}' object but received a `+
+`'${$B.class_name(self)}'`)}}
 $B.update_VFS=function(scripts){$B.VFS=$B.VFS ||{}
 var vfs_timestamp=scripts.$timestamp
 if(vfs_timestamp !==undefined){delete scripts.$timestamp}
@@ -105,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-11 17:35:47.466355"
-__BRYTHON__.timestamp=1623425747466
+__BRYTHON__.compiled_date="2021-06-13 10:54:19.552739"
+__BRYTHON__.timestamp=1623574459552
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6191,8 +6196,18 @@ self[attr]=val}
 return _b_.None}
 object.__setattr__.__get__=function(obj){return function(attr,val){object.__setattr__(obj,attr,val)}}
 object.__setattr__.__str__=function(){return "method object.setattr"}
-object.__str__=function(self){var repr_func=$B.$getattr(self,"__repr__")
-return $B.$call(repr_func)()}
+object.__str__=function(self){
+var len=arguments.length
+if(len==0){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
+"object needs an argument")}else if(len > 1){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
+"expects 1 argument, got "+len)}else if(self.$nat=='kw'){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
+"doesn't accept keyword arguments")}
+if(self.$is_class ||self.$factory){var class_str=$B.$getattr(self.__class__ ||$B.get_class(self),'__str__',null)
+if(class_str !==null && class_str !==object.__str__){return class_str(self)}
+var class_repr=$B.$getattr(self.__class__ ||$B.get_class(self),'__repr__',null)
+if(class_repr !==null && class_repr !==object.__repr__){return class_repr(self)}}else{
+var repr_func=$B.$getattr(self,"__repr__")
+return $B.$call(repr_func)()}}
 object.__subclasshook__=function(){return _b_.NotImplemented}
 object.$factory=function(){var res={__class__:object},args=[res].concat(Array.prototype.slice.call(arguments))
 object.__init__.apply(null,args)
@@ -6419,7 +6434,8 @@ if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
 return _b_.NotImplemented}
 type.__prepare__=function(){return $B.empty_dict()}
 type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value},__str__:function(self){console.log("type.__qualname__")},__eq__:function(self,other){return self.$infos.__qualname__==other}}
-type.__repr__=type.__str__=function(kls){if(kls.$infos===undefined){console.log("no $infos",kls)}
+type.__repr__=function(kls){$B.builtins_repr_check(type,arguments)
+if(kls.$infos===undefined){console.log("no $infos",kls)}
 var qualname=kls.$infos.__qualname__
 if(kls.$infos.__module__ &&
 kls.$infos.__module__ !="builtins" &&
@@ -8007,8 +8023,8 @@ self.__delete__=fdel;
 self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
 self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
 self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
-property.__repr__=function(self){return _b_.repr(self.fget(self))}
-property.__str__=function(self){return _b_.str.$factory(self.fget(self))}
+property.__repr__=function(self){$B.builtins_repr_check(property,arguments)
+return _b_.repr(self.fget(self))}
 $B.set_func_names(property,"builtins")
 function quit(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
@@ -8181,7 +8197,8 @@ method.$infos={__self__:self.__self_class__,__func__:f,__name__:attr,__module__:
 return method}
 throw _b_.AttributeError.$factory("object 'super' has no attribute '"+
 attr+"'")}
-$$super.__repr__=$$super.__str__=function(self){var res="<super: <class '"+self.__thisclass__.$infos.__name__+"'>"
+$$super.__repr__=function(self){$B.builtins_repr_check($$super,arguments)
+var res="<super: <class '"+self.__thisclass__.$infos.__name__+"'>"
 if(self.__self_class__ !==undefined){res+=', <'+self.__self_class__.__class__.$infos.__name__+' object>'}else{res+=', NULL'}
 return res+'>'}
 $B.set_func_names($$super,"builtins")
@@ -8362,7 +8379,8 @@ var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(None))}}
 return _b_.tuple.$factory(cells)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-$B.Function.__repr__=$B.Function.__str__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
+$B.Function.__repr__=function(self){if(self===undefined){throw _b_.TypeError.$factory('self undef')}
+if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.Function.__mro__=[_b_.object]
 $B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
@@ -8794,7 +8812,8 @@ if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
 return self.$counter}
 range.__reversed__=function(self){var n=$B.sub(range.__len__(self),1)
 return range.$factory($B.add(self.start,$B.mul(n,self.step)),$B.sub(self.start,self.step),$B.mul(-1,self.step))}
-range.__repr__=range.__str__=function(self){var res="range("+_b_.str.$factory(self.start)+", "+
+range.__repr__=function(self){$B.builtins_repr_check(range,arguments)
+var res="range("+_b_.str.$factory(self.start)+", "+
 _b_.str.$factory(self.stop)
 if(self.step !=1){res+=", "+_b_.str.$factory(self.step)}
 return res+")"}
@@ -8836,7 +8855,8 @@ slice.__eq__=function(self,other){var conv1=conv_slice(self),conv2=conv_slice(ot
 return conv1[0]==conv2[0]&&
 conv1[1]==conv2[1]&&
 conv1[2]==conv2[2]}
-slice.__repr__=slice.__str__=function(self){return "slice("+_b_.str.$factory(self.start)+", "+
+slice.__repr__=function(self){$B.builtins_repr_check(slice,arguments)
+return "slice("+_b_.str.$factory(self.start)+", "+
 _b_.str.$factory(self.stop)+", "+_b_.str.$factory(self.step)+")"}
 slice.__setattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 function conv_slice(self){
@@ -9522,11 +9542,10 @@ set.__rand__=function(self,other){
 return set.__and__(self,other)}
 set.__reduce__=function(self){return _b_.tuple.$factory([self.__class__,_b_.tuple.$factory([self.$items]),$N])}
 set.__reduce_ex__=function(self,protocol){return set.__reduce__(self)}
-set.__rsub__=function(self,other){
-return set.__sub__(other,self)}
-set.__rxor__=function(self,other){
-return set.__xor__(self,other)}
-set.__str__=set.__repr__=function(self){var klass_name=$B.class_name(self)
+set.__repr__=function(self){$B.builtins_repr_check(set,arguments)
+return set_repr(self)}
+function set_repr(self){
+klass_name=$B.class_name(self)
 if(self.$items.length===0){return klass_name+"()"}
 var head=klass_name+"({",tail="})"
 if(head=="set({"){head="{";tail="}"}
@@ -9539,6 +9558,10 @@ else{res.push(r)}}
 res=res.join(", ")
 $B.repr.leave(self)
 return head+res+tail}
+set.__rsub__=function(self,other){
+return set.__sub__(other,self)}
+set.__rxor__=function(self,other){
+return set.__xor__(self,other)}
 set.__sub__=function(self,other,accept_iter){
 try{$test(accept_iter,other,"-")}
 catch(err){return _b_.NotImplemented}
@@ -9723,6 +9746,8 @@ frozenset.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory
 "frozenset.__new__(): not enough arguments")}
 return{
 __class__:cls,$simple:true,$items:[],$numbers:[],$hashes:{}}}
+frozenset.__repr__=function(self){$B.builtins_repr_check(frozenset,arguments)
+return set_repr(self)}
 var singleton_id=Math.floor(Math.random()*Math.pow(2,40))
 function empty_frozenset(){var res=frozenset.__new__(frozenset)
 res.$id=singleton_id
@@ -10698,7 +10723,8 @@ var res=args.slice(1)
 res.__class__=args[0]
 return res}
 float.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,float_value(self)]),_b_.None,_b_.None,_b_.None])}
-float.__repr__=float.__str__=function(self){self=float_value(self).valueOf()
+float.__repr__=function(self){$B.builtins_repr_check(float,arguments)
+self=float_value(self).valueOf()
 if(self==Infinity){return 'inf'}else if(self==-Infinity){return '-inf'}else if(isNaN(self)){return 'nan'}else if(self===0){if(1/self===-Infinity){return '-0.0'}
 return '0.0'}
 var res=self+"" 
@@ -11010,7 +11036,8 @@ var res=args.slice(1)
 res.__class__=args[0]
 return res}
 int.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,int_value(self)]),_b_.None,_b_.None,_b_.None])}
-int.__repr__=function(self){return int_value(self).toString()}
+int.__repr__=function(self){$B.builtins_repr_check(int,arguments)
+return int_value(self).toString()}
 int.__rshift__=function(self,other){self=int_value(self)
 if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
 return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
@@ -11021,7 +11048,6 @@ if(_b_.dir(self).indexOf(attr)>-1){var msg="attribute '"+attr+`' of '${cl_name}'
 throw _b_.AttributeError.$factory(msg)}
 _b_.dict.$setitem(self.__dict__,attr,value)
 return _b_.None}
-int.__str__=int.__repr__
 int.__sub__=function(self,other){self=int_value(self)
 if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
 other=int_value(other)
@@ -11155,7 +11181,8 @@ bool.__neg__=function(self){return-$B.int_or_bool(self)}
 bool.__or__=function(self,other){if(_b_.isinstance(other,bool)){return self ||other}else if(_b_.isinstance(other,int)){return int.__or__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
 bool.__pos__=$B.int_or_bool
-bool.__repr__=bool.__str__=function(self){return self ? "True" :"False"}
+bool.__repr__=function(self){$B.builtins_repr_check(bool,arguments)
+return self ? "True" :"False"}
 bool.__xor__=function(self,other){if(_b_.isinstance(other,bool)){return self ^ other ? true :false}else if(_b_.isinstance(other,int)){return int.__xor__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
 bool.$factory=function(){
@@ -11796,10 +11823,8 @@ $B.class_name(other)+"'")}}
 complex.__radd__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
 if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other+self.$real,self.$imag)}
 return _b_.NotImplemented}
-complex.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
-if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other*self.$real,other*self.$imag)}
-return _b_.NotImplemented}
-complex.__str__=complex.__repr__=function(self){var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
+complex.__repr__=function(self){$B.builtins_repr_check(complex,arguments)
+var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
 if(self.$real instanceof Number && self.$real==parseInt(self.$real)){real=_b_.str.$factory(parseInt(self.$real))}
 if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){imag=_b_.str.$factory(parseInt(self.$imag))
 if(self.$imag==0 && 1/self.$imag===-Infinity){imag="-0"}}
@@ -11809,6 +11834,9 @@ if(self.$imag > 0 ||isNaN(self.$imag)){return "("+real+"+"+imag+"j)"}
 if(self.$imag==0){if(1/self.$imag < 0){return "("+real+"-0j)"}
 return "("+real+"+0j)"}
 return "("+real+"-"+_b_.str.$factory(-self.$imag)+"j)"}
+complex.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
+if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other*self.$real,other*self.$imag)}
+return _b_.NotImplemented}
 complex.__sqrt__=function(self){if(self.$imag==0){return complex(Math.sqrt(self.$real))}
 var r=self.$real,i=self.$imag,_a=Math.sqrt((r+sqrt)/2),_b=Number.sign(i)*Math.sqrt((-r+sqrt)/2)
 return make_complex(_a,_b)}
@@ -12291,7 +12319,10 @@ var res=args.slice(1)
 res.__class__=args[0]
 return res}
 list.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__]),_b_.None,_b_.iter(self)])}
-list.__repr__=function(self){if($B.repr.enter(self)){
+list.__repr__=function(self){$B.builtins_repr_check(list,arguments)
+return list_repr(self)}
+function list_repr(self){
+if($B.repr.enter(self)){
 return '[...]'}
 var _r=[],res
 for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
@@ -12511,6 +12542,8 @@ catch(err){if(err.__class__===_b_.StopIteration){break}
 else{throw err}}}
 return self}
 tuple.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__].concat(self.slice())),_b_.None,_b_.None])}
+tuple.__repr__=function(self){$B.builtins_repr_check(tuple,arguments)
+return list_repr(self)}
 $B.set_func_names(tuple,"builtins")
 _b_.list=list
 _b_.tuple=tuple
@@ -13755,7 +13788,8 @@ var res=$B.empty_dict()
 res.__class__=args[0]
 return res}
 dict.__reduce_ex__=function(self,protocol){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__]),_b_.None,_b_.None,dict.items(self)])}
-dict.__repr__=function(self){if(self.$jsobj){
+dict.__repr__=function(self){$B.builtins_repr_check(dict,arguments)
+if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj))}
 if($B.repr.enter(self)){return "{...}"}
 var res=[],items=to_list(self)
@@ -13818,7 +13852,6 @@ self.$object_dict[hash][ix][1]=[value,self.$object_dict[hash][ix][1][1]]
 return $N}else if(self.$object_dict.hasOwnProperty(hash)){self.$object_dict[hash].push([key,[value,self.$order++]])}else{self.$object_dict[hash]=[[key,[value,self.$order++]]]}
 self.$version++
 return $N}
-dict.__str__=function(){return dict.__repr__.apply(null,arguments)}
 $B.make_rmethods(dict)
 dict.clear=function(){
 var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null),self=$.self

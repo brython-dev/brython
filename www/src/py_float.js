@@ -620,7 +620,8 @@ float.__reduce_ex__ = function(self){
         _b_.None])
 }
 
-float.__repr__ = float.__str__ = function(self){
+float.__repr__ = function(self){
+    $B.builtins_repr_check(float, arguments) // in brython_builtins.js
     self = float_value(self).valueOf()
     if(self == Infinity){
         return 'inf'
