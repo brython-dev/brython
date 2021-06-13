@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,3,'final',0]
 __BRYTHON__.__MAGIC__="3.9.3"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-13 10:54:19.552739"
-__BRYTHON__.timestamp=1623574459552
+__BRYTHON__.compiled_date="2021-06-13 11:44:51.099103"
+__BRYTHON__.timestamp=1623577491099
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3224,16 +3224,21 @@ while(scope){if(scope.globals && scope.globals.has(this.value)){return $get_modu
 if(scope.binding && scope.binding[this.value]){return scope.id}
 scope=scope.parent}}
 $IdCtx.prototype.boundBefore=function(scope){
+function test(node,name){if(node.bindings && node.bindings[name]){
+var ctx=node.C.tree[0]
+if(['def','generator'].indexOf(ctx.type)>-1 &&
+ctx.locals.indexOf(name)>-1){return false}
+return true}}
 var node=$get_node(this),found=false
-var $test=false 
+var $test=this.value=="a"
 if($test){console.log(this.value,"bound before")
 console.log("node",node)}
 while(!found && node.parent){var pnode=node.parent
-if(pnode.bindings && pnode.bindings[this.value]){if($test){console.log("bound in",pnode)}
+if(test(pnode,this.value)){if($test){console.log("bound in",pnode)}
 return pnode.bindings[this.value]}
 for(var i=0;i < pnode.children.length;i++){var child=pnode.children[i]
 if(child===node){break}
-if(child.bindings && child.bindings[this.value]){if($test){console.log("bound in child",child)}
+if(test(child,this.value)){if($test){console.log("bound in child",child)}
 return child.bindings[this.value]}}
 if(pnode===scope){break}
 node=pnode}
@@ -8379,8 +8384,7 @@ var cells=[]
 for(var i=0;i < free_vars.length;i++){try{cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))}catch(err){
 cells.push($B.cell.$factory(None))}}
 return _b_.tuple.$factory(cells)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
-$B.Function.__repr__=function(self){if(self===undefined){throw _b_.TypeError.$factory('self undef')}
-if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
+$B.Function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.Function.__mro__=[_b_.object]
 $B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(

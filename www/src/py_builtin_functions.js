@@ -3185,9 +3185,6 @@ $B.Function.__getattribute__ = function(self, attr){
 }
 
 $B.Function.__repr__ = function(self){
-    if(self === undefined){
-        throw _b_.TypeError.$factory('self undef')
-    }
     if(self.$infos === undefined){
         return '<function ' + self.name + '>'
     }else{

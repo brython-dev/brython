@@ -5857,9 +5857,23 @@ $IdCtx.prototype.boundBefore = function(scope){
     // code tree. It will be translated to $local_search("x"), which will
     // check at run time if the name "x" exists and if not, raise an
     // UnboundLocalError.
+    function test(node, name){
+        if(node.bindings && node.bindings[name]){
+            // Exclude function arguments, which are in node.bindings
+            // if the node is a function definition
+            // cf. issue #1688
+            var ctx = node.context.tree[0]
+            if(['def', 'generator'].indexOf(ctx.type) > -1 &&
+                    ctx.locals.indexOf(name) > -1){
+                return false
+            }
+            return true
+        }
+    }
+
     var node = $get_node(this),
         found = false
-    var $test = false // this.value == "console"
+    var $test = this.value == "a"
     if($test){
         console.log(this.value, "bound before")
         console.log("node", node)
@@ -5867,14 +5881,14 @@ $IdCtx.prototype.boundBefore = function(scope){
 
     while(!found && node.parent){
         var pnode = node.parent
-        if(pnode.bindings && pnode.bindings[this.value]){
+        if(test(pnode, this.value)){
             if($test){console.log("bound in", pnode)}
             return pnode.bindings[this.value]
         }
         for(var i = 0; i < pnode.children.length; i++){
             var child = pnode.children[i]
             if(child === node){break}
-            if(child.bindings && child.bindings[this.value]){
+            if(test(child, this.value)){
                 if($test){console.log("bound in child", child)}
                 return child.bindings[this.value]
             }
@@ -5958,7 +5972,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "xw"
+    var $test = false // val == "a"
 
     if($test){
         console.log("ENTER IdCtx.py2js", "this", this)

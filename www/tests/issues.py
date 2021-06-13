@@ -2964,6 +2964,17 @@ assertRaises(TypeError, float.__repr__, 'x')
 assertRaises(TypeError, float.__repr__, 7)
 assert float.__repr__(7.6) == '7.6'
 
+# issue 1688
+def f(a1688):
+    pass
+
+try:
+    for a1688 in a1688.b:
+        pass
+    raise Exception("should have raised NameError")
+except NameError:
+    pass
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
