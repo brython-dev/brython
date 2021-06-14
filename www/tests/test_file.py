@@ -1,6 +1,6 @@
 from browser import document, html, window
 
-with open('test.html') as f:
+with open('index.html') as f:
     f.read()
 
 with open('files/text-utf8.txt') as f:
