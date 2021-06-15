@@ -616,4 +616,10 @@ y = 3
 assert x * y == 48
 assert y * x == 48
 
+# augmented assignment on list item
+a = [1800]
+a[0] += -260.7
+assert a[0] == 1539.3
+
+
 print('passed all tests...')

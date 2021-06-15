@@ -877,7 +877,7 @@ $B.augm_item_add = function(obj, item, incr){
         var augm_func = ga(ga(obj, "__getitem__")(item), "__iadd__")
     }catch(err){
         ga(obj, "__setitem__")(item,
-            ga(ga(obj, "__getitem__")(item), "__add__")(incr))
+            $B.add(ga(obj, "__getitem__")(item), incr))
         return
     }
     augm_func(incr)
