@@ -2138,7 +2138,8 @@ assertRaises(SyntaxError, exec, "x{}")
 class Class():
 
     def method(self):
-      return __class__.__name__
+        assert "__class__" not in Class.method.__code__.co_varnames
+        return __class__.__name__
 
 assert Class().method() == "Class"
 
@@ -2974,7 +2975,7 @@ try:
     raise Exception("should have raised NameError")
 except NameError:
     pass
-    
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

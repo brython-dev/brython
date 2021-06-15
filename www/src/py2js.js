@@ -3340,6 +3340,7 @@ $DefCtx.prototype.transform = function(node, rank){
         var class_ref = "$locals_" + scope.parent_block.id.replace(/\./g, '_') +
             '.' + scope.context.tree[0].qualname
         // bind name __class__ in method
+        var had_class = this.parent.node.binding["__class__"] // already bound ?
         this.parent.node.binding["__class__"] = true
         // set its value to the class where the method is defined
         nodes.push($NodeJS("$locals.__class__ = " + class_ref))
@@ -3476,6 +3477,13 @@ $DefCtx.prototype.transform = function(node, rank){
             $NodeJS('    __module__ : "' + root.module + '",'))
 
         for(var attr in this.parent.node.binding){
+            // for attribute __class__, if function is a method and name
+            // __class__ was not explicitely bound, had_class is false and
+            // __class__ was added to binding only to be available inside the
+            // function. Don't add is to varnames
+            if(attr == "__class__" && is_method && ! had_class){
+                continue
+            }
             this.varnames[attr] = true
         }
         var co_varnames = []
@@ -3576,6 +3584,7 @@ $DefCtx.prototype.transform = function(node, rank){
 
     return offset
 }
+
 
 $DefCtx.prototype.to_js = function(func_name){
     this.js_processed = true
@@ -5873,7 +5882,7 @@ $IdCtx.prototype.boundBefore = function(scope){
 
     var node = $get_node(this),
         found = false
-    var $test = this.value == "a"
+    var $test = false // this.value == "a"
     if($test){
         console.log(this.value, "bound before")
         console.log("node", node)
