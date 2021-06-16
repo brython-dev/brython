@@ -32,9 +32,7 @@ Here are a few features and limitations imposed by the browser and Javascript :
 - the built-in function `open()` takes as argument the url of the file to
   open. Since it is read with an Ajax call, it must be in the same domain as
   the script. The object returned by `open()` has the usual reading and access
-  methods : `read, readlines, seek, tell, close`. Only text mode is supported:
-  the Ajax call is blocking and in this mode the `responseType` attribute
-  can't be set
+  methods : `read, readlines, seek, tell, close`.
 
 - by default, `print()` will output to the web browser console and so are the
   error messages. `sys.stderr` and `sys.stdout` can be assigned to an object

@@ -42,8 +42,7 @@ Algunas de las características y limitaciones impuestas por el navegador y Java
 - la función built-in `open()` toma como argumento la url del fichero a
   abrir. Debido a que se abre mediante una llamada Ajax, el fichero debe estar en el mismo dominio que
   el script que lo llama. El objeto devuelto por `open()` dispone de los métodos de lectura y acceso
-  habituales : `read, readlines, seek, tell, close`. Solo es posible usar el modo texto:
-  la llamada Ajax es bloqueante y de esto modo el atributo `responseType` no se puede definir.
+  habituales : `read, readlines, seek, tell, close`.
 
 - por defecto, `print()` mostrará la salida en la consola del navegador de la misma forma que sucede
   con los errores. `sys.stderr` y `sys.stdout` se pueden asignar a un objeto usando
