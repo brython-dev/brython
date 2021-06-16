@@ -958,20 +958,16 @@ the end.
     msg = "Position of the International Space Station at {}: {}"
 
     def complete(request):
-        import json
         import datetime
-        data = json.loads(request.responseText)
+        data = request.json
         position = data["iss_position"]
         ts = data["timestamp"]
         now = datetime.datetime.fromtimestamp(ts)
         document["zone10"].text = msg.format(now, position)
 
     def click(event):
-        req = ajax.ajax()
-        req.open("GET", url, True)
-        req.bind("complete", complete)
+        ajax.get(url, oncomplete=complete, mode="json")
         document["zone10"].text = "waiting..."
-        req.send()
 
     document["button10"].bind("click", click)
     </script>
