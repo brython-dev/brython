@@ -14,10 +14,10 @@ ajax.get("files/text-utf8.txt", encoding='utf-8',
     oncomplete=lambda req: show(req, 'bébé'),
     blocking=True)
 
-ajax.get("../doc/en/cookbook/file.txt", encoding='utf-8',
+ajax.get("../static_doc/en/cookbook/file.txt", encoding='utf-8',
     oncomplete=lambda req: show(req, 'Шея'))
 
-ajax.get("../doc/en/cookbook/file.txt", encoding='utf-8',
+ajax.get("../static_doc/en/cookbook/file.txt", encoding='utf-8',
     oncomplete=lambda req: show(req, 'Шея'),
     blocking=True)
 
