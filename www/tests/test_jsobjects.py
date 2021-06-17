@@ -171,4 +171,6 @@ assert Square2(10).name == "Square2"
 assert Square2(25).surface() == 625
 assert Square2(20).f() == 400
 
+# issue 1696
+window.jsFunction1696('asdf'.isupper)
 print("all tests ok...")

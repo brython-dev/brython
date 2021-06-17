@@ -250,7 +250,9 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
     }else if(klass === $B.Function || klass === $B.method){
         // Transform arguments
-        if(pyobj.prototype.constructor === pyobj && ! pyobj.$is_func){
+        if(pyobj.prototype &&
+                pyobj.prototype.constructor === pyobj &&
+                ! pyobj.$is_func){
             // pyobj is a Javascript constructor - this happens with
             // javascript.extends
             return pyobj

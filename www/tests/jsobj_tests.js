@@ -70,3 +70,7 @@ function Square(x){
 function get_float() {
   return 57.735026919;
 }
+
+// issue 1696
+function jsFunction1696() {
+}
