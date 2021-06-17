@@ -77,9 +77,17 @@ StringIO.getvalue = function(){
 StringIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
-    $.self.$content += $.data
+    if(! _b_.isinstance($.data, _b_.str)){
+        throw _b_.TypeError.$factory('string argument expected, got ' +
+            `'${$B.class_name($.data)}'`)
+    }
+    var text = $.self.$content,
+        position = $.self.$counter
+    text = text.substr(0, position) + $.data +
+        text.substr(position + $.data.length)
+    $.self.$content = text
     $.self.$counter += $.data.length
-    return _b_.None
+    return $.data.length
 }
 $B.set_func_names(StringIO, "_io")
 

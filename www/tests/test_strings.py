@@ -450,4 +450,24 @@ try:
 except TypeError as exc:
     assert exc.args[0] == "must be str, not int"
 
+# issue 1690
+s = StringIO('abc')
+assert s.tell() == 0
+assert s.write('defg') == 4
+assert s.tell() == 4
+assert s.getvalue() == 'defg'
+
+s = StringIO('abc')
+assert s.write('d') == 1
+assert s.tell() == 1
+assert s.getvalue() == 'dbc'
+assert s.write('e') == 1
+assert s.tell() == 2
+assert s.getvalue() == 'dec'
+
+s = StringIO('abc')
+s.seek(2)
+s.write('x')
+assert s.getvalue() == 'abx'
+
 print("passed all tests...")
