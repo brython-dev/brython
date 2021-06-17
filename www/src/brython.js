@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-16 13:53:45.157220"
-__BRYTHON__.timestamp=1623844425157
+__BRYTHON__.compiled_date="2021-06-17 15:28:20.869891"
+__BRYTHON__.timestamp=1623936500868
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -460,7 +460,7 @@ res+=' '.repeat(indent)
 res+=this.C
 if(this.children.length > 0){res+='{'}
 res+='\n'
-this.children.forEach(function(child){res+='['+i+'] '+child.show(indent+4)})
+this.children.forEach(function(child){res+=child.show(indent+4)})
 if(this.children.length > 0){res+=' '.repeat(indent)
 res+='}\n'}
 return res}
@@ -5565,14 +5565,14 @@ lnum=token.start[0]
 $pos=line2pos[lnum]+token.start[1]
 if(expect_indent &&
 ['INDENT','COMMENT','NL'].indexOf(token.type)==-1){C=C ||new $NodeCtx(node)
-$_SyntaxError(C,"expected an indented block")}else{expect_indent=false}
+$_SyntaxError(C,"expected an indented block")}
 switch(token.type){case 'ENDMARKER':
 if(root.yields_func_check){var save_pos=$pos
 for(const _yield of root.yields_func_check){$pos=_yield[1]
 _yield[0].check_in_function()}
 $pos=save_pos}
 if(indent !=0){$_SyntaxError(node.C,'expected an indented block')}
-if(node.C===undefined){node.parent.children.pop()}
+if(node.C===undefined ||node.C.tree.length==0){node.parent.children.pop()}
 return
 case 'ENCODING':
 case 'TYPE_COMMENT':
@@ -5602,12 +5602,13 @@ C=$transition(C,'id',name)}
 continue
 case 'OP':
 var op=token[1]
-if((op.length==1 && '()[]{}.,:='.indexOf(op)>-1)||
+if((op.length==1 && '()[]{}.,='.indexOf(op)>-1)||
 [':='].indexOf(op)>-1){if(braces_open.indexOf(op)>-1){braces_stack.push(token)}else if(braces_close[op]){if(braces_stack.length==0){$_SyntaxError(C,"unmatched '"+op+"'")}else{var last_brace=$B.last(braces_stack)
 if(last_brace.string==braces_close[op]){braces_stack.pop()}else{$_SyntaxError(C,[`closing parenthesis '${op}' does not `+
 `match opening parenthesis '`+
 `${last_brace.string}'`])}}}
-C=$transition(C,token[1])}else if(op=='...'){C=$transition(C,'ellipsis')}else if(op=='->'){C=$transition(C,'annotation')}else if(op==';'){if(C.type=='node' && C.tree.length==0){$_SyntaxError(C,'statement cannot start with ;')}
+C=$transition(C,token[1])}else if(op==':'){C=$transition(C,':')
+if(C.node && C.node.is_body_node){node=C.node}}else if(op=='...'){C=$transition(C,'ellipsis')}else if(op=='->'){C=$transition(C,'annotation')}else if(op==';'){if(C.type=='node' && C.tree.length==0){$_SyntaxError(C,'statement cannot start with ;')}
 $transition(C,'eol')
 var new_node=new $Node()
 new_node.line_num=token[2][0]+1
@@ -5630,8 +5631,9 @@ C=C ||new $NodeCtx(node)
 $transition(C,'eol')
 var new_node=new $Node()
 new_node.line_num=token[2][0]+1
-node.parent.add(new_node)
-C=null
+if(node.parent.children.length > 0 &&
+node.parent.children[0].is_body_node){node.parent.parent.add(new_node)}else{node.parent.add(new_node)}
+C=new $NodeCtx(new_node)
 node=new_node
 continue
 case 'DEDENT':
@@ -5641,13 +5643,10 @@ node.parent.parent.add(node)
 continue
 case 'INDENT':
 indent++
-node.parent.children.pop()
-var previous_node=$B.last(node.parent.children)
-if(previous_node===undefined ||
-$indented.indexOf(previous_node.C.tree[0].type)==-1){$pos=pos
+if(! expect_indent){$pos=pos
 C=C ||new $NodeCtx(node)
 $_SyntaxError(C,'unexpected indent',$pos)}
-previous_node.add(node)
+expect_indent=false
 continue}}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module

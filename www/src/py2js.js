@@ -325,7 +325,7 @@ $Node.prototype.show = function(indent){
     if(this.children.length > 0){res += '{'}
     res +='\n'
     this.children.forEach(function(child){
-       res += '[' + i + '] ' + child.show(indent + 4)
+       res += child.show(indent + 4)
     })
     if(this.children.length > 0){
       res += ' '.repeat(indent)
@@ -1834,7 +1834,9 @@ var $BodyCtx = $B.parser.$BodyCtx = function(context){
     // inline body for def, class, if, elif, else, try...
     // creates a new node, child of context node
     var ctx_node = context.parent
-    while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
+    while(ctx_node.type !== 'node'){
+        ctx_node = ctx_node.parent
+    }
     var tree_node = ctx_node.node
     var body_node = new $Node()
     body_node.is_body_node = true
@@ -10960,13 +10962,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         }
         lnum = token.start[0]
         $pos = line2pos[lnum] + token.start[1]
-        // console.log('token', token, 'lnum', lnum, '$pos', $pos)
+        // console.log('context', context, '\ntoken', token, 'lnum', lnum, '$pos', $pos)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
             $_SyntaxError(context, "expected an indented block")
-        }else{
-            expect_indent = false
         }
 
         switch(token.type){
@@ -10983,7 +10983,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 if(indent != 0){
                     $_SyntaxError(node.context, 'expected an indented block')
                 }
-                if(node.context === undefined){
+                if(node.context === undefined || node.context.tree.length == 0){
                     node.parent.children.pop()
                 }
                 return
@@ -11034,7 +11034,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 continue
             case 'OP':
                 var op = token[1]
-                if((op.length == 1 && '()[]{}.,:='.indexOf(op) > -1) ||
+                if((op.length == 1 && '()[]{}.,='.indexOf(op) > -1) ||
                         [':='].indexOf(op) > -1){
                     if(braces_open.indexOf(op) > -1){
                         braces_stack.push(token)
@@ -11054,6 +11054,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                        }
                     }
                     context = $transition(context, token[1])
+                }else if(op == ':'){
+                    context = $transition(context, ':')
+                    if(context.node && context.node.is_body_node){
+                        node = context.node
+                    }
                 }else if(op == '...'){
                     context = $transition(context, 'ellipsis')
                 }else if(op == '->'){
@@ -11095,8 +11100,13 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 // Create a new node
                 var new_node = new $Node()
                 new_node.line_num = token[2][0] + 1
-                node.parent.add(new_node)
-                context = null
+                if(node.parent.children.length > 0 &&
+                        node.parent.children[0].is_body_node){
+                    node.parent.parent.add(new_node)
+                }else{
+                    node.parent.add(new_node)
+                }
+                context = new $NodeCtx(new_node)
                 node = new_node
                 continue
             case 'DEDENT':
@@ -11113,17 +11123,14 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 // to "null". It was attached to the current parent. Detach
                 // it
                 indent++
-                node.parent.children.pop()
+                // node.parent.children.pop()
                 // Check that it supports indentation
-                var previous_node = $B.last(node.parent.children)
-                if(previous_node === undefined ||
-                        $indented.indexOf(previous_node.context.tree[0].type) == -1){
+                if(! expect_indent){
                     $pos = pos
                     context = context || new $NodeCtx(node)
                     $_SyntaxError(context, 'unexpected indent', $pos)
                 }
-                // Attach new_node (currently empty) to current
-                previous_node.add(node)
+                expect_indent = false
                 continue
         }
     }

@@ -717,4 +717,21 @@ class MyClass(list):
 a = MyClass([1, 2, [3, 4, 5]])
 assert type(a[2]) is MyClass
 
+# issue 1693
+t = []
+if 1: t.append('a');t.append('b')
+else: t.append('c')
+
+assert t == ['a', 'b']
+
+t = []
+if 1: t.append('a');t.append('b');
+else: t.append('c')
+
+assert t == ['a', 'b']
+
+lambda:{};t.append('c');
+assert t[-1] == 'c'
+
+
 print('passed all tests...')
