@@ -205,7 +205,7 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
-    //console.log("syntax error", context, "msg", msg, "indent", indent)
+    // console.log("syntax error", context, "msg", msg, "indent", indent)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
@@ -10966,7 +10966,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
-            $_SyntaxError(context, "expected an indented block")
+            $_SyntaxError(context, "expected an indented block", 1)
         }
 
         switch(token.type){
@@ -10981,7 +10981,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                     $pos = save_pos
                 }
                 if(indent != 0){
-                    $_SyntaxError(node.context, 'expected an indented block')
+                    $_SyntaxError(node.context, 'expected an indented block', 1)
                 }
                 if(node.context === undefined || node.context.tree.length == 0){
                     node.parent.children.pop()

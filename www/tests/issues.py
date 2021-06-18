@@ -2976,6 +2976,9 @@ try:
 except NameError:
     pass
 
+# issue 1699
+assertRaises(IndentationError, exec, 'def f():')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
