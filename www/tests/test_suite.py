@@ -733,5 +733,12 @@ assert t == ['a', 'b']
 lambda:{};t.append('c');
 assert t[-1] == 'c'
 
+# issue 1697
+try:
+    for x1697.y in [0]:
+        pass
+    raise Exception('should have raised NameError')
+except NameError:
+    pass
 
 print('passed all tests...')

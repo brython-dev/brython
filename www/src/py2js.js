@@ -5752,6 +5752,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
         // the name has no value (cf. issue 1233)
         this.no_bindings = true
         // $bind(value, scope, this)
+        console.log('id in target list', this)
         this.bound = true
     }
 
@@ -5812,6 +5813,10 @@ $IdCtx.prototype.transition = function(token, value){
                 return new $AbstractExprCtx(
                     new $KwArgCtx(context.parent), false)
             }
+            return $transition(context.parent, token, value)
+        case '.':
+            // If followed by ".", the id cannot be bound
+            delete this.bound
             return $transition(context.parent, token, value)
         case 'op':
             return $transition(context.parent, token, value)
@@ -5983,7 +5988,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "a"
+    var $test = val == "x1697"
 
     if($test){
         console.log("ENTER IdCtx.py2js", "this", this)
@@ -10304,7 +10309,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    //console.log("context", context, "token", token, value, '$pos', $pos)
+    // console.log("context", context, "token", token, value, '$pos', $pos)
     return context.transition(token, value)
 }
 

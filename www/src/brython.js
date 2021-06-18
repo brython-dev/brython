@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-18 12:26:09.529521"
-__BRYTHON__.timestamp=1624011969529
+__BRYTHON__.compiled_date="2021-06-18 22:15:51.722251"
+__BRYTHON__.timestamp=1624047351721
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3187,6 +3187,7 @@ else{ctx.locals.push(value)}}}
 ctx=ctx.parent}
 if($parent_match(C,{type:'target_list'})){
 this.no_bindings=true
+console.log('id in target list',this)
 this.bound=true}
 if(["def","generator"].indexOf(scope.ntype)>-1){
 var _ctx=this.parent
@@ -3207,6 +3208,9 @@ if(C.parent.type=='expr' &&
 C.parent.parent !==undefined &&
 C.parent.parent.type=='call_arg'){return new $AbstractExprCtx(
 new $KwArgCtx(C.parent),false)}
+return $transition(C.parent,token,value)
+case '.':
+delete this.bound
 return $transition(C.parent,token,value)
 case 'op':
 return $transition(C.parent,token,value)
@@ -3264,7 +3268,7 @@ return found}
 $IdCtx.prototype.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 var val=this.value
-var $test=false 
+var $test=val=="x1697"
 if($test){console.log("ENTER IdCtx.py2js","this",this)}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
