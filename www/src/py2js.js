@@ -5752,7 +5752,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
         // the name has no value (cf. issue 1233)
         this.no_bindings = true
         // $bind(value, scope, this)
-        console.log('id in target list', this)
         this.bound = true
     }
 
