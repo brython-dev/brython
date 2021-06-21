@@ -214,8 +214,11 @@ $B.tokenizer = function*(src){
                   }else if(indent < $last(indents)){
                       var ix = indents.indexOf(indent)
                       if(ix == -1){
-                          throw Error('IndentationError line ' + line_num)
-                      }
+                          var error = Error('unindent does not match ' +
+                              'any outer indentation level')
+                          error.type = 'IndentationError'
+                          error.line_num = line_num
+                          throw error                      }
                       for(var i = indents.length - 1; i > ix; i--){
                           indents.pop()
                           yield Token('DEDENT', '', [line_num, indent],
@@ -454,7 +457,7 @@ $B.tokenizer = function*(src){
                         if(! escaped){
                             // string end
                             var string_line = line
-                            // If the string spans over several lines, "line" 
+                            // If the string spans over several lines, "line"
                             // is extended until the last quote
                             if(line_num > string_start[0]){
                                 string_line = src.substring(
@@ -552,7 +555,7 @@ $B.tokenizer = function*(src){
                     number += char
                 }else if(char == '_'){
                     if(number.endsWith('_')){
-                        throw Error('SyntaxError: consecutive _ in number')
+                        throw SyntaxError('consecutive _ in number')
                     }
                     number += char
                 }else if(char == '.' && number.indexOf(char) == -1){

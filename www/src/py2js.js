@@ -10940,7 +10940,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
             if(err.type == 'IndentationError'){
                 context = context || new $NodeCtx(node)
                 $pos = line2pos[err.line_num]
-                $_SyntaxError(context, err.message, 'indent')
+                $_SyntaxError(context, err.message, 1)
             }else if(err instanceof SyntaxError){
                 if(braces_stack.length > 0){
                     var last_brace = $B.last(braces_stack),

@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-21 21:13:53.274801"
-__BRYTHON__.timestamp=1624302833274
+__BRYTHON__.compiled_date="2021-06-21 22:58:07.140292"
+__BRYTHON__.timestamp=1624309087140
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -187,7 +187,11 @@ pos+=2
 continue}
 if(indents.length==0 ||indent > $last(indents)){indents.push(indent)
 yield Token('INDENT','',[line_num,0],[line_num,indent],line)}else if(indent < $last(indents)){var ix=indents.indexOf(indent)
-if(ix==-1){throw Error('IndentationError line '+line_num)}
+if(ix==-1){var error=Error('unindent does not match '+
+'any outer indentation level')
+error.type='IndentationError'
+error.line_num=line_num
+throw error }
 for(var i=indents.length-1;i > ix;i--){indents.pop()
 yield Token('DEDENT','',[line_num,indent],[line_num,indent],line)}}
 state=null}else{
@@ -347,7 +351,7 @@ break}
 break
 case 'NUMBER':
 if(num_type=='' && unicode_tables.Nd[ord(char)]){number+=char}else if(num_type=='b' && '01'.indexOf(char)>-1){number+=char}else if(num_type=='o' && '01234567'.indexOf(char)>-1){number+=char}else if(num_type=='x' &&
-'0123456789abcdef'.indexOf(char.toLowerCase())>-1){number+=char}else if(char=='_'){if(number.endsWith('_')){throw Error('SyntaxError: consecutive _ in number')}
+'0123456789abcdef'.indexOf(char.toLowerCase())>-1){number+=char}else if(char=='_'){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}
 number+=char}else if(char=='.' && number.indexOf(char)==-1){number+=char}else if(char.toLowerCase()=='e' &&
 number.toLowerCase().indexOf('e')==-1){number+=char}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){number+=char
@@ -5567,7 +5571,7 @@ for(var pos=0,len=src.length;pos < len;pos++){if(src[pos]=='\n'){line_num++
 line2pos[line_num]=pos+1}}
 while(true){try{var token=tokenizer.next()}catch(err){if(err.type=='IndentationError'){C=C ||new $NodeCtx(node)
 $pos=line2pos[err.line_num]
-$_SyntaxError(C,err.message,'indent')}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
+$_SyntaxError(C,err.message,1)}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
 $pos=line2pos[start[0]]+start[1]
 $_SyntaxError(C,[`'${last_brace.string} was `+
 'never closed'])}
