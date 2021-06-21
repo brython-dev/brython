@@ -94,10 +94,6 @@ $B.tokenizer = function*(src){
 
     yield Token('ENCODING', 'utf-8', [0, 0], [0, 0], '')
 
-    if(! src.endsWith('\n')){
-        src += '\n'
-    }
-
     while(pos < src.length){
 
         char = src[pos]
@@ -110,7 +106,7 @@ $B.tokenizer = function*(src){
         pos++
         switch(state){
             case "line_start":
-                line = get_line_at(src, pos)
+                line = get_line_at(src, pos - 1)
                 line_start = pos
                 line_num++
                 if(char == "\n"){
@@ -125,7 +121,6 @@ $B.tokenizer = function*(src){
                 }else if(char == '\r'){
                     yield Token('NL', '\r', [line_num, 0], [line_num, 1],
                         line)
-                    pos++
                     continue
                 }else if(char == '\f'){
                     // form feed : ignore (present eg in email.header)
@@ -556,6 +551,13 @@ $B.tokenizer = function*(src){
     if(braces.length > 0){
         throw SyntaxError('EOF in multi-line statement')
     }
+
+    if(! src.endsWith('\n')){
+        yield Token('NEWLINE', '', [line_num, pos - line_start + 1],
+            [line_num, pos - line_start + 2], '')
+        line_num++
+    }
+
     switch(state){
         case 'line_start':
             line_num++
@@ -577,16 +579,11 @@ $B.tokenizer = function*(src){
             throw SyntaxError(
                 `unterminated string literal (detected at line ${line_num})`)
     }
-    if(state != 'line_start'){
-        yield Token('NEWLINE', '', [line_num, pos - line_start + 1],
-            [line_num, pos - line_start + 2], line)
-        line_num++
-    }
     while(indents.length > 0){
         indents.pop()
-        yield Token('DEDENT', '', [line_num, 0], [line_num, 0], line)
+        yield Token('DEDENT', '', [line_num, 0], [line_num, 0], '')
     }
-    yield Token('ENDMARKER', '', [line_num, 0], [line_num, 0], line)
+    yield Token('ENDMARKER', '', [line_num, 0], [line_num, 0], '')
 
 }
 })(__BRYTHON__)

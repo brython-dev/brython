@@ -5987,7 +5987,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = val == "x1697"
+    var $test = false // val == "x1697"
 
     if($test){
         console.log("ENTER IdCtx.py2js", "this", this)

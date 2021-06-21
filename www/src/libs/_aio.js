@@ -110,7 +110,7 @@ function ajax(){
                     resolve(this)
                 }
             }
-            if(args.body && 
+            if(args.body &&
                     ['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(method) > -1){
                 xhr.send(args.body)
             }else{
@@ -212,6 +212,7 @@ function run(coro){
             // coro.$stack is a snapshot of the frames stack when the async
             // function was called. Restore it to get the correct call tree
             console.log("Exception in asynchronous function")
+            console.log("class", err.__class__)
             err.$stack = coro.$stack.concat([$B.last(err.$stack)])
             $B.handle_error(err)
         }

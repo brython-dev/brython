@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-19 14:51:04.852713"
-__BRYTHON__.timestamp=1624107064852
+__BRYTHON__.compiled_date="2021-06-21 16:34:19.987840"
+__BRYTHON__.timestamp=1624286059987
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -142,7 +142,6 @@ pos++}}
 $B.tokenizer=function*(src){var unicode_tables=$B.unicode_tables,whitespace=' \t\n',operators='*+-/%&^~=<>',allowed_after_identifier=',.()[]:;',string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
 var state="line_start",char,cp,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line_num=0,line_start=1,line
 yield Token('ENCODING','utf-8',[0,0],[0,0],'')
-if(! src.endsWith('\n')){src+='\n'}
 while(pos < src.length){char=src[pos]
 cp=src.charCodeAt(pos)
 if(cp >=0xD800 && cp <=0xDBFF){cp=ord(src.substr(pos,2))
@@ -150,14 +149,13 @@ char=src.substr(pos,2)
 pos++}
 pos++
 switch(state){case "line_start":
-line=get_line_at(src,pos)
+line=get_line_at(src,pos-1)
 line_start=pos
 line_num++
 if(char=="\n"){yield Token('NL','\n',[line_num,0],[line_num,1],line)
 continue}else if(char=='\r' && src[pos]=='\n'){yield Token('NL','\r\n',[line_num,0],[line_num,2],line)
 pos++
 continue}else if(char=='\r'){yield Token('NL','\r',[line_num,0],[line_num,1],line)
-pos++
 continue}else if(char=='\f'){
 if(src.substr(pos,2)=='\r\n'){yield Token('NL','\f'+src[pos],[line_num,pos-line_start+1],[line_num,pos-line_start+3],line)
 pos+=2
@@ -343,6 +341,8 @@ state=null
 pos--}
 break}}
 if(braces.length > 0){throw SyntaxError('EOF in multi-line statement')}
+if(! src.endsWith('\n')){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+2],'')
+line_num++}
 switch(state){case 'line_start':
 line_num++
 break
@@ -355,11 +355,9 @@ break
 case 'STRING':
 throw SyntaxError(
 `unterminated string literal (detected at line ${line_num})`)}
-if(state !='line_start'){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+2],line)
-line_num++}
 while(indents.length > 0){indents.pop()
-yield Token('DEDENT','',[line_num,0],[line_num,0],line)}
-yield Token('ENDMARKER','',[line_num,0],[line_num,0],line)}})(__BRYTHON__)
+yield Token('DEDENT','',[line_num,0],[line_num,0],'')}
+yield Token('ENDMARKER','',[line_num,0],[line_num,0],'')}})(__BRYTHON__)
 ;
 
 ;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
@@ -3267,7 +3265,7 @@ return found}
 $IdCtx.prototype.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 var val=this.value
-var $test=val=="x1697"
+var $test=false 
 if($test){console.log("ENTER IdCtx.py2js","this",this)}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
