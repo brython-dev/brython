@@ -1825,8 +1825,13 @@ $AwaitCtx.prototype.transition = function(token, value){
 }
 
 $AwaitCtx.prototype.to_js = function(){
+    // Save execution stack before awaiting.
+    // If the promise is rejected, restore it before throwing the
+    // exception.
+    // cf. issue #1701
     return 'var save_stack = $B.save_stack();' +
-        'await ($B.promise(' + $to_js(this.tree) + '));' +
+        'try{await ($B.promise(' + $to_js(this.tree) + '))}' +
+        'catch(err){$B.restore_stack(save_stack, $locals);throw err};' +
         '$B.restore_stack(save_stack, $locals); '
 }
 

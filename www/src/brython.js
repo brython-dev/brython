@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-21 22:58:07.140292"
-__BRYTHON__.timestamp=1624309087140
+__BRYTHON__.compiled_date="2021-06-22 18:46:24.842100"
+__BRYTHON__.timestamp=1624380384842
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1273,8 +1273,10 @@ p=p.parent}}
 $AwaitCtx.prototype.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
-$AwaitCtx.prototype.to_js=function(){return 'var save_stack = $B.save_stack();'+
-'await ($B.promise('+$to_js(this.tree)+'));'+
+$AwaitCtx.prototype.to_js=function(){
+return 'var save_stack = $B.save_stack();'+
+'try{await ($B.promise('+$to_js(this.tree)+'))}'+
+'catch(err){$B.restore_stack(save_stack, $locals);throw err};'+
 '$B.restore_stack(save_stack, $locals); '}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
@@ -8480,7 +8482,7 @@ eval(bltns)
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
 frame[1].$current_exception=undefined}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
-if(frame===undefined){console.log("no frame",exc)}
+if(frame===undefined){console.log("no frame",exc,exc.__class__,exc.args)}
 frame[1].$current_exception=$B.exception(exc)}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}

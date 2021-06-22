@@ -11,7 +11,7 @@ $B.del_exc = function(){
 $B.set_exc = function(exc){
     var frame = $B.last($B.frames_stack)
     if(frame === undefined){
-        console.log("no frame", exc)
+        console.log("no frame", exc, exc.__class__, exc.args)
     }
     frame[1].$current_exception = $B.exception(exc)
 }
