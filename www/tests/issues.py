@@ -2979,6 +2979,16 @@ except NameError:
 # issue 1699
 assertRaises(IndentationError, exec, 'def f():')
 
+# issue 1703
+def get_foobar():
+    global foobar
+    return foobar
+
+global foobar
+foobar = 'foobar'
+
+assert get_foobar() == "foobar"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

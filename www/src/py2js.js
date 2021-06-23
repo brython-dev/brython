@@ -5678,7 +5678,12 @@ $GlobalCtx.prototype.add = function(name){
         $_SyntaxError(this, ["annotated name '" + name +
             "' can't be global"])
     }
+    if(this.scope.type == "module"){
+        // "global x" at module level does nothing
+        return
+    }
     if(this.scope.binding && this.scope.binding[name]){
+        console.log('error globals, scope', this.scope)
         $pos = this.$pos - 1
         $_SyntaxError(this, [`name '${name}' is parameter and global`])
     }

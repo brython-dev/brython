@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-22 18:46:24.842100"
-__BRYTHON__.timestamp=1624380384842
+__BRYTHON__.compiled_date="2021-06-23 15:42:08.639690"
+__BRYTHON__.timestamp=1624455728639
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3167,7 +3167,10 @@ break}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $GlobalCtx.prototype.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(this,["annotated name '"+name+
 "' can't be global"])}
-if(this.scope.binding && this.scope.binding[name]){$pos=this.$pos-1
+if(this.scope.type=="module"){
+return}
+if(this.scope.binding && this.scope.binding[name]){console.log('error globals, scope',this.scope)
+$pos=this.$pos-1
 $_SyntaxError(this,[`name '${name}' is parameter and global`])}
 this.scope.globals.add(name)
 var mod=this.scope.parent_block
