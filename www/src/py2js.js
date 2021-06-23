@@ -5997,10 +5997,9 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "x1697"
-
+    var $test = false // val == "n"
     if($test){
-        console.log("ENTER IdCtx.py2js", "this", this)
+        console.log("ENTER IdCtx.py2js line", $get_node(this).line_num, "this", this)
     }
 
     // Special cases
@@ -6133,8 +6132,8 @@ $IdCtx.prototype.to_js = function(arg){
                 if(this.augm_assign){
                     return global_ns + '["' + val + '"]'
                 }else{
-                    return '$B.$global_search("' + val + '", ' +
-                        search_ids + ')'
+                    return '$B.$check_def("' + val + '", ' + global_ns +
+                        '["' + val + '"])'
                 }
             }
         }

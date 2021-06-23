@@ -183,6 +183,20 @@ async def test_async_future_exc():
         return
     assert False, "Error has not been raised"
 
+n1571 = 0
+t1571 = []
+
+async def test_fstring_with_global():
+    global n1571
+    async def g():
+        global n1571
+        n1571 += 1
+        t1571.append(f'{n1571}')
+    for p in range(3):
+        await g()
+    assert t1571 == ['1', '2', '3']
+    print('fstring with global ok')
+
 async def main(secs, urls):
     print(f"wait {secs} seconds...")
     await aio.sleep(secs)
@@ -205,7 +219,10 @@ async def main(secs, urls):
     await test_async_future()
     await test_async_future_exc()
 
+    await test_fstring_with_global()
+
     await raise_error()
+
 
 print("Start...")
 aio.run(main(1, ["test_suite.py", "index.html", "unknown.txt"]),

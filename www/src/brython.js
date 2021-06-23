@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-23 15:42:08.639690"
-__BRYTHON__.timestamp=1624455728639
+__BRYTHON__.compiled_date="2021-06-23 17:52:50.497332"
+__BRYTHON__.timestamp=1624463570497
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3291,7 +3291,7 @@ $IdCtx.prototype.to_js=function(arg){
 if(this.result !==undefined && this.scope.ntype=='generator'){return this.result}
 var val=this.value
 var $test=false 
-if($test){console.log("ENTER IdCtx.py2js","this",this)}
+if($test){console.log("ENTER IdCtx.py2js line",$get_node(this).line_num,"this",this)}
 if(val=='__BRYTHON__' ||val=='$B'){return val}
 if(val.startsWith("comp_result_"+$B.lambda_magic)){if(this.bound){return "var "+val}
 return val}
@@ -3332,8 +3332,8 @@ while(1){if(scope.globals !==undefined &&
 scope.globals.has(val)){if($test){console.log("in globals of",scope.id,'globals',gs)}
 if(this.boundBefore(gs)){if($test){console.log("bound before in gs",gs,global_ns)}
 return global_ns+'["'+val+'"]'}else{if($test){console.log("use global search",this)}
-if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$global_search("'+val+'", '+
-search_ids+')'}}}
+if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$check_def("'+val+'", '+global_ns+
+'["'+val+'"])'}}}
 if($test){console.log("scope",scope.id,scope,"innermost",innermost,"scope is innermost",scope===innermost,"bound_before",bound_before,"found",found.slice())}
 if(scope===innermost){
 if(bound_before){if(bound_before.indexOf(val)>-1){found.push(scope)}else if(scope.C &&
@@ -13559,7 +13559,7 @@ var ce=current.expression,last_char=ce.charAt(ce.length-1),last_char_re=('()'.in
 if(ce.length==0 ||
 nb_paren > 0 ||
 string.charAt(i+1)=="=" ||
-"=!<>:".search(last_char_re)>-1){current.expression+=car 
+"=!<>:".search(last_char_re)>-1){current.expression+=car
 i+=1}else{
 tail=car
 while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)

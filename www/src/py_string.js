@@ -2760,7 +2760,7 @@ $B.parse_fstring = function(string){
                             nb_paren > 0 ||
                             string.charAt(i + 1) == "=" ||
                             "=!<>:".search(last_char_re) > -1){
-                        current.expression += car //+ string.charAt(i + 1)
+                        current.expression += car
                         i += 1
                     }else{
                         // add debug string
@@ -2788,7 +2788,9 @@ $B.parse_fstring = function(string){
             }
         }
     }
-    if(current.length > 0){elts.push(current)}
+    if(current.length > 0){
+        elts.push(current)
+    }
     return elts
 }
 
