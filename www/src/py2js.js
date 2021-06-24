@@ -374,10 +374,19 @@ $Node.prototype.transform = function(rank){
     // we must jump to the next original node, skipping those that have
     // just been inserted
     if(this.has_await){
+        // If node has an "await" statement, insert a node to save
+        // execution stack, so that it can be restored when the awaitable
+        // is completed
         this.parent.insert(rank,
             $NodeJS("var save_stack = $B.save_stack()"))
-        this.parent.insert(rank + 2,
-            $NodeJS("$B.restore_stack(save_stack, $locals)"))
+        if(! (this.context && this.context.tree.length > 0 &&
+                this.context.tree[0].type == 'return')){
+            // Add node to restore execution stack
+            // This is already done in $ReturnCtx.to_js() before returning the
+            // value
+            this.parent.insert(rank + 2,
+                $NodeJS("$B.restore_stack(save_stack, $locals)"))
+        }
         this.has_await = false // avoid recursion
         return 1
     }
@@ -8638,7 +8647,11 @@ $ReturnCtx.prototype.to_js = function(){
     'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n' + indent +
     '$B.leave_frame'
     if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
-    js += '({$locals});\n' + indent + 'return $res'
+    js += '({$locals});\n'
+    if(this.is_await){
+        js += indent + '$B.restore_stack(save_stack, $locals)\n'
+    }
+    js += indent + 'return $res'
     return js
 }
 

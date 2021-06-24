@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-24 20:41:16.128962"
-__BRYTHON__.timestamp=1624560076128
+__BRYTHON__.compiled_date="2021-06-24 21:53:33.187342"
+__BRYTHON__.timestamp=1624564413187
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -489,8 +489,11 @@ this.res.push('}\n')}}
 this.js=this.res.join('')
 return this.js}
 $Node.prototype.transform=function(rank){
-if(this.has_await){this.parent.insert(rank,$NodeJS("var save_stack = $B.save_stack()"))
-this.parent.insert(rank+2,$NodeJS("$B.restore_stack(save_stack, $locals)"))
+if(this.has_await){
+this.parent.insert(rank,$NodeJS("var save_stack = $B.save_stack()"))
+if(!(this.C && this.C.tree.length > 0 &&
+this.C.tree[0].type=='return')){
+this.parent.insert(rank+2,$NodeJS("$B.restore_stack(save_stack, $locals)"))}
 this.has_await=false 
 return 1}
 if(this.has_yield && ! this.has_yield.transformed){
@@ -4594,7 +4597,9 @@ var js='var $res = '+$to_js(this.tree)+';\n'+indent+
 'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n'+indent+
 '$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
-js+='({$locals});\n'+indent+'return $res'
+js+='({$locals});\n'
+if(this.is_await){js+=indent+'$B.restore_stack(save_stack, $locals)\n'}
+js+=indent+'return $res'
 return js}
 var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
 this.type='single_kw'
