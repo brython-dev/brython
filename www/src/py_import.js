@@ -389,6 +389,12 @@ VFSLoader.exec_module = function(self, modobj){
             // Initialise $B.imported[parent]
             var mod_js = $B.precompiled[parent],
                 is_package = modobj.$is_package
+            if(mod_js === undefined){
+                // Might be the case if the code in package __init__.py
+                // imports a submodule : the parent of the submodule is not
+                // yet in precompiled
+                continue
+            }
             if(Array.isArray(mod_js)){mod_js = mod_js[0]}
             var mod = $B.imported[parent] = Module.$factory(parent,
                 undefined, is_package)

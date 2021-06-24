@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-24 07:59:19.351623"
-__BRYTHON__.timestamp=1624514359351
+__BRYTHON__.compiled_date="2021-06-24 20:41:16.128962"
+__BRYTHON__.timestamp=1624560076128
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -155,7 +155,6 @@ pos++
 switch(state){case "line_start":
 line=get_line_at(src,pos-1)
 line_start=pos
-console.log('at line stazrt',src.substr(line_start,10))
 line_num++
 if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))){
 yield Token('NL',mo[0],[line_num,0],[line_num,mo[0].length],line)
@@ -10172,6 +10171,8 @@ for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
 if($B.imported.hasOwnProperty(parent)&&
 $B.imported[parent].__initialized__){continue}
 var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
+if(mod_js===undefined){
+continue}
 if(Array.isArray(mod_js)){mod_js=mod_js[0]}
 var mod=$B.imported[parent]=Module.$factory(parent,undefined,is_package)
 mod.__initialized__=true
