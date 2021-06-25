@@ -264,6 +264,7 @@ function run_py(module_contents, path, module, compiled) {
 }
 
 $B.run_py = run_py // used in importlib.basehook
+$B.run_js = run_js
 
 var ModuleSpec = $B.make_class("ModuleSpec",
     function(fields) {
