@@ -277,27 +277,35 @@ function RandomStream(seed) {
         if(seed === undefined){
             seed = Date.now()
         }
+        /*
         if(Array.isArray(seed)){ // Brython-specific, for debugging
             init_by_array(seed, seed.length)
             return
         }
+        */
         var keys = []
         if(typeof seed == "number" || _b_.isinstance(seed, _b_.int)){
-            var int32 = Math.pow(2, 32)
+            var int32 = Math.pow(2, 32),
+                int32_1 = int32 - 1
+            // Transform to long integer
             seed = $B.long_int.$factory(seed)
+            // Take abs(seed)
             seed = $B.long_int.__abs__(seed)
-            while($B.long_int.__ge__(seed, int32)){
+            // decomposition in factors of 2 ** 32
+            while($B.long_int.__ge__(seed, int32_1)){
                 var dm = _b_.divmod(seed, int32)
+                // Rest is a JS number (< 2 ** 32)
                 keys.push(dm[1])
+                // Quotient is either a JS number or a instance of long_int
+                // but seed must be long_int
                 seed = dm[0].value === undefined ?
                     $B.long_int.$factory(dm[0]) : dm[0]
             }
-            keys.splice(0, 0, parseInt(seed.value))
-            keys = keys.reverse()
+            keys.push(parseInt(seed.value))
         }else if(typeof seed != "number"){
             seed = parseInt(seed, 10)
             if((seed !== 0 && ! seed) || isNaN(seed)){
-                throw _b_.ValueError.$factory("Bad seed: " + 
+                throw _b_.ValueError.$factory("Bad seed: " +
                     _b_.str.$factory(seed))
             }
         }
@@ -885,6 +893,8 @@ Random.seed = function(){
             }
             a = $B.add(a, $B.$getattr(sha512(a), 'digest')())
             a = _b_.int.from_bytes(a, 'big')
+        }else if(false && Array.isArray(a)){
+            // for debugging
         }else if(!_b_.isinstance(a, _b_.int)){
             throw _b_.TypeError.$factory('wrong argument')
         }
