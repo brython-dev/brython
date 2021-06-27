@@ -274,12 +274,19 @@ function RandomStream(seed) {
     var random = genrand_res53
 
     random.seed = function(seed){
-        if(seed === undefined){seed = Date.now()}
-        if(typeof seed != "number"){seed = parseInt(seed, 10)}
+        if(seed === undefined){
+            seed = Date.now()
+        }
+        if(typeof seed != "number"){
+            seed = parseInt(seed, 10)
+        }
+        if(seed < 0){
+            seed = -seed
+        }
         if((seed !== 0 && ! seed) || isNaN(seed)){
             throw _b_.ValueError.$factory("Bad seed: " + _b_.str.$factory(seed))
         }
-        init_genrand(seed)
+        init_by_array([seed], 1)
     }
 
     random.seed(seed)
@@ -291,11 +298,15 @@ function RandomStream(seed) {
     random.res53 = genrand_res53
 
     // Added for compatibility with Python
-    random.getstate = function(){return [VERSION, mt, mti]}
+    random.getstate = function(){
+        return $B.fast_tuple([VERSION,
+            $B.fast_tuple(mt.concat([mti]))
+            , _b_.None])
+    }
 
     random.setstate = function(state){
-        mt = state[1]
-        mti = state[2]
+        mt = state[1].slice(0, state[1].length - 1)
+        mti = state[1][state[1].length - 1]
     }
 
     return random
@@ -713,7 +724,7 @@ Random.randrange = function(){
 
     if(($B.rich_comp("__gt__", step, 0) &&
             $B.rich_comp("__ge__", start, stop)) ||
-            ($B.rich_comp("__lt__", step, 0) && 
+            ($B.rich_comp("__lt__", step, 0) &&
              $B.rich_comp("__le__", start, stop))){
         throw _b_.ValueError.$factory("empty range for randrange() (" +
             start + ", " + stop + ", " + step + ")")
