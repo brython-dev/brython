@@ -844,6 +844,7 @@ $B.delitem_slice = function(obj, slice){
                 obj.splice(slice.start, slice.stop - slice.start)
             }
         }
+      return null
     }
     var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
         null)
