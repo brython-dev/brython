@@ -826,6 +826,14 @@ $B.$delitem = function(obj, item){
 }
 
 $B.delitem_slice = function(obj, slice){
+    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
+        null)
+
+    if(di !== null){
+      return di(obj, slice)
+    }
+
+
     if(Array.isArray(obj)){
         if(slice.start === _b_.None && slice.stop === _b_.None){
             if(slice.step === _b_.None || slice.step == 1 ||
@@ -844,16 +852,11 @@ $B.delitem_slice = function(obj, slice){
                 obj.splice(slice.start, slice.stop - slice.start)
             }
         }
-      return null
+      return null;
     }
-    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
-        null)
 
-    if(di === null){
-        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
-            "' object doesn't support item deletion")
-    }
-    return di(obj, slice)
+     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+         "' object doesn't support item deletion")
 }
 
 // augmented item
