@@ -559,12 +559,20 @@
             }
         ),
         meta_path: _b_.property.$factory(
-            function(){return $B.meta_path},
-            function(self, obj, value){ $B.meta_path = value }
+            function(){
+                return $B.meta_path
+            },
+            function(self, obj, value){
+                $B.meta_path = value
+            }
         ),
         path_hooks: _b_.property.$factory(
-            function(){return $B.path_hooks},
-            function(self, obj, value){ $B.path_hooks = value }
+            function(){
+                return $B.path_hooks
+            },
+            function(self, obj, value){
+                $B.path_hooks = value
+            }
         ),
         path_importer_cache: _b_.property.$factory(
             function(){
@@ -589,25 +597,36 @@
             return _b_.None
         },
         stderr: _b_.property.$factory(
-            function(){return $B.stderr},
-            function(self, value){$B.stderr = value}
+            function(){
+                return $B.stderr
+            },
+            function(self, value){
+                $B.stderr = value
+            }
         ),
         stdout: _b_.property.$factory(
-            function(){return $B.stdout},
+            function(){
+                return $B.stdout
+            },
             function(self, value){
                 $B.stdout = value
             }
         ),
         stdin: _b_.property.$factory(
-            function(){return $B.stdin},
+            function(){
+                return $B.stdin
+            },
             function(self, value){
                 $B.stdin = value
             }
         ),
         vfs: _b_.property.$factory(
             function(){
-                if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
-                else{return _b_.None}
+                if($B.hasOwnProperty("VFS")){
+                    return $B.obj_dict($B.VFS)
+                }else{
+                    return _b_.None
+                }
             },
             function(){
                 throw _b_.TypeError.$factory("Read only property 'sys.vfs'")

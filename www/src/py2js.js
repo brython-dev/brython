@@ -5806,16 +5806,17 @@ $IdCtx.prototype.transition = function(token, value){
     var context = this
     if(context.value == '$$case' && context.parent.parent.type == "node"){
         // case at the beginning of a line : if the line ends with a colon
-        // (:), and the parent node is a "match", $NodeCtx has set the
-        // attribute "is_case" of node to true
-        if(context.parent.parent.node.is_case){
+        // (:), it is the "soft keyword" `case` for pattern matching
+        var start = context.parent.$pos,
+            src = $get_module(this).src
+        if(line_ends_with_comma(src.substr(start))){
             return $transition(new $PatternCtx(
                 new $CaseCtx(context.parent.parent)),
                     token, value)
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
         // same for match
-        var start = context.parent.parent.node.pos,
+        var start = context.parent.$pos,
             src = $get_module(this).src
         if(line_ends_with_comma(src.substr(start))){
             return $transition(new $AbstractExprCtx(
@@ -7223,19 +7224,6 @@ $NodeCtx.prototype.toString = function(){
 
 $NodeCtx.prototype.transition = function(token, value){
     var context = this
-    if(context.node.parent.is_match && !context.node.is_body_node){
-        if(token !== 'id' || value != '$$case'){
-            $_SyntaxError(context)
-        }else{
-            // check that line ends with :
-            var start = context.node.pos,
-                src = $get_module(context).src
-            if(! line_ends_with_comma(src.substr(start))){
-                $_SyntaxError(context)
-            }
-            context.node.is_case = true
-        }
-    }
     switch(token) {
         case ',':
             if(context.tree && context.tree.length == 0){
@@ -10524,21 +10512,16 @@ function* basic_tokenizer(src){
 function line_ends_with_comma(src){
     // used to check if 'match' or 'case' are the "soft keywords" for pattern
     // matching, or ordinary ids
-    var expect = ':',
-        braces = 0
-    for(token of basic_tokenizer(src)){
+    var expect = ':'
+    for(token of $B.tokenizer(src)){
         if(expect == ':'){
-            if(token == ':' && braces == 0){
+            if(token.type == 'OP' && token.string == ':'){
                 expect = 'eol'
-            }else if(token == '\n' && braces == 0){
+            }else if(token.type == 'NEWLINE'){
                 return false
-            }else if('([{'. indexOf(token) > -1){
-                braces++
-            }else if(')]}'.indexOf(token) > -1){
-                braces--
             }
         }else{
-            return token == '\n'
+            return token.type == 'NEWLINE'
         }
     }
     return false

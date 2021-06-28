@@ -284,7 +284,7 @@ $B.ajax_load_script = function(script){
                     if(script.is_ww){
                         $B.webworkers[name] = src
                     }else{
-                        $B.tasks.splice(0, 0, [$B.run_script, src, name, 
+                        $B.tasks.splice(0, 0, [$B.run_script, src, name,
                             url, true])
                     }
                     loop()
@@ -408,7 +408,7 @@ $B.has_indexedDB = self.indexedDB !== undefined
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
     if($B.debug > 1){
-        console.log("handle error", err.__class__, err.args)
+        console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
     }
     if(err.__class__ !== undefined){
         var name = $B.class_name(err),
