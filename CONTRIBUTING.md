@@ -157,33 +157,6 @@ Navigating to [localhost:8000/tests](http://localhost:8000/tests/)
 you can run the full Brython test suite manually by clicking on "Run all
 tests".
 
-Every commit is tested on [Travis CI](https://travis-ci.org/brython-dev/brython).
-To run the same tests locally you first have to install the
-[Testem](https://github.com/testem/testem) test runner.
-
-Assuming you have `node.js` and `npm`/`yarn` this can be done via
-
-```bash
-    $ npm install testem
-```
-or
-```bash
-    $ yarn add testem
-```
-or
-```bash
-    $ ./manage.py ci get_testem
-```
-
-Running the tests is then just a matter of
-```bash
-    $ ./manage.py ci run_tests
-```
-or
-```bash
-    $ ./node_modules/.bin/testem -t www/tests/qunit/run_tests.html ci
-```
-
 
 ### Writing tests
 
