@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-27 17:43:39.325230"
-__BRYTHON__.timestamp=1624808619325
+__BRYTHON__.compiled_date="2021-06-29 08:28:21.878497"
+__BRYTHON__.timestamp=1624948101878
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3210,9 +3210,10 @@ if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(sco
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='$$case' && C.parent.parent.type=="node"){
-if(C.parent.parent.node.is_case){return $transition(new $PatternCtx(
+var start=C.parent.$pos,src=$get_module(this).src
+if(line_ends_with_comma(src.substr(start))){return $transition(new $PatternCtx(
 new $CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
-var start=C.parent.parent.node.pos,src=$get_module(this).src
+var start=C.parent.$pos,src=$get_module(this).src
 if(line_ends_with_comma(src.substr(start))){return $transition(new $AbstractExprCtx(
 new $MatchCtx(C.parent.parent),true),token,value)}}
 switch(token){case '=':
@@ -3798,10 +3799,6 @@ this.node.locals=clone(scope.binding)
 this.scope=scope}
 $NodeCtx.prototype.toString=function(){return 'node '+this.tree}
 $NodeCtx.prototype.transition=function(token,value){var C=this
-if(C.node.parent.is_match && !C.node.is_body_node){if(token !=='id' ||value !='$$case'){$_SyntaxError(C)}else{
-var start=C.node.pos,src=$get_module(C).src
-if(! line_ends_with_comma(src.substr(start))){$_SyntaxError(C)}
-C.node.is_case=true}}
 switch(token){case ',':
 if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
 var first=C.tree[0]
@@ -5403,8 +5400,8 @@ pos++}}else if(src[pos]=='\\' && src[pos+1]=='\n'){
 pos++}else if(' \t'.indexOf(src[pos])==-1){yield src[pos]}
 pos++}}
 function line_ends_with_comma(src){
-var expect=':',braces=0
-for(token of basic_tokenizer(src)){if(expect==':'){if(token==':' && braces==0){expect='eol'}else if(token=='\n' && braces==0){return false}else if('([{'. indexOf(token)>-1){braces++}else if(')]}'.indexOf(token)>-1){braces--}}else{return token=='\n'}}
+var expect=':'
+for(token of $B.tokenizer(src)){if(expect==':'){if(token.type=='OP' && token.string==':'){expect='eol'}else if(token.type=='NEWLINE'){return false}}else{return token.type=='NEWLINE'}}
 return false}
 function prepare_number(n){
 n=n.replace(/_/g,"")
@@ -6012,7 +6009,7 @@ try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined
 $B.handle_error=function(err){
-if($B.debug > 1){console.log("handle error",err.__class__,err.args)}
+if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)}
 if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[1][2]
 trace+='\n    '+' '.repeat(offset)+'^'+
@@ -6920,12 +6917,14 @@ if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
 return di(obj,item)}
 $B.delitem_slice=function(obj,slice){if(Array.isArray(obj)){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1 ||
-slice.step==-1){while(obj.length > 0){obj.pop()}}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
+slice.step==-1){while(obj.length > 0){obj.pop()}
+return _b_.None}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
 if(slice.stop===_b_.None){slice.stop=obj.length}
 if(typeof slice.start=="number" &&
 typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
 if(slice.stop < 0){slice.stop+=obj.length}
-obj.splice(slice.start,slice.stop-slice.start)}}}
+obj.splice(slice.start,slice.stop-slice.start)
+return _b_.None}}}
 var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
 if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
@@ -14925,9 +14924,9 @@ function(){return $B.obj_dict($B.imported)},function(self,obj,value){throw _b_.T
 ),path:_b_.property.$factory(
 function(){return $B.path},function(self,obj,value){$B.path=value;}
 ),meta_path:_b_.property.$factory(
-function(){return $B.meta_path},function(self,obj,value){$B.meta_path=value }
+function(){return $B.meta_path},function(self,obj,value){$B.meta_path=value}
 ),path_hooks:_b_.property.$factory(
-function(){return $B.path_hooks},function(self,obj,value){$B.path_hooks=value }
+function(){return $B.path_hooks},function(self,obj,value){$B.path_hooks=value}
 ),path_importer_cache:_b_.property.$factory(
 function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},function(self,obj,value){throw _b_.TypeError.$factory("Read only property"+
 " 'sys.path_importer_cache'")}
@@ -14942,8 +14941,7 @@ function(){return $B.stdout},function(self,value){$B.stdout=value}
 ),stdin:_b_.property.$factory(
 function(){return $B.stdin},function(self,value){$B.stdin=value}
 ),vfs:_b_.property.$factory(
-function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}
-else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
+function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
 )}
 modules._sys.__breakpointhook__=modules._sys.breakpointhook
 modules._sys.stderr.write=function(data){return $B.$getattr(_sys.stderr.__get__(),"write")(data)}
