@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-29 09:02:17.942072"
-__BRYTHON__.timestamp=1624950137942
+__BRYTHON__.compiled_date="2021-06-29 13:16:57.157940"
+__BRYTHON__.timestamp=1624965417157
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1557,10 +1557,14 @@ break
 case 'op':
 if(value=='|'){return new $PatternCtx(new $PatternOrCtx(C))}
 $_SyntaxError(C,['expected :'])
+case ',':
+if(C.expect==':' ||C.expect=='as'){console.log('implicit tuple',this)
+var first=this.tree[0]
+return new $PatternCtx(new $PatternSequenceCtx(C))}
 default:
 $_SyntaxError(C,['expected :'])}}
-$CaseCtx.prototype.to_js=function(){console.log('Case to js',this)
-return 'if($B.pattern_match(subject, '+$to_js(this.tree)+
+$CaseCtx.prototype.to_js=function(){var node=$get_node(this),rank=node.parent.children.indexOf(node),prefix=rank==0 ? 'if' :'else if'
+return prefix+'($B.pattern_match(subject, '+$to_js(this.tree)+
 (this.alias ? `, {as: "${this.alias.value}"}` :'')+'))'}
 var $ClassCtx=$B.parser.$ClassCtx=function(C){
 this.type='class'
@@ -3799,6 +3803,10 @@ this.node.locals=clone(scope.binding)
 this.scope=scope}
 $NodeCtx.prototype.toString=function(){return 'node '+this.tree}
 $NodeCtx.prototype.transition=function(token,value){var C=this
+if(this.node.parent && this.node.parent.C){var pctx=this.node.parent.C
+if(pctx.tree && pctx.tree.length==1 &&
+pctx.tree[0].type=="match"){if(token !='eol' &&(token !=='id' ||value !=='$$case')){C.$pos=$pos
+$_SyntaxError(C,'line does not start with "case"')}}}
 switch(token){case ',':
 if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
 var first=C.tree[0]
@@ -4538,7 +4546,7 @@ if(C.expect==','){if((this.token=='[' && token==']')||
 return C}else if(this.token===undefined){return $transition(C.parent,token,value)}
 $_SyntaxError(C)}else if(C.expect=='id'){C.expect=','
 return $transition(new $PatternCtx(C),token,value)}}
-$PatternSequenceCtx.prototype.to_js=function(){return '['+$to_js(this.tree)+']'}
+$PatternSequenceCtx.prototype.to_js=function(){return '{sequence: ['+$to_js(this.tree)+']}'}
 var $RaiseCtx=$B.parser.$RaiseCtx=function(C){
 this.type='raise'
 this.parent=C
@@ -6856,7 +6864,7 @@ if(gi !==_b_.None){return gi(obj,item)}
 throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")}
 $B.getitem_slice=function(obj,slice){var res
-if(Array.isArray(obj)){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
+if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
 if(slice.stop===_b_.None){slice.stop=obj.length}
 if(typeof slice.start=="number" &&
 typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
@@ -6872,8 +6880,7 @@ if(key < 0){key+=obj.length}
 if(obj[key]===undefined){console.log(obj,key)
 throw _b_.IndexError.$factory("list assignment index out of range")}
 obj[key]=value}
-$B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}
-else{start=$B.$GetInt(start)
+$B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}else{start=$B.$GetInt(start)
 if(start < 0){start=Math.max(0,start+obj.length)}}
 if(stop===null){stop=obj.length}
 stop=$B.$GetInt(stop)
@@ -6905,7 +6912,7 @@ var si=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__setitem__",null)
 if(si===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object does not support item assignment")}
 return si(obj,item,value)}
-$B.$delitem=function(obj,item){if(Array.isArray(obj)&& obj.__class__===undefined &&
+$B.$delitem=function(obj,item){if(Array.isArray(obj)&& obj.__class__===_b_.list &&
 typeof item=="number" &&
 !_b_.isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
 if(obj[item]===undefined){throw _b_.IndexError.$factory("list deletion index out of range")}
@@ -6916,7 +6923,7 @@ var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
 if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
 return di(obj,item)}
-$B.delitem_slice=function(obj,slice){if(Array.isArray(obj)){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1 ||
+$B.delitem_slice=function(obj,slice){if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1 ||
 slice.step==-1){while(obj.length > 0){obj.pop()}
 return _b_.None}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
 if(slice.stop===_b_.None){slice.stop=obj.length}
@@ -10984,8 +10991,7 @@ if(_b_.isinstance(other,int)){other=int_value(other)
 if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return Math.floor(self/other)}
 return _b_.NotImplemented}
-int.__hash__=function(self){console.log('hash of int',self)
-if(self.$brython_value){
+int.__hash__=function(self){if(self.$brython_value){
 var hash_method=$B.$getattr(self.__class__,'__hash__')
 if(hash_method===int.__hash__){if(typeof self.$brython_value=="number"){return self.$brython_value}else{
 return $B.long_int.__hash__(self.$brython_value)}}else{return hash_method(self)}}

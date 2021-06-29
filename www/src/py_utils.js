@@ -674,7 +674,7 @@ $B.$getitem = function(obj, item){
 
 $B.getitem_slice = function(obj, slice){
     var res
-    if(Array.isArray(obj)){
+    if(Array.isArray(obj) && obj.__class__ === _b_.list){
         if(slice.start === _b_.None && slice.stop === _b_.None){
             if(slice.step === _b_.None || slice.step == 1){
                 res = obj.slice()
@@ -720,14 +720,19 @@ $B.set_list_key = function(obj, key, value){
 }
 
 $B.set_list_slice = function(obj, start, stop, value){
-    if(start === null){start = 0}
-    else{
+    if(start === null){
+        start = 0
+    }else{
         start = $B.$GetInt(start)
         if(start < 0){start = Math.max(0, start + obj.length)}
     }
-    if(stop === null){stop = obj.length}
+    if(stop === null){
+        stop = obj.length
+    }
     stop = $B.$GetInt(stop)
-    if(stop < 0){stop = Math.max(0, stop + obj.length)}
+    if(stop < 0){
+        stop = Math.max(0, stop + obj.length)
+    }
     var res = _b_.list.$factory(value)
     obj.splice.apply(obj,[start, stop - start].concat(res))
 }
@@ -801,7 +806,7 @@ $B.$setitem = function(obj, item, value){
 
 // item deletion
 $B.$delitem = function(obj, item){
-    if(Array.isArray(obj) && obj.__class__ === undefined &&
+    if(Array.isArray(obj) && obj.__class__ === _b_.list &&
             typeof item == "number" &&
             !_b_.isinstance(obj, _b_.tuple)){
         if(item < 0){item += obj.length}
@@ -826,7 +831,7 @@ $B.$delitem = function(obj, item){
 }
 
 $B.delitem_slice = function(obj, slice){
-    if(Array.isArray(obj)){
+    if(Array.isArray(obj) && obj.__class__ === _b_.list){
         if(slice.start === _b_.None && slice.stop === _b_.None){
             if(slice.step === _b_.None || slice.step == 1 ||
                     slice.step == -1){

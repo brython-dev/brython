@@ -354,4 +354,29 @@ assert t == [1, 2, 3, 4, 5]
 del t[:1]
 assert t == [2, 3, 4, 5]
 
+# issue 1713
+class Foo(list):
+    def __getitem__(self, index):
+        raise NotImplementedError()
+
+    def __delitem__(self, index):
+        raise NotImplementedError()
+
+    def __setitem__(self, index, value):
+        raise NotImplementedError()
+
+f = Foo((1, 2, 3, 4))
+try:
+    f[1:3:2]
+    raise AssertionError('should have raised NotImplementedError')
+except NotImplementedError:
+    pass
+
+try:
+    del f[0:1]
+    raise AssertionError('should have raised NotImplementedError')
+except NotImplementedError:
+    pass
+
+
 print("passed all tests..")
