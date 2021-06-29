@@ -73,6 +73,20 @@ remains up-to-date, they should be developed in a fork of the project.
 * Run _all_ the test suite (see below) to ensure nothing else was accidentally
   broken.
 
+### Creating distribution
+
+Run `make_dist.py` script to generate these files after changing the source:
+
+- `www/src/brython.js`
+- `www/src/brython_stdlib.js`
+- `www/src/stdlib_paths.js`
+- `www/src/version_info.js`
+
+```bash
+cd scripts
+python3 make_dist.py
+```
+
 ## Repository Layout
 
   - `scripts`   - miscellaneous release helper scripts
@@ -167,6 +181,7 @@ or
 ```bash
     $ ./node_modules/.bin/testem -t www/tests/qunit/run_tests.html ci
 ```
+
 
 ### Writing tests
 
