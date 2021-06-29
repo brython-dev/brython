@@ -75,7 +75,9 @@ remains up-to-date, they should be developed in a fork of the project.
 
 ### Creating distribution
 
-Run `make_dist.py` script to generate these files after changing the source:
+Run `make_dist.py` script with a CPython interpreter of the same version as
+Brython (eg CPython 3.8 for Brython 3.8) to generate these files after 
+changing the source:
 
 - `www/src/brython.js`
 - `www/src/brython_stdlib.js`
