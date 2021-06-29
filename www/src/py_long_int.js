@@ -719,6 +719,19 @@ long_int.__gt__ = function(self, other){
     return ! long_int.__le__(self, other)
 }
 
+long_int.__hash__ = function(self){
+    console.log('long int hash')
+    var modulus = $B.fast_long_int("2305843009213693951", true),
+        self_pos = $B.fast_long_int(self.value, true)
+    var _hash = $B.long_int.__mod__(self_pos, modulus)
+    if(typeof _hash == "number"){
+        _hash = self.pos ? _hash : -_hash
+    }else{
+        _hash.pos = self.pos
+    }
+    return self.__hashvalue__ = _hash
+}
+
 long_int.__index__ = function(self){
     // Used by bin()
     // returns a string with the binary value of self
@@ -1346,6 +1359,62 @@ long_int.$factory = function(value, base){
     }
     return {__class__: long_int, value: value, pos: pos}
 }
+
+function extended_euclidean_algorithm(a, b){
+    /*
+    Returns a three-tuple (gcd, x, y) such that
+    a * x + b * y == gcd, where gcd is the greatest
+    common divisor of a and b.
+
+    This function implements the extended Euclidean
+    algorithm and runs in O(log b) in the worst case.
+    */
+    var s = 0,
+        old_s = 1,
+        t = 1,
+        old_t = 0,
+        r = b,
+        old_r = a,
+        quotient,
+        tmp
+
+    while($B.rich_comp('__ne__', r, 0)){
+        quotient = $B.rich_op('floordiv', old_r, r)
+        tmp = $B.rich_op('sub', old_r, $B.rich_op('mul', quotient, r))
+        old_r = r
+        r = tmp
+        tmp = $B.rich_op('sub', old_s, $B.rich_op('mul', quotient, s))
+        old_s = s
+        s = tmp
+        tmp = $B.rich_op('sub', old_t, $B.rich_op('mul', quotient, t))
+        old_t = t
+        t = tmp
+   }
+    return [old_r, old_s, old_t]
+}
+
+function inverse_of(n, p){
+    /*
+    Returns the multiplicative inverse of
+    n modulo p.
+
+    This function returns an integer m such that
+    (n * m) % p == 1.
+    */
+    var gcd, x, y
+    [gcd, x, y] = extended_euclidean_algorithm(n, p)
+    
+    if($B.rich_comp('__ne__', gcd, 1)){
+        // Either n is 0, or p is not a prime number.
+        throw Error(
+            `${n} has no multiplicative inverse '
+            'modulo ${p}`)
+    }else{
+        return $B.rich_op('mod', x, p)
+    }
+}
+
+$B.inverse_of = inverse_of
 
 $B.set_func_names(long_int, "builtins")
 

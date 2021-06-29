@@ -1301,20 +1301,18 @@ function hasattr(obj,attr){
     }
 }
 
-var hash_cache = {}
+var hash_cache = {} // for strings
 function hash(obj){
     check_no_kw('hash', obj)
     check_nb_args('hash', 1, arguments)
 
-    if(obj.__hashvalue__ !== undefined){return obj.__hashvalue__}
-    if(isinstance(obj, _b_.bool)){return _b_.int.$factory(obj)}
-    if(isinstance(obj, _b_.int)){
-        if(obj.$brython_value === undefined){
-            return obj.valueOf()
-        }else{ // int subclass
-            return obj.__hashvalue__ = obj.$brython_value
-        }
+    if(obj.__hashvalue__ !== undefined){
+        return obj.__hashvalue__
     }
+    if(isinstance(obj, _b_.bool)){
+        return _b_.int.$factory(obj)
+    }
+
     if(obj.$is_class ||
             obj.__class__ === _b_.type ||
             obj.__class__ === $B.Function){
@@ -1334,6 +1332,7 @@ function hash(obj){
         throw _b_.TypeError.$factory("unhashable type: '" +
                 _b_.str.$factory($B.JSObj.$factory(obj)) + "'")
     }
+
     var hash_method = $B.$getattr(klass, '__hash__', _b_.None)
 
     if(hash_method === _b_.None){

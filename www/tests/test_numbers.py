@@ -621,5 +621,21 @@ a = [1800]
 a[0] += -260.7
 assert a[0] == 1539.3
 
+# hash of integers
+assert hash(2 ** 61 - 2) == 2 ** 61 - 2
+assert hash(2 ** 61 - 1) == 0
+assert hash(-(2 ** 61 - 1)) == 0
+
+class Int(int):
+  pass
+
+assert hash(Int(2**61)) == 1
+
+class IntH(int):
+
+  def __hash__(self):
+     return 99
+
+assert hash(IntH(0)) == 99
 
 print('passed all tests...')
