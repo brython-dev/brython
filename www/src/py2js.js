@@ -2371,6 +2371,12 @@ $CaseCtx.prototype.transition = function(token, value){
                 return new $PatternCtx(new $PatternOrCtx(context))
             }
             $_SyntaxError(context, ['expected :'])
+        case ',':
+            if(context.expect == ':' || context.expect == 'as'){
+                console.log('implicit tuple', this)
+                var first = this.tree[0]
+                return new $PatternCtx(new $PatternSequenceCtx(context))
+            }
         default:
             $_SyntaxError(context, ['expected :'])
     }
@@ -2378,8 +2384,11 @@ $CaseCtx.prototype.transition = function(token, value){
 
 
 $CaseCtx.prototype.to_js = function(){
-    console.log('Case to js', this)
-    return 'if($B.pattern_match(subject, ' + $to_js(this.tree) +
+    var node = $get_node(this),
+        rank = node.parent.children.indexOf(node),
+        prefix = rank == 0 ? 'if' : 'else if'
+
+    return prefix + '($B.pattern_match(subject, ' + $to_js(this.tree) +
         (this.alias ? `, {as: "${this.alias.value}"}` : '') + '))'
 
 }
@@ -7224,6 +7233,17 @@ $NodeCtx.prototype.toString = function(){
 
 $NodeCtx.prototype.transition = function(token, value){
     var context = this
+    if(this.node.parent && this.node.parent.context){
+        var pctx = this.node.parent.context
+        if(pctx.tree && pctx.tree.length == 1 &&
+                pctx.tree[0].type == "match"){
+            if(token != 'eol' && (token !== 'id' || value !== '$$case')){
+                context.$pos = $pos
+                $_SyntaxError(context,
+                    'line does not start with "case"')
+            }
+        }
+    }
     switch(token) {
         case ',':
             if(context.tree && context.tree.length == 0){
@@ -8510,7 +8530,7 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
 }
 
 $PatternSequenceCtx.prototype.to_js = function(){
-    return '[' + $to_js(this.tree) + ']'
+    return '{sequence: [' + $to_js(this.tree) + ']}'
 }
 
 var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
