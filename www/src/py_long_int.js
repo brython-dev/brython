@@ -720,7 +720,6 @@ long_int.__gt__ = function(self, other){
 }
 
 long_int.__hash__ = function(self){
-    console.log('long int hash')
     var modulus = $B.fast_long_int("2305843009213693951", true),
         self_pos = $B.fast_long_int(self.value, true)
     var _hash = $B.long_int.__mod__(self_pos, modulus)

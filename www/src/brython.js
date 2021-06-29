@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-29 08:59:21.680809"
-__BRYTHON__.timestamp=1624949961680
+__BRYTHON__.compiled_date="2021-06-29 09:02:17.942072"
+__BRYTHON__.timestamp=1624950137942
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -11496,8 +11496,7 @@ else if(self.value.length < other.value.length){return ! self.pos}
 else{return self.pos ? self.value >=other.value :
 self.value <=other.value}}
 long_int.__gt__=function(self,other){return ! long_int.__le__(self,other)}
-long_int.__hash__=function(self){console.log('long int hash')
-var modulus=$B.fast_long_int("2305843009213693951",true),self_pos=$B.fast_long_int(self.value,true)
+long_int.__hash__=function(self){var modulus=$B.fast_long_int("2305843009213693951",true),self_pos=$B.fast_long_int(self.value,true)
 var _hash=$B.long_int.__mod__(self_pos,modulus)
 if(typeof _hash=="number"){_hash=self.pos ? _hash :-_hash}else{_hash.pos=self.pos}
 return self.__hashvalue__=_hash}
