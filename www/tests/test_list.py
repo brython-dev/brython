@@ -346,5 +346,12 @@ try:
 except TypeError as exc:
     assert exc.args[0] == \
         "can't set attributes of built-in/extension type 'tuple'"
-        
+
+# issue 1701
+t = [1, 2, 3, 4, 5]
+del t[:0]
+assert t == [1, 2, 3, 4, 5]
+del t[:1]
+assert t == [2, 3, 4, 5]
+
 print("passed all tests..")
