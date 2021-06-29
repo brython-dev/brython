@@ -269,7 +269,6 @@ int.__floordiv__ = function(self, other){
 }
 
 int.__hash__ = function(self){
-    console.log('hash of int', self)
     if(self.$brython_value){
         // int subclass
         var hash_method = $B.$getattr(self.__class__, '__hash__')
