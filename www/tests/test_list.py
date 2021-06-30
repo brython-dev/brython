@@ -378,12 +378,25 @@ try:
 except NotImplementedError:
     pass
 
+# issue 1714
+nb_calls_init = 0
+
+class Foo(list):
+    def __init__(self, initial):
+        global nb_calls_init
+        nb_calls_init += 1
+        super().__init__(initial)
+
+s = Foo('123456')
+assert s[1::2] == ['2', '4', '6']
+assert nb_calls_init == 1
+
 # issue 1715
 class Foo(list):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
 
-        
+
 s = Foo()
 assert s == []
 

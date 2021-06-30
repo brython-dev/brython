@@ -160,20 +160,28 @@ list.__getitem__ = function(self, key){
 }
 
 list.$getitem = function(self, key){
-    var factory = (self.__class__ || $B.get_class(self)).$factory
+    var klass = (self.__class__ || $B.get_class(self))
+    var factory = function(list_res){
+        list_res.__class__ = klass
+        return list_res
+    }
 
     var int_key
-    try {
+    try{
       int_key = $B.PyNumber_Index(key)
-    } catch(err) {
+    }catch(err){
 
     }
 
-    if (int_key !== undefined) {
+    if(int_key !== undefined){
         var items = self.valueOf(),
             pos = int_key
-        if(int_key < 0){pos = items.length + pos}
-        if(pos >= 0 && pos < items.length){return items[pos]}
+        if(int_key < 0){
+            pos = items.length + pos
+        }
+        if(pos >= 0 && pos < items.length){
+            return items[pos]
+        }
 
         throw _b_.IndexError.$factory($B.class_name(self) +
             " index out of range")

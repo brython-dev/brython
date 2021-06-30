@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-30 11:31:23.494193"
-__BRYTHON__.timestamp=1625045483493
+__BRYTHON__.compiled_date="2021-06-30 12:39:22.627580"
+__BRYTHON__.timestamp=1625049562626
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6828,7 +6828,7 @@ else{start=$B.$GetInt(start)
 if(start < 0){start=Math.max(0,start+obj.length)}}
 if(stop===null){return obj.slice(start)}
 stop=$B.$GetInt(stop)
-if(stop < 0){stop=Math.max(0,stop+obj.length)}
+if(stop < 0){stop+=obj.length}
 return obj.slice(start,stop)}
 $B.list_slice_step=function(obj,start,stop,step){if(step===null ||step==1){return $B.list_slice(obj,start,stop)}
 if(step==0){throw _b_.ValueError.$factory("slice step cannot be zero")}
@@ -12286,10 +12286,11 @@ list.__getitem__=function(self,key){
 $B.check_no_kw("__getitem__",self,key)
 $B.check_nb_args("__getitem__",2,arguments)
 return list.$getitem(self,key)}
-list.$getitem=function(self,key){var factory=(self.__class__ ||$B.get_class(self)).$factory
+list.$getitem=function(self,key){var klass=(self.__class__ ||$B.get_class(self))
+var factory=function(list_res){list_res.__class__=klass
+return list_res}
 var int_key
-try{
-int_key=$B.PyNumber_Index(key)}catch(err){}
+try{int_key=$B.PyNumber_Index(key)}catch(err){}
 if(int_key !==undefined){var items=self.valueOf(),pos=int_key
 if(int_key < 0){pos=items.length+pos}
 if(pos >=0 && pos < items.length){return items[pos]}

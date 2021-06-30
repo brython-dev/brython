@@ -579,7 +579,7 @@ $B.list_slice = function(obj, start, stop){
     }
     if(stop === null){return obj.slice(start)}
     stop = $B.$GetInt(stop)
-    if(stop < 0){stop = Math.max(0, stop + obj.length)}
+    if(stop < 0){stop += obj.length}
     return obj.slice(start, stop)
 }
 
