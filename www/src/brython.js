@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-30 12:39:22.627580"
-__BRYTHON__.timestamp=1625049562626
+__BRYTHON__.compiled_date="2021-06-30 12:55:09.964271"
+__BRYTHON__.timestamp=1625050509964
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -8265,8 +8265,11 @@ if(ix==-1){var rest=self.$content.source.slice(self.$counter)
 self.$counter=self.$content.source.length
 return _b_.bytes.$factory(rest)}else{var res={__class__:_b_.bytes,source :self.$content.source.slice(self.$counter,ix+1)}
 self.$counter=ix+1
-return res}}else{var ix=self.$content.indexOf("\n",self.$counter)
-if(ix==-1){return ''}else{var res=self.$content.substring(self.$counter,ix+1)
+return res}}else{if(self.$counter==self.$content.length){return ''}
+var ix=self.$content.indexOf("\n",self.$counter)
+if(ix==-1){var rest=self.$content.substr(self.$counter)
+self.$counter=self.$content.length
+return rest}else{var res=self.$content.substring(self.$counter,ix+1)
 self.$counter=ix+1
 self.$lc+=1
 return res}}}

@@ -2748,9 +2748,14 @@ $Reader.readline = function(self, size){
             return res
         }
     }else{
+        if(self.$counter == self.$content.length){
+            return ''
+        }
         var ix = self.$content.indexOf("\n", self.$counter)
         if(ix == -1){
-            return ''
+            var rest = self.$content.substr(self.$counter)
+            self.$counter = self.$content.length
+            return rest
         }else{
             var res = self.$content.substring(self.$counter, ix + 1)
             self.$counter = ix + 1
