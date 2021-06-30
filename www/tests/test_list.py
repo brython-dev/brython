@@ -378,5 +378,13 @@ try:
 except NotImplementedError:
     pass
 
+# issue 1715
+class Foo(list):
+    def __init__(self, *args, **kw):
+        super().__init__(*args, **kw)
+
+        
+s = Foo()
+assert s == []
 
 print("passed all tests..")

@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-29 13:16:57.157940"
-__BRYTHON__.timestamp=1624965417157
+__BRYTHON__.compiled_date="2021-06-30 11:31:23.494193"
+__BRYTHON__.timestamp=1625045483493
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -12334,11 +12334,15 @@ list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","
 if(x==0){list.clear($.self);return $.self}
 for(var i=1;i < x;i++){for(j=0;j < len;j++){$.self[pos++]=$.self[j]}}
 return $.self}
-list.__init__=function(self,arg){var len_func=$B.$call(getattr(self,"__len__")),pop_func=getattr(self,"pop",$N)
+list.__init__=function(self,arg){var $=$B.args('__init__',1,{self:null},['self'],arguments,{},'args',null),self=$.self,args=$.args
+if(args.length > 1){throw _b_.TypeError.$factory('expected at most 1 argument, got '+
+args.length)}
+var arg=args[0]
+var len_func=$B.$call($B.$getattr(self,"__len__")),pop_func=$B.$getattr(self,"pop",$N)
 if(pop_func !==$N){pop_func=$B.$call(pop_func)
 while(len_func()){pop_func()}}
 if(arg===undefined){return $N}
-var arg=$B.$iter(arg),next_func=$B.$call(getattr(arg,"__next__")),pos=len_func()
+var arg=$B.$iter(arg),next_func=$B.$call($B.$getattr(arg,"__next__")),pos=len_func()
 while(1){try{var res=next_func()
 self[pos++]=res}catch(err){if(err.__class__===_b_.StopIteration){break}
 else{throw err}}}

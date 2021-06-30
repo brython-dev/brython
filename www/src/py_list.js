@@ -282,15 +282,26 @@ list.__imul__ = function() {
 }
 
 list.__init__ = function(self, arg){
-    var len_func = $B.$call(getattr(self, "__len__")),
-        pop_func = getattr(self, "pop", $N)
+    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
+            'args', null),
+        self = $.self,
+        args = $.args
+    if(args.length > 1){
+        throw _b_.TypeError.$factory('expected at most 1 argument, got ' +
+            args.length)
+    }
+    var arg = args[0]
+    var len_func = $B.$call($B.$getattr(self, "__len__")),
+        pop_func = $B.$getattr(self, "pop", $N)
     if(pop_func !== $N){
         pop_func = $B.$call(pop_func)
         while(len_func()){pop_func()}
     }
-    if(arg === undefined){return $N}
+    if(arg === undefined){
+        return $N
+    }
     var arg = $B.$iter(arg),
-        next_func = $B.$call(getattr(arg, "__next__")),
+        next_func = $B.$call($B.$getattr(arg, "__next__")),
         pos = len_func()
     while(1){
         try{
