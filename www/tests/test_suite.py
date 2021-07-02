@@ -741,4 +741,14 @@ try:
 except NameError:
     pass
 
+# issue 1718 (tabulations)
+characters = {
+	"amber": {
+		'ascension': {
+			'element_1': 'agnidus_agate',
+		},
+		'element': 'pyro'
+	}
+}
+
 print('passed all tests...')

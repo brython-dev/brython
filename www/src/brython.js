@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-06-30 12:55:09.964271"
-__BRYTHON__.timestamp=1625050509964
+__BRYTHON__.compiled_date="2021-07-02 10:02:09.825345"
+__BRYTHON__.timestamp=1625212929824
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -269,7 +269,7 @@ pos++}else if((char=='-' && src[pos]=='>')||
 pos++}
 if('[({'.indexOf(char)>-1){braces.push(char)}else if('])}'.indexOf(char)>-1){if(braces && $last(braces)==closing[char]){braces.pop()}else{braces.push(char)}}
 yield Token('OP',op,[line_num,pos-line_start-op.length+1],[line_num,pos-line_start+1],line)}else if(char=='!' && src[pos]=='='){yield Token('OP','!=',[line_num,pos-line_start],[line_num,pos-line_start+2],line)
-pos++}else{if(char !=' '){yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}}}
+pos++}else if(char==' ' ||char=='\t'){}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}}
 break
 case 'NAME':
 if(unicode_tables.XID_Continue[ord(char)]){name+=char}else if(char=='"' ||char=="'"){if(string_prefix.exec(name)||bytes_prefix.exec(name)){
@@ -4390,7 +4390,8 @@ this.parent=C.parent
 C.parent.tree.pop()
 C.parent.tree.push(this)
 this.tree=[value]
-this.expect='.'}
+this.expect='.'
+this.$pos=$pos}
 $PatternCaptureCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case '.':
 if(token=='.'){C.type="value_pattern"
@@ -4526,6 +4527,8 @@ this.tree=[first_pattern]
 this.expect='|'
 C.tree.push(this)}
 $PatternOrCtx.prototype.transition=function(token,value){var C=this
+for(var i=0,len=C.tree.length-1;i < len;i++){if(C.tree[i].type=='capture_pattern'){$_SyntaxError(C.tree[i],[`name capture '${C.tree[i].tree[0]}' `+
+'makes remaining patterns unreachable'])}}
 if(token=='op' && value=="|"){return new $PatternCtx(C)}
 return $transition(C.parent,token,value)}
 $PatternOrCtx.prototype.to_js=function(){return '{or : ['+$to_js(this.tree)+']}'}
@@ -5554,7 +5557,7 @@ line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
 return unindented_lines.join('\n')}
 function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_SyntaxError(C,['unterminated string literal '+
 `(detected at line ${token.start[0]})`])}
-$_SyntaxError(C,'invalid token '+token[1])}
+$_SyntaxError(C,'invalid token '+token[1]+_b_.ord(token[1]))}
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root,src){var tokenizer=$B.tokenizer(src)
 var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"

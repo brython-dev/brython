@@ -8484,7 +8484,6 @@ $PatternOrCtx.prototype.transition = function(token, value){
     var context = this
     for(var i = 0, len = context.tree.length - 1; i < len; i++){
         if(context.tree[i].type == 'capture_pattern'){
-            console.log(context.tree[i])
             $_SyntaxError(context.tree[i],
                 [`name capture '${context.tree[i].tree[0]}' ` +
                 'makes remaining patterns unreachable'])
@@ -10924,7 +10923,7 @@ function handle_errortoken(context, token){
         $_SyntaxError(context, ['unterminated string literal ' +
             `(detected at line ${token.start[0]})`])
     }
-    $_SyntaxError(context, 'invalid token ' + token[1])
+    $_SyntaxError(context, 'invalid token ' + token[1] + _b_.ord(token[1]))
 }
 
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){

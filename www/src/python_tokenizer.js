@@ -352,13 +352,13 @@ $B.tokenizer = function*(src){
                               [line_num, pos - line_start + 2],
                               line)
                           pos++
+                        }else if(char == ' ' || char == '\t'){
+                            // ignore
                         }else{
-                            if(char != ' '){
-                                yield Token('ERRORTOKEN', char,
-                                    [line_num, pos - line_start],
-                                    [line_num, pos - line_start + 1],
-                                    line)
-                            }
+                            yield Token('ERRORTOKEN', char,
+                                [line_num, pos - line_start],
+                                [line_num, pos - line_start + 1],
+                                line)
                         }
               }
               break
