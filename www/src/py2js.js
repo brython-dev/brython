@@ -8247,6 +8247,7 @@ var $PatternCaptureCtx = function(context, value){
     context.parent.tree.push(this)
     this.tree = [value]
     this.expect = '.'
+    this.$pos = $pos
 }
 
 $PatternCaptureCtx.prototype.transition = function(token, value){
@@ -8481,6 +8482,14 @@ var $PatternOrCtx = function(context){
 
 $PatternOrCtx.prototype.transition = function(token, value){
     var context = this
+    for(var i = 0, len = context.tree.length - 1; i < len; i++){
+        if(context.tree[i].type == 'capture_pattern'){
+            console.log(context.tree[i])
+            $_SyntaxError(context.tree[i],
+                [`name capture '${context.tree[i].tree[0]}' ` +
+                'makes remaining patterns unreachable'])
+        }
+    }
     if(token == 'op' && value == "|"){
         return new $PatternCtx(context)
     }
