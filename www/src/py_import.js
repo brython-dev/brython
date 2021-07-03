@@ -416,6 +416,7 @@ VFSLoader.exec_module = function(self, modobj){
                     mod)
             }catch(err){
                 if($B.debug > 1){
+                    console.log('error in module', mod)
                     console.log(err)
                     for(var k in err){console.log(k, err[k])}
                     console.log(Object.keys($B.imported))

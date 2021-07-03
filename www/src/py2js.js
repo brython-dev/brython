@@ -1735,21 +1735,31 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         return
     }
 
-    // insert node 'if(!hasattr(x, "__iadd__"))
-    var new_node = new $Node()
-    if(!lnum_set){new_node.line_num = line_num; lnum_set = true}
-    var js = ''
-    if(prefix){js += 'else '}
-    js += 'if(! _b_.hasattr(' + context.to_js() + ',"' + func + '"))'
-    new $NodeJSCtx(new_node, js)
-    parent.insert(rank + offset, new_node)
+    if(prefix){
+        var else_node = $NodeJS('else')
+    }else{
+        var else_node = $NodeJS('if(true)')
+    }
+    parent.insert(rank + offset, else_node)
     offset++
+
+    // insert node 'iadd = getattr(x, "__iadd__", None)'
+    var iadd_node = $NodeJS('var iadd = $B.$getattr(' + context.to_js() +
+        ',"' + func + '", null)')
+    if(!lnum_set){
+        iadd_node.line_num = line_num
+        lnum_set = true
+    }
+    else_node.add(iadd_node)
+
+    var no_iadd_node = $NodeJS('if(iadd === null)')
+    else_node.add(no_iadd_node)
 
     // create node for "x = x + y"
     var aa1 = new $Node()
     aa1.id = this.scope.id
     aa1.line_num = node.line_num
-    new_node.add(aa1)
+    no_iadd_node.add(aa1)
     var ctx1 = new $NodeCtx(aa1)
     var expr1 = new $ExprCtx(ctx1, 'clone', false)
     if(left_id_unbound){
@@ -1769,13 +1779,13 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
     expr1.parent.tree.push(assign1)
 
     // create node for "else"
-    var else_node = $NodeJS("else")
-    parent.insert(rank + offset, else_node)
+    var yes_iadd_node = $NodeJS("else")
+    else_node.add(yes_iadd_node)
 
-    // create node for "x = x.__iadd__(y)"
+    // create node for "x.__iadd__(y)"
     var aa2 = new $Node()
     aa2.line_num = node.line_num
-    else_node.add(aa2)
+    yes_iadd_node.add(aa2)
 
     var ctx2 = new $NodeCtx(aa2)
     var expr2 = new $ExprCtx(ctx2, 'clone', false)
@@ -1792,8 +1802,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         })
     }
     var assign2 = new $AssignCtx(expr2)
-    assign2.tree.push($NodeJS('$B.$getattr(' + context.to_js() + ',"' +
-        func + '")(' + right + ')'))
+    assign2.tree.push($NodeJS('iadd(' + right + ')'))
     expr2.parent.tree.pop()
     expr2.parent.tree.push(assign2)
 

@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-02 10:02:09.825345"
-__BRYTHON__.timestamp=1625212929824
+__BRYTHON__.compiled_date="2021-07-03 13:54:53.333528"
+__BRYTHON__.timestamp=1625313293333
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1210,18 +1210,20 @@ new $NodeJSCtx(new_node,js1)
 parent.insert(rank+offset,new_node)
 offset++
 return}
-var new_node=new $Node()
-if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
-var js=''
-if(prefix){js+='else '}
-js+='if(! _b_.hasattr('+C.to_js()+',"'+func+'"))'
-new $NodeJSCtx(new_node,js)
-parent.insert(rank+offset,new_node)
+if(prefix){var else_node=$NodeJS('else')}else{var else_node=$NodeJS('if(true)')}
+parent.insert(rank+offset,else_node)
 offset++
+var iadd_node=$NodeJS('var iadd = $B.$getattr('+C.to_js()+
+',"'+func+'", null)')
+if(!lnum_set){iadd_node.line_num=line_num
+lnum_set=true}
+else_node.add(iadd_node)
+var no_iadd_node=$NodeJS('if(iadd === null)')
+else_node.add(no_iadd_node)
 var aa1=new $Node()
 aa1.id=this.scope.id
 aa1.line_num=node.line_num
-new_node.add(aa1)
+no_iadd_node.add(aa1)
 var ctx1=new $NodeCtx(aa1)
 var expr1=new $ExprCtx(ctx1,'clone',false)
 if(left_id_unbound){new $RawJSCtx(expr1,left)}else{expr1.tree=C.tree
@@ -1233,11 +1235,11 @@ new $RawJSCtx(new_op,right)
 assign1.tree.push(new_op)
 expr1.parent.tree.pop()
 expr1.parent.tree.push(assign1)
-var else_node=$NodeJS("else")
-parent.insert(rank+offset,else_node)
+var yes_iadd_node=$NodeJS("else")
+else_node.add(yes_iadd_node)
 var aa2=new $Node()
 aa2.line_num=node.line_num
-else_node.add(aa2)
+yes_iadd_node.add(aa2)
 var ctx2=new $NodeCtx(aa2)
 var expr2=new $ExprCtx(ctx2,'clone',false)
 if(left_id_unbound){var js=left
@@ -1245,8 +1247,7 @@ if(! binding_scope){js='$B.$local_search("'+left_value+'");'+left}
 new $RawJSCtx(expr2,js)}else{expr2.tree=C.tree
 expr2.tree.forEach(function(elt){elt.parent=expr2})}
 var assign2=new $AssignCtx(expr2)
-assign2.tree.push($NodeJS('$B.$getattr('+C.to_js()+',"'+
-func+'")('+right+')'))
+assign2.tree.push($NodeJS('iadd('+right+')'))
 expr2.parent.tree.pop()
 expr2.parent.tree.push(assign2)
 if(left_is_id && !was_bound && !this.scope.blurred){this.scope.binding[left_id]=undefined}
@@ -10200,7 +10201,8 @@ mod.__file__=path
 try{var parent_id=parent.replace(/\./g,"_")
 mod_js+="return $locals_"+parent_id
 var $module=new Function("$locals_"+parent_id,mod_js)(
-mod)}catch(err){if($B.debug > 1){console.log(err)
+mod)}catch(err){if($B.debug > 1){console.log('error in module',mod)
+console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
 if($B.debug > 2){console.log(modobj,"mod_js",mod_js)}}
