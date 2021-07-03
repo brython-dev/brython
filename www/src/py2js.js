@@ -1723,6 +1723,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         offset++
 
         if(op == '+='){
+            // shortcut for += on strings
             var js = 'else if(typeof $left == "string" && typeof $temp == ' +
                 '"string"){' + left + ' = $left + $temp}'
             parent.insert(rank + offset, $NodeJS(js))
@@ -11181,7 +11182,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 // node.parent.children.pop()
                 // Check that it supports indentation
                 if(! expect_indent){
-                    $pos = pos
                     context = context || new $NodeCtx(node)
                     $_SyntaxError(context, 'unexpected indent', $pos)
                 }
