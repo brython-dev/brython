@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,4,'final',0]
 __BRYTHON__.__MAGIC__="3.9.4"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-03 13:54:53.333528"
-__BRYTHON__.timestamp=1625313293333
+__BRYTHON__.compiled_date="2021-07-03 14:11:32.407540"
+__BRYTHON__.timestamp=1625314292407
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1183,21 +1183,27 @@ parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
 return offset++}
 prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
 var op1=op.charAt(0)
-if(prefix){var left1=in_class ? '$left' :left
+if(prefix){parent.insert(rank+offset,$NodeJS('$left = '+left))
+offset++
+var left1=in_class ? '$left' :left
 var new_node=new $Node()
 if(!lnum_set){new_node.line_num=line_num
 lnum_set=true}
 js=right_is_int ? 'if(' :'if(typeof $temp.valueOf() == "number" && '
-js+=left1+'.constructor === Number'
-js+=' && Number.isSafeInteger('+left+op1+right+')){'+
+js+='$left.constructor === Number'
+js+=' && Number.isSafeInteger($left'+op1+right+')){'+
 (right_is_int ? '(' :'(typeof $temp == "number" && ')+
-'typeof '+left1+' == "number") ? '
+'typeof $left == "number") ? '
 js+=left+op+right
-js+=' : '+left+' = new Number('+left+op1+
+js+=' : '+left+' = new Number($left'+op1+
 (right_is_int ? right :right+'.valueOf()')+')}'
 new $NodeJSCtx(new_node,js)
 parent.insert(rank+offset,new_node)
-offset++}
+offset++
+if(op=='+='){var js='else if(typeof $left == "string" && typeof $temp == '+
+'"string"){'+left+' = $left + $temp}'
+parent.insert(rank+offset,$NodeJS(js))
+offset++}}
 var aaops={'+=':'add','-=':'sub','*=':'mul'}
 if(C.tree[0].type=='sub' &&
 ('+='==op ||'-='==op ||'*='==op)&&

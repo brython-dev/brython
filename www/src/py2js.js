@@ -1694,6 +1694,9 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
     var op1 = op.charAt(0)
 
     if(prefix){
+        parent.insert(rank + offset, $NodeJS('$left = ' + left))
+        offset++
+
         var left1 = in_class ? '$left' : left
         var new_node = new $Node()
         if(!lnum_set){
@@ -1701,24 +1704,30 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
             lnum_set = true
         }
         js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf() == "number" && '
-        js += left1 + '.constructor === Number'
+        js += '$left.constructor === Number'
 
         // If both arguments are integers, we must check that the result
         // is a safe integer
-        js += ' && Number.isSafeInteger(' + left + op1 + right + ')){' +
+        js += ' && Number.isSafeInteger($left' + op1 + right + ')){' +
             (right_is_int ? '(' : '(typeof $temp == "number" && ') +
-            'typeof ' + left1 + ' == "number") ? '
+            'typeof $left == "number") ? '
 
         js += left + op + right
 
         // result is a float
-        js += ' : ' + left + ' = new Number(' + left + op1 +
+        js += ' : ' + left + ' = new Number($left' + op1 +
             (right_is_int ? right : right + '.valueOf()') + ')}'
 
         new $NodeJSCtx(new_node, js)
         parent.insert(rank + offset, new_node)
         offset++
 
+        if(op == '+='){
+            var js = 'else if(typeof $left == "string" && typeof $temp == ' +
+                '"string"){' + left + ' = $left + $temp}'
+            parent.insert(rank + offset, $NodeJS(js))
+            offset++
+        }
     }
     var aaops = {'+=': 'add', '-=': 'sub', '*=': 'mul'}
     if(context.tree[0].type == 'sub' &&
