@@ -6,7 +6,7 @@ import tb as traceback
 import javascript
 
 from browser import document as doc, window, alert, bind, html
-from browser.widgets import dialog
+import browser.widgets.dialog as dialog
 
 # set height of container to 75% of screen
 _height = doc.documentElement.clientHeight
