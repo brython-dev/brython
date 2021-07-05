@@ -1,0 +1,84 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-family: arial, sans-serif;
+    font-size: calc(9px + 0.3vw + 0.3vh);
+}
+
+body {
+    margin: 0px;
+}
+
+h2 {
+    margin: 0px 0px 1vh;
+}
+
+div.intro {
+    padding: 3%;
+}
+
+div.rowpanel {
+    height: 100%;
+    align-items: center;
+}
+
+div.leftpane {
+    margin: 0%;
+    padding: 1%;
+    width: 50%;
+    height: 100%;
+}
+
+textarea.databox {
+    display: block;
+    width: 45vw;
+    height: 25vh;
+}
+
+textarea.codebox {
+    display: block;
+    width: 45vw;
+    height: 15vh;
+}
+
+p.boxlabel {
+    margin-bottom: 0px;
+}
+
+span.code {
+    font-family: monospace;
+    background-color: #81858630;
+}
+
+span.bold {
+    font-weight: bold;
+}
+
+span.italic{
+    font-style: italic;
+}
+
+div.chartcontainer {
+    width:40%;
+    height:10%;
+}
+
+svg {
+    border: 1px solid black;
+    margin: auto;
+}
+
+table {
+    border-collapse: collapse;
+    background-color: #fbd0d0;
+    font-size: inherit;
+    margin: auto;
+}
+
+td, th {
+    text-align: center;
+    border: 1px solid black;
+
+}
