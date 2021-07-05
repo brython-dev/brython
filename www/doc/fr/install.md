@@ -11,14 +11,14 @@ d'inclure les scripts Brython dans la page HTML depuis un CDN.
 ```
 
 On peut aussi préciser la version mineure avec `brython@3.9` et la version
-micro avec `brython@3.9.4`.
+micro avec `brython@3.9.5`.
 
 Brython est également disponible sur cdnjs:
 
 ```xml
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.4/brython.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.5/brython.min.js">
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.4/brython_stdlib.min.js">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.5/brython_stdlib.min.js">
 </script>
 ```
 

@@ -1,6 +1,6 @@
 {
   "name": "brython",
-  "version": "3.9.4",
+  "version": "3.9.5",
   "description": "Python 3 in the browser",
   "main": "brython.js",
   "scripts": {
