@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-07 09:12:44.856196"
-__BRYTHON__.timestamp=1625641964856
+__BRYTHON__.compiled_date="2021-07-07 09:24:34.185948"
+__BRYTHON__.timestamp=1625642674185
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3339,7 +3339,8 @@ if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$check_def("
 '["'+val+'"])'}}}
 if($test){console.log("scope",scope.id,scope,"innermost",innermost,"scope is innermost",scope===innermost,"bound_before",bound_before,"found",found.slice())}
 if(scope===innermost){
-if(bound_before){if(bound_before.indexOf(val)>-1){found.push(scope)}else if(scope.C &&
+if(bound_before && bound_before.length > 0){console.log(val,'bound before',bound_before)
+if(bound_before.indexOf(val)>-1){found.push(scope)}else if(scope.C &&
 scope.C.tree[0].type=='def' &&
 scope.C.tree[0].env.indexOf(val)>-1){found.push(scope)}}else{if(scope.binding[val]){if($test){console.log(val,'in bindings of',scope.id,this_node.locals[val])}
 if(this_node.locals[val]===undefined){

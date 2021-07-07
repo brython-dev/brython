@@ -6185,7 +6185,8 @@ $IdCtx.prototype.to_js = function(arg){
             // Handle the case when the same name is used at both sides
             // of an assignment and the right side is defined in an
             // upper scope, eg "range = range"
-            if(bound_before){
+            if(bound_before && bound_before.length > 0){
+                console.log(val, 'bound before', bound_before)
                 if(bound_before.indexOf(val) > -1){
                     found.push(scope)
                 }else if(scope.context &&
