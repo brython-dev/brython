@@ -7193,7 +7193,6 @@ var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
 
 $MatchCtx.prototype.transition = function(token, value){
     var context = this
-    console.log('transition on match', token, value)
     switch(token){
         case 'as':
             return new $AbstractExprCtx(new $AliasCtx(context))
@@ -8211,6 +8210,9 @@ $PatternCtx.prototype.transition = function(token, value){
                             context.expect = 'number'
                             context.sign = value
                             return context
+                        case '*':
+                            context.expect = 'starred_id'
+                            return context
                         default:
                             $_SyntaxError(context)
                     }
@@ -8223,13 +8225,22 @@ $PatternCtx.prototype.transition = function(token, value){
                     }
                     break
                 case '[':
-                case '(':
                     return new $PatternCtx(
                         new $PatternSequenceCtx(context.parent, token))
+                case '(':
+                    return new $PatternCtx(
+                        new $PatternGroupCtx(context.parent, token))
                 case '{':
                     return new $PatternMappingItemCtx(
                         new $PatternMappingCtx(context.parent, token))
             }
+        case 'starred_id':
+            if(token == 'id'){
+                var capture = new $PatternCaptureCtx(context, value)
+                capture.starred = true
+                return capture
+            }
+            $_SyntaxError(context, 'expected id after *')
         case 'number':
             // if pattern starts with unary - or +
             switch(token){
@@ -8281,6 +8292,13 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             }else if(token == '('){
                 // open class pattern
                 return new $PatternCtx(new $PatternClassCtx(context))
+            }else if(token == ','){
+                if(context.parent instanceof $PatternSequenceCtx){
+                    return new $PatternCtx(context.parent)
+                }else{
+                    return new $PatternCtx(
+                        new $PatternSequenceCtx(context.parent))
+                }
             }
         case 'id':
             if(token == 'id'){
@@ -8288,13 +8306,18 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
                 context.expect = '.'
                 return context
             }
+
     }
     return $transition(context.parent, token, value)
 }
 
 $PatternCaptureCtx.prototype.to_js = function(){
     if(this.tree.length == 1){
-        return '{capture: "' + this.tree[0] + '"}'
+        var js = '{capture'
+        if(this.starred == true){
+            js += '_starred'
+        }
+        return js + ': "' + this.tree[0] + '"}'
     }
     return '{value: "' + this.tree.join('') + '"}'
 }
@@ -8346,6 +8369,57 @@ $PatternClassCtx.prototype.to_js = function(){
         i++
     }
     return '{class: [' + args.join(', ') + ']}'
+}
+
+var $PatternGroupCtx = function(context){
+    // Class for group patterns, delimited by (), in a "case" statement
+    this.type = "group_pattern"
+    this.parent = context
+    this.tree = []
+    var first_pattern = context.tree.pop()
+    this.expect = ',|'
+    context.tree.push(this)
+}
+
+$PatternGroupCtx.prototype.transition = function(token, value){
+    var context = this
+    if(context.expect == ',|'){
+        if(token == ")"){
+            // close group
+            this.expect = 'as'
+            return context
+        }else if(token == ','){
+            context.expect = 'id'
+            return context
+        }else if(token == 'op' && value == '|'){
+            var opctx = new $PatternOrCtx(context.parent)
+            opctx.parenthese = true
+            return new $PatternCtx(opctx)
+        }else if(this.token === undefined){
+            return $transition(context.parent, token, value)
+        }
+        $_SyntaxError(context)
+    }else if(context.expect == 'as'){
+        if(token == 'as'){
+            this.expect = 'alias'
+            return context
+        }
+        return $transition(context.parent, token, value)
+    }else if(context.expect == 'alias'){
+        if(token =  'id'){
+            context.alias = value
+            return context.parent
+        }
+        $_SyntaxError(context, 'expected alias')
+    }else if(context.expect == 'id'){
+        context.expect = ','
+        console.log('create new pattern')
+        return $transition(new $PatternCtx(context), token, value)
+    }
+}
+
+$PatternGroupCtx.prototype.to_js = function(){
+    return '{group: [' + $to_js(this.tree) + ']}'
 }
 
 var $PatternLiteralCtx = function(context, token, value, sign){
@@ -8494,7 +8568,11 @@ var $PatternOrCtx = function(context){
     this.type = "or_pattern"
     this.parent = context
     var first_pattern = context.tree.pop()
+    if(first_pattern instanceof $PatternGroupCtx){
+        first_pattern = first_pattern.tree[0]
+    }
     this.tree = [first_pattern]
+    first_pattern.parent = this
     this.expect = '|'
     context.tree.push(this)
 }
@@ -8508,14 +8586,35 @@ $PatternOrCtx.prototype.transition = function(token, value){
                 'makes remaining patterns unreachable'])
         }
     }
+    if(context.expect == 'as'){
+        if(token == 'as'){
+            context.expect = 'alias'
+            return context
+        }
+        return $transition(context.parent, token, value)
+    }else if(context.expect == 'alias'){
+        if(token == 'id'){
+            context.alias = value
+            return context.parent
+        }
+        $_SyntaxError(context, 'bad alias')
+    }
     if(token == 'op' && value == "|"){
         return new $PatternCtx(context)
+    }else if(token == ')' && context.parenthese){
+        delete context.parenthese
+        context.expect = 'as'
+        return context
     }
     return $transition(context.parent, token, value)
 }
 
 $PatternOrCtx.prototype.to_js = function(){
-    return '{or : [' + $to_js(this.tree) + ']}'
+    var res = '{or : [' + $to_js(this.tree) + ']'
+    if(this.alias){
+        res += `, alias: '${this.alias}'`
+    }
+    return res + '}'
 }
 
 var $PatternSequenceCtx = function(context, token){
@@ -8542,14 +8641,29 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
     if(context.expect == ','){
         if((this.token == '[' && token == ']') ||
                 (this.token == '(' && token == ")")){
-            return context.parent
+            this.expect = 'as'
+            return context
         }else if(token == ','){
             context.expect = 'id'
             return context
+        }else if(token == 'op' && value == '|' && this.token == '('){
+            return new $PatternCtx(new $PatternOrCtx(context.parent))
         }else if(this.token === undefined){
             return $transition(context.parent, token, value)
         }
         $_SyntaxError(context)
+    }else if(context.expect == 'as'){
+        if(token == 'as'){
+            this.expect = 'alias'
+            return context
+        }
+        return $transition(context.parent, token, value)
+    }else if(context.expect == 'alias'){
+        if(token =  'id'){
+            context.alias = value
+            return context.parent
+        }
+        $_SyntaxError(context, 'expected alias')
     }else if(context.expect == 'id'){
         context.expect = ','
         return $transition(new $PatternCtx(context), token, value)
@@ -8559,6 +8673,7 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
 $PatternSequenceCtx.prototype.to_js = function(){
     return '{sequence: [' + $to_js(this.tree) + ']}'
 }
+
 
 var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     // Class for keyword "raise"
@@ -10365,7 +10480,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 // Python source code
 
 var $transition = $B.parser.$transition = function(context, token, value){
-    // console.log("context", context, "token", token, value, '$pos', $pos)
+    //console.log("context", context, "token", token, value, '$pos', $pos)
     return context.transition(token, value)
 }
 
