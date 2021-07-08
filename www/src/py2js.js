@@ -6192,7 +6192,6 @@ $IdCtx.prototype.to_js = function(arg){
             // of an assignment and the right side is defined in an
             // upper scope, eg "range = range"
             if(bound_before && bound_before.length > 0){
-                console.log(val, 'bound before', bound_before)
                 if(bound_before.indexOf(val) > -1){
                     found.push(scope)
                 }else if(scope.context &&
@@ -8706,7 +8705,11 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
 }
 
 $PatternSequenceCtx.prototype.to_js = function(){
-    return '{sequence: [' + $to_js(this.tree) + ']}'
+    var js = '{sequence: [' + $to_js(this.tree) + ']'
+    if(this.alias){
+        js += `, alias: '${this.alias}'`
+    }
+    return js + '}'
 }
 
 

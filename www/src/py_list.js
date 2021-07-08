@@ -29,6 +29,7 @@ var list = {
     },
     $is_class: true,
     $native: true,
+    $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
     __dir__: object.__dir__
 }
 
@@ -914,7 +915,8 @@ var tuple = {
         __name__: "tuple"
     },
     $is_class: true,
-    $native: true
+    $native: true,
+    $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
 }
 
 var tuple_iterator = $B.make_iterator_class("tuple_iterator")

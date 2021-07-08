@@ -58,6 +58,7 @@ var array = $B.make_class("array",
 )
 
 array.$buffer_protocol = true
+array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 
 array.__getitem__ = function(self, key){
     if(self.obj && self.obj[key] !== undefined){

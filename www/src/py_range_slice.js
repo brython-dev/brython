@@ -12,6 +12,7 @@ var _b_ = $B.builtins,
         },
         $is_class: true,
         $native: true,
+        $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
         $descriptors:{
             start: true,
             step: true,
