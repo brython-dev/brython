@@ -5837,7 +5837,13 @@ $IdCtx.prototype.transition = function(token, value){
         // (:), it is the "soft keyword" `case` for pattern matching
         var start = context.parent.$pos,
             src = $get_module(this).src
-        if(line_ends_with_comma(src.substr(start))){
+        try{
+            var flag = line_ends_with_comma(src.substr(start))
+        }catch(err){
+            $pos = start + err.offset
+            $_SyntaxError(context, [err.message])
+        }
+        if(flag){
             return $transition(new $PatternCtx(
                 new $CaseCtx(context.parent.parent)),
                     token, value)
@@ -8269,6 +8275,26 @@ $PatternCtx.prototype.transition = function(token, value){
     return context.parent.transition(token, value)
 }
 
+function as_pattern(context, token, value){
+    // common to all patterns
+    if(context.expect == 'as'){
+        if(token == 'as'){
+            context.expect = 'alias'
+            return context
+        }else{
+            return $transition(context.parent, token, value)
+        }
+    }else if(context.expect == 'alias'){
+        if(token == 'id'){
+            context.alias = value
+            return context.parent
+        }else{
+            $_SyntaxError(context, 'bad alias')
+        }
+    }
+}
+
+
 var $PatternCaptureCtx = function(context, value){
     // Class for capture patterns in a "case" statement
     // context is a $PatternCtx
@@ -8300,7 +8326,13 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
                     return new $PatternCtx(
                         new $PatternSequenceCtx(context.parent))
                 }
+            }else{
+                context.expect = 'as'
+                return context.transition(token, value)
             }
+        case 'as':
+        case 'alias':
+            return as_pattern(context, token, value)
         case 'id':
             if(token == 'id'){
                 context.tree.push(value)
@@ -8318,9 +8350,14 @@ $PatternCaptureCtx.prototype.to_js = function(){
         if(this.starred == true){
             js += '_starred'
         }
-        return js + ': "' + this.tree[0] + '"}'
+        js += `: '${this.tree[0]}'`
+    }else{
+        js += `{value: '${this.tree.join('')}'`
     }
-    return '{value: "' + this.tree.join('') + '"}'
+    if(this.alias){
+        js += `, alias: '${this.alias}'`
+    }
+    return js + '}'
 }
 
 $PatternClassCtx = function(context){
@@ -8384,39 +8421,32 @@ var $PatternGroupCtx = function(context){
 
 $PatternGroupCtx.prototype.transition = function(token, value){
     var context = this
-    if(context.expect == ',|'){
-        if(token == ")"){
-            // close group
-            this.expect = 'as'
-            return context
-        }else if(token == ','){
-            context.expect = 'id'
-            return context
-        }else if(token == 'op' && value == '|'){
-            var opctx = new $PatternOrCtx(context.parent)
-            opctx.parenthese = true
-            return new $PatternCtx(opctx)
-        }else if(this.token === undefined){
-            return $transition(context.parent, token, value)
-        }
-        $_SyntaxError(context)
-    }else if(context.expect == 'as'){
-        if(token == 'as'){
-            this.expect = 'alias'
-            return context
-        }
-        return $transition(context.parent, token, value)
-    }else if(context.expect == 'alias'){
-        if(token =  'id'){
-            context.alias = value
-            return context.parent
-        }
-        $_SyntaxError(context, 'expected alias')
-    }else if(context.expect == 'id'){
-        context.expect = ','
-        console.log('create new pattern')
-        return $transition(new $PatternCtx(context), token, value)
+    switch(context.expect){
+        case ',|':
+            if(token == ")"){
+                // close group
+                this.expect = 'as'
+                return context
+            }else if(token == ','){
+                context.expect = 'id'
+                return context
+            }else if(token == 'op' && value == '|'){
+                var opctx = new $PatternOrCtx(context.parent)
+                opctx.parenthese = true
+                return new $PatternCtx(opctx)
+            }else if(this.token === undefined){
+                return $transition(context.parent, token, value)
+            }
+            $_SyntaxError(context)
+        case 'as':
+        case 'alias':
+            return as_pattern(context, token, value)
+        case 'id':
+            context.expect = ','
+            console.log('create new pattern')
+            return $transition(new $PatternCtx(context), token, value)
     }
+    $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
 $PatternGroupCtx.prototype.to_js = function(){
@@ -8464,6 +8494,13 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                     $_SyntaxError(context, 'expected imaginary')
 
             }
+        case 'as':
+        case 'alias':
+            return as_pattern(context, token, value)
+    }
+    if(token == 'as' && context.tree.length == 1){
+        context.expect = 'as'
+        return context.transition(token, value)
     }
     return $transition(context.parent, token, value)
 }
@@ -8497,7 +8534,11 @@ $PatternLiteralCtx.prototype.to_js = function(){
             (this.tree[1] == '-' ? '-' : '') +
             this.tree[2].value + ')'
     }
-    return res
+    var js = '{literal: ' + res
+    if(this.alias){
+        js += `, alias: '${this.alias}'`
+    }
+    return js + '}'
 }
 
 var $PatternMappingCtx = function(context){
@@ -8566,10 +8607,12 @@ $PatternMappingItemCtx.prototype.to_js = function(){
 
 var $PatternOrCtx = function(context){
     // Class for "or patterns" in a "case" statement
+    // context already has a pattern as its first child
     this.type = "or_pattern"
     this.parent = context
     var first_pattern = context.tree.pop()
     if(first_pattern instanceof $PatternGroupCtx){
+        // eg "case (a, ...)"
         first_pattern = first_pattern.tree[0]
     }
     this.tree = [first_pattern]
@@ -8577,6 +8620,7 @@ var $PatternOrCtx = function(context){
     this.expect = '|'
     context.tree.push(this)
 }
+
 
 $PatternOrCtx.prototype.transition = function(token, value){
     var context = this
@@ -8587,18 +8631,8 @@ $PatternOrCtx.prototype.transition = function(token, value){
                 'makes remaining patterns unreachable'])
         }
     }
-    if(context.expect == 'as'){
-        if(token == 'as'){
-            context.expect = 'alias'
-            return context
-        }
-        return $transition(context.parent, token, value)
-    }else if(context.expect == 'alias'){
-        if(token == 'id'){
-            context.alias = value
-            return context.parent
-        }
-        $_SyntaxError(context, 'bad alias')
+    if(['as', 'alias'].indexOf(context.expect) > -1){
+        return as_pattern(context, token, value)
     }
     if(token == 'op' && value == "|"){
         return new $PatternCtx(context)
@@ -10672,14 +10706,36 @@ function* basic_tokenizer(src){
     }
 }
 
+var opening = {')': '(', '}': '{', ']': '['}
+
 function line_ends_with_comma(src){
     // used to check if 'match' or 'case' are the "soft keywords" for pattern
     // matching, or ordinary ids
-    var expect = ':'
+    var expect = ':',
+        braces = []
     for(token of $B.tokenizer(src)){
         if(expect == ':'){
             if(token.type == 'OP' && token.string == ':'){
                 expect = 'eol'
+            }else if(token.type == 'OP'){
+                if('([{'.indexOf(token.string) > -1){
+                    braces.push(token)
+                }else if(')]}'.indexOf(token.string) > -1){
+                    if(braces.length == 0){
+                        var err = SyntaxError(
+                            `unmatched '${token.string}'`)
+                        err.offset = token.start[1]
+                        throw err
+                    }else if($B.last(braces).string != opening[token.string]){
+                        var err = SyntaxError("closing parenthesis " +
+                            `'${token.string}' does not match opening ` +
+                            `parenthesis '${$B.last(braces).string}'`)
+                        err.offset = token.start[1]
+                        throw err
+                    }else{
+                        braces.pop()
+                    }
+                }
             }else if(token.type == 'NEWLINE'){
                 return false
             }

@@ -67,11 +67,22 @@ $B.pattern_match = function(subject, pattern){
         if(pattern.capture != '_'){
             // capture identifier in local namespace
             locals[pattern.capture] = subject
+            if(pattern.alias){
+                locals[pattern.alias] = subject
+            }
         }
         return true
     }else if(pattern.capture_starred){
         locals[pattern.capture_starred] = subject
         return true
+    }else if(pattern.literal){
+        if(subject == pattern.literal){
+            if(pattern.alias){
+                locals[pattern.alias] = subject
+            }
+            return true
+        }
+        return false
     }else if(subject == pattern){
         return true
     }

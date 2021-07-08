@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-07 09:24:34.185948"
-__BRYTHON__.timestamp=1625642674185
+__BRYTHON__.compiled_date="2021-07-08 09:15:49.354506"
+__BRYTHON__.timestamp=1625728549354
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3223,7 +3223,9 @@ $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='$$case' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src
-if(line_ends_with_comma(src.substr(start))){return $transition(new $PatternCtx(
+try{var flag=line_ends_with_comma(src.substr(start))}catch(err){$pos=start+err.offset
+$_SyntaxError(C,[err.message])}
+if(flag){return $transition(new $PatternCtx(
 new $CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src
 if(line_ends_with_comma(src.substr(start))){return $transition(new $AbstractExprCtx(
@@ -4402,6 +4404,10 @@ new $PatternSequenceCtx(C.parent))
 case ':':
 return $BodyCtx(C)}}
 return C.parent.transition(token,value)}
+function as_pattern(C,token,value){
+if(C.expect=='as'){if(token=='as'){C.expect='alias'
+return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias'){if(token=='id'){C.alias=value
+return C.parent}else{$_SyntaxError(C,'bad alias')}}}
 var $PatternCaptureCtx=function(C,value){
 this.type="capture_pattern"
 this.parent=C.parent
@@ -4417,7 +4423,11 @@ C.tree.push('.')
 C.expect='id'
 return C}else if(token=='('){
 return new $PatternCtx(new $PatternClassCtx(C))}else if(token==','){if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}else{return new $PatternCtx(
-new $PatternSequenceCtx(C.parent))}}
+new $PatternSequenceCtx(C.parent))}}else{C.expect='as'
+return C.transition(token,value)}
+case 'as':
+case 'alias':
+return as_pattern(C,token,value)
 case 'id':
 if(token=='id'){C.tree.push(value)
 C.expect='.'
@@ -4425,8 +4435,9 @@ return C}}
 return $transition(C.parent,token,value)}
 $PatternCaptureCtx.prototype.to_js=function(){if(this.tree.length==1){var js='{capture'
 if(this.starred==true){js+='_starred'}
-return js+': "'+this.tree[0]+'"}'}
-return '{value: "'+this.tree.join('')+'"}'}
+js+=`: '${this.tree[0]}'`}else{js+=`{value: '${this.tree.join('')}'`}
+if(this.alias){js+=`, alias: '${this.alias}'`}
+return js+'}'}
 $PatternClassCtx=function(C){this.type="class_pattern"
 this.tree=[]
 this.parent=C.parent
@@ -4461,19 +4472,22 @@ var first_pattern=C.tree.pop()
 this.expect=',|'
 C.tree.push(this)}
 $PatternGroupCtx.prototype.transition=function(token,value){var C=this
-if(C.expect==',|'){if(token==")"){
+switch(C.expect){case ',|':
+if(token==")"){
 this.expect='as'
 return C}else if(token==','){C.expect='id'
 return C}else if(token=='op' && value=='|'){var opctx=new $PatternOrCtx(C.parent)
 opctx.parenthese=true
 return new $PatternCtx(opctx)}else if(this.token===undefined){return $transition(C.parent,token,value)}
-$_SyntaxError(C)}else if(C.expect=='as'){if(token=='as'){this.expect='alias'
-return C}
-return $transition(C.parent,token,value)}else if(C.expect=='alias'){if(token='id'){C.alias=value
-return C.parent}
-$_SyntaxError(C,'expected alias')}else if(C.expect=='id'){C.expect=','
+$_SyntaxError(C)
+case 'as':
+case 'alias':
+return as_pattern(C,token,value)
+case 'id':
+C.expect=','
 console.log('create new pattern')
-return $transition(new $PatternCtx(C),token,value)}}
+return $transition(new $PatternCtx(C),token,value)}
+$_SyntaxError(C,'token '+token+' after '+C)}
 $PatternGroupCtx.prototype.to_js=function(){return '{group: ['+$to_js(this.tree)+']}'}
 var $PatternLiteralCtx=function(C,token,value,sign){
 this.type="literal_pattern"
@@ -4500,7 +4514,12 @@ switch(token){case 'imaginary':
 C.tree.push({token,value,sign:C.num_sign})
 return C.parent
 default:
-$_SyntaxError(C,'expected imaginary')}}
+$_SyntaxError(C,'expected imaginary')}
+case 'as':
+case 'alias':
+return as_pattern(C,token,value)}
+if(token=='as' && C.tree.length==1){C.expect='as'
+return C.transition(token,value)}
 return $transition(C.parent,token,value)}
 $PatternLiteralCtx.prototype.to_js=function(){function int_to_num(item){var v=parseInt(item.value[1],item.value[0])
 return item.sign=='-' ?-v :v}
@@ -4523,7 +4542,9 @@ break}
 if(this.tree.length > 1){res='$B.make_complex('+res+','+
 (this.tree[1]=='-' ? '-' :'')+
 this.tree[2].value+')'}
-return res}
+var js='{literal: '+res
+if(this.alias){js+=`, alias: '${this.alias}'`}
+return js+'}'}
 var $PatternMappingCtx=function(C){
 this.type="mapping_pattern"
 this.parent=C
@@ -4566,7 +4587,8 @@ var $PatternOrCtx=function(C){
 this.type="or_pattern"
 this.parent=C
 var first_pattern=C.tree.pop()
-if(first_pattern instanceof $PatternGroupCtx){first_pattern=first_pattern.tree[0]}
+if(first_pattern instanceof $PatternGroupCtx){
+first_pattern=first_pattern.tree[0]}
 this.tree=[first_pattern]
 first_pattern.parent=this
 this.expect='|'
@@ -4574,11 +4596,7 @@ C.tree.push(this)}
 $PatternOrCtx.prototype.transition=function(token,value){var C=this
 for(var i=0,len=C.tree.length-1;i < len;i++){if(C.tree[i].type=='capture_pattern'){$_SyntaxError(C.tree[i],[`name capture '${C.tree[i].tree[0]}' `+
 'makes remaining patterns unreachable'])}}
-if(C.expect=='as'){if(token=='as'){C.expect='alias'
-return C}
-return $transition(C.parent,token,value)}else if(C.expect=='alias'){if(token=='id'){C.alias=value
-return C.parent}
-$_SyntaxError(C,'bad alias')}
+if(['as','alias'].indexOf(C.expect)>-1){return as_pattern(C,token,value)}
 if(token=='op' && value=="|"){return new $PatternCtx(C)}else if(token==')' && C.parenthese){delete C.parenthese
 C.expect='as'
 return C}
@@ -5469,9 +5487,17 @@ pos++}}else if(src[pos]=='#'){while(pos < src.length){if(src[pos]=='\n'){break}
 pos++}}else if(src[pos]=='\\' && src[pos+1]=='\n'){
 pos++}else if(' \t'.indexOf(src[pos])==-1){yield src[pos]}
 pos++}}
+var opening={')':'(','}':'{',']':'['}
 function line_ends_with_comma(src){
-var expect=':'
-for(token of $B.tokenizer(src)){if(expect==':'){if(token.type=='OP' && token.string==':'){expect='eol'}else if(token.type=='NEWLINE'){return false}}else{return token.type=='NEWLINE'}}
+var expect=':',braces=[]
+for(token of $B.tokenizer(src)){if(expect==':'){if(token.type=='OP' && token.string==':'){expect='eol'}else if(token.type=='OP'){if('([{'.indexOf(token.string)>-1){braces.push(token)}else if(')]}'.indexOf(token.string)>-1){if(braces.length==0){var err=SyntaxError(
+`unmatched '${token.string}'`)
+err.offset=token.start[1]
+throw err}else if($B.last(braces).string !=opening[token.string]){var err=SyntaxError("closing parenthesis "+
+`'${token.string}' does not match opening `+
+`parenthesis '${$B.last(braces).string}'`)
+err.offset=token.start[1]
+throw err}else{braces.pop()}}}else if(token.type=='NEWLINE'){return false}}else{return token.type=='NEWLINE'}}
 return false}
 function prepare_number(n){
 n=n.replace(/_/g,"")
@@ -6081,7 +6107,7 @@ $B.handle_error=function(err){
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)}
 if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[1][2]
-trace+='\n    '+' '.repeat(offset)+'^'+
+trace+='\n   '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name
 if(err.args[0]!==undefined && err.args[0]!==_b_.None){trace+=': '+_b_.str.$factory(err.args[0])}}}else{console.log(err)
 trace=err+""}
