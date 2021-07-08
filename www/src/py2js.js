@@ -8218,6 +8218,8 @@ $PatternCtx.prototype.transition = function(token, value){
                             return context
                         case '*':
                             context.expect = 'starred_id'
+                            console.log('set expect to starred id', context)
+                            alert()
                             return context
                         default:
                             $_SyntaxError(context)
@@ -8239,12 +8241,14 @@ $PatternCtx.prototype.transition = function(token, value){
                 case '{':
                     return new $PatternMappingCtx(context.parent, token)
             }
+            break
         case 'starred_id':
             if(token == 'id'){
                 var capture = new $PatternCaptureCtx(context, value)
                 capture.starred = true
                 return capture
             }
+            console.log('context expects starred id', context)
             $_SyntaxError(context, 'expected id after *')
         case 'number':
             // if pattern starts with unary - or +
@@ -8261,7 +8265,6 @@ $PatternCtx.prototype.transition = function(token, value){
         case ',':
             switch(token){
                 case ',':
-                console.log(', in pattern, parent', context.parent)
                     if(context.parent instanceof $PatternSequenceCtx){
                         return new $PatternCtx(context.parent)
                     }
@@ -8318,13 +8321,10 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             }else if(token == '('){
                 // open class pattern
                 return new $PatternCtx(new $PatternClassCtx(context))
-            }else if(false && token == ','){
-                if(context.parent instanceof $PatternSequenceCtx){
-                    return new $PatternCtx(context.parent)
-                }else{
-                    return new $PatternCtx(
-                        new $PatternSequenceCtx(context.parent))
-                }
+            }else if(context.parent instanceof $PatternMappingCtx){
+                console.log('transition on capture parent', context.parent,
+                    token, value)
+                return context.parent.transition(token, value)
             }else{
                 context.expect = 'as'
                 return context.transition(token, value)
@@ -8442,7 +8442,6 @@ $PatternGroupCtx.prototype.transition = function(token, value){
             return as_pattern(context, token, value)
         case 'id':
             context.expect = ','
-            console.log('create new pattern')
             return $transition(new $PatternCtx(context), token, value)
     }
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -8562,17 +8561,22 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 return this
             }
             var p = new $PatternCtx(this)
-            var lit = p.transition(token, value)
-            if(lit instanceof $PatternLiteralCtx){
+            var lit_or_val = p.transition(token, value)
+            if(lit_or_val instanceof $PatternLiteralCtx){
                 this.tree.pop() // remove PatternCtx
-                return new $PatternKeyValueCtx(this, lit)
+                return new $PatternKeyValueCtx(this, lit_or_val)
+            }else if(lit_or_val instanceof $PatternCaptureCtx){
+                // expect a dotted name (value pattern)
+                this.tree.pop()
+                new $PatternKeyValueCtx(this, lit_or_val)
+                this.expect = '.'
+                return this
             }else{
                 // PEP 634 specifies that value patterns are supported as keys
                 // Ignore it for the moment.
                 $_SyntaxError(this, 'expected key or **')
             }
         case 'capture_pattern':
-            console.log('expect capture', token, value)
             var p = new $PatternCtx(this)
             var capture = p.transition(token, value)
             if(capture instanceof $PatternCaptureCtx){
@@ -8583,6 +8587,18 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             }else{
                 $_SyntaxError(this, 'expected identifier')
             }
+        case '.':
+            // value pattern
+            if(this.tree.length > 0){
+                var last = $B.last(this.tree)
+                if(last instanceof $PatternKeyValueCtx){
+                    // create an id with the first name in value pattern
+                    new $IdCtx(last, last.tree[0].tree[0])
+                    context.expect = 'key_value_pattern'
+                    return $transition(last.tree[0], token, value)
+                }
+            }
+            $_SyntaxError(context, 'token ' + token + 'after ' + context)
     }
     return $transition(context.parent, token, value)
 }
@@ -8599,6 +8615,7 @@ var $PatternKeyValueCtx = function(context, literal_or_value){
     this.type = "pattern_key_value"
     this.parent = context
     this.tree = [literal_or_value]
+    literal_or_value.parent = this
     this.expect = ':'
     context.tree.push(this)
 }
@@ -8627,7 +8644,21 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
 }
 
 $PatternKeyValueCtx.prototype.to_js = function(){
-    return '[' + this.tree[0].to_js() + ',' + this.tree[1].to_js() + ']'
+    var key,
+        value
+    if(this.tree[0].type == 'value_pattern'){
+        // second item in this.tree is an id
+        key = this.tree[1].to_js()
+        for(var i = 2, len = this.tree[0].tree.length; i < len; i += 2){
+            key = '$B.$getattr(' + key + ', "' + this.tree[0].tree[i] + '")'
+        }
+        key = '{value: ' + key + '}'
+        value = this.tree[2].to_js()
+    }else{
+        key = this.tree[0].to_js()
+        value = this.tree[1].to_js()
+    }
+    return '[' + key + ',' + value + ']'
 }
 
 var $PatternOrCtx = function(context){

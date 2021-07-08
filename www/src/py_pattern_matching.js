@@ -134,16 +134,18 @@ $B.pattern_match = function(subject, pattern){
                 value_pattern = item[1]
             if(key_pattern.literal){
                 var key = key_pattern.literal
-                try{
-                    var v = $B.$getitem(subject, key)
-                    if(! $B.pattern_match(v, value_pattern)){
-                        return false
-                    }
-                    matched.push(key)
-                }catch(err){
-                    if($B.is_exc(err, [_b_.KeyError])){
-                        return false
-                    }
+            }else if(key_pattern.value){
+                var key = key_pattern.value
+            }
+            try{
+                var v = $B.$getitem(subject, key)
+                if(! $B.pattern_match(v, value_pattern)){
+                    return false
+                }
+                matched.push(key)
+            }catch(err){
+                if($B.is_exc(err, [_b_.KeyError])){
+                    return false
                 }
             }
         }
@@ -160,7 +162,7 @@ $B.pattern_match = function(subject, pattern){
                     }
                     throw err
                 }
-                if(matched.indexOf(next_key) == - 1){
+                if(! _b_.list.__contains__(matched, next_key)){
                     _b_.dict.__setitem__(rest, next_key,
                         $B.$getitem(subject, next_key))
                 }

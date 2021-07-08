@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-08 15:56:38.963969"
-__BRYTHON__.timestamp=1625752598963
+__BRYTHON__.compiled_date="2021-07-08 22:19:35.367941"
+__BRYTHON__.timestamp=1625775575366
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4366,6 +4366,8 @@ C.sign=value
 return C
 case '*':
 C.expect='starred_id'
+console.log('set expect to starred id',C)
+alert()
 return C
 default:
 $_SyntaxError(C)}
@@ -4381,10 +4383,12 @@ return new $PatternCtx(
 new $PatternGroupCtx(C.parent,token))
 case '{':
 return new $PatternMappingCtx(C.parent,token)}
+break
 case 'starred_id':
 if(token=='id'){var capture=new $PatternCaptureCtx(C,value)
 capture.starred=true
 return capture}
+console.log('C expects starred id',C)
 $_SyntaxError(C,'expected id after *')
 case 'number':
 switch(token){case 'int':
@@ -4396,7 +4400,6 @@ default:
 $_SyntaxError(C)}
 case ',':
 switch(token){case ',':
-console.log(', in pattern, parent',C.parent)
 if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}
 return new $PatternCtx(
 new $PatternSequenceCtx(C.parent))
@@ -4421,8 +4424,8 @@ if(token=='.'){C.type="value_pattern"
 C.tree.push('.')
 C.expect='id'
 return C}else if(token=='('){
-return new $PatternCtx(new $PatternClassCtx(C))}else if(false && token==','){if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}else{return new $PatternCtx(
-new $PatternSequenceCtx(C.parent))}}else{C.expect='as'
+return new $PatternCtx(new $PatternClassCtx(C))}else if(C.parent instanceof $PatternMappingCtx){console.log('transition on capture parent',C.parent,token,value)
+return C.parent.transition(token,value)}else{C.expect='as'
 return C.transition(token,value)}
 case 'as':
 case 'alias':
@@ -4484,7 +4487,6 @@ case 'alias':
 return as_pattern(C,token,value)
 case 'id':
 C.expect=','
-console.log('create new pattern')
 return $transition(new $PatternCtx(C),token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $PatternGroupCtx.prototype.to_js=function(){return '{group: ['+$to_js(this.tree)+']}'}
@@ -4557,18 +4559,28 @@ if(token=='}'){return this.parent}
 if(token=='op' && value=='**'){this.expect='capture_pattern'
 return this}
 var p=new $PatternCtx(this)
-var lit=p.transition(token,value)
-if(lit instanceof $PatternLiteralCtx){this.tree.pop()
-return new $PatternKeyValueCtx(this,lit)}else{
+var lit_or_val=p.transition(token,value)
+if(lit_or_val instanceof $PatternLiteralCtx){this.tree.pop()
+return new $PatternKeyValueCtx(this,lit_or_val)}else if(lit_or_val instanceof $PatternCaptureCtx){
+this.tree.pop()
+new $PatternKeyValueCtx(this,lit_or_val)
+this.expect='.'
+return this}else{
 $_SyntaxError(this,'expected key or **')}
 case 'capture_pattern':
-console.log('expect capture',token,value)
 var p=new $PatternCtx(this)
 var capture=p.transition(token,value)
 if(capture instanceof $PatternCaptureCtx){this.tree.pop()
 this.rest=capture
 this.expect='key_value_pattern'
-return this}else{$_SyntaxError(this,'expected identifier')}}
+return this}else{$_SyntaxError(this,'expected identifier')}
+case '.':
+if(this.tree.length > 0){var last=$B.last(this.tree)
+if(last instanceof $PatternKeyValueCtx){
+new $IdCtx(last,last.tree[0].tree[0])
+C.expect='key_value_pattern'
+return $transition(last.tree[0],token,value)}}
+$_SyntaxError(C,'token '+token+'after '+C)}
 return $transition(C.parent,token,value)}
 $PatternMappingCtx.prototype.to_js=function(){var js='{mapping: ['+$to_js(this.tree)+']'
 if(this.rest){js+=", rest: '"+this.rest.tree[0]+"'"}
@@ -4576,6 +4588,7 @@ return js+'}'}
 var $PatternKeyValueCtx=function(C,literal_or_value){this.type="pattern_key_value"
 this.parent=C
 this.tree=[literal_or_value]
+literal_or_value.parent=this
 this.expect=':'
 C.tree.push(this)}
 $PatternKeyValueCtx.prototype.transition=function(token,value){var C=this
@@ -4592,7 +4605,14 @@ case ',':
 return C.parent}
 $_SyntaxError(C,'expected , or }')}
 return $transition(C.parent,token,value)}
-$PatternKeyValueCtx.prototype.to_js=function(){return '['+this.tree[0].to_js()+','+this.tree[1].to_js()+']'}
+$PatternKeyValueCtx.prototype.to_js=function(){var key,value
+if(this.tree[0].type=='value_pattern'){
+key=this.tree[1].to_js()
+for(var i=2,len=this.tree[0].tree.length;i < len;i+=2){key='$B.$getattr('+key+', "'+this.tree[0].tree[i]+'")'}
+key='{value: '+key+'}'
+value=this.tree[2].to_js()}else{key=this.tree[0].to_js()
+value=this.tree[1].to_js()}
+return '['+key+','+value+']'}
 var $PatternOrCtx=function(C){
 this.type="or_pattern"
 this.parent=C
