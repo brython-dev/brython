@@ -8237,8 +8237,7 @@ $PatternCtx.prototype.transition = function(token, value){
                     return new $PatternCtx(
                         new $PatternGroupCtx(context.parent, token))
                 case '{':
-                    return new $PatternMappingItemCtx(
-                        new $PatternMappingCtx(context.parent, token))
+                    return new $PatternMappingCtx(context.parent, token)
             }
         case 'starred_id':
             if(token == 'id'){
@@ -8262,6 +8261,7 @@ $PatternCtx.prototype.transition = function(token, value){
         case ',':
             switch(token){
                 case ',':
+                console.log(', in pattern, parent', context.parent)
                     if(context.parent instanceof $PatternSequenceCtx){
                         return new $PatternCtx(context.parent)
                     }
@@ -8318,7 +8318,7 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             }else if(token == '('){
                 // open class pattern
                 return new $PatternCtx(new $PatternClassCtx(context))
-            }else if(token == ','){
+            }else if(false && token == ','){
                 if(context.parent instanceof $PatternSequenceCtx){
                     return new $PatternCtx(context.parent)
                 }else{
@@ -8547,61 +8547,87 @@ var $PatternMappingCtx = function(context){
     context.tree.pop()
     this.tree = []
     context.tree.push(this)
+    this.expect = 'key_value_pattern'
 }
 
 $PatternMappingCtx.prototype.transition = function(token, value){
     var context = this
-    switch(token){
-        case ',':
-            return new $PatternMappingItemCtx(context)
-        case '}':
-            return context.parent
-        default:
-            $_SyntaxError(context)
-    }
-}
-
-$PatternMappingCtx.prototype.to_js = function(){
-    return '{mapping: ' + $to_js(this.tree) + '}'
-}
-
-var $PatternMappingItemCtx = function(context){
-    this.type = "mapping_pattern_item"
-    this.parent = context
-    this.tree = []
-    this.expect = 'literal'
-    context.tree.push(this)
-}
-
-$PatternMappingItemCtx.prototype.transition = function(token, value){
-    var context = this
-    switch(context.expect){
-        case 'literal':
-            switch(token){
-                case 'str':
-                    this.tree.push(value)
-                    this.expect = ':'
-                    return this
-                default:
-                    $_SyntaxError(this, 'expected a literal')
+    switch(this.expect){
+        case 'key_value_pattern':
+            if(token == '}'){
+                return this.parent
             }
-        case ':':
-            switch(token){
-                case ':':
-                    this.expect = 'pattern'
-                    return new $PatternCtx(this)
-                default:
-                    $_SyntaxError('expected :')
+            if(token == 'op' && value == '**'){
+                this.expect = 'capture_pattern'
+                return this
             }
-        case 'pattern':
-            console.log(token, value)
+            var p = new $PatternCtx(this)
+            var lit = p.transition(token, value)
+            if(lit instanceof $PatternLiteralCtx){
+                this.tree.pop() // remove PatternCtx
+                return new $PatternKeyValueCtx(this, lit)
+            }else{
+                // PEP 634 specifies that value patterns are supported as keys
+                // Ignore it for the moment.
+                $_SyntaxError(this, 'expected key or **')
+            }
+        case 'capture_pattern':
+            console.log('expect capture', token, value)
+            var p = new $PatternCtx(this)
+            var capture = p.transition(token, value)
+            if(capture instanceof $PatternCaptureCtx){
+                this.tree.pop() // remove PatternCtx
+                this.rest = capture
+                this.expect = 'key_value_pattern'
+                return this
+            }else{
+                $_SyntaxError(this, 'expected identifier')
+            }
     }
     return $transition(context.parent, token, value)
 }
 
-$PatternMappingItemCtx.prototype.to_js = function(){
-    console.log('pattern mapping to js', this)
-    return '[' + this.tree[0] + ',' + this.tree[1].to_js() + ']'
+$PatternMappingCtx.prototype.to_js = function(){
+    var js = '{mapping: [' + $to_js(this.tree) + ']'
+    if(this.rest){
+        js += ", rest: '" + this.rest.tree[0] + "'"
+    }
+    return js + '}'
+}
+
+var $PatternKeyValueCtx = function(context, literal_or_value){
+    this.type = "pattern_key_value"
+    this.parent = context
+    this.tree = [literal_or_value]
+    this.expect = ':'
+    context.tree.push(this)
+}
+
+$PatternKeyValueCtx.prototype.transition = function(token, value){
+    var context = this
+    switch(context.expect){
+        case ':':
+            switch(token){
+                case ':':
+                    this.expect = ','
+                    return new $PatternCtx(this)
+                default:
+                    $_SyntaxError('expected :')
+            }
+        case ',':
+            switch(token){
+                case '}':
+                    return context.parent.parent
+                case ',':
+                    return context.parent
+            }
+            $_SyntaxError(context, 'expected , or }')
+    }
+    return $transition(context.parent, token, value)
+}
+
+$PatternKeyValueCtx.prototype.to_js = function(){
+    return '[' + this.tree[0].to_js() + ',' + this.tree[1].to_js() + ']'
 }
 
 var $PatternOrCtx = function(context){
@@ -10718,7 +10744,7 @@ function line_ends_with_comma(src){
         braces = []
     for(token of $B.tokenizer(src)){
         if(expect == ':'){
-            if(token.type == 'OP' && token.string == ':'){
+            if(token.type == 'OP' && token.string == ':' && braces.length == 0){
                 expect = 'eol'
             }else if(token.type == 'OP'){
                 if('([{'.indexOf(token.string) > -1){

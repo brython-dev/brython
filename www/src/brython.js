@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-08 14:00:07.058402"
-__BRYTHON__.timestamp=1625745607058
+__BRYTHON__.compiled_date="2021-07-08 15:56:38.963969"
+__BRYTHON__.timestamp=1625752598963
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4380,8 +4380,7 @@ case '(':
 return new $PatternCtx(
 new $PatternGroupCtx(C.parent,token))
 case '{':
-return new $PatternMappingItemCtx(
-new $PatternMappingCtx(C.parent,token))}
+return new $PatternMappingCtx(C.parent,token)}
 case 'starred_id':
 if(token=='id'){var capture=new $PatternCaptureCtx(C,value)
 capture.starred=true
@@ -4397,6 +4396,7 @@ default:
 $_SyntaxError(C)}
 case ',':
 switch(token){case ',':
+console.log(', in pattern, parent',C.parent)
 if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}
 return new $PatternCtx(
 new $PatternSequenceCtx(C.parent))
@@ -4421,7 +4421,7 @@ if(token=='.'){C.type="value_pattern"
 C.tree.push('.')
 C.expect='id'
 return C}else if(token=='('){
-return new $PatternCtx(new $PatternClassCtx(C))}else if(token==','){if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}else{return new $PatternCtx(
+return new $PatternCtx(new $PatternClassCtx(C))}else if(false && token==','){if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}else{return new $PatternCtx(
 new $PatternSequenceCtx(C.parent))}}else{C.expect='as'
 return C.transition(token,value)}
 case 'as':
@@ -4549,39 +4549,50 @@ this.type="mapping_pattern"
 this.parent=C
 C.tree.pop()
 this.tree=[]
-C.tree.push(this)}
+C.tree.push(this)
+this.expect='key_value_pattern'}
 $PatternMappingCtx.prototype.transition=function(token,value){var C=this
-switch(token){case ',':
-return new $PatternMappingItemCtx(C)
-case '}':
-return C.parent
-default:
-$_SyntaxError(C)}}
-$PatternMappingCtx.prototype.to_js=function(){return '{mapping: '+$to_js(this.tree)+'}'}
-var $PatternMappingItemCtx=function(C){this.type="mapping_pattern_item"
+switch(this.expect){case 'key_value_pattern':
+if(token=='}'){return this.parent}
+if(token=='op' && value=='**'){this.expect='capture_pattern'
+return this}
+var p=new $PatternCtx(this)
+var lit=p.transition(token,value)
+if(lit instanceof $PatternLiteralCtx){this.tree.pop()
+return new $PatternKeyValueCtx(this,lit)}else{
+$_SyntaxError(this,'expected key or **')}
+case 'capture_pattern':
+console.log('expect capture',token,value)
+var p=new $PatternCtx(this)
+var capture=p.transition(token,value)
+if(capture instanceof $PatternCaptureCtx){this.tree.pop()
+this.rest=capture
+this.expect='key_value_pattern'
+return this}else{$_SyntaxError(this,'expected identifier')}}
+return $transition(C.parent,token,value)}
+$PatternMappingCtx.prototype.to_js=function(){var js='{mapping: ['+$to_js(this.tree)+']'
+if(this.rest){js+=", rest: '"+this.rest.tree[0]+"'"}
+return js+'}'}
+var $PatternKeyValueCtx=function(C,literal_or_value){this.type="pattern_key_value"
 this.parent=C
-this.tree=[]
-this.expect='literal'
-C.tree.push(this)}
-$PatternMappingItemCtx.prototype.transition=function(token,value){var C=this
-switch(C.expect){case 'literal':
-switch(token){case 'str':
-this.tree.push(value)
+this.tree=[literal_or_value]
 this.expect=':'
-return this
-default:
-$_SyntaxError(this,'expected a literal')}
-case ':':
+C.tree.push(this)}
+$PatternKeyValueCtx.prototype.transition=function(token,value){var C=this
+switch(C.expect){case ':':
 switch(token){case ':':
-this.expect='pattern'
+this.expect=','
 return new $PatternCtx(this)
 default:
 $_SyntaxError('expected :')}
-case 'pattern':
-console.log(token,value)}
+case ',':
+switch(token){case '}':
+return C.parent.parent
+case ',':
+return C.parent}
+$_SyntaxError(C,'expected , or }')}
 return $transition(C.parent,token,value)}
-$PatternMappingItemCtx.prototype.to_js=function(){console.log('pattern mapping to js',this)
-return '['+this.tree[0]+','+this.tree[1].to_js()+']'}
+$PatternKeyValueCtx.prototype.to_js=function(){return '['+this.tree[0].to_js()+','+this.tree[1].to_js()+']'}
 var $PatternOrCtx=function(C){
 this.type="or_pattern"
 this.parent=C
@@ -5491,7 +5502,7 @@ pos++}}
 var opening={')':'(','}':'{',']':'['}
 function line_ends_with_comma(src){
 var expect=':',braces=[]
-for(token of $B.tokenizer(src)){if(expect==':'){if(token.type=='OP' && token.string==':'){expect='eol'}else if(token.type=='OP'){if('([{'.indexOf(token.string)>-1){braces.push(token)}else if(')]}'.indexOf(token.string)>-1){if(braces.length==0){var err=SyntaxError(
+for(token of $B.tokenizer(src)){if(expect==':'){if(token.type=='OP' && token.string==':' && braces.length==0){expect='eol'}else if(token.type=='OP'){if('([{'.indexOf(token.string)>-1){braces.push(token)}else if(')]}'.indexOf(token.string)>-1){if(braces.length==0){var err=SyntaxError(
 `unmatched '${token.string}'`)
 err.offset=token.start[1]
 throw err}else if($B.last(braces).string !=opening[token.string]){var err=SyntaxError("closing parenthesis "+
@@ -13749,7 +13760,7 @@ klass.__len__=function(self){return self.len}
 klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
 $B.set_func_names(klass,"builtins")
 return klass}
-var dict={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true}
+var dict={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true,$match_mapping_pattern:true }
 dict.$to_obj=function(d){
 var res={}
 for(var key in d.$string_dict){res[key]=d.$string_dict[key][0]}
@@ -14120,6 +14131,7 @@ var res=$B.obj_dict(dict.$to_obj(obj))}else{var res=$B.obj_dict(obj)}
 res.__class__=mappingproxy
 return res}
 )
+mappingproxy.$match_mapping_pattern=true 
 mappingproxy.__setitem__=function(){throw _b_.TypeError.$factory("'mappingproxy' object does not support "+
 "item assignment")}
 for(var attr in dict){if(mappingproxy[attr]!==undefined ||

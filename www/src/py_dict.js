@@ -171,7 +171,8 @@ var dict = {
         __name__: "dict"
     },
     $is_class: true,
-    $native: true
+    $native: true,
+    $match_mapping_pattern: true // for pattern matching (PEP 634)
 }
 
 dict.$to_obj = function(d){
@@ -1178,6 +1179,8 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
         return res
     }
 )
+
+mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
 mappingproxy.__setitem__ = function(){
     throw _b_.TypeError.$factory("'mappingproxy' object does not support " +

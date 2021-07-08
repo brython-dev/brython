@@ -16,17 +16,26 @@ $B.pattern_match = function(subject, pattern){
 
     if(pattern.sequence){
         // iterate on subject and match each item in the sequence
+
+        // First, check that the subject is an instance of a class that
+        // supports sequence pattern matching
         var Sequence
         if($B.imported['collections.abc']){
             Sequence = $B.imported['collections.abc'].Sequence
+        }
+        var deque
+        if($B.imported['collections']){
+            deque = $B.imported['collections'].deque
         }
         var supported = false
         var klass = subject.__class__ || $B.get_class(subject)
         for(var base of [klass].concat(klass.__bases__ || [])){
             if(base.$match_sequence_pattern){
+                // set for builtin classes list, tuple, range, memoryview
+                // and for array.array
                 supported = true
                 break
-            }else if(base === Sequence){
+            }else if(base === Sequence || base == deque){
                 supported = true
                 break
             }
@@ -39,6 +48,8 @@ $B.pattern_match = function(subject, pattern){
             return false
         }
 
+        // Iterate on elements of subject and check that item i matches
+        // pattern i
         var it = _b_.iter(subject),
             nxt = $B.$getattr(it, '__next__')
         for(var i = 0, len = pattern.sequence.length; i < len; i++){
@@ -90,6 +101,72 @@ $B.pattern_match = function(subject, pattern){
             }
         }
         return false
+    }
+
+    if(pattern.mapping){
+        // First check that subject is an instance of a class that supports
+        // mapping patterns
+        var supported = false
+        var Mapping
+        if($B.imported['collections.abc']){
+            Mapping = $B.imported['collections.abc'].Mapping
+        }
+        var klass = subject.__class__ || $B.get_class(subject)
+        for(var base of [klass].concat(klass.__bases__ || [])){
+            // $match_mapping_pattern is set for dict and mappingproxy
+            if(base.$match_mapping_pattern || base === Mapping){
+                supported = true
+                break
+            }
+        }
+        if((! supported) && Mapping){
+            supported = _b_.issubclass(klass, Mapping)
+        }
+
+        if(! supported){
+            return false
+        }
+
+        // value of pattern.mapping is a list of 2-element lists [key_pattern, value]
+        var matched = []
+        for(var item of pattern.mapping){
+            var key_pattern = item[0],
+                value_pattern = item[1]
+            if(key_pattern.literal){
+                var key = key_pattern.literal
+                try{
+                    var v = $B.$getitem(subject, key)
+                    if(! $B.pattern_match(v, value_pattern)){
+                        return false
+                    }
+                    matched.push(key)
+                }catch(err){
+                    if($B.is_exc(err, [_b_.KeyError])){
+                        return false
+                    }
+                }
+            }
+        }
+        if(pattern.rest){
+            var rest = $B.empty_dict(),
+                it = _b_.iter(subject)
+            while(true){
+                try{
+                    var next_key = _b_.next(it)
+                }catch(err){
+                    if($B.is_exc(err, [_b_.StopIteration])){
+                        locals[pattern.rest] = rest
+                        return true
+                    }
+                    throw err
+                }
+                if(matched.indexOf(next_key) == - 1){
+                    _b_.dict.__setitem__(rest, next_key,
+                        $B.$getitem(subject, next_key))
+                }
+            }
+        }
+        return true
     }
 
     if(pattern.capture){
