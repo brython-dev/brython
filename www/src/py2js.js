@@ -8218,8 +8218,6 @@ $PatternCtx.prototype.transition = function(token, value){
                             return context
                         case '*':
                             context.expect = 'starred_id'
-                            console.log('set expect to starred id', context)
-                            alert()
                             return context
                         default:
                             $_SyntaxError(context)
@@ -8322,8 +8320,6 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
                 // open class pattern
                 return new $PatternCtx(new $PatternClassCtx(context))
             }else if(context.parent instanceof $PatternMappingCtx){
-                console.log('transition on capture parent', context.parent,
-                    token, value)
                 return context.parent.transition(token, value)
             }else{
                 context.expect = 'as'
@@ -8532,6 +8528,7 @@ $PatternLiteralCtx.prototype.to_js = function(){
             (this.tree[1] == '-' ? '-' : '') +
             this.tree[2].value + ')'
     }
+    this.js_value = res
     var js = '{literal: ' + res
     if(this.alias){
         js += `, alias: '${this.alias}'`
@@ -8547,6 +8544,8 @@ var $PatternMappingCtx = function(context){
     this.tree = []
     context.tree.push(this)
     this.expect = 'key_value_pattern'
+    // store duplicate literal keys
+    this.duplicate_keys = []
 }
 
 $PatternMappingCtx.prototype.transition = function(token, value){
@@ -8554,6 +8553,14 @@ $PatternMappingCtx.prototype.transition = function(token, value){
     switch(this.expect){
         case 'key_value_pattern':
             if(token == '}'){
+                console.log('close mapping', this.duplicate_keys)
+                // If there are only literal values, raise SyntaxError if
+                // there are duplicate keys
+                if((! this.has_value_pattern_keys) &&
+                        this.duplicate_keys.length > 0){
+                    $_SyntaxError(context, 'duplicate key ' +
+                        this.duplicate_keys[0])
+                }
                 return this.parent
             }
             if(token == 'op' && value == '**'){
@@ -8564,8 +8571,27 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             var lit_or_val = p.transition(token, value)
             if(lit_or_val instanceof $PatternLiteralCtx){
                 this.tree.pop() // remove PatternCtx
+                // check duplicates
+                for(var kv of this.tree){
+                    if(kv instanceof $PatternKeyValueCtx){
+                        var key = kv.tree[0]
+                        if(key instanceof $PatternLiteralCtx){
+                            var old_lit = key.tree[0],
+                                new_lit = lit_or_val.tree[0]
+                            if(old_lit.token === new_lit.token &&
+                                    old_lit.value === new_lit.value &&
+                                    old_lit.sign === new_lit.sign){
+                                // call to_js() to generate JS value
+                                lit_or_val.to_js()
+                                // store JS value in duplicate_keys
+                                this.duplicate_keys.push(lit_or_val.js_value)
+                            }
+                        }
+                    }
+                }
                 return new $PatternKeyValueCtx(this, lit_or_val)
             }else if(lit_or_val instanceof $PatternCaptureCtx){
+                this.has_value_pattern_keys = true
                 // expect a dotted name (value pattern)
                 this.tree.pop()
                 new $PatternKeyValueCtx(this, lit_or_val)
@@ -8634,7 +8660,7 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
         case ',':
             switch(token){
                 case '}':
-                    return context.parent.parent
+                    return $transition(context.parent, token, value)
                 case ',':
                     return context.parent
             }
