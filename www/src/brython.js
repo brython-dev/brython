@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-08 22:19:35.367941"
-__BRYTHON__.timestamp=1625775575366
+__BRYTHON__.compiled_date="2021-07-09 18:48:03.297126"
+__BRYTHON__.timestamp=1625849283297
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4366,8 +4366,6 @@ C.sign=value
 return C
 case '*':
 C.expect='starred_id'
-console.log('set expect to starred id',C)
-alert()
 return C
 default:
 $_SyntaxError(C)}
@@ -4424,8 +4422,7 @@ if(token=='.'){C.type="value_pattern"
 C.tree.push('.')
 C.expect='id'
 return C}else if(token=='('){
-return new $PatternCtx(new $PatternClassCtx(C))}else if(C.parent instanceof $PatternMappingCtx){console.log('transition on capture parent',C.parent,token,value)
-return C.parent.transition(token,value)}else{C.expect='as'
+return new $PatternCtx(new $PatternClassCtx(C))}else if(C.parent instanceof $PatternMappingCtx){return C.parent.transition(token,value)}else{C.expect='as'
 return C.transition(token,value)}
 case 'as':
 case 'alias':
@@ -4543,6 +4540,7 @@ break}
 if(this.tree.length > 1){res='$B.make_complex('+res+','+
 (this.tree[1]=='-' ? '-' :'')+
 this.tree[2].value+')'}
+this.js_value=res
 var js='{literal: '+res
 if(this.alias){js+=`, alias: '${this.alias}'`}
 return js+'}'}
@@ -4552,16 +4550,28 @@ this.parent=C
 C.tree.pop()
 this.tree=[]
 C.tree.push(this)
-this.expect='key_value_pattern'}
+this.expect='key_value_pattern'
+this.duplicate_keys=[]}
 $PatternMappingCtx.prototype.transition=function(token,value){var C=this
 switch(this.expect){case 'key_value_pattern':
-if(token=='}'){return this.parent}
+if(token=='}'){console.log('close mapping',this.duplicate_keys)
+if((! this.has_value_pattern_keys)&&
+this.duplicate_keys.length > 0){$_SyntaxError(C,'duplicate key '+
+this.duplicate_keys[0])}
+return this.parent}
 if(token=='op' && value=='**'){this.expect='capture_pattern'
 return this}
 var p=new $PatternCtx(this)
 var lit_or_val=p.transition(token,value)
 if(lit_or_val instanceof $PatternLiteralCtx){this.tree.pop()
-return new $PatternKeyValueCtx(this,lit_or_val)}else if(lit_or_val instanceof $PatternCaptureCtx){
+for(var kv of this.tree){if(kv instanceof $PatternKeyValueCtx){var key=kv.tree[0]
+if(key instanceof $PatternLiteralCtx){var old_lit=key.tree[0],new_lit=lit_or_val.tree[0]
+if(old_lit.token===new_lit.token &&
+old_lit.value===new_lit.value &&
+old_lit.sign===new_lit.sign){
+lit_or_val.to_js()
+this.duplicate_keys.push(lit_or_val.js_value)}}}}
+return new $PatternKeyValueCtx(this,lit_or_val)}else if(lit_or_val instanceof $PatternCaptureCtx){this.has_value_pattern_keys=true
 this.tree.pop()
 new $PatternKeyValueCtx(this,lit_or_val)
 this.expect='.'
@@ -4600,7 +4610,7 @@ default:
 $_SyntaxError('expected :')}
 case ',':
 switch(token){case '}':
-return C.parent.parent
+return $transition(C.parent,token,value)
 case ',':
 return C.parent}
 $_SyntaxError(C,'expected , or }')}
@@ -6453,9 +6463,9 @@ Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
 kls.__qualname__=class_name.replace("$$","")
 return kls}
-var type=$B.make_class("type",function(obj,bases,cl_dict){if(arguments.length==1){if(obj===undefined){return $B.UndefinedClass}
-return obj.__class__ ||$B.get_class(obj)}
-return type.__new__(type,obj,bases,cl_dict)}
+var type=$B.make_class("type",function(obj,bases,cl_dict){var len=arguments.length
+if(len==1){if(obj===undefined){return $B.UndefinedClass}
+return obj.__class__ ||$B.get_class(obj)}else if(len==3){return type.__new__(type,obj,bases,cl_dict)}else{throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}}
 )
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}

@@ -267,13 +267,17 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
 var type = $B.make_class("type",
     function(obj, bases, cl_dict){
-        if(arguments.length == 1){
+        var len = arguments.length
+        if(len == 1){
             if(obj === undefined){
                 return $B.UndefinedClass
             }
             return obj.__class__ || $B.get_class(obj)
+        }else if(len == 3){
+            return type.__new__(type, obj, bases, cl_dict)
+        }else{
+            throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
         }
-        return type.__new__(type, obj, bases, cl_dict)
     }
 )
 

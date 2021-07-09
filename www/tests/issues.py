@@ -2989,6 +2989,13 @@ foobar = 'foobar'
 
 assert get_foobar() == "foobar"
 
+# issue 1723
+try:
+    type()
+    raise Exception('should have raised TypeError')
+except TypeError:
+    pass
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
