@@ -1857,6 +1857,14 @@ memoryview.__len__ = function(self){
     return len(self.obj) / self.itemsize
 }
 
+memoryview.__setitem__ = function(self, key, value){
+    try{
+        $B.$setitem(self.obj, key, value)
+    }catch(err){
+        throw _b_.TypeError.$factory("cannot modify read-only memory")
+    }
+}
+
 memoryview.cast = function(self, format){
     switch(format){
         case "B":
