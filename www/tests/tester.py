@@ -8,10 +8,15 @@ If the test failed, print the exception, and the line in the script where the
 exception happened.
 """
 
-import python_re as re
+try:
+    import python_re as re # Brython
+    import tb
+except ImportError:
+    import re
+    import traceback as tb
+
 import sys
 import time
-import tb
 
 class _AssertRaisesBaseContext(object):
 
