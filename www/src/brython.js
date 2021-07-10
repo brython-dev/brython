@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-09 18:48:03.297126"
-__BRYTHON__.timestamp=1625849283297
+__BRYTHON__.compiled_date="2021-07-10 08:10:41.142717"
+__BRYTHON__.timestamp=1625897441142
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1566,13 +1566,13 @@ case 'op':
 if(value=='|'){return new $PatternCtx(new $PatternOrCtx(C))}
 $_SyntaxError(C,['expected :'])
 case ',':
-if(C.expect==':' ||C.expect=='as'){console.log('implicit tuple',this)
-var first=this.tree[0]
+if(C.expect==':' ||C.expect=='as'){var first=this.tree[0]
 return new $PatternCtx(new $PatternSequenceCtx(C))}
 default:
 $_SyntaxError(C,['expected :'])}}
 $CaseCtx.prototype.to_js=function(){var node=$get_node(this),rank=node.parent.children.indexOf(node),prefix=rank==0 ? 'if' :'else if'
-return prefix+'($B.pattern_match(subject, '+$to_js(this.tree)+
+return prefix+'(($locals.$line_info="'+node.line_num+','+
+node.module+'") && $B.pattern_match(subject, '+$to_js(this.tree)+
 (this.alias ? `, {as: "${this.alias.value}"}` :'')+'))'}
 var $ClassCtx=$B.parser.$ClassCtx=function(C){
 this.type='class'
@@ -4554,7 +4554,7 @@ this.expect='key_value_pattern'
 this.duplicate_keys=[]}
 $PatternMappingCtx.prototype.transition=function(token,value){var C=this
 switch(this.expect){case 'key_value_pattern':
-if(token=='}'){console.log('close mapping',this.duplicate_keys)
+if(token=='}'){
 if((! this.has_value_pattern_keys)&&
 this.duplicate_keys.length > 0){$_SyntaxError(C,'duplicate key '+
 this.duplicate_keys[0])}
@@ -4570,7 +4570,8 @@ if(old_lit.token===new_lit.token &&
 old_lit.value===new_lit.value &&
 old_lit.sign===new_lit.sign){
 lit_or_val.to_js()
-this.duplicate_keys.push(lit_or_val.js_value)}}}}
+$_SyntaxError(C,["duplicate literal key "+
+lit_or_val.js_value])}}}}
 return new $PatternKeyValueCtx(this,lit_or_val)}else if(lit_or_val instanceof $PatternCaptureCtx){this.has_value_pattern_keys=true
 this.tree.pop()
 new $PatternKeyValueCtx(this,lit_or_val)

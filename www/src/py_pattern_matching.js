@@ -128,7 +128,8 @@ $B.pattern_match = function(subject, pattern){
         }
 
         // value of pattern.mapping is a list of 2-element lists [key_pattern, value]
-        var matched = []
+        var matched = [],
+            keys = []
         for(var item of pattern.mapping){
             var key_pattern = item[0],
                 value_pattern = item[1]
@@ -137,6 +138,10 @@ $B.pattern_match = function(subject, pattern){
             }else if(key_pattern.value){
                 var key = key_pattern.value
             }
+            if(_b_.list.__contains__(keys, key)){
+                throw _b_.ValueError.$factory('duplicate key ' + key)
+            }
+            keys.push(key)
             try{
                 var v = $B.$getitem(subject, key)
                 if(! $B.pattern_match(v, value_pattern)){

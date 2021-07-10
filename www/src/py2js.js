@@ -2392,7 +2392,6 @@ $CaseCtx.prototype.transition = function(token, value){
             $_SyntaxError(context, ['expected :'])
         case ',':
             if(context.expect == ':' || context.expect == 'as'){
-                console.log('implicit tuple', this)
                 var first = this.tree[0]
                 return new $PatternCtx(new $PatternSequenceCtx(context))
             }
@@ -2406,8 +2405,10 @@ $CaseCtx.prototype.to_js = function(){
     var node = $get_node(this),
         rank = node.parent.children.indexOf(node),
         prefix = rank == 0 ? 'if' : 'else if'
-
-    return prefix + '($B.pattern_match(subject, ' + $to_js(this.tree) +
+    // since statement is "if", $add_line_num doesn't insert a node with the
+    // line number
+    return prefix + '(($locals.$line_info="' + node.line_num + ',' +
+        node.module + '") && $B.pattern_match(subject, ' + $to_js(this.tree) +
         (this.alias ? `, {as: "${this.alias.value}"}` : '') + '))'
 
 }
@@ -8553,7 +8554,6 @@ $PatternMappingCtx.prototype.transition = function(token, value){
     switch(this.expect){
         case 'key_value_pattern':
             if(token == '}'){
-                console.log('close mapping', this.duplicate_keys)
                 // If there are only literal values, raise SyntaxError if
                 // there are duplicate keys
                 if((! this.has_value_pattern_keys) &&
@@ -8584,7 +8584,9 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                                 // call to_js() to generate JS value
                                 lit_or_val.to_js()
                                 // store JS value in duplicate_keys
-                                this.duplicate_keys.push(lit_or_val.js_value)
+                                $_SyntaxError(context,
+                                    ["duplicate literal key " +
+                                    lit_or_val.js_value])
                             }
                         }
                     }
