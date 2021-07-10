@@ -139,7 +139,9 @@ $B.pattern_match = function(subject, pattern){
                 var key = key_pattern.value
             }
             if(_b_.list.__contains__(keys, key)){
-                throw _b_.ValueError.$factory('duplicate key ' + key)
+                throw _b_.ValueError.$factory('mapping pattern checks ' +
+                    'duplicate key (' +
+                    _b_.str.$factory(key) + ')')
             }
             keys.push(key)
             try{
