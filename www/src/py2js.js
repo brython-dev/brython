@@ -7424,9 +7424,8 @@ $NodeCtx.prototype.to_js = function(){
                     // Evaluate annotation
                     this.js = this.tree[0].annotation.to_js() + ";"
                 }else{
-                    // Ignore
+                    // Don't evaluate
                     this.js = ""
-                    this.tree = []
                 }
             }else if(["def", "generator"].indexOf(this.tree[0].type) == -1){
                 // Avoid evaluation
