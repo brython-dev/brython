@@ -133,11 +133,13 @@ $B.pattern_match = function(subject, pattern){
         for(var item of pattern.mapping){
             var key_pattern = item[0],
                 value_pattern = item[1]
-            if(key_pattern.literal){
+            if(key_pattern.hasOwnProperty('literal')){
                 var key = key_pattern.literal
-            }else if(key_pattern.value){
+            }else if(key_pattern.hasOwnProperty('value')){
                 var key = key_pattern.value
             }
+            // Check that key is not already used. Use __contains__ to handle
+            // corner cases like {0: _, False: _}
             if(_b_.list.__contains__(keys, key)){
                 throw _b_.ValueError.$factory('mapping pattern checks ' +
                     'duplicate key (' +
@@ -154,6 +156,7 @@ $B.pattern_match = function(subject, pattern){
                 if($B.is_exc(err, [_b_.KeyError])){
                     return false
                 }
+                throw err
             }
         }
         if(pattern.rest){

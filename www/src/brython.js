@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-11 09:14:43.134542"
-__BRYTHON__.timestamp=1625987683134
+__BRYTHON__.compiled_date="2021-07-11 10:04:55.000273"
+__BRYTHON__.timestamp=1625990695000
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1568,8 +1568,17 @@ $_SyntaxError(C,['expected :'])
 case ',':
 if(C.expect==':' ||C.expect=='as'){var first=this.tree[0]
 return new $PatternCtx(new $PatternSequenceCtx(C))}
+case 'if':
+C.has_guard=true
+return new $AbstractExprCtx(new $ConditionCtx(C,token),false)
 default:
 $_SyntaxError(C,['expected :'])}}
+$CaseCtx.prototype.transform=function(node,rank){
+if(this.has_guard){this.guard=this.tree.pop()
+var guard_node=new $NodeJS(this.guard.to_js()),block=node.children.slice()
+node.children=[]
+node.add(guard_node)
+for(var child of block){guard_node.add(child)}}}
 $CaseCtx.prototype.to_js=function(){var node=$get_node(this),rank=node.parent.children.indexOf(node),prefix=rank==0 ? 'if' :'else if'
 return prefix+'(($locals.$line_info="'+node.line_num+','+
 node.module+'") && $B.pattern_match(subject, '+$to_js(this.tree)+

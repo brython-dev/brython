@@ -2395,11 +2395,30 @@ $CaseCtx.prototype.transition = function(token, value){
                 var first = this.tree[0]
                 return new $PatternCtx(new $PatternSequenceCtx(context))
             }
+        case 'if':
+            // guard
+            context.has_guard = true
+            return new $AbstractExprCtx(new $ConditionCtx(context, token),
+                false)
         default:
             $_SyntaxError(context, ['expected :'])
     }
 }
 
+$CaseCtx.prototype.transform = function(node, rank){
+    // If the case has a guard, insert it as a condition below "case" node
+    // and attach "case" block to the guard node
+    if(this.has_guard){
+        this.guard = this.tree.pop()
+        var guard_node = new $NodeJS(this.guard.to_js()),
+            block = node.children.slice()
+        node.children = []
+        node.add(guard_node)
+        for(var child of block){
+            guard_node.add(child)
+        }
+    }
+}
 
 $CaseCtx.prototype.to_js = function(){
     var node = $get_node(this),
