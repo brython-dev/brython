@@ -8272,6 +8272,7 @@ $PatternCtx.prototype.transition = function(token, value){
                     return $BodyCtx(context)
             }
     }
+    console.log('delegate to parent', context.parent, token, value)
     return context.parent.transition(token, value)
 }
 
@@ -8359,13 +8360,39 @@ $PatternClassCtx = function(context){
     this.type = "class_pattern"
     this.tree = []
     this.parent = context.parent
-    this.class_name = context.tree.pop()
+    // create an id for class name
+    this.class_id = new $IdCtx(context, context.tree[0])
+    // remove this instance of $dCtx from tree
+    context.tree.pop()
+    // get possible attributes of id
+    this.attrs = context.tree.slice(2)
     context.parent.tree.pop()
     context.parent.tree.push(this)
     this.expect = ','
+    this.keywords = []
+    this.positionals = []
 }
 
 $PatternClassCtx.prototype.transition = function(token, value){
+    var context = this
+
+    function check_last_arg(){
+        var last = $B.last(context.tree)
+        if(last instanceof $PatternCaptureCtx &&
+                ! last.is_keyword){
+            if(context.keywords.length > 0){
+                    $_SyntaxError(context,
+                        'positional argument after keyword')
+            }else{
+                if(context.positionals.indexOf(last.tree[0]) > -1){
+                    $_SyntaxError(context, ['multiple assignments ' +
+                        `to name '${last.tree[0]}' in pattern`])
+                }
+                context.positionals.push(last.tree[0])
+            }
+        }
+    }
+
     switch(this.expect){
         case ',':
             switch(token){
@@ -8373,13 +8400,25 @@ $PatternClassCtx.prototype.transition = function(token, value){
                     // check that current argument is a capture
                     var current = $B.last(this.tree)
                     if(current instanceof $PatternCaptureCtx){
-                        this.tree[this.tree.length - 1] = current.tree[0]
+                        // check duplicate
+                        if(this.keywords.indexOf(current.tree[0]) > -1){
+                            $_SyntaxError(context,
+                                ['attribute name repeated in class pattern: ' +
+                                 current.tree[0]])
+                        }
+                        current.is_keyword = true
+                        this.keywords.push(current.tree[0])
                         return new $PatternCtx(this)
                     }
                     $_SyntaxError(this)
                 case ',':
+                    check_last_arg()
                     return new $PatternCtx(this)
                 case ')':
+                    check_last_arg()
+                    if($B.last(this.tree).tree.length == 0){
+                        this.tree.pop()
+                    }
                     return this.parent
                 default:
                     $_SyntaxError(this)
@@ -8388,20 +8427,30 @@ $PatternClassCtx.prototype.transition = function(token, value){
 }
 
 $PatternClassCtx.prototype.to_js = function(){
+    console.log('pattern class', this)
     var i = 0,
-        args = []
+        args = [],
+        kwargs = []
+    var klass = this.class_id.to_js()
+    for(var i = 0, len = this.attrs.length; i < len; i += 2){
+        klass = '$B.$getattr(' + klass + ', "' + this.attrs[i] + '")'
+    }
+    for(var arg of this.positionals){
+        args.push(`'${arg}'`)
+    }
+    i = 0
     while(i < this.tree.length){
         var item = this.tree[i]
-        if(typeof item == "string"){
-            // keyword
-            args.push('{' + item + ': ' + this.tree[i + 1].to_js() + '}')
-            i++
-        }else{
-            args.push(item.to_js())
+        if(item instanceof $PatternCaptureCtx){
+            if(item.is_keyword){
+                kwargs.push(item.tree[0] + ': ' + this.tree[i + 1].to_js())
+                i++
+            }
         }
         i++
     }
-    return '{class: [' + args.join(', ') + ']}'
+    return '{class: ' + klass + ', args: [' + args.join(', ') + '], ' +
+        'keywords: {' + kwargs.join(', ') + '}}'
 }
 
 var $PatternGroupCtx = function(context){

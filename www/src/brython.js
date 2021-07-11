@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-10 19:57:51.000923"
-__BRYTHON__.timestamp=1625939871000
+__BRYTHON__.compiled_date="2021-07-11 09:14:43.134542"
+__BRYTHON__.timestamp=1625987683134
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ajax_nevez","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sreXXX","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re_backtrack_choice","python_re_v5","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4402,6 +4402,7 @@ return new $PatternCtx(
 new $PatternSequenceCtx(C.parent))
 case ':':
 return $BodyCtx(C)}}
+console.log('delegate to parent',C.parent,token,value)
 return C.parent.transition(token,value)}
 function as_pattern(C,token,value){
 if(C.expect=='as'){if(token=='as'){C.expect='alias'
@@ -4439,29 +4440,51 @@ return js+'}'}
 $PatternClassCtx=function(C){this.type="class_pattern"
 this.tree=[]
 this.parent=C.parent
-this.class_name=C.tree.pop()
+this.class_id=new $IdCtx(C,C.tree[0])
+C.tree.pop()
+this.attrs=C.tree.slice(2)
 C.parent.tree.pop()
 C.parent.tree.push(this)
-this.expect=','}
-$PatternClassCtx.prototype.transition=function(token,value){switch(this.expect){case ',':
+this.expect=','
+this.keywords=[]
+this.positionals=[]}
+$PatternClassCtx.prototype.transition=function(token,value){var C=this
+function check_last_arg(){var last=$B.last(C.tree)
+if(last instanceof $PatternCaptureCtx &&
+! last.is_keyword){if(C.keywords.length > 0){$_SyntaxError(C,'positional argument after keyword')}else{if(C.positionals.indexOf(last.tree[0])>-1){$_SyntaxError(C,['multiple assignments '+
+`to name '${last.tree[0]}' in pattern`])}
+C.positionals.push(last.tree[0])}}}
+switch(this.expect){case ',':
 switch(token){case '=':
 var current=$B.last(this.tree)
-if(current instanceof $PatternCaptureCtx){this.tree[this.tree.length-1]=current.tree[0]
+if(current instanceof $PatternCaptureCtx){
+if(this.keywords.indexOf(current.tree[0])>-1){$_SyntaxError(C,['attribute name repeated in class pattern: '+
+current.tree[0]])}
+current.is_keyword=true
+this.keywords.push(current.tree[0])
 return new $PatternCtx(this)}
 $_SyntaxError(this)
 case ',':
+check_last_arg()
 return new $PatternCtx(this)
 case ')':
+check_last_arg()
+if($B.last(this.tree).tree.length==0){this.tree.pop()}
 return this.parent
 default:
 $_SyntaxError(this)}}}
-$PatternClassCtx.prototype.to_js=function(){var i=0,args=[]
+$PatternClassCtx.prototype.to_js=function(){console.log('pattern class',this)
+var i=0,args=[],kwargs=[]
+var klass=this.class_id.to_js()
+for(var i=0,len=this.attrs.length;i < len;i+=2){klass='$B.$getattr('+klass+', "'+this.attrs[i]+'")'}
+for(var arg of this.positionals){args.push(`'${arg}'`)}
+i=0
 while(i < this.tree.length){var item=this.tree[i]
-if(typeof item=="string"){
-args.push('{'+item+': '+this.tree[i+1].to_js()+'}')
-i++}else{args.push(item.to_js())}
+if(item instanceof $PatternCaptureCtx){if(item.is_keyword){kwargs.push(item.tree[0]+': '+this.tree[i+1].to_js())
+i++}}
 i++}
-return '{class: ['+args.join(', ')+']}'}
+return '{class: '+klass+', args: ['+args.join(', ')+'], '+
+'keywords: {'+kwargs.join(', ')+'}}'}
 var $PatternGroupCtx=function(C){
 this.type="group_pattern"
 this.parent=C

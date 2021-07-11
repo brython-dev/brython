@@ -178,6 +178,26 @@ $B.pattern_match = function(subject, pattern){
         return true
     }
 
+    if(pattern.class){
+        var klass = pattern.class
+        if(! _b_.isinstance(klass, _b_.type)){
+            throw _b_.TypeError.$factory('called match pattern must be a type')
+        }
+        if(! _b_.isinstance(subject, klass)){
+            return false
+        }
+        for(var key in pattern.keywords){
+            var v = $B.$getattr(subject, key, null)
+            if(v === null){
+                return false
+            }else if(! $B.pattern_match(v, pattern.keywords[key])){
+                return false
+            }
+        }
+        bind(pattern, subject)
+        return true
+    }
+
     if(pattern.capture){
         if(pattern.capture != '_'){
             // capture identifier in local namespace
