@@ -9,12 +9,11 @@ exception happened.
 """
 
 try:
-    import python_re as re # Brython
-    import tb
+    import tb # Brython-only
 except ImportError:
-    import re
     import traceback as tb
 
+import re
 import sys
 import time
 
