@@ -2886,13 +2886,11 @@ function $url_open(){
         // read the file content and return an object with file object methods
         var is_binary = mode.search('b') > -1
         if($B.file_cache.hasOwnProperty($.file)){
-            console.log('open cas 1')
             result.content = $B.file_cache[$.file] // string
             if(is_binary){
                 result.content = _b_.str.encode(content, 'utf-8')
             }
         }else if($B.files && $B.files.hasOwnProperty($.file)){
-            console.log('open cas 2')
             // Virtual file system created by
             // python -m brython --make_file_system
             $res = atob($B.files[$.file].content)
@@ -2941,7 +2939,7 @@ function $url_open(){
             // add fake query string to avoid caching
             var fake_qs = $B.$options.cache ? '' :
                               '?foo=' + (new Date().getTime())
-            req.open('GET', file + fake_qs, false)
+            req.open('GET', encodeURI(file + fake_qs), false)
             req.send()
         }else{
             throw _b_.FileNotFoundError.$factory(
