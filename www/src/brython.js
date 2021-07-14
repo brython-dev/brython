@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-14 08:09:39.808145"
-__BRYTHON__.timestamp=1626242979808
+__BRYTHON__.compiled_date="2021-07-14 18:41:38.782743"
+__BRYTHON__.timestamp=1626280898762
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6476,7 +6476,7 @@ mro[i][attr].__class__.__get__)){
 cl_dict.$has_setattr=true
 break}}}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
-var kls=meta_new(metaclass,class_name,bases,cl_dict)
+var kls=meta_new(metaclass,class_name,bases,cl_dict,{$nat:'kw',kw:extra_kwargs})
 kls.__module__=module
 kls.$infos={__module__:module,__name__:$B.from_alias(class_name),__qualname__:class_obj.$qualname}
 kls.$subclasses=[]
@@ -6486,9 +6486,6 @@ var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)}
-var sup=_b_.$$super.$factory(kls,kls)
-var init_subclass=_b_.$$super.__getattribute__(sup,"__init_subclass__")
-init_subclass({$nat:"kw",kw:extra_kwargs})
 if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class "+
 "interface with abstract methods "+
 Object.keys(abstract_methods).join(", "))}
@@ -6600,7 +6597,9 @@ else{for(var i=0;i < kl.__mro__.length;i++){if(kl.__mro__[i]===cls){return true}
 return false}
 type.__instancecheck__.$type="staticmethod"
 type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value},__str__:function(self){return "type"},__eq__:function(self,other){return self.$infos.__name__==other}}
-type.__new__=function(meta,name,bases,cl_dict){
+type.__new__=function(meta,name,bases,cl_dict,extra_kwargs){
+extra_kwargs=extra_kwargs===undefined ?{$nat:'kw',kw:{}}:
+extra_kwargs
 var module=cl_dict.$string_dict.__module__
 if(module){module=module[0]}
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$",""),__module__:module},$is_class:true,$has_setattr:cl_dict.$has_setattr}
@@ -6619,6 +6618,9 @@ v.$infos.__qualname__=name+'.'+v.$infos.__name__
 if(v.$infos.$defaults){
 var $defaults=v.$infos.$defaults
 $B.Function.__setattr__(v,"__defaults__",$defaults)}}}}
+var sup=_b_.$$super.$factory(class_dict,class_dict)
+var init_subclass=_b_.$$super.__getattribute__(sup,"__init_subclass__")
+init_subclass(extra_kwargs)
 return class_dict}
 type.__or__=function(){var len=arguments.length
 if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}

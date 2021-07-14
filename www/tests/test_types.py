@@ -93,4 +93,12 @@ assert dog1 == dog3
 
 assert str(type(dog1)) == "<class 'types.SimpleNamespace'>"
 
+# issue 1726
+from typing import TypedDict
+
+class Movie(TypedDict, total=False):
+    name: str
+    year: int
+
+
 print("Passed all tests...")

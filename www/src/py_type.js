@@ -218,7 +218,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
 
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
-    var kls = meta_new(metaclass, class_name, bases, cl_dict)
+    var kls = meta_new(metaclass, class_name, bases, cl_dict,
+        {$nat: 'kw', kw: extra_kwargs})
     kls.__module__ = module
     kls.$infos = {
         __module__: module,
@@ -248,9 +249,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         bases[i].$subclasses  = bases[i].$subclasses || []
         bases[i].$subclasses.push(kls)
     }
-    var sup = _b_.$$super.$factory(kls, kls)
-    var init_subclass = _b_.$$super.__getattribute__(sup, "__init_subclass__")
-    init_subclass({$nat: "kw", kw: extra_kwargs})
 
     if(!is_instanciable){
         function nofactory(){
@@ -557,13 +555,17 @@ type.__name__ = {
 }
 
 
-type.__new__ = function(meta, name, bases, cl_dict){
+type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // Return a new type object. This is essentially a dynamic form of the
     // class statement. The name string is the class name and becomes the
     // __name__ attribute; the bases tuple itemizes the base classes and
     // becomes the __bases__ attribute; and the dict dictionary is the
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
+
+    // arguments passed as keywords in class defintion
+    extra_kwargs = extra_kwargs === undefined ? {$nat: 'kw', kw: {}} : 
+        extra_kwargs
 
     // Create the class dictionary
     var module = cl_dict.$string_dict.__module__
@@ -617,6 +619,10 @@ type.__new__ = function(meta, name, bases, cl_dict){
             }
         }
     }
+
+    var sup = _b_.$$super.$factory(class_dict, class_dict)
+    var init_subclass = _b_.$$super.__getattribute__(sup, "__init_subclass__")
+    init_subclass(extra_kwargs)
 
     return class_dict
 }
