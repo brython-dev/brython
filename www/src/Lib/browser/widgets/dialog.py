@@ -167,7 +167,7 @@ class EntryDialog(Dialog):
         Dialog.__init__(self, title,
                         top=top, left=left, ok_cancel=True,
                         default_css=default_css)
-        self.message = html.SPAN(message, Class="brython-dialog-message") \
+        self.message = html.SPAN(message or '', Class="brython-dialog-message") \
             or ""
         self.entry = html.INPUT()
         self.panel <= self.message + self.entry
