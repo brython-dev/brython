@@ -80,7 +80,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 jsDelivr supports version ranges, so if you want the latest of the
 3.9.x versions:
 
-```
+```xml
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3.9/brython.min.js">
 </script>
@@ -91,7 +91,7 @@ jsDelivr supports version ranges, so if you want the latest of the
 
 or the latest of the 3.x.y versions:
 
-```
+```xml
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
 </script>
