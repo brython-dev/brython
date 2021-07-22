@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-14 18:41:38.782743"
-__BRYTHON__.timestamp=1626280898762
+__BRYTHON__.compiled_date="2021-07-22 09:05:31.343886"
+__BRYTHON__.timestamp=1626937531343
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4411,7 +4411,6 @@ return new $PatternCtx(
 new $PatternSequenceCtx(C.parent))
 case ':':
 return $BodyCtx(C)}}
-console.log('delegate to parent',C.parent,token,value)
 return C.parent.transition(token,value)}
 function as_pattern(C,token,value){
 if(C.expect=='as'){if(token=='as'){C.expect='alias'
@@ -4644,7 +4643,10 @@ case ',':
 switch(token){case '}':
 return $transition(C.parent,token,value)
 case ',':
-return C.parent}
+return C.parent
+case 'op':
+if(value=='|'){
+return new $PatternCtx(new $PatternOrCtx(C))}}
 $_SyntaxError(C,'expected , or }')}
 return $transition(C.parent,token,value)}
 $PatternKeyValueCtx.prototype.to_js=function(){var key,value
@@ -4688,8 +4690,10 @@ this.token=token}
 this.expect=','
 C.tree.push(this)}
 $PatternSequenceCtx.prototype.transition=function(token,value){var C=this
-if(C.expect==','){if((this.token=='[' && token==']')||
-(this.token=='(' && token==")")){this.expect='as'
+if(C.expect==','){if((C.token=='[' && token==']')||
+(C.token=='(' && token==")")){C.expect='as'
+var last=$B.last(C.tree)
+if(last instanceof $PatternCtx && last.tree.length==0){C.tree.pop()}
 return C}else if(token==','){C.expect='id'
 return C}else if(token=='op' && value=='|' && this.token=='('){return new $PatternCtx(new $PatternOrCtx(C.parent))}else if(this.token===undefined){return $transition(C.parent,token,value)}
 $_SyntaxError(C)}else if(C.expect=='as'){if(token=='as'){this.expect='alias'
@@ -5497,7 +5501,8 @@ var $to_js_map=$B.parser.$to_js_map=function(tree_element){if(tree_element.to_js
 console.log('no to_js',tree_element)
 throw Error('no to_js() for '+tree_element)}
 var $to_js=$B.parser.$to_js=function(tree,sep){if(sep===undefined){sep=','}
-return tree.map($to_js_map).join(sep)}
+try{return tree.map($to_js_map).join(sep)}catch(err){console.log('error',tree)
+throw err}}
 var $mangle=$B.parser.$mangle=function(name,C){
 if(name.substr(0,2)=="__" && name.substr(name.length-2)!=="__"){var klass=null,scope=$get_scope(C)
 while(true){if(scope.ntype=="module"){return name}

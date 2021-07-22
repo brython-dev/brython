@@ -8291,7 +8291,6 @@ $PatternCtx.prototype.transition = function(token, value){
                     return $BodyCtx(context)
             }
     }
-    console.log('delegate to parent', context.parent, token, value)
     return context.parent.transition(token, value)
 }
 
@@ -8732,6 +8731,11 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
                     return $transition(context.parent, token, value)
                 case ',':
                     return context.parent
+                case 'op':
+                    if(value == '|'){
+                        // value is an alternative
+                        return new $PatternCtx(new $PatternOrCtx(context))
+                    }
             }
             $_SyntaxError(context, 'expected , or }')
     }
@@ -8825,9 +8829,13 @@ var $PatternSequenceCtx = function(context, token){
 $PatternSequenceCtx.prototype.transition = function(token, value){
     var context = this
     if(context.expect == ','){
-        if((this.token == '[' && token == ']') ||
-                (this.token == '(' && token == ")")){
-            this.expect = 'as'
+        if((context.token == '[' && token == ']') ||
+                (context.token == '(' && token == ")")){
+            context.expect = 'as'
+            var last = $B.last(context.tree)
+            if(last instanceof $PatternCtx && last.tree.length == 0){
+                context.tree.pop()
+            }
             return context
         }else if(token == ','){
             context.expect = 'id'
@@ -10639,8 +10647,12 @@ var $to_js_map = $B.parser.$to_js_map = function(tree_element) {
 
 var $to_js = $B.parser.$to_js = function(tree,sep){
     if(sep === undefined){sep = ','}
-
-    return tree.map($to_js_map).join(sep)
+    try{
+        return tree.map($to_js_map).join(sep)
+    }catch(err){
+        console.log('error', tree)
+        throw err
+    }
 }
 
 var $mangle = $B.parser.$mangle = function(name, context){
