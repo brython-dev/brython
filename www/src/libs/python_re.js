@@ -215,7 +215,7 @@ var BPattern = $B.make_class("Pattern",
 )
 
 BPattern.__eq__ = function(self, other){
-    if(self.$pattern.type != other.$pattern.$type){
+    if(other.$pattern && self.$pattern.type != other.$pattern.$type){
         // warn(_b_.BytesWarning, "cannot compare str and bytes pattern", 1)
     }
     return self.pattern == other.pattern &&
