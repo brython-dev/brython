@@ -51,26 +51,44 @@ $B.pattern_match = function(subject, pattern){
         // Iterate on elements of subject and check that item i matches
         // pattern i
         var it = _b_.iter(subject),
-            nxt = $B.$getattr(it, '__next__')
+            nxt = $B.$getattr(it, '__next__'),
+            store_starred = []
         for(var i = 0, len = pattern.sequence.length; i < len; i++){
             try{
                 var subject_item = nxt()
             }catch(err){
                 if($B.is_exc(err, [_b_.StopIteration])){
-                    return false
+                    if(pattern.sequence[i].capture_starred){
+                        locals[pattern.sequence[i].capture_starred] = []
+                        bind(pattern, subject)
+                        return true
+                    }else{
+                        return false
+                    }
+                }else{
+                    throw err
                 }
-                throw err
             }
             if(pattern.sequence[i].capture_starred){
                 if(i < len - 1){
-                    // if starred identifier is not the last item, match fails
-                    return false
+                    // if starred identifier is not the last item, store items
+                    // in capture_starred until the next item matches
+                    var next_pattern = pattern.sequence[i + 1]
+                    if(! $B.pattern_match(subject_item, next_pattern)){
+                        store_starred.push(subject_item)
+                        i -= 1 // stay on the starred pattern
+                        continue
+                    }
+                    locals[pattern.sequence[i].capture_starred] = store_starred
+                    bind(pattern, subject)
+                    i++ // skip pattern i + 1, which already matched
+                }else{
+                    // consume the rest of the subject
+                    var rest = [subject_item].concat(_b_.list.$factory(it))
+                    locals[pattern.sequence[i].capture_starred] = rest
+                    bind(pattern, subject)
+                    return true
                 }
-                // consume the rest of the subject
-                var rest = [subject_item].concat(_b_.list.$factory(it))
-                locals[pattern.sequence[i].capture_starred] = rest
-                bind(pattern, subject)
-                return true
             }else{
                 var m = $B.pattern_match(subject_item, pattern.sequence[i])
                 if(! m){
@@ -205,18 +223,23 @@ $B.pattern_match = function(subject, pattern){
         if(pattern.capture != '_'){
             // capture identifier in local namespace
             locals[pattern.capture] = subject
-            bind(pattern, subject)
         }
+        bind(pattern, subject)
         return true
     }else if(pattern.capture_starred){
         locals[pattern.capture_starred] = subject
         return true
-    }else if(pattern.literal){
+    }else if(pattern.hasOwnProperty('literal')){
         if($B.rich_comp('__eq__', subject, pattern.literal)){
             bind(pattern, subject)
             return true
         }
         return false
+    }else if(pattern.hasOwnProperty('value')){
+        if($B.rich_comp('__eq__', subject, pattern.value)){
+            bind(pattern, subject)
+            return true
+        }
     }else if(subject == pattern){
         return true
     }
