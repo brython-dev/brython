@@ -9,16 +9,18 @@ $B.pattern_match = function(subject, pattern){
         }
     }
 
-    if(pattern === _b_.None || pattern === _b_.True || pattern === _b_.False){
-        // test identity (not equality) for these values
-        return subject === pattern
-    }
-
     if(pattern.sequence){
         // iterate on subject and match each item in the sequence
 
         // First, check that the subject is an instance of a class that
         // supports sequence pattern matching
+        if(_b_.isinstance(subject, [_b_.str, _b_.bytes, _b_.bytearray])){
+            // PEP 634 :
+            // Although str, bytes, and bytearray are usually considered
+            // sequences, they are not included in the above list and do not
+            // match sequence patterns.
+            return false
+        }
         var Sequence
         if($B.imported['collections.abc']){
             Sequence = $B.imported['collections.abc'].Sequence
@@ -45,6 +47,19 @@ $B.pattern_match = function(subject, pattern){
             supported = _b_.issubclass(klass, Sequence)
         }
         if(! supported){
+            return false
+        }
+
+        var subject_length = _b_.len(subject)
+        var nb_fixed_length = 0
+        for(var item of pattern.sequence){
+            if(! item.capture_starred){
+                nb_fixed_length++
+            }
+        }
+
+        if(subject_length < nb_fixed_length){
+            // no need to test items
             return false
         }
 
@@ -110,6 +125,20 @@ $B.pattern_match = function(subject, pattern){
         return true
     }
 
+    if(pattern.group){
+        if(pattern.group.length == 1){
+            // match the only item
+            if($B.pattern_match(subject, pattern.group[0])){
+                bind(pattern, subject)
+                return true
+            }
+        }else{
+            // handle as a sequence
+            pattern.sequence = pattern.group
+            return $B.pattern_match(subject, pattern)
+        }
+    }
+
     if(pattern.or){
         // If one of the alternative matches, the 'or' pattern matches
         for(var item of pattern.or){
@@ -149,6 +178,7 @@ $B.pattern_match = function(subject, pattern){
         var matched = [],
             keys = []
         for(var item of pattern.mapping){
+            console.log('item in mapping', item)
             var key_pattern = item[0],
                 value_pattern = item[1]
             if(key_pattern.hasOwnProperty('literal')){
@@ -165,7 +195,8 @@ $B.pattern_match = function(subject, pattern){
             }
             keys.push(key)
             try{
-                var v = $B.$getitem(subject, key)
+                var v = $B.$call($B.$getattr(subject, "get"))(key)
+                console.log('compare', v, value_pattern)
                 if(! $B.pattern_match(v, value_pattern)){
                     return false
                 }
@@ -230,7 +261,14 @@ $B.pattern_match = function(subject, pattern){
         locals[pattern.capture_starred] = subject
         return true
     }else if(pattern.hasOwnProperty('literal')){
-        if($B.rich_comp('__eq__', subject, pattern.literal)){
+        var literal = pattern.literal
+        if(literal === _b_.None || literal === _b_.True ||
+                literal === _b_.False){
+            // test identity (not equality) for these values
+            return $B.$is(subject, pattern)
+        }
+
+        if($B.rich_comp('__eq__', subject, literal)){
             bind(pattern, subject)
             return true
         }

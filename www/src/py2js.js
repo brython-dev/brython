@@ -8344,7 +8344,12 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             if(token == '.'){
                 context.type = "value_pattern"
                 context.expect = 'id'
-                new $IdCtx(context, context.tree.pop())
+                if(context.tree.length == 1){
+                    // create an $IdCtx to resolve the name correctly
+                    new $IdCtx(context, context.tree.pop())
+                }else{
+                    context.tree.push('.')
+                }
                 return context
             }else if(token == '('){
                 // open class pattern
@@ -8547,12 +8552,11 @@ $PatternGroupCtx.prototype.transition = function(token, value){
 }
 
 $PatternGroupCtx.prototype.to_js = function(){
-    try{
-        return '{sequence: [' + $to_js(this.tree) + ']}'
-    }catch(err){
-        console.log('error', this)
-        throw _b_.RuntimeError.$factory(this, err.message)
+    var js = '{group: [' + $to_js(this.tree) + ']'
+    if(this.alias){
+        js += `, alias: "${this.alias}"`
     }
+    return js + '}'
 }
 
 var $PatternLiteralCtx = function(context, token, value, sign){
@@ -8658,7 +8662,8 @@ $PatternLiteralCtx.prototype.to_js = function(){
                 res = (first.sign == '-' ? '-' : '') + first.value
                 break
             case 'imaginary':
-                res += '$B.make_complex(0, ' + first.value + ')'
+                res += '$B.make_complex(0, ' +
+                    (first.sign == '-' ? '-' : '') + first.value + ')'
                 break
         }
     }
