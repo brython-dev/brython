@@ -212,7 +212,7 @@ $B.pattern_match = function(subject, pattern){
         locals[pattern.capture_starred] = subject
         return true
     }else if(pattern.literal){
-        if(subject == pattern.literal){
+        if($B.rich_comp('__eq__', subject, pattern.literal)){
             bind(pattern, subject)
             return true
         }
