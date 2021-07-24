@@ -1,3 +1,5 @@
+// Set attribute __match_args__ of a number of builtin classes
+
 $B.pattern_match = function(subject, pattern){
     var _b_ = $B.builtins,
         frame = $B.last($B.frames_stack),
@@ -99,8 +101,11 @@ $B.pattern_match = function(subject, pattern){
                     i++ // skip pattern i + 1, which already matched
                 }else{
                     // consume the rest of the subject
-                    var rest = [subject_item].concat(_b_.list.$factory(it))
-                    locals[pattern.sequence[i].capture_starred] = rest
+                    var name = pattern.sequence[i].capture_starred
+                    if(name != '_'){
+                        var rest = [subject_item].concat(_b_.list.$factory(it))
+                        locals[name] = rest
+                    }
                     bind(pattern, subject)
                     return true
                 }
@@ -178,7 +183,6 @@ $B.pattern_match = function(subject, pattern){
         var matched = [],
             keys = []
         for(var item of pattern.mapping){
-            console.log('item in mapping', item)
             var key_pattern = item[0],
                 value_pattern = item[1]
             if(key_pattern.hasOwnProperty('literal')){
@@ -196,7 +200,6 @@ $B.pattern_match = function(subject, pattern){
             keys.push(key)
             try{
                 var v = $B.$call($B.$getattr(subject, "get"))(key)
-                console.log('compare', v, value_pattern)
                 if(! $B.pattern_match(v, value_pattern)){
                     return false
                 }
@@ -238,6 +241,51 @@ $B.pattern_match = function(subject, pattern){
         if(! _b_.isinstance(subject, klass)){
             return false
         }
+        if(pattern.args.length > 0){
+            if([_b_.bool, _b_.bytearray, _b_.bytes, _b_.dict,
+                    _b_.float, _b_.frozenset, _b_.int, _b_.list, _b_.set,
+                    _b_.str, _b_.tuple].indexOf(klass) > -1){
+                // a single positional subpattern is accepted which will match
+                // the entire subject
+                if(pattern.args.length > 1){
+                    throw _b_.TypeError.$factory('for builtin type ' +
+                        $B.class_name(subject) + ', a single positional ' +
+                        'subpattern is accepted')
+                }
+                locals[pattern.args[0]] = subject
+            }else{
+                // Conversion of positional arguments to keyword arguments
+                // Get attribute __match_args__ of class
+                var match_args = $B.$getattr(klass, '__match_args__',
+                    $B.fast_tuple([]))
+                if(! _b_.isinstance(match_args, _b_.tuple)){
+                    throw _b_.TypeError.$factory(
+                        '__match_args__() did not return a tuple')
+                }
+                if(pattern.args.length > match_args.length){
+                    throw _b_.TypeError.$factory(
+                        '__match_args__() returns ' + match_args.length +
+                        ' names but ' + pattern.args.length + ' positional ' +
+                        'arguments were passed')
+                }
+                for(var i = 0, len = pattern.args.length; i < len; i++){
+                    // If Class.__match_args__ is ("a", "b"),
+                    // Class(x, y) is converted to Class(a=x, b=y)
+                    var pattern_arg = pattern.args[i],
+                        klass_arg = match_args[i]
+                    if(typeof klass_arg !== "string"){
+                        throw _b_.TypeError.$factory('item in __match_args__ ' +
+                            'is not a string: ' + klass_arg)
+                    }
+                    // Check duplicate pattern
+                    if(pattern.keywords.hasOwnProperty(klass_arg)){
+                        throw _b_.TypeError.$factory('__match_arg__ item ' +
+                            klass_arg + ' was passed as keyword pattern')
+                    }
+                    pattern.keywords[klass_arg] = {capture: pattern_arg}
+                }
+            }
+        }
         for(var key in pattern.keywords){
             var v = $B.$getattr(subject, key, null)
             if(v === null){
@@ -258,7 +306,8 @@ $B.pattern_match = function(subject, pattern){
         bind(pattern, subject)
         return true
     }else if(pattern.capture_starred){
-        locals[pattern.capture_starred] = subject
+        // bind name to a list, whatever the subject type
+        locals[pattern.capture_starred] = $B.$list(subject)
         return true
     }else if(pattern.hasOwnProperty('literal')){
         var literal = pattern.literal
