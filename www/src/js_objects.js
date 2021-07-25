@@ -357,6 +357,9 @@ for(var op in ops){
 $B.JSObj.__eq__ = function(self, other){
     switch(typeof self){
         case "object":
+            if(self.__eq__ !== undefined){
+                return self.__eq__(other)
+            }
             if(Object.keys(self).length !== Object.keys(other).length){
                 return false
             }

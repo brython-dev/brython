@@ -878,6 +878,11 @@ long_int.__mul__ = function(self, other){
     return intOrLong(res)
 }
 
+long_int.__ne__ = function(self, other){
+    var res = long_int.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : !res
+}
+
 long_int.__neg__ = function(obj){
     return {__class__: long_int, value: obj.value, pos: ! obj.pos}
 }
@@ -1402,7 +1407,7 @@ function inverse_of(n, p){
     */
     var gcd, x, y
     [gcd, x, y] = extended_euclidean_algorithm(n, p)
-    
+
     if($B.rich_comp('__ne__', gcd, 1)){
         // Either n is 0, or p is not a prime number.
         throw Error(

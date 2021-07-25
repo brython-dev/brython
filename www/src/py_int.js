@@ -177,11 +177,12 @@ int.__divmod__ = function(self, other){
 
 int.__eq__ = function(self, other){
     // compare object "self" to class "int"
-    if(other === undefined){return self === int}
     if(_b_.isinstance(other, int)){
         return self.valueOf() == int_value(other).valueOf()
     }
-    if(_b_.isinstance(other, _b_.float)){return self.valueOf() == other.valueOf()}
+    if(_b_.isinstance(other, _b_.float)){
+        return self.valueOf() == other.valueOf()
+    }
     if(_b_.isinstance(other, _b_.complex)){
         if(other.$imag != 0){return False}
         return self.valueOf() == other.$real

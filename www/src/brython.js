@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-24 17:11:01.162971"
-__BRYTHON__.timestamp=1627139461162
+__BRYTHON__.compiled_date="2021-07-25 10:34:05.898907"
+__BRYTHON__.timestamp=1627202045898
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -798,7 +798,9 @@ $AnnotationCtx.prototype.transition=function(token,value){var C=this
 if(token=="eol" && C.tree.length==1 &&
 C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}else if(token=="augm_assign"){$_SyntaxError(C,"augmented assign as annotation")}else if(token=="op"){$_SyntaxError(C,"operator as annotation")}
 return $transition(C.parent,token)}
-$AnnotationCtx.prototype.to_js=function(){return $to_js(this.tree)}
+$AnnotationCtx.prototype.to_js=function(){if(this.tree[0].type=='expr' &&
+this.tree[0].tree[0].type=='id'){return `"${this.tree[0].tree[0].value}"`}
+return $to_js(this.tree)}
 var $AssertCtx=$B.parser.$AssertCtx=function(C){
 this.type='assert'
 this.parent=C
@@ -4501,13 +4503,13 @@ return $transition(C.parent,token,value)}
 $PatternClassCtx.prototype.to_js=function(){var i=0,args=[],kwargs=[]
 var klass=this.class_id.to_js()
 for(var i=0,len=this.attrs.length;i < len;i+=2){klass='$B.$getattr('+klass+', "'+this.attrs[i]+'")'}
-for(var arg of this.positionals){args.push(`'${arg}'`)}
+for(var arg of this.positionals){}
 i=0
-while(i < this.tree.length){var item=this.tree[i]
-if(item instanceof $PatternCaptureCtx){if(item.tree.length > 1){kwargs.push(item.tree[0]+': '+item.tree[1].to_js())}}
-i++}
-return '{class: '+klass+', args: ['+args.join(', ')+'], '+
-'keywords: {'+kwargs.join(', ')+'}}'}
+for(item of this.tree){if(item instanceof $PatternCaptureCtx && item.tree.length > 1){kwargs.push(item.tree[0]+': '+item.tree[1].to_js())}else{args.push(item.to_js())}}
+var js='{class: '+klass+', args: ['+args.join(', ')+'], '+
+'keywords: {'+kwargs.join(', ')+'}'
+if(this.alias){js+=`, alias: "${this.alias}"`}
+return js+'}'}
 var $PatternGroupCtx=function(C){
 this.type="group_pattern"
 this.parent=C
@@ -6525,7 +6527,7 @@ for(var attr in kdict){if(non_abstract_methods[attr]){continue}
 var v=kdict[attr]
 if(typeof v=="function"){if(v.__isabstractmethod__===true ||
 (v.$attrs && v.$attrs.__isabstractmethod__)){is_instanciable=false
-abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}}}
+abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}else{non_abstract_methods[attr]=true}}}
 var _slots=class_obj.__slots__
 if(_slots !==undefined){if(typeof _slots=="string"){_slots=[_slots]}else{_slots=_b_.list.$factory(_slots)}
 cl_dict.__slots__=_slots}
@@ -7435,22 +7437,21 @@ case "__ge__":
 return x1 >=y1
 case "__gt__":
 return x1 > y1}}
-var res,rev_op
+var res
 if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
+var x_class_op=$B.$call($B.$getattr(x.__class__ ||$B.get_class(x),op)),rev_op=reversed_op[op]||op
 if(x.__class__ && y.__class__){
-if(y.__class__.__mro__.indexOf(x.__class__)>-1){rev_op=reversed_op[op]||op
-var rev_func=$B.$getattr(y,rev_op)
+if(y.__class__.__mro__.indexOf(x.__class__)>-1){var rev_func=$B.$getattr(y,rev_op)
 res=$B.$call($B.$getattr(y,rev_op))(x)
 if(res !==_b_.NotImplemented){return res}}}
-res=$B.$call($B.$getattr(x,op))(y)
+res=x_class_op(x,y)
 if(res !==_b_.NotImplemented){return res}
-rev_op=reversed_op[op]||op
-res=$B.$call($B.$getattr(y,rev_op))(x)
+var y_class_op=$B.$call($B.$getattr(y.__class__ ||$B.get_class(y),rev_op))
+res=y_class_op(y,x)
 if(res !==_b_.NotImplemented ){return res}
-if(op=="__eq__"){return _b_.False}
-else if(op=="__ne__"){return _b_.True}
+if(op=="__eq__"){return _b_.False}else if(op=="__ne__"){return _b_.True}
 throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
@@ -10142,6 +10143,7 @@ var ops={'+':'__add__','*':'__mul__','**':'__pow__','%' :'__mod__'}
 for(var op in ops){eval('$B.JSObj.'+ops[op]+' = '+
 ($B.JSObj.__sub__+'').replace(/-/g,op))}
 $B.JSObj.__eq__=function(self,other){switch(typeof self){case "object":
+if(self.__eq__ !==undefined){return self.__eq__(other)}
 if(Object.keys(self).length !==Object.keys(other).length){return false}
 for(var key in self){if(! $B.JSObj.__eq__(self[key],other[key])){return false}}
 default:
@@ -11170,7 +11172,6 @@ int.__ceil__=function(self){return Math.ceil(int_value(self))}
 int.__divmod__=function(self,other){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
 return $B.fast_tuple([int.__floordiv__(self,other),int.__mod__(self,other)])}
 int.__eq__=function(self,other){
-if(other===undefined){return self===int}
 if(_b_.isinstance(other,int)){return self.valueOf()==int_value(other).valueOf()}
 if(_b_.isinstance(other,_b_.float)){return self.valueOf()==other.valueOf()}
 if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return False}
@@ -11797,6 +11798,8 @@ var res=mul_pos(self.value,other_value)
 if(self.pos==other_pos){return intOrLong(res)}
 res.pos=false
 return intOrLong(res)}
+long_int.__ne__=function(self,other){var res=long_int.__eq__(self,other)
+return res===_b_.NotImplemented ? res :!res}
 long_int.__neg__=function(obj){return{__class__:long_int,value:obj.value,pos:! obj.pos}}
 long_int.__or__=function(self,other){other=long_int.$factory(other)
 var v1=long_int.__index__(self)

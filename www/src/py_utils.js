@@ -1648,8 +1648,7 @@ $B.rich_comp = function(op, x, y){
                 return x1 > y1
         }
     }
-    var res,
-        rev_op
+    var res
 
     if(x.$is_class || x.$factory) {
         if(op == "__eq__"){
@@ -1663,6 +1662,8 @@ $B.rich_comp = function(op, x, y){
         }
     }
 
+    var x_class_op = $B.$call($B.$getattr(x.__class__ || $B.get_class(x), op)),
+        rev_op = reversed_op[op] || op
     if(x.__class__ && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
@@ -1671,22 +1672,30 @@ $B.rich_comp = function(op, x, y){
         // reflected method of the right operand has priority, otherwise the
         // left operand’s method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__) > -1){
-            rev_op = reversed_op[op] || op
             var rev_func = $B.$getattr(y, rev_op)
             res = $B.$call($B.$getattr(y, rev_op))(x)
-            if(res !== _b_.NotImplemented){return res}
+            if(res !== _b_.NotImplemented){
+                return res
+            }
         }
     }
 
-    res = $B.$call($B.$getattr(x, op))(y)
+    res = x_class_op(x, y)
     if(res !== _b_.NotImplemented){return res}
-    rev_op = reversed_op[op] || op
-    res = $B.$call($B.$getattr(y, rev_op))(x)
-    if(res !== _b_.NotImplemented ){return res}
+    var y_class_op = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),
+        rev_op))
+    res = y_class_op(y, x)
+    if(res !== _b_.NotImplemented ){
+        return res
+    }
+
     // If both operands return NotImplemented, return False if the operand is
     // __eq__, True if it is __ne__, raise TypeError otherwise
-    if(op == "__eq__"){return _b_.False}
-    else if(op == "__ne__"){return _b_.True}
+    if(op == "__eq__"){
+        return _b_.False
+    }else if(op == "__ne__"){
+        return _b_.True
+    }
 
     throw _b_.TypeError.$factory("'" + method2comp[op] +
         "' not supported between instances of '" + $B.class_name(x) +
