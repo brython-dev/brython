@@ -8480,20 +8480,22 @@ $PatternClassCtx.prototype.to_js = function(){
         klass = '$B.$getattr(' + klass + ', "' + this.attrs[i] + '")'
     }
     for(var arg of this.positionals){
-        args.push(`'${arg}'`)
+        // args.push(`'${arg}'`)
     }
     i = 0
-    while(i < this.tree.length){
-        var item = this.tree[i]
-        if(item instanceof $PatternCaptureCtx){
-            if(item.tree.length > 1){
-                kwargs.push(item.tree[0] + ': ' + item.tree[1].to_js())
-            }
+    for(item of this.tree){
+        if(item instanceof $PatternCaptureCtx && item.tree.length > 1){
+            kwargs.push(item.tree[0] + ': ' + item.tree[1].to_js())
+        }else{
+            args.push(item.to_js())
         }
-        i++
     }
-    return '{class: ' + klass + ', args: [' + args.join(', ') + '], ' +
-        'keywords: {' + kwargs.join(', ') + '}}'
+    var js = '{class: ' + klass + ', args: [' + args.join(', ') + '], ' +
+        'keywords: {' + kwargs.join(', ') + '}'
+    if(this.alias){
+        js += `, alias: "${this.alias}"`
+    }
+    return js + '}'
 }
 
 var $PatternGroupCtx = function(context){

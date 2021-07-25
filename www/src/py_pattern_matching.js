@@ -252,7 +252,7 @@ $B.pattern_match = function(subject, pattern){
                         $B.class_name(subject) + ', a single positional ' +
                         'subpattern is accepted')
                 }
-                locals[pattern.args[0]] = subject
+                return $B.pattern_match(subject, pattern.args[0])
             }else{
                 // Conversion of positional arguments to keyword arguments
                 // Get attribute __match_args__ of class
@@ -282,7 +282,7 @@ $B.pattern_match = function(subject, pattern){
                         throw _b_.TypeError.$factory('__match_arg__ item ' +
                             klass_arg + ' was passed as keyword pattern')
                     }
-                    pattern.keywords[klass_arg] = {capture: pattern_arg}
+                    pattern.keywords[klass_arg] = pattern_arg
                 }
             }
         }
