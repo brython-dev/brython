@@ -185,6 +185,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 }else{
                     non_abstract_methods[attr] = true
                 }
+            }else{
+                non_abstract_methods[attr] = true
             }
         }
     }
@@ -564,7 +566,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // __dict__ attribute
 
     // arguments passed as keywords in class defintion
-    extra_kwargs = extra_kwargs === undefined ? {$nat: 'kw', kw: {}} : 
+    extra_kwargs = extra_kwargs === undefined ? {$nat: 'kw', kw: {}} :
         extra_kwargs
 
     // Create the class dictionary
