@@ -885,6 +885,10 @@ $AnnotationCtx.prototype.transition = function(token, value){
 }
 
 $AnnotationCtx.prototype.to_js = function(){
+    if(this.tree[0].type == 'expr' &&
+            this.tree[0].tree[0].type == 'id'){
+        return `"${this.tree[0].tree[0].value}"`
+    }
     return $to_js(this.tree)
 }
 

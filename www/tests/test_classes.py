@@ -394,7 +394,7 @@ class B(A):
     pass
 
 
-assert {'prop': str} == B.__annotations__
+assert {'prop': 'str'} == B.__annotations__
 
 # issue 922
 class A:
