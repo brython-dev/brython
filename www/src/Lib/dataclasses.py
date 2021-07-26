@@ -409,10 +409,7 @@ def _create_fn(name, args, body, *, globals=None, locals=None,
     ns = {}
     exec(txt, globals, ns)
     func = ns['__create_fn__'](**locals)
-    print('dataclasses 412 locals', locals)
-    print('func annotations', func.__annotations__)
     for arg, annotation in func.__annotations__.copy().items():
-        print('dataclasses 413', arg, annotation)
         func.__annotations__[arg] = locals[annotation]
     return func
 
