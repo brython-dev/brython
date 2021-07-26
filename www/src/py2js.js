@@ -8531,6 +8531,7 @@ $PatternGroupCtx.prototype.transition = function(token, value){
                 return context
             }else if(token == ','){
                 context.expect = 'id'
+                context.is_tuple = true
                 return context
             }else if(token == 'op' && value == '|'){
                 var opctx = new $PatternOrCtx(context.parent)
@@ -8558,7 +8559,11 @@ $PatternGroupCtx.prototype.transition = function(token, value){
 }
 
 $PatternGroupCtx.prototype.to_js = function(){
-    var js = '{group: [' + $to_js(this.tree) + ']'
+    if(this.is_tuple){
+        var js = '{sequence: [' + $to_js(this.tree) + ']'
+    }else{
+        var js = '{group: [' + $to_js(this.tree) + ']'
+    }
     if(this.alias){
         js += `, alias: "${this.alias}"`
     }
@@ -8700,7 +8705,7 @@ var $PatternMappingCtx = function(context){
 
 $PatternMappingCtx.prototype.transition = function(token, value){
     var context = this
-    switch(this.expect){
+    switch(context.expect){
         case 'key_value_pattern':
             if(token == '}'){
                 // If there are only literal values, raise SyntaxError if
@@ -8710,18 +8715,27 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                     $_SyntaxError(context, 'duplicate key ' +
                         this.duplicate_keys[0])
                 }
-                return this.parent
+                if(context.double_star){
+                    var ix = context.tree.indexOf(context.double_star)
+                    if(ix != context.tree.length - 1){
+                        context.$pos = context.double_star.$pos
+                        $_SyntaxError(context,
+                            ["can't use starred name here (consider moving to end)"])
+                    }
+                    context.rest = context.tree.pop()
+                }
+                return context.parent
             }
             if(token == 'op' && value == '**'){
-                this.expect = 'capture_pattern'
-                return this
+                context.expect = 'capture_pattern'
+                return context
             }
-            var p = new $PatternCtx(this)
+            var p = new $PatternCtx(context)
             var lit_or_val = p.transition(token, value)
             if(lit_or_val instanceof $PatternLiteralCtx){
-                this.tree.pop() // remove PatternCtx
+                context.tree.pop() // remove PatternCtx
                 // check duplicates
-                for(var kv of this.tree){
+                for(var kv of context.tree){
                     if(kv instanceof $PatternKeyValueCtx){
                         var key = kv.tree[0]
                         if(key instanceof $PatternLiteralCtx){
@@ -8747,34 +8761,52 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                         }
                     }
                 }
-                new $PatternKeyValueCtx(this, lit_or_val)
+                new $PatternKeyValueCtx(context, lit_or_val)
                 return lit_or_val
             }else if(lit_or_val instanceof $PatternCaptureCtx){
-                this.has_value_pattern_keys = true
+                context.has_value_pattern_keys = true
                 // expect a dotted name (value pattern)
-                this.tree.pop()
-                new $PatternKeyValueCtx(this, lit_or_val)
-                this.expect = '.'
+                context.tree.pop()
+                new $PatternKeyValueCtx(context, lit_or_val)
+                context.expect = '.'
                 return this
             }else{
                 console.log('lit_or_val', lit_or_val)
-                $_SyntaxError(this, 'expected key or **')
+                $_SyntaxError(context, 'expected key or **')
             }
         case 'capture_pattern':
-            var p = new $PatternCtx(this)
-            var capture = p.transition(token, value)
+            var p = new $PatternCtx(context)
+            var capture = $transition(p, token, value)
             if(capture instanceof $PatternCaptureCtx){
-                this.tree.pop() // remove PatternCtx
-                this.rest = capture
-                this.expect = 'key_value_pattern'
-                return this
+                if(context.double_star){
+                    context.$pos = capture.$pos
+                    $_SyntaxError(context,
+                     ["only one double star pattern is accepted"])
+                }
+                if(value == '_'){
+                    $_SyntaxError(context, '**_ is not valid')
+                }
+                capture.double_star = true
+                context.double_star = capture
+                context.expect = ','
+                return context
             }else{
                 $_SyntaxError(this, 'expected identifier')
             }
+        case ',':
+            // after a **rest item
+            if(token == ','){
+                context.expect = 'key_value_pattern'
+                return context
+            }else if(token == '}'){
+                context.expect = 'key_value_pattern'
+                return context.transition(token, value)
+            }
+            $_SyntaxError(context, 'token ' + token + 'after context ' +context)
         case '.':
             // value pattern
-            if(this.tree.length > 0){
-                var last = $B.last(this.tree)
+            if(context.tree.length > 0){
+                var last = $B.last(context.tree)
                 if(last instanceof $PatternKeyValueCtx){
                     // create an id with the first name in value pattern
                     new $IdCtx(last, last.tree[0].tree[0])
@@ -8870,6 +8902,14 @@ var $PatternOrCtx = function(context){
 
 
 $PatternOrCtx.prototype.transition = function(token, value){
+    function set_alias(){
+        // If last item has an alias, it is the alias of the whole "or pattern"
+        var last = $B.last(context.tree)
+        if(last.alias){
+            context.alias = last.alias
+            delete last.alias
+        }
+    }
     var context = this
     for(var i = 0, len = context.tree.length - 1; i < len; i++){
         if(context.tree[i].type == 'capture_pattern'){
@@ -8890,16 +8930,13 @@ $PatternOrCtx.prototype.transition = function(token, value){
         }
         return new $PatternCtx(context)
     }else if(token == ')' && context.parenthese){
-        // If last item has an alias, it is the alias of the whole "or pattern"
-        var last = $B.last(context.tree)
-        if(last.alias){
-            context.alias = last.alias
-            delete last.alias
-        }
+        set_alias()
         delete context.parenthese
         context.expect = 'as'
         return context
     }
+    // If last item has an alias, it is the alias of the whole "or pattern"
+    set_alias()
     return $transition(context.parent, token, value)
 }
 
@@ -10797,6 +10834,7 @@ var $mangle = $B.parser.$mangle = function(name, context){
 
 var $transition = $B.parser.$transition = function(context, token, value){
     //console.log("context", context, "token", token, value, '$pos', $pos)
+    context.$pos = $pos
     return context.transition(token, value)
 }
 

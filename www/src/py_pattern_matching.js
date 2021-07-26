@@ -102,7 +102,8 @@ $B.pattern_match = function(subject, pattern){
                 locals[pattern.sequence[i].capture_starred] = store_starred
                 nb_matched_in_subject += starred_match_length
             }else{
-                var m = $B.pattern_match(nxt(), pattern.sequence[i])
+                var subject_item = nxt()
+                var m = $B.pattern_match(subject_item, pattern.sequence[i])
                 if(! m){
                     return false
                 }
@@ -185,8 +186,22 @@ $B.pattern_match = function(subject, pattern){
                     _b_.str.$factory(key) + ')')
             }
             keys.push(key)
+
+            // create a dummy class to pass as default value for get()
+            var missing = $B.make_class('missing',
+                function(){
+                    return {
+                        __class__: missing
+                    }
+                }
+            )
+
             try{
-                var v = $B.$call($B.$getattr(subject, "get"))(key)
+                var v = $B.$call($B.$getattr(subject, "get"))(key, missing)
+                if(v === missing){
+                    // pattern key not in subject : return false
+                    return false
+                }
                 if(! $B.pattern_match(v, value_pattern)){
                     return false
                 }
@@ -301,7 +316,7 @@ $B.pattern_match = function(subject, pattern){
         if(literal === _b_.None || literal === _b_.True ||
                 literal === _b_.False){
             // test identity (not equality) for these values
-            return $B.$is(subject, pattern)
+            return $B.$is(subject, literal)
         }
 
         if($B.rich_comp('__eq__', subject, literal)){
