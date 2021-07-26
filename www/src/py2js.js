@@ -8933,9 +8933,19 @@ var $PatternSequenceCtx = function(context, token){
 $PatternSequenceCtx.prototype.transition = function(token, value){
     var context = this
     if(context.expect == ','){
-        //console.log('sequence pattern', context, token, value)
         if((context.token == '[' && token == ']') ||
                 (context.token == '(' && token == ")")){
+            // check if there are more than 1 starred subpattern
+            var nb_starred = 0
+            for(var item of this.tree){
+                if(item instanceof $PatternCaptureCtx && item.starred){
+                    nb_starred++
+                    if(nb_starred > 1){
+                        $_SyntaxError(context,
+                            ['multiple starred names in sequence pattern'])
+                    }
+                }
+            }
             context.expect = 'as'
             remove_empty_pattern(context)
             return context

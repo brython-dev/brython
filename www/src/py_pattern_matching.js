@@ -44,7 +44,7 @@ $B.pattern_match = function(subject, pattern){
                 break
             }
         }
-        if(! supported && Sequence){
+        if((! supported) && Sequence){
             // subclass of collections.abc.Sequence ?
             supported = _b_.issubclass(klass, Sequence)
         }
@@ -60,73 +60,60 @@ $B.pattern_match = function(subject, pattern){
             }
         }
 
+        // shortcust
         if(subject_length < nb_fixed_length){
             // no need to test items
             return false
+        }else if(
+            (subject_length == 0 && pattern.sequence.length == 0) ||
+            (pattern.sequence.length == 1 &&
+                pattern.sequence[0].capture_starred == '_')){
+            // "case []" and "case [*_]" always match and don't require to
+            // iterate on subject
+            return true
         }
 
         // Iterate on elements of subject and check that item i matches
         // pattern i
         var it = _b_.iter(subject),
             nxt = $B.$getattr(it, '__next__'),
-            store_starred = []
+            store_starred = [],
+            nb_matched_in_subject = 0
         for(var i = 0, len = pattern.sequence.length; i < len; i++){
-            try{
-                var subject_item = nxt()
-            }catch(err){
-                if($B.is_exc(err, [_b_.StopIteration])){
-                    if(pattern.sequence[i].capture_starred){
-                        locals[pattern.sequence[i].capture_starred] = []
-                        bind(pattern, subject)
-                        return true
-                    }else{
-                        return false
-                    }
-                }else{
-                    throw err
-                }
-            }
             if(pattern.sequence[i].capture_starred){
-                if(i < len - 1){
-                    // if starred identifier is not the last item, store items
-                    // in capture_starred until the next item matches
-                    var next_pattern = pattern.sequence[i + 1]
-                    if(! $B.pattern_match(subject_item, next_pattern)){
-                        store_starred.push(subject_item)
-                        i -= 1 // stay on the starred pattern
-                        continue
-                    }
-                    locals[pattern.sequence[i].capture_starred] = store_starred
-                    bind(pattern, subject)
-                    i++ // skip pattern i + 1, which already matched
-                }else{
-                    // consume the rest of the subject
-                    var name = pattern.sequence[i].capture_starred
-                    if(name != '_'){
-                        var rest = [subject_item].concat(_b_.list.$factory(it))
-                        locals[name] = rest
-                    }
+                // Starred identifier
+                // - there are nb_matches_in_subject items already matched
+                // - there are len - i - 1 remaining items in the sequence
+                // - compute the length of the captured list
+
+                // Shortcut : if starred subpattern is the last item in the
+                // sequence and is the wildcard, do nothing
+                if(pattern.sequence[i].capture_starred == '_' &&
+                        i == len - 1){
                     bind(pattern, subject)
                     return true
                 }
+                var starred_match_length = subject_length -
+                        nb_matched_in_subject - len + i + 1
+                for(var j = 0; j < starred_match_length; j++){
+                    store_starred.push(nxt())
+                }
+                // bind capture name
+                locals[pattern.sequence[i].capture_starred] = store_starred
+                nb_matched_in_subject += starred_match_length
             }else{
-                var m = $B.pattern_match(subject_item, pattern.sequence[i])
+                var m = $B.pattern_match(nxt(), pattern.sequence[i])
                 if(! m){
                     return false
                 }
+                nb_matched_in_subject++
             }
         }
         // If there are still items in subject, match fails
-        try{
-            nxt()
+        if(nb_matched_in_subject != subject_length){
             return false
-        }catch(err){
-            if($B.is_exc(err, [_b_.StopIteration])){
-                bind(pattern, subject)
-                return true
-            }
-            throw err
         }
+        bind(pattern, subject)
         return true
     }
 
