@@ -205,13 +205,13 @@ Function called in case of SyntaxError
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
-    // console.log("syntax error", context, "msg", msg, "indent", indent)
+    // console.log("syntax error", context, "msg", msg, "indent", indent, '$pos', $pos)
     var ctx_node = context
     while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
     var tree_node = ctx_node.node,
         root = tree_node
     while(root.parent !== undefined){root = root.parent}
-    var module = tree_node.module,
+    var module = tree_node.module || $get_module(context).module,
         src = root.src,
         line_num = tree_node.line_num
     if(context.$pos !== undefined){
@@ -268,20 +268,51 @@ module level, or a function definition, a loop, a condition, etc.
 /*
 Function that checks that a context is not inside another incompatible
 context. Used for (augmented) assignements */
-function check_assignment(context){
+function check_assignment(context, once){
     var ctx = context,
         forbidden = ['assert', 'del', 'import', 'raise', 'return']
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'invalid syntax - assign')
-        }else if(ctx.type == "expr" && ctx.tree[0].type == "op"){
-            if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
-                $_SyntaxError(context, ["cannot assign to comparison"])
-            }else{
-                $_SyntaxError(context, ["cannot assign to operator"])
+        }else if(ctx.type == "expr"){
+            var assigned = ctx.tree[0]
+            if(assigned.type == "op"){
+                if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
+                    $_SyntaxError(context, ["cannot assign to comparison"])
+                }else{
+                    $_SyntaxError(context, ["cannot assign to operator"])
+                }
+            }else if(assigned.type == 'call'){
+                $_SyntaxError(context, ["cannot assign to function call"])
+            }else if(assigned.type == 'id'){
+                var name = assigned.value
+                if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
+                    $_SyntaxError(context, ['cannot assign to ' + name])
+                }
+                if(noassign[name] === true){
+                    $_SyntaxError(context, ["cannot assign to keyword"])
+                }
+            }else if(['str', 'int', 'float', 'complex'].indexOf(assigned.type) > -1){
+                $_SyntaxError(context, ["cannot assign to literal"])
+            }else if(assigned.type == "ellipsis"){
+                $_SyntaxError(context, ['cannot assign to Ellipsis'])
+            }
+        }else if(ctx.type == 'expr' && ctx.tree[0].type == 'list_or_tuple'){
+            if(ctx.tree[0].real == 'gen_expr'){
+                $_SyntaxError(context,
+                    ['cannot assign to generator expression'])
+            }
+        }else if(ctx.type == 'list_or_tuple'){
+            for(var item of ctx.tree){
+                check_assignment(item, true)
             }
         }else if(ctx.type == "ternary"){
             $_SyntaxError(context, ["cannot assign to conditional expression"])
+        }else if(ctx.type == 'op'){
+            $_SyntaxError(context, ["cannot assign to operator"])
+        }            
+        if(once){
+            break
         }
         ctx = ctx.parent
     }
@@ -992,15 +1023,12 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }else if(context.type == 'list_or_tuple' ||
             (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
         if(context.type == 'expr'){
-            if(context.tree[0].real == 'gen_expr'){
-                $_SyntaxError(context,
-                    ['cannot assign to generator expression'])
-            }
             context = context.tree[0]
         }
         // Bind all the ids in the list or tuple
         context.bind_ids(scope)
     }else if(context.type == 'assign'){
+        check_assignment(context.tree[1])
         context.tree.forEach(function(elt){
             var assigned = elt.tree[0]
             if(assigned.type == 'id'){
@@ -1011,11 +1039,6 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
         var assigned = context.tree[0]
         if(assigned && assigned.type == 'id'){
             var name = assigned.value
-            if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
-                $_SyntaxError(context, ['cannot assign to ' + name])
-            }else if(noassign[name] === true){
-                $_SyntaxError(context,["cannot assign to keyword"])
-            }
             // Attribute bound of an id indicates if it is being
             // bound, as it is the case in the left part of an assignment
             assigned.bound = true
@@ -1041,8 +1064,6 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
                 assigned.global_module = module.module
                 $bind(assigned.value, module, this)
             }
-        }else if(["str", "int", "float", "complex"].indexOf(assigned.type) > -1){
-            $_SyntaxError(context, ["cannot assign to literal"])
         }else if(assigned.type == "ellipsis"){
                 $_SyntaxError(context, ['cannot assign to Ellipsis'])
         }else if(assigned.type == "unary"){
@@ -1504,7 +1525,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     // Class for augmented assignments such as "+="
 
     check_assignment(context)
-
+    
     this.type = 'augm_assign'
     this.context = context
     this.parent = context.parent
@@ -1519,12 +1540,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         var assigned = context.tree[0]
         if(assigned.type == 'id'){
             var name = assigned.value
-            if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
-                $_SyntaxError(context, 'cannot assign to ' + name)
-            }
-            if(noassign[name] === true){
-                $_SyntaxError(context, "cannot assign to keyword")
-            }else if((scope.ntype == 'def' || scope.ntype == 'generator') &&
+            if((scope.ntype == 'def' || scope.ntype == 'generator') &&
                     (scope.binding[name] === undefined)){
                 if(scope.globals === undefined ||
                         ! scope.globals.has(name)){
@@ -1535,8 +1551,6 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
                     assigned.unbound = true
                 }
             }
-        }else if(['str', 'int', 'float', 'complex'].indexOf(assigned.type) > -1){
-            $_SyntaxError(context, ["cannot assign to literal"])
         }
     }
 

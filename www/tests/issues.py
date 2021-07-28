@@ -2996,6 +2996,12 @@ try:
 except TypeError:
     pass
 
+# issue 1729
+assertRaises(SyntaxError, exec,
+'''for i in range(0):
+    if True:
+        f() += 1''')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
