@@ -16,7 +16,7 @@ with open('compression/du cote de chez swann.txt', 'r') as f:
     counter = 0
     for line in f:
         counter += 1
-    assert counter == 2118
+    assert counter in [2117, 2118] # last LF might be removed
 
 try:
     with open('files/text-latin1.txt') as f:
