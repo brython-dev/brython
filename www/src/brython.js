@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-26 17:05:06.367854"
-__BRYTHON__.timestamp=1627311906367
+__BRYTHON__.compiled_date="2021-07-28 10:36:33.170310"
+__BRYTHON__.timestamp=1627461393170
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4424,7 +4424,8 @@ return $BodyCtx(C)}}
 return C.parent.transition(token,value)}
 function as_pattern(C,token,value){
 if(C.expect=='as'){if(token=='as'){C.expect='alias'
-return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias'){if(token=='id'){C.alias=value
+return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias'){if(token=='id'){if(value=='_'){$_SyntaxError(C,["alias cannot be _"])}
+C.alias=value
 return C.parent}else{$_SyntaxError(C,'bad alias')}}}
 var $PatternCaptureCtx=function(C,value){
 this.type="capture_pattern"
@@ -4434,6 +4435,9 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
+$PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree
+if(this.alias){bindings.push(this.alias)}
+return bindings}
 $PatternCaptureCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case '.':
 if(token=='.'){C.type="value_pattern"
@@ -4469,13 +4473,21 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 this.expect=','
 this.keywords=[]
-this.positionals=[]}
+this.positionals=[]
+this.bound_names=[]}
+$PatternClassCtx.prototype.bindings=function(){var bindings=this.bound_names
+if(this.alias){bindings.push(this.alias)}
+return bindings}
 $PatternClassCtx.prototype.transition=function(token,value){var C=this
-function check_last_arg(){var last=$B.last(C.tree)
-if(last instanceof $PatternCaptureCtx &&
-! last.is_keyword){if(C.keywords.length > 0){$_SyntaxError(C,'positional argument after keyword')}else{if(C.positionals.indexOf(last.tree[0])>-1){$_SyntaxError(C,['multiple assignments '+
-`to name '${last.tree[0]}' in pattern`])}
-C.positionals.push(last.tree[0])}}}
+function check_last_arg(){var last=$B.last(C.tree),bound
+if(last instanceof $PatternCaptureCtx){if(! last.is_keyword &&
+C.keywords.length > 0){$_SyntaxError(C,'positional argument after keyword')}
+if(last.is_keyword){if(C.keywords.indexOf(last.tree[0])>-1){$_SyntaxError(C,[`keyword argument repeated: ${last.tree[0]}`])}
+C.keywords.push(last.tree[0])
+bound=last.tree[1].bindings()}else{bound=last.bindings()}
+for(var b of bound){if(C.bound_names.indexOf(b)>-1){$_SyntaxError(C,['multiple assignments '+
+`to name '${name}' in pattern`])}}
+C.bound_names=C.bound_names.concat(bound)}}
 switch(this.expect){case ',':
 switch(token){case '=':
 var current=$B.last(this.tree)
@@ -4483,9 +4495,8 @@ if(current instanceof $PatternCaptureCtx){
 if(this.keywords.indexOf(current.tree[0])>-1){$_SyntaxError(C,['attribute name repeated in class pattern: '+
 current.tree[0]])}
 current.is_keyword=true
-this.keywords.push(current.tree[0])
 return new $PatternCtx(current)}
-$_SyntaxError(this)
+$_SyntaxError(this,'= after non-capture')
 case ',':
 check_last_arg()
 return new $PatternCtx(this)
@@ -4520,12 +4531,17 @@ C.tree.push(this)}
 function remove_empty_pattern(C){var last=$B.last(C.tree)
 if(last && last instanceof $PatternCtx &&
 last.tree.length==0){C.tree.pop()}}
+$PatternGroupCtx.prototype.bindings=function(){var bindings=[]
+for(var item of this.tree){bindings=bindings.concat(item.bindings())}
+if(this.alias){bindings.push(this.alias)}
+return bindings}
 $PatternGroupCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case ',|':
 if(token==")"){
 remove_empty_pattern(C)
 C.expect='as'
 return C}else if(token==','){C.expect='id'
+C.is_tuple=true
 return C}else if(token=='op' && value=='|'){var opctx=new $PatternOrCtx(C.parent)
 opctx.parenthese=true
 return new $PatternCtx(opctx)}else if(this.token===undefined){return $transition(C.parent,token,value)}
@@ -4542,7 +4558,7 @@ C.expect=',|'
 return $transition(new $PatternCtx(C),token,value)}
 console.log('error',this,token,value)
 $_SyntaxError(C,'token '+token+' after '+C)}
-$PatternGroupCtx.prototype.to_js=function(){var js='{group: ['+$to_js(this.tree)+']'
+$PatternGroupCtx.prototype.to_js=function(){if(this.is_tuple){var js='{sequence: ['+$to_js(this.tree)+']'}else{var js='{group: ['+$to_js(this.tree)+']'}
 if(this.alias){js+=`, alias: "${this.alias}"`}
 return js+'}'}
 var $PatternLiteralCtx=function(C,token,value,sign){
@@ -4554,6 +4570,8 @@ if(token.sign){this.tree=[{sign:token.sign}]
 this.expect='number'}else{if(token=='str'){this.tree=[]
 new $StringCtx(this,value)}else{this.tree=[{token,value,sign}]}
 this.expect='op'}}
+$PatternLiteralCtx.prototype.bindings=function(){if(this.alias){return[this.alias]}
+return[]}
 $PatternLiteralCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case 'op':
 if(token=="op"){switch(value){case '+':
@@ -4593,9 +4611,10 @@ return C.transition(token,value)}
 return $transition(C.parent,token,value)}
 $PatternLiteralCtx.prototype.to_js=function(){function int_to_num(item){var v=parseInt(item.value[1],item.value[0])
 return item.sign=='-' ?-v :v}
-var res='',first=this.tree[0]
+var res='',first=this.tree[0],num_value
 if(first instanceof $StringCtx){res=first.to_js()}else{switch(first.token){case 'id':
 res='_b_.'+first.value
+num_value=first.value=='True' ? 1 :0
 break
 case 'str':
 res=first.value
@@ -4609,11 +4628,13 @@ break
 case 'imaginary':
 res+='$B.make_complex(0, '+
 (first.sign=='-' ? '-' :'')+first.value+')'
+if(first.value==0){num_value=0}
 break}}
 if(this.tree.length > 1){res='$B.make_complex('+res+','+
 (this.tree[1]=='-' ? '-' :'')+
 this.tree[2].value+')'}
 this.js_value=res
+this.num_value=num_value===undefined ? res :num_value
 var js='{literal: '+res
 if(this.alias){js+=`, alias: '${this.alias}'`}
 return js+'}'}
@@ -4625,44 +4646,60 @@ this.tree=[]
 C.tree.push(this)
 this.expect='key_value_pattern'
 this.duplicate_keys=[]}
+$PatternMappingCtx.prototype.bindings=function(){var bindings=[]
+for(var item of this.tree){bindings=bindings.concat(item.bindings())}
+if(this.rest){bindings=bindings.concat(this.rest.bindings())}
+if(this.alias){bindings.push(this.alias)}
+return bindings}
 $PatternMappingCtx.prototype.transition=function(token,value){var C=this
-switch(this.expect){case 'key_value_pattern':
+switch(C.expect){case 'key_value_pattern':
 if(token=='}'){
+console.log('end mapping',this)
 if((! this.has_value_pattern_keys)&&
 this.duplicate_keys.length > 0){$_SyntaxError(C,'duplicate key '+
 this.duplicate_keys[0])}
-return this.parent}
-if(token=='op' && value=='**'){this.expect='capture_pattern'
-return this}
-var p=new $PatternCtx(this)
+if(C.double_star){var ix=C.tree.indexOf(C.double_star)
+if(ix !=C.tree.length-1){C.$pos=C.double_star.$pos
+$_SyntaxError(C,["can't use starred name here (consider moving to end)"])}
+C.rest=C.tree.pop()}
+return C.parent}
+if(token=='op' && value=='**'){C.expect='capture_pattern'
+return C}
+var p=new $PatternCtx(C)
 var lit_or_val=p.transition(token,value)
-if(lit_or_val instanceof $PatternLiteralCtx){this.tree.pop()
-for(var kv of this.tree){if(kv instanceof $PatternKeyValueCtx){var key=kv.tree[0]
+if(lit_or_val instanceof $PatternLiteralCtx){C.tree.pop()
+for(var kv of C.tree){if(kv instanceof $PatternKeyValueCtx){var key=kv.tree[0]
 if(key instanceof $PatternLiteralCtx){var old_lit=key.tree[0],new_lit=lit_or_val.tree[0]
-if(old_lit instanceof $StringCtx &&
-new_lit instanceof $StringCtx){if(old_lit.tree[0]==new_lit.tree[0]){$_SyntaxError(C,["duplicate literal key "+
-new_lit.to_js()])}}else if(old_lit.token===new_lit.token &&
-old_lit.value===new_lit.value &&
-old_lit.sign===new_lit.sign){
+key.to_js()
 lit_or_val.to_js()
-$_SyntaxError(C,["duplicate literal key "+
-lit_or_val.js_value])}}}}
-new $PatternKeyValueCtx(this,lit_or_val)
-return lit_or_val}else if(lit_or_val instanceof $PatternCaptureCtx){this.has_value_pattern_keys=true
-this.tree.pop()
-new $PatternKeyValueCtx(this,lit_or_val)
-this.expect='.'
+key_value=key.num_value
+lit_or_val_value=lit_or_val.num_value
+if(key_value==lit_or_val_value){$_SyntaxError(C,["duplicate literal key "+
+lit_or_val_value])}}}}
+new $PatternKeyValueCtx(C,lit_or_val)
+return lit_or_val}else if(lit_or_val instanceof $PatternCaptureCtx){C.has_value_pattern_keys=true
+C.tree.pop()
+new $PatternKeyValueCtx(C,lit_or_val)
+C.expect='.'
 return this}else{console.log('lit_or_val',lit_or_val)
-$_SyntaxError(this,'expected key or **')}
+$_SyntaxError(C,'expected key or **')}
 case 'capture_pattern':
-var p=new $PatternCtx(this)
-var capture=p.transition(token,value)
-if(capture instanceof $PatternCaptureCtx){this.tree.pop()
-this.rest=capture
-this.expect='key_value_pattern'
-return this}else{$_SyntaxError(this,'expected identifier')}
+var p=new $PatternCtx(C)
+var capture=$transition(p,token,value)
+if(capture instanceof $PatternCaptureCtx){if(C.double_star){C.$pos=capture.$pos
+$_SyntaxError(C,["only one double star pattern is accepted"])}
+if(value=='_'){$_SyntaxError(C,'**_ is not valid')}
+capture.double_star=true
+C.double_star=capture
+C.expect=','
+return C}else{$_SyntaxError(this,'expected identifier')}
+case ',':
+if(token==','){C.expect='key_value_pattern'
+return C}else if(token=='}'){C.expect='key_value_pattern'
+return C.transition(token,value)}
+$_SyntaxError(C,'token '+token+'after C '+C)
 case '.':
-if(this.tree.length > 0){var last=$B.last(this.tree)
+if(C.tree.length > 0){var last=$B.last(C.tree)
 if(last instanceof $PatternKeyValueCtx){
 new $IdCtx(last,last.tree[0].tree[0])
 C.expect='key_value_pattern'
@@ -4678,6 +4715,7 @@ this.tree=[literal_or_value]
 literal_or_value.parent=this
 this.expect=':'
 C.tree.push(this)}
+$PatternKeyValueCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
 $PatternKeyValueCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case ':':
 switch(token){case ':':
@@ -4715,19 +4753,30 @@ this.tree=[first_pattern]
 first_pattern.parent=this
 this.expect='|'
 C.tree.push(this)}
-$PatternOrCtx.prototype.transition=function(token,value){var C=this
+$PatternOrCtx.prototype.bindings=function(){var names
+for(var subpattern of this.tree){if(subpattern.bindings===undefined){console.log('no binding',subpattern)}
+var subbindings=subpattern.bindings()
+if(names===undefined){names=subbindings}else{for(var item of names){if(subbindings.indexOf(item)==-1){$_SyntaxError(this,["alternative patterns bind different names"])}}
+for(var item of subbindings){if(names.indexOf(item)==-1){$_SyntaxError(this,["alternative patterns bind different names"])}}}}
+if(this.alias){names.push(this.alias)}
+return names}
+$PatternOrCtx.prototype.transition=function(token,value){function set_alias(){
+var last=$B.last(C.tree)
+if(last.alias){C.alias=last.alias
+delete last.alias}}
+var C=this
 for(var i=0,len=C.tree.length-1;i < len;i++){if(C.tree[i].type=='capture_pattern'){$_SyntaxError(C.tree[i],[`name capture '${C.tree[i].tree[0]}' `+
 'makes remaining patterns unreachable'])}}
 if(['as','alias'].indexOf(C.expect)>-1){return as_pattern(C,token,value)}
 if(token=='op' && value=="|"){
 for(var item of C.tree){if(item.alias){$_SyntaxError(C,'no as pattern inside or pattern')}}
-return new $PatternCtx(C)}else if(token==')' && C.parenthese){
-var last=$B.last(C.tree)
-if(last.alias){C.alias=last.alias
-delete last.alias}
+return new $PatternCtx(C)}else if(token==')' && C.parenthese){set_alias()
+C.bindings()
 delete C.parenthese
 C.expect='as'
 return C}
+set_alias()
+C.bindings()
 return $transition(C.parent,token,value)}
 $PatternOrCtx.prototype.to_js=function(){var res='{or : ['+$to_js(this.tree)+']'
 if(this.alias){res+=`, alias: '${this.alias}'`}
@@ -4743,6 +4792,7 @@ first_pattern.parent=this}else{
 this.token=token}
 this.expect=','
 C.tree.push(this)}
+$PatternSequenceCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
 $PatternSequenceCtx.prototype.transition=function(token,value){var C=this
 if(C.expect==','){if((C.token=='[' && token==']')||
 (C.token=='(' && token==")")){

@@ -10933,7 +10933,6 @@ var $mangle = $B.parser.$mangle = function(name, context){
 
 var $transition = $B.parser.$transition = function(context, token, value){
     //console.log("context", context, "token", token, value, '$pos', $pos)
-    context.$pos = $pos
     return context.transition(token, value)
 }
 
