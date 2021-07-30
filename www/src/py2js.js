@@ -310,7 +310,7 @@ function check_assignment(context, once){
             $_SyntaxError(context, ["cannot assign to conditional expression"])
         }else if(ctx.type == 'op'){
             $_SyntaxError(context, ["cannot assign to operator"])
-        }            
+        }
         if(once){
             break
         }
@@ -1525,7 +1525,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     // Class for augmented assignments such as "+="
 
     check_assignment(context)
-    
+
     this.type = 'augm_assign'
     this.context = context
     this.parent = context.parent
@@ -2406,6 +2406,7 @@ $CaseCtx.prototype.transition = function(token, value){
             if(is_irrefutable(this.tree[0])){
                 // mark match node as having already an irrefutable pattern,
                 // so that remaining patterns raise a SyntaxError
+                console.log('set as irrefutable', context)
                 $get_node(context).parent.irrefutable = context
             }
             switch(context.expect) {
@@ -2426,7 +2427,6 @@ $CaseCtx.prototype.transition = function(token, value){
             $_SyntaxError(context, ['expected :'])
         case ',':
             if(context.expect == ':' || context.expect == 'as'){
-                var first = this.tree[0]
                 return new $PatternCtx(new $PatternSequenceCtx(context))
             }
         case 'if':
@@ -5892,6 +5892,11 @@ $IdCtx.prototype.transition = function(token, value){
             $_SyntaxError(context, [err.message])
         }
         if(flag){
+            var node = $get_node(context),
+                parent = node.parent
+            if((! node.parent) || !(node.parent.is_match)){
+                $_SyntaxError(context, '"case" not inside "match"')
+            }
             return $transition(new $PatternCtx(
                 new $CaseCtx(context.parent.parent)),
                     token, value)
@@ -8337,6 +8342,10 @@ function as_pattern(context, token, value){
             if(value == '_'){
                 $_SyntaxError(context, ["alias cannot be _"])
             }
+            if(context.bindings().indexOf(value) > -1){
+                $_SyntaxError(context,
+                    [`multiple assignments to name '${value}' in pattern`])
+            }
             context.alias = value
             return context.parent
         }else{
@@ -8359,7 +8368,7 @@ var $PatternCaptureCtx = function(context, value){
 }
 
 $PatternCaptureCtx.prototype.bindings = function(){
-    var bindings = this.tree[0] == '_' ? [] : this.tree
+    var bindings = this.tree[0] == '_' ? [] : this.tree.slice()
     if(this.alias){
         bindings.push(this.alias)
     }
@@ -8391,7 +8400,8 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             }
         case 'as':
         case 'alias':
-            return as_pattern(context, token, value)
+            var res = as_pattern(context, token, value)
+            return res
         case 'id':
             if(token == 'id'){
                 context.tree.push(value)
@@ -8475,7 +8485,7 @@ $PatternClassCtx.prototype.transition = function(token, value){
             for(var b of bound){
                 if(context.bound_names.indexOf(b) > -1){
                     $_SyntaxError(context, ['multiple assignments ' +
-                        `to name '${name}' in pattern`])
+                        `to name '${b}' in pattern`])
                 }
             }
             context.bound_names = context.bound_names.concat(bound)
@@ -8638,6 +8648,9 @@ var $PatternLiteralCtx = function(context, token, value, sign){
         this.expect = 'number'
     }else{
         if(token == 'str'){
+            if(Array.isArray(value)){ // f-string
+                $_SyntaxError(this, ["patterns cannot include f-strings"])
+            }
             this.tree = []
             new $StringCtx(this, value)
         }else{
@@ -8770,6 +8783,7 @@ var $PatternMappingCtx = function(context){
     this.expect = 'key_value_pattern'
     // store duplicate literal keys
     this.duplicate_keys = []
+    this.bound_names = []
 }
 
 $PatternMappingCtx.prototype.bindings = function(){
@@ -8788,17 +8802,37 @@ $PatternMappingCtx.prototype.bindings = function(){
 
 $PatternMappingCtx.prototype.transition = function(token, value){
     var context = this
+    function check_duplicate_names(){
+        var last = $B.last(context.tree),
+            bindings
+        if(last instanceof $PatternKeyValueCtx){
+            if(context.double_star){
+                // key-value after double star is not allowed
+                context.$pos = context.double_star.$pos
+                $_SyntaxError(context,
+                    ["can't use starred name here (consider moving to end)"])
+            }
+            if(last.tree[0].type == 'value_pattern'){
+                bindings = last.tree[2].bindings()
+            }else{
+                bindings = last.tree[1].bindings()
+            }
+            for(var binding of bindings){
+                if(context.bound_names.indexOf(binding) > -1){
+                    $_SyntaxError(context,
+                        [`multiple assignments to name '${binding}'` +
+                         ' in pattern'])
+                }
+            }
+            context.bound_names = context.bound_names.concat(bindings)
+        }
+    }
     switch(context.expect){
         case 'key_value_pattern':
-            if(token == '}'){
+            if(token == '}' || token == ','){
                 // If there are only literal values, raise SyntaxError if
                 // there are duplicate keys
-                console.log('end mapping', this)
-                if((! this.has_value_pattern_keys) &&
-                        this.duplicate_keys.length > 0){
-                    $_SyntaxError(context, 'duplicate key ' +
-                        this.duplicate_keys[0])
-                }
+                check_duplicate_names()
                 if(context.double_star){
                     var ix = context.tree.indexOf(context.double_star)
                     if(ix != context.tree.length - 1){
@@ -8808,7 +8842,7 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                     }
                     context.rest = context.tree.pop()
                 }
-                return context.parent
+                return token == ',' ? context : context.parent
             }
             if(token == 'op' && value == '**'){
                 context.expect = 'capture_pattern'
@@ -8862,6 +8896,10 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 if(value == '_'){
                     $_SyntaxError(context, '**_ is not valid')
                 }
+                if(context.bound_names.indexOf(value) > -1){
+                    $_SyntaxError(context, ['duplicate binding: ' + value])
+                }
+                context.bound_names.push(value)
                 capture.double_star = true
                 context.double_star = capture
                 context.expect = ','
@@ -8931,7 +8969,8 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
                 case '}':
                     return $transition(context.parent, token, value)
                 case ',':
-                    return context.parent
+                    context.parent.expect = 'key_value_pattern'
+                    return $transition(context.parent, token, value)
                 case 'op':
                     if(value == '|'){
                         // value is an alternative
@@ -9003,7 +9042,7 @@ $PatternOrCtx.prototype.bindings = function(){
         }
     }
     if(this.alias){
-        names.push(this.alias)
+        return names.concat(this.alias)
     }
     return names
 }
@@ -9064,11 +9103,16 @@ var $PatternSequenceCtx = function(context, token){
     this.type = "sequence_pattern"
     this.parent = context
     this.tree = []
+    this.bound_names = []
     var first_pattern = context.tree.pop()
     if(token === undefined){
         // implicit sequence : form "case x, y:"
         // context.parent already has a pattern
+        this.bound_names = first_pattern.bindings()
         this.tree = [first_pattern]
+        if(first_pattern.starred){
+            this.has_star = true
+        }
         first_pattern.parent = this
     }else{
         // explicit sequence with token '[' or '('
@@ -9081,13 +9125,35 @@ var $PatternSequenceCtx = function(context, token){
 $PatternSequenceCtx.prototype.bindings = $PatternMappingCtx.prototype.bindings
 
 $PatternSequenceCtx.prototype.transition = function(token, value){
+    function check_duplicate_names(){
+        var last = $B.last(context.tree)
+        if(! (last instanceof $PatternCtx)){
+            // check duplicate bindings
+            var last_bindings = last.bindings()
+            for(var b of last_bindings){
+                if(context.bound_names.indexOf(b) > -1){
+                    $_SyntaxError(context, ["multiple assignments to name '" +
+                        b + "' in pattern"])
+                }
+            }
+            if(last.starred){
+                if(context.has_star){
+                    $_SyntaxError(context,
+                        ['multiple starred names in sequence pattern'])
+                }
+                context.has_star = true
+            }
+            context.bound_names = context.bound_names.concat(last_bindings)
+        }
+    }
+
     var context = this
     if(context.expect == ','){
         if((context.token == '[' && token == ']') ||
                 (context.token == '(' && token == ")")){
             // check if there are more than 1 starred subpattern
             var nb_starred = 0
-            for(var item of this.tree){
+            for(var item of context.tree){
                 if(item instanceof $PatternCaptureCtx && item.starred){
                     nb_starred++
                     if(nb_starred > 1){
@@ -9097,9 +9163,11 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
                 }
             }
             context.expect = 'as'
+            check_duplicate_names()
             remove_empty_pattern(context)
             return context
         }else if(token == ','){
+            check_duplicate_names()
             context.expect = 'id'
             return context
         }else if(token == 'op' && value == '|'){
@@ -9107,6 +9175,8 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
             remove_empty_pattern(context)
             return new $PatternCtx(new $PatternOrCtx(context))
         }else if(this.token === undefined){
+            // implicit tuple
+            check_duplicate_names()
             return $transition(context.parent, token, value)
         }
         $_SyntaxError(context)
@@ -9429,10 +9499,11 @@ $StarArgCtx.prototype.to_js = function(){
 
 var $StringCtx = $B.parser.$StringCtx = function(context, value){
     // Class for literal strings
+    // For f-strings, value is an Array
     this.type = 'str'
     this.parent = context
     this.tree = [value] // may be extended if consecutive strings eg 'a' 'b'
-    context.tree[context.tree.length] = this
+    context.tree.push(this)
     this.raw = false
     this.$pos = $pos
 }

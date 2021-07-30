@@ -60,7 +60,7 @@ $B.pattern_match = function(subject, pattern){
             }
         }
 
-        // shortcust
+        // shortcut
         if(subject_length < nb_fixed_length){
             // no need to test items
             return false
