@@ -2603,6 +2603,7 @@ $B.parse_fstring = function(string){
         current = "",
         ctype = null,
         nb_braces = 0,
+        expr_start,
         car
 
     while(pos < string.length){
@@ -2615,6 +2616,7 @@ $B.parse_fstring = function(string){
                     pos += 2
                 }else{
                     ctype = "expression"
+                    expr_start = pos + 1
                     nb_braces = 1
                     pos++
                 }
@@ -2644,6 +2646,7 @@ $B.parse_fstring = function(string){
                     }else{
                         elts.push(current)
                         ctype = "expression"
+                        expr_start = i + 1
                         pos = i + 1
                         break
                     }
@@ -2667,6 +2670,7 @@ $B.parse_fstring = function(string){
             while(string.charAt(i) == " "){i++}
             if(string.charAt(i) == "}"){
                 // end of debug expression
+                console.log('end of debug', current)
                 elts.push(current)
                 ctype = null
                 current = ""
@@ -2689,6 +2693,9 @@ $B.parse_fstring = function(string){
                     nb_braces -= 1
                     if(nb_braces == 0){
                         // end of expression
+                        if(current.fmt){
+                            current.format = string.substring(fmt_start, i)
+                        }
                         if(current.expression == ""){
                             fstring_error("f-string: empty expression not allowed",
                                 pos)
@@ -2706,7 +2713,7 @@ $B.parse_fstring = function(string){
                     throw Error("f-string expression part cannot include a" +
                         " backslash")
                 }else if(nb_paren == 0 && car == "!" && current.fmt === null &&
-                    ":}".indexOf(string.charAt(i + 2)) > -1){
+                        ":}".indexOf(string.charAt(i + 2)) > -1){
                     if(current.expression.length == 0){
                         throw Error("f-string: empty expression not allowed")
                     }
@@ -2748,6 +2755,7 @@ $B.parse_fstring = function(string){
                     }
                 }else if(nb_paren == 0 && car == ":"){
                     current.fmt = true
+                    var fmt_start = i
                     current.expression += car
                     i++
                 }else if(car == "="){
@@ -2760,6 +2768,7 @@ $B.parse_fstring = function(string){
                             nb_paren > 0 ||
                             string.charAt(i + 1) == "=" ||
                             "=!<>:".search(last_char_re) > -1){
+                        // not a debug expression
                         current.expression += car
                         i += 1
                     }else{
@@ -2769,6 +2778,7 @@ $B.parse_fstring = function(string){
                             tail += string.charAt(i + 1)
                             i++
                         }
+                        // push simple string
                         elts.push(current.expression + tail)
                         // remove trailing whitespace from expression
                         while(ce.match(/\s$/)){
@@ -2790,6 +2800,15 @@ $B.parse_fstring = function(string){
     }
     if(current.length > 0){
         elts.push(current)
+    }
+    for(var elt of elts){
+        if(typeof elt == "object"){
+            if(elt.fmt_pos !== undefined &&
+                    elt.expression.charAt(elt.fmt_pos) != ':'){
+                console.log('mauvais format', string, elts)
+                throw Error()
+            }
+        }
     }
     return elts
 }

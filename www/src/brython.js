@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-28 15:44:06.248210"
-__BRYTHON__.timestamp=1627479846248
+__BRYTHON__.compiled_date="2021-07-31 09:05:58.417558"
+__BRYTHON__.timestamp=1627715158417
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1569,6 +1569,7 @@ pattern.tree.length==1 &&
 is_irrefutable(pattern.tree[0])){return true}
 return false}
 if(is_irrefutable(this.tree[0])){
+console.log('set as irrefutable',C)
 $get_node(C).parent.irrefutable=C}
 switch(C.expect){case 'id':
 case 'as':
@@ -1581,8 +1582,7 @@ case 'op':
 if(value=='|'){return new $PatternCtx(new $PatternOrCtx(C))}
 $_SyntaxError(C,['expected :'])
 case ',':
-if(C.expect==':' ||C.expect=='as'){var first=this.tree[0]
-return new $PatternCtx(new $PatternSequenceCtx(C))}
+if(C.expect==':' ||C.expect=='as'){return new $PatternCtx(new $PatternSequenceCtx(C))}
 case 'if':
 C.has_guard=true
 return new $AbstractExprCtx(new $ConditionCtx(C,token),false)
@@ -3247,7 +3247,9 @@ if(C.value=='$$case' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src
 try{var flag=line_ends_with_comma(src.substr(start))}catch(err){$pos=start+err.offset
 $_SyntaxError(C,[err.message])}
-if(flag){return $transition(new $PatternCtx(
+if(flag){var node=$get_node(C),parent=node.parent
+if((! node.parent)||!(node.parent.is_match)){$_SyntaxError(C,'"case" not inside "match"')}
+return $transition(new $PatternCtx(
 new $CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src,flag=line_ends_with_comma(src.substr(start))
 if(flag){return $transition(new $AbstractExprCtx(
@@ -4427,6 +4429,7 @@ return C.parent.transition(token,value)}
 function as_pattern(C,token,value){
 if(C.expect=='as'){if(token=='as'){C.expect='alias'
 return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias'){if(token=='id'){if(value=='_'){$_SyntaxError(C,["alias cannot be _"])}
+if(C.bindings().indexOf(value)>-1){$_SyntaxError(C,[`multiple assignments to name '${value}' in pattern`])}
 C.alias=value
 return C.parent}else{$_SyntaxError(C,'bad alias')}}}
 var $PatternCaptureCtx=function(C,value){
@@ -4437,7 +4440,7 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
-$PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree
+$PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree.slice()
 if(this.alias){bindings.push(this.alias)}
 return bindings}
 $PatternCaptureCtx.prototype.transition=function(token,value){var C=this
@@ -4451,7 +4454,8 @@ return new $PatternCtx(new $PatternClassCtx(C))}else if(C.parent instanceof $Pat
 return C.transition(token,value)}
 case 'as':
 case 'alias':
-return as_pattern(C,token,value)
+var res=as_pattern(C,token,value)
+return res
 case 'id':
 if(token=='id'){C.tree.push(value)
 C.expect='.'
@@ -4488,7 +4492,7 @@ if(last.is_keyword){if(C.keywords.indexOf(last.tree[0])>-1){$_SyntaxError(C,[`ke
 C.keywords.push(last.tree[0])
 bound=last.tree[1].bindings()}else{bound=last.bindings()}
 for(var b of bound){if(C.bound_names.indexOf(b)>-1){$_SyntaxError(C,['multiple assignments '+
-`to name '${name}' in pattern`])}}
+`to name '${b}' in pattern`])}}
 C.bound_names=C.bound_names.concat(bound)}}
 switch(this.expect){case ',':
 switch(token){case '=':
@@ -4569,7 +4573,9 @@ this.parent=C.parent
 C.parent.tree.pop()
 C.parent.tree.push(this)
 if(token.sign){this.tree=[{sign:token.sign}]
-this.expect='number'}else{if(token=='str'){this.tree=[]
+this.expect='number'}else{if(token=='str'){if(Array.isArray(value)){
+$_SyntaxError(this,["patterns cannot include f-strings"])}
+this.tree=[]
 new $StringCtx(this,value)}else{this.tree=[{token,value,sign}]}
 this.expect='op'}}
 $PatternLiteralCtx.prototype.bindings=function(){if(this.alias){return[this.alias]}
@@ -4647,24 +4653,30 @@ C.tree.pop()
 this.tree=[]
 C.tree.push(this)
 this.expect='key_value_pattern'
-this.duplicate_keys=[]}
+this.duplicate_keys=[]
+this.bound_names=[]}
 $PatternMappingCtx.prototype.bindings=function(){var bindings=[]
 for(var item of this.tree){bindings=bindings.concat(item.bindings())}
 if(this.rest){bindings=bindings.concat(this.rest.bindings())}
 if(this.alias){bindings.push(this.alias)}
 return bindings}
 $PatternMappingCtx.prototype.transition=function(token,value){var C=this
+function check_duplicate_names(){var last=$B.last(C.tree),bindings
+if(last instanceof $PatternKeyValueCtx){if(C.double_star){
+C.$pos=C.double_star.$pos
+$_SyntaxError(C,["can't use starred name here (consider moving to end)"])}
+if(last.tree[0].type=='value_pattern'){bindings=last.tree[2].bindings()}else{bindings=last.tree[1].bindings()}
+for(var binding of bindings){if(C.bound_names.indexOf(binding)>-1){$_SyntaxError(C,[`multiple assignments to name '${binding}'`+
+' in pattern'])}}
+C.bound_names=C.bound_names.concat(bindings)}}
 switch(C.expect){case 'key_value_pattern':
-if(token=='}'){
-console.log('end mapping',this)
-if((! this.has_value_pattern_keys)&&
-this.duplicate_keys.length > 0){$_SyntaxError(C,'duplicate key '+
-this.duplicate_keys[0])}
+if(token=='}' ||token==','){
+check_duplicate_names()
 if(C.double_star){var ix=C.tree.indexOf(C.double_star)
 if(ix !=C.tree.length-1){C.$pos=C.double_star.$pos
 $_SyntaxError(C,["can't use starred name here (consider moving to end)"])}
 C.rest=C.tree.pop()}
-return C.parent}
+return token==',' ? C :C.parent}
 if(token=='op' && value=='**'){C.expect='capture_pattern'
 return C}
 var p=new $PatternCtx(C)
@@ -4691,6 +4703,8 @@ var capture=$transition(p,token,value)
 if(capture instanceof $PatternCaptureCtx){if(C.double_star){C.$pos=capture.$pos
 $_SyntaxError(C,["only one double star pattern is accepted"])}
 if(value=='_'){$_SyntaxError(C,'**_ is not valid')}
+if(C.bound_names.indexOf(value)>-1){$_SyntaxError(C,['duplicate binding: '+value])}
+C.bound_names.push(value)
 capture.double_star=true
 C.double_star=capture
 C.expect=','
@@ -4730,7 +4744,8 @@ case ',':
 switch(token){case '}':
 return $transition(C.parent,token,value)
 case ',':
-return C.parent
+C.parent.expect='key_value_pattern'
+return $transition(C.parent,token,value)
 case 'op':
 if(value=='|'){
 return new $PatternCtx(new $PatternOrCtx(C))}}
@@ -4760,7 +4775,7 @@ for(var subpattern of this.tree){if(subpattern.bindings===undefined){console.log
 var subbindings=subpattern.bindings()
 if(names===undefined){names=subbindings}else{for(var item of names){if(subbindings.indexOf(item)==-1){$_SyntaxError(this,["alternative patterns bind different names"])}}
 for(var item of subbindings){if(names.indexOf(item)==-1){$_SyntaxError(this,["alternative patterns bind different names"])}}}}
-if(this.alias){names.push(this.alias)}
+if(this.alias){return names.concat(this.alias)}
 return names}
 $PatternOrCtx.prototype.transition=function(token,value){function set_alias(){
 var last=$B.last(C.tree)
@@ -4787,26 +4802,41 @@ var $PatternSequenceCtx=function(C,token){
 this.type="sequence_pattern"
 this.parent=C
 this.tree=[]
+this.bound_names=[]
 var first_pattern=C.tree.pop()
 if(token===undefined){
+this.bound_names=first_pattern.bindings()
 this.tree=[first_pattern]
+if(first_pattern.starred){this.has_star=true}
 first_pattern.parent=this}else{
 this.token=token}
 this.expect=','
 C.tree.push(this)}
 $PatternSequenceCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
-$PatternSequenceCtx.prototype.transition=function(token,value){var C=this
+$PatternSequenceCtx.prototype.transition=function(token,value){function check_duplicate_names(){var last=$B.last(C.tree)
+if(!(last instanceof $PatternCtx)){
+var last_bindings=last.bindings()
+for(var b of last_bindings){if(C.bound_names.indexOf(b)>-1){$_SyntaxError(C,["multiple assignments to name '"+
+b+"' in pattern"])}}
+if(last.starred){if(C.has_star){$_SyntaxError(C,['multiple starred names in sequence pattern'])}
+C.has_star=true}
+C.bound_names=C.bound_names.concat(last_bindings)}}
+var C=this
 if(C.expect==','){if((C.token=='[' && token==']')||
 (C.token=='(' && token==")")){
 var nb_starred=0
-for(var item of this.tree){if(item instanceof $PatternCaptureCtx && item.starred){nb_starred++
+for(var item of C.tree){if(item instanceof $PatternCaptureCtx && item.starred){nb_starred++
 if(nb_starred > 1){$_SyntaxError(C,['multiple starred names in sequence pattern'])}}}
 C.expect='as'
+check_duplicate_names()
 remove_empty_pattern(C)
-return C}else if(token==','){C.expect='id'
+return C}else if(token==','){check_duplicate_names()
+C.expect='id'
 return C}else if(token=='op' && value=='|'){
 remove_empty_pattern(C)
-return new $PatternCtx(new $PatternOrCtx(C))}else if(this.token===undefined){return $transition(C.parent,token,value)}
+return new $PatternCtx(new $PatternOrCtx(C))}else if(this.token===undefined){
+check_duplicate_names()
+return $transition(C.parent,token,value)}
 $_SyntaxError(C)}else if(C.expect=='as'){if(token=='as'){this.expect='alias'
 return C}
 return $transition(C.parent,token,value)}else if(C.expect=='alias'){if(token='id'){C.alias=value
@@ -4958,7 +4988,7 @@ var $StringCtx=$B.parser.$StringCtx=function(C,value){
 this.type='str'
 this.parent=C
 this.tree=[value]
-C.tree[C.tree.length]=this
+C.tree.push(this)
 this.raw=false
 this.$pos=$pos}
 $StringCtx.prototype.toString=function(){return 'string '+(this.tree ||'')}
@@ -4978,10 +5008,8 @@ function fstring(parsed_fstring){
 var elts=[]
 for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
 var pos=0,br_stack=[],parts=[expr]
-while(pos < expr.length){var car=expr.charAt(pos)
-if(car==":" && br_stack.length==0){parts=[expr.substr(0,pos),expr.substr(pos+1)]
-break}else if("{[(".indexOf(car)>-1){br_stack.push(car)}else if(")]}".indexOf(car)>-1){br_stack.pop()}
-pos++}
+var format=parsed_fstring[i].format
+if(format !==undefined){parts=[expr.substr(0,expr.length-format.length),format.substr(1)]}
 expr=parts[0]
 var save_pos=$pos
 var expr_node=$B.py2js(expr,scope.module,scope.id,scope)
@@ -13814,11 +13842,12 @@ function fstring_error(msg,pos){error=Error(msg)
 error.position=pos
 throw error}
 $B.parse_fstring=function(string){
-var elts=[],pos=0,current="",ctype=null,nb_braces=0,car
+var elts=[],pos=0,current="",ctype=null,nb_braces=0,expr_start,car
 while(pos < string.length){if(ctype===null){car=string.charAt(pos)
 if(car=="{"){if(string.charAt(pos+1)=="{"){ctype="string"
 current="{"
 pos+=2}else{ctype="expression"
+expr_start=pos+1
 nb_braces=1
 pos++}}else if(car=="}"){if(string.charAt(pos+1)==car){ctype="string"
 current="}"
@@ -13830,6 +13859,7 @@ while(i < string.length){car=string.charAt(i)
 if(car=="{"){if(string.charAt(i+1)=="{"){current+="{"
 i+=2}else{elts.push(current)
 ctype="expression"
+expr_start=i+1
 pos=i+1
 break}}else if(car=="}"){if(string.charAt(i+1)==car){current+=car
 i+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{current+=car
@@ -13837,6 +13867,7 @@ i++}}
 pos=i+1}else if(ctype=="debug"){
 while(string.charAt(i)==" "){i++}
 if(string.charAt(i)=="}"){
+console.log('end of debug',current)
 elts.push(current)
 ctype=null
 current=""
@@ -13847,6 +13878,7 @@ if(car=="{" && nb_paren==0){nb_braces++
 current.expression+=car
 i++}else if(car=="}" && nb_paren==0){nb_braces-=1
 if(nb_braces==0){
+if(current.fmt){current.format=string.substring(fmt_start,i)}
 if(current.expression==""){fstring_error("f-string: empty expression not allowed",pos)}
 elts.push(current)
 ctype=null
@@ -13872,13 +13904,15 @@ current.expression+=trs
 i=end+3}}else{var end=string.indexOf('"',i+1)
 if(end==-1){fstring_error("f-string: unterminated string",pos)}else{current.expression+=string.substring(i,end+1)
 i=end+1}}}else if(nb_paren==0 && car==":"){current.fmt=true
+var fmt_start=i
 current.expression+=car
 i++}else if(car=="="){
 var ce=current.expression,last_char=ce.charAt(ce.length-1),last_char_re=('()'.indexOf(last_char)>-1 ? "\\" :"")+last_char
 if(ce.length==0 ||
 nb_paren > 0 ||
 string.charAt(i+1)=="=" ||
-"=!<>:".search(last_char_re)>-1){current.expression+=car
+"=!<>:".search(last_char_re)>-1){
+current.expression+=car
 i+=1}else{
 tail=car
 while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
@@ -13891,6 +13925,9 @@ i++}}else{current.expression+=car
 i++}}
 if(nb_braces > 0){fstring_error("f-string: expected '}'",pos)}}}
 if(current.length > 0){elts.push(current)}
+for(var elt of elts){if(typeof elt=="object"){if(elt.fmt_pos !==undefined &&
+elt.expression.charAt(elt.fmt_pos)!=':'){console.log('mauvais format',string,elts)
+throw Error()}}}
 return elts}
 var _chr=$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
 return String.fromCodePoint(0xD800 |(code >> 10))+

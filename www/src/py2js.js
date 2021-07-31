@@ -9549,18 +9549,10 @@ $StringCtx.prototype.to_js = function(){
                     br_stack = [],
                     parts = [expr]
 
-                while(pos < expr.length){
-                    var car = expr.charAt(pos)
-                    if(car == ":" && br_stack.length == 0){
-                        parts = [expr.substr(0, pos),
-                            expr.substr(pos + 1)]
-                        break
-                    }else if("{[(".indexOf(car) > -1){
-                        br_stack.push(car)
-                    }else if(")]}".indexOf(car) > -1){
-                        br_stack.pop()
-                    }
-                    pos++
+                var format = parsed_fstring[i].format
+                if(format !== undefined){
+                    parts = [expr.substr(0, expr.length - format.length),
+                        format.substr(1)]
                 }
                 expr = parts[0]
                 // We transform the source code of the expression using py2js.
