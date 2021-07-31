@@ -52,6 +52,13 @@ $B.pattern_match = function(subject, pattern){
             return false
         }
 
+        // [*_] always succeeds and does nothing, even if the subject has no
+        // len()
+        if(pattern.sequence.length == 1 &&
+                pattern.sequence[0].capture_starred == '_'){
+            return true
+        }
+
         var subject_length = _b_.len(subject)
         var nb_fixed_length = 0
         for(var item of pattern.sequence){
@@ -64,12 +71,8 @@ $B.pattern_match = function(subject, pattern){
         if(subject_length < nb_fixed_length){
             // no need to test items
             return false
-        }else if(
-            (subject_length == 0 && pattern.sequence.length == 0) ||
-            (pattern.sequence.length == 1 &&
-                pattern.sequence[0].capture_starred == '_')){
-            // "case []" and "case [*_]" always match and don't require to
-            // iterate on subject
+        }else if(subject_length == 0 && pattern.sequence.length == 0){
+            // "case []" always match and doen't require to iterate on subject
             return true
         }
 
