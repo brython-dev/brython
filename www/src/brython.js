@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-31 09:05:58.417558"
-__BRYTHON__.timestamp=1627715158417
+__BRYTHON__.compiled_date="2021-07-31 14:34:20.181949"
+__BRYTHON__.timestamp=1627734860166
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1563,14 +1563,15 @@ switch(token){case 'as':
 C.expect=':'
 return new $AbstractExprCtx(new $AliasCtx(C))
 case ':':
-function is_irrefutable(pattern){if(pattern.type=="capture_pattern"){return true}else if(pattern.type=="or_pattern"){for(var subpattern of pattern.tree){if(is_irrefutable(subpattern)){return true}}}else if(pattern.type=="sequence_pattern" &&
+function is_irrefutable(pattern){var cause
+if(pattern.type=="capture_pattern"){return pattern.tree[0]}else if(pattern.type=="or_pattern"){for(var subpattern of pattern.tree){if(cause=is_irrefutable(subpattern)){return cause}}}else if(pattern.type=="sequence_pattern" &&
 pattern.token=='(' &&
 pattern.tree.length==1 &&
-is_irrefutable(pattern.tree[0])){return true}
+(cause=is_irrefutable(pattern.tree[0]))){return cause}
 return false}
-if(is_irrefutable(this.tree[0])){
-console.log('set as irrefutable',C)
-$get_node(C).parent.irrefutable=C}
+var cause
+if(cause=is_irrefutable(this.tree[0])){
+$get_node(C).parent.irrefutable=cause}
 switch(C.expect){case 'id':
 case 'as':
 case ':':
@@ -3248,7 +3249,10 @@ var start=C.parent.$pos,src=$get_module(this).src
 try{var flag=line_ends_with_comma(src.substr(start))}catch(err){$pos=start+err.offset
 $_SyntaxError(C,[err.message])}
 if(flag){var node=$get_node(C),parent=node.parent
-if((! node.parent)||!(node.parent.is_match)){$_SyntaxError(C,'"case" not inside "match"')}
+if((! node.parent)||!(node.parent.is_match)){$_SyntaxError(C,'"case" not inside "match"')}else{if(node.parent.irrefutable){
+var name=node.parent.irrefutable,msg=name=='_' ? 'wildcard' :
+`name capture '${name}'`
+$_SyntaxError(C,[`${msg} makes remaining patterns unreachable`])}}
 return $transition(new $PatternCtx(
 new $CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src,flag=line_ends_with_comma(src.substr(start))
@@ -4588,8 +4592,7 @@ if(['int','float'].indexOf(this.tree[0].token)>-1){C.expect='imaginary'
 this.tree.push(value)
 C.num_sign=value
 return C}
-$_SyntaxError(C,value+'sign only after '+
-'int or float')
+$_SyntaxError(C,['patterns cannot include operators'])
 default:
 return $transition(C.parent,token,value)}}
 break
@@ -4769,7 +4772,8 @@ first_pattern=first_pattern.tree[0]}
 this.tree=[first_pattern]
 first_pattern.parent=this
 this.expect='|'
-C.tree.push(this)}
+C.tree.push(this)
+this.check_reachable()}
 $PatternOrCtx.prototype.bindings=function(){var names
 for(var subpattern of this.tree){if(subpattern.bindings===undefined){console.log('no binding',subpattern)}
 var subbindings=subpattern.bindings()
@@ -4777,16 +4781,23 @@ if(names===undefined){names=subbindings}else{for(var item of names){if(subbindin
 for(var item of subbindings){if(names.indexOf(item)==-1){$_SyntaxError(this,["alternative patterns bind different names"])}}}}
 if(this.alias){return names.concat(this.alias)}
 return names}
+$PatternOrCtx.prototype.check_reachable=function(){
+var item=$B.last(this.tree)
+var capture
+if(item.type=='capture_pattern'){capture=item.tree[0]}else if(item.type=='group_pattern' && item.tree.length==1 &&
+item.tree[0].type=='capture_pattern'){capture=item.tree[0].tree[0]}else if(item instanceof $PatternOrCtx){item.check_reachable()}
+if(capture){var msg=capture=='_' ? 'wildcard' :
+`name capture '${capture}'`
+$_SyntaxError(this,[`${msg} makes remaining patterns unreachable`])}}
 $PatternOrCtx.prototype.transition=function(token,value){function set_alias(){
 var last=$B.last(C.tree)
 if(last.alias){C.alias=last.alias
 delete last.alias}}
 var C=this
-for(var i=0,len=C.tree.length-1;i < len;i++){if(C.tree[i].type=='capture_pattern'){$_SyntaxError(C.tree[i],[`name capture '${C.tree[i].tree[0]}' `+
-'makes remaining patterns unreachable'])}}
 if(['as','alias'].indexOf(C.expect)>-1){return as_pattern(C,token,value)}
 if(token=='op' && value=="|"){
 for(var item of C.tree){if(item.alias){$_SyntaxError(C,'no as pattern inside or pattern')}}
+C.check_reachable()
 return new $PatternCtx(C)}else if(token==')' && C.parenthese){set_alias()
 C.bindings()
 delete C.parenthese

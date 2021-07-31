@@ -2387,27 +2387,28 @@ $CaseCtx.prototype.transition = function(token, value){
         case ':':
             // check if case is 'irrefutable' (cf. PEP 634)
             function is_irrefutable(pattern){
+                var cause
                 if(pattern.type == "capture_pattern"){
-                    return true
+                    return pattern.tree[0]
                 }else if(pattern.type == "or_pattern"){
                     for(var subpattern of pattern.tree){
-                        if(is_irrefutable(subpattern)){
-                            return true
+                        if(cause = is_irrefutable(subpattern)){
+                            return cause
                         }
                     }
                 }else if(pattern.type == "sequence_pattern" &&
                         pattern.token == '(' &&
                         pattern.tree.length == 1 &&
-                        is_irrefutable(pattern.tree[0])){
-                    return true
+                        (cause = is_irrefutable(pattern.tree[0]))){
+                    return cause
                 }
                 return false
             }
-            if(is_irrefutable(this.tree[0])){
+            var cause
+            if(cause = is_irrefutable(this.tree[0])){
                 // mark match node as having already an irrefutable pattern,
                 // so that remaining patterns raise a SyntaxError
-                console.log('set as irrefutable', context)
-                $get_node(context).parent.irrefutable = context
+                $get_node(context).parent.irrefutable = cause
             }
             switch(context.expect) {
                 case 'id':
@@ -5896,6 +5897,15 @@ $IdCtx.prototype.transition = function(token, value){
                 parent = node.parent
             if((! node.parent) || !(node.parent.is_match)){
                 $_SyntaxError(context, '"case" not inside "match"')
+            }else{
+                if(node.parent.irrefutable){
+                    // "match" statement already has an irrefutable pattern
+                    var name = node.parent.irrefutable,
+                        msg = name == '_' ? 'wildcard' :
+                            `name capture '${name}'`
+                    $_SyntaxError(context,
+                        [`${msg} makes remaining patterns unreachable`])
+                }
             }
             return $transition(new $PatternCtx(
                 new $CaseCtx(context.parent.parent)),
@@ -8681,8 +8691,8 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                             context.num_sign = value
                             return context
                         }
-                        $_SyntaxError(context, value + 'sign only after ' +
-                            'int or float')
+                        $_SyntaxError(context,
+                            ['patterns cannot include operators'])
                     default:
                         return $transition(context.parent, token, value)
                 }
@@ -9015,6 +9025,7 @@ var $PatternOrCtx = function(context){
     first_pattern.parent = this
     this.expect = '|'
     context.tree.push(this)
+    this.check_reachable()
 }
 
 $PatternOrCtx.prototype.bindings = function(){
@@ -9047,6 +9058,27 @@ $PatternOrCtx.prototype.bindings = function(){
     return names
 }
 
+$PatternOrCtx.prototype.check_reachable = function(){
+    // Called before accepting a new alternative. If the last one is a
+    // capture or wildcard, raise SyntaxError
+    var item = $B.last(this.tree)
+    var capture
+    if(item.type == 'capture_pattern'){
+        capture = item.tree[0]
+    }else if(item.type == 'group_pattern' && item.tree.length == 1 &&
+        item.tree[0].type == 'capture_pattern'){
+            capture = item.tree[0].tree[0]
+    }else if(item instanceof $PatternOrCtx){
+        item.check_reachable()
+    }
+    if(capture){
+        var msg = capture == '_' ? 'wildcard' :
+            `name capture '${capture}'`
+        $_SyntaxError(this,
+            [`${msg} makes remaining patterns unreachable`])
+    }
+}
+
 $PatternOrCtx.prototype.transition = function(token, value){
     function set_alias(){
         // If last item has an alias, it is the alias of the whole "or pattern"
@@ -9058,13 +9090,7 @@ $PatternOrCtx.prototype.transition = function(token, value){
     }
 
     var context = this
-    for(var i = 0, len = context.tree.length - 1; i < len; i++){
-        if(context.tree[i].type == 'capture_pattern'){
-            $_SyntaxError(context.tree[i],
-                [`name capture '${context.tree[i].tree[0]}' ` +
-                'makes remaining patterns unreachable'])
-        }
-    }
+
     if(['as', 'alias'].indexOf(context.expect) > -1){
         return as_pattern(context, token, value)
     }
@@ -9075,6 +9101,7 @@ $PatternOrCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context, 'no as pattern inside or pattern')
             }
         }
+        context.check_reachable()
         return new $PatternCtx(context)
     }else if(token == ')' && context.parenthese){
         set_alias()
@@ -9083,7 +9110,6 @@ $PatternOrCtx.prototype.transition = function(token, value){
         context.expect = 'as'
         return context
     }
-    // If last item has an alias, it is the alias of the whole "or pattern"
     set_alias()
     context.bindings()
     return $transition(context.parent, token, value)
