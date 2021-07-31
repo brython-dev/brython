@@ -1,13 +1,24 @@
 import os
+import sys
 import re
 import tarfile
 import zipfile
 import shutil
 
+import version
+print('Brython', version.version[:2])
+print('CPython', sys.version_info[:2])
+brython_version = '.'.join(str(x) for x in version.version[:2])
+cpython_version = '.'.join(str(x) for x in sys.version_info[:2])
+if brython_version != cpython_version:
+    print('Brython version is', brython_version,
+        'but Cpython version is', cpython_version)
+
 # generate html files that compare Brython and CPython distributions
 import make_stdlib_list
 
 from make_dist import run, pdir, vname, vname1, vname2, abs_path
+
 
 run()
 
