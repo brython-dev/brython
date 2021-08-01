@@ -5807,11 +5807,41 @@ $GlobalCtx.prototype.toString = function(){
     return 'global ' + this.tree
 }
 
+function check_global_nonlocal(context, value, type){
+    var scope = context.scope
+    if(type == 'nonlocal' && scope.globals && scope.globals.has(value)){
+        $_SyntaxError(context,
+         [`name '${value}' is nonlocal and global`])
+    }
+    if(type == 'global' && scope.nonlocals && scope.nonlocals[value]){
+        $_SyntaxError(context,
+         [`name '${value}' is nonlocal and global`])
+    }
+
+    if(['def', 'generator'].indexOf(scope.ntype) > -1){
+        var params = scope.context.tree[0]
+        if(params.locals && params.locals.indexOf(value) > -1){
+            $_SyntaxError(context,
+             [`name '${value}' is parameter and ${type}`])
+        }
+        if(scope.binding[value]){
+            console.log('scope ntype', scope)
+            $_SyntaxError(context,
+             [`name '${value}' is assigned to before ${type} declaration`])
+        }
+        if(scope.referenced && scope.referenced[value]){
+            $_SyntaxError(context,
+             [`name '${value}' is used prior to ${type} declaration`])
+        }
+    }
+}
+
 $GlobalCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
+               check_global_nonlocal(context, value, 'global')
                new $IdCtx(context, value)
                context.add(value)
                context.expect = ','
@@ -5883,9 +5913,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
 
     // Store variables referenced in scope
     if(["def", "generator"].indexOf(scope.ntype) > -1){
-        scope.referenced = scope.referenced || {}
-        if(! $B.builtins[this.value]){
-            scope.referenced[this.value] = true
+        if((! (context instanceof $GlobalCtx)) &&
+                ! (context instanceof $NonlocalCtx)){
+            scope.referenced = scope.referenced || {}
+            if(! $B.builtins[this.value]){
+                scope.referenced[this.value] = true
+            }
         }
     }
     if(context.parent.type == 'call_arg') {
@@ -5915,8 +5948,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
     }
 
     if($parent_match(context, {type: 'target_list'})){
-            // ||
-            //(context.type == 'expr' && context.parent.type == 'target_list')){
         // An id defined as a target in a "for" loop is bound in the scope,
         // but *not* in the node bindings, because if the iterable is empty
         // the name has no value (cf. issue 1233)
@@ -7662,6 +7693,7 @@ $NonlocalCtx.prototype.transition = function(token, value){
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
+               check_global_nonlocal(context, value, 'nonlocal')
                new $IdCtx(context, value)
                context.add(value)
                context.expect = ','

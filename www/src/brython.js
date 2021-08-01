@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-01 18:26:25.078242"
-__BRYTHON__.timestamp=1627835185078
+__BRYTHON__.compiled_date="2021-08-01 22:29:59.581717"
+__BRYTHON__.timestamp=1627849799581
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3200,9 +3200,18 @@ while(this.module.module !=this.module.id){this.module=this.module.parent_block}
 this.module.binding=this.module.binding ||{}
 this.$pos=$pos}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
+function check_global_nonlocal(C,value,type){var scope=C.scope
+if(type=='nonlocal' && scope.globals && scope.globals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
+if(type=='global' && scope.nonlocals && scope.nonlocals[value]){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
+if(['def','generator'].indexOf(scope.ntype)>-1){var params=scope.C.tree[0]
+if(params.locals && params.locals.indexOf(value)>-1){$_SyntaxError(C,[`name '${value}' is parameter and ${type}`])}
+if(scope.binding[value]){console.log('scope ntype',scope)
+$_SyntaxError(C,[`name '${value}' is assigned to before ${type} declaration`])}
+if(scope.referenced && scope.referenced[value]){$_SyntaxError(C,[`name '${value}' is used prior to ${type} declaration`])}}}
 $GlobalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){new $IdCtx(C,value)
+if(C.expect=='id'){check_global_nonlocal(C,value,'global')
+new $IdCtx(C,value)
 C.add(value)
 C.expect=','
 return C}
@@ -3241,8 +3250,9 @@ C.tree[C.tree.length]=this
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
-if(["def","generator"].indexOf(scope.ntype)>-1){scope.referenced=scope.referenced ||{}
-if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}
+if(["def","generator"].indexOf(scope.ntype)>-1){if((!(C instanceof $GlobalCtx))&&
+!(C instanceof $NonlocalCtx)){scope.referenced=scope.referenced ||{}
+if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}}
 if(C.parent.type=='call_arg'){this.call_arg=true}
 var ctx=C
 while(ctx.parent !==undefined){switch(ctx.type){case 'ctx_manager_alias':
@@ -4039,7 +4049,8 @@ this.names[name]=[false,$pos]
 this.scope.nonlocals[name]=true}
 $NonlocalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){new $IdCtx(C,value)
+if(C.expect=='id'){check_global_nonlocal(C,value,'nonlocal')
+new $IdCtx(C,value)
 C.add(value)
 C.expect=','
 return C}
