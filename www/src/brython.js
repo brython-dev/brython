@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-01 09:40:48.211039"
-__BRYTHON__.timestamp=1627803648211
+__BRYTHON__.compiled_date="2021-08-01 11:01:40.628022"
+__BRYTHON__.timestamp=1627808500628
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -442,11 +442,13 @@ $B.$SyntaxError(module,message,src,$pos,line_num,root)}else{throw $B.$Indentatio
 function SyntaxWarning(C,msg){var node=$get_node(C),module=$get_module(C),src=module.src,lines=src.split("\n"),message=`Module ${module.module} line ${node.line_num}: ${msg}\n`+
 '    '+lines[node.line_num-1]
 $B.$getattr($B.stderr,"write")(message)}
-function check_assignment(C,once){var ctx=C,forbidden=['assert','del','import','raise','return']
+function check_assignment(C,once){console.log('check assignment',C,once)
+var ctx=C,forbidden=['assert','del','import','raise','return']
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
 if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}else if(assigned.type=='call'){$_SyntaxError(C,["cannot assign to function call"])}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){$_SyntaxError(C,['cannot assign to '+name])}
-if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}}else if(ctx.type=='expr' && ctx.tree[0].type=='list_or_tuple'){if(ctx.tree[0].real=='gen_expr'){$_SyntaxError(C,['cannot assign to generator expression'])}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,true)}}else if(ctx.type=="ternary"){$_SyntaxError(C,["cannot assign to conditional expression"])}else if(ctx.type=='op'){$_SyntaxError(C,["cannot assign to operator"])}
+if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}else if(assigned.type=='list_or_tuple' &&
+assigned.real=='gen_expr'){$_SyntaxError(C,['cannot assign to generator expression'])}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,true)}}else if(ctx.type=="comprehension"){$_SyntaxError(C,["cannot assign to comprehension"])}else if(ctx.type=="ternary"){$_SyntaxError(C,["cannot assign to conditional expression"])}else if(ctx.type=='op'){$_SyntaxError(C,["cannot assign to operator"])}
 if(once){break}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type

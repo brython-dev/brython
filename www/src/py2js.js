@@ -269,6 +269,7 @@ module level, or a function definition, a loop, a condition, etc.
 Function that checks that a context is not inside another incompatible
 context. Used for (augmented) assignements */
 function check_assignment(context, once){
+    console.log('check assignment', context, once)
     var ctx = context,
         forbidden = ['assert', 'del', 'import', 'raise', 'return']
     while(ctx){
@@ -296,9 +297,8 @@ function check_assignment(context, once){
                 $_SyntaxError(context, ["cannot assign to literal"])
             }else if(assigned.type == "ellipsis"){
                 $_SyntaxError(context, ['cannot assign to Ellipsis'])
-            }
-        }else if(ctx.type == 'expr' && ctx.tree[0].type == 'list_or_tuple'){
-            if(ctx.tree[0].real == 'gen_expr'){
+            }else if(assigned.type == 'list_or_tuple' &&
+                    assigned.real == 'gen_expr'){
                 $_SyntaxError(context,
                     ['cannot assign to generator expression'])
             }
@@ -306,6 +306,8 @@ function check_assignment(context, once){
             for(var item of ctx.tree){
                 check_assignment(item, true)
             }
+        }else if(ctx.type == "comprehension"){
+            $_SyntaxError(context, ["cannot assign to comprehension"])
         }else if(ctx.type == "ternary"){
             $_SyntaxError(context, ["cannot assign to conditional expression"])
         }else if(ctx.type == 'op'){
