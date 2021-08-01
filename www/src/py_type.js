@@ -362,7 +362,7 @@ type.__format__ = function(klass, fmt_spec){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = attr == "__init__" // && klass.$infos.__name__ == "generator"
+    var $test = false // attr == "__init__" // && klass.$infos.__name__ == "generator"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }

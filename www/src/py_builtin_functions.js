@@ -2523,7 +2523,6 @@ $$super.__get__ = function(self, instance, klass){
 }
 
 $$super.__getattribute__ = function(self, attr){
-    console.log('super __ga__', self, attr)
     var mro = self.__thisclass__.__mro__,
         res
 
