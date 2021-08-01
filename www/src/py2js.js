@@ -268,10 +268,21 @@ module level, or a function definition, a loop, a condition, etc.
 /*
 Function that checks that a context is not inside another incompatible
 context. Used for (augmented) assignements */
-function check_assignment(context, once){
-    console.log('check assignment', context, once)
+function check_assignment(context, kwargs){
+    // kwargs, if provided, is a Javascript object that can have these
+    // attributes:
+    //  .once : if set, only check the context; otherwise, also check
+    //      the context's parents
+    //  .delete: if set, the context checked is not an assignment but
+    //      a "del"; adapt error message
+    var once,
+        action = 'assign to'
+    if(kwargs){
+        once = kwargs.once
+        action = kwargs.action || action
+    }
     var ctx = context,
-        forbidden = ['assert', 'del', 'import', 'raise', 'return']
+        forbidden = ['assert', 'import', 'raise', 'return']
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'invalid syntax - assign')
@@ -279,39 +290,41 @@ function check_assignment(context, once){
             var assigned = ctx.tree[0]
             if(assigned.type == "op"){
                 if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
-                    $_SyntaxError(context, ["cannot assign to comparison"])
+                    $_SyntaxError(context, [`cannot ${action} comparison`])
                 }else{
-                    $_SyntaxError(context, ["cannot assign to operator"])
+                    $_SyntaxError(context, [`cannot ${action} operator`])
                 }
             }else if(assigned.type == 'call'){
-                $_SyntaxError(context, ["cannot assign to function call"])
+                $_SyntaxError(context, [`cannot ${action} function call`])
             }else if(assigned.type == 'id'){
                 var name = assigned.value
                 if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
-                    $_SyntaxError(context, ['cannot assign to ' + name])
+                    $_SyntaxError(context, [`cannot ${action} ${name}`])
                 }
                 if(noassign[name] === true){
-                    $_SyntaxError(context, ["cannot assign to keyword"])
+                    $_SyntaxError(context, [`cannot ${action} keyword`])
                 }
             }else if(['str', 'int', 'float', 'complex'].indexOf(assigned.type) > -1){
-                $_SyntaxError(context, ["cannot assign to literal"])
+                $_SyntaxError(context, [`cannot ${action} literal`])
             }else if(assigned.type == "ellipsis"){
-                $_SyntaxError(context, ['cannot assign to Ellipsis'])
+                $_SyntaxError(context, [`cannot ${action} Ellipsis`])
             }else if(assigned.type == 'list_or_tuple' &&
                     assigned.real == 'gen_expr'){
                 $_SyntaxError(context,
-                    ['cannot assign to generator expression'])
+                    [`cannot ${action} generator expression`])
+            }else if(assigned.type == 'packed'){
+                check_assignment(assigned.tree[0], {action, once: true})
             }
         }else if(ctx.type == 'list_or_tuple'){
             for(var item of ctx.tree){
-                check_assignment(item, true)
+                check_assignment(item, {action, once: true})
             }
         }else if(ctx.type == "comprehension"){
-            $_SyntaxError(context, ["cannot assign to comprehension"])
+            $_SyntaxError(context, [`cannot ${action} comprehension`])
         }else if(ctx.type == "ternary"){
-            $_SyntaxError(context, ["cannot assign to conditional expression"])
+            $_SyntaxError(context, [`cannot ${action} conditional expression`])
         }else if(ctx.type == 'op'){
-            $_SyntaxError(context, ["cannot assign to operator"])
+            $_SyntaxError(context, [`cannot ${action} operator`])
         }
         if(once){
             break
@@ -3714,7 +3727,10 @@ $DelCtx.prototype.toString = function(){
 
 $DelCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == 'eol'){return $transition(context.parent, token)}
+    if(token == 'eol'){
+        check_assignment(this.tree[0], {action: 'delete'})
+        return $transition(context.parent, token)
+    }
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
@@ -3776,10 +3792,6 @@ $DelCtx.prototype.to_js = function(){
                 js = expr.to_js()
                 expr.func = 'getitem'
                 return js
-            case 'op':
-                  $_SyntaxError(this, ["cannot delete operator"])
-            case 'call':
-                $_SyntaxError(this, ["cannot delete function call"])
             case 'attribute':
                 return '_b_.delattr(' + expr.value.to_js() + ',"' +
                     expr.name + '")'
@@ -4802,6 +4814,7 @@ $ForExpr.prototype.transition = function(token, value){
         case 'in':
             // bind single ids in target list
             for(var target_expr of context.tree[0].tree){
+                check_assignment(target_expr.tree[0])
                 if(target_expr.tree[0].type == 'id'){
                     var id = target_expr.tree[0]
                     $bind(id.value, this.scope, id)
@@ -9838,6 +9851,9 @@ $TargetListCtx.prototype.toString = function(){
 
 $TargetListCtx.prototype.transition = function(token, value){
     var context = this
+    if(context.expect == ','){
+        check_assignment($B.last(context.tree), {once: true})
+    }
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
@@ -9860,7 +9876,9 @@ $TargetListCtx.prototype.transition = function(token, value){
             }
         case ')':
         case ']':
-            if(context.expect == ','){return context.parent}
+            if(context.expect == ','){
+                return context.parent
+            }
         case ',':
             if(context.expect == ','){
                 context.expect = 'id'
@@ -11005,7 +11023,7 @@ var $to_js = $B.parser.$to_js = function(tree, sep){
     try{
         return tree.map($to_js_map).join(sep)
     }catch(err){
-        console.log('error', tree)
+        console.log('error', err, '\ntree', tree)
         throw err
     }
 }

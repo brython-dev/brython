@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-01 11:01:40.628022"
-__BRYTHON__.timestamp=1627808500628
+__BRYTHON__.compiled_date="2021-08-01 11:55:43.560954"
+__BRYTHON__.timestamp=1627811743560
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -442,13 +442,16 @@ $B.$SyntaxError(module,message,src,$pos,line_num,root)}else{throw $B.$Indentatio
 function SyntaxWarning(C,msg){var node=$get_node(C),module=$get_module(C),src=module.src,lines=src.split("\n"),message=`Module ${module.module} line ${node.line_num}: ${msg}\n`+
 '    '+lines[node.line_num-1]
 $B.$getattr($B.stderr,"write")(message)}
-function check_assignment(C,once){console.log('check assignment',C,once)
-var ctx=C,forbidden=['assert','del','import','raise','return']
+function check_assignment(C,kwargs){
+var once,action='assign to'
+if(kwargs){once=kwargs.once
+action=kwargs.action ||action}
+var ctx=C,forbidden=['assert','import','raise','return']
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
-if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,["cannot assign to comparison"])}else{$_SyntaxError(C,["cannot assign to operator"])}}else if(assigned.type=='call'){$_SyntaxError(C,["cannot assign to function call"])}else if(assigned.type=='id'){var name=assigned.value
-if(['None','True','False','__debug__'].indexOf(name)>-1){$_SyntaxError(C,['cannot assign to '+name])}
-if(noassign[name]===true){$_SyntaxError(C,["cannot assign to keyword"])}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,["cannot assign to literal"])}else if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}else if(assigned.type=='list_or_tuple' &&
-assigned.real=='gen_expr'){$_SyntaxError(C,['cannot assign to generator expression'])}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,true)}}else if(ctx.type=="comprehension"){$_SyntaxError(C,["cannot assign to comprehension"])}else if(ctx.type=="ternary"){$_SyntaxError(C,["cannot assign to conditional expression"])}else if(ctx.type=='op'){$_SyntaxError(C,["cannot assign to operator"])}
+if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,[`cannot ${action} comparison`])}else{$_SyntaxError(C,[`cannot ${action} operator`])}}else if(assigned.type=='call'){$_SyntaxError(C,[`cannot ${action} function call`])}else if(assigned.type=='id'){var name=assigned.value
+if(['None','True','False','__debug__'].indexOf(name)>-1){$_SyntaxError(C,[`cannot ${action} ${name}`])}
+if(noassign[name]===true){$_SyntaxError(C,[`cannot ${action} keyword`])}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,[`cannot ${action} literal`])}else if(assigned.type=="ellipsis"){$_SyntaxError(C,[`cannot ${action} Ellipsis`])}else if(assigned.type=='list_or_tuple' &&
+assigned.real=='gen_expr'){$_SyntaxError(C,[`cannot ${action} generator expression`])}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){$_SyntaxError(C,[`cannot ${action} comprehension`])}else if(ctx.type=="ternary"){$_SyntaxError(C,[`cannot ${action} conditional expression`])}else if(ctx.type=='op'){$_SyntaxError(C,[`cannot ${action} operator`])}
 if(once){break}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
@@ -2170,7 +2173,8 @@ C.tree[C.tree.length]=this
 this.tree=[]}
 $DelCtx.prototype.toString=function(){return 'del '+this.tree}
 $DelCtx.prototype.transition=function(token,value){var C=this
-if(token=='eol'){return $transition(C.parent,token)}
+if(token=='eol'){check_assignment(this.tree[0],{action:'delete'})
+return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $DelCtx.prototype.to_js=function(){this.js_processed=true
 var C=this.parent
@@ -2206,10 +2210,6 @@ expr.func='delitem'
 js=expr.to_js()
 expr.func='getitem'
 return js
-case 'op':
-$_SyntaxError(this,["cannot delete operator"])
-case 'call':
-$_SyntaxError(this,["cannot delete function call"])
 case 'attribute':
 return '_b_.delattr('+expr.value.to_js()+',"'+
 expr.name+'")'
@@ -2750,7 +2750,8 @@ $loop_num++}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
 $ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
-for(var target_expr of C.tree[0].tree){if(target_expr.tree[0].type=='id'){var id=target_expr.tree[0]
+for(var target_expr of C.tree[0].tree){check_assignment(target_expr.tree[0])
+if(target_expr.tree[0].type=='id'){var id=target_expr.tree[0]
 $bind(id.value,this.scope,id)}}
 if(C.tree[0].tree.length==0){
 $_SyntaxError(C,"missing target between 'for' and 'in'")}
@@ -5149,6 +5150,7 @@ this.expect='id'
 C.tree[C.tree.length]=this}
 $TargetListCtx.prototype.toString=function(){return '(target list) '+this.tree}
 $TargetListCtx.prototype.transition=function(token,value){var C=this
+if(C.expect==','){check_assignment($B.last(C.tree),{once:true})}
 switch(token){case 'id':
 if(C.expect=='id'){C.expect=','
 return new $IdCtx(
@@ -5653,7 +5655,7 @@ var $to_js_map=$B.parser.$to_js_map=function(tree_element){if(tree_element.to_js
 console.log('no to_js',tree_element)
 throw Error('no to_js() for '+tree_element)}
 var $to_js=$B.parser.$to_js=function(tree,sep){if(sep===undefined){sep=','}
-try{return tree.map($to_js_map).join(sep)}catch(err){console.log('error',tree)
+try{return tree.map($to_js_map).join(sep)}catch(err){console.log('error',err,'\ntree',tree)
 throw err}}
 var $mangle=$B.parser.$mangle=function(name,C){
 if(name.substr(0,2)=="__" && name.substr(name.length-2)!=="__"){var klass=null,scope=$get_scope(C)
@@ -6477,8 +6479,7 @@ object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--}
-object.__init__=function(){console.log('object __init__',arguments)
-if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
+object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
 "object needs an argument")}
 return _b_.None}
 object.__init_subclass__=function(){
@@ -6691,7 +6692,7 @@ case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
-var $test=attr=="__init__" 
+var $test=false 
 if($test){console.log("attr",attr,"of",klass,res,res+"")}
 if(res===undefined && klass.__slots__ &&
 klass.__slots__.indexOf(attr)>-1){return member_descriptor.$factory(attr,klass)}
@@ -8518,8 +8519,7 @@ __class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
 )
 $$super.__get__=function(self,instance,klass){
 return $$super.$factory(self.__thisclass__,instance)}
-$$super.__getattribute__=function(self,attr){console.log('super __ga__',self,attr)
-var mro=self.__thisclass__.__mro__,res
+$$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
 if(self.__thisclass__.$is_js_class){if(attr=="__init__"){
 return function(){mro[0].$js_func.call(self.__self_class__,...arguments)}}}
 var sc=self.__self_class__
