@@ -12,14 +12,17 @@ import inspect
 import types
 
 
-stdlib_name = '_warnings'
+stdlib_name = 'numpy.core._multiarray_umath'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
-
+print(list(ns))
 if('.') in stdlib_name:
-    package, name = stdlib_name.split('.')
-    infos = getattr(ns[package], name)
-
+    package, *names = stdlib_name.split('.')
+    print(names)
+    infos = ns[package]
+    while names:
+        name = names.pop(0)
+        infos = getattr(infos, name)
 else:
     infos = ns[stdlib_name]
 

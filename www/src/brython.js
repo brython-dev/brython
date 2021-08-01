@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-07-31 15:35:08.616140"
-__BRYTHON__.timestamp=1627738508616
+__BRYTHON__.compiled_date="2021-08-01 09:40:48.211039"
+__BRYTHON__.timestamp=1627803648211
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6475,7 +6475,8 @@ object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--}
-object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
+object.__init__=function(){console.log('object __init__',arguments)
+if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
 "object needs an argument")}
 return _b_.None}
 object.__init_subclass__=function(){
@@ -6688,7 +6689,7 @@ case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
-var $test=false 
+var $test=attr=="__init__" 
 if($test){console.log("attr",attr,"of",klass,res,res+"")}
 if(res===undefined && klass.__slots__ &&
 klass.__slots__.indexOf(attr)>-1){return member_descriptor.$factory(attr,klass)}
@@ -6739,7 +6740,8 @@ if(attr=="__init_subclass__"){res=_b_.classmethod.$factory(res)}
 if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
 return res}}else{return res}}}
 type.__hash__=function(cls){return _b_.hash(cls)}
-type.__init__=function(){}
+type.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'type' "+
+"object needs an argument")}}
 type.__init_subclass__=function(){
 var $=$B.args("__init_subclass__",1,{},[],arguments,{},"args","kwargs")
 if($.kwargs !==undefined){if($.kwargs.__class__ !==_b_.dict ||
@@ -8514,7 +8516,8 @@ __class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
 )
 $$super.__get__=function(self,instance,klass){
 return $$super.$factory(self.__thisclass__,instance)}
-$$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
+$$super.__getattribute__=function(self,attr){console.log('super __ga__',self,attr)
+var mro=self.__thisclass__.__mro__,res
 if(self.__thisclass__.$is_js_class){if(attr=="__init__"){
 return function(){mro[0].$js_func.call(self.__self_class__,...arguments)}}}
 var sc=self.__self_class__
@@ -8545,6 +8548,10 @@ method.$infos={__self__:self.__self_class__,__func__:f,__name__:attr,__module__:
 return method}
 throw _b_.AttributeError.$factory("object 'super' has no attribute '"+
 attr+"'")}
+$$super.__init__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("descriptor '__init__' of 'super' "+
+"object needs an argument")}
+if(cls.__class__ !==$$super){throw _b_.TypeError.$factory("descriptor '__init__' requires a"+
+" 'super' object but received a '"+$B.class_name(cls)+"'")}}
 $$super.__repr__=function(self){$B.builtins_repr_check($$super,arguments)
 var res="<super: <class '"+self.__thisclass__.$infos.__name__+"'>"
 if(self.__self_class__ !==undefined){res+=', <'+self.__self_class__.__class__.$infos.__name__+' object>'}else{res+=', NULL'}

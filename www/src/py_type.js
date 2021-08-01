@@ -362,7 +362,7 @@ type.__format__ = function(klass, fmt_spec){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__hash__" // && klass.$infos.__name__ == "generator"
+    var $test = attr == "__init__" // && klass.$infos.__name__ == "generator"
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -510,7 +510,10 @@ type.__hash__ = function(cls){
 }
 
 type.__init__ = function(){
-    // Returns nothing
+    if(arguments.length == 0){
+        throw _b_.TypeError.$factory("descriptor '__init__' of 'type' " +
+            "object needs an argument")
+    }
 }
 
 type.__init_subclass__ = function(){

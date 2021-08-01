@@ -2523,6 +2523,7 @@ $$super.__get__ = function(self, instance, klass){
 }
 
 $$super.__getattribute__ = function(self, attr){
+    console.log('super __ga__', self, attr)
     var mro = self.__thisclass__.__mro__,
         res
 
@@ -2617,6 +2618,17 @@ $$super.__getattribute__ = function(self, attr){
 
     throw _b_.AttributeError.$factory("object 'super' has no attribute '" +
         attr + "'")
+}
+
+$$super.__init__ = function(cls){
+    if(cls === undefined){
+        throw _b_.TypeError.$factory("descriptor '__init__' of 'super' " +
+            "object needs an argument")
+    }
+    if(cls.__class__ !== $$super){
+        throw _b_.TypeError.$factory("descriptor '__init__' requires a" +
+            " 'super' object but received a '" + $B.class_name(cls) + "'")
+    }
 }
 
 $$super.__repr__ = function(self){

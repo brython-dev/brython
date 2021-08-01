@@ -354,6 +354,7 @@ object.__hash__ = function (self) {
 }
 
 object.__init__ = function(){
+    console.log('object __init__', arguments)
     if(arguments.length == 0){
         throw _b_.TypeError.$factory("descriptor '__init__' of 'object' " +
             "object needs an argument")
