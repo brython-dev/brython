@@ -2440,13 +2440,13 @@ try:
     exec("(x.a < 2) += 100")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "cannot assign to comparison"
+    assert exc.args[0] == "'comparison' is an illegal expression for augmented assignment"
 
 try:
     exec("(x.a * 2) += 100")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "cannot assign to operator"
+    assert exc.args[0] == "'operator' is an illegal expression for augmented assignment"
 
 # issue 1278
 import textwrap

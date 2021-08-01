@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-01 11:55:43.560954"
-__BRYTHON__.timestamp=1627811743560
+__BRYTHON__.compiled_date="2021-08-01 18:26:25.078242"
+__BRYTHON__.timestamp=1627835185078
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -443,15 +443,20 @@ function SyntaxWarning(C,msg){var node=$get_node(C),module=$get_module(C),src=mo
 '    '+lines[node.line_num-1]
 $B.$getattr($B.stderr,"write")(message)}
 function check_assignment(C,kwargs){
-var once,action='assign to'
+var once,action='assign to',augmented=false
 if(kwargs){once=kwargs.once
-action=kwargs.action ||action}
+action=kwargs.action ||action
+augmented=kwargs.augmented===undefined ? false :kwargs.augmented}
 var ctx=C,forbidden=['assert','import','raise','return']
-while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'invalid syntax - assign')}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
-if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){$_SyntaxError(C,[`cannot ${action} comparison`])}else{$_SyntaxError(C,[`cannot ${action} operator`])}}else if(assigned.type=='call'){$_SyntaxError(C,[`cannot ${action} function call`])}else if(assigned.type=='id'){var name=assigned.value
-if(['None','True','False','__debug__'].indexOf(name)>-1){$_SyntaxError(C,[`cannot ${action} ${name}`])}
-if(noassign[name]===true){$_SyntaxError(C,[`cannot ${action} keyword`])}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){$_SyntaxError(C,[`cannot ${action} literal`])}else if(assigned.type=="ellipsis"){$_SyntaxError(C,[`cannot ${action} Ellipsis`])}else if(assigned.type=='list_or_tuple' &&
-assigned.real=='gen_expr'){$_SyntaxError(C,[`cannot ${action} generator expression`])}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){$_SyntaxError(C,[`cannot ${action} comprehension`])}else if(ctx.type=="ternary"){$_SyntaxError(C,[`cannot ${action} conditional expression`])}else if(ctx.type=='op'){$_SyntaxError(C,[`cannot ${action} operator`])}
+if(action !='delete'){
+forbidden.push('del')}
+function report(wrong_type){if(augmented){$_SyntaxError(C,[`'${wrong_type}' is an illegal expression `+
+'for augmented assignment'])}else{$_SyntaxError(C,[`cannot ${action} ${wrong_type}`])}}
+while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'assign to '+ctx.type)}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
+if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('operator')}}else if(assigned.type=='call'){report('function call')}else if(assigned.type=='id'){var name=assigned.value
+if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
+if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='list_or_tuple' &&
+assigned.real=='gen_expr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}
 if(once){break}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
@@ -1108,7 +1113,7 @@ js+".__class__.$has_setattr && ! "+js+
 if(this.func=='setattr'){
 return '$B.$setattr('+js+',"'+this.name+'")'}else{return '$B.$getattr('+js+',"'+this.name+'")'}}
 var $AugmentedAssignCtx=$B.parser.$AugmentedAssignCtx=function(C,op){
-check_assignment(C)
+check_assignment(C,{augmented:true})
 this.type='augm_assign'
 this.C=C
 this.parent=C.parent
@@ -1622,6 +1627,10 @@ break
 case '(':
 return new $CallCtx(C)
 case ':':
+if(this.args){for(var arg of this.args.tree){var param=arg.tree[0]
+if((param.type=='expr' && param.name=='id')||
+param.type=="kwarg"){continue}
+$_SyntaxError(C,'invalid class parameter')}}
 return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $ClassCtx.prototype.set_name=function(name){var C=this.parent
@@ -1896,6 +1905,7 @@ this.after_star=[]}
 $DefCtx.prototype.set_name=function(name){try{name=$mangle(name,this.parent.tree[0])}catch(err){console.log(err)
 console.log('parent',this.parent)
 throw err}
+if(["None","True","False"].indexOf(name)>-1){$_SyntaxError(this,'invalid function name')}
 var id_ctx=new $IdCtx(this,name)
 this.name=name
 this.id=this.scope.id+'_'+name
@@ -2631,6 +2641,7 @@ if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
 C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
 if(C.tree.length==1){var child=C.tree[0]
+check_assignment(child)
 if(["id","sub","attribute"].indexOf(child.type)>-1){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
 child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]),false)}}
 $_SyntaxError(C,"invalid target for annotation")}
@@ -2762,7 +2773,6 @@ if(C.tree.length < 2
 ||C.tree[1].tree[0].type=="abstract_expr"){$_SyntaxError(C,'token '+token+' after '+
 C)}
 return $BodyCtx(C)}
-console.log('C',C,'tokan',token,value)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $ForExpr.prototype.transform=function(node,rank){
 var pnode=this.parent.node.parent
@@ -3059,6 +3069,14 @@ this.has_star_arg=false
 this.has_kw_arg=false}
 $FuncArgs.prototype.toString=function(){return 'func args '+this.tree}
 $FuncArgs.prototype.transition=function(token,value){var C=this
+function check(){if(C.tree.length==0){return}
+var last=$B.last(C.tree)
+if(C.has_default && ! last.has_default){if(last.type=='func_star_arg' ||
+last.type=='end_positional'){return}
+if(C.names.indexOf('*')>-1){
+return}
+$_SyntaxError(C,['non-default argument follows default argument'])}
+if(last.has_default){C.has_default=true}}
 switch(token){case 'id':
 if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
 if(C.expect=='id'){C.expect=','
@@ -3066,11 +3084,13 @@ if(C.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
 ' in function definition'])}}
 return new $FuncArgIdCtx(C,value)
 case ',':
-if(C.expect==','){C.expect='id'
+if(C.expect==','){check()
+C.expect='id'
 return C}
 $_SyntaxError(C,'token '+token+' after '+
 C)
 case ')':
+check()
 var last=$B.last(C.tree)
 if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
 $_SyntaxError(C,['named arguments must follow bare *'])}else{$_SyntaxError(C,'invalid syntax')}}}
@@ -3091,6 +3111,7 @@ $FuncArgs.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
 var $FuncArgIdCtx=$B.parser.$FuncArgIdCtx=function(C,name){
 this.type='func_arg_id'
+if(["None","True","False"].indexOf(name)>-1){$_SyntaxError(C,'invalid name')}
 this.name=name
 this.parent=C
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
@@ -3140,6 +3161,7 @@ $FuncStarArgCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.name===undefined){if(C.parent.names.indexOf(value)>-1){$_SyntaxError(C,['duplicate argument '+value+
 ' in function definition'])}}
+if(["None","True","False"].indexOf(value)>-1){$_SyntaxError(C,'invalid name')}
 C.set_name(value)
 C.parent.names.push(value)
 return C
@@ -5150,7 +5172,6 @@ this.expect='id'
 C.tree[C.tree.length]=this}
 $TargetListCtx.prototype.toString=function(){return '(target list) '+this.tree}
 $TargetListCtx.prototype.transition=function(token,value){var C=this
-if(C.expect==','){check_assignment($B.last(C.tree),{once:true})}
 switch(token){case 'id':
 if(C.expect=='id'){C.expect=','
 return new $IdCtx(
@@ -5663,7 +5684,9 @@ while(true){if(scope.ntype=="module"){return name}
 else if(scope.ntype=="class"){var class_name=scope.C.tree[0].name
 while(class_name.charAt(0)=='_'){class_name=class_name.substr(1)}
 return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_scope(scope.C.tree[0])}else{return name}}}}else{return name}}
-var $transition=$B.parser.$transition=function(C,token,value){
+$B.nb_debug_lines=0
+var $transition=$B.parser.$transition=function(C,token,value){if($B.nb_debug_lines > 100){alert('too many debug lines')
+$B.nb_debug_lines=0}
 return C.transition(token,value)}
 $B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","export","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","String","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
 $B.aliased_names=$B.list2obj($B.forbidden)
