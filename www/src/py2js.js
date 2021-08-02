@@ -3530,6 +3530,14 @@ $DefCtx.prototype.transform = function(node, rank){
             }
         }
     }
+    if(this.parent.node.nonlocals){
+        for(var key of this.parent.node.nonlocals){
+            var attr = '"' + key + '"'
+            if(free_vars.indexOf(attr) == -1){
+                free_vars.push(attr)
+            }
+        }
+    }
 
     // Add the new function definition
     node.add(def_func_node)
@@ -4777,7 +4785,7 @@ $ExprCtx.prototype.to_js = function(arg){
                 scope = scope.parent_block
             }
         }else if(scope.nonlocals &&
-                scope.nonlocals[this.assign.value]){
+                scope.nonlocals.has(this.assign.value)){
             // Name is declared nonlocal
             scope = scope.parent_block
         }
@@ -5813,7 +5821,7 @@ function check_global_nonlocal(context, value, type){
         $_SyntaxError(context,
          [`name '${value}' is nonlocal and global`])
     }
-    if(type == 'global' && scope.nonlocals && scope.nonlocals[value]){
+    if(type == 'global' && scope.nonlocals && scope.nonlocals.has(value)){
         $_SyntaxError(context,
          [`name '${value}' is nonlocal and global`])
     }
@@ -6246,7 +6254,7 @@ $IdCtx.prototype.to_js = function(arg){
         bound_before = this_node.bound_before
 
     this.nonlocal = this.scope.nonlocals &&
-        this.scope.nonlocals[val] !== undefined
+        this.scope.nonlocals.has(val)
 
     // If name is bound in the scope, but not yet bound when this
     // instance of $IdCtx was created, it is resolved by a call to
@@ -7667,7 +7675,7 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     this.expect = 'id'
 
     this.scope = $get_scope(this)
-    this.scope.nonlocals = this.scope.nonlocals || {}
+    this.scope.nonlocals = this.scope.nonlocals || new Set()
 
     if(this.scope.context === undefined){
         $_SyntaxError(context,
@@ -7685,7 +7693,7 @@ $NonlocalCtx.prototype.add = function(name){
           ["name '" + name + "' is parameter and nonlocal"])
     }
     this.names[name] = [false, $pos]
-    this.scope.nonlocals[name] = true
+    this.scope.nonlocals.add(name)
 }
 
 $NonlocalCtx.prototype.transition = function(token, value){
@@ -10955,7 +10963,7 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     // - add it to the attribute "bindings" of the node, except if no_bindings
     //   is set, which is the case for "for x in A" : if A is empty the name
     //   has no value (issue #1233)
-    if(scope.nonlocals && scope.nonlocals[name]){
+    if(scope.nonlocals && scope.nonlocals.has(name)){
         // name is declared nonlocal in the scope : don't bind
         return
     }

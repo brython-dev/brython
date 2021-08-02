@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-01 22:29:59.581717"
-__BRYTHON__.timestamp=1627849799581
+__BRYTHON__.compiled_date="2021-08-02 22:19:34.700558"
+__BRYTHON__.timestamp=1627935574700
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2080,6 +2080,8 @@ js+='({$locals});return _b_.None'
 node.add($NodeJS(js))}
 var free_vars=[]
 if(this.parent.node.referenced){for(var attr in this.parent.node.referenced){if(! this.parent.node.binding[attr]){free_vars.push('"'+attr+'"')}}}
+if(this.parent.node.nonlocals){for(var key of this.parent.node.nonlocals){var attr='"'+key+'"'
+if(free_vars.indexOf(attr)==-1){free_vars.push(attr)}}}
 node.add(def_func_node)
 var offset=1,indent=node.indent
 if(! this.is_comp){
@@ -2727,7 +2729,7 @@ while(scope.is_comp){scope=scope.parent_block}
 if(scope.globals && scope.globals.has(this.assign.value)){
 while(scope.parent_block &&
 scope.parent_block.id !=="__builtins__"){scope=scope.parent_block}}else if(scope.nonlocals &&
-scope.nonlocals[this.assign.value]){
+scope.nonlocals.has(this.assign.value)){
 scope=scope.parent_block}
 res="($locals_"+scope.id.replace(/\./g,'_')+'["'+
 this.assign.value+'"] = '+res+')'}
@@ -3202,7 +3204,7 @@ this.$pos=$pos}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
 function check_global_nonlocal(C,value,type){var scope=C.scope
 if(type=='nonlocal' && scope.globals && scope.globals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
-if(type=='global' && scope.nonlocals && scope.nonlocals[value]){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
+if(type=='global' && scope.nonlocals && scope.nonlocals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
 if(['def','generator'].indexOf(scope.ntype)>-1){var params=scope.C.tree[0]
 if(params.locals && params.locals.indexOf(value)>-1){$_SyntaxError(C,[`name '${value}' is parameter and ${type}`])}
 if(scope.binding[value]){console.log('scope ntype',scope)
@@ -3370,7 +3372,7 @@ if(this.global_module){if(this.bound){return '$locals_'+this.global_module.repla
 this.global_module.replace(/\./g,"_")+')'}}
 var is_local=this.scope.binding[val]!==undefined,this_node=$get_node(this),bound_before=this_node.bound_before
 this.nonlocal=this.scope.nonlocals &&
-this.scope.nonlocals[val]!==undefined
+this.scope.nonlocals.has(val)
 this.unbound=this.unbound ||(is_local && !this.bound &&
 bound_before && bound_before.indexOf(val)==-1)
 if((!this.bound)&& this.scope.C
@@ -4041,12 +4043,12 @@ this.names={}
 C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
-this.scope.nonlocals=this.scope.nonlocals ||{}
+this.scope.nonlocals=this.scope.nonlocals ||new Set()
 if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])}}
 $NonlocalCtx.prototype.toString=function(){return 'nonlocal '+this.tree}
 $NonlocalCtx.prototype.add=function(name){if(this.scope.binding[name]=="arg"){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])}
 this.names[name]=[false,$pos]
-this.scope.nonlocals[name]=true}
+this.scope.nonlocals.add(name)}
 $NonlocalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.expect=='id'){check_global_nonlocal(C,value,'nonlocal')
@@ -5618,7 +5620,7 @@ var i=0
 while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}
 return offset}else{return 1}}
 var $bind=$B.parser.$bind=function(name,scope,C){
-if(scope.nonlocals && scope.nonlocals[name]){
+if(scope.nonlocals && scope.nonlocals.has(name)){
 return}
 if(scope.globals && scope.globals.has(name)){var module=$get_module(C)
 module.binding[name]=true

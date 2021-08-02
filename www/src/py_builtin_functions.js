@@ -1011,7 +1011,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__ceil__" // && obj === $B // "Point"
+    var $test = false // attr == "__closure__" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -3188,7 +3188,9 @@ $B.Function.__getattribute__ = function(self, attr){
             return self.$infos.__dict__.$string_dict[attr][0]
     }else if(attr == "__closure__"){
         var free_vars = self.$infos.__code__.co_freevars
-        if(free_vars.length == 0){return None}
+        if(free_vars.length == 0){
+            return None
+        }
         var cells = []
         for(var i = 0; i < free_vars.length; i++){
             try{
