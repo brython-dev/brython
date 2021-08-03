@@ -758,6 +758,13 @@
     for(var attr in _b_){
         _b_.__builtins__[attr] = _b_[attr]
         $B.builtins_scope.binding[attr] = true
+        if(_b_[attr].$is_class){
+            if(_b_[attr].__bases__){
+                _b_[attr].__bases__.__class__ = _b_.tuple
+            }else{
+                _b_[attr].__bases__ = $B.fast_tuple([_b_.object])
+            }
+        }
     }
     _b_.__builtins__.__setattr__ = function(attr, value){
         _b_[attr] = value

@@ -697,6 +697,7 @@ function $make_exc(names, parent){
         $exc = $exc.replace("//placeholder//", code)
         // class dictionary
         _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
+            '__bases__: [_b_.' + parent.$infos.__name__ + '], ' +
             '__mro__: [_b_.' + parent.$infos.__name__ +
             "].concat(parent.__mro__), $is_class: true," +
             "$infos: {__name__:'" + name + "'}}"

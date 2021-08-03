@@ -6335,8 +6335,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     // Build the list of scopes where the variable name is bound
     while(1){
-        if(scope.globals !== undefined &&
-                scope.globals.has(val)){
+        if(scope.globals !== undefined && scope.globals.has(val)){
             if($test){
                 console.log("in globals of", scope.id, 'globals', gs)
             }

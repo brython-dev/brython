@@ -2254,7 +2254,8 @@ $B.$setattr = function(obj, attr, value){
                 "supported for heap types or ModuleType subclasses")
             }else if(Array.isArray(value.__bases__)){
                 for(var i = 0; i < value.__bases__.length; i++){
-                    if(value.__bases__[i].__module__ == "builtins"){
+                    if(value.__bases__[i] !== _b_.object &&
+                            value.__bases__[i].__module__ == "builtins"){
                         error("__class__ assignment: '" + $B.class_name(obj) +
                             "' object layout differs from '" +
                             $B.class_name(value) + "'")

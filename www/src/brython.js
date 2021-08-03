@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-02 22:19:34.700558"
-__BRYTHON__.timestamp=1627935574700
+__BRYTHON__.compiled_date="2021-08-03 19:19:05.195433"
+__BRYTHON__.timestamp=1628011145195
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3398,8 +3398,7 @@ if(bscope !==undefined){return "$locals_"+bscope.replace(/\./g,"_")+'["'+
 val+'"]'}else if(this.bound){return "$locals_"+innermost.id.replace(/\./g,"_")+
 '["'+val+'"]'}}
 var global_ns='$locals_'+gs.id.replace(/\./g,'_')
-while(1){if(scope.globals !==undefined &&
-scope.globals.has(val)){if($test){console.log("in globals of",scope.id,'globals',gs)}
+while(1){if(scope.globals !==undefined && scope.globals.has(val)){if($test){console.log("in globals of",scope.id,'globals',gs)}
 if(this.boundBefore(gs)){if($test){console.log("bound before in gs",gs,global_ns)}
 return global_ns+'["'+val+'"]'}else{if($test){console.log("use global search",this)}
 if(this.augm_assign){return global_ns+'["'+val+'"]'}else{return '$B.$check_def("'+val+'", '+global_ns+
@@ -6675,6 +6674,7 @@ var kls=meta_new(metaclass,class_name,bases,cl_dict,{$nat:'kw',kw:extra_kwargs})
 kls.__module__=module
 kls.$infos={__module__:module,__name__:$B.from_alias(class_name),__qualname__:class_obj.$qualname}
 kls.$subclasses=[]
+if(kls.__bases__===undefined ||kls.__bases__.length==0){kls.__bases__=$B.fast_tuple([_b_.object])}
 for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
@@ -6713,9 +6713,9 @@ for(var key in ann.$string_dict){res.$string_dict[key]=ann.$string_dict[key]}}}}
 if(res===undefined){res=$B.empty_dict()}
 return res
 case "__bases__":
-var res=klass.__bases__ ||_b_.tuple.$factory()
+var res=klass.__bases__ 
 res.__class__=_b_.tuple
-if(res.length==0){res.push(_b_.object)}
+if(res.length==0){}
 return res
 case "__class__":
 return klass.__class__
@@ -6834,6 +6834,8 @@ type.__ror__=function(){var len=arguments.length
 if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
 return _b_.NotImplemented}
 type.mro=function(cls){
+if(cls===undefined){throw _b_.TypeError.$factory(
+'unbound method type.mro() needs an argument')}
 var bases=cls.__bases__,seqs=[],pos1=0
 for(var i=0;i < bases.length;i++){
 if(bases[i]===_b_.str){bases[i]=$B.StringSubclass}
@@ -6847,7 +6849,6 @@ var _tmp=bases[i].__mro__
 if(_tmp[0]===bases[i]){_tmp.splice(0,1)}
 for(var k=0;k < _tmp.length;k++){bmro[pos++]=_tmp[k]}
 seqs[pos1++]=bmro}
-if(bases.indexOf(_b_.object)==-1){bases=bases.concat(_b_.tuple.$factory([_b_.object]))}
 seqs[pos1++]=bases.slice()
 var mro=[cls],mpos=1
 while(1){var non_empty=[],pos=0
@@ -8463,7 +8464,8 @@ obj.__dict__=value
 return None}else if(attr=="__class__"){
 function error(msg){throw _b_.TypeError.$factory(msg)}
 if(value.__class__){if(value.__module__=="builtins"){error("__class__ assignement only "+
-"supported for heap types or ModuleType subclasses")}else if(Array.isArray(value.__bases__)){for(var i=0;i < value.__bases__.length;i++){if(value.__bases__[i].__module__=="builtins"){error("__class__ assignment: '"+$B.class_name(obj)+
+"supported for heap types or ModuleType subclasses")}else if(Array.isArray(value.__bases__)){for(var i=0;i < value.__bases__.length;i++){if(value.__bases__[i]!==_b_.object &&
+value.__bases__[i].__module__=="builtins"){error("__class__ assignment: '"+$B.class_name(obj)+
 "' object layout differs from '"+
 $B.class_name(value)+"'")}}}}
 obj.__class__=value
@@ -9109,6 +9111,7 @@ $B.builtins_scope[name]=true
 var $exc=(BaseException.$factory+"").replace(/BaseException/g,name)
 $exc=$exc.replace("//placeholder//",code)
 _str[pos++]="_b_."+name+' = {__class__:_b_.type, '+
+'__bases__: [_b_.'+parent.$infos.__name__+'], '+
 '__mro__: [_b_.'+parent.$infos.__name__+
 "].concat(parent.__mro__), $is_class: true,"+
 "$infos: {__name__:'"+name+"'}}"
@@ -12984,7 +12987,8 @@ return list_repr(self)}
 $B.set_func_names(tuple,"builtins")
 _b_.list=list
 _b_.tuple=tuple
-_b_.object.__bases__=tuple.$factory()})(__BRYTHON__)
+_b_.object.__bases__=tuple.$factory()
+_b_.type.__bases__=$B.fast_tuple([_b_.object])})(__BRYTHON__)
 ;
 
 var $B=__BRYTHON__
@@ -15395,7 +15399,8 @@ if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html'
 var _b_=$B.builtins
 _b_.__builtins__=$B.module.$factory('__builtins__','Python builtins')
 for(var attr in _b_){_b_.__builtins__[attr]=_b_[attr]
-$B.builtins_scope.binding[attr]=true}
+$B.builtins_scope.binding[attr]=true
+if(_b_[attr].$is_class){if(_b_[attr].__bases__){_b_[attr].__bases__.__class__=_b_.tuple}else{_b_[attr].__bases__=$B.fast_tuple([_b_.object])}}}
 _b_.__builtins__.__setattr__=function(attr,value){_b_[attr]=value}
 $B.method_descriptor.__getattribute__=$B.Function.__getattribute__
 $B.wrapper_descriptor.__getattribute__=$B.Function.__getattribute__

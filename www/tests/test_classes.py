@@ -651,4 +651,24 @@ try:
 except Exception as exc:
     assert exc.args[0] == "This will never happen"
 
+# issue 1737
+class A: pass
+
+class B(A): pass
+
+assert A.__bases__ == (object,)
+assert B.__bases__ == (A,)
+
+assert object.__bases__ == ()
+assert type.__bases__ == (object,)
+assert type.__mro__ == (type, object)
+assert object.mro() == [object]
+assert list.__bases__ == (object,)
+
+try:
+    type.mro()
+    raise AssertionError('should have raised TypeError')
+except TypeError:
+    pass
+
 print('passed all tests..')

@@ -5,6 +5,7 @@ var _b_ = $B.builtins
 // generic code for class constructor
 $B.$class_constructor = function(class_name, class_obj, bases,
         parents_names, kwargs){
+
     bases = bases || []
     var metaclass
 
@@ -230,6 +231,11 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     }
     kls.$subclasses = []
 
+
+    if(kls.__bases__ === undefined || kls.__bases__.length == 0){
+        kls.__bases__ = $B.fast_tuple([_b_.object])
+    }
+
     // Set attribute "$class" of functions defined in the class. Used in
     // py_builtin_functions / Function.__setattr__ to reset the function
     // if the attribute __defaults__ is reset.
@@ -335,10 +341,10 @@ type.__format__ = function(klass, fmt_spec){
             if(res === undefined){res = $B.empty_dict()}
             return res
         case "__bases__":
-            var res = klass.__bases__ || _b_.tuple.$factory()
+            var res = klass.__bases__ // || _b_.tuple.$factory()
             res.__class__ = _b_.tuple
             if(res.length == 0){
-                res.push(_b_.object)
+                // res.push(_b_.object)
             }
             return res
         case "__class__":
@@ -685,6 +691,10 @@ type.mro = function(cls){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
+    if(cls === undefined){
+        throw _b_.TypeError.$factory(
+            'unbound method type.mro() needs an argument')
+    }
     var bases = cls.__bases__,
         seqs = [],
         pos1 = 0
@@ -714,10 +724,6 @@ type.mro = function(cls){
             bmro[pos++] = _tmp[k]
         }
         seqs[pos1++] = bmro
-    }
-
-    if(bases.indexOf(_b_.object) == -1){
-        bases = bases.concat(_b_.tuple.$factory([_b_.object]))
     }
 
     seqs[pos1++] = bases.slice()
