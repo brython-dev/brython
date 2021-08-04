@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-03 21:31:10.890475"
-__BRYTHON__.timestamp=1628019070890
+__BRYTHON__.compiled_date="2021-08-04 15:24:55.556041"
+__BRYTHON__.timestamp=1628083495556
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7622,6 +7622,289 @@ $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
 var repr_stack=new Set()
 $B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
 ;
+;(function($B){
+var DEFAULT_MIN_MERGE=32
+var DEFAULT_MIN_GALLOPING=7
+var DEFAULT_TMP_STORAGE_LENGTH=256
+var POWERS_OF_TEN=[1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
+function log10(x){if(x < 1e5){if(x < 1e2){return x < 1e1 ? 0 :1}
+if(x < 1e4){return x < 1e3 ? 2 :3}
+return 4}
+if(x < 1e7){return x < 1e6 ? 5 :6}
+if(x < 1e9){return x < 1e8 ? 7 :8}
+return 9}
+function alphabeticalCompare(a,b){if(a===b){return 0}
+if(~~a===a && ~~b===b){if(a===0 ||b===0){return a < b ?-1 :1}
+if(a < 0 ||b < 0){if(b >=0){return-1}
+if(a >=0){return 1}
+a=-a
+b=-b}
+al=log10(a)
+bl=log10(b)
+var t=0
+if(al < bl){a*=POWERS_OF_TEN[bl-al-1]
+b/=10
+t=-1}else if(al > bl){b*=POWERS_OF_TEN[al-bl-1]
+a/=10;
+t=1;}
+if(a===b){return t}
+return a < b ?-1 :1}
+var aStr=String(a)
+var bStr=String(b)
+if(aStr===bStr){return 0}
+return aStr < bStr ?-1 :1}
+function minRunLength(n){var r=0
+while(n >=DEFAULT_MIN_MERGE){r |=(n & 1)
+n >>=1}
+return n+r}
+function makeAscendingRun(array,lo,hi,compare){var runHi=lo+1
+if(runHi===hi){return 1;}
+if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi-1])< 0){runHi++}
+reverseRun(array,lo,runHi)}else{while(runHi < hi && compare(array[runHi],array[runHi-1])>=0){runHi++}}
+return runHi-lo}
+function reverseRun(array,lo,hi){hi--
+while(lo < hi){var t=array[lo]
+array[lo++]=array[hi]
+array[hi--]=t}}
+function binaryInsertionSort(array,lo,hi,start,compare){if(start===lo){start++}
+for(;start < hi;start++){var pivot=array[start]
+var left=lo
+var right=start
+while(left < right){var mid=(left+right)>>> 1
+if(compare(pivot,array[mid])< 0){right=mid}else{left=mid+1}}
+var n=start-left
+switch(n){case 3:
+array[left+3]=array[left+2]
+case 2:
+array[left+2]=array[left+1]
+case 1:
+array[left+1]=array[left]
+break;
+default:
+while(n > 0){array[left+n]=array[left+n-1]
+n--;}}
+array[left]=pivot}}
+function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
+if(compare(value,array[start+hint])> 0){maxOffset=length-hint
+while(offset < maxOffset && compare(value,array[start+hint+offset])> 0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+lastOffset+=hint
+offset+=hint}else{maxOffset=hint+1
+while(offset < maxOffset && compare(value,array[start+hint-offset])<=0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+var tmp=lastOffset
+lastOffset=hint-offset
+offset=hint-tmp}
+lastOffset++
+while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
+if(compare(value,array[start+m])> 0){lastOffset=m+1}else{offset=m}}
+return offset}
+function gallopRight(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
+if(compare(value,array[start+hint])< 0){maxOffset=hint+1
+while(offset < maxOffset && compare(value,array[start+hint-offset])< 0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+var tmp=lastOffset
+lastOffset=hint-offset
+offset=hint-tmp}else{maxOffset=length-hint
+while(offset < maxOffset && compare(value,array[start+hint+offset])>=0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+lastOffset+=hint
+offset+=hint}
+lastOffset++
+while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
+if(compare(value,array[start+m])< 0){offset=m}else{lastOffset=m+1}}
+return offset}
+var TIM_SORT_ASSERTION="TimSortAssertion"
+var TimSortAssertion=function(message){this.name=TIM_SORT_ASSERTION
+this.message=message}
+var TimSort=function(array,compare){var self={array:array,compare:compare,minGallop:DEFAULT_MIN_GALLOPING,length :array.length,tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,stackLength:0,runStart:null,runLength:null,stackSize:0,
+pushRun:function(runStart,runLength){this.runStart[this.stackSize]=runStart
+this.runLength[this.stackSize]=runLength
+this.stackSize+=1},
+mergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
+if((n >=1 && this.runLength[n-1]<=
+this.runLength[n]+this.runLength[n+1])||
+(n >=2 && this.runLength[n-2]<=
+this.runLength[n]+this.runLength[n-1])){if(this.runLength[n-1]< this.runLength[n+1]){n--}}else if(this.runLength[n]> this.runLength[n+1]){break}
+this.mergeAt(n)}},
+forceMergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
+if(n > 0 && this.runLength[n-1]< this.runLength[n+1]){n--}
+this.mergeAt(n)}},
+mergeAt:function(i){var compare=this.compare,array=this.array,start1=this.runStart[i],length1=this.runLength[i],start2=this.runStart[i+1],length2=this.runLength[i+1]
+this.runLength[i]=length1+length2
+if(i===this.stackSize-3){this.runStart[i+1]=this.runStart[i+2]
+this.runLength[i+1]=this.runLength[i+2]}
+this.stackSize--;
+var k=gallopRight(array[start2],array,start1,length1,0,compare)
+start1+=k
+length1-=k
+if(length1===0){return}
+length2=gallopLeft(array[start1+length1-1],array,start2,length2,length2-1,compare)
+if(length2===0){return}
+if(length1 <=length2){this.mergeLow(start1,length1,start2,length2)}else{this.mergeHigh(start1,length1,start2,length2)}},
+mergeLow:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
+for(var i=0;i < length1;i++){tmp[i]=array[start1+i]}
+var cursor1=0,cursor2=start2,dest=start1
+array[dest++]=array[cursor2++]
+if(--length2===0){for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}
+return}
+if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
+array[dest+length2]=tmp[cursor1]
+return}
+var minGallop=this.minGallop
+while(true){var count1=0,count2=0,exit=false
+do{if(compare(array[cursor2],tmp[cursor1])< 0){array[dest++]=array[cursor2++]
+count2++
+count1=0
+if(--length2===0){exit=true
+break}}else{array[dest++]=tmp[cursor1++]
+count1++
+count2=0
+if(--length1===1){exit=true
+break}}}while((count1 |count2)< minGallop)
+if(exit){break}
+do{
+count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare)
+if(count1 !==0){for(var i=0;i < count1;i++){array[dest+i]=tmp[cursor1+i]}
+dest+=count1
+cursor1+=count1
+length1-=count1
+if(length1 <=1){exit=true
+break}}
+array[dest++]=array[cursor2++]
+if(--length2===0){exit=true
+break}
+count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare)
+if(count2 !==0){for(var i=0;i < count2;i++){array[dest+i]=array[cursor2+i]}
+dest+=count2
+cursor2+=count2
+length2-=count2
+if(length2===0){exit=true
+break}}
+array[dest++]=tmp[cursor1++]
+if(--length1===1){exit=true
+break}
+minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||
+count2 >=DEFAULT_MIN_GALLOPING);
+if(exit){break}
+if(minGallop < 0){minGallop=0}
+minGallop+=2}
+this.minGallop=minGallop
+if(minGallop < 1){this.minGallop=1}
+if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
+array[dest+length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}}},
+mergeHigh:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
+for(var i=0;i < length2;i++){tmp[i]=array[start2+i]}
+var cursor1=start1+length1-1,cursor2=length2-1,dest=start2+length2-1,customCursor=0,customDest=0
+array[dest--]=array[cursor1--]
+if(--length1===0){customCursor=dest-(length2-1)
+for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}
+return}
+if(length2===1){dest-=length1
+cursor1-=length1
+customDest=dest+1
+customCursor=cursor1+1
+for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+array[dest]=tmp[cursor2]
+return}
+var minGallop=this.minGallop
+while(true){var count1=0,count2=0,exit=false
+do{if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--]
+count1++
+count2=0
+if(--length1===0){exit=true
+break}}else{array[dest--]=tmp[cursor2--]
+count2++
+count1=0
+if(--length2===1){exit=true
+break}}}while((count1 |count2)< minGallop)
+if(exit){break}
+do{count1=length1-gallopRight(tmp[cursor2],array,start1,length1,length1-1,compare)
+if(count1 !==0){dest-=count1
+cursor1-=count1
+length1-=count1
+customDest=dest+1
+customCursor=cursor1+1
+for(var i=count1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+if(length1===0){exit=true
+break}}
+array[dest--]=tmp[cursor2--]
+if(--length2===1){exit=true
+break}
+count2=length2-gallopLeft(array[cursor1],tmp,0,length2,length2-1,compare)
+if(count2 !==0){dest-=count2
+cursor2-=count2
+length2-=count2
+customDest=dest+1
+customCursor=cursor2+1
+for(var i=0;i < count2;i++){array[customDest+i]=tmp[customCursor+i]}
+if(length2 <=1){exit=true
+break}}
+array[dest--]=array[cursor1--]
+if(--length1===0){exit=true
+break}
+minGallop--}while(count1 >=DEFAULT_MIN_GALLOPING ||
+count2 >=DEFAULT_MIN_GALLOPING)
+if(exit){break}
+if(minGallop < 0){minGallop=0}
+minGallop+=2}
+this.minGallop=minGallop
+if(minGallop < 1){this.minGallop=1}
+if(length2===1){dest-=length1
+cursor1-=length1
+customDest=dest+1
+customCursor=cursor1+1
+for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+array[dest]=tmp[cursor2]}else if(length2==0){throw new TimSortAssertion("mergeHigh preconditions were not respected")}else{customCursor=dest-(length2-1)
+for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}}}}
+if(self.length < 2*DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1}
+self.tmp=new Array(self.tmpStorageLength)
+self.stackLength=
+(self.length < 120 ? 5 :
+self.length < 1542 ? 10 :
+self.length < 119151 ? 19 :40)
+self.runStart=new Array(self.stackLength)
+self.runLength=new Array(self.stackLength)
+return self}
+function tim_sort(array,compare,lo,hi){if(!Array.isArray(array)){throw TypeError.$factory("Can only sort arrays")}
+if(!compare){compare=alphabeticalCompare}else if(typeof compare !=="function"){hi=lo
+lo=compare
+compare=alphabeticalCompare}
+if(!lo){lo=0}
+if(!hi){hi=array.length}
+var remaining=hi-lo
+if(remaining < 2){return}
+var runLength=0
+if(remaining < DEFAULT_MIN_MERGE){runLength=makeAscendingRun(array,lo,hi,compare)
+binaryInsertionSort(array,lo,hi,lo+runLength,compare)
+return}
+var ts=new TimSort(array,compare)
+var minRun=minRunLength(remaining)
+do{runLength=makeAscendingRun(array,lo,hi,compare)
+if(runLength < minRun){var force=remaining
+if(force > minRun){force=minRun}
+binaryInsertionSort(array,lo,lo+force,lo+runLength,compare)
+runLength=force}
+ts.pushRun(lo,runLength)
+ts.mergeRuns()
+remaining-=runLength
+lo+=runLength}while(remaining !==0)
+ts.forceMergeRuns()}
+function tim_sort_safe(array,compare){
+try{
+tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
+throw e;}}}
+$B.$TimSort=tim_sort_safe
+$B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
+;
 
 ;(function($B){var _b_=$B.builtins
 _b_.__debug__=false
@@ -10868,2128 +11151,6 @@ var _importlib_module={__class__ :Module,__name__ :"_importlib",Loader:Loader,VF
 _importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__)
 ;
-;(function($B){var bltns=$B.InjectBuiltins()
-eval(bltns)
-var object=_b_.object
-function $err(op,other){var msg="unsupported operand type(s) for "+op+
-": 'float' and '"+$B.class_name(other)+"'"
-throw _b_.TypeError.$factory(msg)}
-function float_value(obj){
-return obj.$brython_value !==undefined ? obj.$brython_value :obj}
-var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
-float.numerator=function(self){return float_value(self)}
-float.denominator=function(self){return _b_.int.$factory(1)}
-float.imag=function(self){return _b_.int.$factory(0)}
-float.real=function(self){return float_value(self)}
-float.__float__=function(self){return float_value(self)}
-$B.shift1_cache={}
-float.as_integer_ratio=function(self){self=float_value(self)
-if(self.valueOf()==Number.POSITIVE_INFINITY ||
-self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
-"float.as_integer_ratio.")}
-if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to "+
-"float.as_integer_ratio.")}
-var tmp=_b_.$frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
-for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp*=2
-exponent--}}
-numerator=_b_.int.$factory(fp)
-py_exponent=abs(exponent)
-denominator=1
-var x
-if($B.shift1_cache[py_exponent]!==undefined){x=$B.shift1_cache[py_exponent]}else{x=$B.$getattr(1,"__lshift__")(py_exponent)
-$B.shift1_cache[py_exponent]=x}
-py_exponent=x
-if(exponent > 0){numerator=$B.rich_op("mul",numerator,py_exponent)}else{denominator=py_exponent}
-return $B.fast_tuple([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
-float.__abs__=function(self){return new Number(Math.abs(float_value(self)))}
-float.__bool__=function(self){self=float_value(self)
-return _b_.bool.$factory(self.valueOf())}
-float.__divmod__=function(self,other){if(! _b_.isinstance(other,[int,float])){return _b_.NotImplemented}
-return $B.fast_tuple([float.__floordiv__(self,other),float.__mod__(self,other)])}
-float.__eq__=function(self,other){self=float_value(self)
-other=float_value(other)
-if(isNaN(self)&& isNaN(other)){return false}
-if(isinstance(other,_b_.int)){return self==other}
-if(isinstance(other,float)){
-return self.valueOf()==other.valueOf()}
-if(isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
-return self==other.$real}
-return _b_.NotImplemented}
-float.__floordiv__=function(self,other){self=float_value(self)
-other=float_value(other)
-if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
-return float.$factory(Math.floor(self/other))}
-return _b_.NotImplemented}
-float.fromhex=function(arg){
-if(! isinstance(arg,_b_.str)){throw _b_.ValueError.$factory("argument must be a string")}
-var value=arg.trim()
-switch(value.toLowerCase()){case "+inf":
-case "inf":
-case "+infinity":
-case "infinity":
-return $FloatClass(Infinity)
-case "-inf":
-case "-infinity":
-return $FloatClass(-Infinity)
-case "+nan":
-case "nan":
-return $FloatClass(Number.NaN)
-case "-nan":
-return $FloatClass(-Number.NaN)
-case "":
-throw _b_.ValueError.$factory("could not convert string to float")}
-var mo=/^(\d*)(\.?)(\d*)$/.exec(value)
-if(mo !==null){var res=parseFloat(mo[1]),coef=16
-if(mo[2]){for(var digit of mo[3]){res+=parseInt(digit,16)/coef
-coef*=16}}
-return $FloatClass(res)}
-var _m=/^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
-if(_m==null){throw _b_.ValueError.$factory("invalid hexadecimal floating-point string")}
-var _sign=_m[1],_int=parseInt(_m[3]||'0',16),_fraction=_m[4]||'.0',_exponent=_m[5]||'p0'
-if(_sign=="-"){_sign=-1}else{_sign=1}
-var _sum=_int
-for(var i=1,len=_fraction.length;i < len;i++){_sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i)}
-return new Number(_sign*_sum*Math.pow(2,parseInt(_exponent.substring(1))))}
-float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
-throw _b_.ValueError.$factory("__getformat__() argument 1 must be "+
-"'double' or 'float'")}
-function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
-if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
-"' for object of type 'float'")}
-if(isNaN(self)){if(fmt.type=="f" ||fmt.type=="g"){return "nan"}
-else{return "NAN"}}
-if(self==Number.POSITIVE_INFINITY){if(fmt.type=="f" ||fmt.type=="g"){return "inf"}
-else{return "INF"}}
-if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
-if(fmt.type=="%"){self*=100}
-if(fmt.type=="e"){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
-if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
-res.charAt(res.length-1)}
-return res}
-if(fmt.precision !==undefined){
-var prec=fmt.precision
-if(prec==0){return Math.round(self)+""}
-var res=self.toFixed(prec),pt_pos=res.indexOf(".")
-if(fmt.type !==undefined &&
-(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{var missing=fmt.precision-res.length+pt_pos+1
-if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
-if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{res=preformat(self,{type:"e",precision:fmt.precision-1})}
-var parts=res.split("e")
-if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{if(parts[1]){var signif=parts[0]
-while(signif.endsWith("0")){signif=signif.substr(0,signif.length-1)}
-if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
-parts[0]=signif}}
-res=parts.join("e")
-if(fmt.type=="G"){res=res.toUpperCase()}
-return res}else if(fmt.type===undefined){fmt.type="g"
-res=preformat(self,fmt)
-fmt.type=undefined}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
-if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
-while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
-res=elts.join("e")}}}else{var res=_b_.str.$factory(self)}
-if(fmt.type===undefined ||"gGn".indexOf(fmt.type)!=-1){
-if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
-if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}
-else{res=res.substr(0,res.length-1)}}}
-if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self > 0){res=fmt.sign+res}}
-if(fmt.type=="%"){res+="%"}
-return res}
-float.__format__=function(self,format_spec){self=float_value(self)
-var fmt=new $B.parse_format_spec(format_spec)
-fmt.align=fmt.align ||">"
-var raw=preformat(self,fmt).split('.'),_int=raw[0]
-if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
-for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
-chunks.reverse()
-raw[0]=chunks.join(",")}
-return $B.format_width(raw.join("."),fmt)}
-float.__hash__=function(self){if(self===undefined){return float.__hashvalue__ ||$B.$py_next_hash--}
-var _v=self.valueOf()
-if(_v===Infinity){return 314159}
-if(_v===-Infinity){return-271828}
-if(isNaN(_v)){return 0}
-if(_v==Math.round(_v)){return Math.round(_v)}
-var r=_b_.$frexp(_v)
-r[0]*=Math.pow(2,31)
-var hipart=_b_.int.$factory(r[0])
-r[0]=(r[0]-hipart)*Math.pow(2,31)
-var x=hipart+_b_.int.$factory(r[0])+(r[1]<< 15)
-return x & 0xFFFFFFFF}
-_b_.$isninf=function(x){var x1=x
-if(isinstance(x,float)){x1=float.numerator(x)}
-return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
-_b_.$isinf=function(x){var x1=x
-if((! x instanceof Number)&& isinstance(x,float)){x1=float.numerator(x)}
-return x1==Infinity ||x1==-Infinity ||
-x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
-_b_.$isnan=function(x){var x1=x
-if(isinstance(x,float)){x1=float.numerator(x)}
-return isNaN(x1)}
-_b_.$fabs=function(x){if(x==0){return new Number(0)}
-return x > 0 ? float.$factory(x):float.$factory(-x)}
-_b_.$frexp=function(x){var x1=x
-if(isinstance(x,float)){x1=x.valueOf()}
-if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}else if(x1==0){return[0,0]}
-var sign=1,ex=0,man=x1
-if(man < 0.){sign=-sign
-man=-man}
-while(man < 0.5){man*=2.0
-ex--}
-while(man >=1.0){man*=0.5
-ex++}
-man*=sign
-return[man,ex]}
-_b_.$ldexp=function(x,i){if(_b_.$isninf(x)){return float.$factory('-inf')}
-if(_b_.$isinf(x)){return float.$factory('inf')}
-var y=x
-if(isinstance(x,float)){y=x.valueOf()}
-if(y==0){return y}
-var j=i
-if(isinstance(i,float)){j=i.valueOf()}
-return y*Math.pow(2,j)}
-float.hex=function(self){
-self=float_value(self)
-var DBL_MANT_DIG=53,
-TOHEX_NBITS=DBL_MANT_DIG+3-(DBL_MANT_DIG+2)% 4
-switch(self.valueOf()){case Infinity:
-case-Infinity:
-case Number.NaN:
-case-Number.NaN:
-return self
-case-0:
-return "-0x0.0p0"
-case 0:
-return "0x0.0p0"}
-var _a=_b_.$frexp(_b_.$fabs(self.valueOf())),_m=_a[0],_e=_a[1],_shift=1-Math.max(-1021-_e,0)
-_m=_b_.$ldexp(_m,_shift)
-_e-=_shift
-var _int2hex="0123456789ABCDEF".split(""),_s=_int2hex[Math.floor(_m)]
-_s+='.'
-_m-=Math.floor(_m)
-for(var i=0;i <(TOHEX_NBITS-1)/4;i++){_m*=16.0
-_s+=_int2hex[Math.floor(_m)]
-_m-=Math.floor(_m)}
-var _esign="+"
-if(_e < 0){_esign="-"
-_e=-_e}
-if(self.value < 0){return "-0x"+_s+"p"+_esign+_e}
-return "0x"+_s+"p"+_esign+_e}
-float.__init__=function(self,value){return _b_.None}
-float.__int__=function(self){return parseInt(self)}
-float.is_integer=function(self){return _b_.int.$factory(self)==self}
-float.__mod__=function(self,other){
-self=float_value(self)
-other=float_value(other)
-if(other==0){throw ZeroDivisionError.$factory("float modulo")}
-if(isinstance(other,_b_.int)){other=_b_.int.numerator(other)
-return new Number((self % other+other)% other)}
-if(isinstance(other,float)){
-var q=Math.floor(self/other),r=self-other*q
-return new Number(r)}
-return _b_.NotImplemented}
-float.__mro__=[object]
-float.__mul__=function(self,other){self=float_value(self)
-other=float_value(other)
-if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
-other=_b_.int.numerator(other)
-return new Number(self*other)}
-if(isinstance(other,float)){return new Number(self*float_value(other))}
-return _b_.NotImplemented}
-float.__ne__=function(self,other){var res=float.__eq__(self,other)
-return res===_b_.NotImplemented ? res :! res}
-float.__neg__=function(self){return new Number(-float_value(self))}
-float.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("float.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")}
-if(cls===float){return float.$factory(value)}
-return{
-__class__:cls,__dict__:$B.empty_dict(),$brython_value:value ||0}}
-float.__pos__=function(self){return float_value(self)}
-float.__pow__=function(self,other){self=float_value(self)
-other=float_value(other)
-var other_int=isinstance(other,_b_.int)
-if(other_int ||isinstance(other,float)){if(self==1){return self}
-if(other==0){return new Number(1)}
-if(self==-1 &&
-(! isFinite(other)||other.__class__===$B.long_int ||
-! $B.is_safe_int(other))&&
-! isNaN(other)){return new Number(1)}else if(self==0 && isFinite(other)&& other < 0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised "+
-"to a negative power")}else if(self==Number.NEGATIVE_INFINITY && ! isNaN(other)){if(other < 0 && other % 2==1){return new Number(-0.0)}else if(other < 0){return new Number(0)}
-else if(other > 0 && other % 2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && ! isNaN(other)){return other > 0 ? self :new Number(0)}
-if(other==Number.NEGATIVE_INFINITY && ! isNaN(self)){return Math.abs(self)< 1 ? Number.POSITIVE_INFINITY :
-new Number(0)}else if(other==Number.POSITIVE_INFINITY && ! isNaN(self)){return Math.abs(self)< 1 ? new Number(0):
-Number.POSITIVE_INFINITY}
-if(self < 0 &&
-! _b_.getattr(other,"__eq__")(_b_.int.$factory(other))){
-return _b_.complex.__pow__($B.make_complex(self,0),other)}
-return float.$factory(Math.pow(self,other))}
-return _b_.NotImplemented}
-function __newobj__(){
-var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
-var res=args.slice(1)
-res.__class__=args[0]
-return res}
-float.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,float_value(self)]),_b_.None,_b_.None,_b_.None])}
-float.__repr__=function(self){$B.builtins_repr_check(float,arguments)
-self=float_value(self).valueOf()
-if(self==Infinity){return 'inf'}else if(self==-Infinity){return '-inf'}else if(isNaN(self)){return 'nan'}else if(self===0){if(1/self===-Infinity){return '-0.0'}
-return '0.0'}
-var res=self+"" 
-if(res.indexOf(".")==-1){res+=".0"}
-var split_e=res.split(/e/i)
-if(split_e.length==2){var mant=split_e[0],exp=split_e[1]
-if(exp.startsWith('-')){exp_str=parseInt(exp.substr(1))+''
-if(exp_str.length < 2){exp_str='0'+exp_str}
-return mant+'e-'+exp_str}}
-var x,y
-[x,y]=res.split('.')
-if(x.length > 16){var exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
-while(dec_part.endsWith("0")){dec_part=dec_part.substr(0,dec_part.length-1)}
-var mant=int_part
-if(dec_part.length > 0){mant+='.'+dec_part}
-return mant+'e+'+exp}else if(x=="0"){var exp=0
-while(exp < y.length && y.charAt(exp)=="0"){exp++}
-if(exp > 3){
-var rest=y.substr(exp),exp=(exp+1).toString()
-while(rest.endsWith("0")){rest=rest.substr(0,res.length-1)}
-var mant=rest[0]
-if(rest.length > 1){mant+='.'+rest.substr(1)}
-if(exp.length==1){exp='0'+exp}
-return mant+'e-'+exp}}
-return _b_.str.$factory(res)}
-float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '"+
-attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
-attr+"' is read-only")}}
-self[attr]=value
-return _b_.None}
-float.__truediv__=function(self,other){self=float_value(self)
-other=float_value(other)
-if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
-return float.$factory(self/other)}
-return _b_.NotImplemented}
-var $op_func=function(self,other){self=float_value(self)
-other=float_value(other)
-if(isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? self-1 :self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
-if(isinstance(other,float)){return float.$factory(self-other)}
-return _b_.NotImplemented}
-$op_func+="" 
-var $ops={"+":"add","-":"sub"}
-for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
-$opf=$opf.replace(/__rsub__/gm,"__r"+$ops[$op]+"__")
-eval("float.__"+$ops[$op]+"__ = "+$opf)}
-var $comp_func=function(self,other){self=float_value(self)
-other=float_value(other)
-if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
-return self > other.valueOf()}
-if(isinstance(other,float)){return self > other}
-if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
-if(hasattr(other,"__int__")||hasattr(other,"__index__")){return _b_.int.__gt__(self,$B.$GetInt(other))}
-var inv_op=getattr(other,"__le__",None)
-if(inv_op !==None){return inv_op(self)}
-throw _b_.TypeError.$factory(
-"unorderable types: float() > "+$B.class_name(other)+"()")}
-$comp_func+="" 
-for(var $op in $B.$comps){eval("float.__"+$B.$comps[$op]+"__ = "+
-$comp_func.replace(/>/gm,$op).
-replace(/__gt__/gm,"__"+$B.$comps[$op]+"__").
-replace(/__le__/,"__"+$B.$inv_comps[$op]+"__"))}
-var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or","divmod"]
-for(var r_opname of r_opnames){if(float["__r"+r_opname+"__"]===undefined &&
-float['__'+r_opname+'__']){float["__r"+r_opname+"__"]=(function(name){return function(self,other){if(_b_.isinstance(other,_b_.int)){other=float_value(_b_.int.numerator(other))
-return float["__"+name+"__"](other,self)}else if(_b_.isinstance(other,float)){other=float_value(other)
-return float["__"+name+"__"](other,self)}
-return _b_.NotImplemented}})(r_opname)}}
-function $FloatClass(value){return new Number(value)}
-function to_digits(s){
-var arabic_digits="\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",res=""
-for(var i=0;i < s.length;i++){var x=arabic_digits.indexOf(s[i])
-if(x >-1){res+=x}
-else{res+=s[i]}}
-return res}
-float.$factory=function(value){switch(value){case undefined:
-return $FloatClass(0.0)
-case Number.MAX_VALUE:
-return $FloatClass(Infinity)
-case-Number.MAX_VALUE:
-return $FloatClass(-Infinity)
-case true:
-return new Number(1)
-case false:
-return new Number(0)}
-if(typeof value=="number"){return new Number(value)}
-if(isinstance(value,float)){return float_value(value)}
-if(isinstance(value,bytes)){var s=getattr(value,"decode")("latin-1")
-return float.$factory(getattr(value,"decode")("latin-1"))}
-if(typeof value=="string"){value=value.trim()
-switch(value.toLowerCase()){case "+inf":
-case "inf":
-case "+infinity":
-case "infinity":
-return Number.POSITIVE_INFINITY
-case "-inf":
-case "-infinity":
-return Number.NEGATIVE_INFINITY
-case "+nan":
-case "nan":
-return Number.NaN
-case "-nan":
-return-Number.NaN
-case "":
-throw _b_.ValueError.$factory("count not convert string to float")
-default:
-value=value.charAt(0)+value.substr(1).replace(/_/g,"")
-value=to_digits(value)
-if(isFinite(value))return $FloatClass(eval(value))
-else{
-_b_.str.encode(value,"latin-1")
-throw _b_.ValueError.$factory(
-"Could not convert to float(): '"+
-_b_.str.$factory(value)+"'")}}}
-var klass=value.__class__ ||$B.get_class(value),num_value=$B.to_num(value,["__float__","__index__"])
-if(value !==Number.POSITIVE_INFINITY && ! isFinite(num_value)){throw _b_.OverflowError.$factory('int too large to convert to float')}
-if(num_value !==null){return num_value}
-throw _b_.TypeError.$factory("float() argument must be a string or a "+
-"number, not '"+$B.class_name(value)+"'")}
-$B.$FloatClass=$FloatClass
-$B.set_func_names(float,"builtins")
-var FloatSubclass=$B.FloatSubclass={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"float"},$is_class:true}
-for(var $attr in float){if(typeof float[$attr]=="function"){FloatSubclass[$attr]=(function(attr){return function(){var args=[],pos=0
-if(arguments.length > 0){var args=[arguments[0].valueOf()],pos=1
-for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}}
-return float[attr].apply(null,args)}})($attr)}}
-$B.set_func_names(FloatSubclass,"builtins")
-_b_.float=float})(__BRYTHON__)
-;
-;(function($B){var _b_=$B.builtins
-function $err(op,other){var msg="unsupported operand type(s) for "+op+
-" : 'int' and '"+$B.class_name(other)+"'"
-throw _b_.TypeError.$factory(msg)}
-function int_value(obj){
-if(typeof obj=="boolean"){return obj ? 1 :0}
-return obj.$brython_value !==undefined ? obj.$brython_value :obj}
-var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
-int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
-return $B.$list([$.self,1])}
-int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed:false},null,null)
-var x=$.bytes,byteorder=$.byteorder,signed=$.signed,_bytes,_len
-if(_b_.isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
-_len=x.source.length}else{_bytes=_b_.list.$factory(x)
-_len=_bytes.length
-for(var i=0;i < _len;i++){_b_.bytes.$factory([_bytes[i]])}}
-if(byteorder=="big"){_bytes.reverse()}else if(byteorder !="little"){throw _b_.ValueError.$factory(
-"byteorder must be either 'little' or 'big'")}
-var num=_bytes[0]
-if(signed && num >=128){num=num-256}
-var _mult=256
-for(var i=1;i < _len;i++){num=$B.add($B.mul(_mult,_bytes[i]),num)
-_mult=$B.mul(_mult,256)}
-if(! signed){return num}
-if(_bytes[_len-1]< 128){return num}
-return $B.sub(num,_mult)}
-int.to_bytes=function(){var $=$B.args("to_bytes",3,{self:null,len:null,byteorder:null,signed:null},["self","len","byteorder","*","signed"],arguments,{signed:false},null,null),self=$.self,len=$.len,byteorder=$.byteorder,signed=$.signed
-if(! _b_.isinstance(len,_b_.int)){throw _b_.TypeError.$factory("integer argument expected, got "+
-$B.class_name(len))}
-if(["little","big"].indexOf(byteorder)==-1){throw _b_.ValueError.$factory(
-"byteorder must be either 'little' or 'big'")}
-if(_b_.isinstance(self,$B.long_int)){return $B.long_int.to_bytes(self,len,byteorder,signed)}
-if(self < 0){if(! signed){throw _b_.OverflowError.$factory(
-"can't convert negative int to unsigned")}
-self=Math.pow(256,len)+self}
-var res=[],value=self
-while(value > 0){var quotient=Math.floor(value/256),rest=value-256*quotient
-res.push(rest)
-if(res.length > len){throw _b_.OverflowError.$factory("int too big to convert")}
-value=quotient}
-while(res.length < len){res.push(0)}
-if(byteorder=="big"){res.reverse()}
-return{
-__class__:_b_.bytes,source:res}}
-int.__abs__=function(self){return _b_.abs(self)}
-int.__add__=function(self,other){self=int_value(self)
-if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__add__($B.long_int.$factory(self),$B.long_int.$factory(other))}
-other=int_value(other)
-var res=self+other
-if(res > $B.min_int && res < $B.max_int){return res}else{return $B.long_int.__add__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
-return _b_.NotImplemented}
-int.__bool__=function(self){return int_value(self).valueOf()==0 ? false :true}
-int.__ceil__=function(self){return Math.ceil(int_value(self))}
-int.__divmod__=function(self,other){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
-return $B.fast_tuple([int.__floordiv__(self,other),int.__mod__(self,other)])}
-int.__eq__=function(self,other){
-if(_b_.isinstance(other,int)){return self.valueOf()==int_value(other).valueOf()}
-if(_b_.isinstance(other,_b_.float)){return self.valueOf()==other.valueOf()}
-if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return False}
-return self.valueOf()==other.$real}
-return _b_.NotImplemented}
-int.__float__=function(self){return new Number(self)}
-function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
-if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
-"' for object of type 'int'")}
-var res
-switch(fmt.type){case undefined:
-case "d":
-res=self.toString()
-break
-case "b":
-res=(fmt.alternate ? "0b" :"")+self.toString(2)
-break
-case "c":
-res=_b_.chr(self)
-break
-case "o":
-res=(fmt.alternate ? "0o" :"")+self.toString(8)
-break
-case "x":
-res=(fmt.alternate ? "0x" :"")+self.toString(16)
-break
-case "X":
-res=(fmt.alternate ? "0X" :"")+self.toString(16).toUpperCase()
-break
-case "n":
-return self }
-if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
-return res}
-int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
-if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
-return _b_.float.__format__(self,format_spec)}
-fmt.align=fmt.align ||">"
-var res=preformat(self,fmt)
-if(fmt.comma){var sign=res[0]=="-" ? "-" :"",rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
-for(var i=0;i < nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
-chunks.reverse()
-res=sign+chunks.join(",")}
-return $B.format_width(res,fmt)}
-int.__floordiv__=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__floordiv__($B.long_int.$factory(self),other)}
-if(_b_.isinstance(other,int)){other=int_value(other)
-if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
-return Math.floor(self/other)}
-return _b_.NotImplemented}
-int.__hash__=function(self){if(self.$brython_value){
-var hash_method=$B.$getattr(self.__class__,'__hash__')
-if(hash_method===int.__hash__){if(typeof self.$brython_value=="number"){return self.$brython_value}else{
-return $B.long_int.__hash__(self.$brython_value)}}else{return hash_method(self)}}
-return self.valueOf()}
-int.__index__=function(self){return int_value(self)}
-int.__init__=function(self,value){if(value===undefined){value=0}
-self.toString=function(){return value}
-return _b_.None}
-int.__int__=function(self){return self}
-int.__invert__=function(self){return ~self}
-int.__lshift__=function(self,other){self=int_value(self)
-if(_b_.isinstance(other,int)){other=int_value(other)
-try{return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}catch(err){console.log('err in lshift',self,other)
-throw err}}
-return _b_.NotImplemented}
-int.__mod__=function(self,other){
-if(_b_.isinstance(other,_b_.tuple)&& other.length==1){other=other[0]}
-if(other.__class__===$B.long_int){return $B.long_int.__mod__($B.long_int.$factory(self),other)}
-if(_b_.isinstance(other,int)){other=int_value(other)
-if(other===false){other=0}
-else if(other===true){other=1}
-if(other==0){throw _b_.ZeroDivisionError.$factory(
-"integer division or modulo by zero")}
-return(self % other+other)% other}
-return _b_.NotImplemented}
-int.__mul__=function(self,other){self=int_value(self)
-if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other))}
-other=int_value(other)
-var res=self*other
-if(res > $B.min_int && res < $B.max_int){return res}else{return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
-return _b_.NotImplemented}
-int.__ne__=function(self,other){var res=int.__eq__(self,other)
-return(res===_b_.NotImplemented)? res :!res}
-int.__neg__=function(self){return-self}
-int.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
-if(cls===int){return int.$factory(value)}
-return{
-__class__:cls,__dict__:$B.empty_dict(),$brython_value:value ||0}}
-int.__pos__=function(self){return self}
-function extended_euclidean(a,b){var d,u,v
-if(b==0){return[a,1,0]}else{[d,u,v]=extended_euclidean(b,a % b)
-return[d,v,u-Math.floor(a/b)*v]}}
-int.__pow__=function(self,other,z){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
-if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
-switch(other.valueOf()){case 0:
-return int.$factory(1)
-case 1:
-return int.$factory(self.valueOf())}
-if(z !==undefined && z !==_b_.None){
-if(z==1){return 0}
-var result=1,base=self % z,exponent=other,long_int=$B.long_int
-if(exponent < 0){var gcd,inv,_
-[gcd,inv,_]=extended_euclidean(self,z)
-if(gcd !==1){throw _b_.ValueError.$factory("not relative primes: "+
-self+' and '+z)}
-return int.__pow__(inv,-exponent,z)}
-while(exponent > 0){if(exponent % 2==1){if(result*base > $B.max_int){result=long_int.__mul__(
-long_int.$factory(result),long_int.$factory(base))
-result=long_int.__mod__(result,z)}else{result=(result*base)% z}}
-exponent=exponent >> 1
-if(base*base > $B.max_int){base=long_int.__mul__(long_int.$factory(base),long_int.$factory(base))
-base=long_int.__mod__(base,z)}else{base=(base*base)% z}}
-return result}
-var res=Math.pow(self.valueOf(),other.valueOf())
-if(res > $B.min_int && res < $B.max_int){return other > 0 ? res :new Number(res)}else if(res !==Infinity && !isFinite(res)){return res}else{if($B.BigInt){return{
-__class__:$B.long_int,value:($B.BigInt(self)**$B.BigInt(other)).toString(),pos:true}}
-return $B.long_int.__pow__($B.long_int.$from_int(self),$B.long_int.$from_int(other))}}
-if(_b_.isinstance(other,_b_.float)){other=_b_.float.numerator(other)
-if(self >=0){return new Number(Math.pow(self,other))}else{
-return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(_b_.isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
-return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
-var rpow=$B.$getattr(other,"__rpow__",_b_.None)
-if(rpow !==_b_.None){return rpow(self)}
-$err("**",other)}
-function __newobj__(){
-var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
-var res=args.slice(1)
-res.__class__=args[0]
-return res}
-int.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,int_value(self)]),_b_.None,_b_.None,_b_.None])}
-int.__repr__=function(self){$B.builtins_repr_check(int,arguments)
-return int_value(self).toString()}
-int.__rshift__=function(self,other){self=int_value(self)
-if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
-return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
-return _b_.NotImplemented}
-int.__setattr__=function(self,attr,value){if(typeof self=="number" ||typeof self=="boolean"){var cl_name=$B.class_name(self)
-if(_b_.dir(self).indexOf(attr)>-1){var msg="attribute '"+attr+`' of '${cl_name}'`+
-"objects is not writable"}else{var msg=`'${cl_name}' object has no attribute '${attr}'`}
-throw _b_.AttributeError.$factory(msg)}
-_b_.dict.$setitem(self.__dict__,attr,value)
-return _b_.None}
-int.__sub__=function(self,other){self=int_value(self)
-if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
-other=int_value(other)
-var res=self-other
-if(res > $B.min_int && res < $B.max_int){return res}else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
-return _b_.NotImplemented}
-int.__truediv__=function(self,other){if(_b_.isinstance(other,int)){other=int_value(other)
-if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
-if(other.__class__===$B.long_int){return new Number(self/parseInt(other.value))}
-return new Number(self/other)}
-return _b_.NotImplemented}
-int.bit_length=function(self){s=_b_.bin(self)
-s=$B.$getattr(s,"lstrip")("-0b")
-return s.length }
-int.numerator=function(self){return int_value(self)}
-int.denominator=function(self){return int.$factory(1)}
-int.imag=function(self){return int.$factory(0)}
-int.real=function(self){return self}
-for(var attr of['numerator','denominator','imag','real']){int[attr].setter=(function(x){return function(self,value){throw _b_.AttributeError.$factory(`attribute '${x}' of `+
-`'${$B.class_name(self)}' objects is not writable`)}})(attr)}
-$B.max_int32=(1 << 30)*2-1
-$B.min_int32=-$B.max_int32
-var $op_func=function(self,other){self=int_value(self)
-if(typeof other=="number" ||_b_.isinstance(other,int)){if(other.__class__===$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
-other=int_value(other)
-if(self > $B.max_int32 ||self < $B.min_int32 ||
-other > $B.max_int32 ||other < $B.min_int32){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
-return self-other}
-return _b_.NotImplemented}
-$op_func+="" 
-var $ops={"&":"and","|":"or","^":"xor"}
-for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
-opf=opf.replace(new RegExp("sub","gm"),$ops[$op])
-eval("int.__"+$ops[$op]+"__ = "+opf)}
-var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__lt__(other,$B.long_int.$factory(self))}
-if(_b_.isinstance(other,int)){other=int_value(other)
-return self.valueOf()> other.valueOf()}else if(_b_.isinstance(other,_b_.float)){return self.valueOf()> _b_.float.numerator(other)}else if(_b_.isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
-if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
-return _b_.NotImplemented}
-$comp_func+="" 
-for(var $op in $B.$comps){eval("int.__"+$B.$comps[$op]+"__ = "+
-$comp_func.replace(/>/gm,$op).
-replace(/__gt__/gm,"__"+$B.$comps[$op]+"__").
-replace(/__lt__/,"__"+$B.$inv_comps[$op]+"__"))}
-var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or","divmod"]
-for(var r_opname of r_opnames){if(int["__r"+r_opname+"__"]===undefined &&
-int['__'+r_opname+'__']){int["__r"+r_opname+"__"]=(function(name){return function(self,other){if(_b_.isinstance(other,int)){other=int_value(other)
-return int["__"+name+"__"](other,self)}
-return _b_.NotImplemented}})(r_opname)}}
-var $valid_digits=function(base){var digits=""
-if(base===0){return "0"}
-if(base < 10){for(var i=0;i < base;i++){digits+=String.fromCharCode(i+48)}
-return digits}
-var digits="0123456789"
-for(var i=10;i < base;i++){digits+=String.fromCharCode(i+55)}
-return digits}
-int.$factory=function(value,base){
-if(value===undefined){return 0}
-if(typeof value=="number" &&
-(base===undefined ||base==10)){return parseInt(value)}
-if(_b_.isinstance(value,_b_.complex)){throw _b_.TypeError.$factory("can't convert complex to int")}
-var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base":10},null,null),value=$ns["x"],base=$ns["base"]
-if(_b_.isinstance(value,_b_.float)&& base==10){value=_b_.float.numerator(value)
-if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
-else{return value > 0 ? Math.floor(value):Math.ceil(value)}}
-if(!(base >=2 && base <=36)){
-if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
-if(typeof value=="number"){if(base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value)}
-return value}else if(value.toString().search("e")>-1){
-throw _b_.OverflowError.$factory("can't convert to base "+base)}else{var res=parseInt(value,base)
-if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value,base)}
-return res}}
-if(value===true){return Number(1)}
-if(value===false){return Number(0)}
-if(value.__class__===$B.long_int){var z=parseInt(value.value)
-if(z > $B.min_int && z < $B.max_int){return z}
-else{return value}}
-base=$B.$GetInt(base)
-function invalid(value,base){throw _b_.ValueError.$factory("invalid literal for int() with base "+
-base+": '"+_b_.str.$factory(value)+"'")}
-if(_b_.isinstance(value,_b_.str)){value=value.valueOf()}
-if(typeof value=="string"){var _value=value.trim()
-if(_value.length==2 && base==0 &&
-(_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
-if(_value.length > 2){var _pre=_value.substr(0,2).toUpperCase()
-if(base==0){if(_pre=="0B"){base=2}
-if(_pre=="0O"){base=8}
-if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
-else if(_pre=="0O" && base !=8){invalid(_value,base)}
-if((_pre=="0B" && base==2)||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
-while(_value.startsWith("_")){_value=_value.substr(1)}}}else if(base==0){
-base=10}
-var _digits=$valid_digits(base),_re=new RegExp("^[+-]?["+_digits+"]"+
-"["+_digits+"_]*$","i"),match=_re.exec(_value)
-if(match===null){invalid(value,base)}else{value=_value.replace(/_/g,"")}
-if(base <=10 && ! isFinite(value)){invalid(_value,base)}
-var res=parseInt(value,base)
-if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
-return res}
-if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
-for(var special_method of["__int__","__index__","__trunc__"]){var num_value=$B.$getattr(value.__class__ ||$B.get_class(value),special_method,_b_.None)
-if(num_value !==_b_.None){return $B.$call(num_value)(value)}}
-throw _b_.TypeError.$factory(
-"int() argument must be a string, a bytes-like "+
-"object or a number, not '"+$B.class_name(value)+"'")}
-$B.set_func_names(int,"builtins")
-_b_.int=int
-$B.$bool=function(obj){
-if(obj===null ||obj===undefined ){return false}
-switch(typeof obj){case "boolean":
-return obj
-case "number":
-case "string":
-if(obj){return true}
-return false
-default:
-if(obj.$is_class){return true}
-var klass=obj.__class__ ||$B.get_class(obj),missing={},bool_method=$B.$getattr(klass,"__bool__",missing)
-if(bool_method===missing){try{return _b_.len(obj)> 0}
-catch(err){return true}}else{var res=$B.$call(bool_method)(obj)
-if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
-"bool, returned "+$B.class_name(res))}
-return res}}}
-var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],$infos:{__name__:"bool",__module__:"builtins"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
-bool.__and__=function(self,other){if(_b_.isinstance(other,bool)){return self && other}else if(_b_.isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
-return _b_.NotImplemented}
-bool.__float__=function(self){return self ? new Number(1):new Number(0)}
-bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
-return 0}
-bool.__neg__=function(self){return-$B.int_or_bool(self)}
-bool.__or__=function(self,other){if(_b_.isinstance(other,bool)){return self ||other}else if(_b_.isinstance(other,int)){return int.__or__(bool.__index__(self),int.__index__(other))}
-return _b_.NotImplemented}
-bool.__pos__=$B.int_or_bool
-bool.__repr__=function(self){$B.builtins_repr_check(bool,arguments)
-return self ? "True" :"False"}
-bool.__xor__=function(self,other){if(_b_.isinstance(other,bool)){return self ^ other ? true :false}else if(_b_.isinstance(other,int)){return int.__xor__(bool.__index__(self),int.__index__(other))}
-return _b_.NotImplemented}
-bool.$factory=function(){
-var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)
-return $B.$bool($.x)}
-bool.numerator=int.numerator
-bool.denominator=int.denominator
-bool.real=int.real
-bool.imag=int.imag
-_b_.bool=bool
-$B.set_func_names(bool,"builtins")})(__BRYTHON__)
-;
-;(function($B){
-var bltns=$B.InjectBuiltins()
-eval(bltns)
-try{eval("window")}catch(err){window=self}
-var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
-var max_safe_divider=$B.max_int/9
-function add_pos(v1,v2){
-if(window.BigInt){return{
-__class__:long_int,value:(BigInt(v1)+BigInt(v2)).toString(),pos:true}}
-var res="",carry=0,iself=v1.length,sv=0,x
-for(var i=v2.length-1;i >=0 ;i--){iself--
-if(iself < 0){sv=0}else{sv=parseInt(v1.charAt(iself))}
-x=(carry+sv+parseInt(v2.charAt(i))).toString()
-if(x.length==2){res=x.charAt(1)+res
-carry=parseInt(x.charAt(0))}
-else{res=x+res;carry=0}}
-while(iself > 0){iself--
-x=(carry+parseInt(v1.charAt(iself))).toString()
-if(x.length==2){res=x.charAt(1)+res
-carry=parseInt(x.charAt(0))}
-else{res=x+res;carry=0}}
-if(carry){res=carry+res}
-return{__class__:long_int,value:res,pos:true}}
-var len=((Math.pow(2,53)-1)+'').length-1
-function binary_pos(t){var nb_chunks=Math.ceil(t.length/len),chunks=[],pos,start,nb,bin=[]
-for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
-start=Math.max(0,pos)
-nb=pos-start
-chunks.push(t.substr(start,len+nb))}
-chunks=chunks.reverse()
-chunks.forEach(function(chunk,i){chunks[i]=parseInt(chunk)})
-var rest
-var carry=Math.pow(10,15)
-while(chunks[chunks.length-1]> 0){chunks.forEach(function(chunk,i){rest=chunk % 2
-chunks[i]=Math.floor(chunk/2)
-if(rest && i < chunks.length-1){chunks[i+1]+=carry}})
-bin.push(rest)
-if(chunks[0]==0){chunks.shift()}}
-bin=bin.reverse().join('')
-return bin}
-function binary(obj){var bpos=binary_pos(obj.value)
-if(obj.pos){return bpos}
-var res=''
-for(var i=0,len=bpos.length;i < len;i++){res+=bpos.charAt(i)=="0" ? "1":"0"}
-var add1=add_pos(res,"1").value
-add1=res.substr(0,res.length-add1.length)+add1
-return add1}
-function check_shift(shift){
-if(! isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '"+
-$B.class_name(shift)+"'")}
-if(! shift.pos){throw ValueError.$factory("negative shift count")}}
-function clone(obj){
-var obj1={}
-for(var attr in obj){obj1[attr]=obj[attr]}
-return obj1}
-function comp_pos(v1,v2){
-if(v1.length > v2.length){return 1}
-else if(v1.length < v2.length){return-1}
-else{if(v1 > v2){return 1}
-else if(v1 < v2){return-1}}
-return 0}
-function divmod_by_safe_int(t,n){
-if(n==1){return[t,0]}
-var T=t.toString(),L=n.toString().length,a=parseInt(T.substr(0,L)),next_pos=L-1,quotient='',q,rest
-while(true){q=Math.floor(a/n)
-rest=a-q*n
-quotient+=q
-next_pos++
-if(next_pos >=T.length){return[quotient,rest]}
-a=10*rest+parseInt(T[next_pos])}}
-function divmod_pos(v1,v2){
-if($B.BigInt){var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
-return[a,b]}
-var iv1=parseInt(v1),iv2=parseInt(v2),res1
-if(iv1 < $B.max_int && iv2 < $B.max_int){var rest=iv1 % iv2,quot=Math.floor(iv1/iv2).toString()
-var res1=[{__class__:long_int,value:quot.toString(),pos:true},{__class__:long_int,value:rest.toString(),pos:true}
-]
-return res1}else if(iv2 < max_safe_divider){var res_safe=divmod_by_safe_int(v1,iv2)
-return[long_int.$factory(res_safe[0]),long_int.$factory(res_safe[1])]}
-var quotient,mod
-if(comp_pos(v1,v2)==-1){
-quotient="0"
-mod=long_int.$factory(v1)}else if(v2==v1){
-quotient="1"
-mod=long_int.$factory("0")}else{var quotient="",left=v1.substr(0,v2.length)
-if(v1 < v2){left=v1.substr(0,v2.length+1)}
-var right=v1.substr(left.length)
-var mv2={}
-while(true){
-var candidate=Math.floor(parseInt(left)/parseInt(v2))+""
-if(candidate=="10"){
-candidate="9"}
-if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}
-if(comp_pos(left,mv2[candidate])==-1){
-candidate--
-if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}}
-quotient+=candidate
-left=sub_pos(left,mv2[candidate]).value
-if(right.length==0){break}
-left+=right.charAt(0)
-right=right.substr(1)}
-mod=sub_pos(v1,mul_pos(quotient,v2).value)}
-return[long_int.$factory(quotient),mod]}
-function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
-for(var i=0;i < nb;i++){var pos=len-size*(i+1)
-if(pos < 0){size+=pos;pos=0}
-chunks.push(parseInt(s.substr(pos,size)))}
-return chunks}
-function mul_pos(x,y){if($B.BigInt){
-return long_int.$factory(from_BigInt(BigInt(x)*BigInt(y)))}
-var ix=parseInt(x),iy=parseInt(y),z=ix*iy
-if(z < $B.max_int){return{
-__class__:long_int,value:z.toString(),pos:true}}
-var chunk_size=6,cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
-var products={},len=cx.length+cy.length
-for(var i=0;i < len-1;i++){products[i]=0}
-for(var i=0;i < cx.length;i++){for(var j=0;j < cy.length;j++){products[i+j]+=cx[i]*cy[j]}}
-var nb=len-1,pos
-for(var i=0;i < len-1;i++){var chunks=split_chunks(products[i].toString(),chunk_size)
-for(var j=1;j < chunks.length;j++){pos=i+j
-if(products[pos]===undefined){products[pos]=parseInt(chunks[j])
-nb=pos}
-else{products[pos]+=parseInt(chunks[j])}}
-products[i]=chunks[0]}
-var result="",i=0,s
-while(products[i]!==undefined){s=products[i].toString()
-if(products[i+1]!==undefined){s="0".repeat(chunk_size-s.length)+s}
-result=s+result
-i++}
-try{return long_int.$factory(result)}catch(err){console.log(x,y,products,result)
-throw err}}
-function sub_pos(v1,v2){
-if(window.BigInt){return{
-__class__:long_int,value:(BigInt(v1)-BigInt(v2)).toString(),pos:true}}
-var res="",carry=0,i1=v1.length,sv=0,x
-for(var i=v2.length-1;i >=0;i--){i1--
-sv=parseInt(v1.charAt(i1))
-x=(sv-carry-parseInt(v2.charAt(i)))
-if(isNaN(x)){console.log("x is NaN",v1.length,v2.length,i,i1,sv,carry,i,v2.charAt(i))}
-if(x < 0){res=(10+x)+res;carry=1}
-else{res=x+res;carry=0}}
-if(res.startsWith("NaN")){alert(res)}
-while(i1 > 0){i1--
-x=(parseInt(v1.charAt(i1))-carry)
-if(x < 0){res=(10+x)+res;carry=1}
-else{res=x+res;carry=0}}
-while(res.charAt(0)=="0" && res.length > 1){res=res.substr(1)}
-if(res.startsWith("NaN")){console.log("hoho !!",v1,v2,v1 >=v2,res)}
-return{__class__:long_int,value:res,pos:true}}
-function to_BigInt(x){var res=$B.BigInt(x.value)
-if(x.pos){return res}
-return-res}
-function to_int(long_int){return long_int.pos ? parseInt(long_int.value):-parseInt(long_int.value)}
-function from_BigInt(y){var pos=y >=0
-y=y.toString()
-y=y.endsWith("n")? y.substr(0,y.length-1):y
-y=y.startsWith('-')? y.substr(1):y
-return intOrLong({__class__:long_int,value:y,pos:pos})}
-long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
-if(s.search("e")>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
-if(pos=="+"){if(n2===undefined){v=n1+"0".repeat(exp-1)}else{v=n1+n2+"0".repeat(exp-1-n2.length)}}}
-return{__class__:long_int,value:v,pos:value >=0}}
-function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
-if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
-"' for object of type 'int'")}
-var res
-switch(fmt.type){case undefined:
-case "d":
-res=self.toString()
-break
-case "b":
-res=(fmt.alternate ? "0b" :"")+BigInt(self.value).toString(2)
-break
-case "c":
-res=_b_.chr(self)
-break
-case "o":
-res=(fmt.alternate ? "0o" :"")+BigInt(self.value).toString(8)
-break
-case "x":
-res=(fmt.alternate ? "0x" :"")+BigInt(self.value).toString(16)
-break
-case "X":
-res=(fmt.alternate ? "0X" :"")+BigInt(self.value).toString(16).toUpperCase()
-break
-case "n":
-return self }
-if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
-return res}
-long_int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
-if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
-return _b_.float.__format__(self,format_spec)}
-fmt.align=fmt.align ||">"
-var res=preformat(self,fmt)
-if(fmt.comma){var sign=res[0]=="-" ? "-" :"",rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
-for(var i=0;i < nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
-chunks.reverse()
-res=sign+chunks.join(",")}
-return $B.format_width(res,fmt)}
-long_int.__abs__=function(self){return{__class__:long_int,value:self.value,pos:true}}
-long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)+other)}
-if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 :0)}else if(isinstance(other,int)){
-other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}else{return _b_.NotImplemented}}
-if($B.BigInt){return from_BigInt(to_BigInt(self)+to_BigInt(other))}
-var res
-if(self.pos && other.pos){
-return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
-res=add_pos(self.value,other.value)
-res.pos=false
-return intOrLong(res)}else if(self.pos && ! other.pos){
-switch(comp_pos(self.value,other.value)){case 1:
-res=sub_pos(self.value,other.value)
-break
-case 0:
-res={__class__:long_int,value:0,pos:true}
-break
-case-1:
-res=sub_pos(other.value,self.value)
-res.pos=false
-break}
-return intOrLong(res)}else{
-switch(comp_pos(self.value,other.value)){case 1:
-res=sub_pos(self.value,other.value)
-res.pos=false
-break
-case 0:
-res={__class__:long_int,value:0,pos:true}
-break
-case-1:
-res=sub_pos(other.value,self.value)
-break}
-return intOrLong(res)}}
-long_int.__and__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-if($B.BigInt){return from_BigInt(to_BigInt(self)& to_BigInt(other))}
-var v1=self.value,v2=other.value,temp1,temp2,res=""
-var neg=(! self.pos)&&(! other.pos)
-if(neg){self=long_int.__neg__(self)
-other=long_int.__neg__(other)}
-var b1=binary(self),len1=b1.length,b2=binary(other),len2=b2.length,i=1,res='',x1,x2
-while(true){if(i > len1 && i > len2){break}
-if(i > len1){x1=self.pos ? "0" :"1"}else{x1=b1.charAt(len1-i)}
-if(i > len2){x2=other.pos ? "0" :"1"}else{x2=b2.charAt(len2-i)}
-if(x1=="1" && x2=="1"){res="1"+res}else{res="0"+res}
-i++}
-while(res.charAt(0)=="0"){res=res.substr(1)}
-res=$B.long_int.$factory(res,2)
-if(neg){res.pos=false}
-return intOrLong(res)}
-long_int.__divmod__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-var dm=divmod_pos(self.value,other.value)
-if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
-if(dm[1].value !="0"){
-dm[0]=long_int.__sub__(dm[0],long_int.$factory("1"))
-dm[1]=long_int.__sub__(self,long_int.__mul__(other,long_int.$factory(dm[0])))}}
-return $B.fast_tuple([intOrLong(dm[0]),intOrLong(dm[1])])}
-long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-return self.value==other.value && self.pos==other.pos}
-long_int.__float__=function(self){if(! isFinite(parseFloat(self.value))){throw _b_.OverflowError.$factory("int too big to convert to float")}
-return new Number(parseFloat(self.value))}
-long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)/other)}
-if(typeof other=="number" && Math.abs(other)< $B.max_safe_divider){var t=self.value,res=divmod_by_safe_int(t,other),pos=other > 0 ? self.pos :!self.pos
-return{__class__:long_int,value:res[0],pos:pos}}
-var res=intOrLong(long_int.__divmod__(self,other)[0])
-return res}
-long_int.__ge__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-if(self.pos !=other.pos){return ! other.pos}
-if(self.value.length > other.value.length){return self.pos}
-else if(self.value.length < other.value.length){return ! self.pos}
-else{return self.pos ? self.value >=other.value :
-self.value <=other.value}}
-long_int.__gt__=function(self,other){return ! long_int.__le__(self,other)}
-long_int.__hash__=function(self){var modulus=$B.fast_long_int("2305843009213693951",true),self_pos=$B.fast_long_int(self.value,true)
-var _hash=$B.long_int.__mod__(self_pos,modulus)
-if(typeof _hash=="number"){_hash=self.pos ? _hash :-_hash}else{_hash.pos=self.pos}
-return self.__hashvalue__=_hash}
-long_int.__index__=function(self){
-var res='',temp=self.value,d
-while(true){d=divmod_pos(temp,"2")
-res=d[1].value+res
-temp=d[0].value
-if(temp=="0"){break}}
-if(! self.pos){
-var nres="",flag=false
-for(var len=res.length-1,i=len;i >=0 ;i--){var bit=res.charAt(i)
-if(bit=="0"){if(flag){nres="1"+nres}else{nres="0"+nres}}else{if(flag){nres="0"+nres}
-else{flag=true;nres="1"+nres}}}
-nres="1"+nres
-res=nres}else{res="0"+res}
-return intOrLong(res)}
-long_int.__invert__=function(self){return long_int.__sub__(long_int.$factory("-1"),self)}
-long_int.__le__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-if(self.pos !==other.pos){return ! self.pos}
-if(self.value.length > other.value.length){return ! self.pos}
-else if(self.value.length < other.value.length){return self.pos}
-else{return self.pos ? self.value <=other.value :
-self.value >=other.value}}
-long_int.__lt__=function(self,other){return !long_int.__ge__(self,other)}
-long_int.__lshift__=function(self,shift){if(window.BigInt){if(shift.__class__==long_int){shift=shift.value}
-return intOrLong({__class__:long_int,value:(BigInt(self.value)<< BigInt(shift)).toString(),pos:self.pos})}
-var is_long=shift.__class__===long_int,shift_safe
-if(is_long){var shift_value=parseInt(shift.value)
-if(shift_value < 0){throw _b_.ValueError.$factory('negative shift count')}
-if(shift_value < $B.max_int){shift_safe=true
-shift=shift_value}}
-if(shift_safe){if(shift_value==0){return self}}else{shift=long_int.$factory(shift)
-if(shift.value=="0"){return self}}
-var res=self.value
-while(true){var x,carry=0,res1=""
-for(var i=res.length-1;i >=0;i--){x=(carry+parseInt(res.charAt(i))*2).toString()
-if(x.length==2){res1=x.charAt(1)+res1
-carry=parseInt(x.charAt(0))}else{res1=x+res1
-carry=0}}
-if(carry){res1=carry+res1}
-res=res1
-if(shift_safe){shift--
-if(shift==0){break}}else{shift=sub_pos(shift.value,"1")
-if(shift.value=="0"){break}}}
-return intOrLong({__class__:long_int,value:res,pos:self.pos})}
-long_int.__mod__=function(self,other){return intOrLong(long_int.__divmod__(self,other)[1])}
-long_int.__mro__=[_b_.int,_b_.object]
-long_int.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
-case Number.POSITIVE_INFINITY:
-if($B.rich_comp("__eq__",other,0)){return NaN}
-else if(_b_.getattr(other,"__gt__")(0)){return self}
-else{return-self}}
-if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)*other)}
-if(typeof other=="number"){other=long_int.$factory(other)}
-other_value=other.value
-other_pos=other.pos
-if(other.__class__ !==long_int && isinstance(other,int)){
-var value=int.__index__(other)
-other_value=_b_.str.$factory(value)
-other_pos=value > 0}
-if($B.BigInt){return from_BigInt(to_BigInt(self)*to_BigInt(other))}
-var res=mul_pos(self.value,other_value)
-if(self.pos==other_pos){return intOrLong(res)}
-res.pos=false
-return intOrLong(res)}
-long_int.__ne__=function(self,other){var res=long_int.__eq__(self,other)
-return res===_b_.NotImplemented ? res :!res}
-long_int.__neg__=function(obj){return{__class__:long_int,value:obj.value,pos:! obj.pos}}
-long_int.__or__=function(self,other){other=long_int.$factory(other)
-var v1=long_int.__index__(self)
-var v2=long_int.__index__(other)
-if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
-var start=v1.length-v2.length
-var res=v1.substr(0,start)
-for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" ||v2.charAt(i)=="1"){res+="1"}
-else{res+="0"}}
-return intOrLong(long_int.$factory(res,2))}
-long_int.__pos__=function(self){return self}
-long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$from_int(power)}else if(isinstance(power,int)){
-power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! isinstance(power,long_int)){var msg="power must be an integer, not '"
-throw TypeError.$factory(msg+$B.class_name(power)+"'")}
-if(! power.pos){if(self.value=="1"){return self}
-return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
-if($B.BigInt){var s=$B.BigInt(self.value),b=$B.BigInt(1),x=$B.BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? $B.BigInt(z):
-$B.BigInt(z.value)
-if(z===undefined){return{
-__class__:long_int,value:(s**x).toString(),pos:true}}
-while(x > 0){if(x % $B.BigInt(2)==1){b=b*s}
-x=x/$B.BigInt(2)
-if(x > 0){s=s*s}
-if(z !==undefined){b=b % z}}
-return{__class__:long_int,value:b.toString(),pos:true}}
-var b={__class__:long_int,value:"1",pos:true},s=self,pow=power.value,temp
-while(true){if(typeof pow=="string" && parseInt(pow)< $B.max_int){pow=parseInt(pow)}
-if(pow==0){break}else if(typeof pow=="string"){if(parseInt(pow.charAt(pow.length-1))% 2==1){b=long_int.__mul__(b,s)}
-pow=long_int.__floordiv__(pow,2)}else{if(pow % 2==1){if(typeof b=="number" && typeof s=="number" &&
-(temp=b*s)< $B.max_int){b=temp}else{b=long_int.__mul__(long_int.$factory(b),long_int.$factory(s))}}
-pow=Math.floor(pow/2)}
-if(pow > 0){if(typeof s=="number" &&(temp=s*s)< $B.max_int){s=temp}else{s=long_int.$factory(s)
-s=long_int.__mul__(s,s)}}
-if(z !==undefined){b=long_int.__mod__(b,z)}}
-return intOrLong(b)}
-long_int.__rshift__=function(self,shift){if(window.BigInt){if(shift.__class__===long_int){shift=shift.value}
-return intOrLong(
-{__class__:long_int,value:(BigInt(self.value)>> BigInt(shift)).toString(),pos:self.pos}
-)}
-if(typeof shift=="number"){var pow2=Math.pow(2,shift)
-if(pow2 < $B.max_int){var res=divmod_by_safe_int(self.value,pow2)
-return intOrLong({__class__:long_int,value:res[0],pos:self.pos})}}
-shift=long_int.$factory(shift)
-if(shift.value=="0"){return self}
-var res=self.value
-while(true){res=divmod_pos(res,"2")[0].value
-if(res.value=="0"){break}
-shift=sub_pos(shift.value,"1")
-if(shift.value=="0"){break}}
-return intOrLong({__class__:long_int,value:res,pos:self.pos})}
-long_int.__str__=long_int.__repr__=function(self){var res=""
-if(! self.pos){res+='-'}
-return res+self.value}
-long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){other=other instanceof Number ? other :other.$brython_value
-return _b_.float.$factory(to_int(self)-other)}
-if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-if($B.BigInt){}
-var res
-if(self.pos && other.pos){switch(comp_pos(self.value,other.value)){case 1:
-res=sub_pos(self.value,other.value)
-break
-case 0:
-res={__class__:long_int,value:"0",pos:true}
-break
-case-1:
-res=sub_pos(other.value,self.value)
-res.pos=false
-break}
-return intOrLong(res)}else if(! self.pos && ! other.pos){switch(comp_pos(self.value,other.value)){case 1:
-res=sub_pos(self.value,other.value)
-res.pos=false
-break
-case 0:
-res={__class__:long_int,value:"0",pos:true}
-break
-case-1:
-res=sub_pos(other.value,self.value)
-break}
-return intOrLong(res)}else if(self.pos && ! other.pos){return intOrLong(add_pos(self.value,other.value))}else{res=add_pos(self.value,other.value)
-res.pos=false
-return intOrLong(res)}}
-long_int.__truediv__=function(self,other){if(isinstance(other,long_int)){return _b_.float.$factory(to_int(self)/to_int(other))}else if(isinstance(other,_b_.int)){return _b_.float.$factory(to_int(self)/other)}else if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)/other)}else{throw TypeError.$factory(
-"unsupported operand type(s) for /: 'int' and '"+
-$B.class_name(other)+"'")}}
-long_int.__xor__=function(self,other){other=long_int.$factory(other)
-var v1=long_int.__index__(self),v2=long_int.__index__(other)
-if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
-var start=v1.length-v2.length
-var res=v1.substr(0,start)
-for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="0"){res+="1"}
-else if(v1.charAt(start+i)=="0" && v2.charAt(i)=="1"){res+="1"}
-else{res+="0"}}
-return intOrLong(long_int.$factory(res,2))}
-long_int.bit_length=function(self){return binary(self).length}
-long_int.numerator=function(self){return self}
-long_int.denominator=function(self){return _b_.int.$factory(1)}
-long_int.imag=function(self){return _b_.int.$factory(0)}
-long_int.real=function(self){return self}
-long_int.to_base=function(self,base){
-if(base==2){return binary_pos(self.value)}
-var res="",v=self.value
-while(v > 0){var dm=divmod_pos(v,base.toString())
-res=parseInt(dm[1].value).toString(base)+res
-v=dm[0].value
-if(v==0){break}}
-return res}
-long_int.to_bytes=function(self,len,byteorder,signed){
-var res=[],v=self.value
-if(! $B.$bool(signed)&& ! self.pos){throw _b_.OverflowError.$factory("can't convert negative int to unsigned")}
-while(v > 0){var dm=divmod_pos(v,256)
-v=parseInt(dm[0].value)
-res.push(parseInt(dm[1].value))
-if(res.length > len){throw _b_.OverflowError.$factory("int too big to convert")}}
-while(res.length < len){res.push(0)}
-if(byteorder=='big'){res.reverse()}
-return _b_.bytes.$factory(res)}
-function digits(base){
-var is_digits={}
-for(var i=0;i < base;i++){if(i==10){break}
-is_digits[i]=true}
-if(base > 10){
-for(var i=0;i < base-10;i++){is_digits[String.fromCharCode(65+i)]=true
-is_digits[String.fromCharCode(97+i)]=true}}
-return is_digits}
-var MAX_SAFE_INTEGER=Math.pow(2,53)-1
-var MIN_SAFE_INTEGER=-MAX_SAFE_INTEGER
-function isSafeInteger(n){return(typeof n==="number" &&
-Math.round(n)===n &&
-MIN_SAFE_INTEGER <=n &&
-n <=MAX_SAFE_INTEGER)}
-function intOrLong(long){
-var v=parseInt(long.value)*(long.pos ? 1 :-1)
-if(v > MIN_SAFE_INTEGER && v < MAX_SAFE_INTEGER){return v}
-return long}
-long_int.$from_int=function(value){return{__class__:long_int,value:value.toString(),pos:value > 0}}
-long_int.$factory=function(value,base){if(arguments.length > 2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
-arguments.length+" given)")}
-if(base===undefined){base=10}
-else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.class_name(base)+
-"' object cannot be interpreted as an integer")}
-if(base < 0 ||base==1 ||base > 36){throw ValueError.$factory(
-"long_int.$factory() base must be >= 2 and <= 36")}
-if(typeof value=="number"){var pos=value >=0,value=Math.abs(value),res
-if(isSafeInteger(value)){res=long_int.$from_int(value)}
-else if(value.constructor==Number){var s=value.toString(),pos_exp=s.search("e")
-if(pos_exp >-1){var mant=s.substr(0,pos_exp),exp=parseInt(s.substr(pos_exp+1)),point=mant.search(/\./)
-if(point >-1){var nb_dec=mant.substr(point+1).length
-if(nb_dec > exp){var res=mant.substr(0,point)+
-mant.substr(point+1).substr(0,exp)
-res=long_int.$from_int(res)}else{var res=mant.substr(0,point)+
-mant.substr(point+1)+'0'.repeat(exp-nb_dec)
-res=long_int.$from_int(res)}}else{res=long_int.$from_int(mant+'0'.repeat(exp))}}else{var point=s.search(/\./)
-if(point >-1){res=long_int.$from_int(s.substr(0,point))}else{res=long_int.$from_int(s)}}}
-else{throw ValueError.$factory(
-"argument of long_int is not a safe integer")}
-res.pos=pos
-return res}else if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
-value===Number.NEGATIVE_INFINITY){return value}
-if(value >=0){value=new Number(Math.round(value.value))}
-else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf()){return int.$factory(1)}
-return int.$factory(0)}else if(value.__class__===long_int){return value}else if(isinstance(value,int)){
-value=value.$brython_value+""}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+""}else if(typeof value !="string"){throw ValueError.$factory(
-"argument of long_int must be a string, not "+
-$B.class_name(value))}
-var has_prefix=false,pos=true,start=0
-while(value.charAt(0)==" " && value.length){value=value.substr(1)}
-while(value.charAt(value.length-1)==" " && value.length){value=value.substr(0,value.length-1)}
-if(value.charAt(0)=="+"){has_prefix=true}
-else if(value.charAt(0)=="-"){has_prefix=true;pos=false}
-if(has_prefix){
-if(value.length==1){
-throw ValueError.$factory(
-'long_int argument is not a valid number: "'+value+'"')}else{value=value.substr(1)}}
-while(start < value.length-1 && value.charAt(start)=="0"){start++}
-value=value.substr(start)
-var is_digits=digits(base),point=-1
-for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}else if(false){
-var mant=value.substr(0,i)
-if(/^[+-]?\d+$/.exec(value.substr(i+1))){exp=parseInt(value.substr(i+1))}else{throw Error("wrong exp "+value.substr(i+1))}
-if(point !=-1){mant=mant.substr(0,point)+mant.substr(point+1)
-exp=exp+point-1}
-point=-1
-value=mant+"0".repeat(exp-mant.length)
-break}
-else if(! is_digits[value.charAt(i)]){throw ValueError.$factory(
-'long_int argument is not a valid number: "'+value+'"')}}
-if(point !=-1){value=value.substr(0,point)}
-if(base !=10){
-var coef="1",v10=long_int.$factory(0),ix=value.length
-while(ix--){var digit_base10=parseInt(value.charAt(ix),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
-v10=add_pos(v10.value,digit_by_coef)
-coef=mul_pos(coef,base.toString()).value}
-return v10}
-return{__class__:long_int,value:value,pos:pos}}
-function extended_euclidean_algorithm(a,b){
-var s=0,old_s=1,t=1,old_t=0,r=b,old_r=a,quotient,tmp
-while($B.rich_comp('__ne__',r,0)){quotient=$B.rich_op('floordiv',old_r,r)
-tmp=$B.rich_op('sub',old_r,$B.rich_op('mul',quotient,r))
-old_r=r
-r=tmp
-tmp=$B.rich_op('sub',old_s,$B.rich_op('mul',quotient,s))
-old_s=s
-s=tmp
-tmp=$B.rich_op('sub',old_t,$B.rich_op('mul',quotient,t))
-old_t=t
-t=tmp}
-return[old_r,old_s,old_t]}
-function inverse_of(n,p){
-var gcd,x,y
-[gcd,x,y]=extended_euclidean_algorithm(n,p)
-if($B.rich_comp('__ne__',gcd,1)){
-throw Error(
-`${n} has no multiplicative inverse '
-            'modulo ${p}`)}else{return $B.rich_op('mod',x,p)}}
-$B.inverse_of=inverse_of
-$B.set_func_names(long_int,"builtins")
-$B.long_int=long_int
-$B.fast_long_int=function(value,pos){return{__class__:$B.long_int,value:value,pos:pos}}})(__BRYTHON__)
-;
-;(function($B){var _b_=$B.builtins
-function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
-op+": '"+class1+"' and '"+class2+"'")}
-var complex={__class__:_b_.type,__dir__:_b_.object.__dir__,$infos:{__module__:"builtins",__name__:"complex"},$is_class:true,$native:true,$descriptors:{real:true,imag:true}}
-complex.__abs__=function(self){var _rf=isFinite(self.$real),_if=isFinite(self.$imag)
-if((_rf && isNaN(self.$imag))||(_if && isNaN(self.$real))||
-(isNaN(self.$imag)&& isNaN(self.$real))){return NaN}
-if(! _rf ||! _if){return Infinity}
-var mag=Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))
-if(!isFinite(mag)&& _rf && _if){
-throw _b_.OverflowError.$factory("absolute value too large")}
-return mag}
-complex.__add__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real+other.$real,self.$imag+other.$imag)}
-if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
-return make_complex($B.add(self.$real,other.valueOf()),self.$imag)}
-if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real+other.valueOf(),self.$imag)}
-return _b_.NotImplemented}
-complex.__bool__=function(self){return(self.$real !=0 ||self.$imag !=0)}
-complex.__complex__=function(self){return self}
-complex.__eq__=function(self,other){if(_b_.isinstance(other,complex)){return self.$real.valueOf()==other.$real.valueOf()&&
-self.$imag.valueOf()==other.$imag.valueOf()}
-if(_b_.isinstance(other,_b_.int)){if(self.$imag !=0){return false}
-return self.$real==other.valueOf()}
-if(_b_.isinstance(other,_b_.float)){if(self.$imag !=0){return false}
-return self.$real==other.valueOf()}
-return _b_.NotImplemented}
-complex.__hash__=function(self){
-return self.$imag*1000003+self.$real}
-complex.__init__=function(){return _b_.None}
-complex.__invert__=function(self){return ~self}
-complex.__mro__=[_b_.object]
-complex.__mul__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real*other.$real-self.$imag*other.$imag,self.$imag*other.$real+self.$real*other.$imag)}else if(_b_.isinstance(other,_b_.int)){return make_complex(self.$real*other.valueOf(),self.$imag*other.valueOf())}else if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real*other,self.$imag*other)}else if(_b_.isinstance(other,_b_.bool)){if(other.valueOf()){return self}
-return make_complex(0,0)}
-$UnsupportedOpType("*",complex,other)}
-complex.__ne__=function(self,other){var res=complex.__eq__(self,other)
-return res===_b_.NotImplemented ? res :! res}
-complex.__neg__=function(self){return make_complex(-self.$real,-self.$imag)}
-complex.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')}
-var res,missing={},args=$B.args("complex",3,{cls:null,real:null,imag:null},["cls","real","imag"],arguments,{real:0,imag:missing},null,null),$real=args.real,$imag=args.imag
-if(typeof $real=="string"){if($imag !==missing){throw _b_.TypeError.$factory("complex() can't take second arg "+
-"if first is a string")}else{var arg=$real
-$real=$real.trim()
-if($real.startsWith("(")&& $real.endsWith(")")){$real=$real.substr(1)
-$real=$real.substr(0,$real.length-1)}
-var complex_re=/^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
-var parts=complex_re.exec($real)
-function to_num(s){var res=parseFloat(s.charAt(0)+s.substr(1).replace(/_/g,""))
-if(isNaN(res)){throw _b_.ValueError.$factory("could not convert string "+
-"to complex: '"+arg+"'")}
-return res}
-if(parts===null){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_real]=="." ||parts[_imag]=="." ||
-parts[_real]==".e" ||parts[_imag]==".e" ||
-parts[_real]=="e" ||parts[_imag]=="e"){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){$real=0
-if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else{$imag=to_num(parts[_real])}}else{$real=to_num(parts[_real])
-$imag=parts[_imag]=="" ? 1 :to_num(parts[_imag])
-$imag=parts[_sign]=="-" ?-$imag :$imag}}else{$real=to_num(parts[_real])
-$imag=0}
-res={__class__:complex,$real:$real ||0,$imag:$imag ||0}
-return res}}
-$imag=$imag===missing ? 0 :$imag
-if(arguments.length==2 && $real.__class__===complex && $imag==0){return $real}
-if(_b_.isinstance($real,[_b_.float,_b_.int])&&
-_b_.isinstance($imag,[_b_.float,_b_.int])){res={__class__:complex,$real:$real,$imag:$imag}
-return res}
-var real_to_num=$B.to_num($real,["__complex__","__float__","__index__"])
-if(real_to_num===null){throw _b_.TypeError.$factory("complex() first argument must be a "+
-" string or a number, not '"+$B.class_name($real)+"'")}
-$real=real_to_num
-$imag=_convert($imag)
-if(! _b_.isinstance($real,_b_.float)&& ! _b_.isinstance($real,_b_.int)&&
-! _b_.isinstance($real,_b_.complex)){throw _b_.TypeError.$factory("complex() argument must be a string "+
-"or a number")}
-if(typeof $imag=="string"){throw _b_.TypeError.$factory("complex() second arg can't be a string")}
-if(! _b_.isinstance($imag,_b_.float)&& ! _b_.isinstance($imag,_b_.int)&&
-! _b_.isinstance($imag,_b_.complex)&& $imag !==missing){throw _b_.TypeError.$factory("complex() argument must be a string "+
-"or a number")}
-$imag=complex.__mul__(complex.$factory("1j"),$imag)
-return complex.__add__($imag,$real)}
-complex.__pos__=function(self){return self}
-function complex2expo(cx){var norm=Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),sin=cx.$imag/norm,cos=cx.$real/norm,angle
-if(cos==0){angle=sin==1 ? Math.PI/2 :3*Math.PI/2}
-else if(sin==0){angle=cos==1 ? 0 :Math.PI}
-else{angle=Math.atan(sin/cos)}
-return{norm:norm,angle:angle}}
-complex.__pow__=function(self,other){
-if(other==1){return self}
-var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
-if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
-var x=other.$real,y=other.$imag
-var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
-return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError.$factory("unsupported operand type(s) "+
-"for ** or pow(): 'complex' and '"+
-$B.class_name(other)+"'")}}
-complex.__radd__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
-if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other+self.$real,self.$imag)}
-return _b_.NotImplemented}
-complex.__repr__=function(self){$B.builtins_repr_check(complex,arguments)
-var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
-if(self.$real instanceof Number && self.$real==parseInt(self.$real)){real=_b_.str.$factory(parseInt(self.$real))}
-if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){imag=_b_.str.$factory(parseInt(self.$imag))
-if(self.$imag==0 && 1/self.$imag===-Infinity){imag="-0"}}
-if(self.$real==0){if(1/self.$real < 0){if(imag.startsWith('-')){return "-0"+imag+"j"}
-return "-0+"+imag+"j"}else{return imag+"j"}}
-if(self.$imag > 0 ||isNaN(self.$imag)){return "("+real+"+"+imag+"j)"}
-if(self.$imag==0){if(1/self.$imag < 0){return "("+real+"-0j)"}
-return "("+real+"+0j)"}
-return "("+real+"-"+_b_.str.$factory(-self.$imag)+"j)"}
-complex.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
-if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other*self.$real,other*self.$imag)}
-return _b_.NotImplemented}
-complex.__sqrt__=function(self){if(self.$imag==0){return complex(Math.sqrt(self.$real))}
-var r=self.$real,i=self.$imag,_a=Math.sqrt((r+sqrt)/2),_b=Number.sign(i)*Math.sqrt((-r+sqrt)/2)
-return make_complex(_a,_b)}
-complex.__sub__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real-other.$real,self.$imag-other.$imag)}
-if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
-return make_complex($B.sub(self.$real,other.valueOf()),self.$imag)}
-if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real-other.valueOf(),self.$imag)}
-return _b_.NotImplemented}
-complex.__truediv__=function(self,other){if(_b_.isinstance(other,complex)){if(other.$real==0 && other.$imag==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
-var _num=self.$real*other.$real+self.$imag*other.$imag,_div=other.$real*other.$real+other.$imag*other.$imag
-var _num2=self.$imag*other.$real-self.$real*other.$imag
-return make_complex(_num/_div,_num2/_div)}
-if(_b_.isinstance(other,_b_.int)){if(! other.valueOf()){throw _b_.ZeroDivisionError.$factory('division by zero')}
-return complex.__truediv__(self,complex.$factory(other.valueOf()))}
-if(_b_.isinstance(other,_b_.float)){if(! other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
-return complex.__truediv__(self,complex.$factory(other.valueOf()))}
-$UnsupportedOpType("//","complex",other.__class__)}
-complex.conjugate=function(self){return make_complex(self.$real,-self.$imag)}
-complex.__ior__=complex.__or__
-var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
-for(var r_opname of r_opnames){if(complex["__r"+r_opname+"__"]===undefined &&
-complex['__'+r_opname+'__']){complex["__r"+r_opname+"__"]=(function(name){return function(self,other){if(_b_.isinstance(other,[_b_.int,_b_.float])){other=make_complex(other,0)
-return complex["__"+name+"__"](other,self)}else if(_b_.isinstance(other,complex)){return complex["__"+name+"__"](other,self)}
-return _b_.NotImplemented}})(r_opname)}}
-var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){return _b_.NotImplemented}
-throw _b_.TypeError.$factory("TypeError: no ordering relation "+
-"is defined for complex numbers")}
-$comp_func+='' 
-for(var $op in $B.$comps){eval("complex.__"+$B.$comps[$op]+"__ = "+
-$comp_func.replace(/>/gm,$op))}
-complex.real=function(self){return new Number(self.$real)}
-complex.real.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
-complex.imag=function(self){return new Number(self.$imag)}
-complex.imag.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
-var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
-var type_conversions=["__complex__","__float__","__index__"]
-var _convert=function(num){var klass=num.__class__ ||$B.get_class(num)
-for(var i=0;i < type_conversions.length;i++){var missing={},method=$B.$getattr(klass,type_conversions[i],missing)
-if(method !==missing){return method(num)}}
-return null}
-var make_complex=$B.make_complex=function(real,imag){return{
-__class__:complex,$real:real,$imag:imag}}
-complex.$factory=function(){return complex.__new__(complex,...arguments)}
-$B.set_func_names(complex,"builtins")
-_b_.complex=complex})(__BRYTHON__)
-;
-;(function($B){
-var DEFAULT_MIN_MERGE=32
-var DEFAULT_MIN_GALLOPING=7
-var DEFAULT_TMP_STORAGE_LENGTH=256
-var POWERS_OF_TEN=[1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
-function log10(x){if(x < 1e5){if(x < 1e2){return x < 1e1 ? 0 :1}
-if(x < 1e4){return x < 1e3 ? 2 :3}
-return 4}
-if(x < 1e7){return x < 1e6 ? 5 :6}
-if(x < 1e9){return x < 1e8 ? 7 :8}
-return 9}
-function alphabeticalCompare(a,b){if(a===b){return 0}
-if(~~a===a && ~~b===b){if(a===0 ||b===0){return a < b ?-1 :1}
-if(a < 0 ||b < 0){if(b >=0){return-1}
-if(a >=0){return 1}
-a=-a
-b=-b}
-al=log10(a)
-bl=log10(b)
-var t=0
-if(al < bl){a*=POWERS_OF_TEN[bl-al-1]
-b/=10
-t=-1}else if(al > bl){b*=POWERS_OF_TEN[al-bl-1]
-a/=10;
-t=1;}
-if(a===b){return t}
-return a < b ?-1 :1}
-var aStr=String(a)
-var bStr=String(b)
-if(aStr===bStr){return 0}
-return aStr < bStr ?-1 :1}
-function minRunLength(n){var r=0
-while(n >=DEFAULT_MIN_MERGE){r |=(n & 1)
-n >>=1}
-return n+r}
-function makeAscendingRun(array,lo,hi,compare){var runHi=lo+1
-if(runHi===hi){return 1;}
-if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi-1])< 0){runHi++}
-reverseRun(array,lo,runHi)}else{while(runHi < hi && compare(array[runHi],array[runHi-1])>=0){runHi++}}
-return runHi-lo}
-function reverseRun(array,lo,hi){hi--
-while(lo < hi){var t=array[lo]
-array[lo++]=array[hi]
-array[hi--]=t}}
-function binaryInsertionSort(array,lo,hi,start,compare){if(start===lo){start++}
-for(;start < hi;start++){var pivot=array[start]
-var left=lo
-var right=start
-while(left < right){var mid=(left+right)>>> 1
-if(compare(pivot,array[mid])< 0){right=mid}else{left=mid+1}}
-var n=start-left
-switch(n){case 3:
-array[left+3]=array[left+2]
-case 2:
-array[left+2]=array[left+1]
-case 1:
-array[left+1]=array[left]
-break;
-default:
-while(n > 0){array[left+n]=array[left+n-1]
-n--;}}
-array[left]=pivot}}
-function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
-if(compare(value,array[start+hint])> 0){maxOffset=length-hint
-while(offset < maxOffset && compare(value,array[start+hint+offset])> 0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-lastOffset+=hint
-offset+=hint}else{maxOffset=hint+1
-while(offset < maxOffset && compare(value,array[start+hint-offset])<=0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-var tmp=lastOffset
-lastOffset=hint-offset
-offset=hint-tmp}
-lastOffset++
-while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
-if(compare(value,array[start+m])> 0){lastOffset=m+1}else{offset=m}}
-return offset}
-function gallopRight(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
-if(compare(value,array[start+hint])< 0){maxOffset=hint+1
-while(offset < maxOffset && compare(value,array[start+hint-offset])< 0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-var tmp=lastOffset
-lastOffset=hint-offset
-offset=hint-tmp}else{maxOffset=length-hint
-while(offset < maxOffset && compare(value,array[start+hint+offset])>=0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-lastOffset+=hint
-offset+=hint}
-lastOffset++
-while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
-if(compare(value,array[start+m])< 0){offset=m}else{lastOffset=m+1}}
-return offset}
-var TIM_SORT_ASSERTION="TimSortAssertion"
-var TimSortAssertion=function(message){this.name=TIM_SORT_ASSERTION
-this.message=message}
-var TimSort=function(array,compare){var self={array:array,compare:compare,minGallop:DEFAULT_MIN_GALLOPING,length :array.length,tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,stackLength:0,runStart:null,runLength:null,stackSize:0,
-pushRun:function(runStart,runLength){this.runStart[this.stackSize]=runStart
-this.runLength[this.stackSize]=runLength
-this.stackSize+=1},
-mergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
-if((n >=1 && this.runLength[n-1]<=
-this.runLength[n]+this.runLength[n+1])||
-(n >=2 && this.runLength[n-2]<=
-this.runLength[n]+this.runLength[n-1])){if(this.runLength[n-1]< this.runLength[n+1]){n--}}else if(this.runLength[n]> this.runLength[n+1]){break}
-this.mergeAt(n)}},
-forceMergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
-if(n > 0 && this.runLength[n-1]< this.runLength[n+1]){n--}
-this.mergeAt(n)}},
-mergeAt:function(i){var compare=this.compare,array=this.array,start1=this.runStart[i],length1=this.runLength[i],start2=this.runStart[i+1],length2=this.runLength[i+1]
-this.runLength[i]=length1+length2
-if(i===this.stackSize-3){this.runStart[i+1]=this.runStart[i+2]
-this.runLength[i+1]=this.runLength[i+2]}
-this.stackSize--;
-var k=gallopRight(array[start2],array,start1,length1,0,compare)
-start1+=k
-length1-=k
-if(length1===0){return}
-length2=gallopLeft(array[start1+length1-1],array,start2,length2,length2-1,compare)
-if(length2===0){return}
-if(length1 <=length2){this.mergeLow(start1,length1,start2,length2)}else{this.mergeHigh(start1,length1,start2,length2)}},
-mergeLow:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
-for(var i=0;i < length1;i++){tmp[i]=array[start1+i]}
-var cursor1=0,cursor2=start2,dest=start1
-array[dest++]=array[cursor2++]
-if(--length2===0){for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}
-return}
-if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
-array[dest+length2]=tmp[cursor1]
-return}
-var minGallop=this.minGallop
-while(true){var count1=0,count2=0,exit=false
-do{if(compare(array[cursor2],tmp[cursor1])< 0){array[dest++]=array[cursor2++]
-count2++
-count1=0
-if(--length2===0){exit=true
-break}}else{array[dest++]=tmp[cursor1++]
-count1++
-count2=0
-if(--length1===1){exit=true
-break}}}while((count1 |count2)< minGallop)
-if(exit){break}
-do{
-count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare)
-if(count1 !==0){for(var i=0;i < count1;i++){array[dest+i]=tmp[cursor1+i]}
-dest+=count1
-cursor1+=count1
-length1-=count1
-if(length1 <=1){exit=true
-break}}
-array[dest++]=array[cursor2++]
-if(--length2===0){exit=true
-break}
-count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare)
-if(count2 !==0){for(var i=0;i < count2;i++){array[dest+i]=array[cursor2+i]}
-dest+=count2
-cursor2+=count2
-length2-=count2
-if(length2===0){exit=true
-break}}
-array[dest++]=tmp[cursor1++]
-if(--length1===1){exit=true
-break}
-minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||
-count2 >=DEFAULT_MIN_GALLOPING);
-if(exit){break}
-if(minGallop < 0){minGallop=0}
-minGallop+=2}
-this.minGallop=minGallop
-if(minGallop < 1){this.minGallop=1}
-if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
-array[dest+length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}}},
-mergeHigh:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
-for(var i=0;i < length2;i++){tmp[i]=array[start2+i]}
-var cursor1=start1+length1-1,cursor2=length2-1,dest=start2+length2-1,customCursor=0,customDest=0
-array[dest--]=array[cursor1--]
-if(--length1===0){customCursor=dest-(length2-1)
-for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}
-return}
-if(length2===1){dest-=length1
-cursor1-=length1
-customDest=dest+1
-customCursor=cursor1+1
-for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
-array[dest]=tmp[cursor2]
-return}
-var minGallop=this.minGallop
-while(true){var count1=0,count2=0,exit=false
-do{if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--]
-count1++
-count2=0
-if(--length1===0){exit=true
-break}}else{array[dest--]=tmp[cursor2--]
-count2++
-count1=0
-if(--length2===1){exit=true
-break}}}while((count1 |count2)< minGallop)
-if(exit){break}
-do{count1=length1-gallopRight(tmp[cursor2],array,start1,length1,length1-1,compare)
-if(count1 !==0){dest-=count1
-cursor1-=count1
-length1-=count1
-customDest=dest+1
-customCursor=cursor1+1
-for(var i=count1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
-if(length1===0){exit=true
-break}}
-array[dest--]=tmp[cursor2--]
-if(--length2===1){exit=true
-break}
-count2=length2-gallopLeft(array[cursor1],tmp,0,length2,length2-1,compare)
-if(count2 !==0){dest-=count2
-cursor2-=count2
-length2-=count2
-customDest=dest+1
-customCursor=cursor2+1
-for(var i=0;i < count2;i++){array[customDest+i]=tmp[customCursor+i]}
-if(length2 <=1){exit=true
-break}}
-array[dest--]=array[cursor1--]
-if(--length1===0){exit=true
-break}
-minGallop--}while(count1 >=DEFAULT_MIN_GALLOPING ||
-count2 >=DEFAULT_MIN_GALLOPING)
-if(exit){break}
-if(minGallop < 0){minGallop=0}
-minGallop+=2}
-this.minGallop=minGallop
-if(minGallop < 1){this.minGallop=1}
-if(length2===1){dest-=length1
-cursor1-=length1
-customDest=dest+1
-customCursor=cursor1+1
-for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
-array[dest]=tmp[cursor2]}else if(length2==0){throw new TimSortAssertion("mergeHigh preconditions were not respected")}else{customCursor=dest-(length2-1)
-for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}}}}
-if(self.length < 2*DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1}
-self.tmp=new Array(self.tmpStorageLength)
-self.stackLength=
-(self.length < 120 ? 5 :
-self.length < 1542 ? 10 :
-self.length < 119151 ? 19 :40)
-self.runStart=new Array(self.stackLength)
-self.runLength=new Array(self.stackLength)
-return self}
-function tim_sort(array,compare,lo,hi){if(!Array.isArray(array)){throw TypeError.$factory("Can only sort arrays")}
-if(!compare){compare=alphabeticalCompare}else if(typeof compare !=="function"){hi=lo
-lo=compare
-compare=alphabeticalCompare}
-if(!lo){lo=0}
-if(!hi){hi=array.length}
-var remaining=hi-lo
-if(remaining < 2){return}
-var runLength=0
-if(remaining < DEFAULT_MIN_MERGE){runLength=makeAscendingRun(array,lo,hi,compare)
-binaryInsertionSort(array,lo,hi,lo+runLength,compare)
-return}
-var ts=new TimSort(array,compare)
-var minRun=minRunLength(remaining)
-do{runLength=makeAscendingRun(array,lo,hi,compare)
-if(runLength < minRun){var force=remaining
-if(force > minRun){force=minRun}
-binaryInsertionSort(array,lo,lo+force,lo+runLength,compare)
-runLength=force}
-ts.pushRun(lo,runLength)
-ts.mergeRuns()
-remaining-=runLength
-lo+=runLength}while(remaining !==0)
-ts.forceMergeRuns()}
-function tim_sort_safe(array,compare){
-try{
-tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
-throw e;}}}
-$B.$TimSort=tim_sort_safe
-$B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
-;
-;(function($B){var _b_=$B.builtins,object=_b_.object,getattr=$B.$getattr,isinstance=_b_.isinstance,$N=_b_.None
-function check_not_tuple(self,attr){if(self.__class__===tuple){throw _b_.AttributeError.$factory(
-"'tuple' object has no attribute '"+attr+"'")}}
-function $list(){
-return list.$factory.apply(null,arguments)}
-var list={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"list"},$is_class:true,$native:true,$match_sequence_pattern:true,
-__dir__:object.__dir__}
-list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var this_name=$B.class_name(self)
-var radd=$B.$getattr(other,'__radd__',null)
-if(radd===null){throw _b_.TypeError.$factory('can only concatenate '+
-this_name+' (not "'+$B.class_name(other)+
-'") to '+this_name)}
-return _b_.NotImplemented}
-var res=self.slice(),is_js=other.$brython_class=="js" 
-for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
-res.__brython__=true
-if(isinstance(self,tuple)){res=tuple.$factory(res)}
-return res}
-list.__class_getitem__=function(cls,item){
-if(! Array.isArray(item)){item=[item]}
-return $B.GenericAlias.$factory(cls,item)}
-list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
-var _eq=function(other){return $B.rich_comp("__eq__",item,other)}
-var i=0
-while(i < self.length){if(_eq(self[i])){return true}
-i++}
-return false}
-list.__delitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
-if(arg < 0){pos=self.length+pos}
-if(pos >=0 && pos < self.length){self.splice(pos,1)
-return $N}
-throw _b_.IndexError.$factory($B.class_name(self)+
-" index out of range")}
-if(isinstance(arg,_b_.slice)){var step=arg.step
-if(step===$N){step=1}
-var start=arg.start
-if(start===$N){start=step > 0 ? 0 :self.length}
-var stop=arg.stop
-if(stop===$N){stop=step > 0 ? self.length :0}
-if(start < 0){start=self.length+start}
-if(stop < 0){stop=self.length+stop}
-var res=[],i=null,pos=0
-if(step > 0){if(stop > start){for(var i=start;i < stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}}}else{if(stop < start){for(var i=start;i > stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}
-res.reverse()}}
-var i=res.length
-while(i--){self.splice(res[i],1)}
-return $N}
-if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__delitem__(self,_b_.int.$factory(arg))
-return $N}
-throw _b_.TypeError.$factory($B.class_name(self)+
-" indices must be integer, not "+$B.class_name(arg))}
-list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{var klass=tuple}
-if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
-while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
-return true}}
-return _b_.NotImplemented}
-list.__getitem__=function(self,key){
-$B.check_no_kw("__getitem__",self,key)
-$B.check_nb_args("__getitem__",2,arguments)
-return list.$getitem(self,key)}
-list.$getitem=function(self,key){var klass=(self.__class__ ||$B.get_class(self))
-var factory=function(list_res){list_res.__class__=klass
-return list_res}
-var int_key
-try{int_key=$B.PyNumber_Index(key)}catch(err){}
-if(int_key !==undefined){var items=self.valueOf(),pos=int_key
-if(int_key < 0){pos=items.length+pos}
-if(pos >=0 && pos < items.length){return items[pos]}
-throw _b_.IndexError.$factory($B.class_name(self)+
-" index out of range")}
-if(key.__class__===_b_.slice ||isinstance(key,_b_.slice)){
-if(key.start===_b_.None && key.stop===_b_.None &&
-key.step===_b_.None){return self.slice()}
-var s=_b_.slice.$conv_for_seq(key,self.length)
-var res=[],i=null,items=self.valueOf(),pos=0,start=s.start,stop=s.stop,step=s.step
-if(step > 0){if(stop <=start){return factory(res)}
-for(var i=start;i < stop;i+=step){res[pos++]=items[i]}
-return factory(res)}else{if(stop > start){return factory(res)}
-for(var i=start;i > stop;i+=step){res[pos++]=items[i]}
-return factory(res)}}
-throw _b_.TypeError.$factory($B.class_name(self)+
-" indices must be integer, not "+$B.class_name(key))}
-list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
-var i=0
-while(i < self.length){if(i >=other.length){return true}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{res=getattr(self[i],"__ge__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(self[i])+"() >= "+
-$B.class_name(other[i])+"()")}else{return res}}}
-return other.length==self.length}
-list.__gt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
-var i=0
-while(i < self.length){if(i >=other.length){return true}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{res=getattr(self[i],"__gt__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(self[i])+"() > "+
-$B.class_name(other[i])+"()")}else return res}}
-return false}
-list.__hash__=$N
-list.__iadd__=function(){var $=$B.args("__iadd__",2,{self:null,x:null},["self","x"],arguments,{},null,null)
-var x=list.$factory($B.$iter($.x))
-for(var i=0;i < x.length;i++){$.self.push(x[i])}
-return $.self}
-list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","x"],arguments,{},null,null),x=$B.$GetInt($.x),len=$.self.length,pos=len
-if(x==0){list.clear($.self);return $.self}
-for(var i=1;i < x;i++){for(j=0;j < len;j++){$.self[pos++]=$.self[j]}}
-return $.self}
-list.__init__=function(self,arg){var $=$B.args('__init__',1,{self:null},['self'],arguments,{},'args',null),self=$.self,args=$.args
-if(args.length > 1){throw _b_.TypeError.$factory('expected at most 1 argument, got '+
-args.length)}
-var arg=args[0]
-var len_func=$B.$call($B.$getattr(self,"__len__")),pop_func=$B.$getattr(self,"pop",$N)
-if(pop_func !==$N){pop_func=$B.$call(pop_func)
-while(len_func()){pop_func()}}
-if(arg===undefined){return $N}
-var arg=$B.$iter(arg),next_func=$B.$call($B.$getattr(arg,"__next__")),pos=len_func()
-while(1){try{var res=next_func()
-self[pos++]=res}catch(err){if(err.__class__===_b_.StopIteration){break}
-else{throw err}}}
-return $N}
-var list_iterator=$B.make_iterator_class("list_iterator")
-list_iterator.__reduce__=list_iterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
-list.__iter__=function(self){return list_iterator.$factory(self)}
-list.__le__=function(self,other){var res=list.__ge__(self,other)
-if(res===_b_.NotImplemented){return res}
-return ! res}
-list.__len__=function(self){return self.length}
-list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
-var i=0
-while(i < self.length){if(i >=other.length){return false}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}else{res=getattr(self[i],"__lt__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(self[i])+"() >= "+
-$B.class_name(other[i])+"()")}else{return res}}}
-return other.length > self.length}
-list.__mul__=function(self,other){if(isinstance(other,_b_.int)){other=_b_.int.numerator(other)
-var res=[],$temp=self.slice(),len=$temp.length
-for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
-res.__class__=self.__class__
-return res}
-if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
-var rmul=$B.$getattr(other,'__rmul__',null)
-if(rmul===null){throw _b_.TypeError.$factory(`can't multiply sequence by non-int `+
-`of type '${$B.class_name(other)}'`)}
-return _b_.NotImplemented}
-list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
-var res=[]
-res.__class__=cls
-res.__brython__=true
-res.__dict__=$B.empty_dict()
-return res}
-function __newobj__(){
-var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
-var res=args.slice(1)
-res.__class__=args[0]
-return res}
-list.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__]),_b_.None,_b_.iter(self)])}
-list.__repr__=function(self){$B.builtins_repr_check(list,arguments)
-return list_repr(self)}
-function list_repr(self){
-if($B.repr.enter(self)){
-return '[...]'}
-var _r=[],res
-for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
-if(_b_.isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
-$B.repr.leave(self)
-return res}
-list.__rmul__=function(self,other){return list.__mul__(self,other)}
-list.__setattr__=function(self,attr,value){if(self.__class__===list ||self.__class__===tuple){var cl_name=$B.class_name(self)
-if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'"+cl_name+
-"' object attribute '"+attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
-"'"+cl_name+" object has no attribute '"+attr+"'")}}
-_b_.dict.$setitem(self.__dict__,attr,value)
-return $N}
-list.__setitem__=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
-list.$setitem(self,arg,value)}
-list.$setitem=function(self,arg,value){
-if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=arg
-if(arg < 0){pos=self.length+pos}
-if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list index out of range")}
-return $N}
-if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
-if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
-return $N}
-if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
-return $N}
-throw _b_.TypeError.$factory("list indices must be integer, not "+
-$B.class_name(arg))}
-list.append=function(self,x){$B.check_no_kw("append",self,x)
-$B.check_nb_args("append",2,arguments)
-self.push(x)
-return $N}
-list.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
-while($.self.length){$.self.pop()}
-return $N}
-list.copy=function(){var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null)
-return $.self.slice()}
-list.count=function(){var $=$B.args("count",2,{self:null,x:null},["self","x"],arguments,{},null,null)
-var res=0,_eq=function(other){return $B.rich_comp("__eq__",$.x,other)},i=$.self.length
-while(i--){if(_eq($.self[i])){res++}}
-return res}
-list.extend=function(){var $=$B.args("extend",2,{self:null,t:null},["self","t"],arguments,{},null,null)
-var other=list.$factory($B.$iter($.t))
-for(var i=0;i < other.length;i++){$.self.push(other[i])}
-return $N}
-list.index=function(){var missing={},$=$B.args("index",4,{self:null,x:null,start:null,stop:null},["self","x","start" ,"stop"],arguments,{start:0,stop:missing},null,null),self=$.self,start=$.start,stop=$.stop
-var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
-if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 :-1)}
-if(start < 0){start=Math.max(0,start+self.length)}
-if(stop===missing){stop=self.length}
-else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 :-1)}
-if(stop < 0){stop=Math.min(self.length,stop+self.length)}
-stop=Math.min(stop,self.length)}
-for(var i=start;i < stop;i++){if(_eq(self[i])){return i}}
-throw _b_.ValueError.$factory(_b_.repr($.x)+" is not in "+
-$B.class_name(self))}
-list.insert=function(){var $=$B.args("insert",3,{self:null,i:null,item:null},["self","i","item"],arguments,{},null,null)
-$.self.splice($.i,0,$.item)
-return $N}
-list.pop=function(){var missing={}
-var $=$B.args("pop",2,{self:null,pos:null},["self","pos"],arguments,{pos:missing},null,null),self=$.self,pos=$.pos
-check_not_tuple(self,"pop")
-if(pos===missing){pos=self.length-1}
-pos=$B.$GetInt(pos)
-if(pos < 0){pos+=self.length}
-var res=self[pos]
-if(res===undefined){throw _b_.IndexError.$factory("pop index out of range")}
-self.splice(pos,1)
-return res}
-list.remove=function(){var $=$B.args("remove",2,{self:null,x:null},["self","x"],arguments,{},null,null)
-for(var i=0,len=$.self.length;i < len;i++){if($B.rich_comp("__eq__",$.self[i],$.x)){$.self.splice(i,1)
-return $N}}
-throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
-list.reverse=function(self){var $=$B.args("reverse",1,{self:null},["self"],arguments,{},null,null),_len=$.self.length-1,i=parseInt($.self.length/2)
-while(i--){var buf=$.self[i]
-$.self[i]=$.self[_len-i]
-$.self[_len-i]=buf}
-return $N}
-function $partition(arg,array,begin,end,pivot)
-{var piv=array[pivot]
-array=swap(array,pivot,end-1)
-var store=begin
-if(arg===null){if(array.$cl !==false){
-var le_func=_b_.getattr(array.$cl,"__le__")
-for(var ix=begin;ix < end-1;++ix){if(le_func(array[ix],piv)){array=swap(array,store,ix);
-++store}}}else{for(var ix=begin;ix < end-1;++ix){if(getattr(array[ix],"__le__")(piv)){array=swap(array,store,ix)
-++store}}}}else{var len=array.length
-for(var ix=begin;ix < end-1;++ix){var x=arg(array[ix])
-if(array.length !==len){throw _b_.ValueError.$factory("list modified during sort")}
-if(getattr(x,"__le__")(arg(piv))){array=swap(array,store,ix)
-++store}}}
-array=swap(array,end-1,store)
-return store}
-function swap(_array,a,b){var tmp=_array[a]
-_array[a]=_array[b]
-_array[b]=tmp
-return _array}
-function $qsort(arg,array,begin,end){if(end-1 > begin){var pivot=begin+Math.floor(Math.random()*(end-begin))
-pivot=$partition(arg,array,begin,end,pivot)
-$qsort(arg,array,begin,pivot)
-$qsort(arg,array,pivot+1,end)}}
-function $elts_class(self){
-if(self.length==0){return null}
-var cl=$B.get_class(self[0]),i=self.length
-while(i--){if($B.get_class(self[i])!==cl){return false}}
-return cl}
-list.sort=function(self){var $=$B.args("sort",1,{self:null},["self"],arguments,{},null,"kw")
-check_not_tuple(self,"sort")
-var func=$N,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
-for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]][0]}else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]][0]}else{throw _b_.TypeError.$factory("'"+keys[i]+
-"' is an invalid keyword argument for this function")}}
-if(self.length==0){return}
-if(func !==$N){func=$B.$call(func)}
-self.$cl=$elts_class(self)
-var cmp=null;
-if(func===$N && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===$N && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{cmp=function(a,b){return a-b}}}else{if(func===$N){if(reverse){cmp=function(b,a){res=getattr(a,"__lt__")(b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(b)+"() < "+
-$B.class_name(a)+"()")}
-if(res){if(a==b){return 0}
-return-1}
-return 1}}else{cmp=function(a,b){res=getattr(a,"__lt__")(b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(a)+"() < "+
-$B.class_name(b)+"()")}
-if(res){if(a==b){return 0}
-return-1}
-return 1}}}else{if(reverse){cmp=function(b,a){var _a=func(a),_b=func(b)
-res=getattr(_a,"__lt__")(_b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(b)+"() < "+
-$B.class_name(a)+"()")}
-if(res){if(_a==_b){return 0}
-return-1}
-return 1}}else{cmp=function(a,b){var _a=func(a),_b=func(b)
-res=$B.$getattr(_a,"__lt__")(_b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(a)+"() < "+
-$B.class_name(b)+"()")}
-if(res){if(_a==_b){return 0}
-return-1}
-return 1}}}}
-$B.$TimSort(self,cmp)
-return(self.__brython__ ? $N :self)}
-$B.$list=function(t){t.__brython__=true
-t.__class__=_b_.list
-return t}
-list.$factory=function(){if(arguments.length==0){return[]}
-var $=$B.args("list",1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
-if(Array.isArray(obj)){
-obj=obj.slice()
-obj.__brython__=true;
-if(obj.__class__==tuple){var res=obj.slice()
-res.__class__=list
-return res}
-return obj}
-var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,"__next__"))
-while(1){try{res[pos++]=next_func()}catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
-break}}
-res.__brython__=true 
-return res}
-$B.set_func_names(list,"builtins")
-list.__class_getitem__=_b_.classmethod.$factory(list.__class_getitem__)
-var JSArray=$B.JSArray=$B.make_class("JSArray",function(array){return{
-__class__:JSArray,js:array}}
-)
-JSArray.__repr__=JSArray.__str__=function(){return "<JSArray object>"}
-function make_args(args){var res=[args[0].js]
-for(var i=1,len=args.length;i < len;i++){res.push(args[i])}
-return res}
-for(var attr in list){if($B.JSArray[attr]!==undefined){continue}
-if(typeof list[attr]=="function"){$B.JSArray[attr]=(function(fname){return function(){return $B.$JS2Py(list[fname].apply(null,make_args(arguments)))}})(attr)}}
-$B.set_func_names($B.JSArray,"builtins")
-function $tuple(arg){return arg}
-var tuple={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"tuple"},$is_class:true,$native:true,$match_sequence_pattern:true,}
-var tuple_iterator=$B.make_iterator_class("tuple_iterator")
-tuple.__iter__=function(self){return tuple_iterator.$factory(self)}
-tuple.$factory=function(){var obj=list.$factory(...arguments)
-obj.__class__=tuple
-return obj}
-$B.fast_tuple=function(array){array.__class__=tuple
-array.__brython__=true
-array.__dict__=$B.empty_dict()
-return array}
-for(var attr in list){switch(attr){case "__delitem__":
-case "__iadd__":
-case "__imul__":
-case "__setitem__":
-case "append":
-case "extend":
-case "insert":
-case "remove":
-case "reverse":
-break
-default:
-if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}}}}
-tuple.__eq__=function(self,other){
-if(other===undefined){return self===tuple}
-return list.__eq__(self,other)}
-function c_mul(a,b){s=((parseInt(a)*b)& 0xFFFFFFFF).toString(16)
-return parseInt(s.substr(0,s.length-1),16)}
-tuple.__hash__=function(self){
-var x=0x3456789
-for(var i=0,len=self.length;i < len;i++){var y=_b_.hash(self[i])
-x=c_mul(1000003,x)^ y & 0xFFFFFFFF}
-return x}
-tuple.__init__=function(){
-return $N}
-tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
-var self=[]
-self.__class__=cls
-self.__brython__=true
-self.__dict__=$B.empty_dict()
-var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,"__next__"))
-while(1){try{var item=next_func()
-self.push(item)}
-catch(err){if(err.__class__===_b_.StopIteration){break}
-else{throw err}}}
-return self}
-tuple.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__].concat(self.slice())),_b_.None,_b_.None])}
-tuple.__repr__=function(self){$B.builtins_repr_check(tuple,arguments)
-return list_repr(self)}
-$B.set_func_names(tuple,"builtins")
-_b_.list=list
-_b_.tuple=tuple
-_b_.object.__bases__=tuple.$factory()
-_b_.type.__bases__=$B.fast_tuple([_b_.object])})(__BRYTHON__)
-;
 
 var $B=__BRYTHON__
 $B.unicode={"Cc":[[0,32],[127,33]],"Zs":[32,160,5760,[8192,11],8239,8287,12288],"Po":[[33,3],[37,3],[42,3,2],47,58,59,63,64,92,161,167,182,183,191,894,903,[1370,6],1417,[1472,3,3],1523,1524,1545,1546,1548,1549,1563,1566,1567,[1642,4],1748,[1792,14],[2039,3],[2096,15],2142,2404,2405,2416,2557,2678,2800,3191,3204,3572,3663,3674,3675,[3844,15],3860,3973,[4048,5],4057,4058,[4170,6],4347,[4960,9],5742,[5867,3],5941,5942,[6100,3],[6104,3],[6144,6],[6151,4],6468,6469,6686,6687,[6816,7],[6824,6],[7002,7],[7164,4],[7227,5],7294,7295,[7360,8],7379,8214,8215,[8224,8],[8240,9],[8251,4],[8257,3],[8263,11],8275,[8277,10],[11513,4],11518,11519,11632,11776,11777,[11782,3],11787,[11790,9],11800,11801,11803,11806,11807,[11818,5],[11824,10],[11836,4],11841,[11843,13],11858,[12289,3],12349,12539,42238,42239,[42509,3],42611,42622,[42738,6],[43124,4],43214,43215,[43256,3],43260,43310,43311,43359,[43457,13],43486,43487,[43612,4],43742,43743,43760,43761,44011,[65040,7],65049,65072,65093,65094,[65097,4],[65104,3],[65108,4],[65119,3],65128,65130,65131,[65281,3],[65285,3],[65290,3,2],65295,65306,65307,65311,65312,65340,65377,65380,65381,[65792,3],66463,66512,66927,67671,67871,67903,[68176,9],68223,[68336,7],[68409,7],[68505,4],[69461,5],[69703,7],69819,69820,[69822,4],[69952,4],70004,70005,[70085,4],70093,70107,[70109,3],[70200,6],70313,[70731,5],70746,70747,70749,70854,[71105,23],[71233,3],[71264,13],[71484,3],71739,[72004,3],72162,[72255,8],[72346,3],[72350,5],[72769,5],72816,72817,73463,73464,73727,[74864,5],92782,92783,92917,[92983,5],92996,[93847,4],94178,113823,[121479,5],125278,125279],"Sc":[36,[162,4],1423,1547,2046,2047,2546,2547,2555,2801,3065,3647,6107,[8352,32],43064,65020,65129,65284,65504,65505,65509,65510,[73693,4],123647,126128],"Ps":[40,91,123,3898,3900,5787,8218,8222,8261,8317,8333,8968,8970,9001,[10088,7,2],10181,[10214,5,2],[10627,11,2],10712,10714,10748,[11810,4,2],11842,[12296,5,2],[12308,4,2],12317,64831,65047,[65077,8,2],65095,[65113,3,2],65288,65339,65371,65375,65378],"Pe":[41,93,125,3899,3901,5788,8262,8318,8334,8969,8971,9002,[10089,7,2],10182,[10215,5,2],[10628,11,2],10713,10715,10749,[11811,4,2],[12297,5,2],[12309,4,2],12318,12319,64830,65048,[65078,8,2],65096,[65114,3,2],65289,65341,[65373,3,3]],"Sm":[43,[60,3],124,126,172,177,215,247,1014,[1542,3],8260,8274,[8314,3],[8330,3],8472,[8512,5],8523,[8592,5],8602,8603,[8608,3,3],8622,8654,8655,8658,8660,[8692,268],8992,8993,9084,[9115,25],[9180,6],9655,9665,[9720,8],9839,[10176,5],[10183,31],[10224,16],[10496,131],[10649,63],[10716,32],[10750,258],[11056,21],[11079,6],64297,65122,[65124,3],65291,[65308,3],65372,65374,65506,[65513,4],120513,120539,120571,120597,120629,120655,120687,120713,120745,120771,126704,126705],"Pd":[45,1418,1470,5120,6150,[8208,6],11799,11802,11834,11835,11840,12316,12336,12448,65073,65074,65112,65123,65293,69293],"Nd":[[48,10],[1632,10],[1776,10],[1984,10],[2406,10],[2534,10],[2662,10],[2790,10],[2918,10],[3046,10],[3174,10],[3302,10],[3430,10],[3558,10],[3664,10],[3792,10],[3872,10],[4160,10],[4240,10],[6112,10],[6160,10],[6470,10],[6608,10],[6784,10],[6800,10],[6992,10],[7088,10],[7232,10],[7248,10],[42528,10],[43216,10],[43264,10],[43472,10],[43504,10],[43600,10],[44016,10],[65296,10],[66720,10],[68912,10],[69734,10],[69872,10],[69942,10],[70096,10],[70384,10],[70736,10],[70864,10],[71248,10],[71360,10],[71472,10],[71904,10],[72016,10],[72784,10],[73040,10],[73120,10],[92768,10],[93008,10],[120782,50],[123200,10],[123632,10],[125264,10],[130032,10]],"Lu":[[65,26],[192,23],[216,7],[256,28,2],[313,8,2],[330,24,2],[377,3,2],385,[386,3,2],391,[393,3],[398,4],403,404,[406,3],412,413,415,[416,4,2],423,425,428,430,431,[433,3],437,439,440,444,[452,4,3],[463,7,2],[478,9,2],497,500,[502,3],[506,29,2],570,571,573,574,577,[579,4],[584,4,2],880,882,886,895,902,[904,3],908,910,911,[913,17],[931,9],975,[978,3],[984,12,2],1012,1015,1017,1018,[1021,51],[1120,17,2],[1162,28,2],[1217,7,2],[1232,48,2],[1329,38],[4256,38],4295,4301,[5024,86],[7312,43],[7357,3],[7680,75,2],[7838,49,2],[7944,8],[7960,6],[7976,8],[7992,8],[8008,6],[8025,4,2],[8040,8],[8120,4],[8136,4],[8152,4],[8168,5],[8184,4],8450,8455,[8459,3],[8464,3],8469,[8473,5],[8484,4,2],[8491,3],[8496,4],8510,8511,8517,8579,[11264,47],11360,[11362,3],[11367,4,2],[11374,3],11378,11381,[11390,3],[11394,49,2],11499,11501,11506,[42560,23,2],[42624,14,2],[42786,7,2],[42802,31,2],[42873,3,2],[42878,5,2],42891,42893,42896,42898,[42902,11,2],[42923,4],[42928,5],[42934,5,2],42946,[42948,4],42953,42997,[65313,26],[66560,40],[66736,36],[68736,51],[71840,32],[93760,32],[119808,26],[119860,26],[119912,26],119964,119966,[119967,3,3],119974,[119977,4],[119982,8],[120016,26],120068,120069,[120071,4],[120077,8],[120086,7],120120,120121,[120123,4],[120128,5],120134,[120138,7],[120172,26],[120224,26],[120276,26],[120328,26],[120380,26],[120432,26],[120488,25],[120546,25],[120604,25],[120662,25],[120720,25],120778,[125184,34]],"Sk":[94,96,168,175,180,184,[706,4],[722,14],[741,7],749,[751,17],885,900,901,8125,[8127,3],[8141,3],[8157,3],[8173,3],8189,8190,12443,12444,[42752,23],42784,42785,42889,42890,43867,43882,43883,[64434,16],65342,65344,65507,[127995,5]],"Pc":[95,8255,8256,8276,65075,65076,[65101,3],65343],"Ll":[[97,26],181,[223,24],[248,8],[257,28,2],[312,9,2],[329,24,2],[378,3,2],383,384,387,389,392,396,397,402,405,[409,3],414,[417,3,2],424,426,427,429,432,436,438,441,442,[445,3],[454,3,3],[462,8,2],[477,10,2],496,499,501,[505,30,2],[564,6],572,575,576,578,[583,5,2],[592,68],[661,27],881,[883,3,4],892,893,912,[940,35],976,977,[981,3],[985,12,2],[1008,4],[1013,3,3],1020,[1072,48],[1121,17,2],[1163,27,2],[1218,7,2],[1231,49,2],[1376,41],[4304,43],[4349,3],[5112,6],[7296,9],[7424,44],[7531,13],[7545,34],[7681,75,2],[7830,8],[7839,49,2],[7936,8],[7952,6],[7968,8],[7984,8],[8000,6],[8016,8],[8032,8],[8048,14],[8064,8],[8080,8],[8096,8],[8112,5],8118,8119,8126,[8130,3],8134,8135,[8144,4],8150,8151,[8160,8],[8178,3],8182,8183,8458,8462,8463,8467,[8495,3,5],8508,8509,[8518,4],8526,8580,[11312,47],11361,11365,[11366,4,2],11377,11379,11380,[11382,6],[11393,50,2],11492,11500,11502,11507,[11520,38],11559,11565,[42561,23,2],[42625,14,2],[42787,7,2],42800,[42801,33,2],[42866,7],42874,42876,[42879,5,2],42892,42894,42897,[42899,3],[42903,10,2],42927,[42933,6,2],42947,42952,42954,42998,43002,[43824,43],[43872,9],[43888,80],[64256,7],[64275,5],[65345,26],[66600,40],[66776,36],[68800,51],[71872,32],[93792,32],[119834,26],[119886,7],[119894,18],[119938,26],[119990,4],119995,[119997,7],[120005,11],[120042,26],[120094,26],[120146,26],[120198,26],[120250,26],[120302,26],[120354,26],[120406,26],[120458,28],[120514,25],[120540,6],[120572,25],[120598,6],[120630,25],[120656,6],[120688,25],[120714,6],[120746,25],[120772,6],120779,[125218,34]],"So":[166,169,174,176,1154,1421,1422,1550,1551,1758,1769,1789,1790,2038,2554,2928,[3059,6],3066,3199,3407,3449,[3841,3],3859,[3861,3],[3866,6],[3892,3,2],[4030,8],[4039,6],4046,4047,[4053,4],4254,4255,[5008,10],5741,6464,[6622,34],[7009,10],[7028,9],8448,8449,[8451,4],8456,8457,8468,8470,8471,[8478,6],[8485,3,2],8494,8506,8507,8522,8524,8525,8527,8586,8587,[8597,5],[8604,4],8609,8610,8612,8613,[8615,7],[8623,31],8656,[8657,3,2],[8662,30],[8960,8],[8972,20],[8994,7],[9003,81],[9085,30],[9140,40],[9186,69],[9280,11],[9372,78],[9472,183],[9656,9],[9666,54],[9728,111],[9840,248],[10132,44],[10240,256],[11008,48],11077,11078,[11085,39],[11126,32],[11159,105],[11493,6],11856,11857,[11904,26],[11931,89],[12032,214],[12272,12],12292,12306,12307,12320,12342,12343,12350,12351,12688,12689,[12694,10],[12736,36],[12800,31],[12842,30],12880,[12896,32],[12938,39],[12992,320],[19904,64],[42128,55],[43048,4],43062,43063,43065,[43639,3],65021,65508,65512,65517,65518,65532,65533,[65847,9],[65913,17],[65932,3],[65936,13],65952,[66000,45],67703,67704,68296,71487,[73685,8],[73697,17],[92988,4],92997,113820,[118784,246],[119040,39],[119081,60],[119146,3],119171,119172,[119180,30],[119214,59],[119296,66],119365,[119552,87],[120832,512],[121399,4],[121453,8],[121462,14],121477,121478,123215,126124,126254,[126976,44],[127024,100],[127136,15],[127153,15],[127169,15],[127185,37],[127245,161],[127462,29],[127504,44],[127552,9],127568,127569,[127584,6],[127744,251],[128000,728],[128736,13],[128752,13],[128768,116],[128896,89],[128992,12],[129024,12],[129040,56],[129104,10],[129120,40],[129168,30],129200,129201,[129280,121],[129402,82],[129485,135],[129632,14],[129648,5],[129656,3],[129664,7],[129680,25],[129712,7],[129728,3],[129744,7],[129792,147],[129940,55]],"Lo":[170,186,443,[448,4],660,[1488,27],[1519,4],[1568,32],[1601,10],1646,1647,[1649,99],1749,1774,1775,[1786,3],1791,1808,[1810,30],[1869,89],1969,[1994,33],[2048,22],[2112,25],[2144,11],[2208,21],[2230,18],[2308,54],2365,2384,[2392,10],[2418,15],[2437,8],2447,2448,[2451,22],[2474,7],2482,[2486,4],2493,2510,2524,2525,[2527,3],2544,2545,2556,[2565,6],2575,2576,[2579,22],[2602,7],2610,2611,2613,2614,2616,2617,[2649,4],2654,[2674,3],[2693,9],[2703,3],[2707,22],[2730,7],2738,2739,[2741,5],2749,2768,2784,2785,2809,[2821,8],2831,2832,[2835,22],[2858,7],2866,2867,[2869,5],2877,2908,2909,[2911,3],2929,2947,[2949,6],[2958,3],[2962,4],2969,[2970,3,2],2975,2979,2980,[2984,3],[2990,12],3024,[3077,8],[3086,3],[3090,23],[3114,16],3133,[3160,3],3168,3169,3200,[3205,8],[3214,3],[3218,23],[3242,10],[3253,5],3261,3294,3296,3297,3313,3314,[3332,9],[3342,3],[3346,41],3389,3406,[3412,3],[3423,3],[3450,6],[3461,18],[3482,24],[3507,9],3517,[3520,7],[3585,48],3634,3635,[3648,6],3713,[3714,3,2],[3719,4],[3724,24],3749,[3751,10],3762,3763,3773,[3776,5],[3804,4],3840,[3904,8],[3913,36],[3976,5],[4096,43],4159,[4176,6],[4186,4],4193,4197,4198,[4206,3],[4213,13],4238,[4352,329],[4682,4],[4688,7],4696,[4698,4],[4704,41],[4746,4],[4752,33],[4786,4],[4792,7],4800,[4802,4],[4808,15],[4824,57],[4882,4],[4888,67],[4992,16],[5121,620],[5743,17],[5761,26],[5792,75],[5873,8],[5888,13],[5902,4],[5920,18],[5952,18],[5984,13],[5998,3],[6016,52],6108,[6176,35],[6212,53],[6272,5],[6279,34],6314,[6320,70],[6400,31],[6480,30],[6512,5],[6528,44],[6576,26],[6656,23],[6688,53],[6917,47],[6981,7],[7043,30],7086,7087,[7098,44],[7168,36],[7245,3],[7258,30],[7401,4],[7406,6],7413,7414,7418,[8501,4],[11568,56],[11648,23],[11680,7],[11688,7],[11696,7],[11704,7],[11712,7],[11720,7],[11728,7],[11736,7],12294,12348,[12353,86],12447,[12449,90],12543,[12549,43],[12593,94],[12704,32],[12784,16],13312,19903,19968,40956,[40960,21],[40982,1143],[42192,40],[42240,268],[42512,16],42538,42539,42606,[42656,70],42895,42999,[43003,7],[43011,3],[43015,4],[43020,23],[43072,52],[43138,50],[43250,6],43259,43261,43262,[43274,28],[43312,23],[43360,29],[43396,47],[43488,5],[43495,9],[43514,5],[43520,41],[43584,3],[43588,8],[43616,16],[43633,6],43642,[43646,50],43697,43701,43702,[43705,5],43712,43714,43739,43740,[43744,11],43762,[43777,6],[43785,6],[43793,6],[43808,7],[43816,7],[43968,35],44032,55203,[55216,23],[55243,49],[63744,366],[64112,106],64285,[64287,10],[64298,13],[64312,5],64318,64320,64321,64323,64324,[64326,108],[64467,363],[64848,64],[64914,54],[65008,12],[65136,5],[65142,135],[65382,10],[65393,45],[65440,31],[65474,6],[65482,6],[65490,6],[65498,3],[65536,12],[65549,26],[65576,19],65596,65597,[65599,15],[65616,14],[65664,123],[66176,29],[66208,49],[66304,32],[66349,20],[66370,8],[66384,38],[66432,30],[66464,36],[66504,8],[66640,78],[66816,40],[66864,52],[67072,311],[67392,22],[67424,8],[67584,6],67592,[67594,44],67639,67640,67644,[67647,23],[67680,23],[67712,31],[67808,19],67828,67829,[67840,22],[67872,26],[67968,56],68030,68031,68096,[68112,4],[68117,3],[68121,29],[68192,29],[68224,29],[68288,8],[68297,28],[68352,54],[68416,22],[68448,19],[68480,18],[68608,73],[68864,36],[69248,42],69296,69297,[69376,29],69415,[69424,22],[69552,21],[69600,23],[69635,53],[69763,45],[69840,25],[69891,36],69956,69959,[69968,35],70006,[70019,48],[70081,4],70106,70108,[70144,18],[70163,25],[70272,7],70280,[70282,4],[70287,15],[70303,10],[70320,47],[70405,8],70415,70416,[70419,22],[70442,7],70450,70451,[70453,5],70461,70480,[70493,5],[70656,53],[70727,4],[70751,3],[70784,48],70852,70853,70855,[71040,47],[71128,4],[71168,48],71236,[71296,43],71352,[71424,27],[71680,44],[71935,8],71945,[71948,8],71957,71958,[71960,24],71999,72001,[72096,8],[72106,39],72161,72163,72192,[72203,40],72250,72272,[72284,46],72349,[72384,57],[72704,9],[72714,37],72768,[72818,30],[72960,7],72968,72969,[72971,38],73030,[73056,6],73063,73064,[73066,32],73112,[73440,19],73648,[73728,922],[74880,196],[77824,1071],[82944,583],[92160,569],[92736,31],[92880,30],[92928,48],[93027,21],[93053,19],[93952,75],94032,94208,100343,[100352,1238],101632,101640,[110592,287],[110928,3],[110948,4],[110960,396],[113664,107],[113776,13],[113792,9],[113808,10],[123136,45],123214,[123584,44],[124928,197],[126464,4],[126469,27],126497,126498,126500,126503,[126505,10],[126516,4],126521,126523,126530,[126535,4,2],126542,126543,126545,126546,126548,[126551,6,2],126562,126564,[126567,4],[126572,7],[126580,4],[126585,4],126590,[126592,10],[126603,17],[126625,3],[126629,5],[126635,17],131072,173789,173824,177972,177984,178205,178208,183969,183984,191456,[194560,542],196608,201546],"Pi":[171,8216,8219,8220,8223,8249,11778,11780,11785,11788,11804,11808],"Cf":[173,[1536,6],1564,1757,1807,2274,6158,[8203,5],[8234,5],[8288,5],[8294,10],65279,[65529,3],69821,69837,[78896,9],[113824,4],[119155,8],917505,[917536,96]],"No":[178,179,185,[188,3],[2548,6],[2930,6],[3056,3],[3192,7],[3416,7],[3440,9],[3882,10],[4969,20],[6128,10],6618,8304,[8308,6],[8320,10],[8528,16],8585,[9312,60],[9450,22],[10102,30],11517,[12690,4],[12832,10],[12872,8],[12881,15],[12928,10],[12977,15],[43056,6],[65799,45],[65909,4],65930,65931,[66273,27],[66336,4],[67672,8],[67705,7],[67751,9],[67835,5],[67862,6],68028,68029,[68032,16],[68050,46],[68160,9],68221,68222,[68253,3],[68331,5],[68440,8],[68472,8],[68521,7],[68858,6],[69216,31],[69405,10],[69457,4],[69573,7],[69714,20],[70113,20],71482,71483,[71914,9],[72794,19],[73664,21],[93019,7],[93824,23],[119520,20],[119648,25],[125127,9],[126065,59],[126125,3],[126129,4],[126209,45],[126255,15],[127232,13]],"Pf":[187,8217,8221,8250,11779,11781,11786,11789,11805,11809],"Lt":[[453,3,3],498,[8072,8],[8088,8],[8104,8],8124,8140,8188],"Lm":[[688,18],[710,12],[736,5],748,750,884,890,1369,1600,1765,1766,2036,2037,2042,2074,2084,2088,2417,3654,3782,4348,6103,6211,6823,[7288,6],[7468,63],7544,[7579,37],8305,8319,[8336,13],11388,11389,11631,11823,12293,[12337,5],12347,12445,12446,[12540,3],40981,[42232,6],42508,42623,42652,42653,[42775,9],42864,42888,43000,43001,43471,43494,43632,43741,43763,43764,[43868,4],43881,65392,65438,65439,[92992,4],[94099,13],94176,94177,94179,[123191,7],125259],"Mn":[[768,112],[1155,5],[1425,45],1471,1473,1474,1476,1477,1479,[1552,11],[1611,21],1648,[1750,7],[1759,6],1767,1768,[1770,4],1809,[1840,27],[1958,11],[2027,9],2045,[2070,4],[2075,9],[2085,3],[2089,5],[2137,3],[2259,15],[2275,32],2362,2364,[2369,8],2381,[2385,7],2402,2403,2433,2492,[2497,4],2509,2530,2531,2558,2561,2562,2620,2625,2626,2631,2632,[2635,3],2641,2672,2673,2677,2689,2690,2748,[2753,5],2759,2760,2765,2786,2787,[2810,6],2817,2876,2879,[2881,4],2893,2901,2902,2914,2915,2946,3008,3021,3072,3076,[3134,3],[3142,3],[3146,4],3157,3158,3170,3171,3201,3260,3263,3270,3276,3277,3298,3299,3328,3329,3387,3388,[3393,4],3405,3426,3427,3457,3530,[3538,3],3542,3633,[3636,7],[3655,8],3761,[3764,9],[3784,6],3864,3865,[3893,3,2],[3953,14],[3968,5],3974,3975,[3981,11],[3993,36],4038,[4141,4],[4146,6],4153,4154,4157,4158,4184,4185,[4190,3],[4209,4],4226,4229,4230,4237,4253,[4957,3],[5906,3],[5938,3],5970,5971,6002,6003,6068,6069,[6071,7],6086,[6089,11],6109,[6155,3],6277,6278,6313,[6432,3],6439,6440,6450,[6457,3],6679,6680,6683,6742,[6744,7],6752,6754,[6757,8],[6771,10],6783,[6832,14],6847,6848,[6912,4],6964,[6966,5],6972,6978,[7019,9],7040,7041,[7074,4],7080,7081,[7083,3],7142,7144,7145,7149,[7151,3],[7212,8],7222,7223,[7376,3],[7380,13],[7394,7],7405,7412,7416,7417,[7616,58],[7675,5],[8400,13],8417,[8421,12],[11503,3],11647,[11744,32],[12330,4],12441,12442,42607,[42612,10],42654,42655,42736,42737,43010,43014,43019,43045,43046,43052,43204,43205,[43232,18],43263,[43302,8],[43335,11],[43392,3],43443,[43446,4],43452,43453,43493,[43561,6],43569,43570,43573,43574,43587,43596,43644,43696,[43698,3],43703,43704,43710,43711,43713,43756,43757,43766,44005,44008,44013,64286,[65024,16],[65056,16],66045,66272,[66422,5],[68097,3],68101,68102,[68108,4],[68152,3],68159,68325,68326,[68900,4],69291,69292,[69446,11],69633,[69688,15],[69759,3],[69811,4],69817,69818,[69888,3],[69927,5],[69933,8],70003,70016,70017,[70070,9],[70089,4],70095,[70191,3],70196,70198,70199,70206,70367,[70371,8],70400,70401,70459,70460,70464,[70502,7],[70512,5],[70712,8],[70722,3],70726,70750,[70835,6],70842,70847,70848,70850,70851,[71090,4],71100,71101,71103,71104,71132,71133,[71219,8],71229,71231,71232,71339,71341,[71344,6],71351,[71453,3],[71458,4],[71463,5],[71727,9],71737,71738,71995,71996,71998,72003,[72148,4],72154,72155,72160,[72193,10],[72243,6],[72251,4],72263,[72273,6],[72281,3],[72330,13],72344,72345,[72752,7],[72760,6],72767,[72850,22],[72874,7],72882,72883,72885,72886,[73009,6],73018,73020,73021,[73023,7],73031,73104,73105,73109,73111,73459,73460,[92912,5],[92976,7],94031,[94095,4],94180,113821,113822,[119143,3],[119163,8],[119173,7],[119210,4],[119362,3],[121344,55],[121403,50],121461,121476,[121499,5],[121505,15],[122880,7],[122888,17],[122907,7],122915,122916,[122918,5],[123184,7],[123628,4],[125136,7],[125252,7],[917760,240]],"Me":[1160,1161,6846,[8413,4],[8418,3],[42608,3]],"Mc":[2307,2363,[2366,3],[2377,4],2382,2383,2434,2435,[2494,3],2503,2504,2507,2508,2519,2563,[2622,3],2691,[2750,3],2761,2763,2764,2818,2819,2878,2880,2887,2888,2891,2892,2903,3006,3007,3009,3010,[3014,3],[3018,3],3031,[3073,3],[3137,4],3202,3203,3262,[3264,5],3271,3272,3274,3275,3285,3286,3330,3331,[3390,3],[3398,3],[3402,3],3415,3458,3459,[3535,3],[3544,8],3570,3571,3902,3903,3967,4139,4140,4145,4152,4155,4156,4182,4183,[4194,3],[4199,7],4227,4228,[4231,6],4239,[4250,3],6070,[6078,8],6087,6088,[6435,4],[6441,3],6448,6449,[6451,6],6681,6682,6741,6743,6753,6755,6756,[6765,6],6916,6965,6971,[6973,5],6979,6980,7042,7073,7078,7079,7082,7143,[7146,3],7150,7154,7155,[7204,8],7220,7221,7393,7415,12334,12335,43043,43044,43047,43136,43137,[43188,16],43346,43347,43395,43444,43445,43450,43451,[43454,3],43567,43568,43571,43572,43597,43643,43645,43755,43758,43759,43765,44003,44004,44006,44007,44009,44010,44012,69632,69634,69762,[69808,3],69815,69816,69932,69957,69958,70018,[70067,3],70079,70080,70094,[70188,3],70194,70195,70197,[70368,3],70402,70403,70462,70463,[70465,4],70471,70472,[70475,3],70487,70498,70499,[70709,3],70720,70721,70725,[70832,3],70841,[70843,4],70849,[71087,3],[71096,4],71102,[71216,3],71227,71228,71230,71340,71342,71343,71350,71456,71457,71462,[71724,3],71736,[71984,6],71991,71992,71997,72000,72002,[72145,3],[72156,4],72164,72249,72279,72280,72343,72751,72766,72873,72881,72884,[73098,5],73107,73108,73110,73461,73462,[94033,55],94192,94193,119141,119142,[119149,6]],"Nl":[[5870,3],[8544,35],[8581,4],12295,[12321,9],[12344,3],[42726,10],[65856,53],66369,66378,[66513,5],[74752,111]],"Zl":[8232],"Zp":[8233],"Cs":[55296,56191,56192,56319,56320,57343],"Co":[57344,63743,983040,1048573,1048576,1114109],"digits":[[48,10],178,179,185,[1632,10],[1776,10],[1984,10],[2406,10],[2534,10],[2662,10],[2790,10],[2918,10],[3046,10],[3174,10],[3302,10],[3430,10],[3558,10],[3664,10],[3792,10],[3872,10],[4160,10],[4240,10],[4969,9],[6112,10],[6160,10],[6470,10],[6608,11],[6784,10],[6800,10],[6992,10],[7088,10],[7232,10],[7248,10],8304,[8308,6],[8320,10],[9312,9],[9332,9],[9352,9],9450,[9461,9],9471,[10102,9],[10112,9],[10122,9],[42528,10],[43216,10],[43264,10],[43472,10],[43504,10],[43600,10],[44016,10],[65296,10],[66720,10],[68160,4],[68912,10],[69216,9],[69714,9],[69734,10],[69872,10],[69942,10],[70096,10],[70384,10],[70736,10],[70864,10],[71248,10],[71360,10],[71472,10],[71904,10],[72016,10],[72784,10],[73040,10],[73120,10],[92768,10],[93008,10],[120782,50],[123200,10],[123632,10],[125264,10],[127232,11],[130032,10]],"numeric":[[48,10],178,179,185,[188,3],[1632,10],[1776,10],[1984,10],[2406,10],[2534,10],[2548,6],[2662,10],[2790,10],[2918,10],[2930,6],[3046,13],[3174,10],[3192,7],[3302,10],[3416,7],[3430,19],[3558,10],[3664,10],[3792,10],[3872,20],[4160,10],[4240,10],[4969,20],[5870,3],[6112,10],[6128,10],[6160,10],[6470,10],[6608,11],[6784,10],[6800,10],[6992,10],[7088,10],[7232,10],[7248,10],8304,[8308,6],[8320,10],[8528,51],[8581,5],[9312,60],[9450,22],[10102,30],11517,12295,[12321,9],[12344,3],[12690,4],[12832,10],[12872,8],[12881,15],[12928,10],[12977,15],13317,13443,14378,15181,19968,19971,19975,19977,20061,20108,20116,20118,20159,20160,20191,20200,20237,20336,20740,20806,[20841,3,2],21313,[21315,3],21324,[21441,4],22235,22769,22777,24186,24318,24319,[24332,3],24336,25342,25420,26578,28422,29590,30334,32902,33836,36014,36019,36144,38433,38470,38476,38520,38646,[42528,10],[42726,10],[43056,6],[43216,10],[43264,10],[43472,10],[43504,10],[43600,10],[44016,10],63851,63859,63864,63922,63953,63955,63997,[65296,10],[65799,45],[65856,57],65930,65931,[66273,27],[66336,4],66369,66378,[66513,5],[66720,10],[67672,8],[67705,7],[67751,9],[67835,5],[67862,6],68028,68029,[68032,16],[68050,46],[68160,9],68221,68222,[68253,3],[68331,5],[68440,8],[68472,8],[68521,7],[68858,6],[68912,10],[69216,31],[69405,10],[69457,4],[69573,7],[69714,30],[69872,10],[69942,10],[70096,10],[70113,20],[70384,10],[70736,10],[70864,10],[71248,10],[71360,10],[71472,12],[71904,19],[72016,10],[72784,29],[73040,10],[73120,10],[73664,21],[74752,111],[92768,10],[93008,10],[93019,7],[93824,23],[119520,20],[119648,25],[120782,50],[123200,10],[123632,10],[125127,9],[125264,10],[126065,59],[126125,3],[126129,4],[126209,45],[126255,15],[127232,13],[130032,10],131073,131172,131298,131361,133418,133507,133516,133532,133866,133885,133913,140176,141720,146203,156269,194704],"Cn":[[888,2],[896,4],[907,1],[909,1],[930,1],[1328,1],[1367,2],[1419,2],[1424,1],[1480,8],[1515,4],[1525,11],[1565,1],[1806,1],[1867,2],[1970,14],[2043,2],[2094,2],[2111,1],[2140,2],[2143,1],[2155,53],[2229,1],[2248,11],[2436,1],[2445,2],[2449,2],[2473,1],[2481,1],[2483,3],[2490,2],[2501,2],[2505,2],[2511,8],[2520,4],[2526,1],[2532,2],[2559,2],[2564,1],[2571,4],[2577,2],[2601,1],[2609,1],[2612,1],[2615,1],[2618,2],[2621,1],[2627,4],[2633,2],[2638,3],[2642,7],[2653,1],[2655,7],[2679,10],[2692,1],[2702,1],[2706,1],[2729,1],[2737,1],[2740,1],[2746,2],[2758,1],[2762,1],[2766,2],[2769,15],[2788,2],[2802,7],[2816,1],[2820,1],[2829,2],[2833,2],[2857,1],[2865,1],[2868,1],[2874,2],[2885,2],[2889,2],[2894,7],[2904,4],[2910,1],[2916,2],[2936,10],[2948,1],[2955,3],[2961,1],[2966,3],[2971,1],[2973,1],[2976,3],[2981,3],[2987,3],[3002,4],[3011,3],[3017,1],[3022,2],[3025,6],[3032,14],[3067,5],[3085,1],[3089,1],[3113,1],[3130,3],[3141,1],[3145,1],[3150,7],[3159,1],[3163,5],[3172,2],[3184,7],[3213,1],[3217,1],[3241,1],[3252,1],[3258,2],[3269,1],[3273,1],[3278,7],[3287,7],[3295,1],[3300,2],[3312,1],[3315,13],[3341,1],[3345,1],[3397,1],[3401,1],[3408,4],[3428,2],[3456,1],[3460,1],[3479,3],[3506,1],[3516,1],[3518,2],[3527,3],[3531,4],[3541,1],[3543,1],[3552,6],[3568,2],[3573,12],[3643,4],[3676,37],[3715,1],[3717,1],[3723,1],[3748,1],[3750,1],[3774,2],[3781,1],[3783,1],[3790,2],[3802,2],[3808,32],[3912,1],[3949,4],[3992,1],[4029,1],[4045,1],[4059,37],[4294,1],[4296,5],[4302,2],[4681,1],[4686,2],[4695,1],[4697,1],[4702,2],[4745,1],[4750,2],[4785,1],[4790,2],[4799,1],[4801,1],[4806,2],[4823,1],[4881,1],[4886,2],[4955,2],[4989,3],[5018,6],[5110,2],[5118,2],[5789,3],[5881,7],[5901,1],[5909,11],[5943,9],[5972,12],[5997,1],[6001,1],[6004,12],[6110,2],[6122,6],[6138,6],[6159,1],[6170,6],[6265,7],[6315,5],[6390,10],[6431,1],[6444,4],[6460,4],[6465,3],[6510,2],[6517,11],[6572,4],[6602,6],[6619,3],[6684,2],[6751,1],[6781,2],[6794,6],[6810,6],[6830,2],[6849,63],[6988,4],[7037,3],[7156,8],[7224,3],[7242,3],[7305,7],[7355,2],[7368,8],[7419,5],[7674,1],[7958,2],[7966,2],[8006,2],[8014,2],[8024,1],[8026,1],[8028,1],[8030,1],[8062,2],[8117,1],[8133,1],[8148,2],[8156,1],[8176,2],[8181,1],[8191,1],[8293,1],[8306,2],[8335,1],[8349,3],[8384,16],[8433,15],[8588,4],[9255,25],[9291,21],[11124,2],[11158,1],[11311,1],[11359,1],[11508,5],[11558,1],[11560,5],[11566,2],[11624,7],[11633,14],[11671,9],[11687,1],[11695,1],[11703,1],[11711,1],[11719,1],[11727,1],[11735,1],[11743,1],[11859,45],[11930,1],[12020,12],[12246,26],[12284,4],[12352,1],[12439,2],[12544,5],[12592,1],[12687,1],[12772,12],[12831,1],[40957,3],[42125,3],[42183,9],[42540,20],[42744,8],[42944,2],[42955,42],[43053,3],[43066,6],[43128,8],[43206,8],[43226,6],[43348,11],[43389,3],[43470,1],[43482,4],[43519,1],[43575,9],[43598,2],[43610,2],[43715,24],[43767,10],[43783,2],[43791,2],[43799,9],[43815,1],[43823,1],[43884,4],[44014,2],[44026,6],[55204,12],[55239,4],[55292,4],[64110,2],[64218,38],[64263,12],[64280,5],[64311,1],[64317,1],[64319,1],[64322,1],[64325,1],[64450,17],[64832,16],[64912,2],[64968,40],[65022,2],[65050,6],[65107,1],[65127,1],[65132,4],[65141,1],[65277,2],[65280,1],[65471,3],[65480,2],[65488,2],[65496,2],[65501,3],[65511,1],[65519,10],[65534,2],[65548,1],[65575,1],[65595,1],[65598,1],[65614,2],[65630,34],[65787,5],[65795,4],[65844,3],[65935,1],[65949,3],[65953,47],[66046,130],[66205,3],[66257,15],[66300,4],[66340,9],[66379,5],[66427,5],[66462,1],[66500,4],[66518,42],[66718,2],[66730,6],[66772,4],[66812,4],[66856,8],[66916,11],[66928,144],[67383,9],[67414,10],[67432,152],[67590,2],[67593,1],[67638,1],[67641,3],[67645,2],[67670,1],[67743,8],[67760,48],[67827,1],[67830,5],[67868,3],[67898,5],[67904,64],[68024,4],[68048,2],[68100,1],[68103,5],[68116,1],[68120,1],[68150,2],[68155,4],[68169,7],[68185,7],[68256,32],[68327,4],[68343,9],[68406,3],[68438,2],[68467,5],[68498,7],[68509,12],[68528,80],[68681,55],[68787,13],[68851,7],[68904,8],[68922,294],[69247,1],[69290,1],[69294,2],[69298,78],[69416,8],[69466,86],[69580,20],[69623,9],[69710,4],[69744,15],[69826,11],[69838,2],[69865,7],[69882,6],[69941,1],[69960,8],[70007,9],[70112,1],[70133,11],[70162,1],[70207,65],[70279,1],[70281,1],[70286,1],[70302,1],[70314,6],[70379,5],[70394,6],[70404,1],[70413,2],[70417,2],[70441,1],[70449,1],[70452,1],[70458,1],[70469,2],[70473,2],[70478,2],[70481,6],[70488,5],[70500,2],[70509,3],[70517,139],[70748,1],[70754,30],[70856,8],[70874,166],[71094,2],[71134,34],[71237,11],[71258,6],[71277,19],[71353,7],[71370,54],[71451,2],[71468,4],[71488,192],[71740,100],[71923,12],[71943,2],[71946,2],[71956,1],[71959,1],[71990,1],[71993,2],[72007,9],[72026,70],[72104,2],[72152,2],[72165,27],[72264,8],[72355,29],[72441,263],[72713,1],[72759,1],[72774,10],[72813,3],[72848,2],[72872,1],[72887,73],[72967,1],[72970,1],[73015,3],[73019,1],[73022,1],[73032,8],[73050,6],[73062,1],[73065,1],[73103,1],[73106,1],[73113,7],[73130,310],[73465,183],[73649,15],[73714,13],[74650,102],[74863,1],[74869,11],[75076,2748],[78895,1],[78905,4039],[83527,8633],[92729,7],[92767,1],[92778,4],[92784,96],[92910,2],[92918,10],[92998,10],[93018,1],[93026,1],[93048,5],[93072,688],[93851,101],[94027,4],[94088,7],[94112,64],[94181,11],[94194,14],[100344,8],[101590,42],[101641,8951],[110879,49],[110931,17],[110952,8],[111356,2308],[113771,5],[113789,3],[113801,7],[113818,2],[113828,4956],[119030,10],[119079,2],[119273,23],[119366,154],[119540,12],[119639,9],[119673,135],[119893,1],[119965,1],[119968,2],[119971,2],[119975,2],[119981,1],[119994,1],[119996,1],[120004,1],[120070,1],[120075,2],[120085,1],[120093,1],[120122,1],[120127,1],[120133,1],[120135,3],[120145,1],[120486,2],[120780,2],[121484,15],[121504,1],[121520,1360],[122887,1],[122905,2],[122914,1],[122917,1],[122923,213],[123181,3],[123198,2],[123210,4],[123216,368],[123642,5],[123648,1280],[125125,2],[125143,41],[125260,4],[125274,4],[125280,785],[126133,76],[126270,194],[126468,1],[126496,1],[126499,1],[126501,2],[126504,1],[126515,1],[126520,1],[126522,1],[126524,6],[126531,4],[126536,1],[126538,1],[126540,1],[126544,1],[126547,1],[126549,2],[126552,1],[126554,1],[126556,1],[126558,1],[126560,1],[126563,1],[126565,2],[126571,1],[126579,1],[126584,1],[126589,1],[126591,1],[126602,1],[126620,5],[126628,1],[126634,1],[126652,52],[126706,270],[127020,4],[127124,12],[127151,2],[127168,1],[127184,1],[127222,10],[127406,56],[127491,13],[127548,4],[127561,7],[127570,14],[127590,154],[128728,8],[128749,3],[128765,3],[128884,12],[128985,7],[129004,20],[129036,4],[129096,8],[129114,6],[129160,8],[129198,2],[129202,78],[129401,1],[129484,1],[129620,12],[129646,2],[129653,3],[129659,5],[129671,9],[129705,7],[129719,9],[129731,13],[129751,41],[129939,1],[129995,37],[130042,1030],[173790,34],[177973,11],[178206,2],[183970,14],[191457,3103],[195102,1506],[201547,715958],[917506,30],[917632,128],[918000,65040],[1048574,2]]}
@@ -13998,6 +12159,1455 @@ code+=(c.charCodeAt(0)& 0x03FF)<< 10
 code+=(c.charCodeAt(1)& 0x03FF)
 return code}})(__BRYTHON__)
 ;
+;(function($B){var _b_=$B.builtins
+function $err(op,other){var msg="unsupported operand type(s) for "+op+
+" : 'int' and '"+$B.class_name(other)+"'"
+throw _b_.TypeError.$factory(msg)}
+function int_value(obj){
+if(typeof obj=="boolean"){return obj ? 1 :0}
+return obj.$brython_value !==undefined ? obj.$brython_value :obj}
+var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
+return $B.$list([$.self,1])}
+int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed:false},null,null)
+var x=$.bytes,byteorder=$.byteorder,signed=$.signed,_bytes,_len
+if(_b_.isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
+_len=x.source.length}else{_bytes=_b_.list.$factory(x)
+_len=_bytes.length
+for(var i=0;i < _len;i++){_b_.bytes.$factory([_bytes[i]])}}
+if(byteorder=="big"){_bytes.reverse()}else if(byteorder !="little"){throw _b_.ValueError.$factory(
+"byteorder must be either 'little' or 'big'")}
+var num=_bytes[0]
+if(signed && num >=128){num=num-256}
+var _mult=256
+for(var i=1;i < _len;i++){num=$B.add($B.mul(_mult,_bytes[i]),num)
+_mult=$B.mul(_mult,256)}
+if(! signed){return num}
+if(_bytes[_len-1]< 128){return num}
+return $B.sub(num,_mult)}
+int.to_bytes=function(){var $=$B.args("to_bytes",3,{self:null,len:null,byteorder:null,signed:null},["self","len","byteorder","*","signed"],arguments,{signed:false},null,null),self=$.self,len=$.len,byteorder=$.byteorder,signed=$.signed
+if(! _b_.isinstance(len,_b_.int)){throw _b_.TypeError.$factory("integer argument expected, got "+
+$B.class_name(len))}
+if(["little","big"].indexOf(byteorder)==-1){throw _b_.ValueError.$factory(
+"byteorder must be either 'little' or 'big'")}
+if(_b_.isinstance(self,$B.long_int)){return $B.long_int.to_bytes(self,len,byteorder,signed)}
+if(self < 0){if(! signed){throw _b_.OverflowError.$factory(
+"can't convert negative int to unsigned")}
+self=Math.pow(256,len)+self}
+var res=[],value=self
+while(value > 0){var quotient=Math.floor(value/256),rest=value-256*quotient
+res.push(rest)
+if(res.length > len){throw _b_.OverflowError.$factory("int too big to convert")}
+value=quotient}
+while(res.length < len){res.push(0)}
+if(byteorder=="big"){res.reverse()}
+return{
+__class__:_b_.bytes,source:res}}
+int.__abs__=function(self){return _b_.abs(self)}
+int.__add__=function(self,other){self=int_value(self)
+if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__add__($B.long_int.$factory(self),$B.long_int.$factory(other))}
+other=int_value(other)
+var res=self+other
+if(res > $B.min_int && res < $B.max_int){return res}else{return $B.long_int.__add__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
+return _b_.NotImplemented}
+int.__bool__=function(self){return int_value(self).valueOf()==0 ? false :true}
+int.__ceil__=function(self){return Math.ceil(int_value(self))}
+int.__divmod__=function(self,other){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
+return $B.fast_tuple([int.__floordiv__(self,other),int.__mod__(self,other)])}
+int.__eq__=function(self,other){
+if(_b_.isinstance(other,int)){return self.valueOf()==int_value(other).valueOf()}
+if(_b_.isinstance(other,_b_.float)){return self.valueOf()==other.valueOf()}
+if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return False}
+return self.valueOf()==other.$real}
+return _b_.NotImplemented}
+int.__float__=function(self){return new Number(self)}
+function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
+if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
+"' for object of type 'int'")}
+var res
+switch(fmt.type){case undefined:
+case "d":
+res=self.toString()
+break
+case "b":
+res=(fmt.alternate ? "0b" :"")+self.toString(2)
+break
+case "c":
+res=_b_.chr(self)
+break
+case "o":
+res=(fmt.alternate ? "0o" :"")+self.toString(8)
+break
+case "x":
+res=(fmt.alternate ? "0x" :"")+self.toString(16)
+break
+case "X":
+res=(fmt.alternate ? "0X" :"")+self.toString(16).toUpperCase()
+break
+case "n":
+return self }
+if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
+return res}
+int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
+return _b_.float.__format__(self,format_spec)}
+fmt.align=fmt.align ||">"
+var res=preformat(self,fmt)
+if(fmt.comma){var sign=res[0]=="-" ? "-" :"",rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
+for(var i=0;i < nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
+chunks.reverse()
+res=sign+chunks.join(",")}
+return $B.format_width(res,fmt)}
+int.__floordiv__=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__floordiv__($B.long_int.$factory(self),other)}
+if(_b_.isinstance(other,int)){other=int_value(other)
+if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
+return Math.floor(self/other)}
+return _b_.NotImplemented}
+int.__hash__=function(self){if(self.$brython_value){
+var hash_method=$B.$getattr(self.__class__,'__hash__')
+if(hash_method===int.__hash__){if(typeof self.$brython_value=="number"){return self.$brython_value}else{
+return $B.long_int.__hash__(self.$brython_value)}}else{return hash_method(self)}}
+return self.valueOf()}
+int.__index__=function(self){return int_value(self)}
+int.__init__=function(self,value){if(value===undefined){value=0}
+self.toString=function(){return value}
+return _b_.None}
+int.__int__=function(self){return self}
+int.__invert__=function(self){return ~self}
+int.__lshift__=function(self,other){self=int_value(self)
+if(_b_.isinstance(other,int)){other=int_value(other)
+try{return int.$factory($B.long_int.__lshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}catch(err){console.log('err in lshift',self,other)
+throw err}}
+return _b_.NotImplemented}
+int.__mod__=function(self,other){
+if(_b_.isinstance(other,_b_.tuple)&& other.length==1){other=other[0]}
+if(other.__class__===$B.long_int){return $B.long_int.__mod__($B.long_int.$factory(self),other)}
+if(_b_.isinstance(other,int)){other=int_value(other)
+if(other===false){other=0}
+else if(other===true){other=1}
+if(other==0){throw _b_.ZeroDivisionError.$factory(
+"integer division or modulo by zero")}
+return(self % other+other)% other}
+return _b_.NotImplemented}
+int.__mul__=function(self,other){self=int_value(self)
+if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other))}
+other=int_value(other)
+var res=self*other
+if(res > $B.min_int && res < $B.max_int){return res}else{return int.$factory($B.long_int.__mul__($B.long_int.$factory(self),$B.long_int.$factory(other)))}}
+return _b_.NotImplemented}
+int.__ne__=function(self,other){var res=int.__eq__(self,other)
+return(res===_b_.NotImplemented)? res :!res}
+int.__neg__=function(self){return-self}
+int.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
+if(cls===int){return int.$factory(value)}
+return{
+__class__:cls,__dict__:$B.empty_dict(),$brython_value:value ||0}}
+int.__pos__=function(self){return self}
+function extended_euclidean(a,b){var d,u,v
+if(b==0){return[a,1,0]}else{[d,u,v]=extended_euclidean(b,a % b)
+return[d,v,u-Math.floor(a/b)*v]}}
+int.__pow__=function(self,other,z){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
+if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
+switch(other.valueOf()){case 0:
+return int.$factory(1)
+case 1:
+return int.$factory(self.valueOf())}
+if(z !==undefined && z !==_b_.None){
+if(z==1){return 0}
+var result=1,base=self % z,exponent=other,long_int=$B.long_int
+if(exponent < 0){var gcd,inv,_
+[gcd,inv,_]=extended_euclidean(self,z)
+if(gcd !==1){throw _b_.ValueError.$factory("not relative primes: "+
+self+' and '+z)}
+return int.__pow__(inv,-exponent,z)}
+while(exponent > 0){if(exponent % 2==1){if(result*base > $B.max_int){result=long_int.__mul__(
+long_int.$factory(result),long_int.$factory(base))
+result=long_int.__mod__(result,z)}else{result=(result*base)% z}}
+exponent=exponent >> 1
+if(base*base > $B.max_int){base=long_int.__mul__(long_int.$factory(base),long_int.$factory(base))
+base=long_int.__mod__(base,z)}else{base=(base*base)% z}}
+return result}
+var res=Math.pow(self.valueOf(),other.valueOf())
+if(res > $B.min_int && res < $B.max_int){return other > 0 ? res :new Number(res)}else if(res !==Infinity && !isFinite(res)){return res}else{if($B.BigInt){return{
+__class__:$B.long_int,value:($B.BigInt(self)**$B.BigInt(other)).toString(),pos:true}}
+return $B.long_int.__pow__($B.long_int.$from_int(self),$B.long_int.$from_int(other))}}
+if(_b_.isinstance(other,_b_.float)){other=_b_.float.numerator(other)
+if(self >=0){return new Number(Math.pow(self,other))}else{
+return _b_.complex.__pow__($B.make_complex(self,0),other)}}else if(_b_.isinstance(other,_b_.complex)){var preal=Math.pow(self,other.$real),ln=Math.log(self)
+return $B.make_complex(preal*Math.cos(ln),preal*Math.sin(ln))}
+var rpow=$B.$getattr(other,"__rpow__",_b_.None)
+if(rpow !==_b_.None){return rpow(self)}
+$err("**",other)}
+function __newobj__(){
+var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
+var res=args.slice(1)
+res.__class__=args[0]
+return res}
+int.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,int_value(self)]),_b_.None,_b_.None,_b_.None])}
+int.__repr__=function(self){$B.builtins_repr_check(int,arguments)
+return int_value(self).toString()}
+int.__rshift__=function(self,other){self=int_value(self)
+if(typeof other=="number" ||_b_.isinstance(other,int)){other=int_value(other)
+return int.$factory($B.long_int.__rshift__($B.long_int.$factory(self),$B.long_int.$factory(other)))}
+return _b_.NotImplemented}
+int.__setattr__=function(self,attr,value){if(typeof self=="number" ||typeof self=="boolean"){var cl_name=$B.class_name(self)
+if(_b_.dir(self).indexOf(attr)>-1){var msg="attribute '"+attr+`' of '${cl_name}'`+
+"objects is not writable"}else{var msg=`'${cl_name}' object has no attribute '${attr}'`}
+throw _b_.AttributeError.$factory(msg)}
+_b_.dict.$setitem(self.__dict__,attr,value)
+return _b_.None}
+int.__sub__=function(self,other){self=int_value(self)
+if(_b_.isinstance(other,int)){if(other.__class__==$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
+other=int_value(other)
+var res=self-other
+if(res > $B.min_int && res < $B.max_int){return res}else{return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}}
+return _b_.NotImplemented}
+int.__truediv__=function(self,other){if(_b_.isinstance(other,int)){other=int_value(other)
+if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
+if(other.__class__===$B.long_int){return new Number(self/parseInt(other.value))}
+return new Number(self/other)}
+return _b_.NotImplemented}
+int.bit_length=function(self){s=_b_.bin(self)
+s=$B.$getattr(s,"lstrip")("-0b")
+return s.length }
+int.numerator=function(self){return int_value(self)}
+int.denominator=function(self){return int.$factory(1)}
+int.imag=function(self){return int.$factory(0)}
+int.real=function(self){return self}
+for(var attr of['numerator','denominator','imag','real']){int[attr].setter=(function(x){return function(self,value){throw _b_.AttributeError.$factory(`attribute '${x}' of `+
+`'${$B.class_name(self)}' objects is not writable`)}})(attr)}
+$B.max_int32=(1 << 30)*2-1
+$B.min_int32=-$B.max_int32
+var $op_func=function(self,other){self=int_value(self)
+if(typeof other=="number" ||_b_.isinstance(other,int)){if(other.__class__===$B.long_int){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
+other=int_value(other)
+if(self > $B.max_int32 ||self < $B.min_int32 ||
+other > $B.max_int32 ||other < $B.min_int32){return $B.long_int.__sub__($B.long_int.$factory(self),$B.long_int.$factory(other))}
+return self-other}
+return _b_.NotImplemented}
+$op_func+="" 
+var $ops={"&":"and","|":"or","^":"xor"}
+for(var $op in $ops){var opf=$op_func.replace(/-/gm,$op)
+opf=opf.replace(new RegExp("sub","gm"),$ops[$op])
+eval("int.__"+$ops[$op]+"__ = "+opf)}
+var $comp_func=function(self,other){if(other.__class__===$B.long_int){return $B.long_int.__lt__(other,$B.long_int.$factory(self))}
+if(_b_.isinstance(other,int)){other=int_value(other)
+return self.valueOf()> other.valueOf()}else if(_b_.isinstance(other,_b_.float)){return self.valueOf()> _b_.float.numerator(other)}else if(_b_.isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
+if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return int.__gt__(self,$B.$GetInt(other))}
+return _b_.NotImplemented}
+$comp_func+="" 
+for(var $op in $B.$comps){eval("int.__"+$B.$comps[$op]+"__ = "+
+$comp_func.replace(/>/gm,$op).
+replace(/__gt__/gm,"__"+$B.$comps[$op]+"__").
+replace(/__lt__/,"__"+$B.$inv_comps[$op]+"__"))}
+var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or","divmod"]
+for(var r_opname of r_opnames){if(int["__r"+r_opname+"__"]===undefined &&
+int['__'+r_opname+'__']){int["__r"+r_opname+"__"]=(function(name){return function(self,other){if(_b_.isinstance(other,int)){other=int_value(other)
+return int["__"+name+"__"](other,self)}
+return _b_.NotImplemented}})(r_opname)}}
+var $valid_digits=function(base){var digits=""
+if(base===0){return "0"}
+if(base < 10){for(var i=0;i < base;i++){digits+=String.fromCharCode(i+48)}
+return digits}
+var digits="0123456789"
+for(var i=10;i < base;i++){digits+=String.fromCharCode(i+55)}
+return digits}
+int.$factory=function(value,base){
+if(value===undefined){return 0}
+if(typeof value=="number" &&
+(base===undefined ||base==10)){return parseInt(value)}
+if(_b_.isinstance(value,_b_.complex)){throw _b_.TypeError.$factory("can't convert complex to int")}
+var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base":10},null,null),value=$ns["x"],base=$ns["base"]
+if(_b_.isinstance(value,_b_.float)&& base==10){value=_b_.float.numerator(value)
+if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
+else{return value > 0 ? Math.floor(value):Math.ceil(value)}}
+if(!(base >=2 && base <=36)){
+if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
+if(typeof value=="number"){if(base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value)}
+return value}else if(value.toString().search("e")>-1){
+throw _b_.OverflowError.$factory("can't convert to base "+base)}else{var res=parseInt(value,base)
+if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value,base)}
+return res}}
+if(value===true){return Number(1)}
+if(value===false){return Number(0)}
+if(value.__class__===$B.long_int){var z=parseInt(value.value)
+if(z > $B.min_int && z < $B.max_int){return z}
+else{return value}}
+base=$B.$GetInt(base)
+function invalid(value,base){throw _b_.ValueError.$factory("invalid literal for int() with base "+
+base+": '"+_b_.str.$factory(value)+"'")}
+if(_b_.isinstance(value,_b_.str)){value=value.valueOf()}
+if(typeof value=="string"){var _value=value.trim()
+if(_value.length==2 && base==0 &&
+(_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
+if(_value.length > 2){var _pre=_value.substr(0,2).toUpperCase()
+if(base==0){if(_pre=="0B"){base=2}
+if(_pre=="0O"){base=8}
+if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
+else if(_pre=="0O" && base !=8){invalid(_value,base)}
+if((_pre=="0B" && base==2)||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
+while(_value.startsWith("_")){_value=_value.substr(1)}}}else if(base==0){
+base=10}
+var _digits=$valid_digits(base),_re=new RegExp("^[+-]?["+_digits+"]"+
+"["+_digits+"_]*$","i"),match=_re.exec(_value)
+if(match===null){invalid(value,base)}else{value=_value.replace(/_/g,"")}
+if(base <=10 && ! isFinite(value)){invalid(_value,base)}
+var res=parseInt(value,base)
+if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
+return res}
+if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
+for(var special_method of["__int__","__index__","__trunc__"]){var num_value=$B.$getattr(value.__class__ ||$B.get_class(value),special_method,_b_.None)
+if(num_value !==_b_.None){return $B.$call(num_value)(value)}}
+throw _b_.TypeError.$factory(
+"int() argument must be a string, a bytes-like "+
+"object or a number, not '"+$B.class_name(value)+"'")}
+$B.set_func_names(int,"builtins")
+_b_.int=int
+$B.$bool=function(obj){
+if(obj===null ||obj===undefined ){return false}
+switch(typeof obj){case "boolean":
+return obj
+case "number":
+case "string":
+if(obj){return true}
+return false
+default:
+if(obj.$is_class){return true}
+var klass=obj.__class__ ||$B.get_class(obj),missing={},bool_method=$B.$getattr(klass,"__bool__",missing)
+if(bool_method===missing){try{return _b_.len(obj)> 0}
+catch(err){return true}}else{var res=$B.$call(bool_method)(obj)
+if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
+"bool, returned "+$B.class_name(res))}
+return res}}}
+var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],$infos:{__name__:"bool",__module__:"builtins"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+bool.__and__=function(self,other){if(_b_.isinstance(other,bool)){return self && other}else if(_b_.isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
+return _b_.NotImplemented}
+bool.__float__=function(self){return self ? new Number(1):new Number(0)}
+bool.__hash__=bool.__index__=bool.__int__=function(self){if(self.valueOf())return 1
+return 0}
+bool.__neg__=function(self){return-$B.int_or_bool(self)}
+bool.__or__=function(self,other){if(_b_.isinstance(other,bool)){return self ||other}else if(_b_.isinstance(other,int)){return int.__or__(bool.__index__(self),int.__index__(other))}
+return _b_.NotImplemented}
+bool.__pos__=$B.int_or_bool
+bool.__repr__=function(self){$B.builtins_repr_check(bool,arguments)
+return self ? "True" :"False"}
+bool.__xor__=function(self,other){if(_b_.isinstance(other,bool)){return self ^ other ? true :false}else if(_b_.isinstance(other,int)){return int.__xor__(bool.__index__(self),int.__index__(other))}
+return _b_.NotImplemented}
+bool.$factory=function(){
+var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)
+return $B.$bool($.x)}
+bool.numerator=int.numerator
+bool.denominator=int.denominator
+bool.real=int.real
+bool.imag=int.imag
+_b_.bool=bool
+$B.set_func_names(bool,"builtins")})(__BRYTHON__)
+;
+;(function($B){
+var bltns=$B.InjectBuiltins()
+eval(bltns)
+try{eval("window")}catch(err){window=self}
+var long_int={__class__:_b_.type,__mro__:[int,object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+var max_safe_divider=$B.max_int/9
+function add_pos(v1,v2){
+if(window.BigInt){return{
+__class__:long_int,value:(BigInt(v1)+BigInt(v2)).toString(),pos:true}}
+var res="",carry=0,iself=v1.length,sv=0,x
+for(var i=v2.length-1;i >=0 ;i--){iself--
+if(iself < 0){sv=0}else{sv=parseInt(v1.charAt(iself))}
+x=(carry+sv+parseInt(v2.charAt(i))).toString()
+if(x.length==2){res=x.charAt(1)+res
+carry=parseInt(x.charAt(0))}
+else{res=x+res;carry=0}}
+while(iself > 0){iself--
+x=(carry+parseInt(v1.charAt(iself))).toString()
+if(x.length==2){res=x.charAt(1)+res
+carry=parseInt(x.charAt(0))}
+else{res=x+res;carry=0}}
+if(carry){res=carry+res}
+return{__class__:long_int,value:res,pos:true}}
+var len=((Math.pow(2,53)-1)+'').length-1
+function binary_pos(t){var nb_chunks=Math.ceil(t.length/len),chunks=[],pos,start,nb,bin=[]
+for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
+start=Math.max(0,pos)
+nb=pos-start
+chunks.push(t.substr(start,len+nb))}
+chunks=chunks.reverse()
+chunks.forEach(function(chunk,i){chunks[i]=parseInt(chunk)})
+var rest
+var carry=Math.pow(10,15)
+while(chunks[chunks.length-1]> 0){chunks.forEach(function(chunk,i){rest=chunk % 2
+chunks[i]=Math.floor(chunk/2)
+if(rest && i < chunks.length-1){chunks[i+1]+=carry}})
+bin.push(rest)
+if(chunks[0]==0){chunks.shift()}}
+bin=bin.reverse().join('')
+return bin}
+function binary(obj){var bpos=binary_pos(obj.value)
+if(obj.pos){return bpos}
+var res=''
+for(var i=0,len=bpos.length;i < len;i++){res+=bpos.charAt(i)=="0" ? "1":"0"}
+var add1=add_pos(res,"1").value
+add1=res.substr(0,res.length-add1.length)+add1
+return add1}
+function check_shift(shift){
+if(! isinstance(shift,long_int)){throw TypeError.$factory("shift must be int, not '"+
+$B.class_name(shift)+"'")}
+if(! shift.pos){throw ValueError.$factory("negative shift count")}}
+function clone(obj){
+var obj1={}
+for(var attr in obj){obj1[attr]=obj[attr]}
+return obj1}
+function comp_pos(v1,v2){
+if(v1.length > v2.length){return 1}
+else if(v1.length < v2.length){return-1}
+else{if(v1 > v2){return 1}
+else if(v1 < v2){return-1}}
+return 0}
+function divmod_by_safe_int(t,n){
+if(n==1){return[t,0]}
+var T=t.toString(),L=n.toString().length,a=parseInt(T.substr(0,L)),next_pos=L-1,quotient='',q,rest
+while(true){q=Math.floor(a/n)
+rest=a-q*n
+quotient+=q
+next_pos++
+if(next_pos >=T.length){return[quotient,rest]}
+a=10*rest+parseInt(T[next_pos])}}
+function divmod_pos(v1,v2){
+if($B.BigInt){var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
+return[a,b]}
+var iv1=parseInt(v1),iv2=parseInt(v2),res1
+if(iv1 < $B.max_int && iv2 < $B.max_int){var rest=iv1 % iv2,quot=Math.floor(iv1/iv2).toString()
+var res1=[{__class__:long_int,value:quot.toString(),pos:true},{__class__:long_int,value:rest.toString(),pos:true}
+]
+return res1}else if(iv2 < max_safe_divider){var res_safe=divmod_by_safe_int(v1,iv2)
+return[long_int.$factory(res_safe[0]),long_int.$factory(res_safe[1])]}
+var quotient,mod
+if(comp_pos(v1,v2)==-1){
+quotient="0"
+mod=long_int.$factory(v1)}else if(v2==v1){
+quotient="1"
+mod=long_int.$factory("0")}else{var quotient="",left=v1.substr(0,v2.length)
+if(v1 < v2){left=v1.substr(0,v2.length+1)}
+var right=v1.substr(left.length)
+var mv2={}
+while(true){
+var candidate=Math.floor(parseInt(left)/parseInt(v2))+""
+if(candidate=="10"){
+candidate="9"}
+if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}
+if(comp_pos(left,mv2[candidate])==-1){
+candidate--
+if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}}
+quotient+=candidate
+left=sub_pos(left,mv2[candidate]).value
+if(right.length==0){break}
+left+=right.charAt(0)
+right=right.substr(1)}
+mod=sub_pos(v1,mul_pos(quotient,v2).value)}
+return[long_int.$factory(quotient),mod]}
+function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
+for(var i=0;i < nb;i++){var pos=len-size*(i+1)
+if(pos < 0){size+=pos;pos=0}
+chunks.push(parseInt(s.substr(pos,size)))}
+return chunks}
+function mul_pos(x,y){if($B.BigInt){
+return long_int.$factory(from_BigInt(BigInt(x)*BigInt(y)))}
+var ix=parseInt(x),iy=parseInt(y),z=ix*iy
+if(z < $B.max_int){return{
+__class__:long_int,value:z.toString(),pos:true}}
+var chunk_size=6,cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
+var products={},len=cx.length+cy.length
+for(var i=0;i < len-1;i++){products[i]=0}
+for(var i=0;i < cx.length;i++){for(var j=0;j < cy.length;j++){products[i+j]+=cx[i]*cy[j]}}
+var nb=len-1,pos
+for(var i=0;i < len-1;i++){var chunks=split_chunks(products[i].toString(),chunk_size)
+for(var j=1;j < chunks.length;j++){pos=i+j
+if(products[pos]===undefined){products[pos]=parseInt(chunks[j])
+nb=pos}
+else{products[pos]+=parseInt(chunks[j])}}
+products[i]=chunks[0]}
+var result="",i=0,s
+while(products[i]!==undefined){s=products[i].toString()
+if(products[i+1]!==undefined){s="0".repeat(chunk_size-s.length)+s}
+result=s+result
+i++}
+try{return long_int.$factory(result)}catch(err){console.log(x,y,products,result)
+throw err}}
+function sub_pos(v1,v2){
+if(window.BigInt){return{
+__class__:long_int,value:(BigInt(v1)-BigInt(v2)).toString(),pos:true}}
+var res="",carry=0,i1=v1.length,sv=0,x
+for(var i=v2.length-1;i >=0;i--){i1--
+sv=parseInt(v1.charAt(i1))
+x=(sv-carry-parseInt(v2.charAt(i)))
+if(isNaN(x)){console.log("x is NaN",v1.length,v2.length,i,i1,sv,carry,i,v2.charAt(i))}
+if(x < 0){res=(10+x)+res;carry=1}
+else{res=x+res;carry=0}}
+if(res.startsWith("NaN")){alert(res)}
+while(i1 > 0){i1--
+x=(parseInt(v1.charAt(i1))-carry)
+if(x < 0){res=(10+x)+res;carry=1}
+else{res=x+res;carry=0}}
+while(res.charAt(0)=="0" && res.length > 1){res=res.substr(1)}
+if(res.startsWith("NaN")){console.log("hoho !!",v1,v2,v1 >=v2,res)}
+return{__class__:long_int,value:res,pos:true}}
+function to_BigInt(x){var res=$B.BigInt(x.value)
+if(x.pos){return res}
+return-res}
+function to_int(long_int){return long_int.pos ? parseInt(long_int.value):-parseInt(long_int.value)}
+function from_BigInt(y){var pos=y >=0
+y=y.toString()
+y=y.endsWith("n")? y.substr(0,y.length-1):y
+y=y.startsWith('-')? y.substr(1):y
+return intOrLong({__class__:long_int,value:y,pos:pos})}
+long_int.$from_float=function(value){var s=Math.abs(value).toString(),v=s
+if(s.search("e")>-1){var t=/-?(\d)(\.\d+)?e([+-])(\d*)/.exec(s),n1=t[1],n2=t[2],pos=t[3],exp=t[4]
+if(pos=="+"){if(n2===undefined){v=n1+"0".repeat(exp-1)}else{v=n1+n2+"0".repeat(exp-1-n2.length)}}}
+return{__class__:long_int,value:v,pos:value >=0}}
+function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
+if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
+"' for object of type 'int'")}
+var res
+switch(fmt.type){case undefined:
+case "d":
+res=self.toString()
+break
+case "b":
+res=(fmt.alternate ? "0b" :"")+BigInt(self.value).toString(2)
+break
+case "c":
+res=_b_.chr(self)
+break
+case "o":
+res=(fmt.alternate ? "0o" :"")+BigInt(self.value).toString(8)
+break
+case "x":
+res=(fmt.alternate ? "0x" :"")+BigInt(self.value).toString(16)
+break
+case "X":
+res=(fmt.alternate ? "0X" :"")+BigInt(self.value).toString(16).toUpperCase()
+break
+case "n":
+return self }
+if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
+return res}
+long_int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
+return _b_.float.__format__(self,format_spec)}
+fmt.align=fmt.align ||">"
+var res=preformat(self,fmt)
+if(fmt.comma){var sign=res[0]=="-" ? "-" :"",rest=res.substr(sign.length),len=rest.length,nb=Math.ceil(rest.length/3),chunks=[]
+for(var i=0;i < nb;i++){chunks.push(rest.substring(len-3*i-3,len-3*i))}
+chunks.reverse()
+res=sign+chunks.join(",")}
+return $B.format_width(res,fmt)}
+long_int.__abs__=function(self){return{__class__:long_int,value:self.value,pos:true}}
+long_int.__add__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)+other)}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 :0)}else if(isinstance(other,int)){
+other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}else{return _b_.NotImplemented}}
+if($B.BigInt){return from_BigInt(to_BigInt(self)+to_BigInt(other))}
+var res
+if(self.pos && other.pos){
+return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
+res=add_pos(self.value,other.value)
+res.pos=false
+return intOrLong(res)}else if(self.pos && ! other.pos){
+switch(comp_pos(self.value,other.value)){case 1:
+res=sub_pos(self.value,other.value)
+break
+case 0:
+res={__class__:long_int,value:0,pos:true}
+break
+case-1:
+res=sub_pos(other.value,self.value)
+res.pos=false
+break}
+return intOrLong(res)}else{
+switch(comp_pos(self.value,other.value)){case 1:
+res=sub_pos(self.value,other.value)
+res.pos=false
+break
+case 0:
+res={__class__:long_int,value:0,pos:true}
+break
+case-1:
+res=sub_pos(other.value,self.value)
+break}
+return intOrLong(res)}}
+long_int.__and__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if($B.BigInt){return from_BigInt(to_BigInt(self)& to_BigInt(other))}
+var v1=self.value,v2=other.value,temp1,temp2,res=""
+var neg=(! self.pos)&&(! other.pos)
+if(neg){self=long_int.__neg__(self)
+other=long_int.__neg__(other)}
+var b1=binary(self),len1=b1.length,b2=binary(other),len2=b2.length,i=1,res='',x1,x2
+while(true){if(i > len1 && i > len2){break}
+if(i > len1){x1=self.pos ? "0" :"1"}else{x1=b1.charAt(len1-i)}
+if(i > len2){x2=other.pos ? "0" :"1"}else{x2=b2.charAt(len2-i)}
+if(x1=="1" && x2=="1"){res="1"+res}else{res="0"+res}
+i++}
+while(res.charAt(0)=="0"){res=res.substr(1)}
+res=$B.long_int.$factory(res,2)
+if(neg){res.pos=false}
+return intOrLong(res)}
+long_int.__divmod__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+var dm=divmod_pos(self.value,other.value)
+if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
+if(dm[1].value !="0"){
+dm[0]=long_int.__sub__(dm[0],long_int.$factory("1"))
+dm[1]=long_int.__sub__(self,long_int.__mul__(other,long_int.$factory(dm[0])))}}
+return $B.fast_tuple([intOrLong(dm[0]),intOrLong(dm[1])])}
+long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+return self.value==other.value && self.pos==other.pos}
+long_int.__float__=function(self){if(! isFinite(parseFloat(self.value))){throw _b_.OverflowError.$factory("int too big to convert to float")}
+return new Number(parseFloat(self.value))}
+long_int.__floordiv__=function(self,other){if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)/other)}
+if(typeof other=="number" && Math.abs(other)< $B.max_safe_divider){var t=self.value,res=divmod_by_safe_int(t,other),pos=other > 0 ? self.pos :!self.pos
+return{__class__:long_int,value:res[0],pos:pos}}
+var res=intOrLong(long_int.__divmod__(self,other)[0])
+return res}
+long_int.__ge__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if(self.pos !=other.pos){return ! other.pos}
+if(self.value.length > other.value.length){return self.pos}
+else if(self.value.length < other.value.length){return ! self.pos}
+else{return self.pos ? self.value >=other.value :
+self.value <=other.value}}
+long_int.__gt__=function(self,other){return ! long_int.__le__(self,other)}
+long_int.__hash__=function(self){var modulus=$B.fast_long_int("2305843009213693951",true),self_pos=$B.fast_long_int(self.value,true)
+var _hash=$B.long_int.__mod__(self_pos,modulus)
+if(typeof _hash=="number"){_hash=self.pos ? _hash :-_hash}else{_hash.pos=self.pos}
+return self.__hashvalue__=_hash}
+long_int.__index__=function(self){
+var res='',temp=self.value,d
+while(true){d=divmod_pos(temp,"2")
+res=d[1].value+res
+temp=d[0].value
+if(temp=="0"){break}}
+if(! self.pos){
+var nres="",flag=false
+for(var len=res.length-1,i=len;i >=0 ;i--){var bit=res.charAt(i)
+if(bit=="0"){if(flag){nres="1"+nres}else{nres="0"+nres}}else{if(flag){nres="0"+nres}
+else{flag=true;nres="1"+nres}}}
+nres="1"+nres
+res=nres}else{res="0"+res}
+return intOrLong(res)}
+long_int.__invert__=function(self){return long_int.__sub__(long_int.$factory("-1"),self)}
+long_int.__le__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if(self.pos !==other.pos){return ! self.pos}
+if(self.value.length > other.value.length){return ! self.pos}
+else if(self.value.length < other.value.length){return self.pos}
+else{return self.pos ? self.value <=other.value :
+self.value >=other.value}}
+long_int.__lt__=function(self,other){return !long_int.__ge__(self,other)}
+long_int.__lshift__=function(self,shift){if(window.BigInt){if(shift.__class__==long_int){shift=shift.value}
+return intOrLong({__class__:long_int,value:(BigInt(self.value)<< BigInt(shift)).toString(),pos:self.pos})}
+var is_long=shift.__class__===long_int,shift_safe
+if(is_long){var shift_value=parseInt(shift.value)
+if(shift_value < 0){throw _b_.ValueError.$factory('negative shift count')}
+if(shift_value < $B.max_int){shift_safe=true
+shift=shift_value}}
+if(shift_safe){if(shift_value==0){return self}}else{shift=long_int.$factory(shift)
+if(shift.value=="0"){return self}}
+var res=self.value
+while(true){var x,carry=0,res1=""
+for(var i=res.length-1;i >=0;i--){x=(carry+parseInt(res.charAt(i))*2).toString()
+if(x.length==2){res1=x.charAt(1)+res1
+carry=parseInt(x.charAt(0))}else{res1=x+res1
+carry=0}}
+if(carry){res1=carry+res1}
+res=res1
+if(shift_safe){shift--
+if(shift==0){break}}else{shift=sub_pos(shift.value,"1")
+if(shift.value=="0"){break}}}
+return intOrLong({__class__:long_int,value:res,pos:self.pos})}
+long_int.__mod__=function(self,other){return intOrLong(long_int.__divmod__(self,other)[1])}
+long_int.__mro__=[_b_.int,_b_.object]
+long_int.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
+case Number.POSITIVE_INFINITY:
+if($B.rich_comp("__eq__",other,0)){return NaN}
+else if(_b_.getattr(other,"__gt__")(0)){return self}
+else{return-self}}
+if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)*other)}
+if(typeof other=="number"){other=long_int.$factory(other)}
+other_value=other.value
+other_pos=other.pos
+if(other.__class__ !==long_int && isinstance(other,int)){
+var value=int.__index__(other)
+other_value=_b_.str.$factory(value)
+other_pos=value > 0}
+if($B.BigInt){return from_BigInt(to_BigInt(self)*to_BigInt(other))}
+var res=mul_pos(self.value,other_value)
+if(self.pos==other_pos){return intOrLong(res)}
+res.pos=false
+return intOrLong(res)}
+long_int.__ne__=function(self,other){var res=long_int.__eq__(self,other)
+return res===_b_.NotImplemented ? res :!res}
+long_int.__neg__=function(obj){return{__class__:long_int,value:obj.value,pos:! obj.pos}}
+long_int.__or__=function(self,other){other=long_int.$factory(other)
+var v1=long_int.__index__(self)
+var v2=long_int.__index__(other)
+if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
+var start=v1.length-v2.length
+var res=v1.substr(0,start)
+for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" ||v2.charAt(i)=="1"){res+="1"}
+else{res+="0"}}
+return intOrLong(long_int.$factory(res,2))}
+long_int.__pos__=function(self){return self}
+long_int.__pow__=function(self,power,z){if(typeof power=="number"){power=long_int.$from_int(power)}else if(isinstance(power,int)){
+power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! isinstance(power,long_int)){var msg="power must be an integer, not '"
+throw TypeError.$factory(msg+$B.class_name(power)+"'")}
+if(! power.pos){if(self.value=="1"){return self}
+return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
+if($B.BigInt){var s=$B.BigInt(self.value),b=$B.BigInt(1),x=$B.BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? $B.BigInt(z):
+$B.BigInt(z.value)
+if(z===undefined){return{
+__class__:long_int,value:(s**x).toString(),pos:true}}
+while(x > 0){if(x % $B.BigInt(2)==1){b=b*s}
+x=x/$B.BigInt(2)
+if(x > 0){s=s*s}
+if(z !==undefined){b=b % z}}
+return{__class__:long_int,value:b.toString(),pos:true}}
+var b={__class__:long_int,value:"1",pos:true},s=self,pow=power.value,temp
+while(true){if(typeof pow=="string" && parseInt(pow)< $B.max_int){pow=parseInt(pow)}
+if(pow==0){break}else if(typeof pow=="string"){if(parseInt(pow.charAt(pow.length-1))% 2==1){b=long_int.__mul__(b,s)}
+pow=long_int.__floordiv__(pow,2)}else{if(pow % 2==1){if(typeof b=="number" && typeof s=="number" &&
+(temp=b*s)< $B.max_int){b=temp}else{b=long_int.__mul__(long_int.$factory(b),long_int.$factory(s))}}
+pow=Math.floor(pow/2)}
+if(pow > 0){if(typeof s=="number" &&(temp=s*s)< $B.max_int){s=temp}else{s=long_int.$factory(s)
+s=long_int.__mul__(s,s)}}
+if(z !==undefined){b=long_int.__mod__(b,z)}}
+return intOrLong(b)}
+long_int.__rshift__=function(self,shift){if(window.BigInt){if(shift.__class__===long_int){shift=shift.value}
+return intOrLong(
+{__class__:long_int,value:(BigInt(self.value)>> BigInt(shift)).toString(),pos:self.pos}
+)}
+if(typeof shift=="number"){var pow2=Math.pow(2,shift)
+if(pow2 < $B.max_int){var res=divmod_by_safe_int(self.value,pow2)
+return intOrLong({__class__:long_int,value:res[0],pos:self.pos})}}
+shift=long_int.$factory(shift)
+if(shift.value=="0"){return self}
+var res=self.value
+while(true){res=divmod_pos(res,"2")[0].value
+if(res.value=="0"){break}
+shift=sub_pos(shift.value,"1")
+if(shift.value=="0"){break}}
+return intOrLong({__class__:long_int,value:res,pos:self.pos})}
+long_int.__str__=long_int.__repr__=function(self){var res=""
+if(! self.pos){res+='-'}
+return res+self.value}
+long_int.__sub__=function(self,other){if(isinstance(other,_b_.float)){other=other instanceof Number ? other :other.$brython_value
+return _b_.float.$factory(to_int(self)-other)}
+if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
+if($B.BigInt){}
+var res
+if(self.pos && other.pos){switch(comp_pos(self.value,other.value)){case 1:
+res=sub_pos(self.value,other.value)
+break
+case 0:
+res={__class__:long_int,value:"0",pos:true}
+break
+case-1:
+res=sub_pos(other.value,self.value)
+res.pos=false
+break}
+return intOrLong(res)}else if(! self.pos && ! other.pos){switch(comp_pos(self.value,other.value)){case 1:
+res=sub_pos(self.value,other.value)
+res.pos=false
+break
+case 0:
+res={__class__:long_int,value:"0",pos:true}
+break
+case-1:
+res=sub_pos(other.value,self.value)
+break}
+return intOrLong(res)}else if(self.pos && ! other.pos){return intOrLong(add_pos(self.value,other.value))}else{res=add_pos(self.value,other.value)
+res.pos=false
+return intOrLong(res)}}
+long_int.__truediv__=function(self,other){if(isinstance(other,long_int)){return _b_.float.$factory(to_int(self)/to_int(other))}else if(isinstance(other,_b_.int)){return _b_.float.$factory(to_int(self)/other)}else if(isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)/other)}else{throw TypeError.$factory(
+"unsupported operand type(s) for /: 'int' and '"+
+$B.class_name(other)+"'")}}
+long_int.__xor__=function(self,other){other=long_int.$factory(other)
+var v1=long_int.__index__(self),v2=long_int.__index__(other)
+if(v1.length < v2.length){var temp=v2;v2=v1;v1=temp}
+var start=v1.length-v2.length
+var res=v1.substr(0,start)
+for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="0"){res+="1"}
+else if(v1.charAt(start+i)=="0" && v2.charAt(i)=="1"){res+="1"}
+else{res+="0"}}
+return intOrLong(long_int.$factory(res,2))}
+long_int.bit_length=function(self){return binary(self).length}
+long_int.numerator=function(self){return self}
+long_int.denominator=function(self){return _b_.int.$factory(1)}
+long_int.imag=function(self){return _b_.int.$factory(0)}
+long_int.real=function(self){return self}
+long_int.to_base=function(self,base){
+if(base==2){return binary_pos(self.value)}
+var res="",v=self.value
+while(v > 0){var dm=divmod_pos(v,base.toString())
+res=parseInt(dm[1].value).toString(base)+res
+v=dm[0].value
+if(v==0){break}}
+return res}
+long_int.to_bytes=function(self,len,byteorder,signed){
+var res=[],v=self.value
+if(! $B.$bool(signed)&& ! self.pos){throw _b_.OverflowError.$factory("can't convert negative int to unsigned")}
+while(v > 0){var dm=divmod_pos(v,256)
+v=parseInt(dm[0].value)
+res.push(parseInt(dm[1].value))
+if(res.length > len){throw _b_.OverflowError.$factory("int too big to convert")}}
+while(res.length < len){res.push(0)}
+if(byteorder=='big'){res.reverse()}
+return _b_.bytes.$factory(res)}
+function digits(base){
+var is_digits={}
+for(var i=0;i < base;i++){if(i==10){break}
+is_digits[i]=true}
+if(base > 10){
+for(var i=0;i < base-10;i++){is_digits[String.fromCharCode(65+i)]=true
+is_digits[String.fromCharCode(97+i)]=true}}
+return is_digits}
+var MAX_SAFE_INTEGER=Math.pow(2,53)-1
+var MIN_SAFE_INTEGER=-MAX_SAFE_INTEGER
+function isSafeInteger(n){return(typeof n==="number" &&
+Math.round(n)===n &&
+MIN_SAFE_INTEGER <=n &&
+n <=MAX_SAFE_INTEGER)}
+function intOrLong(long){
+var v=parseInt(long.value)*(long.pos ? 1 :-1)
+if(v > MIN_SAFE_INTEGER && v < MAX_SAFE_INTEGER){return v}
+return long}
+long_int.$from_int=function(value){return{__class__:long_int,value:value.toString(),pos:value > 0}}
+long_int.$factory=function(value,base){if(arguments.length > 2){throw _b_.TypeError.$factory("long_int takes at most 2 arguments ("+
+arguments.length+" given)")}
+if(base===undefined){base=10}
+else if(!isinstance(base,int)){throw TypeError.$factory("'"+$B.class_name(base)+
+"' object cannot be interpreted as an integer")}
+if(base < 0 ||base==1 ||base > 36){throw ValueError.$factory(
+"long_int.$factory() base must be >= 2 and <= 36")}
+if(typeof value=="number"){var pos=value >=0,value=Math.abs(value),res
+if(isSafeInteger(value)){res=long_int.$from_int(value)}
+else if(value.constructor==Number){var s=value.toString(),pos_exp=s.search("e")
+if(pos_exp >-1){var mant=s.substr(0,pos_exp),exp=parseInt(s.substr(pos_exp+1)),point=mant.search(/\./)
+if(point >-1){var nb_dec=mant.substr(point+1).length
+if(nb_dec > exp){var res=mant.substr(0,point)+
+mant.substr(point+1).substr(0,exp)
+res=long_int.$from_int(res)}else{var res=mant.substr(0,point)+
+mant.substr(point+1)+'0'.repeat(exp-nb_dec)
+res=long_int.$from_int(res)}}else{res=long_int.$from_int(mant+'0'.repeat(exp))}}else{var point=s.search(/\./)
+if(point >-1){res=long_int.$from_int(s.substr(0,point))}else{res=long_int.$from_int(s)}}}
+else{throw ValueError.$factory(
+"argument of long_int is not a safe integer")}
+res.pos=pos
+return res}else if(isinstance(value,_b_.float)){if(value===Number.POSITIVE_INFINITY ||
+value===Number.NEGATIVE_INFINITY){return value}
+if(value >=0){value=new Number(Math.round(value.value))}
+else{value=new Number(Math.ceil(value.value))}}else if(isinstance(value,_b_.bool)){if(value.valueOf()){return int.$factory(1)}
+return int.$factory(0)}else if(value.__class__===long_int){return value}else if(isinstance(value,int)){
+value=value.$brython_value+""}else if(isinstance(value,_b_.bool)){value=_b_.bool.__int__(value)+""}else if(typeof value !="string"){throw ValueError.$factory(
+"argument of long_int must be a string, not "+
+$B.class_name(value))}
+var has_prefix=false,pos=true,start=0
+while(value.charAt(0)==" " && value.length){value=value.substr(1)}
+while(value.charAt(value.length-1)==" " && value.length){value=value.substr(0,value.length-1)}
+if(value.charAt(0)=="+"){has_prefix=true}
+else if(value.charAt(0)=="-"){has_prefix=true;pos=false}
+if(has_prefix){
+if(value.length==1){
+throw ValueError.$factory(
+'long_int argument is not a valid number: "'+value+'"')}else{value=value.substr(1)}}
+while(start < value.length-1 && value.charAt(start)=="0"){start++}
+value=value.substr(start)
+var is_digits=digits(base),point=-1
+for(var i=0;i < value.length;i++){if(value.charAt(i)=="." && point==-1){point=i}else if(false){
+var mant=value.substr(0,i)
+if(/^[+-]?\d+$/.exec(value.substr(i+1))){exp=parseInt(value.substr(i+1))}else{throw Error("wrong exp "+value.substr(i+1))}
+if(point !=-1){mant=mant.substr(0,point)+mant.substr(point+1)
+exp=exp+point-1}
+point=-1
+value=mant+"0".repeat(exp-mant.length)
+break}
+else if(! is_digits[value.charAt(i)]){throw ValueError.$factory(
+'long_int argument is not a valid number: "'+value+'"')}}
+if(point !=-1){value=value.substr(0,point)}
+if(base !=10){
+var coef="1",v10=long_int.$factory(0),ix=value.length
+while(ix--){var digit_base10=parseInt(value.charAt(ix),base).toString(),digit_by_coef=mul_pos(coef,digit_base10).value
+v10=add_pos(v10.value,digit_by_coef)
+coef=mul_pos(coef,base.toString()).value}
+return v10}
+return{__class__:long_int,value:value,pos:pos}}
+function extended_euclidean_algorithm(a,b){
+var s=0,old_s=1,t=1,old_t=0,r=b,old_r=a,quotient,tmp
+while($B.rich_comp('__ne__',r,0)){quotient=$B.rich_op('floordiv',old_r,r)
+tmp=$B.rich_op('sub',old_r,$B.rich_op('mul',quotient,r))
+old_r=r
+r=tmp
+tmp=$B.rich_op('sub',old_s,$B.rich_op('mul',quotient,s))
+old_s=s
+s=tmp
+tmp=$B.rich_op('sub',old_t,$B.rich_op('mul',quotient,t))
+old_t=t
+t=tmp}
+return[old_r,old_s,old_t]}
+function inverse_of(n,p){
+var gcd,x,y
+[gcd,x,y]=extended_euclidean_algorithm(n,p)
+if($B.rich_comp('__ne__',gcd,1)){
+throw Error(
+`${n} has no multiplicative inverse '
+            'modulo ${p}`)}else{return $B.rich_op('mod',x,p)}}
+$B.inverse_of=inverse_of
+$B.set_func_names(long_int,"builtins")
+$B.long_int=long_int
+$B.fast_long_int=function(value,pos){return{__class__:$B.long_int,value:value,pos:pos}}})(__BRYTHON__)
+;
+;(function($B){var bltns=$B.InjectBuiltins()
+eval(bltns)
+var object=_b_.object
+function $err(op,other){var msg="unsupported operand type(s) for "+op+
+": 'float' and '"+$B.class_name(other)+"'"
+throw _b_.TypeError.$factory(msg)}
+function float_value(obj){
+return obj.$brython_value !==undefined ? obj.$brython_value :obj}
+var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+float.numerator=function(self){return float_value(self)}
+float.denominator=function(self){return _b_.int.$factory(1)}
+float.imag=function(self){return _b_.int.$factory(0)}
+float.real=function(self){return float_value(self)}
+float.__float__=function(self){return float_value(self)}
+$B.shift1_cache={}
+float.as_integer_ratio=function(self){self=float_value(self)
+if(self.valueOf()==Number.POSITIVE_INFINITY ||
+self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
+"float.as_integer_ratio.")}
+if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to "+
+"float.as_integer_ratio.")}
+var tmp=_b_.$frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
+for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp*=2
+exponent--}}
+numerator=_b_.int.$factory(fp)
+py_exponent=abs(exponent)
+denominator=1
+var x
+if($B.shift1_cache[py_exponent]!==undefined){x=$B.shift1_cache[py_exponent]}else{x=$B.$getattr(1,"__lshift__")(py_exponent)
+$B.shift1_cache[py_exponent]=x}
+py_exponent=x
+if(exponent > 0){numerator=$B.rich_op("mul",numerator,py_exponent)}else{denominator=py_exponent}
+return $B.fast_tuple([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
+float.__abs__=function(self){return new Number(Math.abs(float_value(self)))}
+float.__bool__=function(self){self=float_value(self)
+return _b_.bool.$factory(self.valueOf())}
+float.__divmod__=function(self,other){if(! _b_.isinstance(other,[int,float])){return _b_.NotImplemented}
+return $B.fast_tuple([float.__floordiv__(self,other),float.__mod__(self,other)])}
+float.__eq__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isNaN(self)&& isNaN(other)){return false}
+if(isinstance(other,_b_.int)){return self==other}
+if(isinstance(other,float)){
+return self.valueOf()==other.valueOf()}
+if(isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
+return self==other.$real}
+return _b_.NotImplemented}
+float.__floordiv__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory('division by zero')}
+return float.$factory(Math.floor(self/other))}
+return _b_.NotImplemented}
+float.fromhex=function(arg){
+if(! isinstance(arg,_b_.str)){throw _b_.ValueError.$factory("argument must be a string")}
+var value=arg.trim()
+switch(value.toLowerCase()){case "+inf":
+case "inf":
+case "+infinity":
+case "infinity":
+return $FloatClass(Infinity)
+case "-inf":
+case "-infinity":
+return $FloatClass(-Infinity)
+case "+nan":
+case "nan":
+return $FloatClass(Number.NaN)
+case "-nan":
+return $FloatClass(-Number.NaN)
+case "":
+throw _b_.ValueError.$factory("could not convert string to float")}
+var mo=/^(\d*)(\.?)(\d*)$/.exec(value)
+if(mo !==null){var res=parseFloat(mo[1]),coef=16
+if(mo[2]){for(var digit of mo[3]){res+=parseInt(digit,16)/coef
+coef*=16}}
+return $FloatClass(res)}
+var _m=/^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
+if(_m==null){throw _b_.ValueError.$factory("invalid hexadecimal floating-point string")}
+var _sign=_m[1],_int=parseInt(_m[3]||'0',16),_fraction=_m[4]||'.0',_exponent=_m[5]||'p0'
+if(_sign=="-"){_sign=-1}else{_sign=1}
+var _sum=_int
+for(var i=1,len=_fraction.length;i < len;i++){_sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i)}
+return new Number(_sign*_sum*Math.pow(2,parseInt(_exponent.substring(1))))}
+float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
+throw _b_.ValueError.$factory("__getformat__() argument 1 must be "+
+"'double' or 'float'")}
+function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
+if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
+"' for object of type 'float'")}
+if(isNaN(self)){if(fmt.type=="f" ||fmt.type=="g"){return "nan"}
+else{return "NAN"}}
+if(self==Number.POSITIVE_INFINITY){if(fmt.type=="f" ||fmt.type=="g"){return "inf"}
+else{return "INF"}}
+if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
+if(fmt.type=="%"){self*=100}
+if(fmt.type=="e"){var res=self.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
+if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
+res.charAt(res.length-1)}
+return res}
+if(fmt.precision !==undefined){
+var prec=fmt.precision
+if(prec==0){return Math.round(self)+""}
+var res=self.toFixed(prec),pt_pos=res.indexOf(".")
+if(fmt.type !==undefined &&
+(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{var missing=fmt.precision-res.length+pt_pos+1
+if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
+if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{res=preformat(self,{type:"e",precision:fmt.precision-1})}
+var parts=res.split("e")
+if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{if(parts[1]){var signif=parts[0]
+while(signif.endsWith("0")){signif=signif.substr(0,signif.length-1)}
+if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
+parts[0]=signif}}
+res=parts.join("e")
+if(fmt.type=="G"){res=res.toUpperCase()}
+return res}else if(fmt.type===undefined){fmt.type="g"
+res=preformat(self,fmt)
+fmt.type=undefined}else{var res1=self.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
+if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
+while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
+res=elts.join("e")}}}else{var res=_b_.str.$factory(self)}
+if(fmt.type===undefined ||"gGn".indexOf(fmt.type)!=-1){
+if(res.search("e")==-1){while(res.charAt(res.length-1)=="0"){res=res.substr(0,res.length-1)}}
+if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}
+else{res=res.substr(0,res.length-1)}}}
+if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self > 0){res=fmt.sign+res}}
+if(fmt.type=="%"){res+="%"}
+return res}
+float.__format__=function(self,format_spec){self=float_value(self)
+var fmt=new $B.parse_format_spec(format_spec)
+fmt.align=fmt.align ||">"
+var raw=preformat(self,fmt).split('.'),_int=raw[0]
+if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
+for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
+chunks.reverse()
+raw[0]=chunks.join(",")}
+return $B.format_width(raw.join("."),fmt)}
+float.__hash__=function(self){if(self===undefined){return float.__hashvalue__ ||$B.$py_next_hash--}
+var _v=self.valueOf()
+if(_v===Infinity){return 314159}
+if(_v===-Infinity){return-271828}
+if(isNaN(_v)){return 0}
+if(_v==Math.round(_v)){return Math.round(_v)}
+var r=_b_.$frexp(_v)
+r[0]*=Math.pow(2,31)
+var hipart=_b_.int.$factory(r[0])
+r[0]=(r[0]-hipart)*Math.pow(2,31)
+var x=hipart+_b_.int.$factory(r[0])+(r[1]<< 15)
+return x & 0xFFFFFFFF}
+_b_.$isninf=function(x){var x1=x
+if(isinstance(x,float)){x1=float.numerator(x)}
+return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
+_b_.$isinf=function(x){var x1=x
+if((! x instanceof Number)&& isinstance(x,float)){x1=float.numerator(x)}
+return x1==Infinity ||x1==-Infinity ||
+x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
+_b_.$isnan=function(x){var x1=x
+if(isinstance(x,float)){x1=float.numerator(x)}
+return isNaN(x1)}
+_b_.$fabs=function(x){if(x==0){return new Number(0)}
+return x > 0 ? float.$factory(x):float.$factory(-x)}
+_b_.$frexp=function(x){var x1=x
+if(isinstance(x,float)){x1=x.valueOf()}
+if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}else if(x1==0){return[0,0]}
+var sign=1,ex=0,man=x1
+if(man < 0.){sign=-sign
+man=-man}
+while(man < 0.5){man*=2.0
+ex--}
+while(man >=1.0){man*=0.5
+ex++}
+man*=sign
+return[man,ex]}
+_b_.$ldexp=function(x,i){if(_b_.$isninf(x)){return float.$factory('-inf')}
+if(_b_.$isinf(x)){return float.$factory('inf')}
+var y=x
+if(isinstance(x,float)){y=x.valueOf()}
+if(y==0){return y}
+var j=i
+if(isinstance(i,float)){j=i.valueOf()}
+return y*Math.pow(2,j)}
+float.hex=function(self){
+self=float_value(self)
+var DBL_MANT_DIG=53,
+TOHEX_NBITS=DBL_MANT_DIG+3-(DBL_MANT_DIG+2)% 4
+switch(self.valueOf()){case Infinity:
+case-Infinity:
+case Number.NaN:
+case-Number.NaN:
+return self
+case-0:
+return "-0x0.0p0"
+case 0:
+return "0x0.0p0"}
+var _a=_b_.$frexp(_b_.$fabs(self.valueOf())),_m=_a[0],_e=_a[1],_shift=1-Math.max(-1021-_e,0)
+_m=_b_.$ldexp(_m,_shift)
+_e-=_shift
+var _int2hex="0123456789ABCDEF".split(""),_s=_int2hex[Math.floor(_m)]
+_s+='.'
+_m-=Math.floor(_m)
+for(var i=0;i <(TOHEX_NBITS-1)/4;i++){_m*=16.0
+_s+=_int2hex[Math.floor(_m)]
+_m-=Math.floor(_m)}
+var _esign="+"
+if(_e < 0){_esign="-"
+_e=-_e}
+if(self.value < 0){return "-0x"+_s+"p"+_esign+_e}
+return "0x"+_s+"p"+_esign+_e}
+float.__init__=function(self,value){return _b_.None}
+float.__int__=function(self){return parseInt(self)}
+float.is_integer=function(self){return _b_.int.$factory(self)==self}
+float.__mod__=function(self,other){
+self=float_value(self)
+other=float_value(other)
+if(other==0){throw ZeroDivisionError.$factory("float modulo")}
+if(isinstance(other,_b_.int)){other=_b_.int.numerator(other)
+return new Number((self % other+other)% other)}
+if(isinstance(other,float)){
+var q=Math.floor(self/other),r=self-other*q
+return new Number(r)}
+return _b_.NotImplemented}
+float.__mro__=[object]
+float.__mul__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,_b_.int)){if(other.__class__==$B.long_int){return new Number(self*parseFloat(other.value))}
+other=_b_.int.numerator(other)
+return new Number(self*other)}
+if(isinstance(other,float)){return new Number(self*float_value(other))}
+return _b_.NotImplemented}
+float.__ne__=function(self,other){var res=float.__eq__(self,other)
+return res===_b_.NotImplemented ? res :! res}
+float.__neg__=function(self){return new Number(-float_value(self))}
+float.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("float.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")}
+if(cls===float){return float.$factory(value)}
+return{
+__class__:cls,__dict__:$B.empty_dict(),$brython_value:value ||0}}
+float.__pos__=function(self){return float_value(self)}
+float.__pow__=function(self,other){self=float_value(self)
+other=float_value(other)
+var other_int=isinstance(other,_b_.int)
+if(other_int ||isinstance(other,float)){if(self==1){return self}
+if(other==0){return new Number(1)}
+if(self==-1 &&
+(! isFinite(other)||other.__class__===$B.long_int ||
+! $B.is_safe_int(other))&&
+! isNaN(other)){return new Number(1)}else if(self==0 && isFinite(other)&& other < 0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised "+
+"to a negative power")}else if(self==Number.NEGATIVE_INFINITY && ! isNaN(other)){if(other < 0 && other % 2==1){return new Number(-0.0)}else if(other < 0){return new Number(0)}
+else if(other > 0 && other % 2==1){return Number.NEGATIVE_INFINITY}else{return Number.POSITIVE_INFINITY}}else if(self==Number.POSITIVE_INFINITY && ! isNaN(other)){return other > 0 ? self :new Number(0)}
+if(other==Number.NEGATIVE_INFINITY && ! isNaN(self)){return Math.abs(self)< 1 ? Number.POSITIVE_INFINITY :
+new Number(0)}else if(other==Number.POSITIVE_INFINITY && ! isNaN(self)){return Math.abs(self)< 1 ? new Number(0):
+Number.POSITIVE_INFINITY}
+if(self < 0 &&
+! _b_.getattr(other,"__eq__")(_b_.int.$factory(other))){
+return _b_.complex.__pow__($B.make_complex(self,0),other)}
+return float.$factory(Math.pow(self,other))}
+return _b_.NotImplemented}
+function __newobj__(){
+var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
+var res=args.slice(1)
+res.__class__=args[0]
+return res}
+float.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,float_value(self)]),_b_.None,_b_.None,_b_.None])}
+float.__repr__=function(self){$B.builtins_repr_check(float,arguments)
+self=float_value(self).valueOf()
+if(self==Infinity){return 'inf'}else if(self==-Infinity){return '-inf'}else if(isNaN(self)){return 'nan'}else if(self===0){if(1/self===-Infinity){return '-0.0'}
+return '0.0'}
+var res=self+"" 
+if(res.indexOf(".")==-1){res+=".0"}
+var split_e=res.split(/e/i)
+if(split_e.length==2){var mant=split_e[0],exp=split_e[1]
+if(exp.startsWith('-')){exp_str=parseInt(exp.substr(1))+''
+if(exp_str.length < 2){exp_str='0'+exp_str}
+return mant+'e-'+exp_str}}
+var x,y
+[x,y]=res.split('.')
+if(x.length > 16){var exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
+while(dec_part.endsWith("0")){dec_part=dec_part.substr(0,dec_part.length-1)}
+var mant=int_part
+if(dec_part.length > 0){mant+='.'+dec_part}
+return mant+'e+'+exp}else if(x=="0"){var exp=0
+while(exp < y.length && y.charAt(exp)=="0"){exp++}
+if(exp > 3){
+var rest=y.substr(exp),exp=(exp+1).toString()
+while(rest.endsWith("0")){rest=rest.substr(0,res.length-1)}
+var mant=rest[0]
+if(rest.length > 1){mant+='.'+rest.substr(1)}
+if(exp.length==1){exp='0'+exp}
+return mant+'e-'+exp}}
+return _b_.str.$factory(res)}
+float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '"+
+attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
+attr+"' is read-only")}}
+self[attr]=value
+return _b_.None}
+float.__truediv__=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,[_b_.int,float])){if(other.valueOf()==0){throw ZeroDivisionError.$factory("division by zero")}
+return float.$factory(self/other)}
+return _b_.NotImplemented}
+var $op_func=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? self-1 :self}else if(other.__class__===$B.long_int){return float.$factory(self-parseInt(other.value))}else{return float.$factory(self-other)}}
+if(isinstance(other,float)){return float.$factory(self-other)}
+return _b_.NotImplemented}
+$op_func+="" 
+var $ops={"+":"add","-":"sub"}
+for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
+$opf=$opf.replace(/__rsub__/gm,"__r"+$ops[$op]+"__")
+eval("float.__"+$ops[$op]+"__ = "+$opf)}
+var $comp_func=function(self,other){self=float_value(self)
+other=float_value(other)
+if(isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self > parseInt(other.value)}
+return self > other.valueOf()}
+if(isinstance(other,float)){return self > other}
+if(isinstance(other,_b_.bool)){return self.valueOf()> _b_.bool.__hash__(other)}
+if(hasattr(other,"__int__")||hasattr(other,"__index__")){return _b_.int.__gt__(self,$B.$GetInt(other))}
+var inv_op=getattr(other,"__le__",None)
+if(inv_op !==None){return inv_op(self)}
+throw _b_.TypeError.$factory(
+"unorderable types: float() > "+$B.class_name(other)+"()")}
+$comp_func+="" 
+for(var $op in $B.$comps){eval("float.__"+$B.$comps[$op]+"__ = "+
+$comp_func.replace(/>/gm,$op).
+replace(/__gt__/gm,"__"+$B.$comps[$op]+"__").
+replace(/__le__/,"__"+$B.$inv_comps[$op]+"__"))}
+var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or","divmod"]
+for(var r_opname of r_opnames){if(float["__r"+r_opname+"__"]===undefined &&
+float['__'+r_opname+'__']){float["__r"+r_opname+"__"]=(function(name){return function(self,other){if(_b_.isinstance(other,_b_.int)){other=float_value(_b_.int.numerator(other))
+return float["__"+name+"__"](other,self)}else if(_b_.isinstance(other,float)){other=float_value(other)
+return float["__"+name+"__"](other,self)}
+return _b_.NotImplemented}})(r_opname)}}
+function $FloatClass(value){return new Number(value)}
+function to_digits(s){
+var arabic_digits="\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",res=""
+for(var i=0;i < s.length;i++){var x=arabic_digits.indexOf(s[i])
+if(x >-1){res+=x}
+else{res+=s[i]}}
+return res}
+float.$factory=function(value){switch(value){case undefined:
+return $FloatClass(0.0)
+case Number.MAX_VALUE:
+return $FloatClass(Infinity)
+case-Number.MAX_VALUE:
+return $FloatClass(-Infinity)
+case true:
+return new Number(1)
+case false:
+return new Number(0)}
+if(typeof value=="number"){return new Number(value)}
+if(isinstance(value,float)){return float_value(value)}
+if(isinstance(value,bytes)){var s=getattr(value,"decode")("latin-1")
+return float.$factory(getattr(value,"decode")("latin-1"))}
+if(typeof value=="string"){value=value.trim()
+switch(value.toLowerCase()){case "+inf":
+case "inf":
+case "+infinity":
+case "infinity":
+return Number.POSITIVE_INFINITY
+case "-inf":
+case "-infinity":
+return Number.NEGATIVE_INFINITY
+case "+nan":
+case "nan":
+return Number.NaN
+case "-nan":
+return-Number.NaN
+case "":
+throw _b_.ValueError.$factory("count not convert string to float")
+default:
+value=value.charAt(0)+value.substr(1).replace(/_/g,"")
+value=to_digits(value)
+if(isFinite(value))return $FloatClass(eval(value))
+else{
+_b_.str.encode(value,"latin-1")
+throw _b_.ValueError.$factory(
+"Could not convert to float(): '"+
+_b_.str.$factory(value)+"'")}}}
+var klass=value.__class__ ||$B.get_class(value),num_value=$B.to_num(value,["__float__","__index__"])
+if(value !==Number.POSITIVE_INFINITY && ! isFinite(num_value)){throw _b_.OverflowError.$factory('int too large to convert to float')}
+if(num_value !==null){return num_value}
+throw _b_.TypeError.$factory("float() argument must be a string or a "+
+"number, not '"+$B.class_name(value)+"'")}
+$B.$FloatClass=$FloatClass
+$B.set_func_names(float,"builtins")
+var FloatSubclass=$B.FloatSubclass={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"float"},$is_class:true}
+for(var $attr in float){if(typeof float[$attr]=="function"){FloatSubclass[$attr]=(function(attr){return function(){var args=[],pos=0
+if(arguments.length > 0){var args=[arguments[0].valueOf()],pos=1
+for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}}
+return float[attr].apply(null,args)}})($attr)}}
+$B.set_func_names(FloatSubclass,"builtins")
+_b_.float=float})(__BRYTHON__)
+;
+;(function($B){var _b_=$B.builtins
+function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
+op+": '"+class1+"' and '"+class2+"'")}
+var complex={__class__:_b_.type,__dir__:_b_.object.__dir__,$infos:{__module__:"builtins",__name__:"complex"},$is_class:true,$native:true,$descriptors:{real:true,imag:true}}
+complex.__abs__=function(self){var _rf=isFinite(self.$real),_if=isFinite(self.$imag)
+if((_rf && isNaN(self.$imag))||(_if && isNaN(self.$real))||
+(isNaN(self.$imag)&& isNaN(self.$real))){return NaN}
+if(! _rf ||! _if){return Infinity}
+var mag=Math.sqrt(Math.pow(self.$real,2)+Math.pow(self.$imag,2))
+if(!isFinite(mag)&& _rf && _if){
+throw _b_.OverflowError.$factory("absolute value too large")}
+return mag}
+complex.__add__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real+other.$real,self.$imag+other.$imag)}
+if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
+return make_complex($B.add(self.$real,other.valueOf()),self.$imag)}
+if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real+other.valueOf(),self.$imag)}
+return _b_.NotImplemented}
+complex.__bool__=function(self){return(self.$real !=0 ||self.$imag !=0)}
+complex.__complex__=function(self){return self}
+complex.__eq__=function(self,other){if(_b_.isinstance(other,complex)){return self.$real.valueOf()==other.$real.valueOf()&&
+self.$imag.valueOf()==other.$imag.valueOf()}
+if(_b_.isinstance(other,_b_.int)){if(self.$imag !=0){return false}
+return self.$real==other.valueOf()}
+if(_b_.isinstance(other,_b_.float)){if(self.$imag !=0){return false}
+return self.$real==other.valueOf()}
+return _b_.NotImplemented}
+complex.__hash__=function(self){
+return self.$imag*1000003+self.$real}
+complex.__init__=function(){return _b_.None}
+complex.__invert__=function(self){return ~self}
+complex.__mro__=[_b_.object]
+complex.__mul__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real*other.$real-self.$imag*other.$imag,self.$imag*other.$real+self.$real*other.$imag)}else if(_b_.isinstance(other,_b_.int)){return make_complex(self.$real*other.valueOf(),self.$imag*other.valueOf())}else if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real*other,self.$imag*other)}else if(_b_.isinstance(other,_b_.bool)){if(other.valueOf()){return self}
+return make_complex(0,0)}
+$UnsupportedOpType("*",complex,other)}
+complex.__ne__=function(self,other){var res=complex.__eq__(self,other)
+return res===_b_.NotImplemented ? res :! res}
+complex.__neg__=function(self){return make_complex(-self.$real,-self.$imag)}
+complex.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory('complex.__new__(): not enough arguments')}
+var res,missing={},args=$B.args("complex",3,{cls:null,real:null,imag:null},["cls","real","imag"],arguments,{real:0,imag:missing},null,null),$real=args.real,$imag=args.imag
+if(typeof $real=="string"){if($imag !==missing){throw _b_.TypeError.$factory("complex() can't take second arg "+
+"if first is a string")}else{var arg=$real
+$real=$real.trim()
+if($real.startsWith("(")&& $real.endsWith(")")){$real=$real.substr(1)
+$real=$real.substr(0,$real.length-1)}
+var complex_re=/^\s*([\+\-]*[0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)([\+\-]?)([0-9_]*\.?[0-9_]*(e[\+\-]*[0-9_]*)?)(j?)\s*$/i
+var parts=complex_re.exec($real)
+function to_num(s){var res=parseFloat(s.charAt(0)+s.substr(1).replace(/_/g,""))
+if(isNaN(res)){throw _b_.ValueError.$factory("could not convert string "+
+"to complex: '"+arg+"'")}
+return res}
+if(parts===null){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_real]=="." ||parts[_imag]=="." ||
+parts[_real]==".e" ||parts[_imag]==".e" ||
+parts[_real]=="e" ||parts[_imag]=="e"){throw _b_.ValueError.$factory("complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){$real=0
+if(parts[_real]=="+" ||parts[_real]==""){$imag=1}else if(parts[_real]=='-'){$imag=-1}else{$imag=to_num(parts[_real])}}else{$real=to_num(parts[_real])
+$imag=parts[_imag]=="" ? 1 :to_num(parts[_imag])
+$imag=parts[_sign]=="-" ?-$imag :$imag}}else{$real=to_num(parts[_real])
+$imag=0}
+res={__class__:complex,$real:$real ||0,$imag:$imag ||0}
+return res}}
+$imag=$imag===missing ? 0 :$imag
+if(arguments.length==2 && $real.__class__===complex && $imag==0){return $real}
+if(_b_.isinstance($real,[_b_.float,_b_.int])&&
+_b_.isinstance($imag,[_b_.float,_b_.int])){res={__class__:complex,$real:$real,$imag:$imag}
+return res}
+var real_to_num=$B.to_num($real,["__complex__","__float__","__index__"])
+if(real_to_num===null){throw _b_.TypeError.$factory("complex() first argument must be a "+
+" string or a number, not '"+$B.class_name($real)+"'")}
+$real=real_to_num
+$imag=_convert($imag)
+if(! _b_.isinstance($real,_b_.float)&& ! _b_.isinstance($real,_b_.int)&&
+! _b_.isinstance($real,_b_.complex)){throw _b_.TypeError.$factory("complex() argument must be a string "+
+"or a number")}
+if(typeof $imag=="string"){throw _b_.TypeError.$factory("complex() second arg can't be a string")}
+if(! _b_.isinstance($imag,_b_.float)&& ! _b_.isinstance($imag,_b_.int)&&
+! _b_.isinstance($imag,_b_.complex)&& $imag !==missing){throw _b_.TypeError.$factory("complex() argument must be a string "+
+"or a number")}
+$imag=complex.__mul__(complex.$factory("1j"),$imag)
+return complex.__add__($imag,$real)}
+complex.__pos__=function(self){return self}
+function complex2expo(cx){var norm=Math.sqrt((cx.$real*cx.$real)+(cx.$imag*cx.$imag)),sin=cx.$imag/norm,cos=cx.$real/norm,angle
+if(cos==0){angle=sin==1 ? Math.PI/2 :3*Math.PI/2}
+else if(sin==0){angle=cos==1 ? 0 :Math.PI}
+else{angle=Math.atan(sin/cos)}
+return{norm:norm,angle:angle}}
+complex.__pow__=function(self,other){
+if(other==1){return self}
+var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
+if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
+var x=other.$real,y=other.$imag
+var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
+return make_complex(pw*Math.cos(theta),pw*Math.sin(theta))}else{throw _b_.TypeError.$factory("unsupported operand type(s) "+
+"for ** or pow(): 'complex' and '"+
+$B.class_name(other)+"'")}}
+complex.__radd__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
+if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other+self.$real,self.$imag)}
+return _b_.NotImplemented}
+complex.__repr__=function(self){$B.builtins_repr_check(complex,arguments)
+var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
+if(self.$real instanceof Number && self.$real==parseInt(self.$real)){real=_b_.str.$factory(parseInt(self.$real))}
+if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){imag=_b_.str.$factory(parseInt(self.$imag))
+if(self.$imag==0 && 1/self.$imag===-Infinity){imag="-0"}}
+if(self.$real==0){if(1/self.$real < 0){if(imag.startsWith('-')){return "-0"+imag+"j"}
+return "-0+"+imag+"j"}else{return imag+"j"}}
+if(self.$imag > 0 ||isNaN(self.$imag)){return "("+real+"+"+imag+"j)"}
+if(self.$imag==0){if(1/self.$imag < 0){return "("+real+"-0j)"}
+return "("+real+"+0j)"}
+return "("+real+"-"+_b_.str.$factory(-self.$imag)+"j)"}
+complex.__rmul__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
+if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other*self.$real,other*self.$imag)}
+return _b_.NotImplemented}
+complex.__sqrt__=function(self){if(self.$imag==0){return complex(Math.sqrt(self.$real))}
+var r=self.$real,i=self.$imag,_a=Math.sqrt((r+sqrt)/2),_b=Number.sign(i)*Math.sqrt((-r+sqrt)/2)
+return make_complex(_a,_b)}
+complex.__sub__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real-other.$real,self.$imag-other.$imag)}
+if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
+return make_complex($B.sub(self.$real,other.valueOf()),self.$imag)}
+if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real-other.valueOf(),self.$imag)}
+return _b_.NotImplemented}
+complex.__truediv__=function(self,other){if(_b_.isinstance(other,complex)){if(other.$real==0 && other.$imag==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
+var _num=self.$real*other.$real+self.$imag*other.$imag,_div=other.$real*other.$real+other.$imag*other.$imag
+var _num2=self.$imag*other.$real-self.$real*other.$imag
+return make_complex(_num/_div,_num2/_div)}
+if(_b_.isinstance(other,_b_.int)){if(! other.valueOf()){throw _b_.ZeroDivisionError.$factory('division by zero')}
+return complex.__truediv__(self,complex.$factory(other.valueOf()))}
+if(_b_.isinstance(other,_b_.float)){if(! other.valueOf()){throw _b_.ZeroDivisionError.$factory("division by zero")}
+return complex.__truediv__(self,complex.$factory(other.valueOf()))}
+$UnsupportedOpType("//","complex",other.__class__)}
+complex.conjugate=function(self){return make_complex(self.$real,-self.$imag)}
+complex.__ior__=complex.__or__
+var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
+for(var r_opname of r_opnames){if(complex["__r"+r_opname+"__"]===undefined &&
+complex['__'+r_opname+'__']){complex["__r"+r_opname+"__"]=(function(name){return function(self,other){if(_b_.isinstance(other,[_b_.int,_b_.float])){other=make_complex(other,0)
+return complex["__"+name+"__"](other,self)}else if(_b_.isinstance(other,complex)){return complex["__"+name+"__"](other,self)}
+return _b_.NotImplemented}})(r_opname)}}
+var $comp_func=function(self,other){if(other===undefined ||other==_b_.None){return _b_.NotImplemented}
+throw _b_.TypeError.$factory("TypeError: no ordering relation "+
+"is defined for complex numbers")}
+$comp_func+='' 
+for(var $op in $B.$comps){eval("complex.__"+$B.$comps[$op]+"__ = "+
+$comp_func.replace(/>/gm,$op))}
+complex.real=function(self){return new Number(self.$real)}
+complex.real.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
+complex.imag=function(self){return new Number(self.$imag)}
+complex.imag.setter=function(){throw _b_.AttributeError.$factory("readonly attribute")}
+var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
+var type_conversions=["__complex__","__float__","__index__"]
+var _convert=function(num){var klass=num.__class__ ||$B.get_class(num)
+for(var i=0;i < type_conversions.length;i++){var missing={},method=$B.$getattr(klass,type_conversions[i],missing)
+if(method !==missing){return method(num)}}
+return null}
+var make_complex=$B.make_complex=function(real,imag){return{
+__class__:complex,$real:real,$imag:imag}}
+complex.$factory=function(){return complex.__new__(complex,...arguments)}
+$B.set_func_names(complex,"builtins")
+_b_.complex=complex})(__BRYTHON__)
+;
 ;(function($B){
 var bltns=$B.InjectBuiltins()
 eval(bltns)
@@ -14422,6 +14032,472 @@ var res=$B.empty_dict()
 res.$jsobj=obj
 res.$from_js=from_js 
 return res}})(__BRYTHON__)
+;
+;(function($B){var _b_=$B.builtins,object=_b_.object,getattr=$B.$getattr,isinstance=_b_.isinstance,$N=_b_.None
+function check_not_tuple(self,attr){if(self.__class__===tuple){throw _b_.AttributeError.$factory(
+"'tuple' object has no attribute '"+attr+"'")}}
+function $list(){
+return list.$factory.apply(null,arguments)}
+var list={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"list"},$is_class:true,$native:true,$match_sequence_pattern:true,
+__dir__:object.__dir__}
+list.__add__=function(self,other){if($B.get_class(self)!==$B.get_class(other)){var this_name=$B.class_name(self)
+var radd=$B.$getattr(other,'__radd__',null)
+if(radd===null){throw _b_.TypeError.$factory('can only concatenate '+
+this_name+' (not "'+$B.class_name(other)+
+'") to '+this_name)}
+return _b_.NotImplemented}
+var res=self.slice(),is_js=other.$brython_class=="js" 
+for(const item of other){res.push(is_js ? $B.$JS2Py(item):item)}
+res.__brython__=true
+if(isinstance(self,tuple)){res=tuple.$factory(res)}
+return res}
+list.__class_getitem__=function(cls,item){
+if(! Array.isArray(item)){item=[item]}
+return $B.GenericAlias.$factory(cls,item)}
+list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
+var _eq=function(other){return $B.rich_comp("__eq__",item,other)}
+var i=0
+while(i < self.length){if(_eq(self[i])){return true}
+i++}
+return false}
+list.__delitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
+if(arg < 0){pos=self.length+pos}
+if(pos >=0 && pos < self.length){self.splice(pos,1)
+return $N}
+throw _b_.IndexError.$factory($B.class_name(self)+
+" index out of range")}
+if(isinstance(arg,_b_.slice)){var step=arg.step
+if(step===$N){step=1}
+var start=arg.start
+if(start===$N){start=step > 0 ? 0 :self.length}
+var stop=arg.stop
+if(stop===$N){stop=step > 0 ? self.length :0}
+if(start < 0){start=self.length+start}
+if(stop < 0){stop=self.length+stop}
+var res=[],i=null,pos=0
+if(step > 0){if(stop > start){for(var i=start;i < stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}}}else{if(stop < start){for(var i=start;i > stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}
+res.reverse()}}
+var i=res.length
+while(i--){self.splice(res[i],1)}
+return $N}
+if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__delitem__(self,_b_.int.$factory(arg))
+return $N}
+throw _b_.TypeError.$factory($B.class_name(self)+
+" indices must be integer, not "+$B.class_name(arg))}
+list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{var klass=tuple}
+if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
+while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
+return true}}
+return _b_.NotImplemented}
+list.__getitem__=function(self,key){
+$B.check_no_kw("__getitem__",self,key)
+$B.check_nb_args("__getitem__",2,arguments)
+return list.$getitem(self,key)}
+list.$getitem=function(self,key){var klass=(self.__class__ ||$B.get_class(self))
+var factory=function(list_res){list_res.__class__=klass
+return list_res}
+var int_key
+try{int_key=$B.PyNumber_Index(key)}catch(err){}
+if(int_key !==undefined){var items=self.valueOf(),pos=int_key
+if(int_key < 0){pos=items.length+pos}
+if(pos >=0 && pos < items.length){return items[pos]}
+throw _b_.IndexError.$factory($B.class_name(self)+
+" index out of range")}
+if(key.__class__===_b_.slice ||isinstance(key,_b_.slice)){
+if(key.start===_b_.None && key.stop===_b_.None &&
+key.step===_b_.None){return self.slice()}
+var s=_b_.slice.$conv_for_seq(key,self.length)
+var res=[],i=null,items=self.valueOf(),pos=0,start=s.start,stop=s.stop,step=s.step
+if(step > 0){if(stop <=start){return factory(res)}
+for(var i=start;i < stop;i+=step){res[pos++]=items[i]}
+return factory(res)}else{if(stop > start){return factory(res)}
+for(var i=start;i > stop;i+=step){res[pos++]=items[i]}
+return factory(res)}}
+throw _b_.TypeError.$factory($B.class_name(self)+
+" indices must be integer, not "+$B.class_name(key))}
+list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
+var i=0
+while(i < self.length){if(i >=other.length){return true}
+if($B.rich_comp("__eq__",self[i],other[i])){i++}
+else{res=getattr(self[i],"__ge__")(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(self[i])+"() >= "+
+$B.class_name(other[i])+"()")}else{return res}}}
+return other.length==self.length}
+list.__gt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
+var i=0
+while(i < self.length){if(i >=other.length){return true}
+if($B.rich_comp("__eq__",self[i],other[i])){i++}
+else{res=getattr(self[i],"__gt__")(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(self[i])+"() > "+
+$B.class_name(other[i])+"()")}else return res}}
+return false}
+list.__hash__=$N
+list.__iadd__=function(){var $=$B.args("__iadd__",2,{self:null,x:null},["self","x"],arguments,{},null,null)
+var x=list.$factory($B.$iter($.x))
+for(var i=0;i < x.length;i++){$.self.push(x[i])}
+return $.self}
+list.__imul__=function(){var $=$B.args("__imul__",2,{self:null,x:null},["self","x"],arguments,{},null,null),x=$B.$GetInt($.x),len=$.self.length,pos=len
+if(x==0){list.clear($.self);return $.self}
+for(var i=1;i < x;i++){for(j=0;j < len;j++){$.self[pos++]=$.self[j]}}
+return $.self}
+list.__init__=function(self,arg){var $=$B.args('__init__',1,{self:null},['self'],arguments,{},'args',null),self=$.self,args=$.args
+if(args.length > 1){throw _b_.TypeError.$factory('expected at most 1 argument, got '+
+args.length)}
+var arg=args[0]
+var len_func=$B.$call($B.$getattr(self,"__len__")),pop_func=$B.$getattr(self,"pop",$N)
+if(pop_func !==$N){pop_func=$B.$call(pop_func)
+while(len_func()){pop_func()}}
+if(arg===undefined){return $N}
+var arg=$B.$iter(arg),next_func=$B.$call($B.$getattr(arg,"__next__")),pos=len_func()
+while(1){try{var res=next_func()
+self[pos++]=res}catch(err){if(err.__class__===_b_.StopIteration){break}
+else{throw err}}}
+return $N}
+var list_iterator=$B.make_iterator_class("list_iterator")
+list_iterator.__reduce__=list_iterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
+list.__iter__=function(self){return list_iterator.$factory(self)}
+list.__le__=function(self,other){var res=list.__ge__(self,other)
+if(res===_b_.NotImplemented){return res}
+return ! res}
+list.__len__=function(self){return self.length}
+list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
+var i=0
+while(i < self.length){if(i >=other.length){return false}
+if($B.rich_comp("__eq__",self[i],other[i])){i++}else{res=getattr(self[i],"__lt__")(other[i])
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(self[i])+"() >= "+
+$B.class_name(other[i])+"()")}else{return res}}}
+return other.length > self.length}
+list.__mul__=function(self,other){if(isinstance(other,_b_.int)){other=_b_.int.numerator(other)
+var res=[],$temp=self.slice(),len=$temp.length
+for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
+res.__class__=self.__class__
+return res}
+if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
+var rmul=$B.$getattr(other,'__rmul__',null)
+if(rmul===null){throw _b_.TypeError.$factory(`can't multiply sequence by non-int `+
+`of type '${$B.class_name(other)}'`)}
+return _b_.NotImplemented}
+list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
+var res=[]
+res.__class__=cls
+res.__brython__=true
+res.__dict__=$B.empty_dict()
+return res}
+function __newobj__(){
+var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
+var res=args.slice(1)
+res.__class__=args[0]
+return res}
+list.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__]),_b_.None,_b_.iter(self)])}
+list.__repr__=function(self){$B.builtins_repr_check(list,arguments)
+return list_repr(self)}
+function list_repr(self){
+if($B.repr.enter(self)){
+return '[...]'}
+var _r=[],res
+for(var i=0;i < self.length;i++){_r.push(_b_.repr(self[i]))}
+if(_b_.isinstance(self,tuple)){if(self.length==1){res="("+_r[0]+",)"}else{res="("+_r.join(", ")+")"}}else{res="["+_r.join(", ")+"]"}
+$B.repr.leave(self)
+return res}
+list.__rmul__=function(self,other){return list.__mul__(self,other)}
+list.__setattr__=function(self,attr,value){if(self.__class__===list ||self.__class__===tuple){var cl_name=$B.class_name(self)
+if(list.hasOwnProperty(attr)){throw _b_.AttributeError.$factory("'"+cl_name+
+"' object attribute '"+attr+"' is read-only")}else{throw _b_.AttributeError.$factory(
+"'"+cl_name+" object has no attribute '"+attr+"'")}}
+_b_.dict.$setitem(self.__dict__,attr,value)
+return $N}
+list.__setitem__=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
+list.$setitem(self,arg,value)}
+list.$setitem=function(self,arg,value){
+if(typeof arg=="number" ||isinstance(arg,_b_.int)){var pos=arg
+if(arg < 0){pos=self.length+pos}
+if(pos >=0 && pos < self.length){self[pos]=value}else{throw _b_.IndexError.$factory("list index out of range")}
+return $N}
+if(isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,self.length)
+if(arg.step===null){$B.set_list_slice(self,s.start,s.stop,value)}else{$B.set_list_slice_step(self,s.start,s.stop,s.step,value)}
+return $N}
+if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__setitem__(self,_b_.int.$factory(arg),value)
+return $N}
+throw _b_.TypeError.$factory("list indices must be integer, not "+
+$B.class_name(arg))}
+list.append=function(self,x){$B.check_no_kw("append",self,x)
+$B.check_nb_args("append",2,arguments)
+self.push(x)
+return $N}
+list.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
+while($.self.length){$.self.pop()}
+return $N}
+list.copy=function(){var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null)
+return $.self.slice()}
+list.count=function(){var $=$B.args("count",2,{self:null,x:null},["self","x"],arguments,{},null,null)
+var res=0,_eq=function(other){return $B.rich_comp("__eq__",$.x,other)},i=$.self.length
+while(i--){if(_eq($.self[i])){res++}}
+return res}
+list.extend=function(){var $=$B.args("extend",2,{self:null,t:null},["self","t"],arguments,{},null,null)
+var other=list.$factory($B.$iter($.t))
+for(var i=0;i < other.length;i++){$.self.push(other[i])}
+return $N}
+list.index=function(){var missing={},$=$B.args("index",4,{self:null,x:null,start:null,stop:null},["self","x","start" ,"stop"],arguments,{start:0,stop:missing},null,null),self=$.self,start=$.start,stop=$.stop
+var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
+if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 :-1)}
+if(start < 0){start=Math.max(0,start+self.length)}
+if(stop===missing){stop=self.length}
+else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 :-1)}
+if(stop < 0){stop=Math.min(self.length,stop+self.length)}
+stop=Math.min(stop,self.length)}
+for(var i=start;i < stop;i++){if(_eq(self[i])){return i}}
+throw _b_.ValueError.$factory(_b_.repr($.x)+" is not in "+
+$B.class_name(self))}
+list.insert=function(){var $=$B.args("insert",3,{self:null,i:null,item:null},["self","i","item"],arguments,{},null,null)
+$.self.splice($.i,0,$.item)
+return $N}
+list.pop=function(){var missing={}
+var $=$B.args("pop",2,{self:null,pos:null},["self","pos"],arguments,{pos:missing},null,null),self=$.self,pos=$.pos
+check_not_tuple(self,"pop")
+if(pos===missing){pos=self.length-1}
+pos=$B.$GetInt(pos)
+if(pos < 0){pos+=self.length}
+var res=self[pos]
+if(res===undefined){throw _b_.IndexError.$factory("pop index out of range")}
+self.splice(pos,1)
+return res}
+list.remove=function(){var $=$B.args("remove",2,{self:null,x:null},["self","x"],arguments,{},null,null)
+for(var i=0,len=$.self.length;i < len;i++){if($B.rich_comp("__eq__",$.self[i],$.x)){$.self.splice(i,1)
+return $N}}
+throw _b_.ValueError.$factory(_b_.str.$factory($.x)+" is not in list")}
+list.reverse=function(self){var $=$B.args("reverse",1,{self:null},["self"],arguments,{},null,null),_len=$.self.length-1,i=parseInt($.self.length/2)
+while(i--){var buf=$.self[i]
+$.self[i]=$.self[_len-i]
+$.self[_len-i]=buf}
+return $N}
+function $partition(arg,array,begin,end,pivot)
+{var piv=array[pivot]
+array=swap(array,pivot,end-1)
+var store=begin
+if(arg===null){if(array.$cl !==false){
+var le_func=_b_.getattr(array.$cl,"__le__")
+for(var ix=begin;ix < end-1;++ix){if(le_func(array[ix],piv)){array=swap(array,store,ix);
+++store}}}else{for(var ix=begin;ix < end-1;++ix){if(getattr(array[ix],"__le__")(piv)){array=swap(array,store,ix)
+++store}}}}else{var len=array.length
+for(var ix=begin;ix < end-1;++ix){var x=arg(array[ix])
+if(array.length !==len){throw _b_.ValueError.$factory("list modified during sort")}
+if(getattr(x,"__le__")(arg(piv))){array=swap(array,store,ix)
+++store}}}
+array=swap(array,end-1,store)
+return store}
+function swap(_array,a,b){var tmp=_array[a]
+_array[a]=_array[b]
+_array[b]=tmp
+return _array}
+function $qsort(arg,array,begin,end){if(end-1 > begin){var pivot=begin+Math.floor(Math.random()*(end-begin))
+pivot=$partition(arg,array,begin,end,pivot)
+$qsort(arg,array,begin,pivot)
+$qsort(arg,array,pivot+1,end)}}
+function $elts_class(self){
+if(self.length==0){return null}
+var cl=$B.get_class(self[0]),i=self.length
+while(i--){if($B.get_class(self[i])!==cl){return false}}
+return cl}
+list.sort=function(self){var $=$B.args("sort",1,{self:null},["self"],arguments,{},null,"kw")
+check_not_tuple(self,"sort")
+var func=$N,reverse=false,kw_args=$.kw,keys=_b_.list.$factory(_b_.dict.$$keys(kw_args))
+for(var i=0;i < keys.length;i++){if(keys[i]=="key"){func=kw_args.$string_dict[keys[i]][0]}else if(keys[i]=="reverse"){reverse=kw_args.$string_dict[keys[i]][0]}else{throw _b_.TypeError.$factory("'"+keys[i]+
+"' is an invalid keyword argument for this function")}}
+if(self.length==0){return}
+if(func !==$N){func=$B.$call(func)}
+self.$cl=$elts_class(self)
+var cmp=null;
+if(func===$N && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===$N && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{cmp=function(a,b){return a-b}}}else{if(func===$N){if(reverse){cmp=function(b,a){res=getattr(a,"__lt__")(b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(b)+"() < "+
+$B.class_name(a)+"()")}
+if(res){if(a==b){return 0}
+return-1}
+return 1}}else{cmp=function(a,b){res=getattr(a,"__lt__")(b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(a)+"() < "+
+$B.class_name(b)+"()")}
+if(res){if(a==b){return 0}
+return-1}
+return 1}}}else{if(reverse){cmp=function(b,a){var _a=func(a),_b=func(b)
+res=getattr(_a,"__lt__")(_b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(b)+"() < "+
+$B.class_name(a)+"()")}
+if(res){if(_a==_b){return 0}
+return-1}
+return 1}}else{cmp=function(a,b){var _a=func(a),_b=func(b)
+res=$B.$getattr(_a,"__lt__")(_b)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
+$B.class_name(a)+"() < "+
+$B.class_name(b)+"()")}
+if(res){if(_a==_b){return 0}
+return-1}
+return 1}}}}
+$B.$TimSort(self,cmp)
+return(self.__brython__ ? $N :self)}
+$B.$list=function(t){t.__brython__=true
+t.__class__=_b_.list
+return t}
+list.$factory=function(){if(arguments.length==0){return[]}
+var $=$B.args("list",1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
+if(Array.isArray(obj)){
+obj=obj.slice()
+obj.__brython__=true;
+if(obj.__class__==tuple){var res=obj.slice()
+res.__class__=list
+return res}
+return obj}
+var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call(getattr(arg,"__next__"))
+while(1){try{res[pos++]=next_func()}catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
+break}}
+res.__brython__=true 
+return res}
+$B.set_func_names(list,"builtins")
+list.__class_getitem__=_b_.classmethod.$factory(list.__class_getitem__)
+var JSArray=$B.JSArray=$B.make_class("JSArray",function(array){return{
+__class__:JSArray,js:array}}
+)
+JSArray.__repr__=JSArray.__str__=function(){return "<JSArray object>"}
+function make_args(args){var res=[args[0].js]
+for(var i=1,len=args.length;i < len;i++){res.push(args[i])}
+return res}
+for(var attr in list){if($B.JSArray[attr]!==undefined){continue}
+if(typeof list[attr]=="function"){$B.JSArray[attr]=(function(fname){return function(){return $B.$JS2Py(list[fname].apply(null,make_args(arguments)))}})(attr)}}
+$B.set_func_names($B.JSArray,"builtins")
+function $tuple(arg){return arg}
+var tuple={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"tuple"},$is_class:true,$native:true,$match_sequence_pattern:true,}
+var tuple_iterator=$B.make_iterator_class("tuple_iterator")
+tuple.__iter__=function(self){return tuple_iterator.$factory(self)}
+tuple.$factory=function(){var obj=list.$factory(...arguments)
+obj.__class__=tuple
+return obj}
+$B.fast_tuple=function(array){array.__class__=tuple
+array.__brython__=true
+array.__dict__=$B.empty_dict()
+return array}
+for(var attr in list){switch(attr){case "__delitem__":
+case "__iadd__":
+case "__imul__":
+case "__setitem__":
+case "append":
+case "extend":
+case "insert":
+case "remove":
+case "reverse":
+break
+default:
+if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}}}}
+tuple.__eq__=function(self,other){
+if(other===undefined){return self===tuple}
+return list.__eq__(self,other)}
+function c_mul(a,b){s=((parseInt(a)*b)& 0xFFFFFFFF).toString(16)
+return parseInt(s.substr(0,s.length-1),16)}
+tuple.__hash__=function(self){
+var x=0x3456789
+for(var i=0,len=self.length;i < len;i++){var y=_b_.hash(self[i])
+x=c_mul(1000003,x)^ y & 0xFFFFFFFF}
+return x}
+tuple.__init__=function(){
+return $N}
+tuple.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
+var self=[]
+self.__class__=cls
+self.__brython__=true
+self.__dict__=$B.empty_dict()
+var arg=$B.$iter(args[0]),next_func=$B.$call(getattr(arg,"__next__"))
+while(1){try{var item=next_func()
+self.push(item)}
+catch(err){if(err.__class__===_b_.StopIteration){break}
+else{throw err}}}
+return self}
+tuple.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__].concat(self.slice())),_b_.None,_b_.None])}
+tuple.__repr__=function(self){$B.builtins_repr_check(tuple,arguments)
+return list_repr(self)}
+$B.set_func_names(tuple,"builtins")
+_b_.list=list
+_b_.tuple=tuple
+_b_.object.__bases__=tuple.$factory()
+_b_.type.__bases__=$B.fast_tuple([_b_.object])})(__BRYTHON__)
+;
+;(function($B){
+var _b_=$B.builtins
+var bltns=$B.InjectBuiltins()
+eval(bltns)
+var $GeneratorReturn={}
+$B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
+$B.generator=$B.make_class("generator",function(func,name){
+var res=function(){var gen=func.apply(null,arguments)
+gen.$name=name ||'generator'
+gen.$func=func
+gen.$has_run=false
+gen.__class__=$B.generator
+if(func.$has_yield_in_cm){var locals=$B.last($B.frames_stack)[1]
+locals.$close_generators=locals.$close_generators ||[]
+locals.$close_generators.push(gen)}
+return gen}
+res.$infos=func.$infos
+res.$is_genfunc=true
+res.$name=name
+return res}
+)
+$B.generator.__iter__=function(self){return self}
+$B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
+$B.generator.__str__=function(self){return '<'+self.$name+' object>'}
+$B.generator.close=function(self){try{$B.generator.$$throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
+$B.generator.send=function(self,value){
+self.$has_run=true
+if(self.$finished){throw _b_.StopIteration.$factory(value)}
+if(self.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
+self.gi_running=true
+try{var res=self.next(value)}catch(err){self.$finished=true
+throw err}
+if(res.value && res.value.__class__===$GeneratorReturn){self.$finished=true
+throw _b_.StopIteration.$factory(res.value.value)}
+self.gi_running=false
+if(res.done){throw _b_.StopIteration.$factory(res.value)}
+return res.value}
+$B.generator.$$throw=function(self,type,value,traceback){var exc=type
+if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
+"instance of BaseException")}else if(value===undefined){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
+if(traceback !==undefined){exc.$traceback=traceback}
+var res=self.throw(exc)
+if(res.done){throw _b_.StopIteration.$factory("StopIteration")}
+return res.value}
+$B.set_func_names($B.generator,"builtins")
+$B.async_generator=$B.make_class("async_generator",function(func){var f=function(){var res=func.apply(null,arguments)
+res.__class__=$B.async_generator
+return res}
+return f}
+)
+var ag_closed={}
+$B.async_generator.__aiter__=function(self){return self}
+$B.async_generator.__anext__=function(self){return $B.async_generator.asend(self,_b_.None)}
+$B.async_generator.aclose=function(self){self.$finished=true
+return _b_.None}
+$B.async_generator.asend=async function(self,value){if(self.$finished){throw _b_.StopAsyncIteration.$factory(value)}
+if(self.ag_running===true){throw _b_.ValueError.$factory("generator already executing")}
+self.ag_running=true
+try{var res=await self.next(value)}catch(err){self.$finished=true
+throw err}
+if(res.done){throw _b_.StopAsyncIteration.$factory(value)}
+if(res.value.__class__===$GeneratorReturn){self.$finished=true
+throw _b_.StopAsyncIteration.$factory(res.value.value)}
+self.ag_running=false
+return res.value}
+$B.async_generator.athrow=async function(self,type,value,traceback){var exc=type
+if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
+"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
+if(traceback !==undefined){exc.$traceback=traceback}
+await self.throw(value)}
+$B.set_func_names($B.async_generator,"builtins")
+function rstrip(s,strip_chars){var _chars=strip_chars ||" \t\n";
+var nstrip=0,len=s.length;
+while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip))>-1)nstrip++;
+return s.substr(0,len-nstrip)}})(__BRYTHON__)
 ;
 ;(function($B){
 var _b_=$B.builtins,object=_b_.object,_window=self
@@ -15097,82 +15173,6 @@ return _window.postMessage(msg,targetOrigin)}
 $B.DOMNode=DOMNode
 $B.win=win})(__BRYTHON__)
 ;
-;(function($B){
-var _b_=$B.builtins
-var bltns=$B.InjectBuiltins()
-eval(bltns)
-var $GeneratorReturn={}
-$B.generator_return=function(value){return{__class__:$GeneratorReturn,value:value}}
-$B.generator=$B.make_class("generator",function(func,name){
-var res=function(){var gen=func.apply(null,arguments)
-gen.$name=name ||'generator'
-gen.$func=func
-gen.$has_run=false
-gen.__class__=$B.generator
-if(func.$has_yield_in_cm){var locals=$B.last($B.frames_stack)[1]
-locals.$close_generators=locals.$close_generators ||[]
-locals.$close_generators.push(gen)}
-return gen}
-res.$infos=func.$infos
-res.$is_genfunc=true
-res.$name=name
-return res}
-)
-$B.generator.__iter__=function(self){return self}
-$B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
-$B.generator.__str__=function(self){return '<'+self.$name+' object>'}
-$B.generator.close=function(self){try{$B.generator.$$throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
-$B.generator.send=function(self,value){
-self.$has_run=true
-if(self.$finished){throw _b_.StopIteration.$factory(value)}
-if(self.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
-self.gi_running=true
-try{var res=self.next(value)}catch(err){self.$finished=true
-throw err}
-if(res.value && res.value.__class__===$GeneratorReturn){self.$finished=true
-throw _b_.StopIteration.$factory(res.value.value)}
-self.gi_running=false
-if(res.done){throw _b_.StopIteration.$factory(res.value)}
-return res.value}
-$B.generator.$$throw=function(self,type,value,traceback){var exc=type
-if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}else if(value===undefined){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
-if(traceback !==undefined){exc.$traceback=traceback}
-var res=self.throw(exc)
-if(res.done){throw _b_.StopIteration.$factory("StopIteration")}
-return res.value}
-$B.set_func_names($B.generator,"builtins")
-$B.async_generator=$B.make_class("async_generator",function(func){var f=function(){var res=func.apply(null,arguments)
-res.__class__=$B.async_generator
-return res}
-return f}
-)
-var ag_closed={}
-$B.async_generator.__aiter__=function(self){return self}
-$B.async_generator.__anext__=function(self){return $B.async_generator.asend(self,_b_.None)}
-$B.async_generator.aclose=function(self){self.$finished=true
-return _b_.None}
-$B.async_generator.asend=async function(self,value){if(self.$finished){throw _b_.StopAsyncIteration.$factory(value)}
-if(self.ag_running===true){throw _b_.ValueError.$factory("generator already executing")}
-self.ag_running=true
-try{var res=await self.next(value)}catch(err){self.$finished=true
-throw err}
-if(res.done){throw _b_.StopAsyncIteration.$factory(value)}
-if(res.value.__class__===$GeneratorReturn){self.$finished=true
-throw _b_.StopAsyncIteration.$factory(res.value.value)}
-self.ag_running=false
-return res.value}
-$B.async_generator.athrow=async function(self,type,value,traceback){var exc=type
-if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
-if(traceback !==undefined){exc.$traceback=traceback}
-await self.throw(value)}
-$B.set_func_names($B.async_generator,"builtins")
-function rstrip(s,strip_chars){var _chars=strip_chars ||" \t\n";
-var nstrip=0,len=s.length;
-while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip))>-1)nstrip++;
-return s.substr(0,len-nstrip)}})(__BRYTHON__)
-;
  ;(function($B){var _b_=$B.builtins
 var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
@@ -15425,9 +15425,6 @@ $B.cell[op]=(function(op){return function(self,other){if(! _b_.isinstance(other,
 if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__","__le__"].indexOf(op)>-1}}else if(other.$cell_contents===null){return["__ne__","__gt__","__ge__"].indexOf(op)>-1}
 return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")})(__BRYTHON__)
-;
-var docs={ArithmeticError:"Base class for arithmetic errors.",AssertionError:"Assertion failed.",AttributeError:"Attribute not found.",BaseException:"Common base class for all exceptions",BlockingIOError:"I/O operation would block.",BrokenPipeError:"Broken pipe.",BufferError:"Buffer error.",BytesWarning:"Base class for warnings about bytes and buffer related problems, mostly\nrelated to conversion from str or comparing to str.",ChildProcessError:"Child process error.",ConnectionAbortedError:"Connection aborted.",ConnectionError:"Connection error.",ConnectionRefusedError:"Connection refused.",ConnectionResetError:"Connection reset.",DeprecationWarning:"Base class for warnings about deprecated features.",EOFError:"Read beyond end of file.",Ellipsis:"",EnvironmentError:"Base class for I/O related errors.",Exception:"Common base class for all non-exit exceptions.",False:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",FileExistsError:"File already exists.",FileNotFoundError:"File not found.",FloatingPointError:"Floating point operation failed.",FutureWarning:"Base class for warnings about constructs that will change semantically\nin the future.",GeneratorExit:"Request that a generator exit.",IOError:"Base class for I/O related errors.",ImportError:"Import can't find module, or can't find name in module.",ImportWarning:"Base class for warnings about probable mistakes in module imports",IndentationError:"Improper indentation.",IndexError:"Sequence index out of range.",InterruptedError:"Interrupted by signal.",IsADirectoryError:"Operation doesn't work on directories.",KeyError:"Mapping key not found.",KeyboardInterrupt:"Program interrupted by user.",LookupError:"Base class for lookup errors.",MemoryError:"Out of memory.",NameError:"Name not found globally.",None:"",NotADirectoryError:"Operation only works on directories.",NotImplemented:"",NotImplementedError:"Method or function hasn't been implemented yet.",OSError:"Base class for I/O related errors.",OverflowError:"Result too large to be represented.",PendingDeprecationWarning:"Base class for warnings about features which will be deprecated\nin the future.",PermissionError:"Not enough permissions.",ProcessLookupError:"Process not found.",ReferenceError:"Weak ref proxy used after referent went away.",ResourceWarning:"Base class for warnings about resource usage.",RuntimeError:"Unspecified run-time error.",RuntimeWarning:"Base class for warnings about dubious runtime behavior.",StopIteration:"Signal the end from iterator.__next__().",SyntaxError:"Invalid syntax.",SyntaxWarning:"Base class for warnings about dubious syntax.",SystemError:"Internal error in the Python interpreter.\n\nPlease report this to the Python maintainer, along with the traceback,\nthe Python version, and the hardware/OS platform and version.",SystemExit:"Request to exit from the interpreter.",TabError:"Improper mixture of spaces and tabs.",TimeoutError:"Timeout expired.",True:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",TypeError:"Inappropriate argument type.",UnboundLocalError:"Local name referenced but not bound to a value.",UnicodeDecodeError:"Unicode decoding error.",UnicodeEncodeError:"Unicode encoding error.",UnicodeError:"Unicode related error.",UnicodeTranslateError:"Unicode translation error.",UnicodeWarning:"Base class for warnings about Unicode related problems, mostly\nrelated to conversion problems.",UserWarning:"Base class for warnings generated by user code.",ValueError:"Inappropriate argument value (of correct type).",Warning:"Base class for warning categories.",WindowsError:"Base class for I/O related errors.",ZeroDivisionError:"Second argument to a division or modulo operation was zero.",__debug__:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",abs:"abs(number) -> number\n\nReturn the absolute value of the argument.",all:"all(iterable) -> bool\n\nReturn True if bool(x) is True for all values x in the iterable.\nIf the iterable is empty, return True.",any:"any(iterable) -> bool\n\nReturn True if bool(x) is True for any x in the iterable.\nIf the iterable is empty, return False.",ascii:"ascii(object) -> string\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\x, \\u or \\U escapes.  This generates a string similar\nto that returned by repr() in Python 2.",bin:"bin(number) -> string\n\nReturn the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'\n",bool:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",bytearray:"bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct an mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer",bytes:"bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",callable:"callable(object) -> bool\n\nReturn whether the object is callable (i.e., some kind of function).\nNote that classes are callable, as are instances of classes with a\n__call__() method.",chr:"chr(i) -> Unicode character\n\nReturn a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.",classmethod:"classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      def f(cls, arg1, arg2, ...): ...\n      f = classmethod(f)\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.",compile:"compile(source, filename, mode[, flags[, dont_inherit]]) -> code object\n\nCompile the source (a Python module, statement or expression)\ninto a code object that can be executed by exec() or eval().\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if non-zero, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or zero these statements do influence the compilation,\nin addition to any features explicitly specified.",complex:"complex(real[, imag]) -> complex number\n\nCreate a complex number from a real part and an optional imaginary part.\nThis is equivalent to (real + imag*1j) where imag defaults to 0.",copyright:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",credits:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",delattr:"delattr(object, name)\n\nDelete a named attribute on an object; delattr(x, 'y') is equivalent to\n``del x.y''.",dict:"dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",dir:"dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes.",divmod:"divmod(x, y) -> (div, mod)\n\nReturn the tuple ((x-x%y)/y, x%y).  Invariant: div*y + mod == x.",enumerate:"enumerate(iterable[, start]) -> iterator for index, value of iterable\n\nReturn an enumerate object.  iterable must be another object that supports\niteration.  The enumerate object yields pairs containing a count (from\nstart, which defaults to zero) and a value yielded by the iterable argument.\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",eval:"eval(source[, globals[, locals]]) -> value\n\nEvaluate the source in the C of globals and locals.\nThe source may be a string representing a Python expression\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.\n",exec:"exec(object[, globals[, locals]])\n\nRead and execute code from an object, which can be a string or a code\nobject.\nThe globals and locals are dictionaries, defaulting to the current\nglobals and locals.  If only globals is given, locals defaults to it.",exit:"",filter:"filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",float:"float(x) -> floating point number\n\nConvert a string or number to a floating point number, if possible.",format:"format(value[, format_spec]) -> string\n\nReturns value.__format__(format_spec)\nformat_spec defaults to \"\"",frozenset:"frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.",getattr:"getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case.",globals:"globals() -> dictionary\n\nReturn the dictionary containing the current scope's global variables.",hasattr:"hasattr(object, name) -> bool\n\nReturn whether the object has an attribute with the given name.\n(This is done by calling getattr(object, name) and catching AttributeError.)",hash:"hash(object) -> integer\n\nReturn a hash value for the object.  Two objects with the same value have\nthe same hash value.  The reverse is not necessarily true, but likely.",help:"Define the builtin 'help'.\n\n    This is a wrapper around pydoc.help that provides a helpful message\n    when 'help' is typed at the Python interactive prompt.\n\n    Calling help() at the Python prompt starts an interactive help session.\n    Calling help(thing) prints help for the python object 'thing'.\n    ",hex:"hex(number) -> string\n\nReturn the hexadecimal representation of an integer.\n\n   >>> hex(3735928559)\n   '0xdeadbeef'\n",id:"id(object) -> integer\n\nReturn the identity of an object.  This is guaranteed to be unique among\nsimultaneously existing objects.  (Hint: it's the object's memory address.)",input:"input([prompt]) -> string\n\nRead a string from standard input.  The trailing newline is stripped.\nIf the user hits EOF (Unix: Ctl-D, Windows: Ctl-Z+Return), raise EOFError.\nOn Unix, GNU readline is used if enabled.  The prompt string, if given,\nis printed without a trailing newline before reading.",int:"int(x=0) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",isinstance:"isinstance(object, class-or-type-or-tuple) -> bool\n\nReturn whether an object is an instance of a class or of a subclass thereof.\nWith a type as second argument, return whether that is the object's type.\nThe form using a tuple, isinstance(x, (A, B, ...)), is a shortcut for\nisinstance(x, A) or isinstance(x, B) or ... (etc.).",issubclass:"issubclass(C, B) -> bool\n\nReturn whether class C is a subclass (i.e., a derived class) of class B.\nWhen using a tuple as the second argument issubclass(X, (A, B, ...)),\nis a shortcut for issubclass(X, A) or issubclass(X, B) or ... (etc.).",iter:"iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.",len:"len(object)\n\nReturn the number of items of a sequence or collection.",license:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",list:"list() -> new empty list\nlist(iterable) -> new list initialized from iterable's items",locals:"locals() -> dictionary\n\nUpdate and return a dictionary containing the current scope's local variables.",map:"map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",max:"max(iterable, *[, default=obj, key=func]) -> value\nmax(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its biggest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the largest argument.",memoryview:"memoryview(object)\n\nCreate a new memoryview object which references the given object.",min:"min(iterable, *[, default=obj, key=func]) -> value\nmin(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the smallest argument.",next:"next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.",object:"The most base type",oct:"oct(number) -> string\n\nReturn the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'\n",open:"open(file, mode='r', buffering=-1, encoding=None,\n     errors=None, newline=None, closefd=True, opener=None) -> file object\n\nOpen file and return a stream.  Raise IOError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory) of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped. (If a file descriptor is given, it is closed when the\nreturned I/O object is closed, unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode.  Other common values are 'w' for writing (truncating the file if\nit already exists), 'x' for creating and writing to a new file, and\n'a' for appending (which on some Unix systems, means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode, if encoding is not specified the encoding used is platform\ndependent: locale.getpreferredencoding(False) is called to get the\ncurrent locale encoding. (For reading and writing raw bytes use binary\nmode and leave encoding unspecified.) The available modes are:\n\n========= ===============================================================\nCharacter Meaning\n--------- ---------------------------------------------------------------\n'r'       open for reading (default)\n'w'       open for writing, truncating the file first\n'x'       create a new file and open it for writing\n'a'       open for writing, appending to the end of the file if it exists\n'b'       binary mode\n't'       text mode (default)\n'+'       open a disk file for updating (reading and writing)\n'U'       universal newline mode (deprecated)\n========= ===============================================================\n\nThe default mode is 'rt' (open for reading text). For binary random\naccess, the mode 'w+b' opens and truncates the file to 0 bytes, while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\n'U' mode is deprecated and will raise an exception in future versions\nof Python.  It has no effect in Python 3.  Use newline to control\nuniversal newlines mode.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n  \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.\n",ord:"ord(c) -> integer\n\nReturn the integer ordinal of a one-character string.",pow:"pow(x, y[, z]) -> number\n\nWith two arguments, equivalent to x**y.  With three arguments,\nequivalent to (x**y) % z, but may be more efficient (e.g. for ints).",print:"print(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\nOptional keyword arguments:\nfile:  a file-like object (stream); defaults to the current sys.stdout.\nsep:   string inserted between values, default a space.\nend:   string appended after the last value, default a newline.\nflush: whether to forcibly flush the stream.",property:"property(fget=None, fset=None, fdel=None, doc=None) -> property attribute\n\nfget is a function to be used for getting an attribute value, and likewise\nfset is a function for setting, and fdel a function for del'ing, an\nattribute.  Typical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x\n",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn a virtual sequence of numbers from start to stop by step.",repr:"repr(object) -> string\n\nReturn the canonical string representation of the object.\nFor most object types, eval(repr(object)) == object.",reversed:"reversed(sequence) -> reverse iterator over values of the sequence\n\nReturn a reverse iterator",round:"round(number[, ndigits]) -> number\n\nRound a number to a given precision in decimal digits (default 0 digits).\nThis returns an int when called with one argument, otherwise the\nsame type as the number. ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"setattr(object, name, value)\n\nSet a named attribute on an object; setattr(x, 'y', v) is equivalent to\n``x.y = v''.",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"sorted(iterable, key=None, reverse=False) --> new sorted list",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n     def f(arg1, arg2, ...): ...\n     f = staticmethod(f)\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"sum(iterable[, start]) -> value\n\nReturn the sum of an iterable of numbers (NOT strings) plus the value\nof parameter 'start' (which defaults to 0).  When the iterable is\nempty, return start.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"tuple() -> empty tuple\ntuple(iterable) -> tuple initialized from iterable's items\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype(name, bases, dict) -> a new type",vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(iter1 [,iter2 [...]]) --> zip object\n\nReturn a zip object whose .__next__() method returns a tuple where\nthe i-th element comes from the i-th iterable argument.  The .__next__()\nmethod continues until the shortest iterable in the argument sequence\nis exhausted and then it raises StopIteration.",}
-__BRYTHON__.builtins_doc=docs
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")

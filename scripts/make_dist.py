@@ -60,13 +60,36 @@ def run():
     import make_stdlib_static
     # build brython.js from base Javascript files
     sources = [
-        'brython_builtins', 'version_info', 'python_tokenizer', 'py2js', 
-        'loaders', 'py_object', 'py_type', 'py_utils', 'py_builtin_functions',
-        'py_exceptions', 'py_range_slice', 'py_bytes', 'py_set', 'js_objects',
-        'stdlib_paths', 'py_import', 'py_float', 'py_int', 'py_long_int',
-        'py_complex', 'py_sort', 'py_list', 'unicode_data', 'py_string',
-        'py_dict', 'py_dom', 'py_generator', 'builtin_modules',
-        'builtins_docstrings', 'async'
+        'brython_builtins',
+        'version_info',
+        'python_tokenizer',
+        'py2js',
+        'loaders',
+        'py_object',
+        'py_type',
+        'py_utils',
+        'py_sort',
+        'py_builtin_functions',
+        'py_exceptions',
+        'py_range_slice',
+        'py_bytes',
+        'py_set',
+        'js_objects',
+        'stdlib_paths',
+        'py_import',
+        'unicode_data',
+        'py_string',
+        'py_int',
+        'py_long_int',
+        'py_float',
+        'py_complex',
+        'py_dict',
+        'py_list',
+        'py_generator',
+        'py_dom',
+        # 'py_pattern_matching',
+        'builtin_modules',
+        'async'
     ]
 
     res = """// brython.js brython.info
