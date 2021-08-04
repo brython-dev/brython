@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
-try:
-    import _jsre as re
-except:
-    import re
+import re
 
 import random
 
