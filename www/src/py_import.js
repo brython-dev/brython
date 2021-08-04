@@ -1247,13 +1247,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 current_frame[3].src, undefined, line_num)
                         }
                         if($err3.$py_error){
-                            var errname = $err3.__class__.$infos.__name__
-                            if($err3.__class__ !== _b_.ImportError &&
-                                    $err3.__class__ !== _b_.ModuleNotFoundError){
-                                $B.handle_error($err3)
-                            }
-                            throw _b_.ImportError.$factory(
-                                "cannot import name '" + name + "'")
+                            throw $err3
                         }
                         if($B.debug > 1){
                             console.log($err3)
