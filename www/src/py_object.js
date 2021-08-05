@@ -548,14 +548,15 @@ object.$factory = function(){
 
 $B.set_func_names(object, "builtins")
 
-$B.make_class = function(name, factory){
+$B.make_class = function(qualname, factory){
     // Builds a basic class object
 
     var A = {
         __class__: _b_.type,
         __mro__: [object],
         $infos:{
-            __name__: name
+            __qualname__: qualname,
+            __name__: $B.last(qualname.split('.'))
         },
         $is_class: true
     }
@@ -564,7 +565,6 @@ $B.make_class = function(name, factory){
 
     return A
 }
-
 return object
 
 })(__BRYTHON__)
