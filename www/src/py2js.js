@@ -3472,13 +3472,16 @@ $DefCtx.prototype.transform = function(node, rank){
     // Handle name __class__ in methods (PEP 3135 and issue #1068)
     var is_method = scope.ntype == "class"
     if(is_method){
-        var class_ref = "$locals_" + scope.parent_block.id.replace(/\./g, '_') +
-            '.' + scope.context.tree[0].qualname
+        var scope_ref = '$locals_' + scope.parent_block.id.replace(/\./g, '_'),
+            class_ref = scope.context.tree[0].qualname
+        console.log('method', scope.parent_block.id.replace(/\./g, '_'),
+            scope.context.tree[0].qualname.split('.'))
         // bind name __class__ in method
         var had_class = this.parent.node.binding["__class__"] // already bound ?
         this.parent.node.binding["__class__"] = true
         // set its value to the class where the method is defined
-        nodes.push($NodeJS("$locals.__class__ = " + class_ref))
+        nodes.push($NodeJS('$locals.__class__ = $B.get_method_class(' +
+            scope_ref + ', "' + class_ref + '")'))
     }
 
     // set __BRYTHON__.js_this to Javascript "this"

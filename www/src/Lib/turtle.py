@@ -205,9 +205,12 @@ class Screen(metaclass=Singleton):
             size = 1
         self.frame_index += 1
 
+        # `size` represents the diameter, svg needs the radius
+        radius = size / 2
+
         x, y = self._convert_coordinates(pos[0], pos[1])
 
-        circle = svg.circle(cx=x, cy=y, r=size, fill=color,
+        circle = svg.circle(cx=x, cy=y, r=radius, fill=color,
                             style={'display': 'none'})
         an = svg.animate(Id="animation_frame%s" % self.frame_index,
                               attributeName="display", attributeType="CSS",
@@ -1222,6 +1225,10 @@ class Turtle(TPen, TNavigator):
     def dot(self, size=None, color=None):
         """Draw a filled circle with diameter size, using color.
         """
+        if size is None:
+            size = max(self._pensize + 4, 2 * self._pensize)
+        if color is None:
+            color = self._pencolor
         item = self.screen._dot((self._x, self._y), size, color=color)
 
     def _write(self, txt, align, font, color=None):

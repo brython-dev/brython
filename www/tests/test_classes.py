@@ -671,4 +671,13 @@ try:
 except TypeError:
     pass
 
+# issue 1740
+class A:
+
+    class B:
+        def __init__(self):
+            pass
+
+    B()
+
 print('passed all tests..')
