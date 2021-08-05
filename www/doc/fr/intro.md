@@ -104,5 +104,10 @@ dictionnaire indexé par les id des éléments DOM. `document["zone"]` est un
 objet correspondant à l'élément INPUT ; on accède à la  valeur par
 l'attribut _value_.
 
-L'affichage est réalisé par la fonction `alert()` définie dans le même module
-**browser**, qui affiche une fenêtre avec le texte passé en paramètre.
+L'affichage peut être réalisé de différentes façons, notamment par la fonction
+`alert()` définie dans le même module **browser**, qui affiche une fenêtre
+avec le texte passé en paramètre.
+
+Dans cet exemple, nous utilisons un module de la distribution standard de
+Brython, **browser.widgets.dialog**, avec une classe `InfoDialog` qui affiche
+une boite de dialogue.

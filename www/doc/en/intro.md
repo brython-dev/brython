@@ -109,3 +109,7 @@ property holds, interestingly enough, the value of the object.
 In Brython, the output can be accomplished in various ways, including with the
 function `alert()` (also defined in **browser**) which shows a popup window
 with the text passed as an argument.
+
+In this example, we use a module from Brython standard distribution,
+**browser.widgets.dialog**, with a class `InfoDialog` that displays
+a popup window.
