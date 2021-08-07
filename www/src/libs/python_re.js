@@ -2719,6 +2719,9 @@ function StringObj(obj){
     this.py_obj = obj
     this.codepoints = []
     this.type = "str"
+    if(obj instanceof String){
+        console.log('String obj', obj)
+    }
     if(typeof obj == "string"){
         // Python object represented as a Javascript string
         this.string = obj
@@ -2732,6 +2735,11 @@ function StringObj(obj){
                 i++
             }
         }
+    }else if(obj instanceof String){
+        // string with surrogate pairs
+        this.string = obj.string
+        this.codepoints = obj.codepoints
+        this.index_map = obj.index_map
     }else if(_b_.isinstance(obj, _b_.str)){ // str subclass
         var so = new StringObj(obj.valueOf())
         this.string = so.string

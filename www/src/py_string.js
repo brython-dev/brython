@@ -17,6 +17,30 @@ $B.has_surrogate = function(s){
     return false
 }
 
+$B.String = function(s){
+    var codepoints = [],
+        index_map = {},
+        has_surrogate = false
+    for(var i = 0, len = s.length; i < len; i++){
+        index_map[codepoints.length] = i
+        var cp = s.codePointAt(i)
+        codepoints.push(cp)
+        if(cp >= 0x10000){
+            i++
+            has_surrogate = true
+        }
+    }
+    if(has_surrogate){
+        var res = new String(s)
+        res.__class__ = str
+        res.index_map = index_map
+        res.codepoints = codepoints
+        res.string = s
+        return res
+    }
+    return s
+}
+
 var str = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
@@ -76,6 +100,9 @@ function to_chars(s){
 
 function to_codepoints(s){
     // Transform Javascript string s into a list of codepoints
+    if(s instanceof String){
+        return s.codepoints
+    }
     var cps = []
     for(var i = 0, len = s.length; i < len; i++){
         var code = s.charCodeAt(i)
@@ -260,7 +287,10 @@ str.__iter__ = function(self){
 str.__len__ = function(self){
     // found at
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
-    return [...self].length
+    if(self instanceof String){
+        return self.codepoints.length
+    }
+    return self.valueOf().length
 }
 
 // Start of section for legacy formatting (with %)
@@ -1079,7 +1109,7 @@ str.count = function(){
     var $ = $B.args("count", 4, {self:null, sub:null, start:null, stop:null},
         ["self", "sub", "start", "stop"], arguments, {start:null, stop:null},
         null, null)
-    if(!(typeof $.sub == "string")){
+    if(!(typeof $.sub.valueOf() == "string")){
         throw _b_.TypeError.$factory("Can't convert '" + $B.class_name($.sub) +
             "' object to str implicitly")
     }

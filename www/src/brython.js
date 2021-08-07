@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-07 08:22:44.269823"
-__BRYTHON__.timestamp=1628317364269
+__BRYTHON__.compiled_date="2021-08-07 09:22:40.062154"
+__BRYTHON__.timestamp=1628320960062
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -5087,6 +5087,7 @@ if(!is_bytes){if(is_fstring){res+=fstring(value)}else{res+=prepare(value)}}else{
 if(i < this.tree.length-1){res+='+'}}}
 if(is_bytes){res+=',"ISO-8859-1")'}
 if(res.length==0){res='""'}
+if($B.has_surrogate(res)){return "$B.String("+res+")"}
 return res}
 var $SubCtx=$B.parser.$SubCtx=function(C){
 this.type='sub'
@@ -11158,6 +11159,19 @@ $B.has_surrogate=function(s){
 for(var i=0;i < s.length;i++){code=s.charCodeAt(i)
 if(code >=0xD800 && code <=0xDBFF){return true}}
 return false}
+$B.String=function(s){var codepoints=[],index_map={},has_surrogate=false
+for(var i=0,len=s.length;i < len;i++){index_map[codepoints.length]=i
+var cp=s.codePointAt(i)
+codepoints.push(cp)
+if(cp >=0x10000){i++
+has_surrogate=true}}
+if(has_surrogate){var res=new String(s)
+res.__class__=str
+res.index_map=index_map
+res.codepoints=codepoints
+res.string=s
+return res}
+return s}
 var str={__class__:_b_.type,__dir__:_b_.object.__dir__,$infos:{__module__:"builtins",__name__:"str"},$is_class:true,$native:true}
 function normalize_start_end($){if($.start===null ||$.start===_b_.None){$.start=0}
 else if($.start < 0){$.start+=$.self.length
@@ -11178,6 +11192,7 @@ if(code >=0xD800 && code <=0xDBFF){chars.push(s.substr(i,2))
 i++}else{chars.push(s.charAt(i))}}
 return chars}
 function to_codepoints(s){
+if(s instanceof String){return s.codepoints}
 var cps=[]
 for(var i=0,len=s.length;i < len;i++){var code=s.charCodeAt(i)
 if(code >=0xD800 && code <=0xDBFF){var v=0x10000
@@ -11247,7 +11262,8 @@ return _b_.None}
 var str_iterator=$B.make_iterator_class("str_iterator")
 str.__iter__=function(self){return str_iterator.$factory(to_chars(self))}
 str.__len__=function(self){
-return[...self].length}
+if(self instanceof String){return self.codepoints.length}
+return self.valueOf().length}
 var kwarg_key=new RegExp("([^\\)]*)\\)")
 var NotANumber=function(){this.name="NotANumber"}
 var number_check=function(s){if(! _b_.isinstance(s,[_b_.int,_b_.float])){throw new NotANumber()}}
@@ -11508,7 +11524,7 @@ res+=self+res
 if(res.length < $.width){res+=$.fillchar}
 return res}
 str.count=function(){var $=$B.args("count",4,{self:null,sub:null,start:null,stop:null},["self","sub","start","stop"],arguments,{start:null,stop:null},null,null)
-if(!(typeof $.sub=="string")){throw _b_.TypeError.$factory("Can't convert '"+$B.class_name($.sub)+
+if(!(typeof $.sub.valueOf()=="string")){throw _b_.TypeError.$factory("Can't convert '"+$B.class_name($.sub)+
 "' object to str implicitly")}
 var substr=$.self
 if($.start !==null){var _slice

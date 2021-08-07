@@ -9797,6 +9797,9 @@ $StringCtx.prototype.to_js = function(){
     if(res.length == 0){
         res = '""'
     }
+    if($B.has_surrogate(res)){
+        return "$B.String(" + res + ")"
+    }
     return res
 }
 
