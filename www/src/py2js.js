@@ -33,7 +33,9 @@ Utility functions
 // Return a clone of an object
 var clone = $B.clone = function(obj){
     var res = {}
-    for(var attr in obj){res[attr] = obj[attr]}
+    for(var attr in obj){
+        res[attr] = obj[attr]
+    }
     return res
 }
 
@@ -49,8 +51,12 @@ $B.last = function(table){
 $B.list2obj = function(list, value){
     var res = {},
         i = list.length
-    if(value === undefined){value = true}
-    while(i-- > 0){res[list[i]] = value}
+    if(value === undefined){
+        value = true
+    }
+    while(i-- > 0){
+        res[list[i]] = value
+    }
     return res
 }
 
@@ -87,14 +93,15 @@ $B.op2method = {
             keys = Object.keys($B.op2method)
             keys.splice(keys.indexOf("subset"), 1)
         }else{
-            for(var i = 0, len=arguments.length; i < len; i++){
-                keys.push(arguments[i])
+            for(var arg of arguments){
+                keys.push(arg)
             }
         }
-        for(var i = 0, len = keys.length; i < len; i++){
-            var key = keys[i],
-                ops = $B.op2method[key]
-            if(ops === undefined){throw Error(key)}
+        for(var key of keys){
+            var ops = $B.op2method[key]
+            if(ops === undefined){
+                throw Error(key)
+            }
             for(var attr in ops){
                 res[attr] = ops[attr]
             }
@@ -140,7 +147,7 @@ var $loop_num = 0
 
 var create_temp_name = $B.parser.create_temp_name = function(prefix) {
     var _prefix = prefix || '$temp'
-    return _prefix + $loop_num ++;
+    return _prefix + $loop_num ++
 }
 
 /*
@@ -156,46 +163,6 @@ var replace_node = $B.parser.replace_node = function(replace_what, replace_with)
     replace_with.bindings = replace_what.bindings
 }
 
-// Adds a new identifier node to :param:`parent` at position :param:`insert_at`.
-// The identifier will be named :param:`name` and it will be assigned the value
-// :param:`val`, which should be a node.
-// Position may also be '-1' in which case the node is added at the end. Other
-// negative positions are not supported.
-// Returns the newly created $Node.
-//
-// Example:
-//
-// If one wants to add, e.g., the python statement
-//
-//    a = 10
-//
-// to a node, one could use the method as follows
-//
-//    add_identnode(node, -1, 'a', new $JSCode('10'))
-//
-//
-var add_identnode = $B.parser.add_identnode = function(parent, insert_at, name, val) {
-    var new_node = new $Node()
-    new_node.parent = parent
-    new_node.locals = parent.locals
-    new_node.module = parent.module
-    var new_ctx = new $NodeCtx(new_node)
-
-    var expr_ctx = new $ExprCtx(new_ctx, 'id', true)
-    var idctx = new $IdCtx(expr_ctx, name)
-    var assign = new $AssignCtx(expr_ctx)
-
-    if (insert_at === -1)
-        parent.add(new_node)
-    else
-        parent.insert(insert_at, new_node)
-
-    assign.tree[1] = val
-
-
-    return new_node
-}
-
 // Variable used for chained comparison
 var chained_comp_num = 0
 
@@ -207,10 +174,14 @@ Function called in case of SyntaxError
 var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     // console.log("syntax error", context, "msg", msg, "indent", indent, '$pos', $pos)
     var ctx_node = context
-    while(ctx_node.type !== 'node'){ctx_node = ctx_node.parent}
+    while(ctx_node.type !== 'node'){
+        ctx_node = ctx_node.parent
+    }
     var tree_node = ctx_node.node,
         root = tree_node
-    while(root.parent !== undefined){root = root.parent}
+    while(root.parent !== undefined){
+        root = root.parent
+    }
     var module = tree_node.module || $get_module(context).module,
         src = root.src,
         line_num = tree_node.line_num
@@ -243,27 +214,6 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
         throw $B.$IndentationError(module, msg, src, $pos, line_num, root)
     }
 }
-
-function SyntaxWarning(context, msg){
-    var node = $get_node(context),
-        module = $get_module(context),
-        src = module.src,
-        lines = src.split("\n"),
-        message = `Module ${module.module} line ${node.line_num}: ${msg}\n` +
-            '    ' + lines[node.line_num - 1]
-    $B.$getattr($B.stderr, "write")(message)
-}
-
-/*
-Class for Python abstract syntax tree
-=====================================
-
-An instance is created for the whole Python program as the root of the tree.
-
-For each instruction in the Python source code, an instance is created
-as a child of the block where it stands : the root for instructions at
-module level, or a function definition, a loop, a condition, etc.
-*/
 
 /*
 Function that checks that a context is not inside another incompatible
@@ -347,6 +297,18 @@ function check_assignment(context, kwargs){
     }
 }
 
+
+/*
+Class for Python abstract syntax tree
+=====================================
+
+An instance is created for the whole Python program as the root of the tree.
+
+For each instruction in the Python source code, an instance is created
+as a child of the block where it stands : the root for instructions at
+module level, or a function definition, a loop, a condition, etc.
+*/
+
 var $Node = $B.parser.$Node = function(type){
     this.type = type
     this.children = []
@@ -367,7 +329,9 @@ $Node.prototype.insert = function(pos, child){
     child.module = this.module
 }
 
-$Node.prototype.toString = function(){return "<object 'Node'>"}
+$Node.prototype.toString = function(){
+    return "<object 'Node'>"
+}
 
 $Node.prototype.show = function(indent){
     // For debugging purposes
@@ -382,7 +346,9 @@ $Node.prototype.show = function(indent){
     indent = indent || 0
     res += ' '.repeat(indent)
     res += this.context
-    if(this.children.length > 0){res += '{'}
+    if(this.children.length > 0){
+        res += '{'
+    }
     res +='\n'
     for(var child of this.children){
        res += child.show(indent + 4)
@@ -397,7 +363,9 @@ $Node.prototype.show = function(indent){
 $Node.prototype.to_js = function(indent){
     // Convert the node into a string with the translation in Javascript
 
-    if(this.js !== undefined){return this.js}
+    if(this.js !== undefined){
+        return this.js
+    }
 
     this.res = []
     this.unbound = []
@@ -411,17 +379,19 @@ $Node.prototype.to_js = function(indent){
     indent = indent || 0
     var ctx_js = this.context.to_js()
     if(ctx_js){ // empty for "global x"
-      this.res.push(' '.repeat(indent))
-      this.res.push(ctx_js)
-      if(this.children.length > 0){this.res.push('{')}
-      this.res.push('\n')
-      for(var child of this.children){
-          this.res.push(child.to_js(indent + 4))
-      }
-      if(this.children.length > 0){
-         this.res.push(' '.repeat(indent))
-         this.res.push('}\n')
-      }
+        this.res.push(' '.repeat(indent))
+        this.res.push(ctx_js)
+        if(this.children.length > 0){
+            this.res.push('{')
+        }
+        this.res.push('\n')
+        for(var child of this.children){
+            this.res.push(child.to_js(indent + 4))
+        }
+        if(this.children.length > 0){
+            this.res.push(' '.repeat(indent))
+            this.res.push('}\n')
+        }
     }
     this.js = this.res.join('')
 
@@ -483,7 +453,6 @@ $Node.prototype.transform = function(rank){
             parent.insert(rank, new_node)
 
             var pnode = $get_node(this.has_yield)
-
 
             var n = this.has_yield.from_num
 
@@ -626,7 +595,9 @@ $Node.prototype.transform = function(rank){
         var i = 0
         while(i < this.children.length){
             var offset = this.children[i].transform(i)
-            if(offset === undefined){offset = 1}
+            if(offset === undefined){
+                offset = 1
+            }
             i += offset
         }
     }else{
@@ -640,10 +611,14 @@ $Node.prototype.transform = function(rank){
         var i = 0
         while(i < this.children.length){
             var offset = this.children[i].transform(i)
-            if(offset === undefined){offset = 1}
+            if(offset === undefined){
+                offset = 1
+            }
             i += offset
         }
-        if(ctx_offset === undefined){ctx_offset = 1}
+        if(ctx_offset === undefined){
+            ctx_offset = 1
+        }
 
         return ctx_offset
     }
@@ -663,8 +638,8 @@ $Node.prototype.clone_tree = function(){
         res[attr] = this[attr]
     }
     res.children = []
-    for(var i = 0, len = this.children.length; i < len; i++){
-        res.add(this.children[i].clone_tree())
+    for(var child of this.children){
+        res.add(child.clone_tree())
     }
     return res
 }
@@ -704,7 +679,7 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
     this.with_commas = with_commas
     this.parent = context
     this.tree = []
-    context.tree[context.tree.length] = this
+    context.tree.push(this)
 }
 
 $AbstractExprCtx.prototype.toString = function(){
@@ -872,7 +847,9 @@ $AbstractExprCtx.prototype.transition = function(token, value){
 
 $AbstractExprCtx.prototype.to_js = function(){
     this.js_processed = true
-    if(this.type === 'list') return '[' + $to_js(this.tree) + ']'
+    if(this.type === 'list'){
+        return '[' + $to_js(this.tree) + ']'
+    }
     return $to_js(this.tree)
 }
 
@@ -927,7 +904,9 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     }
 }
 
-$AnnotationCtx.prototype.toString = function(){return '(annotation) ' + this.tree}
+$AnnotationCtx.prototype.toString = function(){
+    return '(annotation) ' + this.tree
+}
 
 $AnnotationCtx.prototype.transition = function(token, value){
     var context = this
@@ -960,7 +939,9 @@ var $AssertCtx = $B.parser.$AssertCtx = function(context){
     context.tree[context.tree.length] = this
 }
 
-$AssertCtx.prototype.toString = function(){return '(assert) ' + this.tree}
+$AssertCtx.prototype.toString = function(){
+    return '(assert) ' + this.tree
+}
 
 $AssertCtx.prototype.transition = function(token, value){
     var context = this
@@ -970,7 +951,9 @@ $AssertCtx.prototype.transition = function(token, value){
         }
         return new $AbstractExprCtx(this, false)
     }
-    if(token == 'eol'){return $transition(context.parent, token)}
+    if(token == 'eol'){
+        return $transition(context.parent, token)
+    }
     $_SyntaxError(context, token)
 }
 
@@ -999,14 +982,13 @@ $AssertCtx.prototype.transform = function(node, rank){
     var not_ctx = new $NotCtx(new_ctx)
     not_ctx.tree = [condition]
     node.context = new_ctx
-    var new_node = new $Node()
+
     var js = 'throw _b_.AssertionError.$factory()'
     if(message !== null){
         js = 'throw _b_.AssertionError.$factory(_b_.str.$factory(' +
             message.to_js() + '))'
     }
-    new $NodeJSCtx(new_node, js)
-    node.add(new_node)
+    node.add($NodeJS(js))
 }
 
 function make_assign(left, right, module){
@@ -1040,16 +1022,14 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }
     // replace parent by "this" in parent tree
     context.parent.tree.pop()
-    context.parent.tree[context.parent.tree.length] = this
+    context.parent.tree.push(this)
 
     this.parent = context.parent
     this.tree = [context]
 
     var scope = $get_scope(this)
 
-    if(context.type == 'expr' && context.tree[0].type == 'call'){
-          $_SyntaxError(context, ["cannot assign to function call "])
-    }else if(context.type == 'list_or_tuple' ||
+    if(context.type == 'list_or_tuple' ||
             (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
         if(context.type == 'expr'){
             context = context.tree[0]
@@ -1071,7 +1051,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             // Attribute bound of an id indicates if it is being
             // bound, as it is the case in the left part of an assignment
             assigned.bound = true
-            if(!scope.globals || !scope.globals.has(assigned.value)){
+            if(! scope.globals || ! scope.globals.has(assigned.value)){
                 // A value is going to be assigned to a name
                 // After assignment the name will be bound to the current
                 // scope
