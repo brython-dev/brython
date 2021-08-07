@@ -244,7 +244,7 @@ function callable(obj) {
     return hasattr(obj, '__call__')
 }
 
-function chr(i) {
+function chr(i){
     check_nb_args('chr', 1, arguments)
     check_no_kw('chr', i)
 

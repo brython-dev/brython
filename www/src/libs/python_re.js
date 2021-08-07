@@ -1345,7 +1345,17 @@ function validate(name){
     }
 }
 
-var chr = _b_.chr
+function chr(i){
+    if(i < 0 || i > 1114111){
+        throw _b_.ValueError.$factory('Outside valid range')
+    }else if(i >= 0x10000 && i <= 0x10FFFF){
+        var code = (i - 0x10000)
+        return String.fromCodePoint(0xD800 | (code >> 10)) +
+            String.fromCodePoint(0xDC00 | (code & 0x3FF))
+    }else{
+        return String.fromCodePoint(i)
+    }
+}
 
 var character_classes = {
     in_charset: to_codepoint_list('bdDsSwW'),
@@ -2712,7 +2722,10 @@ function StringObj(obj){
     if(typeof obj == "string"){
         // Python object represented as a Javascript string
         this.string = obj
+        // Maps a position in codepoints to position in string
+        this.index_map = {}
         for(var i = 0, len = obj.length; i < len; i++){
+            this.index_map[this.codepoints.length] = i
             var cp = obj.codePointAt(i)
             this.codepoints.push(cp)
             if(cp >= 0x10000){
@@ -2748,6 +2761,17 @@ function StringObj(obj){
 
 StringObj.prototype.substring = function(start, end){
     // Returns a string
+    var s
+    if(this.string && this.index_map){
+        if(this.index_map[start] === undefined){
+            return ''
+        }
+        if(end === undefined){
+            return this.string.substr(this.index_map[start])
+        }
+        return this.string.substring(this.index_map[start],
+            this.index_map[end])
+    }
     var codepoints,
         res = ''
     if(end === undefined){

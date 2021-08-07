@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-05 22:32:11.600239"
-__BRYTHON__.timestamp=1628195531600
+__BRYTHON__.compiled_date="2021-08-07 08:22:44.269823"
+__BRYTHON__.timestamp=1628317364269
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -388,8 +388,8 @@ while(i--> 0){res[list[i]]=value}
 return res}
 $B.op2method={operations:{"**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","@":"matmul" },augmented_assigns:{"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"},binary:{"&":"and","|":"or","~":"invert","^":"xor"},comparisons:{"<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne"},boolean:{"or":"or","and":"and","in":"in","not":"not","is":"is"},subset:function(){var res={},keys=[]
 if(arguments[0]=="all"){keys=Object.keys($B.op2method)
-keys.splice(keys.indexOf("subset"),1)}else{for(var i=0,len=arguments.length;i < len;i++){keys.push(arguments[i])}}
-for(var i=0,len=keys.length;i < len;i++){var key=keys[i],ops=$B.op2method[key]
+keys.splice(keys.indexOf("subset"),1)}else{for(var arg of arguments){keys.push(arg)}}
+for(var key of keys){var ops=$B.op2method[key]
 if(ops===undefined){throw Error(key)}
 for(var attr in ops){res[attr]=ops[attr]}}
 return res}}
@@ -403,26 +403,12 @@ for(var _tmp of $op_order){for(var item of _tmp){$op_weight[item]=$weight}
 $weight++}
 var $loop_num=0
 var create_temp_name=$B.parser.create_temp_name=function(prefix){var _prefix=prefix ||'$temp'
-return _prefix+$loop_num++;}
+return _prefix+$loop_num++}
 var replace_node=$B.parser.replace_node=function(replace_what,replace_with){var parent=replace_what.parent
 var pos=replace_what.parent.children.indexOf(replace_what)
 parent.children[pos]=replace_with
 replace_with.parent=parent
 replace_with.bindings=replace_what.bindings}
-var add_identnode=$B.parser.add_identnode=function(parent,insert_at,name,val){var new_node=new $Node()
-new_node.parent=parent
-new_node.locals=parent.locals
-new_node.module=parent.module
-var new_ctx=new $NodeCtx(new_node)
-var expr_ctx=new $ExprCtx(new_ctx,'id',true)
-var idctx=new $IdCtx(expr_ctx,name)
-var assign=new $AssignCtx(expr_ctx)
-if(insert_at===-1)
-parent.add(new_node)
-else
-parent.insert(insert_at,new_node)
-assign.tree[1]=val
-return new_node}
 var chained_comp_num=0
 var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){
 var ctx_node=C
@@ -439,9 +425,6 @@ $B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,l
 var message='invalid syntax'
 if(msg && !(msg.startsWith("token "))){message+=' ('+msg+')'}
 $B.$SyntaxError(module,message,src,$pos,line_num,root)}else{throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}}
-function SyntaxWarning(C,msg){var node=$get_node(C),module=$get_module(C),src=module.src,lines=src.split("\n"),message=`Module ${module.module} line ${node.line_num}: ${msg}\n`+
-'    '+lines[node.line_num-1]
-$B.$getattr($B.stderr,"write")(message)}
 function check_assignment(C,kwargs){
 var once,action='assign to',augmented=false
 if(kwargs){once=kwargs.once
@@ -651,13 +634,13 @@ return res}
 $Node.prototype.clone_tree=function(){var res=new $Node(this.type)
 for(var attr in this){res[attr]=this[attr]}
 res.children=[]
-for(var i=0,len=this.children.length;i < len;i++){res.add(this.children[i].clone_tree())}
+for(var child of this.children){res.add(child.clone_tree())}
 return res}
 var $AbstractExprCtx=$B.parser.$AbstractExprCtx=function(C,with_commas){this.type='abstract_expr'
 this.with_commas=with_commas
 this.parent=C
 this.tree=[]
-C.tree[C.tree.length]=this}
+C.tree.push(this)}
 $AbstractExprCtx.prototype.toString=function(){return '(abstract_expr '+this.with_commas+') '+this.tree}
 $AbstractExprCtx.prototype.transition=function(token,value){var C=this
 var packed=C.packed,is_await=C.is_await,assign=C.assign
@@ -777,7 +760,7 @@ default:
 $_SyntaxError(C,token)}}
 return $transition(C.parent,token,value)}
 $AbstractExprCtx.prototype.to_js=function(){this.js_processed=true
-if(this.type==='list')return '['+$to_js(this.tree)+']'
+if(this.type==='list'){return '['+$to_js(this.tree)+']'}
 return $to_js(this.tree)}
 var $AliasCtx=$B.parser.$AliasCtx=function(C){
 this.type='ctx_manager_alias'
@@ -840,12 +823,10 @@ var new_ctx=new $ConditionCtx(node.C,'if')
 var not_ctx=new $NotCtx(new_ctx)
 not_ctx.tree=[condition]
 node.C=new_ctx
-var new_node=new $Node()
 var js='throw _b_.AssertionError.$factory()'
 if(message !==null){js='throw _b_.AssertionError.$factory(_b_.str.$factory('+
 message.to_js()+'))'}
-new $NodeJSCtx(new_node,js)
-node.add(new_node)}
+node.add($NodeJS(js))}
 function make_assign(left,right,module){var node=new $Node()
 node.id=module
 var C=new $NodeCtx(node)
@@ -861,18 +842,18 @@ this.type='assign'
 if(expression=='expression'){this.expression=true
 console.log("parent of assign expr",C.parent)}
 C.parent.tree.pop()
-C.parent.tree[C.parent.tree.length]=this
+C.parent.tree.push(this)
 this.parent=C.parent
 this.tree=[C]
 var scope=$get_scope(this)
-if(C.type=='expr' && C.tree[0].type=='call'){$_SyntaxError(C,["cannot assign to function call "])}else if(C.type=='list_or_tuple' ||
+if(C.type=='list_or_tuple' ||
 (C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
 C.bind_ids(scope)}else if(C.type=='assign'){check_assignment(C.tree[1])
 for(var elt of C.tree){var assigned=elt.tree[0]
 if(assigned.type=='id'){$bind(assigned.value,scope,this)}}}else{var assigned=C.tree[0]
 if(assigned && assigned.type=='id'){var name=assigned.value
 assigned.bound=true
-if(!scope.globals ||!scope.globals.has(assigned.value)){
+if(! scope.globals ||! scope.globals.has(assigned.value)){
 var node=$get_node(this)
 node.bound_before=Object.keys(scope.binding)
 $bind(assigned.value,scope,this)}else{
