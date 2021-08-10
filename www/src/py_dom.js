@@ -923,7 +923,7 @@ DOMNode.__getattribute__ = function(self, attr){
 
 DOMNode.__getitem__ = function(self, key){
     if(self.nodeType == 9){ // Document
-        if(typeof key == "string"){
+        if(typeof key.valueOf() == "string"){
             var res = self.getElementById(key)
             if(res){return DOMNode.$factory(res)}
             throw _b_.KeyError.$factory(key)

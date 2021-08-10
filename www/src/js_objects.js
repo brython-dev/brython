@@ -18,6 +18,8 @@ function to_simple(value){
                 return 'null'
             }else if(value instanceof Number){
                 return value.valueOf()
+            }else if(value instanceof String){
+                return value.valueOf()
             }
         default:
         console.log("erreur", value)
@@ -32,7 +34,7 @@ $B.pyobj2structuredclone = function(obj, strict){
     // If "strict" is false, dictionaries with non-string keys are supported
     strict = strict === undefined ? true : strict
     if(typeof obj == "boolean" || typeof obj == "number" ||
-            typeof obj == "string"){
+            typeof obj == "string" || obj instanceof String){
         return obj
     }else if(obj instanceof Number){
         return obj.valueOf()
@@ -72,7 +74,7 @@ $B.structuredclone2pyobj = function(obj){
     }else if(typeof obj == "boolean" || typeof obj == "number" ||
             typeof obj == "string"){
         return obj
-    }else if(obj instanceof Number){
+    }else if(obj instanceof Number || obj instanceof String){
         return obj.valueOf()
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
             obj.__class__ === _b_.tuple){
@@ -159,20 +161,23 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
         return jsobj
     }
 
-    if(jsobj === undefined){return $B.Undefined}
-    else if(jsobj === null){return _b_.None}
+    if(jsobj === undefined){
+        return $B.Undefined
+    }else if(jsobj === null){
+        return _b_.None
+    }
 
     if(Array.isArray(jsobj)){
         return _b_.list.$factory(jsobj.map(jsobj2pyobj))
-    }
-
-    if(typeof jsobj === 'number'){
-       if(jsobj.toString().indexOf('.') == -1){return _b_.int.$factory(jsobj)}
+    }else if(typeof jsobj === 'number'){
+       if(jsobj.toString().indexOf('.') == -1){
+           return _b_.int.$factory(jsobj)
+       }
        // for now, lets assume a float
        return _b_.float.$factory(jsobj)
-    }
-
-    if(typeof jsobj == "function"){
+    }else if(typeof jsobj == "string"){
+        return $B.String(jsobj)
+    }else if(typeof jsobj == "function"){
         // transform Python arguments to equivalent JS arguments
         return function(){
             var args = []
@@ -243,9 +248,9 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         })
         return jsobj
 
-    }else if(klass === _b_.float){
+    }else if(klass === _b_.float || klass === _b_.str){
 
-        // Python floats are converted to the underlying value
+        // Python floats and strings are converted to the underlying value
         return pyobj.valueOf()
 
     }else if(klass === $B.Function || klass === $B.method){

@@ -782,6 +782,9 @@ dict.$setitem = function(self, key, value, $hash){
         }
         return $N
     }
+    if(key instanceof String){
+        key = key.valueOf()
+    }
 
     switch(typeof key){
         case "string":

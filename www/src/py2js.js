@@ -7989,7 +7989,10 @@ $OpCtx.prototype.to_js = function(){
               case 'str':
                   switch(t0.type){
                       case 'str':
-                          return js0 + this.op + js1
+                          // use .valueOf() in case the string has
+                          // surrogate pair: in Javascript,
+                          // "new String('a') == new String('a')" is false...
+                          return js0 + '.valueOf() ' + this.op + js1 + '.valueOf()'
                       case 'int':
                           switch(this.op){
                               case "==":
@@ -9797,10 +9800,7 @@ $StringCtx.prototype.to_js = function(){
     if(res.length == 0){
         res = '""'
     }
-    if($B.has_surrogate(res)){
-        return "$B.String(" + res + ")"
-    }
-    return res
+    return "$B.String(" + res + ")"
 }
 
 var $SubCtx = $B.parser.$SubCtx = function(context){

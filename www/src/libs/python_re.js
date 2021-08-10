@@ -2504,7 +2504,7 @@ function from_codepoint_list(codepoints, type){
     for(const cp of codepoints){
         s += _b_.chr(cp)
     }
-    return s
+    return $B.String(s)
 }
 
 var GroupDict = $B.make_class("GroupDict")
@@ -2719,10 +2719,8 @@ function StringObj(obj){
     this.py_obj = obj
     this.codepoints = []
     this.type = "str"
-    if(obj instanceof String){
-        console.log('String obj', obj)
-    }
-    if(typeof obj == "string"){
+    if(typeof obj == "string" ||
+            (obj instanceof String && ! obj.codepoints)){
         // Python object represented as a Javascript string
         this.string = obj
         // Maps a position in codepoints to position in string
@@ -2734,6 +2732,11 @@ function StringObj(obj){
             if(cp >= 0x10000){
                 i++
             }
+        }
+        if(obj instanceof String){
+            // store for next use
+            obj.codepoints = this.codepoints
+            obj.index_map = this.index_map
         }
     }else if(obj instanceof String){
         // string with surrogate pairs

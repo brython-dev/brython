@@ -638,18 +638,19 @@ $B.$getitem = function(obj, item){
     var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
-        if(is_list ||
-                (typeof obj == "string" &&
-                 ! $B.has_surrogate(obj))){
+        if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item
-            if(obj[item] !== undefined){return obj[item]}
-            else{index_error(obj)}
+            if(obj[item] !== undefined){
+                return obj[item]
+            }else{
+                index_error(obj)
+            }
         }else if(is_dict){
             if(obj.$numeric_dict[item] !== undefined){
                 return obj.$numeric_dict[item][0]
             }
         }
-    }else if(typeof item == "string" && is_dict){
+    }else if(typeof item.valueOf() == "string" && is_dict){
         var res = obj.$string_dict[item]
         if(res !== undefined){
             return res[0]
@@ -1648,6 +1649,9 @@ var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
     "__ge__": ">="}
 
 $B.rich_comp = function(op, x, y){
+    if(x === undefined){
+        throw _b_.RuntimeError.$factory('error in rich comp')
+    }
     var x1 = x.valueOf(),
         y1 = y.valueOf()
     if(typeof x1 == "number" && typeof y1 == "number" &&

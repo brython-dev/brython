@@ -19,26 +19,35 @@ $B.has_surrogate = function(s){
 
 $B.String = function(s){
     var codepoints = [],
-        index_map = {},
-        has_surrogate = false
+        surrogates = [],
+        j = 0
     for(var i = 0, len = s.length; i < len; i++){
-        index_map[codepoints.length] = i
         var cp = s.codePointAt(i)
-        codepoints.push(cp)
         if(cp >= 0x10000){
+            surrogates.push(j)
             i++
-            has_surrogate = true
         }
+        j++
     }
-    if(has_surrogate){
-        var res = new String(s)
-        res.__class__ = str
-        res.index_map = index_map
-        res.codepoints = codepoints
-        res.string = s
-        return res
+    if(surrogates.length == 0){
+        return s
     }
-    return s
+    var res = new String(s)
+    res.__class__ = str
+    res.surrogates = surrogates
+    return res
+}
+
+function pypos2jspos(s, pypos){
+    // convert Python position to JS position
+    if(s.surrogates === undefined){
+        return pypos
+    }
+    var nb = 0
+    while(s.surrogates[nb] < pypos){
+        nb++
+    }
+    return pypos + nb
 }
 
 var str = {
@@ -53,14 +62,20 @@ var str = {
 }
 
 function normalize_start_end($){
-    if($.start === null || $.start === _b_.None){$.start = 0}
-    else if($.start < 0){
-        $.start += $.self.length
+    if(typeof $.self == "string"){
+        $.self = $B.String($.self)
+    }
+    var len = str.__len__($.self)
+    if($.start === null || $.start === _b_.None){
+        $.start = 0
+    }else if($.start < 0){
+        $.start += len
         $.start = Math.max(0, $.start)
     }
-    if($.end === null || $.end === _b_.None){$.end = $.self.length}
-    else if($.end < 0){
-        $.end += $.self.length
+    if($.end === null || $.end === _b_.None){
+        $.end = len
+    }else if($.end < 0){
+        $.end += len
         $.end = Math.max(0, $.end)
     }
 
@@ -68,6 +83,8 @@ function normalize_start_end($){
         throw _b_.TypeError.$factory("slice indices must be integers " +
             "or None or have an __index__ method")
     }
+    $.js_start = pypos2jspos($.self, $.start)
+    $.js_end = pypos2jspos($.self, $.end)
 }
 
 function reverse(s){
@@ -100,7 +117,7 @@ function to_chars(s){
 
 function to_codepoints(s){
     // Transform Javascript string s into a list of codepoints
-    if(s instanceof String){
+    if(s.codepoints){
         return s.codepoints
     }
     var cps = []
@@ -116,17 +133,18 @@ function to_codepoints(s){
             cps.push(code)
         }
     }
-    return cps
+    return s.codepoints = cps
 }
 
 str.__add__ = function(self, other){
-    if(!(typeof other === "string")){
-        try{return $B.$getattr(other, "__radd__")(self)}
-        catch(err){
+    if(! _b_.isinstance(other, str)){
+        try{
+            return $B.$getattr(other, "__radd__")(self)
+        }catch(err){
             throw _b_.TypeError.$factory("Can't convert " +
                 $B.class_name(other) + " to str implicitly")}
     }
-    return self + other
+    return $B.String(self + other)
 }
 
 str.__contains__ = function(self, item){
@@ -134,7 +152,7 @@ str.__contains__ = function(self, item){
         throw _b_.TypeError.$factory("'in <string>' requires " +
             "string as left operand, not " + item.__class__)
     }
-    if(typeof item == "string"){
+    if(item.__class__ === str || _b_.isinstance(item, str)){
         var nbcar = item.length
     }else{
         var nbcar = _b_.len(item)
@@ -143,7 +161,8 @@ str.__contains__ = function(self, item){
          // a string contains the empty string
         return true
     }
-    if(self.length == 0){
+    var len = self.length
+    if(len == 0){
         return nbcar == 0
     }
     for(var i = 0, len = self.length; i < len; i++){
@@ -193,21 +212,26 @@ str.__format__ = function(self, format_spec) {
 }
 
 str.__getitem__ = function(self, arg){
-    var chars = to_chars(self)
+    var len = str.__len__(self)
     if(_b_.isinstance(arg, _b_.int)){
         var pos = arg
         if(arg < 0){
-            pos += self.length
+            pos += len
         }
-        if(pos >= 0 && pos < chars.length){
-            return chars[pos]
+        if(pos >= 0 && pos < len){
+            var jspos = pypos2jspos(self, pos)
+            if(self.codePointAt(jspos) >= 0x10000){
+                return $B.String(self.substr(jspos, 2))
+            }else{
+                return $B.String(self[jspos])
+            }
         }
         throw _b_.IndexError.$factory("string index out of range")
     }
     if(_b_.isinstance(arg, _b_.slice)){
-        var s = _b_.slice.$conv_for_seq(arg, self.length),
-            start = s.start,
-            stop = s.stop,
+        var s = _b_.slice.$conv_for_seq(arg, len),
+            start = pypos2jspos(self, s.start),
+            stop = pypos2jspos(self, s.stop),
             step = s.step
         var res = "",
             i = null
@@ -216,17 +240,17 @@ str.__getitem__ = function(self, arg){
                 return ""
             }
             for(var i = start; i < stop; i += step){
-                res += chars[i]
+                res += self[i]
             }
         }else{
             if(stop >= start){
                 return ''
             }
             for(var i = start; i > stop; i += step){
-                res += chars[i]
+                res += self[i]
             }
         }
-        return res
+        return $B.String(res)
     }
     if(_b_.isinstance(arg, _b_.bool)){
         return self.__getitem__(_b_.int.$factory(arg))
@@ -270,7 +294,12 @@ str.__hash__ = function(self) {
         str.$nb_str_hash_cache = 0
         str_hash_cache = {}
     }
-    return str_hash_cache[self] = fnv(to_codepoints(self))
+    try{
+        return str_hash_cache[self] = fnv(to_codepoints(self))
+    }catch(err){
+        console.log('error hash, cps', self, to_codepoints(self))
+        throw err
+    }
 }
 
 str.__init__ = function(self, arg){
@@ -285,12 +314,14 @@ str.__iter__ = function(self){
 }
 
 str.__len__ = function(self){
-    // found at
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/length
-    if(self instanceof String){
-        return self.codepoints.length
+    if(self.surrogates === undefined){
+        return self.length
     }
-    return self.valueOf().length
+    if(self.len !== undefined){
+        return self.len
+    }
+    var len = self.len = self.valueOf().length - self.surrogates.length
+    return len
 }
 
 // Start of section for legacy formatting (with %)
@@ -916,7 +947,7 @@ str.__mul__ = function(){
 }
 
 str.__ne__ = function(self, other){
-    return other !== self.valueOf()
+    return other.valueOf() !== self.valueOf()
 }
 
 function __newobj__(){
@@ -1250,30 +1281,21 @@ str.find = function(){
     check_str($.sub)
     normalize_start_end($)
 
-    if(!_b_.isinstance($.start, _b_.int) ||
-            !_b_.isinstance($.end, _b_.int)){
-        throw _b_.TypeError.$factory("slice indices must be " +
-            "integers or None or have an __index__ method")}
-    // Can't use string.substring(start, end) because if end < start,
-    // Javascript transforms it into substring(end, start)...
-    var s = ""
-    for(var i = $.start; i < $.end; i++){
-        s += $.self.charAt(i)
-    }
+    var len = str.__len__($.self),
+        sub_len = str.__len__($.sub)
 
-    var len = str.__len__($.self)
-
-    if($.sub.length == 0 && $.start == len){
+    if(sub_len == 0 && $.start == len){
         return len
     }
-    if(s.length + $.sub.length == 0){
+    if(len + sub_len == 0){
         return -1
     }
 
-    var last_search = s.length - $.sub.length
-    for(var i = 0; i <= last_search; i++){
-        if(s.substr(i, $.sub.length) == $.sub){
-            return $.start + str.__len__(s.substr(0, i))
+    var last_search = len - sub_len
+    for(var i = $.start; i <= last_search; i++){
+        var js_pos = pypos2jspos($.self, i)
+        if($.self.substr(js_pos, $.sub.length) == $.sub){
+            return i
         }
     }
     return -1
@@ -1450,7 +1472,10 @@ str.format = function(self) {
 
     for(var i = 0; i < parts.length; i++){
         // Literal text is added unchanged
-        if(typeof parts[i] == "string"){res += parts[i]; continue}
+        if(typeof parts[i] == "string"){
+            res += parts[i];
+            continue
+        }
 
         // Format objects
         fmt = parts[i]
@@ -2024,22 +2049,23 @@ str.rfind = function(self, substr){
         arguments, {start: 0, end: null}, null, null)
 
     normalize_start_end($)
-
     check_str($.sub)
 
-    if($.sub.length == 0){
-        if($.start > $.self.length){
+    var len = str.__len__($.self),
+        sub_len = str.__len__($.sub)
+
+    if(sub_len == 0){
+        if($.js_start > len){
             return -1
         }else{
             return str.__len__($.self)
         }
     }
 
-    var sublen = $.sub.length
-
-    for(var i = $.end - sublen; i >= $.start; i--){
-        if($.self.substr(i, sublen) == $.sub){
-            return str.__len__($.self.substr(0, i))
+    for(var py_pos = $.end - sub_len; py_pos >= $.start; py_pos--){
+        var js_pos = pypos2jspos($.self, py_pos)
+        if($.self.substr(js_pos, $.sub.length) == $.sub){
+            return py_pos
         }
     }
     return -1
@@ -2128,6 +2154,7 @@ str.split = function(){
     if(sep == ""){
         throw _b_.ValueError.$factory("empty separator")
     }
+
     if(sep === _b_.None){
         var res = []
         while(pos < self.length && self.charAt(pos).search(/\s/) > -1){
@@ -2163,19 +2190,21 @@ str.split = function(){
                 break
             }
         }
-        return res
+        return res.map($B.String)
     }else{
         var res = [],
             s = "",
             seplen = sep.length
-        if(maxsplit == 0){return [self]}
+        if(maxsplit == 0){
+            return [self]
+        }
         while(pos < self.length){
             if(self.substr(pos, seplen) == sep){
                 res.push(s)
                 pos += seplen
                 if(maxsplit > -1 && res.length >= maxsplit){
                     res.push(self.substr(pos))
-                    return res
+                    return res.map($B.String)
                 }
                 s = ""
             }else{
@@ -2184,7 +2213,7 @@ str.split = function(){
             }
         }
         res.push(s)
-        return res
+        return res.map($B.String)
     }
 }
 
@@ -2237,10 +2266,8 @@ str.startswith = function(){
     if(! _b_.isinstance(prefixes, _b_.tuple)){
         prefixes = [prefixes]
     }
-
-    var s = to_chars($.self).slice($.start, $.end).join('')
-    for(var i = 0, len = prefixes.length; i < len; i++){
-        var prefix = prefixes[i]
+    var s = $.self.substring($.js_start, $.js_end)
+    for(var prefix of prefixes){
         if(! _b_.isinstance(prefix, str)){
             throw _b_.TypeError.$factory("endswith first arg must be str " +
                 "or a tuple of str, not int")
@@ -2379,11 +2406,11 @@ str.$factory = function(arg, encoding, errors){
             encoding = $.encoding,
             errors = $.errors
     }
-    switch(typeof arg) {
-        case "string":
-            return str.__str__(arg)
-        case "number":
-            if(isFinite(arg)){return arg.toString()}
+    if(typeof arg == "string" || arg instanceof String ||
+            typeof arg == "number"){
+        if(isFinite(arg)){
+            return arg.toString()
+        }
     }
     try{
         if(arg.$is_class || arg.$factory){
