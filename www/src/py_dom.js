@@ -500,10 +500,24 @@ dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
 var Options = {
     __class__: _b_.type,
-    __delitem__: function(self, arg){
-        self.parent.options.remove(arg.elt)
+    __delitem__: function(self, key){
+        key = $B.PyNumber_Index(key)
+        if(key < 0){
+            key += self.parent.options.length
+        }
+        if(! self.parent.options[key]){
+            throw _b_.KeyError.$factory(key)
+        }
+        self.parent.options.remove(key)
     },
     __getitem__: function(self, key){
+        key = $B.PyNumber_Index(key)
+        if(key < 0){
+            key += self.parent.options.length
+        }
+        if(! self.parent.options[key]){
+            throw _b_.KeyError.$factory(key)
+        }
         return DOMNode.$factory(self.parent.options[key])
     },
     __len__: function(self){
@@ -520,11 +534,11 @@ var Options = {
         return "<object Options wraps " + self.parent.options + ">"
     },
     append: function(self, element){
-        self.parent.options.add(element.elt)
+        self.parent.options.add(element)
     },
     insert: function(self, index, element){
-        if(index === undefined){self.parent.options.add(element.elt)}
-        else{self.parent.options.add(element.elt, index)}
+        if(index === undefined){self.parent.options.add(element)}
+        else{self.parent.options.add(element, index)}
     },
     item: function(self, index){
         return self.parent.options.item(index)
@@ -532,8 +546,8 @@ var Options = {
     namedItem: function(self, name){
         return self.parent.options.namedItem(name)
     },
-    remove: function(self, arg){
-        self.parent.options.remove(arg.elt)
+    remove: function(self, element){
+        self.parent.options.remove(element.index)
     },
     $infos: {
         __module__: "<pydom>",

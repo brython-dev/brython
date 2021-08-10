@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-10 16:15:49.664054"
-__BRYTHON__.timestamp=1628604949664
+__BRYTHON__.compiled_date="2021-08-10 16:45:01.497636"
+__BRYTHON__.timestamp=1628606701497
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -14687,8 +14687,14 @@ dom.File.__class__=_b_.type
 dom.File.__str__=function(){return "<class 'File'>"}
 dom.FileReader.__class__=_b_.type
 dom.FileReader.__str__=function(){return "<class 'FileReader'>"}
-var Options={__class__:_b_.type,__delitem__:function(self,arg){self.parent.options.remove(arg.elt)},__getitem__:function(self,key){return DOMNode.$factory(self.parent.options[key])},__len__:function(self){return self.parent.options.length},__mro__:[object],__setattr__:function(self,attr,value){self.parent.options[attr]=value},__setitem__:function(self,attr,value){self.parent.options[attr]=$B.$JS2Py(value)},__str__:function(self){return "<object Options wraps "+self.parent.options+">"},append:function(self,element){self.parent.options.add(element.elt)},insert:function(self,index,element){if(index===undefined){self.parent.options.add(element.elt)}
-else{self.parent.options.add(element.elt,index)}},item:function(self,index){return self.parent.options.item(index)},namedItem:function(self,name){return self.parent.options.namedItem(name)},remove:function(self,arg){self.parent.options.remove(arg.elt)},$infos:{__module__:"<pydom>",__name__:"Options"}}
+var Options={__class__:_b_.type,__delitem__:function(self,key){key=$B.PyNumber_Index(key)
+if(key < 0){key+=self.parent.options.length}
+if(! self.parent.options[key]){throw _b_.KeyError.$factory(key)}
+self.parent.options.remove(key)},__getitem__:function(self,key){key=$B.PyNumber_Index(key)
+if(key < 0){key+=self.parent.options.length}
+if(! self.parent.options[key]){throw _b_.KeyError.$factory(key)}
+return DOMNode.$factory(self.parent.options[key])},__len__:function(self){return self.parent.options.length},__mro__:[object],__setattr__:function(self,attr,value){self.parent.options[attr]=value},__setitem__:function(self,attr,value){self.parent.options[attr]=$B.$JS2Py(value)},__str__:function(self){return "<object Options wraps "+self.parent.options+">"},append:function(self,element){self.parent.options.add(element)},insert:function(self,index,element){if(index===undefined){self.parent.options.add(element)}
+else{self.parent.options.add(element,index)}},item:function(self,index){return self.parent.options.item(index)},namedItem:function(self,name){return self.parent.options.namedItem(name)},remove:function(self,element){self.parent.options.remove(element.index)},$infos:{__module__:"<pydom>",__name__:"Options"}}
 Options.$factory=function(parent){return{
 __class__:Options,parent:parent}}
 $B.set_func_names(Options,"<dom>")
