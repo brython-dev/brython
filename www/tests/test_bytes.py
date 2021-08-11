@@ -269,4 +269,10 @@ assert b == b"removeafter"
 
 assert b.removesuffix(b"z") == b
 
+# issue 1744
+assert b'UUDDLRLRAB'.hex(' ', 4) == '5555 44444c52 4c524142'
+assert b'UUDDLRLRAB'.hex(' ', -4) == '55554444 4c524c52 4142'
+assert b'UUDDLRLRAB'.hex('-', 4) == '5555-44444c52-4c524142'
+assert b'UUDDLRLRAB'.hex(':', -4) == '55554444:4c524c52:4142'
+
 print('passed all tests...')

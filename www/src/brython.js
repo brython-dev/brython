@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-10 16:45:01.497636"
-__BRYTHON__.timestamp=1628606701497
+__BRYTHON__.compiled_date="2021-08-11 11:10:56.629501"
+__BRYTHON__.timestamp=1628673056629
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9778,10 +9778,16 @@ for(var i=0;i < string.length;i+=2){if(i+2 > string.length){throw _b_.ValueError
 source.push(_b_.int.$factory(string.substr(i,2),16))}
 return $.cls.$factory(source)}
 bytes.hex=function(){
-var $=$B.args('hex',1,{self:null},['self'],arguments,{},null,null),self=$.self,res=""
-for(var i=0,len=self.source.length;i < len;i++){var hexa=self.source[i].toString(16)
-if(hexa.length < 2){hexa="0"+hexa}
-res+=hexa}
+var $=$B.args('hex',3,{self:null,sep:null,bytes_per_sep:null},['self','sep','bytes_per_sep'],arguments,{sep:"",bytes_per_sep:1},null,null),self=$.self,sep=$.sep,bytes_per_sep=$.bytes_per_sep,res="",digits="0123456789abcdef",bps=bytes_per_sep,jstart=bps,len=self.source.length;
+if(bytes_per_sep < 0){bps=-bytes_per_sep;
+jstart=bps}else if(bytes_per_sep==0){sep=''}else{jstart=len % bps
+if(jstart==0){jstart=bps}}
+for(var i=0,j=jstart;i < len;i++){var c=self.source[i]
+if(j==0){res+=sep
+j=bps}
+j--
+res+=digits[c >> 4]
+res+=digits[c & 0x0f]}
 return res}
 bytes.index=function(){var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
 var index=bytes.find($.self,$.sub,$.start,$.end)
