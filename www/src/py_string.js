@@ -50,6 +50,18 @@ function pypos2jspos(s, pypos){
     return pypos + nb
 }
 
+function jspos2pypos(s, jspos){
+    // convert JS position to Python position
+    if(s.surrogates === undefined){
+        return jspos
+    }
+    var nb = 0
+    while(s.surrogates[nb] + nb < jspos){
+        nb++
+    }
+    return jspos - nb
+}
+
 var str = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
@@ -62,10 +74,12 @@ var str = {
 }
 
 function normalize_start_end($){
+    var len
     if(typeof $.self == "string"){
-        $.self = $B.String($.self)
+        len = $.self.length
+    }else{
+        len = str.__len__($.self)
     }
-    var len = str.__len__($.self)
     if($.start === null || $.start === _b_.None){
         $.start = 0
     }else if($.start < 0){
@@ -83,8 +97,10 @@ function normalize_start_end($){
         throw _b_.TypeError.$factory("slice indices must be integers " +
             "or None or have an __index__ method")
     }
-    $.js_start = pypos2jspos($.self, $.start)
-    $.js_end = pypos2jspos($.self, $.end)
+    if($.self.surrogates){
+        $.js_start = pypos2jspos($.self, $.start)
+        $.js_end = pypos2jspos($.self, $.end)
+    }
 }
 
 function reverse(s){
@@ -93,6 +109,9 @@ function reverse(s){
 }
 
 function check_str(obj, prefix){
+    if(obj instanceof String || typeof obj == "string"){
+        return
+    }
     if(! _b_.isinstance(obj, str)){
         throw _b_.TypeError.$factory((prefix || '') +
             "must be str, not " + $B.class_name(obj))
@@ -189,7 +208,9 @@ str.__eq__ = function(self, other){
 }
 
 function preformat(self, fmt){
-    if(fmt.empty){return _b_.str.$factory(self)}
+    if(fmt.empty){
+        return _b_.str.$factory(self)
+    }
     if(fmt.type && fmt.type != "s"){
         throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
             "' for object of type 'str'")
@@ -223,7 +244,7 @@ str.__getitem__ = function(self, arg){
             if(self.codePointAt(jspos) >= 0x10000){
                 return $B.String(self.substr(jspos, 2))
             }else{
-                return $B.String(self[jspos])
+                return self[jspos]
             }
         }
         throw _b_.IndexError.$factory("string index out of range")
@@ -1290,15 +1311,14 @@ str.find = function(){
     if(len + sub_len == 0){
         return -1
     }
-
-    var last_search = len - sub_len
-    for(var i = $.start; i <= last_search; i++){
-        var js_pos = pypos2jspos($.self, i)
-        if($.self.substr(js_pos, $.sub.length) == $.sub){
-            return i
-        }
+    // Use .indexOf(), not .search(), to avoid conversion to reg exp
+    var js_start = pypos2jspos($.self, $.start),
+        js_end = pypos2jspos($.self, $.end),
+        ix = $.self.substring(js_start, js_end).indexOf($.sub)
+    if(ix == -1){
+        return -1
     }
-    return -1
+    return jspos2pypos($.self, js_start + ix) - $.start
 }
 
 // Next function used by method .format()
@@ -1831,17 +1851,26 @@ str.lower = function(self){
 
 str.lstrip = function(self, x){
     var $ = $B.args("lstrip", 2, {self: null, chars: null}, ["self", "chars"],
-            arguments, {chars:_b_.None}, null, null)
-    if($.chars === _b_.None){
-        return $.self.trimLeft()
+            arguments, {chars:_b_.None}, null, null),
+        self = $.self,
+        chars = $.chars
+    if(chars === _b_.None){
+        return self.trimStart()
     }
-    var chars = to_chars(self)
-    for(var i = 0, len = chars.length; i < len; i++){
-        if($.chars.indexOf(chars[i]) === -1){
-            return chars.slice(i).join('')
+    while(self.length > 0){
+        var flag = false
+        for(var char of chars){
+            if(self.startsWith(char)){
+                self = self.substr(char.length)
+                flag = true
+                break
+            }
+        }
+        if(! flag){
+            return $.self.surrogates ? $B.String(self) : self
         }
     }
-    return ""
+    return ''
 }
 
 // note, maketrans should be a static function.
@@ -2040,9 +2069,6 @@ str.rfind = function(self, substr){
     // Return the highest index in the string where substring sub is found,
     // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
-    if(arguments.length == 2 && typeof substr == "string"){
-        return self.lastIndexOf(substr)
-    }
     var $ = $B.args("rfind", 4,
         {self: null, sub: null, start: null, end: null},
         ["self", "sub", "start", "end"],
@@ -2062,13 +2088,14 @@ str.rfind = function(self, substr){
         }
     }
 
-    for(var py_pos = $.end - sub_len; py_pos >= $.start; py_pos--){
-        var js_pos = pypos2jspos($.self, py_pos)
-        if($.self.substr(js_pos, $.sub.length) == $.sub){
-            return py_pos
-        }
+    // Use .indexOf(), not .search(), to avoid conversion to reg exp
+    var js_start = pypos2jspos($.self, $.start),
+        js_end = pypos2jspos($.self, $.end),
+        ix = $.self.substring(js_start, js_end).lastIndexOf($.sub)
+    if(ix == -1){
+        return -1
     }
-    return -1
+    return jspos2pypos($.self, js_start + ix) - $.start
 }
 
 str.rindex = function(){
@@ -2086,11 +2113,11 @@ str.rjust = function(self) {
         ["self", "width", "fillchar"],
         arguments, {fillchar: " "}, null, null)
 
-    if($.width <= self.length){
+    var len = str.__len__(self)
+    if($.width <= len){
         return self
     }
-
-    return $.fillchar.repeat($.width - self.length) + self
+    return $B.String($.fillchar.repeat($.width - len) + self)
 }
 
 str.rpartition = function(self,sep) {
@@ -2127,17 +2154,26 @@ str.rsplit = function(self) {
 
 str.rstrip = function(self, x){
     var $ = $B.args("rstrip", 2, {self: null, chars: null}, ["self", "chars"],
-            arguments, {chars: _b_.None}, null, null)
-    if($.chars === _b_.None){
-        return $.self.trimRight()
+            arguments, {chars: _b_.None}, null, null),
+        self = $.self,
+        chars = $.chars
+    if(chars === _b_.None){
+        return self.trimEnd()
     }
-    var chars = to_chars(self)
-    for(var j = chars.length - 1; j >= 0; j--){
-        if($.chars.indexOf(chars[j]) == -1){
-            return chars.slice(0, j + 1).join('')
+    while(self.length > 0){
+        var flag = false
+        for(var char of chars){
+            if(self.endsWith(char)){
+                self = self.substr(0, self.length - char.length)
+                flag = true
+                break
+            }
+        }
+        if(! flag){
+            return $.self.surrogates ? $B.String(self) : self
         }
     }
-    return ""
+    return ''
 }
 
 str.split = function(){
@@ -2247,7 +2283,7 @@ str.splitlines = function(self) {
     if(start < self.length){
         res.push(self.slice(start))
     }
-    return res
+    return res.map($B.String)
 }
 
 str.startswith = function(){
@@ -2285,18 +2321,7 @@ str.strip = function(){
     if($.chars === _b_.None){
         return $.self.trim()
     }
-    var chars = to_chars($.self)
-    for(var i = 0; i < chars.length; i++){
-        if($.chars.indexOf(chars[i]) == -1){
-            break
-        }
-    }
-    for(var j = chars.length - 1; j >= i; j--){
-        if($.chars.indexOf(chars[j]) == -1){
-            break
-        }
-    }
-    return chars.slice(i, j + 1).join('')
+    return str.rstrip(str.lstrip($.self, $.chars), $.chars)
 }
 
 str.swapcase = function(self){

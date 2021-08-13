@@ -75,5 +75,18 @@ assert "B?".isupper()
 # issue 287
 assert 'abb'.count('b', 2) == 1
 
+# strings in astral planes
+lamb = '🐑 '
+assert f'{lamb}: lil' == '🐑 : lil'
+
+s = lamb.rjust(3, ':')
+assert len(s) == 3
+assert lamb.rstrip(' 🐑') == ''
+assert lamb.lstrip('🐑') == ' '
+
+s = 'ab🐑d🐑f'
+assert s.find('🐑') == 2
+assert s.find('d') == 3
+assert s.rfind('🐑') == 4
 
 print("passed all tests...")
