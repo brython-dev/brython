@@ -729,12 +729,13 @@ PathEntryFinder.find_spec = function(self, fullname){
         notfound = true,
         hint = self.hint,
         base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
-        modpaths = []
+        modpaths = [],
+        py_ext = $B.$options.python_extension // defaults to .py (issue #1748)
     var tryall = hint === undefined
     if(tryall || hint == 'py'){
         // either py or undefined , try py code
-        modpaths = modpaths.concat([[base_path + ".py", "py", false],
-            [base_path + "/__init__.py", "py", true]])
+        modpaths = modpaths.concat([[base_path + py_ext, "py", false],
+            [base_path + "/__init__" + py_ext, "py", true]])
     }
 
     for(var j = 0; notfound && j < modpaths.length; ++j){

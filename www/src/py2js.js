@@ -12266,6 +12266,9 @@ var brython = $B.parser.brython = function(options){
         $B.$options.static_stdlib_import = false
     }
 
+    // Default extension used in imports (cf. issue #1748)
+    options.python_extension = options.python_extension || '.py'
+
     // Or it can be provided as a list of strings or path objects
     // where a path object has at least a path attribute and, optionally,
     // a prefetch attribute and/or a lang attribute
