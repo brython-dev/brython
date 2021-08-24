@@ -43,6 +43,7 @@ def discover_brython_test_modules():
         ("Modules", [
           ("test_aio.py", "browser.aio"),
           ("test_ajax.py", "browser.ajax"),
+          ("test_highlight.py", "browser.highlight"),
           ("test_binascii.py", "binascii"),
           ("test_bisect.py", "bisect"),
           ("test_code.py", "code"),

@@ -1,4 +1,4 @@
-import _jsre as re
+import re
 
 from browser import html
 
@@ -81,7 +81,7 @@ def highlight(txt):
             k = i + len(car)
             while k < len(txt):
                 k = txt.find(car, k)
-                if k != -1: 
+                if k != -1:
                     nb_as, j = 0, k - 1
                     while txt[j] == '\\':
                         nb_as += 1

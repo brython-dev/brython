@@ -1780,9 +1780,12 @@ $B.rich_op = function(op, x, y){
     }
     res = method(y)
     if(res === _b_.NotImplemented){
-        res = $B.$call($B.$getattr(y, "__r" + op + "__"))(x)
-        if(res !== _b_.NotImplemented){
-            return res
+        var reflected = $B.$getattr(y, "__r" + op + "__", null)
+        if(reflected !== null){
+            res = $B.$call(reflected)(x)
+            if(res !== _b_.NotImplemented){
+                return res
+            }
         }
         throw _b_.TypeError.$factory("'" + (opname2opsign[op] || op) +
             "' not supported between instances of '" + $B.class_name(x) +

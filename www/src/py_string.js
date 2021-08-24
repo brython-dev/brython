@@ -1301,7 +1301,7 @@ str.find = function(){
             arguments, {start: 0, end: null}, null, null)
     check_str($.sub)
     normalize_start_end($)
-
+    
     var len = str.__len__($.self),
         sub_len = str.__len__($.sub)
 
@@ -1318,7 +1318,7 @@ str.find = function(){
     if(ix == -1){
         return -1
     }
-    return jspos2pypos($.self, js_start + ix) - $.start
+    return jspos2pypos($.self, js_start + ix)
 }
 
 // Next function used by method .format()

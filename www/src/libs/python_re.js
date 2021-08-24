@@ -3627,12 +3627,16 @@ var $module = {
         }
         data.pattern = pattern
         // optimization
-        if(isFinite(pattern.$pattern.fixed_length) &&
+        if(pattern.$pattern.fixed_length !== false &&
+                isFinite(pattern.$pattern.fixed_length) &&
                 pattern.pattern.endsWith('$') &&
                 ! (pattern.flags.value & MULTILINE.value)){
-            var mo = match(pattern.$pattern, data.string,
+            var mo = match(data.pattern.$pattern, data.string,
                 data.string.length - pattern.$pattern.fixed_length)
-            return BMO.$factory(mo)
+            if(mo){
+                return BMO.$factory(mo)
+            }
+            return _b_.None
         }
         var pos = 0
         while(pos < data.string.codepoints.length){

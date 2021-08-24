@@ -11799,8 +11799,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 if(braces_stack.length > 0){
                     var last_brace = $B.last(braces_stack),
                         start = last_brace.start
-                    $pos = line2pos[start[0]] + start[1]
-                    $_SyntaxError(context, [`'${last_brace.string} was ` +
+                    context.$pos = line2pos[start[0]] + start[1]
+                    $_SyntaxError(context, [`'${last_brace.string}' was ` +
                        'never closed'])
                 }
                 $_SyntaxError(context, err.message)
