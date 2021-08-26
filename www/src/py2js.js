@@ -3899,6 +3899,11 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                       ' after ' + context)}
                 case 'for':
                     // comprehension
+                    if(context.real == "set" && context.tree.length > 1){
+                        context.$pos = context.tree[0].$pos
+                        $_SyntaxError(context, ["did you forget " +
+                            "parentheses around the comprehension target?"])
+                    }
                     if(context.real == 'dict_or_set'){
                         context.real = 'set_comp'
                     }else{
@@ -7029,8 +7034,8 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                     if(context.real == 'list'){
                         if(this.tree.length > 1){
                             // eg [x, y for x in A for y in B]
-                            $_SyntaxError(context, "unparenthesized " +
-                                "expression before 'for'")
+                            $_SyntaxError(context, ["did you forget " +
+                                "parentheses around the comprehension target?"])
                         }
                         context.real = 'list_comp'
                     }

@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-26 11:29:23.316759"
-__BRYTHON__.timestamp=1629970163315
+__BRYTHON__.compiled_date="2021-08-26 11:49:40.572874"
+__BRYTHON__.timestamp=1629971380572
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2258,6 +2258,9 @@ if(C.real=='dict'){C.expect=','
 return new $AbstractExprCtx(C,false)}else{$_SyntaxError(C,'token '+token+
 ' after '+C)}
 case 'for':
+if(C.real=="set" && C.tree.length > 1){C.$pos=C.tree[0].$pos
+$_SyntaxError(C,["did you forget "+
+"parentheses around the comprehension target?"])}
 if(C.real=='dict_or_set'){C.real='set_comp'}else{C.real='dict_comp'}
 var lst=new $ListOrTupleCtx(C,'dict_or_set_comp')
 lst.intervals=[C.start+1]
@@ -3669,8 +3672,8 @@ C.expect='id'
 return C
 case 'for':
 if(C.real=='list'){if(this.tree.length > 1){
-$_SyntaxError(C,"unparenthesized "+
-"expression before 'for'")}
+$_SyntaxError(C,["did you forget "+
+"parentheses around the comprehension target?"])}
 C.real='list_comp'}
 else{C.real='gen_expr'}
 C.intervals=[C.start+1]
@@ -6356,7 +6359,7 @@ $B.handle_error=function(err){
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)}
 if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[1][2]
-trace+='\n   '+' '.repeat(offset)+'^'+
+trace+='\n    '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name
 if(err.args[0]!==undefined && err.args[0]!==_b_.None){trace+=': '+_b_.str.$factory(err.args[0])}}}else{console.log(err)
 trace=err+""}
