@@ -2820,7 +2820,7 @@ $ConditionCtx.prototype.transition = function(token, value){
         }
         return $BodyCtx(context)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    $_SyntaxError(context, ["expected ':'"])
 }
 
 $ConditionCtx.prototype.transform = function(node, rank){
@@ -3898,7 +3898,6 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                   }else{$_SyntaxError(context, 'token ' + token +
                       ' after ' + context)}
                 case 'for':
-
                     // comprehension
                     if(context.real == 'dict_or_set'){
                         context.real = 'set_comp'
