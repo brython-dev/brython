@@ -4246,9 +4246,13 @@ $ExceptCtx.prototype.transition = function(token, value){
                     (context.expect == 'as' || context.expect == ',')){
                 context.expect = 'id'
                 return context
+            }else if(context.parenth === undefined){
+                $_SyntaxError(context,
+                    ["multiple exception types must be parenthesized"])
             }
-  }
-  $_SyntaxError(context, 'token ' + token + ' after ' + context.expect)
+    }
+    console.log('error', context, token)
+    $_SyntaxError(context, 'token ' + token + ' after ' + context.expect)
 }
 
 $ExceptCtx.prototype.set_alias = function(alias){
@@ -4341,7 +4345,11 @@ $ExprCtx.prototype.transition = function(token, value){
         case 'lambda':
         case 'pass':
         case 'str':
-            console.log("syntax error", context, token, value)
+            if(context.parent.type == 'dict_or_set' &&
+                    context.parent.expect == ','){
+                $_SyntaxError(context,
+                    ["invalid syntax. Perhaps you forgot a comma?"])
+            }
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
             break
@@ -4366,7 +4374,9 @@ $ExprCtx.prototype.transition = function(token, value){
     }
     switch(token) {
         case 'not':
-            if(context.expect == ','){return new $ExprNot(context)}
+            if(context.expect == ','){
+                return new $ExprNot(context)
+            }
             break
         case 'in':
             if(context.parent.type == 'target_list'){
@@ -7809,20 +7819,6 @@ $NumberCtx.prototype.toString = function(){
 
 $NumberCtx.prototype.transition = function(token, value){
     var context = this
-    switch(token) {
-        case 'id':
-        case 'imaginary':
-        case 'int':
-        case 'float':
-        case 'str':
-        case 'bytes':
-        case '[':
-        case '(':
-        case '{':
-        case 'lambda':
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
-    }
     return $transition(context.parent, token, value)
 }
 

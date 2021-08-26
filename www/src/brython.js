@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-26 11:49:40.572874"
-__BRYTHON__.timestamp=1629971380572
+__BRYTHON__.compiled_date="2021-08-26 14:32:53.117677"
+__BRYTHON__.timestamp=1629981173117
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2455,7 +2455,8 @@ case ',':
 if(C.parenth !==undefined &&
 C.has_alias===undefined &&
 (C.expect=='as' ||C.expect==',')){C.expect='id'
-return C}}
+return C}else if(C.parenth===undefined){$_SyntaxError(C,["multiple exception types must be parenthesized"])}}
+console.log('error',C,token)
 $_SyntaxError(C,'token '+token+' after '+C.expect)}
 $ExceptCtx.prototype.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
 $bind(alias,this.scope,this)}
@@ -2507,7 +2508,8 @@ case 'int':
 case 'lambda':
 case 'pass':
 case 'str':
-console.log("syntax error",C,token,value)
+if(C.parent.type=='dict_or_set' &&
+C.parent.expect==','){$_SyntaxError(C,["invalid syntax. Perhaps you forgot a comma?"])}
 $_SyntaxError(C,'token '+token+' after '+
 C)
 break
@@ -4096,18 +4098,6 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
-switch(token){case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case 'lambda':
-$_SyntaxError(C,'token '+token+' after '+
-C)}
 return $transition(C.parent,token,value)}
 $NumberCtx.prototype.to_js=function(){this.js_processed=true
 var type=this.type,value=this.value
