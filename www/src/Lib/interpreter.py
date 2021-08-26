@@ -232,8 +232,7 @@ class Interpreter:
                     self.zone.value += '... '
                     self._status = "block"
                 except SyntaxError as msg:
-                    if str(msg) == 'invalid syntax : triple string end not found' or \
-                            str(msg).startswith('Unbalanced bracket'):
+                    if str(msg) == 'invalid syntax : triple string end not found':
                         self.zone.value += '... '
                         self._status = "3string"
                     elif str(msg) == 'eval() argument must be an expression':
@@ -247,6 +246,9 @@ class Interpreter:
                         self.zone.value += '>>> '
                         self._status = "main"
                     elif str(msg) == 'decorator expects function':
+                        self.zone.value += '... '
+                        self._status = "block"
+                    elif str(msg).endswith('was never closed'):
                         self.zone.value += '... '
                         self._status = "block"
                     else:
