@@ -171,10 +171,14 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     var missing = []
     for(var attr in slots){
         if(slots[attr] === null){
-            if($dobj[attr] !== undefined){slots[attr] = $dobj[attr]}
-            else{missing.push("'" + attr + "'")}
+            if($dobj[attr] !== undefined){
+                slots[attr] = $dobj[attr]
+            }else{
+                missing.push("'" + $B.from_alias(attr) + "'")
+            }
         }
     }
+
 
     if(missing.length > 0){
 
