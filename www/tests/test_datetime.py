@@ -116,4 +116,9 @@ s = '2019-08-05T22:24:10.544Z'
 dt = datetime.strptime(s,"%Y-%m-%dT%H:%M:%S.%f%z")
 assert str(dt) == "2019-08-05 22:24:10.544000+00:00"
 
+# issue 1755
+date = "Thu, 26 Aug 2021 00:00:00 GMT"
+dt = datetime.strptime(date, "%a, %d %b %Y %H:%M:%S GMT")
+assert dt == datetime(2021, 8, 26, 0, 0)
+
 print('passed all tests')

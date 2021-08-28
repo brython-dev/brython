@@ -15,7 +15,9 @@ var $module = (function($B){
                 shortdays = [],
                 longdays = [],
                 conv_func = locale == "C" ?
-                    function(d){return d.toDateString()} :
+                    function(d, options){
+                        return d.toLocaleDateString('en-EN', options)
+                    } :
                     function(d, options){
                         return d.toLocaleDateString(locale, options)
                     }
@@ -90,6 +92,7 @@ var $module = (function($B){
                             t = spec == "a" ? shortdays : longdays
                             res = re.exec(s.substr(pos_s))
                         if(res === null){
+                            console.log('error', re, 'string', s.substr(pos_s), 'fmt', fmt)
                             error()
                         }else{
                             var match = res[0],
