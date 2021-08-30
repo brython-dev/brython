@@ -444,6 +444,7 @@ VFSLoader.exec_module = function(self, modobj){
             console.log("run Python code from VFS", mod_name)
         }
         var record = run_py(module_contents, modobj.__path__, modobj)
+        record.imports = imports.join(',')
         record.is_package = modobj.$is_package
         record.timestamp = $B.timestamp
         record.source_ts = timestamp
