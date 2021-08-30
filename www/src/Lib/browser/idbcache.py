@@ -50,7 +50,7 @@ def open_success(evt):
             infos['size'] += len(record.content)
             getattr(cursor, "continue")()
         else:
-            panel = dialog.Dialog('indexedDB cache').panel
+            panel = dialog.Dialog('indexedDB cache', top=0, left=0).panel
             panel <= H1("Brython indexedDB cache")
             size = '{:,d}'.format(infos['size'])
             panel <= H3(f"{infos['nb_modules']} modules, size {size} bytes")
