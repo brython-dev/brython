@@ -400,7 +400,7 @@ var _mod = {
                 res += diff * diff
             }
             return scale * _mod.sqrt(res)
-        }else if(min_diff < min_value){
+        }else if(min_diff !== 0 && min_diff < min_value){
             while(min_diff < min_value){
                 scale *= 2
                 min_diff *= 2

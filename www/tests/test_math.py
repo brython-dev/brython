@@ -230,4 +230,7 @@ assert math.lgamma(1e3) == 5905.220423209181
 for x in [-1, -1.0, 0, 0.0, float('-inf')]:
     assertRaises(ValueError, math.gamma, x)
 
+# issue 1758
+assert math.dist((0,0),(1,0)) == 1.0
+
 print("passed all tests..")
