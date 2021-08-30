@@ -55,6 +55,7 @@ function idb_load(evt, module){
                 if($B.debug > 1){console.log("precompile", module)}
 
                 // Store Javascript translation in indexedDB
+                /*
                 var parts = module.split(".")
                 if(parts.length > 1){parts.pop()}
                 if($B.stdlib.hasOwnProperty(parts.join("."))){
@@ -63,6 +64,7 @@ function idb_load(evt, module){
                     $B.tasks.splice(0, 0, [store_precompiled,
                         module, js, source_ts, imports, is_package])
                 }
+                */
             }else{
                 console.log('bizarre', module, ext)
             }
@@ -339,14 +341,16 @@ var loop = $B.loop = function(){
             while($B.outdated.length > 0){
                 var module = $B.outdated.pop(),
                     req = store.delete(module)
-                req.onsuccess = function(event){
-                    if($B.debug > 1){
-                        console.info("delete outdated", module)
+                req.onsuccess = (function(mod){
+                    return function(event){
+                        if($B.debug > 1){
+                            console.info("delete outdated", mod)
+                        }
+                        document.dispatchEvent(new CustomEvent('precompile',
+                            {detail: 'remove outdated ' + mod +
+                             ' from cache'}))
                     }
-                    document.dispatchEvent(new CustomEvent('precompile',
-                        {detail: 'remove outdated ' + module +
-                         ' from cache'}))
-                }
+                })(module)
             }
             document.dispatchEvent(new CustomEvent('precompile',
                 {detail: "close"}))
