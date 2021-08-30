@@ -12,10 +12,11 @@ import git
 class Visitor(ast.NodeVisitor):
     """Used to list all the modules imported by a script."""
 
-    def __init__(self, lib_path, package):
+    def __init__(self, lib_path, package, file_name):
         self.imports = set()
         self.lib_path = lib_path
         self.package = package
+        self.file_name = file_name
 
     def visit_Import(self, node):
         for alias in node.names:
@@ -110,7 +111,7 @@ def process(filename, exclude_dirs=['test','site-packages']):
                     fqname = ".".join(path_elts)
                     with open(os.path.join(root, file_name), encoding="utf-8") as f:
                         tree = ast.parse(f.read())
-                        visitor = Visitor(lib_path, package)
+                        visitor = Visitor(lib_path, package, file_name)
                         visitor.visit(tree)
                         imports = sorted(list(visitor.imports))
 
