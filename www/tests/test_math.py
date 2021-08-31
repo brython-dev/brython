@@ -233,4 +233,7 @@ for x in [-1, -1.0, 0, 0.0, float('-inf')]:
 # issue 1758
 assert math.dist((0,0),(1,0)) == 1.0
 
+# issue 1759
+assert math.ceil(5) == 5
+
 print("passed all tests..")
