@@ -12345,7 +12345,7 @@ $B.run_script = function(src, name, url, run_loop){
             }
             $B.file_cache[script.__file__] = src
             if($B.debug > 1){
-                console.log(js)
+                console.log('run_script\n', js)
             }
     }catch(err){
         $B.handle_error(err) // in loaders.js

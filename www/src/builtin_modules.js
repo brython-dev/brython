@@ -141,7 +141,7 @@
                 var $ = $B.args("run_script", 2, {src: null, name: null},
                     ["src", "name"], arguments, {name: "script_" + $B.UUID()},
                     null, null)
-                $B.run_script($.src, $.name, true)
+                $B.run_script($.src, $.name, $B.script_path, true)
             },
             URLParameter:function(name) {
             name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
