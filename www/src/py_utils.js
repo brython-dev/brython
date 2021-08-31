@@ -207,7 +207,7 @@ $B.wrong_nb_args = function(name, received, expected, positional){
         var missing = expected - received
         throw _b_.TypeError.$factory(name + "() missing " + missing +
             " positional argument" + (missing > 1 ? "s" : "") + ": " +
-            positional.slice(received))
+            positional.slice(received).map(x => `'${$B.from_alias(x)}'`))
     }else{
         throw _b_.TypeError.$factory(name + "() takes " + expected +
             " positional argument" + (expected > 1 ? "s" : "") +
