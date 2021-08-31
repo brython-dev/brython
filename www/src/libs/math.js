@@ -231,10 +231,12 @@ var _mod = {
             return _b_.int.$factory(Math.ceil(x))
         }
 
+        var klass = x.__class__ || $B.get_class(x)
+
         try{
             // Use attribute of the object's class, not of the object
             // itself (special method)
-            return $B.$call($B.$getattr(x.__class__, '__ceil__'))(x)
+            return $B.$call($B.$getattr(klass, '__ceil__'))(x)
         }catch(err){
             if(! $B.is_exc(err, [_b_.AttributeError])){
                 throw err
@@ -242,7 +244,7 @@ var _mod = {
         }
 
         try{
-            x = $B.$call($B.$getattr(x.__class__, '__float__'))(x)
+            x = $B.$call($B.$getattr(klass, '__float__'))(x)
         }catch(err){
             if(! $B.is_exc(err, [_b_.AttributeError])){
                 throw err
