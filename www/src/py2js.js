@@ -699,6 +699,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             case 'int':
             case 'float':
             case 'str':
+            case 'JoinedStr':
             case 'bytes':
             case 'ellipsis':
             case '[':
@@ -724,6 +725,9 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                 value)
         case 'str':
             return new $StringCtx(new $ExprCtx(context, 'str', commas),
+                value)
+        case 'JoinedStr':
+            return new JoinedStrCtx(new $ExprCtx(context, 'str', commas),
                 value)
         case 'bytes':
             return new $StringCtx(new $ExprCtx(context, 'bytes', commas),
@@ -2023,6 +2027,7 @@ $CallArgCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -2165,6 +2170,7 @@ $CallCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -3737,6 +3743,30 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
     this.tree = []
 }
 
+$DelCtx.prototype.ast = function(){
+    var targets
+    if(this.tree[0].type == 'list_or_tuple'){
+        // Syntax "del a, b, c"
+        targets = this.tree[0]
+    }else if(this.tree[0].type == 'expr' &&
+            this.tree[0].tree[0].type == 'list_or_tuple'){
+        // del(x[0]) is the same as del x[0], cf.issue #923
+        targets = this.tree[0].tree[0]
+    }else{
+        targets = [this.tree[0].tree[0]]
+    }
+    for(var i = 0; i < targets.length; i++){
+        if(targets[i].ast !== undefined){
+            targets[i] = targets[i].ast()
+            targets[i].ctx = "del"
+        }
+    }
+    return {
+        type: 'Delete',
+        targets
+    }
+}
+
 $DelCtx.prototype.toString = function(){
     return 'del ' + this.tree
 }
@@ -3941,6 +3971,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                 case 'int':
                 case 'float':
                 case 'str':
+                case 'JoinedStr':
                 case 'bytes':
                 case '[':
                 case '(':
@@ -4108,6 +4139,7 @@ $DoubleStarArgCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -4197,6 +4229,7 @@ $ExceptCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -4345,6 +4378,7 @@ $ExprCtx.prototype.transition = function(token, value){
         case 'lambda':
         case 'pass':
         case 'str':
+        case 'JoinedStr':
             if(context.parent.type == 'dict_or_set' &&
                     context.parent.expect == ','){
                 $_SyntaxError(context,
@@ -4761,6 +4795,9 @@ $ExprCtx.prototype.to_js = function(arg){
     if(this.type == 'list'){
         res = '[' + $to_js(this.tree) + ']'
     }else if(this.tree.length == 1){
+        if(this.tree[0].to_js === undefined){
+            console.log('pas de to_js', this)
+        }
         res = this.tree[0].to_js(arg)
     }else{
         res = '_b_.tuple.$factory([' + $to_js(this.tree) + '])'
@@ -5986,6 +6023,13 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
     }
 }
 
+$IdCtx.prototype.ast = function(){
+    return {
+        type: 'Name',
+        id: this.value
+    }
+}
+
 $IdCtx.prototype.toString = function(){
     return '(id) ' + this.value + ':' + (this.tree || '')
 }
@@ -6050,6 +6094,7 @@ $IdCtx.prototype.transition = function(token, value){
             return $transition(context.parent, token, value)
         case 'id':
         case 'str':
+        case 'JoinedStr':
         case 'int':
         case 'float':
         case 'imaginary':
@@ -6743,6 +6788,151 @@ $ImportedModuleCtx.prototype.transition = function(token, value){
 $ImportedModuleCtx.prototype.to_js = function(){
     this.js_processed = true
     return '"' + this.name + '"'
+}
+
+var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, value){
+    // Class for f-strings. value is an Array with strings or expressions
+    this.type = 'JoinedStr'
+    this.parent = context
+    this.tree = value
+    context.tree.push(this)
+    this.raw = false
+    this.$pos = $pos
+}
+
+JoinedStrCtx.prototype.ast = function(){
+
+}
+
+JoinedStrCtx.prototype.toString = function(){
+    return 'f-string ' + (this.tree || '')
+}
+
+JoinedStrCtx.prototype.transition = function(token, value){
+    var context = this
+    switch(token) {
+        case '[':
+            return new $AbstractExprCtx(new $SubCtx(context.parent),
+                false)
+        case '(':
+            // Strings are not callable. We replace the string by a
+            // call to an object that will raise the correct exception
+            context.parent.tree[0] = context
+            return new $CallCtx(context.parent)
+        case 'str':
+            context.tree.push(value)
+            return context
+        case 'JoinedStr':
+            context.tree = context.tree.concat(value)
+            return context
+    }
+    return $transition(context.parent, token, value)
+}
+
+JoinedStrCtx.prototype.to_js = function(){
+    this.js_processed = true
+    var res = '',
+        scope = $get_scope(this)
+
+    function fstring(parsed_fstring){
+        // generate code for a f-string
+        // parsed_fstring is an array, the result of $B.parse_fstring()
+        // in py_string.js
+        var elts = []
+        for(var i = 0; i < parsed_fstring.length; i++){
+            if(parsed_fstring[i].type == 'expression'){
+                var expr = parsed_fstring[i].expression
+                // search specifier
+                var pos = 0,
+                    br_stack = [],
+                    parts = [expr]
+
+                var format = parsed_fstring[i].format
+                if(format !== undefined){
+                    parts = [expr.substr(0, expr.length - format.length),
+                        format.substr(1)]
+                }
+                expr = parts[0]
+                // We transform the source code of the expression using py2js.
+                // This gives us a node whose structure is always the same.
+                // The Javascript code matching the expression is the first
+                // child of the first "try" block in the node's children.
+                var save_pos = $pos
+                var expr_node = $B.py2js(expr, scope.module, scope.id, scope)
+                expr_node.to_js()
+                $pos = save_pos
+                for(var j = 0; j < expr_node.children.length; j++){
+                    var node = expr_node.children[j]
+                    if(node.context.tree && node.context.tree.length == 1 &&
+                            node.context.tree[0] == "try"){
+                        // node is the first "try" node
+                        for(var k = 0; k < node.children.length; k++){
+                            // Ignore line num children if any
+                            if(node.children[k].is_line_num){continue}
+                            // This is the node with the translation of the
+                            // f-string expression. It has the attribute js
+                            // set to the Javascript translation
+                            var expr1 = node.children[k].js
+                            // Remove trailing newline and ;
+                            if(expr1.length > 0){
+                                while("\n;".indexOf(expr1.charAt(expr1.length - 1)) > -1){
+                                    expr1 = expr1.substr(0, expr1.length - 1)
+                                }
+                            }else{
+                                console.log("f-string: empty expression not allowed")
+                            }
+                            break
+                        }
+                        break
+                    }
+                }
+                switch(parsed_fstring[i].conversion){
+                    case "a":
+                        expr1 = '_b_.ascii(' + expr1 + ')'
+                        break
+                    case "r":
+                        expr1 = '_b_.repr(' + expr1 + ')'
+                        break
+                    case "s":
+                        expr1 = '_b_.str.$factory(' + expr1 + ')'
+                        break
+                }
+
+                var fmt = parts[1]
+                if(fmt !== undefined){
+                    // Format specifier can also contain expressions
+                    var parsed_fmt = $B.parse_fstring(fmt)
+                    if(parsed_fmt.length > 1){
+                        fmt = fstring(parsed_fmt)
+                    }else{
+                        fmt = "'" + fmt + "'"
+                    }
+                    var res1 = "_b_.str.format('{0:' + " +
+                        fmt + " + '}', " + expr1 + ")"
+                    elts.push(res1)
+                }else{
+                    if(parsed_fstring[i].conversion === null){
+                        expr1 = '_b_.str.$factory(' + expr1 + ')'
+                    }
+                    elts.push(expr1)
+                }
+            }else if(parsed_fstring[i] instanceof $StringCtx){
+                elts.push(parsed_fstring[i].to_js())
+            }else{
+                if(parsed_fstring[i].replace === undefined){
+                    console.log('pas de replace', parsed_fstring, i)
+                    console.log($B.frames_stack.slice())
+                }
+                var re = new RegExp("'", "g")
+                var elt = parsed_fstring[i].replace(re, "\\'")
+                                           .replace(/\n/g, "\\n")
+                elts.push("'" + elt + "'")
+            }
+        }
+        return elts.join(' + ')
+    }
+
+    return "$B.String(" + (fstring(this.tree) || "''") + ")"
 }
 
 var $JSCode = $B.parser.$JSCode = function(js){
@@ -7467,6 +7657,7 @@ $NodeCtx.prototype.transition = function(token, value){
         case 'imaginary':
         case 'int':
         case 'str':
+        case 'JoinedStr':
         case 'not':
         case 'lambda':
             var expr = new $AbstractExprCtx(context,true)
@@ -7777,6 +7968,7 @@ $NotCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -7811,6 +8003,13 @@ var $NumberCtx = $B.parser.$NumberCtx = function(type, context, value){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
+}
+
+$NumberCtx.prototype.ast = function(){
+    return {
+        type: 'Constant',
+        value: this.value
+    }
 }
 
 $NumberCtx.prototype.toString = function(){
@@ -7917,6 +8116,7 @@ $OpCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -8304,6 +8504,9 @@ $PackedCtx.prototype.transition = function(token, value){
         case 'str':
             context.parent.expect = ","
             return new $StringCtx(context, value)
+        case 'JoinedStr':
+            context.parent.expect = ","
+            return new JoinedStrCtx(context, value)
         case "]":
             return $transition(context.parent, token, value)
         case "{":
@@ -9596,6 +9799,7 @@ $StarArgCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -9625,17 +9829,34 @@ $StarArgCtx.prototype.to_js = function(){
 
 var $StringCtx = $B.parser.$StringCtx = function(context, value){
     // Class for literal strings
-    // For f-strings, value is an Array
+    // value is the string with quotes, eg 'a', "b\"c" etc.
     this.type = 'str'
     this.parent = context
-    this.tree = [value] // may be extended if consecutive strings eg 'a' 'b'
+
+    function prepare(value){
+        value = value.replace(/\n/g,'\\n\\\n')
+        value = value.replace(/\r/g,'\\r\\\r')
+        return value
+    }
+
+    this.is_bytes = value.charAt(0) == 'b'
+    if(! this.is_bytes){
+        this.value = prepare(value)
+    }else{
+        this.value = prepare(value.substr(1))
+    }
     context.tree.push(this)
+    this.tree = [this.value]
     this.raw = false
     this.$pos = $pos
 }
 
+$StringCtx.prototype.ast = function(){
+
+}
+
 $StringCtx.prototype.toString = function(){
-    return 'string ' + (this.tree || '')
+    return 'string ' + (this.value || '')
 }
 
 $StringCtx.prototype.transition = function(token, value){
@@ -9650,157 +9871,35 @@ $StringCtx.prototype.transition = function(token, value){
             context.parent.tree[0] = context
             return new $CallCtx(context.parent)
         case 'str':
-            context.tree.push(value)
+            if((this.is_bytes && ! value.startsWith('b')) ||
+                    (! this.is_bytes && value.startsWith('b'))){
+                context.$pos = $pos
+                $_SyntaxError(context,
+                    ["cannot mix bytes and nonbytes literals"])
+            }
+            context.value += ' + ' + (this.is_bytes ? value.substr(1) : value)
             return context
+        case 'JoinedStr':
+            // replace by a new JoinedStr where the first value is this
+            context.parent.tree.pop()
+            var joined_str = new JoinedStrCtx(context.parent, value)
+            if(typeof joined_str.tree[0] == "string"){
+                joined_str.tree[0] = this.value + joined_str.tree[0]
+            }else{
+                joined_str.tree.splice(0, 0, this)
+            }
+            return joined_str
     }
     return $transition(context.parent, token, value)
 }
 
 $StringCtx.prototype.to_js = function(){
     this.js_processed = true
-    var res = '',
-        type = null,
-        scope = $get_scope(this)
-
-    function fstring(parsed_fstring){
-        // generate code for a f-string
-        // parsed_fstring is an array, the result of $B.parse_fstring()
-        // in py_string.js
-        var elts = []
-        for(var i = 0; i < parsed_fstring.length; i++){
-            if(parsed_fstring[i].type == 'expression'){
-                var expr = parsed_fstring[i].expression
-                // search specifier
-                var pos = 0,
-                    br_stack = [],
-                    parts = [expr]
-
-                var format = parsed_fstring[i].format
-                if(format !== undefined){
-                    parts = [expr.substr(0, expr.length - format.length),
-                        format.substr(1)]
-                }
-                expr = parts[0]
-                // We transform the source code of the expression using py2js.
-                // This gives us a node whose structure is always the same.
-                // The Javascript code matching the expression is the first
-                // child of the first "try" block in the node's children.
-                var save_pos = $pos
-                var expr_node = $B.py2js(expr, scope.module, scope.id, scope)
-                expr_node.to_js()
-                $pos = save_pos
-                for(var j = 0; j < expr_node.children.length; j++){
-                    var node = expr_node.children[j]
-                    if(node.context.tree && node.context.tree.length == 1 &&
-                            node.context.tree[0] == "try"){
-                        // node is the first "try" node
-                        for(var k = 0; k < node.children.length; k++){
-                            // Ignore line num children if any
-                            if(node.children[k].is_line_num){continue}
-                            // This is the node with the translation of the
-                            // f-string expression. It has the attribute js
-                            // set to the Javascript translation
-                            var expr1 = node.children[k].js
-                            // Remove trailing newline and ;
-                            if(expr1.length > 0){
-                                while("\n;".indexOf(expr1.charAt(expr1.length - 1)) > -1){
-                                    expr1 = expr1.substr(0, expr1.length - 1)
-                                }
-                            }else{
-                                console.log("f-string: empty expression not allowed")
-                            }
-                            break
-                        }
-                        break
-                    }
-                }
-                switch(parsed_fstring[i].conversion){
-                    case "a":
-                        expr1 = '_b_.ascii(' + expr1 + ')'
-                        break
-                    case "r":
-                        expr1 = '_b_.repr(' + expr1 + ')'
-                        break
-                    case "s":
-                        expr1 = '_b_.str.$factory(' + expr1 + ')'
-                        break
-                }
-
-                var fmt = parts[1]
-                if(fmt !== undefined){
-                    // Format specifier can also contain expressions
-                    var parsed_fmt = $B.parse_fstring(fmt)
-                    if(parsed_fmt.length > 1){
-                        fmt = fstring(parsed_fmt)
-                    }else{
-                        fmt = "'" + fmt + "'"
-                    }
-                    var res1 = "_b_.str.format('{0:' + " +
-                        fmt + " + '}', " + expr1 + ")"
-                    elts.push(res1)
-                }else{
-                    if(parsed_fstring[i].conversion === null){
-                        expr1 = '_b_.str.$factory(' + expr1 + ')'
-                    }
-                    elts.push(expr1)
-                }
-            }else{
-                var re = new RegExp("'", "g")
-                var elt = parsed_fstring[i].replace(re, "\\'")
-                                           .replace(/\n/g, "\\n")
-                elts.push("'" + elt + "'")
-            }
-        }
-        return elts.join(' + ')
+    if(! this.is_bytes){
+        return "$B.String(" + this.value + ")"
+    }else{
+        return '_b_.bytes.$new(_b_.bytes, ' + this.value + ", 'ISO-8859-1')"
     }
-
-    function prepare(value){
-        value = value.replace(/\n/g,'\\n\\\n')
-        value = value.replace(/\r/g,'\\r\\\r')
-        return value
-    }
-
-    for(var i = 0; i < this.tree.length; i++){
-        if(this.tree[i].type == "call"){
-            // syntax like "hello"(*args, **kw) raises TypeError
-            // cf issue 335
-            var js = '(function(){throw _b_.TypeError.$factory("' + "'str'" +
-                ' object is not callable")}())'
-            return js
-        }else{
-            var value = this.tree[i],
-                is_fstring = Array.isArray(value),
-                is_bytes = false
-
-            if(!is_fstring){
-                is_bytes = value.charAt(0) == 'b'
-            }
-
-            if(type == null){
-                type = is_bytes
-                if(is_bytes){res += '_b_.bytes.$new(_b_.bytes, '}
-            }else if(type != is_bytes){
-                return '$B.$TypeError("can\'t concat bytes to str")'
-            }
-            if(!is_bytes){
-                if(is_fstring){
-                    res += fstring(value)
-                }else{
-                    res += prepare(value)
-                }
-            }else{
-                res += prepare(value.substr(1))
-            }
-            if(i < this.tree.length - 1){res += '+'}
-        }
-    }
-    if(is_bytes){
-        res += ',"ISO-8859-1")'
-    }
-    if(res.length == 0){
-        res = '""'
-    }
-    return "$B.String(" + res + ")"
 }
 
 var $SubCtx = $B.parser.$SubCtx = function(context){
@@ -9827,6 +9926,7 @@ $SubCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'str':
+        case 'JoinedStr':
         case 'bytes':
         case '[':
         case '(':
@@ -11940,7 +12040,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 continue
             case 'STRING':
                 var prepared = prepare_string(context, token[1], token[2])
-                context = $transition(context, 'str', prepared.value)
+                if(prepared.value instanceof Array){
+                    context = $transition(context, 'JoinedStr', prepared.value)
+                }else{
+                    context = $transition(context, 'str', prepared.value)
+                }
                 continue
             case 'NUMBER':
                 var prepared = prepare_number(token[1])

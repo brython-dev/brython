@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-08-31 11:44:52.458156"
-__BRYTHON__.timestamp=1630403092458
+__BRYTHON__.compiled_date="2021-09-02 13:05:37.108430"
+__BRYTHON__.timestamp=1630580737108
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -649,6 +649,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case 'ellipsis':
 case '[':
@@ -669,6 +670,8 @@ case 'id':
 return new $IdCtx(new $ExprCtx(C,'id',commas),value)
 case 'str':
 return new $StringCtx(new $ExprCtx(C,'str',commas),value)
+case 'JoinedStr':
+return new JoinedStrCtx(new $ExprCtx(C,'str',commas),value)
 case 'bytes':
 return new $StringCtx(new $ExprCtx(C,'bytes',commas),value)
 case 'int':
@@ -1343,6 +1346,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -1431,6 +1435,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -2164,6 +2169,15 @@ this.type='del'
 this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]}
+$DelCtx.prototype.ast=function(){var targets
+if(this.tree[0].type=='list_or_tuple'){
+targets=this.tree[0]}else if(this.tree[0].type=='expr' &&
+this.tree[0].tree[0].type=='list_or_tuple'){
+targets=this.tree[0].tree[0]}else{targets=[this.tree[0].tree[0]]}
+for(var i=0;i < targets.length;i++){if(targets[i].ast !==undefined){targets[i]=targets[i].ast()
+targets[i].ctx="del"}}
+return{
+type:'Delete',targets}}
 $DelCtx.prototype.toString=function(){return 'del '+this.tree}
 $DelCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){check_assignment(this.tree[0],{action:'delete'})
@@ -2286,6 +2300,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -2372,6 +2387,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -2422,6 +2438,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -2508,6 +2525,7 @@ case 'int':
 case 'lambda':
 case 'pass':
 case 'str':
+case 'JoinedStr':
 if(C.parent.type=='dict_or_set' &&
 C.parent.expect==','){$_SyntaxError(C,["invalid syntax. Perhaps you forgot a comma?"])}
 $_SyntaxError(C,'token '+token+' after '+
@@ -2706,7 +2724,8 @@ $_SyntaxError(C,["can't use starred expression here"])}}}
 return $transition(C.parent,token)}
 $ExprCtx.prototype.to_js=function(arg){var res
 this.js_processed=true
-if(this.type=='list'){res='['+$to_js(this.tree)+']'}else if(this.tree.length==1){res=this.tree[0].to_js(arg)}else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
+if(this.type=='list'){res='['+$to_js(this.tree)+']'}else if(this.tree.length==1){if(this.tree[0].to_js===undefined){console.log('pas de to_js',this)}
+res=this.tree[0].to_js(arg)}else{res='_b_.tuple.$factory(['+$to_js(this.tree)+'])'}
 if(this.is_await){res="await ($B.promise("+res+"))"}
 if(this.assign){
 var scope=$get_scope(this)
@@ -3264,6 +3283,8 @@ while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
+$IdCtx.prototype.ast=function(){return{
+type:'Name',id:this.value}}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='$$case' && C.parent.parent.type=="node"){
@@ -3293,6 +3314,7 @@ case 'op':
 return $transition(C.parent,token,value)
 case 'id':
 case 'str':
+case 'JoinedStr':
 case 'int':
 case 'float':
 case 'imaginary':
@@ -3525,6 +3547,74 @@ $ImportedModuleCtx.prototype.toString=function(){return ' (imported module) '+th
 $ImportedModuleCtx.prototype.transition=function(token,value){var C=this}
 $ImportedModuleCtx.prototype.to_js=function(){this.js_processed=true
 return '"'+this.name+'"'}
+var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,value){
+this.type='JoinedStr'
+this.parent=C
+this.tree=value
+C.tree.push(this)
+this.raw=false
+this.$pos=$pos}
+JoinedStrCtx.prototype.ast=function(){}
+JoinedStrCtx.prototype.toString=function(){return 'f-string '+(this.tree ||'')}
+JoinedStrCtx.prototype.transition=function(token,value){var C=this
+switch(token){case '[':
+return new $AbstractExprCtx(new $SubCtx(C.parent),false)
+case '(':
+C.parent.tree[0]=C
+return new $CallCtx(C.parent)
+case 'str':
+C.tree.push(value)
+return C
+case 'JoinedStr':
+C.tree=C.tree.concat(value)
+return C}
+return $transition(C.parent,token,value)}
+JoinedStrCtx.prototype.to_js=function(){this.js_processed=true
+var res='',scope=$get_scope(this)
+function fstring(parsed_fstring){
+var elts=[]
+for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
+var pos=0,br_stack=[],parts=[expr]
+var format=parsed_fstring[i].format
+if(format !==undefined){parts=[expr.substr(0,expr.length-format.length),format.substr(1)]}
+expr=parts[0]
+var save_pos=$pos
+var expr_node=$B.py2js(expr,scope.module,scope.id,scope)
+expr_node.to_js()
+$pos=save_pos
+for(var j=0;j < expr_node.children.length;j++){var node=expr_node.children[j]
+if(node.C.tree && node.C.tree.length==1 &&
+node.C.tree[0]=="try"){
+for(var k=0;k < node.children.length;k++){
+if(node.children[k].is_line_num){continue}
+var expr1=node.children[k].js
+if(expr1.length > 0){while("\n;".indexOf(expr1.charAt(expr1.length-1))>-1){expr1=expr1.substr(0,expr1.length-1)}}else{console.log("f-string: empty expression not allowed")}
+break}
+break}}
+switch(parsed_fstring[i].conversion){case "a":
+expr1='_b_.ascii('+expr1+')'
+break
+case "r":
+expr1='_b_.repr('+expr1+')'
+break
+case "s":
+expr1='_b_.str.$factory('+expr1+')'
+break}
+var fmt=parts[1]
+if(fmt !==undefined){
+var parsed_fmt=$B.parse_fstring(fmt)
+if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'"+fmt+"'"}
+var res1="_b_.str.format('{0:' + "+
+fmt+" + '}', "+expr1+")"
+elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='_b_.str.$factory('+expr1+')'}
+elts.push(expr1)}}else if(parsed_fstring[i]instanceof $StringCtx){elts.push(parsed_fstring[i].to_js())}else{if(parsed_fstring[i].replace===undefined){console.log('pas de replace',parsed_fstring,i)
+console.log($B.frames_stack.slice())}
+var re=new RegExp("'","g")
+var elt=parsed_fstring[i].replace(re,"\\'")
+.replace(/\n/g,"\\n")
+elts.push("'"+elt+"'")}}
+return elts.join(' + ')}
+return "$B.String("+(fstring(this.tree)||"''")+")"}
 var $JSCode=$B.parser.$JSCode=function(js){this.js=js}
 $JSCode.prototype.toString=function(){return this.js}
 $JSCode.prototype.transition=function(token,value){var C=this}
@@ -3885,6 +3975,7 @@ case 'id':
 case 'imaginary':
 case 'int':
 case 'str':
+case 'JoinedStr':
 case 'not':
 case 'lambda':
 var expr=new $AbstractExprCtx(C,true)
@@ -4074,6 +4165,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -4096,6 +4188,8 @@ this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
+$NumberCtx.prototype.ast=function(){return{
+type:'Constant',value:this.value}}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -4144,6 +4238,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -4354,6 +4449,9 @@ return new $ListOrTupleCtx(C,"tuple")
 case 'str':
 C.parent.expect=","
 return new $StringCtx(C,value)
+case 'JoinedStr':
+C.parent.expect=","
+return new JoinedStrCtx(C,value)
 case "]":
 return $transition(C.parent,token,value)
 case "{":
@@ -4989,6 +5087,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -5008,11 +5107,17 @@ return '{$nat:"ptuple",arg:'+$to_js(this.tree)+'}'}
 var $StringCtx=$B.parser.$StringCtx=function(C,value){
 this.type='str'
 this.parent=C
-this.tree=[value]
+function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
+value=value.replace(/\r/g,'\\r\\\r')
+return value}
+this.is_bytes=value.charAt(0)=='b'
+if(! this.is_bytes){this.value=prepare(value)}else{this.value=prepare(value.substr(1))}
 C.tree.push(this)
+this.tree=[this.value]
 this.raw=false
 this.$pos=$pos}
-$StringCtx.prototype.toString=function(){return 'string '+(this.tree ||'')}
+$StringCtx.prototype.ast=function(){}
+$StringCtx.prototype.toString=function(){return 'string '+(this.value ||'')}
 $StringCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
 return new $AbstractExprCtx(new $SubCtx(C.parent),false)
@@ -5020,67 +5125,19 @@ case '(':
 C.parent.tree[0]=C
 return new $CallCtx(C.parent)
 case 'str':
-C.tree.push(value)
-return C}
+if((this.is_bytes && ! value.startsWith('b'))||
+(! this.is_bytes && value.startsWith('b'))){C.$pos=$pos
+$_SyntaxError(C,["cannot mix bytes and nonbytes literals"])}
+C.value+=' + '+(this.is_bytes ? value.substr(1):value)
+return C
+case 'JoinedStr':
+C.parent.tree.pop()
+var joined_str=new JoinedStrCtx(C.parent,value)
+if(typeof joined_str.tree[0]=="string"){joined_str.tree[0]=this.value+joined_str.tree[0]}else{joined_str.tree.splice(0,0,this)}
+return joined_str}
 return $transition(C.parent,token,value)}
 $StringCtx.prototype.to_js=function(){this.js_processed=true
-var res='',type=null,scope=$get_scope(this)
-function fstring(parsed_fstring){
-var elts=[]
-for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
-var pos=0,br_stack=[],parts=[expr]
-var format=parsed_fstring[i].format
-if(format !==undefined){parts=[expr.substr(0,expr.length-format.length),format.substr(1)]}
-expr=parts[0]
-var save_pos=$pos
-var expr_node=$B.py2js(expr,scope.module,scope.id,scope)
-expr_node.to_js()
-$pos=save_pos
-for(var j=0;j < expr_node.children.length;j++){var node=expr_node.children[j]
-if(node.C.tree && node.C.tree.length==1 &&
-node.C.tree[0]=="try"){
-for(var k=0;k < node.children.length;k++){
-if(node.children[k].is_line_num){continue}
-var expr1=node.children[k].js
-if(expr1.length > 0){while("\n;".indexOf(expr1.charAt(expr1.length-1))>-1){expr1=expr1.substr(0,expr1.length-1)}}else{console.log("f-string: empty expression not allowed")}
-break}
-break}}
-switch(parsed_fstring[i].conversion){case "a":
-expr1='_b_.ascii('+expr1+')'
-break
-case "r":
-expr1='_b_.repr('+expr1+')'
-break
-case "s":
-expr1='_b_.str.$factory('+expr1+')'
-break}
-var fmt=parts[1]
-if(fmt !==undefined){
-var parsed_fmt=$B.parse_fstring(fmt)
-if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'"+fmt+"'"}
-var res1="_b_.str.format('{0:' + "+
-fmt+" + '}', "+expr1+")"
-elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='_b_.str.$factory('+expr1+')'}
-elts.push(expr1)}}else{var re=new RegExp("'","g")
-var elt=parsed_fstring[i].replace(re,"\\'")
-.replace(/\n/g,"\\n")
-elts.push("'"+elt+"'")}}
-return elts.join(' + ')}
-function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
-value=value.replace(/\r/g,'\\r\\\r')
-return value}
-for(var i=0;i < this.tree.length;i++){if(this.tree[i].type=="call"){
-var js='(function(){throw _b_.TypeError.$factory("'+"'str'"+
-' object is not callable")}())'
-return js}else{var value=this.tree[i],is_fstring=Array.isArray(value),is_bytes=false
-if(!is_fstring){is_bytes=value.charAt(0)=='b'}
-if(type==null){type=is_bytes
-if(is_bytes){res+='_b_.bytes.$new(_b_.bytes, '}}else if(type !=is_bytes){return '$B.$TypeError("can\'t concat bytes to str")'}
-if(!is_bytes){if(is_fstring){res+=fstring(value)}else{res+=prepare(value)}}else{res+=prepare(value.substr(1))}
-if(i < this.tree.length-1){res+='+'}}}
-if(is_bytes){res+=',"ISO-8859-1")'}
-if(res.length==0){res='""'}
-return "$B.String("+res+")"}
+if(! this.is_bytes){return "$B.String("+this.value+")"}else{return '_b_.bytes.$new(_b_.bytes, '+this.value+", 'ISO-8859-1')"}}
 var $SubCtx=$B.parser.$SubCtx=function(C){
 this.type='sub'
 this.func='getitem' 
@@ -5096,6 +5153,7 @@ case 'imaginary':
 case 'int':
 case 'float':
 case 'str':
+case 'JoinedStr':
 case 'bytes':
 case '[':
 case '(':
@@ -5970,7 +6028,7 @@ node=new_node}else if($augmented_assigns[op]){C=$transition(C,'augm_assign',op)}
 continue
 case 'STRING':
 var prepared=prepare_string(C,token[1],token[2])
-C=$transition(C,'str',prepared.value)
+if(prepared.value instanceof Array){C=$transition(C,'JoinedStr',prepared.value)}else{C=$transition(C,'str',prepared.value)}
 continue
 case 'NUMBER':
 var prepared=prepare_number(token[1])

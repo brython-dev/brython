@@ -1301,7 +1301,7 @@ str.find = function(){
             arguments, {start: 0, end: null}, null, null)
     check_str($.sub)
     normalize_start_end($)
-    
+
     var len = str.__len__($.self),
         sub_len = str.__len__($.sub)
 
