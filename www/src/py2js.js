@@ -6801,7 +6801,33 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, value){
 }
 
 JoinedStrCtx.prototype.ast = function(){
+    var res = {
+        type: 'JoinedStr',
+        values: []
+    }
+    for(var item of this.tree){
+        if(typeof item == "string"){
+            res.values.push({type: 'Constant', value: item})
+        }else{
+            var conv_num = {a: 97, r: 114, s: 115},
+                value = {
+                    type: 'FormattedValue',
+                    value: item,
+                    conversion: conv_num[item.conversion] || -1
+                }
+            var format = item.format
+            if(format !== undefined){
+                var parsed_format = $B.parse_fstring(format.substr(1)),
+                    format_as_joined_str = new JoinedStrCtx(this,
+                        parsed_format)
+                this.tree.pop() // remove newly created instance
+                value.format = format_as_joined_str.ast()
+            }
 
+            res.values.push(value)
+        }
+    }
+    return res
 }
 
 JoinedStrCtx.prototype.toString = function(){
@@ -6820,10 +6846,25 @@ JoinedStrCtx.prototype.transition = function(token, value){
             context.parent.tree[0] = context
             return new $CallCtx(context.parent)
         case 'str':
-            context.tree.push(value)
+            if(context.tree.length > 0 &&
+                    typeof $B.last(context.tree) == "string"){
+                context.tree[context.tree.length - 1] =
+                    $B.last(context.tree) + eval(value)
+            }else{
+                context.tree.push(value)
+            }
             return context
         case 'JoinedStr':
-            context.tree = context.tree.concat(value)
+            if(context.tree.length > 0 &&
+                    typeof $B.last(context.tree) == "string" &&
+                    typeof value[0] == "string"){
+                // join last string in context and first in value
+                context.tree[context.tree.length - 1] =
+                    $B.last(context.tree) + value[0]
+                context.tree = context.tree.concat(value.slice(1))
+            }else{
+                context.tree = context.tree.concat(value)
+            }
             return context
     }
     return $transition(context.parent, token, value)
@@ -9884,7 +9925,7 @@ $StringCtx.prototype.transition = function(token, value){
             context.parent.tree.pop()
             var joined_str = new JoinedStrCtx(context.parent, value)
             if(typeof joined_str.tree[0] == "string"){
-                joined_str.tree[0] = this.value + joined_str.tree[0]
+                joined_str.tree[0] = eval(this.value) + joined_str.tree[0]
             }else{
                 joined_str.tree.splice(0, 0, this)
             }
