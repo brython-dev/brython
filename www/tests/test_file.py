@@ -9,6 +9,9 @@ with open('files/text-utf8.txt') as f:
 with open('compression/du cote de chez swann.txt', 'rb') as f:
     assert len(f.read()) in [1_054_176, 1_056_294]
 
+with open("compression/du cote de chez swann.txt", "rb") as f:
+    assert len(f.readlines()) == 2118, "readlines (binary mode) failed on file"
+
 with open('compression/du cote de chez swann.txt', 'r') as f:
     assert len(f.readlines()) == 2118
 

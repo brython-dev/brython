@@ -57,4 +57,31 @@ while True:
 
 assert t == [b'foo\n', b'  bar\n', b'  baz', b'']
 
+# issue #1763
+# problem with readlines working wrong on linux text files.
+
+def myreadlines(self):
+    """Read and return the list of all logical lines using readline."""
+    lines = []
+    while True:
+        line = self.readline()
+        if not line:
+            return lines
+        else:
+            lines.append(line)
+
+# test readline
+assert len(myreadlines(io.StringIO("foo\n\n\n"))) == 3, r"myreadline failed with \n\n"
+assert (
+    len(myreadlines(io.StringIO("foo\r\n\r\n\r\n"))) == 3
+), r"myreadline failed with \r\n\r\n"
+
+# Test readlines()
+assert (
+    len(io.StringIO("foo\r\n\r\n\r\n").readlines()) == 3
+), r"readlines failed with \r\n"
+
+
+assert len(io.StringIO("foo\n\n\n").readlines()) == 3, r"readlines failed with \n\n!"
+
 print('all tests passed...')

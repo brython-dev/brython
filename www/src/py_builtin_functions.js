@@ -2720,6 +2720,10 @@ function make_lines(self){
     if(self.$lines === undefined){
         if(! self.$binary){
             self.$lines = self.$content.split("\n")
+            if($B.last(self.$lines) == ''){
+                self.$lines.pop()
+            }
+            self.$lines = self.$lines.map(x => x + '\n')
         }else{
             var lines = [],
                 pos = 0,
@@ -2809,9 +2813,6 @@ $Reader.readlines = function(){
             self.$lc++
             lines.push(self.$lines[self.$lc])
         }
-    }
-    while(lines[lines.length - 1] == ''){
-        lines.pop()
     }
     return lines
 }

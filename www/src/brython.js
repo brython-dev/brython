@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-05 08:44:01.944755"
-__BRYTHON__.timestamp=1630824241944
+__BRYTHON__.compiled_date="2021-09-05 09:08:39.626471"
+__BRYTHON__.timestamp=1630825719626
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -5957,12 +5957,6 @@ return unindented_lines.join('\n')}
 function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_SyntaxError(C,['unterminated string literal '+
 `(detected at line ${token.start[0]})`])}
 $_SyntaxError(C,'invalid token '+token[1]+_b_.ord(token[1]))}
-var braces_close={")":"(","]":"[","}":"{"},braces_open="([{"
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
-]
-var unsupported=[]
-var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
-]
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root,src){var tokenizer=$B.tokenizer(src)
 var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
@@ -6077,8 +6071,7 @@ indent++
 if(! expect_indent){C=C ||new $NodeCtx(node)
 $_SyntaxError(C,'unexpected indent',$pos)}
 expect_indent=false
-continue}}
-return C}
+continue}}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id
@@ -8954,7 +8947,9 @@ self.$counter+=size
 return res}
 $Reader.readable=function(self){return true}
 function make_lines(self){
-if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")}else{var lines=[],pos=0,source=self.$content.source
+if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")
+if($B.last(self.$lines)==''){self.$lines.pop()}
+self.$lines=self.$lines.map(x=> x+'\n')}else{var lines=[],pos=0,source=self.$content.source
 while(pos < self.$length){var ix=source.indexOf(10,pos)
 if(ix==-1){lines.push({__class__:_b_.bytes,source:source.slice(pos)})
 break}else{lines.push({__class__:_b_.bytes,source:source.slice(pos,ix+1)})
@@ -8985,7 +8980,6 @@ if(hint < 0){var lines=self.$lines.slice(self.$lc+1)}else{var lines=[]
 while(self.$lc < self.$lines.length &&
 nb_read < hint){self.$lc++
 lines.push(self.$lines[self.$lc])}}
-while(lines[lines.length-1]==''){lines.pop()}
 return lines}
 $Reader.seek=function(self,offset,whence){if(self.closed===True){throw _b_.ValueError.$factory('I/O operation on closed file')}
 if(whence===undefined){whence=0}
