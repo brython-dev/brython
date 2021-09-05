@@ -103,4 +103,6 @@ assertRaises(SyntaxError, exec, 'f"Bad format {}"')
 assert f'[{"Text":10}]' == '[Text      ]'
 assert f'[{"Text:":10}]' == '[Text:     ]'
 
+x = 45
+assert f'{x}' 'b' == '45b'
 print("passed all tests")
