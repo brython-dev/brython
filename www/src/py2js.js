@@ -6859,7 +6859,7 @@ JoinedStrCtx.prototype.transition = function(token, value){
                 context.tree[context.tree.length - 1] =
                     $B.last(context.tree) + eval(value)
             }else{
-                context.tree.push(value)
+                new $StringCtx(this, value)
             }
             return context
         case 'JoinedStr':
