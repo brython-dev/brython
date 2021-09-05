@@ -2776,7 +2776,8 @@ $B.parse_fstring = function(string){
                     if(nb_braces == 0){
                         // end of expression
                         if(current.fmt){
-                            current.format = string.substring(fmt_start, i)
+                            current.format_string = string.substring(fmt_start, i)
+                            current.format = $B.parse_fstring(current.format_string.substr(1))
                         }
                         if(current.expression == ""){
                             fstring_error("f-string: empty expression not allowed",

@@ -6790,24 +6790,37 @@ $ImportedModuleCtx.prototype.to_js = function(){
     return '"' + this.name + '"'
 }
 
-var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, value){
-    // Class for f-strings. value is an Array with strings or expressions
+var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
+    // Class for f-strings. values is an Array with strings or expressions
     this.type = 'JoinedStr'
     this.parent = context
-    this.tree = value
+    this.tree = []
+    for(var value of values){
+        if(typeof value == "string"){
+            new $StringCtx(this, "'" +
+                value.replace(new RegExp("'", "g"), "\\" + "'") + "'")
+        }else{
+            if(value.format !== undefined){
+                value.format = new JoinedStrCtx(this, value.format)
+                this.tree.pop()
+            }
+            this.tree.push(value)
+        }
+    }
     context.tree.push(this)
     this.raw = false
     this.$pos = $pos
 }
 
 JoinedStrCtx.prototype.ast = function(){
+    console.log('ast, values', this.tree)
     var res = {
         type: 'JoinedStr',
         values: []
     }
     for(var item of this.tree){
-        if(typeof item == "string"){
-            res.values.push({type: 'Constant', value: item})
+        if(item instanceof $StringCtx){
+            res.values.push({type: 'Constant', value: item.value})
         }else{
             var conv_num = {a: 97, r: 114, s: 115},
                 value = {
@@ -6817,13 +6830,8 @@ JoinedStrCtx.prototype.ast = function(){
                 }
             var format = item.format
             if(format !== undefined){
-                var parsed_format = $B.parse_fstring(format.substr(1)),
-                    format_as_joined_str = new JoinedStrCtx(this,
-                        parsed_format)
-                this.tree.pop() // remove newly created instance
-                value.format = format_as_joined_str.ast()
+                value.format = item.format.ast()
             }
-
             res.values.push(value)
         }
     }
@@ -6880,15 +6888,15 @@ JoinedStrCtx.prototype.to_js = function(){
         // parsed_fstring is an array, the result of $B.parse_fstring()
         // in py_string.js
         var elts = []
-        for(var i = 0; i < parsed_fstring.length; i++){
-            if(parsed_fstring[i].type == 'expression'){
-                var expr = parsed_fstring[i].expression
+        for(var elt of parsed_fstring){
+            if(elt.type == 'expression'){
+                var expr = elt.expression
                 // search specifier
                 var pos = 0,
                     br_stack = [],
                     parts = [expr]
 
-                var format = parsed_fstring[i].format
+                var format = elt.format_string
                 if(format !== undefined){
                     parts = [expr.substr(0, expr.length - format.length),
                         format.substr(1)]
@@ -6927,7 +6935,7 @@ JoinedStrCtx.prototype.to_js = function(){
                         break
                     }
                 }
-                switch(parsed_fstring[i].conversion){
+                switch(elt.conversion){
                     case "a":
                         expr1 = '_b_.ascii(' + expr1 + ')'
                         break
@@ -6952,20 +6960,16 @@ JoinedStrCtx.prototype.to_js = function(){
                         fmt + " + '}', " + expr1 + ")"
                     elts.push(res1)
                 }else{
-                    if(parsed_fstring[i].conversion === null){
+                    if(elt.conversion === null){
                         expr1 = '_b_.str.$factory(' + expr1 + ')'
                     }
                     elts.push(expr1)
                 }
-            }else if(parsed_fstring[i] instanceof $StringCtx){
-                elts.push(parsed_fstring[i].to_js())
+            }else if(elt instanceof $StringCtx){
+                elts.push(elt.to_js())
             }else{
-                if(parsed_fstring[i].replace === undefined){
-                    console.log('pas de replace', parsed_fstring, i)
-                    console.log($B.frames_stack.slice())
-                }
                 var re = new RegExp("'", "g")
-                var elt = parsed_fstring[i].replace(re, "\\'")
+                var elt = elt.replace(re, "\\'")
                                            .replace(/\n/g, "\\n")
                 elts.push("'" + elt + "'")
             }

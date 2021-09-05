@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-03 16:30:32.581311"
-__BRYTHON__.timestamp=1630679432581
+__BRYTHON__.compiled_date="2021-09-05 08:44:01.944755"
+__BRYTHON__.timestamp=1630824241944
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3547,19 +3547,22 @@ $ImportedModuleCtx.prototype.toString=function(){return ' (imported module) '+th
 $ImportedModuleCtx.prototype.transition=function(token,value){var C=this}
 $ImportedModuleCtx.prototype.to_js=function(){this.js_processed=true
 return '"'+this.name+'"'}
-var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,value){
+var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,values){
 this.type='JoinedStr'
 this.parent=C
-this.tree=value
+this.tree=[]
+for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
+value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefined){value.format=new JoinedStrCtx(this,value.format)
+this.tree.pop()}
+this.tree.push(value)}}
 C.tree.push(this)
 this.raw=false
 this.$pos=$pos}
-JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
-for(var item of this.tree){if(typeof item=="string"){res.values.push({type:'Constant',value:item})}else{var conv_num={a:97,r:114,s:115},value={type:'FormattedValue',value:item,conversion:conv_num[item.conversion]||-1}
+JoinedStrCtx.prototype.ast=function(){console.log('ast, values',this.tree)
+var res={type:'JoinedStr',values:[]}
+for(var item of this.tree){if(item instanceof $StringCtx){res.values.push({type:'Constant',value:item.value})}else{var conv_num={a:97,r:114,s:115},value={type:'FormattedValue',value:item,conversion:conv_num[item.conversion]||-1}
 var format=item.format
-if(format !==undefined){var parsed_format=$B.parse_fstring(format.substr(1)),format_as_joined_str=new JoinedStrCtx(this,parsed_format)
-this.tree.pop()
-value.format=format_as_joined_str.ast()}
+if(format !==undefined){value.format=item.format.ast()}
 res.values.push(value)}}
 return res}
 JoinedStrCtx.prototype.toString=function(){return 'f-string '+(this.tree ||'')}
@@ -3587,9 +3590,9 @@ JoinedStrCtx.prototype.to_js=function(){this.js_processed=true
 var res='',scope=$get_scope(this)
 function fstring(parsed_fstring){
 var elts=[]
-for(var i=0;i < parsed_fstring.length;i++){if(parsed_fstring[i].type=='expression'){var expr=parsed_fstring[i].expression
+for(var elt of parsed_fstring){if(elt.type=='expression'){var expr=elt.expression
 var pos=0,br_stack=[],parts=[expr]
-var format=parsed_fstring[i].format
+var format=elt.format_string
 if(format !==undefined){parts=[expr.substr(0,expr.length-format.length),format.substr(1)]}
 expr=parts[0]
 var save_pos=$pos
@@ -3605,7 +3608,7 @@ var expr1=node.children[k].js
 if(expr1.length > 0){while("\n;".indexOf(expr1.charAt(expr1.length-1))>-1){expr1=expr1.substr(0,expr1.length-1)}}else{console.log("f-string: empty expression not allowed")}
 break}
 break}}
-switch(parsed_fstring[i].conversion){case "a":
+switch(elt.conversion){case "a":
 expr1='_b_.ascii('+expr1+')'
 break
 case "r":
@@ -3620,11 +3623,9 @@ var parsed_fmt=$B.parse_fstring(fmt)
 if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'"+fmt+"'"}
 var res1="_b_.str.format('{0:' + "+
 fmt+" + '}', "+expr1+")"
-elts.push(res1)}else{if(parsed_fstring[i].conversion===null){expr1='_b_.str.$factory('+expr1+')'}
-elts.push(expr1)}}else if(parsed_fstring[i]instanceof $StringCtx){elts.push(parsed_fstring[i].to_js())}else{if(parsed_fstring[i].replace===undefined){console.log('pas de replace',parsed_fstring,i)
-console.log($B.frames_stack.slice())}
-var re=new RegExp("'","g")
-var elt=parsed_fstring[i].replace(re,"\\'")
+elts.push(res1)}else{if(elt.conversion===null){expr1='_b_.str.$factory('+expr1+')'}
+elts.push(expr1)}}else if(elt instanceof $StringCtx){elts.push(elt.to_js())}else{var re=new RegExp("'","g")
+var elt=elt.replace(re,"\\'")
 .replace(/\n/g,"\\n")
 elts.push("'"+elt+"'")}}
 return elts.join(' + ')}
@@ -5956,6 +5957,12 @@ return unindented_lines.join('\n')}
 function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_SyntaxError(C,['unterminated string literal '+
 `(detected at line ${token.start[0]})`])}
 $_SyntaxError(C,'invalid token '+token[1]+_b_.ord(token[1]))}
+var braces_close={")":"(","]":"[","}":"{"},braces_open="([{"
+var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
+]
+var unsupported=[]
+var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
+]
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root,src){var tokenizer=$B.tokenizer(src)
 var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
 var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
@@ -6070,7 +6077,8 @@ indent++
 if(! expect_indent){C=C ||new $NodeCtx(node)
 $_SyntaxError(C,'unexpected indent',$pos)}
 expect_indent=false
-continue}}}
+continue}}
+return C}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
 root.module=module
 root.id=locals_id
@@ -12170,7 +12178,8 @@ if(car=="{" && nb_paren==0){nb_braces++
 current.expression+=car
 i++}else if(car=="}" && nb_paren==0){nb_braces-=1
 if(nb_braces==0){
-if(current.fmt){current.format=string.substring(fmt_start,i)}
+if(current.fmt){current.format_string=string.substring(fmt_start,i)
+current.format=$B.parse_fstring(current.format_string.substr(1))}
 if(current.expression==""){fstring_error("f-string: empty expression not allowed",pos)}
 elts.push(current)
 ctype=null
