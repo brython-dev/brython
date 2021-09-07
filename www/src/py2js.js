@@ -6795,6 +6795,8 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
     this.type = 'JoinedStr'
     this.parent = context
     this.tree = []
+    this.scope = $get_scope(context)
+    var line_num = $get_node(context).line_num
     for(var value of values){
         if(typeof value == "string"){
             new $StringCtx(this, "'" +
@@ -6804,7 +6806,18 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
                 value.format = new JoinedStrCtx(this, value.format)
                 this.tree.pop()
             }
-            this.tree.push(value)
+            var src = value.expression,
+                save_pos = $pos,
+                root = $create_root_node({src},
+                    this.scope.module, this.scope.id,
+                    this.scope.parent_block, line_num)
+
+            dispatch_tokens(root, src)
+            $pos = save_pos
+            var expr = root.children[0].context.tree[0]
+            this.tree.push(expr)
+            expr.parent = this
+            expr.elt = value
         }
     }
     context.tree.push(this)
@@ -6863,15 +6876,17 @@ JoinedStrCtx.prototype.transition = function(token, value){
             }
             return context
         case 'JoinedStr':
+            // create new JoinedStr
+            var joined_expr = new JoinedStrCtx(context.parent, value)
+            context.parent.tree.pop()
             if(context.tree.length > 0 &&
-                    typeof $B.last(context.tree) == "string" &&
-                    typeof value[0] == "string"){
-                // join last string in context and first in value
-                context.tree[context.tree.length - 1] =
-                    $B.last(context.tree) + value[0]
-                context.tree = context.tree.concat(value.slice(1))
+                    $B.last(context.tree) instanceof $StringCtx &&
+                    joined_expr.tree[0] instanceof $StringCtx){
+                // merge last string in context and first in value
+                $B.last(context.tree).value += ' + ' + joined_expr.tree[0].value
+                context.tree = context.tree.concat(joined_expr.tree.slice(1))
             }else{
-                context.tree = context.tree.concat(value)
+                context.tree = context.tree.concat(joined_expr.tree)
             }
             return context
     }
@@ -6881,103 +6896,43 @@ JoinedStrCtx.prototype.transition = function(token, value){
 JoinedStrCtx.prototype.to_js = function(){
     this.js_processed = true
     var res = '',
-        scope = $get_scope(this)
+        elts = []
+    for(var value of this.tree){
+        if(value instanceof $StringCtx){
+            elts.push(value.to_js())
+        }else{
+            // elt is an expression
+            var elt = value.elt,
+                js = value.to_js()
+            // search specifier
+            var pos = 0,
+                br_stack = []
 
-    function fstring(parsed_fstring){
-        // generate code for a f-string
-        // parsed_fstring is an array, the result of $B.parse_fstring()
-        // in py_string.js
-        var elts = []
-        for(var elt of parsed_fstring){
-            if(elt.type == 'expression'){
-                var expr = elt.expression
-                // search specifier
-                var pos = 0,
-                    br_stack = [],
-                    parts = [expr]
-
-                var format = elt.format_string
-                if(format !== undefined){
-                    parts = [expr.substr(0, expr.length - format.length),
-                        format.substr(1)]
-                }
-                expr = parts[0]
-                // We transform the source code of the expression using py2js.
-                // This gives us a node whose structure is always the same.
-                // The Javascript code matching the expression is the first
-                // child of the first "try" block in the node's children.
-                var save_pos = $pos
-                var expr_node = $B.py2js(expr, scope.module, scope.id, scope)
-                expr_node.to_js()
-                $pos = save_pos
-                for(var j = 0; j < expr_node.children.length; j++){
-                    var node = expr_node.children[j]
-                    if(node.context.tree && node.context.tree.length == 1 &&
-                            node.context.tree[0] == "try"){
-                        // node is the first "try" node
-                        for(var k = 0; k < node.children.length; k++){
-                            // Ignore line num children if any
-                            if(node.children[k].is_line_num){continue}
-                            // This is the node with the translation of the
-                            // f-string expression. It has the attribute js
-                            // set to the Javascript translation
-                            var expr1 = node.children[k].js
-                            // Remove trailing newline and ;
-                            if(expr1.length > 0){
-                                while("\n;".indexOf(expr1.charAt(expr1.length - 1)) > -1){
-                                    expr1 = expr1.substr(0, expr1.length - 1)
-                                }
-                            }else{
-                                console.log("f-string: empty expression not allowed")
-                            }
-                            break
-                        }
-                        break
-                    }
-                }
-                switch(elt.conversion){
-                    case "a":
-                        expr1 = '_b_.ascii(' + expr1 + ')'
-                        break
-                    case "r":
-                        expr1 = '_b_.repr(' + expr1 + ')'
-                        break
-                    case "s":
-                        expr1 = '_b_.str.$factory(' + expr1 + ')'
-                        break
-                }
-
-                var fmt = parts[1]
-                if(fmt !== undefined){
-                    // Format specifier can also contain expressions
-                    var parsed_fmt = $B.parse_fstring(fmt)
-                    if(parsed_fmt.length > 1){
-                        fmt = fstring(parsed_fmt)
-                    }else{
-                        fmt = "'" + fmt + "'"
-                    }
-                    var res1 = "_b_.str.format('{0:' + " +
-                        fmt + " + '}', " + expr1 + ")"
-                    elts.push(res1)
-                }else{
-                    if(elt.conversion === null){
-                        expr1 = '_b_.str.$factory(' + expr1 + ')'
-                    }
-                    elts.push(expr1)
-                }
-            }else if(elt instanceof $StringCtx){
-                elts.push(elt.to_js())
-            }else{
-                var re = new RegExp("'", "g")
-                var elt = elt.replace(re, "\\'")
-                                           .replace(/\n/g, "\\n")
-                elts.push("'" + elt + "'")
+            switch(elt.conversion){
+                case "a":
+                    js = '_b_.ascii(' + js + ')'
+                    break
+                case "r":
+                    js = '_b_.repr(' + js + ')'
+                    break
+                case "s":
+                    js = '_b_.str.$factory(' + js + ')'
+                    break
             }
-        }
-        return elts.join(' + ')
-    }
 
-    return "$B.String(" + (fstring(this.tree) || "''") + ")"
+            var fmt = elt.format
+            if(fmt !== undefined){
+                js = "_b_.str.format('{0:' + " +
+                        fmt.to_js() + " + '}', " + js + ")"
+            }else{
+                if(elt.conversion === null){
+                    js = '_b_.str.$factory(' + js + ')'
+                }
+            }
+            elts.push(js)
+        }
+    }
+    return "$B.String(" + (elts.join(' + ') || "''") + ")"
 }
 
 var $JSCode = $B.parser.$JSCode = function(js){
@@ -7262,6 +7217,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                              }
                          }
                          context.intervals.push($pos)
+                         context.src = $get_module(context).src
                          return $transition(context.parent, token)
                     }
                     break
@@ -7358,7 +7314,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                 default:
                     context.expect = ','
                     var expr = new $AbstractExprCtx(context, false)
-                    return $transition(expr,token, value)
+                    return $transition(expr, token, value)
             }
 
         }else{
@@ -7369,6 +7325,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
 
 $ListOrTupleCtx.prototype.close = function(){
     this.closed = true
+    this.src = $get_module(this).src
     for(var i = 0, len = this.tree.length; i < len; i++){
         // Replace parenthesized expressions inside list or tuple
         // by the expression itself, eg (x, (y)) by (x, y).
@@ -7483,7 +7440,11 @@ $ListOrTupleCtx.prototype.to_js = function(){
         case 'list_comp':
         case 'gen_expr':
         case 'dict_or_set_comp':
-            var src = this.get_src()
+            if(this.src === undefined){
+                console.log('no src', this)
+                console.log($B.frames_stack.slice())
+            }
+            var src = this.src
             var res1 = [], items = []
 
             var qesc = new RegExp('"', "g") // to escape double quotes in arguments

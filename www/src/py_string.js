@@ -2752,7 +2752,6 @@ $B.parse_fstring = function(string){
             while(string.charAt(i) == " "){i++}
             if(string.charAt(i) == "}"){
                 // end of debug expression
-                console.log('end of debug', current)
                 elts.push(current)
                 ctype = null
                 current = ""
@@ -2775,10 +2774,6 @@ $B.parse_fstring = function(string){
                     nb_braces -= 1
                     if(nb_braces == 0){
                         // end of expression
-                        if(current.fmt){
-                            current.format_string = string.substring(fmt_start, i)
-                            current.format = $B.parse_fstring(current.format_string.substr(1))
-                        }
                         if(current.expression == ""){
                             fstring_error("f-string: empty expression not allowed",
                                 pos)
@@ -2837,10 +2832,34 @@ $B.parse_fstring = function(string){
                         }
                     }
                 }else if(nb_paren == 0 && car == ":"){
+                    // start format
                     current.fmt = true
-                    var fmt_start = i
-                    current.expression += car
-                    i++
+                    var cb = 0,
+                        fmt_complete = false
+                    for(var j = i + 1; j < string.length; j++){
+                        if(string[j] == '{'){
+                            if(string[j + 1] == '{'){
+                                j += 2
+                            }else{
+                                cb++
+                            }
+                        }else if(string[j] == '}'){
+                            if(string[j + 1] == '}'){
+                                j += 2
+                            }else if(cb == 0){
+                                fmt_complete = true
+                                var fmt = string.substring(i + 1, j)
+                                current.format = $B.parse_fstring(fmt)
+                                i = j
+                                break
+                            }else{
+                                cb--
+                            }
+                        }
+                    }
+                    if(! fmt_complete){
+                        fstring_error('invalid format', pos)
+                    }
                 }else if(car == "="){
                     // might be a "debug expression", eg f"{x=}"
                     var ce = current.expression,

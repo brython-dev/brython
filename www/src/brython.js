@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-05 15:04:29.334308"
-__BRYTHON__.timestamp=1630847069333
+__BRYTHON__.compiled_date="2021-09-07 13:59:15.512525"
+__BRYTHON__.timestamp=1631015955511
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3551,10 +3551,18 @@ var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,values){
 this.type='JoinedStr'
 this.parent=C
 this.tree=[]
+this.scope=$get_scope(C)
+var line_num=$get_node(C).line_num
 for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
 value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefined){value.format=new JoinedStrCtx(this,value.format)
 this.tree.pop()}
-this.tree.push(value)}}
+var src=value.expression,save_pos=$pos,root=$create_root_node({src},this.scope.module,this.scope.id,this.scope.parent_block,line_num)
+dispatch_tokens(root,src)
+$pos=save_pos
+var expr=root.children[0].C.tree[0]
+this.tree.push(expr)
+expr.parent=this
+expr.elt=value}}
 C.tree.push(this)
 this.raw=false
 this.$pos=$pos}
@@ -3578,58 +3586,34 @@ typeof $B.last(C.tree)=="string"){C.tree[C.tree.length-1]=
 $B.last(C.tree)+eval(value)}else{new $StringCtx(this,value)}
 return C
 case 'JoinedStr':
+var joined_expr=new JoinedStrCtx(C.parent,value)
+C.parent.tree.pop()
 if(C.tree.length > 0 &&
-typeof $B.last(C.tree)=="string" &&
-typeof value[0]=="string"){
-C.tree[C.tree.length-1]=
-$B.last(C.tree)+value[0]
-C.tree=C.tree.concat(value.slice(1))}else{C.tree=C.tree.concat(value)}
+$B.last(C.tree)instanceof $StringCtx &&
+joined_expr.tree[0]instanceof $StringCtx){
+$B.last(C.tree).value+=' + '+joined_expr.tree[0].value
+C.tree=C.tree.concat(joined_expr.tree.slice(1))}else{C.tree=C.tree.concat(joined_expr.tree)}
 return C}
 return $transition(C.parent,token,value)}
 JoinedStrCtx.prototype.to_js=function(){this.js_processed=true
-var res='',scope=$get_scope(this)
-function fstring(parsed_fstring){
-var elts=[]
-for(var elt of parsed_fstring){if(elt.type=='expression'){var expr=elt.expression
-var pos=0,br_stack=[],parts=[expr]
-var format=elt.format_string
-if(format !==undefined){parts=[expr.substr(0,expr.length-format.length),format.substr(1)]}
-expr=parts[0]
-var save_pos=$pos
-var expr_node=$B.py2js(expr,scope.module,scope.id,scope)
-expr_node.to_js()
-$pos=save_pos
-for(var j=0;j < expr_node.children.length;j++){var node=expr_node.children[j]
-if(node.C.tree && node.C.tree.length==1 &&
-node.C.tree[0]=="try"){
-for(var k=0;k < node.children.length;k++){
-if(node.children[k].is_line_num){continue}
-var expr1=node.children[k].js
-if(expr1.length > 0){while("\n;".indexOf(expr1.charAt(expr1.length-1))>-1){expr1=expr1.substr(0,expr1.length-1)}}else{console.log("f-string: empty expression not allowed")}
-break}
-break}}
+var res='',elts=[]
+for(var value of this.tree){if(value instanceof $StringCtx){elts.push(value.to_js())}else{
+var elt=value.elt,js=value.to_js()
+var pos=0,br_stack=[]
 switch(elt.conversion){case "a":
-expr1='_b_.ascii('+expr1+')'
+js='_b_.ascii('+js+')'
 break
 case "r":
-expr1='_b_.repr('+expr1+')'
+js='_b_.repr('+js+')'
 break
 case "s":
-expr1='_b_.str.$factory('+expr1+')'
+js='_b_.str.$factory('+js+')'
 break}
-var fmt=parts[1]
-if(fmt !==undefined){
-var parsed_fmt=$B.parse_fstring(fmt)
-if(parsed_fmt.length > 1){fmt=fstring(parsed_fmt)}else{fmt="'"+fmt+"'"}
-var res1="_b_.str.format('{0:' + "+
-fmt+" + '}', "+expr1+")"
-elts.push(res1)}else{if(elt.conversion===null){expr1='_b_.str.$factory('+expr1+')'}
-elts.push(expr1)}}else if(elt instanceof $StringCtx){elts.push(elt.to_js())}else{var re=new RegExp("'","g")
-var elt=elt.replace(re,"\\'")
-.replace(/\n/g,"\\n")
-elts.push("'"+elt+"'")}}
-return elts.join(' + ')}
-return "$B.String("+(fstring(this.tree)||"''")+")"}
+var fmt=elt.format
+if(fmt !==undefined){js="_b_.str.format('{0:' + "+
+fmt.to_js()+" + '}', "+js+")"}else{if(elt.conversion===null){js='_b_.str.$factory('+js+')'}}
+elts.push(js)}}
+return "$B.String("+(elts.join(' + ')||"''")+")"}
 var $JSCode=$B.parser.$JSCode=function(js){this.js=js}
 $JSCode.prototype.toString=function(){return this.js}
 $JSCode.prototype.transition=function(token,value){var C=this}
@@ -3771,6 +3755,7 @@ var comp_type=C.parent.real=="set_comp" ?
 "set" :"dict"
 $_SyntaxError(C,[`'yield' inside ${comp_type} comprehension`])}}
 C.intervals.push($pos)
+C.src=$get_module(C).src
 return $transition(C.parent,token)}
 break}
 switch(token){case ',':
@@ -3827,6 +3812,7 @@ C.expect=','
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)}}else{return $transition(C.parent,token,value)}}}
 $ListOrTupleCtx.prototype.close=function(){this.closed=true
+this.src=$get_module(this).src
 for(var i=0,len=this.tree.length;i < len;i++){
 var elt=this.tree[i]
 if(elt.type=="expr" &&
@@ -3878,7 +3864,9 @@ return '$B.$list(['+$to_js(this.tree)+'])'
 case 'list_comp':
 case 'gen_expr':
 case 'dict_or_set_comp':
-var src=this.get_src()
+if(this.src===undefined){console.log('no src',this)
+console.log($B.frames_stack.slice())}
+var src=this.src
 var res1=[],items=[]
 var qesc=new RegExp('"',"g")
 var comments=root.comments
@@ -12161,7 +12149,6 @@ i++}}
 pos=i+1}else if(ctype=="debug"){
 while(string.charAt(i)==" "){i++}
 if(string.charAt(i)=="}"){
-console.log('end of debug',current)
 elts.push(current)
 ctype=null
 current=""
@@ -12172,8 +12159,6 @@ if(car=="{" && nb_paren==0){nb_braces++
 current.expression+=car
 i++}else if(car=="}" && nb_paren==0){nb_braces-=1
 if(nb_braces==0){
-if(current.fmt){current.format_string=string.substring(fmt_start,i)
-current.format=$B.parse_fstring(current.format_string.substr(1))}
 if(current.expression==""){fstring_error("f-string: empty expression not allowed",pos)}
 elts.push(current)
 ctype=null
@@ -12186,7 +12171,8 @@ throw Error("f-string expression part cannot include a"+
 " backslash")}else if(nb_paren==0 && car=="!" && current.fmt===null &&
 ":}".indexOf(string.charAt(i+2))>-1){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
 if("ars".indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:"+
-" expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
+" expected 's', 'r', or 'a'")}else{current.debug_expr=current.expression
+current.conversion=string.charAt(i+1)
 i+=2}}else if(car=="("){nb_paren++
 current.expression+=car
 i++}else if(car==")"){nb_paren--
@@ -12198,10 +12184,15 @@ trs=trs.replace("\n","\\n\\")
 current.expression+=trs
 i=end+3}}else{var end=string.indexOf('"',i+1)
 if(end==-1){fstring_error("f-string: unterminated string",pos)}else{current.expression+=string.substring(i,end+1)
-i=end+1}}}else if(nb_paren==0 && car==":"){current.fmt=true
-var fmt_start=i
-current.expression+=car
-i++}else if(car=="="){
+i=end+1}}}else if(nb_paren==0 && car==":"){
+current.fmt=true
+var cb=0,fmt_complete=false
+for(var j=i+1;j < string.length;j++){if(string[j]=='{'){if(string[j+1]=='{'){j+=2}else{cb++}}else if(string[j]=='}'){if(string[j+1]=='}'){j+=2}else if(cb==0){fmt_complete=true
+var fmt=string.substring(i+1,j)
+current.format=$B.parse_fstring(fmt)
+i=j
+break}else{cb--}}}
+if(! fmt_complete){fstring_error('invalid format',pos)}}else if(car=="="){
 var ce=current.expression,last_char=ce.charAt(ce.length-1),last_char_re=('()'.indexOf(last_char)>-1 ? "\\" :"")+last_char
 if(ce.length==0 ||
 nb_paren > 0 ||
@@ -12214,7 +12205,7 @@ while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
 i++}
 elts.push(current.expression+tail)
 while(ce.match(/\s$/)){ce=ce.substr(0,ce.length-1)}
-current.expression=ce
+current.expression=current.debug_expr=ce
 ctype="debug"
 i++}}else{current.expression+=car
 i++}}
