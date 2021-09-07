@@ -385,6 +385,63 @@ class C(A3, A1):
 
 assert C.__class__ == Meta3
 
+
+# setting __class__
+class A:pass
+class B:
+    x = 1
+
+a = A()
+assert not hasattr(a, 'x')
+a.__class__ = B
+assert a.x == 1
+
+# issue 118
+class A:
+
+    def toString(self):
+        return "whatever"
+
+assert A().toString() == "whatever"
+
+# issue 126
+class MyType(type):
+
+    def __getattr__(cls, attr):
+        return "whatever"
+
+class MyParent(metaclass=MyType):
+    pass
+
+class MyClass(MyParent):
+    pass
+
+assert MyClass.spam == "whatever"
+assert MyParent.spam == "whatever"
+
+# issue 154
+class MyMetaClass(type):
+
+    def __str__(cls):
+        return "Hello"
+
+class MyClass(metaclass=MyMetaClass):
+    pass
+
+assert str(MyClass) == "Hello"
+
+# issue 155
+class MyMetaClass(type):
+    pass
+
+class MyClass(metaclass=MyMetaClass):
+    pass
+
+MyOtherClass = MyMetaClass("DirectlyCreatedClass", (), {})
+
+assert isinstance(MyClass, MyMetaClass), type(MyClass)
+assert isinstance(MyOtherClass, MyMetaClass), type(MyOtherClass)
+
 # issue 905
 class A:
     prop: str
