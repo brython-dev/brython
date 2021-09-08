@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-07 13:59:15.512525"
-__BRYTHON__.timestamp=1631015955511
+__BRYTHON__.compiled_date="2021-09-08 21:14:15.548484"
+__BRYTHON__.timestamp=1631128455548
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -12171,8 +12171,7 @@ throw Error("f-string expression part cannot include a"+
 " backslash")}else if(nb_paren==0 && car=="!" && current.fmt===null &&
 ":}".indexOf(string.charAt(i+2))>-1){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
 if("ars".indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:"+
-" expected 's', 'r', or 'a'")}else{current.debug_expr=current.expression
-current.conversion=string.charAt(i+1)
+" expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
 i+=2}}else if(car=="("){nb_paren++
 current.expression+=car
 i++}else if(car==")"){nb_paren--
@@ -12205,7 +12204,7 @@ while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
 i++}
 elts.push(current.expression+tail)
 while(ce.match(/\s$/)){ce=ce.substr(0,ce.length-1)}
-current.expression=current.debug_expr=ce
+current.expression=ce
 ctype="debug"
 i++}}else{current.expression+=car
 i++}}
