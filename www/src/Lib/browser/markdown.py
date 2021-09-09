@@ -292,8 +292,6 @@ def apply_markdown(src):
     while i < len(src):
         if src[i] == '[':
             img_link = i > 0 and src[i - 1] == '!'
-            print('img_link', img_link, 'i', i, src[i], src[i - 1],
-                i > 1, i > 1 and src[i - 1] == '!')
             start_a = i + 1
             nb = 1
             while True:
