@@ -77,7 +77,7 @@ document["altKey"].bind("keypress", keypress)
 #### Example
 
 Enter text in the entry below. Note that the character can be read by
-`ch(ev.charCode)`
+`chr(ev.charCode)`
 
 <input id="charCode" value="" autocomplete="off">&nbsp;
 <span id="traceCharCode">&nbsp;</span>
@@ -147,7 +147,7 @@ some keyboard shortcuts using the Ctrl key.
 #### Example
 
 Enter text in the entry fields below. Note that the character can be read by
-`ch(ev.charCode)` with the *keypress* event
+`chr(ev.charCode)` with the *keypress* event
 
 with *keydown* <input id="keyCodeKeydown" value="" autocomplete="off">
 

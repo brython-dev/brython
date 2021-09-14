@@ -147,7 +147,7 @@ défaut associé à certains raccourcis clavier qui utilisent la touche Ctrl.
 #### Example
 
 Saisissez du texte dans les champs de saisie ci-dessous. Notez que le
-caractère peut être lu par `ch(ev.charCode)` avec l'événement *keypress*
+caractère peut être lu par `chr(ev.charCode)` avec l'événement *keypress*
 
 avec *keydown* <input id="keyCodeKeydown" autocomplete="off">
 
