@@ -314,12 +314,25 @@ var $Node = $B.parser.$Node = function(type){
     this.children = []
 }
 
-
 $Node.prototype.add = function(child){
     // Insert as the last child
     this.children[this.children.length] = child
     child.parent = this
     child.module = this.module
+}
+
+$Node.prototype.ast = function(){
+    if(this.context){
+        if(this.context.tree[0].ast){
+            console.log('ast for node', this, this.context.tree[0].ast())
+        }else{
+            console.log(this.context.tree[0].type, '(no ast)')
+        }
+    }else{
+        for(var node of this.children){
+            node.ast()
+        }
+    }
 }
 
 $Node.prototype.insert = function(pos, child){
@@ -2153,6 +2166,28 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 
 }
 
+$CallCtx.prototype.ast = function(){
+    var res = {
+        type: 'Call',
+        func: this.func.ast ? this.func.ast() : this.func,
+        args: [],
+        keywords: []
+    }
+    for(var call_arg of this.tree){
+        var item = call_arg.tree[0]
+        if(item.type == 'kwarg'){
+            res.keywords.push({
+                type: 'keyword',
+                arg: item.tree[0].value,
+                value: item.tree[1].ast ? item.tree[1].ast() : item.tree[1]
+            })
+        }else{
+            res.args.push(item.ast ? item.ast() : item)
+        }
+    }
+    return res
+}
+
 $CallCtx.prototype.toString = function(){
     return '(call) ' + this.func + '(' + this.tree + ')'
 }
@@ -2806,11 +2841,36 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
     this.token = token
     this.parent = context
     this.tree = []
+    this.node = $get_node(this)
     this.scope = $get_scope(this)
     if(token == 'while'){
         this.loop_num = $loop_num++
     }
-    context.tree[context.tree.length] = this
+    if(token == 'elif'){
+        // in the AST, this is the attribute 'orelse' of the previous "if"
+        // or "elif"
+        var rank = this.node.parent.children.indexOf(this.node),
+            previous = this.node.parent.children[rank - 1]
+        previous.context.tree[0].orelse = this
+    }
+    context.tree.push(this)
+}
+
+$ConditionCtx.prototype.ast = function(){
+    var types = {'if': 'If', 'while': 'While', 'elif': 'If'}
+    var res = {
+        type: types[this.token],
+        test: this.tree[0].ast() ? this.tree[0].ast() : this.tree[0]
+    }
+    if(this.orelse){
+        res.orelse = this.orelse.ast ? this.orelse.ast() : this.orelse
+    }
+    res.body = []
+    for(var node of this.node.children){
+        res.body.push(node.context.tree[0].ast ?
+            node.context.tree[0].ast(): node.context.tree[0])
+    }
+    return res
 }
 
 $ConditionCtx.prototype.toString = function(){
@@ -4361,6 +4421,23 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     }
     this.tree = []
     context.tree[context.tree.length] = this
+}
+
+$ExprCtx.prototype.ast = function(){
+    if(['imaginary', 'int', 'float', 'list', 'str'].indexOf(this.name) > -1){
+        if(this.tree[0].ast === undefined){
+            console.log('bizarre', this)
+            return this.tree[0]
+        }
+        return this.tree[0].ast()
+    }else if(this.name == 'id'){
+        if(this.tree[0].type == 'id'){
+            return this.tree[0].ast()
+        }else if(this.tree[0].type == 'call'){
+            return this.tree[0].ast()
+        }
+    }
+    return this
 }
 
 $ExprCtx.prototype.toString = function(){
@@ -6024,6 +6101,12 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
 }
 
 $IdCtx.prototype.ast = function(){
+    if(['True', 'False', 'None'].indexOf(this.value) > -1){
+        return {
+            type: 'Constant',
+            value: this.value
+        }
+    }
     return {
         type: 'Name',
         id: this.value
@@ -7095,6 +7178,17 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
     context.tree[context.tree.length] = this
 }
 
+$ListOrTupleCtx.prototype.ast = function(){
+    var elts = []
+    for(var item of this.tree){
+        elts.push(item.ast ? item.ast(): item)
+    }
+    return {
+        type: 'List',
+        elts
+    }
+}
+
 $ListOrTupleCtx.prototype.toString = function(){
     switch(this.real) {
       case 'list':
@@ -8012,9 +8106,16 @@ var $NumberCtx = $B.parser.$NumberCtx = function(type, context, value){
 }
 
 $NumberCtx.prototype.ast = function(){
+    var value = this.value
+    if(Array.isArray(value)){
+        value = parseInt(value[1], value[0])
+    }
+    if(this.type == 'imaginary'){
+        value += 'j'
+    }
     return {
         type: 'Constant',
-        value: this.value
+        value
     }
 }
 
@@ -9634,25 +9735,36 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
     }
 }
 
+$ReturnCtx.prototype.ast = function(){
+    var res = {
+        type: 'Return'
+    }
+    if(this.tree.length > 0){
+        res.expr = this.tree[0].ast ? this.tree[0].ast() : this.tree[0]
+    }
+    return res
+}
+
 $ReturnCtx.prototype.toString = function(){
     return 'return ' + this.tree
 }
 
 $ReturnCtx.prototype.transition = function(token, value){
     var context = this
-    return $transition(context.parent,token)
+    if(token == 'eol' && this.tree.length == 1 &&
+             this.tree[0].type == 'abstract_expr'){
+        // "return" must be transformed into "return None"
+        this.tree.pop()
+    }
+    return $transition(context.parent, token)
 }
 
 $ReturnCtx.prototype.to_js = function(){
     this.js_processed = true
-    if(this.tree.length == 1 && this.tree[0].type == 'abstract_expr'){
-        // "return" must be transformed into "return None"
-        this.tree.pop()
-        new $IdCtx(new $ExprCtx(this, 'rvalue', false), 'None')
-    }
+    var expr = this.tree.length == 0 ? '_b_.None' : $to_js(this.tree)
     var scope = this.scope
     if(scope.ntype == 'generator'){
-        return 'var $res = ' + $to_js(this.tree) + '; $B.leave_frame({$locals});' +
+        return 'var $res = ' + expr + '; $B.leave_frame({$locals});' +
             'return $B.generator_return($res)'
     }
 
@@ -9660,10 +9772,12 @@ $ReturnCtx.prototype.to_js = function(){
     // If the return is in a try block with a finally block, the frames
     // will be restored when entering "finally"
     var indent = '    '.repeat(this.node.indent - 1)
-    var js = 'var $res = ' + $to_js(this.tree) + ';\n' + indent +
+    var js = 'var $res = ' + expr + ';\n' + indent +
     'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n' + indent +
     '$B.leave_frame'
-    if(scope.id.substr(0, 6) == '$exec_'){js += '_exec'}
+    if(scope.id.substr(0, 6) == '$exec_'){
+        js += '_exec'
+    }
     js += '({$locals});\n'
     if(this.is_await){
         js += indent + '$B.restore_stack(save_stack, $locals)\n'
@@ -9683,12 +9797,10 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
     // If token is "else" inside a "for" loop, set the flag "has_break"
     // on the loop, to force the creation of a boolean "$no_break"
     if(token == "else"){
-        var node = context.node
-        var pnode = node.parent
-        for(var rank = 0; rank < pnode.children.length; rank++){
-            if(pnode.children[rank] === node){break}
-        }
-        var pctx = pnode.children[rank - 1].context
+        var node = context.node,
+            rank = node.parent.children.indexOf(node),
+            pctx = node.parent.children[rank - 1].context
+        pctx.tree[0].orelse = this
         if(pctx.tree.length > 0){
             var elt = pctx.tree[0]
             if(elt.type == 'for' ||
@@ -9858,7 +9970,10 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
 }
 
 $StringCtx.prototype.ast = function(){
-
+    return {
+        type: 'Constant',
+        value: eval(this.value)
+    }
 }
 
 $StringCtx.prototype.toString = function(){
