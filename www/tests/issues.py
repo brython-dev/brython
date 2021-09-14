@@ -2946,6 +2946,9 @@ assertRaises(SyntaxError, exec,
     if True:
         f() += 1''')
 
+# issue 1767
+assertRaises(TypeError, chr, '')
+assertRaises(TypeError, chr, 'a')
 
 # ==========================================
 # Finally, report that all tests have passed

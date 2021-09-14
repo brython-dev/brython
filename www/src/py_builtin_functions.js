@@ -248,6 +248,8 @@ function chr(i){
     check_nb_args('chr', 1, arguments)
     check_no_kw('chr', i)
 
+    i = $B.PyNumber_Index(i)
+
     if(i < 0 || i > 1114111){
         throw _b_.ValueError.$factory('Outside valid range')
     }else if(i >= 0x10000 && i <= 0x10FFFF){

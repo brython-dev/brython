@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-09 14:23:41.323835"
-__BRYTHON__.timestamp=1631190221323
+__BRYTHON__.compiled_date="2021-09-14 13:58:19.287165"
+__BRYTHON__.timestamp=1631620699287
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -448,6 +448,7 @@ $Node.prototype.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
 child.module=this.module}
+$Node.prototype.ast=function(){if(this.C){if(this.C.tree[0].ast){console.log('ast for node',this,this.C.tree[0].ast())}else{console.log(this.C.tree[0].type,'(no ast)')}}else{for(var node of this.children){node.ast()}}}
 $Node.prototype.insert=function(pos,child){
 this.children.splice(pos,0,child)
 child.parent=this
@@ -1423,6 +1424,10 @@ if(this.func && this.func.type=="attribute" && this.func.name=="wait"
 && this.func.value.type=="id" && this.func.value.value=="time"){console.log('call',this.func)
 $get_node(this).blocking={'type':'wait','call':this}}
 if(this.func && this.func.value=='input'){$get_node(this).blocking={'type':'input'}}}
+$CallCtx.prototype.ast=function(){var res={type:'Call',func:this.func.ast ? this.func.ast():this.func,args:[],keywords:[]}
+for(var call_arg of this.tree){var item=call_arg.tree[0]
+if(item.type=='kwarg'){res.keywords.push({type:'keyword',arg:item.tree[0].value,value:item.tree[1].ast ? item.tree[1].ast():item.tree[1]})}else{res.args.push(item.ast ? item.ast():item)}}
+return res}
 $CallCtx.prototype.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 $CallCtx.prototype.transition=function(token,value){var C=this
 switch(token){case ',':
@@ -1768,9 +1773,20 @@ this.type='condition'
 this.token=token
 this.parent=C
 this.tree=[]
+this.node=$get_node(this)
 this.scope=$get_scope(this)
 if(token=='while'){this.loop_num=$loop_num++}
-C.tree[C.tree.length]=this}
+if(token=='elif'){
+var rank=this.node.parent.children.indexOf(this.node),previous=this.node.parent.children[rank-1]
+previous.C.tree[0].orelse=this}
+C.tree.push(this)}
+$ConditionCtx.prototype.ast=function(){var types={'if':'If','while':'While','elif':'If'}
+var res={type:types[this.token],test:this.tree[0].ast()? this.tree[0].ast():this.tree[0]}
+if(this.orelse){res.orelse=this.orelse.ast ? this.orelse.ast():this.orelse}
+res.body=[]
+for(var node of this.node.children){res.body.push(node.C.tree[0].ast ?
+node.C.tree[0].ast():node.C.tree[0])}
+return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
 $ConditionCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){if(C.tree[0].type=="abstract_expr" &&
@@ -2515,6 +2531,10 @@ if(C.assign){
 this.assign=C.assign}
 this.tree=[]
 C.tree[C.tree.length]=this}
+$ExprCtx.prototype.ast=function(){if(['imaginary','int','float','list','str'].indexOf(this.name)>-1){if(this.tree[0].ast===undefined){console.log('bizarre',this)
+return this.tree[0]}
+return this.tree[0].ast()}else if(this.name=='id'){if(this.tree[0].type=='id'){return this.tree[0].ast()}else if(this.tree[0].type=='call'){return this.tree[0].ast()}}
+return this}
 $ExprCtx.prototype.toString=function(){return '(expr '+this.with_commas+') '+this.tree}
 $ExprCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'bytes':
@@ -3283,7 +3303,9 @@ while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
-$IdCtx.prototype.ast=function(){return{
+$IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return{
+type:'Constant',value:this.value}}
+return{
 type:'Name',id:this.value}}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
@@ -3696,6 +3718,10 @@ this.closed=false
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
+$ListOrTupleCtx.prototype.ast=function(){var elts=[]
+for(var item of this.tree){elts.push(item.ast ? item.ast():item)}
+return{
+type:'List',elts}}
 $ListOrTupleCtx.prototype.toString=function(){switch(this.real){case 'list':
 return '(list) ['+this.tree+']'
 case 'list_comp':
@@ -4191,8 +4217,11 @@ this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$NumberCtx.prototype.ast=function(){return{
-type:'Constant',value:this.value}}
+$NumberCtx.prototype.ast=function(){var value=this.value
+if(Array.isArray(value)){value=parseInt(value[1],value[0])}
+if(this.type=='imaginary'){value+='j'}
+return{
+type:'Constant',value}}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -5008,18 +5037,22 @@ while(node.parent){if(node.parent.C){var elt=node.parent.C.tree[0]
 if(elt.type=='for'){elt.has_return=true
 break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
 node=node.parent}}
+$ReturnCtx.prototype.ast=function(){var res={type:'Return'}
+if(this.tree.length > 0){res.expr=this.tree[0].ast ? this.tree[0].ast():this.tree[0]}
+return res}
 $ReturnCtx.prototype.toString=function(){return 'return '+this.tree}
 $ReturnCtx.prototype.transition=function(token,value){var C=this
+if(token=='eol' && this.tree.length==1 &&
+this.tree[0].type=='abstract_expr'){
+this.tree.pop()}
 return $transition(C.parent,token)}
 $ReturnCtx.prototype.to_js=function(){this.js_processed=true
-if(this.tree.length==1 && this.tree[0].type=='abstract_expr'){
-this.tree.pop()
-new $IdCtx(new $ExprCtx(this,'rvalue',false),'None')}
+var expr=this.tree.length==0 ? '_b_.None' :$to_js(this.tree)
 var scope=this.scope
-if(scope.ntype=='generator'){return 'var $res = '+$to_js(this.tree)+'; $B.leave_frame({$locals});'+
+if(scope.ntype=='generator'){return 'var $res = '+expr+'; $B.leave_frame({$locals});'+
 'return $B.generator_return($res)'}
 var indent='    '.repeat(this.node.indent-1)
-var js='var $res = '+$to_js(this.tree)+';\n'+indent+
+var js='var $res = '+expr+';\n'+indent+
 'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n'+indent+
 '$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
@@ -5033,10 +5066,8 @@ this.token=token
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-if(token=="else"){var node=C.node
-var pnode=node.parent
-for(var rank=0;rank < pnode.children.length;rank++){if(pnode.children[rank]===node){break}}
-var pctx=pnode.children[rank-1].C
+if(token=="else"){var node=C.node,rank=node.parent.children.indexOf(node),pctx=node.parent.children[rank-1].C
+pctx.tree[0].orelse=this
 if(pctx.tree.length > 0){var elt=pctx.tree[0]
 if(elt.type=='for' ||
 elt.type=='asyncfor' ||
@@ -5119,7 +5150,8 @@ C.tree.push(this)
 this.tree=[this.value]
 this.raw=false
 this.$pos=$pos}
-$StringCtx.prototype.ast=function(){}
+$StringCtx.prototype.ast=function(){return{
+type:'Constant',value:eval(this.value)}}
 $StringCtx.prototype.toString=function(){return 'string '+(this.value ||'')}
 $StringCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
@@ -8038,6 +8070,7 @@ check_no_kw('callable',obj)
 return hasattr(obj,'__call__')}
 function chr(i){check_nb_args('chr',1,arguments)
 check_no_kw('chr',i)
+i=$B.PyNumber_Index(i)
 if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
 return String.fromCodePoint(0xD800 |(code >> 10))+
 String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
