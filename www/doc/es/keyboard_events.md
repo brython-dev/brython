@@ -77,7 +77,7 @@ document["altKey"].bind("keypress", keypress)
 #### Ejemplo
 
 Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede 
-leer mediante `ch(ev.charCode)`
+leer mediante `chr(ev.charCode)`
 
 <input id="charCode" value="" autocomplete="off">&nbsp;
 <span id="traceCharCode">&nbsp;</span>
@@ -147,7 +147,7 @@ algunos atajos de teclado que usan la tecla Ctrl
 #### Ejemplo
 
 Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede 
-leer mediante `ch(ev.charCode)` con el evento *keypress*
+leer mediante `chr(ev.charCode)` con el evento *keypress*
 
 con *keydown* <input id="keyCodeKeydown" value="" autocomplete="off">
 
@@ -218,7 +218,7 @@ document["shiftKey"].bind("keypress", keypress)
 #### Ejemplo
 
 Introduce texto en el campo de más abajo. Date cuenta que el carácter se puede 
-leer mediante `ch(ev.which)` del evento *keypress*
+leer mediante `chr(ev.which)` del evento *keypress*
 
 
 <table>
