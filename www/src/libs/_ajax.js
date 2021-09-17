@@ -200,6 +200,17 @@ var ajax = {
             method = $.method,
             url = $.url,
             async = $.async
+        console.log(method, url, async)
+        if(typeof method !== "string"){
+            throw _b_.TypeError.$factory(
+                'open() argument method should be string, got ' +
+                $B.class_name(method))
+        }
+        if(typeof url !== "string"){
+            throw _b_.TypeError.$factory(
+                'open() argument url should be string, got ' +
+                $B.class_name(url))
+        }
         self.$method = method
         self.blocking = ! self.async
         self.js.open(method, url, async)
