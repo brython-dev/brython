@@ -26,9 +26,7 @@ Le repository Brython inclut un script, accessible à l'adresse
 _localhost:8000/speed_, qui compare la vitesse de Brython et de CPython sur la
 machine locale pour ces opérations élémentaires.
 
-__Q__ : _quelle est la performance de Brython par rapport à Javascript, ou_
-_par rapport à d'autres solutions qui permettent d'utiliser Python dans le_
-_navigateur ?_
+__Q__ : _quelle est la performance de Brython par rapport à Javascript ?_
 
 __R__ : par rapport à Javascript, le rapport est naturellement très différent
 d'un programme à l'autre. Une console Javascript est fournie dans la
@@ -46,17 +44,6 @@ La différence tient à deux facteurs :
 - le code Javascript généré par Brython doit être conforme aux spécifications
   de Python, notamment au caractère dynamique de la recherche d'attributs, ce
   qui dans certains cas conduit à du code Javascript non optimisé.
-
-Par rapport à d'autres solutions de traduction de Python en Javascript, un
-test est disponible sur [le blog de Pierre Quentel](https://brythonista.wordpress.com/2015/03/28/comparing-the-speed-of-cpython-brython-skulpt-and-pypy-js/)
-(le créateur et principal développeur de Brython). Il compare Brython,
-[Skulpt](http://skulpt.org) et [pypy.js](http://pypyjs.org/demo/). Il faut
-être prudent avec ce genre de comparaison, mais elle montre que pour le code
-testé, Brython est généralement plus rapide que pypy.js, lui-même plus rapide
-que Skulpt. Dans certains cas Brython est plus rapide que l'implémentation de
-référence de Python, CPython.
-
-
 
 __Q__ : _il y a des erreurs 404 dans la console du navigateur quand j'exécute_
 _des scripts Brython, pourquoi ?_
@@ -106,6 +93,27 @@ chaque navigateur. La compilation se fait la première fois qu'un script est
 importé, ou si la version de Brython a changé depuis la précédente
 compilation. Cela permet d'améliorer sensiblement le temps de chargement des
 imports.
+
+__Q__ : _j'essaie d'importer un module de la distribution standard Brython et_
+_j'ai un message d'erreur, pourquoi ?_
+
+__R__ : la raison la plus probable est que le script __brython_stdlib.js__
+n'a pas été intégré dans la page.
+
+__Q__ : _puis-je importer tous les modules / paquetages qui fonctionnent avec_
+_CPython ?_
+
+__R__ : non, seulement ceux qui sont écrits entièrement en Python. Les
+programmes qui font appel à des extensions écrites en langage C ne sont pas
+supportés. Par exemple, Numpy, Matplotlib, Pandas ne peuvent pas fonctionner
+avec Brython.
+
+De même pour les modules / paquetages qui font appel à des primitives du
+système d'exploitation qui ne sont pas disponibles dans le contexte du
+navigateur : par exemple requests, qui utilise les piles IP pour effectuer
+des requêtes HTTP vers des adresses arbitraires, alors qu'un navigateur ne
+peut qu'effectuer des appels Ajax dans le même domaine, ou vers les (rares)
+sites qui permettent les requêtes cross-origin.
 
 __Q__ : _pourquoi utiliser l'opérateur `<=` pour construire l'arbre des_
 _éléments DOM ? Ce n'est pas pythonique !_
