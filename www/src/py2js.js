@@ -12445,11 +12445,19 @@ $B.set_import_paths = function(){
 
 var brython = $B.parser.brython = function(options){
     // By default, only set debug level
-    if(options === undefined){options = {'debug': 1}}
+    if(options === undefined){
+        options = {debug: 1}
+    }else if(typeof options == 'number'){
+        options = {debug: options}
+    }else if(typeof options !== 'object'){
+        console.warn('ignoring invalid argument passed to brython():',
+            options)
+        options = {debug: 1}
+    }
 
     // If the argument provided to brython() is a number, it is the debug
     // level
-    if(typeof options == 'number'){options = {'debug': options}}
+
     if(options.debug === undefined){options.debug = 1}
     $B.debug = options.debug
     // set built-in variable __debug__
