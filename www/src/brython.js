@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-17 15:26:51.036396"
-__BRYTHON__.timestamp=1631885211036
+__BRYTHON__.compiled_date="2021-09-19 09:50:50.783827"
+__BRYTHON__.timestamp=1632037850783
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -402,6 +402,22 @@ var $op_weight={},$weight=1
 for(var _tmp of $op_order){for(var item of _tmp){$op_weight[item]=$weight}
 $weight++}
 var $loop_num=0
+var ast={}
+ast.arg=function(arg){this.arg=arg}
+ast.Constant=function(value){this.value=value}
+ast.Expr=function(value){this.value=value}
+ast.Load={}
+ast.Name=function(id,ctx){this.id=id
+this.ctx=ctx ||ast.Load}
+ast.Pass=function(){}
+ast.UAdd=function(){}
+ast.USub=function(){}
+ast.Not=function(){}
+ast.Invert=function(){}
+ast.UnaryOp=function(op,operand){this.op=op
+this.operand=operand}
+function ast_or_obj(obj){
+return obj.ast ? obj.ast():obj}
 var create_temp_name=$B.parser.create_temp_name=function(prefix){var _prefix=prefix ||'$temp'
 return _prefix+$loop_num++}
 var replace_node=$B.parser.replace_node=function(replace_what,replace_with){var parent=replace_what.parent
@@ -1426,7 +1442,7 @@ $get_node(this).blocking={'type':'wait','call':this}}
 if(this.func && this.func.value=='input'){$get_node(this).blocking={'type':'input'}}}
 $CallCtx.prototype.ast=function(){var res={type:'Call',func:this.func.ast ? this.func.ast():this.func,args:[],keywords:[]}
 for(var call_arg of this.tree){var item=call_arg.tree[0]
-if(item.type=='kwarg'){res.keywords.push({type:'keyword',arg:item.tree[0].value,value:item.tree[1].ast ? item.tree[1].ast():item.tree[1]})}else{res.args.push(item.ast ? item.ast():item)}}
+if(item.type=='kwarg'){res.keywords.push({type:'keyword',arg:item.tree[0].value,value:ast_or_obj(item.tree[1])})}else{res.args.push(ast_or_obj(item))}}
 return res}
 $CallCtx.prototype.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 $CallCtx.prototype.transition=function(token,value){var C=this
@@ -1781,11 +1797,10 @@ var rank=this.node.parent.children.indexOf(this.node),previous=this.node.parent.
 previous.C.tree[0].orelse=this}
 C.tree.push(this)}
 $ConditionCtx.prototype.ast=function(){var types={'if':'If','while':'While','elif':'If'}
-var res={type:types[this.token],test:this.tree[0].ast()? this.tree[0].ast():this.tree[0]}
-if(this.orelse){res.orelse=this.orelse.ast ? this.orelse.ast():this.orelse}
+var res={type:types[this.token],test:ast_or_obj(this.tree[0])}
+if(this.orelse){res.orelse=ast_or_obj(this.orelse)}
 res.body=[]
-for(var node of this.node.children){res.body.push(node.C.tree[0].ast ?
-node.C.tree[0].ast():node.C.tree[0])}
+for(var node of this.node.children){res.body.push(ast_or_obj(node.C.tree[0]))}
 return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
 $ConditionCtx.prototype.transition=function(token,value){var C=this
@@ -1880,6 +1895,13 @@ this.tree=[]
 this.async=C.async
 this.locals=[]
 C.tree[C.tree.length]=this
+this.decorator_list=[]
+var parent_node=C.node.parent
+var rank=parent_node.children.indexOf(C.node)
+while(true){rank--
+if(rank < 0){break}else if(parent_node.children[rank].C.tree[0].type==
+'decorator'){var deco=parent_node.children[rank].C.tree[0].tree[0]
+this.decorator_list.push(ast_or_obj(deco))}else{break}}
 this.enclosing=[]
 var scope=this.scope=$get_scope(this)
 if(scope.C && scope.C.tree[0].type=="class"){this.class_name=scope.C.tree[0].name}
@@ -1904,6 +1926,19 @@ this.default_list=[]
 this.other_args=null
 this.other_kw=null
 this.after_star=[]}
+$DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kwdefaults:[],defaults:[]},func_args=this.tree[1].tree,state='arg',default_value
+for(var arg of func_args){if(arg.type=='end_positional'){args.posonlyargs=args.args
+args.args=[]}else if(arg.type=='func_star_arg'){if(arg.op=='*' && arg.name=='*'){state='kwonly'}else if(arg.op=='*'){args.vararg=new ast.arg(arg.name)}else if(arg.op=='**'){args.kwarg=new ast.arg(arg.name)}}else{default_value=false
+if(arg.has_default){default_value=ast_or_obj(arg.tree[0])}
+var argument=new ast.arg(arg.name)
+if(arg.annotation){argument.annotation=ast_or_obj(arg.annotation.tree[0])}
+if(state=='kwonly'){args.kwonlyargs.push(argument)
+if(default_value){args.kwdefaults.push(default_value)}}else{args.args.push(argument)
+if(default_value){args.defaults.push(default_value)}}}}
+var res={type:'FunctionDef',args,name:this.name,decorator_list:this.decorator_list,body:[]}
+if(this.annotation){res.returns=ast_or_obj(this.annotation.tree[0])}
+for(var child of this.parent.node.children){res.body.push(ast_or_obj(child.C.tree[0]))}
+return res}
 $DefCtx.prototype.set_name=function(name){try{name=$mangle(name,this.parent.tree[0])}catch(err){console.log(err)
 console.log('parent',this.parent)
 throw err}
@@ -2531,9 +2566,9 @@ if(C.assign){
 this.assign=C.assign}
 this.tree=[]
 C.tree[C.tree.length]=this}
-$ExprCtx.prototype.ast=function(){if(['imaginary','int','float','list','str'].indexOf(this.name)>-1){if(this.tree[0].ast===undefined){console.log('bizarre',this)
-return this.tree[0]}
-return this.tree[0].ast()}else if(this.name=='id'){if(this.tree[0].type=='id'){return this.tree[0].ast()}else if(this.tree[0].type=='call'){return this.tree[0].ast()}}
+$ExprCtx.prototype.ast=function(){var res
+if(['imaginary','int','float','list','str'].indexOf(this.name)>-1){var res=ast_or_obj(this.tree[0])}else if(this.name=='id'){if(this.tree[0].type=='id'){res=this.tree[0].ast()}else if(this.tree[0].type=='call'){res=this.tree[0].ast()}}
+if(res){if(this.parent.type=='node'){return new ast.Expr(res)}else{return res}}
 return this}
 $ExprCtx.prototype.toString=function(){return '(expr '+this.with_commas+') '+this.tree}
 $ExprCtx.prototype.transition=function(token,value){var C=this
@@ -2591,16 +2626,15 @@ var op_parent=C.parent,op=value
 if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
 return new $AbstractExprCtx(new_op,false)}
 var op1=C.parent,repl=null
-while(1){if(op1.type=='expr'){op1=op1.parent}
-else if(op1.type=='op' &&
+while(1){if(op1.type=='expr'){op1=op1.parent}else if(op1.type=='op' &&
 $op_weight[op1.op]>=$op_weight[op]&&
 !(op1.op=='**' && op=='**')){
 repl=op1
 op1=op1.parent}else if(op1.type=="not" &&
 $op_weight['not']> $op_weight[op]){repl=op1
 op1=op1.parent}else{break}}
-if(repl===null){while(1){if(C.parent !==op1){C=C.parent
-op_parent=C.parent}else{break}}
+if(repl===null){while(C.parent !==op1){C=C.parent
+op_parent=C.parent}
 C.parent.tree.pop()
 var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
 expr.expect=','
@@ -3303,10 +3337,8 @@ while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
 break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
-$IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return{
-type:'Constant',value:this.value}}
-return{
-type:'Name',id:this.value}}
+$IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return new ast.Constant(this.value)}
+return new ast.Name($B.from_alias(this.value))}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='$$case' && C.parent.parent.type=="node"){
@@ -3590,7 +3622,7 @@ this.raw=false
 this.$pos=$pos}
 JoinedStrCtx.prototype.ast=function(){console.log('ast, values',this.tree)
 var res={type:'JoinedStr',values:[]}
-for(var item of this.tree){if(item instanceof $StringCtx){res.values.push({type:'Constant',value:item.value})}else{var conv_num={a:97,r:114,s:115},value={type:'FormattedValue',value:item,conversion:conv_num[item.conversion]||-1}
+for(var item of this.tree){if(item instanceof $StringCtx){res.values.push(new ast.Constant(item.value))}else{var conv_num={a:97,r:114,s:115},value={type:'FormattedValue',value:item,conversion:conv_num[item.conversion]||-1}
 var format=item.format
 if(format !==undefined){value.format=item.format.ast()}
 res.values.push(value)}}
@@ -3719,7 +3751,7 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
 $ListOrTupleCtx.prototype.ast=function(){var elts=[]
-for(var item of this.tree){elts.push(item.ast ? item.ast():item)}
+for(var item of this.tree){elts.push(ast_or_obj(item))}
 return{
 type:'List',elts}}
 $ListOrTupleCtx.prototype.toString=function(){switch(this.real){case 'list':
@@ -4070,11 +4102,12 @@ case 'nonlocal':
 return new $NonlocalCtx(C)
 case 'op':
 switch(value){case '*':
+var expr=new $AbstractExprCtx(C,true)
+return $transition(expr,token,value)
 case '+':
 case '-':
 case '~':
-var expr=new $AbstractExprCtx(C,true)
-return $transition(expr,token,value)
+return new $UnaryCtx(C,value)
 case '@':
 return new $DecoratorCtx(C)}
 break
@@ -4184,6 +4217,7 @@ this.type='not'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
+$NotCtx.prototype.ast=function(){return new ast.UnaryOp(new ast.Not(),ast_or_obj(this.tree[0]))}
 $NotCtx.prototype.toString=function(){return 'not ('+this.tree+')'}
 $NotCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
@@ -4220,8 +4254,7 @@ C.tree[C.tree.length]=this}
 $NumberCtx.prototype.ast=function(){var value=this.value
 if(Array.isArray(value)){value=parseInt(value[1],value[0])}
 if(this.type=='imaginary'){value+='j'}
-return{
-type:'Constant',value}}
+return new ast.Constant(value)}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -4249,6 +4282,8 @@ if(C.type=="expr"){if(['int','float','str'].indexOf(C.tree[0].type)>-1){this.lef
 if(binding){this.left_type=binding.type}}}
 C.parent.tree.pop()
 C.parent.tree.push(this)}
+$OpCtx.prototype.ast=function(){console.log('op ast',this)
+return this}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
 $OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
@@ -4505,6 +4540,7 @@ this.type='pass'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
+$PassCtx.prototype.ast=function(){return new ast.Pass()}
 $PassCtx.prototype.toString=function(){return '(pass)'}
 $PassCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
@@ -5038,7 +5074,7 @@ if(elt.type=='for'){elt.has_return=true
 break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
 node=node.parent}}
 $ReturnCtx.prototype.ast=function(){var res={type:'Return'}
-if(this.tree.length > 0){res.expr=this.tree[0].ast ? this.tree[0].ast():this.tree[0]}
+if(this.tree.length > 0){res.expr=ast_or_obj(this.tree[0])}
 return res}
 $ReturnCtx.prototype.toString=function(){return 'return '+this.tree}
 $ReturnCtx.prototype.transition=function(token,value){var C=this
@@ -5150,8 +5186,7 @@ C.tree.push(this)
 this.tree=[this.value]
 this.raw=false
 this.$pos=$pos}
-$StringCtx.prototype.ast=function(){return{
-type:'Constant',value:eval(this.value)}}
+$StringCtx.prototype.ast=function(){return new ast.Constant(eval(this.value))}
 $StringCtx.prototype.toString=function(){return 'string '+(this.value ||'')}
 $StringCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
@@ -5376,36 +5411,33 @@ var $UnaryCtx=$B.parser.$UnaryCtx=function(C,op){
 this.type='unary'
 this.op=op
 this.parent=C
-C.tree[C.tree.length]=this}
+this.tree=[]
+C.tree.push(this)}
+$UnaryCtx.prototype.ast=function(){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op]
+return new ast.UnaryOp(new op(),ast_or_obj(this.tree[0]))}
 $UnaryCtx.prototype.toString=function(){return '(unary) '+this.op}
 $UnaryCtx.prototype.transition=function(token,value){var C=this
-switch(token){case 'int':
+switch(token){case 'op':
+if('+'==value ||'-'==value){if(C.op===value){C.op='+'}else{C.op='-'}
+return C}
+case 'int':
 case 'float':
 case 'imaginary':
 if(C.parent.type=="packed"){$_SyntaxError(C,["can't use starred expression here"])}
-var expr=C.parent
-C.parent.parent.tree.pop()
-if(C.op=='-'){value="-"+value}
-else if(C.op=='~'){value=~value}
-return $transition(C.parent.parent,token,value)
+return $transition(new $AbstractExprCtx(C,false),token,value)
 case 'id':
-var p=C.parent.parent.tree.pop()
-if(p.type=="packed"){
-C.parent.parent.tree.push(p)
-p.tree.pop()
-var expr=new $ExprCtx(p,'call',false)}else{var expr=new $ExprCtx(C.parent.parent,'call',false)}
-var expr1=new $ExprCtx(expr,'id',false)
-new $IdCtx(expr1,value)
-var repl=new $AttrCtx(expr)
-if(C.op=='+'){repl.name='__pos__'}else if(C.op=='-'){repl.name='__neg__'}else{repl.name='__invert__'}
-return expr1
-case 'op':
-if('+'==value ||'-'==value){if(C.op===value){C.op='+'}
-else{C.op='-'}
-return C}}
+return $transition(new $AbstractExprCtx(C,false),token,value)}
 return $transition(C.parent,token,value)}
 $UnaryCtx.prototype.to_js=function(){this.js_processed=true
-return this.op}
+var operand=this.tree[0].tree[0]
+switch(operand.type){case 'float':
+return eval(this.op+operand.value)
+case 'int':
+operand.value[1]=eval(this.op+operand.value[1])
+return operand.to_js()}
+var method={'-':'neg','+':'pos','~':'invert'}[this.op]
+return '$B.$call($B.$getattr('+operand.to_js()+', "__'+
+method+'__"))()'}
 var $WithCtx=$B.parser.$WithCtx=function(C){
 this.type='with'
 this.parent=C
@@ -8238,6 +8270,7 @@ switch(type){case 'expr':
 case 'list_or_tuple':
 case 'op':
 case 'ternary':
+case 'unary':
 var children=try_node.children
 root.children.splice(root.children.length-2,2)
 for(var i=0;i < children.length-1;i++){root.add(children[i])}

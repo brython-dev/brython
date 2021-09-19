@@ -725,6 +725,7 @@ function $$eval(src, _globals, _locals){
             case 'list_or_tuple':
             case 'op':
             case 'ternary':
+            case 'unary':
                 // If the source is an expression, what we must execute is the
                 // block inside the "try" clause : if we run root, since it's
                 // wrapped in try / finally, the value produced by
