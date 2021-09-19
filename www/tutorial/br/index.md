@@ -15,6 +15,9 @@ E-barzh ar skridtreterezh, krouit ur bajenn HTML, enni ar c'hod a-dreñv:
     <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/brython@{implementation}/brython.min.js">
     </script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/brython@{implementation}/brython_stdlib.js">
+    </script>
 </head>
 
 <body onload="brython()">

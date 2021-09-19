@@ -15,6 +15,9 @@ Nell'editor di testo, crea una pagina HTML con il seguente contenuto:
     <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/brython@{implementation}/brython.min.js">
     </script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/brython@{implementation}/brython_stdlib.js">
+    </script>
 </head>
 
 <body onload="brython()">
