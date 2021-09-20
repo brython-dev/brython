@@ -150,23 +150,111 @@ var ast = {}
 ast.arg = function(arg){
     this.arg = arg
 }
+
+// binary operator tokens
+var binary_ops = {
+    '+': 'Add', '-': 'Sub', '*': 'Mult', '/': 'Div', '//': 'FloorDiv',
+    '%': 'Mod', '**': 'Pow', '<<': 'LShift', '>>': 'RShift', '|': 'BitOr',
+    '^': 'BitXor', '&': 'BitAnd', '@': 'MatMult'
+    }
+
+for(var key in binary_ops){
+    eval('ast.' + binary_ops[key] + ' = function(){}')
+}
+
+// boolean operator tokens
+var boolean_ops = {'and': 'And', 'or': 'Or'}
+for(var key in boolean_ops){
+    eval('ast.' + boolean_ops[key] + ' = function(){}')
+}
+
+// comparison operator tokens
+var comparison_ops = {
+    '=': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
+    'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
+for(var key in comparison_ops){
+    eval('ast.' + comparison_ops[key] + ' = function(){}')
+}
+
+// unary operator tokens
+for(var tok of ['UAdd', 'USub', 'Not', 'Invert']){
+    eval('ast.' + tok + ' = function(){}')
+}
+
+ast.Assign = function(targets, value){
+    this.targets = targets
+    this.value = value
+}
+ast.AsyncFunctionDef = function(name, args, body, decorator_list){
+    this.name = name
+    this.args = args
+    this.body = body
+    this.decorator_lsit = decorator_list
+}
+ast.AugAssign = function(target, op, value){
+    this.target = target
+    this.op = op
+    this.value = value
+}
+ast.BinaryOp = function(left, op, right){
+    this.left = left
+    this.op = op
+    this.right = right
+}
+ast.BooleanOp = function(left, op, right){
+    this.left = left
+    this.op = op
+    this.right = right
+}
+ast.Call = function(func, args, keywords){
+    this.func = func
+    this.args = args
+    this.keywords = keywords
+}
+ast.ClassDef = function(name, bases, keywords, body, decorator_list){
+    this.name = name
+    this.bases = bases
+    this.keywords = keywords
+    this.body = body
+    this.decorator_list = decorator_list
+}
 ast.Constant = function(value){
     this.value = value
+}
+ast.Del = function(){}
+ast.Delete = function(targets){
+    this.targets = targets
 }
 ast.Expr = function(value){
     this.value = value
 }
-ast.Load = {}
+ast.FunctionDef = function(name, args, body, decorator_list){
+    this.name = name
+    this.args = args
+    this.body = body
+    this.decorator_lsit = decorator_list
+}
+ast.keyword = function(arg, value){
+    this.arg = arg
+    this.value = value
+}
+ast.Load = function(){}
 ast.Name = function(id, ctx){
     this.id = id
     this.ctx = ctx || ast.Load
 }
 ast.Pass = function(){}
-ast.UAdd = function(){}
-ast.USub = function(){}
-ast.Not = function(){}
-ast.Invert = function(){}
-
+ast.Return = function(){}
+ast.Slice = function(){}
+ast.Starred = function(value){
+    this.value = value
+}
+ast.Store = function(){}
+ast.Subscript = function(value, slice){
+    this.value = value
+    this.slice = slice
+    this.ctx = ast.Load
+}
 ast.UnaryOp = function(op, operand){
     this.op = op
     this.operand = operand
@@ -357,7 +445,8 @@ $Node.prototype.add = function(child){
 $Node.prototype.ast = function(){
     if(this.context){
         if(this.context.tree[0].ast){
-            console.log('ast for node', this, this.context.tree[0].ast())
+            console.log('ast for node', this, '\n',
+                this.context.tree[0].ast())
         }else{
             console.log(this.context.tree[0].type, '(no ast)')
         }
@@ -1066,10 +1155,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }
 
     this.type = 'assign'
-    if(expression == 'expression'){
-        this.expression = true
-        console.log("parent of assign expr", context.parent)
-    }
+
     // replace parent by "this" in parent tree
     context.parent.tree.pop()
     context.parent.tree.push(this)
@@ -1144,6 +1230,21 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             }
         }
     }
+}
+
+$AssignCtx.prototype.ast = function(){
+    var value = ast_or_obj(this.tree[1]),
+        targets = [],
+        target = this.tree[0]
+    while(target.type == 'assign'){
+        targets.splice(0, 0, ast_or_obj(target.tree[1]))
+        target = target.tree[0]
+    }
+    targets.splice(0, 0, ast_or_obj(target.tree[0]))
+    for(var tg of targets){
+        tg.ctx = ast.Store
+    }
+    return new ast.Assign(targets, value)
 }
 
 $AssignCtx.prototype.guess_type = function(){
@@ -2200,20 +2301,28 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 }
 
 $CallCtx.prototype.ast = function(){
-    var res = {
-        type: 'Call',
-        func: this.func.ast ? this.func.ast() : this.func,
-        args: [],
-        keywords: []
-    }
+    var res = new ast.Call(ast_or_obj(this.func), [], [])
+    console.log('call ast', this.tree)
     for(var call_arg of this.tree){
+        if(call_arg.type == 'double_star_arg'){
+            var value = call_arg.tree[0].tree[0].value,
+                keyword = new ast.keyword(null, value)
+            delete keyword.arg
+            res.keywords.push(keyword)
+            continue
+        }
         var item = call_arg.tree[0]
+        if(item === undefined){
+            // case when call ends with ",)"
+            continue
+        }
         if(item.type == 'kwarg'){
-            res.keywords.push({
-                type: 'keyword',
-                arg: item.tree[0].value,
-                value: ast_or_obj(item.tree[1])
-            })
+            res.keywords.push(new ast.keyword(item.tree[0].value,
+                ast_or_obj(item.tree[1])))
+        }else if(item.type == 'star_arg'){
+            var starred = new ast.Starred(ast_or_obj(item.tree[0]))
+            starred.ctx = ast.Load
+            res.args.push(starred)
         }else{
             res.args.push(ast_or_obj(item))
         }
@@ -2559,6 +2668,27 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     this.parent.node.binding = {
         __annotations__: true
     }
+}
+
+$ClassCtx.prototype.ast = function(){
+    var decorators = get_decorators(this.parent.node),
+        bases = [],
+        keywords = []
+    if(this.args){
+        for(var arg of this.args.tree){
+            if(arg.vars.length == 2){
+                keywords.push(new ast.keyword(ast_or_obj(arg.vars[0]),
+                    ast_or_obj(arg.vars[1])))
+            }else{
+                bases.push(new ast.arg(ast_or_obj(arg.vars[0])))
+            }
+        }
+    }
+    var res = new ast.ClassDef(this.name, bases, keywords, [], decorators)
+    for(var child of this.parent.node.children){
+        res.body.push(ast_or_obj(child.context.tree[0]))
+    }
+    return res
 }
 
 $ClassCtx.prototype.toString = function(){
@@ -3155,6 +3285,25 @@ $DecoratorCtx.prototype.to_js = function(){
     return res.join('')
 }
 
+function get_decorators(node){
+    var decorators = []
+    var parent_node = node.parent
+    var rank = parent_node.children.indexOf(node)
+    while(true){
+        rank--
+        if(rank < 0){
+            break
+        }else if(parent_node.children[rank].context.tree[0].type ==
+                'decorator'){
+            var deco = parent_node.children[rank].context.tree[0].tree[0]
+            decorators.push(ast_or_obj(deco))
+        }else{
+            break
+        }
+    }
+    return decorators
+}
+
 var $DefCtx = $B.parser.$DefCtx = function(context){
     this.type = 'def'
     this.name = null
@@ -3164,23 +3313,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
     this.locals = []
     context.tree[context.tree.length] = this
-
-    // decorators
-    this.decorator_list = []
-    var parent_node = context.node.parent
-    var rank = parent_node.children.indexOf(context.node)
-    while(true){
-        rank--
-        if(rank < 0){
-            break
-        }else if(parent_node.children[rank].context.tree[0].type ==
-                'decorator'){
-            var deco = parent_node.children[rank].context.tree[0].tree[0]
-            this.decorator_list.push(ast_or_obj(deco))
-        }else{
-            break
-        }
-    }
 
     // store id of enclosing functions
     this.enclosing = []
@@ -3251,9 +3383,11 @@ $DefCtx.prototype.ast = function(){
             kwdefaults: [],
             defaults: []
         },
+        decorators = get_decorators(this.parent.node),
         func_args = this.tree[1].tree,
         state = 'arg',
-        default_value
+        default_value,
+        res
     for(var arg of func_args){
         if(arg.type == 'end_positional'){
             args.posonlyargs = args.args
@@ -3288,12 +3422,10 @@ $DefCtx.prototype.ast = function(){
             }
         }
     }
-    var res = {
-        type: 'FunctionDef',
-        args,
-        name: this.name,
-        decorator_list: this.decorator_list,
-        body: []
+    if(this.async){
+        res = new ast.AsyncFunctionDef(this.name, args, [], decorators)
+    }else{
+        res = new ast.FunctionDef(this.name, args, [], decorators)
     }
     if(this.annotation){
         res.returns = ast_or_obj(this.annotation.tree[0])
@@ -3909,15 +4041,16 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
     // Class for keyword "del"
     this.type = 'del'
     this.parent = context
-    context.tree[context.tree.length] = this
+    context.tree.push(this)
     this.tree = []
 }
 
 $DelCtx.prototype.ast = function(){
     var targets
+    console.log('ast del', this.tree[0])
     if(this.tree[0].type == 'list_or_tuple'){
         // Syntax "del a, b, c"
-        targets = this.tree[0]
+        targets = this.tree[0].tree.slice()
     }else if(this.tree[0].type == 'expr' &&
             this.tree[0].tree[0].type == 'list_or_tuple'){
         // del(x[0]) is the same as del x[0], cf.issue #923
@@ -3926,15 +4059,10 @@ $DelCtx.prototype.ast = function(){
         targets = [this.tree[0].tree[0]]
     }
     for(var i = 0; i < targets.length; i++){
-        if(targets[i].ast !== undefined){
-            targets[i] = targets[i].ast()
-            targets[i].ctx = "del"
-        }
+        targets[i] = ast_or_obj(targets[i])
+        targets[i].ctx = ast.Del
     }
-    return {
-        type: 'Delete',
-        targets
-    }
+    return new ast.Delete(targets)
 }
 
 $DelCtx.prototype.toString = function(){
@@ -4535,12 +4663,10 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
 
 $ExprCtx.prototype.ast = function(){
     var res
-    if(['imaginary', 'int', 'float', 'list', 'str'].indexOf(this.name) > -1){
+    if(['imaginary', 'int', 'float', 'list', 'str', 'operand'].indexOf(this.name) > -1){
         var res = ast_or_obj(this.tree[0])
     }else if(this.name == 'id'){
-        if(this.tree[0].type == 'id'){
-            res = this.tree[0].ast()
-        }else if(this.tree[0].type == 'call'){
+        if(['id', 'call', 'sub'].indexOf(this.tree[0].type) > -1){
             res = this.tree[0].ast()
         }
     }
@@ -4680,7 +4806,7 @@ $ExprCtx.prototype.transition = function(token, value){
           }else{
               // issue #371
               if(op === 'and' || op === 'or'){
-                  while(repl.parent.type == 'not'||
+                  while(repl.parent.type == 'not' ||
                           (repl.parent.type == 'expr' &&
                           repl.parent.parent.type == 'not')){
                       // 'and' and 'or' have higher precedence than 'not'
@@ -8295,8 +8421,19 @@ var $OpCtx = $B.parser.$OpCtx = function(context, op){
 }
 
 $OpCtx.prototype.ast = function(){
-    console.log('op ast', this)
-    return this
+    var op = binary_ops[this.op]
+    if(op){
+        return new ast.BinaryOp(
+            ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
+    }
+    op = boolean_ops[this.op]
+    if(op){
+        return new ast.BooleanOp(
+            ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
+    }
+    op = comparions_ops[this.op]
+    return new ast.BooleanOp(
+        ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))        
 }
 
 $OpCtx.prototype.toString = function(){
@@ -9854,9 +9991,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
 }
 
 $ReturnCtx.prototype.ast = function(){
-    var res = {
-        type: 'Return'
-    }
+    var res = new ast.Return()
     if(this.tree.length > 0){
         res.expr = ast_or_obj(this.tree[0])
     }
@@ -9989,6 +10124,18 @@ var $SliceCtx = $B.parser.$SliceCtx = function(context){
     this.parent = context
     this.tree = context.tree.length > 0 ? [context.tree.pop()] : []
     context.tree.push(this)
+}
+
+$SliceCtx.prototype.ast = function(){
+    var slice = new ast.Slice()
+    var attrs = ['lower', 'upper', 'step']
+    for(var i = 0; i < this.tree.length; i++){
+        var item = this.tree[i]
+        if(item.type !== 'abstract_expr'){
+            slice[attrs[i]] = ast_or_obj(item)
+        }
+    }
+    return slice
 }
 
 $SliceCtx.prototype.transition = function(token, value){
@@ -10147,6 +10294,11 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
     context.tree[context.tree.length] = this
     this.parent = context
     this.tree = []
+}
+
+$SubCtx.prototype.ast = function(){
+    var slice = ast_or_obj(this.tree[0])
+    return new ast.Subscript(ast_or_obj(this.value), slice)
 }
 
 $SubCtx.prototype.toString = function(){
