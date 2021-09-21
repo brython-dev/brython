@@ -439,5 +439,10 @@ try:
 except TypeError as exc:
     assert exc.args[0] == "must be str, not int"
 
-        
+# issue 1772
+test = '🤔'
+assert ord(test) == 129300
+assert len(test) == 1
+
+
 print("passed all tests...")

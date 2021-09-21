@@ -511,13 +511,16 @@ function $$eval(src, _globals, _locals){
         _b_.print(">", $.src.source.trim())
     }
 
-
     if(src.__class__ === code){
         mode = src.mode
         src = src.source
-    }else if(typeof src !== 'string'){
+    }else if(typeof src.valueOf() !== 'string'){
         throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
             "or code object")
+    }else{
+        // src might be an instance of JS String if source has surrogate pairs
+        // cf. issue #1772
+        src = src.valueOf()
     }
 
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
@@ -1968,7 +1971,7 @@ function ord(c) {
     check_nb_args('ord', 1, arguments)
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
-    if(typeof c == 'string'){
+    if(typeof c.valueOf() == 'string'){
         if(c.length == 1){
             return c.charCodeAt(0)
         }
