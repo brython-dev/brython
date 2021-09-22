@@ -39,6 +39,9 @@ def main():
     parser.add_argument('--update', help='Update Brython scripts',
         action="store_true")
 
+    parser.add_argument('--version', help='Brython version number',
+        action="store_true")
+
     args = parser.parse_args()
 
     files = ['README.txt', 'demo.html', 'index.html',
@@ -79,10 +82,10 @@ def main():
 
     if args.install:
         print('Installing Brython {}'.format(implementation))
-    
+
         data_path = os.path.join(os.path.dirname(__file__), 'data')
         current_path_files = os.listdir(os.getcwd())
-    
+
         if current_path_files and 'brython.js' in current_path_files:
             override = input(
                 'brython.js is already present in this directory.'
@@ -92,13 +95,13 @@ def main():
                 import sys
                 print('exiting')
                 sys.exit()
-    
+
         for path in os.listdir(data_path):
             try:
                 shutil.copyfile(os.path.join(data_path, path), path)
             except shutil.SameFileError:
                 print(f'{path} has not been moved. Are the same file.')
-    
+
         print('done')
 
     if args.update:
@@ -180,7 +183,7 @@ def main():
                 return ctype
 
             def translate_path(self, path):
-                """Map /cpython_site_packages to local CPython site-packages 
+                """Map /cpython_site_packages to local CPython site-packages
                 directory."""
                 elts = path.split('/')
                 if len(elts) > 1 and elts[0] == '':
@@ -200,6 +203,9 @@ def main():
                 '"--server PORT".')
         print("Press CTRL+C to Quit.\n")
         http.server.test(HandlerClass=Handler, port=port)
+
+    if args.version:
+        print('Brython version', implementation)
 
 if __name__ == "__main__":
     main()

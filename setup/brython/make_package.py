@@ -70,7 +70,7 @@ def make(package_name, package_path, exclude_dirs=None, output_path=None):
 
         for filename in filenames:
             name, ext = os.path.splitext(filename)
-            if ext not in ('.py', '.js'):
+            if ext != '.py':
                 continue
             is_package = name.endswith('__init__')
             if is_package:
