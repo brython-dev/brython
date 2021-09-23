@@ -1,7 +1,6 @@
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
+var _b_ = $B.builtins
 
 var object = _b_.object
 
@@ -71,7 +70,7 @@ float.as_integer_ratio = function(self){
     }
 
     numerator = _b_.int.$factory(fp)
-    py_exponent = abs(exponent)
+    py_exponent = _b_.abs(exponent)
     denominator = 1
     var x
     if($B.shift1_cache[py_exponent] !== undefined){
@@ -101,7 +100,7 @@ float.__bool__ = function(self){
 }
 
 float.__divmod__ = function(self, other){
-    if(! _b_.isinstance(other, [int, float])){
+    if(! _b_.isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
     return $B.fast_tuple([float.__floordiv__(self, other),
@@ -112,12 +111,12 @@ float.__eq__ = function(self, other){
     self = float_value(self)
     other = float_value(other)
     if(isNaN(self) && isNaN(other)){return false}
-    if(isinstance(other, _b_.int)){return self == other}
-    if(isinstance(other, float)) {
+    if(_b_.isinstance(other, _b_.int)){return self == other}
+    if(_b_.isinstance(other, float)) {
       // new Number(1.2) == new Number(1.2) returns false !!!
       return self.valueOf() == other.valueOf()
     }
-    if(isinstance(other, _b_.complex)){
+    if(_b_.isinstance(other, _b_.complex)){
       if (other.$imag != 0){return false}
       return self == other.$real
     }
@@ -127,9 +126,9 @@ float.__eq__ = function(self, other){
 float.__floordiv__ = function(self, other){
     self = float_value(self)
     other = float_value(other)
-    if(isinstance(other,[_b_.int, float])){
+    if(_b_.isinstance(other,[_b_.int, float])){
       if(other.valueOf() == 0){
-          throw ZeroDivisionError.$factory('division by zero')
+          throw _b_.ZeroDivisionError.$factory('division by zero')
       }
       return float.$factory(Math.floor(self / other))
     }
@@ -139,7 +138,7 @@ float.__floordiv__ = function(self, other){
 float.fromhex = function(arg){
    // [sign] ['0x'] integer ['.' fraction] ['p' exponent]
 
-   if(! isinstance(arg, _b_.str)){
+   if(! _b_.isinstance(arg, _b_.str)){
       throw _b_.ValueError.$factory("argument must be a string")
    }
 
@@ -363,13 +362,13 @@ float.__hash__ = function(self) {
 
 _b_.$isninf = function(x) {
     var x1 = x
-    if(isinstance(x, float)){x1 = float.numerator(x)}
+    if(_b_.isinstance(x, float)){x1 = float.numerator(x)}
     return x1 == -Infinity || x1 == Number.NEGATIVE_INFINITY
 }
 
 _b_.$isinf = function(x) {
     var x1 = x
-    if((! x instanceof Number) && isinstance(x, float)){
+    if((! x instanceof Number) && _b_.isinstance(x, float)){
         x1 = float.numerator(x)
     }
     return x1 == Infinity || x1 == -Infinity ||
@@ -378,7 +377,7 @@ _b_.$isinf = function(x) {
 
 _b_.$isnan = function(x) {
     var x1 = x
-    if(isinstance(x, float)){x1 = float.numerator(x)}
+    if(_b_.isinstance(x, float)){x1 = float.numerator(x)}
     return isNaN(x1)
 }
 
@@ -391,7 +390,7 @@ _b_.$fabs = function(x){
 
 _b_.$frexp = function(x){
     var x1 = x
-    if(isinstance(x, float)){
+    if(_b_.isinstance(x, float)){
         x1 = x.valueOf()
     }
 
@@ -430,11 +429,11 @@ _b_.$ldexp = function(x, i) {
     if(_b_.$isinf(x)){return float.$factory('inf')}
 
     var y = x
-    if(isinstance(x, float)){y = x.valueOf()}
+    if(_b_.isinstance(x, float)){y = x.valueOf()}
     if(y == 0){return y}
 
     var j = i
-    if(isinstance(i, float)){j = i.valueOf()}
+    if(_b_.isinstance(i, float)){j = i.valueOf()}
     return y * Math.pow(2, j)
 }
 
@@ -498,14 +497,14 @@ float.__mod__ = function(self, other) {
     self = float_value(self)
     other = float_value(other)
     if(other == 0){
-        throw ZeroDivisionError.$factory("float modulo")
+        throw _b_.ZeroDivisionError.$factory("float modulo")
     }
-    if(isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
         return new Number((self % other + other) % other)
     }
 
-    if(isinstance(other, float)){
+    if(_b_.isinstance(other, float)){
         // use truncated division
         // cf https://en.wikipedia.org/wiki/Modulo_operation
         var q = Math.floor(self / other),
@@ -520,14 +519,14 @@ float.__mro__ = [object]
 float.__mul__ = function(self, other){
     self = float_value(self)
     other = float_value(other)
-    if(isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(other.__class__ == $B.long_int){
             return new Number(self * parseFloat(other.value))
         }
         other = _b_.int.numerator(other)
         return new Number(self * other)
     }
-    if(isinstance(other, float)){
+    if(_b_.isinstance(other, float)){
         return new Number(self * float_value(other))
     }
     return _b_.NotImplemented
@@ -562,8 +561,8 @@ float.__pow__ = function(self, other){
     self = float_value(self)
     other = float_value(other)
 
-    var other_int = isinstance(other, _b_.int)
-    if(other_int || isinstance(other, float)){
+    var other_int = _b_.isinstance(other, _b_.int)
+    if(other_int || _b_.isinstance(other, float)){
         if(self == 1){return self} // even for Infinity or NaN
         if(other == 0){return new Number(1)}
 
@@ -593,7 +592,7 @@ float.__pow__ = function(self, other){
                 Number.POSITIVE_INFINITY
         }
         if(self < 0 &&
-                ! _b_.getattr(other, "__eq__")(_b_.int.$factory(other))){
+                ! $B.$getattr(other, "__eq__")(_b_.int.$factory(other))){
             // use complex power
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }
@@ -614,7 +613,7 @@ function __newobj__(){
 float.__reduce_ex__ = function(self){
     return $B.fast_tuple([
         __newobj__,
-        $B.fast_tuple([self.__class__ || int, float_value(self)]),
+        $B.fast_tuple([self.__class__ || _b_.int, float_value(self)]),
         _b_.None,
         _b_.None,
         _b_.None])
@@ -709,9 +708,9 @@ float.__setattr__ = function(self, attr, value){
 float.__truediv__ = function(self, other){
     self = float_value(self)
     other = float_value(other)
-    if(isinstance(other, [_b_.int, float])){
+    if(_b_.isinstance(other, [_b_.int, float])){
         if(other.valueOf() == 0){
-            throw ZeroDivisionError.$factory("division by zero")
+            throw _b_.ZeroDivisionError.$factory("division by zero")
         }
         return float.$factory(self/other)
     }
@@ -722,14 +721,14 @@ float.__truediv__ = function(self, other){
 var $op_func = function(self, other){
     self = float_value(self)
     other = float_value(other)
-    if(isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? self - 1 : self
         }else if(other.__class__ === $B.long_int){
             return float.$factory(self - parseInt(other.value))
         }else{return float.$factory(self - other)}
     }
-    if(isinstance(other, float)){
+    if(_b_.isinstance(other, float)){
         return float.$factory(self - other)
     }
     return _b_.NotImplemented
@@ -747,24 +746,24 @@ var $comp_func = function(self, other){
     self = float_value(self)
     other = float_value(other)
 
-    if(isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(other.__class__ === $B.long_int){
             return self > parseInt(other.value)
         }
         return self > other.valueOf()
     }
-    if(isinstance(other,float)){return self > other}
+    if(_b_.isinstance(other,float)){return self > other}
 
-    if(isinstance(other, _b_.bool)) {
+    if(_b_.isinstance(other, _b_.bool)) {
       return self.valueOf() > _b_.bool.__hash__(other)
     }
-    if(hasattr(other, "__int__") || hasattr(other, "__index__")) {
+    if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
        return _b_.int.__gt__(self, $B.$GetInt(other))
     }
 
     // See if other has the opposite operator, eg <= for >
-    var inv_op = getattr(other, "__le__", None)
-    if(inv_op !== None){return inv_op(self)}
+    var inv_op = $B.$getattr(other, "__le__", _b_.None)
+    if(inv_op !== _b_.None){return inv_op(self)}
 
     throw _b_.TypeError.$factory(
         "unorderable types: float() > " + $B.class_name(other) + "()")
@@ -836,12 +835,12 @@ float.$factory = function (value){
     if(typeof value == "number"){
         return new Number(value)
     }
-    if(isinstance(value, float)){
+    if(_b_.isinstance(value, float)){
         return float_value(value)
     }
-    if(isinstance(value, bytes)){
-      var s = getattr(value, "decode")("latin-1")
-      return float.$factory(getattr(value, "decode")("latin-1"))
+    if(_b_.isinstance(value, _b_.bytes)){
+      var s = $B.$getattr(value, "decode")("latin-1")
+      return float.$factory($B.$getattr(value, "decode")("latin-1"))
     }
 
     if(typeof value == "string"){

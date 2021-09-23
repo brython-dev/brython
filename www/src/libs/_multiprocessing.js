@@ -2,11 +2,6 @@
 var $module = (function($B){
 
 var _b_ = $B.builtins
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +'=_b_["'+$b+'"]')
-eval($s.join(';'))
-
-//for(var $py_builtin in _b_){eval("var "+$py_builtin+"=_b_[$py_builtin]")}
 
 var Process = {
     __class__:_b_.type,
@@ -21,7 +16,7 @@ var $convert_args=function(args) {
     var _list=[]
     for(var i=0, _len_i = args.length; i < _len_i; i++) {
       var _a=args[i]
-      if(isinstance(_a, str)){_list.push("'"+_a+"'")} else {_list.push(_a)}
+      if(_b_.isinstance(_a, _b_.str)){_list.push("'"+_a+"'")} else {_list.push(_a)}
     }
 
     return _list.join(',')
@@ -72,15 +67,15 @@ Process. $factory = function(){
     var $ns=$B.args('Process',0,{},[],arguments,{},null,'kw')
     var kw=$ns['kw']
 
-    var target=_b_.dict.get($ns['kw'],'target',None)
-    var args=_b_.dict.get($ns['kw'],'args',tuple.$factory())
+    var target=_b_.dict.get($ns['kw'],'target', _b_.None)
+    var args=_b_.dict.get($ns['kw'],'args', _b_.tuple.$factory())
 
     var worker = new Worker('/src/web_workers/multiprocessing.js')
 
     var res = {
         __class__:Process,
         $worker: worker,
-        name: $ns['name'] || None,
+        name: $ns['name'] || _b_.None,
         $target: target+'',
         $args: args,
         //$kwargs: $ns['kw'],
@@ -105,21 +100,21 @@ Pool.map = function(){
    var $ns=$B.args('Pool.map', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
        arguments,{},'args','kw')
-   var func=$ns['func']
-   var fargs=$ns['fargs']
+   var func = $ns['func']
+   var fargs = $ns['fargs']
 
-   var _results=[]
+   var _results = []
 
-   fargs=iter(fargs)
+   fargs = _b_.iter(fargs)
 
-   var _pos=0
+   var _pos = 0
    console.log(self.$processes)
-   _workers=[]
+   _workers =[]
    for(var i=0; i < self.$processes; i++) {
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{arg=getattr(fargs, '__next__')()}
+       try{arg = $B.$getattr(fargs, '__next__')()}
        catch(err) {
           if (err.__class__ !== _b_.StopIteration) throw err
        }
@@ -134,7 +129,7 @@ Pool.map = function(){
            if (_results.length == args.length) return _results
 
            try {
-               arg=getattr(fargs, '__next__')()
+               arg = $B.$getattr(fargs, '__next__')()
                e.currentTarget.postMessage({target: func+'', pos: _pos,
                                             args: $convert_args([arg])})
                _pos++
@@ -151,13 +146,13 @@ Pool.apply_async = function(){
    var $ns=$B.$MakeArgs('apply_async', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
        arguments,{},'args','kw')
-   var func=$ns['func']
-   var fargs=$ns['fargs']
+   var func = $ns['func']
+   var fargs = $ns['fargs']
 
-   fargs=iter(fargs)
+   fargs = _b_.iter(fargs)
 
    async_result = {}
-   async_result.get=function(timeout){
+   async_result.get = function(timeout){
                       console.log(results)
                       console.log(fargs)
                       return this.results}
@@ -170,7 +165,7 @@ Pool.apply_async = function(){
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{arg=getattr(fargs, '__next__')()}
+       try{arg = $B.$getattr(fargs, '__next__')()}
        catch(err) {
           if (err.__class__ !== _b_.StopIteration) throw err
        }
@@ -185,7 +180,7 @@ Pool.apply_async = function(){
            //if (_results.length == args.length) return _results
 
            try {
-               arg=getattr(fargs, '__next__')()
+               arg = $B.$getattr(fargs, '__next__')()
                e.currentTarget.postMessage({target: func+'', pos: _pos,
                                             args: $convert_args([arg])})
                _pos++
@@ -205,11 +200,10 @@ Pool.$factory = function(){
     console.log(arguments)
     var $ns=$B.args('Pool',1,
         {processes:null},['processes'],arguments,{},'args','kw')
-    //var kw=$ns['kw']
 
-    var processes=$ns['processes']
+    var processes = $ns['processes']
 
-    if (processes == None) {
+    if (processes === _b_.None) {
        // look to see if we have stored cpu_count in local storage
        // maybe we should create a brython config file with settings,etc..??
 

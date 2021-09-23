@@ -3,8 +3,7 @@
 Module to manipulate long integers
 */
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
+var _b_ = $B.builtins
 
 try{
     eval("window")
@@ -14,7 +13,7 @@ try{
 
 var long_int = {
     __class__: _b_.type,
-    __mro__: [int, object],
+    __mro__: [_b_.int, _b_.object],
     $infos: {
         __module__: "builtins",
         __name__: "int"
@@ -131,11 +130,11 @@ function binary(obj){
 
 function check_shift(shift){
     // Check the argument of >> and <<
-    if(! isinstance(shift, long_int)){
-        throw TypeError.$factory("shift must be int, not '" +
+    if(! _b_.isinstance(shift, long_int)){
+        throw _b_.TypeError.$factory("shift must be int, not '" +
             $B.class_name(shift) + "'")
     }
-    if(! shift.pos){throw ValueError.$factory("negative shift count")}
+    if(! shift.pos){throw _b_.ValueError.$factory("negative shift count")}
 }
 
 function clone(obj){
@@ -535,15 +534,15 @@ long_int.__abs__ = function(self){
 }
 
 long_int.__add__ = function(self, other){
-    if(isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return _b_.float.$factory(to_int(self) + other)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }else if(other.__class__ !== long_int){
-        if(isinstance(other, _b_.bool)){
+        if(_b_.isinstance(other, _b_.bool)){
             other = long_int.$factory(other ? 1 : 0)
-        }else if(isinstance(other, int)){
+        }else if(_b_.isinstance(other, _b_.int)){
             // int subclass
             other = long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))
         }else{
@@ -689,7 +688,7 @@ long_int.__float__ = function(self){
 }
 
 long_int.__floordiv__ = function(self, other){
-    if(isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return _b_.float.$factory(to_int(self) / other)
     }
     if(typeof other == "number" && Math.abs(other) < $B.max_safe_divider){
@@ -855,7 +854,7 @@ long_int.__mul__ = function(self, other){
             else if(_b_.getattr(other, "__gt__")(0)){return self}
             else{return -self}
     }
-    if(isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return _b_.float.$factory(to_int(self) * other)
     }
     if(typeof other == "number"){
@@ -863,9 +862,9 @@ long_int.__mul__ = function(self, other){
     }
     other_value = other.value
     other_pos = other.pos
-    if(other.__class__ !== long_int && isinstance(other, int)){
+    if(other.__class__ !== long_int && _b_.isinstance(other, _b_.int)){
         // int subclass
-        var value = int.__index__(other)
+        var value = _b_.int.__index__(other)
         other_value = _b_.str.$factory(value)
         other_pos = value > 0
     }
@@ -906,12 +905,12 @@ long_int.__pos__ = function(self){return self}
 long_int.__pow__ = function(self, power, z){
     if(typeof power == "number"){
         power = long_int.$from_int(power)
-    }else if(isinstance(power, int)){
+    }else if(_b_.isinstance(power, _b_.int)){
         // int subclass
         power = long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))
-    }else if(! isinstance(power, long_int)){
+    }else if(! _b_.isinstance(power, long_int)){
         var msg = "power must be an integer, not '"
-        throw TypeError.$factory(msg + $B.class_name(power) + "'")
+        throw _b_.TypeError.$factory(msg + $B.class_name(power) + "'")
     }
     if(! power.pos){
         if(self.value == "1"){return self}
@@ -1046,7 +1045,7 @@ long_int.__str__ = long_int.__repr__ = function(self){
 }
 
 long_int.__sub__ = function(self, other){
-    if(isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         other = other instanceof Number ? other : other.$brython_value
         return _b_.float.$factory(to_int(self) - other)
     }
@@ -1095,13 +1094,13 @@ long_int.__sub__ = function(self, other){
 }
 
 long_int.__truediv__ = function(self, other){
-    if(isinstance(other, long_int)){
+    if(_b_.isinstance(other, long_int)){
         return _b_.float.$factory(to_int(self) / to_int(other))
-    }else if(isinstance(other,_b_.int)){
+    }else if(_b_.isinstance(other,_b_.int)){
         return _b_.float.$factory(to_int(self) / other)
-    }else if(isinstance(other,_b_.float)){
+    }else if(_b_.isinstance(other,_b_.float)){
         return _b_.float.$factory(to_int(self) / other)
-    }else{throw TypeError.$factory(
+    }else{throw _b_.TypeError.$factory(
         "unsupported operand type(s) for /: 'int' and '" +
         $B.class_name(other) + "'")}
 }
@@ -1223,12 +1222,12 @@ long_int.$factory = function(value, base){
     //    console.log("long int", value, typeof value, base)
     // base defaults to 10
     if(base === undefined){base = 10}
-    else if(!isinstance(base, int)){
-        throw TypeError.$factory("'" + $B.class_name(base) +
+    else if(! _b_.isinstance(base, _b_.int)){
+        throw _b_.TypeError.$factory("'" + $B.class_name(base) +
             "' object cannot be interpreted as an integer")
     }
     if(base < 0 || base == 1 || base > 36){
-        throw ValueError.$factory(
+        throw _b_.ValueError.$factory(
             "long_int.$factory() base must be >= 2 and <= 36")
     }
     if(typeof value == "number"){
@@ -1269,30 +1268,30 @@ long_int.$factory = function(value, base){
             }
         }
         else{
-            throw ValueError.$factory(
+            throw _b_.ValueError.$factory(
                 "argument of long_int is not a safe integer")
         }
         res.pos = pos
         return res
-    }else if(isinstance(value, _b_.float)){
+    }else if(_b_.isinstance(value, _b_.float)){
         if(value === Number.POSITIVE_INFINITY ||
                 value === Number.NEGATIVE_INFINITY){
             return value
         }
         if(value >= 0){value = new Number(Math.round(value.value))}
         else{value = new Number(Math.ceil(value.value))}
-    }else if(isinstance(value, _b_.bool)){
-        if(value.valueOf()){return int.$factory(1)}
-        return int.$factory(0)
+    }else if(_b_.isinstance(value, _b_.bool)){
+        if(value.valueOf()){return _b_.int.$factory(1)}
+        return _b_.int.$factory(0)
     }else if(value.__class__ === long_int){
         return value
-    }else if(isinstance(value, int)){
+    }else if(_b_.isinstance(value, _b_.int)){
         // int subclass
         value = value.$brython_value + ""
-    }else if(isinstance(value, _b_.bool)){
+    }else if(_b_.isinstance(value, _b_.bool)){
         value = _b_.bool.__int__(value) + ""
     }else if(typeof value != "string"){
-        throw ValueError.$factory(
+        throw _b_.ValueError.$factory(
             "argument of long_int must be a string, not " +
             $B.class_name(value))
     }
@@ -1311,7 +1310,7 @@ long_int.$factory = function(value, base){
         // Remove prefix
         if(value.length == 1){
             // "+" or "-" alone are not valid arguments
-            throw ValueError.$factory(
+            throw _b_.ValueError.$factory(
                 'long_int argument is not a valid number: "' + value + '"')
         }else{value = value.substr(1)}
     }
@@ -1343,7 +1342,7 @@ long_int.$factory = function(value, base){
         }
 
         else if(! is_digits[value.charAt(i)]){
-            throw ValueError.$factory(
+            throw _b_.ValueError.$factory(
                 'long_int argument is not a valid number: "' + value + '"')
         }
     }

@@ -3592,9 +3592,9 @@ $DefCtx.prototype.transform = function(node, rank){
                     this.otherdefaults.push(arg.name)
                 }
             }
-            this.slots.push(arg.name + ':null')
+            this.slots.push('"' + arg.name + '":null')
             slot_list.push('"' + arg.name + '"')
-            slot_init.push(arg.name + ':' + arg.name)
+            slot_init.push('"' + arg.name + '": _' + arg.name)
             if(arg.tree.length > 0){
                 defaults.push('"' + arg.name + '"')
                 defs1.push(arg.name + ':' + $to_js(arg.tree))
@@ -3785,7 +3785,7 @@ $DefCtx.prototype.transform = function(node, rank){
     var def_func_node = new $Node()
     this.params = ''
     if(only_positional){
-        this.params = Object.keys(this.varnames).join(', ')
+        this.params = Object.keys(this.varnames).map(x => '_' + x).join(', ')
     }
     new $NodeJSCtx(def_func_node, '')
     def_func_node.is_def_func = true
@@ -4024,7 +4024,7 @@ $DefCtx.prototype.to_js = function(func_name){
     if(this.is_comp){
         return "var " + this.name + " = " +
             (this.async ? ' async ' : '') +
-            "function* (expr)"
+            "function* (_expr)"
     }
 
     func_name = func_name || this.tree[0].to_js()
@@ -5235,7 +5235,7 @@ $ForExpr.prototype.transform = function(node,rank){
                 pnode.outermost_expr = this.tree[1]
                 module.outermost_expr = this.tree[1]
                 this.tree.pop()
-                new $RawJSCtx(this, "expr")
+                new $RawJSCtx(this, "_expr")
             }
             break
         }
@@ -5457,6 +5457,9 @@ $ForExpr.prototype.transform = function(node,rank){
         js = 'var ' + iterable_name + ' = ' + it_js + ';' +
              '$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
              iterable_name + '),"__next__")'
+    if(it_js == 'expr'){
+        console.log('it js is expr, iterable', iterable)
+    }
     new $NodeJSCtx(new_node,js)
     new_nodes[pos++] = new_node
 
@@ -5798,10 +5801,11 @@ $FromCtx.prototype.to_js = function(){
                 $package = $B.imported[$package]
                 packages.pop()
             }
+            console.log('$package', $package)
             if($package === undefined){
                 return 'throw _b_.SystemError.$factory("Parent module \'\' ' +
                     'not loaded, cannot perform relative import")'
-            }else if($package == 'None'){
+            }else if($package === 'None'){
                 console.log('package is None !')
             }
             _mod = _mod.substr(1)
@@ -6242,8 +6246,8 @@ $GlobalCtx.prototype.add = function(name){
     if(this.module.module.startsWith("$exec")){
         while(mod && mod.parent_block !== this.module){
             // Set attribute _globals for intermediate scopes
-            mod._globals = mod._globals || {}
-            mod._globals[name] = this.module.id
+            mod._globals = mod._globals || new Map()
+            mod._globals.set(name, this.module.id)
             // Delete possibly existing binding below module level
             delete mod.binding[name]
             mod = mod.parent_block
@@ -6595,8 +6599,8 @@ $IdCtx.prototype.to_js = function(arg){
 
     this.js_processed = true
 
-    if(this.scope._globals && this.scope._globals[val]){
-        this.global_module = this.scope._globals[val]
+    if(this.scope._globals && this.scope._globals.has(val)){
+        this.global_module = this.scope._globals.get(val)
     }
     if(this.global_module){
         if(this.bound){
@@ -7851,7 +7855,7 @@ $ListOrTupleCtx.prototype.to_js = function(){
 
                     js += 'return ' + listcomp_name
                     js = "function" + (has_yield ? "*" : "") +
-                        `(expr){${js}})(${outer_most})`
+                        `(_expr){${js}})(${outer_most})`
                     if(this.is_await){
                         js = 'async ' + js
                     }
@@ -8433,7 +8437,7 @@ $OpCtx.prototype.ast = function(){
     }
     op = comparions_ops[this.op]
     return new ast.BooleanOp(
-        ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))        
+        ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
 }
 
 $OpCtx.prototype.toString = function(){
@@ -11633,6 +11637,7 @@ $B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
     "RegExp", "String", "super", "switch", "this", "throw", "typeof", "var",
     "window", "toLocaleString", "toString", "void"]
     //enum, export, extends, import, and super
+$B.forbidden = []
 $B.aliased_names = $B.list2obj($B.forbidden)
 
 var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',

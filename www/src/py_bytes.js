@@ -115,7 +115,7 @@ bytearray.__setitem__ = function(self, arg, value){
                 if(! _b_.isinstance($temp[i], _b_.int)){
                     throw _b_.TypeError.$factory('an integer is required')
                 }else if($temp[i] > 255){
-                    throw ValueError.$factory("byte must be in range(0, 256)")
+                    throw _b_.ValueError.$factory("byte must be in range(0, 256)")
                 }
                 self.source.splice(start, 0, $temp[i])
             }
@@ -136,7 +136,7 @@ bytearray.append = function(self, b){
     if(! _b_.isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
-    if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
+    if(b > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
     self.source[self.source.length] = b
 }
 
@@ -172,7 +172,7 @@ bytearray.insert = function(self, pos, b){
     if(! _b_.isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
-    if(b > 255){throw ValueError.$factory("byte must be in range(0, 256)")}
+    if(b > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
     _b_.list.insert(self.source, pos, b)
 }
 

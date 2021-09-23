@@ -1999,13 +1999,13 @@ str.replace = function(self, old, _new, count) {
     // the number of times to replace. In CPython, negative or undefined
     // values of count means replace all.
     var $ = $B.args("replace", 4,
-        {self: null, old: null, $$new: null, count: null},
-        ["self", "old", "$$new", "count"],
+        {self: null, old: null, new: null, count: null},
+        ["self", "old", "new", "count"],
         arguments, {count: -1}, null, null),
         count = $.count,
         self = $.self,
         old = $.old,
-        _new = $.$$new
+        _new = $.new
     // Validate type of old
     check_str(old, "replace() argument 1 ")
     check_str(_new, "replace() argument 2 ")

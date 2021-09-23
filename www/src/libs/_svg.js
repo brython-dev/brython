@@ -4,10 +4,6 @@ var $module = (function($B){
 var _b_ = $B.builtins
 var TagSum = $B.TagSum // defined in py_dom.js
 
-var $s=[]
-for(var $b in _b_) $s.push('var ' + $b +' = _b_["' + $b + '"]')
-eval($s.join(';'))
-
 var $svgNS = "http://www.w3.org/2000/svg"
 var $xlinkNS = "http://www.w3.org/1999/xlink"
 
@@ -22,15 +18,15 @@ function makeTagDict(tagName){
             args = $ns['args']
         if(args.length == 1){
             var first = args[0]
-            if(isinstance(first, [str, int, float])){
-                self.appendChild(document.createTextNode(str.$factory(first)))
+            if(_b_.isinstance(first, [_b_.str, _b_.int, _b_.float])){
+                self.appendChild(document.createTextNode(_b_.str.$factory(first)))
             }else if(first.__class__ === TagSum){
                 for(var i = 0, len = first.children.length; i < len; i++){
                     self.appendChild(first.children[i].elt)
                 }
             }else{ // argument is another DOMNode instance
                 try{self.appendChild(first.elt)}
-                catch(err){throw ValueError.$factory('wrong element ' + first)}
+                catch(err){throw _b_.ValueError.$factory('wrong element ' + first)}
             }
         }
 
@@ -58,7 +54,7 @@ function makeTagDict(tagName){
                         arg = arg.replace('_', '-')
                         self.setAttributeNS(null, arg, value)
                     }catch(err){
-                        throw ValueError.$factory("can't set attribute " + arg)
+                        throw _b_.ValueError.$factory("can't set attribute " + arg)
                     }
                 }
             }

@@ -923,7 +923,7 @@ Random.setstate = function(state){
             state.length + ")")
     }
     if($.state[0] != 3){
-        throw _b_.ValueError.$factory("ValueError: state with version " +
+        throw _b_.ValueError.$factory("state with version " +
             $.state[0] + " passed to Random.setstate() of version 3")
     }
     var second = _b_.list.$factory($.state[1])

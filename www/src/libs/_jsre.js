@@ -1,9 +1,6 @@
 var $module = (function($B){
 
     var _b_ = $B.builtins
-    var $s = []
-    for(var $b in _b_) $s.push('var ' + $b +'=_b_["' + $b + '"]')
-    eval($s.join(';'))
 
     var MatchObject = $B.make_class("Match",
         function(jsmatch, string, pattern){
@@ -20,20 +17,20 @@ var $module = (function($B){
     MatchObject.group = function(self){
         var res = []
         for(var i = 0, _len_i = arguments.length; i < _len_i; i++){
-            if(self.jsmatch[arguments[i]] === undefined){res.push(None)}
+            if(self.jsmatch[arguments[i]] === undefined){res.push(_b_.None)}
             else{res.push(self.jsmatch[arguments[i]])}
         }
         if(arguments.length == 1){return res[0]}
-        return tuple.$factory(res)
+        return _b_.tuple.$factory(res)
     }
     MatchObject.groups = function(self, _default){
-        if(_default===undefined){_default=None}
+        if(_default === undefined){_default = _b_.None}
         var res = []
         for(var i = 1, _len_i = self.length; i < _len_i; i++){
             if(self.jsmatch[i] === undefined){res.push(_default)}
             else{res.push(self.jsmatch[i])}
         }
-        return tuple.$factory(res)
+        return _b_.tuple.$factory(res)
     }
     MatchObject.start = function(self){
         return self.index
@@ -59,7 +56,7 @@ var $module = (function($B){
         if ($B.$options.re == 'jsre'){return true}   //force use of brythons re module
         // FIXME: Improve
 
-        if(! isinstance(pattern, str)){
+        if(! _b_.isinstance(pattern, _b_.str)){
            // this is probably a SRE_PATTERN, so return false, and let
            // python's re module handle this.
            return false
@@ -98,7 +95,7 @@ var $module = (function($B){
             __name__:'SRE_Pattern'
         }
     }
-    $SRE_PatternDict.__mro__ = [object]
+    $SRE_PatternDict.__mro__ = [_b_.object]
     $SRE_PatternDict.findall = function(self, string){
         return obj.findall(self.pattern, string, self.flags)
     }
@@ -148,7 +145,7 @@ var $module = (function($B){
             args = $ns['args'] ,
             _flags = 0;
         if(args.length>0){var flags = args[0]}
-        else{var _flags = getattr($ns['kw'], 'get')('flags', 0)}
+        else{var _flags = $B.$getattr($ns['kw'], 'get')('flags', 0)}
 
         var flags = normflags()
         flags += 'gm'
@@ -164,7 +161,7 @@ var $module = (function($B){
             args = $ns['args'],
             _flags = 0;
         if(args.length>0){var flags=args[0]}
-        else{var _flags = getattr($ns['kw'], 'get')('flags', 0)}
+        else{var _flags = $B.$getattr($ns['kw'], 'get')('flags', 0)}
 
         var flags = normflags()
         flags += 'gm'
@@ -179,20 +176,20 @@ var $module = (function($B){
             mo.group = function(){
                var res = []
                for(var i=0, _len_i = arguments.length; i < _len_i;i++){
-                   if(jsmatch[arguments[i]] === undefined){res.push(None)}
+                   if(jsmatch[arguments[i]] === undefined){res.push(_b_.None)}
                    else{res.push(jsmatch[arguments[i]])}
                }
                if(arguments.length == 1){return res[0]}
-               return tuple.$factory(res)
+               return _b_.tuple.$factory(res)
             }
             mo.groups = function(_default){
-               if(_default === undefined){_default=None}
+               if(_default === undefined){_default = _b_.None}
                var res = []
                for(var i = 1, _len_i = jsmatch.length; i < _len_i; i++){
                   if(jsmatch[i] === undefined){res.push(_default)}
                   else{res.push(jsmatch[i])}
                }
-               return tuple.$factory(res)
+               return _b_.tuple.$factory(res)
             }
             mo.start = function(){return mo._match.index}
             mo.end = function(){return mo._match.length - mo._match.index}
@@ -207,11 +204,11 @@ var $module = (function($B){
             arguments, {}, 'args', 'kw')
         var args = $ns['args']
         if(args.length>0){var flags = args[0]}
-        else{var flags = getattr($ns['kw'], 'get')('flags', '')}
+        else{var flags = $B.$getattr($ns['kw'], 'get')('flags', '')}
         flags = normflags(flags)
         var jsp = new RegExp(pattern, flags)
         var jsmatch = string.match(jsp)
-        if(jsmatch === null){return None}
+        if(jsmatch === null){return _b_.None}
         return MatchObject.$factory(jsmatch, string, pattern)
     }
     obj.sub = function(pattern, repl, string){
@@ -249,7 +246,7 @@ var $module = (function($B){
                     groups.push(arguments[i])
                 }
                 mo.groups = function(_default){
-                    if(_default === undefined){_default = None}
+                    if(_default === undefined){_default = _b_.None}
                     var res = []
                     for(var i = 0, _len_i = groups.length; i < _len_i; i++){
                         if(groups[i] === undefined){res.push(_default)}

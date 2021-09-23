@@ -20,8 +20,6 @@
 //   yielding node
 
 var _b_ = $B.builtins
-var bltns = $B.InjectBuiltins()
-eval(bltns)
 
 // Class used for "return" inside a generator function
 var $GeneratorReturn = {}
@@ -39,13 +37,15 @@ $B.generator = $B.make_class("generator",
             gen.$name = name || 'generator'
             gen.$func = func
             gen.$has_run = false
-            gen.__class__ = $B.generator
             if(func.$has_yield_in_cm){
                 var locals = $B.last($B.frames_stack)[1]
                 locals.$close_generators = locals.$close_generators || []
                 locals.$close_generators.push(gen)
             }
-            return gen
+            return {
+                __class__: $B.generator,
+                js_gen: gen
+            }
         }
         res.$infos = func.$infos
         res.$is_genfunc = true
@@ -68,7 +68,7 @@ $B.generator.__str__ = function(self){
 
 $B.generator.close = function(self){
     try{
-        $B.generator.$$throw(self, _b_.GeneratorExit.$factory())
+        $B.generator.throw(self, _b_.GeneratorExit.$factory())
     }catch(err){
         if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
             throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")
@@ -80,33 +80,35 @@ $B.generator.send = function(self, value){
     // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
     // to decide if a generator with "yield" inside context managers must
     // be applied method .return()
-    self.$has_run = true
-    if(self.$finished){
+    var gen = self.js_gen
+    gen.$has_run = true
+    if(gen.$finished){
         throw _b_.StopIteration.$factory(value)
     }
-    if(self.gi_running === true){
+    if(gen.gi_running === true){
         throw _b_.ValueError.$factory("generator already executing")
     }
-    self.gi_running = true
+    gen.gi_running = true
     try{
-        var res = self.next(value)
+        var res = gen.next(value)
     }catch(err){
-        self.$finished = true
+        gen.$finished = true
         throw err
     }
     if(res.value && res.value.__class__ === $GeneratorReturn){
-        self.$finished = true
+        gen.$finished = true
         throw _b_.StopIteration.$factory(res.value.value)
     }
-    self.gi_running = false
+    gen.gi_running = false
     if(res.done){
         throw _b_.StopIteration.$factory(res.value)
     }
     return res.value
 }
 
-$B.generator.$$throw = function(self, type, value, traceback){
-    var exc = type
+$B.generator.throw = function(self, type, value, traceback){
+    var gen = self.js_gen,
+        exc = type
 
     if(exc.$is_class){
         if(! _b_.issubclass(type, _b_.BaseException)){
@@ -125,7 +127,7 @@ $B.generator.$$throw = function(self, type, value, traceback){
         }
     }
     if(traceback !== undefined){exc.$traceback = traceback}
-    var res = self.throw(exc)
+    var res = gen.throw(exc)
     if(res.done){
         throw _b_.StopIteration.$factory("StopIteration")
     }
@@ -137,8 +139,10 @@ $B.set_func_names($B.generator, "builtins")
 $B.async_generator = $B.make_class("async_generator",
     function(func){
         var f = function(){
-            var res = func.apply(null, arguments)
+            var gen = func.apply(null, arguments)
+            var res = Object.create(null)
             res.__class__ = $B.async_generator
+            res.js_gen = gen
             return res
         }
         return f
@@ -158,37 +162,39 @@ $B.async_generator.__anext__ = function(self){
 //$B.async_generator.__dir__ = generator.__dir__
 
 $B.async_generator.aclose = function(self){
-    self.$finished = true
+    self.js_gen.$finished = true
     return _b_.None
 }
 
 $B.async_generator.asend = async function(self, value){
-    if(self.$finished){
+    var gen = self.js_gen
+    if(gen.$finished){
         throw _b_.StopAsyncIteration.$factory(value)
     }
-    if(self.ag_running === true){
+    if(gen.ag_running === true){
         throw _b_.ValueError.$factory("generator already executing")
     }
-    self.ag_running = true
+    gen.ag_running = true
     try{
-        var res = await self.next(value)
+        var res = await gen.next(value)
     }catch(err){
-        self.$finished = true
+        gen.$finished = true
         throw err
     }
     if(res.done){
         throw _b_.StopAsyncIteration.$factory(value)
     }
     if(res.value.__class__ === $GeneratorReturn){
-        self.$finished = true
+        gen.$finished = true
         throw _b_.StopAsyncIteration.$factory(res.value.value)
     }
-    self.ag_running = false
+    gen.ag_running = false
     return res.value
 }
 
 $B.async_generator.athrow = async function(self, type, value, traceback){
-    var exc = type
+    var gen = self.js_gen,
+        exc = type
 
     if(exc.$is_class){
         if(! _b_.issubclass(type, _b_.BaseException)){
@@ -205,7 +211,7 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
         }
     }
     if(traceback !== undefined){exc.$traceback = traceback}
-    await self.throw(value)
+    await gen.throw(value)
 }
 
 $B.set_func_names($B.async_generator, "builtins")

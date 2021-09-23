@@ -25,8 +25,7 @@ keys with the same hash can be stored in a dictionary, $object_dict[hash] is a
 list of [key, [value, rank]] lists.
 */
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
+var _b_ = $B.builtins
 
 var str_hash = _b_.str.__hash__,
     $N = _b_.None
@@ -494,8 +493,8 @@ dict.$getitem = function(self, arg, ignore_missing){
     if(! ignore_missing){
         if(self.__class__ !== dict && ! ignore_missing){
             try{
-                var missing_method = getattr(self.__class__, "__missing__",
-                    _b_.None)
+                var missing_method = $B.$getattr(self.__class__, 
+                    "__missing__", _b_.None)
             }catch(err){
                 console.log(err)
 
@@ -625,8 +624,8 @@ dict.__init__ = function(self, first, second){
     return $N
 }
 
-dict.__iter__ = function(self) {
-    return _b_.iter(dict.$$keys(self))
+dict.__iter__ = function(self){
+    return _b_.iter(dict.keys(self))
 }
 
 dict.__ior__ = function(self, other){
@@ -713,7 +712,7 @@ dict.__repr__ = function(self){
         items = to_list(self)
     items.forEach(function(item){
         try{
-            res.push(repr(item[0]) + ": " + repr(item[1]))
+            res.push(_b_.repr(item[0]) + ": " + _b_.repr(item[1]))
         }catch(err){
             throw err
         }
@@ -987,7 +986,7 @@ dict.items = function(self){
 var dict_keys = $B.make_view("dict_keys")
 dict_keys.$iterator = $B.make_iterator_class("dict_keyiterator")
 
-dict.$$keys = function(self){
+dict.keys = function(self){
     if(arguments.length > 1){
        var _len = arguments.length - 1,
            _msg = "keys() takes no arguments (" + _len + " given)"
@@ -1072,7 +1071,7 @@ dict.update = function(self){
         }else if(_b_.hasattr(o, "keys")){
             var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
             for(var i = 0, len = _keys.length; i < len; i++){
-                var _value = getattr(o, "__getitem__")(_keys[i])
+                var _value = $B.$getattr(o, "__getitem__")(_keys[i])
                 dict.$setitem(self, _keys[i], _value)
             }
         }else{

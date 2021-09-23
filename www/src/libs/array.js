@@ -1,10 +1,6 @@
 var $module = (function($B){
 
-var _b_ = $B.builtins,
-    $s = [],
-    i
-for(var $b in _b_){$s.push('var ' + $b +' = _b_["'+$b+'"]')}
-eval($s.join(';'))
+var _b_ = $B.builtins
 
 var typecodes = {
     'b': Int8Array,    // signed char, 1 byte
@@ -154,7 +150,7 @@ array.frombytes = function(self, s){
             "not '" + $B.class_name(s) + "'")
     }
     self.obj = new typecodes[self.typecode](s.source)
-    return None
+    return _b_.None
 }
 
 array.fromlist = function(self, list){

@@ -1,18 +1,18 @@
 // ajax
 var $module = (function($B){
 
-eval($B.InjectBuiltins())
+
 var $N = $B.builtins.None,
     _b_ = $B.builtins
 
 var add_to_res = function(res, key, val) {
-    if(isinstance(val, list)){
+    if(_b_.isinstance(val, _b_.list)){
         for (j = 0; j < val.length; j++) {
             add_to_res(res, key, val[j])
         }
     }else if (val instanceof File || val instanceof Blob){
         res.append(key, val)
-    }else{res.append(key,str.$factory(val))}
+    }else{res.append(key, _b_.str.$factory(val))}
 }
 
 function set_timeout(self, timeout){
@@ -29,6 +29,7 @@ function set_timeout(self, timeout){
 }
 
 function _read(req){
+    console.log('read from request', req)
     var xhr = req.js
     if(xhr.responseType == "json"){
         return $B.structuredclone2pyobj(xhr.response)
@@ -241,9 +242,9 @@ var ajax = {
             self.js.send()
             return _b_.None
         }
-        if(isinstance(params, str)){
+        if(_b_.isinstance(params, _b_.str)){
             res = params
-        }else if(isinstance(params, dict)){
+        }else if(_b_.isinstance(params, _b_.dict)){
             if(content_type == 'multipart/form-data'){
                 // The FormData object serializes the data in the 'multipart/form-data'
                 // content-type so we may as well override that header if it was set
@@ -251,7 +252,7 @@ var ajax = {
                 res = new FormData()
                 var items = _b_.list.$factory(_b_.dict.items(params))
                 for(var i = 0, len = items.length; i < len; i++){
-                    add_to_res(res, str.$factory(items[i][0]), items[i][1])
+                    add_to_res(res, _b_.str.$factory(items[i][0]), items[i][1])
                 }
             }else{
                 if(self.$method && self.$method.toUpperCase() == "POST" &&
@@ -262,15 +263,15 @@ var ajax = {
                 }
                 var items = _b_.list.$factory(_b_.dict.items(params))
                 for(var i = 0, len = items.length; i < len; i++){
-                    var key = encodeURIComponent(str.$factory(items[i][0]));
-                    if(isinstance(items[i][1], list)){
+                    var key = encodeURIComponent(_b_.str.$factory(items[i][0]));
+                    if(_b_.isinstance(items[i][1], _b_.list)){
                         for (j = 0; j < items[i][1].length; j++) {
                             res += key +'=' +
-                                encodeURIComponent(str.$factory(items[i][1][j])) + '&'
+                                encodeURIComponent(_b_.str.$factory(items[i][1][j])) + '&'
                         }
                     }else{
                         res += key + '=' +
-                            encodeURIComponent(str.$factory(items[i][1])) + '&'
+                            encodeURIComponent(_b_.str.$factory(items[i][1])) + '&'
                     }
                 }
                 res = res.substr(0, res.length - 1)
@@ -278,7 +279,7 @@ var ajax = {
         }else{
             throw _b_.TypeError.$factory(
                 "send() argument must be string or dictionary, not '" +
-                str.$factory(params.__class__) + "'")
+                _b_.str.$factory(params.__class__) + "'")
         }
         self.js.send(res)
         return _b_.None
@@ -475,7 +476,7 @@ function file_upload(){
     var formdata = new FormData()
     formdata.append(field_name, file, file.name)
 
-    self.js.open(method, url, True)
+    self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
     for(key in kw.$string_dict){
@@ -490,7 +491,7 @@ $B.set_func_names(ajax)
 return {
     ajax: ajax,
     Ajax: ajax,
-    $$delete: _delete,
+    delete: _delete,
     file_upload: file_upload,
     connect,
     get,

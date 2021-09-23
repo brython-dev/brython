@@ -107,7 +107,9 @@ $B.precompiled = {}
 $B.frames_stack = []
 
 // Python __builtins__
-$B.builtins = {}
+// Set to Object.create(null) instead of {}
+// to avoid conflicts with JS attributes such as "constructor"
+$B.builtins = Object.create(null)
 
 $B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
 

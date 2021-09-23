@@ -40,7 +40,7 @@ function to_json(obj, level){
              kw.indent === _b_.None ? [', ', ': '] : [',', ': '] :
             kw.separators,
         skipkeys = kw.skipkeys,
-        $$default = kw.default,
+        _default = kw.default,
         sort_keys = kw.sort_keys,
         allow_nan = kw.allow_nan,
         check_circular = kw.check_circular
@@ -153,11 +153,11 @@ function to_json(obj, level){
         return first + res.join(sep) + last
     }
     // For other types, use function default if provided
-    if($$default == _b_.None){
+    if(_default == _b_.None){
         throw _b_.TypeError.$factory("Object of type " + $B.class_name(obj) +
             " is not JSON serializable")
     }else{
-        return to_json($B.$call($$default)(obj), level, kwarg)
+        return to_json($B.$call(_default)(obj), level, kwarg)
     }
 }
 

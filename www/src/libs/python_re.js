@@ -121,7 +121,7 @@ Flag.__or__ = function(self, other){
 }
 
 Flag.__ror__ = function(self, other){
-    if(typeof other == "number" || _b_.isinstance(other, int)){
+    if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
         if(other == 0){
             return Flag.$factory(self.value)
         }
@@ -256,7 +256,7 @@ BPattern.__repr__ = BPattern.__str__ = function(self){
 }
 
 BPattern.findall = function(self){
-    var iter = BPattern.finditer.apply(null, arguments),
+    var iter = BPattern.finditer.apply(null, arguments).js_gen,
         res = []
 
     while(true){
@@ -2839,7 +2839,7 @@ function subn(pattern, repl, string, count, flags){
         repl1 = data1.repl1
     }
     pos = 0
-    for(var bmo of $module.finditer(BPattern.$factory(pattern), string.to_str())){
+    for(var bmo of $module.finditer(BPattern.$factory(pattern), string.to_str()).js_gen){
         // finditer yields instances of BMatchObject
         var mo = bmo.mo // instance of MatchObject
         res += from_codepoint_list(string.codepoints.slice(pos, mo.start),
@@ -3519,7 +3519,7 @@ var $module = {
             }
         }
 
-        var iter = $module.finditer.apply(null, arguments),
+        var iter = $module.finditer.apply(null, arguments).js_gen,
             res = []
         while(true){
             var next = iter.next()
@@ -3670,7 +3670,7 @@ var $module = {
         }else{
             data = {pattern, string}
         }
-        for(var bmo of $module.finditer(pattern, $.string)){
+        for(var bmo of $module.finditer(pattern, $.string).js_gen){
             var mo = bmo.mo, // finditer returns instances of BMO
                 groupobj = mo.$groups
             res.push(data.string.substring(pos, mo.start))

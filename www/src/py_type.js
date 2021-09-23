@@ -631,8 +631,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         }
     }
 
-    var sup = _b_.$$super.$factory(class_dict, class_dict)
-    var init_subclass = _b_.$$super.__getattribute__(sup, "__init_subclass__")
+    var sup = _b_.super.$factory(class_dict, class_dict)
+    var init_subclass = _b_.super.__getattribute__(sup, "__init_subclass__")
     init_subclass(extra_kwargs)
 
     return class_dict

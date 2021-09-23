@@ -78,28 +78,28 @@
         console: self.console && $B.JSObj.$factory(self.console),
         self: $B.win,
         win: $B.win,
-        $$window: $B.win,
+        "window": $B.win,
     }
     browser.__path__ = browser.__file__
 
     if ($B.isNode) {
-        delete browser.$$window
+        delete browser.window
         delete browser.win
     }else if($B.isWebWorker){
         browser.is_webworker = true
         // In a web worker, name "window" is not defined, but name "self" is
-        delete browser.$$window
+        delete browser.window
         delete browser.win
         // browser.send is an alias for postMessage
         browser.self.send = self.postMessage
     } else {
         browser.is_webworker = false
         update(browser, {
-            $$alert:function(message){
+            "alert":function(message){
                 window.alert($B.builtins.str.$factory(message || ""))
             },
             confirm: $B.JSObj.$factory(window.confirm),
-            $$document:$B.DOMNode.$factory(document),
+            "document":$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
             DOMNode:$B.DOMNode,
@@ -367,7 +367,7 @@
     var super_class = $B.make_class("JavascriptSuper",
         function(){
             // Use Brython's super() to get a reference to self
-            var b_super = _b_.$$super.$factory(),
+            var b_super = _b_.super.$factory(),
                 b_self = b_super.__self_class__,
                 proto = Object.getPrototypeOf(b_self),
                 parent = proto.constructor.$parent
@@ -402,14 +402,14 @@
     $B.set_func_names(super_class, "javascript")
 
     modules['javascript'] = {
-        $$this: function(){
+        "this": function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
             if($B.js_this === undefined){return $B.builtins.None}
             return $B.JSObj.$factory($B.js_this)
         },
-        $$Date: self.Date && $B.JSObj.$factory(self.Date),
-        $$extends: function(js_constr){
+        "Date": self.Date && $B.JSObj.$factory(self.Date),
+        "extends": function(js_constr){
             return function(obj){
                 if(obj.$is_class){
                     var factory = function(){
@@ -460,9 +460,9 @@
             var content = $B.$getattr(file_obj, 'read')()
             eval(content)
         },
-        $$Math: self.Math && $B.JSObj.$factory(self.Math),
+        "Math": self.Math && $B.JSObj.$factory(self.Math),
         NULL: null,
-        $$Number: self.Number && $B.JSObj.$factory(self.Number),
+        "Number": self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
@@ -471,9 +471,9 @@
                 $B.builtins_scope).to_js()
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
-        $$RegExp: self.RegExp && $B.JSObj.$factory(self.RegExp),
-        $$String: self.String && $B.JSObj.$factory(self.String),
-        $$super: super_class,
+        "RegExp": self.RegExp && $B.JSObj.$factory(self.RegExp),
+        "String": self.String && $B.JSObj.$factory(self.String),
+        "super": super_class,
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedClass
     }
@@ -701,7 +701,7 @@
             var frame = $B.imported._sys.Getframe()
                 warning_message = {
                     __class__: WarningMessage,
-                    $$message: message,
+                    message: message,
                     category: message.__class__,
                     filename: message.filename || frame.f_code.co_filename,
                     lineno: message.lineno || frame.f_lineno,
@@ -829,7 +829,7 @@
         $B.cell[op] = (function(op){
             return function(self, other){
                 if(! _b_.isinstance(other, $B.cell)){
-                    return NotImplemented
+                    return _b_.NotImplemented
                 }
                 if(self.$cell_contents === null){
                     if(other.$cell_contents === null){

@@ -387,7 +387,7 @@ $B.JSObj.__getattribute__ = function(self, attr){
     if(test){
         console.log("__ga__", self, attr)
     }
-    if(attr == "$$new" && typeof self == "function"){
+    if(attr == "new" && typeof self == "function"){
         // constructor
         if(self.$js_func){
             return function(){

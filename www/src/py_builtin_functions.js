@@ -370,7 +370,7 @@ $B.$delete = function(name, is_global){
     function del(obj){
         if(obj.__class__ === $B.generator){
             // Force generator return (useful if yield was in a context manager)
-            obj.return()
+            obj.js_gen.return()
         }
     }
     var found = false,
@@ -1017,7 +1017,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__closure__" // && obj === $B // "Point"
+    var $test = false // attr == "sort" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1108,7 +1108,7 @@ $B.$getattr = function(obj, attr, _default){
                   "__dict__") // in py_dict.js
               return $B.mappingproxy.$factory(proxy) // in py_dict.js
           }else{
-              if(obj.hasOwnProperty(attr)){
+              if(obj[attr] !== undefined){
                   return obj[attr]
               }else if(obj.$infos){
                   if(obj.$infos.hasOwnProperty("__dict__")){
@@ -1247,16 +1247,18 @@ $B.$getattr = function(obj, attr, _default){
         if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
             // Special case for list subclasses. Cf issue 1081.
             res = undefined
-        }
-        if(res === null){
+        }else if(res === null){
             return null
-        }else if(res === undefined && obj.hasOwnProperty(attr)){
-            return res
+        }else if(res === undefined && obj[attr] !== undefined){
+            console.log('cas 1')
+            if(_default === undefined){
+                throw _b_.AttributeError.$factory(attr)
+            }
+            return _default
         }else if(res !== undefined){
             if($test){console.log(obj, attr, obj[attr],
                 res.__set__ || res.$is_class)}
             // Cf. issue 1081
-            //var in_proto = Object.getPrototypeOf(obj)[attr]
             if(res.__set__ === undefined || res.$is_class){
                 if($test){console.log("return", res, res+'',
                     res.__set__, res.$is_class)}
@@ -1742,7 +1744,7 @@ function $extreme(args, op){ // used by min() and max()
                 case 'key':
                     func = last_arg[attr]
                     break
-                case '$$default': // Brython changes "default" to "$$default"
+                case 'default':
                     var default_value = last_arg[attr]
                     has_default = true
                     break
@@ -2469,7 +2471,7 @@ function sum(iterable, start){
         start = $.start
 
     if(_b_.isinstance(start, [_b_.str, _b_.bytes])){
-        throw _b_.TypeError.$factory("TypeError: sum() can't sum bytes" +
+        throw _b_.TypeError.$factory("sum() can't sum bytes" +
             " [use b''.join(seq) instead]")
     }
 
@@ -2871,7 +2873,7 @@ var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
               null, null)
         return {
             __class__: $TextIOWrapper,
-            $bytes: $.buffer.$bytes,
+            $content: _b_.bytes.decode($.buffer.$content, $.encoding),
             encoding: $.encoding,
             errors: $.errors,
             newline: $.newline
@@ -2907,7 +2909,7 @@ function $url_open(){
         if($B.file_cache.hasOwnProperty($.file)){
             result.content = $B.file_cache[$.file] // string
             if(is_binary){
-                result.content = _b_.str.encode(content, 'utf-8')
+                result.content = _b_.str.encode(result.content, 'utf-8')
             }
         }else if($B.files && $B.files.hasOwnProperty($.file)){
             // Virtual file system created by
@@ -2982,7 +2984,6 @@ function $url_open(){
             name: file
         }
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
-
         return res
     }else{
         throw _b_.TypeError.$factory("invalid argument for open(): " +
@@ -3345,8 +3346,8 @@ for(var i = 0; i < builtin_names.length; i++){
         orig_name = name,
         name1 = name
     if(name == 'open'){name1 = '$url_open'}
-    if(name == 'super'){name = name1 = '$$super'}
-    if(name == 'eval'){name = name1 = '$$eval'}
+    if(name == 'super'){name1 = '$$super'}
+    if(name == 'eval'){name1 = '$$eval'}
     if(name == 'print'){name1 = '$print'}
     try{
         _b_[name] = eval(name1)
@@ -3369,7 +3370,7 @@ for(var i = 0; i < builtin_names.length; i++){
 
 _b_['open'] = $url_open
 _b_['print'] = $print
-_b_['$$super'] = $$super
+_b_['super'] = $$super
 
 _b_.object.__init__.__class__ = wrapper_descriptor
 _b_.object.__new__.__class__ = builtin_function

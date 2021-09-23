@@ -1,7 +1,6 @@
 ;(function($B){
 
-var bltns = $B.InjectBuiltins()
-eval(bltns)
+var _b_ = $B.builtins
 
 $B.del_exc = function(){
     var frame = $B.last($B.frames_stack)
@@ -29,14 +28,14 @@ $B.$raise = function(arg){
         var es = $B.get_exc()
         if(es !== undefined){throw es}
         throw _b_.RuntimeError.$factory("No active exception to reraise")
-    }else if(isinstance(arg, BaseException)){
+    }else if(_b_.isinstance(arg, BaseException)){
         if(arg.__class__ === _b_.StopIteration &&
                 $B.last($B.frames_stack)[1].$is_generator){
             // PEP 479
             arg = _b_.RuntimeError.$factory("generator raised StopIteration")
         }
         throw arg
-    }else if(arg.$is_class && issubclass(arg, BaseException)){
+    }else if(arg.$is_class && _b_.issubclass(arg, BaseException)){
         if(arg === _b_.StopIteration){
             if($B.last($B.frames_stack)[1].$is_generator){
                 // PEP 479
@@ -223,7 +222,7 @@ traceback.__getattribute__ = function(self, attr){
                 }
             }
         case "tb_next":
-            if(self.$stack.length <= 1){return None}
+            if(self.$stack.length <= 1){return _b_.None}
             else{
                 return traceback.$factory(self.exc,
                     self.$stack.slice(1))
@@ -401,10 +400,10 @@ BaseException.__init__ = function(self){
 BaseException.__repr__ = function(self){
     var res =  self.__class__.$infos.__name__
     if(self.args[0] !== undefined){
-        res += '(' + repr(self.args[0])
+        res += '(' + _b_.repr(self.args[0])
     }
     if(self.args.length > 1){
-        res += ', ' + repr($B.fast_tuple(self.args.slice(1)))
+        res += ', ' + _b_.repr($B.fast_tuple(self.args.slice(1)))
     }
     return res + ')'
 }
@@ -660,7 +659,7 @@ $B.is_exc = function(exc, exc_list){
     for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]
         if(this_exc_class === undefined){console.log("exc class undefined", exc)}
-        if(issubclass(this_exc_class, exc_class)){return true}
+        if(_b_.issubclass(this_exc_class, exc_class)){return true}
     }
     return false
 }

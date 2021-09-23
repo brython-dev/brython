@@ -258,7 +258,7 @@ Attributes.get = function(){
     }
 }
 
-Attributes.$$keys = function(){
+Attributes.keys = function(){
     return Attributes.__iter__.apply(null, arguments)
 }
 
@@ -427,7 +427,7 @@ function $EventsList(elt, evt, arg){
     // removes the event listener
     this.elt = elt
     this.evt = evt
-    if(isintance(arg, list)){this.callbacks = arg}
+    if(_b_.isinstance(arg, _b_.list)){this.callbacks = arg}
     else{this.callbacks = [arg]}
     this.remove = function(callback){
         var found = false
@@ -481,7 +481,7 @@ OpenFile.__setattr__ = function(self, attr, value) {
     }else if(attr in obj){
         obj[attr] = value
     }else{
-        setattr(obj, attr, value)
+        _b_.setattr(obj, attr, value)
     }
 }
 
@@ -771,7 +771,7 @@ DOMNode.__getattribute__ = function(self, attr){
               return res
           }
           break
-        case "$$location":
+        case "location":
             attr = "location"
             break
     }

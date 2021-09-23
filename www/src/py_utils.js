@@ -324,7 +324,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
 
     js += '\nreturn ' + res + '\n'
 
-    js = "(function(expr){" + js + "})(" + outer_expr + ")"
+    js = "(function(_expr){" + js + "})(" + outer_expr + ")"
     $B.clear_ns(dictcomp_name)
     delete $B.$py_src[dictcomp_name]
 
@@ -1432,7 +1432,7 @@ function exit_ctx_managers_in_generators(frame){
             // Force generator termination, which executes the "finally" block
             // associated with the context manager
             var gen_obj = frame[1][key]
-            gen_obj.return()
+            gen_obj.js_gen.return()
         }
     }
 }
@@ -1656,8 +1656,8 @@ $B.rich_comp = function(op, x, y){
     if(x === undefined){
         throw _b_.RuntimeError.$factory('error in rich comp')
     }
-    var x1 = x.valueOf(),
-        y1 = y.valueOf()
+    var x1 = x.valueOf ? x.valueOf() : x,
+        y1 = y.valueOf ? y.valueOf() : y()
     if(typeof x1 == "number" && typeof y1 == "number" &&
             x.__class__ === undefined && y.__class__ === undefined){
         switch(op){

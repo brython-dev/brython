@@ -184,7 +184,7 @@ int.__eq__ = function(self, other){
         return self.valueOf() == other.valueOf()
     }
     if(_b_.isinstance(other, _b_.complex)){
-        if(other.$imag != 0){return False}
+        if(other.$imag != 0){return _b_.False}
         return self.valueOf() == other.$real
     }
     return _b_.NotImplemented

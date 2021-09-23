@@ -2,10 +2,6 @@ var $module=(function($B){
 
 var _b_ = $B.builtins
 
-var $s = []
-for(var $b in _b_){$s.push('var ' + $b +' = _b_["'+$b+'"]')}
-eval($s.join(';'))
-
 var $mod = {
 
     __getattr__ : function(attr){
