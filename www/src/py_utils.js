@@ -1345,8 +1345,13 @@ $B.enter_frame = function(frame){
                     return _b_.None
                 }
             }
-            return $B.tracefunc($B._frame.$factory($B.frames_stack,
-                $B.frames_stack.length - 1), 'call', _b_.None)
+            try{
+                return $B.tracefunc($B._frame.$factory($B.frames_stack,
+                    $B.frames_stack.length - 1), 'call', _b_.None)
+            }catch(err){
+                err.$in_trace_func = true
+                throw err
+            }
         }
     }
     return _b_.None
@@ -1483,7 +1488,7 @@ $B.is_safe_int = function(){
 }
 
 $B.add = function(x, y){
-    if(x.valueOf && typeof x.valueOf() == "number" && 
+    if(x.valueOf && typeof x.valueOf() == "number" &&
             y.valueOf && typeof y.valueOf() == "number"){
         if(typeof x == "number" && typeof y == "number"){
             // ints

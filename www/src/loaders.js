@@ -411,6 +411,10 @@ $B.has_indexedDB = self.indexedDB !== undefined
 
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
+    if(err.$handled){
+        return
+    }
+    err.$handled = true
     if($B.debug > 1){
         console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
     }

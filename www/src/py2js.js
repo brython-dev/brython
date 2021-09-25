@@ -4006,7 +4006,7 @@ $DefCtx.prototype.transform = function(node, rank){
 
     var except_node = $NodeJS('catch(err)')
     except_node.add($NodeJS('$B.set_exc(err)'))
-    except_node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
+    except_node.add($NodeJS('if((! err.$in_trace_func) && $locals.$f_trace !== _b_.None){' +
         '$locals.$f_trace = $B.trace_exception()}'))
     except_node.add($NodeJS('$B.leave_frame({$locals});throw err'))
 
