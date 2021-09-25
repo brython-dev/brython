@@ -401,9 +401,6 @@ $B.JSObj.__getattribute__ = function(self, attr){
             }
         }
     }
-    if(typeof attr == "string"){
-        attr = $B.from_alias(attr)
-    }
     var js_attr = self[attr]
     if(js_attr == undefined && typeof self == "function" && self.$js_func){
         js_attr = self.$js_func[attr]
@@ -474,9 +471,6 @@ $B.JSObj.__getattribute__ = function(self, attr){
 }
 
 $B.JSObj.__setattr__ = function(self, attr, value){
-    if(typeof attr == "string"){
-        attr = $B.from_alias(attr)
-    }
     self[attr] = $B.pyobj2structuredclone(value)
     return _b_.None
 }

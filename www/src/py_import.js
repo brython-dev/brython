@@ -132,8 +132,8 @@ function run_js(module_contents, path, _module){
         if(typeof $module[attr] == "function"){
             $module[attr].$infos = {
                 __module__: _module.__name__,
-                __name__: $B.from_alias(attr),
-                __qualname__: $B.from_alias(attr)
+                __name__: attr,
+                __qualname__: attr
             }
             $module[attr].$in_js_module = true
         }
@@ -1163,7 +1163,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
             }
         }else{
             prefix = false;
-            norm_parts.push(p.substr(0,2) == "$$" ? p.substr(2) : p)
+            norm_parts.push(p)
         }
     }
     var mod_name = norm_parts.join(".")
@@ -1197,7 +1197,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         if(alias){
             locals[alias] = $B.imported[mod_name]
         }else{
-            locals[$B.to_alias(norm_parts[0])] = modobj
+            locals[norm_parts[0]] = modobj
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
     }else{
@@ -1231,11 +1231,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
-                        var name1 = $B.from_alias(name)
-                        $B.$getattr(__import__, '__call__')(mod_name + '.' + name1,
+                        $B.$getattr(__import__, '__call__')(mod_name + '.' + name,
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
-                        locals[alias] = $B.$getattr(modobj, name1)
+                        locals[alias] = $B.$getattr(modobj, name)
                     }catch($err3){
                         // [Import spec] Attribute not found
                         if(mod_name === "__future__"){
@@ -1268,9 +1267,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
 $B.import_all = function(locals, module){
     // Used for "from module import *"
     for(var attr in module){
-        if(attr.startsWith("$$")){
-            locals[attr] = module[attr]
-        }else if('_$'.indexOf(attr.charAt(0)) == -1){
+        if('_$'.indexOf(attr.charAt(0)) == -1){
             locals[attr] = module[attr]
         }
     }

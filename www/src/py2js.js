@@ -1664,7 +1664,7 @@ $AttrCtx.prototype.to_js = function(){
                     return [js + ".__class__ && " + js + ".__dict__ && !" +
                         js + ".__class__.$has_setattr && ! " + js +
                         ".$is_class ? _b_.dict.$setitem(" + js +
-                        ".__dict__, '" + $B.from_alias(this.name) +
+                        ".__dict__, '" + this.name +
                         "', ", ") : $B.$setattr(" + js +
                         ', "' + this.name + '", ']
                 }
@@ -3850,17 +3850,17 @@ $DefCtx.prototype.transform = function(node, rank){
 
         // Add attribute __name__
         var __name__ = this.name
-        if(this.name.substr(0, 2) == "$$"){__name__ = __name__.substr(2)}
         if(__name__.substr(0, 15) == 'lambda_' + $B.lambda_magic){
             __name__ = "<lambda>"
         }
-        js = '    __name__:"' + $B.from_alias(__name__) + '",'
+        js = '    __name__:"' + __name__ + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
 
         // Add attribute __qualname__
         var __qualname__ = __name__
-        if(this.class_name){__qualname__ = this.class_name + '.' +
-            $B.from_alias(__name__)}
+        if(this.class_name){
+            __qualname__ = this.class_name + '.' + __name__
+        }
         js = '    __qualname__:"' + __qualname__ + '",'
         node.parent.insert(rank + offset++, $NodeJS(js))
 
@@ -3920,7 +3920,7 @@ $DefCtx.prototype.transform = function(node, rank){
         }
         var co_varnames = []
         for(var attr in this.varnames){
-            co_varnames.push('"' + $B.from_alias(attr) + '"')
+            co_varnames.push('"' + attr + '"')
         }
 
         // CODE_MARKER is a placeholder which will be replaced
@@ -5801,7 +5801,6 @@ $FromCtx.prototype.to_js = function(){
                 $package = $B.imported[$package]
                 packages.pop()
             }
-            console.log('$package', $package)
             if($package === undefined){
                 return 'throw _b_.SystemError.$factory("Parent module \'\' ' +
                     'not loaded, cannot perform relative import")'
@@ -6347,7 +6346,7 @@ $IdCtx.prototype.ast = function(){
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
         return new ast.Constant(this.value)
     }
-    return new ast.Name($B.from_alias(this.value))
+    return new ast.Name(this.value)
 }
 
 $IdCtx.prototype.toString = function(){
@@ -7304,7 +7303,6 @@ $KwArgCtx.prototype.transition = function(token, value){
 $KwArgCtx.prototype.to_js = function(){
     this.js_processed = true
     var key = this.tree[0].value
-    if(key.substr(0,2) == '$$'){key = key.substr(2)}
     var res = '{$nat:"kw",name:"' + key + '",'
     return res + 'value:' +
         $to_js(this.tree.slice(1, this.tree.length)) + '}'
@@ -8736,7 +8734,7 @@ $OpCtx.prototype.to_js = function(){
                         tests1 = [], pos = 0
                     for(var _var of vars){
                         // Test if all variables are numbers
-                        tests.push('typeof ' + _var +
+                        tests.push(_var + '.valueOf && typeof ' + _var +
                             '.valueOf() == "number"')
                         // Test if all variables are integers
                         tests1.push('typeof ' + _var + ' == "number"')
@@ -8753,7 +8751,7 @@ $OpCtx.prototype.to_js = function(){
 
                     // Close integers test
                     res.push(')')
-                   // If at least one variable is not a number
+                    // If at least one variable is not a number
 
                     // For addition, test if both arguments are strings
                     var t0 = this.tree[0].to_js(),
@@ -11629,16 +11627,8 @@ var $transition = $B.parser.$transition = function(context, token, value){
     return context.transition(token, value)
 }
 
-// Names that can't be given to variable names or attributes
-$B.forbidden = ["alert", "arguments", "case", "catch", "const", "constructor",
-    "Date", "debugger", "delete", "default", "do", "document", "enum",
-    "export", "eval", "extends", "Error", "history", "function", "instanceof",
-    "keys", "length", "location", "Math", "message","new", "null", "Number",
-    "RegExp", "String", "super", "switch", "this", "throw", "typeof", "var",
-    "window", "toLocaleString", "toString", "void"]
-    //enum, export, extends, import, and super
 $B.forbidden = []
-$B.aliased_names = $B.list2obj($B.forbidden)
+$B.aliased_names = Object.create(null)
 
 var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',
     is_escaped = {}
@@ -12367,7 +12357,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                     // Literal operators : "and", "or", "is"
                     context = $transition(context, 'op', name)
                 }else{
-                    if($B.forbidden.indexOf(name) > -1){name = '$$' + name}
                     context = $transition(context, 'id', name)
                 }
                 continue

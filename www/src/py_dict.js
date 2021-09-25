@@ -280,10 +280,7 @@ dict.__contains__ = function(){
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
-    if(self.$is_namespace){ // issue 1244
-        key = $B.to_alias(key)
-    }
-
+    
     if(self.$jsobj){
         return self.$jsobj[key] !== undefined
     }

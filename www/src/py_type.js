@@ -5,7 +5,6 @@ var _b_ = $B.builtins
 // generic code for class constructor
 $B.$class_constructor = function(class_name, class_obj, bases,
         parents_names, kwargs){
-
     bases = bases || []
     var metaclass
 
@@ -131,7 +130,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                     class_obj[attr].$string_dict[key][0])
             }
         }else{
-            if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+            if(attr.charAt(0) != "$"){
                 set_class_item(attr, class_obj[attr])
             }
         }
@@ -226,7 +225,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     kls.__module__ = module
     kls.$infos = {
         __module__: module,
-        __name__: $B.from_alias(class_name),
+        __name__: class_name,
         __qualname__: class_obj.$qualname
     }
     kls.$subclasses = []
@@ -240,7 +239,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // py_builtin_functions / Function.__setattr__ to reset the function
     // if the attribute __defaults__ is reset.
     for(var attr in class_obj){
-        if(attr.charAt(0) != "$" || attr.substr(0,2) == "$$"){
+        if(attr.charAt(0) != "$"){
             if(typeof class_obj[attr] == "function"){
                 class_obj[attr].$infos.$class = kls
             }
@@ -266,7 +265,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         kls.$factory = nofactory
     }
 
-    kls.__qualname__ = class_name.replace("$$", "")
+    kls.__qualname__ = class_name
 
     return kls
 }
@@ -588,7 +587,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         __bases__ : bases,
         __dict__ : cl_dict,
         $infos:{
-            __name__: name.replace("$$", ""),
+            __name__: name,
             __module__: module
         },
         $is_class: true,
@@ -600,7 +599,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // set class attributes for faster lookups
     var items = $B.dict_to_list(cl_dict) // defined in py_dict.js
     for(var i = 0; i < items.length; i++){
-        var key = $B.to_alias(items[i][0]),
+        var key = items[i][0],
             v = items[i][1]
         if(key === "__module__"){continue} // already set
         if(v === undefined){continue}
@@ -797,6 +796,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
     if(klass.prototype && klass.prototype.constructor == klass){
         // JS constructor
+        console.log(801)
         return function(){
             return new klass(...arguments)
         }
@@ -845,7 +845,10 @@ var $instance_creator = $B.$instance_creator = function(klass){
                         throw _b_.TypeError.$factory("object() takes no parameters")
                     }
                 }
-                return {__class__: klass, __dict__: $B.empty_dict()}
+                var res = Object.create(null)
+                $B.update_obj(res,
+                    {__class__: klass, __dict__: $B.empty_dict()})
+                return res
             }
         }
     }else{

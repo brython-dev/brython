@@ -29,7 +29,6 @@ function set_timeout(self, timeout){
 }
 
 function _read(req){
-    console.log('read from request', req)
     var xhr = req.js
     if(xhr.responseType == "json"){
         return $B.structuredclone2pyobj(xhr.response)
@@ -201,7 +200,6 @@ var ajax = {
             method = $.method,
             url = $.url,
             async = $.async
-        console.log(method, url, async)
         if(typeof method !== "string"){
             throw _b_.TypeError.$factory(
                 'open() argument method should be string, got ' +

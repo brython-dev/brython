@@ -615,7 +615,6 @@ $B.exception = function(js_exc, in_ctx_manager){
         }else if(js_exc.name == "ReferenceError"){
             exc.__name__ = "NameError"
             exc.__class__ = _b_.NameError
-            js_exc.message = js_exc.message.replace("$$", "")
         }else if(js_exc.name == "InternalError"){
             exc.__name__ = "RuntimeError"
             exc.__class__ = _b_.RuntimeError

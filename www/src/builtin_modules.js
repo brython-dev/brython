@@ -1,6 +1,6 @@
  ;(function($B) {
      var _b_ = $B.builtins
-    var update = function(mod, data) {
+    var update = $B.update_obj = function(mod, data) {
         for(attr in data) {
             mod[attr] = data[attr]
         }
@@ -380,7 +380,7 @@
                     res = p(...arguments)
                 }
                 for(key in res){
-                    b_self[$B.to_alias(key)] = res[key]
+                    b_self[key] = res[key]
                 }
                 return res
             }
@@ -736,11 +736,10 @@
         // set attribute "name" of functions
         for(var attr in module_obj){
             if(typeof module_obj[attr] == 'function'){
-                var attr1 = $B.from_alias(attr)
                 module_obj[attr].$infos = {
                     __module__: name,
-                    __name__: attr1,
-                    __qualname__: name + '.' + attr1
+                    __name__: attr,
+                    __qualname__: name + '.' + attr
                 }
             }
         }

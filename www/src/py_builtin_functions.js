@@ -483,17 +483,6 @@ enumerate.__next__ = function(self){
 
 $B.set_func_names(enumerate, "builtins")
 
-$B.from_alias = function(attr){
-    if(attr.substr(0, 2) == '$$' && $B.aliased_names[attr.substr(2)]){
-        return attr.substr(2)
-    }
-    return attr
-}
-$B.to_alias = function(attr){
-    if($B.aliased_names[attr]){return '$$' + attr}
-    return attr
-}
-
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
     var $ = $B.args("eval", 4,
@@ -598,10 +587,10 @@ function $$eval(src, _globals, _locals){
                 binding: {}
             }
             for(var attr in _globals.$string_dict){
-                grandparent_scope.binding[$B.to_alias(attr)] = true
+                grandparent_scope.binding[attr] = true
             }
             for(var attr in _locals.$string_dict){
-                parent_scope.binding[$B.to_alias(attr)] = true
+                parent_scope.binding[attr] = true
             }
         }
     }
@@ -619,7 +608,7 @@ function $$eval(src, _globals, _locals){
             obj = {}
         eval(ex) // needed for generators
         for(var attr in gobj){
-            if(attr.startsWith("$") && !attr.startsWith("$$")){continue}
+            if(attr.startsWith("$")){continue}
             obj[attr] = gobj[attr]
         }
         eval("$locals_" + globals_id +" = obj")
@@ -634,9 +623,8 @@ function $$eval(src, _globals, _locals){
         }
         eval("$locals_" + globals_id + " = _globals.$jsobj")
         for(var item in items){
-            var item1 = $B.to_alias(item)
             try{
-                eval('$locals_' + globals_id + '["' + item1 + '"] = items.' + item)
+                eval('$locals_' + globals_id + '["' + item + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -656,7 +644,7 @@ function $$eval(src, _globals, _locals){
                 ex = '',
                 obj = {}
             for(var attr in current_frame[1]){
-                if(attr.startsWith("$") && !attr.startsWith("$$")){continue}
+                if(attr.startsWith("$")){continue}
                 obj[attr] = lobj[attr]
             }
             eval('$locals_' + locals_id + " = obj")
@@ -672,9 +660,8 @@ function $$eval(src, _globals, _locals){
             _locals.$jsobj = items
         }
         for(var item in items){
-            var item1 = $B.to_alias(item)
             try{
-                eval('$locals_' + locals_id + '["' + item1 + '"] = items.' + item)
+                eval('$locals_' + locals_id + '["' + item + '"] = items.' + item)
             }catch(err){
                 console.log(err)
                 console.log('error setting', item)
@@ -804,14 +791,13 @@ function $$eval(src, _globals, _locals){
         if(_locals !== _b_.None){
             lns = eval("$locals_" + locals_id)
             for(var attr in lns){
-                var attr1 = $B.from_alias(attr)
-                if(attr1.charAt(0) != '$'){
+                if(attr.charAt(0) != '$'){
                     if(_locals.$jsobj){
                         _locals.$jsobj[attr] = lns[attr]
                     }else if(_locals.__class__ !== _b_.dict){
-                        $B.$setitem(_locals, attr1, lns[attr])
+                        $B.$setitem(_locals, attr, lns[attr])
                     }else{
-                        _b_.dict.$setitem(_locals, attr1, lns[attr])
+                        _b_.dict.$setitem(_locals, attr, lns[attr])
                     }
                 }
             }
@@ -830,18 +816,17 @@ function $$eval(src, _globals, _locals){
                 delete _globals.$jsobj
             }
             for(var attr in gns){
-                attr1 = $B.from_alias(attr)
-                if(attr1.charAt(0) != '$'){
+                if(attr.charAt(0) != '$'){
                     if(globals_is_dict){
                         _b_.dict.$setitem(_globals, attr, gns[attr])
                     }else{
-                        _globals.$jsobj[attr1] = gns[attr]
+                        _globals.$jsobj[attr] = gns[attr]
                     }
                 }
             }
             // Remove attributes starting with $
             for(var attr in _globals.$string_dict){
-                if(attr.startsWith("$") && !attr.startsWith("$$")){
+                if(attr.startsWith("$")){
                     delete _globals.$string_dict[attr]
                 }
             }
@@ -992,8 +977,6 @@ function in_mro(klass, attr){
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
 
-    attr = $B.to_alias(attr)
-
     if(obj.$method_cache &&
             obj.$method_cache[attr] &&
             obj.__class__ &&
@@ -1017,19 +1000,20 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "sort" // && obj === $B // "Point"
+    var $test = false // attr == "pop" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
-    if(klass !== undefined && klass.__bases__ &&
+    if(klass !== undefined && (! klass.$native) && klass.__bases__ &&
             klass.__getattribute__ === undefined &&
             (klass.__bases__.length == 0 ||
                 (klass.__bases__.length == 1 &&
                  klass.__bases__[0] === _b_.object))){
         if($test){
-            console.log("class without parent")
+            console.log("class without parent", klass)
+            console.log('obj[attr]', obj[attr])
         }
-        if(obj.hasOwnProperty(attr)){
+        if(obj[attr] !== undefined){
             return obj[attr]
         }else if(obj.__dict__ &&
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
@@ -1099,9 +1083,8 @@ $B.$getattr = function(obj, attr, _default){
           if(is_class){
               var proxy = {}
               for(var key in obj){
-                  var key1 = $B.from_alias(key)
-                  if(! key1.startsWith("$")){
-                      proxy[key1] = obj[key]
+                  if(! key.startsWith("$")){
+                      proxy[key] = obj[key]
                   }
               }
               proxy.__dict__ = $B.getset_descriptor.$factory(obj,
@@ -2234,10 +2217,7 @@ $B.$setattr = function(obj, attr, value){
     // Used in the code generated by py2js. Avoids having to parse the
     // since we know we will get the 3 values
     var $test = false // attr === "__module__" // && value == "my doc."
-    var unaliased = $B.from_alias(attr)
-    if($B.aliased_names[attr]){
-        attr = '$$' + attr
-    }else if(attr == '__dict__'){
+    if(attr == '__dict__'){
         // set attribute __dict__
         // remove previous attributes
         if(! isinstance(value, _b_.dict)){
@@ -2401,12 +2381,12 @@ $B.$setattr = function(obj, attr, value){
             return []
         }
         var has_slot = false
-        if(mangled_slots(klass).indexOf(unaliased) > -1){
+        if(mangled_slots(klass).indexOf(attr) > -1){
             has_slot = true
         }else{
             for(var i = 0; i < klass.__mro__.length; i++){
                 var kl = klass.__mro__[i]
-                if(mangled_slots(kl).indexOf(unaliased) > - 1){
+                if(mangled_slots(kl).indexOf(attr) > - 1){
                     has_slot = true
                     break
                 }
@@ -2414,7 +2394,7 @@ $B.$setattr = function(obj, attr, value){
         }
         if(! has_slot){
             throw _b_.AttributeError.$factory("'"  + klass.$infos.__name__ +
-            "' object has no attribute '" + unaliased + "'")
+            "' object has no attribute '" + attr + "'")
         }
     }
     if($test){console.log("attr", attr, "use _setattr", _setattr)}
@@ -2422,7 +2402,7 @@ $B.$setattr = function(obj, attr, value){
         if(obj.__dict__ === undefined){
             obj[attr] = value
         }else{
-            _b_.dict.$setitem(obj.__dict__, unaliased, value)
+            _b_.dict.$setitem(obj.__dict__, attr, value)
         }
         if($test){
             console.log("no setattr, obj", obj)

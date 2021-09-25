@@ -110,9 +110,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-23 22:33:32.995700"
-__BRYTHON__.timestamp=1632429212995
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
+__BRYTHON__.compiled_date="2021-09-25 08:36:18.915378"
+__BRYTHON__.timestamp=1632551778915
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -1153,7 +1153,7 @@ this.assign_self=true
 return[js+".__class__ && "+js+".__dict__ && !"+
 js+".__class__.$has_setattr && ! "+js+
 ".$is_class ? _b_.dict.$setitem("+js+
-".__dict__, '"+$B.from_alias(this.name)+
+".__dict__, '"+this.name+
 "', ",") : $B.$setattr("+js+
 ', "'+this.name+'", ']}}}}
 if(this.func=='setattr'){
@@ -2186,13 +2186,11 @@ node.parent.insert(rank+offset++,$NodeJS(name+'.$is_func = true'))
 if(this.$has_yield_in_cm){node.parent.insert(rank+offset++,$NodeJS(name+'.$has_yield_in_cm = true'))}
 node.parent.insert(rank+offset++,$NodeJS(name+'.$infos = {'))
 var __name__=this.name
-if(this.name.substr(0,2)=="$$"){__name__=__name__.substr(2)}
 if(__name__.substr(0,15)=='lambda_'+$B.lambda_magic){__name__="<lambda>"}
-js='    __name__:"'+$B.from_alias(__name__)+'",'
+js='    __name__:"'+__name__+'",'
 node.parent.insert(rank+offset++,$NodeJS(js))
 var __qualname__=__name__
-if(this.class_name){__qualname__=this.class_name+'.'+
-$B.from_alias(__name__)}
+if(this.class_name){__qualname__=this.class_name+'.'+__name__}
 js='    __qualname__:"'+__qualname__+'",'
 node.parent.insert(rank+offset++,$NodeJS(js))
 if(this.otherdefaults.length > 0){var def_names=[]
@@ -2214,7 +2212,7 @@ for(var attr in this.parent.node.binding){
 if(attr=="__class__" && is_method && ! had_class){continue}
 this.varnames[attr]=true}
 var co_varnames=[]
-for(var attr in this.varnames){co_varnames.push('"'+$B.from_alias(attr)+'"')}
+for(var attr in this.varnames){co_varnames.push('"'+attr+'"')}
 var CODE_MARKER='___%%%-CODE-%%%___'+this.name+this.num;
 var h='\n'+' '.repeat(indent+8)
 js='    __code__:{'+h+'    co_argcount:'+this.argcount
@@ -3152,7 +3150,6 @@ var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
 packages=$package.split('.')}}else{$package=$B.imported[$package]
 packages.pop()}
-console.log('$package',$package)
 if($package===undefined){return 'throw _b_.SystemError.$factory("Parent module \'\' '+
 'not loaded, cannot perform relative import")'}else if($package==='None'){console.log('package is None !')}
 _mod=_mod.substr(1)}else{break}}
@@ -3400,7 +3397,7 @@ break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
 $IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return new ast.Constant(this.value)}
-return new ast.Name($B.from_alias(this.value))}
+return new ast.Name(this.value)}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='$$case' && C.parent.parent.type=="node"){
@@ -3753,7 +3750,6 @@ if(token==','){return new $CallArgCtx(C.parent.parent)}
 return $transition(C.parent,token)}
 $KwArgCtx.prototype.to_js=function(){this.js_processed=true
 var key=this.tree[0].value
-if(key.substr(0,2)=='$$'){key=key.substr(2)}
 var res='{$nat:"kw",name:"'+key+'",'
 return res+'value:'+
 $to_js(this.tree.slice(1,this.tree.length))+'}'}
@@ -4522,7 +4518,7 @@ return '$B.mul('+v0.to_js()+','+
 v1.to_js()+')'}}
 var tests=[],tests1=[],pos=0
 for(var _var of vars){
-tests.push('typeof '+_var+
+tests.push(_var+'.valueOf && typeof '+_var+
 '.valueOf() == "number"')
 tests1.push('typeof '+_var+' == "number"')}
 var res=[tests.join(' && ')+' ? ']
@@ -5874,9 +5870,8 @@ $B.nb_debug_lines=0
 var $transition=$B.parser.$transition=function(C,token,value){if($B.nb_debug_lines > 100){alert('too many debug lines')
 $B.nb_debug_lines=0}
 return C.transition(token,value)}
-$B.forbidden=["alert","arguments","case","catch","const","constructor","Date","debugger","delete","default","do","document","enum","export","eval","extends","Error","history","function","instanceof","keys","length","location","Math","message","new","null","Number","RegExp","String","super","switch","this","throw","typeof","var","window","toLocaleString","toString","void"]
 $B.forbidden=[]
-$B.aliased_names=$B.list2obj($B.forbidden)
+$B.aliased_names=Object.create(null)
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function SurrogatePair(value){
@@ -6151,8 +6146,7 @@ switch(token[0]){case 'NAME':
 var name=token[1]
 if(kwdict.indexOf(name)>-1){if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
 C=$transition(C,name)}else if(name=='not'){C=$transition(C,'not')}else if(typeof $operators[name]=='string'){
-C=$transition(C,'op',name)}else{if($B.forbidden.indexOf(name)>-1){name='$$'+name}
-C=$transition(C,'id',name)}
+C=$transition(C,'op',name)}else{C=$transition(C,'id',name)}
 continue
 case 'OP':
 var op=token[1]
@@ -6573,8 +6567,7 @@ var object={
 $infos:{__name__:"object"},$is_class:true,$native:true}
 var opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
 var opsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
-object.__delattr__=function(self,attr){attr=$B.from_alias(attr)
-if(self.__dict__ && self.__dict__.$string_dict &&
+object.__delattr__=function(self,attr){if(self.__dict__ && self.__dict__.$string_dict &&
 self.__dict__.$string_dict[attr]!==undefined){delete self.__dict__.$string_dict[attr]
 return _b_.None}else if(self.__dict__===undefined && self[attr]!==undefined){delete self[attr]
 return _b_.None}else{
@@ -6594,8 +6587,7 @@ if(! isNaN(parseInt(attr.charAt(0)))){
 continue}
 if(attr=="__mro__"){continue}
 res.push(attr)}}
-if(self.__dict__){for(var attr in self.__dict__.$string_dict){if(attr.substr(0,2)=="$$"){res.push(attr.substr(2))}
-else if(attr.charAt(0)!="$"){res.push(attr)}}}
+if(self.__dict__){for(var attr in self.__dict__.$string_dict){if(attr.charAt(0)!="$"){res.push(attr)}}}
 res=_b_.list.$factory(_b_.set.$factory(res))
 _b_.list.sort(res)
 return res}
@@ -6614,9 +6606,9 @@ if(attr==="__class__"){return klass}
 var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
-if(res===undefined && obj.__dict__){var dict=obj.__dict__,attr1=$B.from_alias(attr)
-if(dict.$string_dict.hasOwnProperty(attr1)){if($test){console.log("__dict__ hasOwnProperty",attr1,dict.$string_dict[attr1])}
-return dict.$string_dict[attr1][0]}}
+if(res===undefined && obj.__dict__){var dict=obj.__dict__
+if(dict.$string_dict.hasOwnProperty(attr)){if($test){console.log("__dict__ hasOwnProperty",attr,dict.$string_dict[attr])}
+return dict.$string_dict[attr][0]}}
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
 if(v !==undefined){return v}}
@@ -6698,8 +6690,9 @@ object.__mro__=[]
 object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
 var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
-return{
-__class__ :cls,__dict__:$B.empty_dict()}}
+var res=Object.create(null)
+$B.update_obj(res,{__class__ :cls,__dict__:$B.empty_dict()})
+return res}
 object.__ne__=function(self,other){
 if(self===other){return false}
 var eq=$B.$getattr(self,"__eq__",null)
@@ -6746,7 +6739,6 @@ throw _b_.TypeError.$factory(
 if(object[attr]===undefined){throw _b_.AttributeError.$factory(
 "'object' object has no attribute '"+attr+"'")}else{throw _b_.AttributeError.$factory(
 "'object' object attribute '"+attr+"' is read-only")}}
-if($B.aliased_names[attr]){attr="$$"+attr}
 if(self.__dict__){_b_.dict.$setitem(self.__dict__,attr,val)}else{
 self[attr]=val}
 return _b_.None}
@@ -6817,7 +6809,7 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=$B.$call(prepare)(class_name,bases)
 if(cl_dict.__class__ !==_b_.dict){var set_class_item=$B.$getattr(cl_dict,"__setitem__")}else{var set_class_item=function(attr,value){cl_dict.$string_dict[attr]=[value,cl_dict.$order++]}}
 for(var attr in class_obj){if(attr=="__annotations__"){if(cl_dict.$string_dict[attr]===undefined){cl_dict.$string_dict[attr]=[$B.empty_dict(),cl_dict.$order++]}
-for(var key in class_obj[attr].$string_dict){$B.$setitem(cl_dict.$string_dict[attr][0],key,class_obj[attr].$string_dict[key][0])}}else{if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){set_class_item(attr,class_obj[attr])}}}
+for(var key in class_obj[attr].$string_dict){$B.$setitem(cl_dict.$string_dict[attr][0],key,class_obj[attr].$string_dict[key][0])}}else{if(attr.charAt(0)!="$"){set_class_item(attr,class_obj[attr])}}}
 if(use_mro_entries){set_class_item("__orig_bases__",_b_.tuple.$factory(orig_bases))}
 var class_dict={__bases__:bases,__class__:metaclass,__dict__:cl_dict}
 if(cl_dict.__class__===_b_.dict){for(var key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key][0]}}else{var get_class_item=$B.$getattr(cl_dict,"__getitem__")
@@ -6843,10 +6835,10 @@ break}}}}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
 var kls=meta_new(metaclass,class_name,bases,cl_dict,{$nat:'kw',kw:extra_kwargs})
 kls.__module__=module
-kls.$infos={__module__:module,__name__:$B.from_alias(class_name),__qualname__:class_obj.$qualname}
+kls.$infos={__module__:module,__name__:class_name,__qualname__:class_obj.$qualname}
 kls.$subclasses=[]
 if(kls.__bases__===undefined ||kls.__bases__.length==0){kls.__bases__=$B.fast_tuple([_b_.object])}
-for(var attr in class_obj){if(attr.charAt(0)!="$" ||attr.substr(0,2)=="$$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
+for(var attr in class_obj){if(attr.charAt(0)!="$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,cl_dict)}
@@ -6856,7 +6848,7 @@ if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't in
 "interface with abstract methods "+
 Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
-kls.__qualname__=class_name.replace("$$","")
+kls.__qualname__=class_name
 return kls}
 var type=$B.make_class("type",function(obj,bases,cl_dict){var len=arguments.length
 if(len==1){if(obj===undefined){return $B.UndefinedClass}
@@ -6969,10 +6961,10 @@ extra_kwargs=extra_kwargs===undefined ?{$nat:'kw',kw:{}}:
 extra_kwargs
 var module=cl_dict.$string_dict.__module__
 if(module){module=module[0]}
-var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name.replace("$$",""),__module__:module},$is_class:true,$has_setattr:cl_dict.$has_setattr}
+var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 var items=$B.dict_to_list(cl_dict)
-for(var i=0;i < items.length;i++){var key=$B.to_alias(items[i][0]),v=items[i][1]
+for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
 if(key==="__module__"){continue}
 if(v===undefined){continue}
 class_dict[key]=v
@@ -7050,6 +7042,7 @@ $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
 var $instance_creator=$B.$instance_creator=function(klass){
 if(klass.prototype && klass.prototype.constructor==klass){
+console.log(801)
 return function(){return new klass(...arguments)}}
 if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
 "Can't instantiate abstract class interface "+
@@ -7064,7 +7057,9 @@ apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=functi
 klass.__init__.bind(null,obj).apply(null,arguments)
 return obj}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$nat &&
 Object.keys(arguments[0].kw).length==0){}else{throw _b_.TypeError.$factory("object() takes no parameters")}}
-return{__class__:klass,__dict__:$B.empty_dict()}}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
+var res=Object.create(null)
+$B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
+return res}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
 var factory=function(){return call_func.bind(null,klass).apply(null,arguments)}}
 factory.__class__=$B.Function
 factory.$infos={__name__:klass.$infos.__name__,__module__:klass.$infos.__module__}
@@ -7176,18 +7171,17 @@ filled++}
 if(filled==argcount && argcount===var_names.length &&
 ! has_kw_args){if(extra_kw_args){slots[extra_kw_args]=extra_kw}
 return slots}
-if(has_kw_args){for(var key in kw_args){var value=kw_args[key],key1=$B.to_alias(key)
-if(slots[key1]===undefined){
+if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
+if(slots[key]===undefined){
 if(extra_kw_args){
-if(key.substr(0,2)=="$$"){key=key.substr(2)}
 extra_kw.$string_dict[key]=[value,extra_kw.$order++]}else{throw _b_.TypeError.$factory($fname+
-"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key1]!==null){
+"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
 throw _b_.TypeError.$factory($fname+
-"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key1)>-1){throw _b_.TypeError.$factory($fname+"() got an "+
+"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key)>-1){throw _b_.TypeError.$factory($fname+"() got an "+
 "unexpected keyword argument '"+key+"'")}else{
-slots[key1]=value}}}
+slots[key]=value}}}
 var missing=[]
-for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push("'"+$B.from_alias(attr)+"'")}}}
+for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push("'"+attr+"'")}}}
 if(missing.length > 0){if(missing.length==1){throw _b_.TypeError.$factory($fname+
 " missing 1 positional argument: "+missing[0])}else{var msg=$fname+" missing "+missing.length+
 " positional arguments: "
@@ -7198,7 +7192,7 @@ return slots}
 $B.wrong_nb_args=function(name,received,expected,positional){if(received < expected){var missing=expected-received
 throw _b_.TypeError.$factory(name+"() missing "+missing+
 " positional argument"+(missing > 1 ? "s" :"")+": "+
-positional.slice(received).map(x=> `'${$B.from_alias(x)}'`))}else{throw _b_.TypeError.$factory(name+"() takes "+expected+
+positional.slice(received))}else{throw _b_.TypeError.$factory(name+"() takes "+expected+
 " positional argument"+(expected > 1 ? "s" :"")+
 " but more were given")}}
 $B.get_class=function(obj){
@@ -7268,7 +7262,7 @@ js+="\nvar $res = $B.generator.$factory("+genexpr_name+
 js="(function($locals_"+genexpr_name+"){"+js+"})($locals)\n"
 return js}
 $B.copy_namespace=function(){var ns={}
-for(const frame of $B.frames_stack){for(const kv of[frame[1],frame[3]]){for(var key in kv){if(key.startsWith('$$')||!key.startsWith('$')){ns[key]=kv[key]}}}}
+for(const frame of $B.frames_stack){for(const kv of[frame[1],frame[3]]){for(var key in kv){if(! key.startsWith('$')){ns[key]=kv[key]}}}}
 return ns}
 $B.clear_ns=function(name){
 if(name.startsWith("__ge")){console.log("clear ns",name)}
@@ -7279,8 +7273,6 @@ $B.$py_src[name]=null
 delete $B.$py_src[name]
 var alt_name=name.replace(/\./g,"_")
 if(alt_name !=name){$B.clear_ns(alt_name)}}
-$B.from_alias=function(attr){if(attr.substr(0,2)=="$$" && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
-return attr}
 $B.$search=function(name,global_ns){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
@@ -7299,13 +7291,13 @@ try{return $B.$getitem(frame[1],name)}catch(err){if(! $B.is_exc(err,[_b_.KeyErro
 if(search_ids.indexOf(frame[2])>-1){if(frame[3][name]!==undefined){return frame[3][name]}}}
 for(var i=0;i < search_ids.length;i++){var search_id=search_ids[i]
 if($B.imported[search_id]&& $B.imported[search_id][name]){return $B.imported[search_id][name]}}
-throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
+throw _b_.NameError.$factory("name '"+name+
 "' is not defined")}
 $B.$local_search=function(name){
 var frame=$B.last($B.frames_stack)
 if(frame[1][name]!==undefined){return frame[1][name]}
 else{throw _b_.UnboundLocalError.$factory("local variable '"+
-$B.from_alias(name)+"' referenced before assignment")}}
+name+"' referenced before assignment")}}
 $B.get_method_class=function(ns,qualname){
 var refs=qualname.split('.'),klass=ns
 while(refs.length > 0){var ref=refs.shift()
@@ -7319,7 +7311,7 @@ return _b_[name]}else{var frame=$B.last($B.frames_stack)
 if(frame[1].$is_not_dict){
 try{return $B.$getitem(frame[1],name)}catch(err){if(! $B.is_exc(err,[_b_.KeyError])){throw err}}}else if(frame[1][name]!==undefined){return frame[1][name]}
 if(frame[3][name]!==undefined){return frame[3][name]}}
-throw _b_.NameError.$factory("name '"+$B.from_alias(name)+
+throw _b_.NameError.$factory("name '"+name+
 "' is not defined")}
 $B.$check_def_global=function(name,ns){var res=ns[name]
 if(res===undefined){throw _b_.NameError.$factory("name '"+name+
@@ -7328,7 +7320,7 @@ return res}
 $B.$check_def_local=function(name,value){
 if(value !==undefined){return value}
 throw _b_.UnboundLocalError.$factory("local variable '"+
-$B.from_alias(name)+"' referenced before assignment")}
+name+"' referenced before assignment")}
 $B.$check_def_free=function(name,value){
 if(value !==undefined){return value}
 var res
@@ -7336,7 +7328,7 @@ for(var i=$B.frames_stack.length-1;i >=0;i--){res=$B.frames_stack[i][1][name]
 if(res !==undefined){return res}
 res=$B.frames_stack[i][3][name]
 if(res !==undefined){return res}}
-throw _b_.NameError.$factory("free variable '"+$B.from_alias(name)+
+throw _b_.NameError.$factory("free variable '"+name+
 "' referenced before assignment in enclosing scope")}
 $B.$check_def_free1=function(name,scope_id){
 var res
@@ -7347,7 +7339,7 @@ if(frame[1].$parent){res=frame[1].$parent[name]
 if(res !==undefined){return res}}
 if(frame[2]==scope_id){res=frame[3][name]
 if(res !==undefined){return res}}}
-throw _b_.NameError.$factory("free variable '"+$B.from_alias(name)+
+throw _b_.NameError.$factory("free variable '"+name+
 "' referenced before assignment in enclosing scope")}
 $B.$JS2Py=function(src){if(typeof src==="number"){if(src % 1===0){return src}
 return _b_.float.$factory(src)}
@@ -7383,7 +7375,7 @@ function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 throw _b_.IndexError.$factory(type+" index out of range")}
 $B.$getitem=function(obj,item){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
 if(typeof item=="number"){if(is_list ||typeof obj=="string"){item=item >=0 ? item :obj.length+item
-if(obj[item]!==undefined){return obj[item]}else{index_error(obj)}}else if(is_dict){if(obj.$numeric_dict[item]!==undefined){return obj.$numeric_dict[item][0]}}}else if(typeof item.valueOf()=="string" && is_dict){var res=obj.$string_dict[item]
+if(obj[item]!==undefined){return obj[item]}else{index_error(obj)}}else if(is_dict){if(obj.$numeric_dict[item]!==undefined){return obj.$numeric_dict[item][0]}}}else if(item.valueOf && typeof item.valueOf()=="string" && is_dict){var res=obj.$string_dict[item]
 if(res !==undefined){return res[0]}
 throw _b_.KeyError.$factory(item)}
 if(obj.$is_class){var class_gi=$B.$getattr(obj,"__class_getitem__",_b_.None)
@@ -7576,9 +7568,6 @@ var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 $B.make_rmethods=function(klass){for(var r_opname of r_opnames){if(klass["__r"+r_opname+"__"]===undefined &&
 klass['__'+r_opname+'__']){klass["__r"+r_opname+"__"]=(function(name){return function(self,other){return klass["__"+name+"__"](other,self)}})(r_opname)}}}
 $B.UUID=function(){return $B.$py_UUID++}
-$B.InjectBuiltins=function(){var _str=["var _b_ = $B.builtins"],pos=1
-for(var $b in $B.builtins){_str[pos++]="var "+$b+'=_b_["'+$b+'"]'}
-return _str.join(";")}
 $B.$GetInt=function(value){
 if(typeof value=="number" ||value.constructor===Number){return value}
 else if(typeof value==="boolean"){return value ? 1 :0}
@@ -7682,7 +7671,8 @@ var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(arg < min_int ||arg > max_int){return false}}
 return true}
-$B.add=function(x,y){if(typeof x.valueOf()=="number" && typeof y.valueOf()=="number"){if(typeof x=="number" && typeof y=="number"){
+$B.add=function(x,y){if(x.valueOf && typeof x.valueOf()=="number" && 
+y.valueOf && typeof y.valueOf()=="number"){if(typeof x=="number" && typeof y=="number"){
 var z=x+y
 if(z < $B.max_int && z > $B.min_int){return z}else if(z===Infinity){return _b_.float.$factory("inf")}else if(z===-Infinity){return _b_.float.$factory("-inf")}else if(isNaN(z)){return _b_.float.$factory('nan')}
 return $B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{
@@ -7734,7 +7724,7 @@ else if(typeof x !="number" && typeof y=="number"){return x.pos===true}else{retu
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
 $B.rich_comp=function(op,x,y){if(x===undefined){throw _b_.RuntimeError.$factory('error in rich comp')}
-var x1=x.valueOf ? x.valueOf():x,y1=y.valueOf ? y.valueOf():y()
+var x1=x.valueOf ? x.valueOf():x,y1=y.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
 x.__class__===undefined && y.__class__===undefined){switch(op){case "__eq__":
 return x1==y1
@@ -8268,10 +8258,6 @@ return self}
 enumerate.__next__=function(self){self.counter++
 return $B.fast_tuple([self.counter,next(self.iter)])}
 $B.set_func_names(enumerate,"builtins")
-$B.from_alias=function(attr){if(attr.substr(0,2)=='$$' && $B.aliased_names[attr.substr(2)]){return attr.substr(2)}
-return attr}
-$B.to_alias=function(attr){if($B.aliased_names[attr]){return '$$'+attr}
-return attr}
 function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
@@ -8303,33 +8289,31 @@ if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
 parent_scope=$B.builtins_scope}else{
 var grandparent_scope={id:globals_id,parent_block:$B.builtins_scope,binding:{}}
 parent_scope={id:locals_id,parent_block:grandparent_scope,binding:{}}
-for(var attr in _globals.$string_dict){grandparent_scope.binding[$B.to_alias(attr)]=true}
-for(var attr in _locals.$string_dict){parent_scope.binding[$B.to_alias(attr)]=true}}}
+for(var attr in _globals.$string_dict){grandparent_scope.binding[attr]=true}
+for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
 $B.$py_module_path[globals_id]=$B.$py_module_path[current_globals_id]
 eval('var $locals_'+globals_id+' = {}\nvar $locals_'+
 locals_id+' = {}')
 if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+' = gobj;',obj={}
 eval(ex)
-for(var attr in gobj){if(attr.startsWith("$")&& !attr.startsWith("$$")){continue}
+for(var attr in gobj){if(attr.startsWith("$")){continue}
 obj[attr]=gobj[attr]}
 eval("$locals_"+globals_id+" = obj")}else{var globals_is_dict=false
 if(_globals.$jsobj){var items=_globals.$jsobj}else{var items=_b_.dict.$to_obj(_globals)
 _globals.$jsobj=items
 globals_is_dict=true}
 eval("$locals_"+globals_id+" = _globals.$jsobj")
-for(var item in items){var item1=$B.to_alias(item)
-try{eval('$locals_'+globals_id+'["'+item1+'"] = items.'+item)}catch(err){console.log(err)
+for(var item in items){try{eval('$locals_'+globals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
 console.log('error setting',item)
 break}}}
 _globals.$is_namespace=true
 if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex='',obj={}
-for(var attr in current_frame[1]){if(attr.startsWith("$")&& !attr.startsWith("$$")){continue}
+for(var attr in current_frame[1]){if(attr.startsWith("$")){continue}
 obj[attr]=lobj[attr]}
 eval('$locals_'+locals_id+" = obj")}}else{var items
 if(_locals.$jsobj){items=_locals.$jsobj}else if(_locals.__class__ !==_b_.dict){items=_locals}else{items=_b_.dict.$to_obj(_locals)
 _locals.$jsobj=items}
-for(var item in items){var item1=$B.to_alias(item)
-try{eval('$locals_'+locals_id+'["'+item1+'"] = items.'+item)}catch(err){console.log(err)
+for(var item in items){try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
 console.log('error setting',item)
 break}}
 eval("$locals_"+locals_id+".$exec_locals = true")
@@ -8375,14 +8359,12 @@ res !==undefined && res !==_b_.None){_b_.print(res)}
 gns=eval("$locals_"+globals_id)
 if($B.frames_stack[$B.frames_stack.length-1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length-1][3]}
 if(_locals !==_b_.None){lns=eval("$locals_"+locals_id)
-for(var attr in lns){var attr1=$B.from_alias(attr)
-if(attr1.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}else if(_locals.__class__ !==_b_.dict){$B.$setitem(_locals,attr1,lns[attr])}else{_b_.dict.$setitem(_locals,attr1,lns[attr])}}}}else{for(var attr in lns){if(attr !=="$src"){current_frame[1][attr]=lns[attr]}}}
+for(var attr in lns){if(attr.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}else if(_locals.__class__ !==_b_.dict){$B.$setitem(_locals,attr,lns[attr])}else{_b_.dict.$setitem(_locals,attr,lns[attr])}}}}else{for(var attr in lns){if(attr !=="$src"){current_frame[1][attr]=lns[attr]}}}
 if(_globals !==_b_.None){
 if(globals_is_dict){var jsobj=_globals.$jsobj
 delete _globals.$jsobj}
-for(var attr in gns){attr1=$B.from_alias(attr)
-if(attr1.charAt(0)!='$'){if(globals_is_dict){_b_.dict.$setitem(_globals,attr,gns[attr])}else{_globals.$jsobj[attr1]=gns[attr]}}}
-for(var attr in _globals.$string_dict){if(attr.startsWith("$")&& !attr.startsWith("$$")){delete _globals.$string_dict[attr]}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
+for(var attr in gns){if(attr.charAt(0)!='$'){if(globals_is_dict){_b_.dict.$setitem(_globals,attr,gns[attr])}else{_globals.$jsobj[attr]=gns[attr]}}}
+for(var attr in _globals.$string_dict){if(attr.startsWith("$")){delete _globals.$string_dict[attr]}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
 if(res===undefined){return _b_.None}
 return res}catch(err){err.src=src
 err.module=globals_id
@@ -8443,7 +8425,6 @@ var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}}
 return false}
 $B.$getattr=function(obj,attr,_default){
-attr=$B.to_alias(attr)
 if(obj.$method_cache &&
 obj.$method_cache[attr]&&
 obj.__class__ &&
@@ -8455,12 +8436,13 @@ var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
 var $test=false 
 if($test){console.log("$getattr",attr,obj,klass)}
-if(klass !==undefined && klass.__bases__ &&
+if(klass !==undefined &&(! klass.$native)&& klass.__bases__ &&
 klass.__getattribute__===undefined &&
 (klass.__bases__.length==0 ||
 (klass.__bases__.length==1 &&
-klass.__bases__[0]===_b_.object))){if($test){console.log("class without parent")}
-if(obj.hasOwnProperty(attr)){return obj[attr]}else if(obj.__dict__ &&
+klass.__bases__[0]===_b_.object))){if($test){console.log("class without parent",klass)
+console.log('obj[attr]',obj[attr])}
+if(obj[attr]!==undefined){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
 klass[attr].__get__)){return obj.__dict__.$string_dict[attr][0]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
@@ -8490,8 +8472,7 @@ case '__class__':
 return klass
 case '__dict__':
 if(is_class){var proxy={}
-for(var key in obj){var key1=$B.from_alias(key)
-if(! key1.startsWith("$")){proxy[key1]=obj[key]}}
+for(var key in obj){if(! key.startsWith("$")){proxy[key]=obj[key]}}
 proxy.__dict__=$B.getset_descriptor.$factory(obj,"__dict__")
 return $B.mappingproxy.$factory(proxy)}else{if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
 return $B.obj_dict(obj)}
@@ -8917,8 +8898,7 @@ if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute 
 return $B.$setattr(obj,attr,value)}
 $B.$setattr=function(obj,attr,value){
 var $test=false 
-var unaliased=$B.from_alias(attr)
-if($B.aliased_names[attr]){attr='$$'+attr}else if(attr=='__dict__'){
+if(attr=='__dict__'){
 if(! isinstance(value,_b_.dict)){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, "+
 "not a '"+$B.class_name(value)+"'")}
 if(obj.$infos){obj.$infos.__dict__=value
@@ -8980,13 +8960,13 @@ if(klass && klass.__slots__ && special_attrs.indexOf(attr)==-1 &&
 ! _setattr){function mangled_slots(klass){if(klass.__slots__){if(Array.isArray(klass.__slots__)){return klass.__slots__.map(function(item){if(item.startsWith("__")&& ! item.endsWith("_")){return "_"+klass.$infos.__name__+item}else{return item}})}else{return klass.__slots__}}
 return[]}
 var has_slot=false
-if(mangled_slots(klass).indexOf(unaliased)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
-if(mangled_slots(kl).indexOf(unaliased)>-1){has_slot=true
+if(mangled_slots(klass).indexOf(attr)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
+if(mangled_slots(kl).indexOf(attr)>-1){has_slot=true
 break}}}
 if(! has_slot){throw _b_.AttributeError.$factory("'"+klass.$infos.__name__+
-"' object has no attribute '"+unaliased+"'")}}
+"' object has no attribute '"+attr+"'")}}
 if($test){console.log("attr",attr,"use _setattr",_setattr)}
-if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,unaliased,value)}
+if(!_setattr){if(obj.__dict__===undefined){obj[attr]=value}else{_b_.dict.$setitem(obj.__dict__,attr,value)}
 if($test){console.log("no setattr, obj",obj)}}else{_setattr(obj,attr,value)}
 return None}
 function sorted(){var $=$B.args('sorted',1,{iterable:null},['iterable'],arguments,{},null,'kw')
@@ -9534,8 +9514,7 @@ exc.__name__="Internal Javascript error: "+
 exc.__class__=_b_.Exception
 exc.$js_exc=js_exc
 if($B.is_recursion_error(js_exc)){return _b_.RecursionError.$factory("too much recursion")}else if(js_exc.name=="ReferenceError"){exc.__name__="NameError"
-exc.__class__=_b_.NameError
-js_exc.message=js_exc.message.replace("$$","")}else if(js_exc.name=="InternalError"){exc.__name__="RuntimeError"
+exc.__class__=_b_.NameError}else if(js_exc.name=="InternalError"){exc.__name__="RuntimeError"
 exc.__class__=_b_.RuntimeError}
 exc.__cause__=_b_.None
 exc.__context__=_b_.None
@@ -10384,7 +10363,10 @@ $add(self,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 return $N}
 var set_iterator=$B.make_iterator_class("set iterator")
-set.__iter__=function(self){self.$items.sort()
+set.__iter__=function(self){
+self.$items.sort(function(x,y){var hx=_b_.hash(x),hy=_b_.hash(y)
+return hx==hy ? 0 :
+hx < hy ?-1 :1})
 return set_iterator.$factory(self.$items)}
 set.__le__=function(self,other){
 if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,"__contains__")
@@ -10763,7 +10745,6 @@ if(attr=="new" && typeof self=="function"){
 if(self.$js_func){return function(){var args=pyargs2jsargs(arguments)
 return $B.JSObj.$factory(new self.$js_func(...args))}}else{return function(){var args=pyargs2jsargs(arguments)
 return $B.JSObj.$factory(new self(...args))}}}
-if(typeof attr=="string"){attr=$B.from_alias(attr)}
 var js_attr=self[attr]
 if(js_attr==undefined && typeof self=="function" && self.$js_func){js_attr=self.$js_func[attr]}
 if(js_attr===undefined){if(typeof self.getNamedItem=='function'){var res=self.getNamedItem(attr)
@@ -10787,8 +10768,7 @@ res.__mro__=[_b_.object]
 res.$infos={__name__:js_attr.name,__qualname__:js_attr.name}
 if($B.frames_stack.length > 0){res.$infos.__module__=$B.last($B.frames_stack)[3].__name__}
 return $B.JSObj.$factory(res)}else{return $B.JSObj.$factory(js_attr)}}
-$B.JSObj.__setattr__=function(self,attr,value){if(typeof attr=="string"){attr=$B.from_alias(attr)}
-self[attr]=$B.pyobj2structuredclone(value)
+$B.JSObj.__setattr__=function(self,attr,value){self[attr]=$B.pyobj2structuredclone(value)
 return _b_.None}
 $B.JSObj.__getitem__=function(self,key){if(typeof key=="string"){return $B.JSObj.__getattribute__(self,key)}else if(typeof key=="number"){if(self[key]!==undefined){return $B.JSObj.$factory(self[key])}
 if(typeof self.length=='number'){if((typeof key=="number" ||typeof key=="boolean")&&
@@ -10858,11 +10838,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_cmath','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre1','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','module1','modulefinder','pbkdf2','posix','python_re','python_re1','python_re2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -10914,7 +10894,7 @@ try{$module}
 catch(err){console.log("no $module")
 throw _b_.ImportError.$factory("name '$module' not defined in module")}
 $module.__name__=_module.__name__
-for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$infos={__module__:_module.__name__,__name__:$B.from_alias(attr),__qualname__:$B.from_alias(attr)}
+for(var attr in $module){if(typeof $module[attr]=="function"){$module[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
 $module[attr].$in_js_module=true}}
 if(_module !==undefined){
 for(var attr in $module){_module[attr]=$module[attr]}
@@ -11286,7 +11266,7 @@ if(prefix && p==""){
 elt=norm_parts.pop()
 if(elt===undefined){throw _b_.ImportError.$factory("Parent module '' not loaded, "+
 "cannot perform relative import")}}else{prefix=false;
-norm_parts.push(p.substr(0,2)=="$$" ? p.substr(2):p)}}
+norm_parts.push(p)}}
 var mod_name=norm_parts.join(".")
 if($B.$options.debug==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
@@ -11299,7 +11279,7 @@ __import__ :
 $B.$getattr(__import__,"__call__"),modobj=importer(mod_name,globals,undefined,fromlist,0)
 if(! fromlist ||fromlist.length==0){
 var alias=aliases[mod_name]
-if(alias){locals[alias]=$B.imported[mod_name]}else{locals[$B.to_alias(norm_parts[0])]=modobj}}else{var __all__=fromlist,thunk={}
+if(alias){locals[alias]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj}}else{var __all__=fromlist,thunk={}
 if(fromlist && fromlist[0]=="*"){__all__=$B.$getattr(modobj,"__all__",thunk);
 if(__all__ !==thunk){
 aliases={}}}
@@ -11309,9 +11289,8 @@ for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
 var alias=aliases[name]||name
 try{
 locals[alias]=$B.$getattr(modobj,name)}catch($err1){
-try{var name1=$B.from_alias(name)
-$B.$getattr(__import__,'__call__')(mod_name+'.'+name1,globals,undefined,[],0)
-locals[alias]=$B.$getattr(modobj,name1)}catch($err3){
+try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
+locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
@@ -11322,7 +11301,7 @@ throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
 return locals}}
 $B.import_all=function(locals,module){
-for(var attr in module){if(attr.startsWith("$$")){locals[attr]=module[attr]}else if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
+for(var attr in module){if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$path_hooks=[url_hook]
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder,CPython:finder_cpython}
@@ -13892,8 +13871,6 @@ dict.__class_getitem__=function(cls,item){
 if(! Array.isArray(item)){item=[item]}
 return $B.GenericAlias.$factory(cls,item)}
 dict.__contains__=function(){var $=$B.args("__contains__",2,{self:null,key:null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
-if(self.$is_namespace){
-key=$B.to_alias(key)}
 if(self.$jsobj){return self.$jsobj[key]!==undefined}
 switch(typeof key){case "string":
 return self.$string_dict[key]!==undefined
@@ -14711,8 +14688,7 @@ var nstrip=0,len=s.length;
 while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip))>-1)nstrip++;
 return s.substr(0,len-nstrip)}})(__BRYTHON__)
 ;
-;(function($B){
-var _b_=$B.builtins,object=_b_.object,_window=self
+;(function($B){var _b_=$B.builtins,object=_b_.object,_window=self
 function $getMouseOffset(target,ev){ev=ev ||_window.event;
 var docPos=$getPosition(target);
 var mousePos=$mouseCoords(ev);
@@ -14959,8 +14935,7 @@ for(var attr in self){if(attr.charAt(0)!="$"){res.push(attr)}}
 res.sort()
 return res}
 DOMNode.__eq__=function(self,other){return self==other}
-DOMNode.__getattribute__=function(self,attr){if(attr.substr(0,2)=="$$"){attr=attr.substr(2)}
-switch(attr){case "attrs":
+DOMNode.__getattribute__=function(self,attr){switch(attr){case "attrs":
 return Attributes.$factory(self)
 case "children":
 case "child_nodes":
@@ -15016,7 +14991,6 @@ if(res._keys.indexOf(key)>-1){res._values[key].push(value)}else{res._keys.push(k
 res._values[key]=[value]}}}
 return res}
 var property=self[attr]
-if(property===undefined && $B.aliased_names[attr]){property=self["$$"+attr]}
 if(property !==undefined && self.__class__ &&
 self.__class__.__module__ !="browser.html" &&
 self.__class__.__module__ !="browser.svg"){
@@ -15392,7 +15366,7 @@ $B.DOMNode=DOMNode
 $B.win=win})(__BRYTHON__)
 ;
  ;(function($B){var _b_=$B.builtins
-var update=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
+var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
 var modules={}
 var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
@@ -15514,7 +15488,7 @@ var super_class=$B.make_class("JavascriptSuper",function(){
 var b_super=_b_.super.$factory(),b_self=b_super.__self_class__,proto=Object.getPrototypeOf(b_self),parent=proto.constructor.$parent
 var factory=function(){var p=parent.bind(b_self),res
 if(parent.toString().startsWith("class")){res=new p(...arguments)}else{res=p(...arguments)}
-for(key in res){b_self[$B.to_alias(key)]=res[key]}
+for(key in res){b_self[key]=res[key]}
 return res}
 return{
 __class__:super_class,__init__:factory,__self_class__:b_self}}
@@ -15610,8 +15584,7 @@ function load(name,module_obj){
 module_obj.__class__=$B.module
 module_obj.__name__=name
 $B.imported[name]=module_obj
-for(var attr in module_obj){if(typeof module_obj[attr]=='function'){var attr1=$B.from_alias(attr)
-module_obj[attr].$infos={__module__:name,__name__:attr1,__qualname__:name+'.'+attr1}}}}
+for(var attr in module_obj){if(typeof module_obj[attr]=='function'){module_obj[attr].$infos={__module__:name,__name__:attr,__qualname__:name+'.'+attr}}}}
 for(var attr in modules){load(attr,modules[attr])}
 if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']}
 var _b_=$B.builtins

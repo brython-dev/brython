@@ -24,7 +24,6 @@ var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
 var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
-    attr = $B.from_alias(attr)
     if(self.__dict__ && self.__dict__.$string_dict &&
             self.__dict__.$string_dict[attr] !== undefined){
         delete self.__dict__.$string_dict[attr]
@@ -80,8 +79,7 @@ object.__dir__ = function(self) {
     // add object's own attributes
     if(self.__dict__){
         for(var attr in self.__dict__.$string_dict){
-            if(attr.substr(0, 2) == "$$"){res.push(attr.substr(2))}
-            else if(attr.charAt(0) != "$"){res.push(attr)}
+            if(attr.charAt(0) != "$"){res.push(attr)}
         }
     }
     res = _b_.list.$factory(_b_.set.$factory(res))
@@ -112,7 +110,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == "__ceil__"
+    var $test = false // attr == "toString"
     if($test){console.log("attr", attr, "de", obj, "klass", klass)}
     if(attr === "__class__"){
         return klass
@@ -124,13 +122,12 @@ object.__getattribute__ = function(obj, attr){
     }
 
     if(res === undefined && obj.__dict__){
-        var dict = obj.__dict__,
-            attr1 = $B.from_alias(attr)
-        if(dict.$string_dict.hasOwnProperty(attr1)){
+        var dict = obj.__dict__
+        if(dict.$string_dict.hasOwnProperty(attr)){
             if($test){
-                console.log("__dict__ hasOwnProperty", attr1, dict.$string_dict[attr1])
+                console.log("__dict__ hasOwnProperty", attr, dict.$string_dict[attr])
             }
-            return dict.$string_dict[attr1][0]
+            return dict.$string_dict[attr][0]
         }
     }
 
@@ -385,10 +382,12 @@ object.__new__ = function(cls, ...args){
             throw _b_.TypeError.$factory("object() takes no parameters")
         }
     }
-    return {
+    var res = Object.create(null)
+    $B.update_obj(res, {
         __class__ : cls,
         __dict__: $B.empty_dict()
-        }
+        })
+    return res
 }
 
 object.__ne__ = function(self, other){
@@ -487,7 +486,6 @@ object.__setattr__ = function(self, attr, val){
                 "'object' object attribute '" + attr + "' is read-only")
         }
     }
-    if($B.aliased_names[attr]){attr = "$$"+attr}
     if(self.__dict__){
         _b_.dict.$setitem(self.__dict__, attr, val)
     }else{

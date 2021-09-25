@@ -140,29 +140,27 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
     // Then fill slots with keyword arguments, if any
     if(has_kw_args){
         for(var key in kw_args){
-            var value = kw_args[key],
-                key1 = $B.to_alias(key)
-            if(slots[key1] === undefined){
+            var value = kw_args[key]
+            if(slots[key] === undefined){
                 // The name of the keyword argument doesn't match any of the
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
-                    if(key.substr(0, 2) == "$$"){key = key.substr(2)}
                     extra_kw.$string_dict[key] = [value, extra_kw.$order++]
                 }else{
                     throw _b_.TypeError.$factory($fname +
                         "() got an unexpected keyword argument '" + key + "'")
                 }
-            }else if(slots[key1] !== null){
+            }else if(slots[key] !== null){
                 // The slot is already filled
                 throw _b_.TypeError.$factory($fname +
                     "() got multiple values for argument '" + key + "'")
-            }else if(only_positional && only_positional.indexOf(key1) > -1){
+            }else if(only_positional && only_positional.indexOf(key) > -1){
                 throw _b_.TypeError.$factory($fname + "() got an " +
                     "unexpected keyword argument '" + key + "'")
             }else{
                 // Fill the slot with the key/value pair
-                slots[key1] = value
+                slots[key] = value
             }
         }
     }
@@ -174,7 +172,7 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
             if($dobj[attr] !== undefined){
                 slots[attr] = $dobj[attr]
             }else{
-                missing.push("'" + $B.from_alias(attr) + "'")
+                missing.push("'" + attr + "'")
             }
         }
     }
@@ -207,7 +205,7 @@ $B.wrong_nb_args = function(name, received, expected, positional){
         var missing = expected - received
         throw _b_.TypeError.$factory(name + "() missing " + missing +
             " positional argument" + (missing > 1 ? "s" : "") + ": " +
-            positional.slice(received).map(x => `'${$B.from_alias(x)}'`))
+            positional.slice(received))
     }else{
         throw _b_.TypeError.$factory(name + "() takes " + expected +
             " positional argument" + (expected > 1 ? "s" : "") +
@@ -370,7 +368,7 @@ $B.copy_namespace = function(){
     for(const frame of $B.frames_stack){
         for(const kv of [frame[1], frame[3]]){
             for(var key in kv){
-                if(key.startsWith('$$') || !key.startsWith('$')){
+                if(! key.startsWith('$')){
                     ns[key] = kv[key]
                 }
             }
@@ -394,13 +392,6 @@ $B.clear_ns = function(name){
 
     var alt_name = name.replace(/\./g, "_")
     if(alt_name != name){$B.clear_ns(alt_name)}
-}
-
-$B.from_alias = function(attr){
-    if(attr.substr(0, 2) == "$$" && $B.aliased_names[attr.substr(2)]){
-        return attr.substr(2)
-    }
-    return attr
 }
 
 // Function used to resolve names not defined in Python source
@@ -455,7 +446,7 @@ $B.$global_search = function(name, search_ids){
             return $B.imported[search_id][name]
         }
     }
-    throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
+    throw _b_.NameError.$factory("name '" + name +
         "' is not defined")
 }
 
@@ -465,7 +456,7 @@ $B.$local_search = function(name){
     if(frame[1][name] !== undefined){return frame[1][name]}
     else{
         throw _b_.UnboundLocalError.$factory("local variable '" +
-            $B.from_alias(name) + "' referenced before assignment")
+            name + "' referenced before assignment")
     }
 }
 
@@ -512,7 +503,7 @@ $B.$check_def = function(name, value){
             return frame[3][name]
         }
     }
-    throw _b_.NameError.$factory("name '" + $B.from_alias(name) +
+    throw _b_.NameError.$factory("name '" + name +
         "' is not defined")
 }
 
@@ -529,7 +520,7 @@ $B.$check_def_local = function(name, value){
     // Check if value is not undefined
     if(value !== undefined){return value}
     throw _b_.UnboundLocalError.$factory("local variable '" +
-        $B.from_alias(name) + "' referenced before assignment")
+        name + "' referenced before assignment")
 }
 
 $B.$check_def_free = function(name, value){
@@ -542,7 +533,7 @@ $B.$check_def_free = function(name, value){
         res = $B.frames_stack[i][3][name]
         if(res !== undefined){return res}
     }
-    throw _b_.NameError.$factory("free variable '" + $B.from_alias(name) +
+    throw _b_.NameError.$factory("free variable '" + name +
         "' referenced before assignment in enclosing scope")
 }
 
@@ -564,7 +555,7 @@ $B.$check_def_free1 = function(name, scope_id){
             if(res !== undefined){return res}
         }
     }
-    throw _b_.NameError.$factory("free variable '" + $B.from_alias(name) +
+    throw _b_.NameError.$factory("free variable '" + name +
         "' referenced before assignment in enclosing scope")
 }
 
@@ -654,7 +645,7 @@ $B.$getitem = function(obj, item){
                 return obj.$numeric_dict[item][0]
             }
         }
-    }else if(typeof item.valueOf() == "string" && is_dict){
+    }else if(item.valueOf && typeof item.valueOf() == "string" && is_dict){
         var res = obj.$string_dict[item]
         if(res !== undefined){
             return res[0]
@@ -1245,15 +1236,6 @@ $B.make_rmethods = function(klass){
 // the variable $B.py_UUID is defined in py2js.js (in the brython function)
 $B.UUID = function(){return $B.$py_UUID++}
 
-$B.InjectBuiltins = function() {
-   var _str = ["var _b_ = $B.builtins"],
-       pos = 1
-   for(var $b in $B.builtins){
-       _str[pos++] = "var " + $b + '=_b_["' + $b + '"]'
-   }
-   return _str.join(";")
-}
-
 $B.$GetInt = function(value) {
   // convert value to an integer
   if(typeof value == "number" || value.constructor === Number){return value}
@@ -1501,7 +1483,8 @@ $B.is_safe_int = function(){
 }
 
 $B.add = function(x, y){
-    if(typeof x.valueOf() == "number" && typeof y.valueOf() == "number"){
+    if(x.valueOf && typeof x.valueOf() == "number" && 
+            y.valueOf && typeof y.valueOf() == "number"){
         if(typeof x == "number" && typeof y == "number"){
             // ints
             var z = x + y
@@ -1657,7 +1640,7 @@ $B.rich_comp = function(op, x, y){
         throw _b_.RuntimeError.$factory('error in rich comp')
     }
     var x1 = x.valueOf ? x.valueOf() : x,
-        y1 = y.valueOf ? y.valueOf() : y()
+        y1 = y.valueOf ? y.valueOf() : y
     if(typeof x1 == "number" && typeof y1 == "number" &&
             x.__class__ === undefined && y.__class__ === undefined){
         switch(op){

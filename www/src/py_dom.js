@@ -1,7 +1,5 @@
 ;(function($B){
 
-//eval($B.InjectBuiltins())
-
 var _b_ = $B.builtins,
     object = _b_.object,
     _window = self
@@ -704,7 +702,6 @@ DOMNode.__eq__ = function(self, other){
 }
 
 DOMNode.__getattribute__ = function(self, attr){
-    if(attr.substr(0, 2) == "$$"){attr = attr.substr(2)}
     switch(attr) {
         case "attrs":
             return Attributes.$factory(self)
@@ -818,9 +815,6 @@ DOMNode.__getattribute__ = function(self, attr){
     // arena ... look for the aliased version
     var property = self[attr]
 
-    if(property === undefined && $B.aliased_names[attr]){
-        property = self["$$" + attr]
-    }
     if(property !== undefined && self.__class__ &&
             self.__class__.__module__ != "browser.html" &&
             self.__class__.__module__ != "browser.svg"){

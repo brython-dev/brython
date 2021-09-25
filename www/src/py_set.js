@@ -166,7 +166,13 @@ set.__init__ = function(self, iterable, second){
 
 var set_iterator = $B.make_iterator_class("set iterator")
 set.__iter__ = function(self){
-    self.$items.sort()
+    // Sort items by hash
+    self.$items.sort(function(x, y){
+        var hx = _b_.hash(x),
+            hy = _b_.hash(y)
+        return hx == hy ? 0 :
+               hx < hy ? -1 : 1
+    })
     return set_iterator.$factory(self.$items)
 }
 
