@@ -3649,7 +3649,7 @@ $DefCtx.prototype.transform = function(node, rank){
     var enter_frame_nodes = [
         $NodeJS('$locals.$line_info = "' + node.line_num + ',' +
             this.module + '"'),
-        $NodeJS(`var $top_frame = ["${this.id}", $locals,` +
+        $NodeJS(`"hey";var $top_frame = ["${this.id}", $locals,` +
             '"' + global_scope.id + '", ' + global_ns + ', ' +
             (this.is_comp ? this.name : name) + ']'),
         $NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),
@@ -7824,7 +7824,7 @@ $ListOrTupleCtx.prototype.to_js = function(){
                         save_pos = $pos,
                         line_info = line_num + ',' + module_name
                     var root = $B.py2js(
-                        {src: py, is_comp: true, line_info: line_info},
+                        {src: py, is_comp: 'listcomp', line_info: line_info},
                         module_name, listcomp_name, scope, 1)
                     var has_yield = root.yields_func_check !== undefined
 
@@ -11451,6 +11451,10 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     if(scope.binding[name] === undefined){
         scope.binding[name] = true
     }
+    scope.varnames = scope.varnames || {}
+    if(scope.varnames[name] === undefined){
+        scope.varnames[name] = true
+    }
 }
 
 function $parent_match(ctx, obj){
@@ -12584,6 +12588,31 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     offset++
 
     // package, if available
+    root.insert(offset++,
+        $NodeJS(local_ns + '.__package__ = "' + __package__ +'"'))
+
+    // if comprehension, set closure information
+    if(is_comp){
+        var info = '{co_argcount: 1, co_firstlineno:' + root.line_num +
+            ', co_name: "<' + is_comp + '>", co_flags: ' +
+            (is_comp == 'genexpr' ? 115 : 83) +
+            ', co_freevars: $B.fast_tuple([]), co_kwonlyargcount: 0,' +
+            'co_posonlyargount: 0'
+        if(root.varnames){
+            delete root.varnames[root.id]
+            info += ", co_varnames: $B.fast_tuple(['.0', " +
+                Object.keys(root.varnames).map(x => `'${x}'`).join(',') + '])'
+        }
+        info += '}'
+        root.insert(offset++, $NodeJS(local_ns + '.$comp_code = ' +
+           info))
+        var arg = "_expr"
+        if(is_comp == "genexpr" || is_comp == "setcomp"){
+            arg = "$locals_" + root.id
+        }
+        root.insert(offset++, $NodeJS('$locals[".0"] = ' + arg))
+    }
+
     root.insert(offset++,
         $NodeJS(local_ns + '.__package__ = "' + __package__ +'"'))
 

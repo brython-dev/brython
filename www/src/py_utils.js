@@ -315,7 +315,7 @@ $B.$dict_comp = function(module_name, parent_scope, items, line_num){
 
     var dictcomp_name = "dc" + ix,
         root = $B.py2js(
-            {src:py, is_comp:true, line_info: line_info},
+            {src:py, is_comp: 'dictcomp', line_info},
             module_name, dictcomp_name, parent_scope, line_num),
         outer_expr = root.outermost_expr.to_js(),
         js = root.to_js()
@@ -348,7 +348,11 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num, set_comp){
 
     var line_info = line_num + ',' + module_name
 
-    var root = $B.py2js({src: py, is_comp: true, line_info:line_info, ix: ix},
+    var root = $B.py2js({
+            src: py,
+            is_comp: set_comp ? 'setcomp' : 'genexpr',
+            line_info, 
+            ix},
             genexpr_name, genexpr_name, parent_scope, line_num),
         js = root.to_js(),
         lines = js.split("\n")

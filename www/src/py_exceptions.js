@@ -285,8 +285,8 @@ var frame = $B.make_class("frame",
             }else{
                 if(_frame[1].$name){
                     co_name = _frame[1].$name
-                }else if(_frame[1].$dict_comp){
-                    co_name = '<dictcomp>'
+                }else if(_frame[1].$comprehension){
+                    co_name = '<' + _frame[1].$comprehension + '>'
                 }else if(_frame[1].$list_comp){
                     co_name = '<listcomp>'
                 }else if(_frame.length > 4){
@@ -321,6 +321,9 @@ var frame = $B.make_class("frame",
                 res.f_code = {
                     co_name: co_name,
                     co_filename: filename
+                }
+                if(_frame[1].$comp_code){
+                    $B.update_obj(res.f_code, _frame[1].$comp_code)
                 }
             }
             res.f_code.__class__ = $B.code

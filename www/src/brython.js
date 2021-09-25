@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,5,'final',0]
 __BRYTHON__.__MAGIC__="3.9.5"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-25 09:38:53.279811"
-__BRYTHON__.timestamp=1632555533279
+__BRYTHON__.compiled_date="2021-09-25 19:42:07.099518"
+__BRYTHON__.timestamp=1632591727099
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2099,7 +2099,7 @@ new_node.func_node=node
 new $NodeJSCtx(new_node,js)
 nodes.push(new_node)
 var enter_frame_nodes=[$NodeJS('$locals.$line_info = "'+node.line_num+','+
-this.module+'"'),$NodeJS(`var $top_frame = ["${this.id}", $locals,`+
+this.module+'"'),$NodeJS(`"hey";var $top_frame = ["${this.id}", $locals,`+
 '"'+global_scope.id+'", '+global_ns+', '+
 (this.is_comp ? this.name :name)+']'),$NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),$NodeJS('var $stack_length = $B.frames_stack.length;')
 ]
@@ -4008,7 +4008,7 @@ switch(this.real){case 'list_comp':
 var lc=$B.$list_comp(items),
 py=lc[0],ix=lc[1],listcomp_name='comp_result_'+$B.lambda_magic+ix,save_pos=$pos,line_info=line_num+','+module_name
 var root=$B.py2js(
-{src:py,is_comp:true,line_info:line_info},module_name,listcomp_name,scope,1)
+{src:py,is_comp:'listcomp',line_info:line_info},module_name,listcomp_name,scope,1)
 var has_yield=root.yields_func_check !==undefined
 var outermost_expr=root.outermost_expr
 if($get_node(this).has_yield){outermost_expr=this.tree[0].tree[0].tree[1]}
@@ -5798,7 +5798,9 @@ if(! C.no_bindings){var node=$get_node(C)
 node.bindings=node.bindings ||{}
 node.bindings[name]=true}
 scope.binding=scope.binding ||{}
-if(scope.binding[name]===undefined){scope.binding[name]=true}}
+if(scope.binding[name]===undefined){scope.binding[name]=true}
+scope.varnames=scope.varnames ||{}
+if(scope.varnames[name]===undefined){scope.varnames[name]=true}}
 function $parent_match(ctx,obj){
 var flag
 while(ctx.parent){flag=true
@@ -6244,6 +6246,21 @@ if(is_comp){js+='    '+local_ns+' = {},\n'+
 var offset=0
 root.insert(0,$NodeJS(js))
 offset++
+root.insert(offset++,$NodeJS(local_ns+'.__package__ = "'+__package__+'"'))
+if(is_comp){var info='{co_argcount: 1, co_firstlineno:'+root.line_num+
+', co_name: "<'+is_comp+'>", co_flags: '+
+(is_comp=='genexpr' ? 115 :83)+
+', co_freevars: $B.fast_tuple([]), co_kwonlyargcount: 0,'+
+'co_posonlyargount: 0'
+if(root.varnames){delete root.varnames[root.id]
+info+=", co_varnames: $B.fast_tuple(['.0', "+
+Object.keys(root.varnames).map(x=> `'${x}'`).join(',')+'])'}
+info+='}'
+root.insert(offset++,$NodeJS(local_ns+'.$comp_code = '+
+info))
+var arg="_expr"
+if(is_comp=="genexpr" ||is_comp=="setcomp"){arg="$locals_"+root.id}
+root.insert(offset++,$NodeJS('$locals[".0"] = '+arg))}
 root.insert(offset++,$NodeJS(local_ns+'.__package__ = "'+__package__+'"'))
 if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = $B.empty_dict()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
@@ -7240,7 +7257,7 @@ indent++}
 py+="    ".repeat(indent)+res+".update({"+items[0]+"})"
 var line_info=line_num+','+module_name
 var dictcomp_name="dc"+ix,root=$B.py2js(
-{src:py,is_comp:true,line_info:line_info},module_name,dictcomp_name,parent_scope,line_num),outer_expr=root.outermost_expr.to_js(),js=root.to_js()
+{src:py,is_comp:'dictcomp',line_info},module_name,dictcomp_name,parent_scope,line_num),outer_expr=root.outermost_expr.to_js(),js=root.to_js()
 js+='\nreturn '+res+'\n'
 js="(function(_expr){"+js+"})("+outer_expr+")"
 $B.clear_ns(dictcomp_name)
@@ -7255,7 +7272,7 @@ indent+=4}
 py+=" ".repeat(indent)
 py+="yield ("+items[0]+")"
 var line_info=line_num+','+module_name
-var root=$B.py2js({src:py,is_comp:true,line_info:line_info,ix:ix},genexpr_name,genexpr_name,parent_scope,line_num),js=root.to_js(),lines=js.split("\n")
+var root=$B.py2js({src:py,is_comp:set_comp ? 'setcomp' :'genexpr',line_info,ix},genexpr_name,genexpr_name,parent_scope,line_num),js=root.to_js(),lines=js.split("\n")
 if(root.outermost_expr===undefined){console.log("no outermost",module_name,parent_scope)}
 var outer_expr=root.outermost_expr.to_js()
 js=lines.join("\n")
@@ -9411,14 +9428,15 @@ if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__
 res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
 var co_name=locals_id.startsWith("$exec")? "<module>" :
 locals_id
-if(locals_id==_frame[2]){co_name="<module>"}else if(locals_id.startsWith("lc"+$B.lambda_magic)){co_name="<listcomp>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$dict_comp){co_name='<dictcomp>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
+if(locals_id==_frame[2]){co_name="<module>"}else if(locals_id.startsWith("lc"+$B.lambda_magic)){co_name="<listcomp>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$comprehension){co_name='<'+_frame[1].$comprehension+'>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
 if(_frame[4].$infos===undefined){
 if(_frame[4].name.startsWith("__ge")){co_name="<genexpr>"}else if(_frame[4].name.startsWith("set_comp"+
 $B.lambda_magic)){co_name="<setcomp>"}else if(_frame[4].name.startsWith("lambda"+
 $B.lambda_magic)){co_name="<lambda>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
 if(filename===undefined){filename=_frame[4].$infos.__module__}
 res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
-if(_frame.length > 4 && _frame[4].$infos !==undefined){res.f_code=_frame[4].$infos.__code__}else{res.f_code={co_name:co_name,co_filename:filename}}
+if(_frame.length > 4 && _frame[4].$infos !==undefined){res.f_code=_frame[4].$infos.__code__}else{res.f_code={co_name:co_name,co_filename:filename}
+if(_frame[1].$comp_code){$B.update_obj(res.f_code,_frame[1].$comp_code)}}
 res.f_code.__class__=$B.code
 res.f_code.co_code=_b_.None
 if(filename===undefined){res.f_code.co_filename="<string>"}}
