@@ -351,7 +351,7 @@ $B.$gen_expr = function(module_name, parent_scope, items, line_num, set_comp){
     var root = $B.py2js({
             src: py,
             is_comp: set_comp ? 'setcomp' : 'genexpr',
-            line_info, 
+            line_info,
             ix},
             genexpr_name, genexpr_name, parent_scope, line_num),
         js = root.to_js(),
@@ -1715,7 +1715,7 @@ $B.rich_comp = function(op, x, y){
     }else if(op == "__ne__"){
         return _b_.True
     }
-
+    
     throw _b_.TypeError.$factory("'" + method2comp[op] +
         "' not supported between instances of '" + $B.class_name(x) +
         "' and '" + $B.class_name(y) + "'")

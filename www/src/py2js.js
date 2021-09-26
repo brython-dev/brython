@@ -3649,7 +3649,7 @@ $DefCtx.prototype.transform = function(node, rank){
     var enter_frame_nodes = [
         $NodeJS('$locals.$line_info = "' + node.line_num + ',' +
             this.module + '"'),
-        $NodeJS(`"hey";var $top_frame = ["${this.id}", $locals,` +
+        $NodeJS(`var $top_frame = ["${this.id}", $locals,` +
             '"' + global_scope.id + '", ' + global_ns + ', ' +
             (this.is_comp ? this.name : name) + ']'),
         $NodeJS('$locals.$f_trace = $B.enter_frame($top_frame)'),
@@ -7374,7 +7374,6 @@ $LambdaCtx.prototype.to_js = function(){
     var lambda_name = 'lambda' + rand,
         module_name = module.id.replace(/\./g, '_')
 
-    node.line_num-- // issue #1645
     var root = $B.py2js(py, module_name, lambda_name, scope, node.line_num)
     var js = root.to_js()
 
@@ -12295,7 +12294,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         }
         lnum = token.start[0]
         $pos = line2pos[lnum] + token.start[1]
-        // console.log('context', context, '\ntoken', token, 'lnum', lnum, '$pos', $pos)
+        //console.log(token, 'lnum', lnum)
+        //console.log('context', context)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
@@ -12324,7 +12324,9 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
             case 'TYPE_COMMENT':
                 continue
             case 'NL':
-                node.line_num++
+                if((! node.context) || node.context.tree.length == 0){
+                    node.line_num++
+                }
                 continue
             case 'COMMENT':
                 var end = line2pos[token.end[0]] + token.end[1]
@@ -12509,7 +12511,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     //
     // Returns a tree structure representing the Python source code
     $pos = 0
-    line_num = line_num || 1
 
     if(typeof module == "object"){
         var __package__ = module.__package__
@@ -12536,8 +12537,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             line_num = parseInt(line_info.split(",")[0])
         }
         src = src.src
+    }else if(line_num !== undefined){
+        line_info = `${line_num},${module}`
+    }else{
+        line_num = 1
     }
-
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
     // Remove trailing \, cf issue 970

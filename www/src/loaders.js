@@ -417,6 +417,7 @@ $B.handle_error = function(err){
     err.$handled = true
     if($B.debug > 1){
         console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
+        console.log(err)
     }
     if(err.__class__ !== undefined){
         var name = $B.class_name(err),

@@ -1711,55 +1711,63 @@ function $extreme(args, op){ // used by min() and max()
     var $op_name = 'min'
     if(op === '__gt__'){$op_name = "max"}
 
-    if(args.length == 0){
-        throw _b_.TypeError.$factory($op_name +
-            " expected 1 arguments, got 0")
-    }
-    var last_arg = args[args.length - 1],
-        nb_args = args.length,
-        has_default = false,
+    var $ = $B.args($op_name, 0, {}, [], args, {}, 'args', 'kw')
+    
+    var has_default = false,
         func = false
-    if(last_arg.$nat == 'kw'){
-        nb_args--
-        last_arg = last_arg.kw
-        for(var attr in last_arg){
-            switch(attr){
-                case 'key':
-                    func = last_arg[attr]
-                    break
-                case 'default':
-                    var default_value = last_arg[attr]
-                    has_default = true
-                    break
-                default:
-                    throw _b_.TypeError.$factory("'" + attr +
-                        "' is an invalid keyword argument for this function")
-            }
+    for(var attr in $.kw.$string_dict){
+        switch(attr){
+            case 'key':
+                func = $.kw.$string_dict[attr][0]
+                break
+            case 'default':
+                var default_value = $.kw.$string_dict[attr][0]
+                has_default = true
+                break
+            default:
+                throw _b_.TypeError.$factory("'" + attr +
+                    "' is an invalid keyword argument for this function")
         }
     }
+
     if((! func) || func === _b_.None){
-        func = function(x){return x}
+        func = x => x
     }
-    if(nb_args == 0){
-        throw _b_.TypeError.$factory($op_name + " expected 1 argument, got 0")
-    }else if(nb_args == 1){
+
+    if($.args.length == 0){
+        throw _b_.TypeError.$factory($op_name +
+            " expected 1 arguments, got 0")
+    }else if($.args.length == 1){
         // Only one positional argument : it must be an iterable
-        var $iter = iter(args[0]),
-            res = null
+        var $iter = iter($.args[0]),
+            res = null,
+            x_value,
+            extr_value
         while(true){
             try{
                 var x = next($iter)
-                if(res === null || $B.$bool($B.$getattr(func(x), op)(func(res)))){
+                if(res === null){
+                    extr_value = func(x)
                     res = x
+                }else{
+                    x_value = func(x)
+                    if($B.rich_comp(op, x_value, extr_value)){
+                        res = x
+                        extr_value = x_value
+                    }
                 }
             }catch(err){
                 if(err.__class__ == _b_.StopIteration){
                     if(res === null){
-                        if(has_default){return default_value}
-                        else{throw _b_.ValueError.$factory($op_name +
-                            "() arg is an empty sequence")
+                        if(has_default){
+                            return default_value
+                        }else{
+                            throw _b_.ValueError.$factory($op_name +
+                                "() arg is an empty sequence")
                         }
-                    }else{return res}
+                    }else{
+                        return res
+                    }
                 }
                 throw err
             }
@@ -1769,14 +1777,12 @@ function $extreme(args, op){ // used by min() and max()
            throw _b_.TypeError.$factory("Cannot specify a default for " +
                $op_name + "() with multiple positional arguments")
         }
-        var res = null
-        for(var i = 0; i < nb_args; i++){
-            var x = args[i]
-            if(res === null || $B.$bool($B.$getattr(func(x), op)(func(res)))){
-                res = x
-            }
+        if($B.last(args).$nat){
+            var _args = [$.args].concat($B.last(args))
+        }else{
+            var _args = [$.args]
         }
-        return res
+        return $extreme.call(null, _args, op)
     }
 }
 
