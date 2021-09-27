@@ -66,33 +66,38 @@ document["altKey"].bind("keypress", keypress)
 </tr>
 
 <td>
-`charCode`
-> The Unicode reference number of the key
+`key`
+> A string for the key pressed:
 
-> This attribute is used only by the *keypress* event
+>> - the character if the key produces a character
 
-> It is set to a different value if the Shift key is pressed or not
+>> - a string that describes the key for special keys (eg "Control" for the
+>>   Ctrl key)
+
 </td>
 <td>
 #### Example
 
-Enter text in the entry below. Note that the character can be read by
-`chr(ev.charCode)`
+Put the cursor in the input boxes below and hit keys on the keyboard
 
-<input id="charCode" value="" autocomplete="off">&nbsp;
-<span id="traceCharCode">&nbsp;</span>
+keydown <input id="key_keydown" autocomplete="off"><br>
+keypress <input id="key_keypress" autocomplete="off">
+&nbsp;<span id="traceKey">&nbsp;</span><br>
+keyup <input id="key_keyup" autocomplete="off"><br>
 
 #### Code
 
 ```exec_on_load
-from browser import document
+from browser import bind, document
 
-def charCode(ev):
-    trace = document["traceCharCode"]
-    char = chr(ev.charCode)
-    trace.text = f"charCode: {ev.charCode}, character: {char}"
+def keyevent(ev):
+    trace = document["traceKey"]
+    trace.text = f"type: {ev.type}, key: {ev.key}"
+    ev.stopPropagation()
 
-document["charCode"].bind("keypress", charCode)
+document["key_keydown"].bind("keydown", keyevent)
+document["key_keypress"].bind("keypress", keyevent)
+document["key_keyup"].bind("keyup", keyevent)
 ```
 </td>
 
@@ -134,27 +139,24 @@ some keyboard shortcuts using the Ctrl key.
 
 <tr>
 <td>
-`keyCode`
-> A system and implementation dependent numerical code identifying the
-> unmodified value of the pressed key
+`code`
+> a string that describes the physical keyboard touch that is hit
 
-> The value doesn't change if the keys Alt, Ctrl or Shift are pressed
-
-> Note that the result is not the same depending on the handled events
-> *keydown*, *keyup* or *keypress*
+> this value is the same regardless of the character produced when hitting
+> the key: for instance on an AZERTY keyboard, hitting key A will produce
+> the code "KeyQ"
 </td>
 <td>
 #### Example
 
-Enter text in the entry fields below. Note that the character can be read by
-`chr(ev.charCode)` with the *keypress* event
+Put the cursor in the entry fields below and hit random keys.
 
-with *keydown* <input id="keyCodeKeydown" value="" autocomplete="off">
+with *keydown* <input id="codeKeydown" value="" autocomplete="off">
 
-<p>with *keypress* <input id="keyCodeKeypress" value="" autocomplete="off">
+<p>with *keypress* <input id="codeKeypress" value="" autocomplete="off">
 &nbsp;<span id="traceKeyCode">&nbsp;</span>
 
-<p>with *keyup* <input id="keyCodeKeyup" value="" autocomplete="off">
+<p>with *keyup* <input id="codeKeyup" value="" autocomplete="off">
 
 #### Code
 
@@ -163,12 +165,12 @@ from browser import document
 
 def keyCode(ev):
     trace = document["traceKeyCode"]
-    trace.text = f"event {ev.type}, keyCode : {ev.keyCode}"
+    trace.text = f"event: {ev.type}, code: {ev.code}"
     ev.stopPropagation()
 
-document["keyCodeKeydown"].bind("keydown", keyCode)
-document["keyCodeKeypress"].bind("keypress", keyCode)
-document["keyCodeKeyup"].bind("keyup", keyCode)
+document["codeKeydown"].bind("keydown", keyCode)
+document["codeKeypress"].bind("keypress", keyCode)
+document["codeKeyup"].bind("keyup", keyCode)
 ```
 </td>
 </tr>
@@ -205,58 +207,6 @@ document["shiftKey"].bind("keypress", keypress)
 </td>
 </tr>
 
-<tr>
-<td>
-`which`
-> A system and implementation dependent numeric code identifying the
-> unmodified value of the pressed key
 
-> Note that the result is not the same depending on the handled events
-> *keydown*, *keyup* or *keypress*
-</td>
-<td>
-#### Example
-
-Enter text in the entry below. Note that the character can be read by
-`chr(ev.which)` for the *keypress* event
-
-
-<table>
-<tr>
-<td>
-with *keydown* <input id="whichKeydown" autocomplete="off">
-
-<p>with *keypress* <input id="whichKeypress" autocomplete="off">
-
-<p>with *keyup* <input id="whichKeyup" autocomplete="off">
-
- </td>
- <td>
- <span id="traceWhich">&nbsp;</span>
- </td>
- </tr>
- <tr>
- <td colspan=2>
-
-#### Code
-
-```exec_on_load
-from browser import document
-
-def which(ev):
-    trace = document["traceWhich"]
-    trace.html = f"event : {ev.type}<br>which: {ev.which}"
-    if ev.type == "keypress":
-        trace.html += f"<br>character : {chr(ev.which)}"
-
-document["whichKeydown"].bind("keydown", which)
-document["whichKeypress"].bind("keypress", which)
-document["whichKeyup"].bind("keyup", which)
-```
- </td>
- </tr>
- </table>
-</td>
-</tr>
 </table>
 
