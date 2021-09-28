@@ -45,9 +45,9 @@ def entry_keypress(ev):
     ev.preventDefault()
     ev.stopPropagation()
     target = ev.target
-    is_digit = ev.charCode >= 49 and ev.keyCode <= 58
+    is_digit = ev.key.isdigit()
     if is_digit:
-        value = chr(ev.charCode)
+        value = ev.key
         cell = ev.target.parent
         cell.clear()
         cell.text = value
@@ -59,7 +59,7 @@ def entry_keypress(ev):
             make_input(next_cell)
 
 def entry_keydown(ev):
-    is_tab = ev.keyCode == 9
+    is_tab = ev.key == "Tab"
     if is_tab:
         ev.preventDefault()
         ev.stopPropagation()

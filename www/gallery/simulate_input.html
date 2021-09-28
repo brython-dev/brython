@@ -83,7 +83,7 @@ def dialog(draw, remove, callback, validate=None):
 
     @bind(inp, "keyup")
     def keyup(ev):
-        if ev.keyCode == 13:
+        if ev.key == "Enter":
             click(ev)
 
 def draw_dialog():
