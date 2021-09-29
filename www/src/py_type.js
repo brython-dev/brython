@@ -73,39 +73,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // - if the class has parents, inherit the class of the first parent
     // - otherwise default to type
     if(metaclass === undefined){
-        if(bases && bases.length > 0){
-            metaclass = bases[0].__class__
-            if(metaclass === undefined){
-                // Might inherit a Javascript constructor
-                if(typeof bases[0] == "function"){
-                    if(bases.length != 1){
-                        throw _b_.TypeError.$factory("A Brython class " +
-                            "can inherit at most 1 Javascript constructor")
-                    }
-                    metaclass = bases[0].__class__ = $B.JSMeta
-                    $B.set_func_names(bases[0], module)
-                }else{
-                    throw _b_.TypeError.$factory("Argument of " + class_name +
-                        "is not a class (type '" + $B.class_name(bases[0]) +
-                        "')")
-                }
-            }
-            for(var i = 1; i < bases.length; i++){
-                var mc = bases[i].__class__
-                if(mc === metaclass || _b_.issubclass(metaclass, mc)){
-                    // same metaclass or a subclass, do nothing
-                }else if(_b_.issubclass(mc, metaclass)){
-                    metaclass = mc
-                }else if(metaclass.__bases__ &&
-                        metaclass.__bases__.indexOf(mc) == -1){
-                    throw _b_.TypeError.$factory("metaclass conflict: the " +
-                        "metaclass of a derived class must be a (non-" +
-                        "strict) subclass of the metaclasses of all its bases")
-                }
-            }
-        }else{
-            metaclass = _b_.type
-        }
+        metaclass = meta_from_bases(class_name, module, bases)
     }
     // Use __prepare__ (PEP 3115)
     var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None),
@@ -270,6 +238,44 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     return kls
 }
 
+function meta_from_bases(class_name, module, bases){
+    var metaclass
+    if(bases && bases.length > 0){
+        metaclass = bases[0].__class__
+        if(metaclass === undefined){
+            // Might inherit a Javascript constructor
+            if(typeof bases[0] == "function"){
+                if(bases.length != 1){
+                    throw _b_.TypeError.$factory("A Brython class " +
+                        "can inherit at most 1 Javascript constructor")
+                }
+                metaclass = bases[0].__class__ = $B.JSMeta
+                $B.set_func_names(bases[0], module)
+            }else{
+                throw _b_.TypeError.$factory("Argument of " + class_name +
+                    "is not a class (type '" + $B.class_name(bases[0]) +
+                    "')")
+            }
+        }
+        for(var i = 1; i < bases.length; i++){
+            var mc = bases[i].__class__
+            if(mc === metaclass || _b_.issubclass(metaclass, mc)){
+                // same metaclass or a subclass, do nothing
+            }else if(_b_.issubclass(mc, metaclass)){
+                metaclass = mc
+            }else if(metaclass.__bases__ &&
+                    metaclass.__bases__.indexOf(mc) == -1){
+                throw _b_.TypeError.$factory("metaclass conflict: the " +
+                    "metaclass of a derived class must be a (non-" +
+                    "strict) subclass of the metaclasses of all its bases")
+            }
+        }
+    }else{
+        metaclass = _b_.type
+    }
+    return metaclass
+}
+
 var type = $B.make_class("type",
     function(obj, bases, cl_dict){
         var len = arguments.length
@@ -279,7 +285,9 @@ var type = $B.make_class("type",
             }
             return obj.__class__ || $B.get_class(obj)
         }else if(len == 3){
-            return type.__new__(type, obj, bases, cl_dict)
+            var module = $B.last($B.frames_stack)[2],
+                meta = meta_from_bases(obj, module, bases)
+            return type.__new__(meta, obj, bases, cl_dict)
         }else{
             throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
         }
@@ -315,7 +323,7 @@ type.__format__ = function(klass, fmt_spec){
     return _b_.str.$factory(klass)
 }
 
- type.__getattribute__ = function(klass, attr){
+type.__getattribute__ = function(klass, attr){
     switch(attr) {
         case "__annotations__":
             var mro = [klass].concat(klass.__mro__),

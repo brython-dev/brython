@@ -737,4 +737,37 @@ class A:
 
     B()
 
+# issue 1779
+class A:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        t.append('I am A')
+
+t = []
+
+class MetaB(type):
+    def __call__(cls, *args, **kwargs):
+        t.append('MetaB Call')
+        self = super().__call__(*args, **kwargs)  # create
+        return self
+
+
+class B(metaclass=MetaB):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        t.append('I am B')
+
+class C(B, A):
+  pass
+
+c = C()
+assert t == ['MetaB Call', 'I am A', 'I am B']
+
+del t[:]
+
+D = type('C', (B, A,), {})
+
+d = D()
+assert t == ['MetaB Call', 'I am A', 'I am B']
+
 print('passed all tests..')
