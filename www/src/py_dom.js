@@ -606,8 +606,8 @@ DOMNode.$factory = function(elt, fromtag){
                 }
                 if(klass !== undefined) {
                     // all checks are good
-                    elt.__class__ = klass
-                    return elt
+                    klass.$elt_wrap = elt  // tell class to wrap element
+                    return klass.$factory()  // and return what the factory wants
                 }
             }
         }
