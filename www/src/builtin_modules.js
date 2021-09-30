@@ -165,7 +165,8 @@
                     __class__: _b_.type,
                     $infos:{
                         __name__: tagName,
-                        __module__: "browser.html"
+                        __module__: "browser.html",
+                        __qualname__: tagName
                     }
                 }
 
@@ -240,8 +241,8 @@
                 dict.__mro__ = [$B.DOMNode, $B.builtins.object]
 
                 dict.__new__ = function(cls){
-                    // __new__ must be defined explicitely : it returns an instance of
-                    // DOMNode for the specified tagName
+                    // __new__ must be defined explicitely : it returns an
+                    // instance of DOMNode for the specified tagName
                     if(cls.$elt_wrap !== undefined) {
                         // DOMNode is piggybacking on us to autogenerate a node
                         var elt = cls.$elt_wrap  // keep track of the to wrap element
@@ -312,8 +313,7 @@
 
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.
-            var obj = {tags:$B.empty_dict()},
-                dicts = {}
+            var obj = {tags:$B.empty_dict()}
 
             // register tags in DOMNode to autogenerate tags when DOMNode is invoked
             $B.DOMNode.tags = obj.tags
@@ -322,7 +322,7 @@
                 if(!(typeof tag == 'string')){
                     throw _b_.TypeError.$factory("html.maketag expects a string as argument")
                 }
-                var klass = dicts[tag] = makeTagDict(tag)
+                var klass = makeTagDict(tag)
                 klass.$factory = makeFactory(klass)
                 _b_.dict.$setitem(obj.tags, tag, klass)
 
