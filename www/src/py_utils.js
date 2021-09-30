@@ -252,6 +252,13 @@ $B.get_class = function(obj){
                     return _b_.float
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
                         && obj instanceof Node){
+                    if(obj.tagName){
+                        try{
+                            return $B.$getitem($B.DOMNode.tags, obj.tagName)
+                        }catch(err){
+                            return $B.DOMNode
+                        }
+                    }
                     return $B.DOMNode
                 }
                 break
@@ -1715,7 +1722,7 @@ $B.rich_comp = function(op, x, y){
     }else if(op == "__ne__"){
         return _b_.True
     }
-    
+
     throw _b_.TypeError.$factory("'" + method2comp[op] +
         "' not supported between instances of '" + $B.class_name(x) +
         "' and '" + $B.class_name(y) + "'")

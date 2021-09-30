@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,6,'final',0]
 __BRYTHON__.__MAGIC__="3.9.6"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-29 11:49:37.408255"
-__BRYTHON__.timestamp=1632908977408
+__BRYTHON__.compiled_date="2021-09-30 12:25:11.508181"
+__BRYTHON__.timestamp=1632997511508
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6978,8 +6978,8 @@ type.__new__=function(meta,name,bases,cl_dict,extra_kwargs){
 extra_kwargs=extra_kwargs===undefined ?{$nat:'kw',kw:{}}:
 extra_kwargs
 var module=cl_dict.$string_dict.__module__
-if(module){module=module[0]}
-var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module},$is_class:true,$has_setattr:cl_dict.$has_setattr}
+if(module){module=module[0]}else{module=$B.last($B.frames_stack)[2]}
+var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module,__qualname__:name},$is_class:true,$has_setattr:cl_dict.$has_setattr}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
@@ -7233,7 +7233,8 @@ return $B.Function
 case "object":
 if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
 return _b_.list}}else if(obj.constructor===Number){return _b_.float}else if(typeof Node !=="undefined" 
-&& obj instanceof Node){return $B.DOMNode}
+&& obj instanceof Node){if(obj.tagName){try{return $B.$getitem($B.DOMNode.tags,obj.tagName)}catch(err){return $B.DOMNode}}
+return $B.DOMNode}
 break}}
 if(klass===undefined){return $B.JSObj}
 return klass}
@@ -14909,19 +14910,7 @@ Options.$factory=function(parent){return{
 __class__:Options,parent:parent}}
 $B.set_func_names(Options,"<dom>")
 var DOMNode={__class__ :_b_.type,__mro__:[object],$infos:{__module__:"browser",__name__:"DOMNode"}}
-DOMNode.$factory=function(elt,fromtag){if(elt.__class__===DOMNode){return elt}
-if(typeof elt=="number" ||typeof elt=="boolean" ||
-typeof elt=="string"){return elt}
-if(elt.__class__===undefined && fromtag===undefined){if(DOMNode.tags !==undefined){
-var tdict=DOMNode.tags.$string_dict
-if(tdict !==undefined && tdict.hasOwnProperty(elt.tagName)){try{var klass=tdict[elt.tagName][0]}catch(err){console.log("tdict",tdict,"tag name",elt.tagName)
-throw err}
-if(klass !==undefined){
-elt.__class__=klass
-return elt}}}}
-if(elt["$brython_id"]===undefined ||elt.nodeType==9){
-elt.$brython_id="DOM-"+$B.UUID()}
-return elt}
+DOMNode.$factory=function(elt){return elt}
 DOMNode.__add__=function(self,other){
 var res=TagSum.$factory()
 res.children=[self],pos=1
@@ -15434,7 +15423,7 @@ return $B.builtins.str.$factory(results);}})
 modules['browser.html']=(function($B){var _b_=$B.builtins
 var TagSum=$B.TagSum
 function makeTagDict(tagName){
-var dict={__class__:_b_.type,$infos:{__name__:tagName,__module__:"browser.html"}}
+var dict={__class__:_b_.type,$infos:{__name__:tagName,__module__:"browser.html",__qualname__:tagName}}
 dict.__init__=function(){var $ns=$B.args('pow',1,{self:null},['self'],arguments,{},'args','kw'),self=$ns['self'],args=$ns['args']
 if(args.length==1){var first=args[0]
 if(_b_.isinstance(first,[_b_.str,_b_.int,_b_.float])){
@@ -15483,10 +15472,10 @@ return factory}
 var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON','CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD','DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT','FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6','HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS','ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU','META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP','OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT','SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP','SVG','TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD','TITLE','TR','TT','U','UL','VAR',
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
 'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
-var obj={tags:$B.empty_dict()},dicts={}
+var obj={tags:$B.empty_dict()}
 $B.DOMNode.tags=obj.tags
 function maketag(tag){if(!(typeof tag=='string')){throw _b_.TypeError.$factory("html.maketag expects a string as argument")}
-var klass=dicts[tag]=makeTagDict(tag)
+var klass=makeTagDict(tag)
 klass.$factory=makeFactory(klass)
 _b_.dict.$setitem(obj.tags,tag,klass)
 return klass}
