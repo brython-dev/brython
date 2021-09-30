@@ -581,6 +581,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     var module = cl_dict.$string_dict.__module__
     if(module){
         module = module[0]
+    }else{
+        module = $B.last($B.frames_stack)[2]
     }
     var class_dict = {
         __class__ : meta,
@@ -588,7 +590,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         __dict__ : cl_dict,
         $infos:{
             __name__: name,
-            __module__: module
+            __module__: module,
+            __qualname__: name
         },
         $is_class: true,
         $has_setattr: cl_dict.$has_setattr
