@@ -110,8 +110,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,6,'final',0]
 __BRYTHON__.__MAGIC__="3.9.6"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-09-30 12:34:34.497075"
-__BRYTHON__.timestamp=1632998074497
+__BRYTHON__.compiled_date="2021-10-01 21:09:37.789017"
+__BRYTHON__.timestamp=1633115377785
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6879,8 +6879,8 @@ return type.__new__(meta,obj,bases,cl_dict)}else{throw _b_.TypeError.$factory('t
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
 var new_func=_b_.type.__getattribute__(klass,"__new__")
-var instance=new_func.apply(null,arguments)
-if(instance.__class__===klass){
+var instance=new_func.apply(null,arguments),instance_class=instance.__class__ ||$B.get_class(instance)
+if(instance_class===klass){
 var init_func=_b_.type.__getattribute__(klass,"__init__")
 if(init_func !==_b_.object.__init__){
 var args=[instance].concat(extra_args)
@@ -7064,7 +7064,6 @@ $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
 var $instance_creator=$B.$instance_creator=function(klass){
 if(klass.prototype && klass.prototype.constructor==klass){
-console.log(801)
 return function(){return new klass(...arguments)}}
 if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
 "Can't instantiate abstract class interface "+
@@ -7237,7 +7236,8 @@ return $B.Function
 case "object":
 if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
 return _b_.list}}else if(obj.constructor===Number){return _b_.float}else if(typeof Node !=="undefined" 
-&& obj instanceof Node){if(obj.tagName){try{return $B.$getitem($B.DOMNode.tags,obj.tagName)}catch(err){return $B.DOMNode}}
+&& obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
+$B.DOMNode}
 return $B.DOMNode}
 break}}
 if(klass===undefined){return $B.JSObj}
@@ -15069,9 +15069,8 @@ for(var i=0,len=self.childNodes.length;i < len;i++){items.push(DOMNode.$factory(
 return $B.$iter(items)}
 DOMNode.__le__=function(self,other){
 if(self.nodeType==9){self=self.body}
-if(_b_.isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){self.appendChild(other.children[i])}}else if(typeof other=="string" ||typeof other=="number"){var $txt=document.createTextNode(other.toString())
-self.appendChild($txt)}else if(_b_.isinstance(other,DOMNode)){
-self.appendChild(other)}else{try{
+if(_b_.isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){self.appendChild(other.children[i])}}else if(typeof other=="string" ||typeof other=="number"){var txt=document.createTextNode(other.toString())
+self.appendChild(txt)}else if(other instanceof Node){self.appendChild(other)}else{try{
 var items=_b_.list.$factory(other)
 items.forEach(function(item){DOMNode.__le__(self,item)})}catch(err){throw _b_.TypeError.$factory("can't add '"+
 $B.class_name(other)+"' object to DOMNode instance")}}
@@ -15450,43 +15449,35 @@ attribute_mapper(arg)
 self.setAttribute(arg,value)}catch(err){throw _b_.ValueError.$factory(
 "can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNode,$B.builtins.object]
-dict.__new__=function(cls){
-if(cls.$elt_wrap !==undefined){
-var elt=cls.$elt_wrap 
-cls.$elt_wrap=undefined 
-var res=$B.DOMNode.$factory(elt,true)
-res._wrapped=true }else{var res=$B.DOMNode.$factory(document.createElement(tagName),true)
-res._wrapped=false }
-res.__class__=cls
-res.__dict__=$B.empty_dict()
+dict.__new__=function(cls){var res=document.createElement(tagName)
+if(cls !==html[tagName]){
+res.__class__=cls}
 return res}
 $B.set_func_names(dict,"browser.html")
 return dict}
-function makeFactory(klass){var factory=function(){if(klass.$elt_wrap !==undefined){
-var elt=klass.$elt_wrap 
-klass.$elt_wrap=undefined 
-var res=$B.DOMNode.$factory(elt,true)
-res._wrapped=true }else{if(klass.$infos.__name__=='SVG'){var res=$B.DOMNode.$factory(
-document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var elt=document.createElement(klass.$infos.__name__),res=$B.DOMNode.$factory(elt,true)}
-res._wrapped=false }
-res.__class__=klass
-klass.__init__(res,...arguments)
+function makeFactory(klass){
+var factory=function(){if(klass.$infos.__name__=='SVG'){var res=$B.DOMNode.$factory(
+document.createElementNS("http://www.w3.org/2000/svg","svg"),true)}else{var res=document.createElement(klass.$infos.__name__)}
+var init=$B.$getattr(klass,"__init__",null)
+if(init !==null){init(res,...arguments)}
 return res}
 return factory}
 var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON','CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD','DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT','FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6','HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS','ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU','META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP','OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT','SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP','SVG','TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD','TITLE','TR','TT','U','UL','VAR',
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
 'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
-var obj={tags:$B.empty_dict()}
-$B.DOMNode.tags=obj.tags
-function maketag(tag){if(!(typeof tag=='string')){throw _b_.TypeError.$factory("html.maketag expects a string as argument")}
-var klass=makeTagDict(tag)
+var html={}
+html.tags=$B.empty_dict()
+function maketag(tagName){
+if(!(typeof tagName=='string')){throw _b_.TypeError.$factory("html.maketag expects a string as argument")}
+var klass=makeTagDict(tagName)
 klass.$factory=makeFactory(klass)
-_b_.dict.$setitem(obj.tags,tag,klass)
+_b_.dict.$setitem(html.tags,tagName,klass)
+html[tagName]=klass
 return klass}
-tags.forEach(function(tag){obj[tag]=maketag(tag)})
-obj.maketag=maketag
-obj.attribute_mapper=function(attr){return attr.replace(/_/g,'-')}
-return obj})(__BRYTHON__)}
+for(var tagName of tags){maketag(tagName)}
+html.maketag=maketag
+html.attribute_mapper=function(attr){return attr.replace(/_/g,'-')}
+return html})(__BRYTHON__)}
 modules['browser']=browser
 $B.UndefinedClass=$B.make_class("Undefined",function(){return $B.Undefined}
 )

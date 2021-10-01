@@ -241,47 +241,36 @@
                 dict.__mro__ = [$B.DOMNode, $B.builtins.object]
 
                 dict.__new__ = function(cls){
-                    // __new__ must be defined explicitely : it returns an
-                    // instance of DOMNode for the specified tagName
-                    if(cls.$elt_wrap !== undefined) {
-                        // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = cls.$elt_wrap  // keep track of the to wrap element
-                        cls.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
-                        res._wrapped = true  // marked as wrapped
-                    }else{
-                        var res = $B.DOMNode.$factory(document.createElement(tagName), true)
-                        res._wrapped = false  // not wrapped
+                    var res = document.createElement(tagName)
+                    if(cls !== html[tagName]){
+                        // Only set __class__ if it can't be determined by
+                        // the tag name
+                        res.__class__ = cls
                     }
-                    res.__class__ = cls
-                    res.__dict__ = $B.empty_dict()
                     return res
                 }
+
                 $B.set_func_names(dict, "browser.html")
                 return dict
             }
 
             function makeFactory(klass){
+                // Create the factory function for HTML tags.
+                // By default, the class used to create a tag is
+                // browser.html.<tag>. It can be overridden by setting
+                // browser.html.tags[tag] to another class.
                 var factory = function(){
-                    if(klass.$elt_wrap !== undefined) {
-                        // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = klass.$elt_wrap  // keep track of the to wrap element
-                        klass.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
-                        res._wrapped = true  // marked as wrapped
+                    if(klass.$infos.__name__ == 'SVG'){
+                        var res = $B.DOMNode.$factory(
+                            document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                     }else{
-                        if(klass.$infos.__name__ == 'SVG'){
-                            var res = $B.DOMNode.$factory(
-                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
-                        }else{
-                            var elt = document.createElement(klass.$infos.__name__),
-                                res = $B.DOMNode.$factory(elt, true)
-                        }
-                        res._wrapped = false  // not wrapped
+                        var res = document.createElement(klass.$infos.__name__)
                     }
-                    res.__class__ = klass
                     // apply __init__
-                    klass.__init__(res, ...arguments)
+                    var init = $B.$getattr(klass, "__init__", null)
+                    if(init !== null){
+                        init(res, ...arguments)
+                    }
                     return res
                 }
                 return factory
@@ -311,37 +300,40 @@
                         // HTML5.1 tags
                         'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 
+            // Object representing the module browser.html
+            var html = {}
+
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.
-            var obj = {tags:$B.empty_dict()}
+            html.tags = $B.empty_dict()
 
-            // register tags in DOMNode to autogenerate tags when DOMNode is invoked
-            $B.DOMNode.tags = obj.tags
-
-            function maketag(tag){
-                if(!(typeof tag == 'string')){
+            function maketag(tagName){
+                // Create a new class associated with the custom HTML tag
+                // "tagName". For instance, "makeTag('P2')" creates the class
+                // that can be used to create tags "<P2></P2>"
+                if(!(typeof tagName == 'string')){
                     throw _b_.TypeError.$factory("html.maketag expects a string as argument")
                 }
-                var klass = makeTagDict(tag)
+                var klass = makeTagDict(tagName)
                 klass.$factory = makeFactory(klass)
-                _b_.dict.$setitem(obj.tags, tag, klass)
-
+                _b_.dict.$setitem(html.tags, tagName, klass)
+                html[tagName] = klass
                 return klass
             }
 
-            tags.forEach(function(tag){
-                obj[tag] = maketag(tag)
-            })
+            for(var tagName of tags){
+                maketag(tagName)
+            }
 
             // expose function maketag to generate arbitrary tags (issue #624)
-            obj.maketag = maketag
+            html.maketag = maketag
 
             // expose function to transform parameters (issue #1187)
-            obj.attribute_mapper = function(attr){
+            html.attribute_mapper = function(attr){
                 return attr.replace(/_/g, '-')
             }
 
-            return obj
+            return html
         })(__BRYTHON__)
     }
 

@@ -302,8 +302,9 @@ type.__call__ = function(){
     }
     var new_func = _b_.type.__getattribute__(klass, "__new__")
     // create an instance with __new__
-    var instance = new_func.apply(null, arguments)
-    if(instance.__class__ === klass){
+    var instance = new_func.apply(null, arguments),
+        instance_class = instance.__class__ || $B.get_class(instance)
+    if(instance_class === klass){
         // call __init__ with the same parameters
         var init_func = _b_.type.__getattribute__(klass, "__init__")
         if(init_func !== _b_.object.__init__){
@@ -807,7 +808,6 @@ var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
     if(klass.prototype && klass.prototype.constructor == klass){
         // JS constructor
-        console.log(801)
         return function(){
             return new klass(...arguments)
         }

@@ -44,7 +44,7 @@ function define(tag_name, cls){
                         var item = _self.attributes.item(i)
                         if(attrs_before_init.indexOf(item) == -1){
                             throw _b_.TypeError.$factory("Custom element " +
-                                "must not create attributes, found: " + 
+                                "must not create attributes, found: " +
                                 item.name + '="' + item.value + '"')
                         }
                     }

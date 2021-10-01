@@ -946,16 +946,17 @@ DOMNode.__iter__ = function(self){
 
 DOMNode.__le__ = function(self, other){
     // for document, append child to document.body
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == 9){
+        self = self.body
+    }
     if(_b_.isinstance(other, TagSum)){
         for(var i = 0; i < other.children.length; i++){
             self.appendChild(other.children[i])
         }
     }else if(typeof other == "string" || typeof other == "number"){
-        var $txt = document.createTextNode(other.toString())
-        self.appendChild($txt)
-    }else if(_b_.isinstance(other, DOMNode)){
-        // other is a DOMNode instance
+        var txt = document.createTextNode(other.toString())
+        self.appendChild(txt)
+    }else if(other instanceof Node){
         self.appendChild(other)
     }else{
         try{
@@ -972,7 +973,9 @@ DOMNode.__le__ = function(self, other){
     return self // to allow chained appends
 }
 
-DOMNode.__len__ = function(self){return self.length}
+DOMNode.__len__ = function(self){
+    return self.length
+}
 
 DOMNode.__mul__ = function(self,other){
     if(_b_.isinstance(other, _b_.int) && other.valueOf() > 0){
@@ -987,7 +990,9 @@ DOMNode.__mul__ = function(self,other){
         "by " + other)
 }
 
-DOMNode.__ne__ = function(self, other){return ! DOMNode.__eq__(self, other)}
+DOMNode.__ne__ = function(self, other){
+    return ! DOMNode.__eq__(self, other)
+}
 
 DOMNode.__next__ = function(self){
    self.$counter++
