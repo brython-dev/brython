@@ -241,7 +241,7 @@ document <= p2('test')
 
 El módulo tiene un atributo relacionado:
 
-_tags_
+`tags`
 
 > Diccionario que mapea los nombres de etiquetas con su clase. Si se añaden nuevas clases
 > mediante la función `maketag()`, también se añadirán a este diccionario.

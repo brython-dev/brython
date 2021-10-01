@@ -250,7 +250,7 @@ document <= p2('test')
 
 The module has a related attribute :
 
-_tags_
+`tags`
 
 > Dictionary mapping tag names to the matching class. If new classes are
 > added by function `maketag()`, they are also added to this dictionary.

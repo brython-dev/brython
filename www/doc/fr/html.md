@@ -252,7 +252,7 @@ document <= p2('test')
 </blockquote>
 Le module possède un autre attribut :
 
-_tags_
+`tags`
 
 > Dictionnaire qui associe des noms de balises (chaines de caractères)
 > aux classes correspondantes. Si de nouvelles balises sont ajoutées
