@@ -87,7 +87,7 @@ def run():
         'py_list',
         'py_generator',
         'py_dom',
-        # 'py_pattern_matching',
+        'py_pattern_matching',
         'builtin_modules',
         'async'
     ]
