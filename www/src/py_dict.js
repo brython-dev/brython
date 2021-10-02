@@ -280,7 +280,7 @@ dict.__contains__ = function(){
         ["self", "key"], arguments, {}, null, null),
         self = $.self,
         key = $.key
-    
+
     if(self.$jsobj){
         return self.$jsobj[key] !== undefined
     }
@@ -439,7 +439,8 @@ dict.$getitem = function(self, arg, ignore_missing){
     // ignore_missing is set in dict.get and dict.setdefault
     if(self.$jsobj){
         if(self.$jsobj[arg] === undefined){
-            if(self.$jsobj.hasOwnProperty(arg)){
+            if(self.$jsobj.hasOwnProperty &&
+                    self.$jsobj.hasOwnProperty(arg)){
                 return $B.Undefined
             }
             throw _b_.KeyError.$factory(arg)
@@ -490,7 +491,7 @@ dict.$getitem = function(self, arg, ignore_missing){
     if(! ignore_missing){
         if(self.__class__ !== dict && ! ignore_missing){
             try{
-                var missing_method = $B.$getattr(self.__class__, 
+                var missing_method = $B.$getattr(self.__class__,
                     "__missing__", _b_.None)
             }catch(err){
                 console.log(err)
