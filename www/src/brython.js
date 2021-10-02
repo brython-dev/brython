@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,6,'final',0]
 __BRYTHON__.__MAGIC__="3.9.6"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-02 20:38:21.826233"
-__BRYTHON__.timestamp=1633199901819
+__BRYTHON__.compiled_date="2021-10-02 20:54:43.266835"
+__BRYTHON__.timestamp=1633200883266
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -15374,6 +15374,131 @@ msg=temp}
 return _window.postMessage(msg,targetOrigin)}
 $B.DOMNode=DOMNode
 $B.win=win})(__BRYTHON__)
+;
+
+$B.pattern_match=function(subject,pattern){var _b_=$B.builtins,frame=$B.last($B.frames_stack),locals=frame[1]
+function bind(pattern,subject){if(pattern.alias){locals[pattern.alias]=subject}}
+if(pattern.sequence){
+if(_b_.isinstance(subject,[_b_.str,_b_.bytes,_b_.bytearray])){
+return false}
+var Sequence
+if($B.imported['collections.abc']){Sequence=$B.imported['collections.abc'].Sequence}
+var deque
+if($B.imported['collections']){deque=$B.imported['collections'].deque}
+var supported=false
+var klass=subject.__class__ ||$B.get_class(subject)
+for(var base of[klass].concat(klass.__bases__ ||[])){if(base.$match_sequence_pattern){
+supported=true
+break}else if(base===Sequence ||base==deque){supported=true
+break}}
+if((! supported)&& Sequence){
+supported=_b_.issubclass(klass,Sequence)}
+if(! supported){return false}
+if(pattern.sequence.length==1 &&
+pattern.sequence[0].capture_starred=='_'){return true}
+var subject_length=_b_.len(subject)
+var nb_fixed_length=0
+for(var item of pattern.sequence){if(! item.capture_starred){nb_fixed_length++}}
+if(subject_length < nb_fixed_length){
+return false}else if(subject_length==0 && pattern.sequence.length==0){
+return true}
+var it=_b_.iter(subject),nxt=$B.$getattr(it,'__next__'),store_starred=[],nb_matched_in_subject=0
+for(var i=0,len=pattern.sequence.length;i < len;i++){if(pattern.sequence[i].capture_starred){
+if(pattern.sequence[i].capture_starred=='_' &&
+i==len-1){bind(pattern,subject)
+return true}
+var starred_match_length=subject_length-
+nb_matched_in_subject-len+i+1
+for(var j=0;j < starred_match_length;j++){store_starred.push(nxt())}
+locals[pattern.sequence[i].capture_starred]=store_starred
+nb_matched_in_subject+=starred_match_length}else{var subject_item=nxt()
+var m=$B.pattern_match(subject_item,pattern.sequence[i])
+if(! m){return false}
+nb_matched_in_subject++}}
+if(nb_matched_in_subject !=subject_length){return false}
+bind(pattern,subject)
+return true}
+if(pattern.group){if(pattern.group.length==1){
+if($B.pattern_match(subject,pattern.group[0])){bind(pattern,subject)
+return true}}else{
+pattern.sequence=pattern.group
+return $B.pattern_match(subject,pattern)}}
+if(pattern.or){
+for(var item of pattern.or){if($B.pattern_match(subject,item)){bind(pattern,subject)
+return true}}
+return false}
+if(pattern.mapping){
+var supported=false
+var Mapping
+if($B.imported['collections.abc']){Mapping=$B.imported['collections.abc'].Mapping}
+var klass=subject.__class__ ||$B.get_class(subject)
+for(var base of[klass].concat(klass.__bases__ ||[])){
+if(base.$match_mapping_pattern ||base===Mapping){supported=true
+break}}
+if((! supported)&& Mapping){supported=_b_.issubclass(klass,Mapping)}
+if(! supported){return false}
+var matched=[],keys=[]
+for(var item of pattern.mapping){var key_pattern=item[0],value_pattern=item[1]
+if(key_pattern.hasOwnProperty('literal')){var key=key_pattern.literal}else if(key_pattern.hasOwnProperty('value')){var key=key_pattern.value}
+if(_b_.list.__contains__(keys,key)){throw _b_.ValueError.$factory('mapping pattern checks '+
+'duplicate key ('+
+_b_.str.$factory(key)+')')}
+keys.push(key)
+var missing=$B.make_class('missing',function(){return{
+__class__:missing}}
+)
+try{var v=$B.$call($B.$getattr(subject,"get"))(key,missing)
+if(v===missing){
+return false}
+if(! $B.pattern_match(v,value_pattern)){return false}
+matched.push(key)}catch(err){if($B.is_exc(err,[_b_.KeyError])){return false}
+throw err}}
+if(pattern.rest){var rest=$B.empty_dict(),it=_b_.iter(subject)
+while(true){try{var next_key=_b_.next(it)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){locals[pattern.rest]=rest
+return true}
+throw err}
+if(! _b_.list.__contains__(matched,next_key)){_b_.dict.__setitem__(rest,next_key,$B.$getitem(subject,next_key))}}}
+return true}
+if(pattern.class){var klass=pattern.class
+if(! _b_.isinstance(klass,_b_.type)){throw _b_.TypeError.$factory('called match pattern must be a type')}
+if(! _b_.isinstance(subject,klass)){return false}
+if(pattern.args.length > 0){if([_b_.bool,_b_.bytearray,_b_.bytes,_b_.dict,_b_.float,_b_.frozenset,_b_.int,_b_.list,_b_.set,_b_.str,_b_.tuple].indexOf(klass)>-1){
+if(pattern.args.length > 1){throw _b_.TypeError.$factory('for builtin type '+
+$B.class_name(subject)+', a single positional '+
+'subpattern is accepted')}
+return $B.pattern_match(subject,pattern.args[0])}else{
+var match_args=$B.$getattr(klass,'__match_args__',$B.fast_tuple([]))
+if(! _b_.isinstance(match_args,_b_.tuple)){throw _b_.TypeError.$factory(
+'__match_args__() did not return a tuple')}
+if(pattern.args.length > match_args.length){throw _b_.TypeError.$factory(
+'__match_args__() returns '+match_args.length+
+' names but '+pattern.args.length+' positional '+
+'arguments were passed')}
+for(var i=0,len=pattern.args.length;i < len;i++){
+var pattern_arg=pattern.args[i],klass_arg=match_args[i]
+if(typeof klass_arg !=="string"){throw _b_.TypeError.$factory('item in __match_args__ '+
+'is not a string: '+klass_arg)}
+if(pattern.keywords.hasOwnProperty(klass_arg)){throw _b_.TypeError.$factory('__match_arg__ item '+
+klass_arg+' was passed as keyword pattern')}
+pattern.keywords[klass_arg]=pattern_arg}}}
+for(var key in pattern.keywords){var v=$B.$getattr(subject,key,null)
+if(v===null){return false}else if(! $B.pattern_match(v,pattern.keywords[key])){return false}}
+bind(pattern,subject)
+return true}
+if(pattern.capture){if(pattern.capture !='_'){
+locals[pattern.capture]=subject}
+bind(pattern,subject)
+return true}else if(pattern.capture_starred){
+locals[pattern.capture_starred]=$B.$list(subject)
+return true}else if(pattern.hasOwnProperty('literal')){var literal=pattern.literal
+if(literal===_b_.None ||literal===_b_.True ||
+literal===_b_.False){
+return $B.$is(subject,literal)}
+if($B.rich_comp('__eq__',subject,literal)){bind(pattern,subject)
+return true}
+return false}else if(pattern.hasOwnProperty('value')){if($B.rich_comp('__eq__',subject,pattern.value)){bind(pattern,subject)
+return true}}else if(subject==pattern){return true}
+return false}
 ;
  ;(function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}

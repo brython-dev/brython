@@ -239,6 +239,11 @@ open = __open
 def open_code(file):
     return __builtins__.open(file, encoding="utf-8")
 
+def text_encoding(encoding, stacklevel=2):
+    if encoding is None:
+        return "locale"
+    return encoding
+
 class DocDescriptor:
     """Helper for builtins.open.__doc__
     """
