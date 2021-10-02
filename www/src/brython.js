@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,6,'final',0]
 __BRYTHON__.__MAGIC__="3.9.6"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-02 09:05:17.645584"
-__BRYTHON__.timestamp=1633158317645
+__BRYTHON__.compiled_date="2021-10-02 20:38:21.826233"
+__BRYTHON__.timestamp=1633199901819
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7000,9 +7000,9 @@ var sup=_b_.super.$factory(class_dict,class_dict)
 var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
 init_subclass(extra_kwargs)
 return class_dict}
-type.__or__=function(){var len=arguments.length
-if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
-return _b_.NotImplemented}
+type.__or__=function(){var $=$B.args('__or__',2,{cls:null,other:null},['cls','other'],arguments,{},null,null),cls=$.cls,other=$.other
+if(! _b_.isinstance(other,type)){return _b_.NotImplemented}
+return $B.UnionType.$factory([cls,other])}
 type.__prepare__=function(){return $B.empty_dict()}
 type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value},__str__:function(self){console.log("type.__qualname__")},__eq__:function(self,other){return self.$infos.__qualname__==other}}
 type.__repr__=function(kls){$B.builtins_repr_check(type,arguments)
@@ -7139,7 +7139,14 @@ $B.GenericAlias.__repr__=function(self){var items=[]
 for(var i=0,len=self.items.length;i < len;i++){if(self.items[i]===_b_.Ellipsis){items.push('...')}else{if(self.items[i].$is_class){items.push(self.items[i].$infos.__name__)}else{items.push(_b_.repr(self.items[i]))}}}
 return self.origin_class.$infos.__qualname__+'['+
 items.join(", ")+']'}
-$B.set_func_names($B.GenericAlias,"builtins")
+$B.set_func_names($B.GenericAlias,"types")
+$B.UnionType=$B.make_class("UnionType",function(items){return{
+__class__:$B.UnionType,items}}
+)
+$B.UnionType.__repr__=function(self){var t=[]
+for(var item of self.items){if(item.$is_class){t.push(item.$infos.__name__)}else{t.push(_b_.repr(item))}}
+return t.join(' | ')}
+$B.set_func_names($B.UnionType,"types")
 _b_.object.__class__=type})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
@@ -7780,12 +7787,12 @@ $B.rich_op=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.
 if(x_class===y_class){
 if(x_class===_b_.int){return _b_.int[special_method](x,y)}else if(x_class===_b_.bool){return(_b_.bool[special_method]||_b_.int[special_method])
 (x,y)}
-try{method=$B.$call($B.$getattr(x,"__"+op+"__"))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
+try{method=$B.$call($B.$getattr(x_class,"__"+op+"__"))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
 throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for "+opname2opsign[op]+" : '"+kl_name+"' and '"+
 kl_name+"'")}
 throw err}
-return method(y)}
+return method(x,y)}
 if(_b_.issubclass(y_class,x_class)){
 var reflected_left=$B.$getattr(x_class,'__r'+op+'__'),reflected_right=$B.$getattr(y_class,'__r'+op+'__')
 if(reflected_right !==reflected_left){return reflected_right(y,x)}}
@@ -8629,7 +8636,7 @@ function isinstance(obj,cls){check_no_kw('isinstance',obj,cls)
 check_nb_args('isinstance',2,arguments)
 if(obj===null){return cls===None}
 if(obj===undefined){return false}
-if(cls.constructor===Array){for(var i=0;i < cls.length;i++){if(isinstance(obj,cls[i])){return true}}
+if(Array.isArray(cls)){for(var kls of cls){if(isinstance(obj,kls)){return true}}
 return false}
 if(cls.__class__===$B.GenericAlias){
 throw _b_.TypeError.$factory(

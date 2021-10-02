@@ -650,11 +650,14 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
 }
 
 type.__or__ = function(){
-    var len = arguments.length
-    if(len != 1){
-        throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)
+    var $ = $B.args('__or__', 2, {cls: null, other: null},  ['cls', 'other'],
+                arguments, {}, null, null),
+        cls = $.cls,
+        other = $.other
+    if(! _b_.isinstance(other, type)){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    return $B.UnionType.$factory([cls, other])
 }
 
 type.__prepare__ = function(){
@@ -1040,7 +1043,7 @@ $B.GenericAlias.__repr__ = function(self){
             if(self.items[i].$is_class){
                 items.push(self.items[i].$infos.__name__)
             }else{
-                items.push(_b_.repr(self.items[i])) //.$infos.__name__
+                items.push(_b_.repr(self.items[i]))
             }
         }
     }
@@ -1048,7 +1051,30 @@ $B.GenericAlias.__repr__ = function(self){
         items.join(", ") + ']'
 }
 
-$B.set_func_names($B.GenericAlias, "builtins")
+$B.set_func_names($B.GenericAlias, "types")
+
+$B.UnionType = $B.make_class("UnionType",
+    function(items){
+        return {
+            __class__: $B.UnionType,
+            items
+        }
+    }
+)
+
+$B.UnionType.__repr__ = function(self){
+    var t = []
+    for(var item of self.items){
+        if(item.$is_class){
+            t.push(item.$infos.__name__)
+        }else{
+            t.push(_b_.repr(item))
+        }
+    }
+    return t.join(' | ')
+}
+
+$B.set_func_names($B.UnionType, "types")
 
 // this could not be done before $type and $factory are defined
 _b_.object.__class__ = type

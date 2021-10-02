@@ -1735,7 +1735,7 @@ $B.rich_op = function(op, x, y){
                 (x, y)
         }
         try{
-            method = $B.$call($B.$getattr(x, "__" + op + "__"))
+            method = $B.$call($B.$getattr(x_class, "__" + op + "__"))
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
                 var kl_name = $B.class_name(x)
@@ -1745,7 +1745,7 @@ $B.rich_op = function(op, x, y){
             }
             throw err
         }
-        return method(y)
+        return method(x, y)
     }
 
     if(_b_.issubclass(y_class, x_class)){

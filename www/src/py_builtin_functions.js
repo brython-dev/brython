@@ -1448,11 +1448,17 @@ function isinstance(obj, cls){
     check_no_kw('isinstance', obj, cls)
     check_nb_args('isinstance', 2, arguments)
 
-    if(obj === null){return cls === None}
-    if(obj === undefined){return false}
-    if(cls.constructor === Array){
-        for(var i = 0; i < cls.length; i++){
-            if(isinstance(obj, cls[i])){return true}
+    if(obj === null){
+        return cls === None
+    }
+    if(obj === undefined){
+        return false
+    }
+    if(Array.isArray(cls)){
+        for(var kls of cls){
+            if(isinstance(obj, kls)){
+                return true
+            }
         }
         return false
     }
