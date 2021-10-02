@@ -595,8 +595,6 @@ function $$eval(src, _globals, _locals){
         }
     }
 
-    // set module path
-    $B.$py_module_path[globals_id] = $B.$py_module_path[current_globals_id]
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')
@@ -1712,7 +1710,7 @@ function $extreme(args, op){ // used by min() and max()
     if(op === '__gt__'){$op_name = "max"}
 
     var $ = $B.args($op_name, 0, {}, [], args, {}, 'args', 'kw')
-    
+
     var has_default = false,
         func = false
     for(var attr in $.kw.$string_dict){

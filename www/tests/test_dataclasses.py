@@ -74,3 +74,5 @@ class Person:
 assert Property.count == 2
 
 p = Person('dan', 15)
+
+print('passed all tests...')

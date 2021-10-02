@@ -389,12 +389,6 @@ $B.clear_ns = function(name){
     // Remove name from __BRYTHON__.modules, and all the keys that start with name
     if(name.startsWith("__ge")){console.log("clear ns", name)}
     var len = name.length
-    for(var key in $B.$py_module_path){
-        if(key.substr(0, len) == name){
-            $B.$py_module_path[key] = null
-            delete $B.$py_module_path[key]
-        }
-    }
     $B.$py_src[name] = null
     delete $B.$py_src[name]
 

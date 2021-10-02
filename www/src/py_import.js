@@ -185,7 +185,6 @@ function run_py(module_contents, path, module, compiled) {
     if(! compiled){
         var $Node = $B.$Node,
             $NodeJSCtx = $B.$NodeJSCtx
-        $B.$py_module_path[module.__name__] = path
 
         var src = {
             src: module_contents,
@@ -946,7 +945,6 @@ function import_engine(mod_name, _path, from_stdlib){
     }
     if($B.$getattr(spec, "has_location")){
         module.__file__ = $B.$getattr(spec, "origin")
-        $B.$py_module_path[module.__name__] = module.__file__
     }
     var cached = $B.$getattr(spec, "cached")
     if(! $B.is_none(cached)){
@@ -987,7 +985,7 @@ function import_error(mod_name){
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
-    var $test = false // mod_name == "browser.load_script"
+    var $test = false // mod_name == "__main__"
     if($test){console.log("__import__", mod_name)}
     // Main entry point for __import__
     //

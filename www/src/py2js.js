@@ -12848,7 +12848,6 @@ var brython = $B.parser.brython = function(options){
 $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
-    $B.$py_module_path[name] = $B.script_path
     try{
         var root = $B.py2js(src, name, name),
             js = root.to_js(),
@@ -12966,7 +12965,6 @@ var _run_scripts = $B.parser._run_scripts = function(options){
     if(options.ipy_id !== undefined){
         module_name = '__main__'
         var $src = "", js, root
-        $B.$py_module_path[module_name] = $B.script_path
         for(var elt of $elts){
             $src += (elt.innerHTML || elt.textContent)
         }
