@@ -1650,3 +1650,5 @@ def _install(_bootstrap_module):
     sys.path_hooks.extend([FileFinder.path_hook(*supported_loaders)])
     sys.meta_path.append(PathFinder)
 
+def _set_bootstrap_module(_bootstrap):
+    pass
