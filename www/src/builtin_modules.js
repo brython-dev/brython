@@ -102,7 +102,14 @@
             "document":$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
-            DOMNode:$B.DOMNode,
+            DOMNode: _b_.property.$factory(
+                function(){
+                    return $B.DOMNode
+                },
+                function(self, value){
+                    $B.DOMNode = value
+                }
+            ),
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
