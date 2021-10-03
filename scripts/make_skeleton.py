@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = 'ast'
+stdlib_name = '_signal'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 
@@ -40,9 +40,6 @@ def skeleton(infos):
             val = getattr(infos, key)
         except AttributeError:
             continue
-
-        if key == 'operator':
-            print(key, val, inspect.isclass(val))
 
         if isinstance(val, (int, float, dict)):
             res += f'\n{key} = {val!r}\n'
