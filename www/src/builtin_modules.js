@@ -102,14 +102,7 @@
             "document":$B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
-            DOMNode: _b_.property.$factory(
-                function(){
-                    return $B.DOMNode
-                },
-                function(self, value){
-                    $B.DOMNode = value
-                }
-            ),
+            DOMNode: $B.DOMNode,
             load:function(script_url){
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
@@ -250,8 +243,7 @@
                 dict.__new__ = function(cls){
                     var res = document.createElement(tagName)
                     if(cls !== html[tagName]){
-                        // Only set __class__ if it can't be determined by
-                        // the tag name
+                        // Only set __class__ if it is not browser.html.<tagName>
                         res.__class__ = cls
                     }
                     return res
@@ -320,6 +312,10 @@
                 // that can be used to create tags "<P2></P2>"
                 if(!(typeof tagName == 'string')){
                     throw _b_.TypeError.$factory("html.maketag expects a string as argument")
+                }
+                if(html[tagName] !== undefined){
+                    throw _b_.ValueError.$factory("cannot reset class for "
+                        + tagName)
                 }
                 var klass = makeTagDict(tagName)
                 klass.$factory = makeFactory(klass)

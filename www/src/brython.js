@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,9,6,'final',0]
 __BRYTHON__.__MAGIC__="3.9.6"
 __BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-03 12:20:28.487692"
-__BRYTHON__.timestamp=1633256428487
+__BRYTHON__.compiled_date="2021-10-03 19:28:51.650490"
+__BRYTHON__.timestamp=1633282131650
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -15533,9 +15533,7 @@ delete browser.win
 browser.self.send=self.postMessage}else{
 browser.is_webworker=false
 update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.JSObj.$factory(window.confirm),"document":$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
-DOMEvent:$B.DOMEvent,DOMNode:_b_.property.$factory(
-function(){return $B.DOMNode},function(self,value){$B.DOMNode=value}
-),load:function(script_url){
+DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
 eval(content)},mouseCoords:function(ev){return $B.JSObj.$factory($mouseCoords(ev))},prompt:function(message,default_value){return $B.JSObj.$factory(window.prompt(message,default_value||''))},reload:function(){
@@ -15596,6 +15594,8 @@ var html={}
 html.tags=$B.empty_dict()
 function maketag(tagName){
 if(!(typeof tagName=='string')){throw _b_.TypeError.$factory("html.maketag expects a string as argument")}
+if(html[tagName]!==undefined){throw _b_.ValueError.$factory("cannot reset class for "
++tagName)}
 var klass=makeTagDict(tagName)
 klass.$factory=makeFactory(klass)
 _b_.dict.$setitem(html.tags,tagName,klass)
