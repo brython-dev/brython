@@ -1,5 +1,4 @@
-### Brython-specific : replace asyncio by browser.aio
-import browser.aio as asyncio
+import asyncio
 import inspect
 
 from .case import TestCase
@@ -103,9 +102,9 @@ class IsolatedAsyncioTestCase(TestCase):
                 ret = await awaitable
                 if not fut.cancelled():
                     fut.set_result(ret)
-            except asyncio.CancelledError:
+            except (SystemExit, KeyboardInterrupt):
                 raise
-            except Exception as ex:
+            except (BaseException, asyncio.CancelledError) as ex:
                 if not fut.cancelled():
                     fut.set_exception(ex)
 
