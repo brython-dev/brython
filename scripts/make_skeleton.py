@@ -12,13 +12,13 @@ import inspect
 import types
 
 
-stdlib_name = 'numpy.core._multiarray_umath'
+stdlib_name = 'ast'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
-print(list(ns))
+
 if('.') in stdlib_name:
     package, *names = stdlib_name.split('.')
-    print(names)
+
     infos = ns[package]
     while names:
         name = names.pop(0)
@@ -29,16 +29,23 @@ else:
 
 def skeleton(infos):
     res = ''
-    print(infos)
+
     if infos.__doc__:
         res += '"""%s"""\n\n' % infos.__doc__
     for key in dir(infos):
-        if key in ['__class__', '__doc__',
-                   '__name__', '__file__', '__package__']:
+        if key.startswith('__') and key.endswith('__') and \
+                key not in ['__module__', '__match_args__']:
             continue
-        val = getattr(infos, key)
+        try:
+            val = getattr(infos, key)
+        except AttributeError:
+            continue
+
+        if key == 'operator':
+            print(key, val, inspect.isclass(val))
+
         if isinstance(val, (int, float, dict)):
-            res += '\n%s = %s\n' % (key, val)
+            res += f'\n{key} = {val!r}\n'
         elif val in [True, False, None]:
             res += '\n%s = %s\n' % (key, val)
         elif isinstance(val, str):
@@ -58,15 +65,14 @@ def skeleton(infos):
                     res += '    %s"""\n' % lines[-1]
             res += '    pass\n'
         elif inspect.isclass(val):
-            res += '\nclass %s' % key
+            res += '\n\nclass %s' % key
             if val.__bases__:
                 res += '('+','.join(x.__name__ for x in val.__bases__)+')'
             res += ':\n'
-            print(('class', val.__name__, skeleton(val)))
             res += '\n'.join('    %s' % line
                              for line in skeleton(val).splitlines())
         else:
-            res += '\n{} = "{}"\n'.format(key, str(val).replace('"', '\\"'))
+            res += '\n{} = "{}"\n'.format(key, repr(val).replace('"', '\\"'))
     return res
 
 
