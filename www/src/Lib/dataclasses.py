@@ -6,9 +6,8 @@ import inspect
 import keyword
 import builtins
 import functools
-import abc
 import _thread
-from types import FunctionType, GenericAlias
+from types import GenericAlias
 
 
 __all__ = ['dataclass',
@@ -151,15 +150,6 @@ __all__ = ['dataclass',
 # @dataclass).
 #
 # See _hash_action (below) for a coded version of this table.
-
-# __match_args__
-#
-# |  no   |  yes  |  <--- class has __match_args__ in __dict__?
-# +=======+=======+
-# | add   |       |  <- the default
-# +=======+=======+
-# __match_args__ is always added unless the class already defines it. It is a
-# tuple of __init__ parameter names; non-init fields must be matched by keyword.
 
 
 # Raised when an attempt is made to modify a frozen class.
@@ -408,10 +398,8 @@ def _create_fn(name, args, body, *, globals=None, locals=None,
 
     ns = {}
     exec(txt, globals, ns)
-    func = ns['__create_fn__'](**locals)
-    for arg, annotation in func.__annotations__.copy().items():
-        func.__annotations__[arg] = locals[annotation]
-    return func
+    return ns['__create_fn__'](**locals)
+
 
 def _field_assign(frozen, name, value, self_name):
     # If we're a frozen class, then assign to our fields in __init__
@@ -662,11 +650,6 @@ def _is_type(annotation, cls, a_module, a_type, is_type_predicate):
     # a eval() penalty for every single field of every dataclass
     # that's defined.  It was judged not worth it.
 
-    # Strip away the extra quotes as a result of double-stringifying when the
-    # 'annotations' feature became default.
-    if annotation.startswith(("'", '"')) and annotation.endswith(("'", '"')):
-        annotation = annotation[1:-1]
-
     match = _MODULE_IDENTIFIER_RE.match(annotation)
     if match:
         ns = None
@@ -713,7 +696,7 @@ def _get_field(cls, a_name, a_type):
     # In addition to checking for actual types here, also check for
     # string annotations.  get_type_hints() won't always work for us
     # (see https://github.com/python/typing/issues/508 for example),
-    # plus it's expensive and would require an eval for every stirng
+    # plus it's expensive and would require an eval for every string
     # annotation.  So, make a best effort to see if this is a ClassVar
     # or InitVar using regex's and checking that the thing referenced
     # is actually of the correct type.
@@ -766,19 +749,12 @@ def _get_field(cls, a_name, a_type):
 
     return f
 
-def _set_qualname(cls, value):
-    # Ensure that the functions returned from _create_fn uses the proper
-    # __qualname__ (the class they belong to).
-    if isinstance(value, FunctionType):
-        value.__qualname__ = f"{cls.__qualname__}.{value.__name__}"
-    return value
 
 def _set_new_attribute(cls, name, value):
     # Never overwrites an existing attribute.  Returns True if the
     # attribute already exists.
     if name in cls.__dict__:
         return True
-    _set_qualname(cls, value)
     setattr(cls, name, value)
     return False
 
@@ -793,7 +769,7 @@ def _hash_set_none(cls, fields, globals):
 
 def _hash_add(cls, fields, globals):
     flds = [f for f in fields if (f.compare if f.hash is None else f.hash)]
-    return _set_qualname(cls, _hash_fn(flds, globals))
+    return _hash_fn(flds, globals)
 
 def _hash_exception(cls, fields, globals):
     # Raise an exception.
@@ -860,7 +836,7 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
         # Only process classes that have been processed by our
         # decorator.  That is, they have a _FIELDS attribute.
         base_fields = getattr(b, _FIELDS, None)
-        if base_fields:
+        if base_fields is not None:
             has_dataclass_bases = True
             for f in base_fields.values():
                 fields[f.name] = f
@@ -1014,12 +990,7 @@ def _process_class(cls, init, repr, eq, order, unsafe_hash, frozen):
     if not getattr(cls, '__doc__'):
         # Create a class doc-string.
         cls.__doc__ = (cls.__name__ +
-                       str(inspect.signature(cls)).replace(' -> NoneType', ''))
-
-    if '__match_args__' not in cls.__dict__:
-        cls.__match_args__ = tuple(f.name for f in flds if f.init)
-
-    abc.update_abstractmethods(cls)
+                       str(inspect.signature(cls)).replace(' -> None', ''))
 
     return cls
 
@@ -1300,7 +1271,7 @@ def replace(obj, /, **changes):
             continue
 
         if f.name not in changes:
-            if f._field_type is _FIELD_INITVAR:
+            if f._field_type is _FIELD_INITVAR and f.default is MISSING:
                 raise ValueError(f"InitVar {f.name!r} "
                                  'must be specified with replace()')
             changes[f.name] = getattr(obj, f.name)
@@ -1311,4 +1282,3 @@ def replace(obj, /, **changes):
     # changes that aren't fields, this will correctly raise a
     # TypeError.
     return obj.__class__(**changes)
-
