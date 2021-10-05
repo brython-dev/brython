@@ -19,14 +19,17 @@ import gc
 from weakref import proxy
 import contextlib
 
+from test.support import import_helper
+from test.support import threading_helper
 from test.support.script_helper import assert_python_ok
 
 import functools
 
-py_functools = support.import_fresh_module('functools', blocked=['_functools'])
-c_functools = support.import_fresh_module('functools', fresh=['_functools'])
+py_functools = import_helper.import_fresh_module('functools',
+                                                 blocked=['_functools'])
+c_functools = import_helper.import_fresh_module('functools')
 
-decimal = support.import_fresh_module('decimal', fresh=['_decimal'])
+decimal = import_helper.import_fresh_module('decimal', fresh=['_decimal'])
 
 @contextlib.contextmanager
 def replaced_module(name, replacement):
@@ -945,6 +948,13 @@ class TestCmpToKeyC(TestCmpToKey, unittest.TestCase):
     if c_functools:
         cmp_to_key = c_functools.cmp_to_key
 
+    @support.cpython_only
+    def test_disallow_instantiation(self):
+        # Ensure that the type disallows instantiation (bpo-43916)
+        support.check_disallow_instantiation(
+            self, type(c_functools.cmp_to_key(None))
+        )
+
 
 class TestCmpToKeyPy(TestCmpToKey, unittest.TestCase):
     cmp_to_key = staticmethod(py_functools.cmp_to_key)
@@ -1152,6 +1162,34 @@ class TestTotalOrdering(unittest.TestCase):
                     method = getattr(Orderable_LT, name)
                     method_copy = pickle.loads(pickle.dumps(method, proto))
                     self.assertIs(method_copy, method)
+
+
+    def test_total_ordering_for_metaclasses_issue_44605(self):
+
+        @functools.total_ordering
+        class SortableMeta(type):
+            def __new__(cls, name, bases, ns):
+                return super().__new__(cls, name, bases, ns)
+
+            def __lt__(self, other):
+                if not isinstance(other, SortableMeta):
+                    pass
+                return self.__name__ < other.__name__
+
+            def __eq__(self, other):
+                if not isinstance(other, SortableMeta):
+                    pass
+                return self.__name__ == other.__name__
+
+        class B(metaclass=SortableMeta):
+            pass
+
+        class A(metaclass=SortableMeta):
+            pass
+
+        self.assertTrue(A < B)
+        self.assertFalse(A > B)
+
 
 @functools.total_ordering
 class Orderable_LT:
@@ -1529,7 +1567,7 @@ class TestLRU:
             # create n threads in order to fill cache
             threads = [threading.Thread(target=full, args=[k])
                        for k in range(n)]
-            with support.start_threads(threads):
+            with threading_helper.start_threads(threads):
                 start.set()
 
             hits, misses, maxsize, currsize = f.cache_info()
@@ -1547,7 +1585,7 @@ class TestLRU:
             threads += [threading.Thread(target=full, args=[k])
                         for k in range(n)]
             start.clear()
-            with support.start_threads(threads):
+            with threading_helper.start_threads(threads):
                 start.set()
         finally:
             sys.setswitchinterval(orig_si)
@@ -1569,7 +1607,7 @@ class TestLRU:
                 self.assertEqual(f(i), 3 * i)
                 stop.wait(10)
         threads = [threading.Thread(target=test) for k in range(n)]
-        with support.start_threads(threads):
+        with threading_helper.start_threads(threads):
             for i in range(m):
                 start.wait(10)
                 stop.reset()
@@ -1589,7 +1627,7 @@ class TestLRU:
                 self.assertEqual(f(x), 3 * x, i)
         threads = [threading.Thread(target=test, args=(i, v))
                    for i, v in enumerate([1, 2, 2, 3, 2])]
-        with support.start_threads(threads):
+        with threading_helper.start_threads(threads):
             pass
 
     def test_need_for_rlock(self):
@@ -2523,7 +2561,7 @@ class TestCachedProperty(unittest.TestCase):
                 threading.Thread(target=lambda: item.cost)
                 for k in range(num_threads)
             ]
-            with support.start_threads(threads):
+            with threading_helper.start_threads(threads):
                 go.set()
         finally:
             sys.setswitchinterval(orig_si)

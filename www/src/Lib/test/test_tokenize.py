@@ -1,4 +1,5 @@
 from test import support
+from test.support import os_helper
 from tokenize import (tokenize, _tokenize, untokenize, NUMBER, NAME, OP,
                      STRING, ENDMARKER, ENCODING, tok_name, detect_encoding,
                      open as tokenize_open, Untokenizer, generate_tokens,
@@ -1265,8 +1266,8 @@ class TestDetectEncoding(TestCase):
         self.assertEqual(consumed_lines, [b'print("#coding=fake")'])
 
     def test_open(self):
-        filename = support.TESTFN + '.py'
-        self.addCleanup(support.unlink, filename)
+        filename = os_helper.TESTFN + '.py'
+        self.addCleanup(os_helper.unlink, filename)
 
         # test coding cookie
         for encoding in ('iso-8859-15', 'utf-8'):
@@ -1457,6 +1458,16 @@ class TestTokenize(TestCase):
         # See http://bugs.python.org/issue16152
         self.assertExactTypeEqual('@          ', token.AT)
 
+    def test_comment_at_the_end_of_the_source_without_newline(self):
+        # See http://bugs.python.org/issue44667
+        source = 'b = 1\n\n#test'
+        expected_tokens = [token.NAME, token.EQUAL, token.NUMBER, token.NEWLINE, token.NL, token.COMMENT]
+
+        tokens = list(tokenize(BytesIO(source.encode('utf-8')).readline))
+        self.assertEqual(tok_name[tokens[0].exact_type], tok_name[ENCODING])
+        for i in range(6):
+            self.assertEqual(tok_name[tokens[i + 1].exact_type], tok_name[expected_tokens[i]])
+        self.assertEqual(tok_name[tokens[-1].exact_type], tok_name[token.ENDMARKER])
 
 class UntokenizeTest(TestCase):
 

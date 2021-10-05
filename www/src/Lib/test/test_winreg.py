@@ -4,11 +4,12 @@
 import os, sys, errno
 import unittest
 from test import support
+from test.support import import_helper
 import threading
 from platform import machine, win32_edition
 
 # Do this first so test will be skipped if module doesn't exist
-support.import_module('winreg', required_on=['win'])
+import_helper.import_module('winreg', required_on=['win'])
 # Now import everything
 from winreg import *
 
@@ -45,7 +46,7 @@ test_data = [
     ("Raw Data",      b"binary\x00data",                       REG_BINARY),
     ("Big String",    "x"*(2**14-1),                           REG_SZ),
     ("Big Binary",    b"x"*(2**14),                            REG_BINARY),
-    # Two and three kanjis, meaning: "Japan" and "Japanese")
+    # Two and three kanjis, meaning: "Japan" and "Japanese".
     ("Japanese 日本", "日本語", REG_SZ),
 ]
 

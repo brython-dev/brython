@@ -23,7 +23,7 @@ Copyright (C) 2001-2016 Vinay Sajip. All Rights Reserved.
 To use, simply 'import logging.handlers' and log away!
 """
 
-import logging, socket, os, pickle, struct, time, re
+import io, logging, socket, os, pickle, struct, time, re
 from stat import ST_DEV, ST_INO, ST_MTIME
 import queue
 import threading
@@ -150,6 +150,8 @@ class RotatingFileHandler(BaseRotatingHandler):
         # on each run.
         if maxBytes > 0:
             mode = 'a'
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
         BaseRotatingHandler.__init__(self, filename, mode, encoding=encoding,
                                      delay=delay, errors=errors)
         self.maxBytes = maxBytes
@@ -205,6 +207,7 @@ class TimedRotatingFileHandler(BaseRotatingHandler):
     def __init__(self, filename, when='h', interval=1, backupCount=0,
                  encoding=None, delay=False, utc=False, atTime=None,
                  errors=None):
+        encoding = io.text_encoding(encoding)
         BaseRotatingHandler.__init__(self, filename, 'a', encoding=encoding,
                                      delay=delay, errors=errors)
         self.when = when.upper()
@@ -356,7 +359,8 @@ class TimedRotatingFileHandler(BaseRotatingHandler):
         dirName, baseName = os.path.split(self.baseFilename)
         fileNames = os.listdir(dirName)
         result = []
-        prefix = baseName + "."
+        # See bpo-44753: Don't use the extension when computing the prefix.
+        prefix = os.path.splitext(baseName)[0] + "."
         plen = len(prefix)
         for fileName in fileNames:
             if fileName[:plen] == prefix:
@@ -442,6 +446,8 @@ class WatchedFileHandler(logging.FileHandler):
     """
     def __init__(self, filename, mode='a', encoding=None, delay=False,
                  errors=None):
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
         logging.FileHandler.__init__(self, filename, mode=mode,
                                      encoding=encoding, delay=delay,
                                      errors=errors)
@@ -1142,7 +1148,7 @@ class NTEventLogHandler(logging.Handler):
 
 class HTTPHandler(logging.Handler):
     """
-    A class which sends records to a Web server, using either GET or
+    A class which sends records to a web server, using either GET or
     POST semantics.
     """
     def __init__(self, host, url, method="GET", secure=False, credentials=None,
@@ -1191,7 +1197,7 @@ class HTTPHandler(logging.Handler):
         """
         Emit a record.
 
-        Send the record to the Web server as a percent-encoded dictionary
+        Send the record to the web server as a percent-encoded dictionary
         """
         try:
             import urllib.parse
