@@ -22,29 +22,32 @@ for dirpath, dirnames, filenames in os.walk(bdir):
             brython_path = os.path.join(dirpath, filename)
             brython_short = brython_path[len(bdir) + 1:]
             if filecmp.cmp(brython_path, ppath, shallow=False):
-                print(brython_short, "same as CPython 3.9")
                 p_new_path = p_new_dir + "\\" + prefix + "\\" + filename
                 if os.path.exists(p_new_path):
                     if filecmp.cmp(brython_path, p_new_path, shallow=False):
-                        print("    not changed in Python 3.10")
+                        #print(brython_short, "same as CPython 3.9",
+                        #    "not changed in Python 3.10")
+                        pass
                     else:
-                        print("    replace by 3.10 version")
+                        print(brython_short, "same as CPython 3.9",
+                            "replace by 3.10 version")
                         shutil.copyfile(p_new_path, brython_path)
                 else:
-                    print("    not in Python 3.10")
+                    print('***', brython_short, "same as CPython 3.9",
+                        "not in Python 3.10")
             else:
                 p_new_path = p_new_dir + "\\" + prefix + "\\" + filename
                 if os.path.exists(p_new_path):
                     if filecmp.cmp(brython_path, p_new_path, shallow=False):
-                        print(brython_short, "already changed to Python 3.10")
+                        #print(brython_short, "already changed to Python 3.10")
+                        pass
                     else:
-                        print(brython_short, 'not the same as CPython 3.9')
+                        print('***', brython_short, 'not the same as CPython 3.9')
                 else:
-                    print(brython_short, "not in Python 3.10")
+                    print('***', brython_short, "not in Python 3.10")
         else:
             p_new_path = p_new_dir + "\\" + prefix + "\\" + filename
             if os.path.exists(p_new_path):
                 print(ppath, "not in CPython 3.9, but present in 3.10")
             else:
                 print(ppath, "not in CPython 3.9 and 3.10")
-                
