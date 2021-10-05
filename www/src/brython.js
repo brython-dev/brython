@@ -1,6 +1,6 @@
 // brython.js brython.info
-// version [3, 9, 0, 'final', 0]
-// implementation [3, 9, 6, 'final', 0]
+// version [3, 10, 0, 'final', 0]
+// implementation [3, 10, 0, 'final', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -106,11 +106,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,9,6,'final',0]
-__BRYTHON__.__MAGIC__="3.9.6"
-__BRYTHON__.version_info=[3,9,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-03 19:28:51.650490"
-__BRYTHON__.timestamp=1633282131650
+__BRYTHON__.implementation=[3,10,0,'final',0]
+__BRYTHON__.__MAGIC__="3.10.0"
+__BRYTHON__.version_info=[3,10,0,'final',0]
+__BRYTHON__.compiled_date="2021-10-05 08:25:40.688608"
+__BRYTHON__.timestamp=1633415140688
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3399,7 +3399,7 @@ $IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-
 return new ast.Name(this.value)}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
-if(C.value=='$$case' && C.parent.parent.type=="node"){
+if(C.value=='case' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src
 try{var flag=line_ends_with_comma(src.substr(start))}catch(err){$pos=start+err.offset
 $_SyntaxError(C,[err.message])}
@@ -4070,7 +4070,7 @@ $NodeCtx.prototype.toString=function(){return 'node '+this.tree}
 $NodeCtx.prototype.transition=function(token,value){var C=this
 if(this.node.parent && this.node.parent.C){var pctx=this.node.parent.C
 if(pctx.tree && pctx.tree.length==1 &&
-pctx.tree[0].type=="match"){if(token !='eol' &&(token !=='id' ||value !=='$$case')){C.$pos=$pos
+pctx.tree[0].type=="match"){if(token !='eol' &&(token !=='id' ||value !=='case')){C.$pos=$pos
 $_SyntaxError(C,'line does not start with "case"')}}}
 switch(token){case ',':
 if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
