@@ -6355,7 +6355,7 @@ $IdCtx.prototype.toString = function(){
 
 $IdCtx.prototype.transition = function(token, value){
     var context = this
-    if(context.value == '$$case' && context.parent.parent.type == "node"){
+    if(context.value == 'case' && context.parent.parent.type == "node"){
         // case at the beginning of a line : if the line ends with a colon
         // (:), it is the "soft keyword" `case` for pattern matching
         var start = context.parent.$pos,
@@ -7959,7 +7959,7 @@ $NodeCtx.prototype.transition = function(token, value){
         var pctx = this.node.parent.context
         if(pctx.tree && pctx.tree.length == 1 &&
                 pctx.tree[0].type == "match"){
-            if(token != 'eol' && (token !== 'id' || value !== '$$case')){
+            if(token != 'eol' && (token !== 'id' || value !== 'case')){
                 context.$pos = $pos
                 $_SyntaxError(context,
                     'line does not start with "case"')
