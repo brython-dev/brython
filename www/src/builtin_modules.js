@@ -371,7 +371,6 @@
                         + tagName)
                 }
                 var klass = makeTagDict(tagName)
-                klass.$factory = makeFactory(klass)
                 _b_.dict.$setitem(html.tags, tagName, klass)
                 html[tagName] = klass
                 return klass
