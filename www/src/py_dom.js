@@ -612,7 +612,7 @@ DOMNode.$factory = function(elt, fromtag){
                     // all checks are good
                     klass.$elt_wrap = elt  // tell class to wrap element
                     // return klass.$factory()  // and return what the factory wants
-                    return $B.$call(elt)
+                    return $B.$call(klass)
                 }
             }
         }
