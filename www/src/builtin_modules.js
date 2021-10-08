@@ -266,6 +266,9 @@
                         }
                         res._wrapped = false  // not wrapped
                     }
+                    res.__class__ = cls
+                    res.__dict__ = $B.empty_dict()
+                    return res
                 }
                 $B.set_func_names(dict, "browser.html")
                 return dict
@@ -296,11 +299,9 @@
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     }else{
-                        var res = document.createElement(klass.$infos.__name__)
                         if(klass.$infos.__name__ == 'SVG'){
                             var res = $B.DOMNode.$factory(
-                                document.createElementNS("http://www.w3.org/2000/svg", "svg"),
-                                true)
+                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
                             var elt = document.createElement(klass.$infos.__name__),
                                 res = $B.DOMNode.$factory(elt, true)

@@ -622,6 +622,7 @@ DOMNode.$factory = function(elt, fromtag){
         // add a unique id for comparisons
         elt.$brython_id = "DOM-" + $B.UUID()
     }
+    return elt
 }
 
 
