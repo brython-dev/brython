@@ -356,6 +356,9 @@
             // names to the matching tag class factory function.
             html.tags = $B.empty_dict()
 
+            // register tags in DOMNode to autogenerate tags when DOMNode is invoked
+            $B.DOMNode.tags = html.tags
+
             function maketag(tagName){
                 // Create a new class associated with the custom HTML tag
                 // "tagName". For instance, "makeTag('P2')" creates the class
