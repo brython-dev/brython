@@ -241,15 +241,32 @@
                 dict.__mro__ = [$B.DOMNode, $B.builtins.object]
 
                 dict.__new__ = function(cls){
-                    // Only called for subclasses of the HTML tag
-                    var res = document.createElement(tagName)
-                    if(cls !== html[tagName]){
-                        // Only set __class__ if it is not browser.html.<tagName>
-                        res.__class__ = cls
+                    if($B.DOMNode._dommodel_ == 0) {
+                        var res = document.createElement(tagName)
+                        if(cls !== html[tagName]){
+                            // Only set __class__ if it is not browser.html.<tagName>
+                            res.__class__ = cls
+                        }
+                        return res
                     }
-                    return res
+                    // __new__ must be defined explicitely : it returns an
+                    // instance of DOMNode for the specified tagName
+                    if(cls.$elt_wrap !== undefined) {
+                        // DOMNode is piggybacking on us to autogenerate a node
+                        var elt = cls.$elt_wrap  // keep track of the to wrap element
+                        cls.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
+                        res._wrapped = true  // marked as wrapped
+                    }else{
+                        if(klass.$infos.__name__ == 'SVG'){
+                            var res = $B.DOMNode.$factory(
+                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                        }else{
+                            var res = $B.DOMNode.$factory(document.createElement(tagName), true)
+                        }
+                        res._wrapped = false  // not wrapped
+                    }
                 }
-
                 $B.set_func_names(dict, "browser.html")
                 return dict
             }
@@ -257,17 +274,42 @@
             function makeFactory(klass){
                 // Create the factory function for HTML tags.
                 var factory = function(){
-                    if(klass.$infos.__name__ == 'SVG'){
-                        var res = $B.DOMNode.$factory(
-                            document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                    if($B.DOMNode._dommodel_ == 0) {
+                        if(klass.$infos.__name__ == 'SVG'){
+                            var res = $B.DOMNode.$factory(
+                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
+                        }else{
+                            var res = document.createElement(klass.$infos.__name__)
+                        }
+                        // apply __init__
+                        var init = $B.$getattr(klass, "__init__", null)
+                        if(init !== null){
+                            init(res, ...arguments)
+                        }
+                        return res
+                    }
+                    // behavior for DOMNode._dommode_ > 0
+                    if(klass.$elt_wrap !== undefined) {
+                        // DOMNode is piggybacking on us to autogenerate a node
+                        var elt = klass.$elt_wrap  // keep track of the to wrap element
+                        klass.$elt_wrap = undefined  // nullify for later calls
+                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
+                        res._wrapped = true  // marked as wrapped
                     }else{
                         var res = document.createElement(klass.$infos.__name__)
+                        if(klass.$infos.__name__ == 'SVG'){
+                            var res = $B.DOMNode.$factory(
+                                document.createElementNS("http://www.w3.org/2000/svg", "svg"),
+                                true)
+                        }else{
+                            var elt = document.createElement(klass.$infos.__name__),
+                                res = $B.DOMNode.$factory(elt, true)
+                        }
+                        res._wrapped = false  // not wrapped
                     }
+                    res.__class__ = klass
                     // apply __init__
-                    var init = $B.$getattr(klass, "__init__", null)
-                    if(init !== null){
-                        init(res, ...arguments)
-                    }
+                    klass.__init__(res, ...arguments)
                     return res
                 }
                 return factory
@@ -298,7 +340,16 @@
                         'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 
             // Object representing the module browser.html
-            var html = {}
+            var html = {
+                _dommodel_: _b_.property.$factory(
+                    function(){
+                        return $B.DOMNode._dommodel_
+                    },
+                    function(self, value){
+                        $B.DOMNode._dommodel_ = value
+                    }
+                )
+            }
 
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.

@@ -570,11 +570,58 @@ var DOMNode = {
     $infos: {
         __module__: "browser",
         __name__: "DOMNode"
-    }
+    },
+    _dommodel_: 0,
 }
 
-DOMNode.$factory = function(elt){
-    return elt
+DOMNode.$factory = function(elt, fromtag){
+    if(DOMNode._dommodel_ == 0) {
+        return elt
+    }
+    if(elt.__class__ === DOMNode){
+        return elt
+    }
+    if(typeof elt == "number" || typeof elt == "boolean" ||
+            typeof elt == "string"){
+        return elt
+    }
+
+    // if none of the above, fromtag determines if the call is made by
+    // the tag factory or by any other call to DOMNode
+    // if made by tag factory (fromtag will be defined, the value is not
+    // important), the regular plain old behavior is retained. Only the
+    // return value of a DOMNode is sought
+
+    // In other cases (fromtag is undefined), DOMNode tries to return a "tag"
+    // from the browser.html module by looking into "$tags" which is set
+    // by the  browser.html module itself (external sources could override
+    // it) and piggybacks on the tag factory by adding an "elt_wrap"
+    // attribute to the class to let it know, that special behavior
+    // is needed. i.e: don't create the element, use the one provided
+    if(elt.__class__ === undefined && fromtag === undefined) {
+        if(DOMNode.tags !== undefined) {  // tags is a python dictionary
+            var tdict = DOMNode.tags.$string_dict
+            if(tdict !== undefined && tdict.hasOwnProperty(elt.tagName)) {
+                try{
+                    var klass = tdict[elt.tagName][0]
+                }catch(err){
+                    console.log("tdict", tdict, "tag name", elt.tagName)
+                    throw err
+                }
+                if(klass !== undefined) {
+                    // all checks are good
+                    klass.$elt_wrap = elt  // tell class to wrap element
+                    // return klass.$factory()  // and return what the factory wants
+                    return $B.$call(elt)
+                }
+            }
+        }
+        // all "else" ... default to old behavior of plain DOMNode wrapping
+    }
+    if(elt["$brython_id"] === undefined || elt.nodeType == 9){
+        // add a unique id for comparisons
+        elt.$brython_id = "DOM-" + $B.UUID()
+    }
 }
 
 
@@ -956,6 +1003,9 @@ DOMNode.__le__ = function(self, other){
     }else if(typeof other == "string" || typeof other == "number"){
         var txt = document.createTextNode(other.toString())
         self.appendChild(txt)
+    }else if(_b_.isinstance(other, DOMNode)){
+        // other is a DOMNode instance
+        self.appendChild(other)
     }else if(other instanceof Node){
         self.appendChild(other)
     }else{
