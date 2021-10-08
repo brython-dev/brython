@@ -617,10 +617,6 @@ DOMNode.$factory = function(elt, fromtag){
         }
         // all "else" ... default to old behavior of plain DOMNode wrapping
     }
-    if(elt["$brython_id"] === undefined || elt.nodeType == 9){
-        // add a unique id for comparisons
-        elt.$brython_id = "DOM-" + $B.UUID()
-    }
     return elt
 }
 
