@@ -274,48 +274,6 @@
                 return dict
             }
 
-            function makeFactory(klass){
-                // Create the factory function for HTML tags.
-                var factory = function(){
-                    if($B.DOMNode._dommodel_ == 0) {
-                        if(klass.$infos.__name__ == 'SVG'){
-                            var res = $B.DOMNode.$factory(
-                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
-                        }else{
-                            var res = document.createElement(klass.$infos.__name__)
-                        }
-                        // apply __init__
-                        var init = $B.$getattr(klass, "__init__", null)
-                        if(init !== null){
-                            init(res, ...arguments)
-                        }
-                        return res
-                    }
-                    // behavior for DOMNode._dommode_ > 0
-                    if(klass.$elt_wrap !== undefined) {
-                        // DOMNode is piggybacking on us to autogenerate a node
-                        var elt = klass.$elt_wrap  // keep track of the to wrap element
-                        klass.$elt_wrap = undefined  // nullify for later calls
-                        var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
-                        res._wrapped = true  // marked as wrapped
-                    }else{
-                        if(klass.$infos.__name__ == 'SVG'){
-                            var res = $B.DOMNode.$factory(
-                                document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
-                        }else{
-                            var elt = document.createElement(klass.$infos.__name__),
-                                res = $B.DOMNode.$factory(elt, true)
-                        }
-                        res._wrapped = false  // not wrapped
-                    }
-                    res.__class__ = klass
-                    // apply __init__
-                    klass.__init__(res, ...arguments)
-                    return res
-                }
-                return factory
-            }
-
             // All HTML 4, 5.x extracted from
             // https://w3c.github.io/elements-of-html/
             // HTML4.01 tags
