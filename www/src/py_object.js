@@ -44,7 +44,7 @@ object.__delattr__ = function(self, attr){
             }
         }
     }
-    throw _b_.AttributeError.$factory(attr)
+    throw $B.attr_error(attr, self)
 }
 
 object.__dir__ = function(self) {
@@ -337,7 +337,7 @@ object.__getattribute__ = function(obj, attr){
             }
             return _ga(obj, attr)
         }else{
-            throw _b_.AttributeError.$factory(attr)
+            throw $B.attr_error(attr, obj)
         }
     }
 }
@@ -479,8 +479,7 @@ object.__setattr__ = function(self, attr, val){
     }else if(self.__class__ === object){
         // setting an attribute to object() is not allowed
         if(object[attr] === undefined){
-            throw _b_.AttributeError.$factory(
-                "'object' object has no attribute '" + attr + "'")
+            throw $B.attr_error(attr, self)
         }else{
             throw _b_.AttributeError.$factory(
                 "'object' object attribute '" + attr + "' is read-only")

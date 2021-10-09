@@ -432,7 +432,7 @@ $B.JSObj.__getattribute__ = function(self, attr){
                 return self.addEventListener(event, callback)
             }
         }
-        throw _b_.AttributeError.$factory(attr)
+        throw $B.attr_error(attr, self)
     }
     if(typeof js_attr === 'function'){
         var res = function(){
@@ -535,8 +535,10 @@ $B.JSObj.__iter__ = function(self){
 }
 
 $B.JSObj.__len__ = function(self){
-    if(typeof self.length == 'number'){return self.length}
-    throw _b_.AttributeError.$factory(self + ' has no attribute __len__')
+    if(typeof self.length == 'number'){
+        return self.length
+    }
+    throw $B.attr_error('__len__', self)
 }
 
 $B.JSObj.__repr__ = $B.JSObj.__str__ = function(self){

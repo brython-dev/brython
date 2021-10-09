@@ -1232,8 +1232,8 @@ function jsobj2dict(x){
 $B.obj_dict = function(obj, from_js){
     var klass = obj.__class__ || $B.get_class(obj)
     if(klass !== undefined && klass.$native){
-        throw _b_.AttributeError.$factory("'" + $B.class_name(obj) +
-            "' object has no attribute '__dict__'")}
+        throw $B.attr_error("__dict__", obj)
+    }
     var res = $B.empty_dict()
     res.$jsobj = obj
     res.$from_js = from_js // set to true if

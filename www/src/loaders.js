@@ -409,46 +409,6 @@ var loop = $B.loop = function(){
 $B.tasks = []
 $B.has_indexedDB = self.indexedDB !== undefined
 
-$B.handle_error = function(err){
-    // Print the error traceback on the standard error stream
-    if(err.$handled){
-        return
-    }
-    err.$handled = true
-    if($B.debug > 1){
-        console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
-        console.log(err)
-    }
-    if(err.__class__ !== undefined){
-        var name = $B.class_name(err),
-            trace = $B.$getattr(err, 'info')
-        if(name == 'SyntaxError' || name == 'IndentationError'){
-            var offset = err.args[1][2]
-            trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name + ': '+ err.args[0]
-        }else{
-            trace += '\n' + name
-            if(err.args[0] !== undefined && err.args[0] !== _b_.None){
-                trace += ': ' + _b_.str.$factory(err.args[0])
-            }
-        }
-    }else{
-        console.log(err)
-        trace = err + ""
-    }
-    try{
-        $B.$getattr($B.stderr, 'write')(trace)
-        var flush = $B.$getattr($B.stderr, 'flush', _b_.None)
-        if(flush !== _b_.None){
-            flush()
-        }
-    }catch(print_exc_err){
-        console.debug(trace)
-    }
-    // Throw the error to stop execution
-    throw err
-}
-
 function required_stdlib_imports(imports, start){
     // Returns the list of modules from the standard library needed by
     // the modules in "imports"

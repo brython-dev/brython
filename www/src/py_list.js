@@ -8,8 +8,7 @@ var _b_ = $B.builtins,
 
 function check_not_tuple(self, attr){
     if(self.__class__ === tuple){
-        throw _b_.AttributeError.$factory(
-            "'tuple' object has no attribute '" + attr +"'")
+        throw $B.attr_error(attr, self)
     }
 }
 

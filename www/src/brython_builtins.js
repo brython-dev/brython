@@ -119,8 +119,9 @@ $B.builtin_classes = []
 $B.__getattr__ = function(attr){return this[attr]}
 $B.__setattr__ = function(attr, value){
     // limited to some attributes
-    if(['debug', 'stdout', 'stderr'].indexOf(attr) > -1){$B[attr] = value}
-    else{
+    if(['debug', 'stdout', 'stderr'].indexOf(attr) > -1){
+        $B[attr] = value
+    }else{
         throw $B.builtins.AttributeError.$factory(
             '__BRYTHON__ object has no attribute ' + attr)
     }

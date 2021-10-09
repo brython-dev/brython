@@ -513,10 +513,11 @@ int.__setattr__ = function(self, attr, value){
     if(typeof self == "number" || typeof self == "boolean"){
         var cl_name = $B.class_name(self)
         if(_b_.dir(self).indexOf(attr) > -1){
-            var msg = "attribute '" + attr + `' of '${cl_name}'` +
-                "objects is not writable"
+            throw _b_.AttributeError.$factory("attribute '" + attr +
+                `' of '${cl_name}' objects is not writable`)
         }else{
-            var msg = `'${cl_name}' object has no attribute '${attr}'`
+            throw _b_.AttributeError.$factory(`'${cl_name}' object` +
+                ` has no attribute '${attr}'`)
         }
         throw _b_.AttributeError.$factory(msg)
     }

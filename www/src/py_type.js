@@ -977,8 +977,7 @@ method.__setattr__ = function(self, key, value){
         throw _b_.TypeError.$factory("__class__ assignment only supported " +
             "for heap types or ModuleType subclasses")
     }
-    throw _b_.AttributeError.$factory("'method' object has no attribute '" +
-        key + "'")
+    throw $B.attr_error(attr, self)
 }
 
 $B.set_func_names(method, "builtins")
