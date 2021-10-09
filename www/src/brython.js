@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-09 10:16:14.972331"
-__BRYTHON__.timestamp=1633767374972
+__BRYTHON__.compiled_date="2021-10-09 10:49:13.180414"
+__BRYTHON__.timestamp=1633769353180
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -13511,7 +13511,7 @@ float.__pos__=function(self){return float_value(self)}
 float.__pow__=function(self,other){self=float_value(self)
 other=float_value(other)
 var other_int=_b_.isinstance(other,_b_.int)
-if(other_int ||_b_.isinstance(other,float)){if(self==1){return self}
+if(other_int ||_b_.isinstance(other,float)){if(self==1){return new Number(1)}
 if(other==0){return new Number(1)}
 if(self==-1 &&
 (! isFinite(other)||other.__class__===$B.long_int ||

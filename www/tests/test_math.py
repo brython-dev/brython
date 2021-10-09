@@ -236,4 +236,8 @@ assert math.dist((0,0),(1,0)) == 1.0
 # issue 1759
 assert math.ceil(5) == 5
 
+# issue 1784
+assert str(math.pow(1, 1)) == "1.0"
+assert str(math.pow(1, 0.5)) == "1.0"
+
 print("passed all tests..")

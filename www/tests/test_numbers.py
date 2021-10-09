@@ -638,4 +638,11 @@ class IntH(int):
 
 assert hash(IntH(0)) == 99
 
+# issue 1784
+assert str(1 ** 1) == "1"
+assert str(pow(1, 1)) == "1"
+assert str(1 ** 0.5) == "1.0"
+assert str(pow(1, 0.5)) == "1.0"
+
+
 print('passed all tests...')

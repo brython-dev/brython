@@ -1157,7 +1157,7 @@ var _mod = {
         if(_b_.$isninf(r)){return _b_.float.$factory('-inf')}
         if(_b_.$isinf(r)){return _b_.float.$factory('inf')}
 
-        return r
+        return _b_.float.$factory(r)
     },
     prod: function(){
         var $ = $B.args("prod", 1, {iterable:null, start:null},

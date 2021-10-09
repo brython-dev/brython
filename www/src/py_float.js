@@ -563,7 +563,7 @@ float.__pow__ = function(self, other){
 
     var other_int = _b_.isinstance(other, _b_.int)
     if(other_int || _b_.isinstance(other, float)){
-        if(self == 1){return self} // even for Infinity or NaN
+        if(self == 1){return new Number(1)} // even for Infinity or NaN
         if(other == 0){return new Number(1)}
 
         if(self == -1 &&
