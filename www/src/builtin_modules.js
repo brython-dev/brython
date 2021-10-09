@@ -258,7 +258,7 @@
                         var res = $B.DOMNode.$factory(elt, true)  // generate the wrapped DOMNode
                         res._wrapped = true  // marked as wrapped
                     }else{
-                        if(klass.$infos.__name__ == 'SVG'){
+                        if(cls.$infos.__name__ == 'SVG'){
                             var res = $B.DOMNode.$factory(
                                 document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
