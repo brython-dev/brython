@@ -241,6 +241,7 @@
                 dict.__mro__ = [$B.DOMNode, $B.builtins.object]
 
                 dict.__new__ = function(cls){
+                    // Only called for subclasses of the HTML tag
                     var res = document.createElement(tagName)
                     if(cls !== html[tagName]){
                         // Only set __class__ if it is not browser.html.<tagName>
@@ -255,9 +256,6 @@
 
             function makeFactory(klass){
                 // Create the factory function for HTML tags.
-                // By default, the class used to create a tag is
-                // browser.html.<tag>. It can be overridden by setting
-                // browser.html.tags[tag] to another class.
                 var factory = function(){
                     if(klass.$infos.__name__ == 'SVG'){
                         var res = $B.DOMNode.$factory(
