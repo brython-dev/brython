@@ -19,8 +19,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         if(bases[i] === undefined){
             // restore the line of class definition
             $B.line_info = class_obj.$def_line
-            throw _b_.NameError.$factory("name '" + parents_names[i] +
-                "' is not defined")
+            throw $B.name_error(parents_names[i])
         }
     }
 

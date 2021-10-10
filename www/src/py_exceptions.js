@@ -412,10 +412,10 @@ BaseException.__repr__ = function(self){
 }
 
 BaseException.__str__ = function(self){
-    if(self.args.length > 0){
+    if(self.args.length > 0 && self.args[0] !== _b_.None){
         return _b_.str.$factory(self.args[0])
     }
-    return self.__class__.$infos.__name__
+    return ''
 }
 
 BaseException.__new__ = function(cls){
@@ -680,6 +680,9 @@ $B.is_recursion_error = function(js_exc){
 function $make_exc(names, parent){
     // Creates the exception classes that inherit from parent
     // names is the list of exception names
+    if(parent === undefined){
+        console.log('pas de parent', names)
+    }
     var _str = [], pos = 0
     for(var i = 0; i < names.length; i++){
         var name = names[i],
@@ -721,14 +724,13 @@ $make_exc([["StopIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "BufferError", "EOFError",
     ["ImportError", "err.name = arguments[0]"],
     "LookupError", "MemoryError",
-    "NameError", "OSError", "ReferenceError", "RuntimeError",
+    "OSError", "ReferenceError", "RuntimeError",
     ["SyntaxError", "err.msg = arguments[0]"],
     "SystemError", "TypeError", "ValueError", "Warning"], _b_.Exception)
 $make_exc(["FloatingPointError", "OverflowError", "ZeroDivisionError"],
     _b_.ArithmeticError)
 $make_exc([["ModuleNotFoundError", "err.name = arguments[0]"]], _b_.ImportError)
 $make_exc(["IndexError","KeyError"], _b_.LookupError)
-$make_exc(["UnboundLocalError"], _b_.NameError)
 $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
     "FileExistsError", "FileNotFoundError", "InterruptedError",
     "IsADirectoryError", "NotADirectoryError", "PermissionError",
@@ -770,13 +772,41 @@ _b_.AttributeError.__str__ = function(self){
     return msg
 }
 
-$B.$TypeError = function(msg){
-    throw _b_.TypeError.$factory(msg)
-}
-
 // Shortcut to create an AttributeError
 $B.attr_error = function(name, obj){
     return _b_.AttributeError.$factory({$nat:"kw",kw:{name, obj}})
+}
+
+// NameError supports keyword-only "name" parameter
+var js = '\nvar $ = $B.args("NameError", 1, {"msg": null, "name":null}, ' +
+    '["msg", "name"], arguments, ' +
+    '{msg: _b_.None, name: _b_.None}, "*", null);\n' +
+    'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;' +
+    'err.name = $.name\n'
+
+$make_exc([["NameError", js]], _b_.Exception)
+
+_b_.NameError.__str__ = function(self){
+    if(self.args.length > 0){
+        return self.args[0]
+    }
+    var msg = `name '${self.name}' is not defined`,
+        suggestion = offer_suggestions_for_name_error(self)
+    if(suggestion){
+        msg += `. Did you mean '${suggestion}'?`
+    }
+    return msg
+}
+
+$make_exc(["UnboundLocalError"], _b_.NameError)
+
+// Shortcut to create a NameError
+$B.name_error = function(name, obj){
+    return _b_.NameError.$factory({$nat:"kw",kw:{name}})
+}
+
+$B.$TypeError = function(msg){
+    throw _b_.TypeError.$factory(msg)
 }
 
 // SyntaxError instances have special attributes
@@ -916,6 +946,23 @@ function offer_suggestions_for_attribute_error(exc){
     return suggestions
 }
 
+function offer_suggestions_for_name_error(exc){
+    var name = exc.name,
+        frame = $B.last(exc.$stack)
+    var locals = Object.keys(frame[1]).filter(x => ! (x.startsWith('$')))
+    var suggestion = calculate_suggestions(locals, name)
+    if(suggestion){
+        return suggestion
+    }
+    if(frame[2] != frame[0]){
+        var globals = Object.keys(frame[3]).filter(x => ! (x.startsWith('$')))
+        var suggestion = calculate_suggestions(globals, name)
+        if(suggestion){
+            return suggestion
+        }
+    }
+}
+
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
     if(err.$handled){
@@ -933,14 +980,8 @@ $B.handle_error = function(err){
             var offset = err.args[1][2]
             trace += '\n    ' + ' '.repeat(offset) + '^' +
                 '\n' + name + ': '+ err.args[0]
-        }else if(name == 'AttributeError'){
-            console.log('handle attr error')
-            trace += '\n' + name + ': ' + _b_.AttributeError.__str__(err)
         }else{
-            trace += '\n' + name
-            if(err.args[0] !== undefined && err.args[0] !== _b_.None){
-                trace += ': ' + _b_.str.$factory(err.args[0])
-            }
+            trace += '\n' + name + ': ' + _b_.str.$factory(err)
         }
     }else{
         console.log(err)

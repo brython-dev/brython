@@ -408,11 +408,11 @@ $B.$search = function(name, global_ns){
     else{
         if(frame[0] == frame[2] || frame[1].$type == "class" ||
                 frame[1].$exec_locals){
-            throw _b_.NameError.$factory(
-                "name '" + name + "' is not defined")}
-        else{
+            throw $B.name_error(name)
+        }else{
             throw _b_.UnboundLocalError.$factory("local variable '" +
-                name + "' referenced before assignment")}
+                name + "' referenced before assignment")
+        }
     }
 }
 
@@ -448,8 +448,7 @@ $B.$global_search = function(name, search_ids){
             return $B.imported[search_id][name]
         }
     }
-    throw _b_.NameError.$factory("name '" + name +
-        "' is not defined")
+    throw $B.name_error(name)
 }
 
 $B.$local_search = function(name){
@@ -505,15 +504,13 @@ $B.$check_def = function(name, value){
             return frame[3][name]
         }
     }
-    throw _b_.NameError.$factory("name '" + name +
-        "' is not defined")
+    throw $B.name_error(name)
 }
 
 $B.$check_def_global = function(name, ns){
     var res = ns[name]
     if(res === undefined){
-        throw _b_.NameError.$factory("name '" + name +
-            "' is not defined")
+        throw $B.name_error(name)
     }
     return res
 }

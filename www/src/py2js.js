@@ -1770,8 +1770,8 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         // For performance reasons, this is only implemented in debug mode
         if($B.debug > 0){
             var check_node = $NodeJS('if(' + this.tree[0].to_js() +
-                ' === undefined){throw _b_.NameError.$factory("name \'' +
-                this.tree[0].tree[0].value + '\' is not defined")}')
+                " === undefined){throw $B.name_error('" +
+                this.tree[0].tree[0].value + "')}")
             node.parent.insert(rank, check_node)
             offset++
         }

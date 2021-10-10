@@ -389,7 +389,7 @@ $B.$delete = function(name, is_global){
         }
     }
     if(!found){
-        throw _b_.NameError.$factory(name)
+        throw $B.name_error(name)
     }
 }
 
