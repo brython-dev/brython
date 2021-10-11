@@ -5012,8 +5012,8 @@ $ExprCtx.prototype.transition = function(token, value){
              while(context.parent !== undefined){
                  context = context.parent
                  if(context.type == "condition"){
-                     $_SyntaxError(context, 'token ' + token + ' after '
-                         + context)
+                     $_SyntaxError(context, ["invalid syntax. Maybe you" +
+                         " meant '==' or ':=' instead of '='?"])
                  }else if(context.type == "augm_assign"){
                      $_SyntaxError(context,
                          "assignment inside augmented assignment")

@@ -108,8 +108,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-11 18:44:31.480619"
-__BRYTHON__.timestamp=1633970671480
+__BRYTHON__.compiled_date="2021-10-11 18:47:32.341155"
+__BRYTHON__.timestamp=1633970852341
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2785,8 +2785,8 @@ C.parent.name=="target list"){$_SyntaxError(C,'token '+token+' after '
 +C)}else if(C.parent.type=="lambda"){if(C.parent.parent.parent.type !="node"){$_SyntaxError(C,['expression cannot contain'+
 ' assignment, perhaps you meant "=="?'])}}
 while(C.parent !==undefined){C=C.parent
-if(C.type=="condition"){$_SyntaxError(C,'token '+token+' after '
-+C)}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
+if(C.type=="condition"){$_SyntaxError(C,["invalid syntax. Maybe you"+
+" meant '==' or ':=' instead of '='?"])}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}
 C=C.tree[0]
 return new $AbstractExprCtx(new $AssignCtx(C),true)}
 break
