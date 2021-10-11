@@ -7800,21 +7800,24 @@ $ListOrTupleCtx.prototype.to_js = function(){
 
             var qesc = new RegExp('"', "g") // to escape double quotes in arguments
 
-            var comments = root.comments
+            var comments = root.comments,
+                in_joined_str = $parent_match(this, {type: 'JoinedStr'})
             for(var i = 1; i < this.intervals.length; i++){
                 var start = this.intervals[i - 1],
                     end = this.intervals[i],
                     txt = src.substring(start, end)
 
-                for(var j = comments.length - 1; j >= 0; j--){
-                    var comment = comments[j]
-                    if(comment[0] > start && comment[0] < end){
-                        // If there is a comment inside the interval,
-                        // replace it by spaces. Cf issue #776
-                        var pos = comment[0] - start
-                        txt = txt.substr(0, pos) +
-                            ' '.repeat(comment[1]) +
-                            txt.substr(pos + comment[1] + 1)
+                if(! in_joined_str){
+                    for(var j = comments.length - 1; j >= 0; j--){
+                        var comment = comments[j]
+                        if(comment[0] > start && comment[0] < end){
+                            // If there is a comment inside the interval,
+                            // replace it by spaces. Cf issue #776
+                            var pos = comment[0] - start
+                            txt = txt.substr(0, pos) +
+                                ' '.repeat(comment[1]) +
+                                txt.substr(pos + comment[1] + 1)
+                        }
                     }
                 }
 
