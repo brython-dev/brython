@@ -7154,6 +7154,7 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
                     this.scope.parent_block, line_num)
 
             dispatch_tokens(root, src)
+
             $pos = save_pos
             var expr = root.children[0].context.tree[0]
             this.tree.push(expr)
@@ -7985,6 +7986,16 @@ $NodeCtx.prototype.transition = function(token, value){
                 context.$pos = $pos
                 $_SyntaxError(context,
                     'line does not start with "case"')
+            }
+        }
+    }
+    if(this.tree.length == 0 && this.node.parent){
+        var rank = this.node.parent.children.indexOf(this.node)
+        if(rank > 0){
+            var previous = this.node.parent.children[rank - 1]
+            if(previous.context.tree[0].type == 'try' &&
+                    ['except', 'finally'].indexOf(token) == -1){
+                $_SyntaxError(context, ["expected 'except' or 'finally' block"])
             }
         }
     }
@@ -10561,19 +10572,6 @@ $TryCtx.prototype.transition = function(token, value){
 $TryCtx.prototype.transform = function(node, rank){
     if(node.parent.children.length == rank + 1){
         $_SyntaxError(node.context, ["unexpected EOF while parsing"])
-    }else{
-        var next_ctx = node.parent.children[rank + 1].context.tree[0]
-        switch(next_ctx.type) {
-            case 'except':
-            case 'finally':
-            case 'single_kw':
-                break
-            default:
-                // Restore $pos
-                $pos = node.parent.children[rank + 1].pos
-                $_SyntaxError(node.parent.children[rank + 1].context.tree[0],
-                    "no clause after try")
-        }
     }
     var scope = $get_scope(this)
 

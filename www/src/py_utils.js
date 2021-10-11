@@ -293,7 +293,6 @@ $B.$list_comp = function(items){
     }
     py += " ".repeat(indent)
     py += res + ".append(" + items[0] + ")\n"
-
     return [py, ix]
 }
 

@@ -108,8 +108,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-11 13:38:40.080269"
-__BRYTHON__.timestamp=1633952320080
+__BRYTHON__.compiled_date="2021-10-11 18:43:08.070594"
+__BRYTHON__.timestamp=1633970588070
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4076,6 +4076,10 @@ if(this.node.parent && this.node.parent.C){var pctx=this.node.parent.C
 if(pctx.tree && pctx.tree.length==1 &&
 pctx.tree[0].type=="match"){if(token !='eol' &&(token !=='id' ||value !=='case')){C.$pos=$pos
 $_SyntaxError(C,'line does not start with "case"')}}}
+if(this.tree.length==0 && this.node.parent){var rank=this.node.parent.children.indexOf(this.node)
+if(rank > 0){var previous=this.node.parent.children[rank-1]
+if(previous.C.tree[0].type=='try' &&
+['except','finally'].indexOf(token)==-1){$_SyntaxError(C,["expected 'except' or 'finally' block"])}}}
 switch(token){case ',':
 if(C.tree && C.tree.length==0){$_SyntaxError(C,'token '+token+' after '+C)}
 var first=C.tree[0]
@@ -5415,14 +5419,7 @@ $TryCtx.prototype.toString=function(){return '(try) '}
 $TryCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$TryCtx.prototype.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(node.C,["unexpected EOF while parsing"])}else{var next_ctx=node.parent.children[rank+1].C.tree[0]
-switch(next_ctx.type){case 'except':
-case 'finally':
-case 'single_kw':
-break
-default:
-$pos=node.parent.children[rank+1].pos
-$_SyntaxError(node.parent.children[rank+1].C.tree[0],"no clause after try")}}
+$TryCtx.prototype.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(node.C,["unexpected EOF while parsing"])}
 var scope=$get_scope(this)
 var error_name=create_temp_name('$err')
 var failed_name="$locals."+create_temp_name('$failed')
