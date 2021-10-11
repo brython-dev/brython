@@ -644,5 +644,13 @@ assert str(pow(1, 1)) == "1"
 assert str(1 ** 0.5) == "1.0"
 assert str(pow(1, 0.5)) == "1.0"
 
+a = 2 ** 63 + 67
+assert divmod(a, 445677) == (20695194135786, 78753)
+assert divmod(a, -445677) == (-20695194135787, -366924)
+assert divmod(-a, 445677) == (-20695194135787, 366924)
+assert divmod(-a, -445677) == (20695194135786, -78753)
+
+assert str(float(a)) == "9.223372036854776e+18"
+assert str(float(-a)) == "-9.223372036854776e+18"
 
 print('passed all tests...')

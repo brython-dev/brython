@@ -636,6 +636,7 @@ float.__repr__ = function(self){
     }
 
     var res = self + "" // coerce to string
+    
     if(res.indexOf(".") == -1){
         res += ".0"
     }
@@ -653,6 +654,11 @@ float.__repr__ = function(self){
     }
     var x, y
     [x, y] = res.split('.')
+    var sign = ''
+    if(x[0] == '-'){
+        x = x.substr(1)
+        sign = '-'
+    }
     if(x.length > 16){
         var exp = x.length - 1,
             int_part = x[0],
@@ -664,7 +670,7 @@ float.__repr__ = function(self){
         if(dec_part.length > 0){
             mant += '.' + dec_part
         }
-        return mant + 'e+' + exp
+        return sign + mant + 'e+' + exp
     }else if(x == "0"){
         var exp = 0
         while(exp < y.length && y.charAt(exp) == "0"){
@@ -684,7 +690,7 @@ float.__repr__ = function(self){
             if(exp.length == 1){
                 exp = '0' + exp
             }
-            return mant + 'e-' + exp
+            return sign + mant + 'e-' + exp
         }
     }
     return _b_.str.$factory(res)

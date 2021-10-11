@@ -34,40 +34,11 @@ function add_pos(v1, v2){
     // Add two positive numbers
     // v1, v2 : strings
     // Return an instance of long_int
-    if(window.BigInt){
-        return {
-            __class__: long_int,
-            value: (BigInt(v1) + BigInt(v2)).toString(),
-            pos: true
-        }
+    return {
+        __class__: long_int,
+        value: (BigInt(v1) + BigInt(v2)).toString(),
+        pos: true
     }
-
-    var res = "",
-        carry = 0,
-        iself = v1.length,
-        sv = 0,
-        x
-    for(var i = v2.length - 1; i >=0 ; i--){
-        iself--
-        if(iself < 0){sv = 0}else{sv = parseInt(v1.charAt(iself))}
-        x = (carry + sv + parseInt(v2.charAt(i))).toString()
-        if(x.length == 2){
-            res = x.charAt(1) + res
-            carry = parseInt(x.charAt(0))
-        }
-        else{res = x + res; carry = 0}
-    }
-    while(iself > 0){
-        iself--
-        x = (carry + parseInt(v1.charAt(iself))).toString()
-        if(x.length == 2){
-            res = x.charAt(1) + res
-            carry = parseInt(x.charAt(0))
-        }
-        else{res = x + res; carry = 0}
-    }
-    if(carry){res = carry + res}
-    return {__class__: long_int, value: res, pos: true}
 }
 
 var len = ((Math.pow(2, 53) - 1) + '').length - 1
@@ -128,22 +99,6 @@ function binary(obj){
     return add1
 }
 
-function check_shift(shift){
-    // Check the argument of >> and <<
-    if(! _b_.isinstance(shift, long_int)){
-        throw _b_.TypeError.$factory("shift must be int, not '" +
-            $B.class_name(shift) + "'")
-    }
-    if(! shift.pos){throw _b_.ValueError.$factory("negative shift count")}
-}
-
-function clone(obj){
-    // Used for traces
-    var obj1 = {}
-    for(var attr in obj){obj1[attr] = obj[attr]}
-    return obj1
-}
-
 function comp_pos(v1, v2){
     // Compare two positive numbers
     if(v1.length > v2.length){return 1}
@@ -157,9 +112,16 @@ function comp_pos(v1, v2){
 
 function divmod_by_safe_int(t, n){
     // Division of the string t holding a long integer in base 10 by the
-    // "safe" positive integer n
+    // "safe" positive integer n.
+    // Returns [quotient, rest]
 
     if(n == 1){return [t, 0]}
+    var quotient = BigInt(t) / BigInt(n),
+        rest = BigInt(t) - quotient * BigInt(n)
+    console.log("divmod by safe int")
+    return [from_BigInt(quotient), from_BigInt(rest)]
+
+    /*
 
     // Manual division algorithm for Q = A / B
     // L is the length of B
@@ -187,105 +149,24 @@ function divmod_by_safe_int(t, n){
         }
         a = 10 * rest + parseInt(T[next_pos])
     }
+    */
 }
 
 function divmod_pos(v1, v2){
     // v1, v2 : strings, represent 2 positive integers A and B
     // Return [a, b] where a and b are instances of long_int
     // a = A // B, b = A % B
-    if($B.BigInt){
-        var a = {
-            __class__: long_int,
-            value: (BigInt(v1) / BigInt(v2)).toString(),
-            pos: true
-        },
-        b = {
-            __class__: long_int,
-            value: (BigInt(v1) % BigInt(v2)).toString(),
-            pos: true
-        }
-        return [a, b]
+    var a = {
+        __class__: long_int,
+        value: (BigInt(v1) / BigInt(v2)).toString(),
+        pos: true
+    },
+    b = {
+        __class__: long_int,
+        value: (BigInt(v1) % BigInt(v2)).toString(),
+        pos: true
     }
-
-    var iv1 = parseInt(v1),
-        iv2 = parseInt(v2),
-        res1
-    if(iv1 < $B.max_int && iv2 < $B.max_int){
-        var rest = iv1 % iv2,
-            quot = Math.floor(iv1 / iv2).toString()
-        var res1 = [
-            {__class__:long_int, value: quot.toString(), pos: true},
-            {__class__:long_int, value: rest.toString(), pos: true}
-        ]
-        return res1
-    }else if(iv2 < max_safe_divider){
-        var res_safe = divmod_by_safe_int(v1, iv2)
-        return [long_int.$factory(res_safe[0]), long_int.$factory(res_safe[1])]
-    }
-    var quotient, mod
-    if(comp_pos(v1, v2) == -1){ // a < b
-        quotient = "0"
-        mod = long_int.$factory(v1)
-    }else if(v2 == v1){ // a = b
-        quotient = "1"
-        mod = long_int.$factory("0")
-    }else{
-        var quotient = "",
-            left = v1.substr(0, v2.length)
-        if(v1 < v2){left = v1.substr(0, v2.length + 1)}
-        var right = v1.substr(left.length)
-        // mv2 maps integers i from 2 to 9 to i*v2, used as a cache to avoid
-        // having to compute i*v2 each time
-        var mv2 = {}
-
-        // Division algorithm
-        // At each step in the division, v1 is split into substrings
-        // "left" is the left part, with the same length as v2
-        // "rest" is the rest of v1 after "left"
-        // The algorithm finds the one-digit integer "candidate" such
-        // that 0 <= left - candidate*v2 < v2
-        // It stops when right is empty
-        while(true){
-            // Uses JS division to test an approximate result
-            var candidate = Math.floor(parseInt(left) / parseInt(v2)) + ""
-            if(candidate == "10"){
-                // Might happen for big numbers with v2 slightly bigger
-                // than left, eg with left = 1000000000000000000000000000000
-                // and v2 = 100000000000000000000005772299
-                candidate = "9"
-            }
-
-            // Check that candidate is the correct result
-            // Start by computing candidate * v2 : for this, use the table
-            // mv2, which stores the multiples of v2 already calculated
-            if(mv2[candidate] === undefined){
-                mv2[candidate] = mul_pos(v2, candidate).value
-            }
-            if(comp_pos(left, mv2[candidate]) == -1){
-                // If left < candidate * v2, use candidate-1
-                candidate--
-                if(mv2[candidate] === undefined){
-                    mv2[candidate] = mul_pos(v2, candidate).value
-                }
-            }
-
-            // Add candidate to the quotient
-            quotient += candidate
-
-            // New value for left : left - v2 * candidate
-            left = sub_pos(left, mv2[candidate]).value
-
-            // Stop if all digits in v1 have been used
-            if(right.length == 0){break}
-
-            // Else, add next digit to left and remove it from right
-            left += right.charAt(0)
-            right = right.substr(1)
-        }
-        // Modulo is A - (A//B) * B
-        mod = sub_pos(v1, mul_pos(quotient, v2).value)
-    }
-    return [long_int.$factory(quotient), mod]
+    return [a, b]
 }
 
 function split_chunks(s, size){
@@ -301,124 +182,17 @@ function split_chunks(s, size){
 }
 
 function mul_pos(x, y){
-    if($B.BigInt){
-        // always return a long int
-        return long_int.$factory(from_BigInt(BigInt(x) * BigInt(y)))
-    }
-    var ix = parseInt(x),
-        iy = parseInt(y),
-        z = ix * iy
-    if(z < $B.max_int){
-        return {
-            __class__: long_int,
-            value: z.toString(),
-            pos: true
-        }
-    }
-    // To multiply long integers in strings x and y, split the strings in
-    // chunks of chunk_size digits to get integers than can be safely
-    // multiplied by Javascript
-    var chunk_size = 6,
-        cx = split_chunks(x, chunk_size),
-        cy = split_chunks(y, chunk_size)
-
-    // Multiply chunk i of x by chunk j of y and store the result in an
-    // object "products" at index i+j
-    // The value of products[pos] is the sum of x[i]*y[j] for i+j = pos
-    var products = {},
-        len = cx.length + cy.length
-    for(var i = 0; i < len - 1; i++){products[i] = 0}
-    for(var i = 0; i < cx.length; i++){
-        for(var j = 0; j < cy.length; j++){
-            products[i + j] += cx[i] * cy[j]
-        }
-    }
-
-    // If products[pos] has more digits than chunk_size, report the carry
-    // at position pos+1
-    var nb = len - 1, pos
-    for(var i = 0; i < len - 1; i++){
-        var chunks = split_chunks(products[i].toString(), chunk_size)
-        for(var j = 1; j < chunks.length; j++){
-            pos = i + j
-            if(products[pos] === undefined){
-                products[pos] = parseInt(chunks[j])
-                nb = pos
-            }
-            else{products[pos] += parseInt(chunks[j])}
-        }
-        products[i] = chunks[0]
-    }
-
-    // Build the result as the concatenation of strings, padded with 0 if
-    // necessary
-    var result = "", i = 0, s
-    while(products[i] !== undefined){
-        s = products[i].toString()
-        if(products[i + 1] !== undefined){
-            s = "0".repeat(chunk_size - s.length) + s
-        }
-        result = s + result
-        i++
-    }
-    try{
-        return long_int.$factory(result)
-    }catch(err){
-        console.log(x, y, products, result)
-        throw err
-    }
+    // always return a long int
+    return long_int.$factory(from_BigInt(BigInt(x) * BigInt(y)))
 }
 
 function sub_pos(v1, v2){
     // Substraction of positive numbers with v1>=v2
-    if(window.BigInt){
-        return {
-            __class__: long_int,
-            value: (BigInt(v1) - BigInt(v2)).toString(),
-            pos: true
-        }
+    return {
+        __class__: long_int,
+        value: (BigInt(v1) - BigInt(v2)).toString(),
+        pos: true
     }
-
-    var res = "",
-        carry = 0,
-        i1 = v1.length,
-        sv = 0,
-        x
-
-    // For all digits in v2, starting by the rightmost, substract it from
-    // the matching digit in v1
-    // This is the equivalent of the manual operation :
-    //    12345678
-    //   -   98765
-    //
-    // We begin by the rightmost operation : 8-5 (3, no carry),
-    // then 7-6 (1, no carry)
-    // then 6-7 (9, carry 1) and so on
-    for(var i = v2.length - 1; i >= 0; i--){
-        i1--
-        sv = parseInt(v1.charAt(i1))
-        x = (sv - carry - parseInt(v2.charAt(i)))
-        if(isNaN(x)){console.log("x is NaN", v1.length, v2.length, i, i1, sv, carry, i, v2.charAt(i))}
-        if(x < 0){res = (10 + x) + res; carry = 1}
-        else{res = x + res; carry = 0}
-    }
-
-
-    if(res.startsWith("NaN")){alert(res)}
-    // If there are remaining digits in v1, substract the carry, if any
-    while(i1 > 0){
-        i1--
-        x = (parseInt(v1.charAt(i1)) - carry)
-        if(x < 0){res = (10 + x) + res; carry = 1}
-        else{res = x + res; carry = 0}
-    }
-
-    // Remove leading zeros and return the result
-    while(res.charAt(0) == "0" && res.length > 1){res = res.substr(1)}
-    if(res.startsWith("NaN")){
-        console.log("hoho !!", v1, v2, v1 >= v2, res)
-    }
-    return {__class__: long_int, value: res, pos: true}
 }
 
 function to_BigInt(x){
@@ -549,106 +323,14 @@ long_int.__add__ = function(self, other){
             return _b_.NotImplemented
         }
     }
-    if($B.BigInt){
-        return from_BigInt(to_BigInt(self) + to_BigInt(other))
-    }
-
-    // Addition of "self" and "other"
-    // If both have the same sign (+ or -) we add their absolute values
-    // If they have different sign we use the substraction of their
-    // absolute values
-    var res
-    if(self.pos && other.pos){  // self > 0, other > 0
-        return add_pos(self.value, other.value)
-    }else if(! self.pos && ! other.pos){ // self < 0, other < 0
-        res = add_pos(self.value, other.value)
-        res.pos = false
-        return intOrLong(res)
-    }else if(self.pos && ! other.pos){ // self > 0, other < 0
-        switch (comp_pos(self.value, other.value)){
-            case 1:
-                res = sub_pos(self.value, other.value)
-                break
-            case 0:
-                res = {__class__: long_int, value:0, pos: true}
-                break
-            case -1:
-                res = sub_pos(other.value, self.value)
-                res.pos = false
-                break
-        }
-        return intOrLong(res)
-    }else{ // self < 0, other > 0
-        switch(comp_pos(self.value, other.value)){
-            case 1:
-                res = sub_pos(self.value, other.value)
-                res.pos = false
-                break
-            case 0:
-                res = {__class__: long_int, value: 0, pos: true}
-                break
-            case -1:
-                res = sub_pos(other.value, self.value)
-                break
-        }
-        return intOrLong(res)
-    }
+    return from_BigInt(to_BigInt(self) + to_BigInt(other))
 }
 
 long_int.__and__ = function(self, other){
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
     }
-    if($B.BigInt){
-        return from_BigInt(to_BigInt(self) & to_BigInt(other))
-    }
-    var v1 = self.value,
-        v2 = other.value,
-        temp1,
-        temp2,
-        res = ""
-    var neg = (! self.pos) && (! other.pos)
-    if(neg){
-        self = long_int.__neg__(self)
-        other = long_int.__neg__(other)
-    }
-    var b1 = binary(self),
-        len1 = b1.length,
-        b2 = binary(other),
-        len2 = b2.length,
-        i = 1,
-        res = '',
-        x1,
-        x2
-    while(true){
-        if(i > len1 && i > len2){
-            break
-        }
-        if(i > len1){
-            x1 = self.pos ? "0" : "1"
-        }else{
-            x1 = b1.charAt(len1 - i)
-        }
-        if(i > len2){
-            x2 = other.pos ? "0" : "1"
-        }else{
-            x2 = b2.charAt(len2 - i)
-        }
-        if(x1 == "1" && x2 == "1"){
-            res = "1" + res
-        }else{
-            res = "0" + res
-        }
-        i++
-    }
-    while(res.charAt(0) == "0"){
-        res = res.substr(1)
-    }
-    res = $B.long_int.$factory(res, 2)
-    if(neg){
-        res.pos = false
-    }
-    return intOrLong(res)
+    return from_BigInt(to_BigInt(self) & to_BigInt(other))
 }
 
 long_int.__divmod__ = function(self, other){
@@ -656,21 +338,16 @@ long_int.__divmod__ = function(self, other){
         other = long_int.$factory(_b_.str.$factory(other))
     }
 
-    var dm = divmod_pos(self.value, other.value)
-    if(self.pos !== other.pos){
-        if(dm[0].value != "0"){
-            dm[0].pos = false
-        }
-        if(dm[1].value != "0"){
-            // If self and other have different signs and self is not a
-            // multiple of other, round to the previous integer
-            dm[0] = long_int.__sub__(dm[0], long_int.$factory("1"))
-            // Modulo is A - (A//B) * B
-            dm[1] = long_int.__sub__(self,
-                long_int.__mul__(other, long_int.$factory(dm[0])))
-        }
+    var a = to_BigInt(self),
+        b = to_BigInt(other),
+        quotient
+    if((a > 0 && b > 0) || (a < 0 && b < 0)){
+        quotient = a / b
+    }else{
+        quotient = a / b - BigInt(1)
     }
-    return $B.fast_tuple([intOrLong(dm[0]), intOrLong(dm[1])])
+    var rest = a - quotient * b
+    return $B.fast_tuple([from_BigInt(quotient), from_BigInt(rest)])
 }
 
 long_int.__eq__ = function(self, other){
@@ -684,7 +361,7 @@ long_int.__float__ = function(self){
     if(! isFinite(parseFloat(self.value))){
         throw _b_.OverflowError.$factory("int too big to convert to float")
     }
-    return new Number(parseFloat(self.value))
+    return new Number((self.pos ? 1 : - 1) * parseFloat(self.value))
 }
 
 long_int.__floordiv__ = function(self, other){
@@ -784,60 +461,14 @@ long_int.__lt__ = function(self, other){
 }
 
 long_int.__lshift__ = function(self, shift){
-    if(window.BigInt){
-        if(shift.__class__ == long_int){
-            shift = shift.value
-        }
-        return intOrLong({
-            __class__: long_int,
-            value: (BigInt(self.value) << BigInt(shift)).toString(),
-            pos: self.pos
-        })
+    if(shift.__class__ == long_int){
+        shift = shift.value
     }
-    var is_long = shift.__class__ === long_int,
-        shift_safe
-    if(is_long){
-        var shift_value = parseInt(shift.value)
-        if(shift_value < 0){
-            throw _b_.ValueError.$factory('negative shift count')
-        }
-        if(shift_value < $B.max_int){
-            shift_safe = true
-            shift = shift_value
-        }
-    }
-    if(shift_safe){
-        if(shift_value == 0){return self}
-    }else{
-        shift = long_int.$factory(shift)
-        if(shift.value == "0"){return self}
-    }
-    var res = self.value
-    while(true){
-        var x,
-            carry = 0,
-            res1 = ""
-        for(var i = res.length - 1; i >= 0; i--){
-            x = (carry + parseInt(res.charAt(i)) * 2).toString()
-            if(x.length == 2){
-                res1 = x.charAt(1) + res1
-                carry = parseInt(x.charAt(0))
-            }else{
-                res1 = x + res1
-                carry = 0
-            }
-        }
-        if(carry){res1 = carry + res1}
-        res = res1
-        if(shift_safe){
-            shift--
-            if(shift == 0){break}
-        }else{
-            shift = sub_pos(shift.value, "1")
-            if(shift.value == "0"){break}
-        }
-    }
-    return intOrLong({__class__: long_int, value: res, pos: self.pos})
+    return intOrLong({
+        __class__: long_int,
+        value: (BigInt(self.value) << BigInt(shift)).toString(),
+        pos: self.pos
+    })
 }
 
 long_int.__mod__ = function(self, other){
@@ -868,13 +499,7 @@ long_int.__mul__ = function(self, other){
         other_value = _b_.str.$factory(value)
         other_pos = value > 0
     }
-    if($B.BigInt){
-        return from_BigInt(to_BigInt(self) * to_BigInt(other))
-    }
-    var res = mul_pos(self.value, other_value)
-    if(self.pos == other_pos){return intOrLong(res)}
-    res.pos = false
-    return intOrLong(res)
+    return from_BigInt(to_BigInt(self) * to_BigInt(other))
 }
 
 long_int.__ne__ = function(self, other){
@@ -932,110 +557,44 @@ long_int.__pow__ = function(self, power, z){
                   s = s * s
           return b
     */
-    if($B.BigInt){
-        var s = $B.BigInt(self.value),
-            b = $B.BigInt(1),
-            x = $B.BigInt(power.value),
-            z = z === undefined ? z : typeof z == "number" ? $B.BigInt(z) :
-                $B.BigInt(z.value)
-        if(z === undefined){
-            return {
-                __class__: long_int,
-                value: (s ** x).toString(),
-                pos: true
-            }
+    var s = $B.BigInt(self.value),
+        b = $B.BigInt(1),
+        x = $B.BigInt(power.value),
+        z = z === undefined ? z : typeof z == "number" ? $B.BigInt(z) :
+            $B.BigInt(z.value)
+    if(z === undefined){
+        return {
+            __class__: long_int,
+            value: (s ** x).toString(),
+            pos: true
         }
-        while(x > 0){
-            if(x % $B.BigInt(2) == 1){
-                b = b * s
-            }
-            x = x / $B.BigInt(2)
-            if(x > 0){
-                s = s * s
-            }
-            if(z !== undefined){
-                b = b % z
-            }
-        }
-        return {__class__: long_int, value: b.toString(), pos: true}
     }
-
-    var b = {__class__: long_int, value: "1", pos: true},
-        s = self,
-        pow = power.value,
-        temp
-    while(true){
-        if(typeof pow == "string" && parseInt(pow) < $B.max_int){
-            pow = parseInt(pow)
+    while(x > 0){
+        if(x % $B.BigInt(2) == 1){
+            b = b * s
         }
-        if(pow == 0){
-            break
-        }else if(typeof pow == "string"){
-            if(parseInt(pow.charAt(pow.length - 1)) % 2 == 1){
-                b = long_int.__mul__(b, s)
-            }
-            pow = long_int.__floordiv__(pow, 2)
-        }else{
-            if(pow % 2 == 1){
-                if(typeof b == "number" && typeof s == "number" &&
-                        (temp = b * s) < $B.max_int){
-                    b = temp
-                }else{
-                    b = long_int.__mul__(long_int.$factory(b),
-                        long_int.$factory(s))
-                }
-            }
-            pow = Math.floor(pow / 2)
-        }
-        if(pow > 0){
-            if(typeof s == "number" && (temp = s * s) < $B.max_int){
-                s = temp
-            }else{
-                s = long_int.$factory(s)
-                s = long_int.__mul__(s, s)
-            }
+        x = x / $B.BigInt(2)
+        if(x > 0){
+            s = s * s
         }
         if(z !== undefined){
-            b = long_int.__mod__(b, z)
+            b = b % z
         }
     }
-    return intOrLong(b)
+    return {__class__: long_int, value: b.toString(), pos: true}
 }
 
 long_int.__rshift__ = function(self, shift){
-    if(window.BigInt){
-        if(shift.__class__ === long_int){
-            shift = shift.value
+    if(shift.__class__ === long_int){
+        shift = shift.value
+    }
+    return intOrLong(
+        {
+            __class__: long_int,
+            value: (BigInt(self.value) >> BigInt(shift)).toString(),
+            pos: self.pos
         }
-        return intOrLong(
-            {
-                __class__: long_int,
-                value: (BigInt(self.value) >> BigInt(shift)).toString(),
-                pos: self.pos
-            }
-        )
-    }
-    if(typeof shift == "number"){
-        var pow2 = Math.pow(2, shift)
-        if(pow2 < $B.max_int){
-            var res = divmod_by_safe_int(self.value, pow2)
-            return intOrLong({
-                __class__: long_int,
-                value: res[0],
-                pos: self.pos
-            })
-        }
-    }
-    shift = long_int.$factory(shift)
-    if(shift.value == "0"){return self}
-    var res = self.value
-    while(true){
-        res = divmod_pos(res, "2")[0].value
-        if(res.value == "0"){break}
-        shift = sub_pos(shift.value, "1")
-        if(shift.value == "0"){break}
-    }
-    return intOrLong({__class__: long_int, value: res, pos: self.pos})
+    )
 }
 
 long_int.__str__ = long_int.__repr__ = function(self){

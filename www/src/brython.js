@@ -108,9 +108,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-10 08:56:14.302800"
-__BRYTHON__.timestamp=1633848974302
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
+__BRYTHON__.compiled_date="2021-10-11 08:44:39.961408"
+__BRYTHON__.timestamp=1633934679961
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -10926,11 +10926,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','gettext','glob','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_cmath','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre1','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','module1','modulefinder','pbkdf2','posix','python_re','python_re1','python_re2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -12787,22 +12787,8 @@ try{eval("window")}catch(err){window=self}
 var long_int={__class__:_b_.type,__mro__:[_b_.int,_b_.object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 var max_safe_divider=$B.max_int/9
 function add_pos(v1,v2){
-if(window.BigInt){return{
+return{
 __class__:long_int,value:(BigInt(v1)+BigInt(v2)).toString(),pos:true}}
-var res="",carry=0,iself=v1.length,sv=0,x
-for(var i=v2.length-1;i >=0 ;i--){iself--
-if(iself < 0){sv=0}else{sv=parseInt(v1.charAt(iself))}
-x=(carry+sv+parseInt(v2.charAt(i))).toString()
-if(x.length==2){res=x.charAt(1)+res
-carry=parseInt(x.charAt(0))}
-else{res=x+res;carry=0}}
-while(iself > 0){iself--
-x=(carry+parseInt(v1.charAt(iself))).toString()
-if(x.length==2){res=x.charAt(1)+res
-carry=parseInt(x.charAt(0))}
-else{res=x+res;carry=0}}
-if(carry){res=carry+res}
-return{__class__:long_int,value:res,pos:true}}
 var len=((Math.pow(2,53)-1)+'').length-1
 function binary_pos(t){var nb_chunks=Math.ceil(t.length/len),chunks=[],pos,start,nb,bin=[]
 for(var i=0;i < nb_chunks;i++){pos=t.length-(i+1)*len
@@ -12827,14 +12813,6 @@ for(var i=0,len=bpos.length;i < len;i++){res+=bpos.charAt(i)=="0" ? "1":"0"}
 var add1=add_pos(res,"1").value
 add1=res.substr(0,res.length-add1.length)+add1
 return add1}
-function check_shift(shift){
-if(! _b_.isinstance(shift,long_int)){throw _b_.TypeError.$factory("shift must be int, not '"+
-$B.class_name(shift)+"'")}
-if(! shift.pos){throw _b_.ValueError.$factory("negative shift count")}}
-function clone(obj){
-var obj1={}
-for(var attr in obj){obj1[attr]=obj[attr]}
-return obj1}
 function comp_pos(v1,v2){
 if(v1.length > v2.length){return 1}
 else if(v1.length < v2.length){return-1}
@@ -12843,92 +12821,22 @@ else if(v1 < v2){return-1}}
 return 0}
 function divmod_by_safe_int(t,n){
 if(n==1){return[t,0]}
-var T=t.toString(),L=n.toString().length,a=parseInt(T.substr(0,L)),next_pos=L-1,quotient='',q,rest
-while(true){q=Math.floor(a/n)
-rest=a-q*n
-quotient+=q
-next_pos++
-if(next_pos >=T.length){return[quotient,rest]}
-a=10*rest+parseInt(T[next_pos])}}
+var quotient=BigInt(t)/BigInt(n),rest=BigInt(t)-quotient*BigInt(n)
+console.log("divmod by safe int")
+return[from_BigInt(quotient),from_BigInt(rest)]}
 function divmod_pos(v1,v2){
-if($B.BigInt){var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
+var a={__class__:long_int,value:(BigInt(v1)/BigInt(v2)).toString(),pos:true},b={__class__:long_int,value:(BigInt(v1)% BigInt(v2)).toString(),pos:true}
 return[a,b]}
-var iv1=parseInt(v1),iv2=parseInt(v2),res1
-if(iv1 < $B.max_int && iv2 < $B.max_int){var rest=iv1 % iv2,quot=Math.floor(iv1/iv2).toString()
-var res1=[{__class__:long_int,value:quot.toString(),pos:true},{__class__:long_int,value:rest.toString(),pos:true}
-]
-return res1}else if(iv2 < max_safe_divider){var res_safe=divmod_by_safe_int(v1,iv2)
-return[long_int.$factory(res_safe[0]),long_int.$factory(res_safe[1])]}
-var quotient,mod
-if(comp_pos(v1,v2)==-1){
-quotient="0"
-mod=long_int.$factory(v1)}else if(v2==v1){
-quotient="1"
-mod=long_int.$factory("0")}else{var quotient="",left=v1.substr(0,v2.length)
-if(v1 < v2){left=v1.substr(0,v2.length+1)}
-var right=v1.substr(left.length)
-var mv2={}
-while(true){
-var candidate=Math.floor(parseInt(left)/parseInt(v2))+""
-if(candidate=="10"){
-candidate="9"}
-if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}
-if(comp_pos(left,mv2[candidate])==-1){
-candidate--
-if(mv2[candidate]===undefined){mv2[candidate]=mul_pos(v2,candidate).value}}
-quotient+=candidate
-left=sub_pos(left,mv2[candidate]).value
-if(right.length==0){break}
-left+=right.charAt(0)
-right=right.substr(1)}
-mod=sub_pos(v1,mul_pos(quotient,v2).value)}
-return[long_int.$factory(quotient),mod]}
 function split_chunks(s,size){var nb=Math.ceil(s.length/size),chunks=[],len=s.length
 for(var i=0;i < nb;i++){var pos=len-size*(i+1)
 if(pos < 0){size+=pos;pos=0}
 chunks.push(parseInt(s.substr(pos,size)))}
 return chunks}
-function mul_pos(x,y){if($B.BigInt){
+function mul_pos(x,y){
 return long_int.$factory(from_BigInt(BigInt(x)*BigInt(y)))}
-var ix=parseInt(x),iy=parseInt(y),z=ix*iy
-if(z < $B.max_int){return{
-__class__:long_int,value:z.toString(),pos:true}}
-var chunk_size=6,cx=split_chunks(x,chunk_size),cy=split_chunks(y,chunk_size)
-var products={},len=cx.length+cy.length
-for(var i=0;i < len-1;i++){products[i]=0}
-for(var i=0;i < cx.length;i++){for(var j=0;j < cy.length;j++){products[i+j]+=cx[i]*cy[j]}}
-var nb=len-1,pos
-for(var i=0;i < len-1;i++){var chunks=split_chunks(products[i].toString(),chunk_size)
-for(var j=1;j < chunks.length;j++){pos=i+j
-if(products[pos]===undefined){products[pos]=parseInt(chunks[j])
-nb=pos}
-else{products[pos]+=parseInt(chunks[j])}}
-products[i]=chunks[0]}
-var result="",i=0,s
-while(products[i]!==undefined){s=products[i].toString()
-if(products[i+1]!==undefined){s="0".repeat(chunk_size-s.length)+s}
-result=s+result
-i++}
-try{return long_int.$factory(result)}catch(err){console.log(x,y,products,result)
-throw err}}
 function sub_pos(v1,v2){
-if(window.BigInt){return{
+return{
 __class__:long_int,value:(BigInt(v1)-BigInt(v2)).toString(),pos:true}}
-var res="",carry=0,i1=v1.length,sv=0,x
-for(var i=v2.length-1;i >=0;i--){i1--
-sv=parseInt(v1.charAt(i1))
-x=(sv-carry-parseInt(v2.charAt(i)))
-if(isNaN(x)){console.log("x is NaN",v1.length,v2.length,i,i1,sv,carry,i,v2.charAt(i))}
-if(x < 0){res=(10+x)+res;carry=1}
-else{res=x+res;carry=0}}
-if(res.startsWith("NaN")){alert(res)}
-while(i1 > 0){i1--
-x=(parseInt(v1.charAt(i1))-carry)
-if(x < 0){res=(10+x)+res;carry=1}
-else{res=x+res;carry=0}}
-while(res.charAt(0)=="0" && res.length > 1){res=res.substr(1)}
-if(res.startsWith("NaN")){console.log("hoho !!",v1,v2,v1 >=v2,res)}
-return{__class__:long_int,value:res,pos:true}}
 function to_BigInt(x){var res=$B.BigInt(x.value)
 if(x.pos){return res}
 return-res}
@@ -12983,62 +12891,18 @@ long_int.__abs__=function(self){return{__class__:long_int,value:self.value,pos:t
 long_int.__add__=function(self,other){if(_b_.isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)+other)}
 if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}else if(other.__class__ !==long_int){if(_b_.isinstance(other,_b_.bool)){other=long_int.$factory(other ? 1 :0)}else if(_b_.isinstance(other,_b_.int)){
 other=long_int.$factory(_b_.str.$factory(_b_.int.__index__(other)))}else{return _b_.NotImplemented}}
-if($B.BigInt){return from_BigInt(to_BigInt(self)+to_BigInt(other))}
-var res
-if(self.pos && other.pos){
-return add_pos(self.value,other.value)}else if(! self.pos && ! other.pos){
-res=add_pos(self.value,other.value)
-res.pos=false
-return intOrLong(res)}else if(self.pos && ! other.pos){
-switch(comp_pos(self.value,other.value)){case 1:
-res=sub_pos(self.value,other.value)
-break
-case 0:
-res={__class__:long_int,value:0,pos:true}
-break
-case-1:
-res=sub_pos(other.value,self.value)
-res.pos=false
-break}
-return intOrLong(res)}else{
-switch(comp_pos(self.value,other.value)){case 1:
-res=sub_pos(self.value,other.value)
-res.pos=false
-break
-case 0:
-res={__class__:long_int,value:0,pos:true}
-break
-case-1:
-res=sub_pos(other.value,self.value)
-break}
-return intOrLong(res)}}
+return from_BigInt(to_BigInt(self)+to_BigInt(other))}
 long_int.__and__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-if($B.BigInt){return from_BigInt(to_BigInt(self)& to_BigInt(other))}
-var v1=self.value,v2=other.value,temp1,temp2,res=""
-var neg=(! self.pos)&&(! other.pos)
-if(neg){self=long_int.__neg__(self)
-other=long_int.__neg__(other)}
-var b1=binary(self),len1=b1.length,b2=binary(other),len2=b2.length,i=1,res='',x1,x2
-while(true){if(i > len1 && i > len2){break}
-if(i > len1){x1=self.pos ? "0" :"1"}else{x1=b1.charAt(len1-i)}
-if(i > len2){x2=other.pos ? "0" :"1"}else{x2=b2.charAt(len2-i)}
-if(x1=="1" && x2=="1"){res="1"+res}else{res="0"+res}
-i++}
-while(res.charAt(0)=="0"){res=res.substr(1)}
-res=$B.long_int.$factory(res,2)
-if(neg){res.pos=false}
-return intOrLong(res)}
+return from_BigInt(to_BigInt(self)& to_BigInt(other))}
 long_int.__divmod__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
-var dm=divmod_pos(self.value,other.value)
-if(self.pos !==other.pos){if(dm[0].value !="0"){dm[0].pos=false}
-if(dm[1].value !="0"){
-dm[0]=long_int.__sub__(dm[0],long_int.$factory("1"))
-dm[1]=long_int.__sub__(self,long_int.__mul__(other,long_int.$factory(dm[0])))}}
-return $B.fast_tuple([intOrLong(dm[0]),intOrLong(dm[1])])}
+var a=to_BigInt(self),b=to_BigInt(other),quotient
+if((a > 0 && b > 0)||(a < 0 && b < 0)){quotient=a/b}else{quotient=a/b-BigInt(1)}
+var rest=a-quotient*b
+return $B.fast_tuple([from_BigInt(quotient),from_BigInt(rest)])}
 long_int.__eq__=function(self,other){if(typeof other=="number"){other=long_int.$factory(_b_.str.$factory(other))}
 return self.value==other.value && self.pos==other.pos}
 long_int.__float__=function(self){if(! isFinite(parseFloat(self.value))){throw _b_.OverflowError.$factory("int too big to convert to float")}
-return new Number(parseFloat(self.value))}
+return new Number((self.pos ? 1 :-1)*parseFloat(self.value))}
 long_int.__floordiv__=function(self,other){if(_b_.isinstance(other,_b_.float)){return _b_.float.$factory(to_int(self)/other)}
 if(typeof other=="number" && Math.abs(other)< $B.max_safe_divider){var t=self.value,res=divmod_by_safe_int(t,other),pos=other > 0 ? self.pos :!self.pos
 return{__class__:long_int,value:res[0],pos:pos}}
@@ -13077,27 +12941,8 @@ else if(self.value.length < other.value.length){return self.pos}
 else{return self.pos ? self.value <=other.value :
 self.value >=other.value}}
 long_int.__lt__=function(self,other){return !long_int.__ge__(self,other)}
-long_int.__lshift__=function(self,shift){if(window.BigInt){if(shift.__class__==long_int){shift=shift.value}
+long_int.__lshift__=function(self,shift){if(shift.__class__==long_int){shift=shift.value}
 return intOrLong({__class__:long_int,value:(BigInt(self.value)<< BigInt(shift)).toString(),pos:self.pos})}
-var is_long=shift.__class__===long_int,shift_safe
-if(is_long){var shift_value=parseInt(shift.value)
-if(shift_value < 0){throw _b_.ValueError.$factory('negative shift count')}
-if(shift_value < $B.max_int){shift_safe=true
-shift=shift_value}}
-if(shift_safe){if(shift_value==0){return self}}else{shift=long_int.$factory(shift)
-if(shift.value=="0"){return self}}
-var res=self.value
-while(true){var x,carry=0,res1=""
-for(var i=res.length-1;i >=0;i--){x=(carry+parseInt(res.charAt(i))*2).toString()
-if(x.length==2){res1=x.charAt(1)+res1
-carry=parseInt(x.charAt(0))}else{res1=x+res1
-carry=0}}
-if(carry){res1=carry+res1}
-res=res1
-if(shift_safe){shift--
-if(shift==0){break}}else{shift=sub_pos(shift.value,"1")
-if(shift.value=="0"){break}}}
-return intOrLong({__class__:long_int,value:res,pos:self.pos})}
 long_int.__mod__=function(self,other){return intOrLong(long_int.__divmod__(self,other)[1])}
 long_int.__mro__=[_b_.int,_b_.object]
 long_int.__mul__=function(self,other){switch(self){case Number.NEGATIVE_INFINITY:
@@ -13113,11 +12958,7 @@ if(other.__class__ !==long_int && _b_.isinstance(other,_b_.int)){
 var value=_b_.int.__index__(other)
 other_value=_b_.str.$factory(value)
 other_pos=value > 0}
-if($B.BigInt){return from_BigInt(to_BigInt(self)*to_BigInt(other))}
-var res=mul_pos(self.value,other_value)
-if(self.pos==other_pos){return intOrLong(res)}
-res.pos=false
-return intOrLong(res)}
+return from_BigInt(to_BigInt(self)*to_BigInt(other))}
 long_int.__ne__=function(self,other){var res=long_int.__eq__(self,other)
 return res===_b_.NotImplemented ? res :!res}
 long_int.__neg__=function(obj){return{__class__:long_int,value:obj.value,pos:! obj.pos}}
@@ -13136,7 +12977,7 @@ power=long_int.$factory(_b_.str.$factory(_b_.int.__index__(power)))}else if(! _b
 throw _b_.TypeError.$factory(msg+$B.class_name(power)+"'")}
 if(! power.pos){if(self.value=="1"){return self}
 return long_int.$factory("0")}else if(power.value=="0"){return long_int.$factory("1")}
-if($B.BigInt){var s=$B.BigInt(self.value),b=$B.BigInt(1),x=$B.BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? $B.BigInt(z):
+var s=$B.BigInt(self.value),b=$B.BigInt(1),x=$B.BigInt(power.value),z=z===undefined ? z :typeof z=="number" ? $B.BigInt(z):
 $B.BigInt(z.value)
 if(z===undefined){return{
 __class__:long_int,value:(s**x).toString(),pos:true}}
@@ -13145,31 +12986,10 @@ x=x/$B.BigInt(2)
 if(x > 0){s=s*s}
 if(z !==undefined){b=b % z}}
 return{__class__:long_int,value:b.toString(),pos:true}}
-var b={__class__:long_int,value:"1",pos:true},s=self,pow=power.value,temp
-while(true){if(typeof pow=="string" && parseInt(pow)< $B.max_int){pow=parseInt(pow)}
-if(pow==0){break}else if(typeof pow=="string"){if(parseInt(pow.charAt(pow.length-1))% 2==1){b=long_int.__mul__(b,s)}
-pow=long_int.__floordiv__(pow,2)}else{if(pow % 2==1){if(typeof b=="number" && typeof s=="number" &&
-(temp=b*s)< $B.max_int){b=temp}else{b=long_int.__mul__(long_int.$factory(b),long_int.$factory(s))}}
-pow=Math.floor(pow/2)}
-if(pow > 0){if(typeof s=="number" &&(temp=s*s)< $B.max_int){s=temp}else{s=long_int.$factory(s)
-s=long_int.__mul__(s,s)}}
-if(z !==undefined){b=long_int.__mod__(b,z)}}
-return intOrLong(b)}
-long_int.__rshift__=function(self,shift){if(window.BigInt){if(shift.__class__===long_int){shift=shift.value}
+long_int.__rshift__=function(self,shift){if(shift.__class__===long_int){shift=shift.value}
 return intOrLong(
 {__class__:long_int,value:(BigInt(self.value)>> BigInt(shift)).toString(),pos:self.pos}
 )}
-if(typeof shift=="number"){var pow2=Math.pow(2,shift)
-if(pow2 < $B.max_int){var res=divmod_by_safe_int(self.value,pow2)
-return intOrLong({__class__:long_int,value:res[0],pos:self.pos})}}
-shift=long_int.$factory(shift)
-if(shift.value=="0"){return self}
-var res=self.value
-while(true){res=divmod_pos(res,"2")[0].value
-if(res.value=="0"){break}
-shift=sub_pos(shift.value,"1")
-if(shift.value=="0"){break}}
-return intOrLong({__class__:long_int,value:res,pos:self.pos})}
 long_int.__str__=long_int.__repr__=function(self){var res=""
 if(! self.pos){res+='-'}
 return res+self.value}
@@ -13611,11 +13431,14 @@ if(exp_str.length < 2){exp_str='0'+exp_str}
 return mant+'e-'+exp_str}}
 var x,y
 [x,y]=res.split('.')
+var sign=''
+if(x[0]=='-'){x=x.substr(1)
+sign='-'}
 if(x.length > 16){var exp=x.length-1,int_part=x[0],dec_part=x.substr(1)+y
 while(dec_part.endsWith("0")){dec_part=dec_part.substr(0,dec_part.length-1)}
 var mant=int_part
 if(dec_part.length > 0){mant+='.'+dec_part}
-return mant+'e+'+exp}else if(x=="0"){var exp=0
+return sign+mant+'e+'+exp}else if(x=="0"){var exp=0
 while(exp < y.length && y.charAt(exp)=="0"){exp++}
 if(exp > 3){
 var rest=y.substr(exp),exp=(exp+1).toString()
@@ -13623,7 +13446,7 @@ while(rest.endsWith("0")){rest=rest.substr(0,res.length-1)}
 var mant=rest[0]
 if(rest.length > 1){mant+='.'+rest.substr(1)}
 if(exp.length==1){exp='0'+exp}
-return mant+'e-'+exp}}
+return sign+mant+'e-'+exp}}
 return _b_.str.$factory(res)}
 float.__setattr__=function(self,attr,value){if(self.constructor===Number){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '"+
 attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
