@@ -108,8 +108,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-11 08:44:39.961408"
-__BRYTHON__.timestamp=1633934679961
+__BRYTHON__.compiled_date="2021-10-11 13:38:40.080269"
+__BRYTHON__.timestamp=1633952320080
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -406,7 +406,7 @@ var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mo
 for(var key in binary_ops){eval('ast.'+binary_ops[key]+' = function(){}')}
 var boolean_ops={'and':'And','or':'Or'}
 for(var key in boolean_ops){eval('ast.'+boolean_ops[key]+' = function(){}')}
-var comparison_ops={'=':'Eq','!=':'NotEq','<':'Lt','<=':'LtE','>':'Gt','>=':'GtE','is':'Is','is_not':'IsNot','in':'In','not_in':'NotIn'}
+var comparison_ops={'==':'Eq','!=':'NotEq','<':'Lt','<=':'LtE','>':'Gt','>=':'GtE','is':'Is','is_not':'IsNot','in':'In','not_in':'NotIn'}
 for(var key in comparison_ops){eval('ast.'+comparison_ops[key]+' = function(){}')}
 for(var tok of['UAdd','USub','Not','Invert']){eval('ast.'+tok+' = function(){}')}
 ast.Assign=function(targets,value){this.targets=targets
@@ -2360,23 +2360,24 @@ C.tree=[]
 C.closed=true
 return C
 case 'dict':
-if(C.nb_dict_items()% 2==0){C.items=C.tree
+if($B.last(this.tree).type=='abstract_expr'){$_SyntaxError(C,["expression expected after dictionary key and ':'"])}else if(C.nb_dict_items()% 2 !=0){$_SyntaxError(C,["':' expected after dictionary key"])}
+C.items=C.tree
 C.tree=[]
 C.closed=true
-return C}}
+return C}
 $_SyntaxError(C,'token '+token+
 ' after '+C)
 case ',':
 if(C.real=='dict_or_set'){C.real='set'}
 if(C.real=='dict' &&
-C.nb_dict_items()% 2){$_SyntaxError(C,'token '+token+
-' after '+C)}
+C.nb_dict_items()% 2){$_SyntaxError(C,["':' expected after dictionary key"])}
 C.expect='id'
 return C
 case ':':
 if(C.real=='dict_or_set'){C.real='dict'}
-if(C.real=='dict'){C.expect=','
-return new $AbstractExprCtx(C,false)}else{$_SyntaxError(C,'token '+token+
+if(C.real=='dict'){C.expect='value'
+C.value_pos=$pos
+return C}else{$_SyntaxError(C,'token '+token+
 ' after '+C)}
 case 'for':
 if(C.real=="set" && C.tree.length > 1){C.$pos=C.tree[0].$pos
@@ -2440,7 +2441,10 @@ if(value=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(value=='+'){var 
 return new $AbstractExprCtx(op_expr,false)}
 $_SyntaxError(C,'token '+token+
 ' after '+C)}
-$_SyntaxError(C,'token '+token+' after '+C)}
+$_SyntaxError(C,'token '+token+' after '+C)}else if(C.expect=='value'){try{C.expect=','
+return $transition(new $AbstractExprCtx(C,false),token,value)}catch(err){C.$pos=C.value_pos
+$_SyntaxError(C,["expression expected after "+
+"dictionary key and ':'"])}}
 return $transition(C.parent,token,value)}}
 $DictOrSetCtx.prototype.nb_dict_items=function(){var nb=0
 for(var item of this.tree){if(item.packed){nb+=2}else{nb++}}
@@ -2452,7 +2456,8 @@ $DictOrSetCtx.prototype.unpack_dict=function(packed){var js="",res,first,i=0,ite
 while(i < this.items.length){item=this.items[i]
 first=i==0
 if(item.type=="expr" && item.packed){res="_b_.list.$factory(_b_.dict.items("+item.to_js()+"))"
-i++}else{res="[["+item.to_js()+","+
+i++}else{if(this.items[i+1]===undefined){console.log('stack',$B.frames_stack.slice(),'this.items',this.items,'i',i)}
+res="[["+item.to_js()+","+
 this.items[i+1].to_js()+"]]"
 i+=2}
 if(! first){res=".concat("+res+")"}
@@ -6080,10 +6085,10 @@ return unindented_lines.join('\n')}
 function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_SyntaxError(C,['unterminated string literal '+
 `(detected at line ${token.start[0]})`])}
 $_SyntaxError(C,'invalid token '+token[1]+_b_.ord(token[1]))}
+var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
+]
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root,src){var tokenizer=$B.tokenizer(src)
 var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
-var kwdict=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
-]
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
 ]
@@ -6143,7 +6148,7 @@ case 'STRING':
 C=C ||new $NodeCtx(node)}
 switch(token[0]){case 'NAME':
 var name=token[1]
-if(kwdict.indexOf(name)>-1){if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
+if(python_keywords.indexOf(name)>-1){if(unsupported.indexOf(name)>-1){$_SyntaxError(C,"Unsupported Python keyword '"+name+"'")}
 C=$transition(C,name)}else if(name=='not'){C=$transition(C,'not')}else if(typeof $operators[name]=='string'){
 C=$transition(C,'op',name)}else{C=$transition(C,'id',name)}
 continue

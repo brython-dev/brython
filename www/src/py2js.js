@@ -170,7 +170,7 @@ for(var key in boolean_ops){
 
 // comparison operator tokens
 var comparison_ops = {
-    '=': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
+    '==': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
     'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
 for(var key in comparison_ops){
     eval('ast.' + comparison_ops[key] + ' = function(){}')
@@ -4196,12 +4196,17 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                              context.closed = true
                              return context
                         case 'dict':
-                            if(context.nb_dict_items() % 2 == 0){
-                                context.items = context.tree
-                                context.tree = []
-                                context.closed = true
-                                return context
+                            if($B.last(this.tree).type == 'abstract_expr'){
+                                $_SyntaxError(context,
+                                    ["expression expected after dictionary key and ':'"])
+                            }else if(context.nb_dict_items() % 2 != 0){
+                                $_SyntaxError(context,
+                                    ["':' expected after dictionary key"])
                             }
+                            context.items = context.tree
+                            context.tree = []
+                            context.closed = true
+                            return context
                       }
                       $_SyntaxError(context, 'token ' + token +
                           ' after ' + context)
@@ -4211,8 +4216,8 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                     }
                     if(context.real == 'dict' &&
                             context.nb_dict_items() % 2){
-                        $_SyntaxError(context, 'token ' + token +
-                            ' after ' + context)
+                        $_SyntaxError(context,
+                            ["':' expected after dictionary key"])
                     }
                     context.expect = 'id'
                     return context
@@ -4221,10 +4226,13 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                       context.real = 'dict'
                   }
                   if(context.real == 'dict'){
-                      context.expect = ','
-                      return new $AbstractExprCtx(context,false)
-                  }else{$_SyntaxError(context, 'token ' + token +
-                      ' after ' + context)}
+                      context.expect = 'value'
+                      context.value_pos = $pos
+                      return context
+                  }else{
+                      $_SyntaxError(context, 'token ' + token +
+                      ' after ' + context)
+                  }
                 case 'for':
                     // comprehension
                     if(context.real == "set" && context.tree.length > 1){
@@ -4319,6 +4327,16 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                         ' after ' + context)
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        }else if(context.expect == 'value'){
+            try{
+                context.expect = ','
+                return $transition(new $AbstractExprCtx(context, false),
+                    token, value)
+            }catch(err){
+                context.$pos = context.value_pos
+                $_SyntaxError(context, ["expression expected after " +
+                    "dictionary key and ':'"])
+            }
         }
         return $transition(context.parent, token, value)
     }
@@ -4360,6 +4378,10 @@ $DictOrSetCtx.prototype.unpack_dict = function(packed){
             res = "_b_.list.$factory(_b_.dict.items(" + item.to_js() + "))"
             i++
         }else{
+            if(this.items[i + 1] === undefined){
+                console.log('stack', $B.frames_stack.slice(),
+                    'this.items', this.items, 'i', i)
+            }
             res = "[[" + item.to_js() + "," +
                 this.items[i + 1].to_js() + "]]"
             i += 2
@@ -12221,18 +12243,20 @@ function handle_errortoken(context, token){
     $_SyntaxError(context, 'invalid token ' + token[1] + _b_.ord(token[1]))
 }
 
+var python_keywords = [
+    "class", "return", "break", "for", "lambda", "try", "finally",
+    "raise", "def", "from", "nonlocal", "while", "del", "global",
+    "with", "as", "elif", "else", "if", "yield", "assert", "import",
+    "except", "raise", "in", "pass", "with", "continue", "__debugger__",
+    "async", "await"
+]
+
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
     var tokenizer = $B.tokenizer(src)
     var braces_close = {")": "(", "]": "[", "}": "{"},
         braces_open = "([{",
         braces_stack = []
-    var kwdict = [
-        "class", "return", "break", "for", "lambda", "try", "finally",
-        "raise", "def", "from", "nonlocal", "while", "del", "global",
-        "with", "as", "elif", "else", "if", "yield", "assert", "import",
-        "except", "raise", "in", "pass", "with", "continue", "__debugger__",
-        "async", "await"
-        ]
+
     var unsupported = []
     var $indented = [
         "class", "def", "for", "condition", "single_kw", "try", "except",
@@ -12351,7 +12375,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         switch(token[0]){
             case 'NAME':
                 var name = token[1]
-                if(kwdict.indexOf(name) > -1){
+                if(python_keywords.indexOf(name) > -1){
                     if(unsupported.indexOf(name) > -1){
                         $_SyntaxError(context,
                             "Unsupported Python keyword '" + name + "'")
