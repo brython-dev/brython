@@ -315,7 +315,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     if(root.line_info){
         line_num = root.line_info
     }
-    if(indent === undefined || typeof indent != "number"){
+    if(indent === undefined){
         if(msg && Array.isArray(msg)){
             $B.$SyntaxError(module, msg[0], src, $pos, line_num, root)
         }
@@ -331,8 +331,12 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
             message += ' (' + msg + ')'
         }
         $B.$SyntaxError(module, message, src, $pos, line_num, root)
-    }else{
+    }else if(typeof indent == 'number'){
         throw $B.$IndentationError(module, msg, src, $pos, line_num, root)
+    }else{
+        // indent is the node that expected indentation
+        throw $B.$IndentationError(module, msg, src, $pos, line_num, root,
+            indent)
     }
 }
 
@@ -12324,7 +12328,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
-            $_SyntaxError(context, "expected an indented block", 1)
+            $_SyntaxError(context, "expected an indented block", expect_indent)
         }
 
         switch(token.type){
@@ -12339,7 +12343,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                     $pos = save_pos
                 }
                 if(indent != 0){
-                    $_SyntaxError(node.context, 'expected an indented block', 1)
+                    $_SyntaxError(node.context, 'expected an indented block',
+                        1)
                 }
                 if(node.context === undefined || node.context.tree.length == 0){
                     node.parent.children.pop()
@@ -12456,7 +12461,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 continue
             case 'NEWLINE':
                 if(context && context.node && context.node.is_body_node){
-                    expect_indent = true
+                    expect_indent = context.node.parent
                 }
                 context = context || new $NodeCtx(node)
                 $transition(context, 'eol')

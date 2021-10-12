@@ -99,12 +99,39 @@ $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
     throw exc
 }
 
-$B.$IndentationError = function(module, msg, src, pos, line_num, root) {
+$B.$IndentationError = function(module, msg, src, pos, line_num, root,
+        indented_node) {
     $B.frames_stack.push([module, {$line_info: line_num + "," + module},
         module, {$src: src}])
     if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
         line_num = root.line_info
+    }
+    if(indented_node){
+        var type = indented_node.context.tree[0].type
+        switch(type){
+            case 'class':
+                type = 'class definition'
+                break
+            case 'condition':
+                type = `'${indented_node.context.tree[0].token}' statement`
+                break
+            case 'def':
+                type = 'function definition'
+                break
+            case 'case':
+            case 'for':
+            case 'match':
+            case 'try':
+            case 'while':
+            case 'with':
+                type = `'${type}' statement`
+                break
+            case 'single_kw':
+                type = `'${indented_node.context.tree[0].token}' statement`
+                break
+        }
+        msg += ` after ${type} on line ${indented_node.line_num}`
     }
     var exc = _b_.IndentationError.$factory(msg)
     $B.$syntax_err_line(exc, module, src, pos, line_num)
