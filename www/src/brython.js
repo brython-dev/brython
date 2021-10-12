@@ -94,7 +94,8 @@ $B.VFS[script].timestamp=vfs_timestamp}}
 $B.add_files=function(files){
 $B.files=$B.files ||{}
 for(var file in files){$B.files[file]=files[file]}}
-$B.python_to_js=function(src,script_id){$B.meta_path=$B.$meta_path.slice()
+$B.python_to_js=function(src,script_id){$B.parse_options()
+$B.meta_path=$B.$meta_path.slice()
 if(!$B.use_VFS){$B.meta_path.shift()}
 if(script_id===undefined){script_id="__main__"}
 var root=__BRYTHON__.py2js(src,script_id,script_id),js=root.to_js()
@@ -108,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-12 17:00:33.529544"
-__BRYTHON__.timestamp=1634050833529
+__BRYTHON__.compiled_date="2021-10-12 18:00:49.670015"
+__BRYTHON__.timestamp=1634054449670
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6296,7 +6297,7 @@ if($B.$options.cpython_import){if($B.$options.cpython_import=="replace"){$B.path
 meta_path.push($B.finders.CPython)}
 $B.meta_path=meta_path
 $B.path_hooks=path_hooks}
-var brython=$B.parser.brython=function(options){
+$B.parse_options=function(options){
 if(options===undefined){options={debug:1}}else if(typeof options=='number'){options={debug:options}}else if(typeof options !=='object'){console.warn('ignoring invalid argument passed to brython():',options)
 options={debug:1}}
 if(options.debug===undefined){options.debug=1}
@@ -6333,7 +6334,8 @@ if((' '+e.rel+' ').indexOf(' prepend ')!=-1){$B.path.unshift(href);}else{$B.path
 var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
-if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
+if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}}
+var brython=$B.parser.brython=function(options){$B.parse_options(options)
 if(!($B.isWebWorker ||$B.isNode)){_run_scripts(options)}}
 $B.run_script=function(src,name,url,run_loop){
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}

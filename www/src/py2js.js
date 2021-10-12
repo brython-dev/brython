@@ -12756,7 +12756,7 @@ $B.set_import_paths = function(){
     $B.path_hooks = path_hooks
 }
 
-var brython = $B.parser.brython = function(options){
+$B.parse_options = function(options){
     // By default, only set debug level
     if(options === undefined){
         options = {debug: 1}
@@ -12869,6 +12869,11 @@ var brython = $B.parser.brython = function(options){
     }else{
         $B.__ARGV = _b_.list.$factory([])
     }
+}
+
+
+var brython = $B.parser.brython = function(options){
+    $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         _run_scripts(options)
     }

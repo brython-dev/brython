@@ -260,6 +260,7 @@ $B.add_files = function(files){
 
 // Can be used in Javascript programs to run Python code
 $B.python_to_js = function(src, script_id){
+    $B.parse_options()
     $B.meta_path = $B.$meta_path.slice()
     if(!$B.use_VFS){$B.meta_path.shift()}
     if(script_id === undefined){script_id = "__main__"}
