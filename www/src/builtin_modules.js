@@ -322,7 +322,7 @@
                     function(){
                         return _b_.dict.$getitem(html.tags, tagName)
                     },
-                    function(self, obj, value){
+                    function(self, value){
                         return _b_.dict.$setitem(html.tags, tagName, value)
                     }
                 )

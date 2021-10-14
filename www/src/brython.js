@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-14 10:40:55.737255"
-__BRYTHON__.timestamp=1634200855736
+__BRYTHON__.compiled_date="2021-10-14 10:44:32.607242"
+__BRYTHON__.timestamp=1634201072605
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -15514,7 +15514,9 @@ if(html[tagName]!==undefined){throw _b_.ValueError.$factory("cannot reset class 
 var klass=makeTagDict(tagName)
 klass.$factory=makeFactory(klass)
 _b_.dict.$setitem(html.tags,tagName,klass)
-html[tagName]=klass
+html[tagName]=_b_.property.$factory(
+function(){return _b_.dict.$getitem(html.tags,tagName)},function(self,value){return _b_.dict.$setitem(html.tags,tagName,value)}
+)
 return klass}
 for(var tagName of tags){maketag(tagName)}
 html.maketag=maketag
