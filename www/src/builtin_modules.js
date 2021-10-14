@@ -318,10 +318,16 @@
                 var klass = makeTagDict(tagName)
                 klass.$factory = makeFactory(klass)
                 _b_.dict.$setitem(html.tags, tagName, klass)
-                html[tagName] = klass
+                html[tagName] = _b_.property.$factory(
+                    function(){
+                        return _b_.dict.$getitem(html.tags, tagName)
+                    },
+                    function(self, obj, value){
+                        return _b_.dict.$setitem(html.tags, tagName, value)
+                    }
+                )
                 return klass
             }
-
             for(var tagName of tags){
                 maketag(tagName)
             }
