@@ -790,9 +790,13 @@ _b_.AttributeError.__str__ = function(self){
     if(self.args.length > 0){
         return self.args[0]
     }
-    var msg = `'${$B.class_name(self.obj)}' object has no attribute '` +
-            self.name + "'",
-        suggestion = offer_suggestions_for_attribute_error(self)
+    if(self.obj.$is_class){
+        var msg = `type object '${self.obj.$infos.__name__}'`
+    }else{
+        var msg = `'${$B.class_name(self.obj)}' object`
+    }
+    msg +=  ` has no attribute '${self.name}'`
+    var suggestion = offer_suggestions_for_attribute_error(self)
     if(suggestion){
         msg += `. Did you mean: '${suggestion}'?`
     }

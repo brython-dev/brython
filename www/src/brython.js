@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-12 18:00:49.670015"
-__BRYTHON__.timestamp=1634054449670
+__BRYTHON__.compiled_date="2021-10-14 10:40:55.737255"
+__BRYTHON__.timestamp=1634200855736
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9609,8 +9609,9 @@ var js='\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj":
 'err.name = $.name\nerr.obj = $.obj\n'
 $make_exc([["AttributeError",js]],_b_.Exception)
 _b_.AttributeError.__str__=function(self){if(self.args.length > 0){return self.args[0]}
-var msg=`'${$B.class_name(self.obj)}' object has no attribute '`+
-self.name+"'",suggestion=offer_suggestions_for_attribute_error(self)
+if(self.obj.$is_class){var msg=`type object '${self.obj.$infos.__name__}'`}else{var msg=`'${$B.class_name(self.obj)}' object`}
+msg+=` has no attribute '${self.name}'`
+var suggestion=offer_suggestions_for_attribute_error(self)
 if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
 return msg}
 $B.attr_error=function(name,obj){return _b_.AttributeError.$factory({$nat:"kw",kw:{name,obj}})}
