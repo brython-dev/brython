@@ -2909,13 +2909,20 @@ function $url_open(){
         }else if($B.files && $B.files.hasOwnProperty($.file)){
             // Virtual file system created by
             // python -m brython --make_file_system
-            $res = atob($B.files[$.file].content)
+            var $res = atob($B.files[$.file].content)
             var source = []
             for(const char of $res){
                 source.push(char.charCodeAt(0))
             }
-            $bytes = _b_.bytes.$factory()
-            $bytes.source = source
+            result.content = _b_.bytes.$factory(source)
+            if(!is_binary){
+                // use encoding to restore text
+                try{
+                    result.content = _b_.bytes.decode(result.content, encoding)
+                } catch(error) {
+                    result.error = error
+                }
+            }
         }else if($B.protocol != "file"){
             // Try to load file by synchronous Ajax call
             var req = new XMLHttpRequest()
