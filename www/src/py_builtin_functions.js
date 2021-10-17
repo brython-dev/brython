@@ -2914,6 +2914,7 @@ function $url_open(){
             for(const char of $res){
                 source.push(char.charCodeAt(0))
             }
+            source.pop()  // remove extra newline char added when created
             result.content = _b_.bytes.$factory(source)
             if(!is_binary){
                 // use encoding to restore text
