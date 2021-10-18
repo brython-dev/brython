@@ -649,7 +649,9 @@ dict.__len__ = function(self) {
     return _count
 }
 
-dict.__ne__ = function(self, other){return ! dict.__eq__(self, other)}
+dict.__ne__ = function(self, other){
+    return ! dict.__eq__(self, other)
+}
 
 dict.__new__ = function(cls){
     if(cls === undefined){
@@ -1239,5 +1241,136 @@ $B.obj_dict = function(obj, from_js){
     res.$from_js = from_js // set to true if
     return res
 }
+
+// Wrapper around a JS object to handle it as a Python dictionary.
+// Some keys of the original object can be ignored by passing
+// the filtering function exclude().
+// Supports adding new keys.
+
+var jsobj_as_pydict = $B.jsobj_as_pydict = $B.make_class('jsobj_as_pydict',
+    function(jsobj, exclude){
+        return {
+            __class__: jsobj_as_pydict,
+            obj: jsobj,
+            exclude: exclude ? exclude : function(){return false},
+            new_keys: []
+        }
+    }
+)
+
+jsobj_as_pydict.__contains__ = function(self, key){
+    if(self.new_keys.indexOf(key) > -1){
+        return true
+    }
+    return ! (self.exclude(key) || self.obj[key] === undefined)
+}
+
+jsobj_as_pydict.__delitem__ = function(self, key){
+    jsobj_as_pydict.__getitem__(self, key) // raises KeyError if not present
+    delete self.obj[key]
+    var ix = self.new_keys.indexOf(key)
+    if(ix > -1){
+        self.new_keys.splice(ix, 1)
+    }
+}
+
+jsobj_as_pydict.__eq__ = function(self, other){
+    if(other.__class__ !== jsobj_as_pydict){
+        return _b_.NotImplemented
+    }
+    // create true Python dicts with the items in self and other
+    var self1 = $B.empty_dict()
+        other1 = $B.empty_dict()
+
+    dict.__init__(self1, jsobj_as_pydict.items(self))
+    dict.__init__(other1, jsobj_as_pydict.items(other))
+
+    // Compare true Python dicts
+    return dict.__eq__(self1, other1)
+}
+
+jsobj_as_pydict.__getitem__ = function(self, key){
+    if(jsobj_as_pydict.__contains__(self, key)){
+        return self.obj[key]
+    }
+    throw _b_.KeyError.$factory(key)
+}
+
+jsobj_as_pydict.__iter__ = function(self){
+    return _b_.iter(jsobj_as_pydict.keys(self))
+}
+
+jsobj_as_pydict.__len__ = function(self){
+    var len = 0
+    for(var key in self.obj){
+        if(! self.exclude(key)){
+            len++
+        }
+    }
+    return len + self.new_keys.length
+}
+
+jsobj_as_pydict.__repr__ = function(self){
+    if($B.repr.enter(self)){
+        return "{...}"
+    }
+    var res = [],
+        items = _b_.list.$factory(jsobj_as_pydict.items(self))
+    for(var item of items){
+        res.push(_b_.repr(item[0]) + ": " + _b_.repr(item[1]))
+    }
+    $B.repr.leave(self)
+    return "{" + res.join(", ") + "}"
+}
+
+jsobj_as_pydict.__setitem__ = function(self, key, value){
+    if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
+        self.new_keys.push(key)
+    }
+    self.obj[key] = value
+}
+
+jsobj_as_pydict.get = function(self, key, _default){
+    _default = _default === undefined ? _b_.None : _default
+    if(self.exclude(key) || self.obj[key] === undefined){
+        return _default
+    }
+    return self.obj[key]
+}
+
+jsobj_as_pydict.items = function(self){
+    var lst = []
+    for(var key in self.obj){
+        if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
+            continue
+        }
+        lst.push($B.fast_tuple([key, self.obj[key]]))
+    }
+    return _b_.iter(lst)
+}
+
+jsobj_as_pydict.keys = function(self){
+    var lst = []
+    for(var key in self.obj){
+        if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
+            continue
+        }
+        lst.push(key)
+    }
+    return _b_.iter(lst)
+}
+
+jsobj_as_pydict.values = function(self){
+    var lst = []
+    for(var key in self.obj){
+        if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
+            continue
+        }
+        lst.push(self.obj[key])
+    }
+    return _b_.iter(lst)
+}
+
+$B.set_func_names(jsobj_as_pydict, 'builtins')
 
 })(__BRYTHON__)

@@ -253,8 +253,8 @@ $B.get_class = function(obj){
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
                         && obj instanceof Node){
                     if(obj.tagName){
-                        return $B.$getattr($B.imported['browser.html'],
-                                obj.tagName, $B.DOMNode)
+                        return $B.imported['browser.html'][obj.tagName] ||
+                                   $B.DOMNode
                     }
                     return $B.DOMNode
                 }

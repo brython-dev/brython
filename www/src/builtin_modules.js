@@ -302,7 +302,13 @@
 
             // Module has an attribute "tags" : a dictionary that maps all tag
             // names to the matching tag class factory function.
-            html.tags = $B.empty_dict()
+            // Implemented as a wrapper around a Javascript object for
+            // performance.
+            html.tags = $B.jsobj_as_pydict.$factory(html,
+                function(attr){
+                    return tags.indexOf(attr) == -1
+                }
+            )
 
             function maketag(tagName){
                 // Create a new class associated with the custom HTML tag
@@ -317,17 +323,10 @@
                 }
                 var klass = makeTagDict(tagName)
                 klass.$factory = makeFactory(klass)
-                _b_.dict.$setitem(html.tags, tagName, klass)
-                html[tagName] = _b_.property.$factory(
-                    function(){
-                        return _b_.dict.$getitem(html.tags, tagName)
-                    },
-                    function(self, value){
-                        return _b_.dict.$setitem(html.tags, tagName, value)
-                    }
-                )
+                html[tagName] = klass
                 return klass
             }
+
             for(var tagName of tags){
                 maketag(tagName)
             }

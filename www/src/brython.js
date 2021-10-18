@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-18 11:53:30.630285"
-__BRYTHON__.timestamp=1634550810630
+__BRYTHON__.compiled_date="2021-10-18 15:00:30.123234"
+__BRYTHON__.timestamp=1634562030123
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7224,7 +7224,8 @@ return $B.Function
 case "object":
 if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
 return _b_.list}}else if(obj.constructor===Number){return _b_.float}else if(typeof Node !=="undefined" 
-&& obj instanceof Node){if(obj.tagName){return $B.$getattr($B.imported['browser.html'],obj.tagName,$B.DOMNode)}
+&& obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
+$B.DOMNode}
 return $B.DOMNode}
 break}}
 if(klass===undefined){return $B.JSObj}
@@ -14157,7 +14158,51 @@ if(klass !==undefined && klass.$native){throw $B.attr_error("__dict__",obj)}
 var res=$B.empty_dict()
 res.$jsobj=obj
 res.$from_js=from_js 
-return res}})(__BRYTHON__)
+return res}
+var jsobj_as_pydict=$B.jsobj_as_pydict=$B.make_class('jsobj_as_pydict',function(jsobj,exclude){return{
+__class__:jsobj_as_pydict,obj:jsobj,exclude:exclude ? exclude :function(){return false},new_keys:[]}}
+)
+jsobj_as_pydict.__contains__=function(self,key){if(self.new_keys.indexOf(key)>-1){return true}
+return !(self.exclude(key)||self.obj[key]===undefined)}
+jsobj_as_pydict.__delitem__=function(self,key){jsobj_as_pydict.__getitem__(self,key)
+delete self.obj[key]
+var ix=self.new_keys.indexOf(key)
+if(ix >-1){self.new_keys.splice(ix,1)}}
+jsobj_as_pydict.__eq__=function(self,other){if(other.__class__ !==jsobj_as_pydict){return _b_.NotImplemented}
+var self1=$B.empty_dict()
+other1=$B.empty_dict()
+dict.__init__(self1,jsobj_as_pydict.items(self))
+dict.__init__(other1,jsobj_as_pydict.items(other))
+return dict.__eq__(self1,other1)}
+jsobj_as_pydict.__getitem__=function(self,key){if(jsobj_as_pydict.__contains__(self,key)){return self.obj[key]}
+throw _b_.KeyError.$factory(key)}
+jsobj_as_pydict.__iter__=function(self){return _b_.iter(jsobj_as_pydict.keys(self))}
+jsobj_as_pydict.__len__=function(self){var len=0
+for(var key in self.obj){if(! self.exclude(key)){len++}}
+return len+self.new_keys.length}
+jsobj_as_pydict.__repr__=function(self){if($B.repr.enter(self)){return "{...}"}
+var res=[],items=_b_.list.$factory(jsobj_as_pydict.items(self))
+for(var item of items){res.push(_b_.repr(item[0])+": "+_b_.repr(item[1]))}
+$B.repr.leave(self)
+return "{"+res.join(", ")+"}"}
+jsobj_as_pydict.__setitem__=function(self,key,value){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){self.new_keys.push(key)}
+self.obj[key]=value}
+jsobj_as_pydict.get=function(self,key,_default){_default=_default===undefined ? _b_.None :_default
+if(self.exclude(key)||self.obj[key]===undefined){return _default}
+return self.obj[key]}
+jsobj_as_pydict.items=function(self){var lst=[]
+for(var key in self.obj){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){continue}
+lst.push($B.fast_tuple([key,self.obj[key]]))}
+return _b_.iter(lst)}
+jsobj_as_pydict.keys=function(self){var lst=[]
+for(var key in self.obj){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){continue}
+lst.push(key)}
+return _b_.iter(lst)}
+jsobj_as_pydict.values=function(self){var lst=[]
+for(var key in self.obj){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){continue}
+lst.push(self.obj[key])}
+return _b_.iter(lst)}
+$B.set_func_names(jsobj_as_pydict,'builtins')})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,object=_b_.object,getattr=$B.$getattr,isinstance=_b_.isinstance,$N=_b_.None
 function check_not_tuple(self,attr){if(self.__class__===tuple){throw $B.attr_error(attr,self)}}
@@ -15507,17 +15552,15 @@ var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
 'DETAILS','DIALOG','MENUITEM','PICTURE','SUMMARY']
 var html={}
-html.tags=$B.empty_dict()
+html.tags=$B.jsobj_as_pydict.$factory(html,function(attr){return tags.indexOf(attr)==-1}
+)
 function maketag(tagName){
 if(!(typeof tagName=='string')){throw _b_.TypeError.$factory("html.maketag expects a string as argument")}
 if(html[tagName]!==undefined){throw _b_.ValueError.$factory("cannot reset class for "
 +tagName)}
 var klass=makeTagDict(tagName)
 klass.$factory=makeFactory(klass)
-_b_.dict.$setitem(html.tags,tagName,klass)
-html[tagName]=_b_.property.$factory(
-function(){return _b_.dict.$getitem(html.tags,tagName)},function(self,value){return _b_.dict.$setitem(html.tags,tagName,value)}
-)
+html[tagName]=klass
 return klass}
 for(var tagName of tags){maketag(tagName)}
 html.maketag=maketag
