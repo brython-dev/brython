@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-18 11:40:19.551824"
-__BRYTHON__.timestamp=1634550019551
+__BRYTHON__.compiled_date="2021-10-18 11:50:54.797992"
+__BRYTHON__.timestamp=1634550654797
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9122,11 +9122,13 @@ if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
 if($B.file_cache.hasOwnProperty($.file)){result.content=$B.file_cache[$.file]
 if(is_binary){result.content=_b_.str.encode(result.content,'utf-8')}}else if($B.files && $B.files.hasOwnProperty($.file)){
-$res=atob($B.files[$.file].content)
+var $res=atob($B.files[$.file].content)
 var source=[]
 for(const char of $res){source.push(char.charCodeAt(0))}
-$bytes=_b_.bytes.$factory()
-$bytes.source=source}else if($B.protocol !="file"){
+source.pop()
+result.content=_b_.bytes.$factory(source)
+if(!is_binary){
+try{result.content=_b_.bytes.decode(result.content,encoding)}catch(error){result.error=error}}}else if($B.protocol !="file"){
 var req=new XMLHttpRequest()
 req.overrideMimeType('text/plain;charset=x-user-defined')
 req.onreadystatechange=function(){if(this.readyState !=4){return}
