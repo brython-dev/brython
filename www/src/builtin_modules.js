@@ -545,7 +545,7 @@
             function(){
                 return $B.obj_dict($B.imported)
             },
-            function(self, obj, value){
+            function(self, value){
                  throw _b_.TypeError.$factory("Read only property 'sys.modules'")
             }
         ),
@@ -553,7 +553,7 @@
             function(){
                 return $B.path
             },
-            function(self, obj, value){
+            function(self, value){
                  $B.path = value;
             }
         ),
@@ -561,7 +561,7 @@
             function(){
                 return $B.meta_path
             },
-            function(self, obj, value){
+            function(self, value){
                 $B.meta_path = value
             }
         ),
@@ -569,7 +569,7 @@
             function(){
                 return $B.path_hooks
             },
-            function(self, obj, value){
+            function(self, value){
                 $B.path_hooks = value
             }
         ),
@@ -577,7 +577,7 @@
             function(){
                 return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))
             },
-            function(self, obj, value){
+            function(self, value){
                 throw _b_.TypeError.$factory("Read only property" +
                     " 'sys.path_importer_cache'")
             }
