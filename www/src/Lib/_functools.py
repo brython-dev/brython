@@ -17,7 +17,7 @@ class partial:
             raise TypeError("the first argument must be callable")
         args = tuple(args)
 
-        if hasattr(func, "func"):
+        if hasattr(func, "func") and isinstance(func.args, tuple):
             args = func.args + args
             tmpkw = func.keywords.copy()
             tmpkw.update(keywords)
