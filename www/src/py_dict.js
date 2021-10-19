@@ -192,7 +192,8 @@ function to_list(d, ix){
     if(d.$jsobj){
         items = []
         for(var attr in d.$jsobj){
-            if(attr.charAt(0) != "$"){
+            if((! attr.startsWith("$")) &&
+                    ((! d.$exclude) || ! d.$exclude(attr))){
                 var val = d.$jsobj[attr]
                 if(val === undefined){val = _b_.NotImplemented}
                 else if(val === null){val = $N}
@@ -438,6 +439,9 @@ dict.__getitem__ = function(){
 dict.$getitem = function(self, arg, ignore_missing){
     // ignore_missing is set in dict.get and dict.setdefault
     if(self.$jsobj){
+        if(self.$exclude && self.$exclude(arg)){
+            throw _b_.KeyError.$factory(arg)
+        }
         if(self.$jsobj[arg] === undefined){
             if(self.$jsobj.hasOwnProperty &&
                     self.$jsobj.hasOwnProperty(arg)){
@@ -636,7 +640,12 @@ dict.__len__ = function(self) {
     var _count = 0
 
     if(self.$jsobj){
-        for(var attr in self.$jsobj){if(attr.charAt(0) != "$"){_count++}}
+        for(var attr in self.$jsobj){
+            if(attr.charAt(0) != "$" &&
+                    ((! self.$exclude) || ! self.$exclude(attr))){
+                _count++
+            }
+        }
         return _count
     }
 
@@ -703,7 +712,7 @@ dict.__reduce_ex__ = function(self, protocol){
 dict.__repr__ = function(self){
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
     if(self.$jsobj){ // wrapper around Javascript object
-        return dict.__repr__(jsobj2dict(self.$jsobj))
+        return dict.__repr__(jsobj2dict(self.$jsobj, self.$exclude))
     }
     if($B.repr.enter(self)){
         return "{...}"
@@ -1213,10 +1222,11 @@ for(var attr in dict){
 
 $B.set_func_names(mappingproxy, "builtins")
 
-function jsobj2dict(x){
+function jsobj2dict(x, exclude){
+    exclude = exclude || function(){return false}
     var d = $B.empty_dict()
     for(var attr in x){
-        if(attr.charAt(0) != "$" && attr !== "__class__"){
+        if(attr.charAt(0) != "$" && ! exclude(attr)){
             if(x[attr] === null){
                 d.$string_dict[attr] = [_b_.None, d.$order++]
             }else if(x[attr] === undefined){
@@ -1231,14 +1241,14 @@ function jsobj2dict(x){
     return d
 }
 
-$B.obj_dict = function(obj, from_js){
+$B.obj_dict = function(obj, exclude){
     var klass = obj.__class__ || $B.get_class(obj)
     if(klass !== undefined && klass.$native){
         throw $B.attr_error("__dict__", obj)
     }
     var res = $B.empty_dict()
     res.$jsobj = obj
-    res.$from_js = from_js
+    res.$exclude = exclude || function(){return false}
     return res
 }
 

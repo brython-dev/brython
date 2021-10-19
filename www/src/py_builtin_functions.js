@@ -1106,13 +1106,6 @@ $B.$getattr = function(obj, attr, _default){
               proxy.__dict__ = $B.getset_descriptor.$factory(obj,
                   "__dict__") // in py_dict.js
               return $B.mappingproxy.$factory(proxy) // in py_dict.js
-          }else if(klass === $B.Zmodule){
-              return $B.jsobj_as_pydict.$factory(obj,
-                  function(key){
-                      return key.startsWith('$') ||
-                          ['__class__', '__initializing__'].indexOf(key) > -1
-                  }
-              )
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
@@ -1123,7 +1116,11 @@ $B.$getattr = function(obj, attr, _default){
                       return obj.$infos.__func__.$infos.__dict__
                   }
               }
-              return $B.obj_dict(obj)
+              return $B.obj_dict(obj,
+                  function(attr){
+                      return ['__class__'].indexOf(attr) > -1
+                  }
+              )
           }
       case '__doc__':
           // for builtins objects, use $B.builtins_doc

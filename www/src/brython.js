@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-19 11:22:36.647702"
-__BRYTHON__.timestamp=1634635356647
+__BRYTHON__.compiled_date="2021-10-19 21:51:53.153898"
+__BRYTHON__.timestamp=1634673113153
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -8482,10 +8482,9 @@ case '__dict__':
 if(is_class){var proxy={}
 for(var key in obj){if(! key.startsWith("$")){proxy[key]=obj[key]}}
 proxy.__dict__=$B.getset_descriptor.$factory(obj,"__dict__")
-return $B.mappingproxy.$factory(proxy)}else if(klass===$B.Zmodule){return $B.jsobj_as_pydict.$factory(obj,function(key){return key.startsWith('$')||
-['__class__','__initializing__'].indexOf(key)>-1}
-)}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
-return $B.obj_dict(obj)}
+return $B.mappingproxy.$factory(proxy)}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
+return $B.obj_dict(obj,function(attr){return['__class__'].indexOf(attr)>-1}
+)}
 case '__doc__':
 for(var i=0;i < builtin_names.length;i++){if(obj===_b_[builtin_names[i]]){_get_builtins_doc()
 return $B.builtins_doc[builtin_names[i]]}}
@@ -13790,7 +13789,8 @@ for(var key in d.$string_dict){res[key]=d.$string_dict[key][0]}
 return res}
 function to_list(d,ix){var items=[],item
 if(d.$jsobj){items=[]
-for(var attr in d.$jsobj){if(attr.charAt(0)!="$"){var val=d.$jsobj[attr]
+for(var attr in d.$jsobj){if((! attr.startsWith("$"))&&
+((! d.$exclude)||! d.$exclude(attr))){var val=d.$jsobj[attr]
 if(val===undefined){val=_b_.NotImplemented}
 else if(val===null){val=$N}
 items.push([attr,val])}}}else if(_b_.isinstance(d,_b_.dict)){for(var k in d.$numeric_dict){items.push([parseFloat(k),d.$numeric_dict[k]])}
@@ -13876,7 +13876,8 @@ return true}
 dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self:null,arg:null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 return dict.$getitem(self,arg)}
 dict.$getitem=function(self,arg,ignore_missing){
-if(self.$jsobj){if(self.$jsobj[arg]===undefined){if(self.$jsobj.hasOwnProperty &&
+if(self.$jsobj){if(self.$exclude && self.$exclude(arg)){throw _b_.KeyError.$factory(arg)}
+if(self.$jsobj[arg]===undefined){if(self.$jsobj.hasOwnProperty &&
 self.$jsobj.hasOwnProperty(arg)){return $B.Undefined}
 throw _b_.KeyError.$factory(arg)}
 return self.$jsobj[arg]}
@@ -13956,7 +13957,8 @@ dict.__ior__=function(self,other){
 dict.update(self,other)
 return self}
 dict.__len__=function(self){var _count=0
-if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!="$"){_count++}}
+if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!="$" &&
+((! self.$exclude)||! self.$exclude(attr))){_count++}}
 return _count}
 for(var k in self.$numeric_dict){_count++}
 for(var k in self.$string_dict){_count++}
@@ -13980,7 +13982,7 @@ return res}
 dict.__reduce_ex__=function(self,protocol){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__]),_b_.None,_b_.None,dict.items(self)])}
 dict.__repr__=function(self){$B.builtins_repr_check(dict,arguments)
 if(self.$jsobj){
-return dict.__repr__(jsobj2dict(self.$jsobj))}
+return dict.__repr__(jsobj2dict(self.$jsobj,self.$exclude))}
 if($B.repr.enter(self)){return "{...}"}
 var res=[],items=to_list(self)
 items.forEach(function(item){try{res.push(_b_.repr(item[0])+": "+_b_.repr(item[1]))}catch(err){throw err}})
@@ -14157,14 +14159,15 @@ for(var attr in dict){if(mappingproxy[attr]!==undefined ||
 ["__class__","__mro__","__new__","__init__","__delitem__","clear","fromkeys","pop","popitem","setdefault","update"].indexOf(attr)>-1){continue}
 if(typeof dict[attr]=="function"){mappingproxy[attr]=(function(key){return function(){return dict[key].apply(null,arguments)}})(attr)}else{mappingproxy[attr]=dict[attr]}}
 $B.set_func_names(mappingproxy,"builtins")
-function jsobj2dict(x){var d=$B.empty_dict()
-for(var attr in x){if(attr.charAt(0)!="$" && attr !=="__class__"){if(x[attr]===null){d.$string_dict[attr]=[_b_.None,d.$order++]}else if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=[d,d.$order++]}else{d.$string_dict[attr]=[$B.$JS2Py(x[attr]),d.$order++]}}}
+function jsobj2dict(x,exclude){exclude=exclude ||function(){return false}
+var d=$B.empty_dict()
+for(var attr in x){if(attr.charAt(0)!="$" && ! exclude(attr)){if(x[attr]===null){d.$string_dict[attr]=[_b_.None,d.$order++]}else if(x[attr]===undefined){continue}else if(x[attr].$jsobj===x){d.$string_dict[attr]=[d,d.$order++]}else{d.$string_dict[attr]=[$B.$JS2Py(x[attr]),d.$order++]}}}
 return d}
-$B.obj_dict=function(obj,from_js){var klass=obj.__class__ ||$B.get_class(obj)
+$B.obj_dict=function(obj,exclude){var klass=obj.__class__ ||$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw $B.attr_error("__dict__",obj)}
 var res=$B.empty_dict()
 res.$jsobj=obj
-res.$from_js=from_js
+res.$exclude=exclude ||function(){return false}
 return res}
 var jsobj_as_pydict=$B.jsobj_as_pydict=$B.make_class('jsobj_as_pydict',function(jsobj,exclude){return{
 __class__:jsobj_as_pydict,obj:jsobj,exclude:exclude ? exclude :function(){return false},new_keys:[]}}
