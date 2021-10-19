@@ -258,6 +258,11 @@ $B.add_files = function(files){
     }
 }
 
+$B.has_file = function(file){
+    // Used to check if a file was added to $B.files
+    return ($B.files && $B.files.hasOwnProperty(file))
+}
+
 // Can be used in Javascript programs to run Python code
 $B.python_to_js = function(src, script_id){
     $B.parse_options()
