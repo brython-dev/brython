@@ -1238,7 +1238,7 @@ $B.obj_dict = function(obj, from_js){
     }
     var res = $B.empty_dict()
     res.$jsobj = obj
-    res.$from_js = from_js // set to true if
+    res.$from_js = from_js
     return res
 }
 
@@ -1339,14 +1339,26 @@ jsobj_as_pydict.get = function(self, key, _default){
 }
 
 jsobj_as_pydict.items = function(self){
-    var lst = []
+    var items = []
     for(var key in self.obj){
         if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
             continue
         }
-        lst.push($B.fast_tuple([key, self.obj[key]]))
+        items.push($B.fast_tuple([key, self.obj[key]]))
     }
-    return _b_.iter(lst)
+    var set_like = true
+    // Check if all values are hashable
+    for(var item of items){
+        try{
+            _b_.hash(item[1])
+        }catch(err){
+            set_like = false
+            break
+        }
+    }
+    var it = dict_items.$factory(self, items, set_like)
+    it.dict_version = self.$version
+    return it
 }
 
 jsobj_as_pydict.keys = function(self){
@@ -1357,18 +1369,22 @@ jsobj_as_pydict.keys = function(self){
         }
         lst.push(key)
     }
-    return _b_.iter(lst)
+    var it = dict_keys.$factory(self, lst, true)
+    it.dict_version = self.$version
+    return it
 }
 
 jsobj_as_pydict.values = function(self){
-    var lst = []
+    var values = []
     for(var key in self.obj){
         if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
             continue
         }
-        lst.push(self.obj[key])
+        values.push(self.obj[key])
     }
-    return _b_.iter(lst)
+    var it = dict_values.$factory(self, values, false)
+    it.dict_version = self.$version
+    return it
 }
 
 $B.set_func_names(jsobj_as_pydict, 'builtins')

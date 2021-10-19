@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-18 15:00:30.123234"
-__BRYTHON__.timestamp=1634562030123
+__BRYTHON__.compiled_date="2021-10-19 11:22:36.647702"
+__BRYTHON__.timestamp=1634635356647
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -8106,6 +8106,7 @@ NoneType['__'+key+'__']=(function(op){return function(other){return _b_.NotImple
 for(var $func in None){if(typeof None[$func]=='function'){None[$func].__str__=(function(f){return function(){return "<method-wrapper "+f+
 " of NoneType object>"}})($func)}}
 $B.set_func_names(NoneType,"builtins")
+function __build_class__(){throw _b_.NotImplementedError.$factory('__build_class__')}
 function abs(obj){check_nb_args('abs',1,arguments)
 check_no_kw('abs',obj)
 if(isinstance(obj,_b_.int)){if(obj.__class__===$B.long_int){return{
@@ -8117,11 +8118,15 @@ try{var method=$B.$getattr(klass,"__abs__")}catch(err){if(err.__class__===_b_.At
 $B.class_name(obj)+"'")}
 throw err}
 return $B.$call(method)(obj)}
+function aiter(async_iterable){return $B.$call($B.$getattr(async_iterable,'__aiter__'))()}
 function all(obj){check_nb_args('all',1,arguments)
 check_no_kw('all',obj)
 var iterable=iter(obj)
 while(1){try{var elt=next(iterable)
 if(!$B.$bool(elt)){return false}}catch(err){return true}}}
+function anext(async_iterator,_default){var missing={},$=$B.args('anext',2,{async_iterator:null,_default:null},['async_iterator','_default'],arguments,{_default:missing},null,null)
+var awaitable=$B.$call($B.$getattr(async_iterator,'__anext__'))()
+return awaitable}
 function any(obj){check_nb_args('any',1,arguments)
 check_no_kw('any',obj)
 var iterable=iter(obj)
@@ -8477,7 +8482,9 @@ case '__dict__':
 if(is_class){var proxy={}
 for(var key in obj){if(! key.startsWith("$")){proxy[key]=obj[key]}}
 proxy.__dict__=$B.getset_descriptor.$factory(obj,"__dict__")
-return $B.mappingproxy.$factory(proxy)}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
+return $B.mappingproxy.$factory(proxy)}else if(klass===$B.Zmodule){return $B.jsobj_as_pydict.$factory(obj,function(key){return key.startsWith('$')||
+['__class__','__initializing__'].indexOf(key)>-1}
+)}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
 return $B.obj_dict(obj)}
 case '__doc__':
 for(var i=0;i < builtin_names.length;i++){if(obj===_b_[builtin_names[i]]){_get_builtins_doc()
@@ -9252,7 +9259,7 @@ else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
-$B.builtin_funcs=["abs","all","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
+$B.builtin_funcs=["__build_class__","abs","aiter","all","anext","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
 var builtin_function=$B.builtin_function=$B.make_class(
 "builtin_function_or_method",function(f){f.__class__=builtin_function
@@ -9602,7 +9609,7 @@ $make_exc(["IndentationError"],_b_.SyntaxError)
 $make_exc(["TabError"],_b_.IndentationError)
 $make_exc(["UnicodeError"],_b_.ValueError)
 $make_exc(["UnicodeDecodeError","UnicodeEncodeError","UnicodeTranslateError"],_b_.UnicodeError)
-$make_exc(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning"],_b_.Warning)
+$make_exc(["DeprecationWarning","PendingDeprecationWarning","RuntimeWarning","SyntaxWarning","UserWarning","FutureWarning","ImportWarning","UnicodeWarning","BytesWarning","ResourceWarning","EncodingWarning"],_b_.Warning)
 $make_exc(["EnvironmentError","IOError","VMSError","WindowsError"],_b_.OSError)
 var js='\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj":null}, '+
 '["msg", "name", "obj"], arguments, '+
@@ -11045,7 +11052,7 @@ js="var $module = (function(){\n"+js+"return $locals_"+
 module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)
+var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 2){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log(js)}
@@ -14157,7 +14164,7 @@ $B.obj_dict=function(obj,from_js){var klass=obj.__class__ ||$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw $B.attr_error("__dict__",obj)}
 var res=$B.empty_dict()
 res.$jsobj=obj
-res.$from_js=from_js 
+res.$from_js=from_js
 return res}
 var jsobj_as_pydict=$B.jsobj_as_pydict=$B.make_class('jsobj_as_pydict',function(jsobj,exclude){return{
 __class__:jsobj_as_pydict,obj:jsobj,exclude:exclude ? exclude :function(){return false},new_keys:[]}}
@@ -14190,18 +14197,27 @@ self.obj[key]=value}
 jsobj_as_pydict.get=function(self,key,_default){_default=_default===undefined ? _b_.None :_default
 if(self.exclude(key)||self.obj[key]===undefined){return _default}
 return self.obj[key]}
-jsobj_as_pydict.items=function(self){var lst=[]
+jsobj_as_pydict.items=function(self){var items=[]
 for(var key in self.obj){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){continue}
-lst.push($B.fast_tuple([key,self.obj[key]]))}
-return _b_.iter(lst)}
+items.push($B.fast_tuple([key,self.obj[key]]))}
+var set_like=true
+for(var item of items){try{_b_.hash(item[1])}catch(err){set_like=false
+break}}
+var it=dict_items.$factory(self,items,set_like)
+it.dict_version=self.$version
+return it}
 jsobj_as_pydict.keys=function(self){var lst=[]
 for(var key in self.obj){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){continue}
 lst.push(key)}
-return _b_.iter(lst)}
-jsobj_as_pydict.values=function(self){var lst=[]
+var it=dict_keys.$factory(self,lst,true)
+it.dict_version=self.$version
+return it}
+jsobj_as_pydict.values=function(self){var values=[]
 for(var key in self.obj){if(self.exclude(key)&& self.new_keys.indexOf(key)==-1){continue}
-lst.push(self.obj[key])}
-return _b_.iter(lst)}
+values.push(self.obj[key])}
+var it=dict_values.$factory(self,values,false)
+it.dict_version=self.$version
+return it}
 $B.set_func_names(jsobj_as_pydict,'builtins')})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins,object=_b_.object,getattr=$B.$getattr,isinstance=_b_.isinstance,$N=_b_.None

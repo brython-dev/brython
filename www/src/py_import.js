@@ -212,7 +212,7 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module)
     }catch(err){
-        if($B.debug > 1){
+        if($B.debug > 2){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
             console.log(root)
