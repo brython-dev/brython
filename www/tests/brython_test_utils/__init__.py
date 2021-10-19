@@ -47,6 +47,7 @@ def discover_brython_test_modules():
           ("test_browser_html.py", "browser.html"),
           ("test_binascii.py", "binascii"),
           ("test_bisect.py", "bisect"),
+          ("test_builtins.py", "builtins"),
           ("test_code.py", "code"),
           ("test_collections.py", "collections"),
           ("test_copy.py", "copy"),

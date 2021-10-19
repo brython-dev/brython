@@ -772,7 +772,8 @@ $make_exc(["UnicodeDecodeError", "UnicodeEncodeError",
     "UnicodeTranslateError"], _b_.UnicodeError)
 $make_exc(["DeprecationWarning", "PendingDeprecationWarning",
     "RuntimeWarning", "SyntaxWarning", "UserWarning", "FutureWarning",
-    "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning"],
+    "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning",
+    "EncodingWarning"],
     _b_.Warning)
 $make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
     _b_.OSError)

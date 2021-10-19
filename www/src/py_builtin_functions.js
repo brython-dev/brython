@@ -91,6 +91,10 @@ for(var $func in None){
 
 $B.set_func_names(NoneType, "builtins")
 
+function __build_class__(){
+    throw _b_.NotImplementedError.$factory('__build_class__')
+}
+
 function abs(obj){
     check_nb_args('abs', 1, arguments)
     check_no_kw('abs', obj)
@@ -123,6 +127,10 @@ function abs(obj){
     return $B.$call(method)(obj)
 }
 
+function aiter(async_iterable){
+    return $B.$call($B.$getattr(async_iterable, '__aiter__'))()
+}
+
 function all(obj){
     check_nb_args('all', 1, arguments)
     check_no_kw('all', obj)
@@ -133,6 +141,15 @@ function all(obj){
             if(!$B.$bool(elt)){return false}
         }catch(err){return true}
     }
+}
+
+function anext(async_iterator, _default){
+    var missing = {},
+        $ = $B.args('anext', 2, {async_iterator: null, _default: null},
+                ['async_iterator', '_default'], arguments,
+                {_default: missing}, null, null)
+    var awaitable = $B.$call($B.$getattr(async_iterator, '__anext__'))()
+    return awaitable
 }
 
 function any(obj){
@@ -1089,6 +1106,13 @@ $B.$getattr = function(obj, attr, _default){
               proxy.__dict__ = $B.getset_descriptor.$factory(obj,
                   "__dict__") // in py_dict.js
               return $B.mappingproxy.$factory(proxy) // in py_dict.js
+          }else if(klass === $B.Zmodule){
+              return $B.jsobj_as_pydict.$factory(obj,
+                  function(key){
+                      return key.startsWith('$') ||
+                          ['__class__', '__initializing__'].indexOf(key) > -1
+                  }
+              )
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
@@ -3287,7 +3311,9 @@ $B.set_func_names($B.Function, "builtins")
 _b_.__BRYTHON__ = __BRYTHON__
 
 $B.builtin_funcs = [
-    "abs", "all", "any", "ascii", "bin", "breakpoint", "callable", "chr",
+    "__build_class__",
+    "abs", "aiter", "all", "anext", "any", "ascii", "bin", "breakpoint",
+    "callable", "chr",
     "compile", "delattr", "dir", "divmod", "eval", "exec", "exit", "format",
     "getattr", "globals", "hasattr", "hash", "help", "hex", "id", "input",
     "isinstance", "issubclass", "iter", "len", "locals", "max", "min", "next",
