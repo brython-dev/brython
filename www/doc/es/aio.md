@@ -72,7 +72,7 @@ Instancias de la clase `Request` tal como son devueltas por `await ajax()`,
 > `evt = await aio.event(element, "click")` suspende la ejecución de una
 > función asíncrona hasta que el usuario pulsa sobre el elemento especificado.
 > El valor devuelto es una instancia de la clase `DOMEvent` (cf. sección
-> [eventos](../events.html))
+> [eventos](events.html))
 
 `sleep(`_seconds_`)`
 
