@@ -804,6 +804,8 @@ _b_.AttributeError.__str__ = function(self){
     return msg
 }
 
+$B.set_func_names(_b_.AttributeError, 'builtins')
+
 // Shortcut to create an AttributeError
 $B.attr_error = function(name, obj){
     return _b_.AttributeError.$factory({$nat:"kw",kw:{name, obj}})
@@ -829,6 +831,8 @@ _b_.NameError.__str__ = function(self){
     }
     return msg
 }
+
+$B.set_func_names(_b_.NameError, 'builtins')
 
 $make_exc(["UnboundLocalError"], _b_.NameError)
 
