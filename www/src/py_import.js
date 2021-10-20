@@ -212,7 +212,7 @@ function run_py(module_contents, path, module, compiled) {
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module)
     }catch(err){
-        if($B.debug > 2){
+        if($B.debug > 1){
             console.log(err + " for module " + module.__name__)
             console.log("module", module)
             console.log(root)
@@ -1081,7 +1081,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                     if(i == len - 1 &&
                             $B.imported[_mod_name][parsed_name[len]] &&
                             $B.imported[_mod_name][parsed_name[len]].__class__ ===
-                                module){
+                                $B.module){
                         return $B.imported[_mod_name][parsed_name[len]]
                     }
                     if(has_from){ // "from a import b" : ImportError
