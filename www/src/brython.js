@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-21 13:58:56.724438"
-__BRYTHON__.timestamp=1634817536724
+__BRYTHON__.compiled_date="2021-10-21 21:36:29.410929"
+__BRYTHON__.timestamp=1634844989410
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -10432,7 +10432,7 @@ for(var j=0;j < us.length;j++){t[pos++]=us.charCodeAt(j)}}}
 break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
-t=from_unicode[enc](s)[0]}
+t=from_unicode[enc](s)[0].source}
 return t}
 bytes.$factory=function(source,encoding,errors){var $=$B.args("bytes",3,{source:null,encoding:null,errors:null},["source","encoding","errors"],arguments,{source:[],encoding:"utf-8",errors:"strict"},null,null)
 return bytes.$new(bytes,$.source,$.encoding,$.errors)}

@@ -47,7 +47,7 @@ def encode(obj, encoding="utf-8", errors="strict"):
     a ValueError. Other possible values are 'ignore', 'replace' and
     'xmlcharrefreplace' as well as any other name registered with
     codecs.register_error that can handle ValueErrors."""
-    return __BRYTHON__.encode(obj, encoding, errors) # in py_bytes.js
+    return bytes(__BRYTHON__.encode(obj, encoding, errors)) # in py_bytes.js
 
 def escape_decode(*args,**kw):
     pass

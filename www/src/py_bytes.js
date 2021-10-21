@@ -1579,7 +1579,7 @@ var encode = $B.encode = function(){
             }catch(err){
                 throw _b_.LookupError.$factory("unknown encoding: " + encoding)
             }
-            t = from_unicode[enc](s)[0]
+            t = from_unicode[enc](s)[0].source
     }
     return t
 }
