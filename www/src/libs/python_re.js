@@ -1550,11 +1550,12 @@ function parse_character_set(text, pos, is_bytes){
                     is_bytes
                 })
             if(typeof escape == "number"){
+                var s = chr(escape)
                 escape = {
                     ord: escape,
                     length: 2,
                     toString: function(){
-                        return chr(escape)
+                        return s
                     }
                 }
             }
