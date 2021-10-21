@@ -245,7 +245,7 @@ TCP_NODELAY = 1
 __loader__ = '<_frozen_importlib.ExtensionFileLoader object at 0x00CA2D90>'
 
 def dup(*args,**kw):
-    """dup(integer) -> integer    
+    """dup(integer) -> integer
     Duplicate an integer socket file descriptor.  This is like os.dup(), but for
     sockets; on some platforms os.dup() won't work for socket file descriptors."""
     pass
@@ -258,58 +258,59 @@ class gaierror:
 
 def getaddrinfo(*args,**kw):
     """getaddrinfo(host, port [, family, socktype, proto, flags])        -> list of (family, socktype, proto, canonname, sockaddr)
-    
+
     Resolve host and port into addrinfo struct."""
     pass
 
 def getdefaulttimeout(*args,**kw):
-    """getdefaulttimeout() -> timeout    
+    """getdefaulttimeout() -> timeout
     Returns the default timeout in seconds (float) for new socket objects.
     A value of None indicates that new socket objects have no timeout.
     When the socket module is first imported, the default is None."""
     pass
 
 def gethostbyaddr(*args,**kw):
-    """gethostbyaddr(host) -> (name, aliaslist, addresslist)    
+    """gethostbyaddr(host) -> (name, aliaslist, addresslist)
     Return the true host name, a list of aliases, and a list of IP addresses,
     for a host.  The host argument is a string giving a host name or IP number."""
     pass
 
 def gethostbyname(*args,**kw):
-    """gethostbyname(host) -> address    
+    """gethostbyname(host) -> address
     Return the IP address (a string of the form '255.255.255.255') for a host."""
     pass
 
 def gethostbyname_ex(*args,**kw):
-    """gethostbyname_ex(host) -> (name, aliaslist, addresslist)    
+    """gethostbyname_ex(host) -> (name, aliaslist, addresslist)
     Return the true host name, a list of aliases, and a list of IP addresses,
     for a host.  The host argument is a string giving a host name or IP number."""
     pass
 
 def gethostname(*args,**kw):
-    """gethostname() -> string    
+    """gethostname() -> string
     Return the current host name."""
-    pass
+    import browser
+    return browser.window.navigator.userAgent
 
 def getnameinfo(*args,**kw):
-    """getnameinfo(sockaddr, flags) --> (host, port)    
+    """getnameinfo(sockaddr, flags) --> (host, port)
     Get host and port for a sockaddr."""
     pass
 
 def getprotobyname(*args,**kw):
-    """getprotobyname(name) -> integer    
+    """getprotobyname(name) -> integer
     Return the protocol number for the named protocol.  (Rarely used.)"""
     pass
 
 def getservbyname(*args,**kw):
-    """getservbyname(servicename[, protocolname]) -> integer    
+    """getservbyname(servicename[, protocolname]) -> integer
     Return a port number from a service name and protocol name.
     The optional protocol name, if given, should be 'tcp' or 'udp',
     otherwise any protocol will match."""
     pass
 
 def getservbyport(*args,**kw):
-    """getservbyport(port[, protocolname]) -> string    
+    """getservbyport(port[, protocolname]) -> string
     Return the service name from a port number and protocol name.
     The optional protocol name, if given, should be 'tcp' or 'udp',
     otherwise any protocol will match."""
@@ -321,38 +322,38 @@ class herror:
     pass
 
 def htonl(*args,**kw):
-    """htonl(integer) -> integer    
+    """htonl(integer) -> integer
     Convert a 32-bit integer from host to network byte order."""
     pass
 
 def htons(*args,**kw):
-    """htons(integer) -> integer    
+    """htons(integer) -> integer
     Convert a 16-bit integer from host to network byte order."""
     pass
 
 def inet_aton(*args,**kw):
-    """inet_aton(string) -> bytes giving packed 32-bit IP representation    
+    """inet_aton(string) -> bytes giving packed 32-bit IP representation
     Convert an IP address in string format (123.45.67.89) to the 32-bit packed
     binary format used in low-level network functions."""
     pass
 
 def inet_ntoa(*args,**kw):
-    """inet_ntoa(packed_ip) -> ip_address_string    
+    """inet_ntoa(packed_ip) -> ip_address_string
     Convert an IP address from 32-bit packed binary format to string format"""
     pass
 
 def ntohl(*args,**kw):
-    """ntohl(integer) -> integer    
+    """ntohl(integer) -> integer
     Convert a 32-bit integer from network to host byte order."""
     pass
 
 def ntohs(*args,**kw):
-    """ntohs(integer) -> integer    
+    """ntohs(integer) -> integer
     Convert a 16-bit integer from network to host byte order."""
     pass
 
 def setdefaulttimeout(*args,**kw):
-    """setdefaulttimeout(timeout)    
+    """setdefaulttimeout(timeout)
     Set the default timeout in seconds (float) for new socket objects.
     A value of None indicates that new socket objects have no timeout.
     When the socket module is first imported, the default is None."""
