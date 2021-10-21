@@ -1014,7 +1014,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "pop" // && obj === $B // "Point"
+    var $test = false // attr == "stderr" // && obj === $B // "Point"
     if($test){console.log("$getattr", attr, obj, klass)}
 
     // Shortcut for classes without parents
@@ -1025,7 +1025,7 @@ $B.$getattr = function(obj, attr, _default){
                  klass.__bases__[0] === _b_.object))){
         if($test){
             console.log("class without parent", klass)
-            console.log('obj[attr]', obj[attr])
+            console.log('\nobj[attr]', obj[attr])
         }
         if(obj[attr] !== undefined){
             return obj[attr]
@@ -1246,7 +1246,7 @@ $B.$getattr = function(obj, attr, _default){
     }
     var odga = _b_.object.__getattribute__
     if($test){console.log("attr_func is odga ?", attr_func,
-        attr_func === odga, obj[attr])}
+        attr_func === odga, '\nobj[attr]', obj[attr])}
     if(attr_func === odga){
         var res = obj[attr]
         if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
@@ -1255,7 +1255,6 @@ $B.$getattr = function(obj, attr, _default){
         }else if(res === null){
             return null
         }else if(res === undefined && obj[attr] !== undefined){
-            console.log('cas 1')
             if(_default === undefined){
                 throw $B.attr_error(attr, obj)
             }
@@ -1263,6 +1262,9 @@ $B.$getattr = function(obj, attr, _default){
         }else if(res !== undefined){
             if($test){console.log(obj, attr, obj[attr],
                 res.__set__ || res.$is_class)}
+            if(res.$is_property){
+                return property.__get__(res)
+            }
             // Cf. issue 1081
             if(res.__set__ === undefined || res.$is_class){
                 if($test){console.log("return", res, res+'',
@@ -2062,7 +2064,7 @@ function $print(){
     writer(end)
     var flush = $B.$getattr(file, 'flush', None)
     if(flush !== None){
-        flush()
+        $B.$call(flush)()
     }
     return None
 }
@@ -2082,11 +2084,22 @@ var property = $B.make_class("property",
 
 property.__init__ = function(self, fget, fset, fdel, doc) {
 
+    var $ = $B.args('__init__', 5,
+                {self: null, fget: null, fset: null, fdel: null, doc: null},
+                ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
+                {fget: _b_.None, fset: _b_.None, fdel: _b_.None, doc: _b_.None},
+                null, null),
+        self = $.self,
+        fget = $.fget,
+        fset = $.fset,
+        fdel = $.fdel,
+        doc = $.doc
     self.__doc__ = doc || ""
     self.$type = fget.$type
     self.fget = fget
     self.fset = fset
     self.fdel = fdel
+    self.$is_property = true
 
     if(fget && fget.$attrs){
         for(var key in fget.$attrs){
@@ -2094,21 +2107,6 @@ property.__init__ = function(self, fget, fset, fdel, doc) {
         }
     }
 
-    self.__get__ = function(self, obj, objtype) {
-        if(obj === undefined){return self}
-        if(self.fget === undefined){
-            throw _b_.AttributeError.$factory("unreadable attribute")
-        }
-        return $B.$call(self.fget)(obj)
-    }
-    if(fset !== undefined){
-        self.__set__ = function(self, obj, value){
-            if(self.fset === undefined){
-                throw _b_.AttributeError.$factory("can't set attribute")
-            }
-            $B.$getattr(self.fset, '__call__')(obj, value)
-        }
-    }
     self.__delete__ = fdel;
 
     self.getter = function(fget){
@@ -2120,12 +2118,25 @@ property.__init__ = function(self, fget, fset, fdel, doc) {
     self.deleter = function(fdel){
         return property.$factory(self.fget, self.fset, fdel, self.__doc__)
     }
+}
 
+property.__get__ = function(self, obj) {
+    if(self.fget === undefined){
+        throw _b_.AttributeError.$factory("unreadable attribute")
+    }
+    return $B.$call(self.fget)(obj)
 }
 
 property.__repr__ = function(self){
     $B.builtins_repr_check(property, arguments) // in brython_builtins.js
     return _b_.repr(self.fget(self))
+}
+
+property.__set__ = function(self, obj, value){
+    if(self.fset === undefined){
+        throw _b_.AttributeError.$factory("can't set attribute")
+    }
+    $B.$getattr(self.fset, '__call__')(obj, value)
 }
 
 $B.set_func_names(property, "builtins")

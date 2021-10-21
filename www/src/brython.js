@@ -109,8 +109,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-19 21:55:33.406182"
-__BRYTHON__.timestamp=1634673333406
+__BRYTHON__.compiled_date="2021-10-21 10:55:56.766645"
+__BRYTHON__.timestamp=1634806556766
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6622,7 +6622,7 @@ break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){
 is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
 return res}}
 if(res !==undefined){if($test){console.log(res)}
-if(res.__class__===_b_.property){return res.__get__(res,obj,klass)}
+if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}
 if(res.__class__===$B.method){if($test){console.log("res is method")}
 if(res.__get__===undefined){console.log("bizarre",obj,attr,res)}
 return res.__get__(obj,klass)}
@@ -8449,7 +8449,7 @@ klass.__getattribute__===undefined &&
 (klass.__bases__.length==0 ||
 (klass.__bases__.length==1 &&
 klass.__bases__[0]===_b_.object))){if($test){console.log("class without parent",klass)
-console.log('obj[attr]',obj[attr])}
+console.log('\nobj[attr]',obj[attr])}
 if(obj[attr]!==undefined){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
@@ -8535,12 +8535,12 @@ for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
 var odga=_b_.object.__getattribute__
-if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,obj[attr])}
+if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\nobj[attr]',obj[attr])}
 if(attr_func===odga){var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
-res=undefined}else if(res===null){return null}else if(res===undefined && obj[attr]!==undefined){console.log('cas 1')
-if(_default===undefined){throw $B.attr_error(attr,obj)}
+res=undefined}else if(res===null){return null}else if(res===undefined && obj[attr]!==undefined){if(_default===undefined){throw $B.attr_error(attr,obj)}
 return _default}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}
+if(res.$is_property){return property.__get__(res)}
 if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,res+'',res.__set__,res.$is_class)}
 return res}}}
 try{var res=attr_func(obj,attr)
@@ -8843,7 +8843,7 @@ writer(arg)
 if(i < len-1){writer(sep)}}
 writer(end)
 var flush=$B.$getattr(file,'flush',None)
-if(flush !==None){flush()}
+if(flush !==None){$B.$call(flush)()}
 return None}
 $print.__name__='print'
 $print.is_func=true
@@ -8851,23 +8851,24 @@ var property=$B.make_class("property",function(fget,fset,fdel,doc){var res={__cl
 property.__init__(res,fget,fset,fdel,doc)
 return res}
 )
-property.__init__=function(self,fget,fset,fdel,doc){self.__doc__=doc ||""
+property.__init__=function(self,fget,fset,fdel,doc){var $=$B.args('__init__',5,{self:null,fget:null,fset:null,fdel:null,doc:null},['self','fget','fset','fdel','doc'],arguments,{fget:_b_.None,fset:_b_.None,fdel:_b_.None,doc:_b_.None},null,null),self=$.self,fget=$.fget,fset=$.fset,fdel=$.fdel,doc=$.doc
+self.__doc__=doc ||""
 self.$type=fget.$type
 self.fget=fget
 self.fset=fset
 self.fdel=fdel
+self.$is_property=true
 if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
-self.__get__=function(self,obj,objtype){if(obj===undefined){return self}
-if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
-return $B.$call(self.fget)(obj)}
-if(fset !==undefined){self.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
-$B.$getattr(self.fset,'__call__')(obj,value)}}
 self.__delete__=fdel;
 self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
 self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
 self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
+property.__get__=function(self,obj){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
+return $B.$call(self.fget)(obj)}
 property.__repr__=function(self){$B.builtins_repr_check(property,arguments)
 return _b_.repr(self.fget(self))}
+property.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
+$B.$getattr(self.fset,'__call__')(obj,value)}
 $B.set_func_names(property,"builtins")
 function quit(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
@@ -9622,6 +9623,7 @@ msg+=` has no attribute '${self.name}'`
 var suggestion=offer_suggestions_for_attribute_error(self)
 if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
 return msg}
+$B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){return _b_.AttributeError.$factory({$nat:"kw",kw:{name,obj}})}
 var js='\nvar $ = $B.args("NameError", 1, {"msg": null, "name":null}, '+
 '["msg", "name"], arguments, '+
@@ -9633,6 +9635,7 @@ _b_.NameError.__str__=function(self){if(self.args.length > 0){return self.args[0
 var msg=`name '${self.name}' is not defined`,suggestion=offer_suggestions_for_name_error(self)
 if(suggestion){msg+=`. Did you mean '${suggestion}'?`}
 return msg}
+$B.set_func_names(_b_.NameError,'builtins')
 $make_exc(["UnboundLocalError"],_b_.NameError)
 $B.name_error=function(name,obj){return _b_.NameError.$factory({$nat:"kw",kw:{name}})}
 $B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}
@@ -11051,7 +11054,7 @@ js="var $module = (function(){\n"+js+"return $locals_"+
 module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 2){console.log(err+" for module "+module.__name__)
+var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log(js)}
@@ -11361,7 +11364,7 @@ if(i < len){try{__path__=$B.$getattr($B.imported[_mod_name],"__path__")}catch(e)
 if(i==len-1 &&
 $B.imported[_mod_name][parsed_name[len]]&&
 $B.imported[_mod_name][parsed_name[len]].__class__===
-module){return $B.imported[_mod_name][parsed_name[len]]}
+$B.module){return $B.imported[_mod_name][parsed_name[len]]}
 if(has_from){
 import_error(mod_name)}else{
 var exc=_b_.ModuleNotFoundError.$factory()
@@ -15664,8 +15667,6 @@ function(){return $B.stdin},function(self,value){$B.stdin=value}
 function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
 )}
 modules._sys.__breakpointhook__=modules._sys.breakpointhook
-modules._sys.stderr.write=function(data){return $B.$getattr(_sys.stderr.__get__(),"write")(data)}
-modules._sys.stdout.write=function(data){return $B.$getattr(_sys.stdout.__get__(),"write")(data)}
 var WarningMessage=$B.make_class("WarningMessage",function(){var $=$B.make_args("WarningMessage",8,{message:null,category:null,filename:null,lineno:null,file:null,line:null,source:null},['message','category','filename','lineno','file','line','source'],arguments,{file:_b_.None,line:_b_.None,source:_b_.None},null,null)
 return{
 __class__:WarningMessage,message:$.message,category:$.category,filename:$.filename,lineno:$.lineno,file:$.file,line:$.line,source:$.source,_category_name:_b_.bool.$factory($.category)?

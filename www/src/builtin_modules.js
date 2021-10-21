@@ -634,14 +634,6 @@
 
     modules._sys.__breakpointhook__ = modules._sys.breakpointhook
 
-    modules._sys.stderr.write = function(data){
-        return $B.$getattr(_sys.stderr.__get__(), "write")(data)
-    }
-
-    modules._sys.stdout.write = function(data){
-        return $B.$getattr(_sys.stdout.__get__(), "write")(data)
-    }
-
     var WarningMessage = $B.make_class("WarningMessage",
         function(){
             var $ = $B.make_args("WarningMessage", 8,

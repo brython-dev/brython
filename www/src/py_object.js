@@ -167,8 +167,8 @@ object.__getattribute__ = function(obj, attr){
 
     if(res !== undefined){
         if($test){console.log(res)}
-        if(res.__class__ === _b_.property){
-            return res.__get__(res, obj, klass)
+        if(res.__class__ && _b_.issubclass(res.__class__, _b_.property)){
+            return $B.$getattr(res, '__get__')(obj, klass)
         }
         if(res.__class__ === $B.method){
             if($test){console.log("res is method")}
