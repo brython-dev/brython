@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-22 09:41:43.739085"
-__BRYTHON__.timestamp=1634888503739
+__BRYTHON__.compiled_date="2021-10-22 09:49:37.544687"
+__BRYTHON__.timestamp=1634888977544
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -5853,8 +5853,7 @@ value=value-0x10000
 return String.fromCharCode(0xD800 |(value >> 10))+
 String.fromCharCode(0xDC00 |(value & 0x3FF))}
 function test_num(num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
-function error(message){$pos+=pos
-$_SyntaxError(C,[message])}
+function error(message){throw SyntaxError(message)}
 function check(elt){if(elt.value.length==0){var t=subtypes[elt.subtype]||'decimal'
 error("invalid "+t+" literal")}else if(elt.value[elt.value.length-1].match(/[\-+_]/)){var t=subtypes[elt.subtype]||'decimal'
 error("invalid "+t+" literal")}else{
@@ -6143,7 +6142,7 @@ var prepared=prepare_string(C,token[1],token[2])
 if(prepared.value instanceof Array){C=$transition(C,'JoinedStr',prepared.value)}else{C=$transition(C,'str',prepared.value)}
 continue
 case 'NUMBER':
-var prepared=prepare_number(token[1])
+try{var prepared=prepare_number(token[1])}catch(err){$_SyntaxError(C,[err.message])}
 if(prepared===undefined){console.log('pas de prepared pour',token)}
 C=$transition(C,prepared.type,prepared.value)
 continue

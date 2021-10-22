@@ -768,4 +768,7 @@ assert not f()
 # issue 1802
 assertRaises(SyntaxError, exec, ".x = 4")
 
+# issue 1803
+assertRaises(SyntaxError, exec, "050")
+
 print('passed all tests...')

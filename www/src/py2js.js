@@ -11647,8 +11647,7 @@ function test_num(num_lit){
         digits_re = /[_\d]/
 
     function error(message){
-        $pos += pos
-        $_SyntaxError(context, [message])
+        throw SyntaxError(message)
     }
     function check(elt){
       if(elt.value.length == 0){
@@ -12417,7 +12416,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 }
                 continue
             case 'NUMBER':
-                var prepared = prepare_number(token[1])
+                try{
+                    var prepared = prepare_number(token[1])
+                }catch(err){
+                    $_SyntaxError(context, [err.message])
+                }
                 if(prepared === undefined){
                     console.log('pas de prepared pour', token)
                 }
