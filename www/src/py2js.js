@@ -145,11 +145,6 @@ for(var _tmp of $op_order){
 // Variable used to generate random names used in loops
 var $loop_num = 0
 
-// ast
-var ast = {}
-ast.arg = function(arg){
-    this.arg = arg
-}
 
 // binary operator tokens
 var binary_ops = {
@@ -158,106 +153,30 @@ var binary_ops = {
     '^': 'BitXor', '&': 'BitAnd', '@': 'MatMult'
     }
 
-for(var key in binary_ops){
-    eval('ast.' + binary_ops[key] + ' = function(){}')
-}
-
 // boolean operator tokens
 var boolean_ops = {'and': 'And', 'or': 'Or'}
-for(var key in boolean_ops){
-    eval('ast.' + boolean_ops[key] + ' = function(){}')
-}
 
 // comparison operator tokens
 var comparison_ops = {
     '==': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
     'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
-for(var key in comparison_ops){
-    eval('ast.' + comparison_ops[key] + ' = function(){}')
-}
 
-// unary operator tokens
-for(var tok of ['UAdd', 'USub', 'Not', 'Invert']){
-    eval('ast.' + tok + ' = function(){}')
-}
+var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
 
-ast.Assign = function(targets, value){
-    this.targets = targets
-    this.value = value
-}
-ast.AsyncFunctionDef = function(name, args, body, decorator_list){
-    this.name = name
-    this.args = args
-    this.body = body
-    this.decorator_lsit = decorator_list
-}
-ast.AugAssign = function(target, op, value){
-    this.target = target
-    this.op = op
-    this.value = value
-}
-ast.BinaryOp = function(left, op, right){
-    this.left = left
-    this.op = op
-    this.right = right
-}
-ast.BooleanOp = function(left, op, right){
-    this.left = left
-    this.op = op
-    this.right = right
-}
-ast.Call = function(func, args, keywords){
-    this.func = func
-    this.args = args
-    this.keywords = keywords
-}
-ast.ClassDef = function(name, bases, keywords, body, decorator_list){
-    this.name = name
-    this.bases = bases
-    this.keywords = keywords
-    this.body = body
-    this.decorator_list = decorator_list
-}
-ast.Constant = function(value){
-    this.value = value
-}
-ast.Del = function(){}
-ast.Delete = function(targets){
-    this.targets = targets
-}
-ast.Expr = function(value){
-    this.value = value
-}
-ast.FunctionDef = function(name, args, body, decorator_list){
-    this.name = name
-    this.args = args
-    this.body = body
-    this.decorator_lsit = decorator_list
-}
-ast.keyword = function(arg, value){
-    this.arg = arg
-    this.value = value
-}
-ast.Load = function(){}
-ast.Name = function(id, ctx){
-    this.id = id
-    this.ctx = ctx || ast.Load
-}
-ast.Pass = function(){}
-ast.Return = function(){}
-ast.Slice = function(){}
-ast.Starred = function(value){
-    this.value = value
-}
-ast.Store = function(){}
-ast.Subscript = function(value, slice){
-    this.value = value
-    this.slice = slice
-    this.ctx = ast.Load
-}
-ast.UnaryOp = function(op, operand){
-    this.op = op
-    this.operand = operand
+// Build ast classes from generated script py_ast.js
+var ast = {}
+if($B.ast_classes){
+    for(var kl in $B.ast_classes){
+        var args = $B.ast_classes[kl]
+        var js = `ast.${kl} = function(${args}){\n`
+        if(args.length > 0){
+            for(var arg of args.split(',')){
+                js += ` this.${arg} = ${arg}\n`
+            }
+        }
+        js += '}'
+        eval(js)
+    }
 }
 
 function ast_or_obj(obj){
@@ -449,8 +368,7 @@ $Node.prototype.add = function(child){
 $Node.prototype.ast = function(){
     if(this.context){
         if(this.context.tree[0].ast){
-            console.log('ast for node', this, '\n',
-                this.context.tree[0].ast())
+            this.context.tree[0].ast()
         }else{
             console.log(this.context.tree[0].type, '(no ast)')
         }
@@ -2306,7 +2224,6 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 
 $CallCtx.prototype.ast = function(){
     var res = new ast.Call(ast_or_obj(this.func), [], [])
-    console.log('call ast', this.tree)
     for(var call_arg of this.tree){
         if(call_arg.type == 'double_star_arg'){
             var value = call_arg.tree[0].tree[0].value,
@@ -7172,7 +7089,6 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
 }
 
 JoinedStrCtx.prototype.ast = function(){
-    console.log('ast, values', this.tree)
     var res = {
         type: 'JoinedStr',
         values: []
@@ -8464,17 +8380,23 @@ var $OpCtx = $B.parser.$OpCtx = function(context, op){
 $OpCtx.prototype.ast = function(){
     var op = binary_ops[this.op]
     if(op){
-        return new ast.BinaryOp(
+        return new ast.BinOp(
             ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
     }
     op = boolean_ops[this.op]
     if(op){
-        return new ast.BooleanOp(
+        return new ast.BoolOp(
             ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
     }
-    op = comparions_ops[this.op]
-    return new ast.BooleanOp(
-        ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
+    op = comparison_ops[this.op]
+    if(op){
+        return new ast.BoolOp(
+            ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
+    }
+    op = unary_ops[this.op]
+    if(op){
+        return new ast.UnaryOp(this.tree[0].op, ast_or_obj(this.tree[1]))
+    }
 }
 
 $OpCtx.prototype.toString = function(){
@@ -10564,6 +10486,42 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
     context.tree[context.tree.length] = this
 }
 
+$TryCtx.prototype.ast = function(){
+    // Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)
+    var node = this.parent.node,
+        res = {
+            body: [],
+            handlers: [],
+            orelse: [],
+            finalbody: []
+        }
+    for(var child of node.children){
+        res.body.push(ast_or_obj(child.context.tree[0]))
+    }
+    var rank = node.parent.children.indexOf(node)
+    for(var child of node.parent.children.slice(rank + 1)){
+        var t = child.context.tree[0],
+            type = t.type
+        if(type == 'single_kw'){
+            type = t.token
+        }
+        if(type == 'except'){
+            res.handlers.push(ast_or_obj(t))
+        }else if(type == 'else'){
+            for(var c of child.children){
+                res.orelse.push(ast_or_obj(c.context.tree[0]))
+            }
+        }else if(type == 'finally'){
+            for(var c of child.children){
+                res.finalbody.push(ast_or_obj(c.context.tree[0]))
+            }
+        }else{
+            break
+        }
+    }
+    return new ast.Try(res.body, res.handlers, res.orelse, res.finalbody)
+}
+
 $TryCtx.prototype.toString = function(){
     return '(try) '
 }
@@ -10717,6 +10675,8 @@ var $UnaryCtx = $B.parser.$UnaryCtx = function(context, op){
 }
 
 $UnaryCtx.prototype.ast = function(){
+    console.log('unary ast', this)
+    alert()
     var op = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}[this.op]
     return new ast.UnaryOp(new op(), ast_or_obj(this.tree[0]))
 }

@@ -7,7 +7,6 @@ import json
 import version
 vnum = '.'.join(str(num) for num in version.version[:2])
 
-"""
 import urllib.request
 
 ast_url = f"https://raw.githubusercontent.com/python/cpython/{vnum}/Parser/Python.asdl"
@@ -17,7 +16,7 @@ f = urllib.request.urlopen(ast_url)
 with open('Python.asdl', 'wb') as out:
     out.write(f.read())
 
-"""
+
 f = open('Python.asdl', encoding='utf-8')
 type_def = False
 ast_types = {}
