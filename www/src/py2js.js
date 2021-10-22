@@ -182,7 +182,12 @@ if($B.ast_classes){
 function ast_or_obj(obj){
     // temporary function used while all contexts don't have ast()
     // implemented
-    return obj.ast ? obj.ast() : obj
+    if(obj.ast){
+        return obj.ast()
+    }else{
+        console.log('no ast', obj.type)
+        return obj
+    }
 }
 
 var create_temp_name = $B.parser.create_temp_name = function(prefix) {
@@ -366,17 +371,18 @@ $Node.prototype.add = function(child){
 }
 
 $Node.prototype.ast = function(){
-    if(this.context){
-        if(this.context.tree[0].ast){
-            this.context.tree[0].ast()
-        }else{
-            console.log(this.context.tree[0].type, '(no ast)')
+    var root_ast = new ast.Module([])
+    for(var node of this.children){
+        var t = node.context.tree[0]
+        // Ignore except / elif / else / finally : they are attributes of
+        // try / for / if nodes
+        if(['single_kw', 'except'].indexOf(t.type) > -1 ||
+                (t.type == 'condition' && t.token == 'elif')){
+            continue
         }
-    }else{
-        for(var node of this.children){
-            node.ast()
-        }
+        root_ast.body.push(ast_or_obj(node.context.tree[0]))
     }
+    return root_ast
 }
 
 $Node.prototype.insert = function(pos, child){
@@ -1556,6 +1562,19 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
     this.func = 'getattr' // becomes setattr for an assignment
 }
 
+$AttrCtx.prototype.ast = function(){
+    // ast.Attribute(value, attr, ctx)
+    var value = ast_or_obj(this.value),
+        attr = this.name,
+        ctx = ast.Load
+    if(this.func == 'setattr'){
+        ctx = ast.Store
+    }else if(this.func == 'delattr'){
+        ctx = ast.Delete
+    }
+    return new ast.Attribute(value, attr, ctx)
+}
+
 $AttrCtx.prototype.toString = function(){return '(attr) ' + this.value + '.' + this.name}
 
 $AttrCtx.prototype.transition = function(token, value){
@@ -1962,6 +1981,11 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     }
 }
 
+$AwaitCtx.prototype.ast = function(){
+    // Await(expr value)
+    return new ast.Await(ast_or_obj(this.tree[0]))
+}
+
 $AwaitCtx.prototype.transition = function(token, value){
     var context = this
     context.parent.is_await = true
@@ -2050,6 +2074,10 @@ var $BreakCtx = $B.parser.$BreakCtx = function(context){
     context.tree[context.tree.length] = this
     // set information related to the associated loop
     set_loop_context.apply(this, [context, 'break'])
+}
+
+$BreakCtx.prototype.ast = function(){
+    return new ast.Break()
 }
 
 $BreakCtx.prototype.toString = function(){return 'break '}
@@ -3972,7 +4000,6 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
 
 $DelCtx.prototype.ast = function(){
     var targets
-    console.log('ast del', this.tree[0])
     if(this.tree[0].type == 'list_or_tuple'){
         // Syntax "del a, b, c"
         targets = this.tree[0].tree.slice()
@@ -4085,6 +4112,27 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     context.tree[context.tree.length] = this
 }
 
+$DictOrSetCtx.prototype.ast = function(){
+    // Dict(expr* keys, expr* values) | Set(expr* elts)
+    if(this.real == 'dict'){
+        var keys = [],
+            values = []
+        for(var i = 0, len = this.items.length; i < len; i++){
+            if(this.items[i].packed){
+                keys.push(undefined)
+                values.push(ast_or_obj(this.items[i]))
+            }else{
+                keys.push(ast_or_obj(this.items[i]))
+                values.push(ast_or_obj(this.items[i + 1]))
+                i++
+            }
+        }
+        return new ast.Dict(keys, values)
+    }else if(this.real == 'set'){
+        return new ast.Set(this.items.map(ast_or_obj))
+    }
+    return this
+}
 $DictOrSetCtx.prototype.toString = function(){
     switch(this.real) {
         case 'dict':
@@ -4464,6 +4512,23 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
     this.scope = $get_scope(this)
 }
 
+$ExceptCtx.prototype.ast = function(){
+    // ast.ExceptHandler(type, name, body)
+    var res = {
+        body: []
+    }
+    for(var child of this.parent.node.children){
+        res.body.push(ast_or_obj(child.context.tree[0]))
+    }
+    if(this.has_alias){
+        res.name = this.tree[0].alias
+    }
+    if(this.tree.length > 0){
+        res.type = ast_or_obj(this.tree[0])
+    }
+    return res
+}
+
 $ExceptCtx.prototype.toString = function(){return '(except) '}
 
 $ExceptCtx.prototype.transition = function(token, value){
@@ -4609,22 +4674,11 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
 }
 
 $ExprCtx.prototype.ast = function(){
-    var res
-    if(['imaginary', 'int', 'float', 'list', 'str', 'operand'].indexOf(this.name) > -1){
-        var res = ast_or_obj(this.tree[0])
-    }else if(this.name == 'id'){
-        if(['id', 'call', 'sub'].indexOf(this.tree[0].type) > -1){
-            res = this.tree[0].ast()
-        }
+    var res = ast_or_obj(this.tree[0])
+    if(this.packed){
+        return new ast.Starred(res)
     }
-    if(res){
-        if(this.parent.type == 'node'){
-            return new ast.Expr(res)
-        }else{
-            return res
-        }
-    }
-    return this
+    return res
 }
 
 $ExprCtx.prototype.toString = function(){
@@ -5128,7 +5182,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     this.type = 'for'
     this.parent = context
     this.tree = []
-    context.tree[context.tree.length] = this
+    context.tree.push(this)
     this.loop_num = $loop_num
     this.scope = $get_scope(this)
     if(this.scope.is_comp){
@@ -5136,6 +5190,19 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     }
     this.module = this.scope.module
     $loop_num++
+}
+
+$ForExpr.prototype.ast = function(){
+    // ast.For(target, iter, body, orelse, type_comment)
+    var target = ast_or_obj(this.tree[0]),
+        iter = ast_or_obj(this.tree[1]),
+        orelse = this.orelse ? ast_or_obj(this.orelse) : undefined,
+        type_comment,
+        body = []
+    for(var child of this.parent.node.children){
+        body.push(ast_or_obj(child.context.tree[0]))
+    }
+    return new ast.For(target, iter, body, orelse, type_comment)
 }
 
 $ForExpr.prototype.toString = function(){
@@ -5616,6 +5683,29 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
     context.tree[context.tree.length] = this
     this.expect = 'module'
     this.scope = $get_scope(this)
+}
+
+$FromCtx.prototype.ast = function(){
+    // ast.ImportFrom(module, names, level)
+    var module = this.module,
+        level = 0
+    while(module.length > 0 && module.startsWith('.')){
+        level++
+        module = module.substr(1)
+    }
+    var res = {
+        module: module || undefined,
+        names: [],
+        level
+    }
+    for(var name of this.names){
+        if(Array.isArray(name)){
+            res.names.push(new ast.alias(name[0], name[1]))
+        }else{
+            res.names.push(new ast.alias(name))
+        }
+    }
+    return new ast.ImportFrom(res.module, res.names, res.level)
 }
 
 $FromCtx.prototype.add_name = function(name){
@@ -6293,7 +6383,7 @@ $IdCtx.prototype.ast = function(){
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
         return new ast.Constant(this.value)
     }
-    return new ast.Name(this.value)
+    return new ast.Name(this.value, ast.Load)
 }
 
 $IdCtx.prototype.toString = function(){
@@ -6938,6 +7028,19 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
     this.expect = 'id'
 }
 
+$ImportCtx.prototype.ast = function(){
+    //ast.Import(names)
+    var names = []
+    for(var item of this.tree){
+        var alias = new ast.alias(item.name)
+        if(item.alias != item.name){
+            alias.asname = item.alias
+        }
+        names.push(alias)
+    }
+    return new ast.Import(names)
+}
+
 $ImportCtx.prototype.toString = function(){
     return 'import ' + this.tree
 }
@@ -7360,13 +7463,14 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
 }
 
 $ListOrTupleCtx.prototype.ast = function(){
-    var elts = []
-    for(var item of this.tree){
-        elts.push(ast_or_obj(item))
-    }
-    return {
-        type: 'List',
-        elts
+    var elts = this.tree.map(ast_or_obj)
+    if(this.real == 'list'){
+        return new ast.List(elts, ast.Load)
+    }else if(this.real == 'tuple'){
+        return new ast.Tuple(elts, ast.Load)
+    }else{
+        console.log('list_or_tuple ast, real', this.real)
+        return this
     }
 }
 
@@ -9184,7 +9288,7 @@ $PatternClassCtx.prototype.to_js = function(){
         // args.push(`'${arg}'`)
     }
     i = 0
-    for(item of this.tree){
+    for(var item of this.tree){
         if(item instanceof $PatternCaptureCtx && item.tree.length > 1){
             kwargs.push(item.tree[0] + ': ' + item.tree[1].to_js())
         }else{
@@ -10034,6 +10138,14 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
     }
 }
 
+$SingleKwCtx.prototype.ast = function(){
+    var body = []
+    for(var child of this.parent.node.children){
+        body.push(ast_or_obj(child.context.tree[0]))
+    }
+    return body
+}
+
 $SingleKwCtx.prototype.toString = function(){
     return this.token
 }
@@ -10383,6 +10495,24 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
     this.tree = []
     this.expect = 'id'
     context.tree[context.tree.length] = this
+}
+
+$TargetListCtx.prototype.ast = function(){
+    if(this.tree.length == 0){
+        var item = ast_or_obj(this.tree[0])
+        item.ctx = ast.Store
+        return item
+    }else{
+        var items = []
+        for(var item of this.tree){
+            item = ast_or_obj(item)
+            if(item.hasOwnProperty('ctx')){
+                item.ctx = ast.Store
+            }
+            items.push(item)
+        }
+        return new ast.Tuple(items, ast.Store)
+    }
 }
 
 $TargetListCtx.prototype.toString = function(){
@@ -12421,9 +12551,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
                 }catch(err){
                     $_SyntaxError(context, [err.message])
                 }
-                if(prepared === undefined){
-                    console.log('pas de prepared pour', token)
-                }
                 context = $transition(context, prepared.type, prepared.value)
                 continue
             case 'NEWLINE':
@@ -12565,7 +12692,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         module, locals_id, parent_scope, line_num)
 
     dispatch_tokens(root, src)
-    //root.ast()
+    //console.log(root.ast())
 
     root.is_comp = is_comp
     if(ix != undefined){
