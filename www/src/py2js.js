@@ -897,11 +897,15 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                         context.parent = tuple
                         return tuple
                     }
+                    break
                 case 'annotation':
                     $_SyntaxError(context, "empty annotation")
                 default:
                     $_SyntaxError(context, token)
             }
+            break
+        case '.':
+            $_SyntaxError(context, 'token ' + token)
     }
     return $transition(context.parent, token, value)
 }
