@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-22 21:10:06.450191"
-__BRYTHON__.timestamp=1634929806450
+__BRYTHON__.compiled_date="2021-10-23 18:39:57.799606"
+__BRYTHON__.timestamp=1635007197799
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -407,14 +407,23 @@ var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mo
 var boolean_ops={'and':'And','or':'Or'}
 var comparison_ops={'==':'Eq','!=':'NotEq','<':'Lt','<=':'LtE','>':'Gt','>=':'GtE','is':'Is','is_not':'IsNot','in':'In','not_in':'NotIn'}
 var unary_ops={unary_inv:'Invert',unary_pos:'UAdd',unary_neg:'USub'}
+var op_types=[binary_ops,boolean_ops,comparison_ops,unary_ops]
 var ast={}
 if($B.ast_classes){for(var kl in $B.ast_classes){var args=$B.ast_classes[kl]
 var js=`ast.${kl} = function(${args}){\n`
 if(args.length > 0){for(var arg of args.split(',')){js+=` this.${arg} = ${arg}\n`}}
 js+='}'
-eval(js)}}
+eval(js)}
+var op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
+for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}
+function ast_body(block_ctx){
+var body=[]
+for(var child of block_ctx.node.children){var ctx=child.C.tree[0]
+if(['decorator'].indexOf(ctx.type)>-1){continue}
+body.push(ast_or_obj(ctx))}
+return body}}
 function ast_or_obj(obj){
-if(obj.ast){return obj.ast()}else{console.log('no ast',obj.type)
+if(obj.ast){return obj.ast()}else{console.log('no ast',obj.type,obj)
 return obj}}
 var create_temp_name=$B.parser.create_temp_name=function(prefix){var _prefix=prefix ||'$temp'
 return _prefix+$loop_num++}
@@ -465,7 +474,7 @@ child.parent=this
 child.module=this.module}
 $Node.prototype.ast=function(){var root_ast=new ast.Module([])
 for(var node of this.children){var t=node.C.tree[0]
-if(['single_kw','except'].indexOf(t.type)>-1 ||
+if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
 (t.type=='condition' && t.token=='elif')){continue}
 root_ast.body.push(ast_or_obj(node.C.tree[0]))}
 return root_ast}
@@ -831,6 +840,9 @@ this.type='assert'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
+$AssertCtx.prototype.ast=function(){
+var msg=this.tree[1]
+return new ast.Assert(ast_or_obj(this.tree[0]),msg===undefined ? msg :ast_or_obj(msg))}
 $AssertCtx.prototype.toString=function(){return '(assert) '+this.tree}
 $AssertCtx.prototype.transition=function(token,value){var C=this
 if(token==","){if(this.tree.length > 1){$_SyntaxError(C,"too many commas after assert")}
@@ -1147,6 +1159,12 @@ if((scope.ntype=='def' ||scope.ntype=='generator')&&
 assigned.unbound=true}}}}
 $get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module}
+$AugmentedAssignCtx.prototype.ast=function(){
+var target=ast_or_obj(this.tree[0]),value=ast_or_obj(this.tree[1])
+target.ctx=ast.Store
+value.ctx=ast.Load
+var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_class=ast_type_class[1]
+return new ast.AugAssign(target,ast_class,value)}
 $AugmentedAssignCtx.prototype.toString=function(){return '(augm assign) '+this.tree}
 $AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
@@ -1651,11 +1669,10 @@ var scope=this.scope=$get_scope(this)
 this.parent.node.parent_block=scope
 this.parent.node.bound={}
 this.parent.node.binding={__annotations__:true}}
-$ClassCtx.prototype.ast=function(){var decorators=get_decorators(this.parent.node),bases=[],keywords=[]
+$ClassCtx.prototype.ast=function(){
+var decorators=get_decorators(this.parent.node),bases=[],keywords=[]
 if(this.args){for(var arg of this.args.tree){if(arg.vars.length==2){keywords.push(new ast.keyword(ast_or_obj(arg.vars[0]),ast_or_obj(arg.vars[1])))}else{bases.push(new ast.arg(ast_or_obj(arg.vars[0])))}}}
-var res=new ast.ClassDef(this.name,bases,keywords,[],decorators)
-for(var child of this.parent.node.children){res.body.push(ast_or_obj(child.C.tree[0]))}
-return res}
+return new ast.ClassDef(this.name,bases,keywords,ast_body(this.parent),decorators)}
 $ClassCtx.prototype.toString=function(){return '(class) '+this.name+' '+this.tree+' args '+this.args}
 $ClassCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -1828,11 +1845,11 @@ if(token=='elif'){
 var rank=this.node.parent.children.indexOf(this.node),previous=this.node.parent.children[rank-1]
 previous.C.tree[0].orelse=this}
 C.tree.push(this)}
-$ConditionCtx.prototype.ast=function(){var types={'if':'If','while':'While','elif':'If'}
-var res={type:types[this.token],test:ast_or_obj(this.tree[0])}
+$ConditionCtx.prototype.ast=function(){
+var types={'if':'If','while':'While','elif':'If'}
+var res=new ast[types[this.token]](ast_or_obj(this.tree[0]))
 if(this.orelse){res.orelse=ast_or_obj(this.orelse)}
-res.body=[]
-for(var node of this.node.children){res.body.push(ast_or_obj(node.C.tree[0]))}
+res.body=ast_body(this)
 return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
 $ConditionCtx.prototype.transition=function(token,value){var C=this
@@ -1866,6 +1883,7 @@ this.parent=C
 $get_node(this).is_continue=true
 C.tree[C.tree.length]=this
 set_loop_context.apply(this,[C,'continue'])}
+$ContinueCtx.prototype.ast=function(){return new ast.Continue()}
 $ContinueCtx.prototype.toString=function(){return '(continue)'}
 $ContinueCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
@@ -1970,7 +1988,7 @@ if(default_value){args.kwdefaults.push(default_value)}}else{args.args.push(argum
 if(default_value){args.defaults.push(default_value)}}}}
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=ast_or_obj(this.annotation.tree[0])}
-for(var child of this.parent.node.children){res.body.push(ast_or_obj(child.C.tree[0]))}
+res.body=ast_body(this.parent)
 return res}
 $DefCtx.prototype.set_name=function(name){try{name=$mangle(name,this.parent.tree[0])}catch(err){console.log(err)
 console.log('parent',this.parent)
@@ -2867,8 +2885,7 @@ if(this.scope.is_comp){}
 this.module=this.scope.module
 $loop_num++}
 $ForExpr.prototype.ast=function(){
-var target=ast_or_obj(this.tree[0]),iter=ast_or_obj(this.tree[1]),orelse=this.orelse ? ast_or_obj(this.orelse):undefined,type_comment,body=[]
-for(var child of this.parent.node.children){body.push(ast_or_obj(child.C.tree[0]))}
+var target=ast_or_obj(this.tree[0]),iter=ast_or_obj(this.tree[1]),orelse=this.orelse ? ast_or_obj(this.orelse):undefined,type_comment,body=ast_body(this.parent)
 return new ast.For(target,iter,body,orelse,type_comment)}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
 $ForExpr.prototype.transition=function(token,value){var C=this
@@ -3319,6 +3336,8 @@ this.module=$get_module(this)
 while(this.module.module !=this.module.id){this.module=this.module.parent_block}
 this.module.binding=this.module.binding ||{}
 this.$pos=$pos}
+$GlobalCtx.prototype.ast=function(){
+return new ast.Global(this.tree.map(item=> item.value))}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
 function check_global_nonlocal(C,value,type){var scope=C.scope
 if(type=='nonlocal' && scope.globals && scope.globals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
@@ -4348,17 +4367,9 @@ if(C.type=="expr"){if(['int','float','str'].indexOf(C.tree[0].type)>-1){this.lef
 if(binding){this.left_type=binding.type}}}
 C.parent.tree.pop()
 C.parent.tree.push(this)}
-$OpCtx.prototype.ast=function(){var op=binary_ops[this.op]
-if(op){return new ast.BinOp(
-ast_or_obj(this.tree[0]),ast[op],ast_or_obj(this.tree[1]))}
-op=boolean_ops[this.op]
-if(op){return new ast.BoolOp(
-ast_or_obj(this.tree[0]),ast[op],ast_or_obj(this.tree[1]))}
-op=comparison_ops[this.op]
-if(op){return new ast.BoolOp(
-ast_or_obj(this.tree[0]),ast[op],ast_or_obj(this.tree[1]))}
-op=unary_ops[this.op]
-if(op){return new ast.UnaryOp(this.tree[0].op,ast_or_obj(this.tree[1]))}}
+$OpCtx.prototype.ast=function(){var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1]
+return new op_type(
+ast_or_obj(this.tree[0]),ast_class,ast_or_obj(this.tree[1]))}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
 $OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
@@ -5185,9 +5196,7 @@ elt.type=='asyncfor' ||
 (elt.type=='condition' && elt.token=='while')){elt.has_break=true
 elt.else_node=$get_node(this)
 this.loop_num=elt.loop_num}}}}
-$SingleKwCtx.prototype.ast=function(){var body=[]
-for(var child of this.parent.node.children){body.push(ast_or_obj(child.C.tree[0]))}
-return body}
+$SingleKwCtx.prototype.ast=function(){return ast_body(this.parent)}
 $SingleKwCtx.prototype.toString=function(){return this.token}
 $SingleKwCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){return $BodyCtx(C)}
@@ -5430,8 +5439,7 @@ this.type='try'
 this.parent=C
 C.tree[C.tree.length]=this}
 $TryCtx.prototype.ast=function(){
-var node=this.parent.node,res={body:[],handlers:[],orelse:[],finalbody:[]}
-for(var child of node.children){res.body.push(ast_or_obj(child.C.tree[0]))}
+var node=this.parent.node,res={body:ast_body(this.parent),handlers:[],orelse:[],finalbody:[]}
 var rank=node.parent.children.indexOf(node)
 for(var child of node.parent.children.slice(rank+1)){var t=child.C.tree[0],type=t.type
 if(type=='single_kw'){type=t.token}
@@ -5506,9 +5514,7 @@ this.op=op
 this.parent=C
 this.tree=[]
 C.tree.push(this)}
-$UnaryCtx.prototype.ast=function(){console.log('unary ast',this)
-alert()
-var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op]
+$UnaryCtx.prototype.ast=function(){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op]
 return new ast.UnaryOp(new op(),ast_or_obj(this.tree[0]))}
 $UnaryCtx.prototype.toString=function(){return '(unary) '+this.op}
 $UnaryCtx.prototype.transition=function(token,value){var C=this

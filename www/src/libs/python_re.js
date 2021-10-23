@@ -883,7 +883,8 @@ function CharacterClass(pos, cp, length, groups){
         case 'S':
             this.test_func = function(string, pos){
                 var cp = string.codepoints[pos]
-                return $B.unicode_tables.Zs[cp] === undefined &&
+                return cp !== undefined &&
+                    $B.unicode_tables.Zs[cp] === undefined &&
                     $B.unicode_bidi_whitespace.indexOf(cp) == -1
             }
             break
