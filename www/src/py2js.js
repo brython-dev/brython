@@ -163,6 +163,8 @@ var comparison_ops = {
 
 var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
 
+var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
+
 // Build ast classes from generated script py_ast.js
 var ast = {}
 if($B.ast_classes){
@@ -177,6 +179,26 @@ if($B.ast_classes){
         js += '}'
         eval(js)
     }
+    // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
+    var op2ast_class = {},
+        ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]
+    for(var i = 0; i < 4; i++){
+        for(var op in op_types[i]){
+            op2ast_class[op] = [ast_types[i], ast[op_types[i][op]]]
+        }
+    }
+    function ast_body(block_ctx){
+        // return the attribute body of nodes with a block (def, class etc.)
+        var body = []
+        for(var child of block_ctx.node.children){
+            var ctx = child.context.tree[0]
+            if(['decorator'].indexOf(ctx.type) > -1){
+                continue
+            }
+            body.push(ast_or_obj(ctx))
+        }
+        return body
+    }
 }
 
 function ast_or_obj(obj){
@@ -185,7 +207,7 @@ function ast_or_obj(obj){
     if(obj.ast){
         return obj.ast()
     }else{
-        console.log('no ast', obj.type)
+        console.log('no ast', obj.type, obj)
         return obj
     }
 }
@@ -376,7 +398,8 @@ $Node.prototype.ast = function(){
         var t = node.context.tree[0]
         // Ignore except / elif / else / finally : they are attributes of
         // try / for / if nodes
-        if(['single_kw', 'except'].indexOf(t.type) > -1 ||
+        // decorator is attribute of the class / def node
+        if(['single_kw', 'except', 'decorator'].indexOf(t.type) > -1 ||
                 (t.type == 'condition' && t.token == 'elif')){
             continue
         }
@@ -1008,6 +1031,13 @@ var $AssertCtx = $B.parser.$AssertCtx = function(context){
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
+}
+
+$AssertCtx.prototype.ast = function(){
+    // Assert(expr test, expr? msg)
+    var msg = this.tree[1]
+    return new ast.Assert(ast_or_obj(this.tree[0]),
+        msg === undefined ? msg : ast_or_obj(msg))
 }
 
 $AssertCtx.prototype.toString = function(){
@@ -1664,6 +1694,19 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
 
     this.module = scope.module
 
+}
+
+$AugmentedAssignCtx.prototype.ast = function(){
+    // AugAssign(expr target, operator op, expr value)
+    var target = ast_or_obj(this.tree[0]),
+        value = ast_or_obj(this.tree[1])
+    target.ctx = ast.Store
+    value.ctx = ast.Load
+    var op = this.op.substr(0, this.op.length -1),
+        ast_type_class = op2ast_class[op],
+        ast_class = ast_type_class[1]
+
+    return new ast.AugAssign(target, ast_class, value)
 }
 
 $AugmentedAssignCtx.prototype.toString = function(){
@@ -2624,6 +2667,8 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
 }
 
 $ClassCtx.prototype.ast = function(){
+    // ClassDef(identifier name, expr* bases, keyword* keywords,
+    //         stmt* body, expr* decorator_list)
     var decorators = get_decorators(this.parent.node),
         bases = [],
         keywords = []
@@ -2637,11 +2682,8 @@ $ClassCtx.prototype.ast = function(){
             }
         }
     }
-    var res = new ast.ClassDef(this.name, bases, keywords, [], decorators)
-    for(var child of this.parent.node.children){
-        res.body.push(ast_or_obj(child.context.tree[0]))
-    }
-    return res
+    return new ast.ClassDef(this.name, bases, keywords,
+                            ast_body(this.parent), decorators)
 }
 
 $ClassCtx.prototype.toString = function(){
@@ -2973,18 +3015,14 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
 }
 
 $ConditionCtx.prototype.ast = function(){
+    // While(expr test, stmt* body, stmt* orelse) |
+    // If(expr test, stmt* body, stmt* orelse)
     var types = {'if': 'If', 'while': 'While', 'elif': 'If'}
-    var res = {
-        type: types[this.token],
-        test: ast_or_obj(this.tree[0])
-    }
+    var res = new ast[types[this.token]](ast_or_obj(this.tree[0]))
     if(this.orelse){
         res.orelse = ast_or_obj(this.orelse)
     }
-    res.body = []
-    for(var node of this.node.children){
-        res.body.push(ast_or_obj(node.context.tree[0]))
-    }
+    res.body = ast_body(this)
     return res
 }
 
@@ -3061,6 +3099,10 @@ var $ContinueCtx = $B.parser.$ContinueCtx = function(context){
 
     // set information related to the associated loop
     set_loop_context.apply(this, [context, 'continue'])
+}
+
+$ContinueCtx.prototype.ast = function(){
+    return new ast.Continue()
 }
 
 $ContinueCtx.prototype.toString = function(){
@@ -3383,9 +3425,7 @@ $DefCtx.prototype.ast = function(){
     if(this.annotation){
         res.returns = ast_or_obj(this.annotation.tree[0])
     }
-    for(var child of this.parent.node.children){
-        res.body.push(ast_or_obj(child.context.tree[0]))
-    }
+    res.body = ast_body(this.parent)
     return res
 }
 
@@ -5198,10 +5238,7 @@ $ForExpr.prototype.ast = function(){
         iter = ast_or_obj(this.tree[1]),
         orelse = this.orelse ? ast_or_obj(this.orelse) : undefined,
         type_comment,
-        body = []
-    for(var child of this.parent.node.children){
-        body.push(ast_or_obj(child.context.tree[0]))
-    }
+        body = ast_body(this.parent)
     return new ast.For(target, iter, body, orelse, type_comment)
 }
 
@@ -6200,6 +6237,11 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     }
     this.module.binding = this.module.binding || {}
     this.$pos = $pos
+}
+
+$GlobalCtx.prototype.ast = function(){
+    // Global(identifier* names)
+    return new ast.Global(this.tree.map(item => item.value))
 }
 
 $GlobalCtx.prototype.toString = function(){
@@ -8486,25 +8528,12 @@ var $OpCtx = $B.parser.$OpCtx = function(context, op){
 }
 
 $OpCtx.prototype.ast = function(){
-    var op = binary_ops[this.op]
-    if(op){
-        return new ast.BinOp(
-            ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
-    }
-    op = boolean_ops[this.op]
-    if(op){
-        return new ast.BoolOp(
-            ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
-    }
-    op = comparison_ops[this.op]
-    if(op){
-        return new ast.BoolOp(
-            ast_or_obj(this.tree[0]), ast[op], ast_or_obj(this.tree[1]))
-    }
-    op = unary_ops[this.op]
-    if(op){
-        return new ast.UnaryOp(this.tree[0].op, ast_or_obj(this.tree[1]))
-    }
+    var ast_type_class = op2ast_class[this.op],
+        op_type = ast_type_class[0],
+        ast_class = ast_type_class[1]
+
+    return new op_type(
+        ast_or_obj(this.tree[0]), ast_class, ast_or_obj(this.tree[1]))
 }
 
 $OpCtx.prototype.toString = function(){
@@ -10139,11 +10168,7 @@ var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
 }
 
 $SingleKwCtx.prototype.ast = function(){
-    var body = []
-    for(var child of this.parent.node.children){
-        body.push(ast_or_obj(child.context.tree[0]))
-    }
-    return body
+    return ast_body(this.parent)
 }
 
 $SingleKwCtx.prototype.toString = function(){
@@ -10624,14 +10649,11 @@ $TryCtx.prototype.ast = function(){
     // Try(stmt* body, excepthandler* handlers, stmt* orelse, stmt* finalbody)
     var node = this.parent.node,
         res = {
-            body: [],
+            body: ast_body(this.parent),
             handlers: [],
             orelse: [],
             finalbody: []
         }
-    for(var child of node.children){
-        res.body.push(ast_or_obj(child.context.tree[0]))
-    }
     var rank = node.parent.children.indexOf(node)
     for(var child of node.parent.children.slice(rank + 1)){
         var t = child.context.tree[0],
@@ -10809,8 +10831,6 @@ var $UnaryCtx = $B.parser.$UnaryCtx = function(context, op){
 }
 
 $UnaryCtx.prototype.ast = function(){
-    console.log('unary ast', this)
-    alert()
     var op = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}[this.op]
     return new ast.UnaryOp(new op(), ast_or_obj(this.tree[0]))
 }
