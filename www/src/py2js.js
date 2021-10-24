@@ -12985,14 +12985,12 @@ $B.parse_options = function(options){
     }
 }
 
-
 var brython = $B.parser.brython = function(options){
     $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         _run_scripts(options)
     }
 }
-
 
 $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in

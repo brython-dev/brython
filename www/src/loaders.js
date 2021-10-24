@@ -270,10 +270,15 @@ $B.idb_open = function(obj){
 
 $B.ajax_load_script = function(script){
     var url = script.url,
-        name = script.name
-    if($B.files && $B.files.hasOwnProperty(name)){
-        $B.tasks.splice(0, 0, [$B.run_script, $B.files[name],
+        name = script.name,
+        rel_path = url.substr($B.script_dir.length + 1)
+
+    if($B.files && $B.files.hasOwnProperty(rel_path)){
+        // File is present in Virtual File System
+        $B.tasks.splice(0, 0, [$B.run_script, 
+            atob($B.files[rel_path].content),
             name, url, true])
+        loop()
     }else if($B.protocol != "file"){
         var req = new XMLHttpRequest(),
             qs = $B.$options.cache ? '' :
