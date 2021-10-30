@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-30 09:32:39.680381"
-__BRYTHON__.timestamp=1635579159680
+__BRYTHON__.compiled_date="2021-10-30 10:14:11.321652"
+__BRYTHON__.timestamp=1635581651321
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -368,8 +368,7 @@ yield Token('DEDENT','',[line_num,0],[line_num,0],'')}
 yield Token('ENDMARKER','',[line_num,0],[line_num,0],'')}})(__BRYTHON__)
 ;
 
-;(function($B){var test_listcomp=1,test_dict_comp=1
-Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
+;(function($B){Number.isInteger=Number.isInteger ||function(value){return typeof value==='number' &&
 isFinite(value)&&
 Math.floor(value)===value};
 Number.isSafeInteger=Number.isSafeInteger ||function(value){return Number.isInteger(value)&& Math.abs(value)<=Number.MAX_SAFE_INTEGER;};
@@ -463,8 +462,7 @@ function report(wrong_type){if(augmented){$_SyntaxError(C,[`'${wrong_type}' is a
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'assign to '+ctx.type)}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
 if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('operator')}}else if(assigned.type=='call'){report('function call')}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
-if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='list_or_tuple' &&
-assigned.real=='gen_expr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.comprehension){break}
+if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='gen_expr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.comprehension){break}
 if(once){break}
 ctx=ctx.parent}}
 var $Node=$B.parser.$Node=function(type){this.type=type
@@ -1419,18 +1417,7 @@ if(C.expect==','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
 break
 case 'for':
 if(this.parent.tree.length > 1){$_SyntaxError(C,"non-parenthesized generator expression")}
-if(test_listcomp){return new $TargetListCtx(new $ForExpr(
-new GeneratorExpCtx(C)))}
-var lst=new $ListOrTupleCtx(C,'gen_expr')
-lst.vars=C.vars 
-lst.locals=C.locals
-lst.intervals=[C.start]
-C.tree.pop()
-lst.expression=C.tree
-C.tree=[lst]
-lst.tree=[]
-var comp=new $ComprehensionCtx(lst)
-return new $TargetListCtx(new $CompForCtx(comp))
+return new $TargetListCtx(new $ForExpr(new GeneratorExpCtx(C)))
 case 'op':
 if(C.expect=='id'){var op=value
 C.expect=','
@@ -1448,9 +1435,6 @@ if(C.parent.kwargs &&
 $B.last(C.parent.tree).tree[0]&& 
 ['kwarg','star_arg','double_star_arg'].
 indexOf($B.last(C.parent.tree).tree[0].type)==-1){$_SyntaxError(C,['non-keyword argument after keyword argument'])}
-if(C.tree.length > 0){var son=C.tree[C.tree.length-1]
-if(son.type=='list_or_tuple' &&
-son.real=='gen_expr'){son.intervals.push($pos)}}
 return $transition(C.parent,token)
 case ':':
 if(C.expect==',' &&
@@ -1783,59 +1767,6 @@ node.parent.insert(rank+2,$NodeJS("_b_.None;"))
 this.transformed=true}
 $ClassCtx.prototype.to_js=function(){this.js_processed=true
 return 'var $'+this.name+'_'+this.random+' = (function()'}
-var $CompIfCtx=$B.parser.$CompIfCtx=function(C){
-this.type='comp_if'
-C.parent.intervals.push($pos)
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this}
-$CompIfCtx.prototype.toString=function(){return '(comp if) '+this.tree}
-$CompIfCtx.prototype.transition=function(token,value){var C=this
-return $transition(C.parent,token,value)}
-$CompIfCtx.prototype.to_js=function(){this.js_processed=true
-return $to_js(this.tree)}
-var $ComprehensionCtx=$B.parser.$ComprehensionCtx=function(C){
-this.type='comprehension'
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this}
-$ComprehensionCtx.prototype.toString=function(){return '(comprehension) '+this.tree}
-$ComprehensionCtx.prototype.transition=function(token,value){var C=this
-switch(token){case 'if':
-return new $AbstractExprCtx(new $CompIfCtx(C),false)
-case 'for':
-return new $TargetListCtx(new $CompForCtx(C))}
-return $transition(C.parent,token,value)}
-$ComprehensionCtx.prototype.to_js=function(){this.js_processed=true
-var intervals=[]
-for(var elt of this.tree){intervals.push(elt.start)}
-return intervals}
-var $CompForCtx=$B.parser.$CompForCtx=function(C){
-this.type='comp_for'
-C.parent.intervals.push($pos)
-this.parent=C
-this.tree=[]
-this.expect='in'
-C.tree[C.tree.length]=this}
-$CompForCtx.prototype.toString=function(){return '(comp for) '+this.tree}
-$CompForCtx.prototype.transition=function(token,value){var C=this
-if(token=='in' && C.expect=='in'){C.expect=null
-return new $AbstractExprCtx(new $CompIterableCtx(C),true)}
-if(C.expect===null){
-return $transition(C.parent,token,value)}
-$_SyntaxError(C,'token '+token+' after '+C)}
-$CompForCtx.prototype.to_js=function(){this.js_processed=true
-return $to_js(this.tree)}
-var $CompIterableCtx=$B.parser.$CompIterableCtx=function(C){
-this.type='comp_iterable'
-this.parent=C
-this.tree=[]
-C.tree[C.tree.length]=this}
-$CompIterableCtx.prototype.toString=function(){return '(comp iter) '+this.tree}
-$CompIterableCtx.prototype.transition=function(token,value){var C=this
-return $transition(C.parent,token,value)}
-$CompIterableCtx.prototype.to_js=function(){this.js_processed=true
-return $to_js(this.tree)}
 var $ConditionCtx=$B.parser.$ConditionCtx=function(C,token){
 this.type='condition'
 this.token=token
@@ -2413,8 +2344,6 @@ switch(C.real){case 'dict_or_set':
 if(C.tree.length !=1){break}
 C.real='set' 
 case 'set':
-case 'set_comp':
-case 'dict_comp':
 C.items=C.tree
 C.tree=[]
 C.closed=true
@@ -2443,22 +2372,9 @@ case 'for':
 if(C.real=="set" && C.tree.length > 1){C.$pos=C.tree[0].$pos
 $_SyntaxError(C,["did you forget "+
 "parentheses around the comprehension target?"])}
-if(C.real=='dict_or_set'){C.real='set_comp'
-if(test_dict_comp){return new $TargetListCtx(new $ForExpr(
-new SetCompCtx(this)))}}else{C.real='dict_comp'
-if(test_dict_comp){return new $TargetListCtx(new $ForExpr(
+if(C.real=='dict_or_set'){return new $TargetListCtx(new $ForExpr(
+new SetCompCtx(this)))}else{return new $TargetListCtx(new $ForExpr(
 new DictCompCtx(this)))}}
-var lst=new $ListOrTupleCtx(C,'dict_or_set_comp')
-lst.intervals=[C.start+1]
-lst.vars=C.vars
-C.tree.pop()
-lst.expression=C.tree
-if(C.yields){lst.expression.yields=C.yields
-delete C.yields}
-C.tree=[lst]
-lst.tree=[]
-var comp=new $ComprehensionCtx(lst)
-return new $TargetListCtx(new $CompForCtx(comp))}
 $_SyntaxError(C,'token '+token+' after '+C)}else if(C.expect=='id'){switch(token){case '}':
 if(C.tree.length==0){
 C.items=[]
@@ -2533,23 +2449,14 @@ if(i > 0){res=".concat("+res+")"}
 js+=res})
 return js}
 $DictOrSetCtx.prototype.to_js=function(){this.js_processed=true
-switch(this.real){case 'dict':
 var packed=this.packed_indices()
-if(packed.length > 0){return '_b_.dict.$factory('+this.unpack_dict(packed)+
+if(this.real=='dict'){if(packed.length > 0){return '_b_.dict.$factory('+this.unpack_dict(packed)+
 ')'+$to_js(this.tree)}
 var res=[]
 for(var i=0;i < this.items.length;i+=2){res.push('['+this.items[i].to_js()+','+
 this.items[i+1].to_js()+']')}
 return '_b_.dict.$factory(['+res.join(',')+'])'+
-$to_js(this.tree)
-case 'set_comp':
-return '_b_.set.$factory('+$to_js(this.items)+')'+
-$to_js(this.tree)
-case 'dict_comp':
-return '_b_.dict.$factory('+$to_js(this.items)+')'+
-$to_js(this.tree)}
-var packed=this.packed_indices()
-if(packed.length > 0){return '_b_.set.$factory('+this.unpack_set(packed)+')'}
+$to_js(this.tree)}else if(packed.length > 0){return '_b_.set.$factory('+this.unpack_set(packed)+')'}
 return '_b_.set.$factory(['+$to_js(this.items)+'])'+$to_js(this.tree)}
 var $DoubleStarArgCtx=$B.parser.$DoubleStarArgCtx=function(C){
 this.type='double_star_arg'
@@ -2984,192 +2891,6 @@ var if_ctx=new $ConditionCtx(this.parent,'if')
 if_ctx.in_comp=true
 return new $AbstractExprCtx(if_ctx,false)}}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$ForExpr.prototype.transform=function(node,rank){
-if(test_listcomp){return}
-var pnode=this.parent.node.parent
-while(pnode){if(pnode.is_comp){var module=$get_module(this)
-if(module.outermost_expr===undefined){pnode.outermost_expr=this.tree[1]
-module.outermost_expr=this.tree[1]
-this.tree.pop()
-new $RawJSCtx(this,"_expr")}
-break}
-pnode=pnode.parent}
-if(this.async){return this.transform_async(node,rank)}
-var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
-var $range=false
-if(target.tree.length==1 &&
-! scope.blurred &&
-target.expct !='id' &&
-iterable.type=='expr' &&
-iterable.tree[0].type=='expr' &&
-iterable.tree[0].tree[0].type=='call'){var call=iterable.tree[0].tree[0]
-if(call.func.type=='id'){var func_name=call.func.value
-if(func_name=='range' && call.tree.length < 3 &&
-call.tree.length > 0){
-$range=call}}}
-var new_nodes=[],pos=0
-var children=node.children
-var offset=1
-if($range){if(this.has_break){
-new_node=new $Node()
-new $NodeJSCtx(new_node,local_ns+'["$no_break'+num+'"] = true')
-new_nodes[pos++]=new_node}
-var range_is_builtin=false,_scope=$get_scope(this),found=[]
-while(1){if(_scope.binding["range"]){found.push(_scope.id)}
-if(_scope.parent_block){_scope=_scope.parent_block}
-else{break}}
-range_is_builtin=found.length==1 &&
-found[0]=="__builtins__"
-var test_range_node=new $Node()
-test_range_node.module=node.parent.module
-if(range_is_builtin){new $NodeJSCtx(test_range_node,'if(1)')}else{new $NodeJSCtx(test_range_node,'if('+call.func.to_js()+' === _b_.range)')}
-new_nodes[pos++]=test_range_node
-var idt=target.to_js(),shortcut=false
-if($range.tree.length==1){var stop=$range.tree[0].tree[0]
-if(stop.tree[0].type=="int"){stop=parseInt(stop.to_js())
-if(0 < stop < $B.max_int){shortcut=true
-var varname="$i"+$B.UUID()
-var for_node=$NodeJS("for (var "+varname+" = 0; "+
-varname+" < "+stop+"; "+varname+"++)")
-var assign_node=make_assign(target,varname,node.parent.module)
-for_node.add(assign_node)}}
-var start=0,stop=$range.tree[0].to_js()}else{var start=$range.tree[0].to_js(),stop=$range.tree[1].to_js()}
-if(!shortcut){var js='var $stop_'+num+' = $B.int_or_bool('+stop+'),'+
-h+'        $next'+num+" = "+start+','+
-h+'        $safe'+num+' = typeof $next'+num+
-' == "number" && typeof '+'$stop_'+num+' == "number";'+
-h+'    while(true)'
-var for_node=new $Node()
-new $NodeJSCtx(for_node,js)
-for_node.add($NodeJS('if($safe'+num+' && $next'+num+
-'>= $stop_'+num+'){break}'))
-for_node.add($NodeJS('else if(!$safe'+num+' && $B.ge($next'+
-num+', $stop_'+num+')){break}'))
-var assign_node=make_assign(target,'$next'+num,node.parent.module)
-for_node.add(assign_node)
-for_node.add($NodeJS('if($safe'+num+'){$next'+num+
-' += 1}'))
-for_node.add($NodeJS('else{$next'+num+' = $B.add($next'+
-num+',1)}'))}
-for(var child of children){for_node.add(child.clone_tree())}
-if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
-','+this.module+'";if($locals.$f_trace !== _b_.None){'+
-'$B.trace_line()};_b_.None;'
-for_node.add($NodeJS(js))}
-var in_loop=false
-if(scope.ntype=='module'){var pnode=node.parent
-while(pnode){if(pnode.for_wrapper){in_loop=true;break}
-pnode=pnode.parent}}
-if(scope.ntype=='module' && !in_loop){var func_node=new $Node()
-func_node.for_wrapper=true
-js='function $f'+num+'('
-if(this.has_break){js+='$no_break'+num}
-js+=')'
-new $NodeJSCtx(func_node,js)
-test_range_node.add(func_node)
-func_node.add(for_node)
-if(this.has_break){func_node.add($NodeJS('return $no_break'+num))}
-test_range_node.add($NodeJS('var $res'+num+' = $f'+num+
-'();'))
-if(this.has_break){test_range_node.add($NodeJS('var $no_break'+num+
-' = $res'+num))}}else{
-test_range_node.add(for_node)}
-if(range_is_builtin){node.parent.children.splice(rank,1)
-var k=0
-if(this.has_break){node.parent.insert(rank,new_nodes[0])
-k++}
-for(var child of new_nodes[k].children){node.parent.insert(rank+k,child)}
-node.parent.children[rank].line_num=node.line_num
-node.parent.children[rank].bindings=node.bindings
-node.children=[]
-return 0}
-var else_node=$NodeJS("else")
-new_nodes[pos++]=else_node
-for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank+1,new_nodes[i])}
-this.test_range=true
-new_nodes=[],pos=0}
-var new_node=new $Node()
-new_node.line_num=$get_node(this).line_num
-var it_js=iterable.to_js(),iterable_name='$iter'+num,js='var '+iterable_name+' = '+it_js+';'+
-'$locals["$next'+num+'"]'+' = $B.$getattr($B.$iter('+
-iterable_name+'),"__next__")'
-if(it_js=='expr'){console.log('it js is expr, iterable',iterable)}
-new $NodeJSCtx(new_node,js)
-new_nodes[pos++]=new_node
-if(this.has_break){
-new_nodes[pos++]=$NodeJS(local_ns+'["$no_break'+num+
-'"] = true;')}
-var while_node=new $Node()
-if(this.has_break){js='while('+local_ns+'["$no_break'+num+'"])'}else{js='while(true)'}
-new $NodeJSCtx(while_node,js)
-while_node.C.loop_num=num 
-while_node.C.type='for' 
-new_nodes[pos++]=while_node
-node.parent.children.splice(rank,1)
-if(this.test_range){for(var i=new_nodes.length-1;i >=0;i--){else_node.insert(0,new_nodes[i])}}else{for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])
-offset+=new_nodes.length}}
-var try_node=$NodeJS("try")
-try_node.bindings=node.bindings
-while_node.add(try_node)
-var iter_node=new $Node()
-iter_node.id=this.module
-var C=new $NodeCtx(iter_node)
-var target_expr=new $ExprCtx(C,'left',true)
-if(target_is_1_tuple){
-var t=new $ListOrTupleCtx(target_expr)
-t.real='tuple'
-t.tree=target.tree}else{target_expr.tree=target.tree}
-var assign=new $AssignCtx(target_expr)
-assign.tree[1]=new $JSCode('$locals["$next'+num+'"]()')
-try_node.add(iter_node)
-while_node.add(
-$NodeJS('catch($err){if($B.is_exc($err, [_b_.StopIteration]))'+
-'{break;}else{throw($err)}}'))
-for(var child of children){
-while_node.add(child.clone())}
-if(node.children.length==0){console.log("bizarre",this)}
-if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
-','+this.module+'";if($locals.$f_trace !== _b_.None){'+
-'$B.trace_line()};_b_.None;'
-while_node.add($NodeJS(js))}
-node.children=[]
-return 0}
-$ForExpr.prototype.transform_async=function(node,rank){
-var scope=$get_scope(this),target=this.tree[0],target_is_1_tuple=target.tree.length==1 && target.expect=='id',iterable=this.tree[1],num=this.loop_num,local_ns='$locals_'+scope.id.replace(/\./g,'_'),h='\n'+' '.repeat(node.indent+4)
-var new_nodes=[]
-var it_js=iterable.to_js(),iterable_name='$iter'+num,type_name='$type'+num,running_name='$running'+num,anext_name='$anext'+num,target_name='$target'+num,js='var '+iterable_name+' = '+it_js
-new_nodes.push($NodeJS(js))
-new_nodes.push($NodeJS('var '+type_name+' = _b_.type.$factory( '+
-iterable_name+')'))
-js=iterable_name+' = $B.$call($B.$getattr('+type_name+
-', "__aiter__"))('+iterable_name+')'
-new_nodes.push($NodeJS(js))
-new_nodes.push($NodeJS('var '+running_name+' = true'))
-new_nodes.push($NodeJS('var '+anext_name+
-' = $B.$call($B.$getattr('+type_name+', "__anext__"))'))
-var while_node=$NodeJS('while('+running_name+')')
-new_nodes.push(while_node)
-var try_node=$NodeJS('try')
-while_node.add(try_node)
-if(target.tree.length==1){var js=target.to_js()+' = await ($B.promise('+
-anext_name+'('+iterable_name+')))'
-try_node.add($NodeJS(js))}else{var new_node=new $Node(),ctx=new $NodeCtx(new_node),expr=new $ExprCtx(ctx,"left",false)
-expr.tree.push(target)
-target.parent=expr
-var assign=new $AssignCtx(expr)
-new $RawJSCtx(assign,'await ($B.promise('+
-anext_name+'('+iterable_name+')))')
-try_node.add(new_node)}
-var catch_node=$NodeJS('catch(err)')
-while_node.add(catch_node)
-var js='if(err.__class__ === _b_.StopAsyncIteration)'+
-'{'+running_name+' = false; continue}else{throw err}'
-catch_node.add($NodeJS(js))
-for(var child of node.children){while_node.add(child)}
-node.parent.children.splice(rank,1)
-for(var i=new_nodes.length-1;i >=0;i--){node.parent.insert(rank,new_nodes[i])}
-node.children=[]
-return 0}
 function tg_to_js(target,iterable,unpack){
 if(target.type=='simple'){var item=target.item
 var assign,assign_to=unpack
@@ -3213,7 +2934,7 @@ res.starred=true}else if(target.tree[0].type=='packed'){res=make_target(target.t
 res.starred=true}}
 return res}
 $ForExpr.prototype.to_js=function(indent){this.js_processed=true
-if(test_listcomp){var node=$get_node(this),indent=indent ||node.get_indent(),targets=this.tree[0].tree,iterable=this.tree[1],id=$B.UUID()
+var node=$get_node(this),indent=indent ||node.get_indent(),targets=this.tree[0].tree,iterable=this.tree[1],id=$B.UUID()
 if(node.module===undefined){var module_id=$get_module(this).module}else{var module_id=node.module}
 module_id=module_id.replace(/\./g,'_')
 var target=make_target(this.tree[0])
@@ -3240,16 +2961,14 @@ if(this.async){iteration+=`var $iter_${id} = ${it}\n`+
 `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
 `  }\n`}
 var body=''
-if(! this.comp_body){for(var child of node.children){body+='\n'+child.to_js()}
+if(! this.comp_body){
+for(var child of node.children){body+='\n'+child.to_js()}
 body+=`;$locals.$line_info = "${node.line_num},${module_id}";`+
 'if($locals.$f_trace !== _b_.None){$B.trace_line()};_b_.None;'
 body+='\n}\n'
 node.children=[]}
-var res=(iteration+assignment+body).split('\n').
-map(x=> '    '.repeat(indent)+x).join('\n')
-return res}
-var iterable=this.tree.pop()
-return 'for ('+$to_js(this.tree)+' in '+iterable.to_js()+')'}
+return(iteration+assignment+body).split('\n').
+map(x=> '    '.repeat(indent)+x).join('\n')}
 var $FromCtx=$B.parser.$FromCtx=function(C){
 this.type='from'
 this.parent=C
@@ -3634,7 +3353,7 @@ this.no_bindings=true
 this.bound=true}
 if(["def","generator"].indexOf(scope.ntype)>-1){
 var _ctx=this.parent
-while(_ctx){if(_ctx.type=='list_or_tuple' && _ctx.is_comp()){this.in_comp=true
+while(_ctx){if(_ctx.comprehension){this.in_comp=true
 break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
@@ -4122,10 +3841,6 @@ if(this.real=='list'){return new ast.List(elts,ast.Load)}else if(this.real=='tup
 return this}}
 $ListOrTupleCtx.prototype.toString=function(){switch(this.real){case 'list':
 return '(list) ['+this.tree+']'
-case 'list_comp':
-case 'gen_expr':
-return '('+this.real+') ['+this.intervals+'-'+
-this.tree+']'
 default:
 return '(tuple) ('+this.tree+')'}}
 $ListOrTupleCtx.prototype.transition=function(token,value){var C=this
@@ -4133,7 +3848,6 @@ if(C.closed){if(token=='['){return new $AbstractExprCtx(
 new $SubCtx(C.parent),false)}
 if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
-case 'gen_expr':
 if(token==')'){var close=true
 while(C.type=="list_or_tuple" &&
 C.real=="tuple" &&
@@ -4147,10 +3861,6 @@ expr.$in_parens=true
 node.tree.splice(ix,1,expr)
 C=expr.tree[0]}
 if(close){C.close()}
-if(C.real=='gen_expr'){
-if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
-$_SyntaxError(C,["'yield' inside generator expression"])}}
-C.intervals.push($pos)}
 if(C.parent.type=="packed"){return C.parent.parent}
 if(C.parent.type=="abstract_expr" &&
 C.parent.assign){
@@ -4163,24 +3873,9 @@ return expr}
 return C.parent}
 break
 case 'list':
-case 'list_comp':
 if(token==']'){C.close()
-if(C.real=='list_comp'){
-if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
-$_SyntaxError(C,["'yield' inside list comprehension"])}}
-C.intervals.push($pos)}
 if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
 return C.parent}
-break
-case 'dict_or_set_comp':
-if(token=='}'){
-if(C.expression.yields){for(const _yield of C.expression.yields){$pos=_yield[1]
-var comp_type=C.parent.real=="set_comp" ?
-"set" :"dict"
-$_SyntaxError(C,[`'yield' inside ${comp_type} comprehension`])}}
-C.intervals.push($pos)
-C.src=$get_module(C).src
-return $transition(C.parent,token)}
 break}
 switch(token){case ',':
 if(C.real=='tuple'){C.has_comma=true}
@@ -4190,27 +3885,14 @@ case 'for':
 if(C.real=='list'){if(this.tree.length > 1){
 $_SyntaxError(C,["did you forget "+
 "parentheses around the comprehension target?"])}
-C.real='list_comp'
-if(test_listcomp){return new $TargetListCtx(new $ForExpr(
-new ListCompCtx(C)))}}
-else{C.real='gen_expr'
-if(test_listcomp){return new $TargetListCtx(new $ForExpr(
+return new $TargetListCtx(new $ForExpr(
+new ListCompCtx(C)))}
+else{return new $TargetListCtx(new $ForExpr(
 new GeneratorExpCtx(C)))}}
-C.intervals=[C.start+1]
-C.expression=C.tree
-if(C.yields){C.expression.yields=C.yields
-delete C.yields}
-C.tree=[]
-var comp=new $ComprehensionCtx(C)
-return new $TargetListCtx(new $CompForCtx(comp))}
 return $transition(C.parent,token,value)}else if(C.expect=='id'){switch(C.real){case 'tuple':
 if(token==')'){C.close()
 return C.parent}
 if(token=='eol' && C.implicit===true){C.close()
-return $transition(C.parent,token)}
-break
-case 'gen_expr':
-if(token==')'){C.close()
 return $transition(C.parent,token)}
 break
 case 'list':
@@ -4249,11 +3931,6 @@ elt.tree[0].real=="tuple" &&
 elt.tree[0].tree.length==1 &&
 elt.tree[0].expect==","){this.tree[i]=elt.tree[0].tree[0]
 this.tree[i].parent=this}}}
-$ListOrTupleCtx.prototype.is_comp=function(){switch(this.real){case 'list_comp':
-case 'gen_expr':
-case 'dict_or_set_comp':
-return true}
-return false}
 $ListOrTupleCtx.prototype.get_src=function(){
 var src=$get_module(this).src
 var scope=$get_scope(this)
@@ -4289,58 +3966,6 @@ switch(this.real){case 'list':
 var packed=this.packed_indices()
 if(packed.length > 0){return '$B.$list('+this.unpack(packed)+')'}
 return '$B.$list(['+$to_js(this.tree)+'])'
-case 'list_comp':
-case 'gen_expr':
-case 'dict_or_set_comp':
-if(this.src===undefined){console.log('no src',this)
-console.log($B.frames_stack.slice())}
-var src=this.src
-var res1=[],items=[]
-var qesc=new RegExp('"',"g")
-var comments=root.comments,in_joined_str=$parent_match(this,{type:'JoinedStr'})
-for(var i=1;i < this.intervals.length;i++){var start=this.intervals[i-1],end=this.intervals[i],txt=src.substring(start,end)
-if(! in_joined_str){for(var j=comments.length-1;j >=0;j--){var comment=comments[j]
-if(comment[0]> start && comment[0]< end){
-var pos=comment[0]-start
-txt=txt.substr(0,pos)+
-' '.repeat(comment[1])+
-txt.substr(pos+comment[1]+1)}}}
-txt=txt.replace(/\\\n/g," ")
-items.push(txt)
-var lines=txt.split('\n')
-var res2=[]
-for(var txt of lines){
-if(txt.replace(/ /g,'').length !=0){txt=txt.replace(/\n/g,' ')
-txt=txt.replace(/\\/g,'\\\\')
-txt=txt.replace(qesc,'\\"')
-res2.push('"'+txt+'"')}}
-res1.push('['+res2.join(',')+']')}
-var line_num=$get_node(this).line_num
-switch(this.real){case 'list_comp':
-var lc=$B.$list_comp(items),
-py=lc[0],ix=lc[1],listcomp_name='comp_result_'+$B.lambda_magic+ix,save_pos=$pos,line_info=line_num+','+module_name
-var root=$B.py2js(
-{src:py,is_comp:'listcomp',line_info:line_info},module_name,listcomp_name,scope,1)
-var has_yield=root.yields_func_check !==undefined
-var outermost_expr=root.outermost_expr
-if($get_node(this).has_yield){outermost_expr=this.tree[0].tree[0].tree[1]}
-if(outermost_expr===undefined){outermost_expr=root.first_for.tree[1]}
-var outer_most=outermost_expr.to_js()
-$pos=save_pos
-var js=root.to_js()
-root=null
-$B.clear_ns(listcomp_name)
-delete $B.$py_src[listcomp_name]
-js+='return '+listcomp_name
-js="function"+(has_yield ? "*" :"")+
-`(_expr){${js}})(${outer_most})`
-if(this.is_await){js='async '+js}
-return '('+js
-case 'dict_or_set_comp':
-if(this.expression.length==1){return $B.$gen_expr(module_name,scope,items,line_num,true)}
-return $B.$dict_comp(module_name,scope,items,line_num)}
-console.log(8339,this)
-return $B.$gen_expr(module_name,scope,items,line_num)
 case 'tuple':
 var packed=this.packed_indices()
 if(packed.length > 0){return '$B.fast_tuple('+this.unpack(packed)+')'}
@@ -7602,46 +7227,23 @@ var res=obj.ix
 obj.ix+=iterator.step
 return res}}}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
-$B.$list_comp=function(items){
-var ix=$B.UUID(),res="comp_result_"+$B.lambda_magic+ix,py=res+" = []\n",indent=0
-for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
-py+=" ".repeat(indent)+item+":\n"
-indent+=4}
-py+=" ".repeat(indent)
-py+=res+".append("+items[0]+")\n"
-return[py,ix]}
-$B.$dict_comp=function(module_name,parent_scope,items,line_num){
-var ix=$B.UUID(),res="comp_result_"+$B.lambda_magic+ix,py=res+" = {}\n",
-indent=0
-for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
-py+="    ".repeat(indent)+item+":\n"
-indent++}
-py+="    ".repeat(indent)+res+".update({"+items[0]+"})"
-var line_info=line_num+','+module_name
-var dictcomp_name="dc"+ix,root=$B.py2js(
-{src:py,is_comp:'dictcomp',line_info},module_name,dictcomp_name,parent_scope,line_num),outer_expr=root.outermost_expr.to_js(),js=root.to_js()
-js+='\nreturn '+res+'\n'
-js="(function(_expr){"+js+"})("+outer_expr+")"
-$B.clear_ns(dictcomp_name)
-delete $B.$py_src[dictcomp_name]
-return js}
-$B.$gen_expr=function(module_name,parent_scope,items,line_num,set_comp){
-var ix=$B.UUID(),genexpr_name=(set_comp ? "set_comp"+$B.lambda_magic :"__ge")+ix,py=`def ${genexpr_name}(expr):\n`,
-indent=1
-for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")
-py+=" ".repeat(indent)+item+":\n"
-indent+=4}
-py+=" ".repeat(indent)
-py+="yield ("+items[0]+")"
-var line_info=line_num+','+module_name
-var root=$B.py2js({src:py,is_comp:set_comp ? 'setcomp' :'genexpr',line_info,ix},genexpr_name,genexpr_name,parent_scope,line_num),js=root.to_js(),lines=js.split("\n")
-if(root.outermost_expr===undefined){console.log("no outermost",module_name,parent_scope)}
-var outer_expr=root.outermost_expr.to_js()
-js=lines.join("\n")
-js+="\nvar $res = $B.generator.$factory("+genexpr_name+
-')('+outer_expr+');\nreturn $res\n'
-js="(function($locals_"+genexpr_name+"){"+js+"})($locals)\n"
-return js}
+$B.unpacker=function(obj,nb_targets,has_starred,target){
+var t=_b_.list.$factory(obj),len=t.length,min_len=has_starred ? len-1 :len
+if(len < min_len){throw _b_.ValueError.$factory(
+`not enough values to unpack (expected ${min_length}, got ${len})`)}
+if((! has_starred)&& len > nb_targets){console.log('iterable',obj,'t',t,'nb_targets',nb_targets)
+throw _b_.ValueError.$factory(
+`too many values to unpack (expected ${nb_targets})`)}
+t.index=-1
+t.read_one=function(){t.index++
+return t[t.index]}
+t.read_rest=function(){t.index++
+return t.slice(t.index)}
+return t}
+$B.rest_iter=function(next_func){
+var res=[]
+while(true){try{res.push(next_func())}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return $B.fast_tuple(res)}
+throw err}}}
 $B.copy_namespace=function(){var ns={}
 for(const frame of $B.frames_stack){for(const kv of[frame[1],frame[3]]){for(var key in kv){if(! key.startsWith('$')){ns[key]=kv[key]}}}}
 return ns}
@@ -7867,21 +7469,6 @@ var it=_b_.iter(last)
 while(true){try{res.push(_b_.next(it))}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
 throw err}}
 return res}
-$B.unpacker=function(obj,nb_targets,has_starred,target){var t=_b_.list.$factory(obj),len=t.length,min_len=has_starred ? len-1 :len
-if(len < min_len){throw _b_.ValueError.$factory(
-`not enough values to unpack (expected ${min_length}, got ${len})`)}
-if((! has_starred)&& len > nb_targets){console.log('iterable',obj,'t',t,'nb_targets',nb_targets)
-throw _b_.ValueError.$factory(
-`too many values to unpack (expected ${nb_targets})`)}
-t.index=-1
-t.read_one=function(){t.index++
-return t[t.index]}
-t.read_rest=function(){t.index++
-return t.slice(t.index)}
-return t}
-$B.rest_iter=function(next_func){var res=[]
-while(true){try{res.push(next_func())}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return $B.fast_tuple(res)}
-throw err}}}
 $B.$test_item=function(expr){
 $B.$test_result=expr
 return _b_.bool.$factory(expr)}

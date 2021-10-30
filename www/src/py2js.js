@@ -2,9 +2,6 @@
 
 ;(function($B){
 
-var test_listcomp = 1,
-    test_dict_comp = 1
-
 Number.isInteger = Number.isInteger || function(value) {
   return typeof value === 'number' &&
     isFinite(value) &&
@@ -347,8 +344,7 @@ function check_assignment(context, kwargs){
                 report('literal')
             }else if(assigned.type == "ellipsis"){
                 report('Ellipsis')
-            }else if(assigned.type == 'list_or_tuple' &&
-                    assigned.real == 'gen_expr'){
+            }else if(assigned.type == 'gen_expr'){
                 report('generator expression')
             }else if(assigned.type == 'packed'){
                 check_assignment(assigned.tree[0], {action, once: true})
@@ -2215,20 +2211,7 @@ $CallArgCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context,
                     "non-parenthesized generator expression")
             }
-            if(test_listcomp){
-                return new $TargetListCtx(new $ForExpr(
-                    new GeneratorExpCtx(context)))
-            }
-            var lst = new $ListOrTupleCtx(context, 'gen_expr')
-            lst.vars = context.vars // copy variables
-            lst.locals = context.locals
-            lst.intervals = [context.start]
-            context.tree.pop()
-            lst.expression = context.tree
-            context.tree = [lst]
-            lst.tree = []
-            var comp = new $ComprehensionCtx(lst)
-            return new $TargetListCtx(new $CompForCtx(comp))
+            return new $TargetListCtx(new $ForExpr(new GeneratorExpCtx(context)))
         case 'op':
             if(context.expect == 'id'){
                var op = value
@@ -2252,13 +2235,6 @@ $CallArgCtx.prototype.transition = function(token, value){
                         indexOf($B.last(context.parent.tree).tree[0].type) == -1){
                 $_SyntaxError(context,
                     ['non-keyword argument after keyword argument'])
-            }
-            if(context.tree.length > 0){
-                var son = context.tree[context.tree.length - 1]
-                if(son.type == 'list_or_tuple' &&
-                        son.real == 'gen_expr'){
-                    son.intervals.push($pos)
-                }
             }
             return $transition(context.parent,token)
         case ':':
@@ -2905,113 +2881,6 @@ $ClassCtx.prototype.transform = function(node, rank){
 $ClassCtx.prototype.to_js = function(){
     this.js_processed = true
     return 'var $' + this.name + '_' + this.random + ' = (function()'
-}
-
-var $CompIfCtx = $B.parser.$CompIfCtx = function(context){
-    // Class for keyword "if" inside a comprehension
-    this.type = 'comp_if'
-    context.parent.intervals.push($pos)
-    this.parent = context
-    this.tree = []
-    context.tree[context.tree.length] = this
-}
-
-$CompIfCtx.prototype.toString = function(){return '(comp if) ' + this.tree}
-
-$CompIfCtx.prototype.transition = function(token, value){
-    var context = this
-    return $transition(context.parent, token, value)
-}
-
-$CompIfCtx.prototype.to_js = function(){
-    this.js_processed = true
-    return $to_js(this.tree)
-}
-
-var $ComprehensionCtx = $B.parser.$ComprehensionCtx = function(context){
-    // Class for comprehensions
-    this.type = 'comprehension'
-    this.parent = context
-    this.tree = []
-    context.tree[context.tree.length] = this
-}
-
-$ComprehensionCtx.prototype.toString = function(){
-    return '(comprehension) ' + this.tree
-}
-
-$ComprehensionCtx.prototype.transition = function(token, value){
-    var context = this
-    switch(token) {
-        case 'if':
-            return new $AbstractExprCtx(new $CompIfCtx(context), false)
-        case 'for':
-            return new $TargetListCtx(new $CompForCtx(context))
-    }
-    return $transition(context.parent,token,value)
-}
-
-$ComprehensionCtx.prototype.to_js = function(){
-    this.js_processed = true
-    var intervals = []
-    for(var elt of this.tree){
-        intervals.push(elt.start)
-    }
-    return intervals
-}
-
-var $CompForCtx = $B.parser.$CompForCtx = function(context){
-    // Class for keyword "for" in a comprehension
-    this.type = 'comp_for'
-    context.parent.intervals.push($pos)
-    this.parent = context
-    this.tree = []
-    this.expect = 'in'
-    context.tree[context.tree.length] = this
-}
-
-$CompForCtx.prototype.toString = function(){
-    return '(comp for) ' + this.tree
-}
-
-$CompForCtx.prototype.transition = function(token, value){
-    var context = this
-    if(token == 'in' && context.expect == 'in'){
-        context.expect = null
-        return new $AbstractExprCtx(new $CompIterableCtx(context), true)
-    }
-    if(context.expect === null){
-        // ids in context.tree[0] are local to the comprehension
-        return $transition(context.parent, token, value)
-    }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
-}
-
-$CompForCtx.prototype.to_js = function(){
-    this.js_processed = true
-    return $to_js(this.tree)
-}
-
-var $CompIterableCtx = $B.parser.$CompIterableCtx = function(context){
-    // Class for keyword "in" in a comprehension
-    this.type = 'comp_iterable'
-    this.parent = context
-    this.tree = []
-    context.tree[context.tree.length] = this
-}
-
-$CompIterableCtx.prototype.toString = function(){
-    return '(comp iter) ' + this.tree
-}
-
-$CompIterableCtx.prototype.transition = function(token, value){
-    var context = this
-    return $transition(context.parent, token, value)
-}
-
-$CompIterableCtx.prototype.to_js = function(){
-    this.js_processed = true
-    return $to_js(this.tree)
 }
 
 var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
@@ -4206,7 +4075,7 @@ DictCompCtx.prototype.transition = function(token, value){
 DictCompCtx.prototype.to_js = function(){
     var node = $get_node(this),
         indent = node.get_indent()
-    
+
     var id = this.id,
         first_for = this.tree[0],
         outmost_expr = first_for.tree[1].to_js()
@@ -4320,8 +4189,6 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                              if(context.tree.length != 1){break}
                              context.real = 'set'   // is this needed?
                         case 'set':
-                        case 'set_comp':
-                        case 'dict_comp':
                              context.items = context.tree
                              context.tree = []
                              context.closed = true
@@ -4372,31 +4239,12 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                             "parentheses around the comprehension target?"])
                     }
                     if(context.real == 'dict_or_set'){
-                        context.real = 'set_comp'
-                        if(test_dict_comp){
-                            return new $TargetListCtx(new $ForExpr(
-                                new SetCompCtx(this)))
-                        }
+                        return new $TargetListCtx(new $ForExpr(
+                            new SetCompCtx(this)))
                     }else{
-                        context.real = 'dict_comp'
-                        if(test_dict_comp){
-                            return new $TargetListCtx(new $ForExpr(
-                                new DictCompCtx(this)))
-                        }
+                        return new $TargetListCtx(new $ForExpr(
+                            new DictCompCtx(this)))
                     }
-                    var lst = new $ListOrTupleCtx(context, 'dict_or_set_comp')
-                    lst.intervals = [context.start + 1]
-                    lst.vars = context.vars
-                    context.tree.pop()
-                    lst.expression = context.tree
-                    if(context.yields){
-                        lst.expression.yields = context.yields
-                        delete context.yields
-                    }
-                    context.tree = [lst]
-                    lst.tree = []
-                    var comp = new $ComprehensionCtx(lst)
-                    return new $TargetListCtx(new $CompForCtx(comp))
             }
             $_SyntaxError(context, 'token ' + token + ' after ' + context)
         }else if(context.expect == 'id'){
@@ -4550,29 +4398,21 @@ $DictOrSetCtx.prototype.unpack_set = function(packed){
 $DictOrSetCtx.prototype.to_js = function(){
     this.js_processed = true
 
-    switch(this.real){
-        case 'dict':
-            var packed = this.packed_indices()
-            if(packed.length > 0){
-                return '_b_.dict.$factory(' + this.unpack_dict(packed) +
-                    ')' + $to_js(this.tree)
-            }
-            var res = []
-            for(var i = 0; i < this.items.length; i += 2){
-                res.push('[' + this.items[i].to_js() + ',' +
-                  this.items[i + 1].to_js() + ']')
-            }
-            return '_b_.dict.$factory([' + res.join(',') + '])' +
-                $to_js(this.tree)
-        case 'set_comp':
-            return '_b_.set.$factory(' + $to_js(this.items) + ')' +
-                $to_js(this.tree)
-        case 'dict_comp':
-            return '_b_.dict.$factory(' + $to_js(this.items) + ')' +
-                $to_js(this.tree)
-    }
     var packed = this.packed_indices()
-    if(packed.length > 0){
+
+    if(this.real == 'dict'){
+        if(packed.length > 0){
+            return '_b_.dict.$factory(' + this.unpack_dict(packed) +
+                ')' + $to_js(this.tree)
+        }
+        var res = []
+        for(var i = 0; i < this.items.length; i += 2){
+            res.push('[' + this.items[i].to_js() + ',' +
+              this.items[i + 1].to_js() + ']')
+        }
+        return '_b_.dict.$factory([' + res.join(',') + '])' +
+            $to_js(this.tree)
+    }else if(packed.length > 0){
         return '_b_.set.$factory(' + this.unpack_set(packed) + ')'
     }
     return '_b_.set.$factory([' + $to_js(this.items) + '])' + $to_js(this.tree)
@@ -5430,439 +5270,6 @@ $ForExpr.prototype.transition = function(token, value){
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
-$ForExpr.prototype.transform = function(node,rank){
-    // If this is the first "for" loop in the generator expression,
-    // replace "for-expression" by "expr"
-    if(test_listcomp){
-        return
-    }
-    var pnode = this.parent.node.parent
-    while(pnode){
-        if(pnode.is_comp){
-            var module = $get_module(this)
-            if(module.outermost_expr === undefined){
-                pnode.outermost_expr = this.tree[1]
-                module.outermost_expr = this.tree[1]
-                this.tree.pop()
-                new $RawJSCtx(this, "_expr")
-            }
-            break
-        }
-        pnode = pnode.parent
-    }
-    if(this.async){
-        return this.transform_async(node, rank)
-    }
-    var scope = $get_scope(this),
-        target = this.tree[0],
-        target_is_1_tuple = target.tree.length == 1 && target.expect == 'id',
-        iterable = this.tree[1],
-        num = this.loop_num,
-        local_ns = '$locals_' + scope.id.replace(/\./g, '_'),
-        h = '\n' + ' '.repeat(node.indent + 4)
-
-    // Because loops like "for x in range(...)" are very common and can be
-    // optimised, check if the target is a call to the builtin function
-    // "range"
-    var $range = false
-    if(target.tree.length == 1 &&
-            ! scope.blurred &&
-            target.expct != 'id' &&
-            iterable.type == 'expr' &&
-            iterable.tree[0].type == 'expr' &&
-            iterable.tree[0].tree[0].type == 'call'){
-        var call = iterable.tree[0].tree[0]
-        if(call.func.type == 'id'){
-            var func_name = call.func.value
-            if(func_name == 'range' && call.tree.length < 3 &&
-                    call.tree.length > 0){ // issue 1104
-                $range = call
-            }
-        }
-    }
-
-    // nodes that will be inserted at the position of the original "for" loop
-    var new_nodes = [], pos = 0
-
-    // save original children (loop body)
-    var children = node.children
-
-    var offset = 1
-
-    if($range){
-        if(this.has_break){
-            // If there is a "break" in the loop, add a boolean
-            // used if there is an "else" clause and in generators
-            new_node = new $Node()
-            new $NodeJSCtx(new_node,
-                local_ns + '["$no_break' + num + '"] = true')
-            new_nodes[pos++] = new_node
-        }
-
-        // Check that range is the built-in function
-        var range_is_builtin = false,
-            _scope = $get_scope(this),
-            found = []
-        while(1){
-            if(_scope.binding["range"]){found.push(_scope.id)}
-            if(_scope.parent_block){_scope = _scope.parent_block}
-            else{break}
-        }
-        range_is_builtin = found.length == 1 &&
-            found[0] == "__builtins__"
-
-        // Line to test if the callable "range" is the built-in "range"
-        var test_range_node = new $Node()
-        test_range_node.module = node.parent.module
-        if(range_is_builtin){
-            new $NodeJSCtx(test_range_node, 'if(1)')
-        }else{
-            new $NodeJSCtx(test_range_node,
-                'if(' + call.func.to_js() + ' === _b_.range)')
-        }
-        new_nodes[pos++] = test_range_node
-
-        // Build the block with the Javascript "for" loop
-        var idt = target.to_js(),
-            shortcut = false
-        if($range.tree.length == 1){
-            var stop = $range.tree[0].tree[0]
-            if(stop.tree[0].type == "int"){
-                stop = parseInt(stop.to_js())
-                if(0 < stop < $B.max_int){
-                    shortcut = true
-                    var varname = "$i" + $B.UUID()
-
-                    var for_node = $NodeJS("for (var " + varname + " = 0; " +
-                        varname + " < " + stop + "; " + varname + "++)")
-                    var assign_node = make_assign(target,
-                        varname,
-                        node.parent.module)
-                    for_node.add(assign_node)
-                }
-            }
-            var start = 0,
-                stop = $range.tree[0].to_js()
-        }else{
-            var start = $range.tree[0].to_js(),
-                stop = $range.tree[1].to_js()
-        }
-
-        if(!shortcut){
-
-            var js = 'var $stop_' + num + ' = $B.int_or_bool(' + stop + '),' +
-                h + '        $next' + num + " = " +start + ',' +
-                h + '        $safe' + num + ' = typeof $next' + num +
-                ' == "number" && typeof ' + '$stop_' + num + ' == "number";' +
-                h + '    while(true)'
-            var for_node = new $Node()
-            new $NodeJSCtx(for_node, js)
-
-            for_node.add($NodeJS('if($safe' + num + ' && $next' + num +
-                '>= $stop_' + num + '){break}'))
-            for_node.add($NodeJS('else if(!$safe' + num + ' && $B.ge($next' +
-                num + ', $stop_' + num + ')){break}'))
-            var assign_node = make_assign(target, '$next' + num,
-                node.parent.module)
-            for_node.add(assign_node)
-            for_node.add($NodeJS('if($safe' + num + '){$next' + num +
-                ' += 1}'))
-            for_node.add($NodeJS('else{$next' + num + ' = $B.add($next' +
-                num + ',1)}'))
-        }
-        // Add the loop body
-        for(var child of children){
-            for_node.add(child.clone_tree())
-        }
-        // Add a line to reset the line number
-        if($B.last(node.children).context.tree[0].type != "return"){
-            var js = '$locals.$line_info = "' + node.line_num +
-                ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
-                '$B.trace_line()};_b_.None;'
-            for_node.add($NodeJS(js))
-        }
-
-        // Check if current "for" loop is inside another "for" loop
-        var in_loop = false
-        if(scope.ntype == 'module'){
-            var pnode = node.parent
-            while(pnode){
-                if(pnode.for_wrapper){in_loop = true; break}
-                pnode = pnode.parent
-            }
-        }
-
-        // If we are at module level, and if the "for" loop is not already
-        // in a wrapper function, wrap it in a function to increase
-        // performance
-        if(scope.ntype == 'module' && !in_loop){
-            var func_node = new $Node()
-            func_node.for_wrapper = true
-            js = 'function $f' + num + '('
-            if(this.has_break){js += '$no_break' + num}
-            js += ')'
-            new $NodeJSCtx(func_node, js)
-
-            // the function is added to the test_range_node
-            test_range_node.add(func_node)
-
-            // Add the "for" loop
-            func_node.add(for_node)
-
-            // Return break flag
-            if(this.has_break){
-                func_node.add($NodeJS('return $no_break' + num))
-            }
-
-            // Line to call the function
-            test_range_node.add($NodeJS('var $res' + num + ' = $f' + num +
-                '();'))
-
-            if(this.has_break){
-                test_range_node.add($NodeJS('var $no_break' + num +
-                    ' = $res' + num))
-            }
-
-        }else{
-            // If the loop is already inside a function, don't wrap it
-            test_range_node.add(for_node)
-        }
-        if(range_is_builtin){
-            node.parent.children.splice(rank, 1)
-            var k = 0
-            if(this.has_break){
-                node.parent.insert(rank, new_nodes[0])
-                k++
-            }
-            for(var child of new_nodes[k].children){
-                node.parent.insert(rank + k, child)
-            }
-            node.parent.children[rank].line_num = node.line_num
-            node.parent.children[rank].bindings = node.bindings
-            node.children = []
-            return 0
-        }
-
-        // Add code in case the callable "range" is *not* the
-        // built-in function
-        var else_node = $NodeJS("else")
-        new_nodes[pos++] = else_node
-
-        // Add lines at module level, after the original "for" loop
-        for(var i = new_nodes.length - 1; i >= 0; i--){
-            node.parent.insert(rank + 1, new_nodes[i])
-        }
-
-        this.test_range = true
-        new_nodes = [], pos = 0
-    }
-
-    // Line to declare the function that produces the next item from
-    // the iterable
-    var new_node = new $Node()
-    new_node.line_num = $get_node(this).line_num
-    var it_js = iterable.to_js(),
-        iterable_name = '$iter'+num,
-        js = 'var ' + iterable_name + ' = ' + it_js + ';' +
-             '$locals["$next' + num + '"]' + ' = $B.$getattr($B.$iter(' +
-             iterable_name + '),"__next__")'
-    if(it_js == 'expr'){
-        console.log('it js is expr, iterable', iterable)
-    }
-    new $NodeJSCtx(new_node,js)
-    new_nodes[pos++] = new_node
-
-    if(this.has_break){
-        // If there is a "break" in the loop, add a boolean
-        // used if there is an "else" clause and in generators
-        new_nodes[pos++] = $NodeJS(local_ns + '["$no_break' + num +
-            '"] = true;')
-    }
-
-    var while_node = new $Node()
-
-    if(this.has_break){
-        js = 'while(' + local_ns + '["$no_break' + num + '"])'
-    }else{js = 'while(true)'}
-
-    new $NodeJSCtx(while_node,js)
-    while_node.context.loop_num = num // used for "else" clauses
-    while_node.context.type = 'for' // used in $add_line_num
-
-    new_nodes[pos++] = while_node
-
-    node.parent.children.splice(rank, 1)
-    if(this.test_range){
-        for(var i = new_nodes.length - 1; i >= 0; i--){
-            else_node.insert(0, new_nodes[i])
-        }
-    }else{
-        for(var i = new_nodes.length - 1; i >= 0; i--){
-            node.parent.insert(rank, new_nodes[i])
-            offset += new_nodes.length
-        }
-    }
-
-    var try_node = $NodeJS("try")
-    // Copy attribute "bindings" in try node, so that it is at the same
-    // level in the code tree as the instructions that use the target
-    // names
-    try_node.bindings = node.bindings
-    while_node.add(try_node)
-
-    var iter_node = new $Node()
-    iter_node.id = this.module
-    var context = new $NodeCtx(iter_node) // create ordinary node
-    var target_expr = new $ExprCtx(context, 'left', true)
-    if(target_is_1_tuple){
-        // assign to a one-element tuple for "for x, in ..."
-        var t = new $ListOrTupleCtx(target_expr)
-        t.real = 'tuple'
-        t.tree = target.tree
-    }else{
-        target_expr.tree = target.tree
-    }
-    var assign = new $AssignCtx(target_expr) // assignment to left operand
-    assign.tree[1] = new $JSCode('$locals["$next' + num + '"]()')
-    try_node.add(iter_node)
-
-    while_node.add(
-        $NodeJS('catch($err){if($B.is_exc($err, [_b_.StopIteration]))' +
-             '{break;}else{throw($err)}}'))
-
-    // set new loop children
-    for(var child of children){
-        // Copy clone, because child might have already been added to the
-        // "for" node if the iterable is range.
-        // This happens in code like
-        //
-        //     def range(n):
-        //         return 'abc'
-        //     for i in range(2):
-        //         print(i)
-        while_node.add(child.clone())
-    }
-
-    // Add a line to reset the line number, except if the last
-    // instruction in the loop is a return, because the next
-    // line would never be reached
-    if(node.children.length == 0){
-        console.log("bizarre", this)
-    }
-    if($B.last(node.children).context.tree[0].type != "return"){
-        var js = '$locals.$line_info = "' + node.line_num +
-            ',' + this.module + '";if($locals.$f_trace !== _b_.None){' +
-            '$B.trace_line()};_b_.None;'
-        while_node.add($NodeJS(js))
-    }
-    node.children = []
-    return 0
-}
-
-$ForExpr.prototype.transform_async = function(node, rank){
-    /*
-    Transform "async for". As per PEP 492
-
-        async for TARGET in ITER:
-            BLOCK
-
-    is equivalent to
-
-        iter = (ITER)
-        iter = type(iter).__aiter__(iter)
-        running = True
-        while running:
-            try:
-                TARGET = await type(iter).__anext__(iter)
-            except StopAsyncIteration:
-                running = False
-            else:
-                BLOCK
-    */
-
-    var scope = $get_scope(this),
-        target = this.tree[0],
-        target_is_1_tuple = target.tree.length == 1 && target.expect == 'id',
-        iterable = this.tree[1],
-        num = this.loop_num,
-        local_ns = '$locals_' + scope.id.replace(/\./g, '_'),
-        h = '\n' + ' '.repeat(node.indent + 4)
-
-    var new_nodes = []
-    // Line "iter = (ITER)
-    var it_js = iterable.to_js(),
-        iterable_name = '$iter' + num,
-        type_name = '$type' + num,
-        running_name = '$running' + num,
-        anext_name = '$anext' + num,
-        target_name = '$target' + num,
-        js = 'var ' + iterable_name + ' = ' + it_js
-    new_nodes.push($NodeJS(js))
-
-    // iter = type(iter).__aiter__(iter)
-    new_nodes.push($NodeJS('var ' + type_name + ' = _b_.type.$factory( ' +
-        iterable_name + ')'))
-
-    js = iterable_name + ' = $B.$call($B.$getattr(' + type_name +
-        ', "__aiter__"))(' + iterable_name + ')'
-    new_nodes.push($NodeJS(js))
-
-    // running = True
-    new_nodes.push($NodeJS('var ' + running_name + ' = true'))
-
-    new_nodes.push($NodeJS('var ' + anext_name +
-        ' = $B.$call($B.$getattr(' + type_name + ', "__anext__"))'))
-
-    // while running:
-    var while_node = $NodeJS('while(' + running_name + ')')
-    new_nodes.push(while_node)
-
-    // try:
-    var try_node = $NodeJS('try')
-    while_node.add(try_node)
-
-    // TARGET = await type(iter).__anext__(iter)
-    if(target.tree.length == 1){
-        var js = target.to_js() + ' = await ($B.promise(' +
-            anext_name + '(' + iterable_name + ')))'
-        try_node.add($NodeJS(js))
-    }else{
-        var new_node = new $Node(),
-            ctx = new $NodeCtx(new_node),
-            expr = new $ExprCtx(ctx, "left", false)
-        expr.tree.push(target)
-        target.parent = expr
-        var assign = new $AssignCtx(expr)
-
-        new $RawJSCtx(assign, 'await ($B.promise(' +
-            anext_name + '(' + iterable_name + ')))')
-
-        try_node.add(new_node)
-    }
-
-    // except
-    var catch_node = $NodeJS('catch(err)')
-    while_node.add(catch_node)
-
-    var js = 'if(err.__class__ === _b_.StopAsyncIteration)' +
-        '{' + running_name + ' = false; continue}else{throw err}'
-    catch_node.add($NodeJS(js))
-
-    // else
-    for(var child of node.children){
-        while_node.add(child)
-    }
-
-    // Remove original "for" node
-    node.parent.children.splice(rank, 1)
-
-    for(var i = new_nodes.length - 1; i >= 0; i--){
-        node.parent.insert(rank, new_nodes[i])
-    }
-    node.children = []
-    return 0
-}
-
 function tg_to_js(target, iterable, unpack){
     // Create the code to assign the targets to values resulting from
     // iteration on an iterable
@@ -5954,69 +5361,67 @@ function make_target(target){
 
 $ForExpr.prototype.to_js = function(indent){
     this.js_processed = true
-    if(test_listcomp){
-        var node = $get_node(this),
-            indent = indent || node.get_indent(),
-            targets = this.tree[0].tree,
-            iterable = this.tree[1],
-            id = $B.UUID()
 
-        if(node.module === undefined){
-            var module_id = $get_module(this).module
-        }else{
-            var module_id = node.module
-        }
-        module_id = module_id.replace(/\./g, '_')
+    var node = $get_node(this),
+        indent = indent || node.get_indent(),
+        targets = this.tree[0].tree,
+        iterable = this.tree[1],
+        id = $B.UUID()
 
-        var target = make_target(this.tree[0])
+    if(node.module === undefined){
+        var module_id = $get_module(this).module
+    }else{
+        var module_id = node.module
+    }
+    module_id = module_id.replace(/\./g, '_')
 
-        var assignment = tg_to_js(target, `$next_${id}`)
+    var target = make_target(this.tree[0])
 
-        var it = this.iterable_is_outermost ? 'expr' : iterable.to_js(),
-            iteration = this.comp_body ? '' :
-                `var $no_break${this.loop_num} = true\n`
+    var assignment = tg_to_js(target, `$next_${id}`)
 
-        if(this.async){
-            iteration += `var $iter_${id} = ${it}\n` +
-                `var $type_${id} = _b_.type.$factory($iter_${id})\n` +
-                `$iter_${id} = $B.$call($B.$getattr($type_${id}, "__aiter__"))($iter_${id})\n` +
-                `var $next_func_${id} = $B.$call(` +
-                `$B.$getattr($type_${id}, '__anext__'))\n` +
+    var it = this.iterable_is_outermost ? 'expr' : iterable.to_js(),
+        iteration = this.comp_body ? '' :
+            `var $no_break${this.loop_num} = true\n`
+
+    if(this.async){
+        iteration += `var $iter_${id} = ${it}\n` +
+            `var $type_${id} = _b_.type.$factory($iter_${id})\n` +
+            `$iter_${id} = $B.$call($B.$getattr($type_${id}, "__aiter__"))($iter_${id})\n` +
+            `var $next_func_${id} = $B.$call(` +
+            `$B.$getattr($type_${id}, '__anext__'))\n` +
+            `while(true){\n`+
+            `  try{\n`+
+            `    var $next_${id} = await $B.promise($next_func_${id}($iter_${id}))\n` +
+            `  }catch(err){\n`+
+            `    if($B.is_exc(err, [_b_.StopAsyncIteration])){break}\n` +
+            `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
+            `  }\n`
+    }else{
+        iteration += `var $next_func_${id} = $B.next_of(${it})\n` +
                 `while(true){\n`+
                 `  try{\n`+
-                `    var $next_${id} = await $B.promise($next_func_${id}($iter_${id}))\n` +
+                `    var $next_${id} = $next_func_${id}()\n` +
                 `  }catch(err){\n`+
-                `    if($B.is_exc(err, [_b_.StopAsyncIteration])){break}\n` +
+                `    if($B.is_exc(err, [_b_.StopIteration])){break}\n` +
                 `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
                 `  }\n`
-        }else{
-            iteration += `var $next_func_${id} = $B.next_of(${it})\n` +
-                    `while(true){\n`+
-                    `  try{\n`+
-                    `    var $next_${id} = $next_func_${id}()\n` +
-                    `  }catch(err){\n`+
-                    `    if($B.is_exc(err, [_b_.StopIteration])){break}\n` +
-                    `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
-                    `  }\n`
-        }
-        var body = ''
-        if(! this.comp_body){
-            for(var child of node.children){
-                body += '\n' + child.to_js()
-            }
-            // add line info of 'for' loop
-            body += `;$locals.$line_info = "${node.line_num},${module_id}";` +
-                    'if($locals.$f_trace !== _b_.None){$B.trace_line()};_b_.None;'
-            body += '\n}\n'
-            node.children = []
-        }
-        var res = (iteration + assignment + body).split('\n').
-                map(x => '    '.repeat(indent) + x).join('\n')
-
-        return res
     }
-    var iterable = this.tree.pop()
-    return 'for (' + $to_js(this.tree) + ' in ' + iterable.to_js() + ')'
+    var body = ''
+    if(! this.comp_body){
+        // If not in a comprehension, add JS translation of node children
+        for(var child of node.children){
+            body += '\n' + child.to_js()
+        }
+        // add line info of 'for' loop
+        body += `;$locals.$line_info = "${node.line_num},${module_id}";` +
+                'if($locals.$f_trace !== _b_.None){$B.trace_line()};_b_.None;'
+        body += '\n}\n'
+        
+        // remove children to avoid processing in $Node.prototype.to_js()
+        node.children = []
+    }
+    return (iteration + assignment + body).split('\n').
+            map(x => '    '.repeat(indent) + x).join('\n')
 
 }
 
@@ -6806,7 +6211,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
         // don't add it to function namespace
         var _ctx = this.parent
         while(_ctx){
-            if(_ctx.type == 'list_or_tuple' && _ctx.is_comp()){
+            if(_ctx.comprehension){
                 this.in_comp = true
                 break
             }
@@ -8054,10 +7459,6 @@ $ListOrTupleCtx.prototype.toString = function(){
     switch(this.real) {
       case 'list':
         return '(list) [' + this.tree + ']'
-      case 'list_comp':
-      case 'gen_expr':
-        return '(' + this.real + ') [' + this.intervals + '-' +
-            this.tree + ']'
       default:
         return '(tuple) (' + this.tree + ')'
     }
@@ -8076,7 +7477,6 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
         if(context.expect == ','){
             switch(context.real){
                 case 'tuple':
-                case 'gen_expr':
                     if(token == ')'){
                         var close = true
                         while(context.type == "list_or_tuple" &&
@@ -8107,17 +7507,6 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         if(close){
                             context.close()
                         }
-                        if(context.real == 'gen_expr'){
-                            // Check if there is a "yield" in the expression
-                            if(context.expression.yields){
-                                for(const _yield of context.expression.yields){
-                                    $pos = _yield[1]
-                                    $_SyntaxError(context,
-                                        ["'yield' inside generator expression"])
-                                }
-                            }
-                            context.intervals.push($pos)
-                        }
                         if(context.parent.type == "packed"){
                             return context.parent.parent
                         }
@@ -8135,20 +7524,8 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                     }
                     break
                 case 'list':
-                case 'list_comp':
                     if(token == ']'){
                          context.close()
-                         if(context.real == 'list_comp'){
-                             // Check if there is a "yield" in the expression
-                             if(context.expression.yields){
-                                 for(const _yield of context.expression.yields){
-                                     $pos = _yield[1]
-                                     $_SyntaxError(context,
-                                         ["'yield' inside list comprehension"])
-                                 }
-                             }
-                             context.intervals.push($pos)
-                         }
                          if(context.parent.type == "packed"){
                              if(context.parent.tree.length > 0){
                                  return context.parent.tree[0]
@@ -8157,23 +7534,6 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                              }
                          }
                          return context.parent
-                    }
-                    break
-                case 'dict_or_set_comp':
-                    if(token == '}'){
-                         // Check if there is a "yield" in the expression
-                         if(context.expression.yields){
-                             for(const _yield of context.expression.yields){
-                                 $pos = _yield[1]
-                                 var comp_type = context.parent.real == "set_comp" ?
-                                     "set" : "dict"
-                                 $_SyntaxError(context,
-                                     [`'yield' inside ${comp_type} comprehension`])
-                             }
-                         }
-                         context.intervals.push($pos)
-                         context.src = $get_module(context).src
-                         return $transition(context.parent, token)
                     }
                     break
             }
@@ -8193,30 +7553,13 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                             $_SyntaxError(context, ["did you forget " +
                                 "parentheses around the comprehension target?"])
                         }
-                        context.real = 'list_comp'
-                        if(test_listcomp){
-                            return new $TargetListCtx(new $ForExpr(
-                                new ListCompCtx(context)))
-                        }
+                        return new $TargetListCtx(new $ForExpr(
+                            new ListCompCtx(context)))
                     }
                     else{
-                        context.real = 'gen_expr'
-                        if(test_listcomp){
-                            return new $TargetListCtx(new $ForExpr(
-                                new GeneratorExpCtx(context)))
-                        }
+                        return new $TargetListCtx(new $ForExpr(
+                            new GeneratorExpCtx(context)))
                     }
-                    // remove names already referenced in list from
-                    // the function references
-                    context.intervals = [context.start + 1]
-                    context.expression = context.tree
-                    if(context.yields){
-                        context.expression.yields = context.yields
-                        delete context.yields
-                    }
-                    context.tree = [] // reset tree
-                    var comp = new $ComprehensionCtx(context)
-                    return new $TargetListCtx(new $CompForCtx(comp))
             }
             return $transition(context.parent,token,value)
         }else if(context.expect == 'id'){
@@ -8227,12 +7570,6 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                       return context.parent
                     }
                     if(token == 'eol' && context.implicit === true){
-                      context.close()
-                      return $transition(context.parent, token)
-                    }
-                    break
-                case 'gen_expr':
-                    if(token == ')'){
                       context.close()
                       return $transition(context.parent, token)
                     }
@@ -8303,16 +7640,6 @@ $ListOrTupleCtx.prototype.close = function(){
             this.tree[i].parent = this
         }
     }
-}
-
-$ListOrTupleCtx.prototype.is_comp = function(){
-    switch(this.real) {
-        case 'list_comp':
-        case 'gen_expr':
-        case 'dict_or_set_comp':
-            return true
-    }
-    return false
 }
 
 $ListOrTupleCtx.prototype.get_src = function(){
@@ -8400,116 +7727,6 @@ $ListOrTupleCtx.prototype.to_js = function(){
                 return '$B.$list(' + this.unpack(packed) + ')'
             }
             return '$B.$list([' + $to_js(this.tree) + '])'
-        case 'list_comp':
-        case 'gen_expr':
-        case 'dict_or_set_comp':
-            if(this.src === undefined){
-                console.log('no src', this)
-                console.log($B.frames_stack.slice())
-            }
-            var src = this.src
-            var res1 = [], items = []
-
-            var qesc = new RegExp('"', "g") // to escape double quotes in arguments
-
-            var comments = root.comments,
-                in_joined_str = $parent_match(this, {type: 'JoinedStr'})
-            for(var i = 1; i < this.intervals.length; i++){
-                var start = this.intervals[i - 1],
-                    end = this.intervals[i],
-                    txt = src.substring(start, end)
-
-                if(! in_joined_str){
-                    for(var j = comments.length - 1; j >= 0; j--){
-                        var comment = comments[j]
-                        if(comment[0] > start && comment[0] < end){
-                            // If there is a comment inside the interval,
-                            // replace it by spaces. Cf issue #776
-                            var pos = comment[0] - start
-                            txt = txt.substr(0, pos) +
-                                ' '.repeat(comment[1]) +
-                                txt.substr(pos + comment[1] + 1)
-                        }
-                    }
-                }
-
-                txt = txt.replace(/\\\n/g, " ") // continuation lines
-
-                items.push(txt)
-                var lines = txt.split('\n')
-                var res2 = []
-                for(var txt of lines){
-                    // ignore empty lines
-                    if(txt.replace(/ /g, '').length != 0){
-                        txt = txt.replace(/\n/g, ' ')
-                        txt = txt.replace(/\\/g, '\\\\')
-                        txt = txt.replace(qesc, '\\"')
-                        res2.push('"' + txt + '"')
-                    }
-                }
-                res1.push('[' + res2.join(',') + ']')
-            }
-
-            var line_num = $get_node(this).line_num
-
-            switch(this.real) {
-                case 'list_comp':
-                    var lc = $B.$list_comp(items), // defined in py_utils.js
-                        py = lc[0],
-                        ix = lc[1],
-                        listcomp_name = 'comp_result_' + $B.lambda_magic + ix,
-                        save_pos = $pos,
-                        line_info = line_num + ',' + module_name
-                    var root = $B.py2js(
-                        {src: py, is_comp: 'listcomp', line_info: line_info},
-                        module_name, listcomp_name, scope, 1)
-                    var has_yield = root.yields_func_check !== undefined
-
-                    var outermost_expr = root.outermost_expr
-
-                    // If there is a "yield" in the comprehension, it is
-                    // in the outermost expression (the expression after
-                    // "in" in the first "for item in expression" in the
-                    // comprehension).
-                    if($get_node(this).has_yield){
-                        outermost_expr = this.tree[0].tree[0].tree[1]
-                    }
-
-                    if(outermost_expr === undefined){
-                        outermost_expr = root.first_for.tree[1]
-                    }
-                    var outer_most = outermost_expr.to_js()
-
-                    $pos = save_pos
-
-                    var js = root.to_js()
-
-                    root = null
-                    $B.clear_ns(listcomp_name)
-                    delete $B.$py_src[listcomp_name]
-
-                    js += 'return ' + listcomp_name
-                    js = "function" + (has_yield ? "*" : "") +
-                        `(_expr){${js}})(${outer_most})`
-                    if(this.is_await){
-                        js = 'async ' + js
-                    }
-                    return '(' + js
-
-                case 'dict_or_set_comp':
-                    if(this.expression.length == 1){
-                        return $B.$gen_expr(module_name, scope, items,
-                            line_num, true)
-                    }
-
-                    return $B.$dict_comp(module_name, scope, items, line_num)
-
-            }
-            console.log(8339, this)
-            // Generator expression
-            // Pass the module name and the current scope object
-            // $B.$gen_expr is in py_utils.js
-            return $B.$gen_expr(module_name, scope, items, line_num)
 
         case 'tuple':
             var packed = this.packed_indices()
