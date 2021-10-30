@@ -5990,8 +5990,7 @@ $ForExpr.prototype.to_js = function(indent){
                 `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
                 `  }\n`
         }else{
-            iteration += `var $next_func_${id} = $B.$call(` +
-                    `$B.$getattr(_b_.iter(${it}), '__next__'))\n` +
+            iteration += `var $next_func_${id} = $B.next_of(${it})\n` +
                     `while(true){\n`+
                     `  try{\n`+
                     `    var $next_${id} = $next_func_${id}()\n` +

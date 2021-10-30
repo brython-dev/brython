@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-30 09:13:31.751440"
-__BRYTHON__.timestamp=1635578011751
+__BRYTHON__.compiled_date="2021-10-30 09:32:39.680381"
+__BRYTHON__.timestamp=1635579159680
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3231,8 +3231,7 @@ if(this.async){iteration+=`var $iter_${id} = ${it}\n`+
 `  }catch(err){\n`+
 `    if($B.is_exc(err, [_b_.StopAsyncIteration])){break}\n`+
 `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
-`  }\n`}else{iteration+=`var $next_func_${id} = $B.$call(`+
-`$B.$getattr(_b_.iter(${it}), '__next__'))\n`+
+`  }\n`}else{iteration+=`var $next_func_${id} = $B.next_of(${it})\n`+
 `while(true){\n`+
 `  try{\n`+
 `    var $next_${id} = $next_func_${id}()\n`+
@@ -7593,6 +7592,16 @@ if(klass===undefined){return $B.JSObj}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.$infos.__name__}}
+$B.next_of=function(iterator){
+if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
+if(iterator.step > 0){return function(){if(obj.ix >=iterator.stop){throw _b_.StopIteration.$factory('')}
+var res=obj.ix
+obj.ix+=iterator.step
+return res}}else{return function(){if(obj.ix <=iterator.stop){throw _b_.StopIteration.$factory('')}
+var res=obj.ix
+obj.ix+=iterator.step
+return res}}}
+return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
 $B.$list_comp=function(items){
 var ix=$B.UUID(),res="comp_result_"+$B.lambda_magic+ix,py=res+" = []\n",indent=0
 for(var i=1,len=items.length;i < len;i++){var item=items[i].replace(/\s+$/,"").replace(/\n/g,"")

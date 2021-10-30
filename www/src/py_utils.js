@@ -276,6 +276,33 @@ $B.class_name = function(obj){
     }
 }
 
+$B.next_of = function(iterator){
+    // return the function that produces the next item in an iterator
+    if(iterator.__class__ === _b_.range){
+        var obj = {ix: iterator.start}
+        if(iterator.step > 0){
+            return function(){
+                if(obj.ix >= iterator.stop){
+                    throw _b_.StopIteration.$factory('')
+                }
+                var res = obj.ix
+                obj.ix += iterator.step
+                return res
+            }
+        }else{
+            return function(){
+                if(obj.ix <= iterator.stop){
+                    throw _b_.StopIteration.$factory('')
+                }
+                var res = obj.ix
+                obj.ix += iterator.step
+                return res
+            }
+        }            
+    }
+    return $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+}
+
 $B.$list_comp = function(items){
     // Called for list comprehensions
     // items[0] is the Python code for the comprehension expression
