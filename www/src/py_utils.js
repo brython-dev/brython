@@ -970,6 +970,44 @@ $B.extend_list = function(){
     return res
 }
 
+$B.unpacker = function(obj, nb_targets, has_starred, target){
+    var t = _b_.list.$factory(obj),
+        len = t.length,
+        min_len = has_starred ? len - 1 : len
+    if(len < min_len){
+        throw _b_.ValueError.$factory(
+            `not enough values to unpack (expected ${min_length}, got ${len})`)
+    }
+    if((! has_starred) && len > nb_targets){
+        console.log('iterable', obj, 't', t, 'nb_targets', nb_targets)
+        throw _b_.ValueError.$factory(
+            `too many values to unpack (expected ${nb_targets})`)
+    }
+    t.index = -1
+    t.read_one = function(){
+        t.index++
+        return t[t.index]
+    }
+    t.read_rest = function(){
+        t.index++
+        return t.slice(t.index)
+    }
+    return t
+}
+
+$B.rest_iter = function(next_func){
+    var res = []
+    while(true){
+        try{
+            res.push(next_func())
+        }catch(err){
+            if($B.is_exc(err, [_b_.StopIteration])){
+                return $B.fast_tuple(res)
+            }
+            throw err
+        }
+    }
+}
 $B.$test_item = function(expr){
     // used to evaluate expressions with "and" or "or"
     // returns a Javascript boolean (true or false) and stores
