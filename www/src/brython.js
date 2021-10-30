@@ -111,9 +111,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,0,'final',0]
 __BRYTHON__.__MAGIC__="3.10.0"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-30 10:14:11.321652"
-__BRYTHON__.timestamp=1635581651321
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
+__BRYTHON__.compiled_date="2021-10-30 21:48:25.095866"
+__BRYTHON__.timestamp=1635623305095
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -1329,14 +1329,17 @@ this.tree=[]
 C.tree.push(this)
 var p=C
 while(p){if(p.type=="list_or_tuple"){p.is_await=true}
-p=p.parent}}
+p=p.parent}
+var node=$get_node(this)
+node.awaits=node.awaits ||[]
+node.awaits.push(this)}
 $AwaitCtx.prototype.ast=function(){
 return new ast.Await(ast_or_obj(this.tree[0]))}
 $AwaitCtx.prototype.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
 $AwaitCtx.prototype.to_js=function(){
-return 'await $B.promise('+$to_js(this.tree)+')'}
+return `await $B.promise(${$to_js(this.tree)})`}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
@@ -2278,14 +2281,15 @@ C.parent.tree[C.parent.tree.length-1]=this
 this.type='dict_comp'
 make_comp(this,C)}
 DictCompCtx.prototype.transition=function(token,value){var C=this
-if(token=='}'){return this.parent}
+if(token=='}'){this.has_await=has_await(this)
+return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 DictCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
 var id=this.id,first_for=this.tree[0],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
 var module_id=this.module.replace(/\./g,'_')
-var js=`(${this.async ? 'async ' : ''}function(expr){
+var js=`(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = "${node.line_num},${node.module}"
@@ -3202,16 +3206,14 @@ break}
 ctx=ctx.parent}
 if(this.op=='*'){ctx.other_args='"'+name+'"'}
 else{ctx.other_kw='"'+name+'"'}}
-var $GeneratorCtx=function(comprehension){comprehension.tree.push(this)
-this.ifs=[]
-this.is_async=false}
 var GeneratorExpCtx=function(C){
 this.type='gen_expr'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 make_comp(this,C)}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
-if(token==')'){if(this.parent.type=='call'){return this.parent.parent}
+if(token==')'){this.has_await=has_await(this)
+if(this.parent.type=='call'){return this.parent.parent}
 return this.parent}
 $_SyntaxError(C,'token '+token+'after gen expr')}
 GeneratorExpCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
@@ -3220,11 +3222,11 @@ outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
 var module_id=this.module.replace(/\./g,'_')
-var js=`(${this.async ? 'async ' : ''}function(expr){
+var js=`(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
-        var ${id} = ${this.async ? 'async ' : ''}function*(expr){
+        var ${id} = ${this.has_await ? 'async ' : ''}function*(expr){
           var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
           $locals.$f_trace = $B.enter_frame($top_frame)
         `
@@ -3792,15 +3794,21 @@ this.tree=[C.tree[0]]
 this.tree[0].parent=this
 make_comp(this,C)}
 ListCompCtx.prototype.transition=function(token,value){var C=this
-if(token==']'){return this.parent}
+if(token==']'){this.has_await=has_await(this)
+return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
-function has_await(ctx){if(ctx.type=='await'){return true}else if(ctx.tree){for(var item of ctx.tree){if(has_await(item)){return true}}}
-return false}
+function has_await(ctx){var node=$get_node(ctx),awaits=get_awaits(ctx)
+for(var aw of awaits){var ix=node.awaits.indexOf(aw)
+if(ix >-1){node.awaits.splice(ix,1)}}
+return awaits.length > 0}
+function get_awaits(ctx,awaits){awaits=awaits ||[]
+if(ctx.type=='await'){awaits.push(ctx)}else if(ctx.tree){for(var item of ctx.tree){get_awaits(item,awaits)}}
+return awaits}
 ListCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
 var id=this.id,expr=this.tree[0],first_for=this.tree[1],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
-var js=`(${this.async ? 'async ' : ''}function(expr){
+var js=`(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
@@ -5103,14 +5111,15 @@ this.tree=[C.tree[0]]
 this.tree[0].parent=this
 make_comp(this,C)}
 SetCompCtx.prototype.transition=function(token,value){var C=this
-if(token=='}'){return this.parent}
+if(token=='}'){this.has_await=has_await(this)
+return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 SetCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
 var id=this.id,expr=this.tree[0],first_for=this.tree[1],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
 var module_id=this.module.replace(/\./g,'_')
-var js=`(${this.async ? 'async ' : ''}function(expr){
+var js=`(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
@@ -10942,11 +10951,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','string','stringprep','struct','subprocess','sys','sysconfig','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_cmath','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre1','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','module1','modulefinder','pbkdf2','posix','python_re','python_re1','python_re2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 

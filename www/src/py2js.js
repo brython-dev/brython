@@ -2034,6 +2034,9 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
         }
         p = p.parent
     }
+    var node = $get_node(this)
+    node.awaits = node.awaits || []
+    node.awaits.push(this)
 }
 
 $AwaitCtx.prototype.ast = function(){
@@ -2058,7 +2061,8 @@ $AwaitCtx.prototype.to_js = function(){
         'catch(err){$B.restore_stack(save_stack, $locals);throw err};' +
         '$B.restore_stack(save_stack, $locals); '
     */
-    return 'await $B.promise(' + $to_js(this.tree) + ')'
+    return `await $B.promise(${$to_js(this.tree)})`
+
 }
 
 var $BodyCtx = $B.parser.$BodyCtx = function(context){
@@ -4067,6 +4071,7 @@ var DictCompCtx = function(context){
 DictCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == '}'){
+        this.has_await = has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
@@ -4083,7 +4088,7 @@ DictCompCtx.prototype.to_js = function(){
     first_for.iterable_is_outermost = true
     var module_id = this.module.replace(/\./g, '_')
 
-    var js = `(${this.async ? 'async ' : ''}function(expr){
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = "${node.line_num},${node.module}"
@@ -5416,7 +5421,7 @@ $ForExpr.prototype.to_js = function(indent){
         body += `;$locals.$line_info = "${node.line_num},${module_id}";` +
                 'if($locals.$f_trace !== _b_.None){$B.trace_line()};_b_.None;'
         body += '\n}\n'
-        
+
         // remove children to avoid processing in $Node.prototype.to_js()
         node.children = []
     }
@@ -5936,12 +5941,6 @@ $FuncStarArgCtx.prototype.set_name = function(name){
     else{ctx.other_kw = '"' + name + '"'}
 }
 
-var $GeneratorCtx = function(comprehension){
-    comprehension.tree.push(this)
-    this.ifs = []
-    this.is_async = false
-}
-
 var GeneratorExpCtx = function(context){
     // create a List Comprehension
     // context is a $ListOrTupleCtx
@@ -5954,6 +5953,7 @@ var GeneratorExpCtx = function(context){
 GeneratorExpCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ')'){
+        this.has_await = has_await(this)
         if(this.parent.type == 'call'){
             return this.parent.parent
         }
@@ -5973,11 +5973,11 @@ GeneratorExpCtx.prototype.to_js = function(){
     first_for.comp_body = true
     first_for.iterable_is_outermost = true
     var module_id = this.module.replace(/\./g, '_')
-    var js = `(${this.async ? 'async ' : ''}function(expr){
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
-        var ${id} = ${this.async ? 'async ' : ''}function*(expr){
+        var ${id} = ${this.has_await ? 'async ' : ''}function*(expr){
           var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
           $locals.$f_trace = $B.enter_frame($top_frame)
         `
@@ -7357,22 +7357,34 @@ var ListCompCtx = function(context){
 ListCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ']'){
+        this.has_await = has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
 }
 
 function has_await(ctx){
-    if(ctx.type == 'await'){
-        return true
-    }else if(ctx.tree){
-        for(var item of ctx.tree){
-            if(has_await(item)){
-                return true
-            }
+    var node = $get_node(ctx),
+        awaits = get_awaits(ctx)
+    for(var aw of awaits){
+        var ix = node.awaits.indexOf(aw)
+        if(ix > -1){
+            node.awaits.splice(ix, 1)
         }
     }
-    return false
+    return awaits.length > 0
+}
+
+function get_awaits(ctx, awaits){
+    awaits = awaits || []
+    if(ctx.type == 'await'){
+        awaits.push(ctx)
+    }else if(ctx.tree){
+        for(var item of ctx.tree){
+            get_awaits(item, awaits)
+        }
+    }
+    return awaits
 }
 
 ListCompCtx.prototype.to_js = function(){
@@ -7387,7 +7399,7 @@ ListCompCtx.prototype.to_js = function(){
     first_for.comp_body = true
     first_for.iterable_is_outermost = true
 
-    var js = `(${this.async ? 'async ' : ''}function(expr){
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
@@ -9910,6 +9922,7 @@ var SetCompCtx = function(context){
 SetCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == '}'){
+        this.has_await = has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
@@ -9927,7 +9940,7 @@ SetCompCtx.prototype.to_js = function(){
     first_for.iterable_is_outermost = true
     var module_id = this.module.replace(/\./g, '_')
 
-    var js = `(${this.async ? 'async ' : ''}function(expr){
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
