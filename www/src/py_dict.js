@@ -1197,6 +1197,10 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
 
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
+mappingproxy.__repr__ = function(){
+    return '<mappingproxy object>'
+}
+
 mappingproxy.__setitem__ = function(){
     throw _b_.TypeError.$factory("'mappingproxy' object does not support " +
         "item assignment")
