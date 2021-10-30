@@ -572,7 +572,6 @@ function $$eval(src, _globals, _locals){
         global_scope.parent_block = $B.builtins_scope
 
         parent_scope = local_scope
-
         // restore parent scope object
         eval("$locals_" + parent_scope.id + " = current_frame[1]")
 
@@ -861,6 +860,24 @@ function $$eval(src, _globals, _locals){
         err.src = src
         err.module = globals_id
         if(err.$py_error === undefined){
+            console.log('Javascript error', Object.getPrototypeOf(err).name,
+                err.message)
+            var lineNumber = err.lineNumber
+            if(lineNumber !== undefined){
+                console.log('around JS line', lineNumber)
+                console.log(js.split('\n').
+                    slice(lineNumber-5, lineNumber+5).join('\n'))
+                var lines_before = js.split('\n').slice(0, lineNumber),
+                    re = new RegExp('line_info = "(.*?)"', 'g'),
+                    matches = (new String(lines_before)).matchAll(re),
+                    line_info
+                for(var match of matches){
+                    line_info = match[1]
+                }
+                if(line_info){
+                    console.log('around source line', line_info.split(',')[0])
+                }
+            }
             throw $B.exception(err)
         }
         if(globals_is_dict){

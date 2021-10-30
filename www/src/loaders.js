@@ -275,7 +275,7 @@ $B.ajax_load_script = function(script){
 
     if($B.files && $B.files.hasOwnProperty(rel_path)){
         // File is present in Virtual File System
-        $B.tasks.splice(0, 0, [$B.run_script, 
+        $B.tasks.splice(0, 0, [$B.run_script,
             atob($B.files[rel_path].content),
             name, url, true])
         loop()
@@ -387,6 +387,12 @@ var loop = $B.loop = function(){
             // instance of a Python exception
             if(err.__class__ === undefined){
                 console.log('Javascript error', err)
+                var lineNumber = err.lineNumber
+                if(lineNumber !== undefined){
+                    console.log('around line', lineNumber)
+                    console.log(script.js.split('\n').
+                        slice(lineNumber - 4, lineNumber).join('\n'))
+                }
                 if($B.is_recursion_error(err)){
                     err = _b_.RecursionError.$factory("too much recursion")
                 }else{
