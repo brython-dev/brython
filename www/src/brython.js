@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,1,'final',0]
 __BRYTHON__.__MAGIC__="3.10.1"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-31 11:04:31.004518"
-__BRYTHON__.timestamp=1635674671004
+__BRYTHON__.compiled_date="2021-10-31 11:07:51.806974"
+__BRYTHON__.timestamp=1635674871806
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9681,7 +9681,6 @@ suggestion_distance=current_distance}}
 return suggestion}
 function offer_suggestions_for_attribute_error(exc){var name=exc.name,obj=exc.obj
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
-console.log('dir of',obj,dir)
 return suggestions}
 function offer_suggestions_for_name_error(exc){var name=exc.name,frame=$B.last(exc.$stack)
 var locals=Object.keys(frame[1]).filter(x=> !(x.startsWith('$')))
