@@ -66,6 +66,7 @@ def show(language=None):
                     language = elt1[1]
         else:
             lang = __BRYTHON__.language # browser setting
+            lang = lang.split('-')[0]
             if lang in ["en", "fr", "es"]:
                 language = lang
             if addr.startswith("static_tutorial"):
