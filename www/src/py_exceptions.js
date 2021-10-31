@@ -786,15 +786,7 @@ var js = '\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj
 $make_exc([["AttributeError", js]], _b_.Exception)
 
 _b_.AttributeError.__str__ = function(self){
-    if(self.args.length > 0){
-        return self.args[0]
-    }
-    if(self.obj.$is_class){
-        var msg = `type object '${self.obj.$infos.__name__}'`
-    }else{
-        var msg = `'${$B.class_name(self.obj)}' object`
-    }
-    msg +=  ` has no attribute '${self.name}'`
+    var msg =  self.args[0]
     var suggestion = offer_suggestions_for_attribute_error(self)
     if(suggestion){
         msg += `. Did you mean: '${suggestion}'?`
@@ -806,7 +798,13 @@ $B.set_func_names(_b_.AttributeError, 'builtins')
 
 // Shortcut to create an AttributeError
 $B.attr_error = function(name, obj){
-    return _b_.AttributeError.$factory({$nat:"kw",kw:{name, obj}})
+    if(obj.$is_class){
+        var msg = `type object '${obj.$infos.__name__}'`
+    }else{
+        var msg = `'${$B.class_name(obj)}' object`
+    }
+    msg +=  ` has no attribute '${name}'`
+    return _b_.AttributeError.$factory({$nat:"kw",kw:{name, obj, msg}})
 }
 
 // NameError supports keyword-only "name" parameter

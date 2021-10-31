@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 10, 0, 'final', 0]
-// implementation [3, 10, 1, 'final', 0]
+// implementation [3, 10, 2, 'final', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -108,11 +108,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,10,1,'final',0]
-__BRYTHON__.__MAGIC__="3.10.1"
+__BRYTHON__.implementation=[3,10,2,'final',0]
+__BRYTHON__.__MAGIC__="3.10.2"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-31 11:07:51.806974"
-__BRYTHON__.timestamp=1635674871806
+__BRYTHON__.compiled_date="2021-10-31 14:00:42.842159"
+__BRYTHON__.timestamp=1635685242842
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9601,14 +9601,14 @@ var js='\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj":
 'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;'+
 'err.name = $.name\nerr.obj = $.obj\n'
 $make_exc([["AttributeError",js]],_b_.Exception)
-_b_.AttributeError.__str__=function(self){if(self.args.length > 0){return self.args[0]}
-if(self.obj.$is_class){var msg=`type object '${self.obj.$infos.__name__}'`}else{var msg=`'${$B.class_name(self.obj)}' object`}
-msg+=` has no attribute '${self.name}'`
+_b_.AttributeError.__str__=function(self){var msg=self.args[0]
 var suggestion=offer_suggestions_for_attribute_error(self)
 if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
 return msg}
 $B.set_func_names(_b_.AttributeError,'builtins')
-$B.attr_error=function(name,obj){return _b_.AttributeError.$factory({$nat:"kw",kw:{name,obj}})}
+$B.attr_error=function(name,obj){if(obj.$is_class){var msg=`type object '${obj.$infos.__name__}'`}else{var msg=`'${$B.class_name(obj)}' object`}
+msg+=` has no attribute '${name}'`
+return _b_.AttributeError.$factory({$nat:"kw",kw:{name,obj,msg}})}
 var js='\nvar $ = $B.args("NameError", 1, {"msg": null, "name":null}, '+
 '["msg", "name"], arguments, '+
 '{msg: _b_.None, name: _b_.None}, "*", null);\n'+
