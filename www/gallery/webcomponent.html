@@ -87,7 +87,7 @@ a.sort_link{
 <p style="margin-top: 5em;">Change attribute value <button id="change_data">change</button>
 
 <ui-page></ui-page>
-
+<div id="trace"></div>
 </td>
 </tr>
 </table>
@@ -197,11 +197,10 @@ class Child(Parent):
         print(self, "connected")
         Child.nb_cx += 1
 
-    def observedAttributes(self):
-        return ["data"]
+    observedAttributes = ["data"]
 
     def attributeChangedCallback(self, name, old, new, ns):
-        print(f"attribute {name} changed from {old} to {new}")
+        document["trace"].text = f"attribute {name} changed from {old} to {new}"
 
 webcomponent.define("parent-component", Parent)
 webcomponent.define("child-component", Child)
@@ -215,8 +214,7 @@ observed_tag = html.maketag("observed-element")
 
 class Observed:
 
-    def observedAttributes(self):
-        return ["data"]
+    observedAttributes = ["data"]
 
     def attributeChangedCallback(self, name, old, new, ns):
         print(f"attribute {name} changed from {old} to {new}")
