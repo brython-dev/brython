@@ -825,7 +825,7 @@ _b_.NameError.__str__ = function(self){
     var msg = `name '${self.name}' is not defined`,
         suggestion = offer_suggestions_for_name_error(self)
     if(suggestion){
-        msg += `. Did you mean '${suggestion}'?`
+        msg += `. Did you mean: '${suggestion}'?`
     }
     return msg
 }
@@ -977,6 +977,7 @@ function offer_suggestions_for_attribute_error(exc){
         obj = exc.obj
     var dir = _b_.dir(obj),
         suggestions = calculate_suggestions(dir, name)
+    console.log('dir of', obj, dir)
     return suggestions
 }
 

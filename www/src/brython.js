@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,1,'final',0]
 __BRYTHON__.__MAGIC__="3.10.1"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-31 10:50:32.699881"
-__BRYTHON__.timestamp=1635673832699
+__BRYTHON__.compiled_date="2021-10-31 11:04:31.004518"
+__BRYTHON__.timestamp=1635674671004
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -8499,9 +8499,7 @@ if(object_attr !==undefined){klass[attr]=object_attr}else{if($test){console.log(
 var attrs=obj.__dict__
 if(attrs &&
 (object_attr=attrs.$string_dict[attr])!==undefined){return object_attr[0]}
-if(_default===undefined){throw _b_.AttributeError.$factory("'"+
-klass.$infos.__name__+"' object has no attribute '"+
-attr+"'")}
+if(_default===undefined){throw $B.attr_error(attr,obj)}
 return _default}}
 if(klass.$descriptors && klass.$descriptors[attr]!==undefined){return klass[attr](obj)}
 if(typeof klass[attr]=='function'){var func=klass[attr]
@@ -9619,7 +9617,7 @@ var js='\nvar $ = $B.args("NameError", 1, {"msg": null, "name":null}, '+
 $make_exc([["NameError",js]],_b_.Exception)
 _b_.NameError.__str__=function(self){if(self.args.length > 0){return self.args[0]}
 var msg=`name '${self.name}' is not defined`,suggestion=offer_suggestions_for_name_error(self)
-if(suggestion){msg+=`. Did you mean '${suggestion}'?`}
+if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
 return msg}
 $B.set_func_names(_b_.NameError,'builtins')
 $make_exc(["UnboundLocalError"],_b_.NameError)
@@ -9683,6 +9681,7 @@ suggestion_distance=current_distance}}
 return suggestion}
 function offer_suggestions_for_attribute_error(exc){var name=exc.name,obj=exc.obj
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
+console.log('dir of',obj,dir)
 return suggestions}
 function offer_suggestions_for_name_error(exc){var name=exc.name,frame=$B.last(exc.$stack)
 var locals=Object.keys(frame[1]).filter(x=> !(x.startsWith('$')))

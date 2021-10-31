@@ -1201,9 +1201,7 @@ $B.$getattr = function(obj, attr, _default){
                     return object_attr[0]
                 }
                 if(_default === undefined){
-                    throw _b_.AttributeError.$factory("'" +
-                        klass.$infos.__name__ +"' object has no attribute '" +
-                        attr + "'")
+                    throw $B.attr_error(attr, obj)
                 }
                 return _default
             }
