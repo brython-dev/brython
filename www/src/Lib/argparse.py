@@ -875,7 +875,7 @@ class BooleanOptionalAction(Action):
                 _option_strings.append(option_string)
 
         if help is not None and default is not None:
-            help += " (default: %(default)s)"
+            help += f" (default: {default})"
 
         super().__init__(
             option_strings=_option_strings,

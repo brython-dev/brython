@@ -99,7 +99,7 @@ __all__ = [
     'NamedTuple',  # Not really a type.
     'TypedDict',  # Not really a type.
     'Generator',
-
+ 
     # Other concrete types.
     'BinaryIO',
     'IO',
@@ -174,11 +174,6 @@ def _type_check(arg, msg, is_argument=True, module=None):
     return arg
 
 
-def _is_param_expr(arg):
-    return arg is ... or isinstance(arg,
-            (tuple, list, ParamSpec, _ConcatenateGenericAlias))
-
-
 def _type_repr(obj):
     """Return the repr() of an object, special-casing types (internal helper).
 
@@ -233,9 +228,7 @@ def _prepare_paramspec_params(cls, params):
     variables (internal helper).
     """
     # Special case where Z[[int, str, bool]] == Z[int, str, bool] in PEP 612.
-    if (len(cls.__parameters__) == 1
-            and params and not _is_param_expr(params[0])):
-        assert isinstance(cls.__parameters__[0], ParamSpec)
+    if len(cls.__parameters__) == 1 and len(params) > 1:
         return (params,)
     else:
         _check_generic(cls, params, len(cls.__parameters__))
@@ -512,8 +505,6 @@ def Union(self, parameters):
     parameters = _remove_dups_flatten(parameters)
     if len(parameters) == 1:
         return parameters[0]
-    if len(parameters) == 2 and type(None) in parameters:
-        return _UnionGenericAlias(self, parameters, name="Optional")
     return _UnionGenericAlias(self, parameters)
 
 @_SpecialForm
@@ -957,7 +948,7 @@ class _BaseGenericAlias(_Final, _root=True):
 
     def __getattr__(self, attr):
         if attr in {'__name__', '__qualname__'}:
-            return self._name or self.__origin__.__name__
+            return self._name
 
         # We are careful for copy and pickle.
         # Also for simplicity we just don't relay all dunder names
@@ -1040,13 +1031,7 @@ class _GenericAlias(_BaseGenericAlias, _root=True):
         new_args = []
         for arg in self.__args__:
             if isinstance(arg, self._typevar_types):
-                if isinstance(arg, ParamSpec):
-                    arg = subst[arg]
-                    if not _is_param_expr(arg):
-                        raise TypeError(f"Expected a list of types, an ellipsis, "
-                                        f"ParamSpec, or Concatenate. Got {arg}")
-                else:
-                    arg = subst[arg]
+                arg = subst[arg]
             elif isinstance(arg, (_GenericAlias, GenericAlias, types.UnionType)):
                 subparams = arg.__parameters__
                 if subparams:
@@ -1081,9 +1066,6 @@ class _GenericAlias(_BaseGenericAlias, _root=True):
         return operator.getitem, (origin, args)
 
     def __mro_entries__(self, bases):
-        if isinstance(self.__origin__, _SpecialForm):
-            raise TypeError(f"Cannot subclass {self!r}")
-
         if self._name:  # generic version of an ABC or built-in class
             return super().__mro_entries__(bases)
         if self.__origin__ is Generic:
@@ -1147,7 +1129,8 @@ class _CallableGenericAlias(_GenericAlias, _root=True):
     def __repr__(self):
         assert self._name == 'Callable'
         args = self.__args__
-        if len(args) == 2 and _is_param_expr(args[0]):
+        if len(args) == 2 and (args[0] is Ellipsis
+                               or isinstance(args[0], (ParamSpec, _ConcatenateGenericAlias))):
             return super().__repr__()
         return (f'typing.Callable'
                 f'[[{", ".join([_type_repr(a) for a in args[:-1]])}], '
@@ -1155,7 +1138,8 @@ class _CallableGenericAlias(_GenericAlias, _root=True):
 
     def __reduce__(self):
         args = self.__args__
-        if not (len(args) == 2 and _is_param_expr(args[0])):
+        if not (len(args) == 2 and (args[0] is Ellipsis
+                                    or isinstance(args[0], (ParamSpec, _ConcatenateGenericAlias)))):
             args = list(args[:-1]), args[-1]
         return operator.getitem, (Callable, args)
 
@@ -1239,10 +1223,6 @@ class _UnionGenericAlias(_GenericAlias, _root=True):
         for arg in self.__args__:
             if issubclass(cls, arg):
                 return True
-
-    def __reduce__(self):
-        func, (origin, args) = super().__reduce__()
-        return func, (Union, args)
 
 
 def _value_and_type_iter(parameters):
@@ -1398,34 +1378,8 @@ def _is_callable_members_only(cls):
     return all(callable(getattr(cls, attr, None)) for attr in _get_protocol_attrs(cls))
 
 
-def _no_init_or_replace_init(self, *args, **kwargs):
-    cls = type(self)
-
-    if cls._is_protocol:
-        raise TypeError('Protocols cannot be instantiated')
-
-    # Already using a custom `__init__`. No need to calculate correct
-    # `__init__` to call. This can lead to RecursionError. See bpo-45121.
-    if cls.__init__ is not _no_init_or_replace_init:
-        return
-
-    # Initially, `__init__` of a protocol subclass is set to `_no_init_or_replace_init`.
-    # The first instantiation of the subclass will call `_no_init_or_replace_init` which
-    # searches for a proper new `__init__` in the MRO. The new `__init__`
-    # replaces the subclass' old `__init__` (ie `_no_init_or_replace_init`). Subsequent
-    # instantiation of the protocol subclass will thus use the new
-    # `__init__` and no longer call `_no_init_or_replace_init`.
-    for base in cls.__mro__:
-        init = base.__dict__.get('__init__', _no_init_or_replace_init)
-        if init is not _no_init_or_replace_init:
-            cls.__init__ = init
-            break
-    else:
-        # should not happen
-        cls.__init__ = object.__init__
-
-    cls.__init__(self, *args, **kwargs)
-
+def _no_init(self, *args, **kwargs):
+    raise TypeError('Protocols cannot be instantiated')
 
 def _caller(depth=1, default='__main__'):
     try:
@@ -1568,6 +1522,15 @@ class Protocol(Generic, metaclass=_ProtocolMeta):
 
         # We have nothing more to do for non-protocols...
         if not cls._is_protocol:
+            if cls.__init__ == _no_init:
+                for base in cls.__mro__:
+                    init = base.__dict__.get('__init__', _no_init)
+                    if init != _no_init:
+                        cls.__init__ = init
+                        break
+                else:
+                    # should not happen
+                    cls.__init__ = object.__init__
             return
 
         # ... otherwise check consistency of bases, and prohibit instantiation.
@@ -1578,7 +1541,7 @@ class Protocol(Generic, metaclass=_ProtocolMeta):
                     issubclass(base, Generic) and base._is_protocol):
                 raise TypeError('Protocols can only inherit from other'
                                 ' protocols, got %r' % base)
-        cls.__init__ = _no_init_or_replace_init
+        cls.__init__ = _no_init
 
 
 class _AnnotatedAlias(_GenericAlias, _root=True):
@@ -1620,11 +1583,6 @@ class _AnnotatedAlias(_GenericAlias, _root=True):
 
     def __hash__(self):
         return hash((self.__origin__, self.__metadata__))
-
-    def __getattr__(self, attr):
-        if attr in {'__name__', '__qualname__'}:
-            return 'Annotated'
-        return super().__getattr__(attr)
 
 
 class Annotated:
@@ -1907,7 +1865,8 @@ def get_args(tp):
     if isinstance(tp, (_GenericAlias, GenericAlias)):
         res = tp.__args__
         if (tp.__origin__ is collections.abc.Callable
-                and not (len(res) == 2 and _is_param_expr(res[0]))):
+                and not (res[0] is Ellipsis
+                         or isinstance(res[0], (ParamSpec, _ConcatenateGenericAlias)))):
             res = (list(res[:-1]), res[-1])
         return res
     if isinstance(tp, types.UnionType):

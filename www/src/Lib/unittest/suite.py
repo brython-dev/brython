@@ -149,7 +149,6 @@ class TestSuite(BaseTestSuite):
         if getattr(currentClass, "__unittest_skip__", False):
             return
 
-        failed = False
         try:
             currentClass._classSetupFailed = False
         except TypeError:
@@ -158,32 +157,27 @@ class TestSuite(BaseTestSuite):
             pass
 
         setUpClass = getattr(currentClass, 'setUpClass', None)
-        doClassCleanups = getattr(currentClass, 'doClassCleanups', None)
         if setUpClass is not None:
             _call_if_exists(result, '_setupStdout')
             try:
-                try:
-                    setUpClass()
-                except Exception as e:
-                    if isinstance(result, _DebugResult):
-                        raise
-                    failed = True
-                    try:
-                        currentClass._classSetupFailed = True
-                    except TypeError:
-                        pass
-                    className = util.strclass(currentClass)
-                    self._createClassOrModuleLevelException(result, e,
-                                                            'setUpClass',
-                                                            className)
-                if failed and doClassCleanups is not None:
-                    doClassCleanups()
-                    for exc_info in currentClass.tearDown_exceptions:
-                        self._createClassOrModuleLevelException(
-                                result, exc_info[1], 'setUpClass', className,
-                                info=exc_info)
+                setUpClass()
+            except Exception as e:
+                if isinstance(result, _DebugResult):
+                    raise
+                currentClass._classSetupFailed = True
+                className = util.strclass(currentClass)
+                self._createClassOrModuleLevelException(result, e,
+                                                        'setUpClass',
+                                                        className)
             finally:
                 _call_if_exists(result, '_restoreStdout')
+                if currentClass._classSetupFailed is True:
+                    currentClass.doClassCleanups()
+                    if len(currentClass.tearDown_exceptions) > 0:
+                        for exc in currentClass.tearDown_exceptions:
+                            self._createClassOrModuleLevelException(
+                                    result, exc[1], 'setUpClass', className,
+                                    info=exc)
 
     def _get_previous_module(self, result):
         previousModule = None
@@ -211,22 +205,20 @@ class TestSuite(BaseTestSuite):
         if setUpModule is not None:
             _call_if_exists(result, '_setupStdout')
             try:
+                setUpModule()
+            except Exception as e:
                 try:
-                    setUpModule()
-                except Exception as e:
-                    if isinstance(result, _DebugResult):
-                        raise
-                    result._moduleSetUpFailed = True
-                    self._createClassOrModuleLevelException(result, e,
+                    case.doModuleCleanups()
+                except Exception as exc:
+                    self._createClassOrModuleLevelException(result, exc,
                                                             'setUpModule',
                                                             currentModule)
-                if result._moduleSetUpFailed:
-                    try:
-                        case.doModuleCleanups()
-                    except Exception as e:
-                        self._createClassOrModuleLevelException(result, e,
-                                                                'setUpModule',
-                                                                currentModule)
+                if isinstance(result, _DebugResult):
+                    raise
+                result._moduleSetUpFailed = True
+                self._createClassOrModuleLevelException(result, e,
+                                                        'setUpModule',
+                                                        currentModule)
             finally:
                 _call_if_exists(result, '_restoreStdout')
 
@@ -259,33 +251,30 @@ class TestSuite(BaseTestSuite):
         except KeyError:
             return
 
-        _call_if_exists(result, '_setupStdout')
-        try:
-            tearDownModule = getattr(module, 'tearDownModule', None)
-            if tearDownModule is not None:
-                try:
-                    tearDownModule()
-                except Exception as e:
-                    if isinstance(result, _DebugResult):
-                        raise
-                    self._createClassOrModuleLevelException(result, e,
-                                                            'tearDownModule',
-                                                            previousModule)
+        tearDownModule = getattr(module, 'tearDownModule', None)
+        if tearDownModule is not None:
+            _call_if_exists(result, '_setupStdout')
             try:
-                case.doModuleCleanups()
+                tearDownModule()
             except Exception as e:
                 if isinstance(result, _DebugResult):
                     raise
                 self._createClassOrModuleLevelException(result, e,
                                                         'tearDownModule',
                                                         previousModule)
-        finally:
-            _call_if_exists(result, '_restoreStdout')
+            finally:
+                _call_if_exists(result, '_restoreStdout')
+                try:
+                    case.doModuleCleanups()
+                except Exception as e:
+                    self._createClassOrModuleLevelException(result, e,
+                                                            'tearDownModule',
+                                                            previousModule)
 
     def _tearDownPreviousClass(self, test, result):
         previousClass = getattr(result, '_previousTestClass', None)
         currentClass = test.__class__
-        if currentClass == previousClass or previousClass is None:
+        if currentClass == previousClass:
             return
         if getattr(previousClass, '_classSetupFailed', False):
             return
@@ -295,34 +284,27 @@ class TestSuite(BaseTestSuite):
             return
 
         tearDownClass = getattr(previousClass, 'tearDownClass', None)
-        doClassCleanups = getattr(previousClass, 'doClassCleanups', None)
-        if tearDownClass is None and doClassCleanups is None:
-            return
-
-        _call_if_exists(result, '_setupStdout')
-        try:
-            if tearDownClass is not None:
-                try:
-                    tearDownClass()
-                except Exception as e:
-                    if isinstance(result, _DebugResult):
-                        raise
-                    className = util.strclass(previousClass)
-                    self._createClassOrModuleLevelException(result, e,
-                                                            'tearDownClass',
-                                                            className)
-            if doClassCleanups is not None:
-                doClassCleanups()
-                for exc_info in previousClass.tearDown_exceptions:
-                    if isinstance(result, _DebugResult):
-                        raise exc_info[1]
-                    className = util.strclass(previousClass)
-                    self._createClassOrModuleLevelException(result, exc_info[1],
-                                                            'tearDownClass',
-                                                            className,
-                                                            info=exc_info)
-        finally:
-            _call_if_exists(result, '_restoreStdout')
+        if tearDownClass is not None:
+            _call_if_exists(result, '_setupStdout')
+            try:
+                tearDownClass()
+            except Exception as e:
+                if isinstance(result, _DebugResult):
+                    raise
+                className = util.strclass(previousClass)
+                self._createClassOrModuleLevelException(result, e,
+                                                        'tearDownClass',
+                                                        className)
+            finally:
+                _call_if_exists(result, '_restoreStdout')
+                previousClass.doClassCleanups()
+                if len(previousClass.tearDown_exceptions) > 0:
+                    for exc in previousClass.tearDown_exceptions:
+                        className = util.strclass(previousClass)
+                        self._createClassOrModuleLevelException(result, exc[1],
+                                                                'tearDownClass',
+                                                                className,
+                                                                info=exc)
 
 
 class _ErrorHolder(object):
