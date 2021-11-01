@@ -12627,9 +12627,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         root.insert(offset++, $NodeJS('$locals[".0"] = ' + arg))
     }
 
-    root.insert(offset++,
-        $NodeJS(local_ns + '.__package__ = "' + __package__ +'"'))
-
     // annotations
     if(root.binding.__annotations__){
         root.insert(offset++,
