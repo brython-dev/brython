@@ -111,9 +111,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,2,'final',0]
 __BRYTHON__.__MAGIC__="3.10.2"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-01 12:04:04.308310"
-__BRYTHON__.timestamp=1635764644308
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
+__BRYTHON__.compiled_date="2021-11-01 17:40:29.990553"
+__BRYTHON__.timestamp=1635784829990
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -466,9 +466,9 @@ if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex
 if(once){break}
 ctx=ctx.parent}}
 $B.format_indent=function(js,indent){
-var lines=js.split('\n'),level=indent,res='',last_is_closing_brace=false,last_is_backslash=false
+var indentation='  ',lines=js.split('\n'),level=indent,res='',last_is_closing_brace=false,last_is_backslash=false,last_is_var_and_comma=false
 for(var i=0,len=lines.length;i < len;i++){var line=lines[i],add_closing_brace=false,add_spaces=true
-if(last_is_backslash){add_spaces=false}else{line=line.trim()}
+if(last_is_backslash){add_spaces=false}else if(last_is_var_and_comma){line='    '+line.trim()}else{line=line.trim()}
 if(add_spaces && last_is_closing_brace &&
 (line.startsWith('else')||
 line.startsWith('catch')||
@@ -477,15 +477,17 @@ add_spaces=false}
 last_is_closing_brace=line.endsWith('}')
 if(line.startsWith('}')){level--}else if(line.endsWith('}')){line=line.substr(0,line.length-1)
 add_closing_brace=true}
-if(level < 0){console.log('level',level)
-console.log(res)
+if(level < 0){if($B.debug > 2){console.log('wrong js indent')
+console.log(res)}
 level=0}
-try{res+=(add_spaces ? '  '.repeat(level):'')+line+'\n'}catch(err){console.log(res)
+try{res+=(add_spaces ? indentation.repeat(level):'')+line+'\n'}catch(err){console.log(res)
 throw err}
 if(line.endsWith('{')){level++}else if(add_closing_brace){level--
-try{res+='  '.repeat(level)+'}\n'}catch(err){console.log(res)
+try{res+=indentation.repeat(level)+'}\n'}catch(err){console.log(res)
 throw err}}
-last_is_backslash=line.endsWith('\\')}
+last_is_backslash=line.endsWith('\\')
+last_is_var_and_comma=line.endsWith(',')&&
+(line.startsWith('var ')||last_is_var_and_comma)}
 return res}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]}
@@ -541,12 +543,12 @@ this.res.push('}\n')}}
 this.js=this.res.join('')
 return this.js}
 $Node.prototype.transform=function(rank){
-if(this.has_await){
+if(this.awaits && this.awaits.length > 0){
 this.parent.insert(rank,$NodeJS("var save_stack = $B.save_stack()"))
 if(!(this.C && this.C.tree.length > 0 &&
 this.C.tree[0].type=='return')){
 this.parent.insert(rank+2,$NodeJS("$B.restore_stack(save_stack, $locals)"))}
-this.has_await=false 
+delete this.awaits 
 return 1}
 if(this.has_yield && ! this.has_yield.transformed){
 var parent=this.parent
@@ -1792,6 +1794,29 @@ node.parent.insert(rank+2,$NodeJS("_b_.None;"))
 this.transformed=true}
 $ClassCtx.prototype.to_js=function(){this.js_processed=true
 return 'var $'+this.name+'_'+this.random+' = (function()'}
+var Comprehension={make_comp:function(comp,C){comp.comprehension=true
+comp.parent=C.parent
+comp.binding={}
+comp.id=comp.type+$B.UUID()
+var scope=$get_scope(C)
+comp.parent_block=scope
+while(scope){if(scope.C && scope.C.tree &&
+scope.C.tree.length > 0 &&
+scope.C.tree[0].async){comp.async=true
+break}
+scope=scope.parent_block}
+comp.module=$get_module(C).module
+comp.module_ref=comp.module.replace(/\./g,'_')
+C.parent.tree[C.parent.tree.length-1]=comp
+Comprehension.set_parent_block(C.tree[0],comp)},set_parent_block:function(ctx,parent_block){if(ctx.tree){for(var item of ctx.tree){if(item.comprehension){item.parent_block=parent_block}
+Comprehension.set_parent_block(item,parent_block)}}},get_awaits:function(ctx,awaits){
+awaits=awaits ||[]
+if(ctx.type=='await'){awaits.push(ctx)}else if(ctx.tree){for(var item of ctx.tree){Comprehension.get_awaits(item,awaits)}}
+return awaits},has_await:function(ctx){
+var node=$get_node(ctx),awaits=Comprehension.get_awaits(ctx)
+for(var aw of awaits){var ix=node.awaits.indexOf(aw)
+if(ix >-1){node.awaits.splice(ix,1)}}
+return awaits.length > 0}}
 var $ConditionCtx=$B.parser.$ConditionCtx=function(C,token){
 this.type='condition'
 this.token=token
@@ -2301,9 +2326,9 @@ this.parent_block=$get_scope(C)
 this.module=$get_module(C).module
 C.parent.tree[C.parent.tree.length-1]=this
 this.type='dict_comp'
-make_comp(this,C)}
+Comprehension.make_comp(this,C)}
 DictCompCtx.prototype.transition=function(token,value){var C=this
-if(token=='}'){this.has_await=has_await(this)
+if(token=='}'){this.has_await=Comprehension.has_await(this)
 return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 DictCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
@@ -2324,7 +2349,7 @@ for(var i=1;i < this.tree.length;i++){nb++
 var stmt=this.tree[i]
 if(stmt.type=='for'){stmt.comp_body=true
 js+='\n'+stmt.to_js(indent+nb)}else if(stmt.type=='condition' && stmt.token=='if'){js+='\n'+' '.repeat(12+4*nb)+stmt.to_js()+'{'}}
-var expr_has_await=has_await(this.value)
+var expr_has_await=Comprehension.has_await(this.value)
 js+='\n'+' '.repeat(16+4*nb)+
 (expr_has_await ? 'var save_stack = $B.save_stack();\n' :'')+
 `try{\n  _b_.dict.$setitem($result_${id}, ${this.key.to_js()}, `+
@@ -2622,10 +2647,6 @@ this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
 if(C.packed){this.packed=C.packed}
-if(C.is_await){var node=$get_node(this)
-node.has_await=node.has_await ||[]
-this.is_await=C.is_await
-node.has_await.push(this)}
 if(C.assign){
 this.assign=C.assign}
 this.tree=[]
@@ -2952,7 +2973,8 @@ var js=`try{\n var $next_${new_id} = $B.unpacker(${nxt}, `+
 `catch(err){\n console.log("erreur");$B.leave_frame($locals); throw err\n}\n`
 for(var item of target.items){js+=tg_to_js(item,`$next_${new_id}`,true)}}
 return js+'\n'}
-function make_target(target){if(target.type=='expr'){return make_target(target.tree[0])}else if(target.tree===undefined ||target.tree.length==0){var res={type:'simple',item:target}}else if(target.tree.length > 1 ||target.implicit_tuple){var res={type:'tuple',items:target.tree.map(make_target)}}else if(target.tree[0].type=='list_or_tuple'){var res={type:'tuple',items:target.tree[0].tree.map(make_target)}}else{var item=target.tree[0]
+function make_target(target){
+if(target.type=='expr'){return make_target(target.tree[0])}else if(target.tree===undefined ||target.tree.length==0){var res={type:'simple',item:target}}else if(target.tree.length > 1 ||target.implicit_tuple){var res={type:'tuple',items:target.tree.map(make_target)}}else if(target.tree[0].type=='list_or_tuple'){var res={type:'tuple',items:target.tree[0].tree.map(make_target)}}else{var item=target.tree[0]
 if(item.type=='expr'){item=item.tree[0]}
 var res={type:'simple',item}
 if(target.packed){res=make_target(target.tree[0])
@@ -3232,9 +3254,9 @@ var GeneratorExpCtx=function(C){
 this.type='gen_expr'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
-make_comp(this,C)}
+Comprehension.make_comp(this,C)}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
-if(token==')'){this.has_await=has_await(this)
+if(token==')'){this.has_await=Comprehension.has_await(this)
 if(this.parent.type=='call'){return this.parent.parent}
 return this.parent}
 $_SyntaxError(C,'token '+token+'after gen expr')}
@@ -3258,7 +3280,7 @@ for(var i=2;i < this.tree.length;i++){nb++
 var stmt=this.tree[i]
 if(stmt.type=='for'){stmt.comp_body=true
 js+='\n'+stmt.to_js(indent+nb)}else if(stmt.type=='condition' && stmt.token=='if'){js+='\n'+' '.repeat(12+4*nb)+stmt.to_js()+'{'}}
-var expr_has_await=has_await(expr)
+var expr_has_await=Comprehension.has_await(expr)
 js+='\n'+' '.repeat(16+4*nb)+
 (expr_has_await ? 'var save_stack = $B.save_stack();\n' :'')+
 `try{
@@ -3794,39 +3816,15 @@ $B.clear_ns(lambda_name)
 $B.$py_src[lambda_name]=null
 delete $B.$py_src[lambda_name]
 return js}
-function set_parent_block(ctx,parent_block){if(ctx.tree){for(var item of ctx.tree){if(item.comprehension){item.parent_block=parent_block}
-set_parent_block(item,parent_block)}}}
-function make_comp(comp,C){comp.comprehension=true
-comp.parent=C.parent
-comp.binding={}
-comp.id=comp.type+$B.UUID()
-var scope=$get_scope(C)
-comp.parent_block=scope
-while(scope){if(scope.C && scope.C.tree &&
-scope.C.tree.length > 0 &&
-scope.C.tree[0].async){comp.async=true
-break}
-scope=scope.parent_block}
-comp.module=$get_module(C).module
-comp.module_ref=comp.module.replace(/\./g,'_')
-C.parent.tree[C.parent.tree.length-1]=comp
-set_parent_block(C.tree[0],comp)}
 var ListCompCtx=function(C){
 this.type='list_comp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
-make_comp(this,C)}
+Comprehension.make_comp(this,C)}
 ListCompCtx.prototype.transition=function(token,value){var C=this
-if(token==']'){this.has_await=has_await(this)
+if(token==']'){this.has_await=Comprehension.has_await(this)
 return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
-function has_await(ctx){var node=$get_node(ctx),awaits=get_awaits(ctx)
-for(var aw of awaits){var ix=node.awaits.indexOf(aw)
-if(ix >-1){node.awaits.splice(ix,1)}}
-return awaits.length > 0}
-function get_awaits(ctx,awaits){awaits=awaits ||[]
-if(ctx.type=='await'){awaits.push(ctx)}else if(ctx.tree){for(var item of ctx.tree){get_awaits(item,awaits)}}
-return awaits}
 ListCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
 var id=this.id,expr=this.tree[0],first_for=this.tree[1],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
@@ -3844,7 +3842,7 @@ for(var i=2;i < this.tree.length;i++){nb++
 var stmt=this.tree[i]
 if(stmt.type=='for'){stmt.comp_body=true
 js+='\n'+stmt.to_js(indent+nb)}else if(stmt.type=='condition' && stmt.token=='if'){js+='\n'+' '.repeat(12+4*nb)+stmt.to_js()+'{'}}
-var expr_has_await=has_await(expr)
+var expr_has_await=Comprehension.has_await(expr)
 js+='\n'+' '.repeat(16+4*nb)+
 (expr_has_await ? 'var save_stack = $B.save_stack();\n' :'')+
 `try{\n`+
@@ -5132,9 +5130,9 @@ var SetCompCtx=function(C){
 this.type='set_comp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
-make_comp(this,C)}
+Comprehension.make_comp(this,C)}
 SetCompCtx.prototype.transition=function(token,value){var C=this
-if(token=='}'){this.has_await=has_await(this)
+if(token=='}'){this.has_await=Comprehension.has_await(this)
 return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 SetCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
@@ -5155,7 +5153,7 @@ for(var i=2;i < this.tree.length;i++){nb++
 var stmt=this.tree[i]
 if(stmt.type=='for'){stmt.comp_body=true
 js+='\n'+stmt.to_js(indent+nb)}else if(stmt.type=='condition' && stmt.token=='if'){js+='\n'+' '.repeat(12+4*nb)+stmt.to_js()+'{'}}
-var expr_has_await=has_await(expr)
+var expr_has_await=Comprehension.has_await(expr)
 js+='\n'+' '.repeat(16+4*nb)+
 (expr_has_await ? 'var save_stack = $B.save_stack();\n' :'')+
 `try{\n_b_.set.add($result_${id}, ${expr.to_js()})\n`+
@@ -6262,7 +6260,6 @@ info))
 var arg="_expr"
 if(is_comp=="genexpr" ||is_comp=="setcomp"){arg="$locals_"+root.id}
 root.insert(offset++,$NodeJS('$locals[".0"] = '+arg))}
-root.insert(offset++,$NodeJS(local_ns+'.__package__ = "'+__package__+'"'))
 if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = $B.empty_dict()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
@@ -10962,11 +10959,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
-var js=['_aio','_ajax','_base64','_binascii','_cmath','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre1','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','module1','modulefinder','pbkdf2','posix','python_re','python_re1','python_re2','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
+var js=['_aio','_ajax','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
