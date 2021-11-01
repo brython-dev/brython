@@ -369,6 +369,7 @@ function check_assignment(context, kwargs){
     }
 }
 
+
 $B.format_indent = function(js, indent){
     // Indent JS code based on curly braces ({ and })
     var indentation = '  ',
@@ -428,7 +429,7 @@ $B.format_indent = function(js, indent){
             }
         }
         last_is_backslash = line.endsWith('\\')
-        last_is_var_and_comma = line.endsWith(',') && 
+        last_is_var_and_comma = line.endsWith(',') &&
             (line.startsWith('var ') || last_is_var_and_comma)
     }
     return res
@@ -564,10 +565,10 @@ $Node.prototype.transform = function(rank){
     // Returns an offset : in case children were inserted by transform(),
     // we must jump to the next original node, skipping those that have
     // just been inserted
-    if(this.has_await){
-        // If node has an "await" statement, insert a node to save
-        // execution stack, so that it can be restored when the awaitable
-        // is completed
+    if(this.awaits && this.awaits.length > 0){
+        // If node has an "await" statement which is not inside a
+        // comprehension, insert a node to save execution stack, so that it
+        // can be restored when the awaitable is completed
         this.parent.insert(rank,
             $NodeJS("var save_stack = $B.save_stack()"))
         if(! (this.context && this.context.tree.length > 0 &&
@@ -578,7 +579,7 @@ $Node.prototype.transform = function(rank){
             this.parent.insert(rank + 2,
                 $NodeJS("$B.restore_stack(save_stack, $locals)"))
         }
-        this.has_await = false // avoid recursion
+        delete this.awaits // avoid recursion
         return 1
     }
 
@@ -2951,6 +2952,64 @@ $ClassCtx.prototype.to_js = function(){
     return 'var $' + this.name + '_' + this.random + ' = (function()'
 }
 
+var Comprehension = {
+    make_comp: function(comp, context){
+        comp.comprehension = true
+        comp.parent = context.parent
+        comp.binding = {}
+        comp.id = comp.type + $B.UUID()
+        var scope = $get_scope(context)
+        comp.parent_block = scope
+        while(scope){
+            if(scope.context && scope.context.tree &&
+                    scope.context.tree.length > 0 &&
+                    scope.context.tree[0].async){
+                comp.async = true
+                break
+            }
+            scope = scope.parent_block
+        }
+        comp.module = $get_module(context).module
+        comp.module_ref = comp.module.replace(/\./g, '_')
+        context.parent.tree[context.parent.tree.length - 1] = comp
+        Comprehension.set_parent_block(context.tree[0], comp)
+    },
+    set_parent_block: function(ctx, parent_block){
+        if(ctx.tree){
+            for(var item of ctx.tree){
+                if(item.comprehension){
+                    item.parent_block = parent_block
+                }
+                Comprehension.set_parent_block(item, parent_block)
+            }
+        }
+    },
+    get_awaits: function(ctx, awaits){
+        // Return the list of Await below context "ctx"
+        awaits = awaits || []
+        if(ctx.type == 'await'){
+            awaits.push(ctx)
+        }else if(ctx.tree){
+            for(var item of ctx.tree){
+                Comprehension.get_awaits(item, awaits)
+            }
+        }
+        return awaits
+    },
+    has_await: function(ctx){
+        //
+        var node = $get_node(ctx),
+            awaits = Comprehension.get_awaits(ctx)
+        for(var aw of awaits){
+            var ix = node.awaits.indexOf(aw)
+            if(ix > -1){
+                node.awaits.splice(ix, 1)
+            }
+        }
+        return awaits.length > 0
+    }
+}
+
 var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
     // Class for keywords "if", "elif", "while"
     this.type = 'condition'
@@ -4129,13 +4188,13 @@ var DictCompCtx = function(context){
     this.module = $get_module(context).module
     context.parent.tree[context.parent.tree.length - 1] = this
     this.type = 'dict_comp'
-    make_comp(this, context)
+    Comprehension.make_comp(this, context)
 }
 
 DictCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == '}'){
-        this.has_await = has_await(this)
+        this.has_await = Comprehension.has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
@@ -4173,7 +4232,7 @@ DictCompCtx.prototype.to_js = function(){
         }
     }
 
-    var expr_has_await = has_await(this.value)
+    var expr_has_await = Comprehension.has_await(this.value)
 
     js +=  '\n' + ' '.repeat(16 + 4 * nb) +
             (expr_has_await ? 'var save_stack = $B.save_stack();\n' : '') +
@@ -4733,12 +4792,6 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.parent = context
     if(context.packed){
         this.packed = context.packed
-    }
-    if(context.is_await){
-        var node = $get_node(this)
-        node.has_await = node.has_await || []
-        this.is_await = context.is_await
-        node.has_await.push(this)
     }
     if(context.assign){
         // assignment expression
@@ -5403,6 +5456,12 @@ function tg_to_js(target, iterable, unpack){
 }
 
 function make_target(target){
+    // Create an ast-like structure for assignement target, initially based on
+    // a $TargetListCtx.
+    // Nodes have an attribute 'type': 'simple' or 'tuple'
+    // 'simple' nodes have an attribute 'item': the context of the target item
+    // (Name, Attribute, Subscript, Starred)
+    // 'tuple' nodes have an attribute 'items': a list of target nodes 
     if(target.type == 'expr'){
         return make_target(target.tree[0])
     }else if(target.tree === undefined || target.tree.length == 0){
@@ -6011,13 +6070,13 @@ var GeneratorExpCtx = function(context){
     this.type = 'gen_expr'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
-    make_comp(this, context)
+    Comprehension.make_comp(this, context)
 }
 
 GeneratorExpCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ')'){
-        this.has_await = has_await(this)
+        this.has_await = Comprehension.has_await(this)
         if(this.parent.type == 'call'){
             return this.parent.parent
         }
@@ -6059,7 +6118,7 @@ GeneratorExpCtx.prototype.to_js = function(){
         }
     }
 
-    var expr_has_await = has_await(expr)
+    var expr_has_await = Comprehension.has_await(expr)
 
     js +=  '\n' + ' '.repeat(16 + 4 * nb) +
             (expr_has_await ? 'var save_stack = $B.save_stack();\n' : '') +
@@ -7377,38 +7436,6 @@ $LambdaCtx.prototype.to_js = function(){
     return js
 }
 
-function set_parent_block(ctx, parent_block){
-    if(ctx.tree){
-        for(var item of ctx.tree){
-            if(item.comprehension){
-                item.parent_block = parent_block
-            }
-            set_parent_block(item, parent_block)
-        }
-    }
-}
-
-function make_comp(comp, context){
-    comp.comprehension = true
-    comp.parent = context.parent
-    comp.binding = {}
-    comp.id = comp.type + $B.UUID()
-    var scope = $get_scope(context)
-    comp.parent_block = scope
-    while(scope){
-        if(scope.context && scope.context.tree &&
-                scope.context.tree.length > 0 &&
-                scope.context.tree[0].async){
-            comp.async = true
-            break
-        }
-        scope = scope.parent_block
-    }
-    comp.module = $get_module(context).module
-    comp.module_ref = comp.module.replace(/\./g, '_')
-    context.parent.tree[context.parent.tree.length - 1] = comp
-    set_parent_block(context.tree[0], comp)
-}
 
 var ListCompCtx = function(context){
     // create a List Comprehension
@@ -7416,40 +7443,16 @@ var ListCompCtx = function(context){
     this.type = 'list_comp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
-    make_comp(this, context)
+    Comprehension.make_comp(this, context)
 }
 
 ListCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ']'){
-        this.has_await = has_await(this)
+        this.has_await = Comprehension.has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
-}
-
-function has_await(ctx){
-    var node = $get_node(ctx),
-        awaits = get_awaits(ctx)
-    for(var aw of awaits){
-        var ix = node.awaits.indexOf(aw)
-        if(ix > -1){
-            node.awaits.splice(ix, 1)
-        }
-    }
-    return awaits.length > 0
-}
-
-function get_awaits(ctx, awaits){
-    awaits = awaits || []
-    if(ctx.type == 'await'){
-        awaits.push(ctx)
-    }else if(ctx.tree){
-        for(var item of ctx.tree){
-            get_awaits(item, awaits)
-        }
-    }
-    return awaits
 }
 
 ListCompCtx.prototype.to_js = function(){
@@ -7485,7 +7488,7 @@ ListCompCtx.prototype.to_js = function(){
         }
     }
 
-    var expr_has_await = has_await(expr)
+    var expr_has_await = Comprehension.has_await(expr)
 
     js +=  '\n' + ' '.repeat(16 + 4 * nb) +
             (expr_has_await ? 'var save_stack = $B.save_stack();\n' : '') +
@@ -9981,13 +9984,13 @@ var SetCompCtx = function(context){
     this.type = 'set_comp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
-    make_comp(this, context)
+    Comprehension.make_comp(this, context)
 }
 
 SetCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == '}'){
-        this.has_await = has_await(this)
+        this.has_await = Comprehension.has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
@@ -10026,7 +10029,7 @@ SetCompCtx.prototype.to_js = function(){
         }
     }
 
-    var expr_has_await = has_await(expr)
+    var expr_has_await = Comprehension.has_await(expr)
 
     js +=  '\n' + ' '.repeat(16 + 4 * nb) +
             (expr_has_await ? 'var save_stack = $B.save_stack();\n' : '') +
