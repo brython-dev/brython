@@ -371,17 +371,21 @@ function check_assignment(context, kwargs){
 
 $B.format_indent = function(js, indent){
     // Indent JS code based on curly braces ({ and })
-    var lines = js.split('\n'),
+    var indentation = '  ',
+        lines = js.split('\n'),
         level = indent,
         res = '',
         last_is_closing_brace = false,
-        last_is_backslash = false
+        last_is_backslash = false,
+        last_is_var_and_comma = false
     for(var i = 0, len = lines.length; i < len; i++){
         var line = lines[i],
             add_closing_brace = false,
             add_spaces = true
         if(last_is_backslash){
             add_spaces = false
+        }else if(last_is_var_and_comma){
+            line = '    ' + line.trim()
         }else{
             line = line.trim()
         }
@@ -400,12 +404,14 @@ $B.format_indent = function(js, indent){
             add_closing_brace = true
         }
         if(level < 0){
-            console.log('level', level)
-            console.log(res)
+            if($B.debug > 2){
+                console.log('wrong js indent')
+                console.log(res)
+            }
             level = 0
         }
         try{
-            res += (add_spaces ? '  '.repeat(level) : '') + line + '\n'
+            res += (add_spaces ? indentation.repeat(level) : '') + line + '\n'
         }catch(err){
             console.log(res)
             throw err
@@ -415,13 +421,15 @@ $B.format_indent = function(js, indent){
         }else if(add_closing_brace){
             level--
             try{
-                res += '  '.repeat(level) + '}\n'
+                res += indentation.repeat(level) + '}\n'
             }catch(err){
                 console.log(res)
                 throw err
             }
         }
         last_is_backslash = line.endsWith('\\')
+        last_is_var_and_comma = line.endsWith(',') && 
+            (line.startsWith('var ') || last_is_var_and_comma)
     }
     return res
 }

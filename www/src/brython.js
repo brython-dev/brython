@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,2,'final',0]
 __BRYTHON__.__MAGIC__="3.10.2"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-01 12:08:28.961462"
-__BRYTHON__.timestamp=1635764908961
+__BRYTHON__.compiled_date="2021-11-01 17:01:42.999967"
+__BRYTHON__.timestamp=1635782502999
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -466,9 +466,9 @@ if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex
 if(once){break}
 ctx=ctx.parent}}
 $B.format_indent=function(js,indent){
-var lines=js.split('\n'),level=indent,res='',last_is_closing_brace=false,last_is_backslash=false
+var indentation='  ',lines=js.split('\n'),level=indent,res='',last_is_closing_brace=false,last_is_backslash=false,last_is_var_and_comma=false
 for(var i=0,len=lines.length;i < len;i++){var line=lines[i],add_closing_brace=false,add_spaces=true
-if(last_is_backslash){add_spaces=false}else{line=line.trim()}
+if(last_is_backslash){add_spaces=false}else if(last_is_var_and_comma){line='    '+line.trim()}else{line=line.trim()}
 if(add_spaces && last_is_closing_brace &&
 (line.startsWith('else')||
 line.startsWith('catch')||
@@ -477,15 +477,17 @@ add_spaces=false}
 last_is_closing_brace=line.endsWith('}')
 if(line.startsWith('}')){level--}else if(line.endsWith('}')){line=line.substr(0,line.length-1)
 add_closing_brace=true}
-if(level < 0){console.log('level',level)
-console.log(res)
+if(level < 0){if($B.debug > 2){console.log('wrong js indent')
+console.log(res)}
 level=0}
-try{res+=(add_spaces ? '  '.repeat(level):'')+line+'\n'}catch(err){console.log(res)
+try{res+=(add_spaces ? indentation.repeat(level):'')+line+'\n'}catch(err){console.log(res)
 throw err}
 if(line.endsWith('{')){level++}else if(add_closing_brace){level--
-try{res+='  '.repeat(level)+'}\n'}catch(err){console.log(res)
+try{res+=indentation.repeat(level)+'}\n'}catch(err){console.log(res)
 throw err}}
-last_is_backslash=line.endsWith('\\')}
+last_is_backslash=line.endsWith('\\')
+last_is_var_and_comma=line.endsWith(',')&& 
+(line.startsWith('var ')||last_is_var_and_comma)}
 return res}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]}
