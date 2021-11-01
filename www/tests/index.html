@@ -6,8 +6,10 @@
 <link rel="stylesheet" href="/brython.css">
 <link rel="stylesheet" href="console.css">
 
-<script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
-<script src="ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ace.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/ext-language_tools.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/theme-solarized_light.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-python.min.js"></script>
 
 <script type="text/javascript" src="../src/brython_builtins.js"></script>
 <script type="text/javascript" src="../src/version_info.js"></script>
@@ -53,7 +55,7 @@ import time
 import sys
 import tb as traceback
 
-from browser import document as doc, bind, console
+from browser import document as doc, bind, console, window
 from browser import timer, aio
 from browser.local_storage import storage
 
@@ -115,19 +117,20 @@ def test_all(ev):
     failed = []
     aio.run(run_all())
 
-@bind("#set_debug", "change")
-def set_debug(ev):
-    if ev.target.checked:
-        __BRYTHON__.debug = 1
-    else:
-        __BRYTHON__.debug = 0
-
-__BRYTHON__.debug = int(doc['set_debug'].checked)
-
 @bind("#run", "click")
 def run_one(ev):
     aio.run(run(reset=True))
 
+@bind('#size_up', 'click')
+def size_up(ev):
+    font_size = window.getComputedStyle(doc['console'])["font-size"]
+    doc['console'].style.fontSize = f'{int(font_size[:-2]) + 1}px'
+
+@bind('#size_down', 'click')
+def size_down(ev):
+    font_size = window.getComputedStyle(doc['console'])["font-size"]
+    new_size = max(1, int(font_size[:-2]))
+    doc['console'].style.fontSize = f'{new_size - 1}px'
 
 # bindings to functions in module editor
 doc['show_js'].bind('click', editor.show_js)
@@ -148,7 +151,7 @@ trans = {
                    'es': 'Poner los bugs en el ',
                    'fr': "Signalez les bugs dans l'"},
     'test_page':{'en': 'Tests page',
-                 'es': 'Página de pruebas', 
+                 'es': 'Página de pruebas',
                  'fr':' Page de tests'},
     'run':{'en': 'run', 'es': 'ejecutar', 'fr': 'exécuter'},
     'clear':{'en': 'clear', 'es': 'borrar', 'fr': 'effacer'}
@@ -197,7 +200,10 @@ for key in trans:
       <div style="padding: 3px 3px 3px 3px;">
         <div style="float:left">
           <button id="run">run</button>
-          debug<input type="checkbox" id="set_debug" checked>
+        </div>
+        <div style="float:left; padding-left:5%;">
+          <button id="size_up">A&uarr;</button>
+          <button id="size_down">A&darr;</button>
         </div>
         <div style="float:right">
           <button id="show_console">Show console</button>
