@@ -465,8 +465,9 @@
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
             }
-            return $B.py2js(src, module_name, module_name,
+            var js = $B.py2js(src, module_name, module_name,
                 $B.builtins_scope).to_js()
+            return $B.format_indent(js, 0)
         },
         pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},
         "RegExp": self.RegExp && $B.JSObj.$factory(self.RegExp),

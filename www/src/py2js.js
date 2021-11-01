@@ -369,6 +369,62 @@ function check_assignment(context, kwargs){
     }
 }
 
+$B.format_indent = function(js, indent){
+    // Indent JS code based on curly braces ({ and })
+    var lines = js.split('\n'),
+        level = indent,
+        res = '',
+        last_is_closing_brace = false,
+        last_is_backslash = false
+    for(var i = 0, len = lines.length; i < len; i++){
+        var line = lines[i],
+            add_closing_brace = false,
+            add_spaces = true
+        if(last_is_backslash){
+            add_spaces = false
+        }else{
+            line = line.trim()
+        }
+        if(add_spaces && last_is_closing_brace &&
+                (line.startsWith('else') ||
+                 line.startsWith('catch') ||
+                 line.startsWith('finally'))){
+            res = res.substr(0, res.length - 1)
+            add_spaces = false
+        }
+        last_is_closing_brace = line.endsWith('}')
+        if(line.startsWith('}')){
+            level--
+        }else if(line.endsWith('}')){
+            line = line.substr(0, line.length - 1)
+            add_closing_brace = true
+        }
+        if(level < 0){
+            console.log('level', level)
+            console.log(res)
+            level = 0
+        }
+        try{
+            res += (add_spaces ? '  '.repeat(level) : '') + line + '\n'
+        }catch(err){
+            console.log(res)
+            throw err
+        }
+        if(line.endsWith('{')){
+            level++
+        }else if(add_closing_brace){
+            level--
+            try{
+                res += '  '.repeat(level) + '}\n'
+            }catch(err){
+                console.log(res)
+                throw err
+            }
+        }
+        last_is_backslash = line.endsWith('\\')
+    }
+    return res
+}
 
 /*
 Class for Python abstract syntax tree
@@ -1395,10 +1451,10 @@ $AssignCtx.prototype.transform = function(node, rank){
 
         node.parent.insert(rank++,
             $NodeJS('var '+rlname+'=[], $pos=0;'+
-            'while(1){'+
-                'try{' +
+            'while(1){\n'+
+                'try{\n' +
                     rlname + '[$pos++] = ' + rname +'()' +
-                '}catch(err){'+
+                '}catch(err){\n'+
                    'break'+
                 '}'+
             '}')
@@ -1420,7 +1476,7 @@ $AssignCtx.prototype.transform = function(node, rank){
 
         // Test if there were enough values in the right part
         node.parent.insert(rank++,
-            $NodeJS('if(' + rlname + '.length<' + min_length + '){' +
+            $NodeJS('if(' + rlname + '.length<' + min_length + '){\n' +
                 'throw _b_.ValueError.$factory('+
                    '"need more than " +' + rlname +
                    '.length + " value" + (' + rlname +
@@ -1431,7 +1487,7 @@ $AssignCtx.prototype.transform = function(node, rank){
          // Test if there were enough variables in the left part
         if(packed == null){
             node.parent.insert(rank++,
-                $NodeJS('if(' + rlname + '.length>' + min_length + '){' +
+                $NodeJS('if(' + rlname + '.length>' + min_length + '){\n' +
                     'throw _b_.ValueError.$factory(' +
                        '"too many values to unpack ' +
                        '(expected ' + left_items.length + ')"'+
@@ -1530,7 +1586,7 @@ $AssignCtx.prototype.to_js = function(){
           var res = 'var ' + temp + ' = ' + seq + '\n'
           if(type !== 'list'){
               res += 'if(Array.isArray(' + temp + ') && !' +
-                  temp + '.__class__){'
+                  temp + '.__class__){\n'
           }
           if(left.tree.length == 1){
               res += '$B.set_list_key(' + temp + ',' +
@@ -1549,7 +1605,7 @@ $AssignCtx.prototype.to_js = function(){
                   right.to_js() + ')'
           }
           if(type == 'list'){return res}
-          res += '\n}else{'
+          res += '\n}else{\n'
           if(left.tree.length == 1){
               res += '$B.$setitem(' + left.value.to_js() +
                   ',' + left.tree[0].to_js() + ',' + right_js + ')};_b_.None;'
@@ -1770,7 +1826,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         // For performance reasons, this is only implemented in debug mode
         if($B.debug > 0){
             var check_node = $NodeJS('if(' + this.tree[0].to_js() +
-                " === undefined){throw $B.name_error('" +
+                " === undefined){\nthrow $B.name_error('" +
                 this.tree[0].tree[0].value + "')}")
             node.parent.insert(rank, check_node)
             offset++
@@ -1898,7 +1954,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
 
         // If both arguments are integers, we must check that the result
         // is a safe integer
-        js += ' && Number.isSafeInteger($left' + op1 + right + ')){' +
+        js += ' && Number.isSafeInteger($left' + op1 + right + ')){\n' +
             (right_is_int ? '(' : '(typeof $temp == "number" && ') +
             'typeof $left == "number") ? '
 
@@ -1915,7 +1971,7 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
         if(op == '+='){
             // shortcut for += on strings
             var js = 'else if(typeof $left == "string" && typeof $temp == ' +
-                '"string"){' + left + ' = $left + $temp}'
+                '"string"){\n' + left + ' = $left + $temp}'
             parent.insert(rank + offset, $NodeJS(js))
             offset++
         }
@@ -2793,12 +2849,12 @@ $ClassCtx.prototype.transform = function(node, rank){
              'var $top_frame = ["' + local_ns +'", $locals,' + '"' +
              global_scope.id + '", ' + global_ns + ']' +
              indent + '$locals.$f_trace = $B.enter_frame($top_frame);' +
-             indent + 'if($locals.$f_trace !== _b_.None){' +
+             indent + 'if($locals.$f_trace !== _b_.None){\n' +
              '$locals.$f_trace = $B.trace_line()}'
     node.insert(1, $NodeJS(js))
 
     // exit frame
-    node.add($NodeJS('if($locals.$f_trace !== _b_.None){' +
+    node.add($NodeJS('if($locals.$f_trace !== _b_.None){\n' +
         '$B.trace_return(_b_.None)}'))
     node.add($NodeJS('$B.leave_frame({$locals})'))
     // return local namespace at the end of class definition
@@ -2958,7 +3014,7 @@ $ConditionCtx.prototype.transform = function(node, rank){
         var module = $get_module(this).module
         if($B.last(node.children).context.tree[0].type != "return"){
             var js = '$locals.$line_info = "' + node.line_num +
-                ',' + module + '";if($locals.$f_trace !== _b_.None){' +
+                ',' + module + '";if($locals.$f_trace !== _b_.None){\n' +
                 '$B.trace_line()};_b_.None;'
             node.add($NodeJS(js))
         }
@@ -3629,13 +3685,13 @@ $DefCtx.prototype.transform = function(node, rank){
 
         // Too many arguments
         else_node.add($NodeJS('else if($len > ' + pos_len +
-            '){$B.wrong_nb_args("' + this.name + '", $len, ' +
+            '){\n$B.wrong_nb_args("' + this.name + '", $len, ' +
             pos_len + ', [' + slot_list + '])}'))
 
         if(pos_len > 0){
             // Not enough arguments
             else_node.add($NodeJS('else if($len + Object.keys($defaults).length < ' +
-                pos_len + '){$B.wrong_nb_args("' + this.name +
+                pos_len + '){\n$B.wrong_nb_args("' + this.name +
                 '", $len, ' + pos_len + ', [' + slot_list + '])}'))
 
             // Replace missing arguments with default values
@@ -3646,7 +3702,7 @@ $DefCtx.prototype.transform = function(node, rank){
                 '$B.conv_undef(' + slot_init + ')'))
             subelse_node.add($NodeJS("var defparams = [" + slot_list + "]"))
             subelse_node.add($NodeJS("for(var i = $len; i < defparams.length" +
-                "; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))
+                "; i++){\n$locals[defparams[i]] = $defaults[defparams[i]]}"))
         }
     }else{
         nodes.push(make_args_nodes[0])
@@ -3696,7 +3752,7 @@ $DefCtx.prototype.transform = function(node, rank){
         last_instr = last_node.context.tree[0]
     if(last_instr.type != 'return'){
         // as always, leave frame before returning
-        js = 'if($locals.$f_trace !== _b_.None){$B.trace_return(_b_.None)}\n' +
+        js = 'if($locals.$f_trace !== _b_.None){\n$B.trace_return(_b_.None)}\n' +
             '    '.repeat(indent + 1)
         js += '$B.leave_frame'
         if(this.id.substr(0,5) == '$exec'){
@@ -3872,7 +3928,7 @@ $DefCtx.prototype.transform = function(node, rank){
             '(' + this.default_str + ')'))
 
         node.parent.insert(rank + offset++, $NodeJS(
-            func_name1 + ".$set_defaults = function(value){return " +
+            func_name1 + ".$set_defaults = function(value){\nreturn " +
             func_name1 + " = " + this.name + "$" + this.num +
             "(value)}"))
 
@@ -3903,7 +3959,7 @@ $DefCtx.prototype.transform = function(node, rank){
 
     var except_node = $NodeJS('catch(err)')
     except_node.add($NodeJS('$B.set_exc(err)'))
-    except_node.add($NodeJS('if((! err.$in_trace_func) && $locals.$f_trace !== _b_.None){' +
+    except_node.add($NodeJS('if((! err.$in_trace_func) && $locals.$f_trace !== _b_.None){\n' +
         '$locals.$f_trace = $B.trace_exception()}'))
     except_node.add($NodeJS('$B.leave_frame({$locals});throw err'))
 
@@ -3928,7 +3984,7 @@ $DefCtx.prototype.to_js = function(func_name){
     if(this.decorated){func_name = 'var ' + this.alias}
 
     return "var " + this.name + '$' + this.num +
-        ' = function($defaults){' +
+        ' = function($defaults){\n' +
         (this.async ? 'async ' : '') + 'function'+
         (this.type == 'generator' ? "* " : " ") +
         this.name + this.num + '(' + this.params + ')'
@@ -4125,7 +4181,7 @@ DictCompCtx.prototype.to_js = function(){
     }
     js += `\n$B.leave_frame({$locals, value: _b_.None})`
     js += `\nreturn $result_${id}`
-    js += `\n})(${outmost_expr})`
+    js += `\n}\n)(${outmost_expr})`
     return js
 }
 
@@ -5398,8 +5454,8 @@ $ForExpr.prototype.to_js = function(indent){
             `  try{\n`+
             `    var $next_${id} = await $B.promise($next_func_${id}($iter_${id}))\n` +
             `  }catch(err){\n`+
-            `    if($B.is_exc(err, [_b_.StopAsyncIteration])){break}\n` +
-            `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
+            `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n` +
+            `    else{\n$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
             `  }\n`
     }else{
         iteration += `var $next_func_${id} = $B.next_of(${it})\n` +
@@ -5407,8 +5463,8 @@ $ForExpr.prototype.to_js = function(indent){
                 `  try{\n`+
                 `    var $next_${id} = $next_func_${id}()\n` +
                 `  }catch(err){\n`+
-                `    if($B.is_exc(err, [_b_.StopIteration])){break}\n` +
-                `    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
+                `    if($B.is_exc(err, [_b_.StopIteration])){\nbreak}\n` +
+                `    else{\n$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
                 `  }\n`
     }
     var body = ''
@@ -6027,7 +6083,8 @@ GeneratorExpCtx.prototype.to_js = function(){
             $B.leave_frame($locals)
         }
            return $B.generator.$factory(${id})(expr)
-          })(${outmost_expr})`
+          }
+          )(${outmost_expr})`
     return js
 }
 
@@ -7437,7 +7494,7 @@ ListCompCtx.prototype.to_js = function(){
     }
     js += `\n$B.leave_frame({$locals, value: _b_.None})`
     js += `\nreturn $result_${id}`
-    js += `\n})(${outmost_expr})`
+    js += `\n}\n)(${outmost_expr})`
     return js
 }
 
@@ -9897,7 +9954,7 @@ $ReturnCtx.prototype.to_js = function(){
     // will be restored when entering "finally"
     var indent = '    '.repeat(this.node.indent - 1)
     var js = 'var $res = ' + expr + ';\n' + indent +
-    'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n' + indent +
+    'if($locals.$f_trace !== _b_.None){\n$B.trace_return($res)}\n' + indent +
     '$B.leave_frame'
     if(scope.id.substr(0, 6) == '$exec_'){
         js += '_exec'
@@ -9965,7 +10022,7 @@ SetCompCtx.prototype.to_js = function(){
 
     js +=  '\n' + ' '.repeat(16 + 4 * nb) +
             (expr_has_await ? 'var save_stack = $B.save_stack();\n' : '') +
-            `try{_b_.set.add($result_${id}, ${expr.to_js()})\n` +
+            `try{\n_b_.set.add($result_${id}, ${expr.to_js()})\n` +
             `}catch(err){\n` +
             (expr_has_await ? '$B.restore_stack(save_stack, $locals);' : '') +
             `$B.leave_frame($locals); throw err\n` +
@@ -9976,7 +10033,7 @@ SetCompCtx.prototype.to_js = function(){
     }
     js += `\n$B.leave_frame({$locals, value: _b_.None})`
     js += `\nreturn $result_${id}`
-    js += `\n})(${outmost_expr})`
+    js += `\n}\n)(${outmost_expr})`
     return js
 }
 
@@ -10032,7 +10089,7 @@ $SingleKwCtx.prototype.transform = function(node, rank){
         var scope = $get_scope(this)
         node.insert(0,
             $NodeJS('var $exit;'+
-            'if($B.frames_stack.length < $stack_length){' +
+            'if($B.frames_stack.length < $stack_length){\n' +
                 '$exit = true;'+
                 '$B.frames_stack.push($top_frame)'+
             '}')
@@ -10044,7 +10101,7 @@ $SingleKwCtx.prototype.transform = function(node, rank){
         // If the finally block ends with "return", don't add the
         // final line
         if(last_child.context.tree[0].type != "return"){
-            node.add($NodeJS('if($exit){$B.leave_frame({$locals})}'))
+            node.add($NodeJS('if($exit){\n$B.leave_frame({$locals})}'))
         }
     }
 }
@@ -10562,7 +10619,7 @@ $TryCtx.prototype.transform = function(node, rank){
     catch_node.add($NodeJS("$B.set_exc(" + error_name + ")"))
     // Trace exception if needed
     catch_node.add($NodeJS("if($locals.$f_trace !== _b_.None)" +
-        "{$locals.$f_trace = $B.trace_exception()}"))
+        "{\n$locals.$f_trace = $B.trace_exception()}"))
 
     // Set the boolean $failed to true
     // Set attribute "pmframe" (post mortem frame) to $B in case an error
@@ -10572,7 +10629,7 @@ $TryCtx.prototype.transform = function(node, rank){
         $NodeJS(failed_name + ' = true;' +
         '$B.pmframe = $B.last($B.frames_stack);'+
         // Fake line to start the 'else if' clauses
-        'if(false){}')
+        'if(false){\n}')
     )
 
     var pos = rank + 2,
@@ -10986,7 +11043,7 @@ $WithCtx.prototype.transform = function(node, rank){
     if(this.scope.ntype == "generator"){
         js += '$B.set_cm_in_generator(' + this.cmexit_name + ');'
     }
-    js += 'if(!$B.$bool($b)){throw ' + this.err_name + '}'
+    js += '\nif(!$B.$bool($b)){\nthrow ' + this.err_name + '}'
     catch_node.add($NodeJS(js))
     top_try_node.add(catch_node)
 
@@ -10998,7 +11055,7 @@ $WithCtx.prototype.transform = function(node, rank){
     finally_node.is_except = true
     finally_node.in_ctx_manager = true
     var js = 'if(' + this.exc_name
-    js += '){' + this.cmexit_name + '(_b_.None, _b_.None, _b_.None);'
+    js += '){\n' + this.cmexit_name + '(_b_.None, _b_.None, _b_.None);'
     if(this.scope.ntype == "generator"){
         js += 'delete ' + this.cmexit_name
     }
@@ -11761,41 +11818,6 @@ function test_num(num_lit){
       }
     }
     return check(elt)
-}
-
-function* basic_tokenizer(src){
-    // basic Python code tokenizer, used by function line_ends_with_comma()
-    var pos = 0
-    while(pos < src.length){
-        if(src[pos] == '"' || src[pos] == "'"){
-            var quote = src[pos],
-                escaped = false,
-                start = pos
-            pos++
-            while(pos < src.length){
-                if(src[pos] == '\\'){
-                    escaped = ! escaped
-                }else if(src[pos] == quote && ! escaped){
-                    yield src.substring(start, pos + 1)
-                    break
-                }
-                pos++
-            }
-        }else if(src[pos] == '#'){
-            while(pos < src.length){
-                if(src[pos] == '\n'){
-                    break
-                }
-                pos++
-            }
-        }else if(src[pos] == '\\' && src[pos + 1] == '\n'){
-            // continuation line
-            pos++
-        }else if(' \t'.indexOf(src[pos]) == -1){
-            yield src[pos]
-        }
-        pos++
-    }
 }
 
 var opening = {')': '(', '}': '{', ']': '['}

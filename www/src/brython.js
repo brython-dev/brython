@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,2,'final',0]
 __BRYTHON__.__MAGIC__="3.10.2"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-10-31 14:00:42.842159"
-__BRYTHON__.timestamp=1635685242842
+__BRYTHON__.compiled_date="2021-11-01 12:04:04.308310"
+__BRYTHON__.timestamp=1635764644308
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -465,6 +465,28 @@ if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
 if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='gen_expr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.comprehension){break}
 if(once){break}
 ctx=ctx.parent}}
+$B.format_indent=function(js,indent){
+var lines=js.split('\n'),level=indent,res='',last_is_closing_brace=false,last_is_backslash=false
+for(var i=0,len=lines.length;i < len;i++){var line=lines[i],add_closing_brace=false,add_spaces=true
+if(last_is_backslash){add_spaces=false}else{line=line.trim()}
+if(add_spaces && last_is_closing_brace &&
+(line.startsWith('else')||
+line.startsWith('catch')||
+line.startsWith('finally'))){res=res.substr(0,res.length-1)
+add_spaces=false}
+last_is_closing_brace=line.endsWith('}')
+if(line.startsWith('}')){level--}else if(line.endsWith('}')){line=line.substr(0,line.length-1)
+add_closing_brace=true}
+if(level < 0){console.log('level',level)
+console.log(res)
+level=0}
+try{res+=(add_spaces ? '  '.repeat(level):'')+line+'\n'}catch(err){console.log(res)
+throw err}
+if(line.endsWith('{')){level++}else if(add_closing_brace){level--
+try{res+='  '.repeat(level)+'}\n'}catch(err){console.log(res)
+throw err}}
+last_is_backslash=line.endsWith('\\')}
+return res}
 var $Node=$B.parser.$Node=function(type){this.type=type
 this.children=[]}
 $Node.prototype.add=function(child){
@@ -1002,10 +1024,10 @@ var new_node=$NodeJS('var '+rname+' = '+
 new_node.line_num=node.line_num 
 node.parent.insert(rank++,new_node)
 node.parent.insert(rank++,$NodeJS('var '+rlname+'=[], $pos=0;'+
-'while(1){'+
-'try{'+
+'while(1){\n'+
+'try{\n'+
 rlname+'[$pos++] = '+rname+'()'+
-'}catch(err){'+
+'}catch(err){\n'+
 'break'+
 '}'+
 '}')
@@ -1017,14 +1039,14 @@ if(expr.type=='packed' ||
 (expr.type=='expr' && expr.tree[0].type=='packed')){packed=i
 min_length--
 break}}
-node.parent.insert(rank++,$NodeJS('if('+rlname+'.length<'+min_length+'){'+
+node.parent.insert(rank++,$NodeJS('if('+rlname+'.length<'+min_length+'){\n'+
 'throw _b_.ValueError.$factory('+
 '"need more than " +'+rlname+
 '.length + " value" + ('+rlname+
 '.length > 1 ?'+' "s" : "") + " to unpack")}'
 )
 )
-if(packed==null){node.parent.insert(rank++,$NodeJS('if('+rlname+'.length>'+min_length+'){'+
+if(packed==null){node.parent.insert(rank++,$NodeJS('if('+rlname+'.length>'+min_length+'){\n'+
 'throw _b_.ValueError.$factory('+
 '"too many values to unpack '+
 '(expected '+left_items.length+')"'+
@@ -1076,7 +1098,7 @@ if(left.value.type=='id'){type=$get_node(this).locals[left.value.value]}
 $loop_num++
 var res='var '+temp+' = '+seq+'\n'
 if(type !=='list'){res+='if(Array.isArray('+temp+') && !'+
-temp+'.__class__){'}
+temp+'.__class__){\n'}
 if(left.tree.length==1){res+='$B.set_list_key('+temp+','+
 (left.tree[0].to_js()+'' ||'null')+','+
 right.to_js()+')'}else if(left.tree.length==2){res+='$B.set_list_slice('+temp+','+
@@ -1088,7 +1110,7 @@ right.to_js()+')'}else if(left.tree.length==3){res+='$B.set_list_slice_step('+te
 (left.tree[2].to_js()+'' ||'null')+','+
 right.to_js()+')'}
 if(type=='list'){return res}
-res+='\n}else{'
+res+='\n}else{\n'
 if(left.tree.length==1){res+='$B.$setitem('+left.value.to_js()+
 ','+left.tree[0].to_js()+','+right_js+')};_b_.None;'}else{left.func='setitem' 
 res+=left.to_js()
@@ -1183,7 +1205,7 @@ if(left_is_id){var left_bound_to_int=
 this.tree[0].tree[0].bindingType(this.scope)=="int"
 this.tree[0].tree[0].augm_assign=true
 if($B.debug > 0){var check_node=$NodeJS('if('+this.tree[0].to_js()+
-" === undefined){throw $B.name_error('"+
+" === undefined){\nthrow $B.name_error('"+
 this.tree[0].tree[0].value+"')}")
 node.parent.insert(rank,check_node)
 offset++}
@@ -1253,7 +1275,7 @@ if(!lnum_set){new_node.line_num=line_num
 lnum_set=true}
 js=right_is_int ? 'if(' :'if(typeof $temp.valueOf() == "number" && '
 js+='$left.constructor === Number'
-js+=' && Number.isSafeInteger($left'+op1+right+')){'+
+js+=' && Number.isSafeInteger($left'+op1+right+')){\n'+
 (right_is_int ? '(' :'(typeof $temp == "number" && ')+
 'typeof $left == "number") ? '
 js+=left+op+right
@@ -1264,7 +1286,7 @@ parent.insert(rank+offset,new_node)
 offset++
 if(op=='+='){
 var js='else if(typeof $left == "string" && typeof $temp == '+
-'"string"){'+left+' = $left + $temp}'
+'"string"){\n'+left+' = $left + $temp}'
 parent.insert(rank+offset,$NodeJS(js))
 offset++}}
 var aaops={'+=':'add','-=':'sub','*=':'mul'}
@@ -1718,10 +1740,10 @@ this.module+'";'+indent+
 'var $top_frame = ["'+local_ns+'", $locals,'+'"'+
 global_scope.id+'", '+global_ns+']'+
 indent+'$locals.$f_trace = $B.enter_frame($top_frame);'+
-indent+'if($locals.$f_trace !== _b_.None){'+
+indent+'if($locals.$f_trace !== _b_.None){\n'+
 '$locals.$f_trace = $B.trace_line()}'
 node.insert(1,$NodeJS(js))
-node.add($NodeJS('if($locals.$f_trace !== _b_.None){'+
+node.add($NodeJS('if($locals.$f_trace !== _b_.None){\n'+
 '$B.trace_return(_b_.None)}'))
 node.add($NodeJS('$B.leave_frame({$locals})'))
 var ret_obj=new $Node()
@@ -1802,7 +1824,7 @@ $ConditionCtx.prototype.transform=function(node,rank){var scope=$get_scope(this)
 if(this.token=="while"){node.parent.insert(rank,$NodeJS('var $no_break'+this.loop_num+' = true'))
 var module=$get_module(this).module
 if($B.last(node.children).C.tree[0].type !="return"){var js='$locals.$line_info = "'+node.line_num+
-','+module+'";if($locals.$f_trace !== _b_.None){'+
+','+module+'";if($locals.$f_trace !== _b_.None){\n'+
 '$B.trace_line()};_b_.None;'
 node.add($NodeJS(js))}
 return 2}}
@@ -2068,11 +2090,11 @@ else_node.add(test_node)
 test_node.add($NodeJS(local_ns+' = $locals = $B.conv_undef('+
 slot_init+')'))
 else_node.add($NodeJS('else if($len > '+pos_len+
-'){$B.wrong_nb_args("'+this.name+'", $len, '+
+'){\n$B.wrong_nb_args("'+this.name+'", $len, '+
 pos_len+', ['+slot_list+'])}'))
 if(pos_len > 0){
 else_node.add($NodeJS('else if($len + Object.keys($defaults).length < '+
-pos_len+'){$B.wrong_nb_args("'+this.name+
+pos_len+'){\n$B.wrong_nb_args("'+this.name+
 '", $len, '+pos_len+', ['+slot_list+'])}'))
 var subelse_node=$NodeJS("else")
 else_node.add(subelse_node)
@@ -2080,7 +2102,7 @@ subelse_node.add($NodeJS(local_ns+' = $locals = '+
 '$B.conv_undef('+slot_init+')'))
 subelse_node.add($NodeJS("var defparams = ["+slot_list+"]"))
 subelse_node.add($NodeJS("for(var i = $len; i < defparams.length"+
-"; i++){$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
+"; i++){\n$locals[defparams[i]] = $defaults[defparams[i]]}"))}}else{nodes.push(make_args_nodes[0])
 if(make_args_nodes.length > 1){nodes.push(make_args_nodes[1])}}
 nodes=nodes.concat(enter_frame_nodes)
 var is_method=scope.ntype=="class"
@@ -2099,7 +2121,7 @@ def_func_node.is_def_func=true
 def_func_node.module=this.module
 var last_node=node.children[node.children.length-1],indent=last_node.get_indent(),last_instr=last_node.C.tree[0]
 if(last_instr.type !='return'){
-js='if($locals.$f_trace !== _b_.None){$B.trace_return(_b_.None)}\n'+
+js='if($locals.$f_trace !== _b_.None){\n$B.trace_return(_b_.None)}\n'+
 '    '.repeat(indent+1)
 js+='$B.leave_frame'
 if(this.id.substr(0,5)=='$exec'){js+='_exec'}
@@ -2173,7 +2195,7 @@ node.parent.insert(rank+offset++,$NodeJS(
 this.func_name+" = "+this.name+'$'+this.num+
 '('+this.default_str+')'))
 node.parent.insert(rank+offset++,$NodeJS(
-func_name1+".$set_defaults = function(value){return "+
+func_name1+".$set_defaults = function(value){\nreturn "+
 func_name1+" = "+this.name+"$"+this.num+
 "(value)}"))
 if(this.$has_yield_in_cm){node.parent.insert(rank+offset++,$NodeJS(`${func_name1}.$has_yield_in_cm = true`))}}
@@ -2186,7 +2208,7 @@ for(var child of children){if(child.is_def_func){for(var grand_child of child.ch
 parent.children.splice(pos+2,parent.children.length)
 var except_node=$NodeJS('catch(err)')
 except_node.add($NodeJS('$B.set_exc(err)'))
-except_node.add($NodeJS('if((! err.$in_trace_func) && $locals.$f_trace !== _b_.None){'+
+except_node.add($NodeJS('if((! err.$in_trace_func) && $locals.$f_trace !== _b_.None){\n'+
 '$locals.$f_trace = $B.trace_exception()}'))
 except_node.add($NodeJS('$B.leave_frame({$locals});throw err'))
 parent.add(except_node)
@@ -2199,7 +2221,7 @@ if(this.is_comp){return "var "+this.name+" = "+
 func_name=func_name ||this.tree[0].to_js()
 if(this.decorated){func_name='var '+this.alias}
 return "var "+this.name+'$'+this.num+
-' = function($defaults){'+
+' = function($defaults){\n'+
 (this.async ? 'async ' :'')+'function'+
 (this.type=='generator' ? "* " :" ")+
 this.name+this.num+'('+this.params+')'}
@@ -2314,7 +2336,7 @@ js+='\n'+' '.repeat(16+4*nb)+
 for(var i=0;i < this.tree.length;i++){js+='\n'+' '.repeat(12+4*nb--)+'}'}
 js+=`\n$B.leave_frame({$locals, value: _b_.None})`
 js+=`\nreturn $result_${id}`
-js+=`\n})(${outmost_expr})`
+js+=`\n}\n)(${outmost_expr})`
 return js}
 var $DictOrSetCtx=$B.parser.$DictOrSetCtx=function(C){
 this.type='dict_or_set'
@@ -2954,15 +2976,15 @@ if(this.async){iteration+=`var $iter_${id} = ${it}\n`+
 `  try{\n`+
 `    var $next_${id} = await $B.promise($next_func_${id}($iter_${id}))\n`+
 `  }catch(err){\n`+
-`    if($B.is_exc(err, [_b_.StopAsyncIteration])){break}\n`+
-`    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
+`    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n`+
+`    else{\n$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
 `  }\n`}else{iteration+=`var $next_func_${id} = $B.next_of(${it})\n`+
 `while(true){\n`+
 `  try{\n`+
 `    var $next_${id} = $next_func_${id}()\n`+
 `  }catch(err){\n`+
-`    if($B.is_exc(err, [_b_.StopIteration])){break}\n`+
-`    else{$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
+`    if($B.is_exc(err, [_b_.StopIteration])){\nbreak}\n`+
+`    else{\n$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
 `  }\n`}
 var body=''
 if(! this.comp_body){
@@ -3264,7 +3286,8 @@ js+=`
             $B.leave_frame($locals)
         }
            return $B.generator.$factory(${id})(expr)
-          })(${outmost_expr})`
+          }
+          )(${outmost_expr})`
 return js}
 var $GlobalCtx=$B.parser.$GlobalCtx=function(C){
 this.type='global'
@@ -3833,7 +3856,7 @@ js+='\n'+' '.repeat(16+4*nb)+
 for(var i=1;i < this.tree.length;i++){js+='\n'+' '.repeat(12+4*nb--)+'}'}
 js+=`\n$B.leave_frame({$locals, value: _b_.None})`
 js+=`\nreturn $result_${id}`
-js+=`\n})(${outmost_expr})`
+js+=`\n}\n)(${outmost_expr})`
 return js}
 var $ListOrTupleCtx=$B.parser.$ListOrTupleCtx=function(C,real){
 this.type='list_or_tuple'
@@ -5098,7 +5121,7 @@ if(scope.ntype=='generator'){return 'var $res = '+expr+'; $B.leave_frame({$local
 'return $B.generator_return($res)'}
 var indent='    '.repeat(this.node.indent-1)
 var js='var $res = '+expr+';\n'+indent+
-'if($locals.$f_trace !== _b_.None){$B.trace_return($res)}\n'+indent+
+'if($locals.$f_trace !== _b_.None){\n$B.trace_return($res)}\n'+indent+
 '$B.leave_frame'
 if(scope.id.substr(0,6)=='$exec_'){js+='_exec'}
 js+='({$locals});\n'
@@ -5135,7 +5158,7 @@ js+='\n'+stmt.to_js(indent+nb)}else if(stmt.type=='condition' && stmt.token=='if
 var expr_has_await=has_await(expr)
 js+='\n'+' '.repeat(16+4*nb)+
 (expr_has_await ? 'var save_stack = $B.save_stack();\n' :'')+
-`try{_b_.set.add($result_${id}, ${expr.to_js()})\n`+
+`try{\n_b_.set.add($result_${id}, ${expr.to_js()})\n`+
 `}catch(err){\n`+
 (expr_has_await ? '$B.restore_stack(save_stack, $locals);' :'')+
 `$B.leave_frame($locals); throw err\n`+
@@ -5143,7 +5166,7 @@ js+='\n'+' '.repeat(16+4*nb)+
 for(var i=1;i < this.tree.length;i++){js+='\n'+' '.repeat(12+4*nb--)+'}'}
 js+=`\n$B.leave_frame({$locals, value: _b_.None})`
 js+=`\nreturn $result_${id}`
-js+=`\n})(${outmost_expr})`
+js+=`\n}\n)(${outmost_expr})`
 return js}
 var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
 this.type='single_kw'
@@ -5167,14 +5190,14 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 $SingleKwCtx.prototype.transform=function(node,rank){
 if(this.token=='finally'){var scope=$get_scope(this)
 node.insert(0,$NodeJS('var $exit;'+
-'if($B.frames_stack.length < $stack_length){'+
+'if($B.frames_stack.length < $stack_length){\n'+
 '$exit = true;'+
 '$B.frames_stack.push($top_frame)'+
 '}')
 )
 var scope_id=scope.id.replace(/\./g,'_')
 var last_child=node.children[node.children.length-1]
-if(last_child.C.tree[0].type !="return"){node.add($NodeJS('if($exit){$B.leave_frame({$locals})}'))}}}
+if(last_child.C.tree[0].type !="return"){node.add($NodeJS('if($exit){\n$B.leave_frame({$locals})}'))}}}
 $SingleKwCtx.prototype.to_js=function(){this.js_processed=true
 if(this.token=='finally'){return this.token}
 if(this.loop_num !==undefined){return 'if($no_break'+this.loop_num+')'}
@@ -5425,11 +5448,11 @@ var catch_node=$NodeJS('catch('+error_name+')')
 node.parent.insert(rank+1,catch_node)
 catch_node.add($NodeJS("$B.set_exc("+error_name+")"))
 catch_node.add($NodeJS("if($locals.$f_trace !== _b_.None)"+
-"{$locals.$f_trace = $B.trace_exception()}"))
+"{\n$locals.$f_trace = $B.trace_exception()}"))
 catch_node.add(
 $NodeJS(failed_name+' = true;'+
 '$B.pmframe = $B.last($B.frames_stack);'+
-'if(false){}')
+'if(false){\n}')
 )
 var pos=rank+2,has_default=false,
 has_else=false,
@@ -5615,7 +5638,7 @@ this.err_name+'.__class__,'+
 this.err_name+','+
 '$B.$getattr('+this.err_name+', "__traceback__"));'
 if(this.scope.ntype=="generator"){js+='$B.set_cm_in_generator('+this.cmexit_name+');'}
-js+='if(!$B.$bool($b)){throw '+this.err_name+'}'
+js+='\nif(!$B.$bool($b)){\nthrow '+this.err_name+'}'
 catch_node.add($NodeJS(js))
 top_try_node.add(catch_node)
 var finally_node=new $Node()
@@ -5626,7 +5649,7 @@ finally_node.C.in_ctx_manager=true
 finally_node.is_except=true
 finally_node.in_ctx_manager=true
 var js='if('+this.exc_name
-js+='){'+this.cmexit_name+'(_b_.None, _b_.None, _b_.None);'
+js+='){\n'+this.cmexit_name+'(_b_.None, _b_.None, _b_.None);'
 if(this.scope.ntype=="generator"){js+='delete '+this.cmexit_name}
 js+='};'
 finally_node.add($NodeJS(js))
@@ -5910,16 +5933,6 @@ check(elt)
 elt.length++
 return elt}else{error("invalid syntax")}}else{break}}
 return check(elt)}
-function*basic_tokenizer(src){
-var pos=0
-while(pos < src.length){if(src[pos]=='"' ||src[pos]=="'"){var quote=src[pos],escaped=false,start=pos
-pos++
-while(pos < src.length){if(src[pos]=='\\'){escaped=! escaped}else if(src[pos]==quote && ! escaped){yield src.substring(start,pos+1)
-break}
-pos++}}else if(src[pos]=='#'){while(pos < src.length){if(src[pos]=='\n'){break}
-pos++}}else if(src[pos]=='\\' && src[pos+1]=='\n'){
-pos++}else if(' \t'.indexOf(src[pos])==-1){yield src[pos]}
-pos++}}
 var opening={')':'(','}':'{',']':'['}
 function line_ends_with_comma(src){
 var expect=':',braces=[]
@@ -15611,7 +15624,8 @@ JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
 eval(content)},"Math":self.Math && $B.JSObj.$factory(self.Math),NULL:null,"Number":self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
-return $B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},"RegExp":self.RegExp && $B.JSObj.$factory(self.RegExp),"String":self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
+var js=$B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()
+return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},"RegExp":self.RegExp && $B.JSObj.$factory(self.RegExp),"String":self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var _b_=$B.builtins

@@ -787,6 +787,7 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             js = root.to_js()
+
             var res = eval(js)
         }
 
