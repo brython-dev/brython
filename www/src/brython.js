@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-02 11:40:55.288323"
-__BRYTHON__.timestamp=1635849655288
+__BRYTHON__.compiled_date="2021-11-02 17:42:00.413807"
+__BRYTHON__.timestamp=1635871320413
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9520,16 +9520,19 @@ err.$stack=$B.frames_stack.slice()
 if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}}}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
-BaseException.$factory=function(){var err=Error()
-err.args=$B.fast_tuple(Array.prototype.slice.call(arguments))
-err.__class__=_b_.BaseException
-err.$py_error=true
-$B.freeze(err)
-var placeholder 
-err.__cause__=_b_.None 
-err.__context__=_b_.None 
-err.__suppress_context__=false 
-return err}
+var be_factory=`
+function (){
+    var err = Error()
+    err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
+    err.__class__ = _b_.BaseException
+    err.$py_error = true
+    $B.freeze(err)
+    // placeholder
+    err.__cause__ = _b_.None // XXX fix me
+    err.__context__ = _b_.None // XXX fix me
+    err.__suppress_context__ = false // XXX fix me
+    return err}`
+eval('BaseException.$factory = '+be_factory)
 BaseException.$factory.$infos={__name__:"BaseException",__qualname__:"BaseException"}
 $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
@@ -9578,8 +9581,8 @@ for(var i=0;i < names.length;i++){var name=names[i],code=""
 if(Array.isArray(name)){
 var code=name[1],name=name[0]}
 $B.builtins_scope[name]=true
-var $exc=(BaseException.$factory+"").replace(/BaseException/g,name)
-$exc=$exc.replace("var placeholder",code)
+var $exc=(be_factory).replace(/BaseException/g,name)
+$exc=$exc.replace("// placeholder",code)
 _str[pos++]="_b_."+name+' = {__class__:_b_.type, '+
 '__bases__: [_b_.'+parent.$infos.__name__+'], '+
 '__mro__: [_b_.'+parent.$infos.__name__+

@@ -603,18 +603,29 @@ var show_stack = $B.show_stack = function(stack){
     }
 }
 
-BaseException.$factory = function (){
+// Source code for BaseException. Used in make_exc to generate all the
+// exceptions.
+// Must be defined as a string: if BaseException.$factory is defined as a
+// function and the function code source is used to generate the other
+// exceptions, this code source might be changed by a JS code minifier...
+// (cf issue #1806)
+// The line '// placeholder' is meant to be replaced by exception-specific
+// code passed to make_exc()
+var be_factory = `
+function (){
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
     err.$py_error = true
     $B.freeze(err)
-    var placeholder // replaced in make_exc()
+    // placeholder
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
     err.__suppress_context__ = false // XXX fix me
     return err
-}
+}`
+
+eval('BaseException.$factory = ' + be_factory)
 
 BaseException.$factory.$infos = {
     __name__: "BaseException",
@@ -721,8 +732,8 @@ function $make_exc(names, parent){
         }
         // create a class for exception called "name"
         $B.builtins_scope[name] = true
-        var $exc = (BaseException.$factory + "").replace(/BaseException/g,name)
-        $exc = $exc.replace("var placeholder", code)
+        var $exc = (be_factory).replace(/BaseException/g,name)
+        $exc = $exc.replace("// placeholder", code)
         // class dictionary
         _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
             '__bases__: [_b_.' + parent.$infos.__name__ + '], ' +
