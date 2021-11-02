@@ -609,7 +609,7 @@ BaseException.$factory = function (){
     err.__class__ = _b_.BaseException
     err.$py_error = true
     $B.freeze(err)
-    eval(`//placeholder//`)
+    var placeholder // replaced in make_exc()
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
     err.__suppress_context__ = false // XXX fix me
@@ -722,7 +722,7 @@ function $make_exc(names, parent){
         // create a class for exception called "name"
         $B.builtins_scope[name] = true
         var $exc = (BaseException.$factory + "").replace(/BaseException/g,name)
-        $exc = $exc.replace("//placeholder//", code)
+        $exc = $exc.replace("var placeholder", code)
         // class dictionary
         _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
             '__bases__: [_b_.' + parent.$infos.__name__ + '], ' +
