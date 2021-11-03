@@ -63,7 +63,7 @@ You can choose the latest stable release :
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.10.3/brython.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.10.3/brython.min.js">
 </script>
 ```
 
@@ -82,7 +82,7 @@ jsDelivr supports version ranges, so if you want the latest of the
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.10/brython.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.10/brython.min.js">
 </script>
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3.10/brython_stdlib.js">
@@ -93,7 +93,7 @@ or the latest of the 3.x.y versions:
 
 ```xml
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3/brython.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
 </script>
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js">
