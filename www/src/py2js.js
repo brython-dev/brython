@@ -2955,6 +2955,26 @@ $ClassCtx.prototype.to_js = function(){
 }
 
 var Comprehension = {
+    generators: function(comp){
+        // Return a list of comprehensions
+        // ast.comprehension(target, iter, ifs, is_async)
+        var comprehensions = []
+        for(item of comp){
+            if(item.type == 'for'){
+                comprehensions.push(
+                    new ast.comprehension(
+                        ast_or_obj(item.tree[0]),
+                        ast_or_obj(item.tree[1]),
+                        [],
+                        !!item.is_async
+                    )
+                )
+            }else{
+                $B.last(comprehensions).ifs.push(ast_or_obj(item.tree[0]))
+            }
+        }
+        return comprehensions
+    },
     make_comp: function(comp, context){
         comp.comprehension = true
         comp.parent = context.parent
@@ -4191,6 +4211,17 @@ var DictCompCtx = function(context){
     context.parent.tree[context.parent.tree.length - 1] = this
     this.type = 'dict_comp'
     Comprehension.make_comp(this, context)
+}
+
+DictCompCtx.prototype.ast = function(){
+    // ast.DictComp(key, value, generators)
+    // key, value is the part evaluated for each item
+    // generators is a list of comprehensions
+    return new ast.DictComp(
+        ast_or_obj(this.key),
+        ast_or_obj(this.value),
+        Comprehension.generators(this.tree)
+    )
 }
 
 DictCompCtx.prototype.transition = function(token, value){
@@ -6075,6 +6106,16 @@ var GeneratorExpCtx = function(context){
     Comprehension.make_comp(this, context)
 }
 
+GeneratorExpCtx.prototype.ast = function(){
+    // ast.GeneratorExp(elt, generators)
+    // elt is the part evaluated for each item
+    // generators is a list of comprehensions
+    return new ast.GeneratorExp(
+        ast_or_obj(this.tree[0]),
+        Comprehension.generators(this.tree.slice(1))
+    )
+}
+
 GeneratorExpCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ')'){
@@ -7446,6 +7487,16 @@ var ListCompCtx = function(context){
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
     Comprehension.make_comp(this, context)
+}
+
+ListCompCtx.prototype.ast = function(){
+    // ast.ListComp(elt, generators)
+    // elt is the part evaluated for each item
+    // generators is a list of comprehensions
+    return new ast.ListComp(
+        ast_or_obj(this.tree[0]),
+        Comprehension.generators(this.tree.slice(1))
+    )
 }
 
 ListCompCtx.prototype.transition = function(token, value){
@@ -9993,6 +10044,16 @@ var SetCompCtx = function(context){
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
     Comprehension.make_comp(this, context)
+}
+
+SetCompCtx.prototype.ast = function(){
+    // ast.SetComp(elt, generators)
+    // elt is the part evaluated for each item
+    // generators is a list of comprehensions
+    return new ast.SetComp(
+        ast_or_obj(this.tree[0]),
+        Comprehension.generators(this.tree.slice(1))
+    )
 }
 
 SetCompCtx.prototype.transition = function(token, value){

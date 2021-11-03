@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-03 17:32:37.008669"
-__BRYTHON__.timestamp=1635957157008
+__BRYTHON__.compiled_date="2021-11-03 17:58:03.412710"
+__BRYTHON__.timestamp=1635958683412
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1795,7 +1795,14 @@ node.parent.insert(rank+2,$NodeJS("_b_.None;"))
 this.transformed=true}
 $ClassCtx.prototype.to_js=function(){this.js_processed=true
 return 'var $'+this.name+'_'+this.random+' = (function()'}
-var Comprehension={make_comp:function(comp,C){comp.comprehension=true
+var Comprehension={generators:function(comp){
+var comprehensions=[]
+for(item of comp){if(item.type=='for'){comprehensions.push(
+new ast.comprehension(
+ast_or_obj(item.tree[0]),ast_or_obj(item.tree[1]),[],!!item.is_async
+)
+)}else{$B.last(comprehensions).ifs.push(ast_or_obj(item.tree[0]))}}
+return comprehensions},make_comp:function(comp,C){comp.comprehension=true
 comp.parent=C.parent
 comp.binding={}
 comp.id=comp.type+$B.UUID()
@@ -2328,6 +2335,10 @@ this.module=$get_module(C).module
 C.parent.tree[C.parent.tree.length-1]=this
 this.type='dict_comp'
 Comprehension.make_comp(this,C)}
+DictCompCtx.prototype.ast=function(){
+return new ast.DictComp(
+ast_or_obj(this.key),ast_or_obj(this.value),Comprehension.generators(this.tree)
+)}
 DictCompCtx.prototype.transition=function(token,value){var C=this
 if(token=='}'){this.has_await=Comprehension.has_await(this)
 return this.parent}
@@ -3256,6 +3267,10 @@ this.type='gen_expr'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
+GeneratorExpCtx.prototype.ast=function(){
+return new ast.GeneratorExp(
+ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
+)}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
 if(token==')'){this.has_await=Comprehension.has_await(this)
 if(this.parent.type=='call'){return this.parent.parent}
@@ -3822,6 +3837,10 @@ this.type='list_comp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
+ListCompCtx.prototype.ast=function(){
+return new ast.ListComp(
+ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
+)}
 ListCompCtx.prototype.transition=function(token,value){var C=this
 if(token==']'){this.has_await=Comprehension.has_await(this)
 return this.parent}
@@ -5134,6 +5153,10 @@ this.type='set_comp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
+SetCompCtx.prototype.ast=function(){
+return new ast.SetComp(
+ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
+)}
 SetCompCtx.prototype.transition=function(token,value){var C=this
 if(token=='}'){this.has_await=Comprehension.has_await(this)
 return this.parent}
