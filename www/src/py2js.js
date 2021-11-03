@@ -2,6 +2,8 @@
 
 ;(function($B){
 
+$B.produce_ast = false
+
 Number.isInteger = Number.isInteger || function(value) {
   return typeof value === 'number' &&
     isFinite(value) &&
@@ -5461,7 +5463,7 @@ function make_target(target){
     // Nodes have an attribute 'type': 'simple' or 'tuple'
     // 'simple' nodes have an attribute 'item': the context of the target item
     // (Name, Attribute, Subscript, Starred)
-    // 'tuple' nodes have an attribute 'items': a list of target nodes 
+    // 'tuple' nodes have an attribute 'items': a list of target nodes
     if(target.type == 'expr'){
         return make_target(target.tree[0])
     }else if(target.tree === undefined || target.tree.length == 0){
@@ -8294,6 +8296,9 @@ $NumberCtx.prototype.ast = function(){
     if(Array.isArray(value)){
         value = parseInt(value[1], value[0])
     }
+    if(this.unary_op){
+        value = eval(this.unary_op + value)
+    }
     if(this.type == 'imaginary'){
         value += 'j'
     }
@@ -8371,6 +8376,9 @@ $OpCtx.prototype.ast = function(){
         op_type = ast_type_class[0],
         ast_class = ast_type_class[1]
 
+    if(op_type === ast.UnaryOp){
+        return new op_type(ast_class, ast_or_obj(this.tree[1]))
+    }
     return new op_type(
         ast_or_obj(this.tree[0]), ast_class, ast_or_obj(this.tree[1]))
 }
@@ -11683,7 +11691,10 @@ var $transition = $B.parser.$transition = function(context, token, value){
         alert('too many debug lines')
         $B.nb_debug_lines = 0
     }
-    //console.log("context", context, "token", token, value, '$pos', $pos); $B.nb_debug_lines++
+    if($B.track_transitions){
+        console.log("context", context, "token", token, value, '$pos', $pos)
+        $B.nb_debug_lines++
+    }
     return context.transition(token, value)
 }
 
@@ -12589,8 +12600,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             module, locals_id, parent_scope, line_num)
 
     dispatch_tokens(root, src)
-    //console.log(root.ast())
-
+    if($B.produce_ast){
+        console.log(root.ast())
+    }
     root.is_comp = is_comp
     if(ix != undefined){
         root.ix = ix
