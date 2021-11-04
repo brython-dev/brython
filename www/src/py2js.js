@@ -10944,6 +10944,9 @@ $UnaryCtx.prototype.transition = function(token, value){
             return $transition(new $AbstractExprCtx(context, false),
                 token, value)
     }
+    if(this.tree.length == 0){
+        $_SyntaxError(context, 'token ' + token + 'after context' + context)
+    }
     return $transition(context.parent, token, value)
 }
 
