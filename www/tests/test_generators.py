@@ -1094,7 +1094,7 @@ assert ''.join(ll) == "()"
 results = []
 
 def main():
-  while (a:=(yield)): # something funny happens here and freezes the page.
+  while (a:=(yield)):
     results.append(a)
 next(test:=main())
 test.send('magic')

@@ -209,7 +209,7 @@ function ast_or_obj(obj){
     if(obj.ast){
         return obj.ast()
     }else{
-        console.log('no ast', obj.type, obj)
+        console.log('no ast', obj.type || typeof obj, obj)
         return obj
     }
 }
@@ -371,6 +371,11 @@ function check_assignment(context, kwargs){
     }
 }
 
+function remove_abstract_expr(tree){
+    if($B.last(tree).type == 'abstract_expr'){
+        tree.pop()
+    }
+}
 
 $B.format_indent = function(js, indent){
     // Indent JS code based on curly braces ({ and })
@@ -435,6 +440,13 @@ $B.format_indent = function(js, indent){
             (line.startsWith('var ') || last_is_var_and_comma)
     }
     return res
+}
+
+function show_line(ctx){
+    // for debugging
+    var lnum = $get_node(ctx).line_num,
+        src = $get_module(ctx).src
+    console.log('this', ctx, '\nline', lnum, src.split('\n')[lnum - 1])
 }
 
 /*
@@ -706,7 +718,7 @@ $Node.prototype.transform = function(rank){
             return 3
         }
         parent.children.splice(rank, 1)
-        if(this.has_yield.tree[0].type === 'abstract_expr'){
+        if(this.has_yield.tree.length === 0){
             new_node = $NodeJS("var result = _b_.None")
         }else{
             var new_node = new $Node()
@@ -844,6 +856,20 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
     this.parent = context
     this.tree = []
     context.tree.push(this)
+}
+
+$AbstractExprCtx.prototype.ast = function(){
+    // the only remaining $AbstractExprCtx are NamedExpr (needs fixing !)
+    if(this.tree.length == 0){
+        console.log('abstract expr sans tree', this)
+        return
+    }
+    var res = new ast.NamedExpr(
+        ast_or_obj(this.assign),
+        ast_or_obj(this.tree[0])
+    )
+    res.target.ctx = ast.Store
+    return res
 }
 
 $AbstractExprCtx.prototype.toString = function(){
@@ -4838,6 +4864,13 @@ $ExprCtx.prototype.ast = function(){
     var res = ast_or_obj(this.tree[0])
     if(this.packed){
         return new ast.Starred(res)
+    }else if(this.assign){
+        res = new ast.NamedExpr(
+            ast_or_obj(this.assign),
+            res
+        )
+        res.target.ctx = ast.Store
+        return res
     }
     return res
 }
@@ -5820,6 +5853,55 @@ var $FuncArgs = $B.parser.$FuncArgs = function(context){
     this.has_default = false
     this.has_star_arg = false
     this.has_kw_arg = false
+}
+
+$FuncArgs.prototype.ast = function(){
+    var args = {
+            posonlyargs: [],
+            args: [],
+            kwonlyargs: [],
+            kwdefaults: [],
+            defaults: []
+        },
+        state = 'arg',
+        default_value
+    for(var arg of this.tree){
+        if(arg.type == 'end_positional'){
+            args.posonlyargs = args.args
+            args.args = []
+        }else if(arg.type == 'func_star_arg'){
+            if(arg.op == '*' && arg.name == '*'){
+                state = 'kwonly'
+            }else if(arg.op == '*'){
+                args.vararg = new ast.arg(arg.name)
+            }else if(arg.op == '**'){
+                args.kwarg = new ast.arg(arg.name)
+            }
+        }else{
+            default_value = false
+            if(arg.has_default){
+                default_value = ast_or_obj(arg.tree[0])
+            }
+            var argument = new ast.arg(arg.name)
+            if(arg.annotation){
+                argument.annotation = ast_or_obj(arg.annotation.tree[0])
+            }
+            if(state == 'kwonly'){
+                args.kwonlyargs.push(argument)
+                if(default_value){
+                    args.kwdefaults.push(default_value)
+                }
+            }else{
+                args.args.push(argument)
+                if(default_value){
+                    args.defaults.push(default_value)
+                }
+            }
+        }
+    }
+    // ast.arguments(posonlyargs, args, vararg, kwonlyargs, kw_defaults, kwarg, defaults)
+    return new ast.arguments(args.posonlyargs, args.args, args.vararg,
+        args.kwonlyargs, args.kw_defaults, args.kwarg, args.defaults)
 }
 
 $FuncArgs.prototype.toString = function(){
@@ -7409,6 +7491,17 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     this.other_args = null
     this.other_kw = null
     this.after_star = []
+}
+
+$LambdaCtx.prototype.ast = function(){
+    // ast.Lambda(args, body)
+    var args
+    if(this.args.length == 0){
+        args = new ast.arguments([], [], undefined, [], [], undefined, [])
+    }else{
+        args = this.args[0].ast()
+    }
+    return new ast.Lambda(args, ast_or_obj(this.tree[0]))
 }
 
 $LambdaCtx.prototype.toString = function(){
@@ -9905,6 +9998,12 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     this.scope_type = $get_scope(this).ntype
 }
 
+$RaiseCtx.prototype.ast = function(){
+    // ast.Raise(exc, cause)
+    // cause is the optional part in "raise exc from cause"
+    return new ast.Raise(...this.tree.map(ast_or_obj))
+}
+
 $RaiseCtx.prototype.toString = function(){
     return ' (raise) ' + this.tree
 }
@@ -9924,6 +10023,7 @@ $RaiseCtx.prototype.transition = function(token, value){
             }
             break
         case 'eol':
+            remove_abstract_expr(this.tree)
             return $transition(context.parent, token)
     }
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -11426,6 +11526,19 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
 
 }
 
+$YieldCtx.prototype.ast = function(){
+    // ast.Yield(value)
+    // ast.YieldFrom(value)
+    if(this.from){
+        return new ast.YieldFrom(ast_or_obj(this.tree[0]))
+    }
+    if(this.tree.length == 1){
+        return new ast.Yield(ast_or_obj(this.tree[0]))
+    }else{
+        return new ast.Yield()
+    }
+}
+
 $YieldCtx.prototype.toString = function(){
     return '(yield) ' + (this.from ? '(from) ' : '') + this.tree
 }
@@ -11441,6 +11554,8 @@ $YieldCtx.prototype.transition = function(token, value){
         context.from = true
         context.from_num = $B.UUID()
         return context.tree[0]
+    }else{
+        remove_abstract_expr(context.tree)
     }
     return $transition(context.parent, token)
 }
