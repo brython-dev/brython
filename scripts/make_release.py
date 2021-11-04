@@ -19,6 +19,8 @@ import make_stdlib_list
 
 from make_dist import run, pdir, vname, vname1, vname2, abs_path
 
+# make minified version with terser
+import make_minified
 
 run()
 
@@ -85,7 +87,7 @@ with open(br_script, "w", encoding="utf-8") as out:
 print("Udpate npm folder...")
 npmdir = os.path.join(pdir, 'npm')
 src_dir = os.path.join(pdir, 'www', 'src')
-for f in ['brython.js', 'brython_stdlib.js', 'unicode.txt']:
+for f in ['brython.js', 'brython.min.js', 'brython_stdlib.js', 'unicode.txt']:
     shutil.copyfile(os.path.join(src_dir, f), os.path.join(npmdir, f))
 
 # copy demo.html
