@@ -7730,6 +7730,15 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                             node.tree.splice(ix, 1, expr)
                             context = expr.tree[0]
                         }
+                        if(context.packed ||
+                                (context.type == 'list_or_tuple' &&
+                                 context.tree.length == 1 &&
+                                 context.tree[0].type == 'expr' &&
+                                 context.tree[0].tree[0].type == 'packed')){
+                             // syntax "(*x)"
+                            $_SyntaxError(context,
+                                ["cannot use starred expression here"])
+                        }
                         if(close){
                             context.close()
                         }

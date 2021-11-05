@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-05 10:44:38.107815"
-__BRYTHON__.timestamp=1636105478107
+__BRYTHON__.compiled_date="2021-11-05 11:05:36.239279"
+__BRYTHON__.timestamp=1636106736239
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3939,6 +3939,12 @@ expr.parent=node
 expr.$in_parens=true 
 node.tree.splice(ix,1,expr)
 C=expr.tree[0]}
+if(C.packed ||
+(C.type=='list_or_tuple' &&
+C.tree.length==1 &&
+C.tree[0].type=='expr' &&
+C.tree[0].tree[0].type=='packed')){
+$_SyntaxError(C,["cannot use starred expression here"])}
 if(close){C.close()}
 if(C.parent.type=="packed"){return C.parent.parent}
 if(C.parent.type=="abstract_expr" &&
