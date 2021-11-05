@@ -2768,11 +2768,11 @@ $ClassCtx.prototype.ast = function(){
         keywords = []
     if(this.args){
         for(var arg of this.args.tree){
-            if(arg.vars.length == 2){
-                keywords.push(new ast.keyword(ast_or_obj(arg.vars[0]),
-                    ast_or_obj(arg.vars[1])))
+            if(arg.tree[0].type == 'kwarg'){
+                keywords.push(new ast.keyword(arg.tree[0].tree[0].value,
+                    ast_or_obj(arg.tree[0].tree[1])))
             }else{
-                bases.push(new ast.arg(ast_or_obj(arg.vars[0])))
+                bases.push(new ast.arg(ast_or_obj(arg.tree[0])))
             }
         }
     }
@@ -10684,6 +10684,11 @@ var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     ternaries.push(this)
 }
 
+$TernaryCtx.prototype.ast = function(){
+    // ast.IfExp(test, body, orelse)
+    return new ast.IfExp(...this.tree.map(ast_or_obj))
+}
+
 $TernaryCtx.prototype.toString = function(){
     return '(ternary) ' + this.tree
 }
@@ -10973,6 +10978,25 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
     this.tree = []
     this.expect = 'as'
     this.scope = $get_scope(this)
+}
+
+$WithCtx.prototype.ast = function(){
+    // With(withitem* items, stmt* body, string? type_comment)
+    // items is a list of withitem nodes representing the context managers
+    // ast.withitem(context_expr, optional_vars)
+    // context_expr is the context manager, often a Call node.
+    // optional_vars is a Name, Tuple or List for the "as foo part", or None
+    var withitems = [],
+        withitem
+    for(var item of this.tree){
+        withitem = new ast.withitem(ast_or_obj(item.tree[0]))
+        if(item.alias){
+            withitem.optional_vars = ast_or_obj(item.alias.tree[0])
+            withitem.optional_vars.ctx = ast.Store
+        }
+        withitems.push(withitem)
+    }
+    return new ast.With(withitems, ast_body(this.parent))
 }
 
 $WithCtx.prototype.toString = function(){
