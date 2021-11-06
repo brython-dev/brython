@@ -9144,6 +9144,9 @@ $PatternCtx.prototype.transition = function(token, value){
                         new $PatternGroupCtx(context.parent, token))
                 case '{':
                     return new $PatternMappingCtx(context.parent, token)
+                case 'JoinedStr':
+                    $_SyntaxError(context, ["patterns may only match " +
+                        "literals and attribute lookups"])
             }
             break
         case 'starred_id':
@@ -9152,7 +9155,6 @@ $PatternCtx.prototype.transition = function(token, value){
                 capture.starred = true
                 return capture
             }
-            console.log('context expects starred id', context)
             $_SyntaxError(context, 'expected id after *')
         case 'number':
             // if pattern starts with unary - or +
@@ -9708,7 +9710,12 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 return context
             }
             var p = new $PatternCtx(context)
-            var lit_or_val = p.transition(token, value)
+            try{
+                var lit_or_val = p.transition(token, value)
+            }catch(err){
+                $_SyntaxError(context, ["mapping pattern keys may only " +
+                    "match literals and attribute lookups"])
+            }
             if(lit_or_val instanceof $PatternLiteralCtx){
                 context.tree.pop() // remove PatternCtx
                 // check duplicates
@@ -11499,7 +11506,7 @@ $WithCtx.prototype.to_js = function(){
         cme_name = head + '$ctx_manager_exit' + num,
         exc_name = head + '$exc' + num,
         val_name = '$value' + num
-    return 'var ' + cm_name + ' = $locals.' + cm_name + ' = ' + 
+    return 'var ' + cm_name + ' = $locals.' + cm_name + ' = ' +
            this.tree[0].to_js() + '\n' +
            h + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
            h + 'var ' + val_name + ' = $B.$getattr('+cm_name+',"__enter__")()\n' +
