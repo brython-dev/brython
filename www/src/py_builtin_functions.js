@@ -762,6 +762,8 @@ function $$eval(src, _globals, _locals){
             }
             js = root.to_js()
 
+            // console.log('js', $B.format_indent(js, 0))
+
             var locals_obj = eval("$locals_" + locals_id),
                 globals_obj = eval("$locals_" + globals_id)
             if(_globals === _b_.None){

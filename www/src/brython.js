@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-06 10:09:19.381657"
-__BRYTHON__.timestamp=1636189759381
+__BRYTHON__.compiled_date="2021-11-06 13:27:31.016958"
+__BRYTHON__.timestamp=1636201651016
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -5741,7 +5741,6 @@ var js=this.exc_name+' = false;'+this.err_name+
 this.err_name+'.__class__,'+
 this.err_name+','+
 '$B.$getattr('+this.err_name+', "__traceback__"));'
-if(this.scope.ntype=="generator"){js+='$B.set_cm_in_generator('+this.cmexit_name+');'}
 js+='\nif(!$B.$bool($b)){\nthrow '+this.err_name+'}'
 catch_node.add($NodeJS(js))
 top_try_node.add(catch_node)
@@ -5766,7 +5765,8 @@ var num=this.num=$loop_num++
 this.cm_name='$ctx_manager'+num,this.cmexit_name='$ctx_manager_exit'+num
 this.exc_name='$exc'+num
 var cmtype_name='$ctx_mgr_type'+num,cmenter_name='$ctx_manager_enter'+num,err_name='$err'+num
-var js='var '+this.cm_name+' = '+expr.to_js()+','
+var js='var '+this.cm_name+' = $locals.'+this.cm_name+' = '+
+expr.to_js()+','
 new_nodes.push($NodeJS(js))
 new_nodes.push($NodeJS('    '+cmtype_name+
 ' = _b_.type.$factory('+this.cm_name+'),'))
@@ -5811,7 +5811,8 @@ return 0}
 $WithCtx.prototype.to_js=function(){this.js_processed=true
 var indent=$get_node(this).indent,h=' '.repeat(indent),num=this.num
 var head=this.prefix=="" ? "var " :this.prefix,cm_name='$ctx_manager'+num,cme_name=head+'$ctx_manager_exit'+num,exc_name=head+'$exc'+num,val_name='$value'+num
-return 'var '+cm_name+' = '+this.tree[0].to_js()+'\n'+
+return 'var '+cm_name+' = $locals.'+cm_name+' = '+
+this.tree[0].to_js()+'\n'+
 h+cme_name+' = $B.$getattr('+cm_name+',"__exit__")\n'+
 h+'var '+val_name+' = $B.$getattr('+cm_name+',"__enter__")()\n'+
 h+exc_name+' = true\n'}
@@ -6450,7 +6451,7 @@ if(!($B.isWebWorker ||$B.isNode)){_run_scripts(options)}}
 $B.run_script=function(src,name,url,run_loop){
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}
 $B.file_cache[script.__file__]=src
-if($B.debug > 1){console.log(js)}}catch(err){$B.handle_error(err)}
+if($B.debug > 1){console.log($B.format_indent(js,0))}}catch(err){$B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
 for(var name of Object.keys(imports)){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
@@ -7753,27 +7754,29 @@ $B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_fun
 if(top_frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame_obj,'return',value)}
-function exit_ctx_managers_in_generators(frame){
-for(key in frame[1]){if(frame[1][key]&& frame[1][key].__class__==$B.generator){
-var gen_obj=frame[1][key]
-gen_obj.js_gen.return()}}}
-$B.set_cm_in_generator=function(cm_exit){if(cm_exit !==undefined){$B.frames_stack.forEach(function(frame){frame[1].$cm_in_gen=frame[1].$cm_in_gen ||new Set()
-frame[1].$cm_in_gen.add(cm_exit)})}}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){console.log("empty stack");return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
+if(frame[1].$is_generator){
+var ctx_managers=new Set()
+for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.add(frame[1][key])}}
+if(ctx_managers.size > 0 && $B.frames_stack.length > 0){
+var caller=$B.last($B.frames_stack)
+caller[1].$ctx_managers_in_gen=caller[1].$ctx_managers_in_gen ||
+new Set()
+for(var cm of ctx_managers){caller[1].$ctx_managers_in_gen.add(cm)}}}
 frame[1].$current_exception=undefined
-if(frame[1].$close_generators){
-for(var i=0,len=frame[1].$close_generators.length;i < len;i++){var gen=frame[1].$close_generators[i]
-if(gen.$has_run){gen.return()}}}
+if(frame[1].$ctx_managers_in_gen){for(var cm of frame[1].$ctx_managers_in_gen){$B.$call($B.$getattr(cm,'__exit__'))(_b_.None,_b_.None,_b_.None)}}
 return _b_.None}
 $B.leave_frame_exec=function(arg){
 if($B.profile > 0){$B.$profile.return()}
 if($B.frames_stack.length==0){console.log("empty stack");return}
-var frame=$B.frames_stack.pop()
-exit_ctx_managers_in_generators(frame)
+var frame=$B.last($B.frames_stack)
+$B.frames_stack.pop()
+if(frame[1].$ctx_managers_in_gen){
+for(var cm of frame[1].$ctx_managers_in_gen){$B.$call($B.$getattr(cm,'__exit__'))(_b_.None,_b_.None,_b_.None)}}
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
@@ -14734,9 +14737,6 @@ var res=function(){var gen=func.apply(null,arguments)
 gen.$name=name ||'generator'
 gen.$func=func
 gen.$has_run=false
-if(func.$has_yield_in_cm){var locals=$B.last($B.frames_stack)[1]
-locals.$close_generators=locals.$close_generators ||[]
-locals.$close_generators.push(gen)}
 return{
 __class__:$B.generator,js_gen:gen}}
 res.$infos=func.$infos

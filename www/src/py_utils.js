@@ -1383,33 +1383,10 @@ $B.trace_return = function(value){
     trace_func(frame_obj, 'return', value)
 }
 
-function exit_ctx_managers_in_generators(frame){
-    // Called when leaving an execution frame.
-    // Inspect the generators in frame's locals. If they have unclosed context
-    // managers, close them.
-    for(key in frame[1]){
-        if(frame[1][key] && frame[1][key].__class__ == $B.generator){
-            // Force generator termination, which executes the "finally" block
-            // associated with the context manager
-            var gen_obj = frame[1][key]
-            gen_obj.js_gen.return()
-        }
-    }
-}
-
-$B.set_cm_in_generator = function(cm_exit){
-    if(cm_exit !== undefined){
-        $B.frames_stack.forEach(function(frame){
-            frame[1].$cm_in_gen = frame[1].$cm_in_gen || new Set()
-            frame[1].$cm_in_gen.add(cm_exit)
-        })
-    }
-}
-
-
 $B.leave_frame = function(arg){
     // Leave execution frame
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
+
     // When leaving a module, arg is set as an object of the form
     // {$locals, value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
@@ -1421,16 +1398,28 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frames_stack.pop()
-    frame[1].$current_exception = undefined
-    if(frame[1].$close_generators){
-        // The attribute $close_generators is set in
-        // py_generator.js/$B.generator
-        for(var i = 0, len = frame[1].$close_generators.length; i < len; i++){
-            var gen = frame[1].$close_generators[i]
-            // Attribute $has_run is set if generator has already been run
-            if(gen.$has_run){
-                gen.return()
+    if(frame[1].$is_generator){
+        // Get context managers in a generator
+        var ctx_managers = new Set()
+        for(var key in frame[1]){
+            if(key.startsWith('$ctx_manager')){
+                ctx_managers.add(frame[1][key])
             }
+        }
+        if(ctx_managers.size > 0 && $B.frames_stack.length > 0){
+            // store context managers in previous frame
+            var caller = $B.last($B.frames_stack)
+            caller[1].$ctx_managers_in_gen = caller[1].$ctx_managers_in_gen ||
+                new Set()
+            for(var cm of ctx_managers){
+                caller[1].$ctx_managers_in_gen.add(cm)
+            }
+        }
+    }
+    frame[1].$current_exception = undefined
+    if(frame[1].$ctx_managers_in_gen){
+        for(var cm of frame[1].$ctx_managers_in_gen){
+            $B.$call($B.$getattr(cm, '__exit__'))(_b_.None, _b_.None, _b_.None)
         }
     }
     return _b_.None
@@ -1441,8 +1430,16 @@ $B.leave_frame_exec = function(arg){
     // on the englobing namespace
     if($B.profile > 0){$B.$profile.return()}
     if($B.frames_stack.length == 0){console.log("empty stack"); return}
-    var frame = $B.frames_stack.pop()
-    exit_ctx_managers_in_generators(frame)
+    var frame = $B.last($B.frames_stack)
+    $B.frames_stack.pop()
+    if(frame[1].$ctx_managers_in_gen){
+        // If the frame used generators with context managers, exit them.
+        // Simulates garbage collection.
+        for(var cm of frame[1].$ctx_managers_in_gen){
+            $B.$call($B.$getattr(cm, '__exit__'))(_b_.None, _b_.None, _b_.None)
+        }
+    }
+
     for(var i = $B.frames_stack.length - 1; i >= 0; i--){
         if($B.frames_stack[i][2] == frame[2]){
             $B.frames_stack[i][3] = frame[3]

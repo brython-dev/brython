@@ -37,11 +37,6 @@ $B.generator = $B.make_class("generator",
             gen.$name = name || 'generator'
             gen.$func = func
             gen.$has_run = false
-            if(func.$has_yield_in_cm){
-                var locals = $B.last($B.frames_stack)[1]
-                locals.$close_generators = locals.$close_generators || []
-                locals.$close_generators.push(gen)
-            }
             return {
                 __class__: $B.generator,
                 js_gen: gen

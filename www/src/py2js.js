@@ -11344,9 +11344,6 @@ $WithCtx.prototype.transform = function(node, rank){
             this.err_name + '.__class__,' +
             this.err_name + ','+
             '$B.$getattr(' + this.err_name + ', "__traceback__"));'
-    if(this.scope.ntype == "generator"){
-        js += '$B.set_cm_in_generator(' + this.cmexit_name + ');'
-    }
     js += '\nif(!$B.$bool($b)){\nthrow ' + this.err_name + '}'
     catch_node.add($NodeJS(js))
     top_try_node.add(catch_node)
@@ -11408,7 +11405,8 @@ $WithCtx.prototype.transform_async = function(node, rank){
         err_name = '$err' + num
 
     // Line mgr = (EXPR)
-    var js = 'var ' + this.cm_name + ' = ' + expr.to_js() +','
+    var js = 'var ' + this.cm_name + ' = $locals.' + this.cm_name + ' = ' +
+        expr.to_js() +','
     new_nodes.push($NodeJS(js))
 
     // aexit = type(mgr).__aexit__
@@ -11501,7 +11499,8 @@ $WithCtx.prototype.to_js = function(){
         cme_name = head + '$ctx_manager_exit' + num,
         exc_name = head + '$exc' + num,
         val_name = '$value' + num
-    return 'var ' + cm_name + ' = ' + this.tree[0].to_js() + '\n' +
+    return 'var ' + cm_name + ' = $locals.' + cm_name + ' = ' + 
+           this.tree[0].to_js() + '\n' +
            h + cme_name + ' = $B.$getattr('+cm_name+',"__exit__")\n' +
            h + 'var ' + val_name + ' = $B.$getattr('+cm_name+',"__enter__")()\n' +
            h + exc_name + ' = true\n'
@@ -13193,7 +13192,7 @@ $B.run_script = function(src, name, url, run_loop){
             }
             $B.file_cache[script.__file__] = src
             if($B.debug > 1){
-                console.log(js)
+                console.log($B.format_indent(js, 0))
             }
     }catch(err){
         $B.handle_error(err) // in loaders.js
