@@ -220,6 +220,16 @@ if($B.ast_classes){
             return res + ']'
         }else if(tree.$name){
             return tree.$name + '()'
+        }else if(tree instanceof ast.MatchSingleton){
+            return `MatchSingleton(value=${tree.value})`
+        }else if(tree instanceof ast.Constant){
+            var value = tree.value
+            // For imaginary numbers, value is an object with
+            // attribute "imaginary" set
+            if(value.imaginary){
+                return `Constant(value=${_b_.repr(value.value)}j)`
+            }
+            return `Constant(value=${_b_.repr(tree.value)})`
         }
         var proto = Object.getPrototypeOf(tree).constructor
         var res = '  ' .repeat(indent) + proto.$name + '('
@@ -228,7 +238,7 @@ if($B.ast_classes){
         }
         var attr_names = $B.ast_classes[proto.$name].split(','),
             attrs = []
-        if([ast.Name, ast.Constant].indexOf(proto) > -1){
+        if([ast.Name].indexOf(proto) > -1){
             for(var attr of attr_names){
                 if(tree[attr] !== undefined){
                     attrs.push(`${attr}=${ast_dump(tree[attr])}`)
@@ -6548,7 +6558,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
 
 $IdCtx.prototype.ast = function(){
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
-        return new ast.Constant(this.value)
+        return new ast.Constant(_b_[this.value])
     }
     return new ast.Name(this.value, ast.Load)
 }
@@ -8527,7 +8537,12 @@ $NumberCtx.prototype.ast = function(){
     if(this.type == 'imaginary'){
         value = {imaginary: true, value: eval(value)}
     }else{
+        try{
         value = eval(value)
+        }catch(err){
+            console.log('error num ast', this)
+            throw err
+        }
     }
     return new ast.Constant(value)
 }
@@ -9223,9 +9238,16 @@ var $PatternCaptureCtx = function(context, value){
 }
 
 $PatternCaptureCtx.prototype.ast = function(){
-    console.log('capture', this)
-    return new ast.MatchAs(new ast.Name(this.tree[0]),
-        this.alias ? this.alias : undefined)
+    var name = this.tree[0]
+    if(name == '_'){
+        name = undefined
+    }
+    if(this.alias){
+        return new ast.MatchAs(
+            new ast.MatchAs(undefined, name),
+            this.alias)
+    }
+    return new ast.MatchAs(undefined, name)
 }
 
 $PatternCaptureCtx.prototype.bindings = function(){
@@ -9311,6 +9333,32 @@ $PatternClassCtx = function(context){
     this.keywords = []
     this.positionals = []
     this.bound_names = []
+}
+
+$PatternClassCtx.prototype.ast = function(){
+    // ast.MatchClass(cls, patterns, kwd_attrs, kwd_patterns)
+    // `cls` is an expression giving the nominal class to be matched
+    // `patterns` is a sequence of pattern nodes to be matched against the
+    //   class defined sequence of pattern matching attributes
+    // `kwd_attrs` is a sequence of additional attributes to be matched
+    // `kwd_patterns` are the corresponding patterns
+    console.log('class pattern', this)
+    var cls = new ast.Name(this.class_id.value),
+        patterns = [],
+        kwd_attrs = [],
+        kwd_patterns = []
+    for(var item of this.tree){
+        if(item.is_keyword){
+            kwd_attrs.push(item.tree[0])
+            kwd_patterns.push(ast_or_obj(item.tree[1]))
+        }else{
+            patterns.push(
+                $PatternCaptureCtx.prototype.ast.bind(item)())
+        }
+    }
+    var res = new ast.MatchClass(cls, patterns, kwd_attrs, kwd_patterns)
+    console.log('result', res)
+    return res
 }
 
 $PatternClassCtx.prototype.bindings = function(){
@@ -9509,15 +9557,48 @@ var $PatternLiteralCtx = function(context, token, value, sign){
         this.expect = 'number'
     }else{
         if(token == 'str'){
-            if(Array.isArray(value)){ // f-string
-                $_SyntaxError(this, ["patterns cannot include f-strings"])
-            }
             this.tree = []
             new $StringCtx(this, value)
+        }else if(token == 'JoinedStr'){
+            $_SyntaxError(this, ["patterns cannot include f-strings"])
         }else{
-            this.tree = [{token, value, sign}]
+            this.tree = [{type: token, value, sign}]
         }
         this.expect = 'op'
+    }
+}
+
+$PatternLiteralCtx.prototype.ast = function(){
+    console.log('literal ast', this)
+    var first = this.tree[0]
+    if(first.type == 'str'){
+        return new ast.MatchValue(new ast.Constant(first.value))
+    }else if(first.type == 'id'){
+        return new ast.MatchValue(new ast.Constant(_b_[first.value]))
+    }else{
+        var num = $NumberCtx.prototype.ast.bind(first)(),
+            res = new ast.MatchValue(num)
+        if(this.tree.length == 1){
+            return res
+        }
+        var num2 = $NumberCtx.prototype.ast.bind(this.tree[2])()
+        return new ast.BinOp(res,
+            this.tree[1] == '+' ? ast.Add : ast.Sub,
+            num2)
+    }
+    if(this.tree.length == 2){
+        // value = complex number
+        return new ast.MatchValue(new ast.BinOp(
+            ast_or_obj(this.tree[0]),
+            context.num_sign == '+' ? ast.Add : ast.Sub,
+            ast_or_obj(this.tree[1])))
+    }else{
+        var value = this.tree[0].value
+        if(['True', 'False', 'None'].indexOf(value) > -1){
+            return new ast.MatchSingleton(value)
+        }else{
+            return new ast.MatchValue(ast_or_obj(this.tree[0]))
+        }
     }
 }
 
@@ -9536,7 +9617,7 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                 switch(value){
                     case '+':
                     case '-':
-                        if(['int', 'float'].indexOf(this.tree[0].token) > -1){
+                        if(['int', 'float'].indexOf(context.tree[0].type) > -1){
                             context.expect = 'imaginary'
                             this.tree.push(value)
                             context.num_sign = value
@@ -9557,7 +9638,7 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                     var last = $B.last(context.tree)
                     if(this.tree.token === undefined){
                         // if pattern starts with unary - or +
-                        last.token = token
+                        last.type = token
                         last.value = value
                         context.expect = 'op'
                         return context
@@ -9569,7 +9650,7 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
         case 'imaginary':
             switch(token){
                 case 'imaginary':
-                    context.tree.push({token, value, sign: context.num_sign})
+                    context.tree.push({type: token, value, sign: context.num_sign})
                     return context.parent
                 default:
                     $_SyntaxError(context, 'expected imaginary')
@@ -9597,7 +9678,7 @@ $PatternLiteralCtx.prototype.to_js = function(){
     if(first instanceof $StringCtx){
         res = first.to_js()
     }else{
-        switch(first.token){
+        switch(first.type){
             case 'id':
                 res = '_b_.' + first.value
                 num_value = first.value == 'True' ? 1 : 0
@@ -9882,6 +9963,11 @@ var $PatternOrCtx = function(context){
     this.expect = '|'
     context.tree.push(this)
     this.check_reachable()
+}
+
+$PatternOrCtx.prototype.ast = function(){
+    // ast.MatchOr(patterns)
+    return new ast.MatchOr(this.tree.map(ast_or_obj))
 }
 
 $PatternOrCtx.prototype.bindings = function(){
