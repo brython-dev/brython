@@ -3052,7 +3052,7 @@ var Comprehension = {
                         ast_or_obj(item.tree[0]),
                         ast_or_obj(item.tree[1]),
                         [],
-                        !!item.is_async
+                        item.is_async ? 1 : 0
                     )
                 )
             }else{
