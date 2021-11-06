@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-05 11:05:36.239279"
-__BRYTHON__.timestamp=1636106736239
+__BRYTHON__.compiled_date="2021-11-05 15:54:23.157010"
+__BRYTHON__.timestamp=1636124063157
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -414,6 +414,7 @@ if($B.ast_classes){for(var kl in $B.ast_classes){var args=$B.ast_classes[kl]
 var js=`ast.${kl} = function(${args}){\n`
 if(args.length > 0){for(var arg of args.split(',')){js+=` this.${arg} = ${arg}\n`}}
 js+='}'
+js+=`\nast.${kl}.$name = "${kl}"`
 eval(js)}
 var op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}
@@ -422,7 +423,25 @@ var body=[]
 for(var child of block_ctx.node.children){var ctx=child.C.tree[0]
 if(['decorator'].indexOf(ctx.type)>-1){continue}
 body.push(ast_or_obj(ctx))}
-return body}}
+return body}
+function ast_dump(tree,indent){indent=indent ||0
+if(typeof tree=='string'){return `'${tree}'`}else if(typeof tree=='number'){return tree+''}else if(tree.imaginary){return tree.value+'j'}else if(Array.isArray(tree)){if(tree.length==0){return '[]'}
+res='[\n'
+res+=tree.map(x=> ast_dump(x,indent+1)).join(',\n')
+return res+']'}else if(tree.$name){return tree.$name+'()'}
+var proto=Object.getPrototypeOf(tree).constructor
+var res='  ' .repeat(indent)+proto.$name+'('
+if($B.ast_classes[proto.$name]===undefined){console.log('pas dans ast_classes',tree,proto,proto.$name)}
+var attr_names=$B.ast_classes[proto.$name].split(','),attrs=[]
+if([ast.Name,ast.Constant].indexOf(proto)>-1){for(var attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
+return res+attrs.join(', ')+')'}
+for(var attr of attr_names){if(tree[attr]!==undefined){var value=tree[attr]
+attrs.push(attr+'='+
+ast_dump(tree[attr],indent+1).trimStart())}}
+if(attrs.length > 0){res+='\n'
+res+=attrs.map(x=> '  '.repeat(indent+1)+x).join(',\n')}
+res+=')'
+return res}}
 function ast_or_obj(obj){
 if(obj.ast){return obj.ast()}else{console.log('no ast',obj.type ||typeof obj,obj)
 return obj}}
@@ -500,7 +519,7 @@ $Node.prototype.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
 child.module=this.module}
-$Node.prototype.ast=function(){var root_ast=new ast.Module([])
+$Node.prototype.ast=function(){var root_ast=new ast.Module([],[])
 for(var node of this.children){var t=node.C.tree[0]
 if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
 (t.type=='condition' && t.token=='elif')){continue}
@@ -1508,13 +1527,14 @@ $CallCtx.prototype.ast=function(){var res=new ast.Call(ast_or_obj(this.func),[],
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=call_arg.tree[0].tree[0].value,keyword=new ast.keyword(null,value)
 delete keyword.arg
 res.keywords.push(keyword)
+continue}else if(call_arg.type=='star_arg'){var starred=new ast.Starred(ast_or_obj(call_arg.tree[0]))
+starred.ctx=ast.Load
+res.args.push(starred)
 continue}
 var item=call_arg.tree[0]
 if(item===undefined){
 continue}
-if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,ast_or_obj(item.tree[1])))}else if(item.type=='star_arg'){var starred=new ast.Starred(ast_or_obj(item.tree[0]))
-starred.ctx=ast.Load
-res.args.push(starred)}else{res.args.push(ast_or_obj(item))}}
+if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,ast_or_obj(item.tree[1])))}else{res.args.push(ast_or_obj(item))}}
 return res}
 $CallCtx.prototype.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 $CallCtx.prototype.transition=function(token,value){var C=this
@@ -1646,6 +1666,8 @@ node_ctx.tree=[this]
 this.parent=node_ctx
 this.tree=[]
 this.expect='as'}
+$CaseCtx.prototype.ast=function(){
+return new ast.match_case(ast_or_obj(this.tree[0]),this.has_guard ? ast_or_obj(this.tree[1].tree[0]):undefined,ast_body(this.parent))}
 $CaseCtx.prototype.set_alias=function(name){this.alias=name}
 $CaseCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'as':
@@ -1993,6 +2015,7 @@ if(arg.annotation){argument.annotation=ast_or_obj(arg.annotation.tree[0])}
 if(state=='kwonly'){args.kwonlyargs.push(argument)
 if(default_value){args.kwdefaults.push(default_value)}}else{args.args.push(argument)
 if(default_value){args.defaults.push(default_value)}}}}
+args=new ast.arguments(args.posonlyargs,args.args,args.vararg,args.kwonlyargs,args.kw_defaults,args.kwarg,args.defaults)
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=ast_or_obj(this.annotation.tree[0])}
 res.body=ast_body(this.parent)
@@ -2567,6 +2590,7 @@ this.type='ellipsis'
 this.parent=C
 this.start=$pos
 C.tree[C.tree.length]=this}
+$EllipsisCtx.prototype.ast=function(){return new ast.Constant('...')}
 $EllipsisCtx.prototype.toString=function(){return 'ellipsis'}
 $EllipsisCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -2594,7 +2618,7 @@ var res={body:[]}
 for(var child of this.parent.node.children){res.body.push(ast_or_obj(child.C.tree[0]))}
 if(this.has_alias){res.name=this.tree[0].alias}
 if(this.tree.length > 0){res.type=ast_or_obj(this.tree[0])}
-return res}
+return new ast.ExceptHandler(ast.type,ast.name,ast_body(this.parent))}
 $ExceptCtx.prototype.toString=function(){return '(except) '}
 $ExceptCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -3741,11 +3765,12 @@ C.tree.push(this)
 this.raw=false
 this.$pos=$pos}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
-for(var item of this.tree){if(item instanceof $StringCtx){res.values.push(new ast.Constant(item.value))}else{var conv_num={a:97,r:114,s:115},value={type:'FormattedValue',value:item,conversion:conv_num[item.conversion]||-1}
+for(var item of this.tree){if(item instanceof $StringCtx){res.values.push(new ast.Constant(item.value))}else{var conv_num={a:97,r:114,s:115},value=new ast.FormattedValue(
+ast_or_obj(item),conv_num[item.conversion]||-1)
 var format=item.format
 if(format !==undefined){value.format=item.format.ast()}
 res.values.push(value)}}
-return res}
+return new ast.JoinedStr(res.values)}
 JoinedStrCtx.prototype.toString=function(){return 'f-string '+(this.tree ||'')}
 JoinedStrCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
@@ -4063,6 +4088,8 @@ node_ctx.node.is_match=true
 this.parent=node_ctx
 this.tree=[]
 this.expect='as'}
+$MatchCtx.prototype.ast=function(){
+return new ast.Match(ast_or_obj(this.tree[0]),ast_body(this.parent))}
 $MatchCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'as':
 return new $AbstractExprCtx(new $AliasCtx(C))
@@ -4339,7 +4366,7 @@ C.tree[C.tree.length]=this}
 $NumberCtx.prototype.ast=function(){var value=this.value
 if(Array.isArray(value)){value=parseInt(value[1],value[0])}
 if(this.unary_op){value=eval(this.unary_op+value)}
-if(this.type=='imaginary'){value+='j'}
+if(this.type=='imaginary'){value={imaginary:true,value:eval(value)}}else{value=eval(value)}
 return new ast.Constant(value)}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
@@ -4585,6 +4612,7 @@ this.parent=C
 this.tree=[]
 this.pos=$pos-1 
 C.tree[C.tree.length]=this}
+$PackedCtx.prototype.ast=function(){return new ast.Starred(ast_or_obj(this.tree[0]),ast.Load)}
 $PackedCtx.prototype.toString=function(){return '(packed) '+this.tree}
 $PackedCtx.prototype.transition=function(token,value){var C=this
 if(C.tree.length > 0 && token=="["){
@@ -4708,6 +4736,8 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
+$PatternCaptureCtx.prototype.ast=function(){console.log('capture',this)
+return new ast.MatchAs(new ast.Name(this.tree[0]),this.alias ? this.alias :undefined)}
 $PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree.slice()
 if(this.alias){bindings.push(this.alias)}
 return bindings}
@@ -5087,6 +5117,7 @@ first_pattern.parent=this}else{
 this.token=token}
 this.expect=','
 C.tree.push(this)}
+$PatternSequenceCtx.prototype.ast=function(){return new ast.MatchSequence(this.tree.map(ast_or_obj))}
 $PatternSequenceCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
 $PatternSequenceCtx.prototype.transition=function(token,value){function check_duplicate_names(){var last=$B.last(C.tree)
 if(!(last instanceof $PatternCtx)){
@@ -6315,7 +6346,7 @@ if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
 {src:src,is_comp:is_comp,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root,src)
-if($B.produce_ast){console.log(root.ast())}
+if($B.produce_ast){console.log(ast_dump(root.ast()))}
 root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
 root.transform()

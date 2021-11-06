@@ -179,6 +179,7 @@ if($B.ast_classes){
             }
         }
         js += '}'
+        js += `\nast.${kl}.$name = "${kl}"`
         eval(js)
     }
     // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
@@ -200,6 +201,55 @@ if($B.ast_classes){
             body.push(ast_or_obj(ctx))
         }
         return body
+    }
+
+    function ast_dump(tree, indent){
+        indent = indent || 0
+        if(typeof tree == 'string'){
+            return `'${tree}'`
+        }else if(typeof tree == 'number'){
+            return tree + ''
+        }else if(tree.imaginary){
+            return tree.value + 'j'
+        }else if(Array.isArray(tree)){
+            if(tree.length == 0){
+                return '[]'
+            }
+            res = '[\n'
+            res += tree.map(x => ast_dump(x, indent + 1)).join(',\n')
+            return res + ']'
+        }else if(tree.$name){
+            return tree.$name + '()'
+        }
+        var proto = Object.getPrototypeOf(tree).constructor
+        var res = '  ' .repeat(indent) + proto.$name + '('
+        if($B.ast_classes[proto.$name] === undefined){
+            console.log('pas dans ast_classes', tree, proto, proto.$name)
+        }
+        var attr_names = $B.ast_classes[proto.$name].split(','),
+            attrs = []
+        if([ast.Name, ast.Constant].indexOf(proto) > -1){
+            for(var attr of attr_names){
+                if(tree[attr] !== undefined){
+                    attrs.push(`${attr}=${ast_dump(tree[attr])}`)
+                }
+            }
+            return res + attrs.join(', ') + ')'
+        }
+        for(var attr of attr_names){
+            if(tree[attr] !== undefined){
+                var value = tree[attr]
+                attrs.push(attr + '=' +
+                    ast_dump(tree[attr], indent + 1).trimStart())
+            }
+        }
+        if(attrs.length > 0){
+            res += '\n'
+            res += attrs.map(x => '  '.repeat(indent + 1) + x).join(',\n')
+
+        }
+        res  += ')'
+        return res
     }
 }
 
@@ -473,7 +523,7 @@ $Node.prototype.add = function(child){
 }
 
 $Node.prototype.ast = function(){
-    var root_ast = new ast.Module([])
+    var root_ast = new ast.Module([], [])
     for(var node of this.children){
         var t = node.context.tree[0]
         // Ignore except / elif / else / finally : they are attributes of
@@ -2400,6 +2450,11 @@ $CallCtx.prototype.ast = function(){
             delete keyword.arg
             res.keywords.push(keyword)
             continue
+        }else if(call_arg.type == 'star_arg'){
+            var starred = new ast.Starred(ast_or_obj(call_arg.tree[0]))
+            starred.ctx = ast.Load
+            res.args.push(starred)
+            continue
         }
         var item = call_arg.tree[0]
         if(item === undefined){
@@ -2409,10 +2464,6 @@ $CallCtx.prototype.ast = function(){
         if(item.type == 'kwarg'){
             res.keywords.push(new ast.keyword(item.tree[0].value,
                 ast_or_obj(item.tree[1])))
-        }else if(item.type == 'star_arg'){
-            var starred = new ast.Starred(ast_or_obj(item.tree[0]))
-            starred.ctx = ast.Load
-            res.args.push(starred)
         }else{
             res.args.push(ast_or_obj(item))
         }
@@ -2654,6 +2705,15 @@ var $CaseCtx = $B.parser.$CaseCtx = function(node_ctx){
     this.parent = node_ctx
     this.tree = []
     this.expect = 'as'
+}
+
+$CaseCtx.prototype.ast = function(){
+    // ast.match_case(pattern, guard, body)
+    // pattern : the match pattern that the subject will be matched against
+    // guard : an expression that will be evaluated if the pattern matches the subject
+    return new ast.match_case(ast_or_obj(this.tree[0]),
+        this.has_guard ? ast_or_obj(this.tree[1].tree[0]) : undefined,
+        ast_body(this.parent))
 }
 
 $CaseCtx.prototype.set_alias = function(name){
@@ -3493,6 +3553,8 @@ $DefCtx.prototype.ast = function(){
             }
         }
     }
+    args = new ast.arguments(args.posonlyargs, args.args, args.vararg,
+        args.kwonlyargs, args.kw_defaults, args.kwarg, args.defaults)
     if(this.async){
         res = new ast.AsyncFunctionDef(this.name, args, [], decorators)
     }else{
@@ -4659,6 +4721,10 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
     context.tree[context.tree.length] = this
 }
 
+$EllipsisCtx.prototype.ast = function(){
+    return new ast.Constant('...')
+}
+
 $EllipsisCtx.prototype.toString = function(){
     return 'ellipsis'
 }
@@ -4719,7 +4785,8 @@ $ExceptCtx.prototype.ast = function(){
     if(this.tree.length > 0){
         res.type = ast_or_obj(this.tree[0])
     }
-    return res
+    return new ast.ExceptHandler(ast.type, ast.name,
+        ast_body(this.parent))
 }
 
 $ExceptCtx.prototype.toString = function(){return '(except) '}
@@ -7318,11 +7385,9 @@ JoinedStrCtx.prototype.ast = function(){
             res.values.push(new ast.Constant(item.value))
         }else{
             var conv_num = {a: 97, r: 114, s: 115},
-                value = {
-                    type: 'FormattedValue',
-                    value: item,
-                    conversion: conv_num[item.conversion] || -1
-                }
+                value = new ast.FormattedValue(
+                    ast_or_obj(item),
+                    conv_num[item.conversion] || -1)
             var format = item.format
             if(format !== undefined){
                 value.format = item.format.ast()
@@ -7330,7 +7395,7 @@ JoinedStrCtx.prototype.ast = function(){
             res.values.push(value)
         }
     }
-    return res
+    return new ast.JoinedStr(res.values)
 }
 
 JoinedStrCtx.prototype.toString = function(){
@@ -7985,6 +8050,13 @@ var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
     this.expect = 'as'
 }
 
+$MatchCtx.prototype.ast = function(){
+    // ast.Match(subject, cases)¶
+    // subject holds the subject of the match
+    // cases contains an iterable of match_case nodes with the different cases
+    return new ast.Match(ast_or_obj(this.tree[0]), ast_body(this.parent))
+}
+
 $MatchCtx.prototype.transition = function(token, value){
     var context = this
     switch(token){
@@ -8453,7 +8525,9 @@ $NumberCtx.prototype.ast = function(){
         value = eval(this.unary_op + value)
     }
     if(this.type == 'imaginary'){
-        value += 'j'
+        value = {imaginary: true, value: eval(value)}
+    }else{
+        value = eval(value)
     }
     return new ast.Constant(value)
 }
@@ -8936,6 +9010,10 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     context.tree[context.tree.length] = this
 }
 
+$PackedCtx.prototype.ast = function(){
+    return new ast.Starred(ast_or_obj(this.tree[0]), ast.Load)
+}
+
 $PackedCtx.prototype.toString = function(){
     return '(packed) ' + this.tree
 }
@@ -9140,6 +9218,12 @@ var $PatternCaptureCtx = function(context, value){
     this.tree = [value]
     this.expect = '.'
     this.$pos = $pos
+}
+
+$PatternCaptureCtx.prototype.ast = function(){
+    console.log('capture', this)
+    return new ast.MatchAs(new ast.Name(this.tree[0]),
+        this.alias ? this.alias : undefined)
 }
 
 $PatternCaptureCtx.prototype.bindings = function(){
@@ -9911,6 +9995,10 @@ var $PatternSequenceCtx = function(context, token){
     }
     this.expect = ','
     context.tree.push(this)
+}
+
+$PatternSequenceCtx.prototype.ast = function(){
+    return new ast.MatchSequence(this.tree.map(ast_or_obj))
 }
 
 $PatternSequenceCtx.prototype.bindings = $PatternMappingCtx.prototype.bindings
@@ -12813,7 +12901,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     dispatch_tokens(root, src)
     if($B.produce_ast){
-        console.log(root.ast())
+        console.log(ast_dump(root.ast()))
     }
     root.is_comp = is_comp
     if(ix != undefined){
