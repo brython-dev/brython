@@ -1,5 +1,6 @@
 import sys
 import builtins
+import re
 
 import tb as traceback
 
@@ -204,84 +205,103 @@ class Interpreter:
                 event.preventDefault() # don't insert line feed
                 return
             src = self.zone.value
-            if self._status == "main":
-                currentLine = src[src.rfind('\n>>>') + 5:]
-            elif self._status == "3string":
-                currentLine = src[src.rfind('\n>>>') + 5:]
-                currentLine = currentLine.replace('\n... ', '\n')
-            else:
-                currentLine = src[src.rfind('\n...') + 5:]
-            if self._status == 'main' and not currentLine.strip():
-                self.zone.value += '\n>>> '
+            self.handle_line(self, event)
+
+    def feed(self, src):
+        """src is Python source code, possibly on several lines.
+        Simulate typing the code in the interpreter.
+        Can be used for debugging, or showing how a code snippet executes.
+        """
+        current_indent = 0
+        for line in src.split('\n'):
+            mo = re.match('^\s*', line)
+            indent = mo.end() - mo.start()
+            current_indent = indent
+            self.zone.value += line
+            self.handle_line(line)
+
+    def handle_line(self, code, event=None):
+        src = self.zone.value
+        if self._status == "main":
+            currentLine = src[src.rfind('\n>>>') + 5:]
+        elif self._status == "3string":
+            currentLine = src[src.rfind('\n>>>') + 5:]
+            currentLine = currentLine.replace('\n... ', '\n')
+        else:
+            currentLine = src[src.rfind('\n...') + 5:]
+        if self._status == 'main' and not currentLine.strip():
+            self.zone.value += '\n>>> '
+            if event is not None:
                 event.preventDefault()
-                return
-            self.zone.value += '\n'
-            self.history.append(currentLine)
-            self.current = len(self.history)
-            if self._status in ["main", "3string"]:
-                try:
-                    _ = self.globals['_'] = eval(currentLine,
-                                              self.globals,
-                                              self.locals)
-                    if _ is not None:
-                        self.write(repr(_) + '\n')
+            return
+        self.zone.value += '\n'
+        self.history.append(currentLine)
+        self.current = len(self.history)
+        if self._status in ["main", "3string"]:
+            try:
+                _ = self.globals['_'] = eval(currentLine,
+                                          self.globals,
+                                          self.locals)
+                if _ is not None:
+                    self.write(repr(_) + '\n')
+                self.flush()
+                self.zone.value += '>>> '
+                self._status = "main"
+            except IndentationError:
+                self.zone.value += '... '
+                self._status = "block"
+            except SyntaxError as msg:
+                if str(msg) == 'invalid syntax : triple string end not found':
+                    self.zone.value += '... '
+                    self._status = "3string"
+                elif str(msg) == 'eval() argument must be an expression':
+                    try:
+                        exec(currentLine,
+                            self.globals,
+                            self.locals)
+                    except:
+                        self.print_tb()
                     self.flush()
                     self.zone.value += '>>> '
                     self._status = "main"
-                except IndentationError:
+                elif str(msg) == 'decorator expects function':
                     self.zone.value += '... '
                     self._status = "block"
-                except SyntaxError as msg:
-                    if str(msg) == 'invalid syntax : triple string end not found':
-                        self.zone.value += '... '
-                        self._status = "3string"
-                    elif str(msg) == 'eval() argument must be an expression':
-                        try:
-                            exec(currentLine,
-                                self.globals,
-                                self.locals)
-                        except:
-                            self.print_tb()
-                        self.flush()
-                        self.zone.value += '>>> '
-                        self._status = "main"
-                    elif str(msg) == 'decorator expects function':
-                        self.zone.value += '... '
-                        self._status = "block"
-                    elif str(msg).endswith('was never closed'):
-                        self.zone.value += '... '
-                        self._status = "block"
-                    else:
-                        self.syntax_error(msg.args)
-                        self.zone.value += '>>> '
-                        self._status = "main"
-                except:
-                    # the full traceback includes the call to eval(); to
-                    # remove it, it is stored in a buffer and the 2nd and 3rd
-                    # lines are removed
-                    self.print_tb()
+                elif str(msg).endswith('was never closed'):
+                    self.zone.value += '... '
+                    self._status = "block"
+                else:
+                    self.syntax_error(msg.args)
                     self.zone.value += '>>> '
                     self._status = "main"
-            elif currentLine == "":  # end of block
-                block = src[src.rfind('\n>>>') + 5:].splitlines()
-                block = [block[0]] + [b[4:] for b in block[1:]]
-                block_src = '\n'.join(block)
-                # status must be set before executing code in globals()
-                self._status = "main"
-                try:
-                    _ = exec(block_src,
-                             self.globals,
-                             self.locals)
-                    if _ is not None:
-                        print(repr(_))
-                except:
-                    self.print_tb()
-                self.flush()
+            except:
+                # the full traceback includes the call to eval(); to
+                # remove it, it is stored in a buffer and the 2nd and 3rd
+                # lines are removed
+                self.print_tb()
                 self.zone.value += '>>> '
-            else:
-                self.zone.value += '... '
+                self._status = "main"
+        elif currentLine == "":  # end of block
+            block = src[src.rfind('\n>>>') + 5:].splitlines()
+            block = [block[0]] + [b[4:] for b in block[1:]]
+            block_src = '\n'.join(block)
+            # status must be set before executing code in globals()
+            self._status = "main"
+            try:
+                _ = exec(block_src,
+                         self.globals,
+                         self.locals)
+                if _ is not None:
+                    print(repr(_))
+            except:
+                self.print_tb()
+            self.flush()
+            self.zone.value += '>>> '
+        else:
+            self.zone.value += '... '
 
-            self.cursor_to_end()
+        self.cursor_to_end()
+        if event is not None:
             event.preventDefault()
 
     def keydown(self, event):
