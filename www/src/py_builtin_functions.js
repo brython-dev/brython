@@ -1631,6 +1631,8 @@ iterator_class.__next__ = function(self){
     catch(err){throw _b_.StopIteration.$factory('')}
 }
 
+$B.set_func_names(iterator_class, "builtins")
+
 callable_iterator = $B.make_class("callable_iterator",
     function(func, sentinel){
         return {
@@ -1652,6 +1654,8 @@ callable_iterator.__next__ = function(self){
     }
     return res
 }
+
+$B.set_func_names(callable_iterator, "builtins")
 
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
