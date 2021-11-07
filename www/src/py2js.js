@@ -12779,8 +12779,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
         try{
             var token = tokenizer.next()
         }catch(err){
+            context = context || new $NodeCtx(node)
             if(err.type == 'IndentationError'){
-                context = context || new $NodeCtx(node)
                 $pos = line2pos[err.line_num]
                 $_SyntaxError(context, err.message, 1)
             }else if(err instanceof SyntaxError){
