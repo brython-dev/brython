@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-07 10:16:45.124736"
-__BRYTHON__.timestamp=1636276605124
+__BRYTHON__.compiled_date="2021-11-07 21:53:13.258891"
+__BRYTHON__.timestamp=1636318393254
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6268,8 +6268,8 @@ var C=null,expect_indent=false,indent=0
 var line2pos={0:0,1:0},line_num=1
 for(var pos=0,len=src.length;pos < len;pos++){if(src[pos]=='\n'){line_num++
 line2pos[line_num]=pos+1}}
-while(true){try{var token=tokenizer.next()}catch(err){if(err.type=='IndentationError'){C=C ||new $NodeCtx(node)
-$pos=line2pos[err.line_num]
+while(true){try{var token=tokenizer.next()}catch(err){C=C ||new $NodeCtx(node)
+if(err.type=='IndentationError'){$pos=line2pos[err.line_num]
 $_SyntaxError(C,err.message,1)}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
 C.$pos=line2pos[start[0]]+start[1]
 $_SyntaxError(C,[`'${last_brace.string}' was `+
@@ -8836,6 +8836,7 @@ iterator_class.__next__=function(self){self.counter++
 if(self.len !==null && self.counter==self.len){throw _b_.StopIteration.$factory('')}
 try{return self.getitem(self.counter)}
 catch(err){throw _b_.StopIteration.$factory('')}}
+$B.set_func_names(iterator_class,"builtins")
 callable_iterator=$B.make_class("callable_iterator",function(func,sentinel){return{
 __class__:callable_iterator,func:func,sentinel:sentinel}}
 )
@@ -8843,6 +8844,7 @@ callable_iterator.__iter__=function(self){return self}
 callable_iterator.__next__=function(self){var res=self.func()
 if($B.rich_comp("__eq__",res,self.sentinel)){throw _b_.StopIteration.$factory()}
 return res}
+$B.set_func_names(callable_iterator,"builtins")
 $B.$iter=function(obj,sentinel){
 if(sentinel===undefined){var klass=obj.__class__ ||$B.get_class(obj)
 try{var _iter=$B.$call($B.$getattr(klass,'__iter__'))}catch(err){if(err.__class__===_b_.AttributeError){try{var gi_method=$B.$call($B.$getattr(klass,'__getitem__')),gi=function(i){return gi_method(obj,i)},ln=len(obj)

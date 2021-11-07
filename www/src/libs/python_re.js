@@ -2967,7 +2967,7 @@ GroupMO.prototype.backtrack = function(string, groups){
             nb0 = mos.length
         while(mos.length > 0){
             var mo = mos.pop()
-            if(mo.backtrack()){
+            if(mo.backtrack(string, groups)){
                 mos.push(mo)
                 if(this.node.num !== undefined){
                     groups[this.node.num].end = mo.end
