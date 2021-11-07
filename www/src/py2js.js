@@ -4207,7 +4207,7 @@ $DelCtx.prototype.ast = function(){
     }else if(this.tree[0].type == 'expr' &&
             this.tree[0].tree[0].type == 'list_or_tuple'){
         // del(x[0]) is the same as del x[0], cf.issue #923
-        targets = this.tree[0].tree[0]
+        targets = this.tree[0].tree[0].tree.slice()
     }else{
         targets = [this.tree[0].tree[0]]
     }
@@ -13081,7 +13081,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     dispatch_tokens(root, src)
     if($B.produce_ast){
-        console.log(ast_dump(root.ast()))
+        ast_dump(root.ast())
     }
     root.is_comp = is_comp
     if(ix != undefined){

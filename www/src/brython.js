@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-07 21:53:13.258891"
-__BRYTHON__.timestamp=1636318393254
+__BRYTHON__.compiled_date="2021-11-07 22:53:03.595779"
+__BRYTHON__.timestamp=1636321983595
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -338,7 +338,7 @@ break}
 break
 case 'NUMBER':
 if(num_type=='' && unicode_tables.Nd[ord(char)]){number+=char}else if(num_type=='b' && '01'.indexOf(char)>-1){number+=char}else if(num_type=='o' && '01234567'.indexOf(char)>-1){number+=char}else if(num_type=='x' &&
-'0123456789abcdef'.indexOf(char.toLowerCase())>-1){number+=char}else if(char=='_'){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}
+'0123456789abcdef'.indexOf(char.toLowerCase())>-1){number+=char}else if(char=='_' && ! number.endsWith('.')){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}
 number+=char}else if(char=='.' && number.indexOf(char)==-1){number+=char}else if(char.toLowerCase()=='e' &&
 number.toLowerCase().indexOf('e')==-1){number+=char}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){
@@ -2306,7 +2306,7 @@ $DelCtx.prototype.ast=function(){var targets
 if(this.tree[0].type=='list_or_tuple'){
 targets=this.tree[0].tree.slice()}else if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){
-targets=this.tree[0].tree[0]}else{targets=[this.tree[0].tree[0]]}
+targets=this.tree[0].tree[0].tree.slice()}else{targets=[this.tree[0].tree[0]]}
 for(var i=0;i < targets.length;i++){targets[i]=ast_or_obj(targets[i])
 targets[i].ctx=ast.Del}
 return new ast.Delete(targets)}
@@ -6400,7 +6400,7 @@ if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
 {src:src,is_comp:is_comp,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root,src)
-if($B.produce_ast){console.log(ast_dump(root.ast()))}
+if($B.produce_ast){ast_dump(root.ast())}
 root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
 root.transform()
