@@ -500,7 +500,7 @@ $B.tokenizer = function*(src){
                 }else if(num_type == 'x' &&
                         '0123456789abcdef'.indexOf(char.toLowerCase()) > -1){
                     number += char
-                }else if(char == '_'){
+                }else if(char == '_' && ! number.endsWith('.')){
                     if(number.endsWith('_')){
                         throw SyntaxError('consecutive _ in number')
                     }
