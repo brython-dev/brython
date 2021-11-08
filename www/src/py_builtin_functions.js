@@ -520,9 +520,9 @@ function $$eval(src, _globals, _locals){
     if(src.__class__ === code){
         mode = src.mode
         src = src.source
-    }else if(typeof src.valueOf() !== 'string'){
-        throw _b_.TypeError.$factory("eval() arg 1 must be a string, bytes "+
-            "or code object")
+    }else if((! src.valueOf) || typeof src.valueOf() !== 'string'){
+        throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,` +
+            " bytes or code object")
     }else{
         // src might be an instance of JS String if source has surrogate pairs
         // cf. issue #1772

@@ -146,5 +146,13 @@ assert y == 1
 z = eval("a", {}, collections.UserDict(a=2))
 assert z == 2
 
+# issue 1808
+class A: pass
+try:
+  exec(A())
+  raise Exception('should have raised TypeError')
+except TypeError as exc:
+  assert exc.args[0] == 'exec() arg 1 must be a string, ' \
+      'bytes or code object'
 
 print("passed all tests...")
