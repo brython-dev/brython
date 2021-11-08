@@ -52,8 +52,17 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     jslist = []
     for dirpath, dirnames, filenames in os.walk(jspath):
         for filename in filenames:
-            if not filename.endswith('.js'):
+            mod_name, ext = os.path.splitext(filename)
+            path = dirpath[len(pypath)+len(os.sep):].split(os.sep)+[mod_name]
+            if not path[0]:
+                path = path[1:]
+            mod_path = 'libs/'+'/'.join(path)
+            if ext != '.js':
                 continue
+            if not git.in_index(mod_path):
+                print(mod_path, 'not in index')
+                continue
+
             mod_name = os.path.splitext(filename)[0]
             jslist.append(mod_name)
 
