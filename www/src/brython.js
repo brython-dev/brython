@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-08 07:29:45.873176"
-__BRYTHON__.timestamp=1636352985873
+__BRYTHON__.compiled_date="2021-11-08 08:01:03.655879"
+__BRYTHON__.timestamp=1636354863655
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2712,6 +2712,9 @@ return res}
 return res}
 $ExprCtx.prototype.toString=function(){return '(expr '+this.with_commas+') '+this.tree}
 $ExprCtx.prototype.transition=function(token,value){var C=this
+if(python_keywords.indexOf(token)>-1 &&
+['as','else','if','for','from','in'].indexOf(token)==-1){C.$pos=$pos
+$_SyntaxError(C,`'${token}' after expression`)}
 switch(token){case 'bytes':
 case 'float':
 case 'id':
@@ -2862,7 +2865,7 @@ if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to
 $_SyntaxError(C,["cannot assign to named expression"])}else if(C.parent.type=="expr" &&
 C.parent.name=="iterator"){$_SyntaxError(C,'token '+token+' after '
 +C)}else if(C.parent.type=="lambda"){if(C.parent.parent.parent.type !="node"){$_SyntaxError(C,['expression cannot contain'+
-' assignment, perhaps you meant "=="?'])}}
+' assignment, perhaps you meant "=="?'])}}else if(C.parent.type=='target_list'){$_SyntaxError(C,"assign to target in iteration")}
 while(C.parent !==undefined){C=C.parent
 if(C.type=="condition"){$_SyntaxError(C,["invalid syntax. Maybe you"+
 " meant '==' or ':=' instead of '='?"])}else if(C.type=="augm_assign"){$_SyntaxError(C,"assignment inside augmented assignment")}}

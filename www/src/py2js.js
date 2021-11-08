@@ -4972,6 +4972,11 @@ $ExprCtx.prototype.toString = function(){
 
 $ExprCtx.prototype.transition = function(token, value){
     var context = this
+    if(python_keywords.indexOf(token) > -1 &&
+            ['as', 'else', 'if', 'for', 'from', 'in'].indexOf(token) == -1){
+        context.$pos = $pos
+        $_SyntaxError(context, `'${token}' after expression`)
+    }
     switch(token) {
         case 'bytes':
         case 'float':
@@ -5272,6 +5277,8 @@ $ExprCtx.prototype.transition = function(token, value){
                      $_SyntaxError(context, ['expression cannot contain' +
                          ' assignment, perhaps you meant "=="?'])
                  }
+             }else if(context.parent.type == 'target_list'){
+                 $_SyntaxError(context, "assign to target in iteration")
              }
              while(context.parent !== undefined){
                  context = context.parent
@@ -5370,6 +5377,7 @@ $ExprCtx.prototype.transition = function(token, value){
               ctx = ctx.parent
           }
           return new $AbstractExprCtx(new $TernaryCtx(ctx), true)
+
       case 'eol':
           // Special case for print and exec
           if(context.tree.length == 2 &&
