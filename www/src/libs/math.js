@@ -669,11 +669,10 @@ var _mod = {
         return a
     },
     hypot: function(x, y){
-        var $ = $B.args("hypot", 2, {x: null, y:null}, ['x', 'y'],
-                    arguments, {}, "args", null),
-            args = [x, y].concat($.args),
-            res = 0
-        return _b_.float.$factory(Math.hypot(...args))
+        var $ = $B.args("hypot", 0, {}, [],
+                    arguments, {}, "args", null)
+        $.args.map(float_check)
+        return _b_.float.$factory(Math.hypot(...$.args))
     },
     inf: _b_.float.$factory('inf'),
     isclose: function(){

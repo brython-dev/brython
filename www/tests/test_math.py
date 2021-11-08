@@ -240,4 +240,8 @@ assert math.ceil(5) == 5
 assert str(math.pow(1, 1)) == "1.0"
 assert str(math.pow(1, 0.5)) == "1.0"
 
+# issue 1811
+assert math.hypot(1) == 1.0
+assert math.hypot() == 0
+
 print("passed all tests..")
