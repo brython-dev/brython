@@ -426,7 +426,7 @@ function check_assignment(context, kwargs){
                 report('literal')
             }else if(assigned.type == "ellipsis"){
                 report('Ellipsis')
-            }else if(assigned.type == 'gen_expr'){
+            }else if(assigned.type == 'genexpr'){
                 report('generator expression')
             }else if(assigned.type == 'packed'){
                 check_assignment(assigned.tree[0], {action, once: true})
@@ -3065,6 +3065,31 @@ $ClassCtx.prototype.to_js = function(){
 }
 
 var Comprehension = {
+    admin_infos: function(comp){
+        var id = comp.id,
+            node = $get_node(comp)
+        return `var $locals_${id} = {},
+            $locals = $locals_${id}
+        $locals.$line_info = '${node.line_num},${node.module}'\n` +
+        Comprehension.code(comp) +
+        `var $top_frame = ["${id}", $locals_${id}, "${comp.module}", $locals_${comp.module_ref}]
+        $locals.$f_trace = $B.enter_frame($top_frame)
+        `
+    },
+    code: function(comp){
+        var node = $get_node(comp),
+            varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
+        return `$locals.$comp_code = {
+            co_argcount: 1,
+            co_firstlineno:${node.line_num},
+            co_name: "<${comp.type}>",
+            co_flags: ${comp.type == 'genexpr' ? 115 : 83},
+            co_freevars: $B.fast_tuple([]),
+            co_kwonlyargcount: 0,
+            co_posonlyargount: 0,
+            co_varnames: $B.fast_tuple(['.0', ${varnames}])
+        }\n`
+    },
     generators: function(comp){
         // Return a list of comprehensions
         // ast.comprehension(target, iter, ifs, is_async)
@@ -4308,7 +4333,7 @@ var DictCompCtx = function(context){
         var comp = context.tree[0].tree[0]
         comp.parent_block = this
     }
-    this.type = 'dict_comp'
+    this.type = 'dictcomp'
     this.comprehension = true
     this.parent = context.parent
     this.key = context.tree[0]
@@ -4317,11 +4342,11 @@ var DictCompCtx = function(context){
     this.value.parent = this
     this.tree = []
     this.binding = {}
-    this.id = 'dict_comp' + $B.UUID()
+    this.id = 'dictcomp' + $B.UUID()
     this.parent_block = $get_scope(context)
     this.module = $get_module(context).module
     context.parent.tree[context.parent.tree.length - 1] = this
-    this.type = 'dict_comp'
+    this.type = 'dictcomp'
     Comprehension.make_comp(this, context)
 }
 
@@ -4356,13 +4381,9 @@ DictCompCtx.prototype.to_js = function(){
     first_for.iterable_is_outermost = true
     var module_id = this.module.replace(/\./g, '_')
 
-    var js = `(${this.has_await ? 'async ' : ''}function(expr){
-        var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = "${node.line_num},${node.module}"
-        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        var $result_${id} = $B.empty_dict()\n`
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){` +
+            Comprehension.admin_infos(this) +
+            `\nvar $result_${id} = $B.empty_dict()\n`
 
     js += first_for.to_js(indent)
     var nb = -1
@@ -5530,18 +5551,18 @@ $ForExpr.prototype.transition = function(token, value){
     if(this.parent.comprehension){
         switch(token){
             case ']':
-                if(this.parent.type == 'list_comp'){
+                if(this.parent.type == 'listcomp'){
                     return $transition(this.parent, token, value)
                 }
                 break
             case ')':
-                if(this.parent.type == 'gen_expr'){
+                if(this.parent.type == 'genexpr'){
                     return $transition(this.parent, token, value)
                 }
                 break
             case '}':
-                if(this.parent.type == 'dict_comp' ||
-                        this.parent.type == 'set_comp'){
+                if(this.parent.type == 'dictcomp' ||
+                        this.parent.type == 'setcomp'){
                     return $transition(this.parent, token, value)
                 }
                 break
@@ -6281,7 +6302,7 @@ $FuncStarArgCtx.prototype.set_name = function(name){
 var GeneratorExpCtx = function(context){
     // create a List Comprehension
     // context is a $ListOrTupleCtx
-    this.type = 'gen_expr'
+    this.type = 'genexpr'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
     Comprehension.make_comp(this, context)
@@ -6323,13 +6344,20 @@ GeneratorExpCtx.prototype.to_js = function(){
     var js = `(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'
-        var ${id} = ${this.has_await ? 'async ' : ''}function*(expr){
+        $locals.$line_info = '${node.line_num},${node.module}'\n` +
+        Comprehension.code(this) +
+        `
+        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
+        $locals.$f_trace = $B.enter_frame($top_frame)
+        ` +
+
+        `var ${id} = ${this.has_await ? 'async ' : ''}function*(expr){
           var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
           $locals.$f_trace = $B.enter_frame($top_frame)
         `
 
     js += first_for.to_js(indent)
+
     var nb = -1
     for(var i = 2; i < this.tree.length; i++){
         nb++
@@ -6373,6 +6401,7 @@ GeneratorExpCtx.prototype.to_js = function(){
     js += `
             $B.leave_frame($locals)
         }
+           $B.leave_frame($locals)
            return $B.generator.$factory(${id})(expr)
           }
           )(${outmost_expr})`
@@ -6821,7 +6850,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "url" && innermost.type == "list_comp"
+    var $test = false // val == "url" && innermost.type == "listcomp"
     if($test){
         console.log("ENTER IdCtx.py2js line", $get_node(this).line_num,
             "\nthis", this, '\nscope', scope)
@@ -7673,7 +7702,7 @@ $LambdaCtx.prototype.to_js = function(){
 var ListCompCtx = function(context){
     // create a List Comprehension
     // context is a $ListOrTupleCtx
-    this.type = 'list_comp'
+    this.type = 'listcomp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
     Comprehension.make_comp(this, context)
@@ -7710,13 +7739,16 @@ ListCompCtx.prototype.to_js = function(){
     first_for.comp_body = true
     first_for.iterable_is_outermost = true
 
-    var js = `(${this.has_await ? 'async ' : ''}function(expr){
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){` +
+        Comprehension.admin_infos(this) +
+        `var $result_${id} = []\n`
+        /*
         var $locals_${id} = {},
             $locals = $locals_${id}
         $locals.$line_info = '${node.line_num},${node.module}'
         var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${this.module_ref}]
         $locals.$f_trace = $B.enter_frame($top_frame)
-        var $result_${id} = []\n`
+        */
 
     js += first_for.to_js(indent)
     var nb = -1
@@ -10426,7 +10458,7 @@ $ReturnCtx.prototype.to_js = function(){
 var SetCompCtx = function(context){
     // create a Set Comprehension
     // context is a $DictOrSetCtx
-    this.type = 'set_comp'
+    this.type = 'setcomp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
     Comprehension.make_comp(this, context)
@@ -10463,13 +10495,9 @@ SetCompCtx.prototype.to_js = function(){
     first_for.iterable_is_outermost = true
     var module_id = this.module.replace(/\./g, '_')
 
-    var js = `(${this.has_await ? 'async ' : ''}function(expr){
-        var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'
-        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        var $result_${id} = _b_.set.$factory()\n`
+    var js = `(${this.has_await ? 'async ' : ''}function(expr){` +
+            Comprehension.admin_infos(this) +
+            `\nvar $result_${id} = _b_.set.$factory()\n`
 
     js += first_for.to_js(indent)
     var nb = -1
@@ -13099,13 +13127,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     // Create internal variables
     var js = 'var $B = __BRYTHON__,\n' +
-             '    _b_ = __BRYTHON__.builtins,\n'
-    if(is_comp){
-        js += '    ' + local_ns + ' = {},\n' +
-              '    $locals = ' + local_ns +';\n'
-    }else{
-        js += '    $locals = ' + local_ns +';\n'
-    }
+             '    _b_ = __BRYTHON__.builtins,\n' +
+             '    $locals = ' + local_ns +';\n'
 
     var offset = 0
 

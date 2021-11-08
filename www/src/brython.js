@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-08 13:49:54.905780"
-__BRYTHON__.timestamp=1636375794905
+__BRYTHON__.compiled_date="2021-11-08 18:50:48.973845"
+__BRYTHON__.timestamp=1636393848973
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -491,7 +491,7 @@ function report(wrong_type){if(augmented){$_SyntaxError(C,[`'${wrong_type}' is a
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'assign to '+ctx.type)}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
 if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('operator')}}else if(assigned.type=='call'){report('function call')}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
-if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='gen_expr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.comprehension){break}
+if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.comprehension){break}
 if(once){break}
 ctx=ctx.parent}}
 function remove_abstract_expr(tree){if($B.last(tree).type=='abstract_expr'){tree.pop()}}
@@ -1833,7 +1833,24 @@ node.parent.insert(rank+2,$NodeJS("_b_.None;"))
 this.transformed=true}
 $ClassCtx.prototype.to_js=function(){this.js_processed=true
 return 'var $'+this.name+'_'+this.random+' = (function()'}
-var Comprehension={generators:function(comp){
+var Comprehension={admin_infos:function(comp){var id=comp.id,node=$get_node(comp)
+return `var $locals_${id} = {},
+            $locals = $locals_${id}
+        $locals.$line_info = '${node.line_num},${node.module}'\n`+
+Comprehension.code(comp)+
+`var $top_frame = ["${id}", $locals_${id}, "${comp.module}", $locals_${comp.module_ref}]
+        $locals.$f_trace = $B.enter_frame($top_frame)
+        `},code:function(comp){var node=$get_node(comp),varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
+return `$locals.$comp_code = {
+            co_argcount: 1,
+            co_firstlineno:${node.line_num},
+            co_name: "<${comp.type}>",
+            co_flags: ${comp.type == 'genexpr' ? 115 : 83},
+            co_freevars: $B.fast_tuple([]),
+            co_kwonlyargcount: 0,
+            co_posonlyargount: 0,
+            co_varnames: $B.fast_tuple(['.0', ${varnames}])
+        }\n`},generators:function(comp){
 var comprehensions=[]
 for(item of comp){if(item.type=='for'){comprehensions.push(
 new ast.comprehension(
@@ -2359,7 +2376,7 @@ if(C.tree[0].type=='expr' &&
 C.tree[0].tree[0].comprehension){
 var comp=C.tree[0].tree[0]
 comp.parent_block=this}
-this.type='dict_comp'
+this.type='dictcomp'
 this.comprehension=true
 this.parent=C.parent
 this.key=C.tree[0]
@@ -2368,11 +2385,11 @@ this.key.parent=this
 this.value.parent=this
 this.tree=[]
 this.binding={}
-this.id='dict_comp'+$B.UUID()
+this.id='dictcomp'+$B.UUID()
 this.parent_block=$get_scope(C)
 this.module=$get_module(C).module
 C.parent.tree[C.parent.tree.length-1]=this
-this.type='dict_comp'
+this.type='dictcomp'
 Comprehension.make_comp(this,C)}
 DictCompCtx.prototype.ast=function(){
 return new ast.DictComp(
@@ -2387,13 +2404,9 @@ var id=this.id,first_for=this.tree[0],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
 var module_id=this.module.replace(/\./g,'_')
-var js=`(${this.has_await ? 'async ' : ''}function(expr){
-        var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = "${node.line_num},${node.module}"
-        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        var $result_${id} = $B.empty_dict()\n`
+var js=`(${this.has_await ? 'async ' : ''}function(expr){`+
+Comprehension.admin_infos(this)+
+`\nvar $result_${id} = $B.empty_dict()\n`
 js+=first_for.to_js(indent)
 var nb=-1
 for(var i=1;i < this.tree.length;i++){nb++
@@ -2981,14 +2994,14 @@ if(C.tree.length < 2
 C)}
 return $BodyCtx(C)}
 if(this.parent.comprehension){switch(token){case ']':
-if(this.parent.type=='list_comp'){return $transition(this.parent,token,value)}
+if(this.parent.type=='listcomp'){return $transition(this.parent,token,value)}
 break
 case ')':
-if(this.parent.type=='gen_expr'){return $transition(this.parent,token,value)}
+if(this.parent.type=='genexpr'){return $transition(this.parent,token,value)}
 break
 case '}':
-if(this.parent.type=='dict_comp' ||
-this.parent.type=='set_comp'){return $transition(this.parent,token,value)}
+if(this.parent.type=='dictcomp' ||
+this.parent.type=='setcomp'){return $transition(this.parent,token,value)}
 break
 case 'for':
 return new $TargetListCtx(new $ForExpr(this.parent))
@@ -3320,7 +3333,7 @@ ctx=ctx.parent}
 if(this.op=='*'){ctx.other_args='"'+name+'"'}
 else{ctx.other_kw='"'+name+'"'}}
 var GeneratorExpCtx=function(C){
-this.type='gen_expr'
+this.type='genexpr'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
@@ -3342,8 +3355,13 @@ var module_id=this.module.replace(/\./g,'_')
 var js=`(${this.has_await ? 'async ' : ''}function(expr){
         var $locals_${id} = {},
             $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'
-        var ${id} = ${this.has_await ? 'async ' : ''}function*(expr){
+        $locals.$line_info = '${node.line_num},${node.module}'\n`+
+Comprehension.code(this)+
+`
+        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
+        $locals.$f_trace = $B.enter_frame($top_frame)
+        `+
+`var ${id} = ${this.has_await ? 'async ' : ''}function*(expr){
           var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
           $locals.$f_trace = $B.enter_frame($top_frame)
         `
@@ -3380,6 +3398,7 @@ for(var i=1;i < this.tree.length;i++){js+='\n'+' '.repeat(12+4*nb--)+'}'}
 js+=`
             $B.leave_frame($locals)
         }
+           $B.leave_frame($locals)
            return $B.generator.$factory(${id})(expr)
           }
           )(${outmost_expr})`
@@ -3895,7 +3914,7 @@ $B.$py_src[lambda_name]=null
 delete $B.$py_src[lambda_name]
 return js}
 var ListCompCtx=function(C){
-this.type='list_comp'
+this.type='listcomp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
@@ -3911,13 +3930,9 @@ ListCompCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_
 var id=this.id,expr=this.tree[0],first_for=this.tree[1],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
-var js=`(${this.has_await ? 'async ' : ''}function(expr){
-        var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'
-        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${this.module_ref}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        var $result_${id} = []\n`
+var js=`(${this.has_await ? 'async ' : ''}function(expr){`+
+Comprehension.admin_infos(this)+
+`var $result_${id} = []\n`
 js+=first_for.to_js(indent)
 var nb=-1
 for(var i=2;i < this.tree.length;i++){nb++
@@ -5275,7 +5290,7 @@ if(this.is_await){js+=indent+'$B.restore_stack(save_stack, $locals)\n'}
 js+=indent+'return $res'
 return js}
 var SetCompCtx=function(C){
-this.type='set_comp'
+this.type='setcomp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
@@ -5292,13 +5307,9 @@ var id=this.id,expr=this.tree[0],first_for=this.tree[1],outmost_expr=first_for.t
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
 var module_id=this.module.replace(/\./g,'_')
-var js=`(${this.has_await ? 'async ' : ''}function(expr){
-        var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'
-        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${module_id}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        var $result_${id} = _b_.set.$factory()\n`
+var js=`(${this.has_await ? 'async ' : ''}function(expr){`+
+Comprehension.admin_infos(this)+
+`\nvar $result_${id} = _b_.set.$factory()\n`
 js+=first_for.to_js(indent)
 var nb=-1
 for(var i=2;i < this.tree.length;i++){nb++
@@ -6408,9 +6419,8 @@ root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js='var $B = __BRYTHON__,\n'+
-'    _b_ = __BRYTHON__.builtins,\n'
-if(is_comp){js+='    '+local_ns+' = {},\n'+
-'    $locals = '+local_ns+';\n'}else{js+='    $locals = '+local_ns+';\n'}
+'    _b_ = __BRYTHON__.builtins,\n'+
+'    $locals = '+local_ns+';\n'
 var offset=0
 root.insert(0,$NodeJS(js))
 offset++
