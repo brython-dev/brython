@@ -2958,6 +2958,12 @@ er = IndexError()
 assert str(er) == ''
 assert repr(er) == 'IndexError()'
 
+# issue 1812
+assertRaises(ValueError, exec,
+    "list(zip(range(3), ['fee', 'fi', 'fo', 'fum'], strict=True))")
+assertRaises(ValueError, exec,
+    "list(zip(range(5), ['fee', 'fi', 'fo', 'fum'], strict=True))")
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

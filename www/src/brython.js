@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-08 08:12:40.998656"
-__BRYTHON__.timestamp=1636355560998
+__BRYTHON__.compiled_date="2021-11-08 08:49:34.459072"
+__BRYTHON__.timestamp=1636357774459
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9332,9 +9332,13 @@ _b_.str.$factory(file))}}
 var zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
-var _args=$ns['args']
+var _args=$ns['args'],strict=$ns.kw.$string_dict.strict &&
+$ns.kw.$string_dict.strict[0]
 var args=[],nexts=[],only_lists=true,min_len
-for(var i=0;i < _args.length;i++){if(only_lists && Array.isArray(_args[i])){if(min_len===undefined ||_args[i].length < min_len){min_len=_args[i].length}}else{only_lists=false}
+for(var i=0;i < _args.length;i++){if(only_lists && Array.isArray(_args[i])){if(strict){if(i==0){var len=_args[i].length}else if(_args[i]!=len){throw _b_.ValueError.$factory(`zip() argument ${i} `+
+`is ${_args[i] > len ? 'longer' : 'shorter'} `+
+`than argument ${i - 1}`)}}
+if(min_len===undefined ||_args[i].length < min_len){min_len=_args[i].length}}else{only_lists=false}
 var _next=$B.$call($B.$getattr(iter(_args[i]),"__next__"))
 args.push(_next)}
 var rank=0,items=[]
@@ -9346,7 +9350,15 @@ items.push($B.fast_tuple(line))}
 res.items=items
 return zip_iterator.$factory(items)}
 function*iterator(args){while(true){var line=[],flag=true
-for(var i=0;i < args.length;i++){try{line.push($B.$call(args[i])())}catch(err){if(err.__class__==_b_.StopIteration){flag=false
+for(var i=0;i < args.length;i++){try{line.push(args[i]())}catch(err){if(err.__class__==_b_.StopIteration){if(strict){if(i > 0){throw _b_.ValueError.$factory(
+`zip() argument ${i + 1} is shorter `+
+`than argument ${i}`)}else{for(var j=1;j < args.length;j++){var exhausted=true
+try{args[j]()
+exhausted=false}catch(err){}
+if(! exhausted){throw _b_.ValueError.$factory(
+`zip() argument ${j + 1} is longer `+
+`than argument ${i + 1}`)}}}}
+flag=false
 break}else{throw err}}}
 if(! flag){return}
 yield $B.fast_tuple(line)}}

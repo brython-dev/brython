@@ -3057,7 +3057,9 @@ var zip = $B.make_class("zip",
             return res
         }
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
-        var _args = $ns['args']
+        var _args = $ns['args'],
+            strict = $ns.kw.$string_dict.strict &&
+                $ns.kw.$string_dict.strict[0]
         var args = [],
             nexts = [],
             only_lists = true,
@@ -3065,6 +3067,15 @@ var zip = $B.make_class("zip",
 
         for(var i = 0; i < _args.length; i++){
             if(only_lists && Array.isArray(_args[i])){
+                if(strict){
+                    if(i == 0){
+                        var len = _args[i].length
+                    }else if(_args[i] != len){
+                        throw _b_.ValueError.$factory(`zip() argument ${i} ` +
+                            `is ${_args[i] > len ? 'longer' : 'shorter'} ` +
+                            `than argument ${i - 1}`)
+                    }
+                }
                 if(min_len === undefined || _args[i].length < min_len){
                     min_len = _args[i].length
                 }
@@ -3096,9 +3107,30 @@ var zip = $B.make_class("zip",
                     flag = true
                 for(var i = 0; i < args.length; i++){
                     try{
-                        line.push($B.$call(args[i])())
+                        line.push(args[i]())
                     }catch(err){
                         if(err.__class__ == _b_.StopIteration){
+                            if(strict){
+                                if(i > 0){
+                                    throw _b_.ValueError.$factory(
+                                        `zip() argument ${i + 1} is shorter ` +
+                                        `than argument ${i}`)
+                                }else{
+                                    for(var j = 1; j < args.length; j++){
+                                        var exhausted = true
+                                        try{
+                                            args[j]()
+                                            exhausted = false
+                                        }catch(err){
+                                        }
+                                        if(! exhausted){
+                                            throw _b_.ValueError.$factory(
+                                                `zip() argument ${j + 1} is longer ` +
+                                                `than argument ${i + 1}`)
+                                        }                                            
+                                    }
+                                }
+                            }
                             flag = false
                             break
                         }else{
