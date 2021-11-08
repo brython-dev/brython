@@ -961,10 +961,12 @@ str.__mro__ = [_b_.object]
 str.__mul__ = function(){
     var $ = $B.args("__mul__", 2, {self: null, other: null},
         ["self", "other"], arguments, {}, null, null)
-    if(! _b_.isinstance($.other, _b_.int)){throw _b_.TypeError.$factory(
+    if(! _b_.isinstance($.other, _b_.int)){
+        throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
-            $B.class_name($.other) + "'")}
-    return $.self.valueOf().repeat($.other)
+            $B.class_name($.other) + "'")
+    }
+    return $.self.valueOf().repeat($.other < 0 ? 0 : $.other)
 }
 
 str.__ne__ = function(self, other){

@@ -444,5 +444,7 @@ test = '🤔'
 assert ord(test) == 129300
 assert len(test) == 1
 
+# issue 1815
+assert 'a' * -1 == ''
 
 print("passed all tests...")
