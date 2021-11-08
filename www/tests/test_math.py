@@ -244,4 +244,19 @@ assert str(math.pow(1, 0.5)) == "1.0"
 assert math.hypot(1) == 1.0
 assert math.hypot() == 0
 
+# issue 1813
+assert math.log2(1 << 53) == 53.0
+assert math.log2((1<<53) + 657889) == 53.00000000010537
+
+assert math.log2(1 << 1024) == 1024
+assert math.log(1 << 1024) == 709.782712893384
+assert math.log10(1 << 1024) == 308.25471555991675, math.log10(1 << 1024)
+
+assert math.log1p(1 << 1024 - 1) == 709.0895657128241
+try:
+    math.log1p(1 << 1024)
+    raise Exception("should have riased OverflowError")
+except OverflowError:
+    pass
+    
 print("passed all tests..")

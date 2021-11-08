@@ -1020,20 +1020,34 @@ var _mod = {
             arguments, {base: _b_.None}, null, null),
             x = $.x,
             base = $.base
-
-         var x1 = float_check(x)
-         if(base === _b_.None){return _b_.float.$factory(Math.log(x1))}
-         return _b_.float.$factory(Math.log(x1) / Math.log(float_check(base)))
+        if(_b_.isinstance(x, $B.long_int)){
+            var log = $B.long_int.$log2(x) * Math.LN2
+        }else{
+            var x1 = float_check(x),
+                log = Math.log(x1)
+        }
+        if(base === _b_.None){return log}
+        return _b_.float.$factory(log / Math.log(float_check(base)))
     },
     log1p: function(x){
         $B.check_nb_args('log1p', 1, arguments)
         $B.check_no_kw('log1p', x)
+        if(_b_.isinstance(x, $B.long_int)){
+            if(x.pos && $B.long_int.bit_length(x) > 1024){
+                throw _b_.OverflowError.$factory(
+                    "int too large to convert to float")
+            }
+            return new Number($B.long_int.$log2($B.long_int.__add__(x, 1)) *
+                Math.LN2)
+        }
         return _b_.float.$factory(Math.log1p(float_check(x)))
     },
     log2: function(x){
         $B.check_nb_args('log2', 1, arguments)
         $B.check_no_kw('log2', x)
-
+        if(_b_.isinstance(x, $B.long_int)){
+            return $B.long_int.$log2(x)
+        }
         if(isNaN(x)){return _b_.float.$factory('nan')}
         if(_b_.$isninf(x)) {throw _b_.ValueError.$factory('')}
         var x1 = float_check(x)
@@ -1043,7 +1057,9 @@ var _mod = {
     log10: function(x){
         $B.check_nb_args('log10', 1, arguments)
         $B.check_no_kw('log10', x)
-
+        if(_b_.isinstance(x, $B.long_int)){
+            return $B.long_int.$log10(x)
+        }
         return _b_.float.$factory(Math.log10(float_check(x)))
     },
     modf: function(x){

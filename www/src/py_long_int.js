@@ -682,6 +682,37 @@ long_int.__xor__ = function(self, other){
 long_int.bit_length = function(self){
     return binary(self).length
 }
+
+function _infos(self){
+    // return a JS object with bit length, power of 2 below self,
+    // rest = self - pow2, relative_rest = rst / pow2
+    var nbits = $B.long_int.bit_length(self),
+        pow2 = 2n ** BigInt(nbits - 1),
+        rest = BigInt(self.value) - pow2,
+        relative_rest = new Number(rest) / new Number(pow2)
+    return {nbits, pow2, rest, relative_rest}
+}
+
+long_int.$log2 = function(x){
+    if(! x.pos){
+        throw _b_.ValueError.$factory('math domain error')
+    }
+    // x = 2 ** (infos.nbits - 1) * ( 1 + infos.relative_rest)
+    var infos = _infos(x)
+    return _b_.float.$factory(infos.nbits - 1 +
+        Math.log(1 + infos.relative_rest / Math.LN2))
+}
+
+long_int.$log10 = function(x){
+    if(! x.pos){
+        throw _b_.ValueError.$factory('math domain error')
+    }
+    // x = mant * 10 ** exp
+    var exp = x.value.length - 1,
+        mant = eval(x.value[0] + '.' + x.value.substr(1))
+    return _b_.float.$factory(exp + Math.log10(mant))
+}
+
 // descriptors
 long_int.numerator = function(self){return self}
 long_int.denominator = function(self){return _b_.int.$factory(1)}
