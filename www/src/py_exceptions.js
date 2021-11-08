@@ -428,9 +428,9 @@ BaseException.__init__ = function(self){
 }
 
 BaseException.__repr__ = function(self){
-    var res =  self.__class__.$infos.__name__
+    var res =  self.__class__.$infos.__name__ + '('
     if(self.args[0] !== undefined){
-        res += '(' + _b_.repr(self.args[0])
+        res += _b_.repr(self.args[0])
     }
     if(self.args.length > 1){
         res += ', ' + _b_.repr($B.fast_tuple(self.args.slice(1)))
