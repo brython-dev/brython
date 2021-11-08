@@ -13074,14 +13074,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     parent_scope = parent_scope || $B.builtins_scope
 
     var t0 = new Date().getTime(),
-        is_comp = false,
         has_annotations = true, // determine if __annotations__ is created
         line_info, // set for generator expression
         ix, // used for generator expressions
         filename
     if(typeof src == 'object'){
-        var is_comp = src.is_comp,
-            has_annotations = src.has_annotations,
+        var has_annotations = src.has_annotations,
             line_info = src.line_info,
             ix = src.ix,
             filename = src.filename
@@ -13111,7 +13109,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     var local_ns = '$locals_' + locals_id.replace(/\./g,'_'),
         global_ns = '$locals_' + module.replace(/\./g,'_'),
         root = $create_root_node(
-            {src: src, is_comp: is_comp, has_annotations: has_annotations,
+            {src: src, has_annotations: has_annotations,
                 filename: filename},
             module, locals_id, parent_scope, line_num)
 
@@ -13119,7 +13117,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     if($B.produce_ast){
         ast_dump(root.ast())
     }
-    root.is_comp = is_comp
     if(ix != undefined){
         root.ix = ix
     }
@@ -13138,28 +13135,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     // package, if available
     root.insert(offset++,
         $NodeJS(local_ns + '.__package__ = "' + __package__ +'"'))
-
-    // if comprehension, set closure information
-    if(is_comp){
-        var info = '{co_argcount: 1, co_firstlineno:' + root.line_num +
-            ', co_name: "<' + is_comp + '>", co_flags: ' +
-            (is_comp == 'genexpr' ? 115 : 83) +
-            ', co_freevars: $B.fast_tuple([]), co_kwonlyargcount: 0,' +
-            'co_posonlyargount: 0'
-        if(root.varnames){
-            delete root.varnames[root.id]
-            info += ", co_varnames: $B.fast_tuple(['.0', " +
-                Object.keys(root.varnames).map(x => `'${x}'`).join(',') + '])'
-        }
-        info += '}'
-        root.insert(offset++, $NodeJS(local_ns + '.$comp_code = ' +
-           info))
-        var arg = "_expr"
-        if(is_comp == "genexpr" || is_comp == "setcomp"){
-            arg = "$locals_" + root.id
-        }
-        root.insert(offset++, $NodeJS('$locals[".0"] = ' + arg))
-    }
 
     // annotations
     if(root.binding.__annotations__){

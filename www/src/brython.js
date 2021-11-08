@@ -111,8 +111,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-08 18:50:48.973845"
-__BRYTHON__.timestamp=1636393848973
+__BRYTHON__.compiled_date="2021-11-08 20:22:15.063557"
+__BRYTHON__.timestamp=1636399335063
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6399,11 +6399,11 @@ $pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
-var t0=new Date().getTime(),is_comp=false,has_annotations=true,
+var t0=new Date().getTime(),has_annotations=true,
 line_info,
 ix,
 filename
-if(typeof src=='object'){var is_comp=src.is_comp,has_annotations=src.has_annotations,line_info=src.line_info,ix=src.ix,filename=src.filename
+if(typeof src=='object'){var has_annotations=src.has_annotations,line_info=src.line_info,ix=src.ix,filename=src.filename
 if(line_info !==undefined){line_num=parseInt(line_info.split(",")[0])}
 src=src.src}else if(line_num !==undefined){line_info=`${line_num},${module}`}else{line_num=1}
 src=src.replace(/\r\n/gm,"\n")
@@ -6412,10 +6412,9 @@ if(src.charAt(src.length-1)!="\n"){src+="\n"}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
-{src:src,is_comp:is_comp,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
+{src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root,src)
 if($B.produce_ast){ast_dump(root.ast())}
-root.is_comp=is_comp
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js='var $B = __BRYTHON__,\n'+
@@ -6425,20 +6424,6 @@ var offset=0
 root.insert(0,$NodeJS(js))
 offset++
 root.insert(offset++,$NodeJS(local_ns+'.__package__ = "'+__package__+'"'))
-if(is_comp){var info='{co_argcount: 1, co_firstlineno:'+root.line_num+
-', co_name: "<'+is_comp+'>", co_flags: '+
-(is_comp=='genexpr' ? 115 :83)+
-', co_freevars: $B.fast_tuple([]), co_kwonlyargcount: 0,'+
-'co_posonlyargount: 0'
-if(root.varnames){delete root.varnames[root.id]
-info+=", co_varnames: $B.fast_tuple(['.0', "+
-Object.keys(root.varnames).map(x=> `'${x}'`).join(',')+'])'}
-info+='}'
-root.insert(offset++,$NodeJS(local_ns+'.$comp_code = '+
-info))
-var arg="_expr"
-if(is_comp=="genexpr" ||is_comp=="setcomp"){arg="$locals_"+root.id}
-root.insert(offset++,$NodeJS('$locals[".0"] = '+arg))}
 if(root.binding.__annotations__){root.insert(offset++,$NodeJS('$locals.__annotations__ = $B.empty_dict()'))}
 var enter_frame_pos=offset,js='var $top_frame = ["'+locals_id.replace(/\./g,'_')+'", '+
 local_ns+', "'+module.replace(/\./g,'_')+'", '+
