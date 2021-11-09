@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-09 10:23:13.324364"
-__BRYTHON__.timestamp=1636449793324
+__BRYTHON__.compiled_date="2021-11-09 21:03:38.046884"
+__BRYTHON__.timestamp=1636488218046
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -15900,7 +15900,8 @@ $comps.forEach(function(comp){var op="__"+comp+"__"
 $B.cell[op]=(function(op){return function(self,other){if(! _b_.isinstance(other,$B.cell)){return _b_.NotImplemented}
 if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__","__le__"].indexOf(op)>-1}}else if(other.$cell_contents===null){return["__ne__","__gt__","__ge__"].indexOf(op)>-1}
 return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
-$B.set_func_names($B.cell,"builtins")})(__BRYTHON__)
+$B.set_func_names($B.cell,"builtins")
+$B.AST={__class__:_b_.type,__mro__:[_b_.object],$infos:{__qualname__:'AST',__name__:'AST'},$is_class:true}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")

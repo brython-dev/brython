@@ -102,6 +102,24 @@ var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
 
 var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
 
+var _b_ = $B.builtins
+
+function class_wrapper(ast_class){
+    var klass = {
+        __class__: _b_.type,
+        __mro__: [$B.AST, _b_.object],
+        __repr__: function(self){
+            return `<ast.${ast_class.$name} object>`
+        },
+        $infos:{
+            __name__ : ast_class.$name
+        },
+        $is_class: true
+    }
+    $B.set_func_names(klass)
+    return klass
+}
+
 var ast = $B.ast = {}
 for(var kl in $B.ast_classes){
     var args = $B.ast_classes[kl],
@@ -113,15 +131,16 @@ for(var kl in $B.ast_classes){
                 js += ` this.${arg} = ${arg}\n`
             }
         }
+        js += `  this.__class__ = class_wrapper(ast.${kl})\n`
         js += '}'
     }else{
         js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\n`
     }
-    js += `\nast.${kl}.$name = "${kl}"`
+    js += `\nast.${kl}.$name = "${kl}"\n`
     eval(js)
 }
 // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
-var op2ast_class = {},
+var op2ast_class = $B.op2ast_class = {},
     ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]
 for(var i = 0; i < 4; i++){
     for(var op in op_types[i]){

@@ -138,23 +138,47 @@ var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
 
 var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
 
+var _b_ = $B.builtins
+
+function class_wrapper(ast_class){
+    var klass = {
+        __class__: _b_.type,
+        __mro__: [$B.AST, _b_.object],
+        __repr__: function(self){
+            return `<ast.${ast_class.$name} object>`
+        },
+        $infos:{
+            __name__ : ast_class.$name
+        },
+        $is_class: true
+    }
+    $B.set_func_names(klass)
+    return klass
+}
+
 var ast = $B.ast = {}
 for(var kl in $B.ast_classes){
     var args = $B.ast_classes[kl],
         js = ''
     if(typeof args == "string"){
-        js = `ast.${kl} = function(${args}){\n`
+        js = `ast.${kl} = function(${args}){
+`
         if(args.length > 0){
             for(var arg of args.split(',')){
-                js += ` this.${arg} = ${arg}\n`
+                js += ` this.${arg} = ${arg}
+`
             }
         }
-        js += `  this.__class__ = ast.${kl}\n`
+        js += `  this.__class__ = class_wrapper(ast.${kl})
+`
         js += '}'
     }else{
-        js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\n`
+        js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]
+`
     }
-    js += `\nast.${kl}.$name = "${kl}"\n`
+    js += `
+ast.${kl}.$name = "${kl}"
+`
     eval(js)
 }
 // Map operators to ast type (BinOp, etc.) and name (Add, etc.)

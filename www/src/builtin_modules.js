@@ -837,4 +837,15 @@
 
     $B.set_func_names($B.cell, "builtins")
 
+
+    $B.AST = {
+        __class__: _b_.type,
+        __mro__: [_b_.object],
+        $infos:{
+            __qualname__: 'AST',
+            __name__: 'AST'
+        },
+        $is_class: true
+    }
+    
 })(__BRYTHON__)
