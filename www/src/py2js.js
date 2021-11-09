@@ -147,49 +147,11 @@ for(var _tmp of $op_order){
 // Variable used to generate random names used in loops
 var $loop_num = 0
 
-
-// binary operator tokens
-var binary_ops = {
-    '+': 'Add', '-': 'Sub', '*': 'Mult', '/': 'Div', '//': 'FloorDiv',
-    '%': 'Mod', '**': 'Pow', '<<': 'LShift', '>>': 'RShift', '|': 'BitOr',
-    '^': 'BitXor', '&': 'BitAnd', '@': 'MatMult'
-    }
-
-// boolean operator tokens
-var boolean_ops = {'and': 'And', 'or': 'Or'}
-
-// comparison operator tokens
-var comparison_ops = {
-    '==': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
-    'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
-
-var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
-
-var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
-
-// Build ast classes from generated script py_ast.js
-var ast = {}
+// ast is in generated script py_ast.js
 if($B.ast_classes){
-    for(var kl in $B.ast_classes){
-        var args = $B.ast_classes[kl]
-        var js = `ast.${kl} = function(${args}){\n`
-        if(args.length > 0){
-            for(var arg of args.split(',')){
-                js += ` this.${arg} = ${arg}\n`
-            }
-        }
-        js += '}'
-        js += `\nast.${kl}.$name = "${kl}"`
-        eval(js)
-    }
-    // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
-    var op2ast_class = {},
-        ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]
-    for(var i = 0; i < 4; i++){
-        for(var op in op_types[i]){
-            op2ast_class[op] = [ast_types[i], ast[op_types[i][op]]]
-        }
-    }
+    var ast = $B.ast,
+        op2ast_class = $B.op2ast_class
+
     function ast_body(block_ctx){
         // return the attribute body of nodes with a block (def, class etc.)
         var body = []
@@ -8118,7 +8080,6 @@ $MatchCtx.prototype.ast = function(){
     // ast.Match(subject, cases)
     // subject holds the subject of the match
     // cases contains an iterable of match_case nodes with the different cases
-    console.log('match ast', this)
     var res = new ast.Match(ast_or_obj(this.tree[0]), ast_body(this.parent))
     res.$line_num = $get_node(this).line_num
     return res
@@ -9434,7 +9395,6 @@ $PatternClassCtx.prototype.ast = function(){
     //   class defined sequence of pattern matching attributes
     // `kwd_attrs` is a sequence of additional attributes to be matched
     // `kwd_patterns` are the corresponding patterns
-  try{
     var cls = new ast.Name(this.class_id.value),
         patterns = [],
         kwd_attrs = [],
@@ -9444,7 +9404,6 @@ $PatternClassCtx.prototype.ast = function(){
             kwd_attrs.push(item.tree[0])
             kwd_patterns.push(ast_or_obj(item.tree[1]))
         }else{
-            console.log('class pattern', item)
             try{
                 patterns.push(ast_or_obj(item))
             }catch(err){
@@ -9455,11 +9414,6 @@ $PatternClassCtx.prototype.ast = function(){
         }
     }
     return new ast.MatchClass(cls, patterns, kwd_attrs, kwd_patterns)
-  }catch(err){
-      console.log('error in class pattern')
-      show_line(this)
-      throw err
-    }
 }
 
 $PatternClassCtx.prototype.bindings = function(){

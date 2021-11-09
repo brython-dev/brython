@@ -20,6 +20,7 @@ with open('Python.asdl', 'wb') as out:
 f = open('Python.asdl', encoding='utf-8')
 type_def = False
 ast_types = {}
+ast_type = None
 
 for line in f:
     line = line.strip()
@@ -28,7 +29,7 @@ for line in f:
     elif '=' in line:
         if not type_def:
             type_def = True
-        elif ast_type not in ast_types:
+        elif ast_type and ast_type not in ast_types:
             ast_types[ast_type] = {'options': ast_options}
         parts = [x.strip() for x in line.split('=')]
         ast_type = parts[0]
@@ -45,9 +46,9 @@ for line in f:
         else:
             ast_options[-1] += line
     else:
-        print('autre', line)
         if type_def:
             ast_types[ast_type] = {'options': ast_options}
+
 
 def parse_arguments(arg_string):
     args = [x.strip() for x in arg_string.split(',')]
@@ -58,27 +59,81 @@ def parse_arguments(arg_string):
     return arg_dict
 
 classes = {}
+
 for ast_type in ast_types:
+    names = []
     for option in ast_types[ast_type]['options']:
         if '(' not in option:
             classes[option] = ''
+            names.append(option)
         elif option.startswith('('):
-            print(f"ast.{ast_type} = function(){{")
-            for name, _type in parse_arguments(option[1:-1]).items():
-                print(f"    this.{name} = {name} // {_type}")
             classes[ast_type] = ','.join(parse_arguments(option[1:-1]))
         else:
             mo = re.match(r'(.*)\((.*)\)', option)
             name, arguments = mo.groups()
-            print(f"ast.{name} = function(){{")
+            names.append(name)
             classes[name] = ','.join(parse_arguments(arguments))
-
+    if names:
+        classes[ast_type] = names
 
 keys = sorted(list(classes))
+
 lines = []
 for key in keys:
-    lines.append(f"{key}:'{classes[key]}'".replace(' ', ''))
+    lines.append(f"{key}:{classes[key]!r}".replace(' ', ''))
+
+code = """
+// binary operator tokens
+var binary_ops = {
+    '+': 'Add', '-': 'Sub', '*': 'Mult', '/': 'Div', '//': 'FloorDiv',
+    '%': 'Mod', '**': 'Pow', '<<': 'LShift', '>>': 'RShift', '|': 'BitOr',
+    '^': 'BitXor', '&': 'BitAnd', '@': 'MatMult'
+    }
+
+// boolean operator tokens
+var boolean_ops = {'and': 'And', 'or': 'Or'}
+
+// comparison operator tokens
+var comparison_ops = {
+    '==': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
+    'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
+
+var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
+
+var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
+
+var ast = $B.ast = {}
+for(var kl in $B.ast_classes){
+    var args = $B.ast_classes[kl],
+        js = ''
+    if(typeof args == "string"){
+        js = `ast.${kl} = function(${args}){\n`
+        if(args.length > 0){
+            for(var arg of args.split(',')){
+                js += ` this.${arg} = ${arg}\n`
+            }
+        }
+        js += '}'
+    }else{
+        js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\n`
+    }
+    js += `\nast.${kl}.$name = "${kl}"`
+    eval(js)
+}
+// Map operators to ast type (BinOp, etc.) and name (Add, etc.)
+var op2ast_class = {},
+    ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]
+for(var i = 0; i < 4; i++){
+    for(var op in op_types[i]){
+        op2ast_class[op] = [ast_types[i], ast[op_types[i][op]]]
+    }
+}
+
+"""
 
 dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
 with open(os.path.join(dest_dir, 'py_ast.js'), 'w', encoding='utf-8') as out:
-    out.write('__BRYTHON__.ast_classes = {\n' + ',\n'.join(lines) + '\n}\n')
+    out.write(";(function($B){\n")
+    out.write('$B.ast_classes = {\n' + ',\n'.join(lines) + '\n}\n')
+    out.write(code)
+    out.write('})(__BRYTHON__)\n')

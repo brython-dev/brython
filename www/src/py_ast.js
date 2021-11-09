@@ -1,4 +1,5 @@
-__BRYTHON__.ast_classes = {
+;(function($B){
+$B.ast_classes = {
 Add:'',
 And:'',
 AnnAssign:'target,annotation,value,simple',
@@ -101,8 +102,68 @@ YieldFrom:'value',
 alias:'name,asname',
 arg:'arg,annotation,type_comment',
 arguments:'posonlyargs,args,vararg,kwonlyargs,kw_defaults,kwarg,defaults',
+boolop:['And','Or'],
+cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],
 comprehension:'target,iter,ifs,is_async',
+excepthandler:['ExceptHandler'],
+expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],
+expr_context:['Load','Store','Del'],
 keyword:'arg,value',
 match_case:'pattern,guard,body',
+mod:['Module','Interactive','Expression','FunctionType'],
+operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],
+pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],
+stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],
+type_ignore:['TypeIgnore'],
+unaryop:['Invert','Not','UAdd','USub'],
 withitem:'context_expr,optional_vars'
 }
+
+// binary operator tokens
+var binary_ops = {
+    '+': 'Add', '-': 'Sub', '*': 'Mult', '/': 'Div', '//': 'FloorDiv',
+    '%': 'Mod', '**': 'Pow', '<<': 'LShift', '>>': 'RShift', '|': 'BitOr',
+    '^': 'BitXor', '&': 'BitAnd', '@': 'MatMult'
+    }
+
+// boolean operator tokens
+var boolean_ops = {'and': 'And', 'or': 'Or'}
+
+// comparison operator tokens
+var comparison_ops = {
+    '==': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
+    'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
+
+var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
+
+var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
+
+var ast = $B.ast = {}
+for(var kl in $B.ast_classes){
+    var args = $B.ast_classes[kl],
+        js = ''
+    if(typeof args == "string"){
+        js = `ast.${kl} = function(${args}){\n`
+        if(args.length > 0){
+            for(var arg of args.split(',')){
+                js += ` this.${arg} = ${arg}\n`
+            }
+        }
+        js += `  this.__class__ = ast.${kl}\n`
+        js += '}'
+    }else{
+        js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\n`
+    }
+    js += `\nast.${kl}.$name = "${kl}"\n`
+    eval(js)
+}
+// Map operators to ast type (BinOp, etc.) and name (Add, etc.)
+var op2ast_class = $B.op2ast_class = {},
+    ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]
+for(var i = 0; i < 4; i++){
+    for(var op in op_types[i]){
+        op2ast_class[op] = [ast_types[i], ast[op_types[i][op]]]
+    }
+}
+
+})(__BRYTHON__)
