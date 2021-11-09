@@ -132,6 +132,7 @@ $B.__setattr__ = function(attr, value){
 $B.language = _window.navigator.userLanguage || _window.navigator.language
 
 $B.locale = "C" // can be reset by locale.setlocale
+$B.PyCF_ONLY_AST = 1024// compiler flag, used in libs/_ast.js
 
 if($B.isWebWorker){
     $B.charset = "utf-8"

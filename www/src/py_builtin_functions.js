@@ -360,7 +360,15 @@ function compile() {
     }
 
     // Run py2js to detect potential syntax errors
-    $B.py2js({src: $.source, filename: $.filename}, module_name, module_name)
+    var root = $B.parser.$create_root_node(
+            {src: $.source, filename: $.filename},
+            module_name, module_name)
+    $B.parser.dispatch_tokens(root, $.source)
+    if($.flags == $B.PyCF_ONLY_AST){
+        var ast = root.ast()
+        console.log('return ast', ast, ast.constructor.$name)
+        return ast
+    }
     return $
 }
 
@@ -3127,7 +3135,7 @@ var zip = $B.make_class("zip",
                                             throw _b_.ValueError.$factory(
                                                 `zip() argument ${j + 1} is longer ` +
                                                 `than argument ${i + 1}`)
-                                        }                                            
+                                        }
                                     }
                                 }
                             }
