@@ -104,40 +104,52 @@ var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
 
 var _b_ = $B.builtins
 
-function class_wrapper(ast_class){
-    var klass = {
-        __class__: _b_.type,
-        __mro__: [$B.AST, _b_.object],
-        __repr__: function(self){
-            return `<ast.${ast_class.$name} object>`
-        },
-        $infos:{
-            __name__ : ast_class.$name
-        },
-        $is_class: true
-    }
-    $B.set_func_names(klass)
-    return klass
-}
-
 var ast = $B.ast = {}
+
 for(var kl in $B.ast_classes){
     var args = $B.ast_classes[kl],
         js = ''
     if(typeof args == "string"){
-        js = `ast.${kl} = function(${args}){\n`
+        js = `ast.${kl} = function(${args}){\\n`
         if(args.length > 0){
             for(var arg of args.split(',')){
-                js += ` this.${arg} = ${arg}\n`
+                js += ` this.${arg} = ${arg}\\n`
             }
         }
-        js += `  this.__class__ = class_wrapper(ast.${kl})\n`
         js += '}'
     }else{
-        js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\n`
+        js = `ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\\n`
     }
-    js += `\nast.${kl}.$name = "${kl}"\n`
     eval(js)
+    ast[kl].$name = kl
+    if(typeof args == "string"){
+        ast[kl]._fields = args.split(',')
+    }
+}
+
+// Function that creates Python classes for ast classes.
+$B.create_python_ast_classes = function(){
+    if($B.python_ast_classes){
+        return
+    }
+    $B.python_ast_classes = {}
+    for(var klass in $B.ast_classes){
+        $B.python_ast_classes[klass] = (function(kl){
+            var cls = $B.make_class(kl,
+                function(js_node){
+                    return {
+                        __class__: $B.python_ast_classes[kl],
+                        js_node
+                    }
+                }
+            )
+            if(typeof $B.ast_classes[kl] == "string"){
+                cls._fields = $B.ast_classes[kl].split(',')
+            }
+            cls.__mro__ = [$B.AST, _b_.object]
+            return cls
+        })(klass)
+    }
 }
 // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
 var op2ast_class = $B.op2ast_class = {},

@@ -910,7 +910,7 @@ $AbstractExprCtx.prototype.ast = function(){
         ast_or_obj(this.assign),
         ast_or_obj(this.tree[0])
     )
-    res.target.ctx = ast.Store
+    res.target.ctx = new ast.Store()
     return res
 }
 
@@ -1351,7 +1351,7 @@ $AssignCtx.prototype.ast = function(){
     }
     targets.splice(0, 0, ast_or_obj(target.tree[0]))
     for(var tg of targets){
-        tg.ctx = ast.Store
+        tg.ctx = new ast.Store()
     }
     return new ast.Assign(targets, value)
 }
@@ -1743,11 +1743,11 @@ $AttrCtx.prototype.ast = function(){
     // ast.Attribute(value, attr, ctx)
     var value = ast_or_obj(this.value),
         attr = this.name,
-        ctx = ast.Load
+        ctx = new ast.Load()
     if(this.func == 'setattr'){
-        ctx = ast.Store
+        ctx = new ast.Store()
     }else if(this.func == 'delattr'){
-        ctx = ast.Delete
+        ctx = new ast.Delete()
     }
     return new ast.Attribute(value, attr, ctx)
 }
@@ -1847,8 +1847,8 @@ $AugmentedAssignCtx.prototype.ast = function(){
     // AugAssign(expr target, operator op, expr value)
     var target = ast_or_obj(this.tree[0]),
         value = ast_or_obj(this.tree[1])
-    target.ctx = ast.Store
-    value.ctx = ast.Load
+    target.ctx = new ast.Store()
+    value.ctx = new ast.Load()
     var op = this.op.substr(0, this.op.length -1),
         ast_type_class = op2ast_class[op],
         ast_class = ast_type_class[1]
@@ -2446,7 +2446,7 @@ $CallCtx.prototype.ast = function(){
             continue
         }else if(call_arg.type == 'star_arg'){
             var starred = new ast.Starred(ast_or_obj(call_arg.tree[0]))
-            starred.ctx = ast.Load
+            starred.ctx = new ast.Load()
             res.args.push(starred)
             continue
         }
@@ -4943,7 +4943,7 @@ $ExprCtx.prototype.ast = function(){
             ast_or_obj(this.assign),
             res
         )
-        res.target.ctx = ast.Store
+        res.target.ctx = new ast.Store()
         return res
     }
     return res
@@ -6573,7 +6573,7 @@ $IdCtx.prototype.ast = function(){
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
         return new ast.Constant(_b_[this.value])
     }
-    return new ast.Name(this.value, ast.Load)
+    return new ast.Name(this.value, new ast.Load())
 }
 
 $IdCtx.prototype.toString = function(){
@@ -7763,9 +7763,9 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
 $ListOrTupleCtx.prototype.ast = function(){
     var elts = this.tree.map(ast_or_obj)
     if(this.real == 'list'){
-        return new ast.List(elts, ast.Load)
+        return new ast.List(elts, new ast.Load())
     }else if(this.real == 'tuple'){
-        return new ast.Tuple(elts, ast.Load)
+        return new ast.Tuple(elts, new ast.Load())
     }else{
         console.log('list_or_tuple ast, real', this.real)
         return this
@@ -9056,7 +9056,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
 }
 
 $PackedCtx.prototype.ast = function(){
-    return new ast.Starred(ast_or_obj(this.tree[0]), ast.Load)
+    return new ast.Starred(ast_or_obj(this.tree[0]), new ast.Load())
 }
 
 $PackedCtx.prototype.toString = function(){
@@ -9270,9 +9270,9 @@ var $PatternCaptureCtx = function(context, value){
 $PatternCaptureCtx.prototype.ast = function(){
   try{
     if(this.tree.length > 1){
-        var pattern = new ast.Name(this.tree[0].value, ast.Load)
+        var pattern = new ast.Name(this.tree[0].value, new ast.Load())
         for(var i = 1; i < this.tree.length; i += 2){
-            pattern = new ast.Attribute(pattern, this.tree[i], ast.Load)
+            pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
         }
         return new ast.MatchValue(pattern)
     }else{
@@ -10871,18 +10871,18 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
 $TargetListCtx.prototype.ast = function(){
     if(this.tree.length == 0){
         var item = ast_or_obj(this.tree[0])
-        item.ctx = ast.Store
+        item.ctx = new ast.Store()
         return item
     }else{
         var items = []
         for(var item of this.tree){
             item = ast_or_obj(item)
             if(item.hasOwnProperty('ctx')){
-                item.ctx = ast.Store
+                item.ctx = new ast.Store()
             }
             items.push(item)
         }
-        return new ast.Tuple(items, ast.Store)
+        return new ast.Tuple(items, new ast.Store())
     }
 }
 
@@ -11260,7 +11260,7 @@ $WithCtx.prototype.ast = function(){
         withitem = new ast.withitem(ast_or_obj(item.tree[0]))
         if(item.alias){
             withitem.optional_vars = ast_or_obj(item.alias.tree[0])
-            withitem.optional_vars.ctx = ast.Store
+            withitem.optional_vars.ctx = new ast.Store()
         }
         withitems.push(withitem)
     }

@@ -4,9 +4,10 @@ var $module = (function($B){
         ast = $B.ast, // created in py2js
         mod = {}
     mod.PyCF_ONLY_AST = $B.PyCF_ONLY_AST
-    mod.AST = $B.make_class('AST')
+    mod.AST = $B.AST // in builtin_modules.js
+    $B.create_python_ast_classes() // in py_ast.js
     for(var klass in ast){
-        mod[klass] = $B.make_class(ast[klass].$name, ast[klass])
+        mod[klass] = $B.python_ast_classes[klass]
     }
     return mod
 

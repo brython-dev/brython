@@ -365,9 +365,10 @@ function compile() {
             module_name, module_name)
     $B.parser.dispatch_tokens(root, $.source)
     if($.flags == $B.PyCF_ONLY_AST){
-        var ast = root.ast()
-        console.log('return ast', ast, ast.constructor.$name)
-        return ast
+        var ast = root.ast(),
+            klass = ast.constructor.$name
+        $B.create_python_ast_classes()
+        return $B.python_ast_classes[klass].$factory(ast)
     }
     return $
 }

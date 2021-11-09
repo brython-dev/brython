@@ -840,12 +840,38 @@
 
     $B.AST = {
         __class__: _b_.type,
+        __getattr__: function(self, attr){
+            var res = self.js_node[attr]
+            if(res === undefined){
+                throw $B.attr_error(attr, self)
+            }
+            return $B.AST.$convert(res)
+        },
         __mro__: [_b_.object],
         $infos:{
             __qualname__: 'AST',
             __name__: 'AST'
         },
-        $is_class: true
+        $is_class: true,
+        $convert: function(js_node){
+            if(js_node === undefined){
+                return _b_.None
+            }
+            var constr = js_node.constructor
+            if(constr && constr.$name){
+                return $B.python_ast_classes[constr.$name].$factory(js_node)
+            }else if(Array.isArray(js_node)){
+                return js_node.map($B.AST.$convert)
+            }else if(typeof js_node == 'string' ||
+                    typeof js_node == 'number'){
+                return js_node
+            }else if(js_node.$name){
+                // eg Store(), Load()...
+                return js_node.$name + '()'
+            }else{
+                console.log('cannot handle', js_node)
+            }
+        }
     }
-    
+
 })(__BRYTHON__)

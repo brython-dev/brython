@@ -112,9 +112,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-09 21:03:38.046884"
-__BRYTHON__.timestamp=1636488218046
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
+__BRYTHON__.compiled_date="2021-11-09 22:47:33.998590"
+__BRYTHON__.timestamp=1636494453998
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -725,7 +725,7 @@ return}
 var res=new ast.NamedExpr(
 ast_or_obj(this.assign),ast_or_obj(this.tree[0])
 )
-res.target.ctx=ast.Store
+res.target.ctx=new ast.Store()
 return res}
 $AbstractExprCtx.prototype.toString=function(){return '(abstract_expr '+this.with_commas+') '+this.tree}
 $AbstractExprCtx.prototype.transition=function(token,value){var C=this
@@ -961,7 +961,7 @@ $AssignCtx.prototype.ast=function(){var value=ast_or_obj(this.tree[1]),targets=[
 while(target.type=='assign'){targets.splice(0,0,ast_or_obj(target.tree[1]))
 target=target.tree[0]}
 targets.splice(0,0,ast_or_obj(target.tree[0]))
-for(var tg of targets){tg.ctx=ast.Store}
+for(var tg of targets){tg.ctx=new ast.Store()}
 return new ast.Assign(targets,value)}
 $AssignCtx.prototype.guess_type=function(){return}
 $AssignCtx.prototype.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
@@ -1172,8 +1172,8 @@ C.tree[C.tree.length]=this
 this.tree=[]
 this.func='getattr' }
 $AttrCtx.prototype.ast=function(){
-var value=ast_or_obj(this.value),attr=this.name,ctx=ast.Load
-if(this.func=='setattr'){ctx=ast.Store}else if(this.func=='delattr'){ctx=ast.Delete}
+var value=ast_or_obj(this.value),attr=this.name,ctx=new ast.Load()
+if(this.func=='setattr'){ctx=new ast.Store()}else if(this.func=='delattr'){ctx=new ast.Delete()}
 return new ast.Attribute(value,attr,ctx)}
 $AttrCtx.prototype.toString=function(){return '(attr) '+this.value+'.'+this.name}
 $AttrCtx.prototype.transition=function(token,value){var C=this
@@ -1218,8 +1218,8 @@ $get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module}
 $AugmentedAssignCtx.prototype.ast=function(){
 var target=ast_or_obj(this.tree[0]),value=ast_or_obj(this.tree[1])
-target.ctx=ast.Store
-value.ctx=ast.Load
+target.ctx=new ast.Store()
+value.ctx=new ast.Load()
 var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_class=ast_type_class[1]
 return new ast.AugAssign(target,ast_class,value)}
 $AugmentedAssignCtx.prototype.toString=function(){return '(augm assign) '+this.tree}
@@ -1527,7 +1527,7 @@ for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=as
 delete keyword.arg
 res.keywords.push(keyword)
 continue}else if(call_arg.type=='star_arg'){var starred=new ast.Starred(ast_or_obj(call_arg.tree[0]))
-starred.ctx=ast.Load
+starred.ctx=new ast.Load()
 res.args.push(starred)
 continue}
 var item=call_arg.tree[0]
@@ -2708,7 +2708,7 @@ $ExprCtx.prototype.ast=function(){var res=ast_or_obj(this.tree[0])
 if(this.packed){return new ast.Starred(res)}else if(this.assign){res=new ast.NamedExpr(
 ast_or_obj(this.assign),res
 )
-res.target.ctx=ast.Store
+res.target.ctx=new ast.Store()
 return res}
 return res}
 $ExprCtx.prototype.toString=function(){return '(expr '+this.with_commas+') '+this.tree}
@@ -3485,7 +3485,7 @@ break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
 $IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return new ast.Constant(_b_[this.value])}
-return new ast.Name(this.value,ast.Load)}
+return new ast.Name(this.value,new ast.Load())}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='case' && C.parent.parent.type=="node"){
@@ -3951,7 +3951,7 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
 $ListOrTupleCtx.prototype.ast=function(){var elts=this.tree.map(ast_or_obj)
-if(this.real=='list'){return new ast.List(elts,ast.Load)}else if(this.real=='tuple'){return new ast.Tuple(elts,ast.Load)}else{console.log('list_or_tuple ast, real',this.real)
+if(this.real=='list'){return new ast.List(elts,new ast.Load())}else if(this.real=='tuple'){return new ast.Tuple(elts,new ast.Load())}else{console.log('list_or_tuple ast, real',this.real)
 return this}}
 $ListOrTupleCtx.prototype.toString=function(){switch(this.real){case 'list':
 return '(list) ['+this.tree+']'
@@ -4630,7 +4630,7 @@ this.parent=C
 this.tree=[]
 this.pos=$pos-1 
 C.tree[C.tree.length]=this}
-$PackedCtx.prototype.ast=function(){return new ast.Starred(ast_or_obj(this.tree[0]),ast.Load)}
+$PackedCtx.prototype.ast=function(){return new ast.Starred(ast_or_obj(this.tree[0]),new ast.Load())}
 $PackedCtx.prototype.toString=function(){return '(packed) '+this.tree}
 $PackedCtx.prototype.transition=function(token,value){var C=this
 if(C.tree.length > 0 && token=="["){
@@ -4756,8 +4756,8 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
-$PatternCaptureCtx.prototype.ast=function(){try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,ast.Load)
-for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],ast.Load)}
+$PatternCaptureCtx.prototype.ast=function(){try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
+for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())}
 return new ast.MatchValue(pattern)}else{var pattern=this.tree[0]
 if(typeof pattern=='string'){pattern=pattern.value}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
 pattern=$NumberCtx.prototype.ast.bind(this)()}
@@ -5508,12 +5508,12 @@ this.expect='id'
 this.nb_packed=0
 C.tree[C.tree.length]=this}
 $TargetListCtx.prototype.ast=function(){if(this.tree.length==0){var item=ast_or_obj(this.tree[0])
-item.ctx=ast.Store
+item.ctx=new ast.Store()
 return item}else{var items=[]
 for(var item of this.tree){item=ast_or_obj(item)
-if(item.hasOwnProperty('ctx')){item.ctx=ast.Store}
+if(item.hasOwnProperty('ctx')){item.ctx=new ast.Store()}
 items.push(item)}
-return new ast.Tuple(items,ast.Store)}}
+return new ast.Tuple(items,new ast.Store())}}
 $TargetListCtx.prototype.toString=function(){return '(target list) '+this.tree}
 $TargetListCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -5685,7 +5685,7 @@ $WithCtx.prototype.ast=function(){
 var withitems=[],withitem
 for(var item of this.tree){withitem=new ast.withitem(ast_or_obj(item.tree[0]))
 if(item.alias){withitem.optional_vars=ast_or_obj(item.alias.tree[0])
-withitem.optional_vars.ctx=ast.Store}
+withitem.optional_vars.ctx=new ast.Store()}
 withitems.push(withitem)}
 return new ast.With(withitems,ast_body(this.parent))}
 $WithCtx.prototype.toString=function(){return '(with) '+this.tree}
@@ -8356,9 +8356,9 @@ if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EO
 var root=$B.parser.$create_root_node(
 {src:$.source,filename:$.filename},module_name,module_name)
 $B.parser.dispatch_tokens(root,$.source)
-if($.flags==$B.PyCF_ONLY_AST){var ast=root.ast()
-console.log('return ast',ast,ast.constructor.$name)
-return ast}
+if($.flags==$B.PyCF_ONLY_AST){var ast=root.ast(),klass=ast.constructor.$name
+$B.create_python_ast_classes()
+return $B.python_ast_classes[klass].$factory(ast)}
 return $}
 var __debug__=$B.debug > 0
 function delattr(obj,attr){
@@ -11131,11 +11131,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -15901,7 +15901,13 @@ $B.cell[op]=(function(op){return function(self,other){if(! _b_.isinstance(other,
 if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__","__le__"].indexOf(op)>-1}}else if(other.$cell_contents===null){return["__ne__","__gt__","__ge__"].indexOf(op)>-1}
 return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")
-$B.AST={__class__:_b_.type,__mro__:[_b_.object],$infos:{__qualname__:'AST',__name__:'AST'},$is_class:true}})(__BRYTHON__)
+$B.AST={__class__:_b_.type,__getattr__:function(self,attr){var res=self.js_node[attr]
+if(res===undefined){throw $B.attr_error(attr,self)}
+return $B.AST.$convert(res)},__mro__:[_b_.object],$infos:{__qualname__:'AST',__name__:'AST'},$is_class:true,$convert:function(js_node){if(js_node===undefined){return _b_.None}
+var constr=js_node.constructor
+if(constr && constr.$name){return $B.python_ast_classes[constr.$name].$factory(js_node)}else if(Array.isArray(js_node)){return js_node.map($B.AST.$convert)}else if(typeof js_node=='string' ||
+typeof js_node=='number'){return js_node}else if(js_node.$name){
+return js_node.$name+'()'}else{console.log('cannot handle',js_node)}}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")
