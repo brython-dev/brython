@@ -7388,7 +7388,18 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
             // expression has access to local scope
             root.binding = $B.clone(this.scope.binding)
 
-            dispatch_tokens(root, src)
+            try{
+                dispatch_tokens(root, src)
+            }catch(err){
+                err.args[1][1] += line_num - 1
+                var line_start = save_pos,
+                    source = $get_module(this).src
+                while(line_start-- > 0 && source[line_start] != '\n'){}
+                err.args[1][2] += value.start + save_pos - line_start
+                err.lineno += line_num - 1
+                err.args[1][3] = $get_module(this).src.split('\n')[line_num - 1]
+                throw err
+            }
 
             $pos = save_pos
             var expr = root.children[0].context.tree[0]
