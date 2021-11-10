@@ -525,7 +525,11 @@ $Node.prototype.ast = function(){
                 (t.type == 'condition' && t.token == 'elif')){
             continue
         }
-        root_ast.body.push(ast_or_obj(node.context.tree[0]))
+        var node_ast = ast_or_obj(node.context.tree[0])
+        if(node_ast.ctx instanceof ast.Load){
+            node_ast = new ast.Expr(node_ast)
+        }
+        root_ast.body.push(node_ast)
     }
     return root_ast
 }
@@ -10869,7 +10873,7 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
 }
 
 $TargetListCtx.prototype.ast = function(){
-    if(this.tree.length == 0){
+    if(this.tree[0].type == 'expr'){
         var item = ast_or_obj(this.tree[0])
         item.ctx = new ast.Store()
         return item
