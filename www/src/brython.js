@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-10 08:47:27.787232"
-__BRYTHON__.timestamp=1636530447787
+__BRYTHON__.compiled_date="2021-11-10 11:23:00.934271"
+__BRYTHON__.timestamp=1636539780934
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3771,7 +3771,13 @@ value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefin
 this.tree.pop()}
 var src=value.expression,save_pos=$pos,root=$create_root_node({src},this.scope.module,this.scope.id,this.scope.parent_block,line_num)
 root.binding=$B.clone(this.scope.binding)
-dispatch_tokens(root,src)
+try{dispatch_tokens(root,src)}catch(err){err.args[1][1]+=line_num-1
+var line_start=save_pos,source=$get_module(this).src
+while(line_start--> 0 && source[line_start]!='\n'){}
+err.args[1][2]+=value.start+save_pos-line_start
+err.lineno+=line_num-1
+err.args[1][3]=$get_module(this).src.split('\n')[line_num-1]
+throw err}
 $pos=save_pos
 var expr=root.children[0].C.tree[0]
 this.tree.push(expr)
@@ -12536,7 +12542,8 @@ case "^":
 var left=parseInt(missing/2)
 return fill.repeat(left)+s+fill.repeat(missing-left)}}
 return s}
-function fstring_expression(){this.type="expression"
+function fstring_expression(start){this.type="expression"
+this.start=start
 this.expression=""
 this.conversion=null
 this.fmt=null}
@@ -12573,7 +12580,7 @@ elts.push(current)
 ctype=null
 current=""
 pos=i+1}}else{
-var i=pos,nb_braces=1,nb_paren=0,current=new fstring_expression()
+var i=pos,nb_braces=1,nb_paren=0,current=new fstring_expression(expr_start)
 while(i < string.length){car=string.charAt(i)
 if(car=="{" && nb_paren==0){nb_braces++
 current.expression+=car
@@ -12592,9 +12599,9 @@ throw Error("f-string expression part cannot include a"+
 ":}".indexOf(string.charAt(i+2))>-1){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
 if("ars".indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:"+
 " expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
-i+=2}}else if(car=="("){nb_paren++
+i+=2}}else if(car=="(" ||car=='['){nb_paren++
 current.expression+=car
-i++}else if(car==")"){nb_paren--
+i++}else if(car==")" ||car==']'){nb_paren--
 current.expression+=car
 i++}else if(car=='"'){
 if(string.substr(i,3)=='"""'){var end=string.indexOf('"""',i+3)

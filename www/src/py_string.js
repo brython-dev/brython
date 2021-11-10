@@ -2667,8 +2667,9 @@ $B.format_width = function(s, fmt){
     return s
 }
 
-function fstring_expression(){
+function fstring_expression(start){
     this.type = "expression"
+    this.start = start
     this.expression = ""
     this.conversion = null
     this.fmt = null
@@ -2765,7 +2766,7 @@ $B.parse_fstring = function(string){
             var i = pos,
                 nb_braces = 1,
                 nb_paren = 0,
-                current = new fstring_expression()
+                current = new fstring_expression(expr_start)
             while(i < string.length){
                 car = string.charAt(i)
                 if(car == "{" && nb_paren == 0){
@@ -2804,11 +2805,11 @@ $B.parse_fstring = function(string){
                         current.conversion = string.charAt(i + 1)
                         i += 2
                     }
-                }else if(car == "("){
+                }else if(car == "(" || car == '['){
                     nb_paren++
                     current.expression += car
                     i++
-                }else if(car == ")"){
+                }else if(car == ")" || car == ']'){
                     nb_paren--
                     current.expression += car
                     i++
