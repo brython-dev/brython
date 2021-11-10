@@ -343,7 +343,6 @@ function compile() {
          null, null)
 
     var module_name = '$exec_' + $B.UUID()
-    $B.clear_ns(module_name)
     $.__class__ = code
     $.co_flags = $.flags
     $.name = "<module>"
@@ -363,6 +362,7 @@ function compile() {
     var root = $B.parser.$create_root_node(
             {src: $.source, filename: $.filename},
             module_name, module_name)
+    root.parent_block = $B.builtins_scope
     $B.parser.dispatch_tokens(root, $.source)
     if($.flags == $B.PyCF_ONLY_AST){
         var ast = root.ast(),
@@ -619,7 +619,7 @@ function $$eval(src, _globals, _locals){
             }
         }
     }
-
+    
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')

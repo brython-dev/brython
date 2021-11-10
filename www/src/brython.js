@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-10 11:23:00.934271"
-__BRYTHON__.timestamp=1636539780934
+__BRYTHON__.compiled_date="2021-11-10 17:27:55.403578"
+__BRYTHON__.timestamp=1636561675387
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -410,7 +410,9 @@ function ast_body(block_ctx){
 var body=[]
 for(var child of block_ctx.node.children){var ctx=child.C.tree[0]
 if(['decorator'].indexOf(ctx.type)>-1){continue}
-body.push(ast_or_obj(ctx))}
+var child_ast=ast_or_obj(ctx)
+if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)}
+body.push(child_ast)}
 return body}
 function ast_dump(tree,indent){indent=indent ||0
 if(tree===_b_.None){
@@ -521,7 +523,7 @@ for(var node of this.children){var t=node.C.tree[0]
 if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
 (t.type=='condition' && t.token=='elif')){continue}
 var node_ast=ast_or_obj(node.C.tree[0])
-if(node_ast.ctx instanceof ast.Load){node_ast=new ast.Expr(node_ast)}
+if(ast.expr.indexOf(node_ast.constructor)>-1){node_ast=new ast.Expr(node_ast)}
 root_ast.body.push(node_ast)}
 return root_ast}
 $Node.prototype.get_indent=function(){var indent=0,node=this
@@ -964,6 +966,7 @@ while(target.type=='assign'){targets.splice(0,0,ast_or_obj(target.tree[1]))
 target=target.tree[0]}
 targets.splice(0,0,ast_or_obj(target.tree[0]))
 for(var tg of targets){tg.ctx=new ast.Store()}
+value.ctx=new ast.Load()
 return new ast.Assign(targets,value)}
 $AssignCtx.prototype.guess_type=function(){return}
 $AssignCtx.prototype.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
@@ -2017,14 +2020,14 @@ this.default_list=[]
 this.other_args=null
 this.other_kw=null
 this.after_star=[]}
-$DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kwdefaults:[],defaults:[]},decorators=get_decorators(this.parent.node),func_args=this.tree[1].tree,state='arg',default_value,res
+$DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[]},decorators=get_decorators(this.parent.node),func_args=this.tree[1].tree,state='arg',default_value,res
 for(var arg of func_args){if(arg.type=='end_positional'){args.posonlyargs=args.args
 args.args=[]}else if(arg.type=='func_star_arg'){if(arg.op=='*' && arg.name=='*'){state='kwonly'}else if(arg.op=='*'){args.vararg=new ast.arg(arg.name)}else if(arg.op=='**'){args.kwarg=new ast.arg(arg.name)}}else{default_value=false
 if(arg.has_default){default_value=ast_or_obj(arg.tree[0])}
 var argument=new ast.arg(arg.name)
 if(arg.annotation){argument.annotation=ast_or_obj(arg.annotation.tree[0])}
 if(state=='kwonly'){args.kwonlyargs.push(argument)
-if(default_value){args.kwdefaults.push(default_value)}}else{args.args.push(argument)
+if(default_value){args.kw_defaults.push(default_value)}}else{args.args.push(argument)
 if(default_value){args.defaults.push(default_value)}}}}
 args=new ast.arguments(args.posonlyargs,args.args,args.vararg,args.kwonlyargs,args.kw_defaults,args.kwarg,args.defaults)
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
@@ -3595,7 +3598,8 @@ scope.comprehension){return '$B.$local_search("'+val+'")'}else{return '$B.$searc
 if($test){console.log("innermost",innermost)}
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
-while(true){if($test){console.log(gs.id,gs)}
+while(true){if($test){console.log(val,gs.id,gs,search_ids)
+alert()}
 if(gs.parent_block){if(gs.parent_block==$B.builtins_scope){break}else if(gs.parent_block.id===undefined){break}
 gs=gs.parent_block}
 if(innermost.ntype !="class" ||gs.parent_block===$B.builtins_scope){search_ids.push('"'+gs.id+'"')}}
@@ -4421,7 +4425,8 @@ if(C.type=="expr"){if(['int','float','str'].indexOf(C.tree[0].type)>-1){this.lef
 if(binding){this.left_type=binding.type}}}
 C.parent.tree.pop()
 C.parent.tree.push(this)}
-$OpCtx.prototype.ast=function(){var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1]
+$OpCtx.prototype.ast=function(){
+var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1]
 if(op_type===ast.UnaryOp){return new op_type(ast_class,ast_or_obj(this.tree[1]))}
 return new op_type(
 ast_or_obj(this.tree[0]),ast_class,ast_or_obj(this.tree[1]))}
@@ -8353,7 +8358,6 @@ code.__getattribute__=function(self,attr){return self[attr]}
 $B.set_func_names(code,"builtins")
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
-$B.clear_ns(module_name)
 $.__class__=code
 $.co_flags=$.flags
 $.name="<module>"
@@ -8363,6 +8367,7 @@ var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
 var root=$B.parser.$create_root_node(
 {src:$.source,filename:$.filename},module_name,module_name)
+root.parent_block=$B.builtins_scope
 $B.parser.dispatch_tokens(root,$.source)
 if($.flags==$B.PyCF_ONLY_AST){var ast=root.ast(),klass=ast.constructor.$name
 $B.create_python_ast_classes()
