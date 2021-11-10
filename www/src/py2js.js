@@ -160,7 +160,11 @@ if($B.ast_classes){
             if(['decorator'].indexOf(ctx.type) > -1){
                 continue
             }
-            body.push(ast_or_obj(ctx))
+            var child_ast = ast_or_obj(ctx)
+            if(ast.expr.indexOf(child_ast.constructor) > -1){
+                child_ast = new ast.Expr(child_ast)
+            }
+            body.push(child_ast)
         }
         return body
     }
@@ -526,7 +530,7 @@ $Node.prototype.ast = function(){
             continue
         }
         var node_ast = ast_or_obj(node.context.tree[0])
-        if(node_ast.ctx instanceof ast.Load){
+        if(ast.expr.indexOf(node_ast.constructor) > -1){
             node_ast = new ast.Expr(node_ast)
         }
         root_ast.body.push(node_ast)
@@ -1357,6 +1361,7 @@ $AssignCtx.prototype.ast = function(){
     for(var tg of targets){
         tg.ctx = new ast.Store()
     }
+    value.ctx = new ast.Load()
     return new ast.Assign(targets, value)
 }
 
@@ -3526,7 +3531,7 @@ $DefCtx.prototype.ast = function(){
             posonlyargs: [],
             args: [],
             kwonlyargs: [],
-            kwdefaults: [],
+            kw_defaults: [],
             defaults: []
         },
         decorators = get_decorators(this.parent.node),
@@ -3558,7 +3563,7 @@ $DefCtx.prototype.ast = function(){
             if(state == 'kwonly'){
                 args.kwonlyargs.push(argument)
                 if(default_value){
-                    args.kwdefaults.push(default_value)
+                    args.kw_defaults.push(default_value)
                 }
             }else{
                 args.args.push(argument)
@@ -6816,7 +6821,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "url" && innermost.type == "listcomp"
+    var $test = false // val == "awx" //&& innermost.type == "listcomp"
     if($test){
         console.log("ENTER IdCtx.py2js line", $get_node(this).line_num,
             "\nthis", this, '\nscope', scope)
@@ -6888,7 +6893,8 @@ $IdCtx.prototype.to_js = function(arg){
 
     while(true){
         if($test){
-            console.log(gs.id, gs)
+            console.log(val, gs.id, gs, search_ids)
+            alert()
         }
         if(gs.parent_block){
             if(gs.parent_block == $B.builtins_scope){
@@ -8659,6 +8665,7 @@ var $OpCtx = $B.parser.$OpCtx = function(context, op){
 }
 
 $OpCtx.prototype.ast = function(){
+    //console.log('op ast', this)
     var ast_type_class = op2ast_class[this.op],
         op_type = ast_type_class[0],
         ast_class = ast_type_class[1]
