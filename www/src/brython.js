@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-10 17:27:55.403578"
-__BRYTHON__.timestamp=1636561675387
+__BRYTHON__.compiled_date="2021-11-14 20:41:21.911242"
+__BRYTHON__.timestamp=1636918881900
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2811,23 +2811,9 @@ case '!=':
 case 'is':
 case '>=':
 case '>':
-var c2=repl.tree[1],
-c2js=c2.to_js()
-var c2_clone=new Object()
-for(var attr in c2){c2_clone[attr]=c2[attr]}
-var vname="$c"+chained_comp_num
-c2.to_js=function(){return vname}
-c2_clone.to_js=function(){return vname}
-chained_comp_num++
-while(repl.parent && repl.parent.type=='op'){if($op_weight[repl.parent.op]<
-$op_weight[repl.op]){repl=repl.parent}else{break}}
-repl.parent.tree.pop()
-var and_expr=new $OpCtx(repl,'and')
-and_expr.wrap={'name':vname,'js':c2js}
-c2_clone.parent=and_expr
-and_expr.tree.push('xxx')
-var new_op=new $OpCtx(c2_clone,op)
-return new $AbstractExprCtx(new_op,false)}}}
+repl.ops=repl.ops ||[repl.op]
+repl.ops.push(op)
+return new $AbstractExprCtx(repl,false)}}}
 repl.parent.tree.pop()
 var expr=new $ExprCtx(repl.parent,'operand',false)
 expr.tree=[op1]
@@ -4472,7 +4458,14 @@ C)}}
 return $transition(C.parent,token)}
 $OpCtx.prototype.to_js=function(){this.js_processed=true
 var comps={'==':'eq','!=':'ne','>=':'ge','<=':'le','<':'lt','>':'gt'}
-if(comps[this.op]!==undefined){var method=comps[this.op]
+if(comps[this.op]!==undefined){if(this.ops){var i=0,tests=[]
+for(var op of this.ops){var method=comps[op]
+tests.push(`$B.rich_comp('__${method}__', `+
+`${i == 0 ? this.tree[i].to_js(): '$locals.$op'}, `+
+`$locals.$op = ${this.tree[i + 1].to_js()})`)
+i++}
+return tests.join(' && ')}
+var method=comps[this.op]
 if(this.tree[0].type=='expr' && this.tree[1].type=='expr'){var t0=this.tree[0].tree[0],t1=this.tree[1].tree[0],js0=t0.to_js(),js1=t1.to_js()
 switch(t1.type){case 'int':
 switch(t0.type){case 'int':

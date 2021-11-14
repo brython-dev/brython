@@ -5120,51 +5120,9 @@ $ExprCtx.prototype.transition = function(token, value){
                       case '>=':
                       case '>':
                        // chained comparisons such as c1 <= c2 < c3
-                       // replace by (c1 op1 c2) and (c2 op c3)
-
-                       // save c2
-                       var c2 = repl.tree[1], // right operand of op1
-                           c2js = c2.to_js()
-
-                       // clone c2
-                       var c2_clone = new Object()
-                       for(var attr in c2){c2_clone[attr] = c2[attr]}
-
-                       // The variable c2 must be evaluated only once ;
-                       // we generate a temporary variable name to
-                       // replace c2.to_js() and c2_clone.to_js()
-                       var vname = "$c" + chained_comp_num
-                       c2.to_js = function(){return vname}
-                       c2_clone.to_js = function(){return vname}
-                       chained_comp_num++
-
-                       // If there are consecutive chained comparisons
-                       // we must go up to the uppermost 'and' operator
-                       while(repl.parent && repl.parent.type == 'op'){
-                           if($op_weight[repl.parent.op] <
-                                   $op_weight[repl.op]){
-                               repl = repl.parent
-                           }else{break}
-                       }
-                       repl.parent.tree.pop()
-
-                       // Create a new 'and' operator, with the left
-                       // operand equal to c1 <= c2
-                       var and_expr = new $OpCtx(repl, 'and')
-                       // Set an attribute "wrap" to the $OpCtx instance.
-                       // It will be used in an anomymous function where
-                       // the temporary variable called vname will be
-                       // set to the value of c2
-                       and_expr.wrap = {'name': vname, 'js': c2js}
-
-                       c2_clone.parent = and_expr
-                       // For compatibility with the interface of $OpCtx,
-                       // add a fake element to and_expr : it will be
-                       // removed when new_op is created at the next
-                       // line
-                       and_expr.tree.push('xxx')
-                       var new_op = new $OpCtx(c2_clone, op)
-                       return new $AbstractExprCtx(new_op, false)
+                       repl.ops = repl.ops || [repl.op]
+                       repl.ops.push(op)
+                       return new $AbstractExprCtx(repl, false)
                  }
               }
           }
@@ -8748,6 +8706,18 @@ $OpCtx.prototype.to_js = function(){
         '<': 'lt','>': 'gt'}
 
     if(comps[this.op] !== undefined){
+        if(this.ops){
+            var i = 0,
+                tests = []
+            for(var op of this.ops){
+                var method = comps[op]
+                tests.push(`$B.rich_comp('__${method}__', ` +
+                    `${i == 0 ? this.tree[i].to_js(): '$locals.$op'}, ` +
+                    `$locals.$op = ${this.tree[i + 1].to_js()})`)
+                i++
+            }
+            return tests.join(' && ')
+        }
         var method = comps[this.op]
         if(this.tree[0].type == 'expr' && this.tree[1].type == 'expr'){
             var t0 = this.tree[0].tree[0],
