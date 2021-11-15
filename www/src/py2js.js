@@ -401,6 +401,8 @@ function check_assignment(context, kwargs){
             for(var item of ctx.tree){
                 check_assignment(item, {action, once: true})
             }
+        }else if(ctx.type == "decorator"){
+            report('decorator')
         }else if(ctx.type == "comprehension"){
             report('comprehension')
         }else if(ctx.type == "ternary"){

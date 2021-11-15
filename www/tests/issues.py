@@ -2963,7 +2963,10 @@ assertRaises(ValueError, exec,
     "list(zip(range(3), ['fee', 'fi', 'fo', 'fum'], strict=True))")
 assertRaises(ValueError, exec,
     "list(zip(range(5), ['fee', 'fi', 'fo', 'fum'], strict=True))")
-    
+
+# issue 1816
+assertRaises(SyntaxError, exec, '@x = 123')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
