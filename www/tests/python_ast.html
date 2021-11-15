@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+<head>
+<title>Python ast</title>
+<meta charset="utf-8">
+<script type="text/javascript" src="../src/brython_builtins.js"></script>
+<script type="text/javascript" src="../src/version_info.js"></script>
+<script type="text/javascript" src="../src/python_tokenizer.js"></script>
+<script type="text/javascript" src="../src/py_ast.js"></script>
+<script type="text/javascript" src="../src/py2js.js"></script>
+<script type="text/javascript" src="../src/loaders.js"></script>
+<script type="text/javascript" src="../src/py_object.js"></script>
+<script type="text/javascript" src="../src/py_type.js"></script>
+<script type="text/javascript" src="../src/py_utils.js"></script>
+<script type="text/javascript" src="../src/py_sort.js"></script>
+<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="../src/py_exceptions.js"></script>
+<script type="text/javascript" src="../src/py_range_slice.js"></script>
+<script type="text/javascript" src="../src/py_bytes.js"></script>
+<script type="text/javascript" src="../src/py_set.js"></script>
+<script type="text/javascript" src="../src/js_objects.js"></script>
+<script type="text/javascript" src="../src/stdlib_paths.js"></script>
+<script type="text/javascript" src="../src/py_import.js"></script>
+<script type="text/javascript" src="../src/unicode_data.js"></script>
+<script type="text/javascript" src="../src/py_string.js"></script>
+<script type="text/javascript" src="../src/py_int.js"></script>
+<script type="text/javascript" src="../src/py_long_int.js"></script>
+<script type="text/javascript" src="../src/py_float.js"></script>
+<script type="text/javascript" src="../src/py_complex.js"></script>
+<script type="text/javascript" src="../src/py_dict.js"></script>
+<script type="text/javascript" src="../src/py_list.js"></script>
+<script type="text/javascript" src="../src/py_generator.js"></script>
+<script type="text/javascript" src="../src/py_dom.js"></script>
+<script type="text/javascript" src="../src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="../src/builtin_modules.js"></script>
+<script type="text/javascript" src="../src/async.js"></script>
+
+<!-- script src="/src/brython_stdlib.js"></script -->
+<style>
+body {
+    margin: 0;
+}
+div, canvas {
+    border: 1px solid black;
+}
+
+#source,  #tokenize{
+  position: fixed;
+}
+
+#zone{
+  margin-left: 25em;
+}
+#zone2{
+  margin-left: 5em;
+}
+</style>
+</head>
+
+<body onload="brython()">
+
+<table>
+  <tr>
+    <td valign="top">
+      <button id="parse">></button><br>
+      <textarea id="source" cols=40 rows=100 autocomplete="on"></textarea></td>
+    <td valign="top"><pre id="zone"></pre></td>
+    <td valign="top"><pre id="zone2"></pre></td>
+  <tr>
+</table>
+
+<script type="text/python">
+import ast
+import json
+
+from browser import ajax, bind, document
+
+source = document["source"]
+zone = document["zone"]
+zone2 = document["zone2"]
+
+def show_cpython(req):
+  zone2.text = req.text.replace('\r\n', '\n').rstrip()
+  print(zone2.text == zone.text)
+  print(len(zone.text),len(zone2.text))
+  ls1, ls2 = 0, 0
+  for i, (c1, c2) in enumerate(zip(zone.text, zone2.text)):
+    if c1 == '\n':
+        ls1 = i
+    if c2 == '\n':
+        ls2 = i
+    if c1 != c2:
+        print(zone.text[ls1:zone.text.find('\n', ls1 + 1)])
+        print(zone2.text[ls2:zone2.text.find('\n', ls2 + 1)])
+        print('at pos', i, 'c1', c1, ord(c1), '!=', c2, ord(c2))
+        break
+
+@bind('#parse', 'click')
+def parse(ev):
+    # Brython parse
+    src = source.value
+    dump = ast.dump(ast.parse(src), indent=4)
+    zone.text = dump.replace('\r\n', '\n')
+    # CPython
+    req = ajax.post("/cgi-bin/dump_ast.py",
+      headers={"Content-Type": "application/json"},
+      data=json.dumps({'py_source': src}),
+      oncomplete=show_cpython
+    )
+
+
+</script>
+
+<script>
+var zone = document.getElementById("zone"),
+    zone2 = document.getElementById("zone2"),
+    source = document.getElementById('source')
+
+var tokenizer = __BRYTHON__.tokenizer
+
+function add_row(token, zone){
+  var row = document.createElement("tr")
+  for(var ix of [0, 1, 2, 3]){
+    var cell = document.createElement("td")
+    cell.appendChild(document.createTextNode(token[ix].toString().substr(0, 30)))
+    row.appendChild(cell)
+  }
+  zone.appendChild(row)
+}
+
+function compare(t1, t2){
+  var rows1 = t1.querySelectorAll('tr'),
+      rows2 = t2.querySelectorAll('tr')
+  for(var i = 0; i < rows1.length; i++){
+    if(rows1[i].innerText != rows2[i].innerText){
+      console.log('différent à i = ', i, rows1[i].innerText, '\n',
+        rows2[i].innerText)
+      alert()
+      break
+    }
+  }
+}
+
+var xhr = new XMLHttpRequest()
+
+for(var fname of []){
+  zone.innerHTML = ''
+  zone2.innerHTML = ''
+  xhr.open('GET', fname, false)
+  xhr.onreadystatechange = function(){
+    if(this.readyState == 4){
+      var src = this.responseText
+      document.getElementById("source").value = src
+      for(var token of tokenizer(src)){
+        if(token[0] !== "unknown" || token[1] != ' '){
+          add_row(token, zone)
+        }
+      }
+      send_request(src)
+    }
+  }
+  xhr.send()
+}
+
+
+function send_request(src){
+  var headers = {
+     "Content-Type": "application/json"
+  }
+  var data = JSON.stringify({"py_source": src})
+
+  fetch("/cgi-bin/tokens.py", {
+      method: "POST",
+      headers: headers,
+      body: data
+  })
+  .then(function(response){
+      return response.json();
+  })
+  .then(function(data){
+      for(var token of data){
+        add_row(token.slice(0, 4), zone2)
+      }
+      compare(zone, zone2)
+      console.log('ok')
+  });
+}
+</script>
+</body>
+</html>
