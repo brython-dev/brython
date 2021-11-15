@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-15 21:34:59.223009"
-__BRYTHON__.timestamp=1637008499223
+__BRYTHON__.compiled_date="2021-11-15 23:06:42.464587"
+__BRYTHON__.timestamp=1637014002464
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -409,7 +409,8 @@ if($B.ast_classes){var ast=$B.ast,op2ast_class=$B.op2ast_class
 function ast_body(block_ctx){
 var body=[]
 for(var child of block_ctx.node.children){var ctx=child.C.tree[0]
-if(['decorator'].indexOf(ctx.type)>-1){continue}
+if(['single_kw','except','decorator'].indexOf(ctx.type)>-1 ||
+(ctx.type=='condition' && ctx.token=='elif')){continue}
 var child_ast=ast_or_obj(ctx)
 if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)}
 body.push(child_ast)}
@@ -1892,7 +1893,7 @@ C.tree.push(this)}
 $ConditionCtx.prototype.ast=function(){
 var types={'if':'If','while':'While','elif':'If'}
 var res=new ast[types[this.token]](ast_or_obj(this.tree[0]))
-if(this.orelse){res.orelse=ast_or_obj(this.orelse)}
+res.orelse=this.orelse ? ast_or_obj(this.orelse):[]
 res.body=ast_body(this)
 return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
@@ -15926,7 +15927,7 @@ return $B.AST.$convert(res)},__mro__:[_b_.object],$infos:{__qualname__:'AST',__n
 var constr=js_node.constructor
 if(constr && constr.$name){return $B.python_ast_classes[constr.$name].$factory(js_node)}else if(Array.isArray(js_node)){return js_node.map($B.AST.$convert)}else if(typeof js_node=='string' ||
 typeof js_node=='number'){return js_node}else if(js_node.$name){
-return js_node.$name+'()'}else{console.log('cannot handle',js_node)}}}})(__BRYTHON__)
+return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else{console.log('cannot handle',js_node)}}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")

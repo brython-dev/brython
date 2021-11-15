@@ -157,7 +157,8 @@ if($B.ast_classes){
         var body = []
         for(var child of block_ctx.node.children){
             var ctx = child.context.tree[0]
-            if(['decorator'].indexOf(ctx.type) > -1){
+            if(['single_kw', 'except', 'decorator'].indexOf(ctx.type) > -1 ||
+                (ctx.type == 'condition' && ctx.token == 'elif')){
                 continue
             }
             var child_ast = ast_or_obj(ctx)
@@ -527,6 +528,7 @@ $Node.prototype.ast = function(){
         // Ignore except / elif / else / finally : they are attributes of
         // try / for / if nodes
         // decorator is attribute of the class / def node
+
         if(['single_kw', 'except', 'decorator'].indexOf(t.type) > -1 ||
                 (t.type == 'condition' && t.token == 'elif')){
             continue
@@ -3175,9 +3177,7 @@ $ConditionCtx.prototype.ast = function(){
     // If(expr test, stmt* body, stmt* orelse)
     var types = {'if': 'If', 'while': 'While', 'elif': 'If'}
     var res = new ast[types[this.token]](ast_or_obj(this.tree[0]))
-    if(this.orelse){
-        res.orelse = ast_or_obj(this.orelse)
-    }
+    res.orelse = this.orelse ? ast_or_obj(this.orelse) : []
     res.body = ast_body(this)
     return res
 }

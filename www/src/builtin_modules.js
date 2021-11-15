@@ -868,6 +868,8 @@
             }else if(js_node.$name){
                 // eg Store(), Load()...
                 return js_node.$name + '()'
+            }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
+                return js_node
             }else{
                 console.log('cannot handle', js_node)
             }
