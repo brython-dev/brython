@@ -1364,6 +1364,15 @@ $AssignCtx.prototype.ast = function(){
         tg.ctx = new ast.Store()
     }
     value.ctx = new ast.Load()
+    if(target.annotation){
+        var res = new ast.AnnAssign(
+            ast_or_obj(target.tree[0]),
+            ast_or_obj(target.annotation.tree[0]),
+            value,
+            1)
+        res.target.ctx = new ast.Store()
+        return res
+    }
     return new ast.Assign(targets, value)
 }
 
@@ -4956,6 +4965,13 @@ $ExprCtx.prototype.ast = function(){
         )
         res.target.ctx = new ast.Store()
         return res
+    }else if(this.annotation){
+        res = new ast.AnnAssign(
+            res,
+            ast_or_obj(this.annotation.tree[0]),
+            undefined,
+            1)
+        return res
     }
     return res
 }
@@ -5061,7 +5077,10 @@ $ExprCtx.prototype.transition = function(token, value){
           var op1 = context.parent,
               repl = null
           while(1){
-              if(op1.type == 'expr'){
+              if(op1.type == 'unary'){
+                  repl = op1
+                  break
+              }else if(op1.type == 'expr'){
                   op1 = op1.parent
               }else if(op1.type == 'op' &&
                       $op_weight[op1.op] >= $op_weight[op] &&
@@ -8255,7 +8274,9 @@ $NodeCtx.prototype.transition = function(token, value){
                 case '+':
                 case '-':
                 case '~':
-                    return new $UnaryCtx(context, value)
+                    return new $AbstractExprCtx(
+                        new $UnaryCtx(
+                            new $ExprCtx(context, 'unary', true), value), false)
                 case '@':
                     return new $DecoratorCtx(context)
             }
@@ -11219,13 +11240,12 @@ $UnaryCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context,
                     ["can't use starred expression here"])
             }
-            return $transition(new $AbstractExprCtx(context, false),
-                token, value)
+            return new $NumberCtx(token, value)
         case 'id':
             return $transition(new $AbstractExprCtx(context, false),
                 token, value)
     }
-    if(this.tree.length == 0){
+    if(this.tree.length == 0 || this.tree[0].type == 'abstract_expr'){
         $_SyntaxError(context, 'token ' + token + 'after context' + context)
     }
     return $transition(context.parent, token, value)

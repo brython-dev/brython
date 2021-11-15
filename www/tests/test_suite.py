@@ -774,4 +774,7 @@ assertRaises(SyntaxError, exec, "050")
 # issue 1807
 assertRaises(SyntaxError, exec, '-')
 
+# issue 1819
+assert eval("-5 - 8") == -13
+
 print('passed all tests...')

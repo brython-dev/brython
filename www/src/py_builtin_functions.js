@@ -619,7 +619,7 @@ function $$eval(src, _globals, _locals){
             }
         }
     }
-    
+
     // Initialise the object for block namespaces
     eval('var $locals_' + globals_id + ' = {}\nvar $locals_' +
         locals_id + ' = {}')
@@ -798,7 +798,7 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             js = root.to_js()
-
+            
             var res = eval(js)
         }
 

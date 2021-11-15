@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-15 16:17:39.705533"
-__BRYTHON__.timestamp=1636989459705
+__BRYTHON__.compiled_date="2021-11-15 18:37:23.663863"
+__BRYTHON__.timestamp=1636997843648
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -967,6 +967,10 @@ target=target.tree[0]}
 targets.splice(0,0,ast_or_obj(target.tree[0]))
 for(var tg of targets){tg.ctx=new ast.Store()}
 value.ctx=new ast.Load()
+if(target.annotation){var res=new ast.AnnAssign(
+ast_or_obj(target.tree[0]),ast_or_obj(target.annotation.tree[0]),value,1)
+res.target.ctx=new ast.Store()
+return res}
 return new ast.Assign(targets,value)}
 $AssignCtx.prototype.guess_type=function(){return}
 $AssignCtx.prototype.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
@@ -2714,6 +2718,8 @@ if(this.packed){return new ast.Starred(res)}else if(this.assign){res=new ast.Nam
 ast_or_obj(this.assign),res
 )
 res.target.ctx=new ast.Store()
+return res}else if(this.annotation){res=new ast.AnnAssign(
+res,ast_or_obj(this.annotation.tree[0]),undefined,1)
 return res}
 return res}
 $ExprCtx.prototype.toString=function(){return '(expr '+this.with_commas+') '+this.tree}
@@ -2775,7 +2781,8 @@ var op_parent=C.parent,op=value
 if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
 return new $AbstractExprCtx(new_op,false)}
 var op1=C.parent,repl=null
-while(1){if(op1.type=='expr'){op1=op1.parent}else if(op1.type=='op' &&
+while(1){if(op1.type=='unary'){repl=op1
+break}else if(op1.type=='expr'){op1=op1.parent}else if(op1.type=='op' &&
 $op_weight[op1.op]>=$op_weight[op]&&
 !(op1.op=='**' && op=='**')){
 repl=op1
@@ -4230,7 +4237,9 @@ return $transition(expr,token,value)
 case '+':
 case '-':
 case '~':
-return new $UnaryCtx(C,value)
+return new $AbstractExprCtx(
+new $UnaryCtx(
+new $ExprCtx(C,'unary',true),value),false)
 case '@':
 return new $DecoratorCtx(C)}
 break
@@ -5668,10 +5677,10 @@ case 'int':
 case 'float':
 case 'imaginary':
 if(C.parent.type=="packed"){$_SyntaxError(C,["can't use starred expression here"])}
-return $transition(new $AbstractExprCtx(C,false),token,value)
+return new $NumberCtx(token,value)
 case 'id':
 return $transition(new $AbstractExprCtx(C,false),token,value)}
-if(this.tree.length==0){$_SyntaxError(C,'token '+token+'after C'+C)}
+if(this.tree.length==0 ||this.tree[0].type=='abstract_expr'){$_SyntaxError(C,'token '+token+'after C'+C)}
 return $transition(C.parent,token,value)}
 $UnaryCtx.prototype.to_js=function(){this.js_processed=true
 var operand=this.tree[0].tree[0]
