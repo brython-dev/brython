@@ -8630,6 +8630,20 @@ $OpCtx.prototype.ast = function(){
         op_type = ast_type_class[0],
         ast_class = ast_type_class[1]
 
+    if(op_type === ast.Compare){
+        var left = ast_or_obj(this.tree[0]),
+            ops = [ast_class]
+        if(this.ops){
+            for(var op of this.ops.slice(1)){
+                ops.push(op2ast_class[op][1])
+            }
+            return new ast.Compare(left, ops,
+                this.tree.slice(1).map(ast_or_obj))
+        }else{
+            return new ast.Compare(left, [ast_class],
+                [ast_or_obj(this.tree[1])])
+        }
+    }
     if(op_type === ast.UnaryOp){
         return new op_type(ast_class, ast_or_obj(this.tree[1]))
     }
