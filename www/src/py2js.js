@@ -8653,15 +8653,15 @@ $OpCtx.prototype.ast = function(){
 
     if(op_type === ast.Compare){
         var left = ast_or_obj(this.tree[0]),
-            ops = [ast_class]
+            ops = [new ast_class()]
         if(this.ops){
             for(var op of this.ops.slice(1)){
-                ops.push(op2ast_class[op][1])
+                ops.push(new op2ast_class[op][1]())
             }
             return new ast.Compare(left, ops,
                 this.tree.slice(1).map(ast_or_obj))
         }else{
-            return new ast.Compare(left, [ast_class],
+            return new ast.Compare(left, ops,
                 [ast_or_obj(this.tree[1])])
         }
     }

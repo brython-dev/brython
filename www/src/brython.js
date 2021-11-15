@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-15 18:37:23.663863"
-__BRYTHON__.timestamp=1636997843648
+__BRYTHON__.compiled_date="2021-11-15 21:34:59.223009"
+__BRYTHON__.timestamp=1637008499223
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4422,9 +4422,9 @@ C.parent.tree.pop()
 C.parent.tree.push(this)}
 $OpCtx.prototype.ast=function(){
 var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1]
-if(op_type===ast.Compare){var left=ast_or_obj(this.tree[0]),ops=[ast_class]
-if(this.ops){for(var op of this.ops.slice(1)){ops.push(op2ast_class[op][1])}
-return new ast.Compare(left,ops,this.tree.slice(1).map(ast_or_obj))}else{return new ast.Compare(left,[ast_class],[ast_or_obj(this.tree[1])])}}
+if(op_type===ast.Compare){var left=ast_or_obj(this.tree[0]),ops=[new ast_class()]
+if(this.ops){for(var op of this.ops.slice(1)){ops.push(new op2ast_class[op][1]())}
+return new ast.Compare(left,ops,this.tree.slice(1).map(ast_or_obj))}else{return new ast.Compare(left,ops,[ast_or_obj(this.tree[1])])}}
 if(op_type===ast.UnaryOp){return new op_type(ast_class,ast_or_obj(this.tree[1]))}
 return new op_type(
 ast_or_obj(this.tree[0]),ast_class,ast_or_obj(this.tree[1]))}
