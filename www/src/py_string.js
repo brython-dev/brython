@@ -2467,7 +2467,7 @@ str.$factory = function(arg, encoding, errors){
         if(method === null ||
                 // if not better than object.__str__, try __repr__
                 (arg.__class__ && arg.__class__ !== _b_.object &&
-                method.$infos && method.$infos.__func__ === _b_.object.__str__)){
+                method === _b_.object.__str__)){
             var method = $B.$getattr(klass, "__repr__")
         }
     }

@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-15 23:06:42.464587"
-__BRYTHON__.timestamp=1637014002464
+__BRYTHON__.compiled_date="2021-11-16 09:27:55.922649"
+__BRYTHON__.timestamp=1637051275922
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -12467,7 +12467,7 @@ if(klass===undefined){return $B.JSObj.__str__($B.JSObj.$factory(arg))}
 var method=$B.$getattr(klass ,"__str__",null)
 if(method===null ||
 (arg.__class__ && arg.__class__ !==_b_.object &&
-method.$infos && method.$infos.__func__===_b_.object.__str__)){var method=$B.$getattr(klass,"__repr__")}}
+method===_b_.object.__str__)){var method=$B.$getattr(klass,"__repr__")}}
 catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}

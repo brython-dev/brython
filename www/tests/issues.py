@@ -2967,6 +2967,18 @@ assertRaises(ValueError, exec,
 # issue 1816
 assertRaises(SyntaxError, exec, '@x = 123')
 
+# issue 1821
+class MyRepr:
+    def __init__(self):
+        self.__repr__ = lambda: "obj"
+    def __repr__(self):
+        return "class"
+my_repr = MyRepr()
+assert str(my_repr.__repr__()) == 'obj'
+assert str(my_repr) == 'class'
+assert str(MyRepr.__repr__(my_repr)) == 'class'
+assert str(MyRepr().__repr__()) == 'obj'
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
