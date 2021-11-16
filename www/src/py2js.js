@@ -423,7 +423,7 @@ function check_assignment(context, kwargs){
 }
 
 function remove_abstract_expr(tree){
-    if($B.last(tree).type == 'abstract_expr'){
+    if(tree.length > 0 && $B.last(tree).type == 'abstract_expr'){
         tree.pop()
     }
 }
@@ -7741,30 +7741,15 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                 case 'tuple':
                     if(token == ')'){
                         var close = true
-                        while(context.type == "list_or_tuple" &&
-                                context.real == "tuple" &&
-                                context.parent.type == "expr" &&
-                                context.parent.parent.type == "node" &&
-                                context.tree.length == 1){
-                            // Not a tuple, just an expression inside
-                            // parenthesis at node level : replace by
-                            // the expression.
-                            // Required for code like
-                            //     (pars): bool = True
-                            //
-                            // See also issue #1253 with code like
-                            //
-                            // def f():
-                            //     ((((x)))) = 1
-                            //
-                            close = false
-                            var node = context.parent.parent,
-                                ix = node.tree.indexOf(context.parent),
-                                expr = context.tree[0]
-                            expr.parent = node
-                            expr.$in_parens = true // keep information
-                            node.tree.splice(ix, 1, expr)
-                            context = expr.tree[0]
+                        if(context.tree.length == 1){
+                            // make single element replace tuple as child of
+                            // context.parent.parent
+                            var grandparent = context.parent.parent
+                            // remove expr tuple
+                            grandparent.tree.pop()
+                            grandparent.tree.push(context.tree[0])
+                            context.tree[0].parent = grandparent
+                            return context.tree[0]
                         }
                         if(context.packed ||
                                 (context.type == 'list_or_tuple' &&
@@ -10930,16 +10915,17 @@ $TargetListCtx.prototype.to_js = function(){
     return $to_js(this.tree)
 }
 
-var ternaries = []
 var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     // Class for the ternary operator : "x if C else y"
+    // "context" represents the expression "x"
+    // Replace it by an expression holding the ternary
     this.type = 'ternary'
-    this.parent = context.parent
     context.parent.tree.pop()
-    context.parent.tree.push(this)
-    context.parent = this
+    var expr = new $ExprCtx(context.parent, 'ternary', false)
+    expr.tree.push(this)
+    this.parent = expr
     this.tree = [context]
-    ternaries.push(this)
+    context.parent = this
 }
 
 $TernaryCtx.prototype.ast = function(){

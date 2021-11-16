@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-16 22:32:53.788485"
-__BRYTHON__.timestamp=1637098373788
+__BRYTHON__.compiled_date="2021-11-16 23:36:43.549217"
+__BRYTHON__.timestamp=1637102203549
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -485,7 +485,7 @@ if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
 if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){report('named expression')}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=="decorator"){report('decorator')}else if(ctx.type=="comprehension"){report('comprehension')}else if(ctx.type=="ternary"){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.comprehension){break}
 if(once){break}
 ctx=ctx.parent}}
-function remove_abstract_expr(tree){if($B.last(tree).type=='abstract_expr'){tree.pop()}}
+function remove_abstract_expr(tree){if(tree.length > 0 && $B.last(tree).type=='abstract_expr'){tree.pop()}}
 $B.format_indent=function(js,indent){
 var indentation='  ',lines=js.split('\n'),level=indent,res='',last_is_closing_brace=false,last_is_backslash=false,last_is_var_and_comma=false
 for(var i=0,len=lines.length;i < len;i++){var line=lines[i],add_closing_brace=false,add_spaces=true
@@ -724,15 +724,6 @@ this.with_commas=with_commas
 this.parent=C
 this.tree=[]
 C.tree.push(this)}
-$AbstractExprCtx.prototype.ast=function(){
-console.log('abstrac ast',this)
-if(this.tree.length==0){console.log('abstract expr sans tree',this)
-return}
-var res=new ast.NamedExpr(
-ast_or_obj(this.assign),ast_or_obj(this.tree[0])
-)
-res.target.ctx=new ast.Store()
-return res}
 $AbstractExprCtx.prototype.toString=function(){return '(abstract_expr '+this.with_commas+') '+this.tree}
 $AbstractExprCtx.prototype.transition=function(token,value){var C=this
 var packed=C.packed,is_await=C.is_await
@@ -3949,17 +3940,12 @@ new $SubCtx(C.parent),false)}
 if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
 if(token==')'){var close=true
-while(C.type=="list_or_tuple" &&
-C.real=="tuple" &&
-C.parent.type=="expr" &&
-C.parent.parent.type=="node" &&
-C.tree.length==1){
-close=false
-var node=C.parent.parent,ix=node.tree.indexOf(C.parent),expr=C.tree[0]
-expr.parent=node
-expr.$in_parens=true 
-node.tree.splice(ix,1,expr)
-C=expr.tree[0]}
+if(C.tree.length==1){
+var grandparent=C.parent.parent
+grandparent.tree.pop()
+grandparent.tree.push(C.tree[0])
+C.tree[0].parent=grandparent
+return C.tree[0]}
 if(C.packed ||
 (C.type=='list_or_tuple' &&
 C.tree.length==1 &&
@@ -5544,15 +5530,14 @@ return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $TargetListCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
-var ternaries=[]
 var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
 this.type='ternary'
-this.parent=C.parent
 C.parent.tree.pop()
-C.parent.tree.push(this)
-C.parent=this
+var expr=new $ExprCtx(C.parent,'ternary',false)
+expr.tree.push(this)
+this.parent=expr
 this.tree=[C]
-ternaries.push(this)}
+C.parent=this}
 $TernaryCtx.prototype.ast=function(){
 return new ast.IfExp(...this.tree.map(ast_or_obj))}
 $TernaryCtx.prototype.toString=function(){return '(ternary) '+this.tree}
