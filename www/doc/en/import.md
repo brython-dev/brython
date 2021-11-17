@@ -55,6 +55,23 @@ Since the browser has no direct access to the file system, looking for a file
 must be done by an Ajax call, which returns an error message if there is no
 file at the specified url.
 
+Additionally, if an HTML has several Brython scripts, those already executed
+can be imported by their `id`:
+
+```xml
+<script type="text/python" id="module">
+def hello():
+    return "world"
+</script>
+
+<script type="text/python">
+from browser import document
+import module
+
+document.body <= module.hello()
+</script>
+```
+
 Optimisation
 ============
 The process described above has two main drawbacks :

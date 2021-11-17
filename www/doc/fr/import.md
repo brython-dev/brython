@@ -63,6 +63,23 @@ plusieurs emplacements :
 - un fichier __\_\_init\_\_.py__ dans le répertoire X
 
 
+En outre, si une page HTML comporte plusieurs scripts Brython, ceux qui sont
+déjà exécutés peuvent être importés par leur `id`:
+
+```xml
+<script type="text/python" id="module">
+def hello():
+    return "world"
+</script>
+
+<script type="text/python">
+from browser import document
+import module
+
+document.body <= module.hello()
+</script>
+```
+
 Optimisation
 ============
 Le mécanisme décrit ci-dessus présente deux inconvénients :
