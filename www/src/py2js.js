@@ -1003,18 +1003,14 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                 case '-':
                 case '~':
                 case '+':
-                    // create a left argument for operator "unary"
-                    context.parent.tree.pop()
-                    var left = new $UnaryCtx(context.parent, tg)
-                    // create the operator "unary"
-                    if(tg == '-'){
-                        var op_expr = new $OpCtx(left,'unary_neg')
-                    }else if(tg == '+'){
-                        var op_expr = new $OpCtx(left, 'unary_pos')
-                    }else{
-                        var op_expr = new $OpCtx(left,'unary_inv')
-                    }
-                    return new $AbstractExprCtx(op_expr, false)
+                    // unary op
+                    context.parent.tree.pop() // remove abstract expr
+                    return new $AbstractExprCtx(
+                        new $UnaryCtx(
+                            new $ExprCtx(context.parent, 'unary', false),
+                            tg),
+                        false
+                    )
                 case 'not':
                     context.parent.tree.pop() // remove abstract expression
                     var commas = context.with_commas
@@ -5053,7 +5049,7 @@ $ExprCtx.prototype.transition = function(token, value){
           while(1){
               if(op1.type == 'unary'){
                   repl = op1
-                  break
+                  op1 = op1.parent
               }else if(op1.type == 'expr'){
                   op1 = op1.parent
               }else if(op1.type == 'op' &&
@@ -5270,7 +5266,6 @@ $ExprCtx.prototype.transition = function(token, value){
           }
           $_SyntaxError(context, 'token ' + token + ' after ' + context)
       case 'if':
-
           var in_comp = false,
               ctx = context.parent
           while(ctx){
@@ -5311,6 +5306,7 @@ $ExprCtx.prototype.transition = function(token, value){
           while(ctx.parent &&
                   (ctx.parent.type == 'op' ||
                    ctx.parent.type == 'not' ||
+                   ctx.parent.type == 'unary' ||
                    (ctx.parent.type == "expr" && ctx.parent.name == "operand"))){
               ctx = ctx.parent
           }
@@ -8505,14 +8501,11 @@ $NumberCtx.prototype.ast = function(){
     if(Array.isArray(value)){
         value = parseInt(value[1], value[0])
     }
-    if(this.unary_op){
-        value = eval(this.unary_op + value)
-    }
     if(this.type == 'imaginary'){
         value = {imaginary: true, value: eval(value)}
     }else{
         try{
-        value = eval(value)
+            value = eval(value)
         }catch(err){
             console.log('error num ast', this)
             throw err
@@ -8541,20 +8534,9 @@ $NumberCtx.prototype.to_js = function(){
     if(type == 'int'){
         var v = parseInt(value[1], value[0])
         if(v > $B.min_int && v < $B.max_int){
-            if(this.unary_op){
-                v = eval(this.unary_op + v)
-            }
             return v
         }else{
             var v = $B.long_int.$factory(value[1], value[0])
-            switch(this.unary_op){
-                case "-":
-                    v = $B.long_int.__neg__(v)
-                    break
-                case "~":
-                    v = $B.long_int.__invert__(v)
-                    break
-            }
             return '$B.fast_long_int("' + v.value + '", ' + v.pos + ')'
         }
     }else if(type == "float"){
@@ -8627,29 +8609,7 @@ $OpCtx.prototype.transition = function(token, value){
     if(context.op === undefined){
         $_SyntaxError(context,['context op undefined ' + context])
     }
-    if(context.op.substr(0,5) == 'unary'){
-        if(token != 'eol'){
-            if(context.parent.type == 'assign' ||
-                    context.parent.type == 'return'){
-                // create and return a tuple whose first element is context
-                context.parent.tree.pop()
-                var t = new $ListOrTupleCtx(context.parent, 'tuple')
-                t.tree.push(context)
-                context.parent = t
-                return t
-            }
-        }
-        if(context.tree.length == 2 && context.tree[1].type == "expr" &&
-                context.tree[1].tree[0].type == "int"){
-            // replace by the integer with the applied unary operator
-            context.parent.tree.pop()
-            context.parent.tree.push(context.tree[1])
-            context.tree[1].parent = context.parent
-            // Set attribute "unary_op", used in $NumberCtx.prototype.to_js()
-            context.tree[1].tree[0].unary_op = context.tree[0].op
-        }
-    }
-
+    
     switch(token) {
         case 'id':
         case 'imaginary':
@@ -11187,7 +11147,10 @@ $UnaryCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context,
                     ["can't use starred expression here"])
             }
-            return new $NumberCtx(token, value)
+            var res = new $NumberCtx(token, context, value)
+            console.log('new number after unary', res)
+            alert()
+            return res
         case 'id':
             return $transition(new $AbstractExprCtx(context, false),
                 token, value)
@@ -11203,14 +11166,16 @@ $UnaryCtx.prototype.to_js = function(){
     var operand = this.tree[0].tree[0]
     switch(operand.type){
         case 'float':
-            return eval(this.op + operand.value)
+            return '_b_.float.$factory(' + this.op + operand.value +')'
         case 'int':
-            operand.value[1] = eval(this.op + operand.value[1])
-            return operand.to_js()
+            var value = eval(operand.to_js())
+            if(value.__class__ != $B.long_int){
+                return eval(this.op + value)
+            }
     }
-    var method = {'-': 'neg', '+': 'pos', '~': 'invert'}[this.op]
-    return '$B.$call($B.$getattr(' + operand.to_js() + ', "__' +
-        method + '__"))()'
+    var method = {'-': '__neg__', '+': '__pos__', '~': '__invert__'}[this.op]
+    return '$B.$call($B.$getattr(' + operand.to_js() + ', "' +
+        method + '"))()'
 }
 
 var $WithCtx = $B.parser.$WithCtx = function(context){

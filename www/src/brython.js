@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-16 23:36:43.549217"
-__BRYTHON__.timestamp=1637102203549
+__BRYTHON__.compiled_date="2021-11-17 11:06:05.620509"
+__BRYTHON__.timestamp=1637143565619
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -795,9 +795,10 @@ case '-':
 case '~':
 case '+':
 C.parent.tree.pop()
-var left=new $UnaryCtx(C.parent,tg)
-if(tg=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(tg=='+'){var op_expr=new $OpCtx(left,'unary_pos')}else{var op_expr=new $OpCtx(left,'unary_inv')}
-return new $AbstractExprCtx(op_expr,false)
+return new $AbstractExprCtx(
+new $UnaryCtx(
+new $ExprCtx(C.parent,'unary',false),tg),false
+)
 case 'not':
 C.parent.tree.pop()
 var commas=C.with_commas
@@ -2769,7 +2770,7 @@ if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
 return new $AbstractExprCtx(new_op,false)}
 var op1=C.parent,repl=null
 while(1){if(op1.type=='unary'){repl=op1
-break}else if(op1.type=='expr'){op1=op1.parent}else if(op1.type=='op' &&
+op1=op1.parent}else if(op1.type=='expr'){op1=op1.parent}else if(op1.type=='op' &&
 $op_weight[op1.op]>=$op_weight[op]&&
 !(op1.op=='**' && op=='**')){
 repl=op1
@@ -2888,6 +2889,7 @@ var ctx=C
 while(ctx.parent &&
 (ctx.parent.type=='op' ||
 ctx.parent.type=='not' ||
+ctx.parent.type=='unary' ||
 (ctx.parent.type=="expr" && ctx.parent.name=="operand"))){ctx=ctx.parent}
 return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
 case 'eol':
@@ -4359,7 +4361,6 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 $NumberCtx.prototype.ast=function(){var value=this.value
 if(Array.isArray(value)){value=parseInt(value[1],value[0])}
-if(this.unary_op){value=eval(this.unary_op+value)}
 if(this.type=='imaginary'){value={imaginary:true,value:eval(value)}}else{try{value=eval(value)}catch(err){console.log('error num ast',this)
 throw err}}
 if(value===undefined){console.log('number value undef',this)
@@ -4371,14 +4372,7 @@ return $transition(C.parent,token,value)}
 $NumberCtx.prototype.to_js=function(){this.js_processed=true
 var type=this.type,value=this.value
 if(type=='int'){var v=parseInt(value[1],value[0])
-if(v > $B.min_int && v < $B.max_int){if(this.unary_op){v=eval(this.unary_op+v)}
-return v}else{var v=$B.long_int.$factory(value[1],value[0])
-switch(this.unary_op){case "-":
-v=$B.long_int.__neg__(v)
-break
-case "~":
-v=$B.long_int.__invert__(v)
-break}
+if(v > $B.min_int && v < $B.max_int){return v}else{var v=$B.long_int.$factory(value[1],value[0])
 return '$B.fast_long_int("'+v.value+'", '+v.pos+')'}}else if(type=="float"){
 if(/^\d+$/.exec(value)||/^\d+\.\d*$/.exec(value)){return '(new Number('+this.value+'))'}
 return '_b_.float.$factory('+value+')'}else if(type=="imaginary"){return '$B.make_complex(0,'+value+')'}}
@@ -4403,19 +4397,6 @@ ast_or_obj(this.tree[0]),new ast_class(),ast_or_obj(this.tree[1]))}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
 $OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
-if(C.op.substr(0,5)=='unary'){if(token !='eol'){if(C.parent.type=='assign' ||
-C.parent.type=='return'){
-C.parent.tree.pop()
-var t=new $ListOrTupleCtx(C.parent,'tuple')
-t.tree.push(C)
-C.parent=t
-return t}}
-if(C.tree.length==2 && C.tree[1].type=="expr" &&
-C.tree[1].tree[0].type=="int"){
-C.parent.tree.pop()
-C.parent.tree.push(C.tree[1])
-C.tree[1].parent=C.parent
-C.tree[1].tree[0].unary_op=C.tree[0].op}}
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -5648,7 +5629,10 @@ case 'int':
 case 'float':
 case 'imaginary':
 if(C.parent.type=="packed"){$_SyntaxError(C,["can't use starred expression here"])}
-return new $NumberCtx(token,value)
+var res=new $NumberCtx(token,C,value)
+console.log('new number after unary',res)
+alert()
+return res
 case 'id':
 return $transition(new $AbstractExprCtx(C,false),token,value)}
 if(this.tree.length==0 ||this.tree[0].type=='abstract_expr'){$_SyntaxError(C,'token '+token+'after C'+C)}
@@ -5656,13 +5640,13 @@ return $transition(C.parent,token,value)}
 $UnaryCtx.prototype.to_js=function(){this.js_processed=true
 var operand=this.tree[0].tree[0]
 switch(operand.type){case 'float':
-return eval(this.op+operand.value)
+return '_b_.float.$factory('+this.op+operand.value+')'
 case 'int':
-operand.value[1]=eval(this.op+operand.value[1])
-return operand.to_js()}
-var method={'-':'neg','+':'pos','~':'invert'}[this.op]
-return '$B.$call($B.$getattr('+operand.to_js()+', "__'+
-method+'__"))()'}
+var value=eval(operand.to_js())
+if(value.__class__ !=$B.long_int){return eval(this.op+value)}}
+var method={'-':'__neg__','+':'__pos__','~':'__invert__'}[this.op]
+return '$B.$call($B.$getattr('+operand.to_js()+', "'+
+method+'"))()'}
 var $WithCtx=$B.parser.$WithCtx=function(C){
 this.type='with'
 this.parent=C
