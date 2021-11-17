@@ -4,8 +4,8 @@ _b_ = $B.builtins
 
 var ELEMENT_NODE = 1,
     TEXT_NODE = 3,
-    COMMENT_NODE =	8,
-    DOCUMENT_TYPE_NODE =	10
+    COMMENT_NODE =    8,
+    DOCUMENT_TYPE_NODE =    10
 
 var HTMLNode = $B.make_class("HTMLNode",
     function(){
@@ -100,7 +100,8 @@ function* tokenize(src){
                     node.text += char
                     pos++
                 }else if(char == "'" || char == '"'){
-                    var i = pos + 1
+                    var i = pos + 1,
+                        found_string_end = false
                     while(i < src.length){
                         if(src[i] == char){
                             var nb_escape = 0
@@ -110,13 +111,20 @@ function* tokenize(src){
                             if(nb_escape % 2 == 0){
                                 node.text += src.substr(pos, i + 1 - pos)
                                 pos = i + 1
+                                found_string_end = true
                                 break
                             }else{
                                 i++
                             }
+                        }else if(src[i] == '>'){
+                            break
                         }else{
                             i++
                         }
+                    }
+                    if(! found_string_end){
+                        // unterminated string: ignore
+                        pos++
                     }
                 }else{
                     node.text += char
@@ -132,8 +140,8 @@ function* tokenize(src){
 return  {
     ELEMENT_NODE: 1,
     TEXT_NODE: 3,
-    COMMENT_NODE:	8,
-    DOCUMENT_TYPE_NODE:	10,
+    COMMENT_NODE:    8,
+    DOCUMENT_TYPE_NODE:    10,
     tokenize: tokenize
 }
 
