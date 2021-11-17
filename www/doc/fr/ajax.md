@@ -27,7 +27,8 @@ et même interface pour `connect, delete, head, options` et `trace`.
 > _timeout_ est la durée en secondes après laquelle la requête est abandonnée
 
 > _cache_ est un booléen qui indique si la requête doit utiliser le cache du
-> navigateur
+> navigateur. Par défaut il n'est pas utilisé et un paramètre numérique est
+> automatiquement ajouté à la requête
 
 > _data_ est soit une chaine de caractères, soit un dictionnaire. Si c'est un
 > dictionnaire, il est converti en une chaine de la forme `x=1&y=2` ajoutée à

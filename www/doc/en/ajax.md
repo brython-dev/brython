@@ -29,7 +29,8 @@ and the same interface for methods `connect, delete, head, options` and
 > dictionary is converted into a string of the form `x=1&y=2`.
 
 > _cache_ is a boolean to specify if the GET request should use the browser
-> cache
+> cache. It is set to `False` by default, which means that a random
+> numeric parameter is added to the request
 
 > _timeout_ is the time in seconds after which the request is canceled
 
