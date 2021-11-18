@@ -4781,20 +4781,11 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
 
 $ExceptCtx.prototype.ast = function(){
     // ast.ExceptHandler(type, name, body)
-    var res = {
-        body: []
-    }
-    for(var child of this.parent.node.children){
-        res.body.push(ast_or_obj(child.context.tree[0]))
-    }
-    if(this.has_alias){
-        res.name = this.tree[0].alias
-    }
-    if(this.tree.length > 0){
-        res.type = ast_or_obj(this.tree[0])
-    }
-    return new ast.ExceptHandler(ast.type, ast.name,
-        ast_body(this.parent))
+    return new ast.ExceptHandler(
+        ast_or_obj(this.tree[0]),
+        this.has_alias ? this.tree[0].alias : undefined,
+        ast_body(this.parent)
+    )
 }
 
 $ExceptCtx.prototype.toString = function(){return '(except) '}
@@ -8609,7 +8600,7 @@ $OpCtx.prototype.transition = function(token, value){
     if(context.op === undefined){
         $_SyntaxError(context,['context op undefined ' + context])
     }
-    
+
     switch(token) {
         case 'id':
         case 'imaginary':
@@ -10298,7 +10289,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
 $ReturnCtx.prototype.ast = function(){
     var res = new ast.Return()
     if(this.tree.length > 0){
-        res.expr = ast_or_obj(this.tree[0])
+        res.value = ast_or_obj(this.tree[0])
     }
     return res
 }
@@ -10682,7 +10673,7 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
 
 $SubCtx.prototype.ast = function(){
     var slice = ast_or_obj(this.tree[0])
-    return new ast.Subscript(ast_or_obj(this.value), slice)
+    return new ast.Subscript(ast_or_obj(this.value), slice, new ast.Load())
 }
 
 $SubCtx.prototype.toString = function(){

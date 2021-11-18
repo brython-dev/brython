@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-18 14:31:54.557371"
-__BRYTHON__.timestamp=1637242314557
+__BRYTHON__.compiled_date="2021-11-18 14:49:55.606789"
+__BRYTHON__.timestamp=1637243395605
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2622,11 +2622,9 @@ this.tree=[]
 this.expect='id'
 this.scope=$get_scope(this)}
 $ExceptCtx.prototype.ast=function(){
-var res={body:[]}
-for(var child of this.parent.node.children){res.body.push(ast_or_obj(child.C.tree[0]))}
-if(this.has_alias){res.name=this.tree[0].alias}
-if(this.tree.length > 0){res.type=ast_or_obj(this.tree[0])}
-return new ast.ExceptHandler(ast.type,ast.name,ast_body(this.parent))}
+return new ast.ExceptHandler(
+ast_or_obj(this.tree[0]),this.has_alias ? this.tree[0].alias :undefined,ast_body(this.parent)
+)}
 $ExceptCtx.prototype.toString=function(){return '(except) '}
 $ExceptCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -5222,7 +5220,7 @@ if(elt.type=='for'){elt.has_return=true
 break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
 node=node.parent}}
 $ReturnCtx.prototype.ast=function(){var res=new ast.Return()
-if(this.tree.length > 0){res.expr=ast_or_obj(this.tree[0])}
+if(this.tree.length > 0){res.value=ast_or_obj(this.tree[0])}
 return res}
 $ReturnCtx.prototype.toString=function(){return 'return '+this.tree}
 $ReturnCtx.prototype.transition=function(token,value){var C=this
@@ -5409,7 +5407,7 @@ C.tree[C.tree.length]=this
 this.parent=C
 this.tree=[]}
 $SubCtx.prototype.ast=function(){var slice=ast_or_obj(this.tree[0])
-return new ast.Subscript(ast_or_obj(this.value),slice)}
+return new ast.Subscript(ast_or_obj(this.value),slice,new ast.Load())}
 $SubCtx.prototype.toString=function(){return '(sub) (value) '+this.value+' (tree) '+this.tree}
 $SubCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
