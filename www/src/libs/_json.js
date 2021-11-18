@@ -195,15 +195,45 @@ function to_py(obj, kw){
             return kw.object_hook === _b_.None ? dict :
                 $B.$call(kw.object_hook)(dict)
         }
+    }else if(obj.type == 'str'){
+        return obj.value
+    }else if(obj.type == 'num'){
+        console.log('num type', obj)
+        if(obj.value.search(/[.eE]/) > -1){
+            // float
+            if(kw.parse_float !== _b_.None){
+                return $B.$call(kw.parse_float)(obj.value)
+            }
+            return new Number(obj.value)
+        }else{
+            // integer
+            if(kw.parse_int !== _b_.None){
+                return $B.$call(kw.parse_int)(obj.value)
+            }
+            var int = parseInt(obj.value)
+            if(Math.abs(int) < $B.max_int){
+                return int
+            }else{
+                if(obj.value.startsWith('-')){
+                    return $B.fast_long_int(obj.value.substr(1), false)
+                }else{
+                    return $B.fast_long_int(obj.value, true)
+                }
+            }
+        }
     }else{
         if(obj instanceof Number && kw.parse_float !== _b_.None){
-            return $B.$call(kw.parse_float)(obj)
+            console.log('parse float', obj, kw.parse_float)
+            var res = $B.$call(kw.parse_float)(obj)
+            console.log('rs', res)
+            return res
         }else if(kw.parse_int !== _b_.None &&
                 (typeof obj == 'number' || obj.__class__ === $B.long_int)){
             return $B.$call(kw.parse_int)(obj)
         }else if(kw.parse_constant !== _b_.None && ! isFinite(obj)){
             return kw.parse_constant(obj)
         }
+        console.log('not converted', obj)
         return obj
     }
 }
@@ -269,10 +299,10 @@ function num_at(s, i){
         exp = ! exp
         j++
       }else{
-        return [{type: 'num', value: to_num(s.substring(i, j), nb_dots, exp)}, j]
+        return [{type: 'num', value: s.substring(i, j)}, j]
       }
   }
-  return [{type: 'num', value: to_num(s.substring(i, j), nb_dots, exp)}, j]
+  return [{type: 'num', value: s.substring(i, j)}, j]
 }
 
 function* tokenize(s){
@@ -296,13 +326,13 @@ function* tokenize(s){
       yield [false, i]
       i += 5
     }else if(s.substr(i, 8) == 'Infinity'){
-      yield [{type: 'num', value: Number.POSITIVE_INFINITY}, i]
+      yield [{type: 'num', value: 'Infinity'}, i]
       i += 8
     }else if(s.substr(i, 9) == '-Infinity'){
-      yield [{type: 'num', value: Number.NEGATIVE_INFINITY}, i]
+      yield [{type: 'num', value: '-Infinity'}, i]
       i += 9
     }else if(s.substr(i, 3) == 'NaN'){
-      yield [{type: 'num', value: NaN}, i]
+      yield [{type: 'num', value: 'NaN'}, i]
       i += 3
     }else if(s[i] == '"'){
       value = string_at(s, i)
@@ -336,7 +366,7 @@ Node.prototype.transition = function(token){
                 (this.list.length > 0 || this.content)){
             throw Error('Extra data')
         }
-        this.list.push(token.type ? token.value : token)
+        this.list.push(token)
         return this.parent ? this.parent : this
     }else if(token == '{'){
         if(this.parent === undefined){
@@ -412,7 +442,7 @@ List.prototype.transition = function(token){
             this.items.push(token)
             return this
         }else if(token.type == 'num' || token.type == 'str'){
-            this.items.push(token.value)
+            this.items.push(token)
             return this
         }else if(token == '{'){
             return new Dict(this)
