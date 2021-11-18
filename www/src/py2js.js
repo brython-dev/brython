@@ -12319,7 +12319,7 @@ function line_ends_with_comma(src){
 }
 
 function prepare_number(n){
-    // n is a numric literal
+    // n is a numeric literal
     // return an object {type: <int | float | imaginary>, value}
     n = n.replace(/_/g, "")
     if(n.startsWith('.')){

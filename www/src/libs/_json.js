@@ -170,7 +170,9 @@ function from_json(s){
         kw = $.kw.$string_dict
     if(Object.keys(kw).length == 0){
         // default
-        return $B.structuredclone2pyobj(JSON.parse(s))
+        var root = parse(text),
+            value = root.content ? root.content : root.list[0]
+        return to_py(value)
     }
     for(key in $defaults){
         if(kw[key] === undefined){
@@ -179,7 +181,7 @@ function from_json(s){
             kw[key] = kw[key][0]
         }
     }
-    
+
     function reviver(key, value){
         if(typeof value == "number"){
             if(Number.isInteger(value) && kw.parse_int !== _b_.None){
@@ -217,7 +219,265 @@ function from_json(s){
     return $B.structuredclone2pyobj(JSON.parse(s, reviver))
 }
 
+function load(url){
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', url + '?' + (Date.now()), false)
+    var root = {}
+    xhr.onreadystatechange = function(){
+      if(this.readyState == 4){
+        var text = xhr.responseText
+        root.content = parse(text)
+      }
+    }
+    xhr.send()
+    console.log('root', root)
+    root = root.content
+    var value = root.content ? root.content : root.list[0]
+    console.log('value', value)
+    return to_py(value)
+}
+
+function to_py(obj){
+    // Conversion to Python objects
+    var res
+    if(obj instanceof List){
+        return obj.items.map(to_py)
+    }else if(obj instanceof Dict){
+        var res = $B.empty_dict()
+        for(var i = 0, len = obj.keys.length; i < len; i++){
+            _b_.dict.$setitem(res, obj.keys[i], to_py(obj.values[i]))
+        }
+        return res
+    }else{
+        return obj
+    }
+}
+
+function string_at(s, i){
+    var j = i + 1,
+        escaped = false,
+        len = s.length
+    while(j < len){
+        if(s[j] == '"' && ! escaped){
+          return [{type: 'str', value: s.substring(i + 1, j)}, j + 1]
+        }else if(s[j] == '\\'){
+          escaped = ! escaped
+          j++
+        }else{
+          j++
+        }
+    }
+}
+
+function to_num(num_string, nb_dots, exp){
+    // convert to correct Brython type
+    if(exp || nb_dots){
+        return new Number(num_string)
+    }else{
+        var int = parseInt(num_string)
+        if(Math.abs(int) < $B.max_int){
+            return int
+        }else{
+            if(num_string.startsWith('-')){
+                return $B.fast_long_int(num_string.substr(1), false)
+            }else{
+                return $B.fast_long_int(num_string, true)
+            }
+        }
+    }
+}
+
+function num_at(s, i){
+  var res = s[i],
+      j = i + 1,
+      nb_dots = 0,
+      exp = false,
+      len = s.length
+  while(j < len){
+      if(s[j].match(/\d/)){
+        j++
+      }else if(s[j] == '.' && nb_dots == 0){
+        nb_dots++
+        j++
+      }else if('eE'.indexOf(s[j]) > -1 && ! exp){
+        exp = ! exp
+        j++
+      }else{
+        return [{type: 'num', value: to_num(s.substring(i, j), nb_dots, exp)}, j]
+      }
+  }
+  return [{type: 'num', value: to_num(s.substring(i, j), nb_dots, exp)}, j]
+}
+
+function* tokenize(s){
+  var i = 0,
+      len = s.length,
+      value,
+      end
+  while(i < len){
+    if(s[i] == " " || s[i] == '\r' || s[i] == '\n'){
+      i++
+    }else if(s[i] == '"'){
+      [value, i] = string_at(s, i)
+      yield value
+    }else if(s[i].match(/\d/) || s[i] == '-'){
+      [value, i] = num_at(s, i)
+      yield value
+    }else if('[]{}:,'.indexOf(s[i]) > -1){
+      yield s[i]
+      i++
+    }else if(s.substr(i, 4) == 'null'){
+      yield _b_.None
+      i += 4
+    }else if(s.substr(i, 4) == 'true'){
+      yield true
+      i += 4
+    }else if(s.substr(i, 5) == 'false'){
+      yield false
+      i += 5
+    }else{
+      throw Error('unexpected: ' + s[i] + s.charCodeAt(i))
+    }
+  }
+}
+
+function Node(parent){
+    this.parent = parent
+    if(parent instanceof List){
+        this.list = parent.items
+    }else if(parent instanceof Dict){
+        this.list = parent.values
+    }else if(parent === undefined){
+        this.list = []
+    }
+}
+
+Node.prototype.transition = function(token){
+    if([true, false, _b_.None].indexOf(token) > -1){
+        this.list.push(token)
+        return this.parent
+    }else if(['str', 'num'].indexOf(token.type) > -1){
+        this.list.push(token.value)
+        return this.parent
+    }else if(token == '{'){
+        if(this.parent === undefined){
+          this.content = new Dict(this)
+          return this.content
+        }
+        return new Dict(this.parent)
+    }else if(token == '['){
+        if(this.parent === undefined){
+            this.content = new List(this)
+            return this.content
+        }
+        return new List(this.parent)
+    }else{
+        throw Error('unexpected item:' + token)
+    }
+}
+
+function Dict(parent){
+    this.parent = parent
+    this.keys = []
+    this.values = []
+    this.expect = 'key'
+    if(parent instanceof List){
+        parent.items.push(this)
+    }else if(parent instanceof Dict){
+        parent.values.push(this)
+    }
+}
+
+Dict.prototype.transition = function(token){
+    if(this.expect == 'key'){
+        if(token.type == 'str'){
+            this.keys.push(token.value)
+            this.expect = ':'
+            return this
+        }else{
+            throw Error('expected str')
+        }
+    }else if(this.expect == ':'){
+        if(token == ':'){
+          this.expect = '}'
+          return new Node(this)
+        }else{
+          throw Error('expected :')
+        }
+    }else if(this.expect == '}'){
+        if(token == '}'){
+            return this.parent
+        }else if(token == ','){
+            this.expect = 'key'
+            return this
+        }
+        throw Error('expected }')
+    }
+}
+
+function List(parent){
+    if(parent === undefined){
+      console.log('list, parent undefined')
+    }
+    if(parent instanceof List){
+        parent.items.push(this)
+    }
+    this.parent = parent
+    this.items = []
+    this.expect = 'item'
+}
+
+List.prototype.transition = function(token){
+    if(this.expect == 'item'){
+        this.expect = ','
+        if([true, false].indexOf(token) > -1){
+            this.items.push(token)
+            return this
+        }else if(token.type == 'num' || token.type == 'str'){
+            this.items.push(token.value)
+            return this
+        }else if(token == '{'){
+            return new Dict(this)
+        }else if(token == '['){
+            return new List(this)
+        }else if(token == ']'){
+            if(this.items.length == 0){
+                return this.parent
+            }
+            throw Error('unexpected ]')
+        }else{
+            console.log('token', token)
+            throw Error('unexpected item:' + token)
+        }
+
+    }else if(this.expect == ','){
+        this.expect = 'item'
+        if(token == ','){
+          return this
+        }else if(token == ']'){
+          if(this.parent instanceof Dict){
+              this.parent.values.push(this)
+          }
+          return this.parent
+        }else{
+          throw Error('expected :')
+        }
+    }
+}
+
+function parse(s){
+  var res,
+      state,
+      node = new Node(),
+      root = node
+  for(var item of tokenize(s)){
+      node = node.transition(item)
+  }
+  return root
+}
+
 return {
+    dscanstring: scanstring,
     dumps: function(){
         return _b_.str.$factory(to_json.apply(null, arguments))
     },
