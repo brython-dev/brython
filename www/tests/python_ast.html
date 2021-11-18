@@ -83,7 +83,6 @@ zone2 = document["zone2"]
 def show_cpython(req):
   zone2.text = req.text.replace('\r\n', '\n').rstrip()
   print(zone2.text == zone.text)
-  print(len(zone.text),len(zone2.text))
   ls1, ls2 = 0, 0
   for i, (c1, c2) in enumerate(zip(zone.text, zone2.text)):
     if c1 == '\n':

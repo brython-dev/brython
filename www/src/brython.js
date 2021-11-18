@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-18 15:38:08.253423"
-__BRYTHON__.timestamp=1637246288221
+__BRYTHON__.compiled_date="2021-11-18 18:23:12.429030"
+__BRYTHON__.timestamp=1637256192429
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1227,7 +1227,7 @@ var target=ast_or_obj(this.tree[0]),value=ast_or_obj(this.tree[1])
 target.ctx=new ast.Store()
 value.ctx=new ast.Load()
 var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_class=ast_type_class[1]
-return new ast.AugAssign(target,ast_class,value)}
+return new ast.AugAssign(target,new ast_class(),value)}
 $AugmentedAssignCtx.prototype.toString=function(){return '(augm assign) '+this.tree}
 $AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
@@ -1889,7 +1889,7 @@ C.tree.push(this)}
 $ConditionCtx.prototype.ast=function(){
 var types={'if':'If','while':'While','elif':'If'}
 var res=new ast[types[this.token]](ast_or_obj(this.tree[0]))
-res.orelse=this.orelse ?[ast_or_obj(this.orelse)]:[]
+if(this.orelse){if(this.orelse.token=='elif'){res.orelse=[ast_or_obj(this.orelse)]}else{res.orelse=ast_or_obj(this.orelse)}}else{res.orelse=[]}
 res.body=ast_body(this)
 return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
@@ -2626,7 +2626,7 @@ this.expect='id'
 this.scope=$get_scope(this)}
 $ExceptCtx.prototype.ast=function(){
 return new ast.ExceptHandler(
-ast_or_obj(this.tree[0]),this.has_alias ? this.tree[0].alias :undefined,ast_body(this.parent)
+this.tree.length==1 ? ast_or_obj(this.tree[0]):undefined,this.has_alias ? this.tree[0].alias :undefined,ast_body(this.parent)
 )}
 $ExceptCtx.prototype.toString=function(){return '(except) '}
 $ExceptCtx.prototype.transition=function(token,value){var C=this

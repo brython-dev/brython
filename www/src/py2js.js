@@ -1865,7 +1865,7 @@ $AugmentedAssignCtx.prototype.ast = function(){
         ast_type_class = op2ast_class[op],
         ast_class = ast_type_class[1]
 
-    return new ast.AugAssign(target, ast_class, value)
+    return new ast.AugAssign(target, new ast_class(), value)
 }
 
 $AugmentedAssignCtx.prototype.toString = function(){
@@ -3167,7 +3167,15 @@ $ConditionCtx.prototype.ast = function(){
     // If(expr test, stmt* body, stmt* orelse)
     var types = {'if': 'If', 'while': 'While', 'elif': 'If'}
     var res = new ast[types[this.token]](ast_or_obj(this.tree[0]))
-    res.orelse = this.orelse ? [ast_or_obj(this.orelse)] : []
+    if(this.orelse){
+        if(this.orelse.token == 'elif'){
+            res.orelse = [ast_or_obj(this.orelse)]
+        }else{
+            res.orelse = ast_or_obj(this.orelse)
+        }
+    }else{
+        res.orelse = []
+    }
     res.body = ast_body(this)
     return res
 }
