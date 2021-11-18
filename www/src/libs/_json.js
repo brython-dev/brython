@@ -198,7 +198,6 @@ function to_py(obj, kw){
     }else if(obj.type == 'str'){
         return obj.value
     }else if(obj.type == 'num'){
-        console.log('num type', obj)
         if(obj.value.search(/[.eE]/) > -1){
             // float
             if(kw.parse_float !== _b_.None){
@@ -223,17 +222,13 @@ function to_py(obj, kw){
         }
     }else{
         if(obj instanceof Number && kw.parse_float !== _b_.None){
-            console.log('parse float', obj, kw.parse_float)
-            var res = $B.$call(kw.parse_float)(obj)
-            console.log('rs', res)
-            return res
+            return $B.$call(kw.parse_float)(obj)
         }else if(kw.parse_int !== _b_.None &&
                 (typeof obj == 'number' || obj.__class__ === $B.long_int)){
             return $B.$call(kw.parse_int)(obj)
         }else if(kw.parse_constant !== _b_.None && ! isFinite(obj)){
             return kw.parse_constant(obj)
         }
-        console.log('not converted', obj)
         return obj
     }
 }
