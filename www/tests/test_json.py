@@ -34,4 +34,15 @@ assert json.loads(s) == {"x": {"y": 1}}
 
 assert json.loads("null") == None
 
+# issue 1824
+s = '{"status":200,"message":"ok","data":{"login":true,"user_name":"tasuren#5161","id":634763612535390209,"language":"ja","icon":"https://cdn.discordapp.com/avatars/634763612535390209\/b7ac245fe341cc87873c23e911af8cbd.png?size=1024"}}'
+
+d = json.loads(s)
+assert d['data']['id'] == 634763612535390209
+
+
+d = {'command': 'settest setting_test_channel', 'kwargs': {}, 'guild_id': 771732762503544801, 'channel_id': '773488498518786077', 'user_id': 634763612535390200, 'category': 'guild'}
+
+assert json.dumps(d) == '{"command": "settest setting_test_channel", "kwargs": {}, "guild_id": 771732762503544801, "channel_id": "773488498518786077", "user_id": 634763612535390200, "category": "guild"}'
+
 print('all tests ok..')

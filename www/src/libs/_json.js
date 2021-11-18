@@ -110,6 +110,8 @@ function to_json(obj, level){
         return first + res.join(sep) + last
     }else if(obj instanceof Number){
         return obj.valueOf()
+    }else if(obj.__class__ === $B.long_int){
+        return (obj.pos ? '' : '-') + obj.value
     }else if(obj === _b_.None){
         return "null"
     }else if(_b_.isinstance(obj, _b_.dict)){
