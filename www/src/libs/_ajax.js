@@ -33,7 +33,7 @@ function _read(req){
     if(xhr.responseType == "json"){
         return $B.structuredclone2pyobj(xhr.response)
     }
-    if(typeof xhr.response == "string"){
+    if(req.charset_user_defined){
         // on blocking mode, xhr.response is a string
         var bytes = []
         for(var i = 0, len = xhr.response.length; i < len; i++){
@@ -44,6 +44,11 @@ function _read(req){
                 bytes.push(cp)
             }
         }
+    }else if(typeof xhr.response == "string"){
+        if(req.mode == 'binary'){
+            return _b_.str.encode(xhr.response, req.encoding || 'utf-8')
+        }
+        return xhr.response
     }else{
         // else it's an ArrayBuffer
         var buf = new Uint8Array(xhr.response),
@@ -234,6 +239,7 @@ var ajax = {
             // override Mime type so that bytes are not processed
             // (unless the Mime type has been explicitely set)
             self.js.overrideMimeType('text/plain;charset=x-user-defined')
+            self.charset_user_defined = true
         }
         var res = ''
         if(! params){
@@ -370,6 +376,7 @@ function _request_without_body(method){
         }
     }else{
         self.js.overrideMimeType('text/plain;charset=x-user-defined')
+        self.charset_user_defined = true
     }
     for(var key in items.headers){
         var header = items.headers[key]
