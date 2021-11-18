@@ -1338,13 +1338,22 @@ $AssignCtx.prototype.ast = function(){
     var value = ast_or_obj(this.tree[1]),
         targets = [],
         target = this.tree[0]
-    while(target.type == 'assign'){
-        targets.splice(0, 0, ast_or_obj(target.tree[1]))
-        target = target.tree[0]
-    }
-    targets.splice(0, 0, ast_or_obj(target.tree[0]))
-    for(var tg of targets){
-        tg.ctx = new ast.Store()
+    if(target.type == 'list_or_tuple'){
+        target = ast_or_obj(target)
+        for(var elt of target.elts){
+            elt.ctx = new ast.Store()
+        }
+        target.ctx = new ast.Store()
+        targets = [target]
+    }else{
+        while(target.type == 'assign'){
+            targets.splice(0, 0, ast_or_obj(target.tree[1]))
+            target = target.tree[0]
+        }
+        targets.splice(0, 0, ast_or_obj(target.tree[0]))
+        for(var tg of targets){
+            tg.ctx = new ast.Store()
+        }
     }
     value.ctx = new ast.Load()
     if(target.annotation){
@@ -2821,7 +2830,7 @@ $ClassCtx.prototype.ast = function(){
                 keywords.push(new ast.keyword(arg.tree[0].tree[0].value,
                     ast_or_obj(arg.tree[0].tree[1])))
             }else{
-                bases.push(new ast.arg(ast_or_obj(arg.tree[0])))
+                bases.push(ast_or_obj(arg.tree[0]))
             }
         }
     }
@@ -3158,7 +3167,7 @@ $ConditionCtx.prototype.ast = function(){
     // If(expr test, stmt* body, stmt* orelse)
     var types = {'if': 'If', 'while': 'While', 'elif': 'If'}
     var res = new ast[types[this.token]](ast_or_obj(this.tree[0]))
-    res.orelse = this.orelse ? ast_or_obj(this.orelse) : []
+    res.orelse = this.orelse ? [ast_or_obj(this.orelse)] : []
     res.body = ast_body(this)
     return res
 }
@@ -4782,7 +4791,7 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
 $ExceptCtx.prototype.ast = function(){
     // ast.ExceptHandler(type, name, body)
     return new ast.ExceptHandler(
-        ast_or_obj(this.tree[0]),
+        this.tree.length == 1 ? ast_or_obj(this.tree[0]) : undefined,
         this.has_alias ? this.tree[0].alias : undefined,
         ast_body(this.parent)
     )
@@ -8586,6 +8595,9 @@ $OpCtx.prototype.ast = function(){
     }
     if(op_type === ast.UnaryOp){
         return new op_type(new ast_class(), ast_or_obj(this.tree[1]))
+    }
+    if(op_type === ast.BoolOp){
+        return new op_type(new ast_class(), this.tree.map(ast_or_obj))
     }
     return new op_type(
         ast_or_obj(this.tree[0]), new ast_class(), ast_or_obj(this.tree[1]))

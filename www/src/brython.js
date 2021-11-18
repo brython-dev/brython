@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-18 14:49:55.606789"
-__BRYTHON__.timestamp=1637243395605
+__BRYTHON__.compiled_date="2021-11-18 15:38:08.253423"
+__BRYTHON__.timestamp=1637246288221
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -956,10 +956,13 @@ $bind(assigned.value,module,this)}}else if(assigned.type=="ellipsis"){$_SyntaxEr
 if(['None','True','False','__debug__'].indexOf(id)>-1){$_SyntaxError(C,['cannot assign to '+id])}}
 if(assigned.parent.in_tuple===undefined){$_SyntaxError(C,["starred assignment target must be in a list or tuple"])}}}}
 $AssignCtx.prototype.ast=function(){var value=ast_or_obj(this.tree[1]),targets=[],target=this.tree[0]
-while(target.type=='assign'){targets.splice(0,0,ast_or_obj(target.tree[1]))
+if(target.type=='list_or_tuple'){target=ast_or_obj(target)
+for(var elt of target.elts){elt.ctx=new ast.Store()}
+target.ctx=new ast.Store()
+targets=[target]}else{while(target.type=='assign'){targets.splice(0,0,ast_or_obj(target.tree[1]))
 target=target.tree[0]}
 targets.splice(0,0,ast_or_obj(target.tree[0]))
-for(var tg of targets){tg.ctx=new ast.Store()}
+for(var tg of targets){tg.ctx=new ast.Store()}}
 value.ctx=new ast.Load()
 if(target.annotation){var res=new ast.AnnAssign(
 ast_or_obj(target.tree[0]),ast_or_obj(target.annotation.tree[0]),value,1)
@@ -1715,7 +1718,7 @@ this.parent.node.bound={}
 this.parent.node.binding={__annotations__:true}}
 $ClassCtx.prototype.ast=function(){
 var decorators=get_decorators(this.parent.node),bases=[],keywords=[]
-if(this.args){for(var arg of this.args.tree){if(arg.tree[0].type=='kwarg'){keywords.push(new ast.keyword(arg.tree[0].tree[0].value,ast_or_obj(arg.tree[0].tree[1])))}else{bases.push(new ast.arg(ast_or_obj(arg.tree[0])))}}}
+if(this.args){for(var arg of this.args.tree){if(arg.tree[0].type=='kwarg'){keywords.push(new ast.keyword(arg.tree[0].tree[0].value,ast_or_obj(arg.tree[0].tree[1])))}else{bases.push(ast_or_obj(arg.tree[0]))}}}
 return new ast.ClassDef(this.name,bases,keywords,ast_body(this.parent),decorators)}
 $ClassCtx.prototype.toString=function(){return '(class) '+this.name+' '+this.tree+' args '+this.args}
 $ClassCtx.prototype.transition=function(token,value){var C=this
@@ -1886,7 +1889,7 @@ C.tree.push(this)}
 $ConditionCtx.prototype.ast=function(){
 var types={'if':'If','while':'While','elif':'If'}
 var res=new ast[types[this.token]](ast_or_obj(this.tree[0]))
-res.orelse=this.orelse ? ast_or_obj(this.orelse):[]
+res.orelse=this.orelse ?[ast_or_obj(this.orelse)]:[]
 res.body=ast_body(this)
 return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
@@ -4390,6 +4393,7 @@ if(op_type===ast.Compare){var left=ast_or_obj(this.tree[0]),ops=[new ast_class()
 if(this.ops){for(var op of this.ops.slice(1)){ops.push(new op2ast_class[op][1]())}
 return new ast.Compare(left,ops,this.tree.slice(1).map(ast_or_obj))}else{return new ast.Compare(left,ops,[ast_or_obj(this.tree[1])])}}
 if(op_type===ast.UnaryOp){return new op_type(new ast_class(),ast_or_obj(this.tree[1]))}
+if(op_type===ast.BoolOp){return new op_type(new ast_class(),this.tree.map(ast_or_obj))}
 return new op_type(
 ast_or_obj(this.tree[0]),new ast_class(),ast_or_obj(this.tree[1]))}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
