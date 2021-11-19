@@ -354,7 +354,8 @@ function check_assignment(context, kwargs){
         augmented = kwargs.augmented === undefined ? false : kwargs.augmented
     }
     var ctx = context,
-        forbidden = ['assert', 'import', 'raise', 'return']
+        forbidden = ['assert', 'import', 'raise', 'return', 'decorator',
+            'comprehension', 'await']
     if(action != 'delete'){
         // "del x = ..." is invalid
         forbidden.push('del')
@@ -404,14 +405,12 @@ function check_assignment(context, kwargs){
             for(var item of ctx.tree){
                 check_assignment(item, {action, once: true})
             }
-        }else if(ctx.type == "decorator"){
-            report('decorator')
-        }else if(ctx.type == "comprehension"){
-            report('comprehension')
-        }else if(ctx.type == "ternary"){
+        }else if(ctx.type == 'ternary'){
             report('conditional expression')
         }else if(ctx.type == 'op'){
             report('operator')
+        }else if(ctx.type == 'yield'){
+            report('yield expression')
         }else if(ctx.comprehension){
             break
         }
@@ -5206,6 +5205,8 @@ $ExprCtx.prototype.transition = function(token, value){
              }else if(context.parent.type == "not"){
                   // issue 1496
                   $_SyntaxError(context, ["cannot assign to operator"])
+             }else if(context.parent.type == "with"){
+                  $_SyntaxError(context, ["expected :"])
              }else if(context.parent.type == "list_or_tuple"){
                  // issue 973
                  for(var i = 0; i < context.parent.tree.length; i++){
@@ -5216,8 +5217,7 @@ $ExprCtx.prototype.transition = function(token, value){
                  }
              }else if(context.parent.type == "expr" &&
                      context.parent.name == "iterator"){
-                 $_SyntaxError(context, 'token ' + token + ' after '
-                     + context)
+                 $_SyntaxError(context, ['expected :'])
              }else if(context.parent.type == "lambda"){
                  if(context.parent.parent.parent.type != "node"){
                      $_SyntaxError(context, ['expression cannot contain' +
@@ -7858,13 +7858,37 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                     }else{
                         break
                     }
+                    $_SyntaxError(context, 'unexpected "if" inside list')
                 case ',':
                     $_SyntaxError(context,
                         'unexpected comma inside list')
-                default:
+                case 'str':
+                case 'JoinedStr':
+                case 'int':
+                case 'float':
+                case 'imaginary':
+                case 'ellipsis':
+                case 'lambda':
+                case 'yield':
+                case 'id':
+                case '(':
+                case '[':
+                case '{':
+                case ':':
+                case 'await':
+                case 'not':
                     context.expect = ','
                     var expr = new $AbstractExprCtx(context, false)
                     return $transition(expr, token, value)
+                case 'op':
+                    if('+-~*'.indexOf(value) > -1 || value == '**'){
+                        context.expect = ','
+                        var expr = new $AbstractExprCtx(context, false)
+                        return $transition(expr, token, value)
+                    }
+                    $_SyntaxError(context, 'unexpected operator: ' + value)
+                default:
+                    $_SyntaxError(context, 'token ' + token)
             }
 
         }else{
@@ -8169,7 +8193,11 @@ $NodeCtx.prototype.transition = function(token, value){
         case 'del':
             return new $AbstractExprCtx(new $DelCtx(context),true)
         case 'elif':
-            var previous = $previous(context)
+            try{
+                var previous = $previous(context)
+            }catch(err){
+                $_SyntaxError(context, "'elif' does not follow 'if'")
+            }
             if(['condition'].indexOf(previous.type) == -1 ||
                     previous.token == 'while'){
                 $_SyntaxError(context, 'elif after ' + previous.type)

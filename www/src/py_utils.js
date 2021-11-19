@@ -1664,7 +1664,7 @@ $B.rich_comp = function(op, x, y){
             }
         }
     }
-
+    
     res = x_class_op(x, y)
     if(res !== _b_.NotImplemented){return res}
     var y_class_op = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),

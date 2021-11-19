@@ -2979,6 +2979,12 @@ assert str(my_repr) == 'class'
 assert str(MyRepr.__repr__(my_repr)) == 'class'
 assert str(MyRepr().__repr__()) == 'obj'
 
+# issue 1826
+assertRaises(SyntaxError, exec, """x, if y > 4:
+    pass""")
+assertRaises(SyntaxError, exec, """async def f():
+    await x = 1""")
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
