@@ -1883,7 +1883,9 @@ $AugmentedAssignCtx.prototype.transition = function(token, value){
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
-$AugmentedAssignCtx.prototype.transform = function(node, rank){
+$AugmentedAssignCtx.prototype._transform = function(node, rank){
+    console.log('augm assign', this)
+    alert()
     var context = this.context,
         op = this.op,
         func = '__' + $operators[op] + '__',
@@ -2162,6 +2164,29 @@ $AugmentedAssignCtx.prototype.transform = function(node, rank){
 }
 
 $AugmentedAssignCtx.prototype.to_js = function(){
+    var target = this.tree[0].tree[0]
+    if(target.type == 'id'){
+        var target_scope = find_scope(target.value, $get_scope(this)),
+            scope_ref
+        if(target_scope === undefined){
+            scope_ref = '$locals'
+        }else{
+            scope_ref = '$locals_' + target_scope.id.replace(/\./g, '_')
+        }
+        target.augm_assign = true
+        var left_target = target.to_js()
+        return `${scope_ref}['${target.value}'] = ` +
+            `$B.augm_assign(${target.to_js()}, '${this.op}', ` +
+            this.tree[1].to_js() + ')'
+    }else if(target.type == 'sub'){
+        return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), ` +
+            `($locals.$key = ${target.tree[0].to_js()}), $B.augm_assign($B.$getitem(` +
+            `$locals.$tg, $locals.$key), '${this.op}', ${this.tree[1].to_js()}))`
+    }else if(target.type == 'attribute'){
+        return `$B.$setattr(($locals.$tg = ${target.value.to_js()}), ` +
+            `'${target.name}', $B.augm_assign($B.$getattr(` +
+            `$locals.$tg, '${target.name}'), '${this.op}', ${this.tree[1].to_js()}))`
+    }
     return ''
 }
 
@@ -6749,7 +6774,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = this.value
 
-    var $test = false // val == "awx" //&& innermost.type == "listcomp"
+    var $test = false // val == "ixq" //&& innermost.type == "listcomp"
     if($test){
         console.log("ENTER IdCtx.py2js line", $get_node(this).line_num,
             "\nthis", this, '\nscope', scope)
@@ -6803,10 +6828,10 @@ $IdCtx.prototype.to_js = function(arg){
         return '$B.$search("' + val + '")'
     }
 
-    if(this.unbound && !this.nonlocal){
+    if(this.unbound && ! this.nonlocal){
         if(scope.ntype == 'def' || scope.ntype == 'generator' ||
                 scope.comprehension){
-            return '$B.$local_search("' + val + '")'
+            return `$B.$local_search('${val}')`
         }else{
             return '$B.$search("' + val + '")'
         }
@@ -7819,7 +7844,8 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                       context.close()
                       return context.parent
                     }
-                    if(token == 'eol' && context.implicit === true){
+                    if(token == 'eol' &&
+                            context.implicit === true){
                       context.close()
                       return $transition(context.parent, token)
                     }
@@ -7874,9 +7900,9 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                 case '(':
                 case '[':
                 case '{':
-                case ':':
                 case 'await':
                 case 'not':
+                case ':':
                     context.expect = ','
                     var expr = new $AbstractExprCtx(context, false)
                     return $transition(expr, token, value)
@@ -11936,7 +11962,7 @@ function find_scope(name, scope){
     if(scope.binding[name]){
         return scope
     }else if(scope.globals && scope.globals.has(name)){
-        return $get_module(scope)
+        return $get_module(scope.context)
     }else if(scope.nonlocals && scope.nonlocals.has(name)){
         // check that one of the upper scopes has name
         var parent_block = scope.parent_block

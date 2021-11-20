@@ -894,6 +894,38 @@ for(var i  =0, len = augm_ops.length; i < len; i++){
     eval("$B.augm_item_" + augm_ops[i][1] + "=" + augm_code)
 }
 
+$B.augm_assign = function(left, op, right){
+    var op1 = op.substr(0, op.length - 1)
+    if(typeof left == 'number' && typeof right == 'number' 
+            && op != '//='){ // operator "//" not supported by Javascript
+        var res = eval(left + ' ' + op1 + ' ' + right)
+        if(res <= $B.max_int && res >= $B.min_int){
+            return res
+        }else{
+            res = eval(BigInt(left) + op1 + BigInt(right))
+            var pos = res > 0n,
+                res = res + ''
+            return pos ? $B.fast_long_int(res, true) :
+                         $B.fast_long_int(res.substr(1), false) // remove "-"
+        }
+    }else if(typeof left == 'string' && typeof right == 'string' &&
+            op == '+='){
+        return eval('`' + left + '` + `' + right + '`')
+    }else{
+        var method = $B.op2method.augmented_assigns[op],
+            augm_func = $B.$getattr(left, '__' + method + '__', null)
+        if(augm_func !== null){
+            return $B.$call(augm_func)(right)
+        }else{
+            var method1 = $B.op2method.operations[op1]
+            if(method1 === undefined){
+                method1 = $B.op2method.binary[op1]
+            }
+            return $B.rich_op(method1, left, right)
+        }
+    }
+}
+
 $B.extend = function(fname, arg){
     // Called if a function call has **kw arguments
     // arg is a dictionary with the keyword arguments entered with the
@@ -1664,7 +1696,7 @@ $B.rich_comp = function(op, x, y){
             }
         }
     }
-    
+
     res = x_class_op(x, y)
     if(res !== _b_.NotImplemented){return res}
     var y_class_op = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),

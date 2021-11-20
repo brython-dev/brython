@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-19 20:34:16.164560"
-__BRYTHON__.timestamp=1637350456163
+__BRYTHON__.compiled_date="2021-11-20 11:35:58.888921"
+__BRYTHON__.timestamp=1637404558887
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1234,7 +1234,9 @@ if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+to
 C)}
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$AugmentedAssignCtx.prototype.transform=function(node,rank){var C=this.C,op=this.op,func='__'+$operators[op]+'__',offset=0,parent=node.parent,line_num=node.line_num,lnum_set=false
+$AugmentedAssignCtx.prototype._transform=function(node,rank){console.log('augm assign',this)
+alert()
+var C=this.C,op=this.op,func='__'+$operators[op]+'__',offset=0,parent=node.parent,line_num=node.line_num,lnum_set=false
 parent.children.splice(rank,1)
 var left_is_id=(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='id')
@@ -1380,7 +1382,19 @@ expr2.parent.tree.pop()
 expr2.parent.tree.push(assign2)
 if(left_is_id && !was_bound && !this.scope.blurred){this.scope.binding[left_id]=undefined}
 return offset}
-$AugmentedAssignCtx.prototype.to_js=function(){return ''}
+$AugmentedAssignCtx.prototype.to_js=function(){var target=this.tree[0].tree[0]
+if(target.type=='id'){var target_scope=find_scope(target.value,$get_scope(this)),scope_ref
+if(target_scope===undefined){scope_ref='$locals'}else{scope_ref='$locals_'+target_scope.id.replace(/\./g,'_')}
+target.augm_assign=true
+var left_target=target.to_js()
+return `${scope_ref}['${target.value}'] = `+
+`$B.augm_assign(${target.to_js()}, '${this.op}', `+
+this.tree[1].to_js()+')'}else if(target.type=='sub'){return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), `+
+`($locals.$key = ${target.tree[0].to_js()}), $B.augm_assign($B.$getitem(`+
+`$locals.$tg, $locals.$key), '${this.op}', ${this.tree[1].to_js()}))`}else if(target.type=='attribute'){return `$B.$setattr(($locals.$tg = ${target.value.to_js()}), `+
+`'${target.name}', $B.augm_assign($B.$getattr(`+
+`$locals.$tg, '${target.name}'), '${this.op}', ${this.tree[1].to_js()}))`}
+return ''}
 var $AwaitCtx=$B.parser.$AwaitCtx=function(C){
 this.type='await'
 this.parent=C
@@ -3560,8 +3574,8 @@ if((!this.bound)&& scope.C
 && scope.ntype=='class' &&
 scope.C.tree[0].name==val){
 return '$B.$search("'+val+'")'}
-if(this.unbound && !this.nonlocal){if(scope.ntype=='def' ||scope.ntype=='generator' ||
-scope.comprehension){return '$B.$local_search("'+val+'")'}else{return '$B.$search("'+val+'")'}}
+if(this.unbound && ! this.nonlocal){if(scope.ntype=='def' ||scope.ntype=='generator' ||
+scope.comprehension){return `$B.$local_search('${val}')`}else{return '$B.$search("'+val+'")'}}
 if($test){console.log("innermost",innermost)}
 var search_ids=['"'+innermost.id+'"']
 var gs=innermost
@@ -3978,7 +3992,8 @@ new GeneratorExpCtx(C)))}}
 return $transition(C.parent,token,value)}else if(C.expect=='id'){switch(C.real){case 'tuple':
 if(token==')'){C.close()
 return C.parent}
-if(token=='eol' && C.implicit===true){C.close()
+if(token=='eol' &&
+C.implicit===true){C.close()
 return $transition(C.parent,token)}
 break
 case 'list':
@@ -4016,9 +4031,9 @@ case 'id':
 case '(':
 case '[':
 case '{':
-case ':':
 case 'await':
 case 'not':
+case ':':
 C.expect=','
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
@@ -5960,7 +5975,7 @@ var i=0
 while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}
 return offset}else{return 1}}
 function find_scope(name,scope){
-if(scope.binding[name]){return scope}else if(scope.globals && scope.globals.has(name)){return $get_module(scope)}else if(scope.nonlocals && scope.nonlocals.has(name)){
+if(scope.binding[name]){return scope}else if(scope.globals && scope.globals.has(name)){return $get_module(scope.C)}else if(scope.nonlocals && scope.nonlocals.has(name)){
 var parent_block=scope.parent_block
 while(parent_block){if(parent_block.binding[name]){return parent_block}
 parent_block=parent_block.parent_block}}}
@@ -7624,6 +7639,16 @@ var augm_ops=[["-=","sub"],["*=","mul"]]
 for(var i=0,len=augm_ops.length;i < len;i++){var augm_code=augm_item_src.replace(/add/g,augm_ops[i][1])
 augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
 eval("$B.augm_item_"+augm_ops[i][1]+"="+augm_code)}
+$B.augm_assign=function(left,op,right){var op1=op.substr(0,op.length-1)
+if(typeof left=='number' && typeof right=='number'){var res=eval(left+' '+op1+' '+right)
+if(res <=$B.max_int && res >=$B.min_int){return res}else{res=eval(BigInt(left)+op1+BigInt(right))
+var pos=res > 0n,res=res+''
+return pos ? $B.fast_long_int(res,true):
+$B.fast_long_int(res.substr(1),false)}}else if(typeof left=='string' && typeof right=='string' &&
+op=='+='){return eval('`'+left+'` + `'+right+'`')}else{var method=$B.op2method.augmented_assigns[op],augm_func=$B.$getattr(left,'__'+method+'__',null)
+if(augm_func !==null){return $B.$call(augm_func)(right)}else{var method1=$B.op2method.operations[op1]
+if(method1===undefined){method1=$B.op2method.binary[op1]}
+return $B.rich_op(method1,left,right)}}}
 $B.extend=function(fname,arg){
 for(var i=2;i < arguments.length;i++){var mapping=arguments[i]
 var it=_b_.iter(mapping),getter=$B.$getattr(mapping,"__getitem__")
@@ -7895,8 +7920,7 @@ if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"
 "' and '"+$B.class_name(y)+"'")}}
 var x_class_op=$B.$call($B.$getattr(x.__class__ ||$B.get_class(x),op)),rev_op=reversed_op[op]||op
 if(x.__class__ && y.__class__){
-if(y.__class__.__mro__.indexOf(x.__class__)>-1){console.log(1662,op)
-var rev_func=$B.$getattr(y,rev_op)
+if(y.__class__.__mro__.indexOf(x.__class__)>-1){var rev_func=$B.$getattr(y,rev_op)
 res=$B.$call($B.$getattr(y,rev_op))(x)
 if(res !==_b_.NotImplemented){return res}}}
 res=x_class_op(x,y)
