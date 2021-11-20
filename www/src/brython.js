@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-20 11:35:58.888921"
-__BRYTHON__.timestamp=1637404558887
+__BRYTHON__.compiled_date="2021-11-20 15:02:51.680418"
+__BRYTHON__.timestamp=1637416971680
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1234,162 +1234,27 @@ if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+to
 C)}
 return $transition(C.parent,'eol')}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$AugmentedAssignCtx.prototype._transform=function(node,rank){console.log('augm assign',this)
-alert()
-var C=this.C,op=this.op,func='__'+$operators[op]+'__',offset=0,parent=node.parent,line_num=node.line_num,lnum_set=false
-parent.children.splice(rank,1)
-var left_is_id=(this.tree[0].type=='expr' &&
-this.tree[0].tree[0].type=='id')
-if(left_is_id){var left_bound_to_int=
-this.tree[0].tree[0].bindingType(this.scope)=="int"
-this.tree[0].tree[0].augm_assign=true
-if($B.debug > 0){var check_node=$NodeJS('if('+this.tree[0].to_js()+
-" === undefined){\nthrow $B.name_error('"+
-this.tree[0].tree[0].value+"')}")
-node.parent.insert(rank,check_node)
-offset++}
-var left_id=this.tree[0].tree[0].value,was_bound=this.scope.binding[left_id]!==undefined,left_id_unbound=this.tree[0].tree[0].unbound}
-var right_is_int=(this.tree[1].type=='expr' &&
-this.tree[1].tree[0].type=='int')
-if(right_is_int){var value=this.tree[1].tree[0].value,to_int=parseInt(value[1],value[0])
-right_is_int=(to_int > $B.min_int)&&(to_int < $B.max_int)}
-var right=right_is_int ?
-'('+this.tree[1].tree[0].to_js()+')' :
-'$temp'
-if(!right_is_int){
-var new_node=new $Node()
-new_node.line_num=line_num
-lnum_set=true
-new $NodeJSCtx(new_node,'var $temp,$left;')
-parent.insert(rank,new_node)
-offset++
-var new_node=new $Node()
-new_node.id=this.scope.id
-var new_ctx=new $NodeCtx(new_node)
-var new_expr=new $ExprCtx(new_ctx,'js',false)
-var _id=new $RawJSCtx(new_expr,'$temp')
-var assign=new $AssignCtx(new_expr)
-assign.tree[1]=this.tree[1]
-_id.parent=assign
-parent.insert(rank+offset,new_node)
-offset++}
-var prefix='',in_class=false
-switch(op){case '+=':
-case '-=':
-case '*=':
-case '/=':
-if(left_is_id){var scope=this.scope,global_ns='$local_'+scope.module.replace(/\./g,'_')
-switch(scope.ntype){case 'module':
-prefix=global_ns
-break
-case 'def':
-case 'generator':
-if(scope.globals &&
-scope.globals.has(C.tree[0].value)){prefix=global_ns}else{prefix='$locals'}
-break
-case 'class':
-var new_node=new $Node()
-if(!lnum_set){new_node.line_num=line_num
-lnum_set=true}
-new $NodeJSCtx(new_node,'var $left = '+
-C.to_js())
-parent.insert(rank+offset,new_node)
-in_class=true
-offset++}}}
-var left=C.tree[0].to_js()
-if(C.tree[0].type=="id"){var binding_scope=C.tree[0].firstBindingScopeId(),left_value=C.tree[0].value
-if(binding_scope){left="$locals_"+binding_scope.replace(/\./g,'_')+
-'["'+left_value+'"]'}else{left='$locals["'+left_value+'"]'}}
-if(left_bound_to_int && right_is_int &&
-op !="//="){
-parent.insert(rank+offset,$NodeJS(left+" "+op+" "+right))
-return offset++}
-prefix=prefix && !C.tree[0].unknown_binding && !left_id_unbound
-var op1=op.charAt(0)
-if(prefix){parent.insert(rank+offset,$NodeJS('$left = '+left))
-offset++
-var left1=in_class ? '$left' :left
-var new_node=new $Node()
-if(!lnum_set){new_node.line_num=line_num
-lnum_set=true}
-js=right_is_int ? 'if(' :'if(typeof $temp.valueOf() == "number" && '
-js+='$left.constructor === Number'
-js+=' && Number.isSafeInteger($left'+op1+right+')){\n'+
-(right_is_int ? '(' :'(typeof $temp == "number" && ')+
-'typeof $left == "number") ? '
-js+=left+op+right
-js+=' : '+left+' = new Number($left'+op1+
-(right_is_int ? right :right+'.valueOf()')+')}'
-new $NodeJSCtx(new_node,js)
-parent.insert(rank+offset,new_node)
-offset++
-if(op=='+='){
-var js='else if(typeof $left == "string" && typeof $temp == '+
-'"string"){\n'+left+' = $left + $temp}'
-parent.insert(rank+offset,$NodeJS(js))
-offset++}}
-var aaops={'+=':'add','-=':'sub','*=':'mul'}
-if(C.tree[0].type=='sub' &&
-('+='==op ||'-='==op ||'*='==op)&&
-C.tree[0].tree.length==1){var js1='$B.augm_item_'+aaops[op]+'('+
-C.tree[0].value.to_js()+','+
-C.tree[0].tree[0].to_js()+','+right+');_b_.None;'
-var new_node=new $Node()
-if(!lnum_set){new_node.line_num=line_num;lnum_set=true}
-new $NodeJSCtx(new_node,js1)
-parent.insert(rank+offset,new_node)
-offset++
-return}
-if(prefix){var else_node=$NodeJS('else')}else{var else_node=$NodeJS('if(true)')}
-parent.insert(rank+offset,else_node)
-offset++
-var iadd_node=$NodeJS('var iadd = $B.$getattr('+C.to_js()+
-',"'+func+'", null)')
-if(!lnum_set){iadd_node.line_num=line_num
-lnum_set=true}
-else_node.add(iadd_node)
-var no_iadd_node=$NodeJS('if(iadd === null)')
-else_node.add(no_iadd_node)
-var aa1=new $Node()
-aa1.id=this.scope.id
-aa1.line_num=node.line_num
-no_iadd_node.add(aa1)
-var ctx1=new $NodeCtx(aa1)
-var expr1=new $ExprCtx(ctx1,'clone',false)
-if(left_id_unbound){new $RawJSCtx(expr1,left)}else{expr1.tree=C.tree
-for(var elt of expr1.tree){elt.parent=expr1}}
-var assign1=new $AssignCtx(expr1)
-var new_op=new $OpCtx(expr1,op.substr(0,op.length-1))
-new_op.parent=assign1
-new $RawJSCtx(new_op,right)
-assign1.tree.push(new_op)
-expr1.parent.tree.pop()
-expr1.parent.tree.push(assign1)
-var yes_iadd_node=$NodeJS("else")
-else_node.add(yes_iadd_node)
-var aa2=new $Node()
-aa2.line_num=node.line_num
-yes_iadd_node.add(aa2)
-var ctx2=new $NodeCtx(aa2)
-var expr2=new $ExprCtx(ctx2,'clone',false)
-if(left_id_unbound){var js=left
-if(! binding_scope){js='$B.$local_search("'+left_value+'");'+left}
-new $RawJSCtx(expr2,js)}else{expr2.tree=C.tree
-for(var elt of expr2.tree){elt.parent=expr2}}
-var assign2=new $AssignCtx(expr2)
-assign2.tree.push($NodeJS('iadd('+right+')'))
-expr2.parent.tree.pop()
-expr2.parent.tree.push(assign2)
-if(left_is_id && !was_bound && !this.scope.blurred){this.scope.binding[left_id]=undefined}
-return offset}
 $AugmentedAssignCtx.prototype.to_js=function(){var target=this.tree[0].tree[0]
-if(target.type=='id'){var target_scope=find_scope(target.value,$get_scope(this)),scope_ref
+if(target.type=='id'){var left_bound_to_int=
+this.tree[0].tree[0].bindingType(this.scope)=="int"
+var target_scope=find_scope(target.value,$get_scope(this)),scope_ref
 if(target_scope===undefined){scope_ref='$locals'}else{scope_ref='$locals_'+target_scope.id.replace(/\./g,'_')}
 target.augm_assign=true
-var left_target=target.to_js()
+var right=this.tree[1].tree[0]
+if(right.type=='int'){var right_value=parseInt(right.value[1],right.value[0])
+if(right_value < $B.max_int && right_value > $B.min_int){var left_bound_to_int=
+this.tree[0].tree[0].bindingType(this.scope)=="int"
+if(left_bound_to_int && this.op !=='//='){
+var op1=this.op.substr(0,this.op.length-1),tg_js=target.to_js()
+return `${scope_ref}['${target.value}'] = `+
+`(typeof ${tg_js} == "number" && $B.is_safe_int($locals.$result = `+
+`${tg_js} ${op1} ${right.to_js()})) ? `+
+` $locals.$result : $B.augm_assign(${tg_js}, `+
+`'${this.op}', ${right.to_js()})`}}}
+var right=this.tree[1].to_js()
 return `${scope_ref}['${target.value}'] = `+
 `$B.augm_assign(${target.to_js()}, '${this.op}', `+
-this.tree[1].to_js()+')'}else if(target.type=='sub'){return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), `+
+right+')'}else if(target.type=='sub'){return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), `+
 `($locals.$key = ${target.tree[0].to_js()}), $B.augm_assign($B.$getitem(`+
 `$locals.$tg, $locals.$key), '${this.op}', ${this.tree[1].to_js()}))`}else if(target.type=='attribute'){return `$B.$setattr(($locals.$tg = ${target.value.to_js()}), `+
 `'${target.name}', $B.augm_assign($B.$getattr(`+
@@ -3547,7 +3412,7 @@ ix=i}}
 if(found){for(var j=ix+1;j < pnode.children.length;j++){child=pnode.children[j]
 if(child.children.length > 0){unknown=true
 break}else if(child===node){break}}
-return unknown ||found}
+return found ||unknown}
 if(pnode===scope){break}
 node=pnode}
 return found}
@@ -7625,27 +7490,16 @@ var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
 if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
 return di(obj,slice)}
-$B.augm_item_add=function(obj,item,incr){if(Array.isArray(obj)&& typeof item=="number" &&
-obj[item]!==undefined){if(Array.isArray(obj[item])&& Array.isArray(incr)){for(var i=0,len=incr.length;i < len;i++){obj[item].push(incr[i])}
-return}else if(typeof obj[item]=="string" && typeof incr=="string"){obj[item]+=incr
-return}else if(typeof obj[item]=="number" && typeof incr=="number"){obj[item]+=incr
-return}}
-var ga=$B.$getattr
-try{var augm_func=ga(ga(obj,"__getitem__")(item),"__iadd__")}catch(err){ga(obj,"__setitem__")(item,$B.add(ga(obj,"__getitem__")(item),incr))
-return}
-augm_func(incr)}
-var augm_item_src=""+$B.augm_item_add
-var augm_ops=[["-=","sub"],["*=","mul"]]
-for(var i=0,len=augm_ops.length;i < len;i++){var augm_code=augm_item_src.replace(/add/g,augm_ops[i][1])
-augm_code=augm_code.replace(/\+=/g,augm_ops[i][0])
-eval("$B.augm_item_"+augm_ops[i][1]+"="+augm_code)}
-$B.augm_assign=function(left,op,right){var op1=op.substr(0,op.length-1)
-if(typeof left=='number' && typeof right=='number'){var res=eval(left+' '+op1+' '+right)
+$B.augm_assign=function(left,op,right){
+var op1=op.substr(0,op.length-1)
+if(typeof left=='number' && typeof right=='number'
+&& op !='//='){
+var res=eval(left+' '+op1+' '+right)
 if(res <=$B.max_int && res >=$B.min_int){return res}else{res=eval(BigInt(left)+op1+BigInt(right))
 var pos=res > 0n,res=res+''
 return pos ? $B.fast_long_int(res,true):
 $B.fast_long_int(res.substr(1),false)}}else if(typeof left=='string' && typeof right=='string' &&
-op=='+='){return eval('`'+left+'` + `'+right+'`')}else{var method=$B.op2method.augmented_assigns[op],augm_func=$B.$getattr(left,'__'+method+'__',null)
+op=='+='){return left+right}else{var method=$B.op2method.augmented_assigns[op],augm_func=$B.$getattr(left,'__'+method+'__',null)
 if(augm_func !==null){return $B.$call(augm_func)(right)}else{var method1=$B.op2method.operations[op1]
 if(method1===undefined){method1=$B.op2method.binary[op1]}
 return $B.rich_op(method1,left,right)}}}
@@ -7845,7 +7699,8 @@ for(var cm of frame[1].$ctx_managers_in_gen){$B.$call($B.$getattr(cm,'__exit__')
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
-if(arg < min_int ||arg > max_int){return false}}
+if((typeof arg !="number")||
+(arg < min_int ||arg > max_int)){return false}}
 return true}
 $B.add=function(x,y){if(x.valueOf && typeof x.valueOf()=="number" &&
 y.valueOf && typeof y.valueOf()=="number"){if(typeof x=="number" && typeof y=="number"){

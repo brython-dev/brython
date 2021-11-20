@@ -858,45 +858,10 @@ $B.delitem_slice = function(obj, slice){
     return di(obj, slice)
 }
 
-// augmented item
-$B.augm_item_add = function(obj, item, incr){
-    if(Array.isArray(obj) && typeof item == "number" &&
-            obj[item] !== undefined){
-        if(Array.isArray(obj[item]) && Array.isArray(incr)){
-            for(var i = 0, len = incr.length; i < len; i++){
-                obj[item].push(incr[i])
-            }
-            return
-        }else if(typeof obj[item] == "string" && typeof incr == "string"){
-            obj[item] += incr
-            return
-        }else if(typeof obj[item] == "number" && typeof incr == "number"){
-            obj[item] += incr
-            return
-        }
-    }
-    var ga = $B.$getattr
-    try{
-        var augm_func = ga(ga(obj, "__getitem__")(item), "__iadd__")
-    }catch(err){
-        ga(obj, "__setitem__")(item,
-            $B.add(ga(obj, "__getitem__")(item), incr))
-        return
-    }
-    augm_func(incr)
-}
-
-var augm_item_src = "" + $B.augm_item_add
-var augm_ops = [["-=", "sub"], ["*=", "mul"]]
-for(var i  =0, len = augm_ops.length; i < len; i++){
-    var augm_code = augm_item_src.replace(/add/g, augm_ops[i][1])
-    augm_code = augm_code.replace(/\+=/g, augm_ops[i][0])
-    eval("$B.augm_item_" + augm_ops[i][1] + "=" + augm_code)
-}
-
 $B.augm_assign = function(left, op, right){
+    // augmented assignment
     var op1 = op.substr(0, op.length - 1)
-    if(typeof left == 'number' && typeof right == 'number' 
+    if(typeof left == 'number' && typeof right == 'number'
             && op != '//='){ // operator "//" not supported by Javascript
         var res = eval(left + ' ' + op1 + ' ' + right)
         if(res <= $B.max_int && res >= $B.min_int){
@@ -910,7 +875,7 @@ $B.augm_assign = function(left, op, right){
         }
     }else if(typeof left == 'string' && typeof right == 'string' &&
             op == '+='){
-        return eval('`' + left + '` + `' + right + '`')
+        return left + right
     }else{
         var method = $B.op2method.augmented_assigns[op],
             augm_func = $B.$getattr(left, '__' + method + '__', null)
@@ -1484,7 +1449,10 @@ var min_int = Math.pow(-2, 53), max_int = Math.pow(2, 53) - 1
 $B.is_safe_int = function(){
     for(var i = 0; i < arguments.length; i++){
         var arg = arguments[i]
-        if(arg < min_int || arg > max_int){return false}
+        if((typeof arg != "number") ||
+                (arg < min_int || arg > max_int)){
+            return false
+        }
     }
     return true
 }

@@ -247,7 +247,6 @@ function string_at(s, i){
             escaped = ! escaped
             j++
         }else if(escaped){
-            console.log('escaped', s[j])
             if('"/bfn'.indexOf(s[j]) > -1){
                 j++
                 escaped = ! escaped

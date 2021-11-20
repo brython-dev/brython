@@ -1883,289 +1883,13 @@ $AugmentedAssignCtx.prototype.transition = function(token, value){
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
-$AugmentedAssignCtx.prototype._transform = function(node, rank){
-    console.log('augm assign', this)
-    alert()
-    var context = this.context,
-        op = this.op,
-        func = '__' + $operators[op] + '__',
-        offset = 0,
-        parent = node.parent,
-        line_num = node.line_num,
-        lnum_set = false
-
-    // remove current node
-    parent.children.splice(rank, 1)
-
-    var left_is_id = (this.tree[0].type == 'expr' &&
-        this.tree[0].tree[0].type == 'id')
-
-    if(left_is_id){
-        var left_bound_to_int =
-            this.tree[0].tree[0].bindingType(this.scope) == "int"
-        // Set attribute "augm_assign" of $IdCtx instance, so that
-        // the id will not be resolved with $B.$check_undef()
-        this.tree[0].tree[0].augm_assign = true
-
-        // If left part is an id we must check that it is defined,
-        // otherwise raise NameError
-        // Example :
-        //
-        // if False:
-        //     a = 0
-        // a += 1
-
-        // For performance reasons, this is only implemented in debug mode
-        if($B.debug > 0){
-            var check_node = $NodeJS('if(' + this.tree[0].to_js() +
-                " === undefined){\nthrow $B.name_error('" +
-                this.tree[0].tree[0].value + "')}")
-            node.parent.insert(rank, check_node)
-            offset++
-        }
-        var left_id = this.tree[0].tree[0].value,
-            was_bound = this.scope.binding[left_id] !== undefined,
-            left_id_unbound = this.tree[0].tree[0].unbound
-    }
-
-    var right_is_int = (this.tree[1].type == 'expr' &&
-        this.tree[1].tree[0].type == 'int')
-    if(right_is_int){
-        var value = this.tree[1].tree[0].value,
-            to_int = parseInt(value[1], value[0])
-        right_is_int = (to_int > $B.min_int) && (to_int < $B.max_int)
-    }
-
-    var right = right_is_int ?
-        '(' + this.tree[1].tree[0].to_js() + ')' :
-        '$temp'
-
-    if(!right_is_int){
-        // Create temporary variable
-        var new_node = new $Node()
-        new_node.line_num = line_num
-        lnum_set = true
-        new $NodeJSCtx(new_node, 'var $temp,$left;')
-        parent.insert(rank, new_node)
-        offset++
-
-        // replace current node by "$temp = <placeholder>"
-        // at the end of $augmented_assign, control will be
-        // passed to the <placeholder> expression
-        var new_node = new $Node()
-        new_node.id = this.scope.id
-        var new_ctx = new $NodeCtx(new_node)
-        var new_expr = new $ExprCtx(new_ctx, 'js', false)
-        // The id must be a "raw_js", otherwise if scope is a class,
-        // it would create a class attribute "$class.$temp"
-        var _id = new $RawJSCtx(new_expr, '$temp')
-        var assign = new $AssignCtx(new_expr)
-        assign.tree[1] = this.tree[1]
-        _id.parent = assign
-        parent.insert(rank + offset, new_node)
-        offset++
-    }
-
-    var prefix = '', in_class = false
-
-    switch(op) {
-        case '+=':
-        case '-=':
-        case '*=':
-        case '/=':
-            if(left_is_id){
-                var scope = this.scope,
-                    global_ns = '$local_' + scope.module.replace(/\./g, '_')
-                switch(scope.ntype){
-                    case 'module':
-                        prefix = global_ns
-                        break
-                    case 'def':
-                    case 'generator':
-                        if(scope.globals &&
-                                scope.globals.has(context.tree[0].value)){
-                            prefix = global_ns
-                        }else{prefix = '$locals'}
-                        break
-                    case 'class':
-                      var new_node = new $Node()
-                      if(!lnum_set){
-                          new_node.line_num = line_num
-                          lnum_set = true
-                      }
-                      new $NodeJSCtx(new_node, 'var $left = ' +
-                          context.to_js())
-                      parent.insert(rank + offset, new_node)
-                      in_class = true
-                      offset++
-                }
-            }
-    }
-
-    var left = context.tree[0].to_js()
-    if(context.tree[0].type == "id"){
-        var binding_scope = context.tree[0].firstBindingScopeId(),
-            left_value = context.tree[0].value
-        if(binding_scope){
-            left = "$locals_" + binding_scope.replace(/\./g, '_') +
-                '["' + left_value + '"]'
-        }else{
-            left = '$locals["' + left_value + '"]'
-        }
-    }
-
-    if(left_bound_to_int && right_is_int &&
-            op != "//="){ // issue 1482
-        parent.insert(rank + offset, $NodeJS(left + " " + op + " " + right))
-        return offset++
-    }
-
-    // Generate code to use Javascript operator if the object type is
-    // str, int or float
-    // If the left part is a name not defined in the souce code, which is
-    // the case with "from A import *", the name is replaced by a
-    // function call "$B.$search(name, globals_name)"
-    // Since augmented assignement can't be applied to a function call
-    // the shortcut will not be used in this case
-
-    prefix = prefix && !context.tree[0].unknown_binding && !left_id_unbound
-    var op1 = op.charAt(0)
-
-    if(prefix){
-        parent.insert(rank + offset, $NodeJS('$left = ' + left))
-        offset++
-
-        var left1 = in_class ? '$left' : left
-        var new_node = new $Node()
-        if(!lnum_set){
-            new_node.line_num = line_num
-            lnum_set = true
-        }
-        js = right_is_int ? 'if(' : 'if(typeof $temp.valueOf() == "number" && '
-        js += '$left.constructor === Number'
-
-        // If both arguments are integers, we must check that the result
-        // is a safe integer
-        js += ' && Number.isSafeInteger($left' + op1 + right + ')){\n' +
-            (right_is_int ? '(' : '(typeof $temp == "number" && ') +
-            'typeof $left == "number") ? '
-
-        js += left + op + right
-
-        // result is a float
-        js += ' : ' + left + ' = new Number($left' + op1 +
-            (right_is_int ? right : right + '.valueOf()') + ')}'
-
-        new $NodeJSCtx(new_node, js)
-        parent.insert(rank + offset, new_node)
-        offset++
-
-        if(op == '+='){
-            // shortcut for += on strings
-            var js = 'else if(typeof $left == "string" && typeof $temp == ' +
-                '"string"){\n' + left + ' = $left + $temp}'
-            parent.insert(rank + offset, $NodeJS(js))
-            offset++
-        }
-    }
-    var aaops = {'+=': 'add', '-=': 'sub', '*=': 'mul'}
-    if(context.tree[0].type == 'sub' &&
-            ('+=' == op || '-=' == op || '*=' == op) &&
-            context.tree[0].tree.length == 1){
-        var js1 = '$B.augm_item_' + aaops[op] + '(' +
-            context.tree[0].value.to_js() + ',' +
-            context.tree[0].tree[0].to_js() + ',' + right + ');_b_.None;'
-        var new_node = new $Node()
-        if(!lnum_set){new_node.line_num = line_num; lnum_set = true}
-        new $NodeJSCtx(new_node, js1)
-        parent.insert(rank + offset, new_node)
-        offset++
-        return
-    }
-
-    if(prefix){
-        var else_node = $NodeJS('else')
-    }else{
-        var else_node = $NodeJS('if(true)')
-    }
-    parent.insert(rank + offset, else_node)
-    offset++
-
-    // insert node 'iadd = getattr(x, "__iadd__", None)'
-    var iadd_node = $NodeJS('var iadd = $B.$getattr(' + context.to_js() +
-        ',"' + func + '", null)')
-    if(!lnum_set){
-        iadd_node.line_num = line_num
-        lnum_set = true
-    }
-    else_node.add(iadd_node)
-
-    var no_iadd_node = $NodeJS('if(iadd === null)')
-    else_node.add(no_iadd_node)
-
-    // create node for "x = x + y"
-    var aa1 = new $Node()
-    aa1.id = this.scope.id
-    aa1.line_num = node.line_num
-    no_iadd_node.add(aa1)
-    var ctx1 = new $NodeCtx(aa1)
-    var expr1 = new $ExprCtx(ctx1, 'clone', false)
-    if(left_id_unbound){
-        new $RawJSCtx(expr1, left)
-    }else{
-        expr1.tree = context.tree
-        for(var elt of expr1.tree){
-            elt.parent = expr1
-        }
-    }
-    var assign1 = new $AssignCtx(expr1)
-    var new_op = new $OpCtx(expr1, op.substr(0, op.length - 1))
-    new_op.parent = assign1
-    new $RawJSCtx(new_op, right)
-    assign1.tree.push(new_op)
-    expr1.parent.tree.pop()
-    expr1.parent.tree.push(assign1)
-
-    // create node for "else"
-    var yes_iadd_node = $NodeJS("else")
-    else_node.add(yes_iadd_node)
-
-    // create node for "x.__iadd__(y)"
-    var aa2 = new $Node()
-    aa2.line_num = node.line_num
-    yes_iadd_node.add(aa2)
-
-    var ctx2 = new $NodeCtx(aa2)
-    var expr2 = new $ExprCtx(ctx2, 'clone', false)
-    if(left_id_unbound){
-        var js = left
-        if(! binding_scope){
-            js = '$B.$local_search("' + left_value + '");' + left
-        }
-        new $RawJSCtx(expr2, js) //'$locals["' + left_id + '"]')
-    }else{
-        expr2.tree = context.tree
-        for(var elt of expr2.tree){
-            elt.parent = expr2
-        }
-    }
-    var assign2 = new $AssignCtx(expr2)
-    assign2.tree.push($NodeJS('iadd(' + right + ')'))
-    expr2.parent.tree.pop()
-    expr2.parent.tree.push(assign2)
-
-    // Augmented assignment doesn't bind names ; if the variable name has
-    // been bound in the code above (by a call to $AssignCtx), remove it
-    if(left_is_id && !was_bound && !this.scope.blurred){
-        this.scope.binding[left_id] = undefined
-    }
-
-    return offset
-}
-
 $AugmentedAssignCtx.prototype.to_js = function(){
+
     var target = this.tree[0].tree[0]
     if(target.type == 'id'){
+
+        var left_bound_to_int =
+            this.tree[0].tree[0].bindingType(this.scope) == "int"
         var target_scope = find_scope(target.value, $get_scope(this)),
             scope_ref
         if(target_scope === undefined){
@@ -2174,10 +1898,30 @@ $AugmentedAssignCtx.prototype.to_js = function(){
             scope_ref = '$locals_' + target_scope.id.replace(/\./g, '_')
         }
         target.augm_assign = true
-        var left_target = target.to_js()
+        var right = this.tree[1].tree[0]
+        if(right.type == 'int'){
+            var right_value = parseInt(right.value[1], right.value[0])
+            if(right_value < $B.max_int && right_value > $B.min_int){
+                var left_bound_to_int =
+                    this.tree[0].tree[0].bindingType(this.scope) == "int"
+                if(left_bound_to_int && this.op !== '//='){
+                    // shortcut if right is an integer and left is an id that
+                    // was last bound to an integer (determined by source code
+                    // analysis)
+                    var op1 = this.op.substr(0, this.op.length - 1),
+                        tg_js = target.to_js()
+                    return `${scope_ref}['${target.value}'] = ` +
+                        `(typeof ${tg_js} == "number" && $B.is_safe_int($locals.$result = ` +
+                        `${tg_js} ${op1} ${right.to_js()})) ? ` +
+                        ` $locals.$result : $B.augm_assign(${tg_js}, ` +
+                        `'${this.op}', ${right.to_js()})`
+                }
+            }
+        }
+        var right = this.tree[1].to_js()
         return `${scope_ref}['${target.value}'] = ` +
             `$B.augm_assign(${target.to_js()}, '${this.op}', ` +
-            this.tree[1].to_js() + ')'
+            right + ')'
     }else if(target.type == 'sub'){
         return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), ` +
             `($locals.$key = ${target.tree[0].to_js()}), $B.augm_assign($B.$getitem(` +
@@ -6749,7 +6493,7 @@ $IdCtx.prototype.bindingType = function(scope){
                     break
                 }
             }
-            return unknown || found
+            return found || unknown
         }
         if(pnode === scope){
             break

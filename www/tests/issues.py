@@ -2984,7 +2984,28 @@ assertRaises(SyntaxError, exec, """x, if y > 4:
     pass""")
 assertRaises(SyntaxError, exec, """async def f():
     await x = 1""")
-    
+
+# issue 1827
+class Vector2:
+
+    def __init__(self, a, b):
+        self.x, self.y = a, b
+
+    def clone(self):
+        return Vector2(self.x, self.y)
+
+    def __imul__(self, k):
+        res = self.clone()
+        res.x *= k
+        res.y *= k
+        return res
+
+vector = Vector2(1.5, 3.7)
+
+vector *= 25.7
+
+assert (vector.x, vector.y) == (38.55, 95.09)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
