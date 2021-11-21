@@ -798,7 +798,7 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             js = root.to_js()
-            
+
             var res = eval(js)
         }
 
@@ -3184,10 +3184,10 @@ var False = false
 var ellipsis = $B.make_class("ellipsis",
     function(){return Ellipsis}
 )
-var Ellipsis = {
-    __class__:ellipsis,
-    __bool__: function(){return True},
+ellipsis.__repr__ = function(self){
+    return 'Ellipsis'
 }
+var Ellipsis = {__class__: ellipsis}
 
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[$key]) {

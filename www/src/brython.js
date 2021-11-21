@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-20 15:02:51.680418"
-__BRYTHON__.timestamp=1637416971680
+__BRYTHON__.compiled_date="2021-11-21 17:14:02.997795"
+__BRYTHON__.timestamp=1637511242997
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1238,7 +1238,8 @@ $AugmentedAssignCtx.prototype.to_js=function(){var target=this.tree[0].tree[0]
 if(target.type=='id'){var left_bound_to_int=
 this.tree[0].tree[0].bindingType(this.scope)=="int"
 var target_scope=find_scope(target.value,$get_scope(this)),scope_ref
-if(target_scope===undefined){scope_ref='$locals'}else{scope_ref='$locals_'+target_scope.id.replace(/\./g,'_')}
+if(target_scope===undefined){
+scope_ref='$locals'}else{scope_ref='$locals_'+target_scope.id.replace(/\./g,'_')}
 target.augm_assign=true
 var right=this.tree[1].tree[0]
 if(right.type=='int'){var right_value=parseInt(right.value[1],right.value[0])
@@ -1247,9 +1248,9 @@ this.tree[0].tree[0].bindingType(this.scope)=="int"
 if(left_bound_to_int && this.op !=='//='){
 var op1=this.op.substr(0,this.op.length-1),tg_js=target.to_js()
 return `${scope_ref}['${target.value}'] = `+
-`(typeof ${tg_js} == "number" && $B.is_safe_int($locals.$result = `+
-`${tg_js} ${op1} ${right.to_js()})) ? `+
-` $locals.$result : $B.augm_assign(${tg_js}, `+
+`(typeof ${tg_js} == "number" && $B.is_safe_int(`+
+`$locals.$result = ${tg_js} ${op1} ${right.to_js()}`+
+`)) ? $locals.$result : $B.augm_assign(${tg_js}, `+
 `'${this.op}', ${right.to_js()})`}}}
 var right=this.tree[1].to_js()
 return `${scope_ref}['${target.value}'] = `+
@@ -1410,15 +1411,12 @@ if(this.func && this.func.value=='input'){$get_node(this).blocking={'type':'inpu
 $CallCtx.prototype.ast=function(){var res=new ast.Call(ast_or_obj(this.func),[],[])
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=ast_or_obj(call_arg.tree[0].tree[0]),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
-res.keywords.push(keyword)
-continue}else if(call_arg.type=='star_arg'){var starred=new ast.Starred(ast_or_obj(call_arg.tree[0]))
+res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){var starred=new ast.Starred(ast_or_obj(call_arg.tree[0]))
 starred.ctx=new ast.Load()
-res.args.push(starred)
-continue}
-var item=call_arg.tree[0]
+res.args.push(starred)}else if(call_arg.type=='genexpr'){res.args.push(call_arg.ast())}else{var item=call_arg.tree[0]
 if(item===undefined){
 continue}
-if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,ast_or_obj(item.tree[1])))}else{res.args.push(ast_or_obj(item))}}
+if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,ast_or_obj(item.tree[1])))}else{res.args.push(ast_or_obj(item))}}}
 return res}
 $CallCtx.prototype.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 $CallCtx.prototype.transition=function(token,value){var C=this
@@ -2480,7 +2478,7 @@ this.type='ellipsis'
 this.parent=C
 this.start=$pos
 C.tree[C.tree.length]=this}
-$EllipsisCtx.prototype.ast=function(){return new ast.Constant('...')}
+$EllipsisCtx.prototype.ast=function(){return new ast.Constant({type:'ellipsis'})}
 $EllipsisCtx.prototype.toString=function(){return 'ellipsis'}
 $EllipsisCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -2814,7 +2812,7 @@ if(this.scope.is_comp){}
 this.module=this.scope.module
 $loop_num++}
 $ForExpr.prototype.ast=function(){
-var target=ast_or_obj(this.tree[0]),iter=ast_or_obj(this.tree[1]),orelse=this.orelse ? ast_or_obj(this.orelse):undefined,type_comment,body=ast_body(this.parent)
+var target=ast_or_obj(this.tree[0]),iter=ast_or_obj(this.tree[1]),orelse=this.orelse ? ast_or_obj(this.orelse):[],type_comment,body=ast_body(this.parent)
 return new ast.For(target,iter,body,orelse,type_comment)}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
 $ForExpr.prototype.transition=function(token,value){var C=this
@@ -3637,8 +3635,8 @@ C.tree.push(this)
 this.raw=false
 this.$pos=$pos}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
-for(var item of this.tree){if(item instanceof $StringCtx){res.values.push(new ast.Constant(item.value))}else{var conv_num={a:97,r:114,s:115},value=new ast.FormattedValue(
-ast_or_obj(item),conv_num[item.conversion]||-1)
+for(var item of this.tree){if(item instanceof $StringCtx){res.values.push(new ast.Constant(eval(item.value)))}else{var conv_num={a:97,r:114,s:115},value=new ast.FormattedValue(
+ast_or_obj(item),conv_num[item.elt.conversion]||-1)
 var format=item.format
 if(format !==undefined){value.format=item.format.ast()}
 res.values.push(value)}}
@@ -3990,7 +3988,9 @@ C.tree.push(this)
 this.parent=C
 this.target.parent=this
 this.tree=[]}
-NamedExprCtx.prototype.ast=function(){return new ast.NamedExpr(ast_or_obj(this.target),ast_or_obj(this.tree[0]))}
+NamedExprCtx.prototype.ast=function(){var res=new ast.NamedExpr(ast_or_obj(this.target),ast_or_obj(this.tree[0]))
+res.target.ctx=new ast.Store()
+return res}
 NamedExprCtx.prototype.transition=function(token,value){return $transition(this.parent,token,value)}
 NamedExprCtx.prototype.to_js=function(){return `($locals_${this.target.scope_ref}.${this.target.value} `+
 `= ${this.tree[0].to_js()})`}
@@ -4261,13 +4261,7 @@ this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$NumberCtx.prototype.ast=function(){var value=this.value
-if(Array.isArray(value)){value=parseInt(value[1],value[0])}
-if(this.type=='imaginary'){value={imaginary:true,value:eval(value)}}else{try{value=eval(value)}catch(err){console.log('error num ast',this)
-throw err}}
-if(value===undefined){console.log('number value undef',this)
-throw Error('number value undef')}
-return new ast.Constant(value)}
+$NumberCtx.prototype.ast=function(){return new ast.Constant({type:this.type,value:this.value})}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -4294,7 +4288,12 @@ if(op_type===ast.Compare){var left=ast_or_obj(this.tree[0]),ops=[new ast_class()
 if(this.ops){for(var op of this.ops.slice(1)){ops.push(new op2ast_class[op][1]())}
 return new ast.Compare(left,ops,this.tree.slice(1).map(ast_or_obj))}else{return new ast.Compare(left,ops,[ast_or_obj(this.tree[1])])}}
 if(op_type===ast.UnaryOp){return new op_type(new ast_class(),ast_or_obj(this.tree[1]))}
-if(op_type===ast.BoolOp){return new op_type(new ast_class(),this.tree.map(ast_or_obj))}
+if(op_type===ast.BoolOp){
+var values=[this.tree[1]],main_op=this.op,ctx=this
+while(ctx.tree[0].type=='op' && ctx.tree[0].op==main_op){values.splice(0,0,ctx.tree[0].tree[1])
+ctx=ctx.tree[0]}
+values.splice(0,0,ctx.tree[0])
+return new op_type(new ast_class(),values.map(ast_or_obj))}
 return new op_type(
 ast_or_obj(this.tree[0]),new ast_class(),ast_or_obj(this.tree[1]))}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
@@ -5381,8 +5380,9 @@ this.tree=[]
 this.expect='id'
 this.nb_packed=0
 C.tree[C.tree.length]=this}
-$TargetListCtx.prototype.ast=function(){if(this.tree[0].type=='expr'){var item=ast_or_obj(this.tree[0])
+$TargetListCtx.prototype.ast=function(){if(this.tree.length==1){var item=ast_or_obj(this.tree[0])
 item.ctx=new ast.Store()
+if(item instanceof ast.Tuple){for(var target of item.elts){target.ctx=new ast.Store()}}
 return item}else{var items=[]
 for(var item of this.tree){item=ast_or_obj(item)
 if(item.hasOwnProperty('ctx')){item.ctx=new ast.Store()}
@@ -6283,7 +6283,8 @@ if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root,src)
-if($B.produce_ast){ast_dump(root.ast())}
+if($B.produce_ast){var ast=ast_dump(root.ast())
+if($B.produce_ast==2){console.log(ast)}}
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js='var $B = __BRYTHON__,\n'+
@@ -9242,7 +9243,8 @@ var True=true
 var False=false
 var ellipsis=$B.make_class("ellipsis",function(){return Ellipsis}
 )
-var Ellipsis={__class__:ellipsis,__bool__:function(){return True},}
+ellipsis.__repr__=function(self){return 'Ellipsis'}
+var Ellipsis={__class__:ellipsis}
 for(var $key in $B.$comps){
 switch($B.$comps[$key]){case 'ge':
 case 'gt':
@@ -15791,8 +15793,15 @@ $B.AST={__class__:_b_.type,__getattr__:function(self,attr){var res=self.js_node[
 if(res===undefined){throw $B.attr_error(attr,self)}
 return $B.AST.$convert(res)},__mro__:[_b_.object],$infos:{__qualname__:'AST',__name__:'AST'},$is_class:true,$convert:function(js_node){if(js_node===undefined){return _b_.None}
 var constr=js_node.constructor
-if(constr && constr.$name){return $B.python_ast_classes[constr.$name].$factory(js_node)}else if(Array.isArray(js_node)){return js_node.map($B.AST.$convert)}else if(typeof js_node=='string' ||
-typeof js_node=='number'){return js_node}else if(js_node.$name){
+if(constr && constr.$name){return $B.python_ast_classes[constr.$name].$factory(js_node)}else if(Array.isArray(js_node)){return js_node.map($B.AST.$convert)}else if(js_node.type){
+switch(js_node.type){case 'int':
+return parseInt(js_node.value[1],js_node.value[0])
+case 'float':
+return new Number(js_node.value)
+case 'imaginary':
+return $B.make_complex(0,$B.AST.$convert(js_node.value))
+case 'ellipsis':
+return _b_.Ellipsis}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else{console.log('cannot handle',js_node)}}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins

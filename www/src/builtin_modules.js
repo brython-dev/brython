@@ -862,8 +862,20 @@
                 return $B.python_ast_classes[constr.$name].$factory(js_node)
             }else if(Array.isArray(js_node)){
                 return js_node.map($B.AST.$convert)
-            }else if(typeof js_node == 'string' ||
-                    typeof js_node == 'number'){
+            }else if(js_node.type){
+                // numeric constant
+                switch(js_node.type){
+                    case 'int':
+                        return parseInt(js_node.value[1], js_node.value[0])
+                    case 'float':
+                        return new Number(js_node.value)
+                    case 'imaginary':
+                        return $B.make_complex(0,
+                            $B.AST.$convert(js_node.value))
+                    case 'ellipsis':
+                        return _b_.Ellipsis
+                }
+            }else if(['string', 'number'].indexOf(typeof js_node) > -1){
                 return js_node
             }else if(js_node.$name){
                 // eg Store(), Load()...

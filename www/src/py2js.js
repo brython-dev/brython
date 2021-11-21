@@ -1887,12 +1887,12 @@ $AugmentedAssignCtx.prototype.to_js = function(){
 
     var target = this.tree[0].tree[0]
     if(target.type == 'id'){
-
         var left_bound_to_int =
             this.tree[0].tree[0].bindingType(this.scope) == "int"
         var target_scope = find_scope(target.value, $get_scope(this)),
             scope_ref
         if(target_scope === undefined){
+            // name is not referenced
             scope_ref = '$locals'
         }else{
             scope_ref = '$locals_' + target_scope.id.replace(/\./g, '_')
@@ -1905,15 +1905,15 @@ $AugmentedAssignCtx.prototype.to_js = function(){
                 var left_bound_to_int =
                     this.tree[0].tree[0].bindingType(this.scope) == "int"
                 if(left_bound_to_int && this.op !== '//='){
-                    // shortcut if right is an integer and left is an id that
-                    // was last bound to an integer (determined by source code
-                    // analysis)
+                    // shortcut if right value is an integer and left is an id
+                    // that was last bound to an integer (determined by source
+                    // code analysis)
                     var op1 = this.op.substr(0, this.op.length - 1),
                         tg_js = target.to_js()
                     return `${scope_ref}['${target.value}'] = ` +
-                        `(typeof ${tg_js} == "number" && $B.is_safe_int($locals.$result = ` +
-                        `${tg_js} ${op1} ${right.to_js()})) ? ` +
-                        ` $locals.$result : $B.augm_assign(${tg_js}, ` +
+                        `(typeof ${tg_js} == "number" && $B.is_safe_int(`+
+                        `$locals.$result = ${tg_js} ${op1} ${right.to_js()}` +
+                        `)) ? $locals.$result : $B.augm_assign(${tg_js}, ` +
                         `'${this.op}', ${right.to_js()})`
                 }
             }
@@ -2223,23 +2223,24 @@ $CallCtx.prototype.ast = function(){
                 keyword = new ast.keyword(_b_.None, value)
             delete keyword.arg
             res.keywords.push(keyword)
-            continue
         }else if(call_arg.type == 'star_arg'){
             var starred = new ast.Starred(ast_or_obj(call_arg.tree[0]))
             starred.ctx = new ast.Load()
             res.args.push(starred)
-            continue
-        }
-        var item = call_arg.tree[0]
-        if(item === undefined){
-            // case when call ends with ",)"
-            continue
-        }
-        if(item.type == 'kwarg'){
-            res.keywords.push(new ast.keyword(item.tree[0].value,
-                ast_or_obj(item.tree[1])))
+        }else if(call_arg.type == 'genexpr'){
+            res.args.push(call_arg.ast())
         }else{
-            res.args.push(ast_or_obj(item))
+            var item = call_arg.tree[0]
+            if(item === undefined){
+                // case when call ends with ",)"
+                continue
+            }
+            if(item.type == 'kwarg'){
+                res.keywords.push(new ast.keyword(item.tree[0].value,
+                    ast_or_obj(item.tree[1])))
+            }else{
+                res.args.push(ast_or_obj(item))
+            }
         }
     }
     return res
@@ -4515,7 +4516,7 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
 }
 
 $EllipsisCtx.prototype.ast = function(){
-    return new ast.Constant('...')
+    return new ast.Constant({type: 'ellipsis'})
 }
 
 $EllipsisCtx.prototype.toString = function(){
@@ -5179,7 +5180,7 @@ $ForExpr.prototype.ast = function(){
     // ast.For(target, iter, body, orelse, type_comment)
     var target = ast_or_obj(this.tree[0]),
         iter = ast_or_obj(this.tree[1]),
-        orelse = this.orelse ? ast_or_obj(this.orelse) : undefined,
+        orelse = this.orelse ? ast_or_obj(this.orelse) : [],
         type_comment,
         body = ast_body(this.parent)
     return new ast.For(target, iter, body, orelse, type_comment)
@@ -7123,12 +7124,12 @@ JoinedStrCtx.prototype.ast = function(){
     }
     for(var item of this.tree){
         if(item instanceof $StringCtx){
-            res.values.push(new ast.Constant(item.value))
+            res.values.push(new ast.Constant(eval(item.value)))
         }else{
             var conv_num = {a: 97, r: 114, s: 115},
                 value = new ast.FormattedValue(
                     ast_or_obj(item),
-                    conv_num[item.conversion] || -1)
+                    conv_num[item.elt.conversion] || -1)
             var format = item.format
             if(format !== undefined){
                 value.format = item.format.ast()
@@ -7839,8 +7840,10 @@ var NamedExprCtx = function(context){
 }
 
 NamedExprCtx.prototype.ast = function(){
-    return new ast.NamedExpr(ast_or_obj(this.target),
+    var res = new ast.NamedExpr(ast_or_obj(this.target),
         ast_or_obj(this.tree[0]))
+    res.target.ctx = new ast.Store()
+    return res
 }
 
 NamedExprCtx.prototype.transition = function(token, value){
@@ -8303,25 +8306,7 @@ var $NumberCtx = $B.parser.$NumberCtx = function(type, context, value){
 }
 
 $NumberCtx.prototype.ast = function(){
-    var value = this.value
-    if(Array.isArray(value)){
-        value = parseInt(value[1], value[0])
-    }
-    if(this.type == 'imaginary'){
-        value = {imaginary: true, value: eval(value)}
-    }else{
-        try{
-            value = eval(value)
-        }catch(err){
-            console.log('error num ast', this)
-            throw err
-        }
-    }
-    if(value === undefined){
-        console.log('number value undef', this)
-        throw Error('number value undef')
-    }
-    return new ast.Constant(value)
+    return new ast.Constant({type: this.type, value: this.value})
 }
 
 $NumberCtx.prototype.toString = function(){
@@ -8403,7 +8388,17 @@ $OpCtx.prototype.ast = function(){
         return new op_type(new ast_class(), ast_or_obj(this.tree[1]))
     }
     if(op_type === ast.BoolOp){
-        return new op_type(new ast_class(), this.tree.map(ast_or_obj))
+        // Consecutive operations with the same operator, such as a or b or c,
+        // are collapsed into one node with several values
+        var values = [this.tree[1]],
+            main_op = this.op,
+            ctx = this
+        while(ctx.tree[0].type == 'op' && ctx.tree[0].op == main_op){
+            values.splice(0, 0, ctx.tree[0].tree[1])
+            ctx = ctx.tree[0]
+        }
+        values.splice(0, 0, ctx.tree[0])
+        return new op_type(new ast_class(), values.map(ast_or_obj))
     }
     return new op_type(
         ast_or_obj(this.tree[0]), new ast_class(), ast_or_obj(this.tree[1]))
@@ -10613,9 +10608,14 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
 }
 
 $TargetListCtx.prototype.ast = function(){
-    if(this.tree[0].type == 'expr'){
+    if(this.tree.length == 1){
         var item = ast_or_obj(this.tree[0])
         item.ctx = new ast.Store()
+        if(item instanceof ast.Tuple){
+            for(var target of item.elts){
+                target.ctx = new ast.Store()
+            }
+        }
         return item
     }else{
         var items = []
@@ -12844,7 +12844,10 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     dispatch_tokens(root, src)
     if($B.produce_ast){
-        ast_dump(root.ast())
+        var ast = ast_dump(root.ast())
+        if($B.produce_ast == 2){
+            console.log(ast)
+        }
     }
     if(ix != undefined){
         root.ix = ix
