@@ -529,7 +529,6 @@ $Node.prototype.ast = function(){
         // Ignore except / elif / else / finally : they are attributes of
         // try / for / if nodes
         // decorator is attribute of the class / def node
-
         if(['single_kw', 'except', 'decorator'].indexOf(t.type) > -1 ||
                 (t.type == 'condition' && t.token == 'elif')){
             continue
@@ -1341,6 +1340,9 @@ $AssignCtx.prototype.ast = function(){
         target = ast_or_obj(target)
         for(var elt of target.elts){
             elt.ctx = new ast.Store()
+            if(elt instanceof ast.Starred){
+                elt.value.ctx = new ast.Store()
+            }
         }
         target.ctx = new ast.Store()
         targets = [target]
@@ -4711,7 +4713,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
 $ExprCtx.prototype.ast = function(){
     var res = ast_or_obj(this.tree[0])
     if(this.packed){
-        return new ast.Starred(res)
+        // return new ast.Starred(res)
     }else if(this.annotation){
         res = new ast.AnnAssign(
             res,
@@ -5649,7 +5651,7 @@ $FuncArgs.prototype.ast = function(){
             posonlyargs: [],
             args: [],
             kwonlyargs: [],
-            kwdefaults: [],
+            kw_defaults: [],
             defaults: []
         },
         state = 'arg',
@@ -5678,7 +5680,7 @@ $FuncArgs.prototype.ast = function(){
             if(state == 'kwonly'){
                 args.kwonlyargs.push(argument)
                 if(default_value){
-                    args.kwdefaults.push(default_value)
+                    args.kw_defaults.push(default_value)
                 }
             }else{
                 args.args.push(argument)
@@ -10762,13 +10764,9 @@ $TryCtx.prototype.ast = function(){
         if(type == 'except'){
             res.handlers.push(ast_or_obj(t))
         }else if(type == 'else'){
-            for(var c of child.children){
-                res.orelse.push(ast_or_obj(c.context.tree[0]))
-            }
+            res.orelse = ast_body(child.context)
         }else if(type == 'finally'){
-            for(var c of child.children){
-                res.finalbody.push(ast_or_obj(c.context.tree[0]))
-            }
+            res.finalbody = ast_body(child.context)
         }else{
             break
         }

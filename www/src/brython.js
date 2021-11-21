@@ -112,8 +112,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-21 17:14:02.997795"
-__BRYTHON__.timestamp=1637511242997
+__BRYTHON__.compiled_date="2021-11-21 20:56:32.749122"
+__BRYTHON__.timestamp=1637524592749
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -957,7 +957,8 @@ if(['None','True','False','__debug__'].indexOf(id)>-1){$_SyntaxError(C,['cannot 
 if(assigned.parent.in_tuple===undefined){$_SyntaxError(C,["starred assignment target must be in a list or tuple"])}}}}
 $AssignCtx.prototype.ast=function(){var value=ast_or_obj(this.tree[1]),targets=[],target=this.tree[0]
 if(target.type=='list_or_tuple'){target=ast_or_obj(target)
-for(var elt of target.elts){elt.ctx=new ast.Store()}
+for(var elt of target.elts){elt.ctx=new ast.Store()
+if(elt instanceof ast.Starred){elt.value.ctx=new ast.Store()}}
 target.ctx=new ast.Store()
 targets=[target]}else{while(target.type=='assign'){targets.splice(0,0,ast_or_obj(target.tree[1]))
 target=target.tree[0]}
@@ -2584,7 +2585,7 @@ if(C.packed){this.packed=C.packed}
 this.tree=[]
 C.tree[C.tree.length]=this}
 $ExprCtx.prototype.ast=function(){var res=ast_or_obj(this.tree[0])
-if(this.packed){return new ast.Starred(res)}else if(this.annotation){res=new ast.AnnAssign(
+if(this.packed){}else if(this.annotation){res=new ast.AnnAssign(
 res,ast_or_obj(this.annotation.tree[0]),undefined,1)
 return res}
 return res}
@@ -3039,14 +3040,14 @@ this.expect='id'
 this.has_default=false
 this.has_star_arg=false
 this.has_kw_arg=false}
-$FuncArgs.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kwdefaults:[],defaults:[]},state='arg',default_value
+$FuncArgs.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[]},state='arg',default_value
 for(var arg of this.tree){if(arg.type=='end_positional'){args.posonlyargs=args.args
 args.args=[]}else if(arg.type=='func_star_arg'){if(arg.op=='*' && arg.name=='*'){state='kwonly'}else if(arg.op=='*'){args.vararg=new ast.arg(arg.name)}else if(arg.op=='**'){args.kwarg=new ast.arg(arg.name)}}else{default_value=false
 if(arg.has_default){default_value=ast_or_obj(arg.tree[0])}
 var argument=new ast.arg(arg.name)
 if(arg.annotation){argument.annotation=ast_or_obj(arg.annotation.tree[0])}
 if(state=='kwonly'){args.kwonlyargs.push(argument)
-if(default_value){args.kwdefaults.push(default_value)}}else{args.args.push(argument)
+if(default_value){args.kw_defaults.push(default_value)}}else{args.args.push(argument)
 if(default_value){args.defaults.push(default_value)}}}}
 return new ast.arguments(args.posonlyargs,args.args,args.vararg,args.kwonlyargs,args.kw_defaults,args.kwarg,args.defaults)}
 $FuncArgs.prototype.toString=function(){return 'func args '+this.tree}
@@ -5450,7 +5451,7 @@ var node=this.parent.node,res={body:ast_body(this.parent),handlers:[],orelse:[],
 var rank=node.parent.children.indexOf(node)
 for(var child of node.parent.children.slice(rank+1)){var t=child.C.tree[0],type=t.type
 if(type=='single_kw'){type=t.token}
-if(type=='except'){res.handlers.push(ast_or_obj(t))}else if(type=='else'){for(var c of child.children){res.orelse.push(ast_or_obj(c.C.tree[0]))}}else if(type=='finally'){for(var c of child.children){res.finalbody.push(ast_or_obj(c.C.tree[0]))}}else{break}}
+if(type=='except'){res.handlers.push(ast_or_obj(t))}else if(type=='else'){res.orelse=ast_body(child.C)}else if(type=='finally'){res.finalbody=ast_body(child.C)}else{break}}
 return new ast.Try(res.body,res.handlers,res.orelse,res.finalbody)}
 $TryCtx.prototype.toString=function(){return '(try) '}
 $TryCtx.prototype.transition=function(token,value){var C=this
