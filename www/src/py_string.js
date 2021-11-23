@@ -992,16 +992,8 @@ str.__reduce_ex__ = function(self){
 
 str.__repr__ = function(self){
     // special cases
-    var t = {
-        8: "\\x08",
-        9: "\\t",
-        10: "\\n",
-        11: "\\x0b",
-        12: "\\x0c",
-        13: "\\r",
-        92: "\\\\"
-    }
-    var repl = '',
+    var t = $B.special_string_repr, // in brython_builtins.js
+        repl = '',
         chars = to_chars(self)
     for(var i = 0; i < chars.length; i++){
         var cp = _b_.ord(chars[i])

@@ -132,7 +132,7 @@ $B.__setattr__ = function(attr, value){
 $B.language = _window.navigator.userLanguage || _window.navigator.language
 
 $B.locale = "C" // can be reset by locale.setlocale
-$B.PyCF_ONLY_AST = 1024// compiler flag, used in libs/_ast.js
+$B.PyCF_ONLY_AST = 1024 // compiler flag, used in libs/_ast.js
 
 if($B.isWebWorker){
     $B.charset = "utf-8"
@@ -147,6 +147,18 @@ $B.min_int = -$B.max_int
 
 $B.max_float = new Number(Number.MAX_VALUE)
 $B.min_float = new Number(Number.MIN_VALUE)
+
+// special repr() for some codepoints, used in py_string.js and py_bytes.js
+$B.special_string_repr = {
+    8: "\\x08",
+    9: "\\t",
+    10: "\\n",
+    11: "\\x0b",
+    12: "\\x0c",
+    13: "\\r",
+    92: "\\\\",
+    160: "\\xa0"
+}
 
 // Used to compute the hash value of some objects (see
 // py_builtin_functions.js)

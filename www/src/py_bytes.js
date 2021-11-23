@@ -398,11 +398,12 @@ bytes.$new = function(cls, source, encoding, errors){
 }
 
 bytes.__repr__ = bytes.__str__ = function(self){
-    var res = ""
+    var t = $B.special_string_repr, // in brython_builtins.js
+        res = ""
     for(var i = 0, len = self.source.length; i < len; i++){
         var s = self.source[i]
-        if(s == 10){
-            res += '\\n'
+        if(t[s] !== undefined){
+            res += t[s]
         }else if(s < 32 || s >= 128){
             var hx = s.toString(16)
             hx = (hx.length == 1 ? '0' : '') + hx
