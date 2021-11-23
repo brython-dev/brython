@@ -1012,7 +1012,9 @@ str.__repr__ = function(self){
             }
             repl += '\\x' + cp
         }else if(cp >= 0x300 && cp <= 0x36F){
-            repl += "\u200B" + chars[i]
+            repl += "\u200B" + chars[i] + ' '
+        }else if(cp.toString(16) == 'feff'){
+            repl += '\\ufeff'
         }else{
             repl += chars[i]
         }
