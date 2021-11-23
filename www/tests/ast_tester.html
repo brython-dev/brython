@@ -82,39 +82,51 @@ zone2 = document["zone2"]
 
 def show_cpython(req):
   cpython_dump = req.text.replace('\r\n', '\n').rstrip()
-  brython_dump = dumps['Brython']
-  if cpython_dump != brython_dump:
-      zone.text = brython_dump
+  if cpython_dump != dumps['Brython']:
       zone2.text = cpython_dump
+      zone.text = dumps['Brython']
       ls1, ls2 = 0, 0
-      for i, (c1, c2) in enumerate(zip(brython_dump, cpython_dump)):
+      for i, (c1, c2) in enumerate(zip(zone.text, zone2.text)):
         if c1 == '\n':
             ls1 = i
         if c2 == '\n':
             ls2 = i
         if c1 != c2:
-            print(cpython_dump[ls1:cpython_dump.find('\n', ls1 + 1)])
-            print(brython_dump[ls2:brython_dump.find('\n', ls2 + 1)])
+            print(zone.text[ls1:zone.text.find('\n', ls1 + 1)])
+            print(zone2.text[ls2:zone2.text.find('\n', ls2 + 1)])
             print('at pos', i, 'c1', c1, ord(c1), '!=', c2, ord(c2))
             break
   else:
-    print(True)
-dumps = {}
+      run()
+
+paths = ['abc.py', 'antigravity.py', 'argparse.py', 'ast.py', 'atexit.py', 'base64.py', 'bdb.py', 'binascii.py', 'bisect.py', 'calendar.py', 'cmath.py', 'cmd.py', 'code.py', 'codecs.py', 'codeop.py', 'colorsys.py', 'configparser.py', 'contextlib.py', 'contextvars.py', 'copy.py', 'copyreg.py', 'csv.py', 'dataclasses.py', 'datetime.py', 'decimal.py', 'difflib.py', 'doctest.py', 'enum.py', 'errno.py', 'external_import.py', 'faulthandler.py', 'fnmatch.py', 'formatter.py', 'fractions.py', 'functools.py', 'gc.py', 'genericpath.py', 'getopt.py', 'getpass.py', 'gettext.py', 'glob.py', 'gzip.py', 'heapq.py', 'hmac.py', 'imp.py', 'inspect.py', 'interpreter.py', 'io.py', 'ipaddress.py', 'itertools.py', 'json.py', 'keyword.py', 'linecache.py', 'locale.py', 'mimetypes.py', 'nntplib.py', 'ntpath.py', 'numbers.py', 'opcode.py', 'operator.py', 'optparse.py', 'os.py', 'pathlib.py', 'pdb.py', 'pickle.py', 'pkgutil.py', 'platform.py', 'posixpath.py', 'pprint.py', 'profile.py', 'pwd.py', 'pydoc.py', 'py_compile.py', 'queue.py', 'quopri.py', 're.py', 'reprlib.py', 'select.py', 'selectors.py', 'shlex.py', 'shutil.py', 'signal.py', 'site.py', 'socket.py', 'sre_compile.py', 'sre_constants.py', 'sre_parse.py', 'stat.py', 'statistics.py', 'string.py',
+#'stringprep.py', 
+'struct.py', 'subprocess.py', 'sys.py', 'sysconfig.py', 'tabnanny.py', 'tarfile.py', 'tb.py', 'tempfile.py', 'textwrap.py', 'this.py', 'threading.py', 'time.py', 'timeit.py', 'token.py', 'tokenize.py', 'traceback.py', 'turtle.py', 'types.py', 'typing.py', 'uu.py', 'uuid.py', 'VFS_import.py', 'warnings.py', 'weakref.py', 'webbrowser.py', 'zipfile.py', 'zipimport.py', 'zlib.py', '_codecs.py', '_codecs_jp.py', '_collections.py', '_collections_abc.py', '_compat_pickle.py', '_compression.py', '_contextvars.py', '_csv.py', '_dummy_thread.py', '_frozen_importlib.py', '_functools.py', '_imp.py', '_io.py', '_markupbase.py', '_multibytecodec.py', '_operator.py', '_pydecimal.py', '_py_abc.py', '_queue.py', '_random.py', '_signal.py', '_socket.py', '_sre.py', '_struct.py', '_sysconfigdata.py', '_sysconfigdata_0_brython_.py', '_testcapi.py', '_thread.py', '_threading_local.py', '_weakref.py', '_weakrefset.py', '__future__.py']
 
 @bind('#parse', 'click')
 def parse(ev):
     # Brython parse
     src = source.value
-    dump = ast.dump(ast.parse(src), indent=4)
-    dumps['Brython'] = dump.replace('\r\n', '\n')
+    dumps['Brython'] = ast.dump(ast.parse(src), indent=4).replace('\r\n', '\n')
     # CPython
     req = ajax.post("/dump_ast",
-      headers={"Content-Type": "text/plain,charset=utf-8"},
+      headers={"Content-Type": "application/json"},
       data=json.dumps({'py_source': src}),
       oncomplete=show_cpython
     )
 
+dumps = {}
 
+def run():
+    path = paths.pop()
+    document["parse"].text = path
+    url = '../src/Lib/' + path
+    src = open(url).read()
+    src = src.replace('\r\n', '\n')
+    source.value = src
+    parse(None)
+
+run()
 </script>
 
 <script>
