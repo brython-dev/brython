@@ -637,7 +637,7 @@ float.__repr__ = function(self){
 
     var res = self + "" // coerce to string
     
-    if(res.indexOf(".") == -1){
+    if(res.search(/[.eE]/) == -1){
         res += ".0"
     }
     var split_e = res.split(/e/i)
