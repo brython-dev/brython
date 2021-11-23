@@ -128,8 +128,7 @@ var $op_order = [['or'], ['and'], ['not'],
     ['^'],
     ['&'],
     ['>>', '<<'],
-    ['+'],
-    ['-'],
+    ['+', '-'],
     ['*', '@', '/', '//', '%'],
     ['unary_neg', 'unary_inv', 'unary_pos'],
     ['**']
@@ -1336,6 +1335,9 @@ $AssignCtx.prototype.ast = function(){
     var value = ast_or_obj(this.tree[1]),
         targets = [],
         target = this.tree[0]
+    if(target.type == 'expr' && target.tree[0].type == 'list_or_tuple'){
+        target = target.tree[0]
+    }
     if(target.type == 'list_or_tuple'){
         target = ast_or_obj(target)
         for(var elt of target.elts){
@@ -1351,9 +1353,14 @@ $AssignCtx.prototype.ast = function(){
             targets.splice(0, 0, ast_or_obj(target.tree[1]))
             target = target.tree[0]
         }
-        targets.splice(0, 0, ast_or_obj(target.tree[0]))
+        targets.splice(0, 0, ast_or_obj(target))
         for(var tg of targets){
             tg.ctx = new ast.Store()
+            if(tg instanceof ast.Tuple){
+                for(var elt of tg.elts){
+                    elt.ctx = new ast.Store()
+                }
+            }
         }
     }
     value.ctx = new ast.Load()
@@ -1755,7 +1762,7 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
 $AttrCtx.prototype.ast = function(){
     // ast.Attribute(value, attr, ctx)
     var value = ast_or_obj(this.value),
-        attr = this.name,
+        attr = this.unmangled_name,
         ctx = new ast.Load()
     if(this.func == 'setattr'){
         ctx = new ast.Store()
@@ -1776,6 +1783,7 @@ $AttrCtx.prototype.transition = function(token, value){
         }else if(noassign[name] === true){
             $_SyntaxError(context, `'${name}' cannot be an attribute`)
         }
+        context.unmangled_name = name
         name = $mangle(name, context)
         context.name = name
         return context.parent
@@ -3227,7 +3235,7 @@ function get_decorators(node){
         }else if(parent_node.children[rank].context.tree[0].type ==
                 'decorator'){
             var deco = parent_node.children[rank].context.tree[0].tree[0]
-            decorators.push(ast_or_obj(deco))
+            decorators.splice(0, 0, ast_or_obj(deco))
         }else{
             break
         }
@@ -3315,46 +3323,12 @@ $DefCtx.prototype.ast = function(){
             defaults: []
         },
         decorators = get_decorators(this.parent.node),
-        func_args = this.tree[1].tree,
+        func_args = this.tree[1],
         state = 'arg',
         default_value,
         res
-    for(var arg of func_args){
-        if(arg.type == 'end_positional'){
-            args.posonlyargs = args.args
-            args.args = []
-        }else if(arg.type == 'func_star_arg'){
-            if(arg.op == '*' && arg.name == '*'){
-                state = 'kwonly'
-            }else if(arg.op == '*'){
-                args.vararg = new ast.arg(arg.name)
-            }else if(arg.op == '**'){
-                args.kwarg = new ast.arg(arg.name)
-            }
-        }else{
-            default_value = false
-            if(arg.has_default){
-                default_value = ast_or_obj(arg.tree[0])
-            }
-            var argument = new ast.arg(arg.name)
-            if(arg.annotation){
-                argument.annotation = ast_or_obj(arg.annotation.tree[0])
-            }
-            if(state == 'kwonly'){
-                args.kwonlyargs.push(argument)
-                if(default_value){
-                    args.kw_defaults.push(default_value)
-                }
-            }else{
-                args.args.push(argument)
-                if(default_value){
-                    args.defaults.push(default_value)
-                }
-            }
-        }
-    }
-    args = new ast.arguments(args.posonlyargs, args.args, args.vararg,
-        args.kwonlyargs, args.kw_defaults, args.kwarg, args.defaults)
+
+    args = ast_or_obj(func_args)
     if(this.async){
         res = new ast.AsyncFunctionDef(this.name, args, [], decorators)
     }else{
@@ -3368,6 +3342,7 @@ $DefCtx.prototype.ast = function(){
 }
 
 $DefCtx.prototype.set_name = function(name){
+    /*
     try{
         name = $mangle(name, this.parent.tree[0])
     }catch(err){
@@ -3375,6 +3350,7 @@ $DefCtx.prototype.set_name = function(name){
         console.log('parent', this.parent)
         throw err
     }
+    */
     if(["None", "True", "False"].indexOf(name) > -1){
         $_SyntaxError(this, 'invalid function name')
     }
@@ -3979,17 +3955,21 @@ $DelCtx.prototype.ast = function(){
     var targets
     if(this.tree[0].type == 'list_or_tuple'){
         // Syntax "del a, b, c"
-        targets = this.tree[0].tree.slice()
+        targets = this.tree[0].tree.map(ast_or_obj)
     }else if(this.tree[0].type == 'expr' &&
             this.tree[0].tree[0].type == 'list_or_tuple'){
         // del(x[0]) is the same as del x[0], cf.issue #923
-        targets = this.tree[0].tree[0].tree.slice()
+        targets = ast_or_obj(this.tree[0].tree[0])
+        targets.ctx = new ast.Del()
+        for(var elt of targets.elts){
+            elt.ctx = new ast.Del()
+        }
+        return new ast.Delete([targets])
     }else{
-        targets = [this.tree[0].tree[0]]
+        targets = [ast_or_obj(this.tree[0].tree[0])]
     }
-    for(var i = 0; i < targets.length; i++){
-        targets[i] = ast_or_obj(targets[i])
-        targets[i].ctx = ast.Del
+    for(var target of targets){
+        target.ctx = new ast.Del()
     }
     return new ast.Delete(targets)
 }
@@ -4823,17 +4803,20 @@ $ExprCtx.prototype.transition = function(token, value){
               return new $AbstractExprCtx(new_op, false)
           }
 
+          // Climb up the tree until we find an operation op1.
+          // If it has a lower precedence than the new token op, replace it by
+          // an operation with op, whose left side is the operation op1.
           var op1 = context.parent,
               repl = null
           while(1){
-              if(op1.type == 'unary'){
+              if(op1.type == 'unary' && op !== '**'){
                   repl = op1
                   op1 = op1.parent
               }else if(op1.type == 'expr'){
                   op1 = op1.parent
               }else if(op1.type == 'op' &&
                       $op_weight[op1.op] >= $op_weight[op] &&
-                      !(op1.op == '**' && op == '**')){ // cf. issue #250
+                      ! (op1.op == '**' && op == '**')){ // cf. issue #250
                   repl = op1
                   op1 = op1.parent
               }else if(op1.type == "not" &&
@@ -4844,7 +4827,20 @@ $ExprCtx.prototype.transition = function(token, value){
                   break
               }
           }
+
           if(repl === null){
+              if(op1.type == 'op'){
+                  // current expr is inside an operation with lower precedence
+                  // than op, eg (+ a b) with op == '*'
+                  // Replace this expression by (+ a (* b ?))
+                  var right = op1.tree.pop(),
+                      expr = new $ExprCtx(op1, 'operand', context.with_commas)
+                  expr.tree.push(right)
+                  right.parent = expr
+                  var new_op = new $OpCtx(expr, op)
+                  return new $AbstractExprCtx(new_op, false)
+              }
+
               while(context.parent !== op1){
                   context = context.parent
                   op_parent = context.parent
@@ -4889,6 +4885,8 @@ $ExprCtx.prototype.transition = function(token, value){
                       case 'is':
                       case '>=':
                       case '>':
+                      case 'in':
+                      case 'not_in':
                        // chained comparisons such as c1 <= c2 < c3
                        repl.ops = repl.ops || [repl.op]
                        repl.ops.push(op)
@@ -5149,8 +5147,13 @@ $ExprNot.prototype.transition = function(token, value){
     var context = this
     if(token == 'in'){ // expr not in : operator
         context.parent.tree.pop()
-        return new $AbstractExprCtx(
-            new $OpCtx(context.parent, 'not_in'), false)
+        // Apply operator precedence to the expression above this instance
+        // eg "a + b not in ?" becomes "(a + b) not in ?")
+        var op1 = context.parent
+        while(op1.type !== 'expr'){
+            op1 = op1.parent
+        }
+        return op1.transition('op', 'not_in')
     }
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
@@ -5661,9 +5664,8 @@ $FuncArgs.prototype.ast = function(){
             args.posonlyargs = args.args
             args.args = []
         }else if(arg.type == 'func_star_arg'){
-            if(arg.op == '*' && arg.name == '*'){
-                state = 'kwonly'
-            }else if(arg.op == '*'){
+            state = 'kwonly'
+            if(arg.op == '*' && arg.name != '*'){
                 args.vararg = new ast.arg(arg.name)
             }else if(arg.op == '**'){
                 args.kwarg = new ast.arg(arg.name)
@@ -5681,6 +5683,8 @@ $FuncArgs.prototype.ast = function(){
                 args.kwonlyargs.push(argument)
                 if(default_value){
                     args.kw_defaults.push(default_value)
+                }else{
+                    args.kw_defaults.push(_b_.None)
                 }
             }else{
                 args.args.push(argument)
@@ -6199,7 +6203,7 @@ $GlobalCtx.prototype.to_js = function(){
 var $IdCtx = $B.parser.$IdCtx = function(context, value){
     // Class for identifiers (variable names)
     this.type = 'id'
-    this.value = $mangle(value, context)
+    this.value = value // $mangle(value, context)
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
@@ -6282,7 +6286,8 @@ $IdCtx.prototype.ast = function(){
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
         return new ast.Constant(_b_[this.value])
     }
-    return new ast.Name(this.value, new ast.Load())
+    return new ast.Name(this.value,
+        this.bound ? new ast.Store() : new ast.Load())
 }
 
 $IdCtx.prototype.toString = function(){
@@ -6519,7 +6524,7 @@ $IdCtx.prototype.to_js = function(arg){
         return this.result
     }
 
-    var val = this.value
+    var val = $mangle(this.value, this)
 
     var $test = false // val == "ixq" //&& innermost.type == "listcomp"
     if($test){
@@ -7124,19 +7129,30 @@ JoinedStrCtx.prototype.ast = function(){
         type: 'JoinedStr',
         values: []
     }
+    var state
     for(var item of this.tree){
         if(item instanceof $StringCtx){
-            res.values.push(new ast.Constant(eval(item.value)))
+            if(state == 'string'){
+                // eg in "'ab' f'c{x}'"
+                $B.last(res.values).value += eval(item.value)
+            }else{
+                res.values.push(new ast.Constant(eval(item.value)))
+            }
+            state = 'string'
         }else{
             var conv_num = {a: 97, r: 114, s: 115},
+                format = item.elt.format
+            format = format === undefined ? format : ast_or_obj(format)
                 value = new ast.FormattedValue(
                     ast_or_obj(item),
-                    conv_num[item.elt.conversion] || -1)
+                    conv_num[item.elt.conversion] || -1,
+                    format)
             var format = item.format
             if(format !== undefined){
                 value.format = item.format.ast()
             }
             res.values.push(value)
+            state = 'formatted_value'
         }
     }
     return new ast.JoinedStr(res.values)
@@ -10425,7 +10441,18 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
 }
 
 $StringCtx.prototype.ast = function(){
-    return new ast.Constant(eval(this.value))
+    var value
+    if(! this.is_bytes){
+        try{
+            value =  eval(this.value)
+        }catch(err){
+            console.log('error str ast', this.value)
+            throw err
+        }
+    }else{
+        value = _b_.bytes.$new(_b_.bytes, eval(this.value), 'ISO-8859-1')
+    }
+    return new ast.Constant(value)
 }
 
 $StringCtx.prototype.toString = function(){
@@ -10701,7 +10728,8 @@ var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
 
 $TernaryCtx.prototype.ast = function(){
     // ast.IfExp(test, body, orelse)
-    return new ast.IfExp(...this.tree.map(ast_or_obj))
+    return new ast.IfExp(ast_or_obj(this.tree[1]), ast_or_obj(this.tree[0]),
+        ast_or_obj(this.tree[2]))
 }
 
 $TernaryCtx.prototype.toString = function(){
@@ -11011,7 +11039,8 @@ $WithCtx.prototype.ast = function(){
         }
         withitems.push(withitem)
     }
-    return new ast.With(withitems, ast_body(this.parent))
+    var klass = this.async ? ast.AsyncWith : ast.With
+    return new klass(withitems, ast_body(this.parent))
 }
 
 $WithCtx.prototype.toString = function(){
@@ -11723,6 +11752,7 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     // - add it to the attribute "bindings" of the node, except if no_bindings
     //   is set, which is the case for "for x in A" : if A is empty the name
     //   has no value (issue #1233)
+    name = $mangle(name, context)
     if(scope.nonlocals && scope.nonlocals.has(name)){
         // name is declared nonlocal in the scope : don't bind
         var parent_block = scope.parent_block
@@ -11908,8 +11938,9 @@ var $mangle = $B.parser.$mangle = function(name, context){
         var klass = null,
             scope = $get_scope(context)
         while(true){
-            if(scope.ntype == "module"){return name}
-            else if(scope.ntype == "class"){
+            if(scope.ntype == "module"){
+                return name
+            }else if(scope.ntype == "class"){
                 var class_name = scope.context.tree[0].name
                 while(class_name.charAt(0) == '_'){
                     class_name = class_name.substr(1)
@@ -12300,11 +12331,13 @@ function prepare_string(context, s, position){
         src = inner
     while(end < src.length){
         if(escaped){
-            if(src.charAt(end) == "a"){
+            if(src.charAt(end) == "a" && ! raw){
                 zone = zone.substr(0, zone.length - 1) + "\u0007"
             }else{
                 zone += src.charAt(end)
-                if(raw && src.charAt(end) == '\\'){zone += '\\'}
+                if(raw && src.charAt(end) == '\\'){
+                    zone += '\\'
+                }
             }
             escaped = false
             end++

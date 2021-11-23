@@ -1043,8 +1043,8 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "stderr" // && obj === $B // "Point"
-    if($test){console.log("$getattr", attr, obj, klass)}
+    var $test = false // attr == "__update" // && obj === $B // "Point"
+    if($test){console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)}
 
     // Shortcut for classes without parents
     if(klass !== undefined && (! klass.$native) && klass.__bases__ &&

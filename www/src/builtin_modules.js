@@ -866,7 +866,12 @@
                 // numeric constant
                 switch(js_node.type){
                     case 'int':
-                        return parseInt(js_node.value[1], js_node.value[0])
+                        var res = parseInt(js_node.value[1], js_node.value[0])
+                        if(res < $B.min_int || res > $B.max_int){
+                            return $B.long_int.$factory(js_node.value[1],
+                                js_node.value[0])
+                        }
+                        return res
                     case 'float':
                         return new Number(js_node.value)
                     case 'imaginary':
@@ -882,8 +887,11 @@
                 return js_node.$name + '()'
             }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
                 return js_node
+            }else if(js_node.__class__){
+                return js_node
             }else{
                 console.log('cannot handle', js_node)
+                return js_node
             }
         }
     }
