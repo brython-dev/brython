@@ -9,5 +9,13 @@ import ast
 
 print('Content-type: text/plain')
 print()
-data = json.loads(sys.stdin.read())
-print(ast.dump(ast.parse(data["py_source"]), indent = 4))
+
+source = sys.stdin.read()
+
+data = json.loads(source)
+source = data["py_source"]
+b = source.encode('utf-8')
+
+result = ast.dump(ast.parse(source), indent = 4)
+result = result.encode('utf-8').decode(sys.stdout.encoding)
+print(result)
