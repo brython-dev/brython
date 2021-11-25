@@ -56,10 +56,6 @@ style_sheet = """
 .tkinter-button {
     margin: 0.5em;
 }
-
-.resizable {
-
-}
 """
 
 
@@ -72,8 +68,7 @@ class Tk:
     Method close() removes the dialog box.
     """
 
-    def __init__(self, *,
-            top=None, left=None, default_css=True):
+    def __init__(self, *, top=None, left=None, default_css=True):
         if default_css:
             for stylesheet in document.styleSheets:
                 if stylesheet.ownerNode.id == "tkinter":
@@ -84,13 +79,14 @@ class Tk:
         self.widget = html.DIV(style='position:absolute;visibility:hidden',
             Class="tkinter-main")
         self.title_text = html.SPAN()
+        self.title_text.html = '&nbsp;'
         self.title_bar = html.DIV(self.title_text, Class="tkinter-title")
         self.widget <= self.title_bar
         self.close_button = html.SPAN("&times;", Class="tkinter-close")
         self.title_bar <= self.close_button
         self.close_button.bind("click", self.close)
         self.panel = html.DIV(Class="tkinter-panel")
-        self.table = html.TABLE()
+        self.table = html.TABLE(border=1, id='tk table')
         self.panel <= self.table
         self.widget <= self.panel
 
@@ -148,62 +144,66 @@ class Tk:
         self.title_text.text = title
 
 def config(widget, **kw):
-      if kw.get('width') is not None:
-          widget.style.width = f'{kw["width"]}em'
-      if kw.get('height') is not None:
-          widget.style.height = f'{kw["height"]}em'
-      if kw.get('bg') is not None:
-          widget.style.backgroundColor = kw['bg']
-      if kw.get('fg') is not None:
-          widget.style.color = kw['fg']
-      if kw.get('bd') is not None:
-          widget.style.borderWidth = kw['db']
-          widget.style.borderStyle = 'solid'
-          widget.style.borderColor = '#ddd'
-      if kw.get('command') is not None:
-          widget.bind('click', command)
-      if kw.get('state') is not None:
-          state = kw['state']
-          if state is DISABLED:
-              widget.attrs['disabled'] = True
-          elif state is NORMAL:
-              widget.attrs['disabled'] = False
+    if (width := kw.get('width')) is not None:
+        widget.style.width = f'{width}em'
+    if (height := kw.get('height')) is not None:
+        if widget.tagName == 'SELECT':
+            widget.attrs['size'] = height
+        else:
+            widget.style.height = f'{height}em'
+    if (bg := kw.get('bg')) is not None:
+        widget.style.backgroundColor = bg
+    if (fg := kw.get('fg')) is not None:
+        widget.style.color = fg
+    if (bd := kw.get('bd')) is not None:
+        widget.style.borderWidth = bd
+        widget.style.borderStyle = 'solid'
+        widget.style.borderColor = '#ddd'
+    if (command := kw.get('command')) is not None:
+        widget.bind('click', lambda ev: command())
+    if (state := kw.get('state')) is not None:
+        if state is DISABLED:
+            widget.attrs['disabled'] = True
+        elif state is NORMAL:
+            widget.attrs['disabled'] = False
+    if widget.tagName == 'SELECT':
+        if selectmode := kw.get('selectmode') is not None:
+            widget.attrs['multiple'] = selectmode is MULTIPLE
 
-class Sticky:
+class Constant:
 
-    def __init__(self, name):
-        self.directions = list(name)
+    def __init__(self, value):
+        self.value = value
 
-    def __add__(self, other):
-        self.mix = [self.directions, other.directions]
 
-E = Sticky('E')
-W = Sticky('W')
-N = Sticky('N')
-S = Sticky('S')
-NW = Sticky('NW')
-NE = Sticky('NE')
-SW = Sticky('SW')
-SE = Sticky('SE')
+E = Constant('E')
+W = Constant('W')
+N = Constant('N')
+S = Constant('S')
+NW = Constant('NW')
+NE = Constant('NE')
+SW = Constant('SW')
+SE = Constant('SE')
 
 def grid(master, column=0, columnspan=1, row=0, rowspan=1,
         in_=None, ipadx=None, ipady=None,
         sticky=''):
     if not hasattr(master, 'table'):
         master.table = html.TABLE()
-        master <= master.table
+        master.widget <= master.table
     if not hasattr(master, 'cells'):
         master.cells = set()
     # The cell at (row, column) in grid must be inserted in table row #row
     # master.cells is a set of (row, column) that are already used because
     # a cell with colspan or rowspan is used
 
-    nb_rows = len(master.table.select('TR'))
+    nb_rows = len(master.table.rows)
     for i in range(row - nb_rows + 1):
         master.table <= html.TR()
-    tr = master.table.select('TR')[row]
+
+    tr = master.table.rows[row]
     # number of TD in table row
-    nb_cols = len(tr.select('TD'))
+    nb_cols = len(tr.cells)
     # cells in row occupied because of rowspan / colspan
     cols_from_span = [c for (r, c) in master.cells
         if r == row and c < column]
@@ -212,7 +212,7 @@ def grid(master, column=0, columnspan=1, row=0, rowspan=1,
     for i in range(column - cols_to_add + 1):
         tr <= html.TD()
 
-    td = tr.select('TD')[column - len(cols_from_span)]
+    td = tr.cells[column - len(cols_from_span)]
 
     # update cells
     for i in range(1, rowspan):
@@ -227,8 +227,8 @@ def grid(master, column=0, columnspan=1, row=0, rowspan=1,
     if rowspan > 1:
         td.attrs['rowspan'] = rowspan
 
-    if isinstance(sticky, Sticky):
-        sticky = sticky.directions
+    if isinstance(sticky, Constant):
+        sticky = list(sticky.value)
     else:
         sticky = list(sticky)
     if 'W' in sticky:
@@ -241,14 +241,18 @@ def grid(master, column=0, columnspan=1, row=0, rowspan=1,
         td.style.verticalAlign = 'bottom'
     return td
 
-class State:
 
-    def __init__(self, value):
+NORMAL = Constant('NORMAL')
+ACTIVE = Constant('ACTIVE')
+DISABLED = Constant('DISABLED')
+
+class IntVar:
+
+    def get(self):
+        return self.value
+
+    def set(self, value):
         self.value = value
-
-NORMAL = State('NORMAL')
-ACTIVE = State('ACTIVE')
-DISABLED = State('DISABLED')
 
 class Button:
 
@@ -274,6 +278,22 @@ class Entry:
         config(td, **self.kw)
         td <= self.widget
 
+class Frame:
+
+    count = 0
+
+    def __init__(self, master, **kw):
+        self.master = master
+        self.kw = kw
+        self.widget = html.DIV()
+        self._count = Frame.count
+        Frame.count += 1
+
+    def grid(self, **kwargs):
+        td = grid(self.master, **kwargs)
+        config(td, **self.kw)
+        td <= self.widget
+
 class Label:
 
     def __init__(self, master, text, **kw):
@@ -285,3 +305,60 @@ class Label:
         td = grid(self.master, **kwargs)
         config(td, **self.kw)
         td.text = self.text
+
+
+# don't define ACTIVE, it's already in State
+END = Constant('END')
+
+SINGLE = Constant('SINGLE')
+BROWSE = Constant('BROWSE')
+MULTIPLE = Constant('MULTIPLE')
+EXTENDED = Constant('EXTENDED')
+
+class Listbox:
+
+    def __init__(self, master, **kw):
+        self.master = master
+        self.kw = kw
+        self.widget = html.SELECT()
+
+    def delete(self, position):
+        if position is END:
+            position = len(self.widget.options) - 1
+        elif position is ACTIVE:
+            position = self.widget.selectedIndex
+        self.widget.remove(position)
+
+    def insert(self, position, *options):
+        if position is END:
+            for option in options:
+                self.widget <= html.OPTION(option)
+            return
+        elif position is ACTIVE:
+            position = self.widget.selectedIndex
+        for option in options.reverse():
+            self.widget.add(html.OPTION(option), position)
+
+    def grid(self, **kwargs):
+        td = grid(self.master, **kwargs)
+        config(self.widget, **self.kw)
+        td <= self.widget
+
+    def size(self):
+        return len(self.widget.options)
+
+class Radiobutton:
+
+    def __init__(self, master, text='', value=None, variable=None,
+            **kw):
+        self.master = master
+        self.kw = kw
+        self.radio = html.INPUT(type='radio', value=value, name='x')
+        if variable:
+            self.radio.bind('click', lambda ev: variable.set(ev.target.value))
+        self.widget = html.DIV(self.radio + html.SPAN(text))
+
+    def grid(self, **kwargs):
+        td = grid(self.master, **kwargs)
+        config(self.widget, **self.kw)
+        td <= self.widget
