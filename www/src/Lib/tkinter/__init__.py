@@ -95,13 +95,11 @@ class Tk:
 
         # Center horizontally and vertically
         if left is None:
-            width = round(window.innerWidth * 0.1)
-            left = int((window.innerWidth - width) / 2)
+            left = int(0.1 * window.innerWidth)
         self.widget.left = left
         self.widget.style.left = f'{left}px'
         if top is None:
-            height = round(float(cstyle.height[:-2]) + 0.5)
-            top = int((window.innerHeight - height) / 2)
+            top = int(0.1 * window.innerHeight)
         # top is relative to document scrollTop
         top += document.scrollingElement.scrollTop
         self.widget.top = top
@@ -144,6 +142,8 @@ class Tk:
         self.title_text.text = title
 
 def config(widget, **kw):
+    if (text := kw.get('text')) is not None:
+        widget.text = text
     if (width := kw.get('width')) is not None:
         widget.style.width = f'{width}em'
     if (height := kw.get('height')) is not None:
@@ -159,6 +159,9 @@ def config(widget, **kw):
         widget.style.borderWidth = bd
         widget.style.borderStyle = 'solid'
         widget.style.borderColor = '#ddd'
+    if(font := kw.get('font')) is not None:
+        for key, value in font.css.items():
+            setattr(widget.style, key, value)
     if (command := kw.get('command')) is not None:
         widget.bind('click', lambda ev: command())
     if (state := kw.get('state')) is not None:
@@ -185,7 +188,7 @@ NE = Constant('NE')
 SW = Constant('SW')
 SE = Constant('SE')
 
-def grid(master, column=0, columnspan=1, row=0, rowspan=1,
+def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         in_=None, ipadx=None, ipady=None,
         sticky=''):
     if not hasattr(master, 'table'):
@@ -196,6 +199,10 @@ def grid(master, column=0, columnspan=1, row=0, rowspan=1,
     # The cell at (row, column) in grid must be inserted in table row #row
     # master.cells is a set of (row, column) that are already used because
     # a cell with colspan or rowspan is used
+
+    if row is None:
+        # default is the first empty row
+        row = len(master.table.rows)
 
     nb_rows = len(master.table.rows)
     for i in range(row - nb_rows + 1):
@@ -296,15 +303,19 @@ class Frame:
 
 class Label:
 
-    def __init__(self, master, text, **kw):
+    def __init__(self, master, *, text='', **kw):
         self.master = master
         self.text = text
         self.kw = kw
+        self.widget = html.SPAN(text,style='white-space:pre;')
+
+    def config(self, **kw):
+        config(self.widget, **kw)
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
         config(td, **self.kw)
-        td.text = self.text
+        td <= self.widget
 
 
 # don't define ACTIVE, it's already in State
