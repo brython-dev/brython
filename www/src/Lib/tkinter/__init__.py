@@ -2,57 +2,58 @@ from browser import console, document, html, window
 
 style_sheet = """
 :root {
-    --brython-dialog-font-family: Arial;
-    --brython-dialog-font-size: 100%;
-    --brython-dialog-bgcolor: #fff;
-    --brython-dialog-border-color: #000;
-    --brython-dialog-title-bgcolor: CadetBlue;
-    --brython-dialog-title-color: #fff;
-    --brython-dialog-close-bgcolor: #fff;
-    --brython-dialog-close-color: #000;
+    --tkinter-font-family: Arial;
+    --tkinter-font-size: 100%;
+    --tkinter-bgcolor: #f0f0f0;
+    --tkinter-border-color: #000;
+    --tkinter-title-bgcolor: #fff;
+    --tkinter-title-color: #000;
+    --tkinter-close-bgcolor: #fff;
+    --tkinter-close-color: #000;
 }
 
-.brython-dialog-main {
-    font-family: var(--brython-dialog-font-family);
-    font-size: var(--brython-dialog-font-size);
-    background-color: var(--brython-dialog-bgcolor);
+.tkinter-main {
+    font-family: var(--tkinter-font-family);
+    font-size: var(--tkinter-font-size);
+    background-color: var(--tkinter-bgcolor);
     left: 10px;
     top: 10px;
     border-style: solid;
-    border-color: var(--brython-dialog-border-color);
+    border-color: var(--tkinter-border-color);
     border-width: 1px;
     z-index: 10;
     resize: both;
     overflow: auto;
 }
 
-.brython-dialog-title {
-    background-color: var(--brython-dialog-title-bgcolor);
-    color: var(--brython-dialog-title-color);
+.tkinter-title {
+    background-color: var(--tkinter-title-bgcolor);
+    color: var(--tkinter-title-color);
     border-style: solid;
-    border-color: var(--brython-dialog-border-color);
+    border-color: var(--tkinter-border-color);
     border-width: 0px 0px 1px 0px;
     padding: 0.4em;
     cursor: default;
 }
 
-.brython-dialog-close {
+.tkinter-close {
     float: right;
-    background-color: var(--brython-dialog-close-bgcolor);
-    color: var(--brython-dialog-close-color);
+    background-color: var(--tkinter-close-bgcolor);
+    color: var(--tkinter-close-color);
     cursor: default;
     padding: 0.1em;
 }
 
-.brython-dialog-panel {
+.tkinter-panel {
     padding: 0.6em;
+    background-color: #f0f0f0;
 }
 
-.brython-dialog-message {
+.tkinter-message {
     padding-right: 0.6em;
 }
 
-.brython-dialog-button {
+.tkinter-button {
     margin: 0.5em;
 }
 
@@ -62,7 +63,7 @@ style_sheet = """
 """
 
 
-class Tk(html.DIV):
+class Tk:
     """Basic, moveable dialog box with a title bar, optional
     "Ok" / "Cancel" buttons.
     The "Ok" button is the attribute "ok_button" of the dialog object.
@@ -71,62 +72,64 @@ class Tk(html.DIV):
     Method close() removes the dialog box.
     """
 
-    def __init__(self, title="", *,
+    def __init__(self, *,
             top=None, left=None, default_css=True):
         if default_css:
             for stylesheet in document.styleSheets:
-                if stylesheet.ownerNode.id == "brython-dialog":
+                if stylesheet.ownerNode.id == "tkinter":
                     break
             else:
-                document <= html.STYLE(style_sheet, id="brython-dialog")
+                document <= html.STYLE(style_sheet, id="tkinter")
 
-        html.DIV.__init__(self, style='position:absolute;visibility:hidden',
-            Class="brython-dialog-main")
-        self.title_bar = html.DIV(html.SPAN(title), Class="brython-dialog-title")
-        self <= self.title_bar
-        self.close_button = html.SPAN("&times;", Class="brython-dialog-close")
+        self.widget = html.DIV(style='position:absolute;visibility:hidden',
+            Class="tkinter-main")
+        self.title_text = html.SPAN()
+        self.title_bar = html.DIV(self.title_text, Class="tkinter-title")
+        self.widget <= self.title_bar
+        self.close_button = html.SPAN("&times;", Class="tkinter-close")
         self.title_bar <= self.close_button
         self.close_button.bind("click", self.close)
-        self.panel = html.DIV(Class="brython-dialog-panel")
-        self.table = html.TABLE(border=1)
+        self.panel = html.DIV(Class="tkinter-panel")
+        self.table = html.TABLE()
         self.panel <= self.table
-        self <= self.panel
+        self.widget <= self.panel
 
-        document <= self
-        cstyle = window.getComputedStyle(self)
+        document <= self.widget
+        cstyle = window.getComputedStyle(self.widget)
 
         # Center horizontally and vertically
         if left is None:
             width = round(window.innerWidth * 0.1)
             left = int((window.innerWidth - width) / 2)
-        self.left = left
-        self.style.left = f'{left}px'
+        self.widget.left = left
+        self.widget.style.left = f'{left}px'
         if top is None:
             height = round(float(cstyle.height[:-2]) + 0.5)
             top = int((window.innerHeight - height) / 2)
         # top is relative to document scrollTop
         top += document.scrollingElement.scrollTop
-        self.top = top
-        self.style.top = f'{top}px'
+        self.widget.top = top
+        self.widget.style.top = f'{top}px'
 
         self.title_bar.bind("mousedown", self.grab_widget)
-        self.bind("leave", self.mouseup)
+        self.widget.bind("leave", self.mouseup)
         self.state = None
 
     def close(self, *args):
-        self.remove()
+        self.widget.remove()
 
     def grab_widget(self, event):
         document.bind("mousemove", self.move_widget)
         document.bind("mouseup", self.stop_moving_widget)
-        self.initial = [self.left - event.x, self.top - event.y]
+        self.initial = [self.widget.left - event.x,
+                        self.widget.top - event.y]
         # prevent default behaviour to avoid selecting the moving element
         event.preventDefault()
 
     def move_widget(self, event):
         # set new moving element coordinates
-        self.left = self.initial[0] + event.x
-        self.top = self.initial[1] + event.y
+        self.widget.left = self.initial[0] + event.x
+        self.widget.top = self.initial[1] + event.y
 
     def stop_moving_widget(self, event):
         document.unbind('mousemove')
@@ -139,7 +142,10 @@ class Tk(html.DIV):
         document.unbind("touchmove")
 
     def mainloop(self):
-        self.style.visibility = "visible"
+        self.widget.style.visibility = "visible"
+
+    def title(self, title):
+        self.title_text.text = title
 
 def config(widget, **kw):
       if kw.get('width') is not None:
