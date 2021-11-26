@@ -1,3 +1,5 @@
+import re
+
 from browser import console, document, html, window
 
 style_sheet = """
@@ -60,12 +62,7 @@ style_sheet = """
 
 
 class Tk:
-    """Basic, moveable dialog box with a title bar, optional
-    "Ok" / "Cancel" buttons.
-    The "Ok" button is the attribute "ok_button" of the dialog object.
-    Supports drag and drop on the document.
-    A dialog has an attribute "panel" that can contain elements.
-    Method close() removes the dialog box.
+    """Basic, moveable dialog box with a title bar.
     """
 
     def __init__(self, *, top=None, left=None, default_css=True):
@@ -86,7 +83,7 @@ class Tk:
         self.title_bar <= self.close_button
         self.close_button.bind("click", self.close)
         self.panel = html.DIV(Class="tkinter-panel")
-        self.table = html.TABLE(border=1, id='tk table')
+        self.table = html.TABLE()
         self.panel <= self.table
         self.widget <= self.panel
 
@@ -109,8 +106,32 @@ class Tk:
         self.widget.bind("leave", self.mouseup)
         self.state = None
 
+        self._maxsize = (None, None)
+        self._minsize = (None, None)
+        self.resizable(1, 1)
+
+    def aspect(self, *args):
+        raise NotImplementedError()
+
     def close(self, *args):
         self.widget.remove()
+
+    def deiconify(self):
+        self.widget.style.visibility = "visible"
+        self._state = "normal"
+
+    def geometry(self, coords=None):
+        if coords is None:
+            return (f'{self.widget.width}x{self.widget.height}x'
+                    f'{self.widget.abs_left}x{self.widget.abs_top}')
+        else:
+            if mo := re.match(r'^(\d+x)*$', coords):
+                attrs = ['width', 'height', 'left', 'top']
+                values = re.findall(r'\d+', coords)
+                for value, attr in zip(values, attrs):
+                    setattr(self.widget.style, attr, f'{value}px')
+            else:
+                raise ValueError(f'bad geometry specifier "{coords}"')
 
     def grab_widget(self, event):
         document.bind("mousemove", self.move_widget)
@@ -120,26 +141,89 @@ class Tk:
         # prevent default behaviour to avoid selecting the moving element
         event.preventDefault()
 
+    def iconify(self):
+        raise NotImplementedError()
+
+    def maxsize(self, width=None, height=None):
+        if width is None and height is None:
+            return self._maxsize
+        self._maxsize = (width, height)
+        if width is not None:
+            self.widget.style.maxWidth = f'{width}px'
+        if height is not None:
+            self.widget.style.maxHeight = f'{height}px'
+
+    def minsize(self, width=None, height=None):
+        if width is None and height is None:
+            return self._minsize
+        self._minsize = (width, height)
+        if width is not None:
+            self.widget.style.minWidth = f'{width}px'
+        if height is not None:
+            self.widget.style.minHeight = f'{height}px'
+
     def move_widget(self, event):
         # set new moving element coordinates
         self.widget.left = self.initial[0] + event.x
         self.widget.top = self.initial[1] + event.y
 
+    def resizable(self, width=None, height=None):
+        if width is None:
+            css = self.widget.style.resize
+            match css:
+                case 'both':
+                    return (1, 1)
+                case 'horizontal':
+                    return (1, 0)
+                case 'vertical':
+                    return (0, 1)
+                case 'non':
+                    return (1, 0)
+        else:
+            if height is None:
+                raise ValueError('missing value for height')
+            height = self._resizable[1] if height is None else height
+            match (width, height):
+                case (0, 0):
+                    self.widget.style.resize = 'none'
+                case (0, 1):
+                    self.widget.style.resize = 'vertical'
+                case (1, 0):
+                    self.widget.style.resize = 'horizontal'
+                case (1, 1):
+                    self.widget.style.resize = 'both'
+
     def stop_moving_widget(self, event):
         document.unbind('mousemove')
         document.unbind('mouseup')
-        self.state = None
 
     def mouseup(self, event):
-        self.state = None
         document.unbind("mousemove")
         document.unbind("touchmove")
 
     def mainloop(self):
         self.widget.style.visibility = "visible"
 
-    def title(self, title):
+    def overrideredirect(self, flag=None):
+        if flag is None:
+            return self._overrideredirect
+        self._overrideredirect = flag
+        if flag:
+            self.title_bar.style.display = 'none'
+        else:
+            self.title_bar.style.display = 'block'
+
+    def state(self):
+        return self._state
+
+    def title(self, title=None):
+        if title is None:
+            return self.title_text.text
         self.title_text.text = title
+
+    def withdraw(self):
+        self.widget.style.visibility = 'hidden'
+        self._state = 'withdrawn'
 
 def config(widget, **kw):
     if (text := kw.get('text')) is not None:
