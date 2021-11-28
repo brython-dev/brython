@@ -10,6 +10,8 @@ style_sheet = """
     --tkinter-border-color: #000;
     --tkinter-title-bgcolor: #fff;
     --tkinter-title-color: #000;
+    --tkinter-menu-bgcolor: #fff;
+    --tkinter-menu-color: #000;
     --tkinter-close-bgcolor: #fff;
     --tkinter-close-color: #000;
 }
@@ -33,9 +35,23 @@ style_sheet = """
     color: var(--tkinter-title-color);
     border-style: solid;
     border-color: var(--tkinter-border-color);
-    border-width: 0px 0px 1px 0px;
+    border-width: 0px;
     padding: 0.4em;
     cursor: default;
+}
+
+.tkinter-menu {
+    background-color: var(--tkinter-menu-bgcolor);
+    color: var(--tkinter-menu-color);
+    border-style: solid;
+    border-color: var(--tkinter-border-color);
+    border-width: 0px;
+    width: auto;
+    cursor: default;
+}
+
+.tkinter-menu span {
+    padding-right: 0.3em;
 }
 
 .tkinter-close {
@@ -60,6 +76,7 @@ style_sheet = """
 }
 """
 
+_loops = []
 
 class Tk:
     """Basic, moveable dialog box with a title bar.
@@ -73,51 +90,59 @@ class Tk:
             else:
                 document <= html.STYLE(style_sheet, id="tkinter")
 
-        self.widget = html.DIV(style='position:absolute;visibility:hidden',
+        self.element = html.DIV(style='position:absolute;visibility:hidden',
             Class="tkinter-main")
         self.title_text = html.SPAN()
         self.title_text.html = '&nbsp;'
-        self.title_bar = html.DIV(self.title_text, Class="tkinter-title")
-        self.widget <= self.title_bar
+        self.title_bar = html.DIV('tk' + 3 * chr(160) + self.title_text,
+            Class="tkinter-title")
+        self.element <= self.title_bar
         self.close_button = html.SPAN("&times;", Class="tkinter-close")
         self.title_bar <= self.close_button
         self.close_button.bind("click", self.close)
         self.panel = html.DIV(Class="tkinter-panel")
         self.table = html.TABLE()
         self.panel <= self.table
-        self.widget <= self.panel
+        self.element <= self.panel
 
-        document <= self.widget
-        cstyle = window.getComputedStyle(self.widget)
+        document <= self.element
+        cstyle = window.getComputedStyle(self.element)
 
         # Center horizontally and vertically
         if left is None:
             left = int(0.1 * window.innerWidth)
-        self.widget.left = left
-        self.widget.style.left = f'{left}px'
+        self.element.left = left
+        self.element.style.left = f'{left}px'
         if top is None:
             top = int(0.1 * window.innerHeight)
         # top is relative to document scrollTop
         top += document.scrollingElement.scrollTop
-        self.widget.top = top
-        self.widget.style.top = f'{top}px'
+        self.element.top = top
+        self.element.style.top = f'{top}px'
 
         self.title_bar.bind("mousedown", self.grab_widget)
-        self.widget.bind("leave", self.mouseup)
-        self.state = None
+        self.element.bind("leave", self.mouseup)
 
         self._maxsize = (None, None)
-        self._minsize = (None, None)
+        self.minsize(int(window.outerWidth * 0.2),
+                        int(window.outerHeight * 0.2))
         self.resizable(1, 1)
+
+        self.menu = None
+
+        _loops.append(self)
 
     def aspect(self, *args):
         raise NotImplementedError()
 
     def close(self, *args):
-        self.widget.remove()
+        self.element.remove()
+
+    def config(self, **kwargs):
+        config(self, **kwargs)
 
     def deiconify(self):
-        self.widget.style.visibility = "visible"
+        self.element.style.visibility = "visible"
         self._state = "normal"
 
     def geometry(self, coords=None):
@@ -129,15 +154,16 @@ class Tk:
                 attrs = ['width', 'height', 'left', 'top']
                 values = re.findall(r'\d+', coords)
                 for value, attr in zip(values, attrs):
-                    setattr(self.widget.style, attr, f'{value}px')
+                    setattr(self.element.style, attr, f'{value}px')
             else:
                 raise ValueError(f'bad geometry specifier "{coords}"')
 
     def grab_widget(self, event):
+        self.remove_menus()
         document.bind("mousemove", self.move_widget)
         document.bind("mouseup", self.stop_moving_widget)
-        self.initial = [self.widget.left - event.x,
-                        self.widget.top - event.y]
+        self.initial = [self.element.left - event.x,
+                        self.element.top - event.y]
         # prevent default behaviour to avoid selecting the moving element
         event.preventDefault()
 
@@ -149,27 +175,32 @@ class Tk:
             return self._maxsize
         self._maxsize = (width, height)
         if width is not None:
-            self.widget.style.maxWidth = f'{width}px'
+            self.element.style.maxWidth = f'{width}px'
         if height is not None:
-            self.widget.style.maxHeight = f'{height}px'
+            self.element.style.maxHeight = f'{height}px'
 
     def minsize(self, width=None, height=None):
         if width is None and height is None:
             return self._minsize
         self._minsize = (width, height)
         if width is not None:
-            self.widget.style.minWidth = f'{width}px'
+            self.element.style.minWidth = f'{width}px'
         if height is not None:
-            self.widget.style.minHeight = f'{height}px'
+            self.element.style.minHeight = f'{height}px'
 
     def move_widget(self, event):
         # set new moving element coordinates
-        self.widget.left = self.initial[0] + event.x
-        self.widget.top = self.initial[1] + event.y
+        self.element.left = self.initial[0] + event.x
+        self.element.top = self.initial[1] + event.y
+
+    def remove_menus(self):
+        if self.menu and self.menu.open_submenu:
+            self.menu.open_on_mouseenter = False
+            self.menu.open_submenu.element.remove()
 
     def resizable(self, width=None, height=None):
         if width is None:
-            css = self.widget.style.resize
+            css = self.element.style.resize
             match css:
                 case 'both':
                     return (1, 1)
@@ -185,13 +216,13 @@ class Tk:
             height = self._resizable[1] if height is None else height
             match (width, height):
                 case (0, 0):
-                    self.widget.style.resize = 'none'
+                    self.element.style.resize = 'none'
                 case (0, 1):
-                    self.widget.style.resize = 'vertical'
+                    self.element.style.resize = 'vertical'
                 case (1, 0):
-                    self.widget.style.resize = 'horizontal'
+                    self.element.style.resize = 'horizontal'
                 case (1, 1):
-                    self.widget.style.resize = 'both'
+                    self.element.style.resize = 'both'
 
     def stop_moving_widget(self, event):
         document.unbind('mousemove')
@@ -202,7 +233,7 @@ class Tk:
         document.unbind("touchmove")
 
     def mainloop(self):
-        self.widget.style.visibility = "visible"
+        self.element.style.visibility = "visible"
 
     def overrideredirect(self, flag=None):
         if flag is None:
@@ -213,6 +244,9 @@ class Tk:
         else:
             self.title_bar.style.display = 'block'
 
+    def quit(self):
+        self.element.remove()
+
     def state(self):
         return self._state
 
@@ -222,40 +256,47 @@ class Tk:
         self.title_text.text = title
 
     def withdraw(self):
-        self.widget.style.visibility = 'hidden'
+        self.element.style.visibility = 'hidden'
         self._state = 'withdrawn'
 
 def config(widget, **kw):
     if (text := kw.get('text')) is not None:
-        widget.text = text
+        widget.element.text = text
     if (width := kw.get('width')) is not None:
-        widget.style.width = f'{width}em'
+        widget.element.style.width = f'{width}em'
     if (height := kw.get('height')) is not None:
-        if widget.tagName == 'SELECT':
-            widget.attrs['size'] = height
+        if isinstance(widget, Listbox):
+            widget.element.attrs['size'] = height
         else:
-            widget.style.height = f'{height}em'
+            widget.element.style.height = f'{height}em'
     if (bg := kw.get('bg')) is not None:
-        widget.style.backgroundColor = bg
+        widget.element.style.backgroundColor = bg
     if (fg := kw.get('fg')) is not None:
-        widget.style.color = fg
+        widget.element.style.color = fg
     if (bd := kw.get('bd')) is not None:
-        widget.style.borderWidth = bd
-        widget.style.borderStyle = 'solid'
-        widget.style.borderColor = '#ddd'
+        widget.element.style.borderWidth = bd
+        widget.element.style.borderStyle = 'solid'
+        widget.element.style.borderColor = '#ddd'
     if(font := kw.get('font')) is not None:
         for key, value in font.css.items():
-            setattr(widget.style, key, value)
+            setattr(widget.element.style, key, value)
     if (command := kw.get('command')) is not None:
-        widget.bind('click', lambda ev: command())
+        widget.element.bind('click', lambda ev: command())
     if (state := kw.get('state')) is not None:
         if state is DISABLED:
-            widget.attrs['disabled'] = True
+            widget.element.attrs['disabled'] = True
         elif state is NORMAL:
-            widget.attrs['disabled'] = False
-    if widget.tagName == 'SELECT':
+            widget.element.attrs['disabled'] = False
+
+    if (menu := kw.get('menu')) is not None:
+        if isinstance(widget, Tk):
+            menu._build()
+            widget.element.insertBefore(menu.element,
+                widget.title_bar.nextSibling)
+            widget.menu = menu
+    if isinstance(widget, Listbox):
         if selectmode := kw.get('selectmode') is not None:
-            widget.attrs['multiple'] = selectmode is MULTIPLE
+            widget.element.attrs['multiple'] = selectmode is MULTIPLE
 
 class Constant:
 
@@ -277,7 +318,7 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         sticky=''):
     if not hasattr(master, 'table'):
         master.table = html.TABLE()
-        master.widget <= master.table
+        master.element <= master.table
     if not hasattr(master, 'cells'):
         master.cells = set()
     # The cell at (row, column) in grid must be inserted in table row #row
@@ -350,24 +391,24 @@ class Button:
     def __init__(self, master, text='', **kw):
         self.master = master
         self.kw = kw
-        self.widget = html.BUTTON(text)
-        config(self.widget, **kw)
+        self.element = html.BUTTON(text)
+        config(self, **kw)
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
-        td <= self.widget
+        td <= self.element
 
 class Entry:
 
     def __init__(self, master, **kw):
         self.master = master
         self.kw = kw
-        self.widget = html.INPUT()
+        self.element = html.INPUT()
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
         config(td, **self.kw)
-        td <= self.widget
+        td <= self.element
 
 class Frame:
 
@@ -376,14 +417,14 @@ class Frame:
     def __init__(self, master, **kw):
         self.master = master
         self.kw = kw
-        self.widget = html.DIV()
+        self.element = html.DIV()
         self._count = Frame.count
         Frame.count += 1
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
         config(td, **self.kw)
-        td <= self.widget
+        td <= self.element
 
 class Label:
 
@@ -391,15 +432,15 @@ class Label:
         self.master = master
         self.text = text
         self.kw = kw
-        self.widget = html.SPAN(text,style='white-space:pre;')
+        self.element = html.DIV(text, style='white-space:pre;')
 
     def config(self, **kw):
-        config(self.widget, **kw)
+        config(self, **kw)
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
-        config(td, **self.kw)
-        td <= self.widget
+        config(self, **self.kw)
+        td <= self.element
 
 
 # don't define ACTIVE, it's already in State
@@ -415,32 +456,135 @@ class Listbox:
     def __init__(self, master, **kw):
         self.master = master
         self.kw = kw
-        self.widget = html.SELECT()
+        self.element = html.SELECT()
 
     def delete(self, position):
         if position is END:
-            position = len(self.widget.options) - 1
+            position = len(self.element.options) - 1
         elif position is ACTIVE:
-            position = self.widget.selectedIndex
-        self.widget.remove(position)
+            position = self.element.selectedIndex
+        self.element.remove(position)
 
     def insert(self, position, *options):
         if position is END:
             for option in options:
-                self.widget <= html.OPTION(option)
+                self.element <= html.OPTION(option)
             return
         elif position is ACTIVE:
-            position = self.widget.selectedIndex
+            position = self.element.selectedIndex
         for option in options.reverse():
-            self.widget.add(html.OPTION(option), position)
+            self.element.add(html.OPTION(option), position)
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
-        config(self.widget, **self.kw)
-        td <= self.widget
+        config(self, **self.kw)
+        td <= self.element
 
     def size(self):
-        return len(self.widget.options)
+        return len(self.element.options)
+
+class Menu:
+    COUNTER = 0
+
+    def __init__(self, master, **kw):
+        self.master = master
+        master.menu = self
+        self.kw = kw
+        self.toplevel = isinstance(master, Tk)
+
+        self.selected = None
+        self.open_submenu = None
+        self.open_on_mouseenter = False
+
+        self.choices = []
+
+    def add_cascade(self, **kw):
+        """Add a command that triggers the opening of 'menu', an instance of
+        Menu.
+        submenu = Menu(main_menu)
+        main_menu.add_cascade('open', submenu)
+        """
+        self.choices.append(kw | {'type': 'cascade'})
+
+    def add_command(self, **kw):
+        self.choices.append(kw | {'type': 'command'})
+
+    def add_separator(self):
+        self.choices.append({'type': 'separator'})
+
+    def _select(self, cell):
+        self.selected = cell
+        cell.style.backgroundColor = 'lightblue'
+        self.open_submenu = cell.kw['menu']
+
+    def _unselect(self):
+        if self.selected:
+            self.selected.style.backgroundColor = '#fff'
+
+    def _show_cascade(self, cell):
+        self._select(cell)
+        submenu = cell.kw['menu']
+        submenu._build()
+        submenu.opener = cell
+        self.element <= submenu.element
+        self.open_on_mouseenter = True
+        master = self.master.element
+        if isinstance(self.master, Tk):
+            submenu.element.style.left = f"{cell.abs_left - master.abs_left}px"
+            submenu.element.style.top = f"{cell.abs_top - master.abs_top + cell.offsetHeight}px"
+        else:
+            submenu.element.style.left = f"{self.element.offsetWidth}px"
+            submenu.element.style.top = f"{cell.abs_top - self.element.abs_top}px"
+        submenu.element.style.display = 'block'
+        self.open_submenu = submenu
+
+    def _cell_enter(self, event):
+        cell = event.target
+        self._unselect()
+        if self.toplevel:
+            # mouse enters a toplevel menu item
+            cell.style.backgroundColor = 'lightblue'
+            if not self.open_on_mouseenter:
+                return
+            self.open_submenu.element.style.display = 'none'
+            self._show_cascade(cell)
+        else:
+            opener = self.opener
+            event.target.style.backgroundColor = 'blue'
+            event.target.style.color = '#fff'
+            opener.style.backgroundColor = 'lightblue'
+
+    def _cell_leave(self, event):
+        if self.toplevel:
+            event.target.style.backgroundColor = '#fff'
+        else:
+            event.target.style.backgroundColor = '#fff'
+            event.target.style.color = '#000'
+
+    def _build(self):
+        self.element = html.DIV(Class='tkinter-menu')
+        if self.toplevel:
+            self.element.style.width='100%'
+        else:
+            self.element.style.position = 'absolute'
+
+        for choice in self.choices:
+            if choice['type'] == 'separator':
+                label = html.HR()
+            else:
+                label = choice.get('label', '').replace(' ', chr(160))
+            cell = html.SPAN(label) if self.toplevel else html.DIV(label)
+            if choice['type'] == 'cascade' and not self.toplevel:
+                cell = html.DIV(html.SPAN(label) +
+                    html.SPAN('>', style='text-align:right;'))
+            self.element <= cell
+            cell.bind('mouseenter', self._cell_enter)
+            cell.bind('mouseleave', self._cell_leave)
+            if choice['type'] == 'cascade':
+                cell.kw = choice
+                cell.bind('click',
+                    lambda ev, cell=cell: self._show_cascade(cell))
+
 
 class Radiobutton:
 
@@ -451,9 +595,13 @@ class Radiobutton:
         self.radio = html.INPUT(type='radio', value=value, name='x')
         if variable:
             self.radio.bind('click', lambda ev: variable.set(ev.target.value))
-        self.widget = html.DIV(self.radio + html.SPAN(text))
+        self.element = html.DIV(self.radio + html.SPAN(text))
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
-        config(self.widget, **self.kw)
-        td <= self.widget
+        config(self, **self.kw)
+        td <= self.element
+
+def mainloop():
+    for item in _loops:
+        item.mainloop()
