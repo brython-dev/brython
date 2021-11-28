@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-11-28 16:34:53.741953"
-__BRYTHON__.timestamp=1638113693740
+__BRYTHON__.compiled_date="2021-11-28 21:09:57.091172"
+__BRYTHON__.timestamp=1638130197091
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1222,7 +1222,7 @@ var scope=this.scope=$get_scope(this)
 if(C.type=='expr'){var assigned=C.tree[0]
 if(assigned.type=='id'){var name=assigned.value
 if((scope.ntype=='def' ||scope.ntype=='generator')&&
-(scope.binding[name]===undefined)){if(scope.globals===undefined ||
+(! scope.binding.hasOwnProperty(name))){if(scope.globals===undefined ||
 ! scope.globals.has(name)){
 assigned.unbound=true}}}}
 $get_node(this).bound_before=Object.keys(scope.binding)
@@ -2083,7 +2083,7 @@ if(this.id.substr(0,5)=='$exec'){js+='_exec'}
 js+='({$locals});return _b_.None'
 node.add($NodeJS(js))}
 var free_vars=[]
-if(this.parent.node.referenced){for(var attr in this.parent.node.referenced){if(! this.parent.node.binding[attr]){free_vars.push('"'+attr+'"')}}}
+if(this.parent.node.referenced){for(var attr in this.parent.node.referenced){if(! this.parent.node.binding.hasOwnProperty(attr)){free_vars.push('"'+attr+'"')}}}
 if(this.parent.node.nonlocals){for(var key of this.parent.node.nonlocals){var attr='"'+key+'"'
 if(free_vars.indexOf(attr)==-1){free_vars.push(attr)}}}
 node.add(def_func_node)
@@ -3105,7 +3105,7 @@ this.name=name
 this.parent=C
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
 if(C.parent.type !="lambda"){var node=$get_node(this)
-if(node.binding[name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
+if(node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
 $bind(name,node,this)}
 this.tree=[]
 C.tree[C.tree.length]=this
@@ -3168,7 +3168,7 @@ return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $FuncStarArgCtx.prototype.set_name=function(name){this.name=name
-if(this.parent.parent.type !="lambda"){if(this.node.binding[name]){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
+if(this.parent.parent.type !="lambda"){if(this.node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
 $bind(name,this.node,this)}
 var ctx=this.parent
 while(ctx.parent !==undefined){if(ctx.type=='def'){ctx.locals.push(name)
@@ -5875,7 +5875,7 @@ if(! C.no_bindings){var node=$get_node(C)
 node.bindings=node.bindings ||{}
 node.bindings[name]=true}
 scope.binding=scope.binding ||{}
-if(scope.binding[name]===undefined){scope.binding[name]=true}
+if(! scope.binding.hasOwnProperty(name)){scope.binding[name]=true}
 scope.varnames=scope.varnames ||{}
 if(scope.varnames[name]===undefined){scope.varnames[name]=true}
 return scope}
@@ -7240,6 +7240,9 @@ if(slots[key]===undefined){
 if(extra_kw_args){
 extra_kw.$string_dict[key]=[value,extra_kw.$order++]}else{throw _b_.TypeError.$factory($fname+
 "() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
+if(key==extra_pos_args){throw _b_.TypeError.$factory(
+`${$fname}() got an unexpected `+
+`keyword argument '${key}'`)}
 throw _b_.TypeError.$factory($fname+
 "() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key)>-1){throw _b_.TypeError.$factory($fname+"() got an "+
 "unexpected keyword argument '"+key+"'")}else{

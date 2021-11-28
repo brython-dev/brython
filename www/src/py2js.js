@@ -1844,7 +1844,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
         if(assigned.type == 'id'){
             var name = assigned.value
             if((scope.ntype == 'def' || scope.ntype == 'generator') &&
-                    (scope.binding[name] === undefined)){
+                    (! scope.binding.hasOwnProperty(name))){
                 if(scope.globals === undefined ||
                         ! scope.globals.has(name)){
                     // Augmented assign to a variable not yet defined in
@@ -3720,7 +3720,7 @@ $DefCtx.prototype.transform = function(node, rank){
     var free_vars = []
     if(this.parent.node.referenced){
         for(var attr in this.parent.node.referenced){
-            if(! this.parent.node.binding[attr]){
+            if(! this.parent.node.binding.hasOwnProperty(attr)){
                 free_vars.push('"' + attr + '"')
             }
         }
@@ -5821,7 +5821,7 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
     // bind name to function scope
     if(context.parent.type != "lambda"){
         var node = $get_node(this)
-        if(node.binding[name]){
+        if(node.binding.hasOwnProperty(name)){
             $_SyntaxError(context,
                 ["duplicate argument '" + name + "' in function definition"])
         }
@@ -5954,7 +5954,7 @@ $FuncStarArgCtx.prototype.set_name = function(name){
 
     // bind name to function scope
     if(this.parent.parent.type != "lambda"){
-        if(this.node.binding[name]){
+        if(this.node.binding.hasOwnProperty(name)){
             $_SyntaxError(context,
                 ["duplicate argument '" + name + "' in function definition"])
         }
@@ -11779,7 +11779,7 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     }
 
     scope.binding = scope.binding || {}
-    if(scope.binding[name] === undefined){
+    if(! scope.binding.hasOwnProperty(name)){
         scope.binding[name] = true
     }
     scope.varnames = scope.varnames || {}

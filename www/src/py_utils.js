@@ -153,6 +153,11 @@ $B.args = function($fname, argcount, slots, var_names, args, $dobj,
                 }
             }else if(slots[key] !== null){
                 // The slot is already filled
+                if(key == extra_pos_args){
+                    throw _b_.TypeError.$factory(
+                        `${$fname}() got an unexpected ` +
+                        `keyword argument '${key}'`)
+                }
                 throw _b_.TypeError.$factory($fname +
                     "() got multiple values for argument '" + key + "'")
             }else if(only_positional && only_positional.indexOf(key) > -1){

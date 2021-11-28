@@ -3006,6 +3006,12 @@ vector *= 25.7
 
 assert (vector.x, vector.y) == (38.55, 95.09)
 
+# issue 1830
+def foo(constructor: bool):
+    assert constructor is True
+
+foo(constructor=True)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
