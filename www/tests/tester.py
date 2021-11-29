@@ -98,6 +98,13 @@ class Tester:
             raise AssertionError('assertEqual, expected %s, got %s'
                 %(expected, result))
 
+    def assertTypedEqual(self, result, expected, msg=None):
+        if result != expected or type(result) != type(expected):
+            if msg is not None:
+                raise AssertionError(msg)
+            raise AssertionError('assertEqual, expected %s, got %s'
+                %(expected, result))
+
     def assertLess(self, result, value):
         if result >= value:
             raise AssertionError('%s not less than %s'
