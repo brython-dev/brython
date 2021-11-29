@@ -101,7 +101,7 @@ class Tk:
         self.title_bar <= self.close_button
         self.close_button.bind("click", self.close)
         self.panel = html.DIV(Class="tkinter-panel")
-        self.table = html.TABLE()
+        self.table = html.TABLE(width='100%')
         self.panel <= self.table
         self.element <= self.panel
 
@@ -303,6 +303,8 @@ class Constant:
     def __init__(self, value):
         self.value = value
 
+    def __repr__(self):
+        return f'<Constant {self.value}>'
 
 E = Constant('E')
 W = Constant('W')
@@ -317,7 +319,7 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         in_=None, ipadx=None, ipady=None,
         sticky=''):
     if not hasattr(master, 'table'):
-        master.table = html.TABLE()
+        master.table = html.TABLE(width='100%')
         master.element <= master.table
     if not hasattr(master, 'cells'):
         master.cells = set()
@@ -363,6 +365,9 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         sticky = list(sticky.value)
     else:
         sticky = list(sticky)
+
+    td.style.textAlign = 'center' # default
+
     if 'W' in sticky:
         td.style.textAlign = 'left'
     if 'E' in sticky:
@@ -439,8 +444,10 @@ class Label:
 
     def grid(self, **kwargs):
         td = grid(self.master, **kwargs)
+        self.element = td
         config(self, **self.kw)
-        td <= self.element
+        td.text = self.text
+        td.style.whiteSpace = 'pre'
 
 
 # don't define ACTIVE, it's already in State
@@ -601,6 +608,131 @@ class Radiobutton:
         td = grid(self.master, **kwargs)
         config(self, **self.kw)
         td <= self.element
+
+INSERT = Constant('INSERT')
+CURRENT = Constant('CURRENT')
+
+
+def get_text_nodes(div):
+    nodes = []
+    for child in div.childNodes:
+        if child.nodeType == 3:
+            nodes.append(child)
+        elif child.nodeType == 1:
+            nodes += get_text_nodes(child)
+    return nodes
+
+class Text:
+
+    def __init__(self, master, **kw):
+        self.master = master
+        self.kw = kw
+        self.element = html.DIV(contenteditable=True,
+            style='text-align:left;background-color:#fff;width:100%;white-space:pre;')
+
+    def index(self, position):
+        print('convert pos', position)
+        el = self.element
+        if position is END:
+            row = len(el.childNodes) - 1
+            column = len(el.childNodes[row].nodeValue)
+        elif position is INSERT:
+            sel = window.getSelection()
+            if sel.anchorNode is self.element:
+                return self.index(END)
+            else:
+                text = ''
+                for child in el.childNodes:
+                    if child.nodeType == 3: # text
+                        if child is sel.anchorNode:
+                            text += child.nodeValue[:sel.anchorOffset]
+                            lines = text.split('\n')
+                            row = len(lines)
+                            column = len(lines[-1])
+                            break
+                        else:
+                            text += child.nodeValue
+        elif isinstance(position, float):
+            row, column = [int(x) for x in str(position).split('.')]
+        elif isinstance(position, str):
+            if '.' not in position:
+                raise ValueError(f'bad text index "{position}"')
+            row, column = position.split('.')
+            row = int(row)
+            if row <= 0:
+                return [0, 0]
+            nodes = get_text_nodes(el)
+            print('column', column)
+            if mo := re.search('\s*[+-]\s*(\d+)\s*(c|chars)$', column):
+                print('match', mo)
+                column = column[:mo.start() - 1]
+            else:
+                print('no match')
+            if column == 'end':
+                text = ''
+                for node in nodes:
+                    text += node.nodeValue + '\n'
+                    lines = text.split('\n')
+                    if len(lines) > row:
+                        break
+                line = lines[row - 1]
+                column = len(line)
+        return row, column
+
+    def grid(self, **kwargs):
+        td = grid(self.master, **kwargs)
+        config(self, **self.kw)
+        td <= self.element
+        h = window.getComputedStyle(self.master.element)['height']
+        self.element.style.height = h
+
+    def delete(self, position, end=None):
+        row, column = self.index(position)
+        _range = document.createRange()
+        sel = window.getSelection()
+        el = self.element
+        _range.setStart(el.childNodes[row - 1], column)
+
+        if end is not None:
+            end_row, end_column = self._convert_position(end)
+            if end_row >= len(el.childNodes):
+                end_row = len(el.childNodes)
+                end_column = len(el.childNodes[end_row].innerText)
+            _range.setEnd(el.childNodes[end_row - 1], end_column)
+        else:
+            _range.setEnd(el.childNodes[row - 1], column + 1)
+
+        sel.removeAllRanges()
+        sel.addRange(_range)
+        _range.deleteContents()
+
+    def insert(self, position, text, tags=()):
+        if position is END:
+            self.element.text += text
+        elif position is INSERT:
+            sel = window.getSelection()
+            if sel.anchorNode is self.element:
+                self.insert(END, text, tags)
+            else:
+                nodeValue = sel.anchorNode.nodeValue
+                sel.anchorNode.nodeValue = nodeValue[:sel.anchorOffset] + \
+                    text + nodeValue[sel.anchorOffset:]
+        else:
+            row, column = self.index(position)
+            el = self.element
+            nodes = get_text_nodes(el)
+            content = ''
+            for node in nodes:
+                content += node.nodeValue + '\n'
+                lines = content.split('\n')
+                if len(lines) >= row:
+                    line = lines[row - 1]
+                    if len(line) >= column:
+                        offset = column
+                        break
+            node.nodeValue = node.nodeValue[:offset] + text + \
+                node.nodeValue[offset:]
+
 
 def mainloop():
     for item in _loops:
