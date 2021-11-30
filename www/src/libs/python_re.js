@@ -2896,14 +2896,6 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
             pos++
         }
     }
-    // does the pattern match the empty string ?
-    /*
-    var mo = match(pattern, new StringObj(''), 0, 0)
-    if(mo){
-        mo.start = mo.end = string.length
-        yield BMO.$factory(mo)
-    }
-    */
     delete original_string.in_iteration
 }
 
@@ -2973,8 +2965,11 @@ GroupMO.prototype.backtrack = function(string, groups){
                     var _mo = match({node: _case, text: _case.text},
                         string, mo.start)
                     if(_mo){
+                        // update GroupMO object
                         mos.push(_mo)
                         this.end = _mo.end
+                        var ix = this.$groups.$last[this.$groups.$last.length - 1]
+                        this.$groups[ix].end = _mo.end
                         return true
                     }
                 }
