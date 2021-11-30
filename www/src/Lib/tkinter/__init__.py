@@ -622,6 +622,39 @@ def get_text_nodes(div):
             nodes += get_text_nodes(child)
     return nodes
 
+def get_all_nodes(elt):
+    nodes = []
+    if elt.child_nodes:
+        for child in elt.childNodes:
+            nodes.append(child)
+            nodes += get_all_nodes(child)
+    return nodes
+
+def build_nodes(elt):
+    nodes = []
+    line = 1
+    text = ''
+    for child in elt.childNodes:
+        if child.nodeType == 3:
+            lines = text.split('\n')
+            start = (len(lines), len(lines[-1]))
+            text += child.nodeValue
+            lines = text.split('\n')
+            end = (len(lines), len(lines[-1]))
+            nodes.append((child, start, end))
+        elif child.nodeType == 1:
+            lines = text.split('\n')
+            start = (len(lines), len(lines[-1]))
+            text += child.text
+            if child.nodeName == 'DIV' and not child.text.endswith('\n'):
+                text += '\n'
+            lines = text.split('\n')
+            end = (len(lines), len(lines[-1]))
+            nodes.append((child.firstChild, start, end))
+        lines = text.split('\n')
+
+    return nodes
+
 class Text:
 
     def __init__(self, master, **kw):
@@ -661,13 +694,19 @@ class Text:
             row = int(row)
             if row <= 0:
                 return [0, 0]
-            nodes = get_text_nodes(el)
-            print('column', column)
-            if mo := re.search('\s*[+-]\s*(\d+)\s*(c|chars)$', column):
-                print('match', mo)
-                column = column[:mo.start() - 1]
-            else:
-                print('no match')
+            delta_column = 0
+            delta_row = 0
+            regexp = '\s*([+-])\s*(\d+)\s*(chars|char|cha|ch|c|lines|line|lin|li|l)'
+            while True:
+                if mo := re.search(regexp, column):
+                    column = column[:mo.start()] + column[mo.end():]
+                    delta = int(mo.groups()[0] + mo.groups()[1])
+                    if mo.groups()[2].startswith('c'):
+                        delta_column += delta
+                    else:
+                        delta_row += delta
+                else:
+                    break
             if column == 'end':
                 text = ''
                 for node in nodes:
@@ -677,6 +716,11 @@ class Text:
                         break
                 line = lines[row - 1]
                 column = len(line)
+            else:
+                column = int(column)
+            column += delta_column
+            row += delta_row
+            print('row, col', row, column)
         return row, column
 
     def grid(self, **kwargs):
@@ -719,19 +763,29 @@ class Text:
                     text + nodeValue[sel.anchorOffset:]
         else:
             row, column = self.index(position)
+            nodes = build_nodes(self.element)
+            console.log('nodes', nodes)
             el = self.element
-            nodes = get_text_nodes(el)
-            content = ''
-            for node in nodes:
-                content += node.nodeValue + '\n'
-                lines = content.split('\n')
-                if len(lines) >= row:
-                    line = lines[row - 1]
-                    if len(line) >= column:
-                        offset = column
-                        break
-            node.nodeValue = node.nodeValue[:offset] + text + \
-                node.nodeValue[offset:]
+            for elt, start, end in nodes:
+                if start <= (row, column) < end:
+                    # insertion point is inside node "elt"
+                    # dtermine the offset of (row, column) in elt
+                    print('insert in elt', elt, elt.text)
+                    r, c = start
+                    lines = elt.nodeValue.split('\n')
+                    offset = 0
+                    for line in lines:
+                        if r == row:
+                            offset += min(column - c, len(line))
+                            break
+                        else:
+                            offset += len(line) + 1
+                        r += 1
+                        c = 0
+                    break
+            elt.nodeValue = elt.nodeValue[:offset] + text + \
+                elt.nodeValue[offset:]
+            print('new node value', elt.nodeValue)
 
 
 def mainloop():
