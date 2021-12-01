@@ -630,6 +630,85 @@ def get_all_nodes(elt):
             nodes += get_all_nodes(child)
     return nodes
 
+def text_nodes(elt):
+    r, c = 1, 0
+    for child in elt.childNodes:
+        console.log(child)
+        if child.nodeType == 3: # text
+            offset = 0
+            for mo in re.finditer('\n', child.nodeValue):
+                yield (child, r, c, c + mo.start() - offset, offset)
+                r += 1
+                c = 0
+                offset = mo.end()
+            yield (child, r, c, c + len(child.nodeValue) - offset, offset)
+            c += len(child.nodeValue)
+        else:
+            if (r, c) != (0, 0):
+                r += 1
+                c = 0
+            child = child.firstChild
+            console.log('firstchild', child, 'node value', child.nodeValue)
+            text = child.nodeValue
+            text = text if text.endswith('\n') else text + '\n'
+            offset = 0
+            for mo in re.finditer('\n', child.nodeValue):
+                print('mo', mo)
+                yield(child, r, c, c + mo.start() - offset, offset)
+                r += 1
+                c = 0
+                offset = mo.end()
+            yield (child, r, c, c + len(text) - offset, offset)
+            c += len(text)
+
+
+def text_nodes_1(elt):
+    r, c = 1, 0
+    pos = 0
+    for child in elt.childNodes:
+        console.log(child)
+        if child.nodeType == 3: # text
+            offset = 0
+            yield ('text', child, pos)
+            pos += len(child.nodeValue)
+        else:
+            #if (r, c) != (0, 0):
+            #    pos += 1 # line feed for <div>
+            child = child.firstChild
+            yield('div', child, pos)
+            pos += len(child.nodeValue)
+
+
+def text_nodes(elt):
+    for child in elt.childNodes:
+        if child.nodeType == 3:
+            yield ('text', child)
+        elif child.nodeType == 1:
+            yield ('div', child.firstChild)
+
+def text_nodes_2(elt, pos, insert):
+    # for each non-whitespace text node, yield a tuple
+    # (text_pos, textNode, offset) where
+    # - text_pos is the position of the stripped text in elt.innerText
+    # - textNode is the text node
+    # - offset is the position in textNode.nodeValue where the stripped text
+    #   begins
+    print('text_nodes_2\n', elt.innerHTML)
+    text = ''
+    offset = 0
+    for nodeType, node in text_nodes(elt):
+        console.log('node', node)
+        nodeText = node.nodeValue
+        if nodeText:
+            if len(text) + len(nodeText) > pos:
+                offset_in_node = pos - len(text)
+                print('offset in node', offset_in_node)
+                node.nodeValue = (node.nodeValue[:offset_in_node] + insert  +
+                    node.nodeValue[offset_in_node:])
+                return
+            text += node.nodeValue
+
+
 def build_nodes(elt):
     nodes = []
     line = 1
@@ -664,7 +743,6 @@ class Text:
             style='text-align:left;background-color:#fff;width:100%;white-space:pre;')
 
     def index(self, position):
-        print('convert pos', position)
         el = self.element
         if position is END:
             row = len(el.childNodes) - 1
@@ -707,20 +785,15 @@ class Text:
                         delta_row += delta
                 else:
                     break
+            row += delta_row
+            lines = self.element.text.split('\n')
+            row = min(row, len(lines))
             if column == 'end':
-                text = ''
-                for node in nodes:
-                    text += node.nodeValue + '\n'
-                    lines = text.split('\n')
-                    if len(lines) > row:
-                        break
                 line = lines[row - 1]
                 column = len(line)
             else:
-                column = int(column)
-            column += delta_column
-            row += delta_row
-            print('row, col', row, column)
+                line = lines[row - 1]
+                column = min(len(line), int(column) + delta_column)
         return row, column
 
     def grid(self, **kwargs):
@@ -763,30 +836,30 @@ class Text:
                     text + nodeValue[sel.anchorOffset:]
         else:
             row, column = self.index(position)
-            nodes = build_nodes(self.element)
-            console.log('nodes', nodes)
-            el = self.element
-            for elt, start, end in nodes:
-                if start <= (row, column) < end:
-                    # insertion point is inside node "elt"
-                    # dtermine the offset of (row, column) in elt
-                    print('insert in elt', elt, elt.text)
-                    r, c = start
-                    lines = elt.nodeValue.split('\n')
-                    offset = 0
-                    for line in lines:
-                        if r == row:
-                            offset += min(column - c, len(line))
-                            break
-                        else:
-                            offset += len(line) + 1
-                        r += 1
-                        c = 0
+            lines = self.element.text.split('\n')
+            row = min(row, len(lines))
+            line = lines[row - 1]
+            print('lines', lines)
+            offset = sum(len(line) for line in lines[:row - 1]) + column
+            print('offset of', row, column, ':', offset)
+            text_nodes_2(self.element, offset, text)
+            """
+            for pos, text_node, text_offset in text_nodes_2(self.element, offset, text):
+                node_len = len(text_node.nodeValue.strip())
+                if pos <=  offset < pos + node_len:
+                    print(f'({row},{column})', 'in text node', text_node,
+                        f'\ncontent [{text_node.nodeValue}]',
+                        '\n at pos in nodeValue', offset - pos)
+                    node_offset = offset - pos
                     break
-            elt.nodeValue = elt.nodeValue[:offset] + text + \
-                elt.nodeValue[offset:]
-            print('new node value', elt.nodeValue)
 
+
+            text_node.nodeValue = text_node.nodeValue[:node_offset] + text + \
+                text_node.nodeValue[node_offset:]
+                """
+
+    def show(self):
+        print(self.element.innerHTML)
 
 def mainloop():
     for item in _loops:
