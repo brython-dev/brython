@@ -1,5 +1,6 @@
 import re
 
+import javascript
 from browser import console, document, html, window
 
 style_sheet = """
@@ -749,7 +750,8 @@ class Text:
             column = len(el.childNodes[row].nodeValue)
         elif position is INSERT:
             sel = window.getSelection()
-            if sel.anchorNode is self.element:
+            if sel.anchorNode is javascript.NULL \
+                    or sel.anchorNode is self.element:
                 return self.index(END)
             else:
                 text = ''
@@ -772,6 +774,7 @@ class Text:
             row = int(row)
             if row <= 0:
                 return [0, 0]
+            # handle modifiers such as "+ 3 chars"
             delta_column = 0
             delta_row = 0
             regexp = '\s*([+-])\s*(\d+)\s*(chars|char|cha|ch|c|lines|line|lin|li|l)'
@@ -785,6 +788,20 @@ class Text:
                         delta_row += delta
                 else:
                     break
+
+            # handle modifiers linestart / lineend
+            if mo := re.search('(linestart|lineend)', column):
+                s = mo.groups()[0]
+                if s == 'linestart':
+                    column = 0
+                else:
+                    column = 'end'
+
+            # handle modifiers wordstart / wordend
+            word_border = None
+            if mo := re.search('(wordstart|wordend)', column):
+                word_border = mo.groups()[0]
+                column = column[:mo.start()] + column[mo.end():]
             row += delta_row
             lines = self.element.text.split('\n')
             row = min(row, len(lines))
@@ -794,6 +811,12 @@ class Text:
             else:
                 line = lines[row - 1]
                 column = min(len(line), int(column) + delta_column)
+                if word_border == "wordstart":
+                    while column and line[column - 1].isalnum():
+                        column -= 1
+                elif word_border == "wordend":
+                    while column < len(line) and line[column].isalnum():
+                        column += 1
         return row, column
 
     def grid(self, **kwargs):
@@ -828,7 +851,8 @@ class Text:
             self.element.text += text
         elif position is INSERT:
             sel = window.getSelection()
-            if sel.anchorNode is self.element:
+            if sel.anchorNode is javascript.NULL \
+                    or sel.anchorNode is self.element:
                 self.insert(END, text, tags)
             else:
                 nodeValue = sel.anchorNode.nodeValue
