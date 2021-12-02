@@ -613,158 +613,32 @@ class Radiobutton:
 INSERT = Constant('INSERT')
 CURRENT = Constant('CURRENT')
 
-
-def get_text_nodes(div):
-    nodes = []
-    for child in div.childNodes:
-        if child.nodeType == 3:
-            nodes.append(child)
-        elif child.nodeType == 1:
-            nodes += get_text_nodes(child)
-    return nodes
-
-def get_all_nodes(elt):
-    nodes = []
-    if elt.child_nodes:
-        for child in elt.childNodes:
-            nodes.append(child)
-            nodes += get_all_nodes(child)
-    return nodes
-
-def text_nodes(elt):
-    r, c = 1, 0
-    for child in elt.childNodes:
-        console.log(child)
-        if child.nodeType == 3: # text
-            offset = 0
-            for mo in re.finditer('\n', child.nodeValue):
-                yield (child, r, c, c + mo.start() - offset, offset)
-                r += 1
-                c = 0
-                offset = mo.end()
-            yield (child, r, c, c + len(child.nodeValue) - offset, offset)
-            c += len(child.nodeValue)
-        else:
-            if (r, c) != (0, 0):
-                r += 1
-                c = 0
-            child = child.firstChild
-            console.log('firstchild', child, 'node value', child.nodeValue)
-            text = child.nodeValue
-            text = text if text.endswith('\n') else text + '\n'
-            offset = 0
-            for mo in re.finditer('\n', child.nodeValue):
-                print('mo', mo)
-                yield(child, r, c, c + mo.start() - offset, offset)
-                r += 1
-                c = 0
-                offset = mo.end()
-            yield (child, r, c, c + len(text) - offset, offset)
-            c += len(text)
-
-
-def text_nodes_1(elt):
-    r, c = 1, 0
-    pos = 0
-    for child in elt.childNodes:
-        console.log(child)
-        if child.nodeType == 3: # text
-            offset = 0
-            yield ('text', child, pos)
-            pos += len(child.nodeValue)
-        else:
-            #if (r, c) != (0, 0):
-            #    pos += 1 # line feed for <div>
-            child = child.firstChild
-            yield('div', child, pos)
-            pos += len(child.nodeValue)
-
-
-def text_nodes(elt):
-    for child in elt.childNodes:
-        if child.nodeType == 3:
-            yield ('text', child)
-        elif child.nodeType == 1:
-            yield ('div', child.firstChild)
-
-def text_nodes_2(elt, pos, insert):
-    # for each non-whitespace text node, yield a tuple
-    # (text_pos, textNode, offset) where
-    # - text_pos is the position of the stripped text in elt.innerText
-    # - textNode is the text node
-    # - offset is the position in textNode.nodeValue where the stripped text
-    #   begins
-    print('text_nodes_2\n', elt.innerHTML)
-    text = ''
-    offset = 0
-    for nodeType, node in text_nodes(elt):
-        console.log('node', node)
-        nodeText = node.nodeValue
-        if nodeText:
-            if len(text) + len(nodeText) > pos:
-                offset_in_node = pos - len(text)
-                print('offset in node', offset_in_node)
-                node.nodeValue = (node.nodeValue[:offset_in_node] + insert  +
-                    node.nodeValue[offset_in_node:])
-                return
-            text += node.nodeValue
-
-
-def build_nodes(elt):
-    nodes = []
-    line = 1
-    text = ''
-    for child in elt.childNodes:
-        if child.nodeType == 3:
-            lines = text.split('\n')
-            start = (len(lines), len(lines[-1]))
-            text += child.nodeValue
-            lines = text.split('\n')
-            end = (len(lines), len(lines[-1]))
-            nodes.append((child, start, end))
-        elif child.nodeType == 1:
-            lines = text.split('\n')
-            start = (len(lines), len(lines[-1]))
-            text += child.text
-            if child.nodeName == 'DIV' and not child.text.endswith('\n'):
-                text += '\n'
-            lines = text.split('\n')
-            end = (len(lines), len(lines[-1]))
-            nodes.append((child.firstChild, start, end))
-        lines = text.split('\n')
-
-    return nodes
-
 class Text:
 
     def __init__(self, master, **kw):
         self.master = master
         self.kw = kw
         self.element = html.DIV(contenteditable=True,
-            style='text-align:left;background-color:#fff;width:100%;white-space:pre;')
+            style='text-align:left;background-color:#fff;width:100%;')
 
     def index(self, position):
         el = self.element
-        if position is END:
-            row = len(el.childNodes) - 1
-            column = len(el.childNodes[row].nodeValue)
-        elif position is INSERT:
+        if position is END or position == "end":
+            # END (or "end") corresponds to the position just after the last
+            # character in the buffer.
+            lines = self._get_text().split('\n')
+            return len(lines) + 1, 0
+        elif position is INSERT or position == "insert":
+            # INSERT (or "insert") corresponds to the insertion cursor.
             sel = window.getSelection()
             if sel.anchorNode is javascript.NULL \
-                    or sel.anchorNode is self.element:
-                return self.index(END)
+                    or sel.anchorNode is self.element \
+                    or not self.element.contains(sel.anchorNode):
+                lines = self._get_text().split('\n')
+                return len(lines), len(lines[-1])
             else:
-                text = ''
-                for child in el.childNodes:
-                    if child.nodeType == 3: # text
-                        if child is sel.anchorNode:
-                            text += child.nodeValue[:sel.anchorOffset]
-                            lines = text.split('\n')
-                            row = len(lines)
-                            column = len(lines[-1])
-                            break
-                        else:
-                            text += child.nodeValue
+                return self._node_offset_to_row_column(sel.anchorNode,
+                    sel.anchorOffset)
         elif isinstance(position, float):
             row, column = [int(x) for x in str(position).split('.')]
         elif isinstance(position, str):
@@ -802,9 +676,11 @@ class Text:
             if mo := re.search('(wordstart|wordend)', column):
                 word_border = mo.groups()[0]
                 column = column[:mo.start()] + column[mo.end():]
+
             row += delta_row
             lines = self.element.text.split('\n')
-            row = min(row, len(lines))
+            if row > len(lines):
+                return self.index(END)
             if column == 'end':
                 line = lines[row - 1]
                 column = len(line)
@@ -847,43 +723,151 @@ class Text:
         _range.deleteContents()
 
     def insert(self, position, text, tags=()):
+        if not self.element.childNodes:
+            print('insert in empty zone')
+            lines = text.split('\n')
+            self.element <= lines[0] # text node
+            for line in lines[1:]:
+                self.element <= html.DIV(line)
+            return
         if position is END:
-            self.element.text += text
+            lastChild = self.element.lastChild
+            lines = text.split('\n')
+            if lastChild.nodeType == 3:
+                lastChild.nodeValue += lines[0]
+                self.element <= (html.DIV(line) for line in lines[1:])
+            else:
+                self.element <= (html.DIV(line) for line in lines)
+            return
         elif position is INSERT:
             sel = window.getSelection()
-            if sel.anchorNode is javascript.NULL \
-                    or sel.anchorNode is self.element:
-                self.insert(END, text, tags)
-            else:
-                nodeValue = sel.anchorNode.nodeValue
-                sel.anchorNode.nodeValue = nodeValue[:sel.anchorOffset] + \
-                    text + nodeValue[sel.anchorOffset:]
+            if sel is javascript.NULL \
+                    or sel.anchorNode is self.element \
+                    or not self.element.contains(sel.anchorNode):
+                return self.insert(END, text)
+            return self.insert(*self.index(INSERT), text)
         else:
             row, column = self.index(position)
-            lines = self.element.text.split('\n')
-            row = min(row, len(lines))
+            element_text = self._get_text()
+            lines = element_text.split('\n')
+            if row > len(lines):
+                return self.insert(END, text)
             line = lines[row - 1]
+            print('text\n', f'[{element_text}]')
             print('lines', lines)
-            offset = sum(len(line) for line in lines[:row - 1]) + column
-            print('offset of', row, column, ':', offset)
-            text_nodes_2(self.element, offset, text)
-            """
-            for pos, text_node, text_offset in text_nodes_2(self.element, offset, text):
-                node_len = len(text_node.nodeValue.strip())
-                if pos <=  offset < pos + node_len:
-                    print(f'({row},{column})', 'in text node', text_node,
-                        f'\ncontent [{text_node.nodeValue}]',
-                        '\n at pos in nodeValue', offset - pos)
-                    node_offset = offset - pos
-                    break
 
-
-            text_node.nodeValue = text_node.nodeValue[:node_offset] + text + \
-                text_node.nodeValue[node_offset:]
-                """
+            node, offset = self._row_column_to_node_offset(row, column)
+            print('ro',row, 'column', column, 'node', node, 'offset', offset)
+            if node.nodeType == 1 and node.nodeName == 'BR':
+                node.parentNode.replaceChild(document.createTextNode(text), node)
+            else:
+                node.nodeValue = node.nodeValue[:offset] + text + \
+                    node.nodeValue[offset:]
 
     def show(self):
         print(self.element.innerHTML)
+
+    def _get_text(self):
+        text = ''
+        previous = None
+        for child in self.element.childNodes:
+            if previous and child.nodeType == 1 \
+                    and child.nodeName == 'DIV':
+                text += '\n'
+            if child.nodeType == 3:
+                text += child.nodeValue.strip()
+            elif child.nodeType == 1:
+                child = child.firstChild
+                if child.nodeType == 3:
+                    text += child.nodeValue.strip()
+            previous = child
+        return text
+
+    def _row_column_to_node_offset(self, row, column):
+        line = 1
+        col = 0
+        previous = None
+
+        for child in self.element.childNodes:
+            if child.nodeType == 3:
+                node_value = child.nodeValue
+                node_text = node_value.strip()
+                node_lines = node_value.split('\n')
+                offset = 0
+                for i, node_line in enumerate(node_lines):
+                    if row == line + i:
+                        return child, min(column + offset, len(node_line))
+                    offset += len(node_line) + 1
+                line += len(node_lines) - 1
+            elif child.nodeType == 1:
+                if previous and child.nodeName == 'DIV':
+                    line += 1
+                    col = 0
+                for child in child.childNodes:
+                    if child.nodeType == 3:
+                        node_value = child.nodeValue
+                        node_lines = node_value.split('\n')
+                        offset = 0
+                        for i, node_line in enumerate(node_lines):
+                            col = 0
+                            if not node_line and i == len(node_lines) - 1:
+                                # ignore last empty line
+                                continue
+                            if row == line + i:
+                                return child, min(column + offset, len(node_line))
+                            offset += len(node_line) + 1
+                            col = len(node_line)
+                        line += len(node_lines) - 1
+                    elif child.nodeType == 1:
+                        if child.nodeName == 'BR' and column == 0:
+                            node_line = ''
+                            if row == line:
+                                return child, 0
+            previous = child
+
+    def _node_offset_to_row_column(self, node, node_offset):
+        line = 1
+        col = 0
+        previous = None
+
+        for child in self.element.childNodes:
+            if child.nodeType == 3:
+                node_value = child.nodeValue
+                node_text = node_value.strip()
+                node_lines = node_value.split('\n')
+                offset = 0
+                for i, node_line in enumerate(node_lines):
+                    if child is node and offset <= node_offset < offset + len(node_line):
+                        return line + i, node_offset
+                    offset += len(node_line) + 1
+                if child is node:
+                    return line + i, len(node_line)
+                line += len(node_lines) - 1
+            elif child.nodeType == 1:
+                if previous and child.nodeName == 'DIV':
+                    line += 1
+                    col = 0
+                for child in child.childNodes:
+                    if child.nodeType == 3:
+                        node_value = child.nodeValue
+                        node_lines = node_value.split('\n')
+                        offset = 0
+                        for i, node_line in enumerate(node_lines):
+                            col = 0
+                            if not node_line and i == len(node_lines) - 1:
+                                # ignore last empty line
+                                continue
+                            if child is node and offset <= node_offset < offset + len(node_line):
+                                return line + i, node_offset
+                            offset += len(node_line) + 1
+                            col = len(node_line)
+                        line += len(node_lines) - 1
+                    elif child.nodeType == 1:
+                        if child.nodeName == 'BR' and column == 0:
+                            node_line = ''
+                            if child is node:
+                                return line, 0
+            previous = child
 
 def mainloop():
     for item in _loops:
