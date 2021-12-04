@@ -1271,7 +1271,7 @@ DOMNode.bindings = function(self){
     return res
 }
 
-DOMNode.events = DOMNode.bindings = function(self, event){
+DOMNode.events = function(self, event){
     self.$events = self.$events || {}
     var evt_list = self.$events[event] = self.$events[event] || [],
         callbacks = []
