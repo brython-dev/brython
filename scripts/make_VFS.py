@@ -92,6 +92,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 ext = os.path.splitext(_file)[1]
                 if ext not in ('.js', '.py'):
                     continue
+                if _file.endswith('.brython.js'):
+                    continue
                 if re.match(r'^module\d+\..*$', _file):
                     continue
                 if not git.in_index(_file):
@@ -100,9 +102,12 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 nb += 1
 
                 file_name = os.path.join(root, _file)
-                with open(file_name, encoding='utf-8') as f:
-                    data = f.read()
-
+                try:
+                    with open(file_name, encoding='utf-8') as f:
+                        data = f.read()
+                except:
+                    print('error reading file', file_name)
+                    raise
                 if ext == '.py':
                     data = python_minifier.minify(data, preserve_lines=True)
                     path_elts = package[:]
