@@ -3,100 +3,58 @@ import re
 import javascript
 from browser import console, document, html, window
 
-style_sheet = """
-:root {
-    --tkinter-font-family: Arial;
-    --tkinter-font-size: 100%;
-    --tkinter-bgcolor: #f0f0f0;
-    --tkinter-border-color: #000;
-    --tkinter-title-bgcolor: #fff;
-    --tkinter-title-color: #000;
-    --tkinter-menu-bgcolor: #fff;
-    --tkinter-menu-color: #000;
-    --tkinter-close-bgcolor: #fff;
-    --tkinter-close-color: #000;
-}
-
-.tkinter-main {
-    position: absolute;
-    font-family: var(--tkinter-font-family);
-    font-size: var(--tkinter-font-size);
-    background-color: var(--tkinter-bgcolor);
-    left: 10px;
-    top: 10px;
-    border-style: solid;
-    border-color: var(--tkinter-border-color);
-    border-width: 1px;
-    z-index: 10;
-    resize: both;
-    overflow: auto;
-}
-
-.tkinter-title {
-    background-color: var(--tkinter-title-bgcolor);
-    color: var(--tkinter-title-color);
-    border-style: solid;
-    border-color: var(--tkinter-border-color);
-    border-width: 0px;
-    padding: 0.4em;
-    cursor: default;
-}
-
-.tkinter-main-menu {
-    background-color: var(--tkinter-menu-bgcolor);
-    color: var(--tkinter-menu-color);
-    border-style: solid;
-    border-color: var(--tkinter-border-color);
-    border-width: 0px;
-    width: 100%;
-    cursor: default;
-    padding-right: 10px;
-}
-
-.tkinter-main-menu span {
-    padding-right: 0.3em;
-}
-
-.tkinter-submenu {
-    position: absolute;
-    background-color: var(--tkinter-bgcolor);
-    color: var(--tkinter-menu-color);
-    border-style: solid;
-    border-color: var(--tkinter-border-color);
-    border-width: 1px;
-    width: auto;
-    cursor: default;
-    padding-right: 10px;
-}
-
-.tkinter-submenu div {
-    padding-left: 0.5em;
-}
-
-.tkinter-close {
-    float: right;
-    background-color: var(--tkinter-close-bgcolor);
-    color: var(--tkinter-close-color);
-    cursor: default;
-    padding: 0.1em;
-}
-
-.tkinter-panel {
-    padding: 0.6em;
-    background-color: var(--tkinter-bgcolor);
-}
-
-.tkinter-message {
-    padding-right: 0.6em;
-}
-
-.tkinter-button {
-    margin: 0.5em;
-}
-"""
-
 _loops = []
-_selected = [] # list of selected windows / menus
+_selected = [] # list of selected windows
+
+
+fontFamily = 'Arial'
+color = '#000'
+backgroundColor = '#f0f0f0'
+borderColor = '#008'
+title_bgColor = '#fff'
+title_color = '#000'
+
+class Constant:
+
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return f'<Constant {self.value}>'
+
+E = Constant('E')
+W = Constant('W')
+N = Constant('N')
+S = Constant('S')
+NW = Constant('NW')
+NE = Constant('NE')
+SW = Constant('SW')
+SE = Constant('SE')
+
+NORMAL = Constant('NORMAL')
+ACTIVE = Constant('ACTIVE')
+DISABLED = Constant('DISABLED')
+END = Constant('END')
+SINGLE = Constant('SINGLE')
+BROWSE = Constant('BROWSE')
+MULTIPLE = Constant('MULTIPLE')
+EXTENDED = Constant('EXTENDED')
+
+# pack() option 'side'
+LEFT = Constant('LEFT')
+RIGHT = Constant('RIGHT')
+TOP = Constant('TOP')
+BOTTOM = Constant('BOTTOM')
+
+# pack() option 'fill'
+NONE = Constant('NONE')
+BOTH = Constant('BOTH')
+X = Constant('X')
+Y = Constant('Y')
+
+
+INSERT = Constant('INSERT')
+CURRENT = Constant('CURRENT')
 
 class Widget:
 
@@ -152,12 +110,18 @@ class Widget:
             self.element.style.boxShadow = "3px 3px 5px #999999"
             self.kw['bd'] = self.kw['borderwidth'] = bd
 
+        # font
         if (font := kw.get('font')) is not None:
             for key, value in font.css.items():
                 setattr(self.element.style, key, value)
 
+        # misc
+        if (cursor := kw.get('cursor')) is not None:
+            self.element.style.cursor = cursor
+
         if (command := kw.get('command')) is not None:
             self.element.bind('click', lambda ev: command())
+
         if (state := kw.get('state')) is not None:
             if state is DISABLED:
                 self.element.attrs['disabled'] = True
@@ -182,14 +146,28 @@ class Widget:
         td = grid(self.master, **kwargs)
         td <= self.element
 
-
-fontFamily = 'Arial'
-fontSize = '100%'
-color = '#000'
-backgroundColor = '#f0f0f0'
-borderColor = '#008'
-title_bgColor = '#fff'
-title_color = '#000'
+    def pack(self, side=TOP, fill=NONE, expand=0, in_=None):
+        if isinstance(self.master, Tk):
+            master_element = self.master.panel
+        else:
+            master_element = self.master.element
+        style = {}
+        if fill is BOTH:
+            self.element.style.width = '100%'
+            self.element.style.height = '100%'
+        elif fill is X:
+            self.element.style.width = '100%'
+        elif fill is Y:
+            self.element.style.height = '100%'
+        if side is TOP:
+            master_element <= html.SPAN(self.element)
+        elif side is LEFT:
+            master_element <= html.SPAN(self.element,
+                style={'float': 'left', 'padding-right': '0.3em'})
+        elif side is BOTTOM:
+            master_element.insertBefore(
+                html.SPAN(self.element),
+                master_element.firstChild)
 
 class Tk(Widget):
     """Basic, moveable dialog box with a title bar.
@@ -198,7 +176,6 @@ class Tk(Widget):
     _main_style = {
         'position': 'absolute',
         'font-family': fontFamily,
-        'font-size': fontSize,
         'z-index': 10,
         'resize': 'both',
         'overflow': 'auto',
@@ -225,7 +202,8 @@ class Tk(Widget):
 
     _panel_style = {
         'padding': '0.6em',
-        'background-color': backgroundColor
+        'background-color': backgroundColor,
+        'text-align': 'center'
     }
 
     _default_config = {
@@ -409,22 +387,7 @@ class Tk(Widget):
 
 
 
-class Constant:
 
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return f'<Constant {self.value}>'
-
-E = Constant('E')
-W = Constant('W')
-N = Constant('N')
-S = Constant('S')
-NW = Constant('NW')
-NE = Constant('NE')
-SW = Constant('SW')
-SE = Constant('SE')
 
 def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         in_=None, ipadx=None, ipady=None,
@@ -488,11 +451,6 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
     if 'S' in sticky:
         td.style.verticalAlign = 'bottom'
     return td
-
-
-NORMAL = Constant('NORMAL')
-ACTIVE = Constant('ACTIVE')
-DISABLED = Constant('DISABLED')
 
 class IntVar:
 
@@ -573,12 +531,7 @@ class Label(Widget):
             'relief', 'state', 'takefocus', 'text', 'textvariable',
             'underline', 'width', 'wraplength']
 
-END = Constant('END')
 
-SINGLE = Constant('SINGLE')
-BROWSE = Constant('BROWSE')
-MULTIPLE = Constant('MULTIPLE')
-EXTENDED = Constant('EXTENDED')
 
 class Listbox(Widget):
 
@@ -825,9 +778,6 @@ class Radiobutton(Widget):
             'selectcolor', 'selectimage', 'state', 'takefocus', 'text',
             'textvariable', 'tristateimage', 'tristatevalue', 'underline',
             'value', 'variable', 'width', 'wraplength']
-
-INSERT = Constant('INSERT')
-CURRENT = Constant('CURRENT')
 
 class Text(Widget):
 
@@ -1097,7 +1047,7 @@ def _get_rank(elt):
     for rank, child in enumerate(elt.parentNode.childNodes):
         if child is elt:
             return rank
-    
+
 @document.bind('keydown')
 def _keyboard_move_selection(event):
     """If an option is currently selected in the main menu, the selection
