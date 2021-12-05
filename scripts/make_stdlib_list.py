@@ -118,7 +118,6 @@ for lang in 'en','es','fr':
                     if git.in_index(os.path.join(path, v).replace("\\", "/"))]
                 valid = [v for v in valid if v.startswith('_')] + \
                     [v for v in valid if not v.startswith('_')]
-
                 if valid:
                     common = [v for v in valid
                         if os.path.exists(os.path.join(python_path, v))]
@@ -132,7 +131,11 @@ for lang in 'en','es','fr':
                                 mod_name = '.'.join(path[4:].split(os.sep) + \
                                     [mod_name])
                             print(v, mod_name)
-                            m = __import__(mod_name)
+                            try:
+                                m = __import__(mod_name)
+                            except ImportError:
+                                # cf issue 1829
+                                continue
                             r1.append(v)
                             if hasattr(m, "__file__"):
                                 replacements.append(
