@@ -19,6 +19,10 @@ class Constant:
     def __init__(self, value):
         self.value = value
 
+    def __eq__(self, other):
+        return other is self \
+            or isinstance(other, str) and other.upper() == self.value
+
     def __repr__(self):
         return f'<Constant {self.value}>'
 
@@ -146,28 +150,103 @@ class Widget:
         td = grid(self.master, **kwargs)
         td <= self.element
 
-    def pack(self, side=TOP, fill=NONE, expand=0, in_=None):
+    def old_pack(self, side=TOP, fill=NONE, expand=0, in_=None):
         if isinstance(self.master, Tk):
             master_element = self.master.panel
         else:
             master_element = self.master.element
-        style = {}
-        if fill is BOTH:
-            self.element.style.width = '100%'
-            self.element.style.height = '100%'
-        elif fill is X:
-            self.element.style.width = '100%'
-        elif fill is Y:
-            self.element.style.height = '100%'
-        if side is TOP:
+        master_element.style.textAlign = 'center'
+
+        lastChild = master_element.lastChild or master_element
+        print('pack', self.element.text, 'side', side, 'lastChild', lastChild.text)
+
+        if side in [TOP, BOTTOM]:
+            # create a new row
+            elt = html.SPAN(self.element)
+            if fill is BOTH:
+                self.element.style.width = "100%"
+                elt.style = self.element.style.cssText
+            elif fill is X:
+                self.element.style.width='100%'
+            elif fill is Y:
+                elt.style = self.element.style.cssText
+                if expand:
+                    elt.style.display = 'inline-block'
+
+            if side is TOP:
+                master_element <= html.DIV() + elt
+            else:
+                master_element.insertBefore(elt, master_element.firstChild)
+
+            self.master.last_packed = 'row'
+
+        elif side in [LEFT, RIGHT]:
+            if self.master.last_packed == 'row':
+                master_element <= html.DIV()
+            self.element.style.float = "right" if side is RIGHT else "left"
             master_element <= html.SPAN(self.element)
-        elif side is LEFT:
-            master_element <= html.SPAN(self.element,
-                style={'float': 'left', 'padding-right': '0.3em'})
-        elif side is BOTTOM:
-            master_element.insertBefore(
-                html.SPAN(self.element),
-                master_element.firstChild)
+            self.master.last_packed = 'column'
+
+    def pack(self, side=TOP, fill=NONE, expand=0, in_=None,
+            ipadx=None, ipady=None):
+        master = self.master
+        if not hasattr(master, "_packed"):
+            master._packed = [(self, side, fill, expand)]
+        else:
+            master._packed.append((self, side, fill, expand))
+        left = 0
+        width = master.element.offsetWidth
+        top = 0
+        height = master.element.offsetHeight
+        if isinstance(master, Tk) and master.title_bar.style.display != 'none':
+            top += master.title_bar.offsetHeight
+            height -= master.title_bar.offsetHeight
+            master_element = master.panel
+        else:
+            master_element = master
+        print('\nPack new element in master', left, top, width, height)
+        master_element.clear()
+        for elt in master._packed:
+            element = elt[0].element
+            element.style.position = 'absolute'
+            element.style.display = 'block'
+            if ipadx is not None:
+                element.style.paddingLeft = f'{ipadx}px'
+                element.style.paddingRight = f'{ipadx}px'
+            if ipady is not None:
+                element.style.paddingTop = f'{ipady}px'
+                element.style.paddingBottom = f'{ipady}px'
+
+            console.log(elt[0].element.text, elt, 'top', top, 'left', left)
+            side = elt[1]
+            if side == LEFT:
+                element.style.left = f'{left}px'
+                master_element <= element
+                left += element.offsetWidth
+                # center vertically
+                if fill in [BOTH, Y] and expand:
+                    elt_top = top + (height - element.offsetHeight) / 2
+                    element.style.top = f'{elt_top}px'
+                if top + element.offsetHeight > height:
+                    height = top + element.offsetHeight
+                print('side is left, new left', left)
+
+            elif side == TOP:
+                element.style.left = f'{left}px'
+                element.style.top = f'{top}px'
+                master_element <= element
+                top += element.offsetHeight
+                # center horizontally
+                if fill in [BOTH, X] and expand:
+                    elt_left = left + (width - left - element.offsetWidth) / 2
+                    element.style.left = f'{elt_left}px'
+                if left + element.offsetWidth > width:
+                    width = left + element.offsetWidth
+                print('side is top, new top', top)
+
+        master.element.style.overflow = 'hidden'
+        master.element.style.width = f'{width}px'
+        master.element.style.height = f'{height}px'
 
 class Tk(Widget):
     """Basic, moveable dialog box with a title bar.
@@ -175,13 +254,16 @@ class Tk(Widget):
 
     _main_style = {
         'position': 'absolute',
+        'left': f'{int(0.1 * window.innerWidth)}px',
+        'top': f'{int(0.1 * window.innerHeight)}px',
+        #'width': f'{int(window.outerWidth * 0.2)}px',
+        #'height': f'{int(window.outerHeight * 0.2)}px',
         'font-family': fontFamily,
         'z-index': 10,
         'resize': 'both',
         'overflow': 'auto',
         'visibility': 'hidden'
     }
-
 
     _title_style = {
         'background-color': title_bgColor,
@@ -201,9 +283,7 @@ class Tk(Widget):
     }
 
     _panel_style = {
-        'padding': '0.6em',
-        'background-color': backgroundColor,
-        'text-align': 'center'
+        'background-color': 'yellow' #backgroundColor
     }
 
     _default_config = {
@@ -214,6 +294,7 @@ class Tk(Widget):
 
     def __init__(self, **kw):
         self.element = html.DIV(style=self._main_style)
+
         self.title_text = html.SPAN()
         self.title_text.html = '&nbsp;'
         self.title_bar = html.DIV('tk' + 3 * chr(160) + self.title_text,
@@ -224,27 +305,18 @@ class Tk(Widget):
         self.title_bar <= self.close_button
         self.close_button.bind("click", self.close)
         self.panel = html.DIV(style=self._panel_style)
-        self.table = html.TABLE(width='100%')
-        self.panel <= self.table
         self.element <= self.panel
 
         self.kw = self._default_config | kw
 
         document <= self.element
-        cstyle = window.getComputedStyle(self.element)
-
-        left = int(0.1 * window.innerWidth)
-        self.element.style.left = f'{left}px'
-        top = int(0.1 * window.innerHeight) + document.scrollingElement.scrollTop
-        self.element.top = top
-        self.element.style.top = f'{top}px'
 
         self.title_bar.bind("mousedown", self._grab_widget)
         self.element.bind("leave", self._mouseup)
 
         self._maxsize = (None, None)
-        self.minsize(int(window.outerWidth * 0.2),
-                        int(window.outerHeight * 0.2))
+        #self.minsize(int(window.outerWidth * 0.2),
+        #                int(window.outerHeight * 0.2))
         self.resizable(1, 1)
 
         self.menu = None
@@ -265,16 +337,30 @@ class Tk(Widget):
 
     def geometry(self, coords=None):
         if coords is None:
-            return (f'{self.widget.width}x{self.widget.height}x'
-                    f'{self.widget.abs_left}x{self.widget.abs_top}')
+            return (f'{self.widget.width}x{self.widget.height}+'
+                    f'{self.widget.abs_left}+{self.widget.abs_top}')
         else:
-            if mo := re.match(r'^(\d+x)*$', coords):
-                attrs = ['width', 'height', 'left', 'top']
-                values = re.findall(r'\d+', coords)
-                for value, attr in zip(values, attrs):
-                    setattr(self.element.style, attr, f'{value}px')
-            else:
+            values = {}
+            whxy = coords.split('x')
+            if len(whxy) > 2:
                 raise ValueError(f'bad geometry specifier "{coords}"')
+            try:
+                values['width'] = int(whxy[0])
+            except:
+                raise ValueError(f'bad geometry specifier "{coords}"')
+            if len(whxy) > 2:
+                raise ValueError(f'bad geometry specifier "{coords}"')
+            elif len(whxy) == 2:
+                hxy = whxy[1].split('+')
+                if len(hxy) > 3:
+                    raise ValueError(f'bad geometry specifier "{coords}"')
+                for key, value in zip(['height', 'x', 'y'], hxy):
+                    try:
+                        values[key] = int(value)
+                    except:
+                        raise ValueError(f'bad geometry specifier "{coords}"')
+            for key, value in values.items():
+                setattr(self.element.style, key, f'{value}px')
 
     def keys(self):
         return ['bd', 'borderwidth', 'class', 'menu', 'relief', 'screen',
@@ -440,7 +526,7 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
     else:
         sticky = list(sticky)
 
-    td.style.textAlign = 'center' # default
+    #td.style.textAlign = 'center' # default
 
     if 'W' in sticky:
         td.style.textAlign = 'left'
@@ -519,7 +605,7 @@ class Label(Widget):
         self.master = master
         self.text = text
         self.kw = kw
-        self.element = html.DIV(text, style={'white-space': 'pre'})
+        self.element = html.SPAN(text, style={'white-space': 'pre'})
         self.config(**kw)
 
     def keys(self):
@@ -530,7 +616,6 @@ class Label(Widget):
             'highlightthickness', 'image', 'justify', 'padx', 'pady',
             'relief', 'state', 'takefocus', 'text', 'textvariable',
             'underline', 'width', 'wraplength']
-
 
 
 class Listbox(Widget):
