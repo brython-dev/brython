@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-09 09:04:36.665642"
-__BRYTHON__.timestamp=1639037076665
+__BRYTHON__.compiled_date="2021-12-09 09:26:41.547669"
+__BRYTHON__.timestamp=1639038401547
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3419,9 +3419,12 @@ if(['def','generator'].indexOf(ctx.type)>-1 &&
 ctx.locals.indexOf(name)>-1){return false}
 return true}}
 var node=$get_node(this),found=false
-var $test=false 
+var $test=this.value=="wxc"
 if($test){console.log(this.value,"bound before")
-console.log("node",node)}
+console.log("node",node)
+console.log('scope',scope)}
+if((scope.ntype=="def" ||scope.ntype=="generator")&&
+scope.C.tree[0].args.indexOf(this.value)>-1){return true}
 while(!found && node.parent){var pnode=node.parent
 if(test(pnode,this.value)){if($test){console.log("bound in",pnode)}
 return pnode.bindings[this.value]}

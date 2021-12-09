@@ -6422,10 +6422,16 @@ $IdCtx.prototype.boundBefore = function(scope){
 
     var node = $get_node(this),
         found = false
-    var $test = false // this.value == "a"
+    var $test = this.value == "wxc"
     if($test){
         console.log(this.value, "bound before")
         console.log("node", node)
+        console.log('scope', scope)
+    }
+
+    if((scope.ntype == "def" || scope.ntype == "generator") &&
+            scope.context.tree[0].args.indexOf(this.value) > -1){
+        return true
     }
 
     while(!found && node.parent){
