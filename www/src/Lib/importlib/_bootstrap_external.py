@@ -22,10 +22,20 @@ work. One should use importlib as the public-facing version of this module.
 # reference any injected objects! This includes not only global code but also
 # anything specified at the class level.
 
-# Bootstrap-related code ######################################################
+# Module injected manually by _set_bootstrap_module()
+_bootstrap = None
 
-# Brython-specific : _io must be present as it is not set by _setup()
+import _imp
 import _io
+import sys
+import posix as _os
+
+path_separators = ['/']
+path_sep = path_separators[0]
+path_sep_tuple = tuple(path_separators)
+path_separators = ''.join(path_separators)
+_pathseps_with_colon = {f':{s}' for s in path_separators}
+
 
 _CASE_INSENSITIVE_PLATFORMS_STR_KEY = 'win',
 _CASE_INSENSITIVE_PLATFORMS_BYTES_KEY = 'cygwin', 'darwin'
@@ -48,6 +58,9 @@ def _make_relax_case():
             """True if filenames must be checked case-insensitively."""
             return False
     return _relax_case
+
+
+_relax_case = _make_relax_case()
 
 
 def _pack_uint32(x):
@@ -294,6 +307,8 @@ _OPT = 'opt-'
 
 SOURCE_SUFFIXES = ['.py']  # _setup() adds .pyw as needed.
 
+EXTENSION_SUFFIXES = _imp.extension_suffixes()
+
 BYTECODE_SUFFIXES = ['.pyc']
 # Deprecated.
 DEBUG_BYTECODE_SUFFIXES = OPTIMIZED_BYTECODE_SUFFIXES = BYTECODE_SUFFIXES
@@ -455,10 +470,8 @@ def _calc_mode(path):
 def _check_name(method):
     """Decorator to verify that the module being requested matches the one the
     loader can handle.
-
     The first argument (self) must define _name which the second argument is
     compared against. If the comparison fails then ImportError is raised.
-
     """
     def _check_name_wrapper(self, name=None, *args, **kwargs):
         if name is None:
@@ -467,15 +480,18 @@ def _check_name(method):
             raise ImportError('loader for %s cannot handle %s' %
                                 (self.name, name), name=name)
         return method(self, name, *args, **kwargs)
-    try:
+
+    # FIXME: @_check_name is used to define class methods before the
+    # _bootstrap module is set by _set_bootstrap_module().
+    if _bootstrap is not None:
         _wrap = _bootstrap._wrap
-    except NameError:
-        # XXX yuck
+    else:
         def _wrap(new, old):
             for replace in ['__module__', '__name__', '__qualname__', '__doc__']:
                 if hasattr(old, replace):
                     setattr(new, replace, getattr(old, replace))
             new.__dict__.update(old.__dict__)
+
     _wrap(_check_name_wrapper, method)
     return _check_name_wrapper
 
@@ -1080,10 +1096,6 @@ class SourcelessFileLoader(FileLoader, _LoaderBasics):
         return None
 
 
-# Filled in by _setup().
-EXTENSION_SUFFIXES = []
-
-
 class ExtensionFileLoader(FileLoader, _LoaderBasics):
 
     """Loader for extension modules.
@@ -1572,83 +1584,14 @@ def _get_supported_file_loaders():
     return [extensions, source, bytecode]
 
 
-def _setup(_bootstrap_module):
-    """Setup the path-based importers for importlib by importing needed
-    built-in modules and injecting them into the global namespace.
-
-    Other components are extracted from the core bootstrap module.
-
-    """
-    global sys, _imp, _bootstrap
+def _set_bootstrap_module(_bootstrap_module):
+    global _bootstrap
     _bootstrap = _bootstrap_module
-    sys = _bootstrap.sys
-    _imp = _bootstrap._imp
-
-    # Directly load built-in modules needed during bootstrap.
-    self_module = sys.modules[__name__]
-    #for builtin_name in ('_io', '_warnings', 'builtins', 'marshal'):
-    # Brython : _io is not built-in
-    for builtin_name in ('_warnings', 'builtins', 'marshal'):
-        if builtin_name not in sys.modules:
-            builtin_module = _bootstrap._builtin_from_name(builtin_name)
-        else:
-            builtin_module = sys.modules[builtin_name]
-        setattr(self_module, builtin_name, builtin_module)
-
-    # Directly load the os module (needed during bootstrap).
-    os_details = ('posix', ['/']), ('nt', ['\\', '/'])
-    for builtin_os, path_separators in os_details:
-        # Assumption made in _path_join()
-        assert all(len(sep) == 1 for sep in path_separators)
-        path_sep = path_separators[0]
-        if builtin_os in sys.modules:
-            os_module = sys.modules[builtin_os]
-            break
-        else:
-            try:
-                os_module = _bootstrap._builtin_from_name(builtin_os)
-                break
-            except ImportError:
-                continue
-    else:
-        raise ImportError('importlib requires posix or nt')
-    setattr(self_module, '_os', os_module)
-    setattr(self_module, 'path_sep', path_sep)
-    setattr(self_module, 'path_separators', ''.join(path_separators))
-    setattr(self_module, '_pathseps_with_colon', {f':{s}' for s in path_separators})
-
-    # Directly load the _thread module (needed during bootstrap).
-    #thread_module = _bootstrap._builtin_from_name('_thread')
-    # Brython : _thread is not built-in
-    import _thread
-    setattr(self_module, '_thread', _thread)
-
-    # Directly load the _weakref module (needed during bootstrap).
-    #weakref_module = _bootstrap._builtin_from_name('_weakref')
-    # Brython : _weakref is not built-in
-    import _weakref
-    setattr(self_module, '_weakref', _weakref)
-
-    # Directly load the winreg module (needed during bootstrap).
-    if builtin_os == 'nt':
-        winreg_module = _bootstrap._builtin_from_name('winreg')
-        setattr(self_module, '_winreg', winreg_module)
-
-    # Constants
-    setattr(self_module, '_relax_case', _make_relax_case())
-    EXTENSION_SUFFIXES.extend(_imp.extension_suffixes())
-    if builtin_os == 'nt':
-        SOURCE_SUFFIXES.append('.pyw')
-        if '_d.pyd' in EXTENSION_SUFFIXES:
-            WindowsRegistryFinder.DEBUG_BUILD = True
 
 
 def _install(_bootstrap_module):
     """Install the path-based import components."""
-    _setup(_bootstrap_module)
+    _set_bootstrap_module(_bootstrap_module)
     supported_loaders = _get_supported_file_loaders()
     sys.path_hooks.extend([FileFinder.path_hook(*supported_loaders)])
     sys.meta_path.append(PathFinder)
-
-def _set_bootstrap_module(_bootstrap):
-    pass
