@@ -60,6 +60,208 @@ Y = Constant('Y')
 INSERT = Constant('INSERT')
 CURRENT = Constant('CURRENT')
 
+class _Packed:
+
+    def __init__(self, widget, side, fill, expand, padx, pady, ipadx, ipady):
+        self.widget = widget
+        self.side = side
+        self.fill = fill
+        self.expand = expand
+        self.padx = padx
+        self.pady = pady
+        self.ipadx = ipadx
+        self.ipady = ipady
+        self.anchor = 'center'
+
+class Cavity:
+
+    def __init__(self, left, top, width, height):
+        self.left = left
+        self.top = top
+        self.width = width
+        self.height = height
+
+class _Packer:
+
+    def __init__(self, widget):
+        self.widget = widget
+
+    def process(self):
+        self.compute_dimensions()
+
+        for elt in self.widget._packed:
+            self.compute_parcel_dimensions(elt)
+            self.compute_content_dimensions(elt)
+            self.position_content_in_parcel(elt)
+
+            """element = elt.widget.element
+            element.style.position = 'absolute'
+            element.style.left = f'{elt.left}px'
+            element.style.top = f'{elt.top}px'
+            element.style.width = f'{elt.content_width}px'
+            element.style.height = f'{elt.content_height}px'
+
+            self.container <= element"""
+
+
+    def compute_content_dimensions(self, elt):
+        """The packer chooses the dimensions of the content. The width will
+        normally be the content's requested width plus twice its -ipadx option
+        and the height will normally be the content's requested height plus
+        twice its -ipady option. However, if the -fill option is x or both
+        then the width of the content is expanded to fill the width of the
+        parcel, minus twice the -padx option. If the -fill option is y or both
+        then the height of the content is expanded to fill the width of the
+        parcel, minus twice the -pady option.
+        """
+        parcel = elt.parcel
+        if elt.fill in [X, BOTH]:
+            elt.content_width = parcel.offsetWidth - 2 * elt.padx
+        else:
+            elt.content_width = elt.content_req_width
+
+        if elt.fill in [Y, BOTH]:
+            elt.content_height = parcel.offsetHeight - 2 * elt.pady
+        else:
+            elt.content_height = elt.content_req_height
+
+    def compute_parcel_dimensions(self, elt):
+        """The packer allocates a rectangular parcel for the content along the
+        side of the cavity given by the content's -side option. If the side is
+        top or bottom then the width of the parcel is the width of the cavity
+        and its height is the requested height of the content plus the -ipady
+        and -pady options. For the left or right side the height of the parcel
+        is the height of the cavity and the width is the requested width of
+        the content plus the -ipadx and -padx options.
+        The parcel may be enlarged further because of the -expand option.
+        """
+        if elt.side in [TOP, BOTTOM]:
+            parcel_width = self.cavity.width
+            parcel_height = elt.content_req_height
+            if elt.expand:
+                parcel_height += self.expand_height
+        else:
+            parcel_height = self.cavity.height
+            parcel_width = elt.content_req_width
+            if elt.expand:
+                parcel_width += self.expand_width
+
+        if elt.side == LEFT:
+            parcel_left = self.cavity.left
+            parcel_top = self.cavity.top
+            self.cavity.left += parcel_width
+            self.cavity.width -= parcel_width
+        elif elt.side == RIGHT:
+            parcel_left = self.cavity.left + self.cavity.width - self.content_width
+            self.cavity.width -= parcel_width
+        elif elt.side == TOP:
+            parcel_left = self.cavity.left
+            parcel_top = self.cavity.top
+            elt.left = 0
+            self.cavity.top += parcel_height
+            self.cavity.height -= parcel_height
+        elif elt.side == BOTTOM:
+            parcel_top = self.cavity.top + self.cavity.height - elt.content_height
+            parcel_left = self.cavity.left
+            self.cavity.height -= parcel_height
+
+        parcel = elt.parcel = html.SPAN(style="position:absolute;")
+        parcel.style.left = f'{parcel_left}px'
+        parcel.style.top = f'{parcel_top}px'
+        parcel.style.width = f'{parcel_width}px'
+        parcel.style.height = f'{parcel_height}px'
+        parcel.style.display = 'flex'
+        parcel.style.alignItems = 'center'
+        parcel.style.justifyContent = 'center'
+
+        self.container <= parcel
+
+    def position_content_in_parcel(self, elt):
+        """If the content is smaller than the parcel then the -anchor option
+        determines where in the parcel the content will be placed. If -padx or
+        -pady is non-zero, then the given amount of external padding will
+        always be left between the content and the edges of the parcel.
+        """
+        parcel = elt.parcel
+        content = elt.widget.element
+        content.style.width = f'{elt.content_width}px'
+        content.style.height = f'{elt.content_height}px'
+        content.style.display = 'flex'
+        content.style.alignItems = 'center'
+        content.style.justifyContent = 'center'
+        parcel <= content
+
+    def compute_dimensions(self):
+        container = self.widget.element
+        left = 0
+        width = container.offsetWidth
+        top = 0
+        height = container.offsetHeight
+        toplevel = isinstance(self.widget, Tk) \
+            and self.widget.title_bar.style.display != 'none'
+        if toplevel:
+            top += self.widget.title_bar.offsetHeight
+            height -= self.widget.title_bar.offsetHeight
+            container = self.widget.panel
+
+        # At the time it processes each content, a rectangular area within the
+        # container is still unallocated. This area is called the cavity; for
+        # the first content it is the entire area of the container.
+        self.cavity = Cavity(left, top, width, height)
+
+        self.container = container
+
+        container.clear()
+
+        # fake hidden DIV to determine the defaut dimensions of widgets
+        fake_container = html.DIV(style='position:absolute;visibility:hidden;')
+        document <= fake_container
+        
+        nb_expand_x = 0 # number of widgets with side = LEFT/RIGHT and expand
+        nb_expand_y = 0 # number of widgets with side = TOP/BOTTOM and expand
+        width_required_by_left_right = 0
+        height_required_by_top_bottom = 0
+        container_req_width = 0
+        container_req_height = 0
+        for packed in self.widget._packed:
+            content = packed.widget.element
+            fake_container <= content
+            # content's requested width and height (including padding)
+            content_req_width = content.offsetWidth + 2 * packed.ipadx
+            content_req_height = content.offsetHeight + 2 * packed.ipady
+            packed.content_req_height = content_req_height
+            packed.content_req_width = content_req_width
+            if packed.expand:
+                if packed.side in [TOP, BOTTOM]:
+                    nb_expand_y += 1
+                else:
+                    nb_expand_x += 1
+            if packed.side in [TOP, BOTTOM]:
+                container_req_height += content_req_height
+                height_required_by_top_bottom += content_req_height
+                if width_required_by_left_right + content_req_width > container_req_width:
+                    container_req_width = width_required_by_left_right + content_req_width
+            else:
+                container_req_width += content_req_width
+                width_required_by_left_right += content_req_width
+                if height_required_by_top_bottom + content_req_height > container_req_height:
+                    container_req_height = height_required_by_top_bottom + content_req_height
+
+        if container_req_width > width:
+            width = container_req_width
+            container.style.width = f'{width}px'
+        if container_req_height > height:
+            dh = container_req_height - height
+            height = container_req_height
+            container.style.height = f'{container.offsetHeight + dh}px'
+        if nb_expand_x:
+            self.expand_width = (width - container_req_width) / nb_expand_x
+        if nb_expand_y:
+            self.expand_height = (height - container_req_height) / nb_expand_y
+
+        fake_container.remove()
+
+
 class Widget:
 
     def __getitem__(self, option):
@@ -150,103 +352,199 @@ class Widget:
         td = grid(self.master, **kwargs)
         td <= self.element
 
-    def old_pack(self, side=TOP, fill=NONE, expand=0, in_=None):
-        if isinstance(self.master, Tk):
-            master_element = self.master.panel
-        else:
-            master_element = self.master.element
-        master_element.style.textAlign = 'center'
-
-        lastChild = master_element.lastChild or master_element
-        print('pack', self.element.text, 'side', side, 'lastChild', lastChild.text)
-
-        if side in [TOP, BOTTOM]:
-            # create a new row
-            elt = html.SPAN(self.element)
-            if fill is BOTH:
-                self.element.style.width = "100%"
-                elt.style = self.element.style.cssText
-            elif fill is X:
-                self.element.style.width='100%'
-            elif fill is Y:
-                elt.style = self.element.style.cssText
-                if expand:
-                    elt.style.display = 'inline-block'
-
-            if side is TOP:
-                master_element <= html.DIV() + elt
-            else:
-                master_element.insertBefore(elt, master_element.firstChild)
-
-            self.master.last_packed = 'row'
-
-        elif side in [LEFT, RIGHT]:
-            if self.master.last_packed == 'row':
-                master_element <= html.DIV()
-            self.element.style.float = "right" if side is RIGHT else "left"
-            master_element <= html.SPAN(self.element)
-            self.master.last_packed = 'column'
-
     def pack(self, side=TOP, fill=NONE, expand=0, in_=None,
-            ipadx=None, ipady=None):
+            ipadx=0, ipady=0, padx=0, pady=0):
         master = self.master
+        packed = _Packed(self, side, fill, expand, padx, pady, ipadx, ipady)
         if not hasattr(master, "_packed"):
-            master._packed = [(self, side, fill, expand)]
+            master._packed = [packed]
         else:
-            master._packed.append((self, side, fill, expand))
+            master._packed.append(packed)
+
+    def _pack(self):
+        """Packer algorithm.
+        See https://www.tcl.tk/man/tcl/TkCmd/pack.html
+        """
+        _Packer(self).process()
+        return
+        container = self
         left = 0
-        width = master.element.offsetWidth
+        width = self.element.offsetWidth
         top = 0
-        height = master.element.offsetHeight
-        if isinstance(master, Tk) and master.title_bar.style.display != 'none':
-            top += master.title_bar.offsetHeight
-            height -= master.title_bar.offsetHeight
-            master_element = master.panel
+        height = self.element.offsetHeight
+        toplevel = isinstance(self, Tk) \
+            and self.title_bar.style.display != 'none'
+        if toplevel:
+            top += self.title_bar.offsetHeight
+            height -= self.title_bar.offsetHeight
+            container = self.panel
         else:
-            master_element = master
+            container = self
         print('\nPack new element in master', left, top, width, height)
-        master_element.clear()
-        for elt in master._packed:
-            element = elt[0].element
+        container.clear()
+
+        # fake hidden DIV to determine the defaut dimensions of widgets
+        fake_container = html.DIV(style='position:absolute;visibility:hidden;')
+        document <= fake_container
+        print('Default widget dimensions')
+        nb_expand_x = 0
+        nb_expand_y = 0
+        width_required_by_left_right = 0
+        height_required_by_top_bottom = 0
+        container_req_width = 0
+        container_req_height = 0
+        for packed in self._packed:
+            content = packed.widget.element
+            fake_container <= content
+            # content's requested width and height (including padding)
+            content_req_width = content.offsetWidth
+            content_req_height = content.offsetHeight
+            if packed.expand:
+                if packed.fill in [X, BOTH]:
+                    nb_expand_x += 1
+                if packed.fill in [Y, BOTH]:
+                    nb_expand_y += 1
+            if packed.side in [TOP, BOTTOM]:
+                container_req_height += content_req_height
+                height_required_by_top_bottom += content_req_height
+                if width_required_by_left_right + content_req_width > container_req_width:
+                    container_req_width = width_required_by_left_right + content_req_width
+            else:
+                container_req_width += content_req_width
+                width_required_by_left_right += content_req_width
+                if height_required_by_top_bottom + content_req_height > container_req_height:
+                    container_req_height = height_required_by_top_bottom + content_req_height
+        print('min width required by LEFT RIGHT', width_required_by_left_right)
+        print('min height required by TOP BOTTOM', height_required_by_top_bottom)
+        print('min required width', container_req_width, 'master w', width)
+        print('min required height', container_req_height, 'master h', height)
+
+        if container_req_width > width:
+            width = container_req_width
+            container.style.width = f'{width}px'
+        if container_req_height > height:
+            dh = container_req_height - height
+            height = container_req_height
+            container.style.height = f'{container.offsetHeight + dh}px'
+        width_available_for_expand = width - container_req_width
+        height_available_for_expand = height - container_req_height
+
+        fake_container.remove()
+
+        # At the time it processes each content, a rectangular area within the
+        # container is still unallocated. This area is called the cavity; for
+        # the first content it is the entire area of the container.
+        cavity = container
+
+        for elt in self._packed:
+            # determine parcel dimensions
+
+            element = elt.widget.element
             element.style.position = 'absolute'
             element.style.display = 'block'
-            if ipadx is not None:
-                element.style.paddingLeft = f'{ipadx}px'
-                element.style.paddingRight = f'{ipadx}px'
-            if ipady is not None:
-                element.style.paddingTop = f'{ipady}px'
-                element.style.paddingBottom = f'{ipady}px'
+            element.style.boxSizing = 'border-box'
 
-            console.log(elt[0].element.text, elt, 'top', top, 'left', left)
-            side = elt[1]
-            if side == LEFT:
-                element.style.left = f'{left}px'
-                master_element <= element
-                left += element.offsetWidth
+            console.log(elt.widget.element.text, elt, 'top', top, 'left', left)
+            if elt.side == LEFT and elt.fill in [Y, BOTH]:
+                # wrap in a container for vertical align
+                wrapper = html.SPAN(element, style=element.style.cssText)
+                wrapper.style.padding = '0px'
+                wrapper.style.border = '0px'
+                wrapper.style.boxSizing = 'border-box'
+                container <= wrapper
+                elt_width = element.offsetWidth
+                element = wrapper
+                element.style.position = 'absolute'
+                element.style.display = 'flex'
+                element.style.alignItems = 'center'
+                element.style.width = f'{elt_width + 1}px'
+                console.log('replace by container', element)
+                console.log('element.style.width', element.style.width, 'offset', element.offsetWidth)
+                console.log('original', element.firstChild.offsetWidth)
+            elif elt.fill in [X, BOTH]:
+                element.style.textAlign = 'center'
+                container <= element
+            else:
+                container <= element
+
+            element.style.top = f'{top}px'
+            element.style.left = f'{left}px'
+
+            if elt.fill in [Y, BOTH]:
+                # Compute element height
+                # If 'expand' is not set, and there are no widgets packed
+                # with fill Y and expand, use all available height
+                print('elt', elt.widget.element.text, 'fill', elt.fill,
+                    'expand', elt.expand, 'nb expand y', nb_expand_y)
+                if not elt.expand and nb_expand_y == 0:
+                    console.log('all height', height)
+                    element.style.height = f'{height}px'
+                    console.log('element filled', element.offsetHeight)
+                    console.log('title bar', master.title_bar.offsetHeight)
+                    console.log('matser', master.element.offsetHeight)
+                    for child in master.element.childNodes:
+                        print('child', child, child.offsetHeight)
+                # If 'expand', add a portion of the space available for
+                # expand
+                elif elt.expand:
+                    extra_height = round(height_available_for_expand /
+                                         nb_expand_y)
+                    expanded_height = element.offsetHeight + extra_height
+                    element.style.height = f'{extended_height}px'
+
+            if elt.fill in [X, BOTH]:
+                # Compute element width
+                # If 'expand' is not set, and there are no widgets packed
+                # with fill X and expand, use all available width
+                print('elt', elt.widget.element.text, 'fill', elt.fill,
+                    'expand', elt.expand, 'nb expand x', nb_expand_x)
+                if not elt.expand and nb_expand_x == 0:
+                    console.log('use all width', width)
+                    element.style.width = f'{width}px'
+                    console.log('offsetWidth', element.offsetWidth)
+                # If 'expand', add a portion of the space available for
+                # expand
+                elif elt.expand:
+                    extra_width = round(width_available_for_expand /
+                                         nb_expand_x)
+                    expanded_width = element.offsetWidth + extra_width
+                    element.style.width = f'{extended_width}px'
+
+            filled_X = elt.fill in [X, BOTH]
+            filled_Y = elt.fill in [Y, BOTH]
+
+            print(elt.widget.element.text, 'filled X', filled_X, 'filled Y', filled_Y)
+            # if side is LEFT or RIGHT and no fill X, center vertically
+
+            if elt.side in [LEFT, RIGHT] and not filled_Y:
                 # center vertically
-                if fill in [BOTH, Y] and expand:
-                    elt_top = top + (height - element.offsetHeight) / 2
-                    element.style.top = f'{elt_top}px'
-                if top + element.offsetHeight > height:
-                    height = top + element.offsetHeight
-                print('side is left, new left', left)
-
-            elif side == TOP:
-                element.style.left = f'{left}px'
-                element.style.top = f'{top}px'
-                master_element <= element
-                top += element.offsetHeight
+                elt_top = top + (height - element.offsetHeight) / 2
+                element.style.top = f'{elt_top}px'
+            elif elt.side in [TOP, BOTTOM] and not filled_X:
                 # center horizontally
-                if fill in [BOTH, X] and expand:
-                    elt_left = left + (width - left - element.offsetWidth) / 2
-                    element.style.left = f'{elt_left}px'
-                if left + element.offsetWidth > width:
-                    width = left + element.offsetWidth
-                print('side is top, new top', top)
+                elt_left = left + (width - element.offsetWidth) / 2
+                element.style.left = f'{elt_left}px'
 
-        master.element.style.overflow = 'hidden'
-        master.element.style.width = f'{width}px'
-        master.element.style.height = f'{height}px'
+            if elt.side == LEFT:
+                left += element.offsetWidth
+                console.log('width before element left', width)
+                width -= element.offsetWidth
+                console.log('width after', width)
+            elif elt.side == RIGHT:
+                width -= element.offsetWidth
+            elif elt.side == TOP:
+                top += element.offsetHeight
+                height -= element.offsetHeight
+            elif elt.side == BOTTOM:
+                height -= element.offsetHeight
+            print('new top left', top, left)
+
+
+    def _root(self):
+        master = self.master
+        while not isinstance(master, Tk):
+            master = master.master
+        return master
 
 class Tk(Widget):
     """Basic, moveable dialog box with a title bar.
@@ -261,7 +559,7 @@ class Tk(Widget):
         'font-family': fontFamily,
         'z-index': 10,
         'resize': 'both',
-        'overflow': 'auto',
+        'overflow': 'hidden',
         'visibility': 'hidden'
     }
 
@@ -283,7 +581,7 @@ class Tk(Widget):
     }
 
     _panel_style = {
-        'background-color': 'yellow' #backgroundColor
+        'background-color': backgroundColor
     }
 
     _default_config = {
@@ -354,14 +652,17 @@ class Tk(Widget):
                 hxy = whxy[1].split('+')
                 if len(hxy) > 3:
                     raise ValueError(f'bad geometry specifier "{coords}"')
-                for key, value in zip(['height', 'x', 'y'], hxy):
+                for key, value in zip(['height', 'left', 'top'], hxy):
                     try:
                         values[key] = int(value)
                     except:
                         raise ValueError(f'bad geometry specifier "{coords}"')
             for key, value in values.items():
                 setattr(self.element.style, key, f'{value}px')
-
+            panel_height = self.element.offsetHeight - self.title_bar.offsetHeight
+            self.panel.style.height = f'{panel_height}px'
+            self.panel.style.width = f'{self.element.offsetWidth}px'
+            
     def keys(self):
         return ['bd', 'borderwidth', 'class', 'menu', 'relief', 'screen',
             'use', 'background', 'bg', 'colormap', 'container', 'cursor',
@@ -417,6 +718,8 @@ class Tk(Widget):
                     self.element.style.resize = 'both'
 
     def mainloop(self):
+        if hasattr(self, '_packed'):
+            self._pack()
         self.element.style.visibility = "visible"
 
     def overrideredirect(self, flag=None):
