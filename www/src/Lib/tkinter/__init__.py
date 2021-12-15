@@ -19,59 +19,77 @@ class Constant:
     def __init__(self, value):
         self.value = value
 
+    def __contains__(self, other):
+        if isinstance(other, str):
+            return other in self.value
+        elif isinstance(other, Constant):
+            return other.value in self.value
+        return NotImplemented
+
     def __eq__(self, other):
         return other is self \
-            or isinstance(other, str) and other.upper() == self.value
+            or isinstance(other, str) and other.lower() == self.value
 
     def __repr__(self):
-        return f'<Constant {self.value}>'
+        return f"<Constant '{self.value}'>"
 
-E = Constant('E')
-W = Constant('W')
-N = Constant('N')
-S = Constant('S')
-NW = Constant('NW')
-NE = Constant('NE')
-SW = Constant('SW')
-SE = Constant('SE')
+def constant_or_str(obj):
+    if isinstance(obj, Constant):
+        return obj.value
+    elif isinstance(obj, str):
+        return obj
+    raise TypeError(f"expected Constant or str, not '{obj.__class__.__name__}'")
 
-NORMAL = Constant('NORMAL')
-ACTIVE = Constant('ACTIVE')
-DISABLED = Constant('DISABLED')
-END = Constant('END')
-SINGLE = Constant('SINGLE')
-BROWSE = Constant('BROWSE')
-MULTIPLE = Constant('MULTIPLE')
-EXTENDED = Constant('EXTENDED')
+# Generate constants
+anchors = "n ne e se s sw w nw center"
+constants = anchors + """
+normal active disabled end single browse multiple extended
+left right top bottom
+none both x y
+insert current
+flat sunken raised groove ridge"""
+for name in constants.split():
+    globals()[name.upper()] = Constant(name)
 
-# pack() option 'side'
-LEFT = Constant('LEFT')
-RIGHT = Constant('RIGHT')
-TOP = Constant('TOP')
-BOTTOM = Constant('BOTTOM')
-
-# pack() option 'fill'
-NONE = Constant('NONE')
-BOTH = Constant('BOTH')
-X = Constant('X')
-Y = Constant('Y')
-
-
-INSERT = Constant('INSERT')
-CURRENT = Constant('CURRENT')
+# Border styles
+border_styles = {
+    'flat': {
+        'borderWidth' : 0
+    },
+    'raised': {
+        'outer': '#fff #777 #777 #fff',
+        'inner': '#e3e3e3 #aaa #aaa #e3e3e3'
+    },
+    'sunken': {
+        'outer': '#aaa #fff #fff #aaa',
+        'inner': '#777 #e3e3e3 #e3e3e3 #777'
+    },
+    'ridge': {
+        'outer': '#fff #b8b8b8 #b8b8b8 #fff',
+        'inner': '#a8a8a8 #fff #fff #a8a8a8'
+    },
+    'groove': {
+        'outer': '#aaa #fff #fff #aaa',
+        'inner': '#fff #aaa #aaa #fff'
+    }
+}
 
 class _Packed:
 
-    def __init__(self, widget, side, fill, expand, padx, pady, ipadx, ipady):
+    def __init__(self, widget, side, fill, expand, anchor,
+                 padx, pady, ipadx, ipady):
         self.widget = widget
         self.side = side
         self.fill = fill
         self.expand = expand
+        if constant_or_str(anchor) not in anchors:
+            raise ValueError(f'bad anchor "{anchor}": ' +
+                'must be n, ne, e, se, s, sw, w, nw, or center')
+        self.anchor = anchor
         self.padx = padx
         self.pady = pady
         self.ipadx = ipadx
         self.ipady = ipady
-        self.anchor = 'center'
 
 class Cavity:
 
@@ -93,7 +111,6 @@ class _Packer:
             self.compute_parcel_dimensions(elt)
             self.compute_content_dimensions(elt)
             self.position_content_in_parcel(elt)
-
 
     def compute_content_dimensions(self, elt):
         """The packer chooses the dimensions of the content.
@@ -169,8 +186,8 @@ class _Packer:
         parcel.style.width = f'{parcel_width}px'
         parcel.style.height = f'{parcel_height}px'
         parcel.style.display = 'flex'
-        parcel.style.alignItems = 'center'
-        parcel.style.justifyContent = 'center'
+
+        #parcel.style.backgroundColor = 'lightblue'
 
         self.container <= parcel
 
@@ -179,17 +196,34 @@ class _Packer:
         determines where in the parcel the content will be placed. If -padx or
         -pady is non-zero, then the given amount of external padding will
         always be left between the content and the edges of the parcel.
-
-        (Brython-specific) -anchor is currently ignored, content is always
-        centered in the parcel.
         """
         parcel = elt.parcel
         content = elt.widget.element
+        content.style.boxSizing = 'border-box'
         content.style.width = f'{elt.content_width}px'
         content.style.height = f'{elt.content_height}px'
         content.style.display = 'flex'
-        content.style.alignItems = 'center'
-        content.style.justifyContent = 'center'
+
+        anchor = constant_or_str(elt.anchor)
+
+        if 'W' in anchor:
+            parcel.style.justifyContent = 'start'
+            content.style.justifyContent = 'start'
+        elif 'E' in anchor:
+            content.style.justifyContent = 'end'
+            parcel.style.justifyContent = 'end'
+        if 'N' in anchor:
+            content.style.alignItems = 'start'
+            parcel.style.alignItems = 'start'
+        elif 'S' in anchor:
+            content.style.alignItems = 'end'
+            parcel.style.alignItems = 'end'
+        if anchor == 'center':
+            content.style.alignItems = 'center'
+            content.style.justifyContent = 'center'
+            parcel.style.alignItems = 'center'
+            parcel.style.justifyContent = 'center'
+
         parcel <= content
 
     def compute_container_dimensions(self):
@@ -208,10 +242,7 @@ class _Packer:
         self.container = container
 
         container.clear()
-
-        # fake hidden DIV to determine the defaut dimensions of widgets
-        fake_container = html.DIV(style='position:absolute;visibility:hidden;')
-        document <= fake_container
+        container.style.visibility = 'hidden'
 
         nb_expand_x = 0 # number of widgets with side = LEFT/RIGHT and expand
         nb_expand_y = 0 # number of widgets with side = TOP/BOTTOM and expand
@@ -221,7 +252,7 @@ class _Packer:
         container_req_height = 0
         for packed in self.widget._packed:
             content = packed.widget.element
-            fake_container <= content
+            container <= content
             # content's requested width and height (including padding)
             content_req_width = content.offsetWidth + 2 * packed.ipadx
             content_req_height = content.offsetHeight + 2 * packed.ipady
@@ -275,7 +306,18 @@ class _Packer:
         # the first content it is the entire area of the container.
         self.cavity = Cavity(left, top, width, height)
 
-        fake_container.remove()
+        container.clear()
+        container.style.visibility = 'visible'
+
+def option_alias(name):
+    if name == 'bg':
+        return 'background'
+    elif name == 'fg':
+        return 'foreground'
+    elif name == 'bd':
+        return 'borderwidth'
+    else:
+        return name
 
 
 class Widget:
@@ -287,11 +329,16 @@ class Widget:
         return value
 
     def cget(self, option):
+        option = option_alias(option)
         if option not in self.keys():
             raise ValueError(f"unknown option '{key}")
         return self.kw.get(option)
 
     def config(self, **kw):
+        toplevel = isinstance(self, Tk)
+        has_relief = 'relief' in self.keys()
+        if has_relief:
+            inner = self.element.firstChild.firstChild
         keys = self.keys()
         for key, value in kw.items():
             if key not in keys:
@@ -309,29 +356,55 @@ class Widget:
             else:
                 self.element.style.height = f'{height}em'
         if (padx := kw.get('padx')) is not None:
-            self.element.style.paddingLeft = f'{padx}px'
-            self.element.style.paddingRight = f'{padx}px'
+            elt = inner if has_relief else self.element
+            elt.style.paddingLeft = f'{padx}px'
+            elt.style.paddingRight = f'{padx}px'
         if (pady := kw.get('pady')) is not None:
-            self.element.style.paddingTop = f'{pady}px'
-            self.element.style.paddingBottom = f'{pady}px'
+            elt = inner if has_relief else self.element
+            elt.style.paddingTop = f'{pady}px'
+            elt.style.paddingBottom = f'{pady}px'
 
         # colors
         if (bg := kw.get('bg')) is not None \
                 or (bg := kw.get('background')) is not None:
-            self.element.style.backgroundColor = bg
-            self.kw['bg'] = self.kw['background'] = bg
+            if toplevel:
+                self.panel.style.backgroundColor = bg
+            else:
+                self.element.style.backgroundColor = bg
+            self.kw['background'] = bg
         if (fg := kw.get('fg')) is not None \
                 or (fg := kw.get('foreground')) is not None:
             self.element.style.color = fg
-            self.kw['fg'] = self.kw['foreground'] = fg
+            self.kw['foreground'] = fg
         if (bd := kw.get('bd')) is not None \
                 or (bd := kw.get('borderwidth')) is not None:
-            self.element.style.borderWidth = f'{bd}px'
-            self.element.style.borderStyle = 'solid'
-            self.element.style.borderColor = '#ddd'
-            self.element.style.boxShadow = "3px 3px 5px #999999"
-            self.kw['bd'] = self.kw['borderwidth'] = bd
+            if not isinstance(self, Button):
+                self.element.style.borderWidth = f'{bd}px'
+                self.element.style.borderStyle = 'solid'
+            self.kw['borderwidth'] = bd
 
+        # relief
+        if (relief := kw.get('relief')) is not None:
+            relief = constant_or_str(relief)
+            if relief not in border_styles:
+                raise ValueError(f'invalid relief: {relief}')
+
+            bd = kw.get('bd') or kw.get('borderwidth') \
+                    or self.kw['borderwidth']
+            outer_bd = bd // 2
+            inner_bd = bd - outer_bd
+            border_style = border_styles[relief]
+
+            self.outer = self.element.firstChild
+            self.outer.style.borderWidth = f'{outer_bd}px'
+            self.outer.style.borderStyle = 'solid'
+            self.outer.style.borderColor = border_style['outer']
+            
+            self.inner = self.outer.firstChild
+            self.inner.style.borderWidth = f'{inner_bd}px'
+            self.inner.style.borderStyle = 'solid'
+            self.inner.style.borderColor = border_style['inner']
+            
         # font
         if (font := kw.get('font')) is not None:
             for key, value in font.css.items():
@@ -368,10 +441,11 @@ class Widget:
         td = grid(self.master, **kwargs)
         td <= self.element
 
-    def pack(self, side=TOP, fill=NONE, expand=0, in_=None,
+    def pack(self, side=TOP, fill=NONE, expand=0, anchor='center', in_=None,
             ipadx=0, ipady=0, padx=0, pady=0):
         master = self.master
-        packed = _Packed(self, side, fill, expand, padx, pady, ipadx, ipady)
+        packed = _Packed(self, side, fill, expand, anchor,
+                         padx, pady, ipadx, ipady)
         if not hasattr(master, "_packed"):
             master._packed = [packed]
         else:
@@ -397,12 +471,12 @@ class Tk(Widget):
         'position': 'absolute',
         'left': f'{int(0.1 * window.innerWidth)}px',
         'top': f'{int(0.1 * window.innerHeight)}px',
-        'width': '150px',
         'font-family': fontFamily,
         'z-index': 10,
         'resize': 'both',
         'overflow': 'hidden',
-        'visibility': 'hidden'
+        'visibility': 'hidden',
+        'box-shadow': '3px 3px 5px #999999'
     }
 
     _title_style = {
@@ -428,7 +502,6 @@ class Tk(Widget):
 
     _default_config = {
         'bg': backgroundColor,
-        'relief': 'solid',
         'bd': 1
     }
 
@@ -455,18 +528,12 @@ class Tk(Widget):
         self.element.bind("leave", self._mouseup)
 
         self._maxsize = (None, None)
-        #self.minsize(int(window.outerWidth * 0.2),
-        #                int(window.outerHeight * 0.2))
+        self.minsize(150, 15)
         self.resizable(1, 1)
 
         self.menu = None
 
         self.config(**self.kw)
-
-        if not 'width' in kw:
-            self.element.style.width = f'{self.title_bar.offsetWidth}px'
-        if not 'height' in kw:
-            self.element.style.height = f'{self.title_bar.offsetHeight}px'
 
         _loops.append(self)
 
@@ -622,9 +689,6 @@ class Tk(Widget):
         document.unbind("touchmove")
 
 
-
-
-
 def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         in_=None, ipadx=None, ipady=None,
         sticky=''):
@@ -688,7 +752,14 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         td.style.verticalAlign = 'bottom'
     return td
 
+
 class IntVar:
+
+    COUNTER = 0
+
+    def __init__(self):
+        self.name = f'IntVar{IntVar.COUNTER}'
+        IntVar.COUNTER += 1
 
     def get(self):
         return self.value
@@ -696,14 +767,38 @@ class IntVar:
     def set(self, value):
         self.value = value
 
+class StringVar:
+
+    COUNTER = 0
+
+    def __init__(self):
+        self.name = f'StringVar{StringVar.COUNTER}'
+        StringVar.COUNTER += 1
+        self.value = None
+
+    def __repr__(self):
+        return f'<StringVar {self.value}>'
+
+    def get(self):
+        return self.value
+
+    def set(self, value):
+        self.value = value
 
 class Button(Widget):
 
+    _default_config = {
+        'borderwidth': 2,
+        'relief': 'raised',
+        'padx': 2,
+        'pady': 2
+    }
+
     def __init__(self, master, text='', **kw):
         self.master = master
-        self.kw = kw
-        self.element = html.BUTTON(text)
-        self.config(**kw)
+        self.kw = self._default_config | kw
+        self.element = html.SPAN(html.DIV(html.DIV(text)))
+        self.config(**self.kw)
 
     def keys(self):
         return ['activebackground', 'activeforeground', 'anchor',
@@ -999,6 +1094,9 @@ class Radiobutton(Widget):
         self.kw = kw
         self.radio = html.INPUT(type='radio', value=value, name='x')
         if variable:
+            self.radio.name = variable.name
+            if variable.value == value:
+                self.radio.checked = True
             self.radio.bind('click', lambda ev: variable.set(ev.target.value))
         self.element = html.DIV(self.radio + html.SPAN(text))
         self.config(**kw)
@@ -1293,7 +1391,7 @@ def _keyboard_move_selection(event):
         return
     if not _selected or not _selected[0].menu \
             or not _selected[0].menu.selected:
-        print('pas de sélection')
+        print('pas de sÃƒÂ©lection')
         return
     menu = _selected[0].menu
     if event.key == 'ArrowRight':
