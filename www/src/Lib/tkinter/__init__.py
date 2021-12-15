@@ -253,9 +253,11 @@ class _Packer:
         for packed in self.widget._packed:
             content = packed.widget.element
             container <= content
-            # content's requested width and height (including padding)
-            content_req_width = content.offsetWidth + 2 * packed.ipadx
-            content_req_height = content.offsetHeight + 2 * packed.ipady
+            # content's requested width and height (including padding and margin)
+            content_req_width = (content.offsetWidth +
+                                 2 * (packed.ipadx + packed.padx))
+            content_req_height = (content.offsetHeight + 
+                                  2 * (packed.ipady + packed.pady))
             packed.content_req_height = content_req_height
             packed.content_req_width = content_req_width
             if packed.expand:
@@ -399,12 +401,12 @@ class Widget:
             self.outer.style.borderWidth = f'{outer_bd}px'
             self.outer.style.borderStyle = 'solid'
             self.outer.style.borderColor = border_style['outer']
-            
+
             self.inner = self.outer.firstChild
             self.inner.style.borderWidth = f'{inner_bd}px'
             self.inner.style.borderStyle = 'solid'
             self.inner.style.borderColor = border_style['inner']
-            
+
         # font
         if (font := kw.get('font')) is not None:
             for key, value in font.css.items():
@@ -788,6 +790,7 @@ class StringVar:
 class Button(Widget):
 
     _default_config = {
+        'cursor': 'default',
         'borderwidth': 2,
         'relief': 'raised',
         'padx': 2,
