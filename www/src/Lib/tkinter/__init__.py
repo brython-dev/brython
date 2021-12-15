@@ -256,7 +256,7 @@ class _Packer:
             # content's requested width and height (including padding and margin)
             content_req_width = (content.offsetWidth +
                                  2 * (packed.ipadx + packed.padx))
-            content_req_height = (content.offsetHeight + 
+            content_req_height = (content.offsetHeight +
                                   2 * (packed.ipady + packed.pady))
             packed.content_req_height = content_req_height
             packed.content_req_width = content_req_width
@@ -354,7 +354,9 @@ class Widget:
             self.element.style.width = f'{width}em'
         if (height := kw.get('height')) is not None:
             if isinstance(self, Listbox):
-                self.element.attrs['size'] = height
+                self.payload.attrs['size'] = height
+            elif has_relief:
+                self.payload.style.height = f'{height}em'
             else:
                 self.element.style.height = f'{height}em'
         if (padx := kw.get('padx')) is not None:
@@ -372,15 +374,15 @@ class Widget:
             if toplevel:
                 self.panel.style.backgroundColor = bg
             else:
-                self.element.style.backgroundColor = bg
+                self.payload.style.backgroundColor = bg
             self.kw['background'] = bg
         if (fg := kw.get('fg')) is not None \
                 or (fg := kw.get('foreground')) is not None:
-            self.element.style.color = fg
+            self.payload.style.color = fg
             self.kw['foreground'] = fg
         if (bd := kw.get('bd')) is not None \
                 or (bd := kw.get('borderwidth')) is not None:
-            if not isinstance(self, Button):
+            if not has_relief:
                 self.element.style.borderWidth = f'{bd}px'
                 self.element.style.borderStyle = 'solid'
             self.kw['borderwidth'] = bd
@@ -410,7 +412,7 @@ class Widget:
         # font
         if (font := kw.get('font')) is not None:
             for key, value in font.css.items():
-                setattr(self.element.style, key, value)
+                setattr(self.payload.style, key, value)
 
         # misc
         if (cursor := kw.get('cursor')) is not None:
@@ -421,19 +423,19 @@ class Widget:
 
         if (state := kw.get('state')) is not None:
             if state is DISABLED:
-                self.element.attrs['disabled'] = True
+                self.payload.attrs['disabled'] = True
             elif state is NORMAL:
-                self.element.attrs['disabled'] = False
+                self.payload.attrs['disabled'] = False
 
         if (menu := kw.get('menu')) is not None:
-            if isinstance(self, Tk):
+            if toplevel:
                 menu._build()
-                self.element.insertBefore(menu.element,
+                self.payload.insertBefore(menu.element,
                     self.title_bar.nextSibling)
                 self.menu = menu
 
         if selectmode := kw.get('selectmode') is not None:
-            self.element.attrs['multiple'] = selectmode is MULTIPLE
+            self.payload.attrs['multiple'] = selectmode is MULTIPLE
 
         self.kw |= kw
 
@@ -800,7 +802,8 @@ class Button(Widget):
     def __init__(self, master, text='', **kw):
         self.master = master
         self.kw = self._default_config | kw
-        self.element = html.SPAN(html.DIV(html.DIV(text)))
+        self.payload = html.DIV(text)
+        self.element = html.SPAN(html.DIV(self.payload))
         self.config(**self.kw)
 
     def keys(self):
@@ -818,8 +821,12 @@ class Entry(Widget):
     def __init__(self, master, **kw):
         self.master = master
         self.kw = kw
-        self.element = html.INPUT()
+        self.payload = html.INPUT()
+        self.element = html.SPAN(html.DIV(html.DIV(self.payload)))
         self.config(**kw)
+
+    def get(self):
+        return self.payload.value
 
     def keys(self):
         return ['background', 'bd', 'bg', 'borderwidth', 'cursor',
@@ -838,7 +845,7 @@ class Frame(Widget):
     def __init__(self, master, **kw):
         self.master = master
         self.kw = kw
-        self.element = html.DIV()
+        self.element = self.payload = html.DIV()
         self.config(**kw)
 
     def keys(self):
@@ -853,7 +860,8 @@ class Label(Widget):
         self.master = master
         self.text = text
         self.kw = kw
-        self.element = html.SPAN(text, style={'white-space': 'pre'})
+        self.payload = html.DIV(text, style={'white-space': 'pre'})
+        self.element = html.SPAN(html.DIV(self.payload))
         self.config(**kw)
 
     def keys(self):
@@ -868,28 +876,33 @@ class Label(Widget):
 
 class Listbox(Widget):
 
+    _default_config = {
+        'height': 10
+    }
+
     def __init__(self, master, **kw):
         self.master = master
-        self.kw = kw
-        self.element = html.SELECT()
-        self.config(**kw)
+        self.kw = self._default_config | kw
+        self.payload = html.SELECT()
+        self.element = html.SPAN(html.DIV(self.payload))
+        self.config(**self.kw)
 
     def delete(self, position):
         if position is END:
-            position = len(self.element.options) - 1
+            position = len(self.payload.options) - 1
         elif position is ACTIVE:
-            position = self.element.selectedIndex
-        self.element.remove(position)
+            position = self.payload.selectedIndex
+        self.payload.remove(position)
 
     def insert(self, position, *options):
         if position is END:
             for option in options:
-                self.element <= html.OPTION(option)
+                self.payload <= html.OPTION(option)
             return
         elif position is ACTIVE:
-            position = self.element.selectedIndex
+            position = self.payload.selectedIndex
         for option in options.reverse():
-            self.element.add(html.OPTION(option), position)
+            self.payload.add(html.OPTION(option), position)
 
     def keys(self):
         return ['activestyle', 'background', 'bd', 'bg', 'borderwidth',
@@ -901,7 +914,7 @@ class Listbox(Widget):
             'listvariable']
 
     def size(self):
-        return len(self.element.options)
+        return len(self.payload.options)
 
 class Menu(Widget):
 
@@ -1046,7 +1059,6 @@ class Menu(Widget):
 
     def _build(self):
         self._unselect()
-        self.element = html.DIV()
         if self.toplevel:
             self.element = html.DIV(style=self._main_menu_style)
         else:
@@ -1095,13 +1107,14 @@ class Radiobutton(Widget):
             **kw):
         self.master = master
         self.kw = kw
-        self.radio = html.INPUT(type='radio', value=value, name='x')
+        self.payload = html.INPUT(type='radio', value=value, name='x')
         if variable:
-            self.radio.name = variable.name
+            self.payload.name = variable.name
             if variable.value == value:
-                self.radio.checked = True
-            self.radio.bind('click', lambda ev: variable.set(ev.target.value))
-        self.element = html.DIV(self.radio + html.SPAN(text))
+                self.payload.checked = True
+            self.payload.bind('click', lambda ev: variable.set(ev.target.value))
+        self.element = html.SPAN(html.DIV(html.DIV(self.payload +
+            html.SPAN(text))))
         self.config(**kw)
 
     def keys(self):
@@ -1118,16 +1131,29 @@ class Radiobutton(Widget):
 
 class Text(Widget):
 
+    _default_config = {
+        'height': 10,
+        'relief': SUNKEN,
+        'borderwidth': 2
+    }
+
     def __init__(self, master, **kw):
         self.master = master
-        self.kw = kw
-        self.element = html.DIV(contenteditable=True,
-            style={'text-align': 'left', 'background-color': '#fff',
-                   'width' :'100%'})
-        self.config(**kw)
+        self.kw = self._default_config | kw
+        self.payload = html.DIV(contenteditable=True,
+            style={'text-align': 'left', 'background-color': '#fff'})
+        self.element = html.SPAN(html.DIV(self.payload, style='width:100%'))
+        self.config(**self.kw)
+        self.has_focus = False
+        self.payload.bind('mouseleave', lambda ev: self._lose_focus())
+        self._selection = None
 
     def index(self, position):
-        el = self.element
+        row, column = self._index(position)
+        return f'{row}.{column}'
+
+    def _index(self, position):
+        el = self.payload
         if position is END or position == "end":
             # END (or "end") corresponds to the position just after the last
             # character in the buffer.
@@ -1135,15 +1161,19 @@ class Text(Widget):
             return len(lines) + 1, 0
         elif position is INSERT or position == "insert":
             # INSERT (or "insert") corresponds to the insertion cursor.
-            sel = window.getSelection()
-            if sel.anchorNode is javascript.NULL \
-                    or sel.anchorNode is self.element \
-                    or not self.element.contains(sel.anchorNode):
+            if self._selection:
+                node, offset = self._selection
+            else:
+                sel = window.getSelection()
+                node = sel.anchorNode
+                offset = sel.anchorOffset
+            if node is javascript.NULL \
+                    or node is el \
+                    or not el.contains(node):
                 lines = self._get_text().split('\n')
                 return len(lines), len(lines[-1])
             else:
-                return self._node_offset_to_row_column(sel.anchorNode,
-                    sel.anchorOffset)
+                return self._node_offset_to_row_column(node, offset)
         elif isinstance(position, float):
             row, column = [int(x) for x in str(position).split('.')]
         elif isinstance(position, str):
@@ -1183,7 +1213,7 @@ class Text(Widget):
                 column = column[:mo.start()] + column[mo.end():]
 
             row += delta_row
-            lines = self.element.text.split('\n')
+            lines = el.text.split('\n')
             if row > len(lines):
                 return self.index(END)
             if column == 'end':
@@ -1209,7 +1239,7 @@ class Text(Widget):
         row, column = self.index(position)
         _range = document.createRange()
         sel = window.getSelection()
-        el = self.element
+        el = self.payload
         _range.setStart(el.childNodes[row - 1], column)
 
         if end is not None:
@@ -1226,29 +1256,25 @@ class Text(Widget):
         _range.deleteContents()
 
     def insert(self, position, text, tags=()):
-        if not self.element.childNodes:
+        el = self.payload
+        if not el.childNodes:
             lines = text.split('\n')
-            self.element <= lines[0] # text node
+            el <= lines[0] # text node
             for line in lines[1:]:
-                self.element <= html.DIV(line)
+                el <= html.DIV(line)
         elif position is END:
-            lastChild = self.element.lastChild
+            lastChild = el.lastChild
             lines = text.split('\n')
             if lastChild.nodeType == 3:
                 lastChild.nodeValue += lines[0]
-                self.element <= (html.DIV(line) for line in lines[1:])
+                el <= (html.DIV(line) for line in lines[1:])
             else:
-                self.element <= (html.DIV(line) for line in lines)
-        elif position is INSERT:
-            sel = window.getSelection()
-            if sel is javascript.NULL \
-                    or sel.anchorNode is self.element \
-                    or not self.element.contains(sel.anchorNode):
-                self.insert(END, text)
-            else:
-                self.insert(*self.index(INSERT), text)
+                el <= (html.DIV(line) for line in lines)
         else:
-            row, column = self.index(position)
+            if position is INSERT:
+                row, column = self._index(INSERT)
+            else:
+                row, column = self._index(position)
             element_text = self._get_text()
             lines = element_text.split('\n')
             if row > len(lines):
@@ -1261,6 +1287,18 @@ class Text(Widget):
             else:
                 node.nodeValue = node.nodeValue[:offset] + text + \
                     node.nodeValue[offset:]
+
+        if self._selection:
+            # reset caret at saved position + text length
+            node, offset = self._selection
+            _range = document.createRange()
+            _range.setStart(node, offset)
+            if position is INSERT:
+                _range.setStart(node, offset + len(text))
+            _range.collapse(True)
+            selection = window.getSelection()
+            selection.removeAllRanges()
+            selection.addRange(_range)
 
     def keys(self):
         return ['autoseparators', 'background', 'bd', 'bg', 'blockcursor',
@@ -1277,16 +1315,17 @@ class Text(Widget):
     def _get_text(self):
         text = ''
         previous = None
-        for child in self.element.childNodes:
+        for child in self.payload.childNodes:
             if previous and child.nodeType == 1 \
                     and child.nodeName == 'DIV':
                 text += '\n'
             if child.nodeType == 3:
                 text += child.nodeValue.strip()
             elif child.nodeType == 1:
-                child = child.firstChild
-                if child.nodeType == 3:
-                    text += child.nodeValue.strip()
+                if child.firstChild:
+                    child = child.firstChild
+                    if child.nodeType == 3:
+                        text += child.nodeValue.strip()
             previous = child
         return text
 
@@ -1295,7 +1334,17 @@ class Text(Widget):
         col = 0
         previous = None
 
-        for child in self.element.childNodes:
+        if not self.payload.childNodes:
+            return self.payload, 0
+        if len(self.payload.childNodes) == 1 \
+                and self.payload.firstChild.nodeType == 1 \
+                and self.payload.firstChild.nodeName == 'BR':
+            t = document.createTextNode('')
+            self.payload.removeChild(self.payload.firstChild)
+            self.payload <= t
+            return t, 0
+
+        for child in self.payload.childNodes:
             if child.nodeType == 3:
                 node_value = child.nodeValue
                 node_text = node_value.strip()
@@ -1332,12 +1381,14 @@ class Text(Widget):
                                 return child, 0
             previous = child
 
+        return self.payload, 0
+
     def _node_offset_to_row_column(self, node, node_offset):
         line = 1
         col = 0
         previous = None
 
-        for child in self.element.childNodes:
+        for child in self.payload.childNodes:
             if child.nodeType == 3:
                 node_value = child.nodeValue
                 node_text = node_value.strip()
@@ -1376,6 +1427,11 @@ class Text(Widget):
                                 return line, 0
             previous = child
 
+    def _lose_focus(self):
+        sel = window.getSelection()
+        if sel.anchorNode != self.payload:
+            self._selection = sel.anchorNode, sel.anchorOffset
+
 class _KeyEventState:
     ignore = False
 
@@ -1394,7 +1450,6 @@ def _keyboard_move_selection(event):
         return
     if not _selected or not _selected[0].menu \
             or not _selected[0].menu.selected:
-        print('pas de sÃƒÂ©lection')
         return
     menu = _selected[0].menu
     if event.key == 'ArrowRight':
