@@ -2509,13 +2509,6 @@ function from_codepoint_list(codepoints, type){
     return $B.String(s)
 }
 
-var GroupDict = $B.make_class("GroupDict")
-GroupDict.__mro__ = [_b_.dict, _b_.object]
-GroupDict.__setitem__ = function(){
-    throw _b_.TypeError.$factory("read only")
-}
-
-
 var bytes_like = [_b_.bytes, _b_.bytearray, _b_.memoryview]
 
 function string2bytes(s){
@@ -3144,7 +3137,6 @@ BMO.groupdict = function(){
             _b_.dict.$setitem(d, key, value)
         }
     }
-    d.__class__ = GroupDict
     return d
 }
 

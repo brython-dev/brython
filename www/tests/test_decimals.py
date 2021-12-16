@@ -84,4 +84,6 @@ x = a / 2
 for i in range(10):
     x2 = (x + a / x) / 2
     x = x2
-    
+
+# issue 1844
+assert f"{Decimal('12'):f}" == '12'
