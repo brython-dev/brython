@@ -707,19 +707,19 @@ var _mod = {
         // because this fails for Decimal instances, which do not support
         // multiplication by floats
 
-        var diff = $B.$call($B.$getattr(b, '__sub__'))(a),
-            abs_diff = $B.$call($B.$getattr(diff, "__abs__"))()
+        var diff = $B.rich_op('sub', b, a),
+            abs_diff = _b_.abs(diff)
         if($B.rich_comp("__le__", abs_diff, abs_tol)){
             return true
         }
-        var abs_a = $B.$call($B.$getattr(a, '__abs__'))(),
-            abs_b = $B.$call($B.$getattr(b, '__abs__'))(),
+        var abs_a = _b_.abs(a),
+            abs_b = _b_.abs(b),
             max_ab = abs_a
         if($B.rich_comp("__gt__", abs_b, abs_a)){
             max_ab = abs_b
         }
         return $B.rich_comp("__le__",
-            $B.$call($B.$getattr(abs_diff, "__truediv__"))(max_ab),
+            $B.rich_op('truediv', abs_diff, max_ab),
             rel_tol)
     },
     isfinite: function(x){

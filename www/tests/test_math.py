@@ -258,5 +258,8 @@ try:
     raise Exception("should have riased OverflowError")
 except OverflowError:
     pass
-    
+
+# issue 1842
+assert not math.isclose(0.1, 0)
+
 print("passed all tests..")
