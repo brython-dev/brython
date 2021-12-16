@@ -78,7 +78,7 @@ var $module = (function($B){
                                 }else if(attr == "tzinfo"){
                                     // Only value supported for the moment : Z
                                     // (UTC)
-                                    var dt_module = $B.imported[cls.__module__]
+                                    var dt_module = $B.imported[cls.$infos.__module__]
                                     dt.tzinfo = dt_module.timezone.utc
                                 }
                                 pos_fmt += 2

@@ -136,4 +136,8 @@ assert datetime.strptime('01-02-2020', '%d-%m-%Y') == d
 
 assert datetime.strptime('3.2.2020', '%d.%m.%Y') == datetime(2020, 2, 3)
 
+# issue 1847
+import time
+assert time.strptime(f'01.02.2020', '%d.%m.%Y').tm_wday == 5
+
 print('passed all tests')

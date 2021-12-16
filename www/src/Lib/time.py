@@ -312,7 +312,7 @@ class struct_time:
 
         time_tuple = args[0]
         if len(time_tuple) != 9:
-            raise TypeError("time.struct_time() takes a 9-sequence (%s-sequence given)" %len(args))
+            raise TypeError("time.struct_time() takes a 9-sequence (%s-sequence given)" %len(time_tuple))
 
         self.args = time_tuple
 
@@ -374,8 +374,15 @@ class struct_time:
 
 def to_struct_time(*arg):
     arg = list(arg)
-    # The tuple received from module _strptime has 7 elements, we must add
-    # the rank of day in the year in the range [1, 366]
+    # The tuple received from module _strptime has 8 elements
+    # The 2 last are microseconds and timezone: remove them
+    del arg[-2:]
+    # Add the rank of day in the week: use Javascript Date
+    from browser import window
+    d = window.Date.new(arg[0], arg[1] - 1, arg[2])
+    weekday = (d.getDay() + 6) % 7
+    arg.append(weekday)
+    # Add the rank of day in the year in the range [1, 366]
     ml = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
     if arg[0] % 4 == 0:
         ml[1] += 1
