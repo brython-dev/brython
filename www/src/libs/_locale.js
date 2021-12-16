@@ -876,8 +876,9 @@ var $module=(function($B){
              }
              var res = $B.empty_dict()
              for(var key in conv){
-                 res.$string_dict[key] = [conv, res.$order++]
+                 _b_.dict.$setitem(res, key, conv[key])
              }
+             
              return res
          },
 

@@ -87,3 +87,6 @@ for i in range(10):
 
 # issue 1844
 assert f"{Decimal('12'):f}" == '12'
+
+# issue 1846
+assert f"{Decimal('12'):n}" == '12'
