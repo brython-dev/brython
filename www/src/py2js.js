@@ -2832,7 +2832,8 @@ var Comprehension = {
             co_kwonlyargcount: 0,
             co_posonlyargount: 0,
             co_varnames: $B.fast_tuple(['.0', ${varnames}])
-        }\n`
+        }
+        $locals['.0'] = expr\n`
     },
     generators: function(comp){
         // Return a list of comprehensions
@@ -7438,13 +7439,6 @@ ListCompCtx.prototype.to_js = function(){
     var js = `(${this.has_await ? 'async ' : ''}function(expr){` +
         Comprehension.admin_infos(this) +
         `var $result_${id} = []\n`
-        /*
-        var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'
-        var $top_frame = ["${id}", $locals_${id}, "${this.module}", $locals_${this.module_ref}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        */
 
     js += first_for.to_js(indent)
     var nb = -1
