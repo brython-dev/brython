@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-16 08:55:38.188313"
-__BRYTHON__.timestamp=1639641338187
+__BRYTHON__.compiled_date="2021-12-16 09:24:22.221405"
+__BRYTHON__.timestamp=1639643062221
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7547,7 +7547,8 @@ var op1=op.substr(0,op.length-1)
 if(typeof left=='number' && typeof right=='number'
 && op !='//='){
 var res=eval(left+' '+op1+' '+right)
-if(res <=$B.max_int && res >=$B.min_int){return res}else{res=eval(BigInt(left)+op1+BigInt(right))
+if(res <=$B.max_int && res >=$B.min_int && 
+res.toString().search(/e/i)==-1){return res}else{res=eval(`${BigInt(left)}n ${op1} ${BigInt(right)}n`)
 var pos=res > 0n,res=res+''
 return pos ? $B.fast_long_int(res,true):
 $B.fast_long_int(res.substr(1),false)}}else if(typeof left=='string' && typeof right=='string' &&

@@ -869,10 +869,11 @@ $B.augm_assign = function(left, op, right){
     if(typeof left == 'number' && typeof right == 'number'
             && op != '//='){ // operator "//" not supported by Javascript
         var res = eval(left + ' ' + op1 + ' ' + right)
-        if(res <= $B.max_int && res >= $B.min_int){
+        if(res <= $B.max_int && res >= $B.min_int && 
+                res.toString().search(/e/i) == -1){
             return res
         }else{
-            res = eval(BigInt(left) + op1 + BigInt(right))
+            res = eval(`${BigInt(left)}n ${op1} ${BigInt(right)}n`)
             var pos = res > 0n,
                 res = res + ''
             return pos ? $B.fast_long_int(res, true) :
