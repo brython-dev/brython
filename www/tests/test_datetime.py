@@ -121,4 +121,19 @@ date = "Thu, 26 Aug 2021 00:00:00 GMT"
 dt = datetime.strptime(date, "%a, %d %b %Y %H:%M:%S GMT")
 assert dt == datetime(2021, 8, 26, 0, 0)
 
+# issue 1845
+for d in ['01.02.2020', '01/02/2020', '01-02-2020']:
+    try:
+        datetime.strptime(d, '%d%m%Y')
+        raise Exception('should have raised ValueError')
+    except ValueError:
+        pass
+
+d = datetime(2020,2, 1)
+assert datetime.strptime('01.02.2020', '%d.%m.%Y') == d
+assert datetime.strptime('01/02/2020', '%d/%m/%Y') == d
+assert datetime.strptime('01-02-2020', '%d-%m-%Y') == d
+
+assert datetime.strptime('3.2.2020', '%d.%m.%Y') == datetime(2020, 2, 3)
+
 print('passed all tests')
