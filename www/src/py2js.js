@@ -946,7 +946,8 @@ $AbstractExprCtx.prototype.transition = function(token, value){
 
     switch(token) {
         case 'await':
-            return new $AbstractExprCtx(new $AwaitCtx(context), true)
+            return new $AbstractExprCtx(new $AwaitCtx(
+                new $ExprCtx(context, 'await', false)), true)
         case 'id':
             return new $IdCtx(new $ExprCtx(context, 'id', commas),
                 value)
@@ -1395,6 +1396,7 @@ $AssignCtx.prototype.transition = function(token, value){
         context.guess_type()
         return $transition(context.parent, 'eol')
     }
+    console.log('token', token, 'after context', context)
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
@@ -1976,18 +1978,7 @@ $AwaitCtx.prototype.transition = function(token, value){
 }
 
 $AwaitCtx.prototype.to_js = function(){
-    // Save execution stack before awaiting.
-    // If the promise is rejected, restore it before throwing the
-    // exception.
-    // cf. issue #1701
-    /*
-    return 'var save_stack = $B.save_stack();' +
-        'try{await ($B.promise(' + $to_js(this.tree) + '))}' +
-        'catch(err){$B.restore_stack(save_stack, $locals);throw err};' +
-        '$B.restore_stack(save_stack, $locals); '
-    */
     return `await $B.promise(${$to_js(this.tree)})`
-
 }
 
 var $BodyCtx = $B.parser.$BodyCtx = function(context){

@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-16 08:22:15.673473"
-__BRYTHON__.timestamp=1639639335673
+__BRYTHON__.compiled_date="2021-12-16 08:35:04.155742"
+__BRYTHON__.timestamp=1639640104155
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -776,7 +776,8 @@ C=C.parent
 C.packed=packed
 C.is_await=is_await}
 switch(token){case 'await':
-return new $AbstractExprCtx(new $AwaitCtx(C),true)
+return new $AbstractExprCtx(new $AwaitCtx(
+new $ExprCtx(C,'await',false)),true)
 case 'id':
 return new $IdCtx(new $ExprCtx(C,'id',commas),value)
 case 'str':
@@ -1006,6 +1007,7 @@ if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+to
 C)}
 C.guess_type()
 return $transition(C.parent,'eol')}
+console.log('token',token,'after C',C)
 $_SyntaxError(C,'token '+token+' after '+C)}
 $AssignCtx.prototype.transform=function(node,rank){
 var scope=$get_scope(this)
@@ -1308,8 +1310,7 @@ return new ast.Await(ast_or_obj(this.tree[0]))}
 $AwaitCtx.prototype.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
-$AwaitCtx.prototype.to_js=function(){
-return `await $B.promise(${$to_js(this.tree)})`}
+$AwaitCtx.prototype.to_js=function(){return `await $B.promise(${$to_js(this.tree)})`}
 var $BodyCtx=$B.parser.$BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
