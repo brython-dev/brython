@@ -341,7 +341,7 @@ long_int.__divmod__ = function(self, other){
     var a = to_BigInt(self),
         b = to_BigInt(other),
         quotient
-    if((a > 0 && b > 0) || (a < 0 && b < 0)){
+    if((a >= 0 && b > 0) || (a <= 0 && b < 0)){
         quotient = a / b
     }else{
         quotient = a / b - BigInt(1)

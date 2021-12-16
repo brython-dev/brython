@@ -653,4 +653,7 @@ assert divmod(-a, -445677) == (20695194135786, -78753)
 assert str(float(a)) == "9.223372036854776e+18"
 assert str(float(-a)) == "-9.223372036854776e+18"
 
+# issue 1840
+assert 0 // 10 ** 100 == 0
+
 print('passed all tests...')
