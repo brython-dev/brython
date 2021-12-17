@@ -44,15 +44,24 @@ var $module = (function($B){
 
             var regexps = {
                 d: ["day", new RegExp("^[123][0-9]|0?[1-9]")],
-                f: ["microsecond", new RegExp("^(\\d{1,6})")],
+                f: ["microsecond", new RegExp("^\\d{1,6}")],
                 H: ["hour", new RegExp("^[01][0-9]|2[0-3]|\\d")],
                 I: ["hour", new RegExp("^1[0-2]|0?[0-9]")],
-                m: ["month", new RegExp("^0?[1-9]|1[012]")],
+                m: ["month", new RegExp("^1[012]|0?[1-9]")],
                 M: ["minute", new RegExp("^[1-5][0-9]|0?[0-9]")],
-                S: ["second", new RegExp("^([1-5]\\d)|(0?\\d)")],
+                S: ["second", new RegExp("^[1-5]\\d|0?\\d")],
                 y: ["year", new RegExp("^0{0,2}\\d{2}")],
                 Y: ["year", new RegExp("^\\d{4}")],
                 z: ["tzinfo", new RegExp("Z")]
+            }
+
+            for(var key in regexps){
+                var re = new RegExp('%' + key, "g"),
+                    mo = fmt.match(re)
+                if(mo && mo.length > 1){
+                    throw _b_.ValueError.$factory('strptime directive %' +
+                        key + ' defined more than once')
+                }
             }
 
             while(pos_fmt < fmt.length){
@@ -67,23 +76,19 @@ var $module = (function($B){
                         if(res === null){
                             error(s, fmt)
                         }else{
-                            if(dt[attr] !== undefined){
-                                throw Error(attr + " is defined more than once")
-                            }else{
-                                dt[attr] = parseInt(res[0])
-                                if(attr == "microsecond"){
-                                    while(dt[attr] < 100000){
-                                        dt[attr] *= 10
-                                    }
-                                }else if(attr == "tzinfo"){
-                                    // Only value supported for the moment : Z
-                                    // (UTC)
-                                    var dt_module = $B.imported[cls.$infos.__module__]
-                                    dt.tzinfo = dt_module.timezone.utc
+                            dt[attr] = parseInt(res[0])
+                            if(attr == "microsecond"){
+                                while(dt[attr] < 100000){
+                                    dt[attr] *= 10
                                 }
-                                pos_fmt += 2
-                                pos_s += res[0].length
+                            }else if(attr == "tzinfo"){
+                                // Only value supported for the moment : Z
+                                // (UTC)
+                                var dt_module = $B.imported[cls.$infos.__module__]
+                                dt.tzinfo = dt_module.timezone.utc
                             }
+                            pos_fmt += 2
+                            pos_s += res[0].length
                         }
                     }else if(spec == "a" || spec == "A"){
                         // Locale's abbreviated (a) or full (A) weekday name
@@ -98,11 +103,7 @@ var $module = (function($B){
                             var match = res[0],
                                 ix = t.indexOf(match)
                         }
-                        if(dt.weekday !== undefined){
-                            throw Error(attr + " is defined more than once")
-                        }else{
-                            dt.weekday = ix
-                        }
+                        dt.weekday = ix
                         pos_fmt += 2
                         pos_s += match.length
                     }else if(spec == "b" || spec == "B"){
@@ -117,11 +118,7 @@ var $module = (function($B){
                             var match = res[0],
                                 ix = t.indexOf(match)
                         }
-                        if(dt.month !== undefined){
-                            throw Error(attr + " is defined more than once")
-                        }else{
-                            dt.month = ix + 1
-                        }
+                        dt.month = ix + 1
                         pos_fmt += 2
                         pos_s += match.length
                     }else if(spec == "c"){
@@ -148,6 +145,12 @@ var $module = (function($B){
                     }
                 }
             }
+
+            if(pos_s < s.length){
+                throw _b_.ValueError.$factory('unconverted data remains: ' +
+                    s.substr(pos_s))
+            }
+
             return $B.$call(cls)(dt.year, dt.month, dt.day,
                 dt.hour || 0, dt.minute || 0, dt.second || 0,
                 dt.microsecond || 0, dt.tzinfo || _b_.None)

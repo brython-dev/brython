@@ -140,4 +140,28 @@ assert datetime.strptime('3.2.2020', '%d.%m.%Y') == datetime(2020, 2, 3)
 import time
 assert time.strptime(f'01.02.2020', '%d.%m.%Y').tm_wday == 5
 
+# issue 1848
+try:
+    datetime.strptime('1.1.10000', '%d.%m.%Y')
+    raise Exception('should have raised ValueError')
+except ValueError:
+    pass
+
+# issue 1849
+assert datetime.strptime('11-12-2013', '%d-%m-%Y') == \
+    datetime(2013, 12, 11, 0, 0)
+assert datetime.strptime('09-09-2013', '%d-%m-%Y') == \
+    datetime(2013, 9, 9, 0, 0)
+assert datetime.strptime('9-9-2013', '%d-%m-%Y') == \
+    datetime(2013, 9, 9, 0, 0)
+
+assert list(time.strptime('11-12-2013', '%d-%m-%Y')) == \
+    [2013, 12, 11, 0, 0, 0, 2, 345, -1]
+
+assert list(time.strptime('09-09-2013', '%d-%m-%Y')) == \
+    [2013, 9, 9, 0, 0, 0, 0, 252, -1]
+
+assert list(time.strptime('9-9-2013', '%d-%m-%Y')) == \
+    [2013, 9, 9, 0, 0, 0, 0, 252, -1]
+    
 print('passed all tests')
