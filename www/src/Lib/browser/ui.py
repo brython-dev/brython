@@ -122,6 +122,9 @@ class Widget:
         if (text := kw.get('text')):
             element.text = text
 
+        if (title := kw.get('title')) and isinstance(self, Box):
+            element.title_bar.text = title
+
         if (width := kw.get('width')):
             element.style.width = f"{width}em"
         if (height := kw.get('height')):
@@ -163,6 +166,7 @@ class Widget:
         self.kw = getattr(self, 'kw', {})
         self.kw |= kw
 
+
 class Box(html.DIV, Widget):
 
     def __init__(self, title="", *, top=None, left=None):
@@ -195,17 +199,18 @@ class Box(html.DIV, Widget):
 
         self.kw = {'top': top, 'left': left}
 
-        self.title_bar.bind("mousedown", self.mousedown)
-        self.title_bar.bind("touchstart", self.mousedown)
-        self.title_bar.bind("mouseup", self.mouseup)
-        self.title_bar.bind("touchend", self.mouseup)
-        self.bind("leave", self.mouseup)
+        self.title_bar.bind("mousedown", self._grab_widget)
+        self.title_bar.bind("touchstart", self._grab_widget)
+        self.title_bar.bind("mouseup", self._move_widget)
+        self.title_bar.bind("touchend", self._move_widget)
+        self.bind("leave", self._stop_moving)
         self.is_moving = False
 
     def close(self, *args):
         self.remove()
 
-    def mousedown(self, event):
+    def _grab_widget(self, event):
+        self._remove_menus()
         document.bind("mousemove", self.mousemove)
         document.bind("touchmove", self.mousemove)
         self.is_moving = True
@@ -213,7 +218,7 @@ class Box(html.DIV, Widget):
         # prevent default behaviour to avoid selecting the moving element
         event.preventDefault()
 
-    def mousemove(self, event):
+    def _move_widget(self, event):
         if not self.is_moving:
             return
 
@@ -221,13 +226,18 @@ class Box(html.DIV, Widget):
         self.left = self.initial[0] + event.x
         self.top = self.initial[1] + event.y
 
-    def mouseup(self, event):
+    def _stop_moving(self, event):
         self.is_moving = False
         document.unbind("mousemove")
         document.unbind("touchmove")
 
     def title(self, text):
         self.title_bar.text = title
+
+    def _remove_menus(self):
+        if self.menu and self.menu.open_submenu:
+            self.menu.open_on_mouseenter = False
+            self.menu.open_submenu.element.remove()
 
 
 class Button(html.BUTTON, Widget):
@@ -388,7 +398,6 @@ class Menu(Widget):
         self.config(**self.kw)
 
         for choice in self.choices:
-            print('buil, choices', self.choices)
             if choice['type'] == 'separator':
                 if not self.toplevel:
                     cell = html.TR(html.TD(html.HR(), colspan=2))
@@ -415,11 +424,12 @@ class Menu(Widget):
             cell.menu = self
             cell.bind('mouseenter', lambda ev: self._cell_enter(ev.target))
             cell.bind('mouseleave', lambda ev: self._cell_leave(ev.target))
+            if (command := choice.get('command')):
+                cell.bind('click', lambda ev, command=command:command())
             if choice['type'] == 'cascade':
                 cell.kw = choice
                 cell.bind('click',
                     lambda ev, cell=cell: self._show_cascade(cell))
-                print('cell', cell, cell.text, 'kw', cell.kw)
 
 
 class Text(html.DIV, Widget):
