@@ -117,40 +117,51 @@ class Widget:
             self.style.height = f'{self.parentNode.height - self.dh}px'
 
     def config(self, **kw):
-        if (text := kw.pop('text', None)):
-            self.text = text
+        element = self.element if isinstance(self, Menu) else self
 
-        if (width := kw.pop('width', None)):
-            self.style.width = f"{width}em"
-        if (height := kw.pop('height', None)):
-            self.style.height = f"{height}em"
+        if (text := kw.get('text')):
+            element.text = text
 
-        if (command := kw.pop('command', None)):
-            self.bind('click', lambda ev: command())
+        if (width := kw.get('width')):
+            element.style.width = f"{width}em"
+        if (height := kw.get('height')):
+            element.style.height = f"{height}em"
 
-        if (font := kw.pop('font', None)):
-            self.style.fontFamily = font.family
-            self.style.fontWeight = font.weight
-            self.style.fontStyle = font.style
+        if (command := kw.get('command')):
+            element.bind('click', lambda ev: command())
+
+        if (font := kw.get('font')):
+            element.style.fontFamily = font.family
+            element.style.fontWeight = font.weight
+            element.style.fontStyle = font.style
             if font.size:
-                self.style.fontSize = f'{font.size}px'
+                element.style.fontSize = f'{font.size}px'
 
-        if (background := kw.pop('background', None)):
-            self.style.backgroundColor = background
-        if (color := kw.pop('color', None)):
-            self.style.color = color
+        if (background := kw.get('background')):
+            element.style.backgroundColor = background
+        if (color := kw.get('color')):
+            element.style.color = color
 
-        if (border := kw.pop('border', None)):
-            self.style.borderStyle = border.style
-            self.style.borderWidth = f'{border.width}px'
-            self.style.borderColor = border.color
+        if (border := kw.get('border')):
+            element.style.borderStyle = border.style
+            element.style.borderWidth = f'{border.width}px'
+            element.style.borderColor = border.color
 
-        if (padding := kw.pop('padding', None)):
-            self.style.paddingTop = f'{padding.values[0]}px'
-            self.style.paddingRight = f'{padding.values[1]}px'
-            self.style.paddingBottom = f'{padding.values[2]}px'
-            self.style.paddingLeft = f'{padding.values[3]}px'
+        if (padding := kw.get('padding')):
+            element.style.paddingTop = f'{padding.values[0]}px'
+            element.style.paddingRight = f'{padding.values[1]}px'
+            element.style.paddingBottom = f'{padding.values[2]}px'
+            element.style.paddingLeft = f'{padding.values[3]}px'
 
+        if (menu := kw.get('menu')) is not None:
+            if isinstance(self, Box):
+                menu._build()
+                self.insertBefore(menu.element,
+                    self.title_bar.nextSibling)
+                self.menu = menu
+
+        self.kw = getattr(self, 'kw', {})
+        self.kw |= kw
 
 class Box(html.DIV, Widget):
 
@@ -181,7 +192,9 @@ class Box(html.DIV, Widget):
         top += document.scrollingElement.scrollTop
         self.top = top
         self.style.top = f'{top}px'
-        
+
+        self.kw = {'top': top, 'left': left}
+
         self.title_bar.bind("mousedown", self.mousedown)
         self.title_bar.bind("touchstart", self.mousedown)
         self.title_bar.bind("mouseup", self.mouseup)
@@ -223,6 +236,190 @@ class Button(html.BUTTON, Widget):
         self.master = master
         self.config(**kw)
         super().__init__(*args)
+
+
+borderColor = '#008'
+backgroundColor = '#f0f0f0'
+color = '#000'
+
+class Menu(Widget):
+
+    _main_menu_style = {
+        'border-color': borderColor,
+        'border-width': '0px',
+        'width': '100%',
+        'cursor': 'default',
+        'padding': '5px 0px 5px 0px'
+    }
+
+    _main_menu_span_style = {
+        'padding': '0em 1em 0em 0.5em'
+    }
+
+    _submenu_style = {
+        'position': 'absolute',
+        'border-color': borderColor,
+        'width': 'auto',
+        'cursor': 'default'
+    }
+
+    _submenu_label_style = {
+        'padding-left': '0.5em',
+        'padding-right': '0px',
+        'width': '80%'
+    }
+
+    _submenu_arrow_style = {
+        'text-align': 'right',
+        'padding-left': '3px',
+        'padding-right': '5px'
+    }
+
+    _default_config_main = {
+        'activebackground': '#0078d7',
+        'background': backgroundColor,
+        'color' : color
+    }
+
+    _default_config = {
+        'activebackground': '#0078d7',
+        'background': backgroundColor,
+        'border': Border(1),
+        'color' : color
+    }
+
+    def __init__(self, master, **kw):
+        self.master = master
+        self.toplevel = isinstance(master, Box)
+        if self.toplevel:
+            master.menu = self
+            self.kw = self._default_config_main | kw
+        else:
+            self.kw = self._default_config | kw
+
+        self.selected = None
+        self.open_submenu = None
+        self.open_on_mouseenter = False
+        self._ignore_next_key_events = False
+
+        self.choices = []
+
+    def add_cascade(self, **kw):
+        """Add a command that triggers the opening of 'menu', an instance of
+        Menu.
+        submenu = Menu(main_menu)
+        main_menu.add_cascade('open', submenu)
+        """
+        self.choices.append(kw | {'type': 'cascade'})
+
+    def add_command(self, **kw):
+        self.choices.append(kw | {'type': 'command'})
+
+    def add_separator(self):
+        self.choices.append({'type': 'separator'})
+
+    def _select(self, cell):
+        """Called when a cell is selected by click or keyboard navigation."""
+        self.selected = cell
+        cell.style.backgroundColor = 'lightblue'
+
+    def _unselect(self):
+        if self.selected:
+            self.selected.style.backgroundColor = self.kw['background']
+            self.selected.style.color = self.kw['color']
+            self.selected = None
+            if self.open_submenu:
+                self.open_submenu.element.remove()
+            self.open_submenu = None
+
+    def _show_cascade(self, cell):
+        global _selected
+        submenu = cell.kw['menu']
+        submenu._build()
+        submenu.opener = cell
+        cell.menu = self
+        self.element <= submenu.element
+        self.open_on_mouseenter = True
+        master = self.master
+        if self.toplevel:
+            _selected = [self.master]
+            submenu.element.style.left = f"{cell.abs_left - master.abs_left}px"
+            submenu.element.style.top = f"{cell.abs_top - master.abs_top + cell.offsetHeight}px"
+        else:
+            submenu.element.style.left = f"{self.element.offsetWidth}px"
+            submenu.element.style.top = f"{cell.abs_top - self.element.abs_top}px"
+        submenu.element.style.display = 'block'
+        self.open_submenu = submenu
+
+    def _cell_enter(self, cell):
+        self._unselect()
+        if self.toplevel:
+            # mouse enters a toplevel menu item
+            cell.style.backgroundColor = 'lightblue'
+            self._select(cell)
+            if self.open_on_mouseenter:
+                self._show_cascade(cell)
+        else:
+            if cell.firstChild.colSpan == 2:
+                # ignore separator
+                return
+            opener = self.opener
+            cell.style.backgroundColor = self.kw['activebackground']
+            cell.style.color = '#fff'
+            opener.style.backgroundColor = 'lightblue'
+            self._select(cell)
+
+    def _cell_leave(self, cell):
+        if self.toplevel:
+            cell.style.backgroundColor = self.kw['background']
+        else:
+            cell.style.backgroundColor = self.kw['background']
+            cell.style.color = self.kw['color']
+
+    def _build(self):
+        self._unselect()
+        if self.toplevel:
+            self.element = html.DIV(style=self._main_menu_style)
+        else:
+            self.element = html.DIV(style=self._submenu_style)
+            self.table = html.TABLE(cellspacing=0)
+            self.element <= self.table
+
+        self.config(**self.kw)
+
+        for choice in self.choices:
+            print('buil, choices', self.choices)
+            if choice['type'] == 'separator':
+                if not self.toplevel:
+                    cell = html.TR(html.TD(html.HR(), colspan=2))
+                    self.table <= cell
+                continue
+            else:
+                label = choice.get('label', '').replace(' ', chr(160))
+
+            if self.toplevel:
+                cell = html.SPAN(label, style=self._main_menu_span_style)
+                self.element <= cell
+            else:
+                arrow = html.SPAN()
+                if choice['type'] == 'cascade':
+                    arrow.html = '&#x25B6;'
+                elif choice['type'] == 'separator':
+                    arrow.html = '<hr>'
+                else:
+                    arrow.html = '&nbsp;'
+                cell = html.TR(
+                    html.TD(label, style=self._submenu_label_style) +
+                    html.TD(arrow, style=self._submenu_arrow_style))
+                self.table <= cell
+            cell.menu = self
+            cell.bind('mouseenter', lambda ev: self._cell_enter(ev.target))
+            cell.bind('mouseleave', lambda ev: self._cell_leave(ev.target))
+            if choice['type'] == 'cascade':
+                cell.kw = choice
+                cell.bind('click',
+                    lambda ev, cell=cell: self._show_cascade(cell))
+                print('cell', cell, cell.text, 'kw', cell.kw)
 
 
 class Text(html.DIV, Widget):
