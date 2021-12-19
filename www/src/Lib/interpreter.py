@@ -192,10 +192,10 @@ class Interpreter:
         return sel
 
     def keypress(self, event):
-        if event.keyCode == 9:  # tab key
+        if event.key == "Tab":  # tab key
             event.preventDefault()
             self.zone.value += "    "
-        elif event.keyCode == 13:  # return
+        elif event.key == "Enter":  # return
             sel_start = self.zone.selectionStart
             sel_end = self.zone.selectionEnd
             if sel_end > sel_start:
@@ -305,17 +305,17 @@ class Interpreter:
             event.preventDefault()
 
     def keydown(self, event):
-        if event.keyCode == 37:  # left arrow
+        if event.key == "ArrowLeft":
             sel = self.get_col()
             if sel < 5:
                 event.preventDefault()
                 event.stopPropagation()
-        elif event.keyCode == 36:  # line start
+        elif event.key == "Home":
             pos = self.zone.selectionStart
             col = self.get_col()
             self.zone.setSelectionRange(pos - col + 4, pos - col + 4)
             event.preventDefault()
-        elif event.keyCode == 38:  # up
+        elif event.key == "ArrowUp":
             if self.current > 0:
                 pos = self.zone.selectionStart
                 col = self.get_col()
@@ -324,7 +324,7 @@ class Interpreter:
                 self.current -= 1
                 self.zone.value += self.history[self.current]
             event.preventDefault()
-        elif event.keyCode == 40:  # down
+        elif event.key == "ArrowDown":
             if self.current < len(self.history) - 1:
                 pos = self.zone.selectionStart
                 col = self.get_col()
@@ -333,13 +333,13 @@ class Interpreter:
                 self.current += 1
                 self.zone.value += self.history[self.current]
             event.preventDefault()
-        elif event.keyCode == 8:  # backspace
+        elif event.key == "Backspace":
             src = self.zone.value
             lstart = src.rfind('\n')
             if (lstart == -1 and len(src) < 5) or (len(src) - lstart < 6):
                 event.preventDefault()
                 event.stopPropagation()
-        elif event.keyCode in [33, 34]: # page up, page down
+        elif event.key in ["PageUp", "PageDown"]:
             event.preventDefault()
 
     def mouseup(self, ev):

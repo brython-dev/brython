@@ -80,10 +80,21 @@ document["altKey"].bind("keypress", keypress)
 
 Put the cursor in the input boxes below and hit keys on the keyboard
 
-keydown <input id="key_keydown" autocomplete="off"><br>
-keypress <input id="key_keypress" autocomplete="off">
-&nbsp;<span id="traceKey">&nbsp;</span><br>
-keyup <input id="key_keyup" autocomplete="off"><br>
+<table>
+<tr>
+<td>keydown</td>
+<td><input id="key_keydown" autocomplete="off"></td>
+<td rowspan="3"><span id="traceKey">&nbsp;</span></td>
+</tr>
+<tr>
+<td>keypress</td>
+<td><input id="key_keypress" autocomplete="off"></td>
+</tr>
+<tr>
+<td>keyup</td>
+<td><input id="key_keyup" autocomplete="off"></td>
+</tr>
+</table>
 
 #### Code
 

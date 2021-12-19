@@ -5,12 +5,12 @@ import binascii
 import tb as traceback
 import javascript
 
-from browser import document as doc, window, alert, bind, html
+from browser import document, window, alert, bind, html
 import browser.widgets.dialog as dialog
 
 # set height of container to 75% of screen
-_height = doc.documentElement.clientHeight
-_s = doc['container']
+_height = document.documentElement.clientHeight
+_s = document['container']
 _s.style.height = '%spx' % int(_height * 0.85)
 
 has_ace = True
@@ -28,7 +28,7 @@ try:
 except:
     from browser import html
     editor = html.TEXTAREA(rows=20, cols=70)
-    doc["editor"] <= editor
+    document["editor"] <= editor
     def get_value(): return editor.value
     def set_value(x): editor.value = x
     editor.getValue = get_value
@@ -40,12 +40,12 @@ if hasattr(window, 'localStorage'):
 else:
     storage = None
 
-if 'set_debug' in doc:
-    __BRYTHON__.debug = int(doc['set_debug'].checked)
+if 'set_debug' in document:
+    __BRYTHON__.debug = int(document['set_debug'].checked)
 
 def reset_src():
-    if "code" in doc.query:
-        code = doc.query.getlist("code")[0]
+    if "code" in document.query:
+        code = document.query.getlist("code")[0]
         editor.setValue(code)
     else:
         if storage is not None and "py_src" in storage:
@@ -66,7 +66,7 @@ class cOutput:
     encoding = 'utf-8'
 
     def __init__(self):
-        self.cons = doc["console"]
+        self.cons = document["console"]
         self.buf = ''
 
     def write(self, data):
@@ -79,7 +79,7 @@ class cOutput:
     def __len__(self):
         return len(self.buf)
 
-if "console" in doc:
+if "console" in document:
     cOut = cOutput()
     sys.stdout = cOut
     sys.stderr = cOut
@@ -92,13 +92,13 @@ info = sys.implementation.version
 version = '%s.%s.%s' % (info.major, info.minor, info.micro)
 if info.releaselevel == "rc":
     version += f"rc{info.serial}"
-doc['version'].text = version
+document['version'].text = version
 
 output = ''
 
 def show_console(ev):
-    doc["console"].value = output
-    doc["console"].cols = 60
+    document["console"].value = output
+    document["console"].cols = 60
 
 # load a Python script
 def load_script(evt):
@@ -108,7 +108,7 @@ def load_script(evt):
 # run a script, in global namespace if in_globals is True
 def run(*args):
     global output
-    doc["console"].value = ''
+    document["console"].value = ''
     src = editor.getValue()
     if storage is not None:
        storage["py_src"] = src
@@ -122,14 +122,14 @@ def run(*args):
         traceback.print_exc(file=sys.stderr)
         state = 0
     sys.stdout.flush()
-    output = doc["console"].value
+    output = document["console"].value
 
     print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
     return state
 
 def show_js(ev):
     src = editor.getValue()
-    doc["console"].value = javascript.py2js(src, '__main__')
+    document["console"].value = javascript.py2js(src, '__main__')
 
 def share_code(ev):
     src = editor.getValue()
@@ -140,7 +140,7 @@ def share_code(ev):
                               ok=True)
     else:
         href = window.location.href.rsplit("?", 1)[0]
-        query = doc.query
+        query = document.query
         query["code"] = src
         url = f"{href}{query}"
         url = url.replace("(", "%28").replace(")", "%29")
@@ -151,7 +151,7 @@ def share_code(ev):
         # copy to clipboard
         area.focus()
         area.select()
-        doc.execCommand("copy")
+        document.execCommand("copy")
         d.remove()
         d = dialog.Dialog("Copy url")
         d.panel <= html.DIV("url copied in the clipboard<br>Send it to share the code")

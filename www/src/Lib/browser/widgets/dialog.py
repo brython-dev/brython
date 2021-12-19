@@ -1,4 +1,4 @@
-from browser import console, document, html, window
+from browser import aio, console, document, html, window
 
 style_sheet = """
 :root {
@@ -43,7 +43,8 @@ style_sheet = """
 }
 
 .brython-dialog-panel {
-    padding: 0.6em;
+    box-sizing: border-box;
+    padding:0.2em;
 }
 
 .brython-dialog-message {
@@ -54,7 +55,6 @@ style_sheet = """
     margin: 0.5em;
 }
 """
-
 
 class Dialog(html.DIV):
     """Basic, moveable dialog box with a title bar, optional
@@ -76,7 +76,7 @@ class Dialog(html.DIV):
 
         html.DIV.__init__(self, style=dict(position="absolute"),
             Class="brython-dialog-main")
-        #set_style(self, "dialog-main")
+
         self.title_bar = html.DIV(html.SPAN(title), Class="brython-dialog-title")
         self <= self.title_bar
         self.close_button = html.SPAN("&times;", Class="brython-dialog-close")
@@ -181,9 +181,16 @@ class EntryDialog(Dialog):
         return self.entry.value
 
     def callback(self, evt):
-        if evt.target == self.entry and evt.keyCode != 13:
+        if evt.target == self.entry and evt.key != "Enter":
             return
         self.dispatchEvent(window.Event.new("entry"))
+
+async def Input(message=None):
+    dialog = EntryDialog('Enter', message)
+    event = await aio.event(dialog, 'entry')
+    result = event.target.value
+    dialog.close()
+    return result
 
 class InfoDialog(Dialog):
     """Dialog box with an information message and no "Ok / Cancel" button."""
@@ -208,3 +215,6 @@ class InfoDialog(Dialog):
                 raise TypeError("remove_after should be a number, not " +
                     str(remove_after.__class__.__name__))
             window.setTimeout(self.close, remove_after * 1000)
+
+def Info(message=None):
+    InfoDialog('Information', str(message))
