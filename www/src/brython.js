@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-18 22:00:24.715799"
-__BRYTHON__.timestamp=1639861224715
+__BRYTHON__.compiled_date="2021-12-19 08:08:24.422660"
+__BRYTHON__.timestamp=1639897704422
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2995,6 +2995,8 @@ if(C.expect=='module'){if(token=='id'){C.module+=value}
 else{C.module+='.'}
 return C}
 case 'import':
+if(C.names.length > 0){
+$_SyntaxError(C,["only one 'import' allowed after 'from'"])}
 if(C.expect=='module'){C.expect='id'
 return C}
 case 'op':

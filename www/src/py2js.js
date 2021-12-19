@@ -5478,6 +5478,10 @@ $FromCtx.prototype.transition = function(token, value){
               return context
           }
         case 'import':
+            if(context.names.length > 0){ // issue 1850
+                $_SyntaxError(context, 
+                    ["only one 'import' allowed after 'from'"])
+            }
             if(context.expect == 'module'){
                 context.expect = 'id'
                 return context
