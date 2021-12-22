@@ -5479,7 +5479,7 @@ $FromCtx.prototype.transition = function(token, value){
           }
         case 'import':
             if(context.names.length > 0){ // issue 1850
-                $_SyntaxError(context, 
+                $_SyntaxError(context,
                     ["only one 'import' allowed after 'from'"])
             }
             if(context.expect == 'module'){
@@ -13115,7 +13115,42 @@ $B.parse_options = function(options){
     }
 }
 
+// Reserved for future use : execute Python scripts as soon as they are
+// inserted in the page, instead of waiting for page load.
+// options are passed as attributes of the <script> tag, eg
+// <script type="text/python" debug=2>
+
+var observer = new MutationObserver(function(mutations){
+  for (var i=0; i < mutations.length; i++){
+    for (var j=0; j < mutations[i].addedNodes.length; j++){
+      checkPythonScripts(mutations[i].addedNodes[j]);
+    }
+  }
+});
+
+observer.observe(document.documentElement, {
+  childList: true,
+  subtree: true
+});
+
+function checkPythonScripts(addedNode) {
+   if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
+       var options = {}
+       for(var attr of addedNode.attributes){
+           if(attr.nodeName == "type"){
+               continue
+           }else if(attr.nodeName == 'debug'){
+               options[attr.nodeName] = parseInt(attr.nodeValue)
+           }else{
+               options[attr.nodeName]  = attr.nodeValue
+           }
+       }
+       // process script here...
+   }
+}
+
 var brython = $B.parser.brython = function(options){
+    observer.disconnect()
     $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         _run_scripts(options)
