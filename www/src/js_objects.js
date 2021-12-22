@@ -492,6 +492,14 @@ $B.JSObj.__getitem__ = function(self, key){
                 return $B.JSObj.$factory(res)
             }
         }
+    }else if(key.__class__ === _b_.slice &&
+            typeof self.item == 'function'){
+        var _slice = _b_.slice.$conv_for_seq(key, self.length)
+        var res = []
+        for(var i = _slice.start; i < _slice.stop; i += _slice.step){
+            res.push(self.item(i))
+        }
+        return res
     }
     throw _b_.KeyError.$factory(rank)
 }
