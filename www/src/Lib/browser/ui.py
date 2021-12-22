@@ -4,28 +4,34 @@ from .widgets import dialog, menu
 def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         in_=None, ipadx=None, ipady=None,
         sticky=''):
-    if not hasattr(master, 'table'):
-        master.table = html.TABLE(cellpadding=0, cellspacing=0,
+    if not hasattr(master, '_table'):
+        master._table = html.TABLE(cellpadding=0, cellspacing=0,
             style='width:100%;height:100%;')
-        master <= master.table
+        master <= master._table
+        if row == 'current':
+            row = 0
 
     if not hasattr(master, 'cells'):
         master.cells = set()
+
     # The cell at (row, column) in grid must be inserted in table row #row
     # master.cells is a set of (row, column) that are already used because
     # a cell with colspan or rowspan is used
-
-    if row is None:
+    nb_rows = len(master._table.rows)
+    if row is None or row == 'next':
         # default is the first empty row
-        row = len(master.table.rows)
+        row = nb_rows
+    elif row == 'current':
+        row = nb_rows - 1
 
-    nb_rows = len(master.table.rows)
     for i in range(row - nb_rows + 1):
-        master.table <= html.TR()
+        master._table <= html.TR()
 
-    tr = master.table.rows[row]
+    tr = master._table.rows[row]
     # number of TD in table row
     nb_cols = len(tr.cells)
+    if column == 'next':
+        column = nb_cols
     # cells in row occupied because of rowspan / colspan
     cols_from_span = [c for (r, c) in master.cells
         if r == row and c < column]
@@ -59,7 +65,7 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
         td.style.verticalAlign = 'bottom'
     if sticky == 'center':
         td.style.textAlign = 'center'
-    return td
+    return row, column, td
 
 
 class Border:
@@ -97,27 +103,109 @@ class Padding:
             raise ValueError('Padding expects at most 4 arguments, got ' +
                 f'{len(args)}')
 
+class Rows:
 
+    def __init__(self, widget):
+        self.widget = widget
+        self._rows = []
+        if hasattr(widget, '_table'):
+            console.log('_table', widget._table)
+            for row in self._widget.rows:
+                cells = []
+                for cell in row.cells:
+                    cells.append(cell.firstChild)
+                rows.append(cells)
+        return rows
 
 class Widget:
+
+    def add(self, widget, row='current', column='next', **kw):
+        widget.master = self
+        widget.config(**widget._options)
+        widget.grid(row=row, column=column, **kw)
+        widget.kw = kw
+
+    def add_row(self, widgets, row='next', column_start=0, **kw):
+        """Add a list of widgets at specified row."""
+        for i, widget in enumerate(widgets):
+            if i == 0:
+                self.add(widget, row, column=column_start, **kw)
+            else:
+                self.add(widget, **kw)
 
     def apply_default_style(self):
         if hasattr(self, 'default_style'):
             for key, value in self.default_style.items():
                 self.style[key] = value
 
+    def check_master(self, master):
+        if not isinstance(master, Widget):
+            raise ValueError('first argument should be Box or Document, ' +
+                f"not '{master.__class__.__name__}'")
+        self.master = master
+
     def grid(self, **options):
-        master = self.master.panel if isinstance(self.master, Box) else self.master
-        td = grid(master, **options)
+        master = self.master
+        if isinstance(master, Document):
+            master = document
+        row, column, td = grid(master, **options)
         td <= self
+        self.row = row
+        self.column = column
         if isinstance(self, Text):
             self.dw = self.parentNode.offsetWidth - self.offsetWidth
             self.dh = self.parentNode.offsetHeight - self.offsetHeight
             self.style.width = f'{self.parentNode.width - self.dw}px'
             self.style.height = f'{self.parentNode.height - self.dh}px'
+        return self
+
+    @property
+    def rows(self):
+        return Rows(self)
+
+    def sort_by_row(self, *columns, has_title=False):
+        """Sort rows by column. Each item in columns is either a number, or
+        a tuple (column_number, ascending)."""
+        rows = self._table.rows
+        if has_title:
+            head = rows[0]
+            rows = rows[1:]
+
+        def first_values(row, rank):
+            values = []
+            for i in range(rank):
+                col_num, _ = colums[i]
+                values.append(row.cells[col_num].firstChild._value)
+            return values
+
+        for i, (col_num, ascending) in enumerate(columns):
+            if i == 0:
+                rows.sort(key=lambda row: row.cells[col_num].firstChild._value,
+                          reverse=not ascending)
+            else:
+                new_rows = []
+                j = 0
+                while True:
+                    same_start = [row for row in rows if
+                        first_values(row, i) == first_values(row, j)]
+                    same_start.sort(key=lambda r: r.cells[col_num].firstChild._value,
+                                    reverse=not ascending)
+                    new_rows += same_start
+                    j += len(same_start)
+                    if j == len(rows):
+                        rows = new_rows
+                        break
+
+        if has_title:
+            rows.insert(0, head)
+        self._table <= rows
 
     def config(self, **kw):
-        element = self.element if isinstance(self, Menu) else self
+        element = self
+        if isinstance(self, Menu):
+            element = self.element
+        elif isinstance(self, Document):
+            element = document
 
         if (text := kw.get('text')):
             element.text = text
@@ -126,12 +214,29 @@ class Widget:
             element.title_bar.text = title
 
         if (width := kw.get('width')):
-            element.style.width = f"{width}em"
+            match width:
+                case str():
+                    element.style.width = width
+                case int() | float():
+                    element.style.width = f'{round(width)}em'
+                case _:
+                    raise ValueError("width should be str or number, not " +
+                        f"'{width.__class__.__name__}'")
+
         if (height := kw.get('height')):
-            element.style.height = f"{height}em"
+            match height:
+                case str():
+                    element.style.height = height
+                case int() | float():
+                    element.style.height = f'{round(height)}em'
+                case _:
+                    raise ValueError("height should be str or number, not " +
+                        f"'{height.__class__.__name__}'")
 
         if (command := kw.get('command')):
-            element.bind('click', lambda ev: command())
+            element.bind('click',
+                lambda ev, command=command: command(ev.target))
+            element.style.cursor = 'default'
 
         if (font := kw.get('font')):
             element.style.fontFamily = font.family
@@ -163,56 +268,71 @@ class Widget:
                     self.title_bar.nextSibling)
                 self.menu = menu
 
-        self.kw = getattr(self, 'kw', {})
-        self.kw |= kw
+        self._config = getattr(self, '_config', {})
+        self._config |= kw
 
+
+borderColor = '#008'
+backgroundColor = '#fff'
+color = '#000'
 
 class Box(html.DIV, Widget):
 
-    def __init__(self, title="", *, top=None, left=None):
+    default_config = {
+        'left': 5,
+        'top': 5,
+        'width': None,
+        'height': None,
+        'background': backgroundColor,
+        'color': color,
+        'cursor': 'default',
+        'menu': None,
+        'border': Border(width=1),
+        'font': Font(family='sans-serif', size=12),
+        'padding': Padding(0)
+    }
+
+    def __init__(self, title="", titlebar=True, **options):
         html.DIV.__init__(self, style="position:absolute")
-        self.config(border=Border(width=1))
+        self._options = self.default_config | options
 
-        self.title_bar = TitleBar(self, title)
-        self.title_bar.config(background='CadetBlue', padding=Padding(5))
-        self <= self.title_bar
+        self.config(**self._options)
 
-        self.panel = html.DIV(Class="brython-dialog-panel")
+        if titlebar:
+            self.title_bar = TitleBar(title, padding=Padding(5))
+            self <= self.title_bar
+
+        self.panel = Frame()
         self <= self.panel
 
         document <= self
-        cstyle = window.getComputedStyle(self)
 
-        # Center horizontally and vertically
-        if left is None:
-            width = round(float(cstyle.width[:-2]) + 0.5)
-            left = int((window.innerWidth - width) / 2)
-        self.left = left
-        self.style.left = f'{left}px'
-        if top is None:
-            height = round(float(cstyle.height[:-2]) + 0.5)
-            top = int((window.innerHeight - height) / 2)
-        # top is relative to document scrollTop
-        top += document.scrollingElement.scrollTop
-        self.top = top
-        self.style.top = f'{top}px'
-
-        self.kw = {'top': top, 'left': left}
-
-        self.title_bar.bind("mousedown", self._grab_widget)
-        self.title_bar.bind("touchstart", self._grab_widget)
-        self.title_bar.bind("mouseup", self._move_widget)
-        self.title_bar.bind("touchend", self._move_widget)
-        self.bind("leave", self._stop_moving)
-        self.is_moving = False
+        # define callbacks for drag and drop
+        if titlebar:
+            self.title_bar.bind("mousedown", self._grab_widget)
+            self.title_bar.bind("touchstart", self._grab_widget)
+            self.title_bar.bind("mouseup", self._stop_moving)
+            self.title_bar.bind("touchend", self._stop_moving)
+            self.bind("leave", self._stop_moving)
+            self.is_moving = False
 
     def close(self, *args):
         self.remove()
 
+    def keys(self):
+        return [
+            'left', 'top', 'width', 'height'
+            'background', 'color',
+            'cursor',
+            'menu',
+            'border',
+            'font',
+            'padding']
+
     def _grab_widget(self, event):
         self._remove_menus()
-        document.bind("mousemove", self.mousemove)
-        document.bind("touchmove", self.mousemove)
+        document.bind("mousemove", self._move_widget)
+        document.bind("touchmove", self._move_widget)
         self.is_moving = True
         self.initial = [self.left - event.x, self.top - event.y]
         # prevent default behaviour to avoid selecting the moving element
@@ -235,22 +355,45 @@ class Box(html.DIV, Widget):
         self.title_bar.text = title
 
     def _remove_menus(self):
-        if self.menu and self.menu.open_submenu:
-            self.menu.open_on_mouseenter = False
-            self.menu.open_submenu.element.remove()
+        menu = self._options['menu']
+        if menu and menu.open_submenu:
+            menu.open_on_mouseenter = False
+            menu.open_submenu.element.remove()
+
+class Document(Widget):
+
+    default_config = {
+        'background': '#fff',
+        'color': color,
+        'menu': None,
+        'font': Font(family='sans-serif', size=12)
+    }
+
+    def __init__(self, **options):
+        self._options = self.default_config | options
+        self.config(**options)
 
 
 class Button(html.BUTTON, Widget):
 
-    def __init__(self, master, *args, **kw):
-        self.master = master
-        self.config(**kw)
+    def __init__(self, *args, **options):
+        self._options = options
         super().__init__(*args)
 
 
-borderColor = '#008'
-backgroundColor = '#f0f0f0'
-color = '#000'
+class Image(html.IMG, Widget):
+
+    def __init__(self, src, **options):
+        html.IMG.__init__(self, src=src)
+        self._options = options
+
+
+class Link(html.A, Widget):
+
+    def __init__(self, text, href, **options):
+        html.A.__init__(self, text, href=href)
+        self._options = options
+
 
 class Menu(Widget):
 
@@ -298,14 +441,13 @@ class Menu(Widget):
         'color' : color
     }
 
-    def __init__(self, master, **kw):
-        self.master = master
+    def __init__(self, **options):
         self.toplevel = isinstance(master, Box)
         if self.toplevel:
             master.menu = self
-            self.kw = self._default_config_main | kw
+            self._options = self._default_config_main | options
         else:
-            self.kw = self._default_config | kw
+            self._options = self._default_config | options
 
         self.selected = None
         self.open_submenu = None
@@ -395,7 +537,7 @@ class Menu(Widget):
             self.table = html.TABLE(cellspacing=0)
             self.element <= self.table
 
-        self.config(**self.kw)
+        self.config(**self._options)
 
         for choice in self.choices:
             if choice['type'] == 'separator':
@@ -443,19 +585,17 @@ class Text(html.DIV, Widget):
         'overflow-y': 'scroll'
     }
 
-    def __init__(self, master, *args, **kw):
-        self.master = master
+    def __init__(self, *args, **options):
         self.apply_default_style()
-        self.config(**kw)
+        self._options = options
         super().__init__(*args)
         self.attrs['contenteditable'] = True
 
 
 class TitleBar(html.DIV, Widget):
 
-    def __init__(self, master, title='', *args, **kw):
-        self.master = master
-        self.config(**kw)
+    def __init__(self, title='', *args, **options):
+        self._options = options
         super().__init__(title, *args)
 
         self.close_button = html.SPAN("&times;",
@@ -467,17 +607,15 @@ class TitleBar(html.DIV, Widget):
 
 class Entry(html.INPUT, Widget):
 
-    def __init__(self, master, *args, **kw):
-        self.master = master
-        self.config(**kw)
+    def __init__(self, *args, **options):
+        self._options = options
         super().__init__(*args)
 
 
 class Frame(html.DIV, Widget):
 
-    def __init__(self, master, *args, **kw):
-        self.master = master
-        self.config(**kw)
+    def __init__(self, *args, **options):
+        self._options = options
         super().__init__(*args)
 
 
@@ -487,9 +625,9 @@ class Label(html.DIV, Widget):
         'whiteSpace': 'pre'
     }
 
-    def __init__(self, master, *args, **kw):
-        self.master = master
-        self.config(**kw)
-        super().__init__(*args)
+    def __init__(self, value, *args, **options):
+        self._options = options
+        self._value = value
+        super().__init__(value, *args)
         self.apply_default_style()
 
