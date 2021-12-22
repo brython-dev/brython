@@ -2,8 +2,7 @@ from . import html, window, console, document
 from .widgets import dialog, menu
 
 def grid(master, column=0, columnspan=1, row=None, rowspan=1,
-        in_=None, ipadx=None, ipady=None,
-        sticky=''):
+         align=''):
     if not hasattr(master, '_table'):
         master._table = html.TABLE(cellpadding=0, cellspacing=0,
             style='width:100%;height:100%;')
@@ -55,25 +54,30 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
     if rowspan > 1:
         td.attrs['rowspan'] = rowspan
 
-    if 'W' in sticky:
+    aligns = align.split()
+    if 'left' in aligns:
         td.style.textAlign = 'left'
-    if 'E' in sticky:
+    if 'right' in aligns:
         td.style.textAlign = 'right'
-    if 'N' in sticky:
-        td.style.verticalAlign = 'top'
-    if 'S' in sticky:
-        td.style.verticalAlign = 'bottom'
-    if sticky == 'center':
+    if 'center' in aligns:
         td.style.textAlign = 'center'
+    if 'top' in aligns:
+        td.style.verticalAlign = 'top'
+    if 'bottom' in aligns:
+        td.style.verticalAlign = 'bottom'
+    if 'middle' in aligns:
+        td.style.verticalAlign = 'middle'
+
     return row, column, td
 
 
 class Border:
 
-    def __init__(self, width=1, style='solid', color='#000'):
+    def __init__(self, width=1, style='solid', color='#000', radius=None):
         self.width = width
         self.style = style
         self.color = color
+        self.radius = radius
 
 
 class Font:
@@ -86,22 +90,44 @@ class Font:
         self.style = style
 
 
-class Padding:
+class _Directions:
 
-    def __init__(self, *args):
+    def __init__(self, *args, **kw):
         if len(args) == 0:
-            self.values = [0] * 4
+            values = [0] * 4
         elif len(args) == 1:
-            self.values = [args[0]] * 4
+            values = [args[0]] * 4
         elif len(args) == 2:
-            self.values = [args[0], args[1]] * 2
+            values = [args[0], args[1]] * 2
         elif len(args) == 3:
-            self.values = args + [0]
+            values = args + [0]
         elif len(args) == 4:
-            self.values = args
+            values = args
         else:
             raise ValueError('Padding expects at most 4 arguments, got ' +
                 f'{len(args)}')
+        self.top, self.right, self.bottom, self.left = values
+        if (x := kw.get('x')) is not None:
+            self.left = self.right = x
+        if (y := kw.get('y')) is not None:
+            self.top = self.bottom = y
+        if (top := kw.get('top')) is not None:
+            self.top = top
+        if (right := kw.get('right')) is not None:
+            self.right = right
+        if (bottom := kw.get('bottom')) is not None:
+            self.bottom = bottom
+        if (left := kw.get('left')) is not None:
+            self.left = left
+
+
+class Padding(_Directions):
+    pass
+
+
+class Margin(_Directions):
+    pass
+
 
 class Rows:
 
@@ -132,6 +158,17 @@ class Widget:
                 self.add(widget, row, column=column_start, **kw)
             else:
                 self.add(widget, **kw)
+
+    def add_from_table(self, table, **kw):
+        """Add from a 2-dimensional table of Python objects, inserted as
+        Labels."""
+        for line in table:
+            self.add(Label(line[0]), row='next')
+            for cell in line[1:]:
+                if isinstance(cell, str):
+                    self.add(Label(cell), align='left', **kw)
+                else:
+                    self.add(Label(cell), align='right', **kw)
 
     def apply_default_style(self):
         if hasattr(self, 'default_style'):
@@ -166,7 +203,7 @@ class Widget:
     def sort_by_row(self, *columns, has_title=False):
         """Sort rows by column. Each item in columns is either a number, or
         a tuple (column_number, ascending)."""
-        rows = self._table.rows
+        rows = list(self._table.rows)
         if has_title:
             head = rows[0]
             rows = rows[1:]
@@ -174,7 +211,7 @@ class Widget:
         def first_values(row, rank):
             values = []
             for i in range(rank):
-                col_num, _ = colums[i]
+                col_num, _ = columns[i]
                 values.append(row.cells[col_num].firstChild._value)
             return values
 
@@ -187,7 +224,7 @@ class Widget:
                 j = 0
                 while True:
                     same_start = [row for row in rows if
-                        first_values(row, i) == first_values(row, j)]
+                        first_values(row, i) == first_values(rows[j], i)]
                     same_start.sort(key=lambda r: r.cells[col_num].firstChild._value,
                                     reverse=not ascending)
                     new_rows += same_start
@@ -233,6 +270,9 @@ class Widget:
                     raise ValueError("height should be str or number, not " +
                         f"'{height.__class__.__name__}'")
 
+        if (cursor := kw.get('cursor')):
+            element.style.cursor = cursor
+
         if (command := kw.get('command')):
             element.bind('click',
                 lambda ev, command=command: command(ev.target))
@@ -243,7 +283,10 @@ class Widget:
             element.style.fontWeight = font.weight
             element.style.fontStyle = font.style
             if font.size:
-                element.style.fontSize = f'{font.size}px'
+                if isinstance(font.size, str):
+                    element.style.fontSize = font.size
+                else:
+                    element.style.fontSize = f'{font.size}px'
 
         if (background := kw.get('background')):
             element.style.backgroundColor = background
@@ -254,12 +297,25 @@ class Widget:
             element.style.borderStyle = border.style
             element.style.borderWidth = f'{border.width}px'
             element.style.borderColor = border.color
+            element.style.borderRadius = f'{border.radius}px'
 
         if (padding := kw.get('padding')):
-            element.style.paddingTop = f'{padding.values[0]}px'
-            element.style.paddingRight = f'{padding.values[1]}px'
-            element.style.paddingBottom = f'{padding.values[2]}px'
-            element.style.paddingLeft = f'{padding.values[3]}px'
+            for key in ['top', 'right', 'bottom', 'left']:
+                value = getattr(padding, key)
+                attr = 'padding' + key.capitalize()
+                if isinstance(value, str):
+                    setattr(element.style, attr, value)
+                else:
+                    setattr(element.style, attr, f'{value}px')
+
+        if (margin := kw.get('margin')):
+            for key in ['top', 'right', 'bottom', 'left']:
+                value = getattr(margin, key)
+                attr = 'margin' + key.capitalize()
+                if isinstance(value, str):
+                    setattr(element.style, attr, value)
+                else:
+                    setattr(element.style, attr, f'{value}px')
 
         if (menu := kw.get('menu')) is not None:
             if isinstance(self, Box):
@@ -288,27 +344,27 @@ class Box(html.DIV, Widget):
         'cursor': 'default',
         'menu': None,
         'border': Border(width=1),
-        'font': Font(family='sans-serif', size=12),
-        'padding': Padding(0)
+        'font': Font(family='sans-serif', size=12)
     }
 
-    def __init__(self, title="", titlebar=True, **options):
+    def __init__(self, container=document, title="", titlebar=True, **options):
         html.DIV.__init__(self, style="position:absolute")
         self._options = self.default_config | options
 
         self.config(**self._options)
 
         if titlebar:
-            self.title_bar = TitleBar(title, padding=Padding(5))
+            self.title_bar = TitleBar(title)
             self <= self.title_bar
 
         self.panel = Frame()
         self <= self.panel
 
-        document <= self
+        container <= self
 
-        # define callbacks for drag and drop
         if titlebar:
+            self.title_bar.close_button.bind("click", self.close)
+            # define callbacks for drag and drop
             self.title_bar.bind("mousedown", self._grab_widget)
             self.title_bar.bind("touchstart", self._grab_widget)
             self.title_bar.bind("mouseup", self._stop_moving)
@@ -594,15 +650,24 @@ class Text(html.DIV, Widget):
 
 class TitleBar(html.DIV, Widget):
 
-    def __init__(self, title='', *args, **options):
-        self._options = options
-        super().__init__(title, *args)
+    default_config = {
+        'background' : backgroundColor,
+        'cursor': 'default'
+    }
 
-        self.close_button = html.SPAN("&times;",
-            style="float:right;background-color:#fff;color:#000;" +
-                  "cursor:default;padding:0.1em;")
-        self <= self.close_button
-        self.close_button.bind("click", master.close)
+    def __init__(self, title='', *args, **options):
+        self._options = self.default_config | options
+        super().__init__('', *args)
+
+        self.add(Label(title, margin=Margin(5)))
+        self.close_button = Button("&#9587;",
+            margin=Margin(0, 0, 0, 20),
+            background="inherit",
+            border=Border(width=0))
+
+        self.add(self.close_button, align="right top")
+
+        self.config(**self._options)
 
 
 class Entry(html.INPUT, Widget):
