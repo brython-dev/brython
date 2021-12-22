@@ -155,4 +155,17 @@ except TypeError as exc:
   assert exc.args[0] == 'exec() arg 1 must be a string, ' \
       'bytes or code object'
 
+# issue 1852
+code = '''
+a = 0
+raise Exception()
+'''
+
+g = dict()
+try:
+    exec(code, g)
+except:
+    pass
+assert g['a'] == 0
+
 print("passed all tests...")

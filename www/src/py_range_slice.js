@@ -332,8 +332,6 @@ slice.__setattr__ = function(self, attr, value){
 }
 
 function conv_slice(self){
-    // Internal method, uses the integer len to set
-    // start, stop, step to integers
     var attrs = ["start", "stop", "step"],
         res = []
     for(var i = 0; i < attrs.length; i++){

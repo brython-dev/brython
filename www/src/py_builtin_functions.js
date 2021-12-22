@@ -715,6 +715,67 @@ function $$eval(src, _globals, _locals){
         }
     }
 
+    function update_namespaces(){
+        var gns = eval("$locals_" + globals_id)
+        if($B.frames_stack[$B.frames_stack.length - 1][2] == globals_id){
+            gns = $B.frames_stack[$B.frames_stack.length - 1][3]
+        }
+
+        if(_locals !== _b_.None){
+            var lns = eval("$locals_" + locals_id)
+        }
+
+        if(_globals !== _b_.None){
+            // Update _globals with the namespace after execution
+            if(globals_is_dict){
+                var jsobj = _globals.$jsobj
+                delete _globals.$jsobj
+            }
+            for(var attr in gns){
+                if(attr.charAt(0) != '$'){
+                    if(globals_is_dict){
+                        _b_.dict.$setitem(_globals, attr, gns[attr])
+                    }else{
+                        _globals.$jsobj[attr] = gns[attr]
+                    }
+                }
+            }
+            // Remove attributes starting with $
+            for(var attr in _globals.$string_dict){
+                if(attr.startsWith("$")){
+                    delete _globals.$string_dict[attr]
+                }
+            }
+        }else{
+            for(var attr in gns){
+                if(attr !== "$src"){
+                    current_frame[3][attr] = gns[attr]
+                }
+            }
+        }
+
+        // Update _locals with the namespace after execution
+        if(_locals !== _b_.None){
+            for(var attr in lns){
+                if(attr.charAt(0) != '$'){
+                    if(_locals.$jsobj){
+                        _locals.$jsobj[attr] = lns[attr]
+                    }else if(_locals.__class__ !== _b_.dict){
+                        $B.$setitem(_locals, attr, lns[attr])
+                    }else{
+                        _b_.dict.$setitem(_locals, attr, lns[attr])
+                    }
+                }
+            }
+        }else{
+            for(var attr in lns){
+                if(attr !== "$src"){
+                    current_frame[1][attr] = lns[attr]
+                }
+            }
+        }
+    }
+
     try{
         // The result of py2js ends with
         // try{
@@ -798,77 +859,22 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             js = root.to_js()
-
             var res = eval(js)
         }
-
 
         if($.src.filename == "<console>" && $.src.mode == "single" &&
                 res !== undefined && res !== _b_.None){
             _b_.print(res)
         }
 
-        gns = eval("$locals_" + globals_id)
-        if($B.frames_stack[$B.frames_stack.length - 1][2] == globals_id){
-            gns = $B.frames_stack[$B.frames_stack.length - 1][3]
-        }
+        update_namespaces()
 
-        // Update _locals with the namespace after execution
-        if(_locals !== _b_.None){
-            lns = eval("$locals_" + locals_id)
-            for(var attr in lns){
-                if(attr.charAt(0) != '$'){
-                    if(_locals.$jsobj){
-                        _locals.$jsobj[attr] = lns[attr]
-                    }else if(_locals.__class__ !== _b_.dict){
-                        $B.$setitem(_locals, attr, lns[attr])
-                    }else{
-                        _b_.dict.$setitem(_locals, attr, lns[attr])
-                    }
-                }
-            }
-        }else{
-            for(var attr in lns){
-                if(attr !== "$src"){
-                    current_frame[1][attr] = lns[attr]
-                }
-            }
-        }
-
-        if(_globals !== _b_.None){
-            // Update _globals with the namespace after execution
-            if(globals_is_dict){
-                var jsobj = _globals.$jsobj
-                delete _globals.$jsobj
-            }
-            for(var attr in gns){
-                if(attr.charAt(0) != '$'){
-                    if(globals_is_dict){
-                        _b_.dict.$setitem(_globals, attr, gns[attr])
-                    }else{
-                        _globals.$jsobj[attr] = gns[attr]
-                    }
-                }
-            }
-            // Remove attributes starting with $
-            for(var attr in _globals.$string_dict){
-                if(attr.startsWith("$")){
-                    delete _globals.$string_dict[attr]
-                }
-            }
-        }else{
-            for(var attr in gns){
-                if(attr !== "$src"){
-                    current_frame[3][attr] = gns[attr]
-                }
-            }
-        }
-
-        // fixme: some extra variables are bleeding into locals...
-        /*  This also causes issues for unittests */
         if(res === undefined){return _b_.None}
         return res
     }catch(err){
+        
+        update_namespaces() // cf. issue #1852
+
         err.src = src
         err.module = globals_id
         if(err.$py_error === undefined){
