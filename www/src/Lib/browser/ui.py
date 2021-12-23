@@ -121,6 +121,15 @@ class _Directions:
             self.left = left
 
 
+class _Coords:
+
+    def __init__(self, left, top, width, height):
+        self.left = left
+        self.top = top
+        self.width = width
+        self.height = height
+
+
 class Padding(_Directions):
     pass
 
@@ -128,6 +137,11 @@ class Padding(_Directions):
 class Margin(_Directions):
     pass
 
+
+class Callbacks:
+
+    def __init__(self, **bindings):
+        self.bindings = bindings
 
 class Rows:
 
@@ -143,9 +157,16 @@ class Rows:
                 rows.append(cells)
         return rows
 
+
 class Widget:
 
-    def add(self, widget, row='current', column='next', **kw):
+    def __init_subclass__(cls):
+        cls.__str__ = Widget.__str__
+
+    def __str__(self):
+        return f'<ui.{self.__class__.__name__}>'
+
+    def add(self, widget, row='current', column=None, **kw):
         widget.master = self
         widget.config(**widget._options)
         widget.grid(row=row, column=column, **kw)
@@ -175,17 +196,204 @@ class Widget:
             for key, value in self.default_style.items():
                 self.style[key] = value
 
-    def check_master(self, master):
-        if not isinstance(master, Widget):
-            raise ValueError('first argument should be Box or Document, ' +
-                f"not '{master.__class__.__name__}'")
-        self.master = master
+    def config(self, **kw):
+        element = self
+        if isinstance(self, Document):
+            element = document
 
-    def grid(self, **options):
+        if (value := kw.get('value')):
+            if not isinstance(self, (Label, Entry)):
+                raise TypeError("invalid keyword 'value' for " +
+                    self.__class__.__name__)
+            element._value = value
+            element.text = value
+
+        for attr in ['type', 'name', 'checked']:
+            if (value := kw.get(attr)) is not None:
+                setattr(element, attr, value)
+
+        if (title := kw.get('title')) and isinstance(self, Box):
+            element.title_bar.text = title
+
+        for attr in ['width', 'height', 'top', 'left']:
+            if (value := kw.get(attr)):
+                match value:
+                    case str():
+                        setattr(element.style, attr, value)
+                    case int() | float():
+                        setattr(element.style, attr, f'{round(value)}px')
+                    case _:
+                        raise ValueError(f"{attr} should be str or number, " +
+                            f"not '{value.__class__.__name__}'")
+
+        if (cursor := kw.get('cursor')):
+            element.style.cursor = cursor
+
+        if (command := kw.get('command')):
+            element.bind('click',
+                lambda ev, command=command: command(ev.target))
+            element.style.cursor = 'default'
+
+        if (font := kw.get('font')):
+            element.style.fontFamily = font.family
+            element.style.fontWeight = font.weight
+            element.style.fontStyle = font.style
+            if font.size:
+                if isinstance(font.size, str):
+                    element.style.fontSize = font.size
+                else:
+                    element.style.fontSize = f'{font.size}px'
+
+        if (background := kw.get('background')):
+            element.style.backgroundColor = background
+        if (color := kw.get('color')):
+            element.style.color = color
+
+        if (border := kw.get('border')):
+            if isinstance(border, str):
+                element.style.borderWidth = border
+                element.style.borderStyle = 'solid'
+            elif isinstance(border, int):
+                element.style.borderWidth = f'{border}px'
+                element.style.borderStyle = 'solid'
+            elif isinstance(border, Border):
+                element.style.borderStyle = border.style
+                element.style.borderWidth = f'{border.width}px'
+                element.style.borderColor = border.color
+                element.style.borderRadius = f'{border.radius}px'
+            else:
+                raise TypeError('invalid type for border: ' +
+                    border.__class__.__name__)
+
+        if (padding := kw.get('padding')):
+            if isinstance(padding, str):
+                element.style.padding = padding
+            elif isinstance(padding, int):
+                element.style.padding = f'{padding}px'
+            elif isinstance(padding, Padding):
+                for key in ['top', 'right', 'bottom', 'left']:
+                    value = getattr(padding, key)
+                    attr = 'padding' + key.capitalize()
+                    if isinstance(value, str):
+                        setattr(element.style, attr, value)
+                    else:
+                        setattr(element.style, attr, f'{value}px')
+            else:
+                raise TypeError('invalid type for padding: ' +
+                    padding.__class__.__name__)
+
+        if (margin := kw.get('margin')):
+            if isinstance(margin, str):
+                element.style.margin = margin
+            elif isinstance(margin, int):
+                element.style.margin = f'{margin}px'
+            elif isinstance(margin, Margin):
+                for key in ['top', 'right', 'bottom', 'left']:
+                    value = getattr(margin, key)
+                    attr = 'margin' + key.capitalize()
+                    if isinstance(value, str):
+                        setattr(element.style, attr, value)
+                    else:
+                        setattr(element.style, attr, f'{value}px')
+            else:
+                raise TypeError('invalid type for margin: ' +
+                    padding.__class__.__name__)
+
+        if (menu := kw.get('menu')) is not None:
+            if isinstance(self, Box):
+                menu._build()
+                self.insertBefore(menu.element,
+                    self.title_bar.nextSibling)
+                self.menu = menu
+
+        if (callbacks := kw.get('callbacks')) is not None:
+            for event, func in callbacks.bindings.items():
+                self.bind(event, lambda ev, func=func: func(self))
+
+        self._config = getattr(self, '_config', {})
+        self._config |= kw
+
+    def coords(self):
+        if not hasattr(self, 'master'):
+            raise TypeError("attribute 'coords' not set until widget is added")
+        parent = self.parentNode
+        return _Coords(parent.offsetLeft, parent.offsetTop, parent.offsetWidth,
+            parent.offsetHeight)
+
+    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align=''):
         master = self.master
         if isinstance(master, Document):
             master = document
-        row, column, td = grid(master, **options)
+        if not hasattr(master, '_table'):
+            master._table = html.TABLE(cellpadding=0, cellspacing=0,
+                style='width:100%;height:100%;')
+            master <= master._table
+            if row == 'current':
+                row = 0
+
+        if not hasattr(master, 'cells'):
+            master.cells = set()
+
+        # The cell at (row, column) in grid must be inserted in table row #row
+        # master.cells is a set of (row, column) that are already used because
+        # a cell with colspan or rowspan is used
+        nb_rows = len(master._table.rows)
+        if row is None or row == 'next':
+            # default is the first empty row
+            row = nb_rows
+            if column is None:
+                column = 0
+        elif row == 'current':
+            row = nb_rows - 1
+
+        if column is None:
+            column = 'next'
+
+        for i in range(row - nb_rows + 1):
+            master._table <= html.TR()
+
+        tr = master._table.rows[row]
+        # number of TD in table row
+        nb_cols = len(tr.cells)
+        if column == 'next':
+            column = nb_cols
+        # cells in row occupied because of rowspan / colspan
+        cols_from_span = [c for (r, c) in master.cells
+            if r == row and c < column]
+
+        cols_to_add = nb_cols + len(cols_from_span)
+        for i in range(column - cols_to_add + 1):
+            tr <= html.TD()
+
+        td = tr.cells[column - len(cols_from_span)]
+
+        # update cells
+        for i in range(1, rowspan):
+            for j in range(columnspan):
+                master.cells.add((row + i, column + j))
+        for i in range(rowspan):
+            for j in range(1, columnspan):
+                master.cells.add((row + i, column + j))
+
+        if columnspan > 1:
+            td.attrs['colspan'] = columnspan
+        if rowspan > 1:
+            td.attrs['rowspan'] = rowspan
+
+        aligns = align.split()
+        if 'left' in aligns:
+            td.style.textAlign = 'left'
+        if 'right' in aligns:
+            td.style.textAlign = 'right'
+        if 'center' in aligns:
+            td.style.textAlign = 'center'
+        if 'top' in aligns:
+            td.style.verticalAlign = 'top'
+        if 'bottom' in aligns:
+            td.style.verticalAlign = 'bottom'
+        if 'middle' in aligns:
+            td.style.verticalAlign = 'middle'
+
         td <= self
         self.row = row
         self.column = column
@@ -237,106 +445,23 @@ class Widget:
             rows.insert(0, head)
         self._table <= rows
 
-    def config(self, **kw):
-        element = self
-        if isinstance(self, Menu):
-            element = self.element
-        elif isinstance(self, Document):
-            element = document
-
-        if (text := kw.get('text')):
-            element.text = text
-
-        if (title := kw.get('title')) and isinstance(self, Box):
-            element.title_bar.text = title
-
-        if (width := kw.get('width')):
-            match width:
-                case str():
-                    element.style.width = width
-                case int() | float():
-                    element.style.width = f'{round(width)}em'
-                case _:
-                    raise ValueError("width should be str or number, not " +
-                        f"'{width.__class__.__name__}'")
-
-        if (height := kw.get('height')):
-            match height:
-                case str():
-                    element.style.height = height
-                case int() | float():
-                    element.style.height = f'{round(height)}em'
-                case _:
-                    raise ValueError("height should be str or number, not " +
-                        f"'{height.__class__.__name__}'")
-
-        if (cursor := kw.get('cursor')):
-            element.style.cursor = cursor
-
-        if (command := kw.get('command')):
-            element.bind('click',
-                lambda ev, command=command: command(ev.target))
-            element.style.cursor = 'default'
-
-        if (font := kw.get('font')):
-            element.style.fontFamily = font.family
-            element.style.fontWeight = font.weight
-            element.style.fontStyle = font.style
-            if font.size:
-                if isinstance(font.size, str):
-                    element.style.fontSize = font.size
-                else:
-                    element.style.fontSize = f'{font.size}px'
-
-        if (background := kw.get('background')):
-            element.style.backgroundColor = background
-        if (color := kw.get('color')):
-            element.style.color = color
-
-        if (border := kw.get('border')):
-            element.style.borderStyle = border.style
-            element.style.borderWidth = f'{border.width}px'
-            element.style.borderColor = border.color
-            element.style.borderRadius = f'{border.radius}px'
-
-        if (padding := kw.get('padding')):
-            for key in ['top', 'right', 'bottom', 'left']:
-                value = getattr(padding, key)
-                attr = 'padding' + key.capitalize()
-                if isinstance(value, str):
-                    setattr(element.style, attr, value)
-                else:
-                    setattr(element.style, attr, f'{value}px')
-
-        if (margin := kw.get('margin')):
-            for key in ['top', 'right', 'bottom', 'left']:
-                value = getattr(margin, key)
-                attr = 'margin' + key.capitalize()
-                if isinstance(value, str):
-                    setattr(element.style, attr, value)
-                else:
-                    setattr(element.style, attr, f'{value}px')
-
-        if (menu := kw.get('menu')) is not None:
-            if isinstance(self, Box):
-                menu._build()
-                self.insertBefore(menu.element,
-                    self.title_bar.nextSibling)
-                self.menu = menu
-
-        self._config = getattr(self, '_config', {})
-        self._config |= kw
 
 
 borderColor = '#008'
 backgroundColor = '#fff'
 color = '#000'
 
+
+class Frame(html.DIV, Widget):
+
+    def __init__(self, *args, **options):
+        self._options = options
+        super().__init__(*args)
+
+
 class Box(html.DIV, Widget):
 
     default_config = {
-        'left': 5,
-        'top': 5,
         'width': None,
         'height': None,
         'background': backgroundColor,
@@ -347,22 +472,22 @@ class Box(html.DIV, Widget):
         'font': Font(family='sans-serif', size=12)
     }
 
-    def __init__(self, container=document, title="", titlebar=True, **options):
+    def __init__(self, title="", container=document, titlebar=True, **options):
         html.DIV.__init__(self, style="position:absolute")
         self._options = self.default_config | options
 
         self.config(**self._options)
 
-        if titlebar:
-            self.title_bar = TitleBar(title)
-            self <= self.title_bar
-
-        self.panel = Frame()
-        self <= self.panel
-
         container <= self
 
         if titlebar:
+            self.title_bar = TitleBar(title)
+            self.add(self.title_bar)
+
+            panel = Frame()
+            self.add(panel, row="next", align="left")
+            self.panel = panel
+
             self.title_bar.close_button.bind("click", self.close)
             # define callbacks for drag and drop
             self.title_bar.bind("mousedown", self._grab_widget)
@@ -371,6 +496,12 @@ class Box(html.DIV, Widget):
             self.title_bar.bind("touchend", self._stop_moving)
             self.bind("leave", self._stop_moving)
             self.is_moving = False
+
+    def add(self, widget, **kw):
+        if hasattr(self, 'panel'):
+            self.panel.add(widget, **kw)
+        else:
+            Widget.add(self, widget, **kw)
 
     def close(self, *args):
         self.remove()
@@ -416,6 +547,23 @@ class Box(html.DIV, Widget):
             menu.open_on_mouseenter = False
             menu.open_submenu.element.remove()
 
+
+class Checkbuttons(Frame):
+
+    COUNTER = 0
+
+    def __init__(self, **options):
+        Frame.__init__(self, **options)
+        self.name = f'checkbutton{self.COUNTER}'
+        self.COUNTER += 1
+
+    def add_option(self, label, value=None, checked=False):
+        self.add(Entry(type="checkbox", name=self.name,
+            value=value if value is not None else label,
+            checked=checked))
+        self.add(Label(label))
+
+
 class Document(Widget):
 
     default_config = {
@@ -428,9 +576,17 @@ class Document(Widget):
     def __init__(self, **options):
         self._options = self.default_config | options
         self.config(**options)
+        self.menu = None
 
 
 class Button(html.BUTTON, Widget):
+
+    def __init__(self, *args, **options):
+        super().__init__(*args)
+        self._options = options
+
+
+class Entry(html.INPUT, Widget):
 
     def __init__(self, *args, **options):
         self._options = options
@@ -440,18 +596,80 @@ class Button(html.BUTTON, Widget):
 class Image(html.IMG, Widget):
 
     def __init__(self, src, **options):
-        html.IMG.__init__(self, src=src)
+        super().__init__(src=src)
         self._options = options
+
+
+class Label(html.DIV, Widget):
+
+    default_style = {
+        'whiteSpace': 'pre'
+    }
+
+    def __init__(self, value, *args, **options):
+        self._options = options
+        self._value = value
+        super().__init__(value, *args)
+        self.apply_default_style()
 
 
 class Link(html.A, Widget):
 
     def __init__(self, text, href, **options):
-        html.A.__init__(self, text, href=href)
+        super().__init__(text, href=href)
         self._options = options
 
 
-class Menu(Widget):
+class Listbox(Frame):
+
+    def __init__(self, **options):
+        self.size = options.pop('size', None)
+        self.multiple = options.pop('multiple', False)
+        if self.size is not None and not isinstance(self.size, int):
+            raise ValueError('size must be an integer')
+        Frame.__init__(self, **options)
+        self._selected = []
+
+    def add_option(self, name):
+        option = Label(name,
+                       callbacks=Callbacks(mouseenter=self.enter_option,
+                          mouseleave=self.leave_option,
+                          click=self.select_option))
+        self.add(option, row='next')
+        if self.size is not None and option.row == self.size - 1:
+            self.style.height = f'{self.offsetHeight}px'
+            self.style.overflowY = "scroll"
+
+    def enter_option(self, widget):
+        if widget not in self._selected:
+            widget.config(background='lightblue')
+
+    def leave_option(self, widget):
+        if widget not in self._selected:
+            widget.config(background='inherit')
+
+    def select_option(self, widget):
+        if self.multiple:
+            if widget in self._selected:
+                self.unselect(widget)
+                self.enter_option(widget)
+            else:
+                self.select(widget)
+        else:
+            if self._selected:
+                self.unselect(self._selected[0])
+            self.select(widget)
+
+    def select(self, widget):
+        widget.config(background='blue', color='white')
+        self._selected.append(widget)
+
+    def unselect(self, widget):
+        widget.config(background='inherit', color='inherit')
+        self._selected.remove(widget)
+
+
+class Menu(Frame):
 
     _main_menu_style = {
         'border-color': borderColor,
@@ -498,12 +716,7 @@ class Menu(Widget):
     }
 
     def __init__(self, **options):
-        self.toplevel = isinstance(master, Box)
-        if self.toplevel:
-            master.menu = self
-            self._options = self._default_config_main | options
-        else:
-            self._options = self._default_config | options
+        self._options = options
 
         self.selected = None
         self.open_submenu = None
@@ -512,16 +725,15 @@ class Menu(Widget):
 
         self.choices = []
 
-    def add_cascade(self, **kw):
-        """Add a command that triggers the opening of 'menu', an instance of
-        Menu.
-        submenu = Menu(main_menu)
-        main_menu.add_cascade('open', submenu)
-        """
-        self.choices.append(kw | {'type': 'cascade'})
+    def add_submenu(self, text, submenu, **kw):
+        """Add a submenu. "text" is the name of the submenu,
+        submenu is an instance of Menu."""
+        label = Label(text, command=self._show_cascade)
+        label._menu = menu
+        self.add(label)
 
-    def add_command(self, **kw):
-        self.choices.append(kw | {'type': 'command'})
+    def add_command(self, text, **kw):
+        self.choices.append(kw | {'text': text, 'type': 'command'})
 
     def add_separator(self):
         self.choices.append({'type': 'separator'})
@@ -541,8 +753,9 @@ class Menu(Widget):
             self.open_submenu = None
 
     def _show_cascade(self, cell):
+        console.log('cell', cell)
         global _selected
-        submenu = cell.kw['menu']
+        submenu = cell._menu
         submenu._build()
         submenu.opener = cell
         cell.menu = self
@@ -630,6 +843,23 @@ class Menu(Widget):
                     lambda ev, cell=cell: self._show_cascade(cell))
 
 
+class Radiobuttons(Frame):
+
+    COUNTER = 0
+
+    def __init__(self, **options):
+        Frame.__init__(self, **options)
+        self.name = "radiobutton{self.COUNTER}"
+        self.COUNTER += 1
+
+    def add_option(self, label, value=None, checked=False):
+        self.add(Entry(type="radio",
+                       name=self.name,
+                       value=value if value is not None else label,
+                       checked=checked))
+        self.add(Label(label))
+
+
 class Text(html.DIV, Widget):
 
     default_style = {
@@ -651,7 +881,7 @@ class Text(html.DIV, Widget):
 class TitleBar(html.DIV, Widget):
 
     default_config = {
-        'background' : backgroundColor,
+        'background' : '#f0f0f0',
         'cursor': 'default'
     }
 
@@ -659,7 +889,7 @@ class TitleBar(html.DIV, Widget):
         self._options = self.default_config | options
         super().__init__('', *args)
 
-        self.add(Label(title, margin=Margin(5)))
+        self.add(Label(title, padding=Padding(5)))
         self.close_button = Button("&#9587;",
             margin=Margin(0, 0, 0, 20),
             background="inherit",
@@ -668,31 +898,4 @@ class TitleBar(html.DIV, Widget):
         self.add(self.close_button, align="right top")
 
         self.config(**self._options)
-
-
-class Entry(html.INPUT, Widget):
-
-    def __init__(self, *args, **options):
-        self._options = options
-        super().__init__(*args)
-
-
-class Frame(html.DIV, Widget):
-
-    def __init__(self, *args, **options):
-        self._options = options
-        super().__init__(*args)
-
-
-class Label(html.DIV, Widget):
-
-    default_style = {
-        'whiteSpace': 'pre'
-    }
-
-    def __init__(self, value, *args, **options):
-        self._options = options
-        self._value = value
-        super().__init__(value, *args)
-        self.apply_default_style()
 

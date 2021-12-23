@@ -3,18 +3,316 @@
 Ce module permet de construire une interface utilisateur, sans faire appel aux
 technologies web habituelles (HTML, CSS).
 
-Il permet de créer des widgets (texte, boutons, liens hypertexte, images,
-etc.) et des les insérer dans la page.
-
-Cet exemple donne une idée de l'utilisation du module:
+# Introduction
 
 ```python
 from browser import ui
 
-ui.Document().add(Label('Coucou !'))
+container = ui.Document()
+element = ui.Label("Coucou")
+container.add(element)
 ```
 
-Il signifie : ajouter au document (`ui.Document()`) le label 'Coucou !'.
+L'interface utilisateur est construite en ajoutant des éléments (ou "widgets")
+à des conteneurs.
+
+Le conteneur peut être le document entier (la page HTML), ou une boite définie
+par la classe `ui.Box`:
+
+```python
+from browser import ui
+
+container = ui.Box(title="Essai")
+element = ui.Label("Coucou")
+container.add(element)
+```
+
+Par défaut, une boite possède une barre de menu, dont le titre est défini par
+l'argument _title_.
+
+La boite est insérée dans un conteneur, qui est le document par défaut,
+mais qui peut être spécifié par l'argument _container_:
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-box-container"],
+              title="Essai")
+root.add(ui.Label("Coucou"))
+```
+</td>
+<td id="example-box-container" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-box-container</i>
+</td>
+</tr>
+</table>
+_Le code ci-dessus est éditable, vous pouvez modifier les paramètres (par_
+_exemple le texte du `Label`) et voir l'effet en cliquant sur le bouton_ ▶
+
+Chaque élément est positionné dans une _cellule_ du conteneur.
+
+Par défaut, la méthode *add()* ajoute chaque élément dans la cellule à droite
+de l'élément précédent.
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-add-1"],
+              title="Essai")
+root.add(ui.Label("Un"))
+root.add(ui.Label("Deux"))
+```
+</td>
+<td id="example-add-1" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-add-1</i>
+</td>
+</tr>
+</table>
+
+Pour passer à la ligne suivante, il suffit d'ajouter l'argument
+_row="next"_.
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-add-2"],
+              title="Essai")
+root.add(ui.Label("Un"))
+root.add(ui.Label("Deux"), row='next')
+```
+</td>
+<td id="example-add-2" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-add-2</i>
+</td>
+</tr>
+</table>
+
+Si l'option _titlebar_ est désactivée, la boite ne contient pas de barre
+de titre (et ne peut donc pas être déplacée par glisser-déposer):
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-no-titlebar"],
+              titlebar=None)
+root.add(ui.Label("Un"))
+root.add(ui.Label("Deux"), row='next')
+```
+</td>
+<td id="example-no-titlebar" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-no-titlebar</i>
+</td>
+</tr>
+</table>
+
+Dans les exemples précédents, les éléments sont "collés" aux bords de la
+boite. Pour les décaler, on utilise l'argument _margin_, qui sous sa forme la
+plus simple prend comme valeur un entier indiquand le nombre de pixels à
+laisser entre le bord de la cellule et l'élément:
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-margin"],
+              titlebar=None)
+root.add(ui.Label("texte avec marge", margin=5))
+```
+</td>
+<td id="example-margin" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-margin</i>
+</td>
+</tr>
+</table>
+
+On peut spécifier la couleur de fond de la boite par l'argument _background_,
+qui peut prendre comme valeur un nom de couleur en anglais:
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-background-1"],
+              titlebar=None,
+              background='yellow')
+root.add(ui.Label("texte avec marge", margin=5))
+```
+</td>
+<td id="example-background-1" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-background-1</i>
+</td>
+</tr>
+</table>
+
+On peut également spécifier la couleur du `Label` par _background_, et la
+couleur du texte par _color_:
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+root = ui.Box(container=document["example-background-2"],
+              titlebar=None,
+              background='yellow')
+root.add(ui.Label("texte avec marge",
+                  margin=5,
+                  background='green',
+                  color='white'))
+```
+</td>
+<td id="example-background-2" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-background-2</i>
+</td>
+</tr>
+</table>
+
+Dans l'exemple précédent le texte est "collé" à l'intérieur du `Label`; pour
+laisser de l'espace autour, on utilise un autre argument, _padding_:
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+playground = document["example-margin-padding"]
+playground.clear()
+
+root = ui.Box(container=playground,
+              titlebar=None,
+              background='yellow')
+root.add(ui.Label("texte avec marge",
+                  margin=5,
+                  padding=8,
+                  background='green',
+                  color='white'))
+```
+</td>
+<td id="example-margin-padding" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-margin-padding</i>
+</td>
+</tr>
+</table>
+
+Vous pouvez exécuter le script en donnant des valeurs différentes à _margin_
+et _padding_ pour bien enregistrer la différence :
+
+- _margin_ est l'espace entre le bord de la cellule du conteneur et le bord
+  de l'élément
+- _padding_ est la distance entre le bord de l'élément et son contenu
+
+
+## Alignement des cellules
+
+Par défaut, un élément est inséré dans une cellule et la largeur des cellules
+s'ajuste selon le contenu le plus long dans chaque colonne.
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+playground = document["example-cells-width"]
+playground.clear()
+
+root = ui.Box(container=playground,
+              titlebar=None)
+
+root.add(ui.Label("cellule verte", background='green', color='white'))
+root.add(ui.Label("cellule rouge", background='red', color='white'))
+root.add(ui.Label("je suis une cellule violette", background='purple',
+    color='white'), row='next')
+root.add(ui.Label("orange", background='orange', color='blue'))
+```
+</td>
+<td id="example-cells-width" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-cells-width</i>
+</td>
+</tr>
+</table>
+
+Pour qu'un élement occupe plus d'une colonne, on passe l'argument _columnspan_
+à la méthode _add()_.
+
+Noter aussi l'argument _align_ qui indique comment aligner l'élément à
+l'intérieur de la cellule.
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+playground = document["example-columnspan"]
+playground.clear()
+
+root = ui.Box(container=playground,
+              titlebar=None)
+
+root.add(ui.Label("cellule verte", background="green", color="white"),
+         columnspan=2,
+         align="center")
+root.add(ui.Label("je suis une cellule violette", background="purple",
+    color="white"), row='next')
+root.add(ui.Label("orange", background="orange", color="blue"))
+```
+</td>
+<td id="example-columnspan" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-columnspan</i>
+</td>
+</tr>
+</table>
+
+En combinant avec l'argument _rowspan_:
+
+<table>
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+playground = document["example-rowspan"]
+playground.clear()
+
+root = ui.Box(container=playground,
+              titlebar=None)
+
+root.add(ui.Label("cellule verte", background="green", color="white"),
+         columnspan=2,
+         align="center")
+root.add(ui.Label("je suis une cellule violette", background="purple",
+    color="white"), row='next', rowspan=2)
+root.add(ui.Label("orange", background="orange", color="blue"))
+root.add(ui.Label("jaune", background="yellow", color="blue"),
+         row='next')
+
+```
+</td>
+<td id="example-rowspan" valign="top" style="padding-left:3em;">
+<i style="font-size:0.7em">example-rowspan</i>
+</td>
+</tr>
+</table>
+
 
 ## Elément racine
 
@@ -77,7 +375,11 @@ l'effet en cliquant sur le bouton ▶
 </td>
 </tr>
 </table>
+
 ## Widgets
+
+Tous les widgets héritent de la classe `Widget`, qui possède les méthodes
+suivantes
 
 `Button(`_texte, command=None, **options_`)`
 
@@ -86,8 +388,6 @@ l'effet en cliquant sur le bouton ▶
 > si _command_ est spécifié, il s'agit d'une fonction qui est appelée quand
 > l'utilisateur appuie sur le bouton. Elle est appelée avec le widget comme
 > argument
-
-
 
 `Label(`_valeur, **options_`)`
 
