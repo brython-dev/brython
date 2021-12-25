@@ -143,6 +143,14 @@ class Callbacks:
     def __init__(self, **bindings):
         self.bindings = bindings
 
+
+class Mouse:
+
+    def __str__(self):
+        return f'<Mouse x={self.x} y={self.y}>'
+
+mouse = Mouse()
+
 class Rows:
 
     def __init__(self, widget):
@@ -308,10 +316,17 @@ class Widget:
 
         if (callbacks := kw.get('callbacks')) is not None:
             for event, func in callbacks.bindings.items():
-                self.bind(event, lambda ev, func=func: func(self))
+                element.bind(event, self._wrap_callback(func))
 
         self._config = getattr(self, '_config', {})
         self._config |= kw
+
+    def _wrap_callback(self, func):
+        def f(event):
+            mouse.x = event.clientX
+            mouse.y = event.clientY
+            return func(self)
+        return f
 
     def coords(self):
         if not hasattr(self, 'master'):
@@ -858,6 +873,66 @@ class Radiobuttons(Frame):
                        value=value if value is not None else label,
                        checked=checked))
         self.add(Label(label))
+
+
+class Slider(Frame):
+
+    default_config = {
+        'background': "#bbb"
+    }
+
+    def __init__(self, width=300, height=20, **options):
+        background = options.pop('background', self.default_config['background'])
+        Frame.__init__(self, width=width, height=height, **options)
+        self.style.display = 'flex'
+        self.style.alignItems = 'center'
+        self.bar = html.DIV(style="width:100%;height:25%;border-radius:3px;")
+        self.bar.style.backgroundColor = background
+        self <= self.bar
+        self.slider = html.DIV(style="position:absolute;" +
+            "cursor:grab;")
+        self.slider.style.backgroundColor = background
+        self <= self.slider
+        self.slider.bind('mousedown', self.grab_slider)
+        self.moving = False
+
+    def grid(self, **kw):
+        Widget.grid(self, **kw)
+        r = round(self.offsetWidth * 0.07)
+        self.slider.style.height = self.slider.style.width = f'{r}px'
+        self.slider.style.borderRadius = "50%"
+        print(self.slider.style.width)
+
+    def grab_slider(self, event):
+        self.x0 = self.slider.offsetLeft
+        self.mouse0 = event.clientX
+        document.bind('mousemove', self.move_slider)
+        document.bind('mouseup', self.release_slider)
+        self.moving = True
+        self.max_x = self.width - self.slider.width
+        event.preventDefault()
+
+    def move_slider(self, event):
+        event.preventDefault()
+        if self.moving:
+            dx = event.clientX - self.mouse0
+            x = self.x0 + dx
+            if x < 0:
+                x = 0
+            elif x > self.max_x:
+                x = self.max_x
+            self.slider.left = x
+            self.ratio = x / self.max_x
+            evt = window.CustomEvent.new('move')
+            evt.clientX = event.clientX
+            evt.clientY = event.clientY
+            self.dispatchEvent(evt)
+        return False
+
+    def release_slider(self, event):
+        self.moving = False
+        document.unbind('mousemove', self.move_slider)
+        document.unbind('mouseup', self.release_slider)
 
 
 class Text(html.DIV, Widget):
