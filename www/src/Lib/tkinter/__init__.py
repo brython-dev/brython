@@ -49,7 +49,7 @@ none both x y
 insert current
 flat sunken raised groove ridge"""
 for name in constants.split():
-    globals()[name.upper()] = Constant(name)
+    globals()[name.upper()] = name
 
 # Border styles
 border_styles = {
@@ -167,7 +167,7 @@ class _Packer:
             self.cavity.left += parcel_width
             self.cavity.width -= parcel_width
         elif elt.side == RIGHT:
-            parcel_left = self.cavity.left + self.cavity.width - self.content_width
+            parcel_left = self.cavity.left + self.cavity.width - self.content_req_width
             self.cavity.width -= parcel_width
         elif elt.side == TOP:
             parcel_left = self.cavity.left
@@ -176,7 +176,7 @@ class _Packer:
             self.cavity.top += parcel_height
             self.cavity.height -= parcel_height
         elif elt.side == BOTTOM:
-            parcel_top = self.cavity.top + self.cavity.height - elt.content_height
+            parcel_top = self.cavity.top + self.cavity.height - elt.content_req_height
             parcel_left = self.cavity.left
             self.cavity.height -= parcel_height
 
@@ -340,18 +340,22 @@ class Widget:
         toplevel = isinstance(self, Tk)
         has_relief = 'relief' in self.keys()
         if has_relief:
-            inner = self.element.firstChild.firstChild
+            inner = self.payload
         keys = self.keys()
         for key, value in kw.items():
             if key not in keys:
                 raise ValueError(f"unknown option '{key}")
 
         if (text := kw.get('text')) is not None:
-            self.element.text = text
+            self.payload.text = text
 
         # dimensions
         if (width := kw.get('width')) is not None:
-            self.element.style.width = f'{width}em'
+            if has_relief:
+                self.payload.style.width = f'{width}em'
+            else:
+                self.element.style.width = f'{width}em'
+
         if (height := kw.get('height')) is not None:
             if isinstance(self, Listbox):
                 self.payload.attrs['size'] = height
@@ -510,7 +514,7 @@ class Tk(Widget):
     }
 
     def __init__(self, **kw):
-        self.element = html.DIV(style=self._main_style)
+        self.element = self.payload = html.DIV(style=self._main_style)
 
         self.title_text = html.SPAN()
         self.title_text.html = '&nbsp;'
@@ -739,20 +743,15 @@ def grid(master, column=0, columnspan=1, row=None, rowspan=1,
     if rowspan > 1:
         td.attrs['rowspan'] = rowspan
 
-    if isinstance(sticky, Constant):
-        sticky = list(sticky.value)
-    else:
-        sticky = list(sticky)
+    sticky = list(sticky)
 
-    #td.style.textAlign = 'center' # default
-
-    if 'W' in sticky:
+    if 'w' in sticky:
         td.style.textAlign = 'left'
-    if 'E' in sticky:
+    if 'e' in sticky:
         td.style.textAlign = 'right'
-    if 'N' in sticky:
+    if 'n' in sticky:
         td.style.verticalAlign = 'top'
-    if 'S' in sticky:
+    if 's' in sticky:
         td.style.verticalAlign = 'bottom'
     return td
 
@@ -1007,7 +1006,7 @@ class Menu(Widget):
     def _unselect(self):
         if self.selected:
             self.selected.style.backgroundColor = self.kw['background']
-            self.selected.style.color = self.kw['fg']
+            self.selected.style.color = self.kw['foreground']
             self.selected = None
             if self.open_submenu:
                 self.open_submenu.element.remove()
@@ -1055,7 +1054,7 @@ class Menu(Widget):
             cell.style.backgroundColor = self.kw['background']
         else:
             cell.style.backgroundColor = self.kw['background']
-            cell.style.color = self.kw['fg']
+            cell.style.color = self.kw['foreground']
 
     def _build(self):
         self._unselect()
@@ -1066,6 +1065,7 @@ class Menu(Widget):
             self.table = html.TABLE(cellspacing=0)
             self.element <= self.table
 
+        self.payload = self.element
         self.config(**self.kw)
 
         for choice in self.choices:
