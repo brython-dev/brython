@@ -1,75 +1,6 @@
 from . import html, window, console, document
 from .widgets import dialog, menu
 
-def grid(master, column=0, columnspan=1, row=None, rowspan=1,
-         align=''):
-    if not hasattr(master, '_table'):
-        master._table = html.TABLE(cellpadding=0, cellspacing=0,
-            style='width:100%;height:100%;')
-        master <= master._table
-        if row == 'current':
-            row = 0
-
-    if not hasattr(master, 'cells'):
-        master.cells = set()
-
-    # The cell at (row, column) in grid must be inserted in table row #row
-    # master.cells is a set of (row, column) that are already used because
-    # a cell with colspan or rowspan is used
-    nb_rows = len(master._table.rows)
-    if row is None or row == 'next':
-        # default is the first empty row
-        row = nb_rows
-    elif row == 'current':
-        row = nb_rows - 1
-
-    for i in range(row - nb_rows + 1):
-        master._table <= html.TR()
-
-    tr = master._table.rows[row]
-    # number of TD in table row
-    nb_cols = len(tr.cells)
-    if column == 'next':
-        column = nb_cols
-    # cells in row occupied because of rowspan / colspan
-    cols_from_span = [c for (r, c) in master.cells
-        if r == row and c < column]
-
-    cols_to_add = nb_cols + len(cols_from_span)
-    for i in range(column - cols_to_add + 1):
-        tr <= html.TD()
-
-    td = tr.cells[column - len(cols_from_span)]
-
-    # update cells
-    for i in range(1, rowspan):
-        for j in range(columnspan):
-            master.cells.add((row + i, column + j))
-    for i in range(rowspan):
-        for j in range(1, columnspan):
-            master.cells.add((row + i, column + j))
-
-    if columnspan > 1:
-        td.attrs['colspan'] = columnspan
-    if rowspan > 1:
-        td.attrs['rowspan'] = rowspan
-
-    aligns = align.split()
-    if 'left' in aligns:
-        td.style.textAlign = 'left'
-    if 'right' in aligns:
-        td.style.textAlign = 'right'
-    if 'center' in aligns:
-        td.style.textAlign = 'center'
-    if 'top' in aligns:
-        td.style.verticalAlign = 'top'
-    if 'bottom' in aligns:
-        td.style.verticalAlign = 'bottom'
-    if 'middle' in aligns:
-        td.style.verticalAlign = 'middle'
-
-    return row, column, td
-
 
 class Border:
 
@@ -138,12 +69,6 @@ class Margin(_Directions):
     pass
 
 
-class Callbacks:
-
-    def __init__(self, **bindings):
-        self.bindings = bindings
-
-
 class Mouse:
 
     def __str__(self):
@@ -174,7 +99,7 @@ class Widget:
     def __str__(self):
         return f'<ui.{self.__class__.__name__}>'
 
-    def add(self, widget, row='current', column=None, **kw):
+    def add(self, widget, row='same', column=None, **kw):
         widget.master = self
         widget.config(**widget._options)
         widget.grid(row=row, column=column, **kw)
@@ -184,7 +109,7 @@ class Widget:
         """Add a list of widgets at specified row."""
         for i, widget in enumerate(widgets):
             if i == 0:
-                self.add(widget, row, column=column_start, **kw)
+                self.add(widget, row=row, column=column_start, **kw)
             else:
                 self.add(widget, **kw)
 
@@ -315,7 +240,7 @@ class Widget:
                 self.menu = menu
 
         if (callbacks := kw.get('callbacks')) is not None:
-            for event, func in callbacks.bindings.items():
+            for event, func in callbacks.items():
                 element.bind(event, self._wrap_callback(func))
 
         self._config = getattr(self, '_config', {})
@@ -335,19 +260,29 @@ class Widget:
         return _Coords(parent.offsetLeft, parent.offsetTop, parent.offsetWidth,
             parent.offsetHeight)
 
-    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align=''):
+    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align='',
+            width=None):
         master = self.master
         if isinstance(master, Document):
             master = document
         if not hasattr(master, '_table'):
-            master._table = html.TABLE(cellpadding=0, cellspacing=0,
+            master._table = html.TABLE(
+                #border=1,
+                cellpadding=0,
+                cellspacing=0,
                 style='width:100%;height:100%;')
             master <= master._table
-            if row == 'current':
+            if row == 'same':
                 row = 0
 
         if not hasattr(master, 'cells'):
             master.cells = set()
+
+        valid = [None, 'same', 'next']
+        if not isinstance(row, int) and row not in valid:
+            raise ValueError(f'invalid value for row: {row!r}')
+        if not isinstance(column, int) and column not in valid:
+            raise ValueError(f'invalid value for column: {column!r}')
 
         # The cell at (row, column) in grid must be inserted in table row #row
         # master.cells is a set of (row, column) that are already used because
@@ -358,7 +293,7 @@ class Widget:
             row = nb_rows
             if column is None:
                 column = 0
-        elif row == 'current':
+        elif row == 'same':
             row = nb_rows - 1
 
         if column is None:
@@ -372,6 +307,8 @@ class Widget:
         nb_cols = len(tr.cells)
         if column == 'next':
             column = nb_cols
+        elif column == 'same':
+            column = nb_cols - 1
         # cells in row occupied because of rowspan / colspan
         cols_from_span = [c for (r, c) in master.cells
             if r == row and c < column]
@@ -409,7 +346,24 @@ class Widget:
         if 'middle' in aligns:
             td.style.verticalAlign = 'middle'
 
-        td <= self
+        if width is not None:
+            td.style.width = width
+
+        has_child = len(td.childNodes) > 0
+        if has_child:
+            if hasattr(td.firstChild, 'is_inner'):
+                inner = td.firstChild
+            else:
+                inner = html.DIV(style="position:relative")
+                inner.is_inner = True
+                inner <= td.firstChild
+                td <= inner
+            self.style.position = "absolute"
+            self.style.top = '0px'
+            inner <= self
+        else:
+            td <= self
+
         self.row = row
         self.column = column
         if isinstance(self, Text):
@@ -471,13 +425,12 @@ class Frame(html.DIV, Widget):
 
     def __init__(self, *args, **options):
         self._options = options
-        super().__init__(*args)
 
 
 class Box(html.DIV, Widget):
 
     default_config = {
-        'width': None,
+        'width': 'inherit',
         'height': None,
         'background': backgroundColor,
         'color': color,
@@ -488,12 +441,12 @@ class Box(html.DIV, Widget):
     }
 
     def __init__(self, title="", container=document, titlebar=True, **options):
-        html.DIV.__init__(self, style="position:absolute")
-        self._options = self.default_config | options
-
-        self.config(**self._options)
+        html.DIV.__init__(self,
+            style="position:absolute;box-sizing:border-box")
 
         container <= self
+        self._options = self.default_config | options
+        self.config(**self._options)
 
         if titlebar:
             self.title_bar = TitleBar(title)
@@ -518,6 +471,14 @@ class Box(html.DIV, Widget):
         else:
             Widget.add(self, widget, **kw)
 
+    def add_menu(self, menu):
+        """Insert menu as first child of self."""
+        if not hasattr(self, "_table"):
+            self.add(menu)
+        else:
+            self.insertBefore(menu, self._table)
+        menu._toplevel = True
+            
     def close(self, *args):
         self.remove()
 
@@ -647,9 +608,9 @@ class Listbox(Frame):
 
     def add_option(self, name):
         option = Label(name,
-                       callbacks=Callbacks(mouseenter=self.enter_option,
-                          mouseleave=self.leave_option,
-                          click=self.select_option))
+                       callbacks=dict(mouseenter=self.enter_option,
+                                      mouseleave=self.leave_option,
+                                      click=self.select_option))
         self.add(option, row='next')
         if self.size is not None and option.row == self.size - 1:
             self.style.height = f'{self.offsetHeight}px'
@@ -686,177 +647,56 @@ class Listbox(Frame):
 
 class Menu(Frame):
 
-    _main_menu_style = {
-        'border-color': borderColor,
-        'border-width': '0px',
-        'width': '100%',
-        'cursor': 'default',
-        'padding': '5px 0px 5px 0px'
-    }
-
-    _main_menu_span_style = {
-        'padding': '0em 1em 0em 0.5em'
-    }
-
-    _submenu_style = {
-        'position': 'absolute',
-        'border-color': borderColor,
-        'width': 'auto',
-        'cursor': 'default'
-    }
-
-    _submenu_label_style = {
-        'padding-left': '0.5em',
-        'padding-right': '0px',
-        'width': '80%'
-    }
-
-    _submenu_arrow_style = {
-        'text-align': 'right',
-        'padding-left': '3px',
-        'padding-right': '5px'
-    }
-
-    _default_config_main = {
-        'activebackground': '#0078d7',
-        'background': backgroundColor,
-        'color' : color
-    }
-
-    _default_config = {
-        'activebackground': '#0078d7',
-        'background': backgroundColor,
-        'border': Border(1),
-        'color' : color
+    default_config = {
+        'background': '#fff'
     }
 
     def __init__(self, **options):
-        self._options = options
+        self._options = self.default_config | options
+        Frame.__init__(self, **self._options)
 
-        self.selected = None
-        self.open_submenu = None
-        self.open_on_mouseenter = False
-        self._ignore_next_key_events = False
+    def add_option(self, label, command=None):
+        callbacks = dict(mouseenter=self.main_over,
+                         mouseleave=self.main_leave)
+        if command:
+            callbacks['click'] = command
+        name = Label(label, padding=5, callbacks=callbacks)
+        self.add(name, row="next")
 
-        self.choices = []
+    def add_submenu(self, label, submenu=None):
+        menu_options = {
+            'callbacks': dict(click=self.submenu,
+                              mouseenter=self.main_over,
+                              mouseleave=self.main_leave),
+            'padding': 5
+        }
 
-    def add_submenu(self, text, submenu, **kw):
-        """Add a submenu. "text" is the name of the submenu,
-        submenu is an instance of Menu."""
-        label = Label(text, command=self._show_cascade)
-        label._menu = menu
-        self.add(label)
+        name = Label(label, **menu_options)
+        name.submenu = submenu
+        self.add(name)
 
-    def add_command(self, text, **kw):
-        self.choices.append(kw | {'text': text, 'type': 'command'})
-
-    def add_separator(self):
-        self.choices.append({'type': 'separator'})
-
-    def _select(self, cell):
-        """Called when a cell is selected by click or keyboard navigation."""
-        self.selected = cell
-        cell.style.backgroundColor = 'lightblue'
-
-    def _unselect(self):
-        if self.selected:
-            self.selected.style.backgroundColor = self.kw['background']
-            self.selected.style.color = self.kw['color']
-            self.selected = None
-            if self.open_submenu:
-                self.open_submenu.element.remove()
-            self.open_submenu = None
-
-    def _show_cascade(self, cell):
-        console.log('cell', cell)
-        global _selected
-        submenu = cell._menu
-        submenu._build()
-        submenu.opener = cell
-        cell.menu = self
-        self.element <= submenu.element
-        self.open_on_mouseenter = True
-        master = self.master
-        if self.toplevel:
-            _selected = [self.master]
-            submenu.element.style.left = f"{cell.abs_left - master.abs_left}px"
-            submenu.element.style.top = f"{cell.abs_top - master.abs_top + cell.offsetHeight}px"
+    def main_over(self, widget):
+        if hasattr(self, '_toplevel'):
+            widget.config(background='lightblue')
         else:
-            submenu.element.style.left = f"{self.element.offsetWidth}px"
-            submenu.element.style.top = f"{cell.abs_top - self.element.abs_top}px"
-        submenu.element.style.display = 'block'
-        self.open_submenu = submenu
+            widget.config(background='blue', color="white")
+        if hasattr(widget.master, 'open_submenu'):
+            self.submenu(widget)
 
-    def _cell_enter(self, cell):
-        self._unselect()
-        if self.toplevel:
-            # mouse enters a toplevel menu item
-            cell.style.backgroundColor = 'lightblue'
-            self._select(cell)
-            if self.open_on_mouseenter:
-                self._show_cascade(cell)
-        else:
-            if cell.firstChild.colSpan == 2:
-                # ignore separator
-                return
-            opener = self.opener
-            cell.style.backgroundColor = self.kw['activebackground']
-            cell.style.color = '#fff'
-            opener.style.backgroundColor = 'lightblue'
-            self._select(cell)
+    def main_leave(self, widget):
+        widget.config(background='inherit', color='inherit')
 
-    def _cell_leave(self, cell):
-        if self.toplevel:
-            cell.style.backgroundColor = self.kw['background']
-        else:
-            cell.style.backgroundColor = self.kw['background']
-            cell.style.color = self.kw['color']
-
-    def _build(self):
-        self._unselect()
-        if self.toplevel:
-            self.element = html.DIV(style=self._main_menu_style)
-        else:
-            self.element = html.DIV(style=self._submenu_style)
-            self.table = html.TABLE(cellspacing=0)
-            self.element <= self.table
-
-        self.config(**self._options)
-
-        for choice in self.choices:
-            if choice['type'] == 'separator':
-                if not self.toplevel:
-                    cell = html.TR(html.TD(html.HR(), colspan=2))
-                    self.table <= cell
-                continue
-            else:
-                label = choice.get('label', '').replace(' ', chr(160))
-
-            if self.toplevel:
-                cell = html.SPAN(label, style=self._main_menu_span_style)
-                self.element <= cell
-            else:
-                arrow = html.SPAN()
-                if choice['type'] == 'cascade':
-                    arrow.html = '&#x25B6;'
-                elif choice['type'] == 'separator':
-                    arrow.html = '<hr>'
-                else:
-                    arrow.html = '&nbsp;'
-                cell = html.TR(
-                    html.TD(label, style=self._submenu_label_style) +
-                    html.TD(arrow, style=self._submenu_arrow_style))
-                self.table <= cell
-            cell.menu = self
-            cell.bind('mouseenter', lambda ev: self._cell_enter(ev.target))
-            cell.bind('mouseleave', lambda ev: self._cell_leave(ev.target))
-            if (command := choice.get('command')):
-                cell.bind('click', lambda ev, command=command:command())
-            if choice['type'] == 'cascade':
-                cell.kw = choice
-                cell.bind('click',
-                    lambda ev, cell=cell: self._show_cascade(cell))
-
+    def submenu(self, widget):
+        master = widget.master
+        if hasattr(master, 'open_submenu'):
+            master.open_submenu.remove()
+        coords = widget.coords()
+        top = coords.top + coords.height
+        left = coords.left
+        box = Box(container=widget, titlebar=None,
+            top=f'{top}px', left=f'{left}px')
+        box.add(widget.submenu)
+        master.open_submenu = box
 
 class Radiobuttons(Frame):
 
@@ -881,7 +721,7 @@ class Slider(Frame):
         'background': "#bbb"
     }
 
-    def __init__(self, width=300, height=20, **options):
+    def __init__(self, ratio=0, width=300, height=20, **options):
         background = options.pop('background', self.default_config['background'])
         Frame.__init__(self, width=width, height=height, **options)
         self.style.display = 'flex'
@@ -894,22 +734,26 @@ class Slider(Frame):
         self.slider.style.backgroundColor = background
         self <= self.slider
         self.slider.bind('mousedown', self.grab_slider)
+        self.ratio = ratio
         self.moving = False
 
     def grid(self, **kw):
         Widget.grid(self, **kw)
-        r = round(self.offsetWidth * 0.07)
-        self.slider.style.height = self.slider.style.width = f'{r}px'
+        ray = round(self.offsetWidth * 0.03)
+        self.min_x = - ray
+        self.max_x = round(self.width - self.slider.width - ray)
+        self.interval = self.width - self.slider.width
+        self.slider.left = self.min_x + round(self.interval * self.ratio)
+        self.slider.style.height = self.slider.style.width = f'{2 * ray}px'
         self.slider.style.borderRadius = "50%"
         print(self.slider.style.width)
 
     def grab_slider(self, event):
-        self.x0 = self.slider.offsetLeft
+        self.x0 = self.slider.left
         self.mouse0 = event.clientX
         document.bind('mousemove', self.move_slider)
         document.bind('mouseup', self.release_slider)
         self.moving = True
-        self.max_x = self.width - self.slider.width
         event.preventDefault()
 
     def move_slider(self, event):
@@ -917,12 +761,12 @@ class Slider(Frame):
         if self.moving:
             dx = event.clientX - self.mouse0
             x = self.x0 + dx
-            if x < 0:
-                x = 0
+            if x < self.min_x:
+                x = self.min_x
             elif x > self.max_x:
                 x = self.max_x
             self.slider.left = x
-            self.ratio = x / self.max_x
+            self.ratio = (x - self.min_x) / self.interval
             evt = window.CustomEvent.new('move')
             evt.clientX = event.clientX
             evt.clientY = event.clientY
