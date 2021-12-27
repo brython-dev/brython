@@ -367,8 +367,7 @@ DOMEvent.__getattribute__ = function(self, attr){
         }
         return $B.$JS2Py(res)
     }
-    throw _b_.AttributeError.$factory("object DOMEvent has no attribute '" +
-        attr + "'")
+    throw $B.attr_error(attr, self)
 }
 
 DOMEvent.$factory = function(evt_name){
