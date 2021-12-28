@@ -250,7 +250,11 @@ class Widget:
         def f(event):
             mouse.x = event.clientX
             mouse.y = event.clientY
-            return func(self)
+            res = func(self)
+            if res is False:
+                event.stopPropagation()
+                event.preventDefault()
+            return res
         return f
 
     def coords(self):
@@ -260,8 +264,7 @@ class Widget:
         return _Coords(parent.offsetLeft, parent.offsetTop, parent.offsetWidth,
             parent.offsetHeight)
 
-    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align='',
-            width=None):
+    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align=''):
         master = self.master
         if isinstance(master, Document):
             master = document
@@ -294,7 +297,7 @@ class Widget:
             if column is None:
                 column = 0
         elif row == 'same':
-            row = nb_rows - 1
+            row = max(0, nb_rows - 1)
 
         if column is None:
             column = 'next'
@@ -346,9 +349,6 @@ class Widget:
         if 'middle' in aligns:
             td.style.verticalAlign = 'middle'
 
-        if width is not None:
-            td.style.width = width
-
         has_child = len(td.childNodes) > 0
         if has_child:
             if hasattr(td.firstChild, 'is_inner'):
@@ -366,6 +366,8 @@ class Widget:
 
         self.row = row
         self.column = column
+        self.cell = Cell(td)
+        self.row = tr
         if isinstance(self, Text):
             self.dw = self.parentNode.offsetWidth - self.offsetWidth
             self.dh = self.parentNode.offsetHeight - self.offsetHeight
@@ -427,6 +429,13 @@ class Frame(html.DIV, Widget):
         self._options = options
 
 
+class Bar(Frame):
+
+    def __init__(self, **options):
+        super().__init__(**options)
+        self <= Label(" ")
+
+
 class Box(html.DIV, Widget):
 
     default_config = {
@@ -478,7 +487,7 @@ class Box(html.DIV, Widget):
         else:
             self.insertBefore(menu, self._table)
         menu._toplevel = True
-            
+
     def close(self, *args):
         self.remove()
 
@@ -522,6 +531,15 @@ class Box(html.DIV, Widget):
         if menu and menu.open_submenu:
             menu.open_on_mouseenter = False
             menu.open_submenu.element.remove()
+
+
+class Cell:
+
+    def __init__(self, td):
+        self.td = td
+
+    def config(self, **options):
+        Widget.config(self.td, **options)
 
 
 class Checkbuttons(Frame):
@@ -648,16 +666,47 @@ class Listbox(Frame):
 class Menu(Frame):
 
     default_config = {
-        'background': '#fff'
+        'background': '#eee'
     }
 
-    def __init__(self, **options):
+    toplevel_options = {
+        'background': 'inherit',
+        'color': 'inherit',
+        'highlight-background': 'LightBlue',
+        'highlight-color': 'inherit'
+    }
+
+    submenu_options = {
+        'background': 'inherit',
+        'color': 'inherit',
+        'highlight-background': 'blue',
+        'highlight-color': 'white'
+    }
+
+    def __init__(self, master, label=None, **options):
+        self.master = master
+        self._toplevel_options = (self.toplevel_options |
+            options.pop('toplevel_options', {}))
+        self._submenu_options = (self.submenu_options |
+            options.pop('submenu_options', {}))
+
+        self._toplevel = not isinstance(master, Menu)
         self._options = self.default_config | options
         Frame.__init__(self, **self._options)
 
+        if not self._toplevel:
+            if label is None:
+                raise ValueError('missing submenu label')
+            master.add_submenu(label, self)
+        elif not hasattr(master, "_table"):
+            master.add(self)
+        else:
+            master.insertBefore(self, master._table)
+
+
     def add_option(self, label, command=None):
-        callbacks = dict(mouseenter=self.main_over,
-                         mouseleave=self.main_leave)
+        callbacks = dict(mouseenter=self.enter,
+                         mouseleave=self.leave)
         if command:
             callbacks['click'] = command
         name = Label(label, padding=5, callbacks=callbacks)
@@ -666,33 +715,53 @@ class Menu(Frame):
     def add_submenu(self, label, submenu=None):
         menu_options = {
             'callbacks': dict(click=self.submenu,
-                              mouseenter=self.main_over,
-                              mouseleave=self.main_leave),
+                              mouseenter=self.enter,
+                              mouseleave=self.leave),
             'padding': 5
         }
+        frame = Frame(**menu_options)
+        frame.submenu = submenu
 
-        name = Label(label, **menu_options)
-        name.submenu = submenu
-        self.add(name)
-
-    def main_over(self, widget):
-        if hasattr(self, '_toplevel'):
-            widget.config(background='lightblue')
+        frame.add(Label(label))
+        if not self._toplevel:
+            frame.add(Label('&#x25B6;', padding=Padding(left="1em")))
+        if self._toplevel:
+            self.add(frame)
         else:
-            widget.config(background='blue', color="white")
+            self.add(frame, row="next")
+
+    def enter(self, widget):
+        if self._toplevel:
+            options = self._toplevel_options
+        else:
+            options = self._submenu_options
+        widget.config(background=options['highlight-background'],
+                      color=options['highlight-color'])
         if hasattr(widget.master, 'open_submenu'):
             self.submenu(widget)
 
-    def main_leave(self, widget):
-        widget.config(background='inherit', color='inherit')
+    def leave(self, widget):
+        if self._toplevel:
+            options = self._toplevel_options
+        else:
+            options = self._submenu_options
+        widget.config(background=options['background'],
+                      color=options['color'])
 
     def submenu(self, widget):
         master = widget.master
         if hasattr(master, 'open_submenu'):
             master.open_submenu.remove()
+        if not hasattr(widget, "submenu"):
+            return
         coords = widget.coords()
-        top = coords.top + coords.height
-        left = coords.left
+        if self._toplevel:
+            top = coords.top + coords.height
+            left = coords.left
+        else:
+            top = coords.top + widget.closest('TABLE').offsetTop
+            left = coords.left + master.master.clientWidth
+
         box = Box(container=widget, titlebar=None,
             top=f'{top}px', left=f'{left}px')
         box.add(widget.submenu)
