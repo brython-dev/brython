@@ -3012,6 +3012,9 @@ def foo(constructor: bool):
 
 foo(constructor=True)
 
+# issue 1854
+assert 0 != int
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

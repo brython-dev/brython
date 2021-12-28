@@ -869,7 +869,7 @@ $B.augm_assign = function(left, op, right){
     if(typeof left == 'number' && typeof right == 'number'
             && op != '//='){ // operator "//" not supported by Javascript
         var res = eval(left + ' ' + op1 + ' ' + right)
-        if(res <= $B.max_int && res >= $B.min_int && 
+        if(res <= $B.max_int && res >= $B.min_int &&
                 res.toString().search(/e/i) == -1){
             return res
         }else{
@@ -1672,7 +1672,9 @@ $B.rich_comp = function(op, x, y){
     }
 
     res = x_class_op(x, y)
-    if(res !== _b_.NotImplemented){return res}
+    if(res !== _b_.NotImplemented){
+        return res
+    }
     var y_class_op = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),
         rev_op))
     res = y_class_op(y, x)
