@@ -13119,19 +13119,20 @@ $B.parse_options = function(options){
 // inserted in the page, instead of waiting for page load.
 // options are passed as attributes of the <script> tag, eg
 // <script type="text/python" debug=2>
+if(! $B.isWebWorker){
+    var observer = new MutationObserver(function(mutations){
+      for (var i=0; i < mutations.length; i++){
+        for (var j=0; j < mutations[i].addedNodes.length; j++){
+          checkPythonScripts(mutations[i].addedNodes[j]);
+        }
+      }
+    });
 
-var observer = new MutationObserver(function(mutations){
-  for (var i=0; i < mutations.length; i++){
-    for (var j=0; j < mutations[i].addedNodes.length; j++){
-      checkPythonScripts(mutations[i].addedNodes[j]);
-    }
-  }
-});
-
-observer.observe(document.documentElement, {
-  childList: true,
-  subtree: true
-});
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+}
 
 function checkPythonScripts(addedNode) {
    if(addedNode.tagName == 'SCRIPT' && addedNode.type == "text/python"){
@@ -13150,9 +13151,9 @@ function checkPythonScripts(addedNode) {
 }
 
 var brython = $B.parser.brython = function(options){
-    observer.disconnect()
     $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
+        observer.disconnect()
         _run_scripts(options)
     }
 }

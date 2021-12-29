@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,3,'final',0]
 __BRYTHON__.__MAGIC__="3.10.3"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-27 21:41:05.954016"
-__BRYTHON__.timestamp=1640637665954
+__BRYTHON__.compiled_date="2021-12-29 10:20:54.327244"
+__BRYTHON__.timestamp=1640769654327
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6417,13 +6417,13 @@ var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}}
-var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
-observer.observe(document.documentElement,{childList:true,subtree:true});
+if(! $B.isWebWorker){var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
+observer.observe(document.documentElement,{childList:true,subtree:true});}
 function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){var options={}
 for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}
-var brython=$B.parser.brython=function(options){observer.disconnect()
-$B.parse_options(options)
-if(!($B.isWebWorker ||$B.isNode)){_run_scripts(options)}}
+var brython=$B.parser.brython=function(options){$B.parse_options(options)
+if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()
+_run_scripts(options)}}
 $B.run_script=function(src,name,url,run_loop){
 try{var root=$B.py2js(src,name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}
 $B.file_cache[script.__file__]=src
@@ -6790,8 +6790,8 @@ $B.update_obj(res,{__class__ :cls,__dict__:$B.empty_dict()})
 return res}
 object.__ne__=function(self,other){
 if(self===other){return false}
-var eq=$B.$getattr(self,"__eq__",null)
-if(eq !==null){var res=$B.$call(eq)(other)
+var eq=$B.$getattr(self.__class__ ||$B.get_class(self),"__eq__",null)
+if(eq !==null){var res=$B.$call(eq)(self,other)
 if(res===_b_.NotImplemented){return res}
 return ! $B.$bool(res)}
 return _b_.NotImplemented}
@@ -7554,7 +7554,7 @@ var op1=op.substr(0,op.length-1)
 if(typeof left=='number' && typeof right=='number'
 && op !='//='){
 var res=eval(left+' '+op1+' '+right)
-if(res <=$B.max_int && res >=$B.min_int && 
+if(res <=$B.max_int && res >=$B.min_int &&
 res.toString().search(/e/i)==-1){return res}else{res=eval(`${BigInt(left)}n ${op1} ${BigInt(right)}n`)
 var pos=res > 0n,res=res+''
 return pos ? $B.fast_long_int(res,true):
