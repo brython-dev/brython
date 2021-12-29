@@ -305,7 +305,7 @@ function* tokenize(s){
       value,
       end
   while(i < len){
-    if(s[i] == " " || s[i] == '\r' || s[i] == '\n'){
+    if(s[i] == " " || s[i] == '\r' || s[i] == '\n' || s[i] == '\t'){
       i++
     }else if('[]{}:,'.indexOf(s[i]) > -1){
       yield [s[i], i]
