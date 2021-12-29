@@ -65,10 +65,6 @@ class Padding(_Directions):
     pass
 
 
-class Margin(_Directions):
-    pass
-
-
 class Mouse:
 
     def __str__(self):
@@ -215,23 +211,6 @@ class Widget:
                 raise TypeError('invalid type for padding: ' +
                     padding.__class__.__name__)
 
-        if (margin := kw.get('margin')):
-            if isinstance(margin, str):
-                element.style.margin = margin
-            elif isinstance(margin, int):
-                element.style.margin = f'{margin}px'
-            elif isinstance(margin, Margin):
-                for key in ['top', 'right', 'bottom', 'left']:
-                    value = getattr(margin, key)
-                    attr = 'margin' + key.capitalize()
-                    if isinstance(value, str):
-                        setattr(element.style, attr, value)
-                    else:
-                        setattr(element.style, attr, f'{value}px')
-            else:
-                raise TypeError('invalid type for margin: ' +
-                    padding.__class__.__name__)
-
         if (menu := kw.get('menu')) is not None:
             if isinstance(self, Box):
                 menu._build()
@@ -278,6 +257,8 @@ class Widget:
             if row == 'same':
                 row = 0
 
+        master.table = _Wrapper(master._table)
+        
         if not hasattr(master, 'cells'):
             master.cells = set()
 
@@ -366,8 +347,8 @@ class Widget:
 
         self.row = row
         self.column = column
-        self.cell = Cell(td)
-        self.row = tr
+        self.cell = _Wrapper(td)
+        self.row = _Wrapper(tr)
         if isinstance(self, Text):
             self.dw = self.parentNode.offsetWidth - self.offsetWidth
             self.dh = self.parentNode.offsetHeight - self.offsetHeight
@@ -533,13 +514,13 @@ class Box(html.DIV, Widget):
             menu.open_submenu.element.remove()
 
 
-class Cell:
+class _Wrapper:
 
-    def __init__(self, td):
-        self.td = td
+    def __init__(self, element):
+        self.element = element
 
     def config(self, **options):
-        Widget.config(self.td, **options)
+        Widget.config(self.element, **options)
 
 
 class Checkbuttons(Frame):
