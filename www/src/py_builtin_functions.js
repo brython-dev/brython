@@ -2071,7 +2071,7 @@ function pow() {
         z = $.mod
     var klass = x.__class__ || $B.get_class(x)
     if(z === _b_.None){
-        return $B.rich_op('pow', x, y)
+        return $B.rich_op('__pow__', x, y)
     }else{
         if(x != _b_.int.$factory(x) || y != _b_.int.$factory(y)){
             throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +

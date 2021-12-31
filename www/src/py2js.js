@@ -6418,7 +6418,7 @@ $IdCtx.prototype.boundBefore = function(scope){
 
     var node = $get_node(this),
         found = false
-    var $test = this.value == "wxc"
+    var $test = false // this.value == "wxc"
     if($test){
         console.log(this.value, "bound before")
         console.log("node", node)
@@ -8730,7 +8730,7 @@ $OpCtx.prototype.to_js = function(){
                             ' == "string" && typeof ' + t1 +
                             ' == "string") ? ' + t0 + '+' + t1)
                     }
-                    res.push(': $B.rich_op("' + $operators[this.op] + '",' +
+                    res.push(`: $B.rich_op("__${$operators[this.op]}__",` +
                         t0 + ',' + t1 + ')')
                     return '(' + res.join('') + ')'
                 }
@@ -8739,7 +8739,7 @@ $OpCtx.prototype.to_js = function(){
                 return '$B.rich_comp("__' + $operators[this.op] + '__",' +
                     e0.to_js() + ',' + e1.to_js() + ')'
             }else{
-                return '$B.rich_op("' + $operators[this.op] + '", ' +
+                return `$B.rich_op("__${$operators[this.op]}__", ` +
                     e0.to_js() + ', ' + e1.to_js() + ')'
             }
         default:
@@ -8747,7 +8747,7 @@ $OpCtx.prototype.to_js = function(){
                 return '$B.rich_comp("__' + $operators[this.op] + '__",' +
                     this.tree[0].to_js() + ',' + this.tree[1].to_js() + ')'
             }else{
-                return '$B.rich_op("' + $operators[this.op] + '", ' +
+                return `$B.rich_op("__${$operators[this.op]}__", ` +
                     this.tree[0].to_js() + ', ' + this.tree[1].to_js() +
                     ')'
             }

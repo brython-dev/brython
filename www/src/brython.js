@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-31 10:38:32.934588"
-__BRYTHON__.timestamp=1640943512934
+__BRYTHON__.compiled_date="2021-12-31 11:24:38.345634"
+__BRYTHON__.timestamp=1640946278345
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3423,7 +3423,7 @@ if(['def','generator'].indexOf(ctx.type)>-1 &&
 ctx.locals.indexOf(name)>-1){return false}
 return true}}
 var node=$get_node(this),found=false
-var $test=this.value=="wxc"
+var $test=false 
 if($test){console.log(this.value,"bound before")
 console.log("node",node)
 console.log('scope',scope)}
@@ -4517,15 +4517,15 @@ var t0=this.tree[0].to_js(),t1=this.tree[1].to_js()
 if(this.op=='+'){res.push(' : (typeof '+t0+
 ' == "string" && typeof '+t1+
 ' == "string") ? '+t0+'+'+t1)}
-res.push(': $B.rich_op("'+$operators[this.op]+'",'+
+res.push(`: $B.rich_op("__${$operators[this.op]}__",`+
 t0+','+t1+')')
 return '('+res.join('')+')'}}
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
-e0.to_js()+','+e1.to_js()+')'}else{return '$B.rich_op("'+$operators[this.op]+'", '+
+e0.to_js()+','+e1.to_js()+')'}else{return `$B.rich_op("__${$operators[this.op]}__", `+
 e0.to_js()+', '+e1.to_js()+')'}
 default:
 if(comps[this.op]!==undefined){return '$B.rich_comp("__'+$operators[this.op]+'__",'+
-this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return '$B.rich_op("'+$operators[this.op]+'", '+
+this.tree[0].to_js()+','+this.tree[1].to_js()+')'}else{return `$B.rich_op("__${$operators[this.op]}__", `+
 this.tree[0].to_js()+', '+this.tree[1].to_js()+
 ')'}}}
 $OpCtx.prototype.simple_js=function(){var op=this.op
@@ -7229,8 +7229,8 @@ _b_.object.__class__=type})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
-$B.args=function($fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args){
-if($fname.startsWith("lambda_"+$B.lambda_magic)){$fname="<lambda>"}
+$B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args){
+if(fname.startsWith("lambda_"+$B.lambda_magic)){fname="<lambda>"}
 var has_kw_args=false,nb_pos=args.length,filled=0,extra_kw,only_positional
 var end_positional=var_names.indexOf("/")
 if(end_positional !=-1){var_names.splice(end_positional,1)
@@ -7240,18 +7240,18 @@ if(Object.keys(args[nb_pos].kw).length > 0){has_kw_args=true
 var kw_args=args[nb_pos].kw
 if(Array.isArray(kw_args)){var kwa=kw_args[0]
 for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i]
-if(kw_arg.__class__===_b_.dict){for(var k in kw_arg.$numeric_dict){throw _b_.TypeError.$factory($fname+
+if(kw_arg.__class__===_b_.dict){for(var k in kw_arg.$numeric_dict){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}
-for(var k in kw_arg.$object_dict){throw _b_.TypeError.$factory($fname+
+for(var k in kw_arg.$object_dict){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}
-for(var k in kw_arg.$string_dict){if(kwa[k]!==undefined){throw _b_.TypeError.$factory($fname+
+for(var k in kw_arg.$string_dict){if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
 k+"'")}
 kwa[k]=kw_arg.$string_dict[k][0]}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
 while(true){try{var k=_b_.next(it)
-if(typeof k !=="string"){throw _b_.TypeError.$factory($fname+
+if(typeof k !=="string"){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}
-if(kwa[k]!==undefined){throw _b_.TypeError.$factory($fname+
+if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
 k+"'")}
 kwa[k]=getitem(k)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
@@ -7263,7 +7263,7 @@ if(extra_kw_args){
 extra_kw=$B.empty_dict()}
 if(nb_pos > argcount){
 if(extra_pos_args===null ||extra_pos_args=="*"){
-msg=$fname+"() takes "+argcount+" positional argument"+
+msg=fname+"() takes "+argcount+" positional argument"+
 (argcount > 1 ? "s" :"")+" but more were given"
 throw _b_.TypeError.$factory(msg)}else{
 for(var i=argcount;i < nb_pos;i++){slots[extra_pos_args].push(args[i])}
@@ -7276,19 +7276,19 @@ return slots}
 if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
 if(slots[key]===undefined){
 if(extra_kw_args){
-extra_kw.$string_dict[key]=[value,extra_kw.$order++]}else{throw _b_.TypeError.$factory($fname+
+extra_kw.$string_dict[key]=[value,extra_kw.$order++]}else{throw _b_.TypeError.$factory(fname+
 "() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
 if(key==extra_pos_args){throw _b_.TypeError.$factory(
-`${$fname}() got an unexpected `+
+`${fname}() got an unexpected `+
 `keyword argument '${key}'`)}
-throw _b_.TypeError.$factory($fname+
-"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key)>-1){throw _b_.TypeError.$factory($fname+"() got an "+
+throw _b_.TypeError.$factory(fname+
+"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key)>-1){throw _b_.TypeError.$factory(fname+"() got an "+
 "unexpected keyword argument '"+key+"'")}else{
 slots[key]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push("'"+attr+"'")}}}
-if(missing.length > 0){if(missing.length==1){throw _b_.TypeError.$factory($fname+
-" missing 1 positional argument: "+missing[0])}else{var msg=$fname+" missing "+missing.length+
+if(missing.length > 0){if(missing.length==1){throw _b_.TypeError.$factory(fname+
+" missing 1 positional argument: "+missing[0])}else{var msg=fname+" missing "+missing.length+
 " positional arguments: "
 msg+=missing.join(" and ")
 throw _b_.TypeError.$factory(msg)}}
@@ -7562,7 +7562,7 @@ $B.fast_long_int(res.substr(1),false)}}else if(typeof left=='string' && typeof r
 op=='+='){return left+right}else{var method=$B.op2method.augmented_assigns[op],augm_func=$B.$getattr(left,'__'+method+'__',null)
 if(augm_func !==null){return $B.$call(augm_func)(right)}else{var method1=$B.op2method.operations[op1]
 if(method1===undefined){method1=$B.op2method.binary[op1]}
-return $B.rich_op(method1,left,right)}}}
+return $B.rich_op(`__${method1}__`,left,right)}}}
 $B.extend=function(fname,arg){
 for(var i=2;i < arguments.length;i++){var mapping=arguments[i]
 var it=_b_.iter(mapping),getter=$B.$getattr(mapping,"__getitem__")
@@ -7774,7 +7774,7 @@ try{var method=$B.$getattr(x.__class__ ||$B.get_class(x),"__add__")}catch(err){i
 throw err}
 var res=$B.$call(method)(x,y)
 if(res===_b_.NotImplemented){
-return $B.rich_op("add",x,y)}
+return $B.rich_op("__add__",x,y)}
 return res}
 $B.div=function(x,y){var z=x/y
 if(x > min_int && x < max_int && y > min_int && y < max_int
@@ -7847,29 +7847,29 @@ if(op=="__eq__"){return _b_.False}else if(op=="__ne__"){return _b_.True}
 throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
-var opname2opsign={sub:"-",xor:"^",mul:"*"}
-$B.rich_op=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),special_method='__'+op+'__',method
+var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*"}
+$B.rich_op=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),rop='__r'+op.substr(2),method
 if(x_class===y_class){
-if(x_class===_b_.int){return _b_.int[special_method](x,y)}else if(x_class===_b_.bool){return(_b_.bool[special_method]||_b_.int[special_method])
+if(x_class===_b_.int){return _b_.int[op](x,y)}else if(x_class===_b_.bool){return(_b_.bool[op]||_b_.int[op])
 (x,y)}
-try{method=$B.$call($B.$getattr(x_class,"__"+op+"__"))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
+try{method=$B.$call($B.$getattr(x_class,op))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
 throw _b_.TypeError.$factory("unsupported operand type(s) "+
 "for "+opname2opsign[op]+" : '"+kl_name+"' and '"+
 kl_name+"'")}
 throw err}
 return method(x,y)}
 if(_b_.issubclass(y_class,x_class)){
-var reflected_left=$B.$getattr(x_class,'__r'+op+'__'),reflected_right=$B.$getattr(y_class,'__r'+op+'__')
+var reflected_left=$B.$getattr(x_class,rop),reflected_right=$B.$getattr(y_class,rop)
 if(reflected_right !==reflected_left){return reflected_right(y,x)}}
 var res
-try{method=$B.$call($B.$getattr(x,"__"+op+"__"))}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
-res=$B.$call($B.$getattr(y,"__r"+op+"__"))(x)
+try{method=$B.$call($B.$getattr(x,op))}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
+res=$B.$call($B.$getattr(y,rop))(x)
 if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
 res=method(y)
-if(res===_b_.NotImplemented){var reflected=$B.$getattr(y,"__r"+op+"__",null)
+if(res===_b_.NotImplemented){var reflected=$B.$getattr(y,rop,null)
 if(reflected !==null){res=$B.$call(reflected)(x)
 if(res !==_b_.NotImplemented){return res}}
 throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
@@ -8932,7 +8932,7 @@ throw _b_.TypeError.$factory('ord() expected a character, but '+
 $B.class_name(c)+' was found')}}
 function pow(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'],arguments,{mod:None},null,null),x=$.x,y=$.y,z=$.mod
 var klass=x.__class__ ||$B.get_class(x)
-if(z===_b_.None){return $B.rich_op('pow',x,y)}else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
+if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
 "unless all arguments are integers")}
 return $B.$call($B.$getattr(klass,'__pow__'))(x,y,z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
@@ -13304,14 +13304,14 @@ return v10}
 return{__class__:long_int,value:value,pos:pos}}
 function extended_euclidean_algorithm(a,b){
 var s=0,old_s=1,t=1,old_t=0,r=b,old_r=a,quotient,tmp
-while($B.rich_comp('__ne__',r,0)){quotient=$B.rich_op('floordiv',old_r,r)
-tmp=$B.rich_op('sub',old_r,$B.rich_op('mul',quotient,r))
+while($B.rich_comp('__ne__',r,0)){quotient=$B.rich_op('__floordiv__',old_r,r)
+tmp=$B.rich_op('__sub__',old_r,$B.rich_op('__mul__',quotient,r))
 old_r=r
 r=tmp
-tmp=$B.rich_op('sub',old_s,$B.rich_op('mul',quotient,s))
+tmp=$B.rich_op('__sub__',old_s,$B.rich_op('__mul__',quotient,s))
 old_s=s
 s=tmp
-tmp=$B.rich_op('sub',old_t,$B.rich_op('mul',quotient,t))
+tmp=$B.rich_op('__sub__',old_t,$B.rich_op('__mul__',quotient,t))
 old_t=t
 t=tmp}
 return[old_r,old_s,old_t]}
@@ -13321,7 +13321,7 @@ var gcd,x,y
 if($B.rich_comp('__ne__',gcd,1)){
 throw Error(
 `${n} has no multiplicative inverse '
-            'modulo ${p}`)}else{return $B.rich_op('mod',x,p)}}
+            'modulo ${p}`)}else{return $B.rich_op('__mod__',x,p)}}
 $B.inverse_of=inverse_of
 $B.set_func_names(long_int,"builtins")
 $B.long_int=long_int
@@ -13357,7 +13357,7 @@ var x
 if($B.shift1_cache[py_exponent]!==undefined){x=$B.shift1_cache[py_exponent]}else{x=$B.$getattr(1,"__lshift__")(py_exponent)
 $B.shift1_cache[py_exponent]=x}
 py_exponent=x
-if(exponent > 0){numerator=$B.rich_op("mul",numerator,py_exponent)}else{denominator=py_exponent}
+if(exponent > 0){numerator=$B.rich_op("__mul__",numerator,py_exponent)}else{denominator=py_exponent}
 return $B.fast_tuple([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
 float.__abs__=function(self){return new Number(Math.abs(float_value(self)))}
 float.__bool__=function(self){self=float_value(self)

@@ -81,7 +81,7 @@ float.as_integer_ratio = function(self){
     }
     py_exponent = x
     if(exponent > 0){
-        numerator = $B.rich_op("mul", numerator, py_exponent)
+        numerator = $B.rich_op("__mul__", numerator, py_exponent)
     }else{
         denominator = py_exponent
     }

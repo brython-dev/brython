@@ -66,23 +66,23 @@ function nextUp(x){
     }else{
         var factor = $B.rich_comp('__lt__', x, 0) ? 1 - EPSILON / 2 :
                                                    1 + EPSILON
-        var y = $B.rich_op("mul", x , factor)
+        var y = $B.rich_op("__mul__", x , factor)
         if(y == x){
             y = MIN_VALUE * EPSILON > 0 ?
-                    $B.rich_op('add', x, MIN_VALUE * EPSILON) :
-                    $B.rich_op('add', x, MIN_VALUE)
+                    $B.rich_op('__add__', x, MIN_VALUE * EPSILON) :
+                    $B.rich_op('__add__', x, MIN_VALUE)
         }
         if(y === +1 / 0){
             y = +MAX_VALUE
         }
-        var y_minus_x = $B.rich_op('sub', y, x)
-        var z = $B.rich_op('truediv', y_minus_x, 2) // (y - x) / 2
+        var y_minus_x = $B.rich_op('__sub__', y, x)
+        var z = $B.rich_op('__truediv__', y_minus_x, 2) // (y - x) / 2
 
-        var b = $B.rich_op('add', x, z)
+        var b = $B.rich_op('__add__', x, z)
         if($B.rich_comp('__lt__', x, b) && $B.rich_comp('__lt__', b, y)){
             y = b;
         }
-        var c = $B.rich_op('truediv', $B.rich_op('add', y, x), 2)
+        var c = $B.rich_op('__truediv__', $B.rich_op('__add__', y, x), 2)
         if($B.rich_comp('__lt__', x, c) && $B.rich_comp('__lt__', c, y)){
             y = c;
         }
@@ -101,11 +101,11 @@ function gcd2(a, b){
         if(b == 0){
             return a
         }
-        a = $B.rich_op("mod", a, b)
+        a = $B.rich_op("__mod__", a, b)
         if(a == 0){
             return b
         }
-        b = $B.rich_op("mod", b, a)
+        b = $B.rich_op("__mod__", b, a)
     }
 }
 
@@ -707,7 +707,7 @@ var _mod = {
         // because this fails for Decimal instances, which do not support
         // multiplication by floats
 
-        var diff = $B.rich_op('sub', b, a),
+        var diff = $B.rich_op('__sub__', b, a),
             abs_diff = _b_.abs(diff)
         if($B.rich_comp("__le__", abs_diff, abs_tol)){
             return true
@@ -719,7 +719,7 @@ var _mod = {
             max_ab = abs_b
         }
         return $B.rich_comp("__le__",
-            $B.rich_op('truediv', abs_diff, max_ab),
+            $B.rich_op('__truediv__', abs_diff, max_ab),
             rel_tol)
     },
     isfinite: function(x){
@@ -1294,10 +1294,10 @@ var _mod = {
             return x > 0 ? nextUp(x) - x : x - (-nextUp(-x))
         }else{
             if($B.rich_comp('__gt__', x, 0)){
-                return $B.rich_op('sub', nextUp(x), x)
+                return $B.rich_op('__sub__', nextUp(x), x)
             }else{
                 var neg_x = $B.$call($B.$getattr(x, "__neg__"))()
-                return $B.rich_op('sub', x,
+                return $B.rich_op('__sub__', x,
                     $B.$call($B.$getattr(nextUp(neg_x), '__neg__'))())
             }
         }
