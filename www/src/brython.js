@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2021-12-31 11:24:38.345634"
-__BRYTHON__.timestamp=1640946278345
+__BRYTHON__.compiled_date="2022-01-02 11:33:24.085650"
+__BRYTHON__.timestamp=1641119604085
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3221,8 +3221,7 @@ if(this.parent.type=='call'){return this.parent.parent}
 return this.parent}
 $_SyntaxError(C,'token '+token+'after gen expr')}
 GeneratorExpCtx.prototype.to_js=function(){var node=$get_node(this),indent=node.get_indent()
-var id=this.id,expr=this.tree[0],first_for=this.tree[1]
-outmost_expr=first_for.tree[1].to_js()
+var id=this.id,expr=this.tree[0],first_for=this.tree[1],outmost_expr=first_for.tree[1].to_js()
 first_for.comp_body=true
 first_for.iterable_is_outermost=true
 var module_id=this.module.replace(/\./g,'_')

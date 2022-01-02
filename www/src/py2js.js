@@ -6007,7 +6007,7 @@ GeneratorExpCtx.prototype.to_js = function(){
 
     var id = this.id,
         expr = this.tree[0],
-        first_for = this.tree[1]
+        first_for = this.tree[1],
         outmost_expr = first_for.tree[1].to_js()
     first_for.comp_body = true
     first_for.iterable_is_outermost = true

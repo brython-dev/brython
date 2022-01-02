@@ -3015,6 +3015,14 @@ foo(constructor=True)
 # issue 1854
 assert 0 != int
 
+# issue 1857
+lines = ["789/",
+         "456*",
+         "123-",
+         "0.=+"]
+
+((x for x in line) for line in lines)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
