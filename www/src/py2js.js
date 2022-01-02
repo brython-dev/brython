@@ -5294,11 +5294,19 @@ function tg_to_js(target, iterable, unpack){
     }else{
         var new_id = $B.UUID(),
             nb_targets = target.items.length,
-            has_starred = !! $B.last(target.items).starred
+            has_starred = false,
+            nb_after_starred
+        for(var i = 0, len = target.items.length; i < len; i++){
+            if(target.items[i].starred){
+                has_starred = true
+                nb_after_starred = len - i - 1
+                break
+            }
+        }
         var nxt = unpack ? `${iterable}.read_one()` : iterable
 
         var js = `try{\n var $next_${new_id} = $B.unpacker(${nxt}, ` +
-                 `${nb_targets}, ${has_starred})\n}` +
+                 `${nb_targets}, ${has_starred}, ${nb_after_starred})\n}` +
                  `catch(err){\n console.log("erreur");$B.leave_frame($locals); throw err\n}\n`
         for(var item of target.items){
             js += tg_to_js(item, `$next_${new_id}`, true)

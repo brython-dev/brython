@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-02 21:57:27.438589"
-__BRYTHON__.timestamp=1641157047438
+__BRYTHON__.compiled_date="2022-01-02 22:16:34.970754"
+__BRYTHON__.timestamp=1641158194970
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -2909,10 +2909,13 @@ break
 default:
 console.log('-- unexpected target type',item.type,item)
 break}
-if(assign){return assign+'\n'}}else{var new_id=$B.UUID(),nb_targets=target.items.length,has_starred=!! $B.last(target.items).starred
+if(assign){return assign+'\n'}}else{var new_id=$B.UUID(),nb_targets=target.items.length,has_starred=false,nb_after_starred
+for(var i=0,len=target.items.length;i < len;i++){if(target.items[i].starred){has_starred=true
+nb_after_starred=len-i-1
+break}}
 var nxt=unpack ? `${iterable}.read_one()` :iterable
 var js=`try{\n var $next_${new_id} = $B.unpacker(${nxt}, `+
-`${nb_targets}, ${has_starred})\n}`+
+`${nb_targets}, ${has_starred}, ${nb_after_starred})\n}`+
 `catch(err){\n console.log("erreur");$B.leave_frame($locals); throw err\n}\n`
 for(var item of target.items){js+=tg_to_js(item,`$next_${new_id}`,true)}}
 return js+'\n'}
@@ -7337,7 +7340,7 @@ var res=obj.ix
 obj.ix+=iterator.step
 return res}}}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
-$B.unpacker=function(obj,nb_targets,has_starred,target){
+$B.unpacker=function(obj,nb_targets,has_starred,nb_after_starred){
 var t=_b_.list.$factory(obj),len=t.length,min_len=has_starred ? len-1 :len
 if(len < min_len){throw _b_.ValueError.$factory(
 `not enough values to unpack (expected ${min_length}, got ${len})`)}
@@ -7348,7 +7351,9 @@ t.index=-1
 t.read_one=function(){t.index++
 return t[t.index]}
 t.read_rest=function(){t.index++
-return t.slice(t.index)}
+var res=t.slice(t.index,t.length-nb_after_starred)
+t.index=t.length-nb_after_starred-1
+return res}
 return t}
 $B.rest_iter=function(next_func){
 var res=[]

@@ -308,7 +308,7 @@ $B.next_of = function(iterator){
     return $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
 }
 
-$B.unpacker = function(obj, nb_targets, has_starred, target){
+$B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
     // Used in unpacking target of a "for" loop if it is a tuple or list
     var t = _b_.list.$factory(obj),
         len = t.length,
@@ -329,7 +329,9 @@ $B.unpacker = function(obj, nb_targets, has_starred, target){
     }
     t.read_rest = function(){
         t.index++
-        return t.slice(t.index)
+        var res = t.slice(t.index, t.length - nb_after_starred)
+        t.index = t.length - nb_after_starred - 1
+        return res
     }
     return t
 }
