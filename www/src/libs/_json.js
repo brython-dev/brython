@@ -432,7 +432,7 @@ function List(parent){
 List.prototype.transition = function(token){
     if(this.expect == 'item'){
         this.expect = ','
-        if([true, false].indexOf(token) > -1){
+        if([true, false, _b_.None].indexOf(token) > -1){
             this.items.push(token)
             return this
         }else if(token.type == 'num' || token.type == 'str'){
@@ -478,6 +478,9 @@ function parse(s){
       try{
           node = node.transition(token)
       }catch(err){
+          console.log('error, item', item)
+          console.log(err, err.message)
+          console.log('n,ode', node)
           if(err.__class__){
               throw err
           }else{

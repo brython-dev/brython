@@ -45,4 +45,7 @@ d = {'command': 'settest setting_test_channel', 'kwargs': {}, 'guild_id': 771732
 
 assert json.dumps(d) == '{"command": "settest setting_test_channel", "kwargs": {}, "guild_id": 771732762503544801, "channel_id": "773488498518786077", "user_id": 634763612535390200, "category": "guild"}'
 
+# issue 1858
+assert json.loads("[0, null]") == [0, None]
+
 print('all tests ok..')
