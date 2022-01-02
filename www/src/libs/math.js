@@ -489,10 +489,8 @@ var _mod = {
         $B.check_no_kw('factorial', x)
 
         if(x instanceof Number || _b_.isinstance(x, _b_.float)){
-            var warning = _b_.DeprecationWarning.$factory(
-                "Using factorial() with floats is deprecated")
-            // module _warning is in builtin_modules.js
-            $B.imported._warnings.warn(warning)
+            throw _b_.TypeError.$factory("'float' object cannot be " +
+                "interpreted as an integer")
          }
 
         if(! _b_.isinstance(x, [_b_.float, _b_.int])){

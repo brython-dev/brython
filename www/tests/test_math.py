@@ -36,7 +36,8 @@ assert math.factorial(0) == 1
 assert math.factorial(1) == 1
 assert math.factorial(2) == 2
 assert math.factorial(5) == 120
-assert math.factorial(5.) == 120
+# issue 1856
+assertRaises(TypeError, math.factorial, 5.)
 
 assert almost_equal(math.acosh(1), 0)
 
