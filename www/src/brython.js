@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-02 22:16:34.970754"
-__BRYTHON__.timestamp=1641158194970
+__BRYTHON__.compiled_date="2022-01-03 08:49:20.294102"
+__BRYTHON__.timestamp=1641196160294
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7279,7 +7279,7 @@ if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
 if(slots[key]===undefined){
 if(extra_kw_args){
 extra_kw.$string_dict[key]=[value,extra_kw.$order++]}else{throw _b_.TypeError.$factory(fname+
-"() got an unexpected keyword argument '"+key+"'")}}else if(slots[key]!==null){
+"() got an unexpected keyword argument '"+key+"'")}}else if(slots.hasOwnProperty(key)&& slots[key]!==null){
 if(key==extra_pos_args){throw _b_.TypeError.$factory(
 `${fname}() got an unexpected `+
 `keyword argument '${key}'`)}
@@ -13956,7 +13956,7 @@ return $B.GenericAlias.$factory(cls,item)}
 dict.__contains__=function(){var $=$B.args("__contains__",2,{self:null,key:null},["self","key"],arguments,{},null,null),self=$.self,key=$.key
 if(self.$jsobj){return self.$jsobj[key]!==undefined}
 switch(typeof key){case "string":
-return self.$string_dict[key]!==undefined
+return self.$string_dict.hasOwnProperty(key)
 case "number":
 return self.$numeric_dict[key]!==undefined}
 var hash=_b_.hash(key)
@@ -14141,7 +14141,7 @@ return $N}
 if(key instanceof String){key=key.valueOf()}
 switch(typeof key){case "string":
 if(self.$string_dict===undefined){console.log("pas de string dict",self,key,value)}
-if(self.$string_dict[key]!==undefined){self.$string_dict[key][0]=value}else{self.$string_dict[key]=[value,self.$order++]
+if(self.$string_dict.hasOwnProperty(key)){self.$string_dict[key][0]=value}else{self.$string_dict[key]=[value,self.$order++]
 self.$str_hash[str_hash(key)]=key
 self.$version++}
 return $N

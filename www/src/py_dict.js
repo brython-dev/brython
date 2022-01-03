@@ -288,7 +288,7 @@ dict.__contains__ = function(){
 
     switch(typeof key) {
         case "string":
-            return self.$string_dict[key] !== undefined
+            return self.$string_dict.hasOwnProperty(key)
         case "number":
             return self.$numeric_dict[key] !== undefined
     }
@@ -799,7 +799,7 @@ dict.$setitem = function(self, key, value, $hash){
             if(self.$string_dict === undefined){
                 console.log("pas de string dict", self, key, value)
             }
-            if(self.$string_dict[key] !== undefined){
+            if(self.$string_dict.hasOwnProperty(key)){
                 self.$string_dict[key][0] = value
             }else{
                 self.$string_dict[key] = [value, self.$order++]

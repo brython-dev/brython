@@ -75,4 +75,11 @@ assert Property.count == 2
 
 p = Person('dan', 15)
 
+# issue 1859
+@dataclass
+class C:
+    constructor: bool = False
+
+assert str(C(constructor=False)) == "C(constructor=False)"
+
 print('passed all tests...')

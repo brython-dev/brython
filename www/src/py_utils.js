@@ -151,7 +151,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                     throw _b_.TypeError.$factory(fname +
                         "() got an unexpected keyword argument '" + key + "'")
                 }
-            }else if(slots[key] !== null){
+            }else if(slots.hasOwnProperty(key) && slots[key] !== null){
                 // The slot is already filled
                 if(key == extra_pos_args){
                     throw _b_.TypeError.$factory(

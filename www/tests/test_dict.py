@@ -79,7 +79,7 @@ try:
     raise AssertionError('should have raised ValueError')
 except ValueError:
     pass
-    
+
 # issue 994
 d = {False: "Test", True: "Test2"}
 assert d[False] == "Test"
@@ -202,5 +202,8 @@ assert str(d) == "{'a': 1, 1: 4, 'b': 3}"
 
 d = {'a': 1, True: 2, 'b': 3, 1: 4}
 assert str(d) == "{'a': 1, True: 4, 'b': 3}"
+
+# issue 1859
+assert 'constructor' not in {}
 
 print("passed all tests..")
