@@ -105,4 +105,10 @@ assert f'[{"Text:":10}]' == '[Text:     ]'
 
 x = 45
 assert f'{x}' 'b' == '45b'
+
+# issue 1863
+a = 2
+s = f'foo { a }'
+assert s == 'foo 2'
+
 print("passed all tests")

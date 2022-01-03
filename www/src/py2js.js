@@ -7110,7 +7110,7 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
             root.binding = $B.clone(this.scope.binding)
 
             try{
-                dispatch_tokens(root, src)
+                dispatch_tokens(root, src.trimStart())
             }catch(err){
                 err.args[1][1] += line_num - 1
                 var line_start = save_pos,

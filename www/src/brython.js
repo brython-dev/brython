@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-03 08:49:20.294102"
-__BRYTHON__.timestamp=1641196160294
+__BRYTHON__.compiled_date="2022-01-03 22:25:02.732888"
+__BRYTHON__.timestamp=1641245102732
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3661,7 +3661,7 @@ value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefin
 this.tree.pop()}
 var src=value.expression,save_pos=$pos,root=$create_root_node({src},this.scope.module,this.scope.id,this.scope.parent_block,line_num)
 root.binding=$B.clone(this.scope.binding)
-try{dispatch_tokens(root,src)}catch(err){err.args[1][1]+=line_num-1
+try{dispatch_tokens(root,src.trimStart())}catch(err){err.args[1][1]+=line_num-1
 var line_start=save_pos,source=$get_module(this).src
 while(line_start--> 0 && source[line_start]!='\n'){}
 err.args[1][2]+=value.start+save_pos-line_start
