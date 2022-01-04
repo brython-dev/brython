@@ -826,6 +826,11 @@ DOMNode.__getattribute__ = function(self, attr){
     if(res !== undefined){
         if(res === null){return _b_.None}
         if(typeof res === "function"){
+            if(res.$is_func){
+                // If the attribute was set in __setattr__ (elt.foo = func),
+                // then getattr(elt, "foo") must be "func"
+                return res
+            }
             // If elt[attr] is a function, it is converted in another function
             // that produces a Python error message in case of failure.
             var func = (function(f, elt){
@@ -874,6 +879,7 @@ DOMNode.__getattribute__ = function(self, attr){
             })(res, self)
             func.$infos = {__name__ : attr, __qualname__: attr}
             func.$is_func = true
+            func.$python_function = res
             return func
         }
         if(attr == 'options'){return Options.$factory(self)}

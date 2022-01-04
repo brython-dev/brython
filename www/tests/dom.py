@@ -128,3 +128,10 @@ assert set(d.attrs.values()) == {
     'mydiv'
 }
 assert "id" in d.attrs
+
+# set function as attribute
+def func():
+    pass
+
+element.foo = func
+assert element.foo == func
