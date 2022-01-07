@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-04 17:51:53.705777"
-__BRYTHON__.timestamp=1641315113705
+__BRYTHON__.compiled_date="2022-01-07 14:35:45.073183"
+__BRYTHON__.timestamp=1641562545073
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -442,7 +442,7 @@ var child_ast=ast_or_obj(ctx)
 if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)}
 body.push(child_ast)}
 return body}
-function ast_dump(tree,indent){indent=indent ||0
+var ast_dump=$B.ast_dump=function(tree,indent){indent=indent ||0
 if(tree===_b_.None){
 return 'None'}else if(typeof tree=='string'){return `'${tree}'`}else if(typeof tree=='number'){return tree+''}else if(tree.imaginary){return tree.value+'j'}else if(Array.isArray(tree)){if(tree.length==0){return '[]'}
 res='[\n'
@@ -1963,6 +1963,8 @@ case '(':
 if(C.name==null){$_SyntaxError(C,"missing name in function definition")}
 C.has_args=true;
 return new $FuncArgs(C)
+case ')':
+return C
 case 'annotation':
 return new $AbstractExprCtx(new $AnnotationCtx(C),true)
 case ':':
@@ -3116,7 +3118,7 @@ check()
 var last=$B.last(C.tree)
 if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
 $_SyntaxError(C,['named arguments must follow bare *'])}else{$_SyntaxError(C,'invalid syntax')}}}
-return C.parent
+return $transition(C.parent,token,value)
 case 'op':
 if(C.has_kw_arg){$_SyntaxError(C,'duplicate keyword argument')}
 var op=value
@@ -6335,8 +6337,11 @@ if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root,src)
-if($B.produce_ast){var ast=ast_dump(root.ast())
-if($B.produce_ast==2){console.log(ast)}}
+if($B.produce_ast){var _ast=root.ast()
+if($B.produce_ast==2){console.log(ast_dump(_ast))}
+if($B.js_from_ast){var js_from_ast=$B.js_from_root(_ast,locals_id)
+console.log($B.format_indent(js_from_ast,0))
+if(locals_id=='js_from_ast'){return{to_js:function(){return js_from_ast}}}}}
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js='var $B = __BRYTHON__,\n'+

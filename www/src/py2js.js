@@ -169,7 +169,7 @@ if($B.ast_classes){
         return body
     }
 
-    function ast_dump(tree, indent){
+    var ast_dump = $B.ast_dump = function(tree, indent){
         indent = indent || 0
         if(tree === _b_.None){
             // happens in dictionary keys for **kw
@@ -246,6 +246,7 @@ if($B.ast_classes){
         res  += ')'
         return res
     }
+
 }
 
 function ast_or_obj(obj){
@@ -3396,6 +3397,8 @@ $DefCtx.prototype.transition = function(token, value){
             }
             context.has_args = true;
             return new $FuncArgs(context)
+        case ')':
+            return context
         case 'annotation':
             return new $AbstractExprCtx(new $AnnotationCtx(context), true)
         case ':':
@@ -5768,7 +5771,7 @@ $FuncArgs.prototype.transition = function(token, value){
                     }
                 }
             }
-            return context.parent
+            return $transition(context.parent, token, value)
         case 'op':
             if(context.has_kw_arg){
                 $_SyntaxError(context, 'duplicate keyword argument')
@@ -12878,9 +12881,16 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     dispatch_tokens(root, src)
     if($B.produce_ast){
-        var ast = ast_dump(root.ast())
+        var _ast = root.ast()
         if($B.produce_ast == 2){
-            console.log(ast)
+            console.log(ast_dump(_ast))
+        }
+        if($B.js_from_ast){
+            var js_from_ast = $B.js_from_root(_ast, locals_id)
+            console.log($B.format_indent(js_from_ast, 0))
+            if(locals_id == 'js_from_ast'){
+                return {to_js: function(){return js_from_ast}}
+            }
         }
     }
     if(ix != undefined){
