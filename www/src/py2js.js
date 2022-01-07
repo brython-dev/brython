@@ -8361,7 +8361,8 @@ $NumberCtx.prototype.to_js = function(){
         }
         return '_b_.float.$factory(' + value + ')'
     }else if(type == "imaginary"){
-        return '$B.make_complex(0,' + value + ')'
+        return '$B.make_complex(0,' +
+            $NumberCtx.prototype.to_js.bind(value)() + ')'
     }
 }
 
@@ -9520,8 +9521,9 @@ $PatternLiteralCtx.prototype.to_js = function(){
                 res = (first.sign == '-' ? '-' : '') + first.value
                 break
             case 'imaginary':
+                var v = $NumberCtx.prototype.to_js.bind(first.value)()
                 res += '$B.make_complex(0, ' +
-                    (first.sign == '-' ? '-' : '') + first.value + ')'
+                    (first.sign == '-' ? '-' : '') + v + ')'
                 if(first.value == 0){
                     num_value = 0
                 }
@@ -9529,9 +9531,9 @@ $PatternLiteralCtx.prototype.to_js = function(){
         }
     }
     if(this.tree.length > 1){
+        var v = $NumberCtx.prototype.to_js.bind(this.tree[2].value)()
         res = '$B.make_complex(' + res + ',' +
-            (this.tree[1] == '-' ? '-' : '') +
-            this.tree[2].value + ')'
+            (this.tree[1] == '-' ? '-' : '') + v + ')'
     }
     this.js_value = res
     this.num_value = num_value === undefined ? res : num_value
@@ -12168,7 +12170,8 @@ function prepare_number(n){
     n = n.replace(/_/g, "")
     if(n.startsWith('.')){
         if(n.endsWith("j")){
-            return {type: 'imaginary', value: n.substr(0, n.length - 1)}
+            return {type: 'imaginary',
+                value: prepare_number(n.substr(0, n.length - 1))}
         }else{
             return {type: 'float', value: n}
         }
@@ -12178,7 +12181,7 @@ function prepare_number(n){
         var num = test_num(n),
             base
         if(num.imaginary){
-            return {type: 'imaginary', value: num.value}
+            return {type: 'imaginary', value: prepare_number(num.value)}
         }
         if(num.subtype == 'float'){
             return {type: num.subtype, value: num.value}
@@ -12194,14 +12197,28 @@ function prepare_number(n){
     }else{
         var num = test_num(n)
         if(num.subtype == "float"){
-           return {
-               type: num.imaginary ? 'imaginary' : 'float',
-               value: num.value
+            if(num.imaginary){
+                return {
+                    type: 'imaginary',
+                    value: prepare_number(num.value)
+                }
+            }else{
+               return {
+                   type: 'float',
+                   value: num.value
+               }
            }
         }else{
-            return {
-               type: num.imaginary ? 'imaginary' : 'int',
-               value: num.imaginary ? num.value : [10, num.value]
+            if(num.imaginary){
+                return {
+                    type: 'imaginary',
+                    value: prepare_number(num.value)
+                }
+            }else{
+                return {
+                   type: 'int',
+                   value: [10, num.value]
+               }
            }
        }
     }
