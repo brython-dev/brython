@@ -1,4 +1,7 @@
 (function($B){
+
+var _b_ = $B.builtins
+
 function Scope(name){
     this.name = name
     this.locals = new Set()
@@ -24,6 +27,23 @@ $B.resolve = function(name){
     throw $B.name_error(name)
 }
 
+
+var $operators = $B.op2method.subset("all") // in py2js.js
+
+// Map operator class names to dunder method names
+var opclass2dunder = {}
+
+for(var op_type of $B.op_types){ // in py_ast.js
+    for(var operator in op_type){
+        opclass2dunder[op_type[operator]] = '__' + $operators[operator] + '__'
+    }
+}
+opclass2dunder['UAdd'] = '__pos__'
+opclass2dunder['USub'] = '__neg__'
+opclass2dunder['Invert'] = '__invert__'
+
+console.log('opclass 2 dunder', opclass2dunder)
+
 var builtins_scope = new Scope("__builtins__")
 for(var name in $B.builtins){
     builtins_scope.locals.add(name)
@@ -38,6 +58,14 @@ function add_body(body, scopes){
         }
     }
     return res
+}
+
+$B.ast.Assert.prototype.to_js = function(scopes){
+    var test = $B.js_from_ast(this.test, scopes),
+        msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
+    return `if(!$B.$bool(${test})){
+    throw _b_.AssertionError.$factory(${msg})
+  }`
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
@@ -58,7 +86,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 }
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
-    var op = '__' + this.op.constructor.$name.toLowerCase() + '__'
+    var op = opclass2dunder[this.op.constructor.$name]
     return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
         `${$B.js_from_ast(this.right, scopes)})`
 }
@@ -73,14 +101,49 @@ $B.ast.Call.prototype.to_js = function(scopes){
     return js
 }
 
-$B.ast.Constant.prototype.to_js = function(scopes){
-    var js = $B.AST.$convert(this.value) // in builtin_modules.js
-    if(typeof js == "string"){
-        js = js.replace("'", "\\'")
-        var lines = js.split('\n')
-        return "'" + lines.join('\\\n') + "'\n"
+$B.ast.Compare.prototype.to_js = function(scopes){
+    var left = $B.js_from_ast(this.left, scopes),
+        comps = []
+    for(var i = 0, len = this.ops.length; i < len; i++){
+        var op = opclass2dunder[this.ops[i].constructor.$name],
+            right = this.comparators[i]
+        comps.push(`$B.rich_comp('${op}', ${left}, ` +
+            `locals.$op = ${$B.js_from_ast(right, scopes)})`)
+        left = 'locals.$op'
     }
-    return js
+    return comps.join(' && ')
+}
+
+$B.ast.Constant.prototype.to_js = function(scopes){
+    console.log('constant', this.value)
+    var type = this.value.type,
+        value = this.value.value
+    switch(type){
+        case 'int':
+            var v = parseInt(value[1], value[0])
+            if(v > $B.min_int && v < $B.max_int){
+                return v
+            }else{
+                var v = $B.long_int.$factory(value[1], value[0])
+                return '$B.fast_long_int("' + v.value + '", ' + v.pos + ')'
+            }
+        case 'float':
+            // number literal
+            if(/^\d+$/.exec(value) || /^\d+\.\d*$/.exec(value)){
+                return '(new Number(' + value + '))'
+            }
+            return '_b_.float.$factory(' + value + ')'
+        case 'imaginary':
+            var img = new $B.ast.Constant(value)
+            return `$B.make_complex(0, $B.$call(_b_.float)(${img.to_js()}))`
+        case 'ellipisis':
+            return `_b_.Ellipsis`
+        case 'str':
+            js = js.replace("'", "\\'")
+            var lines = js.split('\n')
+            return "'" + lines.join('\\\n') + "'"
+    }
+    return '// inconnu'
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
@@ -134,7 +197,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.vararg ? `'${this.args.vararg.arg}', ` : 'null, ') +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${local_name} = locals = $B.args(${parse_args.join(', ')})\n`
-    js += `var $top_frame = ["${name}", locals, "${gname}", globals]
+    js += `var $top_frame = ["${name}", locals, "${gname}", locals_${gname}]
     locals.$f_trace = $B.enter_frame($top_frame)\n`
     if(is_generator){
         js += `locals.$is_generator = true\n`
@@ -198,21 +261,21 @@ $B.ast.Module.prototype.to_js = function(module_id){
     var js = `var $B = __BRYTHON__,
                   _b_ = $B.builtins,
                   ${global_name} = {},
-                  globals = ${global_name},
-                  $top_frame = ["${module_id}", globals, ` +
-              `"${module_id}", globals]
-    globals.$f_trace = $B.enter_frame($top_frame)
+                  locals = ${global_name},
+                  $top_frame = ["${module_id}", locals, ` +
+              `"${module_id}", locals]
+    locals.$f_trace = $B.enter_frame($top_frame)
     try{\n`
 
     js += add_body(this.body, scopes)
 
-    js += `$B.leave_frame(globals)
+    js += `$B.leave_frame(locals)
     }catch(err){
     $B.set_exc(err)
-    if((! err.$in_trace_func) && globals.$f_trace !== _b_.None){
-    globals.$f_trace = $B.trace_exception()
+    if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){
+    locals.$f_trace = $B.trace_exception()
     }
-    $B.leave_frame(globals);throw err
+    $B.leave_frame(locals);throw err
     }`
 
     scopes.pop()
@@ -243,7 +306,6 @@ $B.ast.Name.prototype.to_js = function(scopes){
 }
 
 $B.ast.Return.prototype.to_js = function(scopes){
-    console.log('return', this)
     var js = 'var result = ' + (this.value ? $B.js_from_ast(this.value, scopes) :
                                             ' _b_.None')
     js += `\nif(locals.$f_trace !== _b_.None){
@@ -252,6 +314,20 @@ $B.ast.Return.prototype.to_js = function(scopes){
     $B.leave_frame(locals);return result
     `
     return js
+}
+
+$B.ast.UnaryOp.prototype.to_js = function(scopes){
+    var operand = $B.js_from_ast(this.operand, scopes)
+    console.log('unary', this, 'operand', operand, _b_.str.$factory(operand))
+    if(typeof operand == "number" || operand instanceof Number){
+        if(this.op instanceof $B.ast.UAdd){
+            return operand + ''
+        }else if(this.op instanceof $B.ast.USub){
+            return -operand + ''
+        }
+    }
+    var method = opclass2dunder[this.op.constructor.$name]
+    return `$B.$getattr(${operand}, '${method}')()`
 }
 
 $B.ast.Yield.prototype.to_js = function(scopes){

@@ -136,7 +136,7 @@ var comparison_ops = {
 
 var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
 
-var op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
+var op_types = $B.op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
 
 var _b_ = $B.builtins
 
