@@ -1,5 +1,8 @@
 from . import html, window, console, document
-from .widgets import dialog, menu
+
+
+class UIError(Exception):
+    pass
 
 
 class Border:
@@ -146,6 +149,7 @@ class Widget:
 
         for attr in ['width', 'height', 'top', 'left']:
             if (value := kw.get(attr)):
+
                 match value:
                     case str():
                         setattr(element.style, attr, value)
@@ -243,22 +247,22 @@ class Widget:
         return _Coords(parent.offsetLeft, parent.offsetTop, parent.offsetWidth,
             parent.offsetHeight)
 
-    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align=''):
+    def grid(self, column=None, columnspan=1, row=None, rowspan=1, align='',
+            **options):
         master = self.master
         if isinstance(master, Document):
             master = document
         if not hasattr(master, '_table'):
             master._table = html.TABLE(
-                #border=1,
                 cellpadding=0,
                 cellspacing=0,
-                style='width:100%;height:100%;')
+                style='width:100%;height:100%;table-layout:fixed;')
             master <= master._table
             if row == 'same':
                 row = 0
 
         master.table = _Wrapper(master._table)
-        
+
         if not hasattr(master, 'cells'):
             master.cells = set()
 
@@ -299,7 +303,7 @@ class Widget:
 
         cols_to_add = nb_cols + len(cols_from_span)
         for i in range(column - cols_to_add + 1):
-            tr <= html.TD()
+            tr <= html.TD(style="overflow:hidden;")
 
         td = tr.cells[column - len(cols_from_span)]
 
@@ -348,6 +352,9 @@ class Widget:
         self.row = row
         self.column = column
         self.cell = _Wrapper(td)
+
+        self.cell.config(**options)
+
         self.row = _Wrapper(tr)
         if isinstance(self, Text):
             self.dw = self.parentNode.offsetWidth - self.offsetWidth
@@ -430,7 +437,7 @@ class Box(html.DIV, Widget):
         'font': Font(family='sans-serif', size=12)
     }
 
-    def __init__(self, title="", container=document, titlebar=True, **options):
+    def __init__(self, title="", container=document, titlebar=False, **options):
         html.DIV.__init__(self,
             style="position:absolute;box-sizing:border-box")
 
@@ -454,6 +461,9 @@ class Box(html.DIV, Widget):
             self.title_bar.bind("touchend", self._stop_moving)
             self.bind("leave", self._stop_moving)
             self.is_moving = False
+
+        elif title:
+            raise UIError('cannot set title if titlebar is not set')
 
     def add(self, widget, **kw):
         if hasattr(self, 'panel'):
@@ -578,7 +588,8 @@ class Image(html.IMG, Widget):
 class Label(html.DIV, Widget):
 
     default_style = {
-        'whiteSpace': 'pre'
+        'whiteSpace': 'pre',
+        'padding': '0.3em'
     }
 
     def __init__(self, value, *args, **options):
@@ -858,9 +869,9 @@ class TitleBar(html.DIV, Widget):
         self._options = self.default_config | options
         super().__init__('', *args)
 
-        self.add(Label(title, padding=Padding(5)))
+        self.add(Label(title))
         self.close_button = Button("&#9587;",
-            margin=Margin(0, 0, 0, 20),
+            padding=Padding(bottom=10),
             background="inherit",
             border=Border(width=0))
 

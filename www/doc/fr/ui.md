@@ -22,16 +22,13 @@ par la classe `ui.Box`:
 ```python
 from browser import ui
 
-container = ui.Box(title="Essai")
+container = ui.Box()
 element = ui.Label("Coucou")
 container.add(element)
 ```
 
-Par défaut, une boite possède une barre de menu, dont le titre est défini par
-l'argument _title_.
-
-La boite est insérée dans un conteneur, qui est le document par défaut,
-mais qui peut être spécifié par l'argument _container_:
+La boite est elle-même insérée dans un conteneur, qui est le document par
+défaut, mais qui peut être spécifié par l'argument _container_:
 
 <table>
 <tr>
@@ -39,8 +36,7 @@ mais qui peut être spécifié par l'argument _container_:
 ```exec
 from browser import document, ui
 
-root = ui.Box(container=document["example-box-container"],
-              title="Essai")
+root = ui.Box(container=document["example-box-container"])
 root.add(ui.Label("Coucou"))
 ```
 </td>
@@ -63,8 +59,7 @@ de l'élément précédent.
 ```exec
 from browser import document, ui
 
-root = ui.Box(container=document["example-add-1"],
-              title="Essai")
+root = ui.Box(container=document["example-add-1"])
 root.add(ui.Label("Un"))
 root.add(ui.Label("Deux"))
 ```
@@ -84,57 +79,13 @@ _row="next"_.
 ```exec
 from browser import document, ui
 
-root = ui.Box(container=document["example-add-2"],
-              title="Essai")
+root = ui.Box(container=document["example-add-2"])
 root.add(ui.Label("Un"))
 root.add(ui.Label("Deux"), row='next')
 ```
 </td>
 <td id="example-add-2" valign="top" style="padding-left:3em;">
 <i style="font-size:0.7em">example-add-2</i>
-</td>
-</tr>
-</table>
-
-Si l'option _titlebar_ est désactivée, la boite ne contient pas de barre
-de titre (et ne peut donc pas être déplacée par glisser-déposer):
-
-<table>
-<tr>
-<td width="50%">
-```exec
-from browser import document, ui
-
-root = ui.Box(container=document["example-no-titlebar"],
-              titlebar=None)
-root.add(ui.Label("Un"))
-root.add(ui.Label("Deux"), row='next')
-```
-</td>
-<td id="example-no-titlebar" valign="top" style="padding-left:3em;">
-<i style="font-size:0.7em">example-no-titlebar</i>
-</td>
-</tr>
-</table>
-
-Dans les exemples précédents, les éléments sont "collés" aux bords de la
-boite. Pour les décaler, on utilise l'argument _margin_, qui sous sa forme la
-plus simple prend comme valeur un entier indiquand le nombre de pixels à
-laisser entre le bord de la cellule et l'élément:
-
-<table>
-<tr>
-<td width="50%">
-```exec
-from browser import document, ui
-
-root = ui.Box(container=document["example-margin"],
-              titlebar=None)
-root.add(ui.Label("texte avec marge", margin=5))
-```
-</td>
-<td id="example-margin" valign="top" style="padding-left:3em;">
-<i style="font-size:0.7em">example-margin</i>
 </td>
 </tr>
 </table>
@@ -149,9 +100,9 @@ qui peut prendre comme valeur un nom de couleur en anglais:
 from browser import document, ui
 
 root = ui.Box(container=document["example-background-1"],
-              titlebar=None,
               background='yellow')
-root.add(ui.Label("texte avec marge", margin=5))
+root.add(ui.Label("gauche"))
+root.add(ui.Label("droite"))
 ```
 </td>
 <td id="example-background-1" valign="top" style="padding-left:3em;">
@@ -160,8 +111,8 @@ root.add(ui.Label("texte avec marge", margin=5))
 </tr>
 </table>
 
-On peut également spécifier la couleur du `Label` par _background_, et la
-couleur du texte par _color_:
+On peut également spécifier la couleur de chaque `Label` par _background_, et
+la couleur du texte par _color_:
 
 <table>
 <tr>
@@ -169,13 +120,9 @@ couleur du texte par _color_:
 ```exec
 from browser import document, ui
 
-root = ui.Box(container=document["example-background-2"],
-              titlebar=None,
-              background='yellow')
-root.add(ui.Label("texte avec marge",
-                  margin=5,
-                  background='green',
-                  color='white'))
+root = ui.Box(container=document["example-background-2"])
+root.add(ui.Label("gauche", background="red", color="white"))
+root.add(ui.Label("droite", background="blue", color="yellow"))
 ```
 </td>
 <td id="example-background-2" valign="top" style="padding-left:3em;">
@@ -183,41 +130,6 @@ root.add(ui.Label("texte avec marge",
 </td>
 </tr>
 </table>
-
-Dans l'exemple précédent le texte est "collé" à l'intérieur du `Label`; pour
-laisser de l'espace autour, on utilise un autre argument, _padding_:
-
-<table>
-<tr>
-<td width="50%">
-```exec
-from browser import document, ui
-
-playground = document["example-margin-padding"]
-playground.clear()
-
-root = ui.Box(container=playground,
-              titlebar=None,
-              background='yellow')
-root.add(ui.Label("texte avec marge",
-                  margin=5,
-                  padding=8,
-                  background='green',
-                  color='white'))
-```
-</td>
-<td id="example-margin-padding" valign="top" style="padding-left:3em;">
-<i style="font-size:0.7em">example-margin-padding</i>
-</td>
-</tr>
-</table>
-
-Vous pouvez exécuter le script en donnant des valeurs différentes à _margin_
-et _padding_ pour bien enregistrer la différence :
-
-- _margin_ est l'espace entre le bord de la cellule du conteneur et le bord
-  de l'élément
-- _padding_ est la distance entre le bord de l'élément et son contenu
 
 
 ## Alignement des cellules
@@ -237,9 +149,9 @@ playground.clear()
 root = ui.Box(container=playground,
               titlebar=None)
 
-root.add(ui.Label("cellule verte", background='green', color='white'))
-root.add(ui.Label("cellule rouge", background='red', color='white'))
-root.add(ui.Label("je suis une cellule violette", background='purple',
+root.add(ui.Label("texte sur fond vert", background='green', color='white'))
+root.add(ui.Label("texte sur fond rouge", background='red', color='white'))
+root.add(ui.Label("je suis un texte sur fond violet", background='purple',
     color='white'), row='next')
 root.add(ui.Label("orange", background='orange', color='blue'))
 ```
@@ -265,13 +177,12 @@ from browser import document, ui
 playground = document["example-columnspan"]
 playground.clear()
 
-root = ui.Box(container=playground,
-              titlebar=None)
+root = ui.Box(container=playground)
 
-root.add(ui.Label("cellule verte", background="green", color="white"),
+root.add(ui.Label("texte sur fond vert", background="green", color="white"),
          columnspan=2,
          align="center")
-root.add(ui.Label("je suis une cellule violette", background="purple",
+root.add(ui.Label("je suis un texte sur fond violet", background="purple",
     color="white"), row='next')
 root.add(ui.Label("orange", background="orange", color="blue"))
 ```
@@ -293,13 +204,12 @@ from browser import document, ui
 playground = document["example-rowspan"]
 playground.clear()
 
-root = ui.Box(container=playground,
-              titlebar=None)
+root = ui.Box(container=playground)
 
-root.add(ui.Label("cellule verte", background="green", color="white"),
+root.add(ui.Label("texte sur fond vert", background="green", color="white"),
          columnspan=2,
          align="center")
-root.add(ui.Label("je suis une cellule violette", background="purple",
+root.add(ui.Label("je suis un texte sur fond violet", background="purple",
     color="white"), row='next', rowspan=2)
 root.add(ui.Label("orange", background="orange", color="blue"))
 root.add(ui.Label("jaune", background="yellow", color="blue"),
@@ -309,6 +219,40 @@ root.add(ui.Label("jaune", background="yellow", color="blue"),
 </td>
 <td id="example-rowspan" valign="top" style="padding-left:3em;">
 <i style="font-size:0.7em">example-rowspan</i>
+</td>
+</tr>
+</table>
+
+Dans ce dernier exemple, le texte sur fond violet est contenu dans une cellule
+sur fond blanc. Pour spécifier le style de la cellule elle-même, les arguments
+doivent être passés à *add()*:
+
+<table>
+<tr>
+<td width="50%">
+```exec_on_load
+from browser import document, ui
+
+playground = document["example-cell-background"]
+playground.clear()
+
+root = ui.Box(container=playground)
+
+root.add(ui.Label("texte sur fond vert", background="green", color="white"),
+         columnspan=2,
+         align="center")
+
+root.add(ui.Label("je suis un texte sur fond violet", color="white"),
+         row="next",
+         rowspan=2,
+         background="purple")
+root.add(ui.Label("orange", background="orange", color="blue"))
+root.add(ui.Label("jaune", background="yellow", color="blue"),
+         row='next')
+```
+</td>
+<td id="example-cell-background" valign="top" style="padding-left:3em;padding-top:3em;">
+<i style="font-size:0.7em">example-cell-background</i>
 </td>
 </tr>
 </table>
