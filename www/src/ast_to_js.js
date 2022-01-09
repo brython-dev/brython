@@ -42,8 +42,6 @@ opclass2dunder['UAdd'] = '__pos__'
 opclass2dunder['USub'] = '__neg__'
 opclass2dunder['Invert'] = '__invert__'
 
-console.log('opclass 2 dunder', opclass2dunder)
-
 var builtins_scope = new Scope("__builtins__")
 for(var name in $B.builtins){
     builtins_scope.locals.add(name)
@@ -63,9 +61,8 @@ function add_body(body, scopes){
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
-    return `if(!$B.$bool(${test})){
-    throw _b_.AssertionError.$factory(${msg})
-  }`
+    return `if(!$B.$bool(${test})){\n` +
+           `throw _b_.AssertionError.$factory(${msg})}\n`
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
@@ -115,14 +112,19 @@ $B.ast.Compare.prototype.to_js = function(scopes){
 }
 
 $B.ast.Constant.prototype.to_js = function(scopes){
-    console.log('constant', this.value)
+    if(this.value === true || this.value === false){
+        return this.value + ''
+    }else if(this.value === _b_.None){
+        return '_b_.None'
+    }
     var type = this.value.type,
         value = this.value.value
+
     switch(type){
         case 'int':
             var v = parseInt(value[1], value[0])
             if(v > $B.min_int && v < $B.max_int){
-                return v
+                return v + ''
             }else{
                 var v = $B.long_int.$factory(value[1], value[0])
                 return '$B.fast_long_int("' + v.value + '", ' + v.pos + ')'
@@ -134,8 +136,8 @@ $B.ast.Constant.prototype.to_js = function(scopes){
             }
             return '_b_.float.$factory(' + value + ')'
         case 'imaginary':
-            var img = new $B.ast.Constant(value)
-            return `$B.make_complex(0, $B.$call(_b_.float)(${img.to_js()}))`
+            var v = $B.ast.Constant.prototype.to_js.bind({value})(scopes)
+            return '$B.make_complex(0,' + v + ')'
         case 'ellipisis':
             return `_b_.Ellipsis`
         case 'str':
@@ -143,7 +145,8 @@ $B.ast.Constant.prototype.to_js = function(scopes){
             var lines = js.split('\n')
             return "'" + lines.join('\\\n') + "'"
     }
-    return '// inconnu'
+    console.log('unknown constant', this, value, value === true)
+    return '// unknown'
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
@@ -154,11 +157,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var func_scope = new Scope(this.name)
     scopes.push(func_scope)
 
-    // process body here to detect possible "yield"s
+    // process body first to detect possible "yield"s
     var function_body = add_body(this.body, scopes),
         is_generator = func_scope.is_generator
-
-    console.log('generator ?', is_generator)
 
     var _defaults = [],
         nb_defaults = this.args.defaults.length,
@@ -198,7 +199,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${local_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var $top_frame = ["${name}", locals, "${gname}", locals_${gname}]
-    locals.$f_trace = $B.enter_frame($top_frame)\n`
+    locals.$f_trace = $B.enter_frame($top_frame)
+    var stack_length = $B.frames_stack.length\n`
     if(is_generator){
         js += `locals.$is_generator = true\n`
     }
@@ -251,7 +253,42 @@ $B.ast.If.prototype.to_js = function(scopes){
     scopes.push(new_scope)
     var js = 'if($B.$bool(' + $B.js_from_ast(this.test, scopes) + ')){\n'
     js += add_body(this.body, scopes) + '}'
+    for(var orelse of this.orelse){
+        if(orelse instanceof $B.ast.If){
+            js += 'else ' + $B.js_from_ast(orelse, scopes)
+        }else{
+            js += 'else{\n' + $B.js_from_ast(orelse, scopes) + '}'
+        }
+    }
     scopes.pop()
+    return js
+}
+
+
+$B.ast.Import.prototype.to_js = function(scopes){
+    var js = ''
+    for(var alias of this.names){
+        js += `$B.$import("${alias.name}", [], `
+        if(alias.asname){
+            js += `{${alias.name} : "${alias.asname}"}, `
+        }else{
+            js += '{}, '
+        }
+        js += `locals, true)\n`
+    }
+    return js.trimRight()
+}
+
+$B.ast.ImportFrom.prototype.to_js = function(scopes){
+    var js = `var module = $B.$import("${this.module}",`
+    var names = this.names.map(x => `"${x.name}"`).join(', ')
+    js += `[${names}], {}, {}, true);`
+    for(var alias of this.names){
+        if(alias.asname){
+            js += `\nlocals.${alias.asname} = $B.$getattr(` +
+                `$.imported["${this.module}"], "${alias.name}")`
+        }
+    }
     return js
 }
 
@@ -265,6 +302,7 @@ $B.ast.Module.prototype.to_js = function(module_id){
                   $top_frame = ["${module_id}", locals, ` +
               `"${module_id}", locals]
     locals.$f_trace = $B.enter_frame($top_frame)
+    var stack_length = $B.frames_stack.length;
     try{\n`
 
     js += add_body(this.body, scopes)
@@ -306,19 +344,66 @@ $B.ast.Name.prototype.to_js = function(scopes){
 }
 
 $B.ast.Return.prototype.to_js = function(scopes){
-    var js = 'var result = ' + (this.value ? $B.js_from_ast(this.value, scopes) :
-                                            ' _b_.None')
-    js += `\nif(locals.$f_trace !== _b_.None){
-    $B.trace_return(_b_.None)
-    }
-    $B.leave_frame(locals);return result
-    `
+    var js = 'var result = ' +
+             (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
+    js += `\nif(locals.$f_trace !== _b_.None){\n` +
+          `$B.trace_return(_b_.None)\n}\n` +
+          `$B.leave_frame(locals)\nreturn result\n`
     return js
+}
+
+$B.ast.Try.prototype.to_js = function(scopes){
+    var js = 'try{\n'
+    js += add_body(this.body, scopes)
+    var id = $B.UUID(),
+        err = 'err' + id
+    js += `}catch(${err}){\n` +
+          `$B.set_exc(${err})\n` +
+          `if(locals.$f_trace !== _b_.None){\n` +
+          `locals.$f_trace = $B.trace_exception()}\n` +
+          `locals.$failed${id} = true\nif(false){\n`
+    if(this.handlers.length > 0){
+        for(var handler of this.handlers){
+            js += `}else if(locals.$line_info=""`
+            if(handler.type){
+                js += ` && $B.is_exc(${err}, `
+                if(handler.type instanceof $B.ast.Tuple){
+                    js += `${$B.js_from_ast(handler.type, scopes)}`
+                }else{
+                    js += `[${$B.js_from_ast(handler.type, scopes)}]`
+                }
+                js += `)){\n`
+            }else{
+                js += '){\n'
+            }
+            js += add_body(handler.body, scopes)
+        }
+    }
+    js += '}\n'
+    if(this.orelse.length > 0 || this.finalbody.length > 0){
+        js += '}finally{\n' +
+              'var exit\n' +
+              'if($B.frames_stack.length < stack_length){\n' +
+              'exit = true;'+
+              '$B.frames_stack.push($top_frame)}\n'
+        if(this.orelse.length > 0){
+            js += `if(! locals.failed${id}){\n`
+            js += add_body(this.orelse, scopes) + '}\n'
+        }
+        js += add_body(this.finalbody)
+        js += 'if(exit){\n$B.leave_frame({locals})\n}\n'
+    }
+    js += '}\n'
+    return js
+}
+
+$B.ast.Tuple.prototype.to_js = function(scopes){
+    var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
+    return '$B.fast_tuple([' + elts.join(', ') + '])'
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){
     var operand = $B.js_from_ast(this.operand, scopes)
-    console.log('unary', this, 'operand', operand, _b_.str.$factory(operand))
     if(typeof operand == "number" || operand instanceof Number){
         if(this.op instanceof $B.ast.UAdd){
             return operand + ''
@@ -337,15 +422,14 @@ $B.ast.Yield.prototype.to_js = function(scopes){
     }
     scopes[ix].is_generator = true
     var value = this.value ? $B.js_from_ast(this.value, scopes) : '_b_.None'
-    var js = `var result = ${value};
-        try{
-          $B.leave_frame({locals})
-          yield result;
-        }catch(err2){
-          $B.frames_stack.push($top_frame)
-          throw err2
-        }
-        $B.frames_stack.push($top_frame)\n`
+    var js = `var result = ${value}\n` +
+             `try{\n` +
+             `$B.leave_frame({locals})\n` +
+             `yield result\n` +
+             `}catch(err){\n` +
+             `$B.frames_stack.push($top_frame)\n` +
+             `throw err\n}\n` +
+             `$B.frames_stack.push($top_frame)\n`
 
     return js
 }
