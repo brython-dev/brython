@@ -66,16 +66,17 @@ $B.ast.Assert.prototype.to_js = function(scopes){
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
+    var js = `locals.$lineno = ${this.lineno}\n`
     if(this.targets.length == 1){
         var target = this.targets[0]
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
-            return $B.js_from_ast(target, scopes) + ' = ' +
+            return js + $B.js_from_ast(target, scopes) + ' = ' +
                 $B.js_from_ast(this.value, scopes)
         }
     }
-    var id = 'v' + $B.UUID(),
-        js = `var ${id} = ${$B.js_from_ast(this.value)}\n`
+    var id = 'v' + $B.UUID()
+    js += `var ${id} = ${$B.js_from_ast(this.value)}\n`
     for(var target of this.targets){
         js += $B.js_from_ast(target, scopes) + ` = ${id}\n`
     }
@@ -251,7 +252,8 @@ $B.ast.If.prototype.to_js = function(scopes){
     // scope.
     new_scope.parent = scope
     scopes.push(new_scope)
-    var js = 'if($B.$bool(' + $B.js_from_ast(this.test, scopes) + ')){\n'
+    var js = `if(locals.$line_info = ${this.lineno} && ` +
+        `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     js += add_body(this.body, scopes) + '}'
     for(var orelse of this.orelse){
         if(orelse instanceof $B.ast.If){
@@ -353,7 +355,7 @@ $B.ast.Return.prototype.to_js = function(scopes){
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
-    var js = 'try{\n'
+    var js = `locals.$lineno = ${this.lineno}\ntry{\n`
     js += add_body(this.body, scopes)
     var id = $B.UUID(),
         err = 'err' + id
@@ -364,7 +366,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
           `locals.$failed${id} = true\nif(false){\n`
     if(this.handlers.length > 0){
         for(var handler of this.handlers){
-            js += `}else if(locals.$line_info=""`
+            js += `}else if(locals.$lineno = ${handler.lineno}`
             if(handler.type){
                 js += ` && $B.is_exc(${err}, `
                 if(handler.type instanceof $B.ast.Tuple){
@@ -384,7 +386,8 @@ $B.ast.Try.prototype.to_js = function(scopes){
         js += '}finally{\n' +
               'var exit\n' +
               'if($B.frames_stack.length < stack_length){\n' +
-              'exit = true;'+
+              '// return in try/catch\n' +
+              'exit = true\n'+
               '$B.frames_stack.push($top_frame)}\n'
         if(this.orelse.length > 0){
             js += `if(! locals.failed${id}){\n`

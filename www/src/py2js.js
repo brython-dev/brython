@@ -1366,16 +1366,19 @@ $AssignCtx.prototype.ast = function(){
         }
     }
     value.ctx = new ast.Load()
+    var lineno = $get_node(this).line_num
     if(target.annotation){
-        var res = new ast.AnnAssign(
+        var ast_obj = new ast.AnnAssign(
             ast_or_obj(target.tree[0]),
             ast_or_obj(target.annotation.tree[0]),
             value,
             1)
-        res.target.ctx = new ast.Store()
-        return res
+        ast_obj.target.ctx = new ast.Store()
+    }else{
+        var ast_obj = new ast.Assign(targets, value)
     }
-    return new ast.Assign(targets, value)
+    ast_obj.lineno = lineno
+    return ast_obj
 }
 
 $AssignCtx.prototype.guess_type = function(){
@@ -4544,11 +4547,13 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
 
 $ExceptCtx.prototype.ast = function(){
     // ast.ExceptHandler(type, name, body)
-    return new ast.ExceptHandler(
+    var ast_obj = new ast.ExceptHandler(
         this.tree.length == 1 ? ast_or_obj(this.tree[0]) : undefined,
         this.has_alias ? this.tree[0].alias : undefined,
         ast_body(this.parent)
     )
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $ExceptCtx.prototype.toString = function(){return '(except) '}
@@ -10807,7 +10812,9 @@ $TryCtx.prototype.ast = function(){
             break
         }
     }
-    return new ast.Try(res.body, res.handlers, res.orelse, res.finalbody)
+    var res = new ast.Try(res.body, res.handlers, res.orelse, res.finalbody)
+    res.lineno = node.line_num
+    return res
 }
 
 $TryCtx.prototype.toString = function(){
