@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-10 09:25:44.503661"
-__BRYTHON__.timestamp=1641803144503
+__BRYTHON__.compiled_date="2022-01-10 10:31:24.102178"
+__BRYTHON__.timestamp=1641807084102
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -5155,9 +5155,18 @@ case 'eol':
 remove_abstract_expr(this.tree)
 return $transition(C.parent,token)}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$RaiseCtx.prototype.to_js=function(){this.js_processed=true
-var exc=this.tree.length==0 ? '' :this.tree[0].to_js()
-return '$B.$raise('+exc+')'}
+$RaiseCtx.prototype.to_js=function(){
+var pnode=$get_node(this).parent,except_node
+while(pnode){if(pnode.C && pnode.C.tree[0].type=='except'){except_node=pnode
+break}
+pnode=pnode.parent}
+var __context__='_b_.None',__cause__
+if(except_node){__context__=except_node.C.tree[0].error_name}
+if(this.tree.length==2){__context__=this.tree[1].to_js()
+__cause__=__context__}
+this.js_processed=true
+var exc=this.tree.length==0 ? 'undefined' :this.tree[0].to_js()
+return `$B.$raise(${exc}, ${__context__}, ${__cause__})`}
 var $RawJSCtx=$B.parser.$RawJSCtx=function(C,js){this.type="raw_js"
 C.tree[C.tree.length]=this
 this.parent=C
@@ -5518,7 +5527,7 @@ if(token==':'){return $BodyCtx(C)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $TryCtx.prototype.transform=function(node,rank){if(node.parent.children.length==rank+1){$_SyntaxError(node.C,["unexpected EOF while parsing"])}
 var scope=$get_scope(this)
-var error_name=create_temp_name('$err')
+var error_name=this.error_name=create_temp_name('$err')
 var failed_name="$locals."+create_temp_name('$failed')
 var js=failed_name+' = false;\n'+
 ' '.repeat(node.indent+4)+'try'
@@ -9438,15 +9447,24 @@ if(frame===undefined){console.log("no frame",exc,exc.__class__,exc.args)}
 frame[1].$current_exception=$B.exception(exc)}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
-$B.$raise=function(arg){
+$B.$raise=function(arg,C,cause){
 if(arg===undefined){var es=$B.get_exc()
 if(es !==undefined){throw es}
 throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(_b_.isinstance(arg,BaseException)){if(arg.__class__===_b_.StopIteration &&
 $B.last($B.frames_stack)[1].$is_generator){
 arg=_b_.RuntimeError.$factory("generator raised StopIteration")}
+if(C===undefined){console.log('bizarre 1')}
+arg.__context__=C
+arg.__cause__=cause ||_b_.None
+arg.__suppress_context__=cause !==undefined
 throw arg}else if(arg.$is_class && _b_.issubclass(arg,BaseException)){if(arg===_b_.StopIteration){if($B.last($B.frames_stack)[1].$is_generator){
 throw _b_.RuntimeError.$factory("generator raised StopIteration")}}
-throw $B.$call(arg)()}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
+if(C===undefined){console.log('bizarre 2')}
+var exc=$B.$call(arg)()
+exc.__context__=C
+exc.__cause__=cause ||_b_.None
+exc.__suppress_context__=cause !==undefined
+throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
 $B.$syntax_err_line=function(exc,module,src,pos,line_num){
 var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" :module
 if(src===undefined){exc.$line_info=line_num+','+module

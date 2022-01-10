@@ -4650,7 +4650,6 @@ $ExceptCtx.prototype.transform = function(node, rank){
 $ExceptCtx.prototype.to_js = function(){
     // in method "transform" of $TryCtx instances, related
     // $ExceptCtx instances receive an attribute __name__
-
     this.js_processed = true
 
     switch(this.tree.length) {
@@ -10038,6 +10037,7 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     this.tree = []
     context.tree[context.tree.length] = this
     this.scope_type = $get_scope(this).ntype
+
 }
 
 $RaiseCtx.prototype.ast = function(){
@@ -10072,9 +10072,28 @@ $RaiseCtx.prototype.transition = function(token, value){
 }
 
 $RaiseCtx.prototype.to_js = function(){
+    // If 'raise' is inside an 'except', set __context__ and __cause__
+    var pnode = $get_node(this).parent,
+        except_node
+    while(pnode){
+        if(pnode.context && pnode.context.tree[0].type == 'except'){
+            except_node = pnode
+            break
+        }
+        pnode = pnode.parent
+    }
+    var __context__ = '_b_.None',
+        __cause__
+    if(except_node){
+        __context__ = except_node.context.tree[0].error_name
+    }
+    if(this.tree.length == 2){
+        __context__ = this.tree[1].to_js()
+        __cause__ = __context__
+    }
     this.js_processed = true
-    var exc = this.tree.length == 0 ? '' : this.tree[0].to_js()
-    return '$B.$raise(' + exc + ')'
+    var exc = this.tree.length == 0 ? 'undefined' : this.tree[0].to_js()
+    return `$B.$raise(${exc}, ${__context__}, ${__cause__})`
 }
 
 var $RawJSCtx = $B.parser.$RawJSCtx = function(context, js){
@@ -10835,7 +10854,7 @@ $TryCtx.prototype.transform = function(node, rank){
     }
     var scope = $get_scope(this)
 
-    var error_name = create_temp_name('$err')
+    var error_name = this.error_name = create_temp_name('$err')
 
     // Add a boolean $failed, used to run the 'else' clause. Set as an
     // attribute of $locals for the case when code is inside a

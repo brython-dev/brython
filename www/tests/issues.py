@@ -3023,6 +3023,15 @@ lines = ["789/",
 
 ((x for x in line) for line in lines)
 
+# issue 1860
+try:
+    try:
+        raise ValueError("inner")
+    except Exception as e:
+        raise ValueError("outer") from e
+except Exception as e:
+    assert repr(e.__context__) == "ValueError('inner')"
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

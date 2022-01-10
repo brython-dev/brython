@@ -20,7 +20,7 @@ $B.get_exc = function(){
     return frame[1].$current_exception
 }
 
-$B.$raise = function(arg){
+$B.$raise = function(arg, context, cause){
     // Used for "raise" without specifying an exception.
     // If there is an exception in the stack, use it, else throw a simple
     // Exception
@@ -34,6 +34,12 @@ $B.$raise = function(arg){
             // PEP 479
             arg = _b_.RuntimeError.$factory("generator raised StopIteration")
         }
+        if(context === undefined){
+            console.log('bizarre 1')
+        }
+        arg.__context__ = context
+        arg.__cause__ = cause || _b_.None
+        arg.__suppress_context__ = cause !== undefined
         throw arg
     }else if(arg.$is_class && _b_.issubclass(arg, BaseException)){
         if(arg === _b_.StopIteration){
@@ -42,7 +48,14 @@ $B.$raise = function(arg){
                 throw _b_.RuntimeError.$factory("generator raised StopIteration")
             }
         }
-        throw $B.$call(arg)()
+        if(context === undefined){
+            console.log('bizarre 2')
+        }
+        var exc = $B.$call(arg)()
+        exc.__context__ = context
+        exc.__cause__ = cause || _b_.None
+        exc.__suppress_context__ = cause !== undefined
+        throw exc
     }else{
         throw _b_.TypeError.$factory("exceptions must derive from BaseException")
     }
