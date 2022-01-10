@@ -18,6 +18,23 @@ function bind(name, scopes){
     return scope
 }
 
+function binding_scope(name, scopes){
+    // return the scope where name is bound, or undefined
+    var scope = $B.last(scopes)
+    if(scope.globals.has(name)){
+        return scopes[0]
+    }else{
+        for(var i = scopes.length - 1; i >= 0; i--){
+            if(scopes[i].locals.has(name)){
+                return scopes[i]
+            }
+        }
+        if(builtins_scope.locals.has(name)){
+            return builtins_scope
+        }
+    }
+}
+
 $B.resolve = function(name){
     for(var frame of $B.frames_stack.slice().reverse()){
         if(frame[1].hasOwnProperty(name)){
@@ -30,6 +47,11 @@ $B.resolve = function(name){
 
 var $operators = $B.op2method.subset("all") // in py2js.js
 
+var opname2opsign = {}
+for(var key in $operators){
+    opname2opsign[$operators[key]] = key
+}
+
 // Map operator class names to dunder method names
 var opclass2dunder = {}
 
@@ -38,6 +60,7 @@ for(var op_type of $B.op_types){ // in py_ast.js
         opclass2dunder[op_type[operator]] = '__' + $operators[operator] + '__'
     }
 }
+
 opclass2dunder['UAdd'] = '__pos__'
 opclass2dunder['USub'] = '__neg__'
 opclass2dunder['Invert'] = '__invert__'
@@ -66,20 +89,98 @@ $B.ast.Assert.prototype.to_js = function(scopes){
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
-    var js = `locals.$lineno = ${this.lineno}\n`
+    var js = `locals.$lineno = ${this.lineno}\n`,
+        value = $B.js_from_ast(this.value, scopes)
+
+    function assign_one(target, value){
+        if(target instanceof $B.ast.Name){
+            return $B.js_from_ast(target, scopes) + ' = ' +
+                value
+        }else if(target instanceof $B.ast.Starred){
+            return assign_one(target.value, value)
+        }else if(target instanceof $B.ast.Subscript){
+            return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
+                `, ${$B.js_from_ast(target.slice)}, ${value})`
+        }else if(target instanceof $B.ast.Attribute){
+            return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
+                `, "${target.attr}", ${value})`
+        }
+    }
+
     if(this.targets.length == 1){
         var target = this.targets[0]
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
-            return js + $B.js_from_ast(target, scopes) + ' = ' +
-                $B.js_from_ast(this.value, scopes)
+           return js + assign_one(target, value)
+        }else{
+            console.log($B.ast_dump(this))
+            var nb_targets = target.elts.length,
+                has_starred = false,
+                nb_after_starred
+            for(var i = 0, len = nb_targets; i < len; i++){
+                if(target.elts[i] instanceof $B.ast.Starred){
+                    has_starred = true
+                    nb_after_starred = len - i - 1
+                    break
+                }
+            }
+            js = `var it = $B.unpacker(${value}, ${nb_targets}, ` +
+                 `${has_starred}, ${nb_after_starred})\n`
+            var assigns = []
+            for(var elt of target.elts){
+                if(elt instanceof $B.ast.Starred){
+                    assigns.push(assign_one(elt, 'it.read_rest()'))
+                }else{
+                    assigns.push(assign_one(elt, 'it.read_one()'))
+                }
+            }
+            js += assigns.join('\n')
+
+            return js
         }
     }
     var id = 'v' + $B.UUID()
-    js += `var ${id} = ${$B.js_from_ast(this.value)}\n`
+    js += `var ${id} = ${value}\n`
     for(var target of this.targets){
-        js += $B.js_from_ast(target, scopes) + ` = ${id}\n`
+        js += assign_one(target, id) + '\n'
     }
+    return js
+}
+
+$B.ast.AugAssign.prototype.to_js = function(scopes){
+    console.log('augm assign', $B.ast_dump(this))
+    var op_class = this.op.constructor
+    for(var op in $B.op2ast_class){
+        if($B.op2ast_class[op][1] === op_class){
+            var iop = op + '='
+            break
+        }
+    }
+    var value = $B.js_from_ast(this.value)
+    if(this.target instanceof $B.ast.Name){
+        var scope = binding_scope(this.target.id, scopes)
+        if(! scope){
+            return `locals.${this.target.id} = $B.augm_assign(` +
+                `$B.resolve('${this.target.id}'), '${iop}', ${value})`
+        }else{
+            var ref = `locals_${scope.name}.${this.target.id}`
+            return ref + ` = typeof ${ref} == "number" && ` +
+                `$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n` +
+                `locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`
+        }
+    }else if(this.target instanceof $B.ast.Subscript){
+        return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), ` +
+            `($locals.$key = ${target.tree[0].to_js()}), $B.augm_assign($B.$getitem(` +
+            `$locals.$tg, $locals.$key), '${this.op}', ${this.tree[1].to_js()}))`
+    }else if(this.target instanceof $B.ast.Attribute){
+        return `$B.$setattr(($locals.$tg = ${target.value.to_js()}), ` +
+            `'${target.name}', $B.augm_assign($B.$getattr(` +
+            `$locals.$tg, '${target.name}'), '${this.op}', ${this.tree[1].to_js()}))`
+    }
+    var js,
+        target = $B.js_from_ast(this.target, scopes),
+        value = $B.js_from_ast(this.value)
+    var js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     return js
 }
 
@@ -294,6 +395,11 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.List.prototype.to_js = function(scopes){
+    var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
+    return '$B.$list([' + elts.join(', ') + '])'
+}
+
 $B.ast.Module.prototype.to_js = function(module_id){
     var scopes = [new Scope(module_id)],
         global_name = `locals_${module_id}`
@@ -328,19 +434,13 @@ $B.ast.Name.prototype.to_js = function(scopes){
         var scope = bind(this.id, scopes)
         return `locals_${scope.name}.${this.id}`
     }else if(this.ctx instanceof $B.ast.Load){
-        var scope = $B.last(scopes)
-        if(scope.globals.has(this.id)){
-            return `locals_${scopes[0].name}.${this.id}`
-        }else{
-            for(var i = scopes.length - 1; i >= 0; i--){
-                if(scopes[i].locals.has(this.id)){
-                    return `locals_${scopes[i].name}.${this.id}`
-                }
-            }
-            if(builtins_scope.locals.has(this.id)){
-                return `_b_.${this.id}`
-            }
+        var scope = binding_scope(this.id, scopes)
+        if(! scope){
             return `$B.resolve("${this.id}")`
+        }else if(scope === builtins_scope){
+            return `_b_.${this.id}`
+        }else{
+            return `locals_${scope.name}.${this.id}`
         }
     }
 }
