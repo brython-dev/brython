@@ -72,6 +72,21 @@ function get_comment(src, pos, line_num, line_start, token_name, line){
     }
 }
 
+function test_num(num_type, char){
+    switch(num_type){
+        case '':
+            return $B.unicode_tables.Nd[ord(char)] !== undefined
+        case 'x':
+            return '0123456789abcdef'.indexOf(char.toLowerCase()) > -1
+        case 'b':
+            return '01'.indexOf(char) > -1
+        case 'o':
+            return '01234567'.indexOf(char) > -1
+        default:
+            throw Error('unknown num type ' + num_type)
+    }
+}
+
 $B.tokenizer = function*(src){
     var unicode_tables = $B.unicode_tables,
         whitespace = ' \t\n',
@@ -491,25 +506,38 @@ $B.tokenizer = function*(src){
                 break
 
             case 'NUMBER':
-                if(num_type == '' && unicode_tables.Nd[ord(char)]){
-                    number += char
-                }else if(num_type == 'b' && '01'.indexOf(char) > -1){
-                    number += char
-                }else if(num_type == 'o' && '01234567'.indexOf(char) > -1){
-                    number += char
-                }else if(num_type == 'x' &&
-                        '0123456789abcdef'.indexOf(char.toLowerCase()) > -1){
+                if(test_num(num_type, char)){
                     number += char
                 }else if(char == '_' && ! number.endsWith('.')){
                     if(number.endsWith('_')){
                         throw SyntaxError('consecutive _ in number')
+                    }else if(src[pos] === undefined ||
+                            ! test_num(num_type, src[pos])){
+                        // eg 12_
+                        yield Token('NUMBER', number,
+                            [line_num, pos - line_start - number.length],
+                            [line_num, pos - line_start],
+                            line)
+                        state = null
+                        pos--
+                    }else{
+                        number += char
                     }
-                    number += char
                 }else if(char == '.' && number.indexOf(char) == -1){
                     number += char
                 }else if(char.toLowerCase() == 'e' &&
                         number.toLowerCase().indexOf('e') == -1){
-                    number += char
+                    if('+-'.indexOf(src[pos]) > -1 ||
+                            unicode_tables.Nd[ord(src[pos])]){
+                        number += char
+                    }else{
+                        yield Token('NUMBER', number,
+                            [line_num, pos - line_start - number.length],
+                            [line_num, pos - line_start],
+                            line)
+                        state = null
+                        pos--
+                    }
                 }else if((char == '+' || char == '-') &&
                         number.toLowerCase().endsWith('e')){
                     number += char

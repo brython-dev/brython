@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-10 10:31:24.102178"
-__BRYTHON__.timestamp=1641807084102
+__BRYTHON__.compiled_date="2022-01-11 13:21:29.790427"
+__BRYTHON__.timestamp=1641903689790
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -145,6 +145,16 @@ if(src[pos]===undefined){t.push(Token('NEWLINE','\n',[line_num,pos-line_start+1]
 pos+=nb}
 return{t,pos}}
 pos++}}
+function test_num(num_type,char){switch(num_type){case '':
+return $B.unicode_tables.Nd[ord(char)]!==undefined
+case 'x':
+return '0123456789abcdef'.indexOf(char.toLowerCase())>-1
+case 'b':
+return '01'.indexOf(char)>-1
+case 'o':
+return '01234567'.indexOf(char)>-1
+default:
+throw Error('unknown num type '+num_type)}}
 $B.tokenizer=function*(src){var unicode_tables=$B.unicode_tables,whitespace=' \t\n',operators='*+-/%&^~=<>',allowed_after_identifier=',.()[]:;',string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
 var state="line_start",char,cp,mo,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line_num=0,line_start=1,line
 yield Token('ENCODING','utf-8',[0,0],[0,0],'')
@@ -339,10 +349,15 @@ string+=char
 break}
 break
 case 'NUMBER':
-if(num_type=='' && unicode_tables.Nd[ord(char)]){number+=char}else if(num_type=='b' && '01'.indexOf(char)>-1){number+=char}else if(num_type=='o' && '01234567'.indexOf(char)>-1){number+=char}else if(num_type=='x' &&
-'0123456789abcdef'.indexOf(char.toLowerCase())>-1){number+=char}else if(char=='_' && ! number.endsWith('.')){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}
-number+=char}else if(char=='.' && number.indexOf(char)==-1){number+=char}else if(char.toLowerCase()=='e' &&
-number.toLowerCase().indexOf('e')==-1){number+=char}else if((char=='+' ||char=='-')&&
+if(test_num(num_type,char)){number+=char}else if(char=='_' && ! number.endsWith('.')){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}else if(src[pos]===undefined ||
+! test_num(num_type,src[pos])){
+yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+state=null
+pos--}else{number+=char}}else if(char=='.' && number.indexOf(char)==-1){number+=char}else if(char.toLowerCase()=='e' &&
+number.toLowerCase().indexOf('e')==-1){if('+-'.indexOf(src[pos])>-1 ||
+unicode_tables.Nd[ord(src[pos])]){number+=char}else{yield Token('NUMBER',number,[line_num,pos-line_start-number.length],[line_num,pos-line_start],line)
+state=null
+pos--}}else if((char=='+' ||char=='-')&&
 number.toLowerCase().endsWith('e')){number+=char}else if(char.toLowerCase()=='j'){
 number+=char
 yield Token('NUMBER',number,[line_num,pos-line_start-number.length+1],[line_num,pos-line_start+1],line)
@@ -4317,6 +4332,7 @@ C.tree[C.tree.length]=this}
 $NumberCtx.prototype.ast=function(){return new ast.Constant({type:this.type,value:this.value})}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
+if(token=='id' && value=='_'){$_SyntaxError(C,['invalid decimal literal'])}
 return $transition(C.parent,token,value)}
 $NumberCtx.prototype.to_js=function(){this.js_processed=true
 var type=this.type,value=this.value
@@ -13851,10 +13867,8 @@ $B.class_name(other)+"'")}}
 complex.__radd__=function(self,other){if(_b_.isinstance(other,_b_.bool)){other=other ? 1 :0}
 if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(other+self.$real,self.$imag)}
 return _b_.NotImplemented}
-complex.__repr__=function(self){console.log('complex repr',self.$imag)
-$B.builtins_repr_check(complex,arguments)
+complex.__repr__=function(self){$B.builtins_repr_check(complex,arguments)
 var real=_b_.str.$factory(self.$real),imag=_b_.str.$factory(self.$imag)
-console.log('imag',imag)
 if(self.$real instanceof Number && self.$real==parseInt(self.$real)){}
 if(self.$imag instanceof Number && self.$imag==parseInt(self.$imag)){
 if(self.$imag==0 && 1/self.$imag===-Infinity){imag="-0"}}

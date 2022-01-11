@@ -656,4 +656,18 @@ assert str(float(-a)) == "-9.223372036854776e+18"
 # issue 1840
 assert 0 // 10 ** 100 == 0
 
+# issue 1864
+assertRaises(NameError, exec, "_12")
+assert 1_2 == 12
+assertRaises(SyntaxError, exec, "12_")
+
+assertRaises(SyntaxError, exec, "_12.34e56")
+assert 1_2.34e56 == 1.234e+57
+assertRaises(SyntaxError, exec, "12_.34e56")
+assertRaises(SyntaxError, exec, "12._34e56")
+assert 12.3_4e56 == 1.234e+57
+assertRaises(SyntaxError, exec, "12.34e_56")
+assert 12.34e5_6 == 1.234e+57
+assertRaises(SyntaxError, exec, "12.34e56_")
+
 print('passed all tests...')

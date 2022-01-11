@@ -8343,6 +8343,9 @@ $NumberCtx.prototype.toString = function(){
 
 $NumberCtx.prototype.transition = function(token, value){
     var context = this
+    if(token == 'id' && value == '_'){
+        $_SyntaxError(context, ['invalid decimal literal'])
+    }
     return $transition(context.parent, token, value)
 }
 
