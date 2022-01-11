@@ -5,7 +5,7 @@ import binascii
 import tb as traceback
 import javascript
 
-from browser import document, window, alert, bind, html
+from browser import console, document, window, alert, bind, html
 import browser.widgets.dialog as dialog
 
 # set height of container to 75% of screen
@@ -52,6 +52,8 @@ def reset_src():
             editor.setValue(storage["py_src"])
         else:
             editor.setValue('for i in range(10):\n\tprint(i)')
+        if "py_test" in storage:
+            document['files'].selectedIndex = int(storage["py_test"])
     editor.scrollToRow(0)
     editor.gotoLine(0)
 
@@ -164,7 +166,8 @@ def share_code(ev):
         def click(evt):
             d.remove()
 
-if has_ace:
-    reset_src()
-else:
-    reset_src_area()
+def reset():
+    if has_ace:
+        reset_src()
+    else:
+        reset_src_area()

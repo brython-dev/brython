@@ -64,6 +64,8 @@ import editor, brython_test_utils as utils
 utils.populate_testmod_input(doc['files'],
     ["Core language features", "Issues", "DOM interface", "Modules"])
 
+editor.reset()
+
 failed = []
 t_start = None
 
@@ -73,6 +75,7 @@ async def run(reset=False):
     src = editor.editor.getValue()
     if storage is not None:
        storage["py_src"] = src
+       storage["py_test"] = str(doc['files'].selectedIndex)
     state, t0, t1, _ = utils.run(src)
     dt = (t1 - t0) * 1000.0
     if state == 0:
