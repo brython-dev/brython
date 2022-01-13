@@ -43,9 +43,6 @@ def _getselectable(selectable_object):
             raise TypeError("Object '%s' is not watchable" % selectable_object,
                             errno.ENOTSOCK)
 
-    if channel and not isinstance(channel, java.nio.channels.SelectableChannel):
-        raise TypeError("Object '%s' is not watchable" % selectable_object,
-                        errno.ENOTSOCK)
     return channel
 
 # Fake Selector
