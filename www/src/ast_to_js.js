@@ -100,7 +100,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             return assign_one(target.value, value)
         }else if(target instanceof $B.ast.Subscript){
             return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
-                `, ${$B.js_from_ast(target.slice)}, ${value})`
+                `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`
         }else if(target instanceof $B.ast.Attribute){
             return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
                 `, "${target.attr}", ${value})`
@@ -147,8 +147,12 @@ $B.ast.Assign.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.Attribute.prototype.to_js = function(scopes){
+    return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, ` +
+        `'${this.attr}')`
+}
+
 $B.ast.AugAssign.prototype.to_js = function(scopes){
-    console.log('augm assign', $B.ast_dump(this))
     var op_class = this.op.constructor
     for(var op in $B.op2ast_class){
         if($B.op2ast_class[op][1] === op_class){
@@ -156,7 +160,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
             break
         }
     }
-    var value = $B.js_from_ast(this.value)
+    var value = $B.js_from_ast(this.value, scopes)
     if(this.target instanceof $B.ast.Name){
         var scope = binding_scope(this.target.id, scopes)
         if(! scope){
@@ -179,7 +183,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
     }
     var js,
         target = $B.js_from_ast(this.target, scopes),
-        value = $B.js_from_ast(this.value)
+        value = $B.js_from_ast(this.value, scopes)
     var js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     return js
 }
@@ -218,9 +222,15 @@ $B.ast.Constant.prototype.to_js = function(scopes){
         return this.value + ''
     }else if(this.value === _b_.None){
         return '_b_.None'
+    }else if(typeof this.value == "string"){
+        var type = 'str',
+            value = this.value
+    }else if(this.value.__class__ === _b_.bytes){
+        return `_b_.bytes.$factory([${this.value.source}])`
+    }else{
+        var type = this.value.type,
+            value = this.value.value
     }
-    var type = this.value.type,
-        value = this.value.value
 
     switch(type){
         case 'int':
@@ -243,9 +253,17 @@ $B.ast.Constant.prototype.to_js = function(scopes){
         case 'ellipisis':
             return `_b_.Ellipsis`
         case 'str':
-            js = js.replace("'", "\\'")
-            var lines = js.split('\n')
-            return "'" + lines.join('\\\n') + "'"
+            var lines = value.split('\n')
+            lines = lines.map(line => line.replace(/\\/g, '\\\\'))
+            value = lines.join('\\n\\\n')
+            if(value.indexOf("'") == -1){
+                return `$B.String('${value}')`
+            }else if(value.indexOf('"') == -1){
+                return `$B.String("${value}")`
+            }else{
+                value = value.replace(new RegExp("'", "g"), "\\'")
+                return `$B.String('${value}')`
+            }
     }
     console.log('unknown constant', this, value, value === true)
     return '// unknown'
@@ -269,7 +287,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         ix = positional.length - nb_defaults
     for(var i = ix; i < positional.length; i++){
         _defaults.push(`${positional[i].arg}: ` +
-            `${$B.js_from_ast(this.args.defaults[i - ix])}`)
+            `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)
     }
     var default_str = `{${_defaults.join(', ')}}`
     var id = $B.UUID(),
@@ -423,7 +441,6 @@ $B.ast.Module.prototype.to_js = function(module_id){
     }
     $B.leave_frame(locals);throw err
     }`
-
     scopes.pop()
     return js
 }
@@ -445,6 +462,10 @@ $B.ast.Name.prototype.to_js = function(scopes){
     }
 }
 
+$B.ast.Pass.prototype.to_js = function(scopes){
+    return 'void(0)'
+}
+
 $B.ast.Return.prototype.to_js = function(scopes){
     var js = 'var result = ' +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
@@ -452,6 +473,18 @@ $B.ast.Return.prototype.to_js = function(scopes){
           `$B.trace_return(_b_.None)\n}\n` +
           `$B.leave_frame(locals)\nreturn result\n`
     return js
+}
+
+$B.ast.Slice.prototype.to_js = function(scopes){
+    var lower = this.lower ? $B.js_from_ast(this.lower, scopes) : '_b_.None',
+        upper = this.upper ? $B.js_from_ast(this.upper, scopes) : '_b_.None',
+        step = this.step ? $B.js_from_ast(this.step, scopes) : '_b_.None'
+    return `_b_.slice.$factory(${lower}, ${upper}, ${step})`
+}
+
+$B.ast.Subscript.prototype.to_js = function(scopes){
+    return `$B.$getitem(${$B.js_from_ast(this.value, scopes)}, ` +
+        `${$B.js_from_ast(this.slice, scopes)})`
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
@@ -491,9 +524,10 @@ $B.ast.Try.prototype.to_js = function(scopes){
               '$B.frames_stack.push($top_frame)}\n'
         if(this.orelse.length > 0){
             js += `if(! locals.failed${id}){\n`
+            console.log('add orelse body', this.orelse, 'scopes', scopes.slice())
             js += add_body(this.orelse, scopes) + '}\n'
         }
-        js += add_body(this.finalbody)
+        js += add_body(this.finalbody, scopes)
         js += 'if(exit){\n$B.leave_frame({locals})\n}\n'
     }
     js += '}\n'
