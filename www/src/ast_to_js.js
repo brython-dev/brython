@@ -2,11 +2,17 @@
 
 var _b_ = $B.builtins
 
-function Scope(name){
+
+$B.set_func_infos = function(func, name, qualname, docstring){
+    func.$is_func = true
+}
+
+function Scope(name, type){
     this.name = name
     this.locals = new Set()
     this.globals = new Set()
     this.nonlocals = new Set()
+    this.type = type
 }
 
 function bind(name, scopes){
@@ -86,6 +92,21 @@ $B.ast.Assert.prototype.to_js = function(scopes){
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
     return `if(!$B.$bool(${test})){\n` +
            `throw _b_.AssertionError.$factory(${msg})}\n`
+}
+
+$B.ast.AnnAssign.prototype.to_js = function(scopes){
+    console.log($B.ast_dump(this))
+    if(this.value){
+        var scope = bind(this.target.id, scopes)
+        var js = `var ann = ${$B.js_from_ast(this.value, scopes)}\n` +
+            `$B.$setitem(locals.__annotations__, ` +
+            `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n` +
+            `locals_${scope.name}.${this.target.id} = ann`
+    }else{
+        var js = `$B.$setitem(locals.__annotations__, ` +
+            `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})`
+    }
+    return js
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
@@ -204,6 +225,62 @@ $B.ast.Call.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.ClassDef.prototype.to_js = function(scopes){
+    console.log($B.ast_dump(this))
+    var class_scope = new Scope(this.name, 'class')
+    scopes.push(class_scope)
+
+    var js = '',
+        name = this.name,
+        ref = name + $B.UUID(),
+        glob = scopes[0].name,
+        decorators = [],
+        decorated = false
+    for(var dec of this.decorator_list){
+        decorated = true
+        var dec_id = 'decorator' + $B.UUID()
+        decorators.push(dec_id)
+        console.log($B.js_from_ast(dec, scopes))
+        js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
+    }
+
+    js += `var ${ref} = (function(){\n` +
+          `var locals_${this.name} = {__annotations__: $B.empty_dict()},\n` +
+          `locals = locals_${this.name}\n` +
+          `locals.$name = "${this.name}"\n` +
+          `locals.$is_class = true\n` +
+          `var top_frame = ["${ref}", locals, "${glob}", locals_${glob}]\n` +
+          `locals.$f_trace = $B.enter_frame(top_frame)\n`
+
+    js += add_body(this.body, scopes)
+
+    scopes.pop()
+    var scope = bind(this.name, scopes)
+
+    js += `$B.leave_frame({locals})\nreturn locals\n})()\n`
+
+    var class_ref = `locals_${scope.name}.${this.name}`
+
+    if(decorated){
+        class_ref = `decorated${$B.UUID()}`
+        js += 'var '
+    }
+    var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
+    console.log(this.bases, 'bases', bases)
+
+    js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
+          `[${bases}],[],[])\n`
+
+    if(decorated){
+        var decorate = class_ref
+        for(var dec of this.decorator_list.reverse()){
+            decorate = `$B.$call(${dec})(${decorate})`
+        }
+        js += decorate + '\n'
+    }
+
+    return js
+}
 $B.ast.Compare.prototype.to_js = function(scopes){
     var left = $B.js_from_ast(this.left, scopes),
         comps = []
@@ -274,8 +351,17 @@ $B.ast.Expr.prototype.to_js = function(scopes){
 }
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
-    var func_scope = new Scope(this.name)
+    console.log($B.ast_dump(this))
+    var func_scope = new Scope(this.name, 'def')
     scopes.push(func_scope)
+
+    // Detect doc string
+    var docstring = '_b_.None'
+    if(this.body[0] instanceof $B.ast.Expr &&
+            this.body[0].value instanceof $B.ast.Constant &&
+            typeof this.body[0].value.value == "string"){
+        docstring = this.body.splice(0, 1)[0].to_js()
+    }
 
     // process body first to detect possible "yield"s
     var function_body = add_body(this.body, scopes),
@@ -284,16 +370,37 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var _defaults = [],
         nb_defaults = this.args.defaults.length,
         positional = this.args.posonlyargs.concat(this.args.args),
-        ix = positional.length - nb_defaults
+        ix = positional.length - nb_defaults,
+        def_names = []
     for(var i = ix; i < positional.length; i++){
+        def_names.push(`defaults.${positional[i].arg}`)
         _defaults.push(`${positional[i].arg}: ` +
             `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)
     }
+    var kw_def_names = []
+    for(var kw of this.args.kwonlyargs){
+        kw_def_names.push(`defaults.${kw.arg}`)
+    }
+    console.log('kw def name', kw_def_names)
+
     var default_str = `{${_defaults.join(', ')}}`
     var id = $B.UUID(),
         name1 = this.name + '$' + id,
         name2 = this.name + id
-    var js = `var ${name1} = function($defaults){\n`
+
+    var js = '',
+        decorators = [],
+        decorated = false
+    for(var dec of this.decorator_list){
+        decorated = true
+        var dec_id = 'decorator' + $B.UUID()
+        decorators.push(dec_id)
+        console.log($B.js_from_ast(dec, scopes))
+        js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`
+    }
+
+    js += `var ${name1} = function(defaults){\n`
+
     if(is_generator){
         js += `function* ${name2}(){\n`
     }else{
@@ -314,13 +421,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
     parse_args.push('{' + slots.join(', ') + '} , ' +
         '[' + arg_names.join(', ') + '], ' +
-        'arguments, $defaults, ' +
+        'arguments, defaults, ' +
         (this.args.vararg ? `'${this.args.vararg.arg}', ` : 'null, ') +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${local_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var $top_frame = ["${name}", locals, "${gname}", locals_${gname}]
     locals.$f_trace = $B.enter_frame($top_frame)
     var stack_length = $B.frames_stack.length\n`
+
     if(is_generator){
         js += `locals.$is_generator = true\n`
     }
@@ -343,15 +451,44 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
     $B.leave_frame(locals);throw err
     }
-    }
-    return ${name2}
     }\n`
+
     scopes.pop()
-    bind(this.name, scopes)
-    var func_ref = `locals_${$B.last(scopes).name}.${this.name}`
+    var scope = bind(this.name, scopes)
+    var qualname = scope.type == 'class' ? `${scope.name}.${this.name}` :
+                                           this.name
+
+    console.log('binding scope', scope, 'qualname', qualname)
+
+    js += `${name2}.$infos = {\n` +
+        `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
+        `__defaults__: $B.fast_tuple([${def_names}]), ` +
+        `__kwdefaults__: $B.fast_tuple([${kw_def_names}]),\n` +
+        `__doc__: ${docstring}\n` +
+        `}\n`
+
+    js += `return ${name2}
+    }\n`
+
+    var func_ref = `locals_${scope.name}.${this.name}`
+
+    if(decorated){
+        func_ref = `decorated${$B.UUID()}`
+        js += 'var '
+    }
+
     js += `${func_ref} = ${name1}(${default_str})\n` +
           `${func_ref}.$set_defaults = function(value){\n`+
           `return ${func_ref} = ${name1}(value)\n}\n`
+
+    if(decorated){
+        js += `locals_${$B.last(scopes).name}.${this.name} = `
+        var decorate = func_ref
+        for(var dec of decorators.reverse()){
+            decorate = `$B.$call(${dec})(${decorate})`
+        }
+        js += decorate
+    }
 
     return js
 }
@@ -366,7 +503,7 @@ $B.ast.Global.prototype.to_js = function(scopes){
 
 $B.ast.If.prototype.to_js = function(scopes){
     var scope = $B.last(scopes),
-        new_scope = new Scope(scope.name)
+        new_scope = new Scope(scope.name, scope.type)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     new_scope.parent = scope
@@ -419,7 +556,7 @@ $B.ast.List.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(module_id){
-    var scopes = [new Scope(module_id)],
+    var scopes = [new Scope(module_id, 'module')],
         global_name = `locals_${module_id}`
     var js = `var $B = __BRYTHON__,
                   _b_ = $B.builtins,
