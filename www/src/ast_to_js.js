@@ -28,6 +28,7 @@ function bind(name, scopes){
 function binding_scope(name, scopes){
     // return the scope where name is bound, or undefined
     var scope = $B.last(scopes)
+    console.log('binding scope of', name, scopes)
     if(scope.globals.has(name)){
         return scopes[0]
     }else{
@@ -227,9 +228,8 @@ $B.ast.Call.prototype.to_js = function(scopes){
 }
 
 $B.ast.ClassDef.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
     var class_scope = new Scope(this.name, 'class')
-    scopes.push(class_scope)
+    scopes.push(this)
 
     var js = '',
         name = this.name,
@@ -267,7 +267,6 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         js += 'var '
     }
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
-    console.log(this.bases, 'bases', bases)
 
     js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
           `[${bases}],[],[])\n`
@@ -352,9 +351,8 @@ $B.ast.Expr.prototype.to_js = function(scopes){
 }
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
     var func_scope = new Scope(this.name, 'def')
-    scopes.push(func_scope)
+    scopes.push(this)
 
     // Detect doc string
     var docstring = '_b_.None'
@@ -382,7 +380,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     for(var kw of this.args.kwonlyargs){
         kw_def_names.push(`defaults.${kw.arg}`)
     }
-    console.log('kw def name', kw_def_names)
 
     var default_str = `{${_defaults.join(', ')}}`
     var id = $B.UUID(),
@@ -458,8 +455,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var scope = bind(this.name, scopes)
     var qualname = scope.type == 'class' ? `${scope.name}.${this.name}` :
                                            this.name
-
-    console.log('binding scope', scope, 'qualname', qualname)
 
     js += `${name2}.$infos = {\n` +
         `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
@@ -594,7 +589,6 @@ $B.ast.Name.prototype.to_js = function(scopes){
         return `locals_${scope.name}.${this.id}`
     }else if(this.ctx instanceof $B.ast.Load){
         var scope = binding_scope(this.id, scopes)
-        console.log(this.id, 'reference', scope)
         if(! scope){
             return `$B.resolve("${this.id}")`
         }else if(scope === builtins_scope){
@@ -716,33 +710,9 @@ $B.ast.Yield.prototype.to_js = function(scopes){
     return js
 }
 
-function make_namespace(ast, scopes){
-
-    if(ast instanceof $B.ast.Assign){
-        console.log('assign', ast)
-        for(var target of ast.targets){
-            if(target instanceof $B.ast.Name){
-                console.log('bind', target.id, 'scope', scopes.join('_'))
-            }
-        }
-    }else if(ast instanceof $B.ast.FunctionDef){
-        scopes.push(ast.name)
-        console.log('functiondef scope', scopes.join('_'))
-        console.log('exit', ast.name, 'scopes', scopes.slice())
-        for(var item of ast.body){
-            make_namespace(item, scopes)
-        }
-        scopes.pop()
-    }else if(ast instanceof $B.ast.Module){
-        for(var item of ast.body){
-            make_namespace(item, scopes)
-        }
-    }
-}
 
 $B.js_from_root = function(ast_root, module_id){
-    var scopes = [module_id]
-    make_namespace(ast_root, scopes)
+    var scopes = [ast_root]
     return $B.js_from_ast(ast_root, module_id)
 }
 
@@ -752,7 +722,7 @@ $B.js_from_ast = function(ast, scopes){
     if(ast.to_js !== undefined){
         return ast.to_js(scopes)
     }
-    console.log($B.ast_dump(ast))
+    console.log("unhandled", ast.constructor.$name)
     return '// unhandled class ast.' + ast.constructor.$name
 }
 

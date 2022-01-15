@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_signal'
+stdlib_name = '_symtable'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 

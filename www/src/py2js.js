@@ -214,7 +214,7 @@ if($B.ast_classes){
             if(value.imaginary){
                 return `Constant(value=${_b_.repr(value.value)}j)`
             }
-            return `Constant(value=${_b_.repr(tree.value)})`
+            return `Constant(value=${$B.AST.$convert(value)})`
         }
         var proto = Object.getPrototypeOf(tree).constructor
         var res = '  ' .repeat(indent) + proto.$name + '('
