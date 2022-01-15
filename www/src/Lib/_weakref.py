@@ -22,6 +22,9 @@ class ReferenceType:
 
 class ref:
 
+    def __new__(cls, *args, **kw):
+        return object.__new__(cls)
+        
     def __init__(self, obj, callback=None):
         self.obj = ReferenceType(obj, callback)
         self.callback = callback
