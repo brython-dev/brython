@@ -12,6 +12,7 @@ function Scope(name, type){
     this.locals = new Set()
     this.globals = new Set()
     this.nonlocals = new Set()
+    this.freevars = new Set()
     this.type = type
 }
 
@@ -586,14 +587,21 @@ $B.ast.Name.prototype.to_js = function(scopes){
     if(this.ctx instanceof $B.ast.Store){
         // In which namespace should it be stored ?
         var scope = bind(this.id, scopes)
+        if(scope === $B.last(scopes) && scope.freevars.has(this.id)){
+            // name was referenced but is declared local afterwards
+            scope.freevars.delete(this.id)
+        }
         return `locals_${scope.name}.${this.id}`
     }else if(this.ctx instanceof $B.ast.Load){
         var scope = binding_scope(this.id, scopes)
+        console.log(this.id, 'reference', scope)
         if(! scope){
             return `$B.resolve("${this.id}")`
         }else if(scope === builtins_scope){
             return `_b_.${this.id}`
         }else{
+            // referenced but not bound
+            $B.last(scopes).freevars.add(this.id)
             return `locals_${scope.name}.${this.id}`
         }
     }
@@ -708,7 +716,33 @@ $B.ast.Yield.prototype.to_js = function(scopes){
     return js
 }
 
+function make_namespace(ast, scopes){
+
+    if(ast instanceof $B.ast.Assign){
+        console.log('assign', ast)
+        for(var target of ast.targets){
+            if(target instanceof $B.ast.Name){
+                console.log('bind', target.id, 'scope', scopes.join('_'))
+            }
+        }
+    }else if(ast instanceof $B.ast.FunctionDef){
+        scopes.push(ast.name)
+        console.log('functiondef scope', scopes.join('_'))
+        console.log('exit', ast.name, 'scopes', scopes.slice())
+        for(var item of ast.body){
+            make_namespace(item, scopes)
+        }
+        scopes.pop()
+    }else if(ast instanceof $B.ast.Module){
+        for(var item of ast.body){
+            make_namespace(item, scopes)
+        }
+    }
+}
+
 $B.js_from_root = function(ast_root, module_id){
+    var scopes = [module_id]
+    make_namespace(ast_root, scopes)
     return $B.js_from_ast(ast_root, module_id)
 }
 

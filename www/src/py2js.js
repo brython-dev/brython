@@ -492,6 +492,7 @@ $B.format_indent = function(js, indent){
     return res
 }
 
+
 function show_line(ctx){
     // for debugging
     var lnum = $get_node(ctx).line_num,
@@ -2651,7 +2652,7 @@ $ClassCtx.prototype.set_name = function(name){
     this.id = context.node.module + '_' + name + '_' + this.random
     this.binding = {}
     this.parent.node.id = this.id
-
+    
     var scope = this.scope,
         parent_block = scope
 
@@ -3338,15 +3339,6 @@ $DefCtx.prototype.ast = function(){
 }
 
 $DefCtx.prototype.set_name = function(name){
-    /*
-    try{
-        name = $mangle(name, this.parent.tree[0])
-    }catch(err){
-        console.log(err)
-        console.log('parent', this.parent)
-        throw err
-    }
-    */
     if(["None", "True", "False"].indexOf(name) > -1){
         $_SyntaxError(this, 'invalid function name')
     }
@@ -3357,7 +3349,7 @@ $DefCtx.prototype.set_name = function(name){
     this.id += '_' + $B.UUID()
     this.parent.node.id = this.id
     this.parent.node.module = this.module
-
+    
     this.binding = {}
 
     var scope = this.scope
@@ -11419,6 +11411,7 @@ $WithCtx.prototype.transform_async = function(node, rank){
             var new_node = new $Node(),
                 ctx = new $NodeCtx(new_node),
                 expr = new $ExprCtx(ctx, "left", false)
+            new_node.parent = scope
             expr.tree.push(alias.tree[0].tree[0])
             alias.tree[0].tree[0].parent = expr
             var assign = new $AssignCtx(expr)
@@ -11789,6 +11782,7 @@ var $bind = $B.parser.$bind = function(name, scope, context){
     // - add it to the attribute "bindings" of the node, except if no_bindings
     //   is set, which is the case for "for x in A" : if A is empty the name
     //   has no value (issue #1233)
+
     name = $mangle(name, context)
     if(scope.nonlocals && scope.nonlocals.has(name)){
         // name is declared nonlocal in the scope : don't bind
@@ -12932,7 +12926,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             console.log(ast_dump(_ast))
         }
         if($B.js_from_ast){
+            _ast.$id = locals_id
+            console.log('symtable', $B._PySymtable_Build(_ast, locals_id))
+            
             var js_from_ast = $B.js_from_root(_ast, locals_id)
+
             console.log($B.format_indent(js_from_ast, 0))
             if(locals_id == 'js_from_ast'){
                 return {to_js: function(){return js_from_ast}}
