@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_symtable'
+stdlib_name = '_weakref'
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 

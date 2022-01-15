@@ -69,6 +69,10 @@ var GENERATOR_EXPRESSION = 2
 
 var CO_FUTURE_ANNOTATIONS = 0x100000 // CPython Include/code.h
 
+var TYPE_CLASS = 1,
+    TYPE_FUNCTION = 0,
+    TYPE_MODULE = 2
+
 var NULL = undefined
 
 var ModuleBlock = {},
@@ -102,9 +106,10 @@ function _Py_Mangle(privateobj, ident){
        TODO(jhylton): Decide whether we want to support
        mangling of the module name, e.g. __M.X.
     */
+    console.log('ident', ident)
     if ((ident[nlen - 1] == '_' &&
          ident[nlen - 2] == '_') ||
-        ident.find('.') != -1) {
+        ident.search('.') != -1) {
         return ident; /* Don't mangle __whatever__ */
     }
     /* Strip leading underscores from class name */
@@ -184,10 +189,6 @@ function ste_new(st, name, block,
         id: k, /* ste owns reference to k */
         name: name,
 
-        symbols: NULL,
-        varnames: NULL,
-        children: NULL,
-
         directives: NULL,
 
         type: block,
@@ -226,14 +227,15 @@ function ste_new(st, name, block,
 
 
 $B._PySymtable_Build = function(mod, filename, future){
-    var st = new Symtable,
+    var st = new Symtable(),
         seq
     st.filename = filename;
     st.future = future || {}
+    st.type = TYPE_MODULE
 
     /* Make the initial symbol information gathering pass */
     if (! GET_IDENTIFIER('top') ||
-        !symtable_enter_block(st, top, ModuleBlock, mod, 0, 0, 0, 0)) {
+        !symtable_enter_block(st, 'top', ModuleBlock, mod, 0, 0, 0, 0)) {
         return NULL;
     }
 
@@ -259,7 +261,7 @@ $B._PySymtable_Build = function(mod, filename, future){
     /* Make the second symbol analysis pass */
     symtable_analyze(st)
 
-    return st;
+    return st.top;
 }
 
 function PySymtable_Lookup(st, key){
@@ -803,7 +805,7 @@ function symtable_lookup(st, name){
 function symtable_add_def_helper(st, name, flag, ste,
                         lineno, col_offset, end_lineno, end_col_offset){
     var o, dict, val, mangled = _Py_Mangle(st.private, name);
-   
+
     if (!mangled){
         return 0;
     }
