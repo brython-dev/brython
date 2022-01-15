@@ -365,10 +365,7 @@ function compile() {
     root.parent_block = $B.builtins_scope
     $B.parser.dispatch_tokens(root, $.source)
     if($.flags == $B.PyCF_ONLY_AST){
-        var ast = root.ast(),
-            klass = ast.constructor.$name
-        $B.create_python_ast_classes()
-        return $B.python_ast_classes[klass].$factory(ast)
+        return root.ast()
     }
     return $
 }
@@ -872,7 +869,7 @@ function $$eval(src, _globals, _locals){
         if(res === undefined){return _b_.None}
         return res
     }catch(err){
-        
+
         update_namespaces() // cf. issue #1852
 
         err.src = src
@@ -2450,36 +2447,50 @@ $B.$setattr = function(obj, attr, value){
     var special_attrs = ["__module__"]
     if(klass && klass.__slots__ && special_attrs.indexOf(attr) == -1 &&
             ! _setattr){
-        function mangled_slots(klass){
-            if(klass.__slots__){
-                if(Array.isArray(klass.__slots__)){
-                    return klass.__slots__.map(function(item){
-                        if(item.startsWith("__") && ! item.endsWith("_")){
-                            return "_" + klass.$infos.__name__ + item
-                        }else{
-                            return item
-                        }
-                    })
-                }else{
-                    return klass.__slots__
-                }
+        var _slots = true
+        for(var kl of klass.__mro__){
+            if(kl === _b_.object || kl === _b_.type){
+                break
             }
-            return []
-        }
-        var has_slot = false
-        if(mangled_slots(klass).indexOf(attr) > -1){
-            has_slot = true
-        }else{
-            for(var i = 0; i < klass.__mro__.length; i++){
-                var kl = klass.__mro__[i]
-                if(mangled_slots(kl).indexOf(attr) > - 1){
-                    has_slot = true
-                    break
-                }
+            if(! kl.__slots__){
+                // If class inherits from a class without __slots__, allow
+                // setattr for any attribute
+                _slots = false
+                break
             }
         }
-        if(! has_slot){
-            throw $B.attr_error(attr, klass)
+        if(_slots){
+            function mangled_slots(klass){
+                if(klass.__slots__){
+                    if(Array.isArray(klass.__slots__)){
+                        return klass.__slots__.map(function(item){
+                            if(item.startsWith("__") && ! item.endsWith("_")){
+                                return "_" + klass.$infos.__name__ + item
+                            }else{
+                                return item
+                            }
+                        })
+                    }else{
+                        return klass.__slots__
+                    }
+                }
+                return []
+            }
+            var has_slot = false
+            if(mangled_slots(klass).indexOf(attr) > -1){
+                has_slot = true
+            }else{
+                for(var i = 0; i < klass.__mro__.length; i++){
+                    var kl = klass.__mro__[i]
+                    if(mangled_slots(kl).indexOf(attr) > - 1){
+                        has_slot = true
+                        break
+                    }
+                }
+            }
+            if(! has_slot){
+                throw $B.attr_error(attr, klass)
+            }
         }
     }
     if($test){console.log("attr", attr, "use _setattr", _setattr)}
