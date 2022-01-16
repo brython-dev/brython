@@ -65,7 +65,7 @@ document <= "Hello !"
 
 You can think of the `<=` sign as a left arrow : the document "receives" a new element, here the string "Hello !". You will see later that it is always possible to use the standardized DOM syntax to interact with the page, but Brython provides a few shortcuts to make the code less verbose.
 
-For this specific case, those who are not at ease with the use of the opeartor `<=` can use the method `attach()` of DOM elements instead:
+For this specific case, those who are not at ease with the use of the operator `<=` can use the method `attach()` of DOM elements instead:
 
 ```python
 document.attach("Hello !")
