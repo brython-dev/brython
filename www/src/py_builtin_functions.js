@@ -348,6 +348,41 @@ function compile() {
     $.name = "<module>"
     var interactive = $.mode == "single" && ($.flags & 0x200)
 
+    if(_b_.isinstance($.source, _b_.bytes)){
+        var encoding = 'utf-8',
+            lfpos = $.source.source.indexOf(10),
+            first_line,
+            second_line
+        if(lfpos == -1){
+            first_line = $.source
+        }else{
+            first_line = _b_.bytes.$factory($.source.source.slice(0, lfpos))
+        }
+        // decode with a safe decoder
+        first_line = _b_.bytes.decode(first_line, 'latin-1')
+        // search encoding (PEP263)
+        var encoding_re = /^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)/
+        var mo = first_line.match(encoding_re)
+        if(mo){
+            encoding = mo[1]
+        }else if(lfpos > -1){
+            // try second line
+            var rest = $.source.source.slice(lfpos + 1)
+            lfpos = rest.indexOf(10)
+            if(lfpos > -1){
+                second_line = _b_.bytes.$factory(rest.slice(0, lfpos))
+            }else{
+                second_line = _b_.bytes.$factory(rest)
+            }
+            second_line = _b_.bytes.decode(second_line, 'latin-1')
+            var mo = second_line.match(encoding_re)
+            if(mo){
+                encoding = mo[1]
+            }
+        }
+        $.source = _b_.bytes.decode($.source, encoding)
+    }
+
     if(interactive && ! $.source.endsWith("\n")){
         // This is used in codeop.py to raise SyntaxError until a block in the
         // interactive interpreter ends with "\n"
