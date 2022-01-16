@@ -30,7 +30,9 @@ return {
             {}, null, null)
         var ast = _b_.compile($.code, $.filename, $.compile_type,
             $B.PyCF_ONLY_AST)
-        return $B._PySymtable_Build(ast, $.filename)
+        var res = $B._PySymtable_Build(ast, $.filename)
+        console.log('result of symtable', res)
+        return res
     }
 }
 

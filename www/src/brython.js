@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-15 22:35:54.058080"
-__BRYTHON__.timestamp=1642282554058
+__BRYTHON__.compiled_date="2022-01-16 20:38:06.502227"
+__BRYTHON__.timestamp=1642361886502
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -8339,6 +8339,19 @@ $.__class__=code
 $.co_flags=$.flags
 $.name="<module>"
 var interactive=$.mode=="single" &&($.flags & 0x200)
+if(_b_.isinstance($.source,_b_.bytes)){var encoding='utf-8',lfpos=$.source.source.indexOf(10),first_line,second_line
+if(lfpos==-1){first_line=$.source}else{first_line=_b_.bytes.$factory($.source.source.slice(0,lfpos))}
+first_line=_b_.bytes.decode(first_line,'latin-1')
+var encoding_re=/^[\t\f]*#.*?coding[:=][\t]*([-_.a-zA-Z0-9]+)/
+var mo=first_line.match(encoding_re)
+if(mo){encoding=mo[1]}else if(lfpos >-1){
+var rest=$.source.source.slice(lfpos+1)
+lfpos=rest.indexOf(10)
+if(lfpos >-1){second_line=_b_.bytes.$factory(rest.slice(0,lfpos))}else{second_line=_b_.bytes.$factory(rest)}
+second_line=_b_.bytes.decode(second_line,'latin-1')
+var mo=second_line.match(encoding_re)
+if(mo){encoding=mo[1]}}
+$.source=_b_.bytes.decode($.source,encoding)}
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
@@ -10464,7 +10477,7 @@ function _hex(_int){return _int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 function normalise(encoding){var enc=encoding.toLowerCase()
 if(enc.substr(0,7)=="windows"){enc="cp"+enc.substr(7)}
-if(enc.startsWith("cp")||enc.startsWith("iso")){enc=enc.replace("-","")}
+if(enc.startsWith("cp-")||enc.startsWith("iso-")){enc=enc.replace("-","")}
 enc=enc.replace(/-/g,"_")
 return enc}
 function load_decoder(enc){
@@ -11033,6 +11046,7 @@ for(var op in ops){eval('$B.JSObj.'+ops[op]+' = '+
 $B.JSObj.__eq__=function(self,other){switch(typeof self){case "object":
 if(self.__eq__ !==undefined){return self.__eq__(other)}
 if(Object.keys(self).length !==Object.keys(other).length){return false}
+if(self===other){return true}
 for(var key in self){if(! $B.JSObj.__eq__(self[key],other[key])){return false}}
 default:
 return self===other}}
