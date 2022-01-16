@@ -130,9 +130,7 @@ class Widget:
 
     def config(self, **kw):
         element = self
-        if isinstance(self, Document):
-            element = document
-
+        
         if (value := kw.get('value')):
             if not isinstance(self, (Label, Entry)):
                 raise TypeError("invalid keyword 'value' for " +
@@ -250,8 +248,6 @@ class Widget:
     def grid(self, column=None, columnspan=1, row=None, rowspan=1, align='',
             **options):
         master = self.master
-        if isinstance(master, Document):
-            master = document
         if not hasattr(master, '_table'):
             master._table = html.TABLE(
                 cellpadding=0,
@@ -428,16 +424,14 @@ class Box(html.DIV, Widget):
 
     default_config = {
         'width': 'inherit',
-        'height': None,
         'background': backgroundColor,
         'color': color,
         'cursor': 'default',
         'menu': None,
-        'border': Border(width=1),
         'font': Font(family='sans-serif', size=12)
     }
 
-    def __init__(self, title="", container=document, titlebar=False, **options):
+    def __init__(self, container=document, title="", titlebar=False, **options):
         html.DIV.__init__(self,
             style="position:absolute;box-sizing:border-box")
 
@@ -547,21 +541,6 @@ class Checkbuttons(Frame):
             value=value if value is not None else label,
             checked=checked))
         self.add(Label(label))
-
-
-class Document(Widget):
-
-    default_config = {
-        'background': '#fff',
-        'color': color,
-        'menu': None,
-        'font': Font(family='sans-serif', size=12)
-    }
-
-    def __init__(self, **options):
-        self._options = self.default_config | options
-        self.config(**options)
-        self.menu = None
 
 
 class Button(html.BUTTON, Widget):

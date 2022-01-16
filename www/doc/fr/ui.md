@@ -8,45 +8,63 @@ technologies web habituelles (HTML, CSS).
 ```python
 from browser import ui
 
-container = ui.Document()
+box = ui.Box()
 element = ui.Label("Coucou")
-container.add(element)
+box.add(element)
 ```
 
 L'interface utilisateur est construite en ajoutant des éléments (ou "widgets")
-à des conteneurs.
-
-Le conteneur peut être le document entier (la page HTML), ou une boite définie
-par la classe `ui.Box`:
-
-```python
-from browser import ui
-
-container = ui.Box()
-element = ui.Label("Coucou")
-container.add(element)
-```
+à des boites de dialogue définis par la classe `ui.Box`:
 
 La boite est elle-même insérée dans un conteneur, qui est le document par
 défaut, mais qui peut être spécifié par l'argument _container_:
 
-<table>
+<table width="100%">
 <tr>
 <td width="50%">
 ```exec
 from browser import document, ui
 
-root = ui.Box(container=document["example-box-container"])
-root.add(ui.Label("Coucou"))
+container = document["example-box-container"]
+container.clear()
+
+box = ui.Box(container)
+box.add(ui.Label("Coucou"))
 ```
 </td>
-<td id="example-box-container" valign="top" style="padding-left:3em;">
+<td valign="top">
 <i style="font-size:0.7em">example-box-container</i>
+<div id="example-box-container" style="position:relative;"></div>
 </td>
 </tr>
 </table>
 _Le code ci-dessus est éditable, vous pouvez modifier les paramètres (par_
 _exemple le texte du `Label`) et voir l'effet en cliquant sur le bouton_ ▶
+
+Par défaut, la boite occupe toute la largeur du conteneur. Pour en occuper
+seulement une partie, on passe l'argument _width_ comme argument de `Box`:
+
+<table width="100%">
+<tr>
+<td width="50%">
+```exec
+from browser import document, ui
+
+container = document["example-box-width"]
+container.clear()
+
+box = ui.Box(container, width="50%")
+box.add(ui.Label("Coucou"))
+```
+</td>
+<td valign="top">
+<i style="font-size:0.7em">example-box-width</i>
+<div id="example-box-width" style="position:relative;"></div>
+</td>
+</tr>
+</table>
+
+
 
 Chaque élément est positionné dans une _cellule_ du conteneur.
 
@@ -146,8 +164,7 @@ from browser import document, ui
 playground = document["example-cells-width"]
 playground.clear()
 
-root = ui.Box(container=playground,
-              titlebar=None)
+root = ui.Box(container=playground)
 
 root.add(ui.Label("texte sur fond vert", background='green', color='white'))
 root.add(ui.Label("texte sur fond rouge", background='red', color='white'))
