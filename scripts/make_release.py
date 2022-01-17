@@ -53,6 +53,7 @@ with open(README_page, encoding="utf-8") as f:
         content)
     content = re.sub("npm/brython@\d\.x\.y", "npm/brython@" + vname1 + '.x.y',
         content)
+    content = re.sub("3\.\d+\.x", f'3.{version.version[1]}.x', content)
 
 with open(README_page, "w", encoding="utf-8") as out:
     out.write(content)
