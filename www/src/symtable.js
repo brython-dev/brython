@@ -69,7 +69,7 @@ var ModuleBlock = 2,
 
 function LOCATION(x){
     // (x)->lineno, (x)->col_offset, (x)->end_lineno, (x)->end_col_offset
-    this.x = x
+    return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
 }
 
 function _Py_Mangle(privateobj, ident){
@@ -171,7 +171,7 @@ function ste_new(st, name, block,
     if (k == NULL){
         return NULL
     }
-    
+
     ste = {
         table: st,
         id: k, /* ste owns reference to k */
@@ -730,7 +730,6 @@ function symtable_enter_block(st, name, block,
                      ast, lineno, col_offset,
                      end_lineno, end_col_offset){
     var prev
-
     var ste = ste_new(st, name, block, ast,
                       lineno, col_offset, end_lineno, end_col_offset)
 
@@ -771,8 +770,13 @@ function symtable_lookup(st, name){
     return ret;
 }
 
-function symtable_add_def_helper(st, name, flag, ste,
-                        lineno, col_offset, end_lineno, end_col_offset){
+function symtable_add_def_helper(st, name, flag, ste, _location){
+
+    var lineno = _location.lineno,
+        col_offset = _location.col_offset,
+        end_lineno = _location.end_lineno,
+        end_col_offset = _location.end_col_offset
+
     var o, dict, val, mangled = _Py_Mangle(st.private, name)
 
     if (!mangled){
@@ -834,10 +838,8 @@ function symtable_add_def_helper(st, name, flag, ste,
     return 1
 }
 
-function symtable_add_def(st, name, flag,
-                 lineno, col_offset, end_lineno, end_col_offset){
-    return symtable_add_def_helper(st, name, flag, st.cur,
-                        lineno, col_offset, end_lineno, end_col_offset);
+function symtable_add_def(st, name, flag, _location){
+    return symtable_add_def_helper(st, name, flag, st.cur, _location);
 }
 
 /* VISIT, VISIT_SEQ and VIST_SEQ_TAIL take an ASDL type as their second argument.
@@ -918,11 +920,12 @@ function symtable_visit_stmt(st, s){
         if (!symtable_visit_annotations(st, s, s.args,
                                         s.returns))
             VISIT_QUIT(st, 0)
-        if (s.decorator_list)
+        if(s.decorator_list){
             VISIT_SEQ(st, expr, s.decorator_list)
+        }
         if (!symtable_enter_block(st, s.name,
                                   FunctionBlock, s,
-                                  LOCATION(s))){
+                                  ...LOCATION(s))){
             VISIT_QUIT(st, 0)
         }
         VISIT(st, 'arguments', s.args)
@@ -1516,7 +1519,7 @@ function symtable_visit_params(st, args){
 function symtable_visit_annotation(st, annotation){
     var future_annotations = st.future.ff_features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
-        !symtable_enter_block(st, GET_IDENTIFIER(_annotation), AnnotationBlock,
+        !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               annotation, annotation.lineno,
                               annotation.col_offset, annotation.end_lineno,
                               annotation.end_col_offset)) {
@@ -1546,7 +1549,7 @@ function symtable_visit_argannotations(st, args){
 function symtable_visit_annotations(st, o, a, returns){
     var future_annotations = st.future.ff_features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
-        !symtable_enter_block(st, GET_IDENTIFIER(_annotation), AnnotationBlock,
+        !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               o, o.lineno, o.col_offset, o.end_lineno,
                               o.end_col_offset)) {
         VISIT_QUIT(st, 0);
@@ -1628,7 +1631,7 @@ function symtable_visit_alias(st, a){
     */
     var store_name,
         name = (a.asname == NULL) ? a.name : a.asname;
-    var dot = name.search('.');
+    var dot = name.search('\\.');
     if (dot != -1) {
         store_name = name.substring(0, dot);
         if (!store_name)
