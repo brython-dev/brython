@@ -62,14 +62,14 @@ var TYPE_CLASS = 1,
 
 var NULL = undefined
 
-var ModuleBlock = {},
-    ClassBlock = {},
-    FunctionBlock = {},
-    AnnotationBlock = {}
+var ModuleBlock = 2,
+    ClassBlock = 1,
+    FunctionBlock = 0,
+    AnnotationBlock = 4
 
 function LOCATION(x){
     // (x)->lineno, (x)->col_offset, (x)->end_lineno, (x)->end_col_offset
-    this.x = x
+    return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
 }
 
 function _Py_Mangle(privateobj, ident){
@@ -171,11 +171,7 @@ function ste_new(st, name, block,
     if (k == NULL){
         return NULL
     }
-    var type = block instanceof $B.ast.Module ?
-                   ModuleBlock :
-                   block instanceof $B.ast.FunctionDef ?
-                   FunctionBlock :
-                   ClassBlock
+
     ste = {
         table: st,
         id: k, /* ste owns reference to k */
@@ -183,7 +179,7 @@ function ste_new(st, name, block,
 
         directives: NULL,
 
-        type: type,
+        type: block,
         nested: 0,
         free: 0,
         varargs: 0,
@@ -196,8 +192,8 @@ function ste_new(st, name, block,
         end_col_offset: end_col_offset
     }
     if(st.cur != NULL &&
-            (st.cur.ste_nested ||
-             st.cur.ste_type == FunctionBlock)){
+            (st.cur.nested ||
+             st.cur.type == FunctionBlock)){
         ste.nested = 1;
     }
     ste.child_free = 0
@@ -209,7 +205,7 @@ function ste_new(st, name, block,
     ste.comp_iter_target = 0
     ste.comp_iter_expr = 0
 
-    ste.symbols = {}
+    ste.symbols = $B.empty_dict()
     ste.varnames = []
     ste.children = []
 
@@ -264,17 +260,11 @@ function PySymtable_Lookup(st, key){
     return v
 }
 
-function _PyST_GetSymbol(ste, name)
-{
-    if(! ste.symbols.hasOwnProperty(name)){
+function _PyST_GetSymbol(ste, name){
+    if(! ste.symbols.$string_dict.hasOwnProperty(name)){
         return 0
     }
-    return ste.symbols[name]
-}
-
-function _PyST_GetScope(ste, name){
-    var symbol = _PyST_GetSymbol(ste, name)
-    return (symbol >> SCOPE_OFFSET) & SCOPE_MASK
+    return ste.symbols.$string_dict[name][0]
 }
 
 function error_at_directive(ste, name){
@@ -456,19 +446,13 @@ function analyze_cells(scopes, free){
            in the dict, because it will not cause a resize.
          */
         scopes[name] = v_cell
-        if(! free.delete(name)){
-            return success
-        }
+        free.delete(name)
     }
     return 1
 }
 
 function drop_class_free(ste, free){
-    var res;
-    res = free.delete('__class__')
-    if (! res){
-        return 0
-    }
+    var res = free.delete('__class__')
     if(res){
         ste.needs_class_closure = 1
     }
@@ -489,8 +473,8 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         pos = 0
 
     /* Update scope information for all symbols in this scope */
-    for(var name in symbols){
-        var flags = symbols[name]
+    for(var name in symbols.$string_dict){
+        var flags = symbols.$string_dict[name][0]
         v_scope = scopes[name]
         var scope = v_scope
         flags |= (scope << SCOPE_OFFSET)
@@ -498,7 +482,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         if (!v_new){
             return 0;
         }
-        symbols[name] = v_new
+        symbols.$string_dict[name][0] = v_new
     }
 
     /* Record not yet resolved free variables from children (if any) */
@@ -512,7 +496,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         }catch(err){
             break
         }
-        v = symbols[name]
+        v = symbols.$string_dict[name][0]
 
         /* Handle symbol that already exists in this scope */
         if (v) {
@@ -527,7 +511,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
                 if (!v_new) {
                     return 0;
                 }
-                symbols[name] = v_new
+                symbols.$string_dict[name][0] = v_new
             }
             /* It's a cell, or already free in this scope */
             continue;
@@ -537,7 +521,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
             continue;       /* it's a global */
         }
         /* Propagate new free symbol up the lexical stack */
-        symbols[name] = v_free
+        symbols.$string_dict[name][0] = v_free
     }
 
     return 1
@@ -571,9 +555,6 @@ function analyze_block(ste, bound, free, global){
         temp, i, success = 0, pos = 0;
 
     local = new Set()  /* collect new names bound in block */
-    if (!local){
-        return 0
-    }
     scopes = {}  /* collect scopes defined for each name */
 
     /* Allocate new global and bound variable dictionaries.  These
@@ -606,11 +587,13 @@ function analyze_block(ste, bound, free, global){
         }
     }
 
-    for(var name in ste.symbols){
-        var flags = ste.symbols[name]
+    for(var name in ste.symbols.$string_dict){
+        var flags = ste.symbols.$string_dict[name][0]
         if (!analyze_name(ste, scopes, name, flags,
-                          bound, local, free, global))
+                          bound, local, free, global)){
+            console.log('rturn 0 line 607')
             return 0
+        }
     }
 
 
@@ -642,7 +625,7 @@ function analyze_block(ste, bound, free, global){
 
     for (var c of ste.children){
         var entry = c
-        if (!analyze_child_block(entry, newbound, newfree, newglobal,
+        if (! analyze_child_block(entry, newbound, newfree, newglobal,
                                  allfree)){
             return 0
         }
@@ -656,6 +639,7 @@ function analyze_block(ste, bound, free, global){
 
     /* Check if any local variables must be converted to cell variables */
     if (ste.type === FunctionBlock && !analyze_cells(scopes, newfree)){
+        console.log('rturn 0 line 655')
         return 0
     }else if (ste.type === ClassBlock && !drop_class_free(ste, newfree)){
         return 0
@@ -686,7 +670,6 @@ function Set_Union(setA, setB) {
 
 function analyze_child_block(entry, bound, free,
                     global, child_free){
-
     /* Copy the bound and global dictionaries.
 
        These dictionaries are used by all blocks enclosed by the
@@ -734,7 +717,6 @@ function symtable_enter_block(st, name, block,
                      ast, lineno, col_offset,
                      end_lineno, end_col_offset){
     var prev
-
     var ste = ste_new(st, name, block, ast,
                       lineno, col_offset, end_lineno, end_col_offset)
 
@@ -757,7 +739,7 @@ function symtable_enter_block(st, name, block,
         return 1
     }
 
-    if (block == ModuleBlock){
+    if (block === ModuleBlock){
         st.global = st.cur.symbols
     }
     if (prev) {
@@ -775,16 +757,22 @@ function symtable_lookup(st, name){
     return ret;
 }
 
-function symtable_add_def_helper(st, name, flag, ste,
-                        lineno, col_offset, end_lineno, end_col_offset){
-    var o, dict, val, mangled = _Py_Mangle(st.private, name)
+function symtable_add_def_helper(st, name, flag, ste, _location){
+    var test = name == "glob"
 
+    var lineno = _location.lineno,
+        col_offset = _location.col_offset,
+        end_lineno = _location.end_lineno,
+        end_col_offset = _location.end_col_offset
+
+    var o, dict, val, mangled = _Py_Mangle(st.private, name)
+    
     if (!mangled){
         return 0
     }
     dict = ste.symbols
-    if(dict.hasOwnProperty(mangled)){
-        o = dict[mangled]
+    if(dict.$string_dict.hasOwnProperty(mangled)){
+        o = dict.$string_dict[mangled][0]
         val = o
         if ((flag & DEF_PARAM) && (val & DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */
@@ -818,7 +806,7 @@ function symtable_add_def_helper(st, name, flag, ste,
     if (o == NULL){
         return 0
     }
-    dict[mangled] = o
+    _b_.dict.$setitem(dict, mangled, o)
 
     if (flag & DEF_PARAM) {
         ste.varnames.push(mangled)
@@ -828,8 +816,6 @@ function symtable_add_def_helper(st, name, flag, ste,
         val = flag
         if (st.global.hasOwnProperty(mangled)){ // (o = PyDict_GetItemWithError(st.global, mangled))) {
             val |= st.global[mangled]
-        }else if (PyErr_Occurred()) {
-            return 0
         }
         o = val
         if (o == NULL){
@@ -840,10 +826,8 @@ function symtable_add_def_helper(st, name, flag, ste,
     return 1
 }
 
-function symtable_add_def(st, name, flag,
-                 lineno, col_offset, end_lineno, end_col_offset){
-    return symtable_add_def_helper(st, name, flag, st.cur,
-                        lineno, col_offset, end_lineno, end_col_offset);
+function symtable_add_def(st, name, flag, _location){
+    return symtable_add_def_helper(st, name, flag, st.cur, _location);
 }
 
 /* VISIT, VISIT_SEQ and VIST_SEQ_TAIL take an ASDL type as their second argument.
@@ -924,11 +908,12 @@ function symtable_visit_stmt(st, s){
         if (!symtable_visit_annotations(st, s, s.args,
                                         s.returns))
             VISIT_QUIT(st, 0)
-        if (s.decorator_list)
+        if(s.decorator_list){
             VISIT_SEQ(st, expr, s.decorator_list)
+        }
         if (!symtable_enter_block(st, s.name,
                                   FunctionBlock, s,
-                                  LOCATION(s))){
+                                  ...LOCATION(s))){
             VISIT_QUIT(st, 0)
         }
         VISIT(st, 'arguments', s.args)
@@ -1430,7 +1415,7 @@ function symtable_visit_expr(st, e){
         break;
     case $B.ast.Name:
         var flag = e.ctx instanceof $B.ast.Load ? USE : DEF_LOCAL
-        if (!symtable_add_def(st, e.id, flag, LOCATION(e)))
+        if (! symtable_add_def(st, e.id, flag, LOCATION(e)))
             VISIT_QUIT(st, 0);
         /* Special-case super: it counts as a use of __class__ */
         if (e.ctx instanceof $B.ast.Load &&
@@ -1522,7 +1507,7 @@ function symtable_visit_params(st, args){
 function symtable_visit_annotation(st, annotation){
     var future_annotations = st.future.ff_features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
-        !symtable_enter_block(st, GET_IDENTIFIER(_annotation), AnnotationBlock,
+        !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               annotation, annotation.lineno,
                               annotation.col_offset, annotation.end_lineno,
                               annotation.end_col_offset)) {
@@ -1552,7 +1537,7 @@ function symtable_visit_argannotations(st, args){
 function symtable_visit_annotations(st, o, a, returns){
     var future_annotations = st.future.ff_features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
-        !symtable_enter_block(st, GET_IDENTIFIER(_annotation), AnnotationBlock,
+        !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               o, o.lineno, o.col_offset, o.end_lineno,
                               o.end_col_offset)) {
         VISIT_QUIT(st, 0);
@@ -1634,7 +1619,7 @@ function symtable_visit_alias(st, a){
     */
     var store_name,
         name = (a.asname == NULL) ? a.name : a.asname;
-    var dot = name.search('.');
+    var dot = name.search('\\.');
     if (dot != -1) {
         store_name = name.substring(0, dot);
         if (!store_name)
