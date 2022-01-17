@@ -188,7 +188,8 @@ function run_py(module_contents, path, module, compiled) {
 
         var src = {
             src: module_contents,
-            has_annotations: false
+            has_annotations: false,
+            filename: path
         }
 
         root = $B.py2js(src, module,
@@ -1243,7 +1244,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                 line_num = parseInt(line_elts[0])
                             $B.$SyntaxError(frame[2],
                                 "future feature " + name + " is not defined",
-                                current_frame[3].src, undefined, line_num)
+                                current_frame[3].src, undefined, line_num,
+                                {filename: mod_name})
                         }
                         if($err3.$py_error){
                             throw $err3

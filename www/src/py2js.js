@@ -2652,7 +2652,7 @@ $ClassCtx.prototype.set_name = function(name){
     this.id = context.node.module + '_' + name + '_' + this.random
     this.binding = {}
     this.parent.node.id = this.id
-    
+
     var scope = this.scope,
         parent_block = scope
 
@@ -3335,6 +3335,7 @@ $DefCtx.prototype.ast = function(){
         res.returns = ast_or_obj(this.annotation.tree[0])
     }
     res.body = ast_body(this.parent)
+    res.lineno = this.parent.node.line_num
     return res
 }
 
@@ -3349,7 +3350,7 @@ $DefCtx.prototype.set_name = function(name){
     this.id += '_' + $B.UUID()
     this.parent.node.id = this.id
     this.parent.node.module = this.module
-    
+
     this.binding = {}
 
     var scope = this.scope
@@ -12928,7 +12929,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         if($B.js_from_ast){
             _ast.$id = locals_id
             console.log('symtable', $B._PySymtable_Build(_ast, locals_id))
-            
+
             var js_from_ast = $B.js_from_root(_ast, locals_id)
 
             console.log($B.format_indent(js_from_ast, 0))

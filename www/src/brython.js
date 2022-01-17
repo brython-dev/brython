@@ -113,9 +113,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-15 22:35:54.058080"
-__BRYTHON__.timestamp=1642282554058
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
+__BRYTHON__.compiled_date="2022-01-17 15:08:38.831299"
+__BRYTHON__.timestamp=1642428518831
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
@@ -1952,6 +1952,7 @@ args=ast_or_obj(func_args)
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=ast_or_obj(this.annotation.tree[0])}
 res.body=ast_body(this.parent)
+res.lineno=this.parent.node.line_num
 return res}
 $DefCtx.prototype.set_name=function(name){if(["None","True","False"].indexOf(name)>-1){$_SyntaxError(this,'invalid function name')}
 var id_ctx=new $IdCtx(this,name)
@@ -8339,6 +8340,23 @@ $.__class__=code
 $.co_flags=$.flags
 $.name="<module>"
 var interactive=$.mode=="single" &&($.flags & 0x200)
+if(_b_.isinstance($.source,_b_.bytes)){var encoding='utf-8',lfpos=$.source.source.indexOf(10),first_line,second_line
+if(lfpos==-1){first_line=$.source}else{first_line=_b_.bytes.$factory($.source.source.slice(0,lfpos))}
+first_line=_b_.bytes.decode(first_line,'latin-1')
+var encoding_re=/^[\t\f]*#.*?coding[:=][\t]*([-_.a-zA-Z0-9]+)/
+var mo=first_line.match(encoding_re)
+if(mo){encoding=mo[1]}else if(lfpos >-1){
+var rest=$.source.source.slice(lfpos+1)
+lfpos=rest.indexOf(10)
+if(lfpos >-1){second_line=_b_.bytes.$factory(rest.slice(0,lfpos))}else{second_line=_b_.bytes.$factory(rest)}
+second_line=_b_.bytes.decode(second_line,'latin-1')
+var mo=second_line.match(encoding_re)
+if(mo){encoding=mo[1]}}
+$.source=_b_.bytes.decode($.source,encoding)}
+if(!_b_.isinstance($.filename,[_b_.bytes,_b_.str])){
+$B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+`path should be string, bytes, or os.PathLike, `+
+`not ${$B.class_name($.filename)}`))}
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
@@ -9486,7 +9504,7 @@ exc.__context__=C
 exc.__cause__=cause ||_b_.None
 exc.__suppress_context__=cause !==undefined
 throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
-$B.$syntax_err_line=function(exc,module,src,pos,line_num){
+$B.$syntax_err_line=function(exc,module,src,pos,line_num,filename){
 var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" :module
 if(src===undefined){exc.$line_info=line_num+','+module
 exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,0,0])])}else{var line_pos={1:0}
@@ -9502,14 +9520,14 @@ if(lpos < 0){lpos=0}
 while(line.charAt(0)==' '){line=line.substr(1)
 if(lpos > 0){lpos--}}
 exc.offset=lpos+1 
-exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,lpos,line])])}
+exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([filename,line_num,lpos,line])])}
 exc.lineno=line_num
 exc.msg=exc.args[0]
-exc.filename=module}
+exc.filename=filename}
 $B.$SyntaxError=function(module,msg,src,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos,line_num)
+$B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
 $B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){$B.frames_stack.push([module,{$line_info:line_num+","+module},module,{$src:src}])
 if(root !==undefined && root.line_info !==undefined){
@@ -9537,7 +9555,7 @@ type=`'${indented_node.C.tree[0].token}' statement`
 break}
 msg+=` after ${type} on line ${indented_node.line_num}`}
 var exc=_b_.IndentationError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos,line_num)
+$B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
 $B.print_stack=function(stack){stack=stack ||$B.frames_stack
 var trace=[]
@@ -10064,6 +10082,7 @@ var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove"
 mutable_methods.forEach(function(method){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
 return _b_.list[m].apply(null,args)}})(method)})
+bytearray.__hash__=_b_.None
 var bytearray_iterator=$B.make_iterator_class('bytearray_iterator')
 bytearray.__iter__=function(self){return bytearray_iterator.$factory(self.source)}
 bytearray.__mro__=[_b_.object]
@@ -10464,7 +10483,7 @@ function _hex(_int){return _int.toString(16)}
 function _int(hex){return parseInt(hex,16)}
 function normalise(encoding){var enc=encoding.toLowerCase()
 if(enc.substr(0,7)=="windows"){enc="cp"+enc.substr(7)}
-if(enc.startsWith("cp")||enc.startsWith("iso")){enc=enc.replace("-","")}
+if(enc.startsWith("cp-")||enc.startsWith("iso-")){enc=enc.replace("-","")}
 enc=enc.replace(/-/g,"_")
 return enc}
 function load_decoder(enc){
@@ -11033,6 +11052,7 @@ for(var op in ops){eval('$B.JSObj.'+ops[op]+' = '+
 $B.JSObj.__eq__=function(self,other){switch(typeof self){case "object":
 if(self.__eq__ !==undefined){return self.__eq__(other)}
 if(Object.keys(self).length !==Object.keys(other).length){return false}
+if(self===other){return true}
 for(var key in self){if(! $B.JSObj.__eq__(self[key],other[key])){return false}}
 default:
 return self===other}}
@@ -11140,11 +11160,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -11218,7 +11238,7 @@ function run_py(module_contents,path,module,compiled){
 $B.file_cache[path]=module_contents
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-var src={src:module_contents,has_annotations:false}
+var src={src:module_contents,has_annotations:false,filename:path}
 root=$B.py2js(src,module,module.__name__,$B.builtins_scope)
 if(module.__package__ !==undefined){root.binding["__package__"]=true}}
 try{js=compiled ? module_contents :root.to_js()
@@ -11593,7 +11613,7 @@ try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
-$B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
+$B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num,{filename:mod_name})}
 if($err3.$py_error){throw $err3}
 if($B.debug > 1){console.log($err3)
 console.log($B.last($B.frames_stack))}

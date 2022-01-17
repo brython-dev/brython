@@ -368,6 +368,9 @@ $B.JSObj.__eq__ = function(self, other){
             if(Object.keys(self).length !== Object.keys(other).length){
                 return false
             }
+            if(self === other){
+                return true
+            }
             for(var key in self){
                 if(! $B.JSObj.__eq__(self[key], other[key])){
                     return false
