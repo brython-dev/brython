@@ -61,7 +61,7 @@ $B.$raise = function(arg, context, cause){
     }
 }
 
-$B.$syntax_err_line = function(exc, module, src, pos, line_num){
+$B.$syntax_err_line = function(exc, module, src, pos, line_num, filename){
     // map position to line number
     var pos2line = {},
         lnum = 1,
@@ -95,11 +95,11 @@ $B.$syntax_err_line = function(exc, module, src, pos, line_num){
         }
         exc.offset = lpos + 1 // starts at column 1, not 0
         exc.args = $B.fast_tuple([$B.$getitem(exc.args, 0),
-            $B.fast_tuple([module, line_num, lpos, line])])
+            $B.fast_tuple([filename, line_num, lpos, line])])
     }
     exc.lineno = line_num
     exc.msg = exc.args[0]
-    exc.filename = module
+    exc.filename = filename
 }
 
 $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
@@ -108,7 +108,7 @@ $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
         line_num = root.line_info
     }
     var exc = _b_.SyntaxError.$factory(msg)
-    $B.$syntax_err_line(exc, module, src, pos, line_num)
+    $B.$syntax_err_line(exc, module, src, pos, line_num, root.filename)
     throw exc
 }
 
@@ -147,7 +147,7 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root,
         msg += ` after ${type} on line ${indented_node.line_num}`
     }
     var exc = _b_.IndentationError.$factory(msg)
-    $B.$syntax_err_line(exc, module, src, pos, line_num)
+    $B.$syntax_err_line(exc, module, src, pos, line_num, root.filename)
     throw exc
 }
 

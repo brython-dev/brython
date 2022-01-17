@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-16 20:38:06.502227"
-__BRYTHON__.timestamp=1642361886502
+__BRYTHON__.compiled_date="2022-01-17 08:24:05.478399"
+__BRYTHON__.timestamp=1642404245478
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1952,6 +1952,7 @@ args=ast_or_obj(func_args)
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=ast_or_obj(this.annotation.tree[0])}
 res.body=ast_body(this.parent)
+res.lineno=this.parent.node.line_num
 return res}
 $DefCtx.prototype.set_name=function(name){if(["None","True","False"].indexOf(name)>-1){$_SyntaxError(this,'invalid function name')}
 var id_ctx=new $IdCtx(this,name)
@@ -9499,7 +9500,7 @@ exc.__context__=C
 exc.__cause__=cause ||_b_.None
 exc.__suppress_context__=cause !==undefined
 throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
-$B.$syntax_err_line=function(exc,module,src,pos,line_num){
+$B.$syntax_err_line=function(exc,module,src,pos,line_num,filename){
 var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" :module
 if(src===undefined){exc.$line_info=line_num+','+module
 exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,0,0])])}else{var line_pos={1:0}
@@ -9515,14 +9516,14 @@ if(lpos < 0){lpos=0}
 while(line.charAt(0)==' '){line=line.substr(1)
 if(lpos > 0){lpos--}}
 exc.offset=lpos+1 
-exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,lpos,line])])}
+exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([filename,line_num,lpos,line])])}
 exc.lineno=line_num
 exc.msg=exc.args[0]
-exc.filename=module}
+exc.filename=filename}
 $B.$SyntaxError=function(module,msg,src,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos,line_num)
+$B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
 $B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){$B.frames_stack.push([module,{$line_info:line_num+","+module},module,{$src:src}])
 if(root !==undefined && root.line_info !==undefined){
@@ -9550,7 +9551,7 @@ type=`'${indented_node.C.tree[0].token}' statement`
 break}
 msg+=` after ${type} on line ${indented_node.line_num}`}
 var exc=_b_.IndentationError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos,line_num)
+$B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
 $B.print_stack=function(stack){stack=stack ||$B.frames_stack
 var trace=[]
@@ -11232,7 +11233,7 @@ function run_py(module_contents,path,module,compiled){
 $B.file_cache[path]=module_contents
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-var src={src:module_contents,has_annotations:false}
+var src={src:module_contents,has_annotations:false,filename:path}
 root=$B.py2js(src,module,module.__name__,$B.builtins_scope)
 if(module.__package__ !==undefined){root.binding["__package__"]=true}}
 try{js=compiled ? module_contents :root.to_js()
@@ -11607,7 +11608,7 @@ try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
-$B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num)}
+$B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num,{filename:mod_name})}
 if($err3.$py_error){throw $err3}
 if($B.debug > 1){console.log($err3)
 console.log($B.last($B.frames_stack))}
