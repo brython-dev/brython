@@ -2953,6 +2953,7 @@ $ConditionCtx.prototype.ast = function(){
         res.orelse = []
     }
     res.body = ast_body(this)
+    res.lineno = this.node.line_num
     return res
 }
 
@@ -5180,7 +5181,9 @@ $ForExpr.prototype.ast = function(){
         orelse = this.orelse ? ast_or_obj(this.orelse) : [],
         type_comment,
         body = ast_body(this.parent)
-    return new ast.For(target, iter, body, orelse, type_comment)
+    var res = new ast.For(target, iter, body, orelse, type_comment)
+    res.lineno = this.parent.node.line_num
+    return res
 }
 
 $ForExpr.prototype.toString = function(){
@@ -7421,10 +7424,11 @@ ListCompCtx.prototype.ast = function(){
     // ast.ListComp(elt, generators)
     // elt is the part evaluated for each item
     // generators is a list of comprehensions
-    return new ast.ListComp(
-        ast_or_obj(this.tree[0]),
-        Comprehension.generators(this.tree.slice(1))
-    )
+    var res = new ast.ListComp(
+            ast_or_obj(this.tree[0]),
+            Comprehension.generators(this.tree.slice(1)))
+    res.lineno = $get_node(this).line_num
+    return res
 }
 
 ListCompCtx.prototype.transition = function(token, value){
@@ -10543,7 +10547,14 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
 
 $SubCtx.prototype.ast = function(){
     var slice = ast_or_obj(this.tree[0])
-    return new ast.Subscript(ast_or_obj(this.value), slice, new ast.Load())
+    if(slice.ctx){
+        slice.ctx = new ast.Load()
+    }
+    var value = ast_or_obj(this.value)
+    if(value.ctx){
+        value.ctx = new ast.Load()
+    }
+    return new ast.Subscript(value, slice, new ast.Load())
 }
 
 $SubCtx.prototype.toString = function(){
@@ -12928,9 +12939,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         }
         if($B.js_from_ast){
             _ast.$id = locals_id
-            console.log('symtable', $B._PySymtable_Build(_ast, locals_id))
+            var symtable = $B._PySymtable_Build(_ast, locals_id)
 
-            var js_from_ast = $B.js_from_root(_ast, locals_id)
+            var js_from_ast = $B.js_from_root(_ast, symtable)
 
             console.log($B.format_indent(js_from_ast, 0))
             if(locals_id == 'js_from_ast'){

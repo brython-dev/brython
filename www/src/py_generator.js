@@ -58,7 +58,7 @@ $B.generator.__next__ = function(self){
 }
 
 $B.generator.__str__ = function(self){
-    return '<' + self.$name + ' object>'
+    return '<' + (self.$name || 'generator') + ' object>'
 }
 
 $B.generator.close = function(self){
@@ -210,12 +210,5 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
 }
 
 $B.set_func_names($B.async_generator, "builtins")
-
-function rstrip(s, strip_chars){
-    var _chars = strip_chars || " \t\n";
-    var nstrip = 0, len = s.length;
-    while(nstrip < len && _chars.indexOf(s.charAt(len-1-nstrip)) > -1) nstrip ++;
-    return s.substr(0, len-nstrip)
-}
 
 })(__BRYTHON__)
