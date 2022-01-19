@@ -163,6 +163,7 @@ if($B.ast_classes){
             var child_ast = ast_or_obj(ctx)
             if(ast.expr.indexOf(child_ast.constructor) > -1){
                 child_ast = new ast.Expr(child_ast)
+                child_ast.lineno = child.line_num
             }
             body.push(child_ast)
         }
@@ -537,6 +538,7 @@ $Node.prototype.ast = function(){
         var node_ast = ast_or_obj(node.context.tree[0])
         if(ast.expr.indexOf(node_ast.constructor) > -1){
             node_ast = new ast.Expr(node_ast)
+            node_ast.lineno = node.line_num
         }
         root_ast.body.push(node_ast)
     }

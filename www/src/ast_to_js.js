@@ -30,8 +30,14 @@ function binding_scope(name, scopes){
     // return the scope where name is bound, or undefined
     var scope = $B.last(scopes)
     if(scope.ast){
-        var block = scopes.symtable.table.blocks.get(scope.ast),
+        var block = scopes.symtable.table.blocks.get(scope.ast)
+
+        try{
             symbol = block.symbols.$string_dict[name][0]
+        }catch(err){
+            console.log(name, block)
+            throw err
+        }
         if(symbol & 2){
             // name is local
             return scope
@@ -313,7 +319,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
     var value = $B.js_from_ast(this.value, scopes)
     if(this.target instanceof $B.ast.Name){
         var scope = binding_scope(this.target.id, scopes)
-        if(! scope){
+        if(! scope || op == '@'){
             return `locals.${this.target.id} = $B.augm_assign(` +
                 `$B.resolve('${this.target.id}'), '${iop}', ${value})`
         }else{
@@ -323,13 +329,15 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
                 `locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`
         }
     }else if(this.target instanceof $B.ast.Subscript){
-        return `$B.$setitem(($locals.$tg = ${target.value.to_js()}), ` +
-            `($locals.$key = ${target.tree[0].to_js()}), $B.augm_assign($B.$getitem(` +
-            `$locals.$tg, $locals.$key), '${this.op}', ${this.tree[1].to_js()}))`
+        var op = opclass2dunder[this.op.constructor.$name]
+        return `$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
+            `(locals.$key = ${this.target.slice.to_js(scopes)}), $B.rich_op('${op}', ` +
+            `$B.$getitem(locals.$tg, locals.$key), ${value}))`
     }else if(this.target instanceof $B.ast.Attribute){
-        return `$B.$setattr(($locals.$tg = ${target.value.to_js()}), ` +
-            `'${target.name}', $B.augm_assign($B.$getattr(` +
-            `$locals.$tg, '${target.name}'), '${this.op}', ${this.tree[1].to_js()}))`
+        var op = opclass2dunder[this.op.constructor.$name]
+        return `$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
+            `'${this.target.attr}', $B.rich_op('${op}', ` +
+            `$B.$getattr(locals.$tg, '${this.target.attr}'), ${value}))`
     }
     var js,
         target = $B.js_from_ast(this.target, scopes),
@@ -353,14 +361,80 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
         `${$B.js_from_ast(this.right, scopes)})`
 }
 
+$B.ast.BoolOp.prototype.to_js = function(scopes){
+    var op = this.op instanceof $B.ast.Or ? 'or' : 'and'
+    if(this.values.length == 2){
+        return `$B.rich_op('${op}', ` +
+               `${$B.js_from_ast(this.values[0], scopes)}, `+
+               `${$B.js_from_ast(this.values[1], scopes)})`
+    }else{
+        var res = `$B.rich_op('${op}', ` +
+               `${$B.js_from_ast(this.values[0], scopes)}, `+
+               `${$B.js_from_ast(this.values[1], scopes)})`
+        for(var v of this.values.slice(2)){
+            res = `$B.rich_op('${op}', ` + res +
+                  `, ${$B.js_from_ast(v, scopes)})`
+        }
+        return res
+    }
+}
+
 $B.ast.Call.prototype.to_js = function(scopes){
     var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')'
-    var args = []
+    var named_args = [],
+        starred_args = [],
+        named_kwargs = [],
+        starred_kwargs = [],
+        has_starred = false
     for(var arg of this.args){
-        args.push($B.js_from_ast(arg, scopes))
+        if(arg instanceof $B.ast.Starred){
+            has_starred = true
+            starred_args.push($B.js_from_ast(arg.value, scopes))
+        }else{
+            named_args.push($B.js_from_ast(arg, scopes))
+        }
     }
-    js += '(' + args.join(', ') + ')'
-    return js
+    for(var keyword of this.keywords){
+        if(keyword.arg){
+            named_kwargs.push(
+                `${keyword.arg}: ${$B.js_from_ast(keyword.value, scopes)}`)
+        }else{
+            has_starred = true
+            starred_kwargs.push($B.js_from_ast(keyword.value, scopes))
+        }
+    }
+
+    if(has_starred){
+        js += '.apply(null, '
+    }else{
+        js += '('
+    }
+    var args = ''
+    if(starred_args.length == 0){
+        args += `${named_args}`
+    }else{
+        args += `[${named_args}]`
+        for(var starred_arg of starred_args){
+            args += `.concat(${starred_arg})`
+        }
+    }
+    if(named_kwargs.length + starred_kwargs.length == 0){
+        return js + `${args})`
+    }else if(starred_kwargs.length == 0){
+        var sk = "{$nat: 'kw', kw:{" + named_kwargs.join(', ') + '}}'
+        if(has_starred){
+            args += `.concat([${sk}])`
+        }else{
+            args += (args.length == 0 ? sk : `, ${sk}`)
+        }
+    }else{
+        args += ".concat([{$nat: 'kw', kw:[{" + named_kwargs.join(', ') + '}'
+        for(var starred_kwarg of starred_kwargs){
+            args += `, ${starred_kwarg}`
+        }
+        args += ']}])'
+    }
+    return js + args + ')'
 }
 
 $B.ast.ClassDef.prototype.to_js = function(scopes){
@@ -417,6 +491,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     return js
 }
+
 $B.ast.Compare.prototype.to_js = function(scopes){
     var left = $B.js_from_ast(this.left, scopes),
         comps = []
@@ -486,7 +561,7 @@ $B.ast.Constant.prototype.to_js = function(scopes){
         case 'imaginary':
             var v = $B.ast.Constant.prototype.to_js.bind({value})(scopes)
             return '$B.make_complex(0,' + v + ')'
-        case 'ellipisis':
+        case 'ellipsis':
             return `_b_.Ellipsis`
         case 'str':
             var lines = value.split('\n')
@@ -530,7 +605,8 @@ $B.ast.DictComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
-    return $B.js_from_ast(this.value, scopes)
+    return `locals.$line_info = ${this.lineno}\n`+
+        $B.js_from_ast(this.value, scopes)
 }
 
 $B.ast.For.prototype.to_js = function(scopes){
@@ -556,7 +632,35 @@ $B.ast.For.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.FormattedValue.prototype.to_js = function(scopes){
+    var value = $B.js_from_ast(this.value, scopes)
+    if(this.conversion == 114){
+        value = `_b_.repr(${value})`
+    }else if(this.conversion == 115){
+        value = `_b_.str.$factory(${value})`
+    }else if(this.conversion == 97){
+        value = `_b_.ascii(${value})`
+    }
+    if(this.format_spec){
+        value = `_b_.str.format('{0:' + `+
+                $B.js_from_ast(this.format_spec, scopes) +
+                ` + '}', ${value})`
+    }
+    return value
+}
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
+
+    var decorators = [],
+        decorated = false,
+        decs = ''
+    for(var dec of this.decorator_list){
+        decorated = true
+        var dec_id = 'decorator' + $B.UUID()
+        decorators.push(dec_id)
+        decs += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`
+    }
+
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
 
@@ -565,7 +669,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(this.body[0] instanceof $B.ast.Expr &&
             this.body[0].value instanceof $B.ast.Constant &&
             typeof this.body[0].value.value == "string"){
-        docstring = this.body.splice(0, 1)[0].to_js()
+        docstring = this.body.splice(0, 1)[0].to_js(scopes)
     }
 
     var _defaults = [],
@@ -611,17 +715,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         name1 = this.name + '$' + id,
         name2 = this.name + id
 
-    var js = '',
-        decorators = [],
-        decorated = false
-    for(var dec of this.decorator_list){
-        decorated = true
-        var dec_id = 'decorator' + $B.UUID()
-        decorators.push(dec_id)
-        console.log($B.js_from_ast(dec, scopes))
-        js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`
-    }
-
+    var js = decs
     js += `var ${name1} = function(defaults){\n`
 
     if(is_generator){
@@ -836,6 +930,11 @@ $B.ast.If.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.IfExp.prototype.to_js = function(scopes){
+    return '($B.$bool(' + $B.js_from_ast(this.test, scopes) + ') ? ' +
+        $B.js_from_ast(this.body, scopes) + ': ' +
+        $B.js_from_ast(this.orelse, scopes) + ')'
+}
 
 $B.ast.Import.prototype.to_js = function(scopes){
     var js = ''
@@ -843,8 +942,10 @@ $B.ast.Import.prototype.to_js = function(scopes){
         js += `$B.$import("${alias.name}", [], `
         if(alias.asname){
             js += `{${alias.name} : "${alias.asname}"}, `
+            bind(alias.asname, scopes)
         }else{
             js += '{}, '
+            bind(alias.name, scopes)
         }
         js += `locals, true)\n`
     }
@@ -862,6 +963,11 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         }
     }
     return js
+}
+
+$B.ast.JoinedStr.prototype.to_js = function(scopes){
+    var items = this.values.map(s => $B.js_from_ast(s, scopes))
+    return items.join(' + ')
 }
 
 $B.ast.Lambda.prototype.to_js = function(scopes){
@@ -1122,6 +1228,20 @@ $B.ast.Name.prototype.to_js = function(scopes){
             return `locals_${scope.name}.${this.id}`
         }
     }
+}
+
+$B.ast.NamedExpr.prototype.to_js = function(scopes){
+    bind(this.target.id, scopes)
+    return '(' + $B.js_from_ast(this.target, scopes) + ' = ' +
+        $B.js_from_ast(this.value, scopes) + ')'
+}
+
+$B.ast.Nonlocal.prototype.to_js = function(scopes){
+    var scope = $B.last(scopes)
+    for(var name of this.names){
+        scope.nonlocals.add(name)
+    }
+    return ''
 }
 
 $B.ast.Pass.prototype.to_js = function(scopes){
