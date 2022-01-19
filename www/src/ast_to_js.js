@@ -258,7 +258,6 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         var target = this.targets[0]
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
-           console.log('assign one', target)
            return js + assign_one(target, value)
         }else{
             var nb_targets = target.elts.length,
@@ -431,6 +430,29 @@ $B.ast.Compare.prototype.to_js = function(scopes){
     return comps.join(' && ')
 }
 
+$B.ast.comprehension.prototype.to_js = function(scopes){
+    var id = $B.UUID(),
+        iter = $B.js_from_ast(this.iter, scopes)
+
+    var js = `var next_func_${id} = $B.next_of(${iter})\n` +
+             `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
+             `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
+             `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
+             `throw err\n}\n}\n`
+    // assign result of iteration to target
+    var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
+    name.to_js = function(){return `next_${id}`}
+    var assign = new $B.ast.Assign([this.target], name)
+    assign.lineno = this.lineno
+    js += assign.to_js(scopes) + ' // assign to target\n'
+
+    for(var _if of this.ifs){
+        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+    }
+
+    return js
+}
+
 $B.ast.Constant.prototype.to_js = function(scopes){
     if(this.value === true || this.value === false){
         return this.value + ''
@@ -481,6 +503,10 @@ $B.ast.Constant.prototype.to_js = function(scopes){
     }
     console.log('unknown constant', this, value, value === true)
     return '// unknown'
+}
+
+$B.ast.DictComp.prototype.to_js = function(scopes){
+    return make_comp.bind(this)(scopes)
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
@@ -645,8 +671,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    js += `${func_ref} = ${name1}(${default_str})\n` +
-          `${func_ref}.$set_defaults = function(value){\n`+
+    if(is_generator){
+        js += `${func_ref} = $B.generator.$factory` +
+            `(${name1}(${default_str}), "${this.name}")\n`
+    }else{
+        js += `${func_ref} = ${name1}(${default_str})\n`
+    }
+    js += `${func_ref}.$set_defaults = function(value){\n`+
           `return ${func_ref} = ${name1}(value)\n}\n`
 
     if(decorated){
@@ -686,8 +717,6 @@ function first_generator(comp, scopes){
 
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
-
     var id = $B.UUID()
 
     var comp_scope = new Scope(`genexpr_${id}`, 'comprehension')
@@ -700,7 +729,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
         comp = {ast:this, id, scopes, type: 'genexpr'}
 
     var js = Comprehension.admin_infos(comp)
-    
+
     // special case for first generator
     js += first_generator(comp, scopes)
     /*
@@ -753,7 +782,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     }
 
     js += `\n$B.leave_frame({locals, value: _b_.None})` +
-          `})(${outmost_expr})\n`
+          `}, "<genexpr>")(${outmost_expr})\n`
 
     scopes.pop()
     return js
@@ -928,35 +957,12 @@ $B.ast.List.prototype.to_js = function(scopes){
     return '$B.$list([' + elts.join(', ') + '])'
 }
 
-$B.ast.comprehension.prototype.to_js = function(scopes){
+function make_comp(scopes){
     var id = $B.UUID(),
-        iter = $B.js_from_ast(this.iter, scopes)
+        type = this.constructor.$name
 
-    var js = `var next_func_${id} = $B.next_of(${iter})\n` +
-             `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-             `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-             `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
-             `throw err\n}\n}\n`
-    // assign result of iteration to target
-    var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
-    name.to_js = function(){return `next_${id}`}
-    var assign = new $B.ast.Assign([this.target], name)
-    assign.lineno = this.lineno
-    js += assign.to_js(scopes) + ' // assign to target\n'
 
-    for(var _if of this.ifs){
-        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
-    }
-
-    return js
-}
-
-$B.ast.ListComp.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
-
-    var id = $B.UUID()
-
-    var comp_scope = new Scope(`listcomp_${id}`, 'comprehension')
+    var comp_scope = new Scope(`${type}_${id}`, 'comprehension')
     scopes.push(comp_scope)
 
     var expr = this.elt,
@@ -964,8 +970,14 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
         nb_paren = 1
 
-    var js = Comprehension.admin_infos({ast:this, id, scopes, type: 'listcomp'}) +
-        `var result_${id} = []\n`
+    var js = Comprehension.admin_infos({ast: this, id, scopes, type})
+    if(this instanceof $B.ast.ListComp){
+        js += `var result_${id} = []\n`
+    }else if(this instanceof $B.ast.SetComp){
+        js += `var result_${id} = _b_.set.$factory()\n`
+    }else if(this instanceof $B.ast.DictComp){
+        js += `var result_${id} = $B.empty_dict()\n`
+    }
 
     // special case for first generator
     var first = this.generators[0]
@@ -996,17 +1008,29 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
 
     // Translate element. This must be done after translating comprehensions
     // so that target names are bound
-    var elt = $B.js_from_ast(this.elt, scopes),
-        has_await = comp_scope.has_await
+    if(this instanceof $B.ast.DictComp){
+        var key = $B.js_from_ast(this.key, scopes),
+            value = $B.js_from_ast(this.value, scopes)
+    }else{
+        var elt = $B.js_from_ast(this.elt, scopes)
+    }
+    var has_await = comp_scope.has_await
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
     js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
 
     js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
-    js += `try{\n` +
-          ` result_${id}.push(${elt})\n` +
-          `}catch(err){\n` +
+    js += `try{\n`
+    if(this instanceof $B.ast.ListComp){
+        js += `result_${id}.push(${elt})\n`
+    }else if(this instanceof $B.ast.SetComp){
+        js += `_b_.set.add(result_${id}, ${elt})\n`
+    }else if(this instanceof $B.ast.DictComp){
+        js += `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
+    }
+
+    js += `}catch(err){\n` +
           (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
           `$B.leave_frame(locals)\nthrow err\n}` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
@@ -1023,8 +1047,11 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.ListComp.prototype.to_js = function(scopes){
+    return make_comp.bind(this)(scopes)
+}
+
 $B.ast.Module.prototype.to_js = function(scopes){
-    console.log('module to js', scopes.slice())
     scopes.push(new Scope(this.$id, 'module'))
     var module_id = this.$id,
         global_name = `locals_${module_id}`
@@ -1056,7 +1083,6 @@ $B.ast.Module.prototype.to_js = function(scopes){
 $B.ast.Name.prototype.to_js = function(scopes){
     if(this.ctx instanceof $B.ast.Store){
         // In which namespace should it be stored ?
-        console.log('store name', this.id, scopes[scopes.length - 1])
         var scope = bind(this.id, scopes)
         if(scope === $B.last(scopes) && scope.freevars.has(this.id)){
             // name was referenced but is declared local afterwards
@@ -1090,6 +1116,10 @@ $B.ast.Return.prototype.to_js = function(scopes){
           `$B.trace_return(_b_.None)\n}\n` +
           `$B.leave_frame(locals)\nreturn result\n`
     return js
+}
+
+$B.ast.SetComp.prototype.to_js = function(scopes){
+    return make_comp.bind(this)(scopes)
 }
 
 $B.ast.Slice.prototype.to_js = function(scopes){

@@ -10211,10 +10211,12 @@ SetCompCtx.prototype.ast = function(){
     // ast.SetComp(elt, generators)
     // elt is the part evaluated for each item
     // generators is a list of comprehensions
-    return new ast.SetComp(
+    var res = new ast.SetComp(
         ast_or_obj(this.tree[0]),
         Comprehension.generators(this.tree.slice(1))
     )
+    res.lineno = $get_node(this).line_num
+    return res
 }
 
 SetCompCtx.prototype.transition = function(token, value){
