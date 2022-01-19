@@ -505,6 +505,26 @@ $B.ast.Constant.prototype.to_js = function(scopes){
     return '// unknown'
 }
 
+$B.ast.Dict.prototype.to_js = function(scopes){
+    var items = [],
+        packed = []
+    for(var i = 0, len = this.keys.length; i < len; i++){
+        if(this.keys[i] === _b_.None){
+            // format t = {
+            packed.push('_b_.list.$factory(_b_.dict.items(' +
+                      $B.js_from_ast(this.values[i], scopes) + '))')
+        }else{
+            items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, ` +
+                       `${$B.js_from_ast(this.values[i], scopes)}]`)
+        }
+    }
+    var res = `_b_.dict.$factory([${items}]`
+    for(var p of packed){
+        res += `.concat(${p})`
+    }
+    return res + ')'
+}
+
 $B.ast.DictComp.prototype.to_js = function(scopes){
     return make_comp.bind(this)(scopes)
 }
@@ -514,7 +534,6 @@ $B.ast.Expr.prototype.to_js = function(scopes){
 }
 
 $B.ast.For.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes)
 
