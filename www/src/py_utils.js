@@ -161,8 +161,9 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                 throw _b_.TypeError.$factory(fname +
                     "() got multiple values for argument '" + key + "'")
             }else if(only_positional && only_positional.indexOf(key) > -1){
-                throw _b_.TypeError.$factory(fname + "() got an " +
-                    "unexpected keyword argument '" + key + "'")
+                throw _b_.TypeError.$factory(`${fname}() got some ` +
+                    `positional-only arguments passed as keyword ` +
+                    `arguments: '${key}'`)
             }else{
                 // Fill the slot with the key/value pair
                 slots[key] = value
