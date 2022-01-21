@@ -526,6 +526,7 @@ $Node.prototype.add = function(child){
 
 $Node.prototype.ast = function(){
     var root_ast = new ast.Module([], [])
+    root_ast.lineno = this.line_num
     for(var node of this.children){
         var t = node.context.tree[0]
         // Ignore except / elif / else / finally : they are attributes of
@@ -12877,7 +12878,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
 }
 
 $B.py2js = function(src, module, locals_id, parent_scope, line_num){
-    // src = Python source (string)
+    // src = Python source (string or object)
     // module = module name (string)
     // locals_id = the id of the block that will be created
     // parent_scope = the scope where the code is created
@@ -12902,7 +12903,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         filename
     if(typeof src == 'object'){
         var has_annotations = src.has_annotations,
-            line_info = src.line_info,
+            line_info = src.line_info || `1,${locals_id}`
             ix = src.ix,
             filename = src.filename
         if(line_info !== undefined){
@@ -12928,6 +12929,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     if(locals_is_module){
         locals_id = locals_id[0]
     }
+
     var local_ns = '$locals_' + locals_id.replace(/\./g,'_'),
         global_ns = '$locals_' + module.replace(/\./g,'_'),
         root = $create_root_node(
@@ -12942,12 +12944,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             console.log(ast_dump(_ast))
         }
         if($B.js_from_ast){
-            _ast.$id = locals_id
             var symtable = $B._PySymtable_Build(_ast, locals_id)
 
             var js_from_ast = $B.js_from_root(_ast, symtable)
-
             console.log($B.format_indent(js_from_ast, 0))
+
             if(locals_id == 'js_from_ast'){
                 return {to_js: function(){return js_from_ast}}
             }
@@ -13240,7 +13241,7 @@ $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
     try{
-        var root = $B.py2js(src, name, name),
+        var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),
             script = {
                 __doc__: root.__doc__,

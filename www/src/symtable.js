@@ -67,10 +67,23 @@ var ModuleBlock = 2,
     FunctionBlock = 0,
     AnnotationBlock = 4
 
+function assert(test){
+    if(! $B.$bool(test)){
+        console.log('test fails', test)
+        throw Error('test fails')
+    }
+}
+
 function LOCATION(x){
     // (x)->lineno, (x)->col_offset, (x)->end_lineno, (x)->end_col_offset
     return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
 }
+
+function ST_LOCATION(x){
+    // (x)->ste_lineno, (x)->ste_col_offset, (x)->ste_end_lineno, (x)->ste_end_col_offset
+    return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
+}
+
 
 function _Py_Mangle(privateobj, ident){
     /* Name mangling: __private becomes _classname__private.
@@ -164,17 +177,11 @@ function ste_new(st, name, block,
         key, lineno, col_offset,
         end_lineno, end_col_offset){
 
-    var ste,
-        k
-
-    k = key;
-    if (k == NULL){
-        return NULL
-    }
+    var ste
 
     ste = {
         table: st,
-        id: k, /* ste owns reference to k */
+        id: _b_.id(key), /* ste owns reference to AST object */
         name: name,
 
         directives: NULL,
@@ -766,7 +773,7 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         end_col_offset = _location.end_col_offset
 
     var o, dict, val, mangled = _Py_Mangle(st.private, name)
-    
+
     if (!mangled){
         return 0
     }
@@ -1180,8 +1187,8 @@ function symtable_visit_stmt(st, s){
 }
 
 function symtable_extend_namedexpr_scope(st, e){
-    assert(st.st_stack);
-    assert(e.kind == Name_kind);
+    assert(st.stack);
+    assert(e instanceof $B.ast.Name);
 
     var target_name = e.id;
     var i, size, ste;
@@ -1190,7 +1197,7 @@ function symtable_extend_namedexpr_scope(st, e){
 
     /* Iterate over the stack in reverse and add to the nearest adequate scope */
     for (i = size - 1; i >= 0; i--) {
-        ste = PyList_GET_ITEM(st.stack, i);
+        ste = st.stack[i]
 
         /* If we find a comprehension scope, check for a target
          * binding conflict with iteration variables, otherwise skip it
@@ -1274,6 +1281,7 @@ function symtable_handle_namedexpr(st, e){
 }
 
 const alias = 'alias',
+      comprehension = 'comprehension',
       excepthandler = 'excepthandler',
       expr = 'expr',
       keyword = 'keyword',
@@ -1481,9 +1489,7 @@ function symtable_visit_pattern(st, p){
 }
 
 function symtable_implicit_arg(st, pos){
-    var id = PyUnicode_FromFormat(".%d", pos);
-    if (id == NULL)
-        return 0;
+    var id = '.' + pos
     if (!symtable_add_def(st, id, DEF_PARAM, ST_LOCATION(st.cur))) {
         return 0;
     }
@@ -1630,7 +1636,7 @@ function symtable_visit_alias(st, a){
     if (name != "*") {
         var r = symtable_add_def(st, store_name, DEF_IMPORT, LOCATION(a));
         return r;
-    }else {
+    }else{
         if (st.cur.type != ModuleBlock) {
             var lineno = a.lineno,
                 col_offset = a.col_offset,
@@ -1642,12 +1648,16 @@ function symtable_visit_alias(st, a){
                                              end_lineno, end_col_offset + 1);
             return 0;
         }
+        // Brython-specific : set attribute $has_import_star, used in name
+        // resolution in as_to_js.js
+        st.cur.$has_import_star = true
         return 1;
     }
 }
 
 
 function symtable_visit_comprehension(st, lc){
+    console.log('visit comprehension')
     st.cur.comp_iter_target = 1;
     VISIT(st, expr, lc.target);
     st.cur.comp_iter_target = 0;
@@ -1729,25 +1739,25 @@ function symtable_handle_comprehension(st, e,
 }
 
 function symtable_visit_genexp(st, e){
-    return symtable_handle_comprehension(st, e, GET_IDENTIFIER(genexpr),
+    return symtable_handle_comprehension(st, e, 'genexpr',
                                          e.generators,
                                          e.elt, NULL);
 }
 
 function symtable_visit_listcomp(st,e){
-    return symtable_handle_comprehension(st, e, GET_IDENTIFIER(listcomp),
+    return symtable_handle_comprehension(st, e, 'listcomp',
                                          e.generators,
                                          e.elt, NULL);
 }
 
 function symtable_visit_setcomp(st, e){
-    return symtable_handle_comprehension(st, e, GET_IDENTIFIER(setcomp),
+    return symtable_handle_comprehension(st, e, 'setcomp',
                                          e.generators,
                                          e.elt, NULL);
 }
 
 function symtable_visit_dictcomp(st, e){
-    return symtable_handle_comprehension(st, e, GET_IDENTIFIER(dictcomp),
+    return symtable_handle_comprehension(st, e, 'dictcomp',
                                          e.generators,
                                          e.key,
                                          e.value);
