@@ -20,13 +20,15 @@ $B.get_exc = function(){
     return frame[1].$current_exception
 }
 
-$B.$raise = function(arg, context, cause){
+$B.$raise = function(arg, cause){
     // Used for "raise" without specifying an exception.
     // If there is an exception in the stack, use it, else throw a simple
     // Exception
+    var active_exc = $B.get_exc()
     if(arg === undefined){
-        var es = $B.get_exc()
-        if(es !== undefined){throw es}
+        if(active_exc !== undefined){
+            throw active_exc
+        }
         throw _b_.RuntimeError.$factory("No active exception to reraise")
     }else if(_b_.isinstance(arg, BaseException)){
         if(arg.__class__ === _b_.StopIteration &&
@@ -34,10 +36,7 @@ $B.$raise = function(arg, context, cause){
             // PEP 479
             arg = _b_.RuntimeError.$factory("generator raised StopIteration")
         }
-        if(context === undefined){
-            console.log('bizarre 1')
-        }
-        arg.__context__ = context
+        arg.__context__ = active_exc === undefined ? _b_.None : active_exc
         arg.__cause__ = cause || _b_.None
         arg.__suppress_context__ = cause !== undefined
         throw arg
@@ -48,11 +47,8 @@ $B.$raise = function(arg, context, cause){
                 throw _b_.RuntimeError.$factory("generator raised StopIteration")
             }
         }
-        if(context === undefined){
-            console.log('bizarre 2')
-        }
         var exc = $B.$call(arg)()
-        exc.__context__ = context
+        exc.__context__ = active_exc === undefined ? _b_.None : active_exc
         exc.__cause__ = cause || _b_.None
         exc.__suppress_context__ = cause !== undefined
         throw exc
@@ -480,27 +476,17 @@ var getExceptionTrace = function(exc, includeInternal) {
 
     for(var i = 0; i < exc.$stack.length; i++){
         var frame = exc.$stack[i]
-        if(! frame[1] || ! frame[1].$line_info){
+        if(! frame[1]){
             continue
         }
-        var $line_info = frame[1].$line_info
-        var line_info = $line_info.split(','),
-            src
-        if(exc.module == line_info[1]){
-            src = exc.src
+        if(frame[1].$line_info){
+            var $line_info = frame[1].$line_info,
+                line_info = $line_info.split(',')
+        }else if(frame[1].$lineno){
+            var line_info = [frame[1].$lineno, frame[2]]
         }
-        if(!includeInternal){
-            var src = frame[3].$src
-            if(src === undefined){
-                if($B.VFS && $B.VFS.hasOwnProperty(frame[2])){
-                    src = $B.VFS[frame[2]][1]
-                }else if(src = $B.file_cache[frame[3].__file__]){
-                    // For imported modules, cf. issue 981
-                }else{
-                    continue
-                }
-            }
-        }
+        var __file__ = $B.imported[frame[2]].__file__,
+            src = $B.file_cache[__file__]
         var file = frame[3].__file__ || "<string>",
             module = line_info[1],
             is_exec = module.charAt(0) == "$"
@@ -560,6 +546,10 @@ BaseException.__getattr__ = function(self, attr){
         // Return traceback object
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
+    }else if(attr == '__context__'){
+        var frame = $B.last($B.frames_stack),
+            ctx = frame[1].$current_exception
+        return ctx || _b_.None
     }else{
         throw $B.attr_error(attr, self)
     }
@@ -678,6 +668,7 @@ $B.exception = function(js_exc, in_ctx_manager){
         exc.$py_error = true
         console.log('js error', exc.args, exc.__class__)
         console.log(js_exc.stack)
+        console.log($B.frames_stack.slice())
         $B.freeze(exc)
     }else{
         var exc = js_exc
