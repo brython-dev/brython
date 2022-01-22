@@ -12946,9 +12946,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         if($B.js_from_ast){
             var symtable = $B._PySymtable_Build(_ast, locals_id)
 
-            var js_from_ast = $B.js_from_root(_ast, symtable)
-            console.log($B.format_indent(js_from_ast, 0))
-
+            var js_from_ast = $B.js_from_root(_ast, symtable, filename)
+            
             if(locals_id == 'js_from_ast'){
                 return {to_js: function(){return js_from_ast}}
             }

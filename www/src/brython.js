@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-21 21:13:43.465268"
-__BRYTHON__.timestamp=1642796023465
+__BRYTHON__.compiled_date="2022-01-22 12:41:01.266291"
+__BRYTHON__.timestamp=1642851661266
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6388,8 +6388,7 @@ dispatch_tokens(root,src)
 if($B.produce_ast){var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
 if($B.js_from_ast){var symtable=$B._PySymtable_Build(_ast,locals_id)
-var js_from_ast=$B.js_from_root(_ast,symtable)
-console.log($B.format_indent(js_from_ast,0))
+var js_from_ast=$B.js_from_root(_ast,symtable,filename)
 if(locals_id=='js_from_ast'){return{to_js:function(){return js_from_ast}}}}}
 if(ix !=undefined){root.ix=ix}
 root.transform()

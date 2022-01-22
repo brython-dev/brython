@@ -41,6 +41,7 @@ function bind(name, scopes){
 }
 
 var CELL = 5,
+    FREE = 4,
     LOCAL = 1,
     SCOPE_MASK = 15,
     SCOPE_OFF = 11
@@ -397,6 +398,10 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         js += assign_one(target, id) + '\n'
     }
     return js
+}
+
+$B.ast.AsyncFunctionDef.prototype.to_js = function(scopes){
+    return $B.ast.FunctionDef.prototype.to_js.bind(this)(scopes)
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
@@ -781,7 +786,18 @@ $B.ast.FormattedValue.prototype.to_js = function(scopes){
     return value
 }
 
+function is_free(x){
+    return (x >> SCOPE_OFF) & SCOPE_MASK == FREE
+}
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
+    var symtable_block = scopes.symtable.table.blocks.get(_b_.id(this))
+    var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
+        is_async = this instanceof $B.ast.AsyncFunctionDef
+    if(in_class){
+        var class_scope = last_scope(scopes)
+    }
+
     var decorators = [],
         decorated = false,
         decs = ''
@@ -864,6 +880,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var js = decs
     js += `var ${name1} = function(defaults){\n`
 
+    if(is_async){
+        js += 'async '
+    }
+
     if(is_generator){
         js += `function* ${name2}(){\n`
     }else{
@@ -880,7 +900,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.vararg ? `'${this.args.vararg.arg}', ` : 'null, ') +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${local_name} = locals = $B.args(${parse_args.join(', ')})\n`
-    js += `var $top_frame = ["${name}", locals, "${gname}", locals_${gname}]
+    js += `var $top_frame = ["${this.name}", locals, "${gname}", locals_${gname}, ${name2}]
     locals.$f_trace = $B.enter_frame($top_frame)
     locals.$lineno = ${this.lineno}
     var stack_length = $B.frames_stack.length\n`
@@ -889,6 +909,17 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += `locals.$is_generator = true\n`
     }
     js += `try{\n$B.js_this = this\n`
+    if(in_class){
+        // Set local name "__class__"
+        var ix = scopes.indexOf(class_scope),
+            parent = scopes[ix - 1]
+
+        var scope_ref = 'locals_' + parent.name,
+            class_ref = class_scope.name // XXX qualname
+        bind("__class__", scopes)
+        js += `locals.__class__ = ` +
+            `$B.get_method_class(${scope_ref}, "${class_ref}")\n`
+    }
 
     js += function_body
 
@@ -914,6 +945,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var qualname = scope.type == 'class' ? `${scope.name}.${this.name}` :
                                            this.name
 
+    // Flags
+    var flags = 67
+    if(this.args.vararg){flags |= 4}
+    if(this.args.kwarg){flags |= 8}
+    if(is_generator){flags |= 32}
+
+    var varnames = symtable_block.varnames.map(x => `"${x}"`)
+
     js += `${name2}.$infos = {\n` +
         `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
         `__defaults__: $B.fast_tuple([${default_names}]), ` +
@@ -921,8 +960,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__doc__: ${docstring},\n` +
         `__code__:{\n` +
         `co_argcount: ${positional.length},\n ` +
-        `co_filename: '${scopes.symtable.table.filename}'\n}\n` +
-        `}\n`
+        `co_filename: locals_${scopes[0].name}.__file__,\n` +
+        `co_firstlineno: ${this.lineno},\n` +
+        `co_flags: ${flags},\n` +
+        `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n` +
+        `co_nlocals: ${varnames.length},\n` +
+        `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
+        `co_varnames: [${varnames}]\n` +
+        `}\n}\n`
 
     js += `return ${name2}
     }\n`
@@ -1125,7 +1170,6 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
 
 $B.ast.JoinedStr.prototype.to_js = function(scopes){
     var items = this.values.map(s => $B.js_from_ast(s, scopes))
-    console.log('items', items)
     return items.join(' + ')
 }
 
@@ -1339,7 +1383,6 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
-    console.log('symtable', scopes.symtable)
     var name = scopes.symtable.table.filename
     var module_scope = new Scope(name, 'module', this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
@@ -1356,6 +1399,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
                   locals = ${global_name},
                   $top_frame = ["${module_id}", locals, ` +
               `"${module_id}", locals]
+    locals.__file__ = '${scopes.filename || "<string>"}'
     locals.$f_trace = $B.enter_frame($top_frame)
     locals.$lineno = ${this.lineno}
     var stack_length = $B.frames_stack.length;
@@ -1396,6 +1440,7 @@ $B.ast.NamedExpr.prototype.to_js = function(scopes){
         i--
     }
     var enclosing_scopes = scopes.slice(0, i + 1)
+    enclosing_scopes.symtable = scopes.symtable
     bind(this.target.id, enclosing_scopes)
     return '(' + $B.js_from_ast(this.target, enclosing_scopes) + ' = ' +
         $B.js_from_ast(this.value, scopes) + ')'
@@ -1622,15 +1667,16 @@ $B.ast.Yield.prototype.to_js = function(scopes){
 }
 
 
-$B.js_from_root = function(ast_root, symtable){
+$B.js_from_root = function(ast_root, symtable, filename){
     var scopes = []
     scopes.symtable = symtable
+    scopes.filename = filename
     return $B.js_from_ast(ast_root, scopes)
 }
 
 $B.js_from_ast = function(ast, scopes){
     if(! scopes.symtable){
-        console.log('on a perdu symtable', scopes)
+        throw Error('perdu symtable')
     }
     var js = ''
     scopes = scopes || []

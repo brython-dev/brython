@@ -444,7 +444,7 @@ $B.$local_search = function(name){
 }
 
 $B.get_method_class = function(ns, qualname){
-    // Used to set the cell __name__ in a method. ns is the namespace
+    // Used to set the cell __class__ in a method. ns is the namespace
     // and qualname is the qualified name of the class
     // Generally, for qualname = "A.B", the result is just ns.A.B
     // In some cases, ns.A might not yet be defined (cf. issue #1740).
