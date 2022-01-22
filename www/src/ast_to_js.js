@@ -60,7 +60,7 @@ function binding_scope(name, scopes){
     try{
         flags = block.symbols.$string_dict[name][0]
     }catch(err){
-        console.log(name, block)
+        console.log('name', name, 'not in symbols of block', block)
         throw err
     }
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
@@ -537,9 +537,6 @@ $B.ast.Call.prototype.to_js = function(scopes){
 $B.ast.ClassDef.prototype.to_js = function(scopes){
     var enclosing_scope = bind(this.name, scopes)
 
-    var class_scope = new Scope(this.name, 'class', this)
-    scopes.push(class_scope)
-
     var js = '',
         name = this.name,
         ref = name + $B.UUID(),
@@ -553,6 +550,10 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         console.log($B.js_from_ast(dec, scopes))
         js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
+
+    var class_scope = new Scope(this.name, 'class', this)
+    scopes.push(class_scope)
+
 
     // Detect doc string
     var docstring = '_b_.None'
@@ -574,7 +575,6 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
-
     js += `$B.leave_frame({locals})\nreturn locals\n})()\n`
 
     var class_ref = `locals_${enclosing_scope.name}.${this.name}`
@@ -590,17 +590,19 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         keywords.push(`["${keyword.arg}", ` +
             $B.js_from_ast(keyword.value, scopes) + ']')
     }
-    
+
     js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
           `[${bases}],[],[${keywords.join(', ')}])\n` +
           `${class_ref}.__doc__ = ${docstring}\n`
 
     if(decorated){
+        js += `locals_${enclosing_scope.name}.${this.name} = `
         var decorate = class_ref
-        for(var dec of this.decorator_list.reverse()){
+        for(var dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
         }
         js += decorate + '\n'
+        //js += `locals_${enclosing_scope.name}.${this.name} = ${class_ref}`
     }
 
     return js
@@ -764,7 +766,7 @@ $B.ast.For.prototype.to_js = function(scopes){
              `var next_func_${id} = $B.next_of(${iter})\n` +
              `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
              `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-             `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
+             `break\n}else{\n ` +
              `throw err\n}\n}\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
@@ -846,7 +848,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
-
 
     var kw_default_names = []
     for(var kw of this.args.kwonlyargs){
@@ -954,9 +955,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }\n`
 
     scopes.pop()
-    var scope = bind(this.name, scopes)
-    var qualname = scope.type == 'class' ? `${scope.name}.${this.name}` :
-                                           this.name
+
+    var func_name_scope = bind(this.name, scopes)
+    var qualname = func_name_scope.type == 'class' ?
+        `${func_name_scope.name}.${this.name}` : this.name
 
     // Flags
     var flags = 67
@@ -985,7 +987,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `return ${name2}
     }\n`
 
-    var func_ref = `locals_${scope.name}.${this.name}`
+    var func_ref = `locals_${func_name_scope.name}.${this.name}`
 
     if(decorated){
         func_ref = `decorated${$B.UUID()}`
@@ -1002,7 +1004,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
           `return ${func_ref} = ${name1}(value)\n}\n`
 
     if(decorated){
-        js += `locals_${$B.last(scopes).name}.${this.name} = `
+        js += `locals_${func_name_scope.name}.${this.name} = `
         var decorate = func_ref
         for(var dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
@@ -1489,6 +1491,11 @@ $B.ast.Return.prototype.to_js = function(scopes){
           `$B.trace_return(_b_.None)\n}\n` +
           `$B.leave_frame(locals)\nreturn result\n`
     return js
+}
+
+$B.ast.Set.prototype.to_js = function(scopes){
+    var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
+    return '_b_.set.$factory([' + elts.join(', ') + '])'
 }
 
 $B.ast.SetComp.prototype.to_js = function(scopes){
