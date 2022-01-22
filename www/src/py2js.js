@@ -5390,7 +5390,7 @@ $ForExpr.prototype.to_js = function(indent){
             `    var $next_${id} = await $B.promise($next_func_${id}($iter_${id}))\n` +
             `  }catch(err){\n`+
             `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n` +
-            `    else{\n$B.leave_frame({$locals, value: _b_.None});throw err}\n`+
+            `    else{\nthrow err}\n`+
             `  }\n`
     }else{
         iteration += `var $next_func_${id} = $B.next_of(${it})\n` +
