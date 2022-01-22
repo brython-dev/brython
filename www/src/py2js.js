@@ -1178,9 +1178,11 @@ var $AssertCtx = $B.parser.$AssertCtx = function(context){
 
 $AssertCtx.prototype.ast = function(){
     // Assert(expr test, expr? msg)
-    var msg = this.tree[1]
-    return new ast.Assert(ast_or_obj(this.tree[0]),
-        msg === undefined ? msg : ast_or_obj(msg))
+    var msg = this.tree[1],
+        ast_obj = new ast.Assert(ast_or_obj(this.tree[0]),
+            msg === undefined ? msg : ast_or_obj(msg))
+    ast_obj.lineno = this.parent.node.line_num
+    return ast_obj
 }
 
 $AssertCtx.prototype.toString = function(){
@@ -12947,7 +12949,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             var symtable = $B._PySymtable_Build(_ast, locals_id)
 
             var js_from_ast = $B.js_from_root(_ast, symtable, filename)
-            
+
             if(locals_id == 'js_from_ast'){
                 return {to_js: function(){return js_from_ast}}
             }

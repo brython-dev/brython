@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-22 12:41:01.266291"
-__BRYTHON__.timestamp=1642851661266
+__BRYTHON__.compiled_date="2022-01-22 18:35:40.773516"
+__BRYTHON__.timestamp=1642872940773
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -942,8 +942,9 @@ this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
 $AssertCtx.prototype.ast=function(){
-var msg=this.tree[1]
-return new ast.Assert(ast_or_obj(this.tree[0]),msg===undefined ? msg :ast_or_obj(msg))}
+var msg=this.tree[1],ast_obj=new ast.Assert(ast_or_obj(this.tree[0]),msg===undefined ? msg :ast_or_obj(msg))
+ast_obj.lineno=this.parent.node.line_num
+return ast_obj}
 $AssertCtx.prototype.toString=function(){return '(assert) '+this.tree}
 $AssertCtx.prototype.transition=function(token,value){var C=this
 if(token==","){if(this.tree.length > 1){$_SyntaxError(C,"too many commas after assert")}
@@ -9714,10 +9715,13 @@ $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
 $B.freeze=function(err){
+function get_line_info(frame){var line_info=frame[1].$line_info
+if(! line_info){line_info=`${frame[1].$lineno},${frame[2]}`}
+return line_info}
 if(err.$stack===undefined){err.$line_infos=[]
-for(var i=0,len=$B.frames_stack.length;i < len;i++){err.$line_infos.push($B.frames_stack[i][1].$line_info)}
+for(var frame of $B.frames_stack){err.$line_infos.push(get_line_info(frame))}
 err.$stack=$B.frames_stack.slice()
-if($B.frames_stack.length){err.$line_info=$B.last($B.frames_stack)[1].$line_info}}}
+if($B.frames_stack.length){err.$line_info=get_line_info($B.last($B.frames_stack))}}}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 var be_factory=`

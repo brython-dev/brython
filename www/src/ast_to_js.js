@@ -319,12 +319,11 @@ var Comprehension = {
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
-    return `if(!$B.$bool(${test})){\n` +
+    return `if((locals.$lineno = ${this.lineno}) && !$B.$bool(${test})){\n` +
            `throw _b_.AssertionError.$factory(${msg})}\n`
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
     if(this.value){
         var scope = bind(this.target.id, scopes)
         var js = `var ann = ${$B.js_from_ast(this.value, scopes)}\n` +
@@ -536,7 +535,6 @@ $B.ast.Call.prototype.to_js = function(scopes){
 }
 
 $B.ast.ClassDef.prototype.to_js = function(scopes){
-
     var enclosing_scope = bind(this.name, scopes)
 
     var class_scope = new Scope(this.name, 'class', this)
@@ -554,6 +552,14 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         decorators.push(dec_id)
         console.log($B.js_from_ast(dec, scopes))
         js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
+    }
+
+    // Detect doc string
+    var docstring = '_b_.None'
+    if(this.body[0] instanceof $B.ast.Expr &&
+            this.body[0].value instanceof $B.ast.Constant &&
+            typeof this.body[0].value.value == "string"){
+        docstring = this.body.splice(0, 1)[0].to_js(scopes)
     }
 
     js += `var ${ref} = (function(){\n` +
@@ -579,8 +585,15 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
 
+    var keywords = []
+    for(var keyword of this.keywords){
+        keywords.push(`["${keyword.arg}", ` +
+            $B.js_from_ast(keyword.value, scopes) + ']')
+    }
+    
     js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
-          `[${bases}],[],[])\n`
+          `[${bases}],[],[${keywords.join(', ')}])\n` +
+          `${class_ref}.__doc__ = ${docstring}\n`
 
     if(decorated){
         var decorate = class_ref
@@ -707,9 +720,9 @@ $B.ast.Delete.prototype.to_js = function(scopes){
         }else if(target instanceof $B.ast.Subscript){
             js += `$B.$delitem(${$B.js_from_ast(target.value, scopes)}, ` +
                   `${$B.js_from_ast(target.slice, scopes)})\n`
-        }else if(target instanceof $.ast.Attribute){
+        }else if(target instanceof $B.ast.Attribute){
             js += `_b_.delattr(${$B.js_from_ast(target.value, scopes)}, ` +
-                  `${$B.js_from_ast(target.attr, scopes)})\n`
+                  `'${target.attr}')\n`
         }
     }
     return js
@@ -1539,7 +1552,6 @@ $B.ast.Try.prototype.to_js = function(scopes){
               '$B.frames_stack.push($top_frame)}\n'
         if(this.orelse.length > 0){
             js += `if(! locals.failed${id}){\n`
-            console.log('add orelse body', this.orelse, 'scopes', scopes.slice())
             js += add_body(this.orelse, scopes) + '}\n'
         }
         js += add_body(this.finalbody, scopes)

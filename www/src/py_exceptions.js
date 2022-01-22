@@ -586,15 +586,22 @@ $B.restore_stack = function(stack, locals){
 
 $B.freeze = function(err){
     // Store line numbers in frames stack when the exception occured
+    function get_line_info(frame){
+        var line_info = frame[1].$line_info
+        if(! line_info){
+            line_info = `${frame[1].$lineno},${frame[2]}`
+        }
+        return line_info
+    }
     if(err.$stack === undefined){
         err.$line_infos = []
-        for(var i = 0, len = $B.frames_stack.length; i < len; i++){
-            err.$line_infos.push($B.frames_stack[i][1].$line_info)
+        for(var frame of $B.frames_stack){
+            err.$line_infos.push(get_line_info(frame))
         }
         // Make a copy of the current frames stack array
         err.$stack = $B.frames_stack.slice()
         if($B.frames_stack.length){
-            err.$line_info = $B.last($B.frames_stack)[1].$line_info
+            err.$line_info = get_line_info($B.last($B.frames_stack))
         }
     }
 }
