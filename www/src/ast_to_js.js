@@ -48,6 +48,10 @@ var CELL = 5,
 
 function binding_scope(name, scopes){
     // return the scope where name is bound, or undefined
+    if(scopes.length == 0){
+        // case of Expression
+        return `$B.resolve('${name}')`
+    }
     var scope = last_scope(scopes)
     // Use symtable to detect if the name is local to the block
     if(scope.ast === undefined){
@@ -55,7 +59,8 @@ function binding_scope(name, scopes){
     }
     var block = scopes.symtable.table.blocks.get(_b_.id(scope.ast))
     if(block === undefined){
-        console.log('no block', scope, scope.ast)
+        console.log('no block', scope, scope.ast, 'id', _b_.id(scope.ast))
+        console.log('symtable', scopes.symtable)
     }
     try{
         flags = block.symbols.$string_dict[name][0]
@@ -476,6 +481,18 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
     }
 }
 
+$B.ast.Break.prototype.to_js = function(scopes){
+    var js = ''
+    for(var scope of scopes.slice().reverse()){
+        if(scope.ast instanceof $B.ast.For){
+            js += `no_break_${scope.id} = false\n`
+            break
+        }
+    }
+    js += `break`
+    return js
+}
+
 $B.ast.Call.prototype.to_js = function(scopes){
     var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')'
     var named_args = [],
@@ -564,11 +581,11 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
 
     js += `var ${ref} = (function(){\n` +
-          `var locals_${this.name} = {__annotations__: $B.empty_dict()},\n` +
-          `locals = locals_${this.name}\n` +
+          `var ${make_local(this.name)} = {__annotations__: $B.empty_dict()},\n` +
+          `locals = ${make_local(this.name)}\n` +
           `locals.$name = "${this.name}"\n` +
           `locals.$is_class = true\n` +
-          `var top_frame = ["${ref}", locals, "${glob}", locals_${glob}]\n` +
+          `var top_frame = ["${ref}", locals, "${glob}", ${make_local(glob)}]\n` +
           `locals.$f_trace = $B.enter_frame(top_frame)\n`
 
     js += add_body(this.body, scopes)
@@ -577,7 +594,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     js += `$B.leave_frame({locals})\nreturn locals\n})()\n`
 
-    var class_ref = `locals_${enclosing_scope.name}.${this.name}`
+    var class_ref = `${make_local(enclosing_scope.name)}.${this.name}`
 
     if(decorated){
         class_ref = `decorated${$B.UUID()}`
@@ -697,6 +714,11 @@ $B.ast.Constant.prototype.to_js = function(scopes){
             var lines = value.split('\n')
             lines = lines.map(line => line.replace(/\\/g, '\\\\'))
             value = lines.join('\\n\\\n')
+            value = value.replace(new RegExp('\r', 'g'), '\\r').
+                          replace(new RegExp('\t', 'g'), '\\t').
+                          replace(new RegExp('\x07', 'g'), '\\x07')
+                          
+                          
             if(value.indexOf("'") == -1){
                 return `$B.String('${value}')`
             }else if(value.indexOf('"') == -1){
@@ -758,9 +780,22 @@ $B.ast.Expr.prototype.to_js = function(scopes){
         $B.js_from_ast(this.value, scopes)
 }
 
+$B.ast.Expression.prototype.to_js = function(scopes){
+    return $B.js_from_ast(this.body, scopes)
+}
+
 $B.ast.For.prototype.to_js = function(scopes){
+    // Create a new scope with the same name to avoid binding in the enclosing
+    // scope.
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes)
+    var scope = $B.last(scopes),
+        new_scope = new Scope(scope.name, scope.type, this)
+    new_scope.id = id
+    // Create a new scope with the same name to avoid binding in the enclosing
+    // scope.
+    new_scope.parent = scope
+    scopes.push(new_scope)
 
     var js = `var no_break_${id} = true\n` +
              `var next_func_${id} = $B.next_of(${iter})\n` +
@@ -778,6 +813,9 @@ $B.ast.For.prototype.to_js = function(scopes){
     js += add_body(this.body, scopes)
 
     js += '\n}' // close 'while' loop
+
+    scopes.pop()
+
     return js
 }
 
@@ -830,7 +868,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(this.body[0] instanceof $B.ast.Expr &&
             this.body[0].value instanceof $B.ast.Constant &&
             typeof this.body[0].value.value == "string"){
-        docstring = this.body.splice(0, 1)[0].to_js(scopes)
+        docstring = this.body.splice(0, 1)[0].value.to_js(scopes)
     }
 
     // Evaluate default values in enclosing scope
@@ -903,7 +941,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         js += `function ${name2}(){\n`
     }
-    var local_name = `locals_${this.name}`
+    var local_name = make_local(this.name)
     var gname = scopes[0].name
     js += `var ${local_name},
                locals\n`
@@ -914,7 +952,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.vararg ? `'${this.args.vararg.arg}', ` : 'null, ') +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${local_name} = locals = $B.args(${parse_args.join(', ')})\n`
-    js += `var $top_frame = ["${this.name}", locals, "${gname}", locals_${gname}, ${name2}]
+    js += `var $top_frame = ["${this.name}", locals, "${gname}", ${make_local(gname)}, ${name2}]
     locals.$f_trace = $B.enter_frame($top_frame)
     locals.$lineno = ${this.lineno}
     var stack_length = $B.frames_stack.length\n`
@@ -975,7 +1013,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__doc__: ${docstring},\n` +
         `__code__:{\n` +
         `co_argcount: ${positional.length},\n ` +
-        `co_filename: locals_${scopes[0].name}.__file__,\n` +
+        `co_filename: ${make_local(scopes[0].name)}.__file__,\n` +
         `co_firstlineno: ${this.lineno},\n` +
         `co_flags: ${flags},\n` +
         `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n` +
@@ -984,10 +1022,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_varnames: [${varnames}]\n` +
         `}\n}\n`
 
-    js += `return ${name2}
-    }\n`
+    js += (is_async ? `return $B.make_async(${name2})` : `return ${name2}`) +
+          `}\n`
 
-    var func_ref = `locals_${func_name_scope.name}.${this.name}`
+    var func_ref = `${make_local(func_name_scope.name)}.${this.name}`
 
     if(decorated){
         func_ref = `decorated${$B.UUID()}`
@@ -1004,7 +1042,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
           `return ${func_ref} = ${name1}(value)\n}\n`
 
     if(decorated){
-        js += `locals_${func_name_scope.name}.${this.name} = `
+        js += `${make_local(func_name_scope.name)}.${this.name} = `
         var decorate = func_ref
         for(var dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
@@ -1031,7 +1069,6 @@ function first_generator(comp, scopes){
     js += assign.to_js(scopes) + '\n'
 
     for(var _if of first.ifs){
-        nb_paren++
         js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
     }
 
@@ -1055,8 +1092,8 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     var js = Comprehension.admin_infos(comp)
 
     // special case for first generator
-    js += first_generator(comp, scopes)
-    /*
+    // js += first_generator(comp, scopes)
+
     var first = this.generators[0]
     js += `var next_func_${id} = $B.next_of(expr)\n` +
           `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
@@ -1074,7 +1111,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
         nb_paren++
         js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
     }
-    */
+
 
     for(var comprehension of this.generators.slice(1)){
         js += comprehension.to_js(scopes)
@@ -1122,7 +1159,7 @@ $B.ast.Global.prototype.to_js = function(scopes){
 
 $B.ast.If.prototype.to_js = function(scopes){
     var scope = $B.last(scopes),
-        new_scope = new Scope(scope.name, scope.type)
+        new_scope = new Scope(scope.name, scope.type, this)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     new_scope.parent = scope
@@ -1130,11 +1167,11 @@ $B.ast.If.prototype.to_js = function(scopes){
     var js = `if((locals.$lineno = ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     js += add_body(this.body, scopes) + '}'
-    for(var orelse of this.orelse){
-        if(orelse instanceof $B.ast.If){
-            js += 'else ' + $B.js_from_ast(orelse, scopes)
+    if(this.orelse.length > 0){
+        if(this.orelse[0] instanceof $B.ast.If){
+            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes)
         }else{
-            js += 'else{\n' + $B.js_from_ast(orelse, scopes) + '}'
+            js += '\nelse{\n' + add_body(this.orelse, scopes) + '}'
         }
     }
     scopes.pop()
@@ -1152,12 +1189,17 @@ $B.ast.Import.prototype.to_js = function(scopes){
     for(var alias of this.names){
         js += `$B.$import("${alias.name}", [], `
         if(alias.asname){
-            js += `{${alias.name} : "${alias.asname}"}, `
+            js += `{'${alias.name}' : '${alias.asname}'}, `
             bind(alias.asname, scopes)
         }else{
             js += '{}, '
             bind(alias.name, scopes)
         }
+        var parts = alias.name.split('.')
+        for(var i = 0; i < parts.length; i++){
+            scopes.imports[parts.slice(0, i + 1).join(".")] = true
+        }
+
         js += `locals, true)\n`
     }
     return js.trimRight()
@@ -1167,11 +1209,19 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
     var js = `var module = $B.$import("${this.module}",`
     var names = this.names.map(x => `"${x.name}"`).join(', ')
     js += `[${names}], {}, locals, true);`
+
+    /*
+    var parts = this.module.split('.')
+    for(var i = 0; i < parts.length; i++){
+        scopes.imports[parts.slice(0, i + 1).join(".")] = true
+    }
+    */
+
     for(var alias of this.names){
         if(alias.asname){
             bind(alias.asname, scopes)
             js += `\nlocals.${alias.asname} = $B.$getattr(` +
-                `$.imported["${this.module}"], "${alias.name}")`
+                `$B.imported["${this.module}"], "${alias.name}")`
         }else if(alias.name == '*'){
             // mark scope as "blurred" by the presence of "from X import *"
             last_scope(scopes).blurred = true
@@ -1397,7 +1447,11 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
     return make_comp.bind(this)(scopes)
 }
 
-$B.ast.Module.prototype.to_js = function(scopes){
+function make_local(module_id){
+    return `locals_${module_id.replace(/\./g, '_')}`
+}
+
+$B.ast.Module.prototype.to_js = function(scopes, namespaces){
     var name = scopes.symtable.table.filename
     var module_scope = new Scope(name, 'module', this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
@@ -1406,19 +1460,23 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     scopes.push(module_scope)
     var module_id = name,
-        global_name = `locals_${module_id}`
-    var js = `// generated from ast
-              var $B = __BRYTHON__,
-                  _b_ = $B.builtins,
-                  ${global_name} = {},
-                  locals = ${global_name},
-                  $top_frame = ["${module_id}", locals, ` +
-              `"${module_id}", locals]
-    locals.__file__ = '${scopes.filename || "<string>"}'
-    locals.$f_trace = $B.enter_frame($top_frame)
-    locals.$lineno = ${this.lineno}
-    var stack_length = $B.frames_stack.length;
-    try{\n`
+        global_name = make_local(module_id)
+    var js = `// generated from ast\n` +
+             `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+    if(! namespaces){
+        js += `${global_name} = {},\nlocals = ${global_name},\n` +
+              `$top_frame = ["${module_id}", locals, "${module_id}", locals]`
+    }else{
+        js += `locals = ${namespaces.local_name},\n` +
+              `globals = ${namespaces.global_name},\n` +
+              `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+    }
+    js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
+          `locals.__name__ = '${name}'\n` +
+          `locals.$f_trace = $B.enter_frame($top_frame)\n` +
+          `locals.$lineno = ${this.lineno}\n` +
+          `var stack_length = $B.frames_stack.length\n` +
+          `try{\n`
 
     js += add_body(this.body, scopes)
 
@@ -1686,11 +1744,13 @@ $B.ast.Yield.prototype.to_js = function(scopes){
 }
 
 
-$B.js_from_root = function(ast_root, symtable, filename){
+$B.js_from_root = function(ast_root, symtable, filename, namespaces){
     var scopes = []
     scopes.symtable = symtable
     scopes.filename = filename
-    return $B.js_from_ast(ast_root, scopes)
+    scopes.imports = {}
+    var js = ast_root.to_js(scopes, namespaces)
+    return js
 }
 
 $B.js_from_ast = function(ast, scopes){

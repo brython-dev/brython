@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-22 20:51:10.324034"
-__BRYTHON__.timestamp=1642881070324
+__BRYTHON__.compiled_date="2022-01-24 21:35:10.967506"
+__BRYTHON__.timestamp=1643056510967
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -562,7 +562,11 @@ $Node.prototype.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
 child.module=this.module}
-$Node.prototype.ast=function(){var root_ast=new ast.Module([],[])
+$Node.prototype.ast=function(){if(this.mode=="eval"){var root_ast=new ast.Expression()
+root_ast.lineno=this.line_num
+root_ast.body=ast_or_obj(this.children[0].C.tree[0])
+return root_ast}
+var root_ast=new ast.Module([],[])
 root_ast.lineno=this.line_num
 for(var node of this.children){var t=node.C.tree[0]
 if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
@@ -570,7 +574,7 @@ if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
 var node_ast=ast_or_obj(node.C.tree[0])
 if(ast.expr.indexOf(node_ast.constructor)>-1){node_ast=new ast.Expr(node_ast)
 node_ast.lineno=node.line_num}
-root_ast.body.push(node_ast)}
+if(this.mode=='eval'){root_ast.body=node_ast}else{root_ast.body.push(node_ast)}}
 return root_ast}
 $Node.prototype.get_indent=function(){var indent=0,node=this
 while(node.parent){indent++
@@ -3242,9 +3246,11 @@ this.tree=[C.tree[0]]
 this.tree[0].parent=this
 Comprehension.make_comp(this,C)}
 GeneratorExpCtx.prototype.ast=function(){
-return new ast.GeneratorExp(
+var res=new ast.GeneratorExp(
 ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
-)}
+)
+res.lineno=$get_node(this).line_num
+return res}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
 if(token==')'){this.has_await=Comprehension.has_await(this)
 if(this.parent.type=='call'){return this.parent.parent}
@@ -3686,7 +3692,7 @@ var line_num=$get_node(C).line_num
 for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
 value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefined){value.format=new JoinedStrCtx(this,value.format)
 this.tree.pop()}
-var src=value.expression,save_pos=$pos,root=$create_root_node({src},this.scope.module,this.scope.id,this.scope.parent_block,line_num)
+var src=value.expression,save_pos=$pos,root=$create_root_node(src,this.scope.module,this.scope.id,this.scope.parent_block,line_num)
 root.binding=$B.clone(this.scope.binding)
 try{dispatch_tokens(root,src.trimStart())}catch(err){err.args[1][1]+=line_num-1
 var line_start=save_pos,source=$get_module(this).src
@@ -6390,7 +6396,10 @@ if($B.produce_ast){var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
 if($B.js_from_ast){var symtable=$B._PySymtable_Build(_ast,locals_id)
 var js_from_ast=$B.js_from_root(_ast,symtable,filename)
-if(locals_id=='js_from_ast'){return{to_js:function(){return js_from_ast}}}}}
+if(true){
+root._ast=_ast
+root.to_js=function(){return js_from_ast}
+return root}}}
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js='var $B = __BRYTHON__,\n'+
@@ -8375,6 +8384,7 @@ var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
 var root=$B.parser.$create_root_node(
 {src:$.source,filename:$.filename},module_name,module_name)
+root.mode=$.mode
 root.parent_block=$B.builtins_scope
 $B.parser.dispatch_tokens(root,$.source)
 if($.flags==$B.PyCF_ONLY_AST){return root.ast()}
@@ -8433,6 +8443,32 @@ return self}
 enumerate.__next__=function(self){self.counter++
 return $B.fast_tuple([self.counter,next(self.iter)])}
 $B.set_func_names(enumerate,"builtins")
+function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
+var local_name=`locals_${frame[0]}`,global_name=`locals_${frame[2]}`,exec_locals,exec_globals
+if(_globals===_b_.None){
+exec_locals={}
+for(var key in frame[1]){exec_locals[key]=frame[1][key]}
+exec_globals=frame[3]}else{
+exec_globals={}
+for(var key in _globals.$string_dict){exec_globals[key]=_globals.$string_dict[key][0]}
+if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_}
+if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name){
+global_name+='_globals'}
+exec_locals={}
+for(var key in _locals.$string_dict){exec_locals[key]=_locals.$string_dict[key][0]}}}
+console.log('eval, lineno',frame[1].$lineno)
+var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],frame[1].$lineno)
+root.mode=mode
+$B.parser.dispatch_tokens(root,src)
+var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,frame[0]),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,global_name})
+if(mode=="eval"){if(!(_ast.body instanceof $B.ast.Expr)){throw _b_.SyntaxError.$factory(
+"eval() argument must be an expression",'<string>',1,1,src)}}
+if(mode=='exec'){js+='return {locals, globals}'
+var res=new Function(local_name,global_name,js)(exec_locals,exec_globals)
+if(_globals !==_b_.None){for(var key in res.globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,res.globals[key])}}
+if(_locals !==_b_.None){for(var key in res.locals){if(! key.startsWith('$')){_b_.dict.$setitem(_locals,key,res.locals[key])}}}}
+return _b_.None}else{var locals=frame[1]
+return eval(js)}}
 function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
@@ -8441,6 +8477,7 @@ if(src.__class__===code){mode=src.mode
 src=src.source}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
 " bytes or code object")}else{
 src=src.valueOf()}
+if($B.js_from_ast){return eval1(src,mode,_globals,_locals)}
 var current_frame=$B.frames_stack[$B.frames_stack.length-1]
 if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./g,'_'),current_globals_id=current_frame[2].replace(/\./g,'_')}
 var stack_len=$B.frames_stack.length
@@ -11258,8 +11295,9 @@ try{js=compiled ? module_contents :root.to_js()
 if($B.$options.debug==10){console.log("code for module "+module.__name__)
 console.log(js)}
 var src=js
-js="var $module = (function(){\n"+js+"return $locals_"+
-module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
+js="var $module = (function(){\n"+js
+if($B.js_from_ast){js+='return locals_'}else{js+="return $locals_"}
+js+=module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id="$locals_"+module.__name__.replace(/\./g,'_')
 var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)

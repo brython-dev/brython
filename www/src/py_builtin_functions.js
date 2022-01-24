@@ -399,10 +399,10 @@ function compile() {
         }
     }
 
-    // Run py2js to detect potential syntax errors
     var root = $B.parser.$create_root_node(
             {src: $.source, filename: $.filename},
             module_name, module_name)
+    root.mode = $.mode
     root.parent_block = $B.builtins_scope
     $B.parser.dispatch_tokens(root, $.source)
     if($.flags == $B.PyCF_ONLY_AST){
@@ -547,6 +547,86 @@ enumerate.__next__ = function(self){
 
 $B.set_func_names(enumerate, "builtins")
 
+function eval1(src, mode, _globals, _locals){
+    var frame = $B.last($B.frames_stack)
+    var local_name = `locals_${frame[0]}`,
+        global_name = `locals_${frame[2]}`,
+        exec_locals,
+        exec_globals
+
+    if(_globals === _b_.None){
+        // create a copy of locals
+        exec_locals = {}
+        for(var key in frame[1]){
+            exec_locals[key] = frame[1][key]
+        }
+        exec_globals = frame[3]
+    }else{
+        // _globals is used for both globals and locals
+        exec_globals = {}
+        for(var key in _globals.$string_dict){
+            exec_globals[key] = _globals.$string_dict[key][0]
+        }
+        if(exec_globals.__builtins__ === undefined){
+            exec_globals.__builtins__ = _b_
+        }
+        if(_locals === _b_.None){
+            exec_locals = exec_globals
+        }else{
+            if(global_name == local_name){
+                // running exec at module level
+                global_name += '_globals'
+            }
+            exec_locals = {}
+            for(var key in _locals.$string_dict){
+                exec_locals[key] = _locals.$string_dict[key][0]
+            }
+        }
+    }
+
+    console.log('eval, lineno', frame[1].$lineno)
+
+    var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
+            frame[1].$lineno)
+    root.mode = mode
+    $B.parser.dispatch_tokens(root, src)
+
+    var _ast = root.ast(),
+        symtable = $B._PySymtable_Build(_ast, frame[0]),
+        js = $B.js_from_root(_ast, symtable, '<string>',
+                {local_name, global_name})
+    if(mode == "eval"){
+        if(! (_ast.body instanceof $B.ast.Expr)){
+            throw _b_.SyntaxError.$factory(
+                "eval() argument must be an expression",
+                '<string>', 1, 1, src)
+        }
+    }
+
+    if(mode == 'exec'){
+        js += 'return {locals, globals}'
+        var res = new Function(local_name, global_name, js)(exec_locals, exec_globals)
+        if(_globals !== _b_.None){
+            for(var key in res.globals){
+                if(! key.startsWith('$')){
+                    _b_.dict.$setitem(_globals, key, res.globals[key])
+                }
+            }
+            if(_locals !== _b_.None){
+                for(var key in res.locals){
+                    if(! key.startsWith('$')){
+                        _b_.dict.$setitem(_locals, key, res.locals[key])
+                    }
+                }
+            }
+        }
+        return _b_.None
+    }else{
+        var locals = frame[1]
+        return eval(js)
+    }
+}
+
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
     var $ = $B.args("eval", 4,
@@ -576,6 +656,9 @@ function $$eval(src, _globals, _locals){
         src = src.valueOf()
     }
 
+    if($B.js_from_ast){
+        return eval1(src, mode, _globals, _locals)
+    }
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
     if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./g, '_'),
@@ -911,6 +994,7 @@ function $$eval(src, _globals, _locals){
         return res
     }catch(err){
 
+        
         update_namespaces() // cf. issue #1852
 
         err.src = src

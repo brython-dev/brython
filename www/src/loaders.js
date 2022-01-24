@@ -390,6 +390,8 @@ var loop = $B.loop = function(){
                 var lineNumber = err.lineNumber
                 if(lineNumber !== undefined){
                     console.log('around line', lineNumber)
+                    //console.log($B.format_indent(script.js), 0)
+                    
                     console.log(script.js.split('\n').
                         slice(lineNumber - 4, lineNumber).join('\n'))
                 }

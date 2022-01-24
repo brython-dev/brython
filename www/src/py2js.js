@@ -525,6 +525,13 @@ $Node.prototype.add = function(child){
 }
 
 $Node.prototype.ast = function(){
+    if(this.mode == "eval"){
+        var root_ast = new ast.Expression()
+        root_ast.lineno = this.line_num
+        root_ast.body = ast_or_obj(this.children[0].context.tree[0])
+        return root_ast
+    }
+
     var root_ast = new ast.Module([], [])
     root_ast.lineno = this.line_num
     for(var node of this.children){
@@ -541,7 +548,11 @@ $Node.prototype.ast = function(){
             node_ast = new ast.Expr(node_ast)
             node_ast.lineno = node.line_num
         }
-        root_ast.body.push(node_ast)
+        if(this.mode == 'eval'){
+            root_ast.body = node_ast
+        }else{
+            root_ast.body.push(node_ast)
+        }
     }
     return root_ast
 }
@@ -5999,10 +6010,12 @@ GeneratorExpCtx.prototype.ast = function(){
     // ast.GeneratorExp(elt, generators)
     // elt is the part evaluated for each item
     // generators is a list of comprehensions
-    return new ast.GeneratorExp(
+    var res = new ast.GeneratorExp(
         ast_or_obj(this.tree[0]),
         Comprehension.generators(this.tree.slice(1))
     )
+    res.lineno = $get_node(this).line_num
+    return res
 }
 
 GeneratorExpCtx.prototype.transition = function(token, value){
@@ -7110,7 +7123,7 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
             }
             var src = value.expression,
                 save_pos = $pos,
-                root = $create_root_node({src},
+                root = $create_root_node(src,
                     this.scope.module, this.scope.id,
                     this.scope.parent_block, line_num)
 
@@ -12950,8 +12963,11 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
             var js_from_ast = $B.js_from_root(_ast, symtable, filename)
 
-            if(locals_id == 'js_from_ast'){
-                return {to_js: function(){return js_from_ast}}
+            if(true){ //locals_id == 'js_from_ast'){
+                // return an object with the same structure as root
+                root._ast = _ast
+                root.to_js = function(){return js_from_ast}
+                return root
             }
         }
     }

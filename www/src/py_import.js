@@ -207,8 +207,13 @@ function run_py(module_contents, path, module, compiled) {
            console.log(js)
         }
         var src = js
-        js = "var $module = (function(){\n" + js + "return $locals_" +
-            module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
+        js = "var $module = (function(){\n" + js
+        if($B.js_from_ast){
+            js += 'return locals_'
+        }else{
+            js += "return $locals_"
+        }
+        js += module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
             "return $module"
         var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module)
