@@ -229,9 +229,7 @@ class Widget:
 
     def _wrap_callback(self, func):
         def f(event):
-            mouse.x = event.clientX
-            mouse.y = event.clientY
-            res = func(self)
+            res = func(event)
             if res is False:
                 event.stopPropagation()
                 event.preventDefault()
@@ -252,7 +250,7 @@ class Widget:
             master._table = html.TABLE(
                 cellpadding=0,
                 cellspacing=0,
-                style='width:100%;height:100%;table-layout:fixed;')
+                style='width:100%;')
             master <= master._table
             if row == 'same':
                 row = 0
@@ -352,11 +350,7 @@ class Widget:
         self.cell.config(**options)
 
         self.row = _Wrapper(tr)
-        if isinstance(self, Text):
-            self.dw = self.parentNode.offsetWidth - self.offsetWidth
-            self.dh = self.parentNode.offsetHeight - self.offsetHeight
-            self.style.width = f'{self.parentNode.width - self.dw}px'
-            self.style.height = f'{self.parentNode.height - self.dh}px'
+
         return self
 
     @property
@@ -825,9 +819,7 @@ class Text(html.DIV, Widget):
         'borderWidth': '1px',
         'borderStyle': 'solid',
         'borderColor': '#999',
-        'boxSizing': 'border-box',
-        'height': '100%',
-        'overflow-y': 'scroll'
+        'boxSizing': 'border-box'
     }
 
     def __init__(self, *args, **options):
