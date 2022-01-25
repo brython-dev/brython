@@ -223,7 +223,6 @@ function ste_new(st, name, block,
 
 
 $B._PySymtable_Build = function(mod, filename, future){
-    console.log('build symtable', mod, filename)
     var st = new Symtable(),
         seq
     st.filename = filename;
@@ -256,8 +255,6 @@ $B._PySymtable_Build = function(mod, filename, future){
 
     /* Make the second symbol analysis pass */
     symtable_analyze(st)
-
-    console.log('symtabel returns', st.top)
 
     return st.top;
 }

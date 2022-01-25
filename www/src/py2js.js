@@ -6118,8 +6118,10 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     this.scope = $get_scope(this)
     this.scope.globals = this.scope.globals || new Set()
     this.module = $get_module(this)
-    while(this.module.module != this.module.id){
-        this.module = this.module.parent_block
+    if(this.module.module !== '<module>'){ // used by eval1
+        while(this.module.module != this.module.id){
+            this.module = this.module.parent_block
+        }
     }
     this.module.binding = this.module.binding || {}
     this.$pos = $pos
@@ -12344,7 +12346,7 @@ function prepare_string(context, s, position){
         pos = 0,
         string_modifier,
         _type = "string"
-    
+
     while(pos < len){
         if(s[pos] == '"' || s[pos] == "'"){
             quote = s[pos]

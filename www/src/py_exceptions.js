@@ -877,6 +877,9 @@ _b_.SyntaxError.$factory = function(){
         frame = $B.last($B.frames_stack)
     if(frame){
         line_info = frame[1].$line_info
+        if(line_info === undefined){
+            line_info = `${frame[1].$lineno},${frame[2]}`
+        }
         exc.filename = frame[3].__file__
         exc.lineno = parseInt(line_info.split(",")[0])
         var src = $B.file_cache[frame[3].__file__]

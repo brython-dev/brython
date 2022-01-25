@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-25 17:37:21.186483"
-__BRYTHON__.timestamp=1643128641186
+__BRYTHON__.compiled_date="2022-01-25 22:58:44.313128"
+__BRYTHON__.timestamp=1643147924313
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3321,7 +3321,8 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.scope.globals=this.scope.globals ||new Set()
 this.module=$get_module(this)
-while(this.module.module !=this.module.id){this.module=this.module.parent_block}
+if(this.module.module !=='<module>'){
+while(this.module.module !=this.module.id){this.module=this.module.parent_block}}
 this.module.binding=this.module.binding ||{}
 this.$pos=$pos}
 $GlobalCtx.prototype.ast=function(){
@@ -8399,7 +8400,7 @@ if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be 
 $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
 $B.$delete=function(name,is_global){
-function del(obj){if(obj.__class__===$B.generator){
+function del(obj){if(obj.__class__===$B.generator){console.log('del generator',obj)
 obj.js_gen.return()}}
 var found=false,frame=$B.last($B.frames_stack)
 if(! is_global){if(frame[1][name]!==undefined){found=true
@@ -8462,8 +8463,6 @@ var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],frame[1].$
 root.mode=mode
 $B.parser.dispatch_tokens(root)
 var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,frame[0]),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,global_name})
-if(mode=="eval"){if(!(_ast.body instanceof $B.ast.Expr)){throw _b_.SyntaxError.$factory(
-"eval() argument must be an expression",'<string>',1,1,src)}}
 if(mode=='exec'){js+='return {locals, globals}'
 var res=new Function(local_name,global_name,js)(exec_locals,exec_globals)
 if(_globals !==_b_.None){for(var key in res.globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,res.globals[key])}}
@@ -9885,6 +9884,7 @@ _b_.SyntaxError.$factory=function(){var arg=arguments[0]
 if(arg.__class__===_b_.SyntaxError){return arg}
 var exc=se.apply(null,arguments),frame=$B.last($B.frames_stack)
 if(frame){line_info=frame[1].$line_info
+if(line_info===undefined){line_info=`${frame[1].$lineno},${frame[2]}`}
 exc.filename=frame[3].__file__
 exc.lineno=parseInt(line_info.split(",")[0])
 var src=$B.file_cache[frame[3].__file__]

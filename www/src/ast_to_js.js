@@ -112,13 +112,13 @@ function binding_scope(name, scopes){
     }else if(scope.globals.has(name)){
         var global_scope = scopes[0]
         if(global_scope.locals.has(name)){
-            return `locals_${scopes[0].name}.${name}`
+            return `${make_scope_name(scopes, scopes[0])}.${name}`
         }
         return `$B.resolve_global('${name}')`
     }else if(scope.nonlocals.has(name)){
         for(var i = scopes.length - 2; i >=0; i--){
             if(scopes[i].locals.has(name)){
-                return `locals_${scopes[i].name}.${name}`
+                return `${make_scope_name(scopes, scopes[i])}.${name}`
             }
         }
     }
@@ -461,7 +461,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
             return `locals.${this.target.id} = $B.augm_assign(` +
                 `$B.resolve('${this.target.id}'), '${iop}', ${value})`
         }else{
-            var ref = `locals_${scope.name}.${this.target.id}`
+            var ref = `${make_scope_name(scopes, scope)}.${this.target.id}`
             return ref + ` = typeof ${ref} == "number" && ` +
                 `$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n` +
                 `locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`
@@ -881,6 +881,8 @@ $B.ast.FormattedValue.prototype.to_js = function(scopes){
         value = `_b_.str.format('{0:' + `+
                 $B.js_from_ast(this.format_spec, scopes) +
                 ` + '}', ${value})`
+    }else if(this.conversion == -1){
+        value = `_b_.str.$factory(${value})`
     }
     return value
 }
@@ -1052,6 +1054,16 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_generator){flags |= 32}
 
     var varnames = symtable_block.varnames.map(x => `"${x}"`)
+    var identifiers = Object.keys(symtable_block.symbols.$string_dict)
+
+    var free_vars = []
+    for(var ident of identifiers){
+        var flag = symtable_block.symbols.$string_dict[ident][0],
+            _scope = (flag >> SCOPE_OFF) & SCOPE_MASK
+        if(_scope == FREE){
+            free_vars.push(`'${ident}'`)
+        }
+    }
 
     js += `${name2}.$infos = {\n` +
         `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
@@ -1063,6 +1075,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_filename: ${make_local(scopes[0].name)}.__file__,\n` +
         `co_firstlineno: ${this.lineno},\n` +
         `co_flags: ${flags},\n` +
+        `co_freevars: $B.fast_tuple([${free_vars}]),\n` +
         `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n` +
         `co_name: '${this.name}',\n` +
         `co_nlocals: ${varnames.length},\n` +
@@ -1070,8 +1083,16 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_varnames: [${varnames}]\n` +
         `}\n}\n`
 
-    js += (is_async ? `return $B.make_async(${name2})` : `return ${name2}`) +
-          `}\n`
+    if(is_async){
+        if(is_generator){
+            js += `return $B.async_generator.$factory(${name2})`
+        }else{
+            js += `return $B.make_async(${name2})`
+        }
+    }else{
+        js += `return ${name2}`
+    }
+    js += `}\n`
 
     var func_ref = `${make_scope_name(scopes, func_name_scope)}.${this.name}`
 
@@ -1080,7 +1101,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    if(is_generator){
+    if(is_generator && ! is_async){
         js += `${func_ref} = $B.generator.$factory` +
             `(${name1}(${default_str}), "${this.name}")\n`
     }else{
@@ -1752,7 +1773,7 @@ $B.ast.With.prototype.to_js = function(scopes){
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `exit_${id} = $B.$getattr(mgr_${id}, ` +
               `"__exit__"),\n` +
-              `value_${id} = $B.$getattr(mgr_${id}, 'enter'),\n` +
+              `value_${id} = $B.$getattr(mgr_${id}, '__enter__'),\n` +
               `exc_${id} = true\n` +
               'try{\ntry{\n'
         if(item.optional_vars){

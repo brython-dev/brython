@@ -433,6 +433,7 @@ $B.$delete = function(name, is_global){
     // remove name from namespace
     function del(obj){
         if(obj.__class__ === $B.generator){
+            console.log('del generator', obj)
             // Force generator return (useful if yield was in a context manager)
             obj.js_gen.return()
         }
@@ -593,13 +594,16 @@ function eval1(src, mode, _globals, _locals){
         symtable = $B._PySymtable_Build(_ast, frame[0]),
         js = $B.js_from_root(_ast, symtable, '<string>',
                 {local_name, global_name})
+    /*
     if(mode == "eval"){
         if(! (_ast.body instanceof $B.ast.Expr)){
+            console.log('body not expr', src, _ast)
             throw _b_.SyntaxError.$factory(
                 "eval() argument must be an expression",
                 '<string>', 1, 1, src)
         }
     }
+    */
 
     if(mode == 'exec'){
         js += 'return {locals, globals}'
@@ -657,7 +661,7 @@ function $$eval(src, _globals, _locals){
     if($B.js_from_ast){
         return eval1(src, mode, _globals, _locals)
     }
-    
+
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
     if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./g, '_'),
