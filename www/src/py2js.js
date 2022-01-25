@@ -7121,7 +7121,7 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
                 value.format = new JoinedStrCtx(this, value.format)
                 this.tree.pop()
             }
-            var src = value.expression,
+            var src = value.expression.trimStart(), // ignore leading whitespace
                 save_pos = $pos,
                 root = $create_root_node(src,
                     this.scope.module, this.scope.id,
@@ -7131,7 +7131,7 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
             root.binding = $B.clone(this.scope.binding)
 
             try{
-                dispatch_tokens(root, src.trimStart())
+                dispatch_tokens(root)
             }catch(err){
                 err.args[1][1] += line_num - 1
                 var line_start = save_pos,
@@ -11742,7 +11742,7 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
     if(node.type == 'module'){
         var i = 0
         while(i < node.children.length){
-            i += $add_line_num(node.children[i], i, line_info)
+            i += $add_line_num(node.children[i], i)
         }
     }else if(node.type !== 'marker'){
         var elt = node.context.tree[0],
@@ -11768,7 +11768,6 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
             flag = false
         }
         if(flag){
-
             _line_info = line_info === undefined ? line_num + ',' + mod_id :
                 line_info
             var js = ';$locals.$line_info = "' + _line_info +
@@ -12345,6 +12344,7 @@ function prepare_string(context, s, position){
         pos = 0,
         string_modifier,
         _type = "string"
+    
     while(pos < len){
         if(s[pos] == '"' || s[pos] == "'"){
             quote = s[pos]
@@ -12615,7 +12615,8 @@ var python_keywords = [
     "async", "await"
 ]
 
-var dispatch_tokens = $B.parser.dispatch_tokens = function(root, src){
+var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
+    var src = root.src
     var tokenizer = $B.tokenizer(src)
     var braces_close = {")": "(", "]": "[", "}": "{"},
         braces_open = "([{",
@@ -12880,6 +12881,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     root.indent = -1
     root.comments = []
     root.imports = {}
+
     if(typeof src == "object"){
         root.is_comp = src.is_comp
         root.filename = src.filename
@@ -12888,6 +12890,17 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
         }
         src = src.src
     }
+
+    // Normalize line ends
+    src = src.replace(/\r\n/gm, "\n")
+    // Remove trailing \, cf issue 970
+    // but don't hide syntax error if ends with \\, cf issue 1210
+    if(src.endsWith("\\") && !src.endsWith("\\\\")){
+        src = src.substr(0, src.length - 1)
+    }
+    // Normalise script end
+    if(src.charAt(src.length - 1) != "\n"){src += "\n"}
+
     root.src = src
     return root
 }
@@ -12930,15 +12943,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }else{
         line_num = 1
     }
-    // Normalize line ends
-    src = src.replace(/\r\n/gm, "\n")
-    // Remove trailing \, cf issue 970
-    // but don't hide syntax error if ends with \\, cf issue 1210
-    if(src.endsWith("\\") && !src.endsWith("\\\\")){
-        src = src.substr(0, src.length - 1)
-    }
-    // Normalise script end
-    if(src.charAt(src.length - 1) != "\n"){src += "\n"}
 
     var locals_is_module = Array.isArray(locals_id)
     if(locals_is_module){
@@ -12952,7 +12956,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
                 filename: filename},
             module, locals_id, parent_scope, line_num)
 
-    dispatch_tokens(root, src)
+    dispatch_tokens(root)
     if($B.produce_ast){
         var _ast = root.ast()
         if($B.produce_ast == 2){

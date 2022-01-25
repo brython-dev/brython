@@ -485,6 +485,9 @@ var getExceptionTrace = function(exc, includeInternal) {
         }else if(frame[1].$lineno){
             var line_info = [frame[1].$lineno, frame[2]]
         }
+        if($B.imported[frame[2]] === undefined){
+            console.log('pas de imported pour', frame[2])
+        }
         var __file__ = $B.imported[frame[2]].__file__,
             src = $B.file_cache[__file__]
         var file = frame[3].__file__ || "<string>",

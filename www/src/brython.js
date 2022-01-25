@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-24 21:35:10.967506"
-__BRYTHON__.timestamp=1643056510967
+__BRYTHON__.compiled_date="2022-01-25 17:37:21.186483"
+__BRYTHON__.timestamp=1643128641186
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3692,9 +3692,10 @@ var line_num=$get_node(C).line_num
 for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
 value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefined){value.format=new JoinedStrCtx(this,value.format)
 this.tree.pop()}
-var src=value.expression,save_pos=$pos,root=$create_root_node(src,this.scope.module,this.scope.id,this.scope.parent_block,line_num)
+var src=value.expression.trimStart(),
+save_pos=$pos,root=$create_root_node(src,this.scope.module,this.scope.id,this.scope.parent_block,line_num)
 root.binding=$B.clone(this.scope.binding)
-try{dispatch_tokens(root,src.trimStart())}catch(err){err.args[1][1]+=line_num-1
+try{dispatch_tokens(root)}catch(err){err.args[1][1]+=line_num-1
 var line_start=save_pos,source=$get_module(this).src
 while(line_start--> 0 && source[line_start]!='\n'){}
 err.args[1][2]+=value.start+save_pos-line_start
@@ -5923,7 +5924,7 @@ func_scope=parent}
 if(! in_func){$_SyntaxError(this.parent,["'yield' outside function"])}else{var def=func_scope.C.tree[0]
 if(! this.is_await){def.type='generator'}}}
 var $add_line_num=$B.parser.$add_line_num=function(node,rank,line_info){if(node.type=='module'){var i=0
-while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node,_line_info
+while(i < node.children.length){i+=$add_line_num(node.children[i],i)}}else if(node.type !=='marker'){var elt=node.C.tree[0],offset=1,flag=true,pnode=node,_line_info
 while(pnode.parent !==undefined){pnode=pnode.parent}
 var mod_id=node.module ||pnode.id
 var line_num=node.line_num
@@ -6245,7 +6246,8 @@ function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_
 $_SyntaxError(C,'invalid token '+token[1]+_b_.ord(token[1]))}
 var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
 ]
-var dispatch_tokens=$B.parser.dispatch_tokens=function(root,src){var tokenizer=$B.tokenizer(src)
+var dispatch_tokens=$B.parser.dispatch_tokens=function(root){var src=root.src
+var tokenizer=$B.tokenizer(src)
 var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
@@ -6369,6 +6371,9 @@ if(typeof src=="object"){root.is_comp=src.is_comp
 root.filename=src.filename
 if(src.has_annotations){root.binding.__annotations__=true}
 src=src.src}
+src=src.replace(/\r\n/gm,"\n")
+if(src.endsWith("\\")&& !src.endsWith("\\\\")){src=src.substr(0,src.length-1)}
+if(src.charAt(src.length-1)!="\n"){src+="\n"}
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope,line_num){
@@ -6384,14 +6389,11 @@ if(typeof src=='object'){var has_annotations=src.has_annotations,line_info=src.l
 ix=src.ix,filename=src.filename
 if(line_info !==undefined){line_num=parseInt(line_info.split(",")[0])}
 src=src.src}else if(line_num !==undefined){line_info=`${line_num},${module}`}else{line_num=1}
-src=src.replace(/\r\n/gm,"\n")
-if(src.endsWith("\\")&& !src.endsWith("\\\\")){src=src.substr(0,src.length-1)}
-if(src.charAt(src.length-1)!="\n"){src+="\n"}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
-dispatch_tokens(root,src)
+dispatch_tokens(root)
 if($B.produce_ast){var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
 if($B.js_from_ast){var symtable=$B._PySymtable_Build(_ast,locals_id)
@@ -8456,10 +8458,9 @@ if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name)
 global_name+='_globals'}
 exec_locals={}
 for(var key in _locals.$string_dict){exec_locals[key]=_locals.$string_dict[key][0]}}}
-console.log('eval, lineno',frame[1].$lineno)
 var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],frame[1].$lineno)
 root.mode=mode
-$B.parser.dispatch_tokens(root,src)
+$B.parser.dispatch_tokens(root)
 var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,frame[0]),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,global_name})
 if(mode=="eval"){if(!(_ast.body instanceof $B.ast.Expr)){throw _b_.SyntaxError.$factory(
 "eval() argument must be an expression",'<string>',1,1,src)}}
@@ -9724,6 +9725,7 @@ var line_info=exc.$line_info
 for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
 if(! frame[1]){continue}
 if(frame[1].$line_info){var $line_info=frame[1].$line_info,line_info=$line_info.split(',')}else if(frame[1].$lineno){var line_info=[frame[1].$lineno,frame[2]]}
+if($B.imported[frame[2]]===undefined){console.log('pas de imported pour',frame[2])}
 var __file__=$B.imported[frame[2]].__file__,src=$B.file_cache[__file__]
 var file=frame[3].__file__ ||"<string>",module=line_info[1],is_exec=module.charAt(0)=="$"
 if(is_exec){module="<module>"}

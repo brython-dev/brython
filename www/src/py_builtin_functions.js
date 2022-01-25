@@ -584,12 +584,10 @@ function eval1(src, mode, _globals, _locals){
         }
     }
 
-    console.log('eval, lineno', frame[1].$lineno)
-
     var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
             frame[1].$lineno)
     root.mode = mode
-    $B.parser.dispatch_tokens(root, src)
+    $B.parser.dispatch_tokens(root)
 
     var _ast = root.ast(),
         symtable = $B._PySymtable_Build(_ast, frame[0]),
@@ -659,6 +657,7 @@ function $$eval(src, _globals, _locals){
     if($B.js_from_ast){
         return eval1(src, mode, _globals, _locals)
     }
+    
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1]
     if(current_frame !== undefined){
         var current_locals_id = current_frame[0].replace(/\./g, '_'),
@@ -994,7 +993,7 @@ function $$eval(src, _globals, _locals){
         return res
     }catch(err){
 
-        
+
         update_namespaces() // cf. issue #1852
 
         err.src = src
