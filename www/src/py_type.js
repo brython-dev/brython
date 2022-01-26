@@ -325,28 +325,6 @@ type.__format__ = function(klass, fmt_spec){
 
 type.__getattribute__ = function(klass, attr){
     switch(attr) {
-        case "__annotations__":
-            var mro = [klass].concat(klass.__mro__),
-                res
-            for(var i = 0, len = mro.length; i < len; i++){
-                if(mro[i].__dict__){
-                    var ann = mro[i].__dict__.$string_dict.__annotations__[0]
-                    if(ann){
-                        if(res === undefined){
-                            res = ann
-                        }else if(res.__class__ === _b_.dict &&
-                                ann.__class__ === _b_.dict){
-                            // Inherit annotations that are implemented as
-                            // dictionaries
-                            for(var key in ann.$string_dict){
-                                res.$string_dict[key] = ann.$string_dict[key]
-                            }
-                        }
-                    }
-                }
-            }
-            if(res === undefined){res = $B.empty_dict()}
-            return res
         case "__bases__":
             var res = klass.__bases__ // || _b_.tuple.$factory()
             res.__class__ = _b_.tuple
