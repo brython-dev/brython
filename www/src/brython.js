@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-25 22:58:44.313128"
-__BRYTHON__.timestamp=1643147924313
+__BRYTHON__.compiled_date="2022-01-26 15:52:35.605578"
+__BRYTHON__.timestamp=1643208755605
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7032,15 +7032,7 @@ return instance}
 type.__class__=type
 type.__format__=function(klass,fmt_spec){
 return _b_.str.$factory(klass)}
-type.__getattribute__=function(klass,attr){switch(attr){case "__annotations__":
-var mro=[klass].concat(klass.__mro__),res
-for(var i=0,len=mro.length;i < len;i++){if(mro[i].__dict__){var ann=mro[i].__dict__.$string_dict.__annotations__[0]
-if(ann){if(res===undefined){res=ann}else if(res.__class__===_b_.dict &&
-ann.__class__===_b_.dict){
-for(var key in ann.$string_dict){res.$string_dict[key]=ann.$string_dict[key]}}}}}
-if(res===undefined){res=$B.empty_dict()}
-return res
-case "__bases__":
+type.__getattribute__=function(klass,attr){switch(attr){case "__bases__":
 var res=klass.__bases__ 
 res.__class__=_b_.tuple
 if(res.length==0){}
@@ -8400,7 +8392,7 @@ if(typeof attr !='string'){throw _b_.TypeError.$factory("attribute name must be 
 $B.class_name(attr)+"'")}
 return $B.$getattr(obj,'__delattr__')(attr)}
 $B.$delete=function(name,is_global){
-function del(obj){if(obj.__class__===$B.generator){console.log('del generator',obj)
+function del(obj){if(obj.__class__===$B.generator){
 obj.js_gen.return()}}
 var found=false,frame=$B.last($B.frames_stack)
 if(! is_global){if(frame[1][name]!==undefined){found=true
@@ -8451,14 +8443,16 @@ var local_name=`locals_${frame[0]}`,global_name=`locals_${frame[2]}`,exec_locals
 if(_globals===_b_.None){
 exec_locals={}
 for(var key in frame[1]){exec_locals[key]=frame[1][key]}
-exec_globals=frame[3]}else{
+exec_globals=frame[3]}else{if(! _globals.__class__===_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
+"a dict, not "+$B.class_name(_globals))}
 exec_globals={}
-for(var key in _globals.$string_dict){exec_globals[key]=_globals.$string_dict[key][0]}
-if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_}
+if(_globals.$jsobj){
+for(var key in _globals.$jsobj){exec_globals[key]=_globals.$jsobj[key]}}else{for(var key in _globals.$string_dict){exec_globals[key]=_globals.$string_dict[key][0]}}
+if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=make_builtins_dict()}
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name){
 global_name+='_globals'}
 exec_locals={}
-for(var key in _locals.$string_dict){exec_locals[key]=_locals.$string_dict[key][0]}}}
+if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{for(var key in _locals.$string_dict){exec_locals[key]=_locals.$string_dict[key][0]}}}}
 var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],frame[1].$lineno)
 root.mode=mode
 $B.parser.dispatch_tokens(root)
@@ -9488,6 +9482,13 @@ else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
+function make_builtins_dict(){
+var builtins=$B.__builtins__
+if(builtins){return builtins}
+builtins={}
+for(var attr in _b_){if(attr !='__BRYTHON__'){builtins[attr]=_b_[attr]}}
+$B.__builtins__=builtins
+return builtins}
 $B.builtin_funcs=["__build_class__","abs","aiter","all","anext","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
 var builtin_function=$B.builtin_function=$B.make_class(
@@ -13477,7 +13478,7 @@ self.valueOf()==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cann
 "float.as_integer_ratio.")}
 if(! Number.isFinite(self.valueOf())){throw _b_.ValueError.$factory("Cannot pass NaN to "+
 "float.as_integer_ratio.")}
-var tmp=_b_.$frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
+var tmp=frexp(self.valueOf()),fp=tmp[0],exponent=tmp[1]
 for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp*=2
 exponent--}}
 numerator=_b_.int.$factory(fp)
@@ -13597,27 +13598,27 @@ if(_v===Infinity){return 314159}
 if(_v===-Infinity){return-271828}
 if(isNaN(_v)){return 0}
 if(_v==Math.round(_v)){return Math.round(_v)}
-var r=_b_.$frexp(_v)
+var r=frexp(_v)
 r[0]*=Math.pow(2,31)
 var hipart=_b_.int.$factory(r[0])
 r[0]=(r[0]-hipart)*Math.pow(2,31)
 var x=hipart+_b_.int.$factory(r[0])+(r[1]<< 15)
 return x & 0xFFFFFFFF}
-_b_.$isninf=function(x){var x1=x
+function isninf(x){var x1=x
 if(_b_.isinstance(x,float)){x1=float.numerator(x)}
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
-_b_.$isinf=function(x){var x1=x
+function isinf(x){var x1=x
 if((! x instanceof Number)&& _b_.isinstance(x,float)){x1=float.numerator(x)}
 return x1==Infinity ||x1==-Infinity ||
 x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
-_b_.$isnan=function(x){var x1=x
+function isnan(x){var x1=x
 if(_b_.isinstance(x,float)){x1=float.numerator(x)}
 return isNaN(x1)}
-_b_.$fabs=function(x){if(x==0){return new Number(0)}
+function fabs(x){if(x==0){return new Number(0)}
 return x > 0 ? float.$factory(x):float.$factory(-x)}
-_b_.$frexp=function(x){var x1=x
+function frexp(x){var x1=x
 if(_b_.isinstance(x,float)){x1=x.valueOf()}
-if(isNaN(x1)||_b_.$isinf(x1)){return[x1,-1]}else if(x1==0){return[0,0]}
+if(isNaN(x1)||isinf(x1)){return[x1,-1]}else if(x1==0){return[0,0]}
 var sign=1,ex=0,man=x1
 if(man < 0.){sign=-sign
 man=-man}
@@ -13627,14 +13628,15 @@ while(man >=1.0){man*=0.5
 ex++}
 man*=sign
 return[man,ex]}
-_b_.$ldexp=function(x,i){if(_b_.$isninf(x)){return float.$factory('-inf')}
-if(_b_.$isinf(x)){return float.$factory('inf')}
+function ldexp(x,i){if(isninf(x)){return float.$factory('-inf')}
+if(isinf(x)){return float.$factory('inf')}
 var y=x
 if(_b_.isinstance(x,float)){y=x.valueOf()}
 if(y==0){return y}
 var j=i
 if(_b_.isinstance(i,float)){j=i.valueOf()}
 return y*Math.pow(2,j)}
+float.$funcs={isinf,isninf,isnan,fabs,frexp,ldexp}
 float.hex=function(self){
 self=float_value(self)
 var DBL_MANT_DIG=53,
@@ -13648,8 +13650,8 @@ case-0:
 return "-0x0.0p0"
 case 0:
 return "0x0.0p0"}
-var _a=_b_.$frexp(_b_.$fabs(self.valueOf())),_m=_a[0],_e=_a[1],_shift=1-Math.max(-1021-_e,0)
-_m=_b_.$ldexp(_m,_shift)
+var _a=frexp(fabs(self.valueOf())),_m=_a[0],_e=_a[1],_shift=1-Math.max(-1021-_e,0)
+_m=ldexp(_m,_shift)
 _e-=_shift
 var _int2hex="0123456789ABCDEF".split(""),_s=_int2hex[Math.floor(_m)]
 _s+='.'

@@ -433,7 +433,6 @@ $B.$delete = function(name, is_global){
     // remove name from namespace
     function del(obj){
         if(obj.__class__ === $B.generator){
-            console.log('del generator', obj)
             // Force generator return (useful if yield was in a context manager)
             obj.js_gen.return()
         }
@@ -563,13 +562,23 @@ function eval1(src, mode, _globals, _locals){
         }
         exec_globals = frame[3]
     }else{
+        if(! _globals.__class__ === _b_.dict){
+            throw _b_.TypeError.$factory(`${mode}() globals must be ` +
+                "a dict, not " + $B.class_name(_globals))
+        }
         // _globals is used for both globals and locals
         exec_globals = {}
-        for(var key in _globals.$string_dict){
-            exec_globals[key] = _globals.$string_dict[key][0]
+        if(_globals.$jsobj){ // eg globals()
+            for(var key in _globals.$jsobj){
+                exec_globals[key] = _globals.$jsobj[key]
+            }
+        }else{
+            for(var key in _globals.$string_dict){
+                exec_globals[key] = _globals.$string_dict[key][0]
+            }
         }
         if(exec_globals.__builtins__ === undefined){
-            exec_globals.__builtins__ = _b_
+            exec_globals.__builtins__ = make_builtins_dict()
         }
         if(_locals === _b_.None){
             exec_locals = exec_globals
@@ -579,8 +588,14 @@ function eval1(src, mode, _globals, _locals){
                 global_name += '_globals'
             }
             exec_locals = {}
-            for(var key in _locals.$string_dict){
-                exec_locals[key] = _locals.$string_dict[key][0]
+            if(_locals.$jsobj){
+                for(var key in _locals.$jsobj){
+                    exec_globals[key] = _locals.$jsobj[key]
+                }
+            }else{
+                for(var key in _locals.$string_dict){
+                    exec_locals[key] = _locals.$string_dict[key][0]
+                }
             }
         }
     }
@@ -594,16 +609,6 @@ function eval1(src, mode, _globals, _locals){
         symtable = $B._PySymtable_Build(_ast, frame[0]),
         js = $B.js_from_root(_ast, symtable, '<string>',
                 {local_name, global_name})
-    /*
-    if(mode == "eval"){
-        if(! (_ast.body instanceof $B.ast.Expr)){
-            console.log('body not expr', src, _ast)
-            throw _b_.SyntaxError.$factory(
-                "eval() argument must be an expression",
-                '<string>', 1, 1, src)
-        }
-    }
-    */
 
     if(mode == 'exec'){
         js += 'return {locals, globals}'
@@ -3524,6 +3529,22 @@ $B.Function.$factory = function(){}
 $B.set_func_names($B.Function, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
+
+function make_builtins_dict(){
+    // Create a dictionary with Python builtins. Used in eval1
+    var builtins = $B.__builtins__
+    if(builtins){
+        return builtins
+    }
+    builtins = {}
+    for(var attr in _b_){
+        if(attr != '__BRYTHON__'){
+            builtins[attr] = _b_[attr]
+        }
+    }
+    $B.__builtins__ = builtins
+    return builtins
+}
 
 $B.builtin_funcs = [
     "__build_class__",

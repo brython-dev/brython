@@ -58,6 +58,31 @@ function make_scope_name(scopes, scope){
     return 'locals_' + names.join('_').replace(/\./g, '_')
 }
 
+function mangle(scopes, scope, name){
+    if(name.startsWith('__') && ! name.endsWith('__')){
+        var ix = scopes.indexOf(scope)
+        while(ix >= 0){
+            if(scopes[ix].ast instanceof $B.ast.ClassDef){
+                var scope_name = scopes[ix].name
+                while(scope_name.length > 0 && scope_name.startsWith('_')){
+                    scope_name = scope_name.substr(1)
+                }
+                if(scope_name.length == 0){
+                    // if class name is only made of _, don't mangle
+                    return name
+                }
+                return '_' + scope_name + name
+            }
+            ix--
+        }
+    }
+    return name
+}
+
+function reference(scopes, scope, name){
+    return make_scope_name(scopes, scope) + '.' + mangle(scopes, scope, name)
+}
+
 function bind(name, scopes){
     var scope = last_scope(scopes)
     if(scope.globals && scope.globals.has(name)){
@@ -85,7 +110,8 @@ function binding_scope(name, scopes){
         // case of Expression
         return `$B.resolve('${name}')`
     }
-    var scope = last_scope(scopes)
+    var scope = last_scope(scopes),
+        name = mangle(scopes, scope, name)
     // Use symtable to detect if the name is local to the block
     if(scope.ast === undefined){
         console.log('no ast', scope)
@@ -107,18 +133,18 @@ function binding_scope(name, scopes){
         if(! scope.locals.has(name)){
             return `$B.resolve_local('${name}')`
         }else{
-            return `${make_scope_name(scopes, scope)}.${name}`
+            return reference(scopes, scope, name)
         }
     }else if(scope.globals.has(name)){
         var global_scope = scopes[0]
         if(global_scope.locals.has(name)){
-            return `${make_scope_name(scopes, scopes[0])}.${name}`
+            return reference(scopes, scopes[0], name)
         }
         return `$B.resolve_global('${name}')`
     }else if(scope.nonlocals.has(name)){
         for(var i = scopes.length - 2; i >=0; i--){
             if(scopes[i].locals.has(name)){
-                return `${make_scope_name(scopes, scopes[i])}.${name}`
+                return reference(scopes, scopes[i], name)
             }
         }
     }
@@ -128,10 +154,7 @@ function binding_scope(name, scopes){
     for(var i = scopes.length - 2; i >= 0; i--){
         var block = scopes.symtable.table.blocks.get(scopes[i].ast)
         if(scopes[i].locals.has(name)){
-            if(name == 'console'){
-                console.log('console', scopes[i].name)
-            }
-            return `${make_scope_name(scopes, scopes[i])}.${name}`
+            return reference(scopes, scopes[i], name)
         }
         if(scopes[i].has_import_star){
             return `$B.resolve('${name}')`
@@ -457,7 +480,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
     var value = $B.js_from_ast(this.value, scopes)
     if(this.target instanceof $B.ast.Name){
         var scope = binding_scope1(this.target.id, scopes)
-        if(! scope || op == '@'){
+        if(! scope || op == '@' || op == '//'){
             return `locals.${this.target.id} = $B.augm_assign(` +
                 `$B.resolve('${this.target.id}'), '${iop}', ${value})`
         }else{
@@ -599,7 +622,6 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         decorated = true
         var dec_id = 'decorator' + $B.UUID()
         decorators.push(dec_id)
-        console.log($B.js_from_ast(dec, scopes))
         js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
@@ -642,7 +664,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     js += `$B.leave_frame({locals})\nreturn locals\n})()\n`
 
-    var class_ref = `${make_local(enclosing_scope.name)}.${this.name}`
+    var class_ref = reference(scopes, enclosing_scope, this.name)
 
     if(decorated){
         class_ref = `decorated${$B.UUID()}`
@@ -661,7 +683,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `${class_ref}.__doc__ = ${docstring}\n`
 
     if(decorated){
-        js += `locals_${enclosing_scope.name}.${this.name} = `
+        js += reference(scopes, enclosing_scope, this.name) + ' = '
         var decorate = class_ref
         for(var dec of decorators.reverse()){
             decorate = `$B.$call(${dec})(${decorate})`
@@ -1015,7 +1037,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         var ix = scopes.indexOf(class_scope),
             parent = scopes[ix - 1]
 
-        var scope_ref = make_local(parent.name),
+        var scope_ref = make_scope_name(scopes, parent),
             class_ref = class_scope.name // XXX qualname
         bind("__class__", scopes)
         js += `locals.__class__ = ` +
@@ -1577,7 +1599,7 @@ $B.ast.Name.prototype.to_js = function(scopes){
             // name was referenced but is declared local afterwards
             scope.freevars.delete(this.id)
         }
-        return `${make_scope_name(scopes, scope)}.${this.id}`
+        return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
         return binding_scope(this.id, scopes)
     }

@@ -91,8 +91,7 @@ function _Py_Mangle(privateobj, ident){
     var result,
         nlen, plen, ipriv,
         maxchar;
-    if (privateobj == NULL ||
-        ! ident.startsWith('__')) {
+    if (privateobj == NULL || ! ident.startsWith('__')) {
         return ident;
     }
     nlen = ident.length
@@ -106,10 +105,8 @@ function _Py_Mangle(privateobj, ident){
        TODO(jhylton): Decide whether we want to support
        mangling of the module name, e.g. __M.X.
     */
-
-    if ((ident[nlen - 1] == '_' &&
-         ident[nlen - 2] == '_') ||
-        ident.search('.') != -1) {
+    
+    if (ident.endsWith('__') || ident.search(/\./) != -1) {
         return ident; /* Don't mangle __whatever__ */
     }
     /* Strip leading underscores from class name */
@@ -119,28 +116,10 @@ function _Py_Mangle(privateobj, ident){
     if (ipriv == plen) {
         return ident; /* Don't mangle if class is just underscores */
     }
-    plen -= ipriv;
-
-    maxchar = PyUnicode_MAX_CHAR_VALUE(ident);
-    if (PyUnicode_MAX_CHAR_VALUE(privateobj) > maxchar)
-        maxchar = PyUnicode_MAX_CHAR_VALUE(privateobj);
-
-    result = PyUnicode_New(1 + nlen + plen, maxchar);
-    if (!result)
-        return 0;
-    /* ident = "_" + priv[ipriv:] + ident # i.e. 1+plen+nlen bytes */
-    PyUnicode_WRITE(PyUnicode_KIND(result), PyUnicode_DATA(result), 0, '_');
-    if (PyUnicode_CopyCharacters(result, 1, privateobj, ipriv, plen) < 0) {
-        Py_DECREF(result);
-        return NULL;
-    }
-    if (PyUnicode_CopyCharacters(result, plen+1, ident, 0, nlen) < 0) {
-        Py_DECREF(result);
-        return NULL;
-    }
-    assert(_PyUnicode_CheckConsistency(result, 1));
-    return result;
+    var prefix = privateobj.substr(ipriv)
+    return '_' + prefix + ident
 }
+
 var top = NULL,
     lambda = NULL,
     genexpr = NULL,
