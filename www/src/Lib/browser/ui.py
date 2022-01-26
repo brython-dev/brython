@@ -130,7 +130,7 @@ class Widget:
 
     def config(self, **kw):
         element = self
-        
+
         if (value := kw.get('value')):
             if not isinstance(self, (Label, Entry)):
                 raise TypeError("invalid keyword 'value' for " +
@@ -291,13 +291,14 @@ class Widget:
             column = nb_cols
         elif column == 'same':
             column = nb_cols - 1
+
         # cells in row occupied because of rowspan / colspan
         cols_from_span = [c for (r, c) in master.cells
             if r == row and c < column]
 
         cols_to_add = nb_cols + len(cols_from_span)
         for i in range(column - cols_to_add + 1):
-            tr <= html.TD(style="overflow:hidden;")
+            tr <= html.TD()
 
         td = tr.cells[column - len(cols_from_span)]
 
@@ -569,6 +570,8 @@ class Label(html.DIV, Widget):
         self._options = options
         self._value = value
         super().__init__(value, *args)
+        if not value:
+            self.style.minHeight = '1em'
         self.apply_default_style()
 
 
