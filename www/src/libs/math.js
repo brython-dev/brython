@@ -36,8 +36,8 @@ function nextUp(x){
     if(x !== x){
         return x
     }
-    if(_b_.$isinf(x)){
-        if(_b_.$isninf(x)){
+    if(_b_.float.$funcs.isinf(x)){
+        if(_b_.float.$funcs.isninf(x)){
             return -MAX_VALUE
         }
         return _mod.inf
@@ -140,8 +140,8 @@ var _mod = {
         $B.check_nb_args('acosh', 1, arguments)
         $B.check_no_kw('acosh', x)
 
-        if(_b_.$isinf(x)){
-            if(_b_.$isninf(x)){
+        if(_b_.float.$funcs.isinf(x)){
+            if(_b_.float.$funcs.isninf(x)){
                 throw _b_.ValueError.$factory("math domain error")
             }
             return _mod.inf
@@ -176,8 +176,8 @@ var _mod = {
         $B.check_nb_args('asinh', 1, arguments)
         $B.check_no_kw('asinh', x)
 
-        if(_b_.$isninf(x)){return _b_.float.$factory('-inf')}
-        if(_b_.$isinf(x)){return _b_.float.$factory('inf')}
+        if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory('-inf')}
+        if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
         var y = float_check(x)
         if(y == 0 && 1 / y === -Infinity){
             return new Number(-0.0)
@@ -188,8 +188,8 @@ var _mod = {
         $B.check_nb_args('atan', 1, arguments)
         $B.check_no_kw('atan', x)
 
-        if(_b_.$isninf(x)){return _b_.float.$factory(-Math.PI / 2)}
-        if(_b_.$isinf(x)){return _b_.float.$factory(Math.PI / 2)}
+        if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory(-Math.PI / 2)}
+        if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory(Math.PI / 2)}
         return _b_.float.$factory(Math.atan(float_check(x)))
     },
     atan2: function(y, x){
@@ -201,7 +201,7 @@ var _mod = {
     atanh: function(x){
         $B.check_nb_args('atanh', 1, arguments)
         $B.check_no_kw('atanh', x)
-        if(_b_.$isinf(x)){
+        if(_b_.float.$funcs.isinf(x)){
             throw _b_.ValueError.$factory("math domain error")
         }
         var y = float_check(x)
@@ -220,7 +220,7 @@ var _mod = {
 
         if(x instanceof Number){
             x = _b_.float.numerator(x)
-            if(_b_.$isinf(x) || _mod.isnan(x)){
+            if(_b_.float.$funcs.isinf(x) || _mod.isnan(x)){
                 return x
             }
             return _b_.int.$factory(Math.ceil(x))
@@ -293,7 +293,7 @@ var _mod = {
         $B.check_nb_args('cosh', 1, arguments)
         $B.check_no_kw('cosh', x)
 
-        if(_b_.$isinf(x)){return _b_.float.$factory('inf')}
+        if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
         var y = float_check(x)
         if(Math.cosh !== undefined){return _b_.float.$factory(Math.cosh(y))}
         return _b_.float.$factory((Math.pow(Math.E, y) +
@@ -333,7 +333,7 @@ var _mod = {
                 var next_p = test(p[i]),
                     next_q = test(q[i]),
                     diff = Math.abs(next_p - next_q)
-                if(_b_.$isinf(diff)){
+                if(_b_.float.$funcs.isinf(diff)){
                     return _mod.inf
                 }
                 diffs.push(diff)
@@ -374,7 +374,7 @@ var _mod = {
                 }
                 next_q = test(next_q)
                 diff = Math.abs(next_p - next_q)
-                if(_b_.$isinf(diff)){
+                if(_b_.float.$funcs.isinf(diff)){
                     return _mod.inf
                 }
                 diffs.push(diff)
@@ -462,27 +462,27 @@ var _mod = {
         $B.check_nb_args('exp', 1, arguments)
         $B.check_no_kw('exp', x)
 
-         if(_b_.$isninf(x)){return _b_.float.$factory(0)}
-         if(_b_.$isinf(x)){return _b_.float.$factory('inf')}
+         if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory(0)}
+         if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
          var _r = Math.exp(float_check(x))
-         if(_b_.$isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
+         if(_b_.float.$funcs.isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
          return _b_.float.$factory(_r)
     },
     expm1: function(x){
         $B.check_nb_args('expm1', 1, arguments)
         $B.check_no_kw('expm1', x)
 
-         if(_b_.$isninf(x)){return _b_.float.$factory(0)}
-         if(_b_.$isinf(x)){return _b_.float.$factory('inf')}
+         if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory(0)}
+         if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
          var _r = Math.expm1(float_check(x))
-         if(_b_.$isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
+         if(_b_.float.$funcs.isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
          return _b_.float.$factory(_r)
     },
     //fabs: function(x){ return x>0?float.$factory(x):float.$factory(-x)},
     fabs: function(x){
         $B.check_nb_args('fabs', 1, arguments)
         $B.check_no_kw('fabs', x)
-        return _b_.$fabs(x) // located in py_float.js
+        return _b_.float.$funcs.fabs(x) // located in py_float.js
     },
     factorial: function(x){
         $B.check_nb_args('factorial', 1, arguments)
@@ -542,7 +542,7 @@ var _mod = {
         $B.check_nb_args('frexp', 1, arguments)
         $B.check_no_kw('frexp', x)
 
-        var _l = _b_.$frexp(x)
+        var _l = _b_.float.$funcs.frexp(x)
         return _b_.tuple.$factory([_b_.float.$factory(_l[0]), _l[1]])
     },
     fsum: function(x){
@@ -693,7 +693,7 @@ var _mod = {
         if(a == b){
             return _b_.True
         }
-        if(_b_.$isinf(a) || _b_.$isinf(b)){
+        if(_b_.float.$funcs.isinf(a) || _b_.float.$funcs.isinf(b)){
             return a === b
         }
         // isclose(a, b, rel_tol, abs_tol) is the same as
@@ -728,7 +728,7 @@ var _mod = {
     isinf: function(x){
         $B.check_nb_args('isinf', 1, arguments)
         $B.check_no_kw('isinf', x)
-        return _b_.$isinf(float_check(x))
+        return _b_.float.$funcs.isinf(float_check(x))
     },
     isnan: function(x){
         $B.check_nb_args('isnan', 1, arguments)
@@ -794,7 +794,7 @@ var _mod = {
     ldexp: function(x, i){
         $B.check_nb_args('ldexp', 2, arguments)
         $B.check_no_kw('ldexp', x, i)
-        return _b_.$ldexp(x, i)   //located in py_float.js
+        return _b_.float.$funcs.ldexp(x, i)   //located in py_float.js
     },
     lgamma: function(x){
         $B.check_nb_args('lgamma', 1, arguments)
@@ -1047,7 +1047,7 @@ var _mod = {
             return $B.long_int.$log2(x)
         }
         if(isNaN(x)){return _b_.float.$factory('nan')}
-        if(_b_.$isninf(x)) {throw _b_.ValueError.$factory('')}
+        if(_b_.float.$funcs.isninf(x)) {throw _b_.ValueError.$factory('')}
         var x1 = float_check(x)
         if(x1 < 0.0){throw _b_.ValueError.$factory('')}
         return _b_.float.$factory(Math.log(x1) / Math.LN2)
@@ -1064,10 +1064,10 @@ var _mod = {
         $B.check_nb_args('modf', 1, arguments)
         $B.check_no_kw('modf', x)
 
-       if(_b_.$isninf(x)){
+       if(_b_.float.$funcs.isninf(x)){
            return _b_.tuple.$factory([0.0, _b_.float.$factory('-inf')])
        }
-       if(_b_.$isinf(x)){
+       if(_b_.float.$funcs.isinf(x)){
            return _b_.tuple.$factory([0.0, _b_.float.$factory('inf')])
        }
        if(isNaN(x)){
@@ -1140,26 +1140,26 @@ var _mod = {
         }
         if(x1 == 0){return _b_.float.$factory(0)}
 
-        if(_b_.$isninf(y)){
+        if(_b_.float.$funcs.isninf(y)){
             if(x1 == 1 || x1 == -1){return _b_.float.$factory(1)}
             if(x1 < 1 && x1 > -1){return _b_.float.$factory('inf')}
             return _b_.float.$factory(0)
         }
-        if(_b_.$isinf(y)){
+        if(_b_.float.$funcs.isinf(y)){
             if(x1 == 1 || x1 == -1){return _b_.float.$factory(1)}
             if(x1 < 1 && x1 > -1){return _b_.float.$factory(0)}
             return _b_.float.$factory('inf')
         }
 
         if(isNaN(x1)){return _b_.float.$factory('nan')}
-        if(_b_.$isninf(x)){
+        if(_b_.float.$funcs.isninf(x)){
             if(y1 > 0 && isOdd(y1)){return _b_.float.$factory('-inf')}
             if(y1 > 0){return _b_.float.$factory('inf')}  // this is even or a float
             if(y1 < 0){return _b_.float.$factory(0)}
             return _b_.float.$factory(1)
         }
 
-        if(_b_.$isinf(x)){
+        if(_b_.float.$funcs.isinf(x)){
             if(y1 > 0){return _b_.float.$factory('inf')}
             if(y1 < 0){return _b_.float.$factory(0)}
             return _b_.float.$factory(1)
@@ -1167,8 +1167,8 @@ var _mod = {
 
         var r = Math.pow(x1, y1)
         if(isNaN(r)){return _b_.float.$factory('nan')}
-        if(_b_.$isninf(r)){return _b_.float.$factory('-inf')}
-        if(_b_.$isinf(r)){return _b_.float.$factory('inf')}
+        if(_b_.float.$funcs.isninf(r)){return _b_.float.$factory('-inf')}
+        if(_b_.float.$funcs.isinf(r)){return _b_.float.$factory('inf')}
 
         return _b_.float.$factory(r)
     },
@@ -1208,7 +1208,7 @@ var _mod = {
         if(_mod.isnan(x) || _mod.isnan(y)){
             return _mod.nan
         }
-        if(_b_.$isinf(x) || y == 0){
+        if(_b_.float.$funcs.isinf(x) || y == 0){
             throw _b_.ValueError.$factory("math domain error")
         }
         x = float_check(x)
@@ -1219,7 +1219,7 @@ var _mod = {
             return _b_.float.$factory(x)
         }
         var res = _b_.float.$factory(x - rounded * y)
-        if(_b_.$isinf(res)){
+        if(_b_.float.$funcs.isinf(res)){
             // happens if rounded * y is infinite
             res = _b_.float.$factory(rounded * (x / rounded - y))
         }
@@ -1244,9 +1244,9 @@ var _mod = {
 
       var y = float_check(x)
       if(y < 0){throw _b_.ValueError.$factory("math range error")}
-      if(_b_.$isinf(y)){return _b_.float.$factory('inf')}
+      if(_b_.float.$funcs.isinf(y)){return _b_.float.$factory('inf')}
       var _r = Math.sqrt(y)
-      if(_b_.$isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
+      if(_b_.float.$funcs.isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
       return _b_.float.$factory(_r)
     },
     tan: function(x) {
@@ -1285,7 +1285,7 @@ var _mod = {
             x = $.x
         if(x == MAX_VALUE){
             return MAX_VALUE - _mod.nextafter(MAX_VALUE, 0)
-        }else if(_b_.$isinf(x)){
+        }else if(_b_.float.$funcs.isinf(x)){
             return _mod.inf
         }
         if(typeof x == "number" || x instanceof Number){

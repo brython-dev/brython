@@ -56,7 +56,7 @@ float.as_integer_ratio = function(self){
             "float.as_integer_ratio.")
     }
 
-    var tmp = _b_.$frexp(self.valueOf()),
+    var tmp = frexp(self.valueOf()),
         fp = tmp[0],
         exponent = tmp[1]
 
@@ -352,7 +352,7 @@ float.__hash__ = function(self) {
     // for integers, return the value
     if(_v == Math.round(_v)){return Math.round(_v)}
 
-    var r = _b_.$frexp(_v)
+    var r = frexp(_v)
     r[0] *= Math.pow(2, 31)
     var hipart = _b_.int.$factory(r[0])
     r[0] = (r[0] - hipart) * Math.pow(2, 31)
@@ -360,13 +360,13 @@ float.__hash__ = function(self) {
     return x & 0xFFFFFFFF
 }
 
-_b_.$isninf = function(x) {
+function isninf(x) {
     var x1 = x
     if(_b_.isinstance(x, float)){x1 = float.numerator(x)}
     return x1 == -Infinity || x1 == Number.NEGATIVE_INFINITY
 }
 
-_b_.$isinf = function(x) {
+function isinf(x) {
     var x1 = x
     if((! x instanceof Number) && _b_.isinstance(x, float)){
         x1 = float.numerator(x)
@@ -375,26 +375,26 @@ _b_.$isinf = function(x) {
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
 
-_b_.$isnan = function(x) {
+function isnan(x) {
     var x1 = x
     if(_b_.isinstance(x, float)){x1 = float.numerator(x)}
     return isNaN(x1)
 }
 
-_b_.$fabs = function(x){
+function fabs(x){
     if(x == 0){
         return new Number(0)
     }
     return x > 0 ? float.$factory(x) : float.$factory(-x)
 }
 
-_b_.$frexp = function(x){
+function frexp(x){
     var x1 = x
     if(_b_.isinstance(x, float)){
         x1 = x.valueOf()
     }
 
-    if(isNaN(x1) || _b_.$isinf(x1)){
+    if(isNaN(x1) || isinf(x1)){
         return [x1, -1]
     }else if (x1 == 0){
         return [0, 0]
@@ -424,9 +424,9 @@ _b_.$frexp = function(x){
     return [man, ex]
 }
 
-_b_.$ldexp = function(x, i) {
-    if(_b_.$isninf(x)){return float.$factory('-inf')}
-    if(_b_.$isinf(x)){return float.$factory('inf')}
+function ldexp(x, i) {
+    if(isninf(x)){return float.$factory('-inf')}
+    if(isinf(x)){return float.$factory('inf')}
 
     var y = x
     if(_b_.isinstance(x, float)){y = x.valueOf()}
@@ -436,6 +436,8 @@ _b_.$ldexp = function(x, i) {
     if(_b_.isinstance(i, float)){j = i.valueOf()}
     return y * Math.pow(2, j)
 }
+
+float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
 
 float.hex = function(self) {
     // http://hg.python.org/cpython/file/d422062d7d36/Objects/floatobject.c
@@ -455,12 +457,12 @@ float.hex = function(self) {
             return "0x0.0p0"
     }
 
-    var _a = _b_.$frexp(_b_.$fabs(self.valueOf())),
+    var _a = frexp(fabs(self.valueOf())),
         _m = _a[0],
         _e = _a[1],
         _shift = 1 - Math.max(-1021 - _e, 0)
 
-    _m = _b_.$ldexp(_m, _shift)
+    _m = ldexp(_m, _shift)
     _e -= _shift
 
     var _int2hex = "0123456789ABCDEF".split(""),
@@ -636,7 +638,7 @@ float.__repr__ = function(self){
     }
 
     var res = self + "" // coerce to string
-    
+
     if(res.search(/[.eE]/) == -1){
         res += ".0"
     }
