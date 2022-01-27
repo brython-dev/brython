@@ -547,12 +547,36 @@ enumerate.__next__ = function(self){
 
 $B.set_func_names(enumerate, "builtins")
 
+function make_proxy(dict, lineno){
+    // return a proxy to a Python dict
+    const handler = {
+      get: function(target, prop) {
+          console.log('get proxy attr', prop, target)
+          if(prop == '__class__'){
+              return _b_.dict
+          }else if(prop == '$lineno'){
+              return lineno
+          }
+          if(target.$string_dict.hasOwnProperty(prop)){
+              return target.$string_dict[prop][0]
+          }
+          return undefined
+      },
+      set: function(target, prop, value){
+        _b_.dict.$setitem(target, prop, value)
+      }
+    }
+    return new Proxy(dict, handler)
+}
+
 function eval1(src, mode, _globals, _locals){
     var frame = $B.last($B.frames_stack)
-    var local_name = `locals_${frame[0]}`,
-        global_name = `locals_${frame[2]}`,
-        exec_locals,
-        exec_globals
+    console.log('eval1, frame', frame)
+    var lineno = frame[1].$lineno
+    var local_name = 'locals_exec', // `locals_${frame[0]}`,
+        global_name = 'globals_exec', // `locals_${frame[2]}`,
+        exec_locals = {},
+        exec_globals = {}
 
     if(_globals === _b_.None){
         // create a copy of locals
@@ -569,12 +593,17 @@ function eval1(src, mode, _globals, _locals){
         // _globals is used for both globals and locals
         exec_globals = {}
         if(_globals.$jsobj){ // eg globals()
-            for(var key in _globals.$jsobj){
-                exec_globals[key] = _globals.$jsobj[key]
-            }
+            exec_globals = _globals.$jsobj
         }else{
+            // The globals object must be the same across calls to exec()
+            // with the same dictionary (cf. issue 690)
+            if(_globals.$jsobj){
+                exec_globals = _globals.$jsobj
+            }else{
+                exec_globals = _globals.$jsobj = {}
+            }
             for(var key in _globals.$string_dict){
-                exec_globals[key] = _globals.$string_dict[key][0]
+                _globals.$jsobj[key] = _globals.$string_dict[key][0]
             }
         }
         if(exec_globals.__builtins__ === undefined){
@@ -587,14 +616,18 @@ function eval1(src, mode, _globals, _locals){
                 // running exec at module level
                 global_name += '_globals'
             }
-            exec_locals = {}
             if(_locals.$jsobj){
                 for(var key in _locals.$jsobj){
                     exec_globals[key] = _locals.$jsobj[key]
                 }
             }else{
+                if(_locals.$jsobj){
+                    exec_locals = _locals.$jsobj
+                }else{
+                    exec_locals = _locals.$jsobj = {}
+                }
                 for(var key in _locals.$string_dict){
-                    exec_locals[key] = _locals.$string_dict[key][0]
+                    _locals.$jsobj[key] = _locals.$string_dict[key][0]
                 }
             }
         }
@@ -606,32 +639,46 @@ function eval1(src, mode, _globals, _locals){
     $B.parser.dispatch_tokens(root)
 
     var _ast = root.ast(),
-        symtable = $B._PySymtable_Build(_ast, frame[0]),
+        symtable = $B._PySymtable_Build(_ast, 'exec'),
         js = $B.js_from_root(_ast, symtable, '<string>',
-                {local_name, global_name})
+                {local_name, exec_locals, global_name, exec_globals})
 
-    if(mode == 'exec'){
-        js += 'return {locals, globals}'
-        var res = new Function(local_name, global_name, js)(exec_locals, exec_globals)
-        if(_globals !== _b_.None){
-            for(var key in res.globals){
-                if(! key.startsWith('$')){
-                    _b_.dict.$setitem(_globals, key, res.globals[key])
-                }
+    var save_frames_stack = $B.frames_stack.slice()
+
+    if(_globals !== _b_.None){
+        $B.frames_stack = [[local_name, exec_locals, global_name, exec_globals]]
+    }
+
+    if(mode == 'eval'){
+        js = 'return ' + js
+    }
+
+    var exec_func = new Function('$B', '_b_', 'locals', local_name, global_name, js)
+
+    try{
+        var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
+    }catch(err){
+        //console.log('err', err.message, err.args)
+        //console.log('exec source\n', src)
+        $B.frames_stack = save_frames_stack
+        throw err
+    }
+    if(_globals !== _b_.None){
+        for(var key in exec_globals){
+            if(! key.startsWith('$')){
+                _b_.dict.$setitem(_globals, key, exec_globals[key])
             }
-            if(_locals !== _b_.None){
-                for(var key in res.locals){
-                    if(! key.startsWith('$')){
-                        _b_.dict.$setitem(_locals, key, res.locals[key])
-                    }
+        }
+        if(_locals !== _b_.None){
+            for(var key in exec_locals){
+                if(! key.startsWith('$')){
+                    _b_.dict.$setitem(_locals, key, exec_locals[key])
                 }
             }
         }
-        return _b_.None
-    }else{
-        var locals = frame[1]
-        return eval(js)
     }
+    $B.frames_stack = save_frames_stack
+    return res
 }
 
 //eval() (built in function)
@@ -1465,6 +1512,7 @@ function globals(){
     var res = $B.obj_dict($B.last($B.frames_stack)[3])
     res.$jsobj.__BRYTHON__ = $B.JSObj.$factory($B) // issue 1181
     res.$is_namespace = true
+    console.log('result of globals', res)
     return res
 }
 

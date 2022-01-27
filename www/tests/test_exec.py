@@ -85,6 +85,8 @@ def f():
 
 g = {'f': f}
 
+exec('def foo(): pass\nf()', g)
+
 # scope
 az = 0
 

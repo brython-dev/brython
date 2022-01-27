@@ -101,6 +101,8 @@ function bind(name, scopes){
 var CELL = 5,
     FREE = 4,
     LOCAL = 1,
+    GLOBAL_EXPLICIT = 2,
+    GLOBAL_IMPLICIT = 3,
     SCOPE_MASK = 15,
     SCOPE_OFF = 11
 
@@ -207,8 +209,17 @@ function binding_scope1(name, scopes){
 
 $B.resolve = function(name){
     for(var frame of $B.frames_stack.slice().reverse()){
-        if(frame[1].hasOwnProperty(name)){
-            return frame[1][name]
+        for(var ns of [frame[1], frame[3]]){
+            if(ns.hasOwnProperty){
+                if(ns.hasOwnProperty(name)){
+                    return ns[name]
+                }
+            }else{
+                var value = ns[name]
+                if(value !== undefined){
+                    return value
+                }
+            }
         }
     }
     if(builtins_scope.locals.has(name)){
@@ -221,8 +232,15 @@ $B.resolve_local = function(name){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
     var frame = $B.last($B.frames_stack)
-    if(frame[1].hasOwnProperty(name)){
-        return frame[1][name]
+    if(frame[1].hasOwnProperty){
+        if(frame[1].hasOwnProperty(name)){
+            return frame[1][name]
+        }
+    }else{
+        var value = frame[1][name]
+        if(value !== undefined){
+            return value
+        }
     }
     throw _b_.UnboundLocalError.$factory(`local variable '${name}' ` +
         'referenced before assignment')
@@ -404,8 +422,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 
     function assign_one(target, value){
         if(target instanceof $B.ast.Name){
-            return $B.js_from_ast(target, scopes) + ' = ' +
-                value
+            return $B.js_from_ast(target, scopes) + ' = ' + value
         }else if(target instanceof $B.ast.Starred){
             return assign_one(target.value, value)
         }else if(target instanceof $B.ast.Subscript){
@@ -1555,6 +1572,19 @@ $B.ast.Module.prototype.to_js = function(scopes, namespaces){
         block = scopes.symtable.table.blocks.get(_b_.id(this))
     if(block.$has_import_star){
         module_scope.has_import_star = true
+    }
+    if(namespaces){
+        console.log('namespaces', namespaces)
+        for(var key in namespaces.exec_globals){
+            if(! key.startsWith('$')){
+                module_scope.locals.add(key)
+            }
+        }
+        for(var key in namespaces.exec_locals){
+            if(! key.startsWith('$')){
+                module_scope.locals.add(key)
+            }
+        }
     }
     scopes.push(module_scope)
     var module_id = name,
