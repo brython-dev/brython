@@ -571,7 +571,6 @@ function make_proxy(dict, lineno){
 
 function eval1(src, mode, _globals, _locals){
     var frame = $B.last($B.frames_stack)
-    console.log('eval1, frame', frame)
     var lineno = frame[1].$lineno
     var local_name = 'locals_exec', // `locals_${frame[0]}`,
         global_name = 'globals_exec', // `locals_${frame[2]}`,
@@ -586,7 +585,7 @@ function eval1(src, mode, _globals, _locals){
         }
         exec_globals = frame[3]
     }else{
-        if(! _globals.__class__ === _b_.dict){
+        if(_globals.__class__ !== _b_.dict){
             throw _b_.TypeError.$factory(`${mode}() globals must be ` +
                 "a dict, not " + $B.class_name(_globals))
         }
@@ -624,10 +623,15 @@ function eval1(src, mode, _globals, _locals){
                 if(_locals.$jsobj){
                     exec_locals = _locals.$jsobj
                 }else{
-                    exec_locals = _locals.$jsobj = {}
+                    exec_locals = _locals.$jsobj = {$dict: _locals}
                 }
                 for(var key in _locals.$string_dict){
                     _locals.$jsobj[key] = _locals.$string_dict[key][0]
+                }
+                exec_locals.$getitem = $B.$call($B.$getattr(_locals.__class__, '__getitem__'))
+                var missing = $B.$getattr(_locals.__class__, '__missing__', null)
+                if(missing){
+                    exec_locals.$missing = $B.$call(missing)
                 }
             }
         }
@@ -1512,7 +1516,6 @@ function globals(){
     var res = $B.obj_dict($B.last($B.frames_stack)[3])
     res.$jsobj.__BRYTHON__ = $B.JSObj.$factory($B) // issue 1181
     res.$is_namespace = true
-    console.log('result of globals', res)
     return res
 }
 

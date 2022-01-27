@@ -210,14 +210,21 @@ function binding_scope1(name, scopes){
 $B.resolve = function(name){
     for(var frame of $B.frames_stack.slice().reverse()){
         for(var ns of [frame[1], frame[3]]){
-            if(ns.hasOwnProperty){
-                if(ns.hasOwnProperty(name)){
-                    return ns[name]
-                }
-            }else{
-                var value = ns[name]
-                if(value !== undefined){
-                    return value
+            if(ns.hasOwnProperty(name)){
+                return ns[name]
+            }else if(ns.$dict){
+                try{
+                    return ns.$getitem(ns.$dict, name)
+                }catch(err){
+                    if(ns.$missing){
+                        try{
+                            return $B.$call(ns.$missing)(ns.$dict, name)
+                        }catch(err){
+                            if(! $B.$is_exc(err, [_b_.KeyError])){
+                                throw err
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -597,7 +604,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
         js += '('
     }
     var args = ''
-    if(starred_args.length == 0){
+    if(! has_starred){
         args += `${named_args}`
     }else{
         args += `[${named_args}]`
@@ -605,6 +612,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
             args += `.concat(${starred_arg})`
         }
     }
+
     if(named_kwargs.length + starred_kwargs.length == 0){
         return js + `${args})`
     }else if(starred_kwargs.length == 0){
@@ -1373,6 +1381,10 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     var func_scope = new Scope(name, 'def', this)
     scopes.push(func_scope)
 
+    // process body first to detect possible "yield"s
+    var function_body = add_body([this.body], scopes),
+        is_generator = func_scope.is_generator
+
     var locals_name = make_scope_name(scopes, func_scope),
         gname = scopes[0].name,
         globals_name = make_scope_name(scopes, scopes[0])
@@ -1416,11 +1428,6 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     locals.$f_trace = $B.enter_frame($top_frame)
     var stack_length = $B.frames_stack.length\n`
 
-    // process body first to detect possible "yield"s
-    var function_body = add_body([this.body], scopes),
-        is_generator = func_scope.is_generator
-
-
     if(is_generator){
         js += `locals.$is_generator = true\n`
     }
@@ -1454,8 +1461,12 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
         `__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n` +
         `}\n`
 
-    js += `return ${name}
-    })(${default_str})\n`
+    if(is_generator){
+        js += `return $B.generator.$factory(${name}, '<lambda>')`
+    }else{
+        js += `return ${name}`
+    }
+    js += `})(${default_str})\n`
 
     return js
 }
@@ -1574,7 +1585,6 @@ $B.ast.Module.prototype.to_js = function(scopes, namespaces){
         module_scope.has_import_star = true
     }
     if(namespaces){
-        console.log('namespaces', namespaces)
         for(var key in namespaces.exec_globals){
             if(! key.startsWith('$')){
                 module_scope.locals.add(key)
@@ -1710,7 +1720,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
           `$B.set_exc(${err})\n` +
           `if(locals.$f_trace !== _b_.None){\n` +
           `locals.$f_trace = $B.trace_exception()}\n` +
-          `locals.$failed${id} = true\nif(false){\n`
+          `locals.$failed${id} = false\nif(false){\n`
     if(this.handlers.length > 0){
         for(var handler of this.handlers){
             js += `}else if(locals.$lineno = ${handler.lineno}`
@@ -1729,6 +1739,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
                 bind(handler.name, scopes)
                 js += `locals.${handler.name} = ${err}\n`
             }
+            js += `locals.$failed${id} = true\n`
             js += add_body(handler.body, scopes)
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                 // delete current exception
@@ -1745,7 +1756,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
               'exit = true\n'+
               '$B.frames_stack.push($top_frame)}\n'
         if(this.orelse.length > 0){
-            js += `if(! locals.failed${id}){\n`
+            js += `if(! locals.$failed${id}){\n`
             js += add_body(this.orelse, scopes) + '}\n'
         }
         js += add_body(this.finalbody, scopes)
@@ -1790,6 +1801,8 @@ $B.ast.While.prototype.to_js = function(scopes){
     return js
 }
 
+var with_counter = [0]
+
 $B.ast.With.prototype.to_js = function(scopes){
     /* PEP 243 says that
 
@@ -1823,9 +1836,9 @@ $B.ast.With.prototype.to_js = function(scopes){
         var id = $B.UUID()
         var s = `var mgr_${id} = locals.mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
-              `exit_${id} = $B.$getattr(mgr_${id}, ` +
+              `exit_${id} = $B.$getattr(mgr_${id}.__class__, ` +
               `"__exit__"),\n` +
-              `value_${id} = $B.$getattr(mgr_${id}, '__enter__'),\n` +
+              `value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, '__enter__'))(mgr_${id}),\n` +
               `exc_${id} = true\n` +
               'try{\ntry{\n'
         if(item.optional_vars){
@@ -1837,7 +1850,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += `}catch(err_${id}){\n` +
               `exc_${id} = false\n` +
               `err_${id} = $B.exception(err_${id}, true)\n` +
-              `var $b = exit_${id}(err_${id}.__class__, ` +
+              `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
               `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n` +
               `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
         s += `}\nfinally{\n` +
@@ -1863,15 +1876,147 @@ $B.ast.Yield.prototype.to_js = function(scopes){
     var js = `var result = ${value}\n` +
              `try{\n` +
              `$B.leave_frame({locals})\n` +
-             `yield result\n` +
+             `return result\n` +
              `}catch(err){\n` +
              `$B.frames_stack.push($top_frame)\n` +
              `throw err\n}\n` +
              `$B.frames_stack.push($top_frame)\n`
 
-    return js
+    return `yield (function(){\nreturn ${value}}\n)()`
 }
 
+$B.ast.YieldFrom.prototype.to_js = function(scopes){
+    /* PEP 380 :
+
+        RESULT = yield from EXPR
+
+    is semantically equivalent to
+
+        _i = iter(EXPR)
+        try:
+            _y = next(_i)
+        except StopIteration as _e:
+            _r = _e.value
+        else:
+            while 1:
+                try:
+                    _s = yield _y
+                except GeneratorExit as _e:
+                    try:
+                        _m = _i.close
+                    except AttributeError:
+                        pass
+                    else:
+                        _m()
+                    raise _e
+                except BaseException as _e:
+                    _x = sys.exc_info()
+                    try:
+                        _m = _i.throw
+                    except AttributeError:
+                        raise _e
+                    else:
+                        try:
+                            _y = _m(*_x)
+                        except StopIteration as _e:
+                            _r = _e.value
+                            break
+                else:
+                    try:
+                        if _s is None:
+                            _y = next(_i)
+                        else:
+                            _y = _i.send(_s)
+                    except StopIteration as _e:
+                        _r = _e.value
+                        break
+    */
+    console.log($B.ast_dump(this))
+    last_scope(scopes).is_generator = true
+    var value = $B.js_from_ast(this.value, scopes)
+    var n = $B.UUID()
+    return `$B.$import("sys", [], {})
+            var _i${n} = _b_.iter(${value}),
+                _r${n}
+            var $failed${n} = false
+            try{
+                var _y${n} = _b_.next(_i${n})
+            }catch(_e){
+                $B.set_exc(_e)
+                $failed${n} = true
+                $B.pmframe = $B.last($B.frames_stack)
+                _e = $B.exception(_e)
+                if(_e.__class__ === _b_.StopIteration){
+                    var _r${n} = $B.$getattr(_e, "value")
+                }else{
+                    throw _e
+                }
+            }
+            if(! $failed${n}){
+                while(true){
+                    var $failed1${n} = false
+                    try{
+                        $B.leave_frame({locals})
+                        var _s${n} = yield _y${n}
+                        $B.frames_stack.push($top_frame)
+                    }catch(_e){
+                        if(_e.__class__ === _b_.GeneratorExit){
+                            var $failed2${n} = false
+                            try{
+                                var _m${n} = $B.$getattr(_i${n}, "close")
+                            }catch(_e1){
+                                $failed2${n} = true
+                                if(_e1.__class__ !== _b_.AttributeError){
+                                    throw _e1
+                                }
+                            }
+                            if(! $failed2${n}){
+                                $B.$call(_m${n})()
+                            }
+                            throw _e
+                        }else if($B.is_exc(_e, [_b_.BaseException])){
+                            var _x = $B.$call($B.$getattr(locals.sys, "exc_info"))()
+                            var $failed3${n} = false
+                            try{
+                                var _m${n} = $B.$getattr(_i${n}, "throw")
+                            }catch(err){
+                                $failed3${n} = true
+                                if($B.is_exc(err, [_b_.AttributeError])){
+                                    throw err
+                                }
+                            }
+                            if(! $failed3${n}){
+                                try{
+                                    _y${n} = $B.$call(_m${n}).apply(null,
+                                        _b_.list.$factory(_x${n}))
+                                }catch(err){
+                                    if($B.$is_exc(err, [_b_.StopIteration])){
+                                        _r${n} = $B.$getattr(err, "value")
+                                        break
+                                    }
+                                    throw err
+                                }
+                            }
+                        }
+                    }
+                    if(! $failed1${n}){
+                        try{
+                            if(_s${n} === _b_.None){
+                                _y${n} = _b_.next(_i${n})
+                            }else{
+                                _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            }
+                        }catch(err){
+                            if($B.is_exc(err, [_b_.StopIteration])){
+                                _r${n} = $B.$getattr(err, "value")
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }
+            }`
+}
 
 $B.js_from_root = function(ast_root, symtable, filename, namespaces){
     var scopes = []
