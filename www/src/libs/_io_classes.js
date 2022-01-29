@@ -20,6 +20,13 @@ _IOBase.flush = function(){
 var _BufferedIOBase = $B.make_class("_BufferedIOBase")
 _BufferedIOBase.__mro__ = [_IOBase, _b_.object]
 
+_BufferedIOBase.__enter__ = function(self){
+    return self
+}
+_BufferedIOBase.__exit__ = function(self, type, value, traceback){
+    self.__closed = true
+}
+
 // Base class for raw binary I/O.
 var _RawIOBase = $B.make_class("_RawIOBase")
 
