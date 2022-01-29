@@ -533,7 +533,10 @@ list.clear = function(){
 list.copy = function(){
     var $ = $B.args("copy", 1, {self: null}, ["self"],
         arguments, {}, null, null)
-    return $.self.slice()
+    var res = $.self.slice()
+    res.__class__ = self.__class__
+    res.__brython__ = true
+    return res
 }
 
 list.count = function(){

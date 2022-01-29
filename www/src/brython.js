@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-29 09:53:13.701182"
-__BRYTHON__.timestamp=1643446393701
+__BRYTHON__.compiled_date="2022-01-29 11:18:12.611606"
+__BRYTHON__.timestamp=1643451492611
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7558,6 +7558,7 @@ typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
 if(slice.stop < 0){slice.stop+=obj.length}
 res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
+res.__brython__=true
 return res}else{return _b_.list.$getitem(obj,slice)}}
 return $B.$getattr(obj,"__getitem__")(slice)}
 $B.set_list_key=function(obj,key,value){try{key=$B.$GetInt(key)}
@@ -14724,7 +14725,10 @@ list.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},
 while($.self.length){$.self.pop()}
 return $N}
 list.copy=function(){var $=$B.args("copy",1,{self:null},["self"],arguments,{},null,null)
-return $.self.slice()}
+var res=$.self.slice()
+res.__class__=self.__class__
+res.__brython__=true
+return res}
 list.count=function(){var $=$B.args("count",2,{self:null,x:null},["self","x"],arguments,{},null,null)
 var res=0,_eq=function(other){return $B.rich_comp("__eq__",$.x,other)},i=$.self.length
 while(i--){if(_eq($.self[i])){res++}}

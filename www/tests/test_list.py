@@ -398,4 +398,13 @@ class Foo(list):
 s = Foo()
 assert s == []
 
+# issue 1868
+L = [1][::]
+assert L.sort() is None
+
+import copy
+L = copy.copy([1])
+assert L.sort() is None
+
+
 print("passed all tests..")
