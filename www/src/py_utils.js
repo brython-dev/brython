@@ -178,21 +178,46 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
             if($dobj[attr] !== undefined){
                 slots[attr] = $dobj[attr]
             }else{
-                missing.push("'" + attr + "'")
+                missing.push(attr)
             }
         }
     }
 
 
     if(missing.length > 0){
-
         if(missing.length == 1){
+            var arg_type = 'positional'
+            if(var_names.indexOf(missing[0]) >= argcount){
+                arg_type = 'required keyword-only'
+            }
             throw _b_.TypeError.$factory(fname +
-                " missing 1 positional argument: " + missing[0])
+                ` missing 1 ${arg_type} argument: '${missing[0]}'`)
         }else{
-            var msg = fname + " missing " + missing.length +
-                " positional arguments: "
-            msg += missing.join(" and ")
+            var missing_positional = missing.filter(arg =>
+                    var_names.indexOf(arg) < argcount),
+                missing_kwonly = missing.filter(arg =>
+                    var_names.indexOf(arg) >= argcount)
+
+            function format_missing(m, type){
+                var msg = m.length +
+                       ` required ${type} argument` +
+                       (m.length > 1 ? 's' : '')
+                m = m.map(x => `'${x}'`)
+                if(m.length > 1){
+                    m[m.length - 1] = ' and ' + m[m.length - 1]
+                    for(var i = 0; i < m.length - 2; i++){
+                        m[i] = m[i] + ', '
+                    }
+                }
+                return msg + ': ' + m.join('')
+            }
+
+            var msg = fname + " missing "
+            if(missing_positional.length > 0){
+                msg += format_missing(missing_positional, 'positional')
+            }else{
+                msg += format_missing(missing_kwonly, 'keyword-only')
+            }
             throw _b_.TypeError.$factory(msg)
         }
 
