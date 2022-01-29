@@ -296,7 +296,7 @@ function add_body(body, scopes){
             res += js + '\n'
         }
     }
-    return res
+    return res.trimRight()
 }
 
 // functions shared by comprehensions
@@ -457,12 +457,13 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                     break
                 }
             }
-            js = `var it = $B.unpacker(${value}, ${nb_targets}, ` +
+            js += `var it = $B.unpacker(${value}, ${nb_targets}, ` +
                  `${has_starred}`
             if(nb_after_starred !== undefined){
                 js += `, ${nb_after_starred}`
             }
             js += `)\n`
+            console.log('in assign js', js)
             var assigns = []
             for(var elt of target.elts){
                 if(elt instanceof $B.ast.Starred){
@@ -687,7 +688,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
-    js += `$B.leave_frame({locals})\nreturn locals\n})()\n`
+    js += `\n$B.leave_frame({locals})\nreturn locals\n})()\n`
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
@@ -978,6 +979,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         _defaults.push(`${positional[i].arg}: ` +
             `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)
     }
+    var ix = 0
+    for(var arg of this.args.kwonlyargs){
+        if(this.args.kw_defaults[ix] === _b_.None){
+            break
+        }
+        _defaults.push(`${arg.arg}: ` +
+            $B.js_from_ast(this.args.kw_defaults[ix], scopes))
+        ix++
+    }
 
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
@@ -1045,7 +1055,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     parse_args.push('{' + slots.join(', ') + '} , ' +
         '[' + arg_names.join(', ') + '], ' +
         'arguments, defaults, ' +
-        (this.args.vararg ? `'${this.args.vararg.arg}', ` : 'null, ') +
+        (this.args.vararg ? `'${this.args.vararg.arg}', ` :
+            (this.args.kwonlyargs.length > 0 ? "'*', " : 'null, ')) +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
@@ -1069,7 +1080,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             `$B.get_method_class(${scope_ref}, "${class_ref}")\n`
     }
 
-    js += function_body
+    js += function_body + '\n'
 
     if(! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
@@ -1284,12 +1295,12 @@ $B.ast.If.prototype.to_js = function(scopes){
     scopes.push(new_scope)
     var js = `if((locals.$lineno = ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
-    js += add_body(this.body, scopes) + '}'
+    js += add_body(this.body, scopes) + '\n}'
     if(this.orelse.length > 0){
         if(this.orelse[0] instanceof $B.ast.If){
             js += 'else ' + $B.js_from_ast(this.orelse[0], scopes)
         }else{
-            js += '\nelse{\n' + add_body(this.orelse, scopes) + '}'
+            js += '\nelse{\n' + add_body(this.orelse, scopes) + '\n}'
         }
     }
     scopes.pop()
@@ -1324,16 +1335,11 @@ $B.ast.Import.prototype.to_js = function(scopes){
 }
 
 $B.ast.ImportFrom.prototype.to_js = function(scopes){
-    var js = `var module = $B.$import("${this.module}",`
-    var names = this.names.map(x => `"${x.name}"`).join(', ')
-    js += `[${names}], {}, locals, true);`
+    var module = '.'.repeat(this.level) + (this.module || '')
 
-    /*
-    var parts = this.module.split('.')
-    for(var i = 0; i < parts.length; i++){
-        scopes.imports[parts.slice(0, i + 1).join(".")] = true
-    }
-    */
+    var js = `var module = $B.$import("${module}",`
+    var names = this.names.map(x => `"${x.name}"`).join(', ')
+    js += `[${names}], {}, locals);`
 
     for(var alias of this.names){
         if(alias.asname){
@@ -1433,7 +1439,7 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     }
     js += `try{\n$B.js_this = this\n`
 
-    js += 'var result = ' + function_body
+    js += 'var result = ' + function_body + '\n'
 
     if(! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
@@ -1617,7 +1623,7 @@ $B.ast.Module.prototype.to_js = function(scopes, namespaces){
           `var stack_length = $B.frames_stack.length\n` +
           `try{\n`
 
-    js += add_body(this.body, scopes)
+    js += add_body(this.body, scopes) + '\n'
 
     js += `$B.leave_frame(locals)
     }catch(err){
@@ -1712,18 +1718,46 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
-    var js = `locals.$lineno = ${this.lineno}\ntry{\n`
-    js += add_body(this.body, scopes)
     var id = $B.UUID(),
-        err = 'err' + id
-    js += `}catch(${err}){\n` +
-          `$B.set_exc(${err})\n` +
-          `if(locals.$f_trace !== _b_.None){\n` +
-          `locals.$f_trace = $B.trace_exception()}\n` +
-          `locals.$failed${id} = false\nif(false){\n`
-    if(this.handlers.length > 0){
+        has_except_handlers = this.handlers.length > 0,
+        has_else = this.orelse.length > 0,
+        has_finally = this.finalbody.length > 0
+
+    var js = `locals.$lineno = ${this.lineno}\ntry{\n`
+
+    // Save stack length. Used if there is an 'else' clause and no 'finally':
+    // if the 'try' body ran without an exception and ended with a 'return',
+    // don't execute the 'else' clause
+    js += `var stack_length_${id} = $B.frames_stack.length\n`
+
+    // Save execution stack in case there are return statements and a finally
+    // block
+    if(has_finally){
+        js += `var save_stack_${id} = $B.frames_stack.slice()\n`
+    }
+    if(has_else){
+        js += `var failed${id} = false\n`
+    }
+    js += add_body(this.body, scopes) + '\n'
+    if(has_except_handlers){
+        var err = 'err' + id
+        js += '}\n' // close try
+        js += `catch(${err}){\n` +
+              `$B.set_exc(${err})\n` +
+              `if(locals.$f_trace !== _b_.None){\n` +
+              `locals.$f_trace = $B.trace_exception()}\n`
+        if(has_else){
+            js += `failed${id} = true\n`
+        }
+        var first = true
         for(var handler of this.handlers){
-            js += `}else if(locals.$lineno = ${handler.lineno}`
+            if(first){
+                js += 'if'
+                first = false
+            }else{
+                js += '}else if'
+            }
+            js += `(locals.$lineno = ${handler.lineno}`
             if(handler.type){
                 js += ` && $B.is_exc(${err}, `
                 if(handler.type instanceof $B.ast.Tuple){
@@ -1739,30 +1773,41 @@ $B.ast.Try.prototype.to_js = function(scopes){
                 bind(handler.name, scopes)
                 js += `locals.${handler.name} = ${err}\n`
             }
-            js += `locals.$failed${id} = true\n`
-            js += add_body(handler.body, scopes)
+            js += add_body(handler.body, scopes) + '\n'
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                 // delete current exception
                 js += '$B.del_exc()\n'
             }
         }
+        // close last if
+        js += '}\n'
     }
-    js += '}\n'
-    if(this.orelse.length > 0 || this.finalbody.length > 0){
-        js += '}finally{\n' +
-              'var exit\n' +
-              'if($B.frames_stack.length < stack_length){\n' +
-              '// return in try/catch\n' +
-              'exit = true\n'+
-              '$B.frames_stack.push($top_frame)}\n'
-        if(this.orelse.length > 0){
-            js += `if(! locals.$failed${id}){\n`
-            js += add_body(this.orelse, scopes) + '}\n'
+    if(has_else || has_finally){
+        js += '}\n' // close try
+        js += 'finally{\n'
+        var finalbody = `$B.frames_stack = save_stack_${id}\n` +
+                        add_body(this.finalbody, scopes)
+        // The 'else' clause is executed if no exception was raised, and if
+        // there was no 'return' in the 'try' block (in which case the stack
+        // was popped from)
+        var elsebody = `if($B.frames_stack.length == stack_length_${id} ` +
+                       `&& ! failed${id}){\n` +
+                       add_body(this.orelse, scopes) +
+                       '\n}' // close "if"
+        if(has_else && has_finally){
+            js += `try{\n` +
+                  elsebody +
+                  '\n}\n' + // close "try"
+                  `finally{\n` + finalbody + '}\n'
+        }else if(has_else && ! has_finally){
+            js += elsebody
+        }else{
+            js += finalbody
         }
-        js += add_body(this.finalbody, scopes)
-        js += 'if(exit){\n$B.leave_frame({locals})\n}\n'
+        js += '\n}\n' // close "finally"
+    }else{
+        js += '}\n' // close catch
     }
-    js += '}\n'
     return js
 }
 
@@ -1796,7 +1841,7 @@ $B.ast.While.prototype.to_js = function(scopes){
     scopes.push(new_scope)
     var js = `while((locals.$lineno = ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
-    js += add_body(this.body, scopes) + '}'
+    js += add_body(this.body, scopes) + '\n}'
     scopes.pop()
     return js
 }
@@ -1859,7 +1904,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         return s
     }
 
-    var js = add_body(this.body, scopes)
+    var js = add_body(this.body, scopes) + '\n'
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
@@ -1867,20 +1912,9 @@ $B.ast.With.prototype.to_js = function(scopes){
 }
 
 $B.ast.Yield.prototype.to_js = function(scopes){
-    var ix = scopes.length - 1
-    while(scopes[ix].parent){
-        ix--
-    }
-    scopes[ix].is_generator = true
+    // Mark current scope as generator
+    last_scope(scopes).is_generator = true
     var value = this.value ? $B.js_from_ast(this.value, scopes) : '_b_.None'
-    var js = `var result = ${value}\n` +
-             `try{\n` +
-             `$B.leave_frame({locals})\n` +
-             `return result\n` +
-             `}catch(err){\n` +
-             `$B.frames_stack.push($top_frame)\n` +
-             `throw err\n}\n` +
-             `$B.frames_stack.push($top_frame)\n`
 
     return `yield (function(){\nreturn ${value}}\n)()`
 }
@@ -1930,20 +1964,22 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                     except StopIteration as _e:
                         _r = _e.value
                         break
+        RESULT = _r
     */
-    console.log($B.ast_dump(this))
     last_scope(scopes).is_generator = true
+    console.log('set scope', last_scope(scopes), 'as generator')
     var value = $B.js_from_ast(this.value, scopes)
     var n = $B.UUID()
-    return `$B.$import("sys", [], {})
-            var _i${n} = _b_.iter(${value}),
+    return `(function(){
+      function* f(){
+        var _i${n} = _b_.iter(${value}),
                 _r${n}
-            var $failed${n} = false
+            var failed${n} = false
             try{
                 var _y${n} = _b_.next(_i${n})
             }catch(_e){
                 $B.set_exc(_e)
-                $failed${n} = true
+                failed${n} = true
                 $B.pmframe = $B.last($B.frames_stack)
                 _e = $B.exception(_e)
                 if(_e.__class__ === _b_.StopIteration){
@@ -1952,40 +1988,41 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                     throw _e
                 }
             }
-            if(! $failed${n}){
+            if(! failed${n}){
                 while(true){
-                    var $failed1${n} = false
+                    var failed1${n} = false
                     try{
                         $B.leave_frame({locals})
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push($top_frame)
                     }catch(_e){
                         if(_e.__class__ === _b_.GeneratorExit){
-                            var $failed2${n} = false
+                            var failed2${n} = false
                             try{
                                 var _m${n} = $B.$getattr(_i${n}, "close")
                             }catch(_e1){
-                                $failed2${n} = true
+                                failed2${n} = true
                                 if(_e1.__class__ !== _b_.AttributeError){
                                     throw _e1
                                 }
                             }
-                            if(! $failed2${n}){
+                            if(! failed2${n}){
                                 $B.$call(_m${n})()
                             }
                             throw _e
                         }else if($B.is_exc(_e, [_b_.BaseException])){
-                            var _x = $B.$call($B.$getattr(locals.sys, "exc_info"))()
-                            var $failed3${n} = false
+                            var sys_module = $B.imported._sys,
+                                _x = sys_module.exc_info()
+                            var failed3${n} = false
                             try{
                                 var _m${n} = $B.$getattr(_i${n}, "throw")
                             }catch(err){
-                                $failed3${n} = true
+                                failed3${n} = true
                                 if($B.is_exc(err, [_b_.AttributeError])){
                                     throw err
                                 }
                             }
-                            if(! $failed3${n}){
+                            if(! failed3${n}){
                                 try{
                                     _y${n} = $B.$call(_m${n}).apply(null,
                                         _b_.list.$factory(_x${n}))
@@ -1999,7 +2036,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                             }
                         }
                     }
-                    if(! $failed1${n}){
+                    if(! failed1${n}){
                         try{
                             if(_s${n} === _b_.None){
                                 _y${n} = _b_.next(_i${n})
@@ -2015,7 +2052,11 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         }
                     }
                 }
-            }`
+            }
+            return _r${n}
+        }
+        return f()
+    })()`
 }
 
 $B.js_from_root = function(ast_root, symtable, filename, namespaces){

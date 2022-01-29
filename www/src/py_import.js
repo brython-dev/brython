@@ -230,7 +230,7 @@ function run_py(module_contents, path, module, compiled) {
             for(var attr in err){
                 console.log(attr, err[attr])
             }
-            console.log($B.$getattr(err, "info", "[no info]"))
+            console.log('info', $B.$getattr(err, "info", "[no info]"))
             console.log("message: " + err.$message)
             console.log("filename: " + err.fileName)
             console.log("linenum: " + err.lineNumber)
@@ -1147,10 +1147,27 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     aliases: aliases used to override local variable name bindings
              (eg "import traceback as tb")
     locals: local namespace import bindings will be applied upon
-     */
-    fromlist = fromlist === undefined ? [] : fromlist
-    aliases = aliases === undefined ? {} : aliases
-    locals = locals === undefined ? {} : locals
+    level: number of leading '.' in "from . import a" or "from .mod import a"
+    */
+    var level = 0,
+        frame = $B.last($B.frames_stack),
+        current_module = frame[2],
+        parts = current_module.split('.')
+    while(mod_name.length > 0 && mod_name.startsWith('.')){
+        level++
+        mod_name = mod_name.substr(1)
+        if(parts.length == 0){
+            throw _b_.ImportError.$factory("Parent module '' not loaded, "+
+                "cannot perform relative import")
+        }
+        current_module = parts.join('.')
+        parts.pop()
+    }
+    if(level > 0){
+        mod_name = current_module + 
+            (mod_name.length > 0 ? '.' + mod_name : '')
+
+    }
     var parts = mod_name.split(".")
     // For . , .. and so on , remove one relative step
     if(mod_name[mod_name.length - 1] == "."){parts.pop()}
@@ -1171,6 +1188,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         }
     }
     var mod_name = norm_parts.join(".")
+    fromlist = fromlist === undefined ? [] : fromlist
+    aliases = aliases === undefined ? {} : aliases
+    locals = locals === undefined ? {} : locals
 
     if($B.$options.debug == 10){
        console.log("$import "+mod_name)

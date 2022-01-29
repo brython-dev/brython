@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-26 15:52:35.605578"
-__BRYTHON__.timestamp=1643208755605
+__BRYTHON__.compiled_date="2022-01-29 09:53:13.701182"
+__BRYTHON__.timestamp=1643446393701
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7347,11 +7347,22 @@ throw _b_.TypeError.$factory(fname+
 `arguments: '${key}'`)}else{
 slots[key]=value}}}
 var missing=[]
-for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push("'"+attr+"'")}}}
-if(missing.length > 0){if(missing.length==1){throw _b_.TypeError.$factory(fname+
-" missing 1 positional argument: "+missing[0])}else{var msg=fname+" missing "+missing.length+
-" positional arguments: "
-msg+=missing.join(" and ")
+for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push(attr)}}}
+if(missing.length > 0){if(missing.length==1){var arg_type='positional'
+if(var_names.indexOf(missing[0])>=argcount){arg_type='required keyword-only'}
+throw _b_.TypeError.$factory(fname+
+` missing 1 ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
+var_names.indexOf(arg)< argcount),missing_kwonly=missing.filter(arg=>
+var_names.indexOf(arg)>=argcount)
+function format_missing(m,type){var msg=m.length+
+` required ${type} argument`+
+(m.length > 1 ? 's' :'')
+m=m.map(x=> `'${x}'`)
+if(m.length > 1){m[m.length-1]=' and '+m[m.length-1]
+for(var i=0;i < m.length-2;i++){m[i]=m[i]+', '}}
+return msg+': '+m.join('')}
+var msg=fname+" missing "
+if(missing_positional.length > 0){msg+=format_missing(missing_positional,'positional')}else{msg+=format_missing(missing_kwonly,'keyword-only')}
 throw _b_.TypeError.$factory(msg)}}
 if(extra_kw_args){slots[extra_kw_args]=extra_kw}
 return slots}
@@ -8438,31 +8449,50 @@ return self}
 enumerate.__next__=function(self){self.counter++
 return $B.fast_tuple([self.counter,next(self.iter)])}
 $B.set_func_names(enumerate,"builtins")
+function make_proxy(dict,lineno){
+const handler={get:function(target,prop){console.log('get proxy attr',prop,target)
+if(prop=='__class__'){return _b_.dict}else if(prop=='$lineno'){return lineno}
+if(target.$string_dict.hasOwnProperty(prop)){return target.$string_dict[prop][0]}
+return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}}
+return new Proxy(dict,handler)}
 function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
-var local_name=`locals_${frame[0]}`,global_name=`locals_${frame[2]}`,exec_locals,exec_globals
+var lineno=frame[1].$lineno
+var local_name='locals_exec',
+global_name='globals_exec',
+exec_locals={},exec_globals={}
 if(_globals===_b_.None){
 exec_locals={}
 for(var key in frame[1]){exec_locals[key]=frame[1][key]}
-exec_globals=frame[3]}else{if(! _globals.__class__===_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
+exec_globals=frame[3]}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
 "a dict, not "+$B.class_name(_globals))}
 exec_globals={}
 if(_globals.$jsobj){
-for(var key in _globals.$jsobj){exec_globals[key]=_globals.$jsobj[key]}}else{for(var key in _globals.$string_dict){exec_globals[key]=_globals.$string_dict[key][0]}}
+exec_globals=_globals.$jsobj}else{
+if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jsobj={}}
+for(var key in _globals.$string_dict){_globals.$jsobj[key]=_globals.$string_dict[key][0]}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=make_builtins_dict()}
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name){
 global_name+='_globals'}
-exec_locals={}
-if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{for(var key in _locals.$string_dict){exec_locals[key]=_locals.$string_dict[key][0]}}}}
+if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
+for(var key in _locals.$string_dict){_locals.$jsobj[key]=_locals.$string_dict[key][0]}
+exec_locals.$getitem=$B.$call($B.$getattr(_locals.__class__,'__getitem__'))
+var missing=$B.$getattr(_locals.__class__,'__missing__',null)
+if(missing){exec_locals.$missing=$B.$call(missing)}}}}
 var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],frame[1].$lineno)
 root.mode=mode
 $B.parser.dispatch_tokens(root)
-var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,frame[0]),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,global_name})
-if(mode=='exec'){js+='return {locals, globals}'
-var res=new Function(local_name,global_name,js)(exec_locals,exec_globals)
-if(_globals !==_b_.None){for(var key in res.globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,res.globals[key])}}
-if(_locals !==_b_.None){for(var key in res.locals){if(! key.startsWith('$')){_b_.dict.$setitem(_locals,key,res.locals[key])}}}}
-return _b_.None}else{var locals=frame[1]
-return eval(js)}}
+var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})
+var save_frames_stack=$B.frames_stack.slice()
+if(_globals !==_b_.None){$B.frames_stack=[[local_name,exec_locals,global_name,exec_globals]]}
+if(mode=='eval'){js='return '+js}
+var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
+try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){
+$B.frames_stack=save_frames_stack
+throw err}
+if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}
+if(_locals !==_b_.None){for(var key in exec_locals){if(! key.startsWith('$')){_b_.dict.$setitem(_locals,key,exec_locals[key])}}}}
+$B.frames_stack=save_frames_stack
+return res}
 function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
@@ -11308,7 +11338,7 @@ console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log(js)}
 for(var attr in err){console.log(attr,err[attr])}
-console.log($B.$getattr(err,"info","[no info]"))
+console.log('info',$B.$getattr(err,"info","[no info]"))
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)}
@@ -11629,9 +11659,15 @@ if(fromlist.length > 0){
 return $B.imported[mod_name]}else{
 return $B.imported[parsed_name[0]]}}
 $B.$import=function(mod_name,fromlist,aliases,locals){
-fromlist=fromlist===undefined ?[]:fromlist
-aliases=aliases===undefined ?{}:aliases
-locals=locals===undefined ?{}:locals
+var level=0,frame=$B.last($B.frames_stack),current_module=frame[2],parts=current_module.split('.')
+while(mod_name.length > 0 && mod_name.startsWith('.')){level++
+mod_name=mod_name.substr(1)
+if(parts.length==0){throw _b_.ImportError.$factory("Parent module '' not loaded, "+
+"cannot perform relative import")}
+current_module=parts.join('.')
+parts.pop()}
+if(level > 0){mod_name=current_module+
+(mod_name.length > 0 ? '.'+mod_name :'')}
 var parts=mod_name.split(".")
 if(mod_name[mod_name.length-1]=="."){parts.pop()}
 var norm_parts=[],prefix=true
@@ -11642,6 +11678,9 @@ if(elt===undefined){throw _b_.ImportError.$factory("Parent module '' not loaded,
 "cannot perform relative import")}}else{prefix=false;
 norm_parts.push(p)}}
 var mod_name=norm_parts.join(".")
+fromlist=fromlist===undefined ?[]:fromlist
+aliases=aliases===undefined ?{}:aliases
+locals=locals===undefined ?{}:locals
 if($B.$options.debug==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+$B.static_stdlib_import)}
@@ -15989,7 +16028,7 @@ case 'imaginary':
 return $B.make_complex(0,$B.AST.$convert(js_node.value))
 case 'ellipsis':
 return _b_.Ellipsis}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
-return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
+return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return _b_.repr(js_node)}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins

@@ -791,4 +791,61 @@ for x, *y, z in lists:
 
 assert groups == [(0, [1, 2], 3), ('ab', ['b'], 'c')]
 
+# various flavours of try / except / else / finally
+def try_except1():
+    try:
+        return 1
+    except ZeroDivisionError:
+        return 2
+
+assert try_except1() == 1
+
+def try_except2():
+    try:
+        return 1 / 0
+    except ZeroDivisionError:
+        return 2
+
+assert try_except2() == 2
+
+def try_except_else1():
+    try:
+        return 1
+    except ZeroDivisionError:
+        return 2
+    else:
+        return 3
+
+assert try_except_else1() == 1
+
+def try_except_else2():
+    try:
+        return 1 / 0
+    except ZeroDivisionError:
+        return 2
+    else:
+        return 3
+
+assert try_except_else2() == 2
+
+def try_finally():
+    try:
+        return 1
+    finally:
+        return 4
+
+assert try_finally() == 4
+
+def try_except_else_finally():
+    try:
+        return 1
+    except ZeroDivisionError:
+        return 2
+    else:
+        return 3
+    finally:
+        return 4
+
+#assert try_except_else_finally() == 4
+
 print('passed all tests...')
