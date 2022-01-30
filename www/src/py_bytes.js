@@ -236,7 +236,9 @@ bytes.__iter__ = function(self){
 }
 
 bytes.__eq__ = function(self, other){
-    if(invalid(other)){return false}
+    if(invalid(other)){
+        return false
+    }
     return $B.$getattr(self.source, '__eq__')(other.source)
 }
 
@@ -349,7 +351,9 @@ bytes.__mul__ = function(){
     return res
 }
 
-bytes.__ne__ = function(self,other){return ! bytes.__eq__(self, other)}
+bytes.__ne__ = function(self,other){
+    return ! bytes.__eq__(self, other)
+}
 
 bytes.__new__ = function(cls, source, encoding, errors){
     var $ = $B.args("__new__", 4,
