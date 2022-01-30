@@ -45,7 +45,8 @@ class BitIO:
                 self.bitnum = 0
             mask = 2 ** self.bitnum
             if trace:
-                print("bit", int(bool(mask & self.bytestream[self.bytenum])))
+                print("byte", self.bytenum, "bitnum", self.bitnum,
+                    "bit", int(bool(mask & self.bytestream[self.bytenum])))
             result += coef * bool(mask & self.bytestream[self.bytenum])
             self.bitnum += 1
             if order == "lsf":
@@ -115,6 +116,10 @@ class BitIO:
             bits.reverse()
         assert len(bits) == nb
         self.write(*bits)
+
+class Error(Exception):
+    pass
+
 
 class ResizeError(Exception):
     pass
@@ -519,7 +524,6 @@ def adler32(source):
 
 
 def compress_dynamic(out, source, store, lit_len_count, distance_count):
-
     # Add 1 occurrence of the End Of Block character
     lit_len_count[256] = 1
 
@@ -622,7 +626,6 @@ def compress_dynamic(out, source, store, lit_len_count, distance_count):
 
 def compress_fixed(out, source, items):
     """Use fixed Huffman code."""
-    print("fixed", items)
     out.write(1, 0) # BTYPE = fixed Huffman codes
 
     for item in items:
@@ -648,51 +651,9 @@ def compress_fixed(out, source, items):
             value, nb = int(code, 2), len(code)
             out.write_int(value, nb, order="msf")
 
-def compress(source, window_size=32 * 1024):
+def compress(data, /, level=-1):
 
-    # Counter for frequency of literals and lengths, encoded in the range
-    # [0, 285] (cf. 3.2.5)
-    lit_len_count = {}
-    # Counter for frequency of distances, encoded in the range [0, 29]
-    # (cf. 3.2.5)
-    distance_count = {}
-
-    store = [] # Store of items produced by the LZ algorithm
-    replaced = 0 # Count length of replaced sequences
-    nb_tuples = 0 # Count number of tuples produced by the LZ algorithm
-
-    for item in lz_generator(source, window_size):
-        if isinstance(item, tuple):
-            nb_tuples += 1
-            length, distance = item # Raw values as integers
-            replaced += length
-            # Transform raw length in range [3...258] into a code in the range
-            # [257, 285] and a number of extra bits
-            length_code, *extra_length = length_to_code(length)
-            # Increment literals / lengths counter
-            lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
-
-            # Transform raw distance in range [1...window_size] into a code in
-            # the range [0...29] and a number of extra bits
-            distance_code, *extra_dist = distance_to_code(distance)
-            # Increment distances counter
-            distance_count[distance_code] = \
-                distance_count.get(distance_code, 0) + 1
-
-            # Add to store for use in next steps
-            store.append((length_code, extra_length, distance_code,
-                          extra_dist))
-        else:
-            literal = item
-            lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
-            store.append(literal)
-
-    store.append(256) # end of block
-
-    # Estimate how many bytes would be saved with dynamic Huffman tables
-    # From different tests, the tables take about 100 bytes, and each
-    # (length, distance) tuple is encoded in about 20 bits
-    score = replaced - 100 - (nb_tuples * 20 // 8)
+    window_size = 32 * 1024
 
     # Create the output bit stream
     out = BitIO()
@@ -706,106 +667,203 @@ def compress(source, window_size=32 * 1024):
         nb += 1
     out.write_int(nb, 4) # window size = 2 ** (8 + 7)
     out.write_int(0x9c, 8) # FLG
+    header = out.bytestream
+    compressor = _Compressor(level)
+    payload = compressor.compress(data) + compressor.flush()
+    a, b = adler32(data)
+    checksum = divmod(b, 256) + divmod(a, 256)
+    return header + payload + bytes(checksum)
 
-    out.write(1) # BFINAL = 1
+def convert32bits(n):
+    result = []
+    for _ in range(4):
+        n, rest = divmod(n, 256)
+        result.append(rest)
+    return result
 
-    if score < 0:
-        compress_fixed(out, source, store)
-    else:
-        compress_dynamic(out, source, store, lit_len_count, distance_count)
+class _Compressor:
 
-    # Pad last byte with 0's
-    while out.bitnum != 8:
-        out.write(0)
+    def __init__(self, level=-1, method=DEFLATED, wbits=MAX_WBITS,
+                 memLevel=DEF_MEM_LEVEL, strategy=Z_DEFAULT_STRATEGY,
+                 zdict=None):
+        self.level = level
+        self.method = method
+        self.wbits = wbits
+        self.window_size = 32 * 1024 # XXX compute from wbits
+        self.memLevel = memLevel
+        self.strategy = strategy
+        self.zdict = zdict
+        self._flushed = False
 
-    # Write ADLER32 checksum
-    a, b = adler32(source)
-    a1, a2 = divmod(a, 256)
-    b1, b2 = divmod(b, 256)
-    out.write_int(b1, 8)
-    out.write_int(b2, 8)
-    out.write_int(a1, 8)
-    out.write_int(a2, 8)
+    def compress(self, source):
+        # Counter for frequency of literals and lengths, encoded in the range
+        # [0, 285] (cf. 3.2.5)
+        lit_len_count = {}
+        # Counter for frequency of distances, encoded in the range [0, 29]
+        # (cf. 3.2.5)
+        distance_count = {}
 
-    return bytes(out.bytestream)
+        store = [] # Store of items produced by the LZ algorithm
+        replaced = 0 # Count length of replaced sequences
+        nb_tuples = 0 # Count number of tuples produced by the LZ algorithm
 
-def decompress(buf):
-    reader = BitIO(buf)
+        for item in lz_generator(source, self.window_size):
+            if isinstance(item, tuple):
+                nb_tuples += 1
+                length, distance = item # Raw values as integers
+                replaced += length
+                # Transform raw length in range [3...258] into a code in the range
+                # [257, 285] and a number of extra bits
+                length_code, *extra_length = length_to_code(length)
+                # Increment literals / lengths counter
+                lit_len_count[length_code] = lit_len_count.get(length_code, 0) + 1
 
-    CM = reader.read(4) # compression method (usually 8)
-    if CM != 8:
-        raise error("unsupported compression method: {}".format(CM))
+                # Transform raw distance in range [1...window_size] into a code in
+                # the range [0...29] and a number of extra bits
+                distance_code, *extra_dist = distance_to_code(distance)
+                # Increment distances counter
+                distance_count[distance_code] = \
+                    distance_count.get(distance_code, 0) + 1
 
-    CINFO = reader.read(4) # ln(window size) - 8
+                # Add to store for use in next steps
+                store.append((length_code, extra_length, distance_code,
+                              extra_dist))
+            else:
+                literal = item
+                lit_len_count[literal] = lit_len_count.get(literal, 0) + 1
+                store.append(literal)
 
-    FLG = reader.read(8)
+        store.append(256) # end of block
 
-    result = bytearray()
+        # Estimate how many bytes would be saved with dynamic Huffman tables
+        # From different tests, the tables take about 100 bytes, and each
+        # (length, distance) tuple is encoded in about 20 bits
+        score = replaced - 100 - (nb_tuples * 20 // 8)
 
-    while True:
-        BFINAL = reader.read(1)
+        # Create the output bit stream
+        out = BitIO()
 
-        BTYPE = reader.read(2)
+        out.write(1) # BFINAL = 1
 
-        if BTYPE == 0b01:
-            # Decompression with fixed Huffman codes for literals/lengths
-            # and distances
-            root = fixed_lit_len_tree
+        if score < 0:
+            compress_fixed(out, source, store)
+        else:
+            compress_dynamic(out, source, store, lit_len_count, distance_count)
 
-            while True:
-                # read a literal or length
-                _type, value = read_literal_or_length(reader, root)
-                if _type == 'eob':
-                    break
-                elif _type == 'literal':
-                    result.append(value)
-                elif _type == 'length':
-                    length = value
-                    # next five bits are the distance code
-                    dist_code = reader.read(5, "msf")
-                    if dist_code < 3:
-                        distance = dist_code + 1
+        # Pad last byte with 0's
+        while out.bitnum != 8:
+            out.write(0)
+
+        self._compressed = bytes(out.bytestream)
+
+        return b''
+
+    def flush(self):
+        if self._flushed:
+            raise Error('inconsistent flush state')
+        self._flushed = True
+        return self._compressed
+
+
+def compressobj(level=-1, method=DEFLATED, wbits=MAX_WBITS,
+                 memLevel=DEF_MEM_LEVEL, strategy=Z_DEFAULT_STRATEGY,
+                 zdict=None):
+    return _Compressor(level, method, wbits, memLevel, strategy, zdict)
+
+
+def decompress(data, /, wbits=MAX_WBITS, bufsize=DEF_BUF_SIZE):
+    source = BitIO(data)
+    assert source.read(4) == 8
+    nb = source.read(4)
+    window_size = 2 ** (nb + 8)
+    assert source.read(8) == 0x9c
+    checksum = data[-4:]
+    a = 256 * checksum[2] + checksum[3]
+    b = 256 * checksum[0] + checksum[1]
+    assert a, b == adler32(data)
+    decompressor = _Decompressor(wbits)
+    return decompressor.decompress(data[2:-4])
+
+
+class _Decompressor:
+
+    def __init__(self, wbits=MAX_WBITS, bufsize=DEF_BUF_SIZE, zdict=None):
+        self.wbits = wbits
+        self.bufsize = bufsize
+        self.zdict = zdict
+        self.eof = False
+        self.unconsumed_tail = b''
+        self.unused_data = b''
+
+    def decompress(self, data, max_length=0):
+        self.data = data
+        if data == b'':
+            return data
+
+        reader = self._reader = BitIO(data)
+
+        result = bytearray()
+
+        while True:
+            BFINAL = reader.read(1)
+
+            BTYPE = reader.read(2)
+
+            if BTYPE == 0b01:
+                # Decompression with fixed Huffman codes for literals/lengths
+                # and distances
+                root = fixed_lit_len_tree
+
+                while True:
+                    # read a literal or length
+                    _type, value = read_literal_or_length(reader, root)
+                    if _type == 'eob':
+                        break
+                    elif _type == 'literal':
+                        result.append(value)
+                    elif _type == 'length':
+                        length = value
+                        # next five bits are the distance code
+                        dist_code = reader.read(5, "msf")
+                        if dist_code < 3:
+                            distance = dist_code + 1
+                        else:
+                            nb = (dist_code // 2) - 1
+                            extra = reader.read(nb)
+                            half, delta = divmod(dist_code, 2)
+                            distance = (1 + (2 ** half) +
+                                delta * (2 ** (half - 1)) + extra)
+                        for _ in range(length):
+                            result.append(result[-distance])
+
+                        node = root
                     else:
-                        nb = (dist_code // 2) - 1
-                        extra = reader.read(nb)
-                        half, delta = divmod(dist_code, 2)
-                        distance = (1 + (2 ** half) +
-                            delta * (2 ** (half - 1)) + extra)
-                    for _ in range(length):
-                        result.append(result[-distance])
+                        node = child
+            elif BTYPE == 0b10:
+                # Decompression with dynamic Huffman codes
 
-                    node = root
-                else:
-                    node = child
+                # Read Huffman code trees
+                lit_len_tree, distance_tree = dynamic_trees(reader)
 
-        elif BTYPE == 0b10:
-            # Decompression with dynamic Huffman codes
+                while True:
+                    # read a literal or length
+                    _type, value = read_literal_or_length(reader, lit_len_tree)
+                    if _type == 'eob':
+                        break
+                    elif _type == 'literal':
+                        result.append(value)
+                    elif _type == 'length':
+                        # read a distance
+                        length = value
+                        distance = read_distance(reader, distance_tree)
+                        for _ in range(length):
+                            result.append(result[-distance])
 
-            # Read Huffman code trees
-            lit_len_tree, distance_tree = dynamic_trees(reader)
-
-            while True:
-                # read a literal or length
-                _type, value = read_literal_or_length(reader, lit_len_tree)
-                if _type == 'eob':
-                    break
-                elif _type == 'literal':
-                    result.append(value)
-                elif _type == 'length':
-                    # read a distance
-                    length = value
-                    distance = read_distance(reader, distance_tree)
-                    for _ in range(length):
-                        result.append(result[-distance])
-
-        if BFINAL:
-            # read ADLER32 checksum in last 4 bytes
-            b1 = 256 * buf[-4] + buf[-3]
-            a1 = 256 * buf[-2] + buf[-1]
-            # compute it from result
-            a, b = adler32(result)
-            # assert that checksum is correct
-            assert a == a1
-            assert b == b1
-
+            if BFINAL:
+                rank = reader.bytenum
+                self.unused_data = bytes(data[rank + 1:])
+                self.eof = True
             return bytes(result)
+
+def decompressobj(wbits=MAX_WBITS, zdict=None):
+    return _Decompressor(wbits, zdict)

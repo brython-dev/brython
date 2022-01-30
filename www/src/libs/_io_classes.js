@@ -24,7 +24,13 @@ _BufferedIOBase.__enter__ = function(self){
     return self
 }
 _BufferedIOBase.__exit__ = function(self, type, value, traceback){
-    self.__closed = true
+    try{
+        $B.$call($B.$getattr(self, 'close'))()
+        self.__closed = true
+        return true
+    }catch(err){
+        return false
+    }
 }
 
 // Base class for raw binary I/O.

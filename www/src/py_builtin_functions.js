@@ -3115,9 +3115,25 @@ $Reader.writable = function(self){
 
 $B.set_func_names($Reader, "builtins")
 
-var $BufferedReader = $B.make_class('_io.BufferedReader')
+var $BufferedReader = $B.make_class('_io.BufferedReader',
+    function(content){
+        return {
+            __class__: $BufferedReader,
+            $binary: true,
+            $content: content,
+            $read_func: $B.$getattr(content, 'read')
+        }
+    }
+)
 
 $BufferedReader.__mro__ = [$Reader, _b_.object]
+
+$BufferedReader.read = function(self, size){
+    if(self.$read_func === undefined){
+        return $Reader.read(self, size === undefined ? -1 : size)
+    }
+    return self.$read_func(size || -1)
+}
 
 var $TextIOWrapper = $B.make_class('_io.TextIOWrapper',
     function(){

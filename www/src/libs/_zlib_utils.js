@@ -30,13 +30,13 @@ for(var n =0; n < 256; n++){
 var $module = (function($B){
 
     return {
-        crc32: function(str) {
-            var crc = 0 ^ (-1);
-        
-            for (var i = 0; i < str.length; i++ ) {
-                crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+        crc32: function(bytes, crc) {
+            var crc = crc ^ (-1);
+
+            for (var byte of bytes.source) {
+                crc = (crc >>> 8) ^ crcTable[(crc ^ byte) & 0xFF];
             }
-        
+
             return (crc ^ (-1)) >>> 0;
         },
 

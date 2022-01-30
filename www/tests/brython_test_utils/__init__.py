@@ -56,6 +56,7 @@ def discover_brython_test_modules():
           ("test_datetime.py", "datetime"),
           ("test_decimals.py", "decimals"),
           ("test_functools.py", "functools"),
+          ("test_compression.py", "gzip / zlib"),
           ("test_hashlib.py", "hashlib"),
           ("test_io.py", "io"),
           ("test_itertools.py", "itertools"),

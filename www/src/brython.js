@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-29 11:18:12.611606"
-__BRYTHON__.timestamp=1643451492611
+__BRYTHON__.compiled_date="2022-01-30 22:45:35.368672"
+__BRYTHON__.timestamp=1643579135368
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -9354,8 +9354,12 @@ $Reader.seekable=function(self){return true}
 $Reader.tell=function(self){return self.$counter}
 $Reader.writable=function(self){return false}
 $B.set_func_names($Reader,"builtins")
-var $BufferedReader=$B.make_class('_io.BufferedReader')
+var $BufferedReader=$B.make_class('_io.BufferedReader',function(content){return{
+__class__:$BufferedReader,$binary:true,$content:content,$read_func:$B.$getattr(content,'read')}}
+)
 $BufferedReader.__mro__=[$Reader,_b_.object]
+$BufferedReader.read=function(self,size){if(self.$read_func===undefined){return $Reader.read(self,size===undefined ?-1 :size)}
+return self.$read_func(size ||-1)}
 var $TextIOWrapper=$B.make_class('_io.TextIOWrapper',function(){var $=$B.args("TextIOWrapper",6,{buffer:null,encoding:null,errors:null,newline:null,line_buffering:null,write_through:null},["buffer","encoding","errors","newline","line_buffering","write_through"],arguments,{encoding:"utf-8",errors:_b_.None,newline:_b_.None,line_buffering:_b_.False,write_through:_b_.False},null,null)
 return{
 __class__:$TextIOWrapper,$content:_b_.bytes.decode($.buffer.$content,$.encoding),encoding:$.encoding,errors:$.errors,newline:$.newline}}
@@ -9756,8 +9760,7 @@ var line_info=exc.$line_info
 for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
 if(! frame[1]){continue}
 if(frame[1].$line_info){var $line_info=frame[1].$line_info,line_info=$line_info.split(',')}else if(frame[1].$lineno){var line_info=[frame[1].$lineno,frame[2]]}
-if($B.imported[frame[2]]===undefined){console.log('pas de imported pour',frame[2])}
-var __file__=$B.imported[frame[2]].__file__,src=$B.file_cache[__file__]
+if($B.imported[frame[2]]===undefined){var file=frame[3].__file__,src=$B.file_cache[__file__]}else{var __file__=$B.imported[frame[2]].__file__,src=$B.file_cache[__file__]}
 var file=frame[3].__file__ ||"<string>",module=line_info[1],is_exec=module.charAt(0)=="$"
 if(is_exec){module="<module>"}
 info+="\n  File "+file+" line "+line_info[0]
@@ -14578,10 +14581,11 @@ if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){list.__delitem__(se
 return $N}
 throw _b_.TypeError.$factory($B.class_name(self)+
 " indices must be integer, not "+$B.class_name(arg))}
-list.__eq__=function(self,other){if(isinstance(self,list)){var klass=list}else{var klass=tuple}
+list.__eq__=function(self,other){var klass=isinstance(self,list)? list :tuple
 if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
 while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
-return true}}
+return true}
+return false}
 return _b_.NotImplemented}
 list.__getitem__=function(self,key){
 $B.check_no_kw("__getitem__",self,key)
