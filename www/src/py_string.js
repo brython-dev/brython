@@ -169,7 +169,7 @@ str.__add__ = function(self, other){
 str.__contains__ = function(self, item){
     if(! _b_.isinstance(item, str)){
         throw _b_.TypeError.$factory("'in <string>' requires " +
-            "string as left operand, not " + item.__class__)
+            "string as left operand, not " + $B.class_name(item))
     }
     if(item.__class__ === str || _b_.isinstance(item, str)){
         var nbcar = item.length

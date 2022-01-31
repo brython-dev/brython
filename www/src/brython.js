@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-31 09:43:04.266889"
-__BRYTHON__.timestamp=1643618584266
+__BRYTHON__.compiled_date="2022-01-31 09:48:22.284072"
+__BRYTHON__.timestamp=1643618902284
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -11815,7 +11815,7 @@ str.__add__=function(self,other){if(! _b_.isinstance(other,str)){try{return $B.$
 $B.class_name(other)+" to str implicitly")}}
 return $B.String(self+other)}
 str.__contains__=function(self,item){if(! _b_.isinstance(item,str)){throw _b_.TypeError.$factory("'in <string>' requires "+
-"string as left operand, not "+item.__class__)}
+"string as left operand, not "+$B.class_name(item))}
 if(item.__class__===str ||_b_.isinstance(item,str)){var nbcar=item.length}else{var nbcar=_b_.len(item)}
 if(nbcar==0){
 return true}
