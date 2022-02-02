@@ -375,31 +375,33 @@ var Comprehension = {
                 Comprehension.set_parent_block(item, parent_block)
             }
         }
-    },
-    get_awaits: function(ctx, awaits){
-        // Return the list of Await below context "ctx"
-        awaits = awaits || []
-        if(ctx.type == 'await'){
-            awaits.push(ctx)
-        }else if(ctx.tree){
-            for(var item of ctx.tree){
-                Comprehension.get_awaits(item, awaits)
-            }
-        }
-        return awaits
-    },
-    has_await: function(ctx){
-        //
-        var node = $get_node(ctx),
-            awaits = Comprehension.get_awaits(ctx)
-        for(var aw of awaits){
-            var ix = node.awaits.indexOf(aw)
-            if(ix > -1){
-                node.awaits.splice(ix, 1)
-            }
-        }
-        return awaits.length > 0
     }
+}
+
+function init_scopes(type, scopes, namespaces){
+    // Common to Expression and Module
+    // Initializes the first scope in scopes
+    // namespaces can be passed by exec() or eval()
+    var name = scopes.symtable.table.filename
+    var top_scope = new Scope(name, `${type}`, this),
+        block = scopes.symtable.table.blocks.get(_b_.id(this))
+    if(block.$has_import_star){
+        top_scope.has_import_star = true
+    }
+    if(namespaces){
+        for(var key in namespaces.exec_globals){
+            if(! key.startsWith('$')){
+                top_scope.locals.add(key)
+            }
+        }
+        for(var key in namespaces.exec_locals){
+            if(! key.startsWith('$')){
+                top_scope.locals.add(key)
+            }
+        }
+    }
+    scopes.push(top_scope)
+    return name
 }
 
 $B.ast.Assert.prototype.to_js = function(scopes){
@@ -875,7 +877,9 @@ $B.ast.Expr.prototype.to_js = function(scopes){
         $B.js_from_ast(this.value, scopes)
 }
 
-$B.ast.Expression.prototype.to_js = function(scopes){
+$B.ast.Expression.prototype.to_js = function(scopes, namespaces){
+    // create top scope; namespaces can be passed by exec()
+    init_scopes.bind(this)('expression', scopes, namespaces)
     return $B.js_from_ast(this.body, scopes)
 }
 
@@ -1396,8 +1400,6 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     var id = $B.UUID(),
         name = 'lambda_' + $B.lambda_magic + '_' + id
 
-    var gname = scopes[0].name
-
     var name1 = name + '$' + id
     var _defaults = [],
         nb_defaults = this.args.defaults.length,
@@ -1507,9 +1509,35 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     return js
 }
 
-$B.ast.List.prototype.to_js = function(scopes){
+function list_or_tuple_to_js(func, scopes){
+    if(this.elts.filter(x => x instanceof $B.ast.Starred).length > 0){
+        var parts = [],
+            simple = []
+        for(var elt of this.elts){
+            if(elt instanceof $B.ast.Starred){
+                parts.push(`[${simple.join(', ')}]`)
+                simple = []
+                parts.push(`_b_.list.$factory(${$B.js_from_ast(elt, scopes)})`)
+            }else{
+                simple.push($B.js_from_ast(elt, scopes))
+            }
+        }
+        if(simple.length > 0){
+            parts.push(`[${simple.join(', ')}]`)
+        }
+        var js = parts[0]
+        for(var part of parts.slice(1)){
+            js += `.concat(${part})`
+        }
+        return `${func}(${js})`
+    }
+
     var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
-    return '$B.$list([' + elts.join(', ') + '])'
+    return `${func}([${elts.join(', ')}])`
+}
+
+$B.ast.List.prototype.to_js = function(scopes){
+    return list_or_tuple_to_js.bind(this)('$B.$list', scopes)
 }
 
 function make_comp(scopes){
@@ -1614,25 +1642,9 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes, namespaces){
-    var name = scopes.symtable.table.filename
-    var module_scope = new Scope(name, 'module', this),
-        block = scopes.symtable.table.blocks.get(_b_.id(this))
-    if(block.$has_import_star){
-        module_scope.has_import_star = true
-    }
-    if(namespaces){
-        for(var key in namespaces.exec_globals){
-            if(! key.startsWith('$')){
-                module_scope.locals.add(key)
-            }
-        }
-        for(var key in namespaces.exec_locals){
-            if(! key.startsWith('$')){
-                module_scope.locals.add(key)
-            }
-        }
-    }
-    scopes.push(module_scope)
+    // create top scope; namespaces can be passed by exec()
+    var name = init_scopes.bind(this)('module', scopes, namespaces)
+
     var module_id = name,
         global_name = make_scope_name(scopes)
 
@@ -1742,8 +1754,14 @@ $B.ast.Slice.prototype.to_js = function(scopes){
     return `_b_.slice.$factory(${lower}, ${upper}, ${step})`
 }
 
+$B.ast.Starred.prototype.to_js = function(scopes){
+    return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`
+}
+
 $B.ast.Subscript.prototype.to_js = function(scopes){
-    return `$B.$getitem(${$B.js_from_ast(this.value, scopes)}, ` +
+    var func = this.slice instanceof $B.ast.Slice ? 'getitem_slice' :
+                                                    '$getitem'
+    return `$B.${func}(${$B.js_from_ast(this.value, scopes)}, ` +
         `${$B.js_from_ast(this.slice, scopes)})`
 }
 
@@ -1842,6 +1860,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
 }
 
 $B.ast.Tuple.prototype.to_js = function(scopes){
+    return list_or_tuple_to_js.bind(this)('$B.fast_tuple', scopes)
     var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
     return '$B.fast_tuple([' + elts.join(', ') + '])'
 }

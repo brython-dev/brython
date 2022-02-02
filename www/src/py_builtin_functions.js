@@ -572,8 +572,8 @@ function make_proxy(dict, lineno){
 function eval1(src, mode, _globals, _locals){
     var frame = $B.last($B.frames_stack)
     var lineno = frame[1].$lineno
-    var local_name = 'locals_exec', // `locals_${frame[0]}`,
-        global_name = 'globals_exec', // `locals_${frame[2]}`,
+    var local_name = 'locals_exec',
+        global_name = 'globals_exec',
         exec_locals = {},
         exec_globals = {}
 
