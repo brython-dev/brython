@@ -1164,9 +1164,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         parts.pop()
     }
     if(level > 0){
-        mod_name = current_module + 
+        mod_name = current_module +
             (mod_name.length > 0 ? '.' + mod_name : '')
-
+        
     }
     var parts = mod_name.split(".")
     // For . , .. and so on , remove one relative step

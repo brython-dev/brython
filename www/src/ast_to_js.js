@@ -1344,9 +1344,30 @@ $B.ast.Import.prototype.to_js = function(scopes){
 }
 
 $B.ast.ImportFrom.prototype.to_js = function(scopes){
-    var module = '.'.repeat(this.level) + (this.module || '')
+    if(this.level == 0){
+        module = this.module
+    }else{
+        var scope = last_scope(scopes),
+            parts = scope.name.split('.')
+        if(this.level > parts.length){
+            return `throw _b_.ImportError.$factory(` +
+                `"Parent module '' not loaded, cannot perform relative import")`
+        }
+        for(var i = 0; i < this.level - 1; i++){
+            parts.pop()
+        }
+        var top_module = $B.imported[parts.join('.')]
+        if(top_module && ! top_module.$is_package){
+            parts.pop()
+        }
+        var module = parts.join('.')
+        if(this.module){
+            module += '.' + this.module
+        }
+    }
 
-    var js = `var module = $B.$import("${module}",`
+    var js = `locals.$lineno = ${this.lineno}\n` +
+             `var module = $B.$import("${module}",`
     var names = this.names.map(x => `"${x.name}"`).join(', ')
     js += `[${names}], {}, locals);`
 
@@ -1354,7 +1375,7 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         if(alias.asname){
             bind(alias.asname, scopes)
             js += `\nlocals.${alias.asname} = $B.$getattr(` +
-                `$B.imported["${this.module}"], "${alias.name}")`
+                  `$B.imported["${this.module}"], "${alias.name}")`
         }else if(alias.name == '*'){
             // mark scope as "blurred" by the presence of "from X import *"
             last_scope(scopes).blurred = true
@@ -1895,8 +1916,8 @@ $B.ast.With.prototype.to_js = function(scopes){
               `value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, ` +
                   `'__enter__'))(mgr_${id}),\n` +
               `exc_${id} = true\n`
-        if(in_generator){
-            // add/update attribute used to close context managers in 
+        if(has_generator){
+            // add/update attribute used to close context managers in
             // leave_frame()
             s += `locals.$context_managers = locals.$context_managers || []\n` +
                  `locals.$context_managers.push(mgr_${id})\n`
@@ -1920,8 +1941,11 @@ $B.ast.With.prototype.to_js = function(scopes){
         return s
     }
 
-    var js = add_body(this.body, scopes) + '\n'
-    var in_generator = last_scope(scopes).is_generator
+    var scope = last_scope(scopes)
+    delete scope.is_generator
+
+    js = add_body(this.body, scopes) + '\n'
+    var has_generator = scope.is_generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
