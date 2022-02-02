@@ -62,6 +62,9 @@ $B.generator.__str__ = function(self){
 }
 
 $B.generator.close = function(self){
+    if($B.js_from_ast){
+        return $B.generator.close1(self)
+    }
     try{
         $B.generator.throw(self, _b_.GeneratorExit.$factory())
     }catch(err){
@@ -71,7 +74,26 @@ $B.generator.close = function(self){
     }
 }
 
+$B.generator.close1 = function(self){
+    var save_stack = $B.frames_stack.slice()
+    if(self.$frame){
+        $B.frames_stack.push(self.$frame)
+    }
+    try{
+        $B.generator.throw(self, _b_.GeneratorExit.$factory())
+    }catch(err){
+        if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
+            $B.frames_stack = save_stack
+            throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")
+        }
+    }
+    $B.frames_stack = save_stack
+}
+
 $B.generator.send = function(self, value){
+    if($B.js_from_ast){
+        return $B.generator.send1(self, value)
+    }
     // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
     // to decide if a generator with "yield" inside context managers must
     // be applied method .return()
@@ -101,7 +123,60 @@ $B.generator.send = function(self, value){
     return res.value
 }
 
+function trace(){
+    return $B.frames_stack.slice()
+}
+
+$B.generator.send1 = function(self, value){
+    // version for ast_to_js
+    // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
+    // to decide if a generator with "yield" inside context managers must
+    // be applied method .return()
+    var gen = self.js_gen
+    gen.$has_run = true
+    if(gen.$finished){
+        throw _b_.StopIteration.$factory(value)
+    }
+    if(gen.gi_running === true){
+        throw _b_.ValueError.$factory("generator already executing")
+    }
+    gen.gi_running = true
+    // save frames before resuming the generator
+    var save_stack = $B.frames_stack.slice()
+    // put generator frame on top of stack
+    // generator expressions don't have $frame
+    if(self.$frame){
+        $B.frames_stack.push(self.$frame)
+    }
+    try{
+        var res = gen.next(value)
+    }catch(err){
+        gen.$finished = true
+        $B.frames_stack = save_stack
+        throw err
+    }
+    // Call leave_frame to handle context managers
+    if($B.last($B.frames_stack) === self.$frame){
+        $B.leave_frame()
+    }
+    // restore stack
+    $B.frames_stack = save_stack
+    if(res.value && res.value.__class__ === $GeneratorReturn){
+        gen.$finished = true
+        throw _b_.StopIteration.$factory(res.value.value)
+    }
+    gen.gi_running = false
+    if(res.done){
+        throw _b_.StopIteration.$factory(res.value)
+    }
+    return res.value
+}
+
+
 $B.generator.throw = function(self, type, value, traceback){
+    if($B.js_from_ast){
+        return $B.generator.throw1(self, type, value, traceback)
+    }
     var gen = self.js_gen,
         exc = type
 
@@ -128,6 +203,42 @@ $B.generator.throw = function(self, type, value, traceback){
     }
     return res.value
 }
+
+$B.generator.throw1 = function(self, type, value, traceback){
+    var gen = self.js_gen,
+        exc = type
+
+    if(exc.$is_class){
+        if(! _b_.issubclass(type, _b_.BaseException)){
+            throw _b_.TypeError.$factory("exception value must be an " +
+                "instance of BaseException")
+        }else if(value === undefined){
+            exc = $B.$call(exc)()
+        }else if(_b_.isinstance(value, type)){
+            exc = value
+        }
+    }else{
+        if(value === undefined){
+            value = exc
+        }else{
+            exc = $B.$call(exc)(value)
+        }
+    }
+    if(traceback !== undefined){
+        exc.$traceback = traceback
+    }
+    var save_stack = $B.frames_stack.slice()
+    if(self.$frame){
+        $B.frames_stack.push(self.$frame)
+    }
+    var res = gen.throw(exc)
+    $B.frames_stack = save_stack
+    if(res.done){
+        throw _b_.StopIteration.$factory("StopIteration")
+    }
+    return res.value
+}
+
 
 $B.set_func_names($B.generator, "builtins")
 

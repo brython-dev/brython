@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-01-30 22:45:35.368672"
-__BRYTHON__.timestamp=1643579135368
+__BRYTHON__.compiled_date="2022-02-02 08:13:15.973708"
+__BRYTHON__.timestamp=1643785995973
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -7813,6 +7813,7 @@ if($B.frames_stack.length==0){console.log("empty stack");return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
+for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){}}
 if(frame[1].$is_generator){
 var ctx_managers=new Set()
 for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.add(frame[1][key])}}
@@ -14943,8 +14944,14 @@ return res}
 $B.generator.__iter__=function(self){return self}
 $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
 $B.generator.__str__=function(self){return '<generator object '+(self.js_gen.$name ||'generator')+'>'}
-$B.generator.close=function(self){try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
-$B.generator.send=function(self,value){
+$B.generator.close=function(self){if($B.js_from_ast){return $B.generator.close1(self)}
+try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
+$B.generator.close1=function(self){var save_stack=$B.frames_stack.slice()
+if(self.$frame){$B.frames_stack.push(self.$frame)}
+try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){$B.frames_stack=save_stack
+throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}
+$B.frames_stack=save_stack}
+$B.generator.send=function(self,value){if($B.js_from_ast){return $B.generator.send1(self,value)}
 var gen=self.js_gen
 gen.$has_run=true
 if(gen.$finished){throw _b_.StopIteration.$factory(value)}
@@ -14957,11 +14964,41 @@ throw _b_.StopIteration.$factory(res.value.value)}
 gen.gi_running=false
 if(res.done){throw _b_.StopIteration.$factory(res.value)}
 return res.value}
-$B.generator.throw=function(self,type,value,traceback){var gen=self.js_gen,exc=type
+function trace(){return $B.frames_stack.slice()}
+$B.generator.send1=function(self,value){
+var gen=self.js_gen
+gen.$has_run=true
+if(gen.$finished){throw _b_.StopIteration.$factory(value)}
+if(gen.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
+gen.gi_running=true
+var save_stack=$B.frames_stack.slice()
+if(self.$frame){$B.frames_stack.push(self.$frame)}
+try{var res=gen.next(value)}catch(err){gen.$finished=true
+$B.frames_stack=save_stack
+throw err}
+if($B.last($B.frames_stack)===self.$frame){$B.leave_frame()}
+$B.frames_stack=save_stack
+if(res.value && res.value.__class__===$GeneratorReturn){gen.$finished=true
+throw _b_.StopIteration.$factory(res.value.value)}
+gen.gi_running=false
+if(res.done){throw _b_.StopIteration.$factory(res.value)}
+return res.value}
+$B.generator.throw=function(self,type,value,traceback){if($B.js_from_ast){return $B.generator.throw1(self,type,value,traceback)}
+var gen=self.js_gen,exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
 var res=gen.throw(exc)
+if(res.done){throw _b_.StopIteration.$factory("StopIteration")}
+return res.value}
+$B.generator.throw1=function(self,type,value,traceback){var gen=self.js_gen,exc=type
+if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
+"instance of BaseException")}else if(value===undefined){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
+if(traceback !==undefined){exc.$traceback=traceback}
+var save_stack=$B.frames_stack.slice()
+if(self.$frame){$B.frames_stack.push(self.$frame)}
+var res=gen.throw(exc)
+$B.frames_stack=save_stack
 if(res.done){throw _b_.StopIteration.$factory("StopIteration")}
 return res.value}
 $B.set_func_names($B.generator,"builtins")

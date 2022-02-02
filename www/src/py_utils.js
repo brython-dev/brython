@@ -1430,6 +1430,12 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frames_stack.pop()
+    for(var key in frame[1]){
+        if(frame[1][key] && frame[1][key].__class__ === $B.generator){
+            //console.log(frame, 'garbage-collect generator', frame[1][key])
+            //$B.generator.close(frame[1][key])
+        }
+    }
     if(frame[1].$is_generator){
         // Get context managers in a generator
         var ctx_managers = new Set()

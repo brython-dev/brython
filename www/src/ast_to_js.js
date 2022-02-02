@@ -463,7 +463,6 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                 js += `, ${nb_after_starred}`
             }
             js += `)\n`
-            console.log('in assign js', js)
             var assigns = []
             for(var elt of target.elts){
                 if(elt instanceof $B.ast.Starred){
@@ -1041,11 +1040,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'async '
     }
 
-    if(is_generator){
-        js += `function* ${name2}(){\n`
-    }else{
-        js += `function ${name2}(){\n`
-    }
+    js += `function ${name2}(){\n`
+
     var locals_name = make_scope_name(scopes, func_scope),
         gname = scopes[0].name,
         globals_name = make_scope_name(scopes, scopes[0])
@@ -1066,6 +1062,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(is_generator){
         js += `locals.$is_generator = true\n`
+        if(is_async){
+            js += `var gen_${id} = $B.async_generator.$factory(function*(){\n`
+        }else{
+            js += `var gen_${id} = $B.generator.$factory(function*(){\n`
+        }
     }
     js += `try{\n$B.js_this = this\n`
     if(in_class){
@@ -1098,6 +1099,14 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     $B.leave_frame(locals);throw err
     }
     }\n`
+
+    if(is_generator){
+        js += `, '${this.name}')\n` +
+              `var _gen_${id} = gen_${id}()\n` +
+              `_gen_${id}.$frame = $top_frame\n` +
+              `$B.leave_frame()\n` +
+              `return _gen_${id}}\n` // close gen
+    }
 
     scopes.pop()
 
@@ -1143,7 +1152,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(is_async){
         if(is_generator){
-            js += `return $B.async_generator.$factory(${name2})`
+            js += `return ${name2}`
         }else{
             js += `return $B.make_async(${name2})`
         }
@@ -1159,12 +1168,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    if(is_generator && ! is_async){
-        js += `${func_ref} = $B.generator.$factory` +
-            `(${name1}(${default_str}), "${this.name}")\n`
-    }else{
+    //if(is_generator && ! is_async){
+    //    js += `${func_ref} = $B.generator.$factory` +
+    //        `(${name1}(${default_str}), "${this.name}")\n`
+    //}else{
         js += `${func_ref} = ${name1}(${default_str})\n`
-    }
+    //}
     js += `${func_ref}.$set_defaults = function(value){\n`+
           `return ${func_ref} = ${name1}(value)\n}\n`
 
@@ -1496,7 +1505,7 @@ function make_comp(scopes){
     var comp_scope = new Scope(`${type}_${id}`, 'comprehension', this)
     scopes.push(comp_scope)
 
-    var comp = {ast:this, id, type: 'genexpr',
+    var comp = {ast:this, id, type,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
@@ -1879,7 +1888,7 @@ $B.ast.With.prototype.to_js = function(scopes){
 
     function add_item(item, js){
         var id = $B.UUID()
-        var s = `var mgr_${id} = locals.mgr_${id} = ` +
+        var s = `var mgr_${id} = locals.$ctx_manager_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `exit_${id} = $B.$getattr(mgr_${id}.__class__, ` +
               `"__exit__"),\n` +
@@ -1916,7 +1925,8 @@ $B.ast.Yield.prototype.to_js = function(scopes){
     last_scope(scopes).is_generator = true
     var value = this.value ? $B.js_from_ast(this.value, scopes) : '_b_.None'
 
-    return `yield (function(){\nreturn ${value}}\n)()`
+    //return `yield (function(){\nreturn ${value}}\n)()`
+    return `yield ${value}`
 }
 
 $B.ast.YieldFrom.prototype.to_js = function(scopes){
@@ -1970,8 +1980,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
     console.log('set scope', last_scope(scopes), 'as generator')
     var value = $B.js_from_ast(this.value, scopes)
     var n = $B.UUID()
-    return `(function(){
-      function* f(){
+    return `yield* (function* f(){
         var _i${n} = _b_.iter(${value}),
                 _r${n}
             var failed${n} = false
@@ -2054,9 +2063,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                 }
             }
             return _r${n}
-        }
-        return f()
-    })()`
+        })()`
 }
 
 $B.js_from_root = function(ast_root, symtable, filename, namespaces){
