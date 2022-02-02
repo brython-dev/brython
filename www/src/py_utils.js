@@ -1438,13 +1438,17 @@ $B.leave_frame = function(arg){
     }
     if(frame[1].$is_generator){
         // Get context managers in a generator
-        var ctx_managers = new Set()
-        for(var key in frame[1]){
-            if(key.startsWith('$ctx_manager')){
-                ctx_managers.add(frame[1][key])
+        if(frame[1].$context_managers){
+            var ctx_managers = frame[1].$context_managers
+        }else{
+            var ctx_managers = []
+            for(var key in frame[1]){
+                if(key.startsWith('$ctx_manager')){
+                    ctx_managers.push(frame[1][key])
+                }
             }
         }
-        if(ctx_managers.size > 0 && $B.frames_stack.length > 0){
+        if(ctx_managers.length > 0 && $B.frames_stack.length > 0){
             // store context managers in previous frame
             var caller = $B.last($B.frames_stack)
             caller[1].$ctx_managers_in_gen = caller[1].$ctx_managers_in_gen ||

@@ -1888,13 +1888,20 @@ $B.ast.With.prototype.to_js = function(scopes){
 
     function add_item(item, js){
         var id = $B.UUID()
-        var s = `var mgr_${id} = locals.$ctx_manager_${id} = ` +
+        var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
               `exit_${id} = $B.$getattr(mgr_${id}.__class__, ` +
               `"__exit__"),\n` +
-              `value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, '__enter__'))(mgr_${id}),\n` +
-              `exc_${id} = true\n` +
-              'try{\ntry{\n'
+              `value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, ` +
+                  `'__enter__'))(mgr_${id}),\n` +
+              `exc_${id} = true\n`
+        if(in_generator){
+            // add/update attribute used to close context managers in 
+            // leave_frame()
+            s += `locals.$context_managers = locals.$context_managers || []\n` +
+                 `locals.$context_managers.push(mgr_${id})\n`
+        }
+        s += 'try{\ntry{\n'
         if(item.optional_vars){
             var assign = new $B.ast.Assign([item.optional_vars],
                 {to_js: function(){return `value_${id}`}})
@@ -1914,6 +1921,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     }
 
     var js = add_body(this.body, scopes) + '\n'
+    var in_generator = last_scope(scopes).is_generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
@@ -1977,7 +1985,6 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
         RESULT = _r
     */
     last_scope(scopes).is_generator = true
-    console.log('set scope', last_scope(scopes), 'as generator')
     var value = $B.js_from_ast(this.value, scopes)
     var n = $B.UUID()
     return `yield* (function* f(){
