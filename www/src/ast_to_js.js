@@ -299,83 +299,126 @@ function add_body(body, scopes){
     return res.trimRight()
 }
 
-// functions shared by comprehensions
-var Comprehension = {
-    admin_infos: function(comp){
-        var id = comp.type + '_' + comp.id
-        return `var ${comp.locals_name} = {},\n` +
+function init_comprehension(comp){
+    // Code common to comprehensions and generator expressions
+    var comp_id = comp.type + '_' + comp.id,
+        varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
+    return `var ${comp.locals_name} = {},\n` +
                `locals = ${comp.locals_name}\n` +
                `locals.$lineno = ${comp.ast.lineno}\n` +
-                Comprehension.code(comp) +
-               `var top_frame = ["${id}", ${comp.locals_name}, ` +
-               `"${comp.module_name}", ${comp.globals_name}]\n` +
-               `locals.$f_trace = $B.enter_frame(top_frame)\n`
-    },
-    code: function(comp){
-        var varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
-        return `locals.$comp_code = {
-            co_argcount: 1,
-            co_firstlineno:${comp.ast.lineno},
-            co_name: "<${comp.type}>",
-            co_flags: ${comp.type == 'genexpr' ? 115 : 83},
-            co_freevars: $B.fast_tuple([]),
-            co_kwonlyargcount: 0,
-            co_posonlyargount: 0,
-            co_varnames: $B.fast_tuple(['.0', ${varnames}])
-        }
-        locals['.0'] = expr\n`
-    },
-    generators: function(comp){
-        // Return a list of comprehensions
-        // ast.comprehension(target, iter, ifs, is_async)
-        var comprehensions = []
-        for(item of comp){
-            if(item.type == 'for'){
-                comprehensions.push(
-                    new ast.comprehension(
-                        ast_or_obj(item.tree[0]),
-                        ast_or_obj(item.tree[1]),
-                        [],
-                        item.is_async ? 1 : 0
-                    )
-                )
-            }else{
-                $B.last(comprehensions).ifs.push(ast_or_obj(item.tree[0]))
-            }
-        }
-        return comprehensions
-    },
-    make_comp: function(comp, context){
-        comp.comprehension = true
-        comp.parent = context.parent
-        comp.binding = {}
-        comp.id = comp.type + $B.UUID()
-        var scope = $get_scope(context)
-        comp.parent_block = scope
-        while(scope){
-            if(scope.context && scope.context.tree &&
-                    scope.context.tree.length > 0 &&
-                    scope.context.tree[0].async){
-                comp.async = true
-                break
-            }
-            scope = scope.parent_block
-        }
-        comp.module = $get_module(context).module
-        comp.module_ref = comp.module.replace(/\./g, '_')
-        context.parent.tree[context.parent.tree.length - 1] = comp
-        Comprehension.set_parent_block(context.tree[0], comp)
-    },
-    set_parent_block: function(ctx, parent_block){
-        if(ctx.tree){
-            for(var item of ctx.tree){
-                if(item.comprehension){
-                    item.parent_block = parent_block
-                }
-                Comprehension.set_parent_block(item, parent_block)
-            }
+           `locals.$comp_code = {\n` +
+               `co_argcount: 1,\n` +
+               `co_firstlineno:${comp.ast.lineno},\n` +
+               `co_name: "<${comp.type}>",\n` +
+               `co_flags: ${comp.type == 'genexpr' ? 115 : 83},\n` +
+               `co_freevars: $B.fast_tuple([]),\n` +
+               `co_kwonlyargcount: 0,\n` +
+               `co_posonlyargount: 0,\n` +
+               `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
+           `}\n` +
+           `locals['.0'] = expr\n` +
+           `var top_frame = ["${comp_id}", ${comp.locals_name}, ` +
+           `"${comp.module_name}", ${comp.globals_name}]\n` +
+           `locals.$f_trace = $B.enter_frame(top_frame)\n`
+}
+
+function make_comp(scopes){
+    // Code common to list / set / dict comprehensions
+    var id = $B.UUID(),
+        type = this.constructor.$name,
+        symtable_block = scopes.symtable.table.blocks.get(_b_.id(this)),
+        varnames = symtable_block.varnames.map(x => `"${x}"`)
+
+    var expr = this.elt,
+        first_for = this.generators[0],
+        // outmost expression is evaluated in enclosing scope
+        outmost_expr = $B.js_from_ast(first_for.iter, scopes),
+        nb_paren = 1
+
+    var comp_scope = new Scope(`${type}_${id}`, 'comprehension', this)
+    scopes.push(comp_scope)
+
+    var comp = {ast:this, id, type, varnames,
+                module_name: scopes[0].name,
+                locals_name: make_scope_name(scopes),
+                globals_name: make_scope_name(scopes, scopes[0])}
+
+    var js = init_comprehension(comp)
+
+    if(this instanceof $B.ast.ListComp){
+        js += `var result_${id} = []\n`
+    }else if(this instanceof $B.ast.SetComp){
+        js += `var result_${id} = _b_.set.$factory()\n`
+    }else if(this instanceof $B.ast.DictComp){
+        js += `var result_${id} = $B.empty_dict()\n`
+    }
+
+    // special case for first generator
+    var first = this.generators[0]
+    js += `var next_func_${id} = $B.next_of(expr)\n` +
+          `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
+          `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
+          `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
+          `throw err\n}\n}\n`
+    // assign result of iteration to target
+    var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
+    name.to_js = function(){return `next_${id}`}
+    var assign = new $B.ast.Assign([first.target], name)
+    assign.lineno = this.lineno
+    js += assign.to_js(scopes) + '\n'
+
+    for(var _if of first.ifs){
+        nb_paren++
+        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
+    }
+
+    for(var comprehension of this.generators.slice(1)){
+        js += comprehension.to_js(scopes)
+        nb_paren++
+        for(var _if of comprehension.ifs){
+            nb_paren++
         }
     }
+
+    // Translate element. This must be done after translating comprehensions
+    // so that target names are bound
+    if(this instanceof $B.ast.DictComp){
+        var key = $B.js_from_ast(this.key, scopes),
+            value = $B.js_from_ast(this.value, scopes)
+    }else{
+        var elt = $B.js_from_ast(this.elt, scopes)
+    }
+    var has_await = comp_scope.has_await
+
+    // If the element has an "await", attribute has_await is set to the scope
+    // Use it to make the function aync or not
+    js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
+
+    js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
+    js += `try{\n`
+    if(this instanceof $B.ast.ListComp){
+        js += `result_${id}.push(${elt})\n`
+    }else if(this instanceof $B.ast.SetComp){
+        js += `_b_.set.add(result_${id}, ${elt})\n`
+    }else if(this instanceof $B.ast.DictComp){
+        js += `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
+    }
+
+    js += `}catch(err){\n` +
+          (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
+          `$B.leave_frame(locals)\nthrow err\n}` +
+          (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
+
+    for(var i = 0; i < nb_paren; i++){
+        js += '}\n'
+    }
+
+    js += `\n$B.leave_frame({locals, value: _b_.None})`
+    js += `\nreturn result_${id}`
+    js += `\n}\n)(${outmost_expr})\n`
+
+    scopes.pop()
+    return js
 }
 
 function init_scopes(type, scopes, namespaces){
@@ -1172,13 +1215,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    //if(is_generator && ! is_async){
-    //    js += `${func_ref} = $B.generator.$factory` +
-    //        `(${name1}(${default_str}), "${this.name}")\n`
-    //}else{
-        js += `${func_ref} = ${name1}(${default_str})\n`
-    //}
-    js += `${func_ref}.$set_defaults = function(value){\n`+
+    js += `${func_ref} = ${name1}(${default_str})\n` +
+          `${func_ref}.$set_defaults = function(value){\n`+
           `return ${func_ref} = ${name1}(value)\n}\n`
 
     if(decorated){
@@ -1193,31 +1231,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     return js
 }
 
-function first_generator(comp, scopes){
-    var first = comp.ast.generators[0],
-        id = comp.id
-    var js = `var next_func_${id} = $B.next_of(expr)\n` +
-          `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-          `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-          `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
-          `throw err\n}\n}\n`
-    // assign result of iteration to target
-    var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
-    name.to_js = function(){return `next_${id}`}
-    var assign = new $B.ast.Assign([first.target], name)
-    assign.lineno = comp.ast.lineno
-    js += assign.to_js(scopes) + '\n'
-
-    for(var _if of first.ifs){
-        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
-    }
-
-    return js
-}
-
-
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
-    var id = $B.UUID()
+    var id = $B.UUID(),
+        symtable_block = scopes.symtable.table.blocks.get(_b_.id(this)),
+        varnames = symtable_block.varnames.map(x => `"${x}"`)
 
     var expr = this.elt,
         first_for = this.generators[0],
@@ -1228,12 +1245,12 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     var comp_scope = new Scope(`genexpr_${id}`, 'comprehension', this)
     scopes.push(comp_scope)
 
-    var comp = {ast:this, id, type: 'genexpr',
+    var comp = {ast:this, id, type: 'genexpr', varnames,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
 
-    var js = Comprehension.admin_infos(comp)
+    var js = init_comprehension(comp)
 
     // special case for first generator
     var first = this.generators[0]
@@ -1538,103 +1555,6 @@ function list_or_tuple_to_js(func, scopes){
 
 $B.ast.List.prototype.to_js = function(scopes){
     return list_or_tuple_to_js.bind(this)('$B.$list', scopes)
-}
-
-function make_comp(scopes){
-    var id = $B.UUID(),
-        type = this.constructor.$name
-
-
-    var expr = this.elt,
-        first_for = this.generators[0],
-        // outmost expression is evaluated in enclosing scope
-        outmost_expr = $B.js_from_ast(first_for.iter, scopes),
-        nb_paren = 1
-
-    var comp_scope = new Scope(`${type}_${id}`, 'comprehension', this)
-    scopes.push(comp_scope)
-
-    var comp = {ast:this, id, type,
-                module_name: scopes[0].name,
-                locals_name: make_scope_name(scopes),
-                globals_name: make_scope_name(scopes, scopes[0])}
-
-    var js = Comprehension.admin_infos(comp)
-
-    if(this instanceof $B.ast.ListComp){
-        js += `var result_${id} = []\n`
-    }else if(this instanceof $B.ast.SetComp){
-        js += `var result_${id} = _b_.set.$factory()\n`
-    }else if(this instanceof $B.ast.DictComp){
-        js += `var result_${id} = $B.empty_dict()\n`
-    }
-
-    // special case for first generator
-    var first = this.generators[0]
-    js += `var next_func_${id} = $B.next_of(expr)\n` +
-          `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-          `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-          `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
-          `throw err\n}\n}\n`
-    // assign result of iteration to target
-    var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
-    name.to_js = function(){return `next_${id}`}
-    var assign = new $B.ast.Assign([first.target], name)
-    assign.lineno = this.lineno
-    js += assign.to_js(scopes) + '\n'
-
-    for(var _if of first.ifs){
-        nb_paren++
-        js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
-    }
-
-    for(var comprehension of this.generators.slice(1)){
-        js += comprehension.to_js(scopes)
-        nb_paren++
-        for(var _if of comprehension.ifs){
-            nb_paren++
-        }
-    }
-
-    // Translate element. This must be done after translating comprehensions
-    // so that target names are bound
-    if(this instanceof $B.ast.DictComp){
-        var key = $B.js_from_ast(this.key, scopes),
-            value = $B.js_from_ast(this.value, scopes)
-    }else{
-        var elt = $B.js_from_ast(this.elt, scopes)
-    }
-    var has_await = comp_scope.has_await
-
-    // If the element has an "await", attribute has_await is set to the scope
-    // Use it to make the function aync or not
-    js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
-
-    js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
-    js += `try{\n`
-    if(this instanceof $B.ast.ListComp){
-        js += `result_${id}.push(${elt})\n`
-    }else if(this instanceof $B.ast.SetComp){
-        js += `_b_.set.add(result_${id}, ${elt})\n`
-    }else if(this instanceof $B.ast.DictComp){
-        js += `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
-    }
-
-    js += `}catch(err){\n` +
-          (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
-          `$B.leave_frame(locals)\nthrow err\n}` +
-          (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
-
-    for(var i = 0; i < nb_paren; i++){
-        js += '}\n'
-    }
-
-    js += `\n$B.leave_frame({locals, value: _b_.None})`
-    js += `\nreturn result_${id}`
-    js += `\n}\n)(${outmost_expr})\n`
-
-    scopes.pop()
-    return js
 }
 
 $B.ast.ListComp.prototype.to_js = function(scopes){
