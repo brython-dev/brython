@@ -4968,7 +4968,7 @@ $ExprCtx.prototype.transition = function(token, value){
               return false
           }
           var annotation
-         if(context.expect == ','){
+          if(context.expect == ','){
              if(context.parent.type == "call_arg"){
                  // issue 708
                  if(context.tree[0].type != "id"){
@@ -4993,6 +4993,13 @@ $ExprCtx.prototype.transition = function(token, value){
                      if(item.type == "expr" && item.name == "operand"){
                          $_SyntaxError(context, ["cannot assign to operator"])
                      }
+                 }
+                 // issue 1875
+                 if(context.parent.real == 'list' ||
+                         (context.parent.real == 'tuple' &&
+                          ! context.parent.implicit)){
+                     $_SyntaxError(context, ["invalid syntax. " +
+                         "Maybe you meant '==' or ':=' instead of '=' ?"])
                  }
              }else if(context.parent.type == "expr" &&
                      context.parent.name == "iterator"){

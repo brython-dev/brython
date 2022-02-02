@@ -3031,7 +3031,10 @@ try:
         raise ValueError("outer") from e
 except Exception as e:
     assert repr(e.__context__) == "ValueError('inner')"
-    
+
+# issue 1875
+assertRaises(SyntaxError, exec, "(a, b = b, a)")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
