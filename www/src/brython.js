@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-03 11:28:57.294531"
-__BRYTHON__.timestamp=1643884137294
+__BRYTHON__.compiled_date="2022-02-03 13:20:00.304652"
+__BRYTHON__.timestamp=1643890800304
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3014,7 +3014,7 @@ var res={module:module ||undefined,names:[],level}
 for(var name of this.names){if(Array.isArray(name)){res.names.push(new ast.alias(name[0],name[1]))}else{res.names.push(new ast.alias(name))}}
 var ast_obj=new ast.ImportFrom(res.module,res.names,res.level)
 ast_obj.lineno=this.parent.node.line_num
-return ast_obj }
+return ast_obj}
 $FromCtx.prototype.add_name=function(name){this.names[this.names.length]=name
 if(name=='*'){this.scope.blurred=true}}
 $FromCtx.prototype.bind_names=function(){
@@ -4723,8 +4723,7 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
-$PatternCaptureCtx.prototype.ast=function(){var lineno=this.parent.node.line_num
-console.log('capture',lineno)
+$PatternCaptureCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
 try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
 for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())}
 return new ast.MatchValue(pattern)}else{var pattern=this.tree[0]
@@ -5144,7 +5143,9 @@ first_pattern.parent=this}else{
 this.token=token}
 this.expect=','
 C.tree.push(this)}
-$PatternSequenceCtx.prototype.ast=function(){return new ast.MatchSequence(this.tree.map(ast_or_obj))}
+$PatternSequenceCtx.prototype.ast=function(){var ast_obj=new ast.MatchSequence(this.tree.map(ast_or_obj))
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $PatternSequenceCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
 $PatternSequenceCtx.prototype.transition=function(token,value){function check_duplicate_names(){var last=$B.last(C.tree)
 if(!(last instanceof $PatternCtx)){
@@ -7828,7 +7829,7 @@ var frame=$B.frames_stack.pop()
 if(frame[1].$is_generator){
 if(frame[1].$context_managers){
 var ctx_managers=frame[1].$context_managers}else{var ctx_managers=[]
-for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.add(frame[1][key])}}}
+for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.push(frame[1][key])}}}
 if(ctx_managers.length > 0 && $B.frames_stack.length > 0){
 var caller=$B.last($B.frames_stack)
 caller[1].$ctx_managers_in_gen=caller[1].$ctx_managers_in_gen ||

@@ -1439,7 +1439,7 @@ $B.leave_frame = function(arg){
             var ctx_managers = []
             for(var key in frame[1]){
                 if(key.startsWith('$ctx_manager')){
-                    ctx_managers.add(frame[1][key])
+                    ctx_managers.push(frame[1][key])
                 }
             }
         }
