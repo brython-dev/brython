@@ -406,7 +406,9 @@ function compile() {
     root.parent_block = $B.builtins_scope
     $B.parser.dispatch_tokens(root, $.source)
     if($.flags == $B.PyCF_ONLY_AST){
-        return root.ast()
+        var _ast = root.ast(),
+            klass = _ast.constructor.$name
+        return $B.python_ast_classes[klass].$factory(_ast)
     }
     return $
 }
