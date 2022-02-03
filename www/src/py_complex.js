@@ -278,11 +278,10 @@ complex.__repr__ = function(self){
     $B.builtins_repr_check(complex, arguments) // in brython_builtins.js
     var real = _b_.str.$factory(self.$real),
         imag = _b_.str.$factory(self.$imag)
-    if(self.$real instanceof Number && self.$real == parseInt(self.$real)){
-        // real = _b_.str.$factory(parseInt(self.$real))
+    if(imag.endsWith('.0')){
+        imag = imag.substr(0, imag.length -2)
     }
     if(self.$imag instanceof Number && self.$imag == parseInt(self.$imag)){
-        // imag = _b_.str.$factory(parseInt(self.$imag))
         if(self.$imag == 0 && 1 / self.$imag === -Infinity){
             imag = "-0"
         }

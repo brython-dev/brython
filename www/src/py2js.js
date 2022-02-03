@@ -9070,15 +9070,21 @@ var $PatternCaptureCtx = function(context, value){
 
 $PatternCaptureCtx.prototype.ast = function(){
     var ast_obj
+    console.log('capture', this)
     try{
         if(this.tree.length > 1){
             var pattern = new ast.Name(this.tree[0].value, new ast.Load())
             for(var i = 1; i < this.tree.length; i += 2){
                 pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
             }
-            ast_obj = new ast.MatchValue(pattern)
+            pattern = new ast.MatchValue(pattern)
         }else if(this.starred){
-            ast_obj = new ast.MatchStar(this.tree[0])
+            var v = this.tree[0]
+            if(v == '_'){
+                ast_obj = new ast.MatchStar()
+            }else{
+                ast_obj = new ast.MatchStar(v)
+            }
         }else{
             var pattern = this.tree[0]
             if(typeof pattern == 'string'){
@@ -9090,14 +9096,19 @@ $PatternCaptureCtx.prototype.ast = function(){
                 pattern = $NumberCtx.prototype.ast.bind(this)()
             }
             if(pattern == '_'){
-                pattern = undefined
+                pattern = new ast.MatchAs()
             }
         }
         if(this.alias){
-            ast_obj = new ast.MatchAs(
-                new ast.MatchAs(undefined, pattern),
-                this.alias)
-        }else{
+            if(typeof pattern == "string"){
+                pattern = new ast.MatchAs(undefined, pattern)
+            }
+            ast_obj = new ast.MatchAs(pattern, this.alias)
+        }else if(this.tree.length > 1 || pattern instanceof ast.MatchAs){
+            ast_obj = pattern
+        }else if(typeof pattern == 'string'){
+            ast_obj = new ast.MatchAs(undefined, pattern)
+        }else if(! this.starred){
             ast_obj = new ast.MatchAs(undefined, pattern)
         }
         ast_obj.lineno = $get_node(this).line_num
@@ -9201,8 +9212,9 @@ $PatternClassCtx.prototype.ast = function(){
     //   class defined sequence of pattern matching attributes
     // `kwd_attrs` is a sequence of additional attributes to be matched
     // `kwd_patterns` are the corresponding patterns
-    var cls = new ast.Name(this.class_id.value),
-        patterns = [],
+    var cls = new ast.Name(this.class_id.value)
+    cls.ctx = new ast.Load()
+    var patterns = [],
         kwd_attrs = [],
         kwd_patterns = []
     for(var item of this.tree){
@@ -9219,7 +9231,12 @@ $PatternClassCtx.prototype.ast = function(){
               }
         }
     }
-    return new ast.MatchClass(cls, patterns, kwd_attrs, kwd_patterns)
+    var ast_obj = new ast.MatchClass(cls, patterns, kwd_attrs, kwd_patterns)
+    if(this.alias){
+        ast_obj = new ast.MatchAs(ast_obj, this.alias)
+    }
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $PatternClassCtx.prototype.bindings = function(){
@@ -9343,9 +9360,10 @@ function remove_empty_pattern(context){
 }
 
 $PatternGroupCtx.prototype.ast = function(){
+    console.log('group', this)
     var ast_obj
     if(this.tree.length == 1){
-        ast_obj = ast_or_obj(this.tree[0])
+        ast_obj = this.tree[0].ast()
     }else{
         ast_obj = $PatternSequenceCtx.prototype.ast.bind(this)()
     }
@@ -9461,9 +9479,9 @@ $PatternLiteralCtx.prototype.ast = function(){
                 result = res
             }else{
                 var num2 = $NumberCtx.prototype.ast.bind(this.tree[2])()
-                result = new ast.BinOp(res,
-                    this.tree[1] == '+' ? ast.Add : ast.Sub,
-                    num2)
+                result = new ast.MatchValue(new ast.BinOp(res.value,
+                    this.tree[1] == '+' ? new ast.Add() : new ast.Sub(),
+                    num2))
             }
         }
         if(this.tree.length == 2){
