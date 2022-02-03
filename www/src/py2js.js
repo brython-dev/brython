@@ -9067,39 +9067,41 @@ var $PatternCaptureCtx = function(context, value){
 }
 
 $PatternCaptureCtx.prototype.ast = function(){
-  try{
-    if(this.tree.length > 1){
-        var pattern = new ast.Name(this.tree[0].value, new ast.Load())
-        for(var i = 1; i < this.tree.length; i += 2){
-            pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
-        }
-        return new ast.MatchValue(pattern)
-    }else{
-        var pattern = this.tree[0]
-        if(typeof pattern == 'string'){
-            pattern = pattern.value
-        }else if(pattern.type == 'group_pattern'){
-            pattern = pattern.ast()
+    var lineno = this.parent.node.line_num
+    console.log('capture', lineno)
+    try{
+        if(this.tree.length > 1){
+            var pattern = new ast.Name(this.tree[0].value, new ast.Load())
+            for(var i = 1; i < this.tree.length; i += 2){
+                pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
+            }
+            return new ast.MatchValue(pattern)
         }else{
-            console.log('bizarre', pattern)
-
-            pattern = $NumberCtx.prototype.ast.bind(this)()
+            var pattern = this.tree[0]
+            if(typeof pattern == 'string'){
+                pattern = pattern.value
+            }else if(pattern.type == 'group_pattern'){
+                pattern = pattern.ast()
+            }else{
+                console.log('bizarre', pattern)
+    
+                pattern = $NumberCtx.prototype.ast.bind(this)()
+            }
+            if(pattern == '_'){
+                pattern = undefined
+            }
         }
-        if(pattern == '_'){
-            pattern = undefined
+        if(this.alias){
+            return new ast.MatchAs(
+                new ast.MatchAs(undefined, pattern),
+                this.alias)
         }
+        return new ast.MatchAs(undefined, pattern)
+    }catch(err){
+        console.log('error capture ast')
+        show_line(this)
+        throw err
     }
-    if(this.alias){
-        return new ast.MatchAs(
-            new ast.MatchAs(undefined, pattern),
-            this.alias)
-    }
-    return new ast.MatchAs(undefined, pattern)
-  }catch(err){
-      console.log('error capture ast')
-      show_line(this)
-      throw err
-  }
 }
 
 $PatternCaptureCtx.prototype.bindings = function(){
@@ -9428,37 +9430,39 @@ var $PatternLiteralCtx = function(context, token, value, sign){
 }
 
 $PatternLiteralCtx.prototype.ast = function(){
-  try{
-    var first = this.tree[0],
-        result
-    if(first.type == 'str'){
-        result = new ast.MatchValue(new ast.Constant(first.value))
-    }else if(first.type == 'id'){
-        result = new ast.MatchSingleton(first.value)
-    }else{
-        var num = $NumberCtx.prototype.ast.bind(first)(),
-            res = new ast.MatchValue(num)
-        if(this.tree.length == 1){
-            result = res
+    var lineno = $get_node(this).line_num
+    try{
+        var first = this.tree[0],
+            result
+        if(first.type == 'str'){
+            result = new ast.MatchValue(new ast.Constant(first.value))
+        }else if(first.type == 'id'){
+            result = new ast.MatchSingleton(first.value)
         }else{
-            var num2 = $NumberCtx.prototype.ast.bind(this.tree[2])()
-            result = new ast.BinOp(res,
-                this.tree[1] == '+' ? ast.Add : ast.Sub,
-                num2)
+            var num = $NumberCtx.prototype.ast.bind(first)(),
+                res = new ast.MatchValue(num)
+            if(this.tree.length == 1){
+                result = res
+            }else{
+                var num2 = $NumberCtx.prototype.ast.bind(this.tree[2])()
+                result = new ast.BinOp(res,
+                    this.tree[1] == '+' ? ast.Add : ast.Sub,
+                    num2)
+            }
         }
-    }
-    if(this.tree.length == 2){
-        // value = complex number
-        result = new ast.MatchValue(new ast.BinOp(
-            ast_or_obj(this.tree[0]),
-            context.num_sign == '+' ? ast.Add : ast.Sub,
-            ast_or_obj(this.tree[1])))
-    }
-    if(this.alias){
-        return new ast.MatchAs(result, this.alias)
-    }
-    return result
-  }catch(err){
+        if(this.tree.length == 2){
+            // value = complex number
+            result = new ast.MatchValue(new ast.BinOp(
+                ast_or_obj(this.tree[0]),
+                context.num_sign == '+' ? ast.Add : ast.Sub,
+                ast_or_obj(this.tree[1])))
+        }
+        if(this.alias){
+            result = new ast.MatchAs(result, this.alias)
+        }
+        result.lineno = lineno
+        return result
+    }catch(err){
       console.log('error pattern literal ast', this)
       show_line(this)
       throw err

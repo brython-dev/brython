@@ -1561,6 +1561,41 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
     return make_comp.bind(this)(scopes)
 }
 
+$B.ast.match_case.prototype.to_js = function(scopes){
+    var js = 'if(' + $B.js_from_ast(this.pattern, scopes) + '){\n'
+
+    js += add_body(this.body, scopes) + '\n}'
+    console.log('in match case', js)
+
+    return js
+}
+
+$B.ast.Match.prototype.to_js = function(scopes){
+    console.log($B.ast_dump(this))
+    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n` +
+             `if(true){\n`
+    for(var _case of this.cases){
+        var case_js = $B.js_from_ast(_case, scopes)
+        console.log('case js', case_js)
+        js += case_js
+    }
+    return js + '\n}'
+}
+
+$B.ast.MatchAs.prototype.to_js = function(scopes){
+    var pattern = $B.js_from_ast(this.pattern, scopes)
+    var js = `(locals.$lineno = ${this.lineno}) && ` +
+             `$B.pattern_match(subject, {${pattern}, alias: '${this.name}'})`
+    return js
+}
+
+$B.ast.MatchValue.prototype.to_js = function(scopes){
+    if(this.value instanceof $B.ast.Constant){
+        return `literal: ${$B.js_from_ast(this.value, scopes)}`
+    }
+    return `value : '<${this.value.constructor.$name}>'`
+}
+
 $B.ast.Module.prototype.to_js = function(scopes, namespaces){
     // create top scope; namespaces can be passed by exec()
     var name = init_scopes.bind(this)('module', scopes, namespaces)

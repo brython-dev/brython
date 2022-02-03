@@ -105,7 +105,7 @@ function _Py_Mangle(privateobj, ident){
        TODO(jhylton): Decide whether we want to support
        mangling of the module name, e.g. __M.X.
     */
-    
+
     if (ident.endsWith('__') || ident.search(/\./) != -1) {
         return ident; /* Don't mangle __whatever__ */
     }
@@ -1264,6 +1264,8 @@ const alias = 'alias',
       excepthandler = 'excepthandler',
       expr = 'expr',
       keyword = 'keyword',
+      match_case = 'match_case',
+      pattern = 'pattern',
       stmt = 'stmt',
       withitem = 'withitem'
 

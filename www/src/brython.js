@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-02 08:53:01.198925"
-__BRYTHON__.timestamp=1643788381197
+__BRYTHON__.compiled_date="2022-02-03 11:28:57.294531"
+__BRYTHON__.timestamp=1643884137294
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3012,7 +3012,9 @@ while(module.length > 0 && module.startsWith('.')){level++
 module=module.substr(1)}
 var res={module:module ||undefined,names:[],level}
 for(var name of this.names){if(Array.isArray(name)){res.names.push(new ast.alias(name[0],name[1]))}else{res.names.push(new ast.alias(name))}}
-return new ast.ImportFrom(res.module,res.names,res.level)}
+var ast_obj=new ast.ImportFrom(res.module,res.names,res.level)
+ast_obj.lineno=this.parent.node.line_num
+return ast_obj }
 $FromCtx.prototype.add_name=function(name){this.names[this.names.length]=name
 if(name=='*'){this.scope.blurred=true}}
 $FromCtx.prototype.bind_names=function(){
@@ -3629,7 +3631,9 @@ var names=[]
 for(var item of this.tree){var alias=new ast.alias(item.name)
 if(item.alias !=item.name){alias.asname=item.alias}
 names.push(alias)}
-return new ast.Import(names)}
+var ast_obj=new ast.Import(names)
+ast_obj.lineno=this.parent.node.line_num
+return ast_obj}
 $ImportCtx.prototype.toString=function(){return 'import '+this.tree}
 $ImportCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -4719,7 +4723,9 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
-$PatternCaptureCtx.prototype.ast=function(){try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
+$PatternCaptureCtx.prototype.ast=function(){var lineno=this.parent.node.line_num
+console.log('capture',lineno)
+try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
 for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())}
 return new ast.MatchValue(pattern)}else{var pattern=this.tree[0]
 if(typeof pattern=='string'){pattern=pattern.value}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
@@ -4873,14 +4879,16 @@ if(token.sign){this.tree=[{sign:token.sign}]
 this.expect='number'}else{if(token=='str'){this.tree=[]
 new $StringCtx(this,value)}else if(token=='JoinedStr'){$_SyntaxError(this,["patterns cannot include f-strings"])}else{this.tree=[{type:token,value,sign}]}
 this.expect='op'}}
-$PatternLiteralCtx.prototype.ast=function(){try{var first=this.tree[0],result
+$PatternLiteralCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
+try{var first=this.tree[0],result
 if(first.type=='str'){result=new ast.MatchValue(new ast.Constant(first.value))}else if(first.type=='id'){result=new ast.MatchSingleton(first.value)}else{var num=$NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
 if(this.tree.length==1){result=res}else{var num2=$NumberCtx.prototype.ast.bind(this.tree[2])()
 result=new ast.BinOp(res,this.tree[1]=='+' ? ast.Add :ast.Sub,num2)}}
 if(this.tree.length==2){
 result=new ast.MatchValue(new ast.BinOp(
 ast_or_obj(this.tree[0]),C.num_sign=='+' ? ast.Add :ast.Sub,ast_or_obj(this.tree[1])))}
-if(this.alias){return new ast.MatchAs(result,this.alias)}
+if(this.alias){result=new ast.MatchAs(result,this.alias)}
+result.lineno=lineno
 return result}catch(err){console.log('error pattern literal ast',this)
 show_line(this)
 throw err}}
@@ -7817,10 +7825,10 @@ if($B.frames_stack.length==0){console.log("empty stack");return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
-for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){}}
 if(frame[1].$is_generator){
-if(frame[1].$context_managers){var ctx_managers=frame[1].$context_managers}else{var ctx_managers=[]
-for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.push(frame[1][key])}}}
+if(frame[1].$context_managers){
+var ctx_managers=frame[1].$context_managers}else{var ctx_managers=[]
+for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.add(frame[1][key])}}}
 if(ctx_managers.length > 0 && $B.frames_stack.length > 0){
 var caller=$B.last($B.frames_stack)
 caller[1].$ctx_managers_in_gen=caller[1].$ctx_managers_in_gen ||
@@ -8463,9 +8471,7 @@ return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,
 return new Proxy(dict,handler)}
 function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
 var lineno=frame[1].$lineno
-var local_name='locals_exec',
-global_name='globals_exec',
-exec_locals={},exec_globals={}
+var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={}
 if(_globals===_b_.None){
 exec_locals={}
 for(var key in frame[1]){exec_locals[key]=frame[1][key]}
