@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-03 13:20:00.304652"
-__BRYTHON__.timestamp=1643890800304
+__BRYTHON__.compiled_date="2022-02-03 19:01:49.811122"
+__BRYTHON__.timestamp=1643911309811
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -458,7 +458,8 @@ if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)
 child_ast.lineno=child.line_num}
 body.push(child_ast)}
 return body}
-var ast_dump=$B.ast_dump=function(tree,indent){indent=indent ||0
+var ast_dump=$B.ast_dump=function(tree,indent){console.log('ast dump',tree)
+indent=indent ||0
 if(tree===_b_.None){
 return 'None'}else if(typeof tree=='string'){return `'${tree}'`}else if(typeof tree=='number'){return tree+''}else if(tree.imaginary){return tree.value+'j'}else if(Array.isArray(tree)){if(tree.length==0){return '[]'}
 res='[\n'
@@ -467,7 +468,8 @@ for(var x of tree){try{items.push(ast_dump(x,indent+1))}catch(err){console.log('
 console.log('for item',x)
 throw err}}
 res+=items.join(',\n')
-return res+']'}else if(tree.$name){return tree.$name+'()'}else if(tree instanceof ast.MatchSingleton){return `MatchSingleton(value=${tree.value})`}else if(tree instanceof ast.Constant){var value=tree.value
+return res+']'}else if(tree.$name){return tree.$name+'()'}else if(tree instanceof ast.MatchSingleton){console.log('dump singleton')
+return `MatchSingleton(value=${$B.ast.$convert(tree.value)})`}else if(tree instanceof ast.Constant){var value=tree.value
 if(value===undefined){console.log('bizarre',tree)}
 if(value.imaginary){return `Constant(value=${_b_.repr(value.value)}j)`}
 return `Constant(value=${$B.AST.$convert(value)})`}
@@ -4723,16 +4725,17 @@ C.parent.tree.push(this)
 this.tree=[value]
 this.expect='.'
 this.$pos=$pos}
-$PatternCaptureCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
+$PatternCaptureCtx.prototype.ast=function(){var ast_obj
 try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
 for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())}
-return new ast.MatchValue(pattern)}else{var pattern=this.tree[0]
-if(typeof pattern=='string'){pattern=pattern.value}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
+ast_obj=new ast.MatchValue(pattern)}else if(this.starred){ast_obj=new ast.MatchStar(this.tree[0])}else{var pattern=this.tree[0]
+if(typeof pattern=='string'){}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
 pattern=$NumberCtx.prototype.ast.bind(this)()}
 if(pattern=='_'){pattern=undefined}}
-if(this.alias){return new ast.MatchAs(
-new ast.MatchAs(undefined,pattern),this.alias)}
-return new ast.MatchAs(undefined,pattern)}catch(err){console.log('error capture ast')
+if(this.alias){ast_obj=new ast.MatchAs(
+new ast.MatchAs(undefined,pattern),this.alias)}else{ast_obj=new ast.MatchAs(undefined,pattern)}
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}catch(err){console.log('error capture ast')
 show_line(this)
 throw err}}
 $PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree.slice()
@@ -4838,7 +4841,11 @@ C.tree.push(this)}
 function remove_empty_pattern(C){var last=$B.last(C.tree)
 if(last && last instanceof $PatternCtx &&
 last.tree.length==0){C.tree.pop()}}
-$PatternGroupCtx.prototype.ast=function(){if(this.tree.length==1){return ast_or_obj(this.tree[0])}else{return $PatternSequenceCtx.prototype.ast.bind(this)()}}
+$PatternGroupCtx.prototype.ast=function(){var ast_obj
+if(this.tree.length==1){ast_obj=ast_or_obj(this.tree[0])}else{ast_obj=$PatternSequenceCtx.prototype.ast.bind(this)()}
+if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $PatternGroupCtx.prototype.bindings=function(){var bindings=[]
 for(var item of this.tree){bindings=bindings.concat(item.bindings())}
 if(this.alias){bindings.push(this.alias)}
@@ -4880,7 +4887,10 @@ new $StringCtx(this,value)}else if(token=='JoinedStr'){$_SyntaxError(this,["patt
 this.expect='op'}}
 $PatternLiteralCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
 try{var first=this.tree[0],result
-if(first.type=='str'){result=new ast.MatchValue(new ast.Constant(first.value))}else if(first.type=='id'){result=new ast.MatchSingleton(first.value)}else{var num=$NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
+if(first.type=='str'){var v=$StringCtx.prototype.ast.bind(first)()
+result=new ast.MatchValue(v)}else if(first.type=='id'){result=new ast.MatchSingleton(_b_[first.value])}else{var num=$NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
+if(first.sign && first.sign !='+'){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[first.sign]
+res=new ast.MatchValue(new ast.UnaryOp(new op(),res.value))}
 if(this.tree.length==1){result=res}else{var num2=$NumberCtx.prototype.ast.bind(this.tree[2])()
 result=new ast.BinOp(res,this.tree[1]=='+' ? ast.Add :ast.Sub,num2)}}
 if(this.tree.length==2){
@@ -4970,7 +4980,8 @@ this.duplicate_keys=[]
 this.bound_names=[]}
 $PatternMappingCtx.prototype.ast=function(){
 var keys=[],patterns=[]
-for(var item of this.tree){keys.push(ast_or_obj(item.tree[0]))
+for(var item of this.tree){if(item.tree[0]instanceof $PatternLiteralCtx){var k=ast_or_obj(item.tree[0])
+keys.push(k.value)}else{keys.push(ast_or_obj(item.tree[0]))}
 patterns.push(ast_or_obj(item.tree[1]))}
 var res=new ast.MatchMapping(keys,patterns)
 if(this.double_star){res.rest=this.double_star.tree[0]}
@@ -5093,7 +5104,10 @@ this.expect='|'
 C.tree.push(this)
 this.check_reachable()}
 $PatternOrCtx.prototype.ast=function(){
-return new ast.MatchOr(this.tree.map(ast_or_obj))}
+var ast_obj=new ast.MatchOr(this.tree.map(ast_or_obj))
+if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $PatternOrCtx.prototype.bindings=function(){var names
 for(var subpattern of this.tree){if(subpattern.bindings===undefined){console.log('no binding',subpattern)}
 var subbindings=subpattern.bindings()
@@ -8408,7 +8422,8 @@ var root=$B.parser.$create_root_node(
 root.mode=$.mode
 root.parent_block=$B.builtins_scope
 $B.parser.dispatch_tokens(root,$.source)
-if($.flags==$B.PyCF_ONLY_AST){return root.ast()}
+if($.flags==$B.PyCF_ONLY_AST){var _ast=root.ast(),klass=_ast.constructor.$name
+return $B.python_ast_classes[klass].$factory(_ast)}
 return $}
 var __debug__=$B.debug > 0
 function delattr(obj,attr){
@@ -16084,7 +16099,7 @@ case 'imaginary':
 return $B.make_complex(0,$B.AST.$convert(js_node.value))
 case 'ellipsis':
 return _b_.Ellipsis}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
-return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return _b_.repr(js_node)}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
+return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins

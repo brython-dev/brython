@@ -1571,7 +1571,6 @@ $B.ast.match_case.prototype.to_js = function(scopes){
 }
 
 $B.ast.Match.prototype.to_js = function(scopes){
-    console.log($B.ast_dump(this))
     var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n` +
              `if(true){\n`
     for(var _case of this.cases){
@@ -1583,6 +1582,7 @@ $B.ast.Match.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchAs.prototype.to_js = function(scopes){
+    console.log($B.ast_dump(this))
     var pattern = $B.js_from_ast(this.pattern, scopes)
     var js = `(locals.$lineno = ${this.lineno}) && ` +
              `$B.pattern_match(subject, {${pattern}, alias: '${this.name}'})`
@@ -1594,6 +1594,15 @@ $B.ast.MatchValue.prototype.to_js = function(scopes){
         return `literal: ${$B.js_from_ast(this.value, scopes)}`
     }
     return `value : '<${this.value.constructor.$name}>'`
+}
+
+$B.ast.MatchSequence.prototype.to_js = function(scopes){
+    console.log(this.lineno, '\n', $B.ast_dump(this))
+    var items = []
+    for(var pattern of this.patterns){
+        items.push($B.js_from_ast(pattern, scopes))
+    }
+    return `sequence: [${items.join(', ')}]`
 }
 
 $B.ast.Module.prototype.to_js = function(scopes, namespaces){
@@ -1816,8 +1825,6 @@ $B.ast.Try.prototype.to_js = function(scopes){
 
 $B.ast.Tuple.prototype.to_js = function(scopes){
     return list_or_tuple_to_js.bind(this)('$B.fast_tuple', scopes)
-    var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
-    return '$B.fast_tuple([' + elts.join(', ') + '])'
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){

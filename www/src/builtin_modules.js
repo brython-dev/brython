@@ -886,7 +886,7 @@
                 // eg Store(), Load()...
                 return js_node.$name + '()'
             }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
-                return _b_.repr(js_node)
+                return js_node
             }else if(js_node.__class__){
                 return js_node
             }else{

@@ -171,6 +171,7 @@ if($B.ast_classes){
     }
 
     var ast_dump = $B.ast_dump = function(tree, indent){
+        console.log('ast dump', tree)
         indent = indent || 0
         if(tree === _b_.None){
             // happens in dictionary keys for **kw
@@ -203,7 +204,8 @@ if($B.ast_classes){
         }else if(tree.$name){
             return tree.$name + '()'
         }else if(tree instanceof ast.MatchSingleton){
-            return `MatchSingleton(value=${tree.value})`
+            console.log('dump singleton')
+            return `MatchSingleton(value=${$B.ast.$convert(tree.value)})`
         }else if(tree instanceof ast.Constant){
 
             var value = tree.value
@@ -5472,7 +5474,7 @@ $FromCtx.prototype.ast = function(){
     }
     var ast_obj = new ast.ImportFrom(res.module, res.names, res.level)
     ast_obj.lineno = this.parent.node.line_num
-    return ast_obj    
+    return ast_obj
 }
 
 $FromCtx.prototype.add_name = function(name){
@@ -9067,24 +9069,24 @@ var $PatternCaptureCtx = function(context, value){
 }
 
 $PatternCaptureCtx.prototype.ast = function(){
-    var lineno = this.parent.node.line_num
-    console.log('capture', lineno)
+    var ast_obj
     try{
         if(this.tree.length > 1){
             var pattern = new ast.Name(this.tree[0].value, new ast.Load())
             for(var i = 1; i < this.tree.length; i += 2){
                 pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
             }
-            return new ast.MatchValue(pattern)
+            ast_obj = new ast.MatchValue(pattern)
+        }else if(this.starred){
+            ast_obj = new ast.MatchStar(this.tree[0])
         }else{
             var pattern = this.tree[0]
             if(typeof pattern == 'string'){
-                pattern = pattern.value
+                // pattern is the string
             }else if(pattern.type == 'group_pattern'){
                 pattern = pattern.ast()
             }else{
                 console.log('bizarre', pattern)
-    
                 pattern = $NumberCtx.prototype.ast.bind(this)()
             }
             if(pattern == '_'){
@@ -9092,11 +9094,14 @@ $PatternCaptureCtx.prototype.ast = function(){
             }
         }
         if(this.alias){
-            return new ast.MatchAs(
+            ast_obj = new ast.MatchAs(
                 new ast.MatchAs(undefined, pattern),
                 this.alias)
+        }else{
+            ast_obj = new ast.MatchAs(undefined, pattern)
         }
-        return new ast.MatchAs(undefined, pattern)
+        ast_obj.lineno = $get_node(this).line_num
+        return ast_obj
     }catch(err){
         console.log('error capture ast')
         show_line(this)
@@ -9338,11 +9343,17 @@ function remove_empty_pattern(context){
 }
 
 $PatternGroupCtx.prototype.ast = function(){
+    var ast_obj
     if(this.tree.length == 1){
-        return ast_or_obj(this.tree[0])
+        ast_obj = ast_or_obj(this.tree[0])
     }else{
-        return $PatternSequenceCtx.prototype.ast.bind(this)()
+        ast_obj = $PatternSequenceCtx.prototype.ast.bind(this)()
     }
+    if(this.alias){
+        ast_obj = new ast.MatchAs(ast_obj, this.alias)
+    }
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $PatternGroupCtx.prototype.bindings = function(){
@@ -9435,12 +9446,17 @@ $PatternLiteralCtx.prototype.ast = function(){
         var first = this.tree[0],
             result
         if(first.type == 'str'){
-            result = new ast.MatchValue(new ast.Constant(first.value))
+            var v = $StringCtx.prototype.ast.bind(first)()
+            result = new ast.MatchValue(v)
         }else if(first.type == 'id'){
-            result = new ast.MatchSingleton(first.value)
+            result = new ast.MatchSingleton(_b_[first.value])
         }else{
             var num = $NumberCtx.prototype.ast.bind(first)(),
                 res = new ast.MatchValue(num)
+            if(first.sign && first.sign != '+'){
+                var op = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}[first.sign]
+                res = new ast.MatchValue(new ast.UnaryOp(new op(), res.value))
+            }
             if(this.tree.length == 1){
                 result = res
             }else{
@@ -9604,7 +9620,12 @@ $PatternMappingCtx.prototype.ast = function(){
     var keys = [],
         patterns = []
     for(var item of this.tree){
-        keys.push(ast_or_obj(item.tree[0]))
+        if(item.tree[0] instanceof $PatternLiteralCtx){
+            var k = ast_or_obj(item.tree[0])
+            keys.push(k.value)
+        }else{
+            keys.push(ast_or_obj(item.tree[0]))
+        }
         patterns.push(ast_or_obj(item.tree[1]))
     }
     var res = new ast.MatchMapping(keys, patterns)
@@ -9853,7 +9874,12 @@ var $PatternOrCtx = function(context){
 
 $PatternOrCtx.prototype.ast = function(){
     // ast.MatchOr(patterns)
-    return new ast.MatchOr(this.tree.map(ast_or_obj))
+    var ast_obj = new ast.MatchOr(this.tree.map(ast_or_obj))
+    if(this.alias){
+        ast_obj = new ast.MatchAs(ast_obj, this.alias)
+    }
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $PatternOrCtx.prototype.bindings = function(){
@@ -9977,7 +10003,9 @@ var $PatternSequenceCtx = function(context, token){
 }
 
 $PatternSequenceCtx.prototype.ast = function(){
-    return new ast.MatchSequence(this.tree.map(ast_or_obj))
+    var ast_obj = new ast.MatchSequence(this.tree.map(ast_or_obj))
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $PatternSequenceCtx.prototype.bindings = $PatternMappingCtx.prototype.bindings
