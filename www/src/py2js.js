@@ -5470,7 +5470,9 @@ $FromCtx.prototype.ast = function(){
             res.names.push(new ast.alias(name))
         }
     }
-    return new ast.ImportFrom(res.module, res.names, res.level)
+    var ast_obj = new ast.ImportFrom(res.module, res.names, res.level)
+    ast_obj.lineno = this.parent.node.line_num
+    return ast_obj    
 }
 
 $FromCtx.prototype.add_name = function(name){
@@ -6993,7 +6995,9 @@ $ImportCtx.prototype.ast = function(){
         }
         names.push(alias)
     }
-    return new ast.Import(names)
+    var ast_obj = new ast.Import(names)
+    ast_obj.lineno = this.parent.node.line_num
+    return ast_obj
 }
 
 $ImportCtx.prototype.toString = function(){
