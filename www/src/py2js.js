@@ -9070,7 +9070,6 @@ var $PatternCaptureCtx = function(context, value){
 
 $PatternCaptureCtx.prototype.ast = function(){
     var ast_obj
-    console.log('capture', this)
     try{
         if(this.tree.length > 1){
             var pattern = new ast.Name(this.tree[0].value, new ast.Load())
@@ -9360,9 +9359,8 @@ function remove_empty_pattern(context){
 }
 
 $PatternGroupCtx.prototype.ast = function(){
-    console.log('group', this)
     var ast_obj
-    if(this.tree.length == 1){
+    if(this.tree.length == 1 && ! this.has_comma){
         ast_obj = this.tree[0].ast()
     }else{
         ast_obj = $PatternSequenceCtx.prototype.ast.bind(this)()
@@ -9396,7 +9394,7 @@ $PatternGroupCtx.prototype.transition = function(token, value){
                 return context
             }else if(token == ','){
                 context.expect = 'id'
-                context.is_tuple = true
+                context.has_comma = true
                 return context
             }else if(token == 'op' && value == '|'){
                 var opctx = new $PatternOrCtx(context.parent)
@@ -9424,7 +9422,7 @@ $PatternGroupCtx.prototype.transition = function(token, value){
 }
 
 $PatternGroupCtx.prototype.to_js = function(){
-    if(this.is_tuple){
+    if(this.has_comma){
         var js = '{sequence: [' + $to_js(this.tree) + ']'
     }else{
         var js = '{group: [' + $to_js(this.tree) + ']'

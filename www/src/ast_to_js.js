@@ -1582,11 +1582,17 @@ $B.ast.Match.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchAs.prototype.to_js = function(scopes){
+    // if the pattern is None, the node represents a capture pattern
+    // (i.e a bare name) and will always succeed.
     console.log($B.ast_dump(this))
-    var pattern = $B.js_from_ast(this.pattern, scopes)
-    var js = `(locals.$lineno = ${this.lineno}) && ` +
-             `$B.pattern_match(subject, {${pattern}, alias: '${this.name}'})`
-    return js
+    if(this.pattern === undefined){
+        var params = `capture: '${this.name}'`
+    }else{
+        var pattern = $B.js_from_ast(this.pattern, scopes)
+            params = `{${pattern}, alias: '${this.name}'}`
+    }
+    return `(locals.$lineno = ${this.lineno}) && ` +
+             `$B.pattern_match(subject, {${params}})`
 }
 
 $B.ast.MatchValue.prototype.to_js = function(scopes){
