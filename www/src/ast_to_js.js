@@ -85,6 +85,7 @@ function reference(scopes, scope, name){
 
 function bind(name, scopes){
     var scope = last_scope(scopes)
+    name = mangle(scopes, scope, name)
     if(scope.globals && scope.globals.has(name)){
         scope = scopes[0]
     }else if(scope.nonlocals.has(name)){
@@ -105,6 +106,10 @@ var CELL = 5,
     GLOBAL_IMPLICIT = 3,
     SCOPE_MASK = 15,
     SCOPE_OFF = 11
+
+var TYPE_CLASS = 1,
+    TYPE_FUNCTION = 0,
+    TYPE_MODULE = 2
 
 function binding_scope(name, scopes){
     // return the scope where name is bound, or undefined
@@ -133,6 +138,11 @@ function binding_scope(name, scopes){
     if([LOCAL, CELL].indexOf(__scope) > -1){
         // name is local (symtable) but may not have yet been bound in scope
         if(! scope.locals.has(name)){
+            if(block.type == TYPE_CLASS){
+                // In class definition, unbound local variables are looked up
+                // in the global namespace (Language Reference 4.2.2)
+                return `$B.resolve_global('${name}')`
+            }
             return `$B.resolve_local('${name}')`
         }else{
             return reference(scopes, scope, name)
@@ -592,18 +602,25 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){
-    var op = this.op instanceof $B.ast.Or ? '||' : '&&'
-    if(this.values.length == 2){
-        return `${$B.js_from_ast(this.values[0], scopes)} ${op} `+
-               `${$B.js_from_ast(this.values[1], scopes)}`
-    }else{
-        var res = `${$B.js_from_ast(this.values[0], scopes)} ${op} `+
-                  `${$B.js_from_ast(this.values[1], scopes)}`
-        for(var v of this.values.slice(2)){
-            res = res + ` ${op} ${$B.js_from_ast(v, scopes)}`
-        }
-        return res
+    // The expression x and y first evaluates x; if x is false, its value is
+    // returned; otherwise, y is evaluated and the resulting value is
+    // returned.
+    // The expression x or y first evaluates x; if x is true, its value is
+    // returned; otherwise, y is evaluated and the resulting value is
+    // returned.
+
+    // Implement this as a JS anonymous self-executing function
+    // The test on each item is "! $B.$bool(item)" for And, "$B.$bool(item)"
+    // for Or
+    var op = this.op instanceof $B.ast.And ? '! ' : '',
+        items = [],
+        js = '(function(){\n'
+    for(var value of this.values){
+        js += `var item = ${$B.js_from_ast(value, scopes)}\n` +
+              `if(${op}$B.$bool(item)){\nreturn item\n}\n`
     }
+    js += `return item\n})()`
+    return js
 }
 
 $B.ast.Break.prototype.to_js = function(scopes){
@@ -654,7 +671,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
     }else{
         args += `[${named_args}]`
         for(var starred_arg of starred_args){
-            args += `.concat(${starred_arg})`
+            args += `.concat(_b_.list.$factory(${starred_arg}))`
         }
     }
 
@@ -749,7 +766,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
 
     js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
-          `[${bases}],[],[${keywords.join(', ')}])\n` +
+          `$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n` +
           `${class_ref}.__doc__ = ${docstring}\n`
 
     if(decorated){
@@ -768,26 +785,32 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 $B.ast.Compare.prototype.to_js = function(scopes){
     var left = $B.js_from_ast(this.left, scopes),
         comps = []
-    for(var i = 0, len = this.ops.length; i < len; i++){
+    // For chained comparison, store each intermediate result in locals.$op
+    var len = this.ops.length,
+        prefix = len > 1 ? 'locals.$op = ' : ''
+
+    for(var i = 0; i < len; i++){
         var op = opclass2dunder[this.ops[i].constructor.$name],
             right = this.comparators[i]
         if(this.ops[i] instanceof $B.ast.In){
             comps.push(`$B.$is_member(${left}, ` +
-                `locals.$op = ${$B.js_from_ast(right, scopes)})`)
+                `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.NotIn){
             comps.push(`! $B.$is_member(${left}, ` +
-                `locals.$op = ${$B.js_from_ast(right, scopes)})`)
+                `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.Is){
             comps.push(`$B.$is(${left}, ` +
-                `locals.$op = ${$B.js_from_ast(right, scopes)})`)
+                `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else if(this.ops[i] instanceof $B.ast.IsNot){
             comps.push(`! $B.$is(${left}, ` +
-                `locals.$op = ${$B.js_from_ast(right, scopes)})`)
+                `${prefix}${$B.js_from_ast(right, scopes)})`)
         }else{
             comps.push(`$B.rich_comp('${op}', ${left}, ` +
-                `locals.$op = ${$B.js_from_ast(right, scopes)})`)
+                `${prefix}${$B.js_from_ast(right, scopes)})`)
         }
-        left = 'locals.$op'
+        if(len > 1){
+            left = 'locals.$op'
+        }
     }
     return comps.join(' && ')
 }
@@ -1507,14 +1530,17 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     }\n`
 
     scopes.pop()
-    var scope = bind(this.name, scopes)
+    var scope = last_scope(scopes)
     var qualname = scope.type == 'class' ? `${scope.name}.${this.name}` :
                                            this.name
 
     js += `${name}.$infos = {\n` +
-        `__defaults__: $B.fast_tuple([${default_names}]), ` +
-        `__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n` +
-        `}\n`
+              `__defaults__: $B.fast_tuple([${default_names}]), ` +
+              `__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n` +
+              `__code__:{\n` +
+                  `co_name: '<lambda>'\n` +
+              `}\n` +
+          `}\n`
 
     if(is_generator){
         js += `return $B.generator.$factory(${name}, '<lambda>')`
@@ -1562,51 +1588,97 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.match_case.prototype.to_js = function(scopes){
-    var js = 'if(' + $B.js_from_ast(this.pattern, scopes) + '){\n'
+    var js = `((locals.$lineno = ${this.lineno}) && ` +
+             `$B.pattern_match(subject, {` +
+             `${$B.js_from_ast(this.pattern, scopes)}})){\n`
 
     js += add_body(this.body, scopes) + '\n}'
-    console.log('in match case', js)
 
     return js
 }
 
 $B.ast.Match.prototype.to_js = function(scopes){
-    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n` +
-             `if(true){\n`
+    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`
+        first = true
     for(var _case of this.cases){
         var case_js = $B.js_from_ast(_case, scopes)
-        console.log('case js', case_js)
-        js += case_js
+        if(first){
+            js += 'if' + case_js
+            first = false
+        }else{
+            js += 'else if' + case_js
+        }
     }
-    return js + '\n}'
+    return js
 }
 
 $B.ast.MatchAs.prototype.to_js = function(scopes){
     // if the pattern is None, the node represents a capture pattern
     // (i.e a bare name) and will always succeed.
-    console.log($B.ast_dump(this))
     if(this.pattern === undefined){
         var params = `capture: '${this.name}'`
     }else{
         var pattern = $B.js_from_ast(this.pattern, scopes)
-            params = `{${pattern}, alias: '${this.name}'}`
+            params = `${pattern}, alias: '${this.name}'`
     }
-    return `(locals.$lineno = ${this.lineno}) && ` +
-             `$B.pattern_match(subject, {${params}})`
+    return params
+}
+
+$B.ast.MatchClass.prototype.to_js = function(scopes){
+    var cls = $B.js_from_ast(this.cls, scopes),
+        patterns = this.patterns.map(x => `{${$B.js_from_ast(x, scopes)}}`)
+    var kw = []
+    for(var i = 0, len = this.kw_patterns; i < len; i++){
+        kw.push(this.kw_attrs[i] + ': ' +
+            $B.js_from_ast(this.kw_patterns[i], scopes))
+    }
+    return `class: ${cls}, args: [${patterns}], keywords: {${kw.join(', ')}}`
+}
+
+$B.ast.MatchMapping.prototype.to_js = function(scopes){
+    var items = []
+    for(var i = 0, len = this.keys.length; i < len; i++){
+        var key = $B.ast.MatchValue.prototype.to_js.bind({value: this.keys[i]})(scopes)
+        items.push(`[{${key}}, ` +
+                   `{${$B.js_from_ast(this.patterns[i], scopes)}}]`)
+    }
+    var js = 'mapping: [' + items.join(', ') + ']'
+    if(this.rest){
+        js += `, rest: '${this.rest}'`
+    }
+    return js
+}
+
+$B.ast.MatchOr.prototype.to_js = function(scopes){
+    var js = this.patterns.map(x => `{${$B.js_from_ast(x, scopes)}}`).join(', ')
+    return `or: [${js}]`
+}
+
+$B.ast.MatchSingleton.prototype.to_js = function(scopes){
+    var value = this.value === true ? '_b_.True' :
+                this.value === false ? '_b_.False' :
+                '_b_.None'
+
+    return `literal: ${value}`
+}
+
+$B.ast.MatchStar.prototype.to_js = function(scopes){
+    return `capture_starred: '${this.name}'`
 }
 
 $B.ast.MatchValue.prototype.to_js = function(scopes){
     if(this.value instanceof $B.ast.Constant){
         return `literal: ${$B.js_from_ast(this.value, scopes)}`
+    }else if(this.value instanceof $B.ast.Attribute){
+        return `value: ${$B.js_from_ast(this.value, scopes)}`
     }
     return `value : '<${this.value.constructor.$name}>'`
 }
 
 $B.ast.MatchSequence.prototype.to_js = function(scopes){
-    console.log(this.lineno, '\n', $B.ast_dump(this))
     var items = []
     for(var pattern of this.patterns){
-        items.push($B.js_from_ast(pattern, scopes))
+        items.push('{' + $B.js_from_ast(pattern, scopes) + '}')
     }
     return `sequence: [${items.join(', ')}]`
 }

@@ -171,7 +171,6 @@ if($B.ast_classes){
     }
 
     var ast_dump = $B.ast_dump = function(tree, indent){
-        console.log('ast dump', tree)
         indent = indent || 0
         if(tree === _b_.None){
             // happens in dictionary keys for **kw
@@ -205,7 +204,7 @@ if($B.ast_classes){
             return tree.$name + '()'
         }else if(tree instanceof ast.MatchSingleton){
             console.log('dump singleton')
-            return `MatchSingleton(value=${$B.ast.$convert(tree.value)})`
+            return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
         }else if(tree instanceof ast.Constant){
 
             var value = tree.value
@@ -2502,9 +2501,11 @@ $CaseCtx.prototype.ast = function(){
     // ast.match_case(pattern, guard, body)
     // pattern : the match pattern that the subject will be matched against
     // guard : an expression that will be evaluated if the pattern matches the subject
-    return new ast.match_case(ast_or_obj(this.tree[0]),
+    var ast_obj = new ast.match_case(ast_or_obj(this.tree[0]),
         this.has_guard ? ast_or_obj(this.tree[1].tree[0]) : undefined,
         ast_body(this.parent))
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $CaseCtx.prototype.set_alias = function(name){
@@ -10020,6 +10021,9 @@ var $PatternSequenceCtx = function(context, token){
 
 $PatternSequenceCtx.prototype.ast = function(){
     var ast_obj = new ast.MatchSequence(this.tree.map(ast_or_obj))
+    if(this.alias){
+        ast_obj = new ast.MatchAs(ast_obj, this.alias)
+    }
     ast_obj.lineno = $get_node(this).line_num
     return ast_obj
 }
