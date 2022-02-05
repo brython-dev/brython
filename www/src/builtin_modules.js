@@ -689,17 +689,18 @@
                 syntax_error.line = message.line
                 throw syntax_error
             }
-            var frame = $B.imported._sys.Getframe()
+            var frame = $B.imported._sys.Getframe(),
+                category = message.__class__ || $B.get_class(message),
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
-                    category: message.__class__,
+                    category,
                     filename: message.filename || frame.f_code.co_filename,
                     lineno: message.lineno || frame.f_lineno,
                     file: _b_.None,
                     line: _b_.None,
                     source: _b_.None,
-                    _category_name: message.__class__.__name__
+                    _category_name: category.__name__
                 }
             if($B.imported.warnings){
                 $B.imported.warnings._showwarnmsg_impl(warning_message)
