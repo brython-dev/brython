@@ -647,7 +647,9 @@ function eval1(src, mode, _globals, _locals){
 
     var _ast = root.ast(),
         symtable = $B._PySymtable_Build(_ast, 'exec'),
-        js = $B.js_from_root(_ast, symtable, '<string>',
+        filename = '<string>'
+    $B.file_cache[filename] = src
+    var js = $B.js_from_root(_ast, symtable, filename,
                 {local_name, exec_locals, global_name, exec_globals})
 
     var save_frames_stack = $B.frames_stack.slice()

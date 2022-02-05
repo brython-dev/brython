@@ -485,15 +485,20 @@ var getExceptionTrace = function(exc, includeInternal) {
         }else if(frame[1].$lineno){
             var line_info = [frame[1].$lineno, frame[2]]
         }
-        if($B.imported[frame[2]] === undefined){
-            var file = frame[3].__file__,
-                src = $B.file_cache[__file__]
+        var file = frame[1].__file__ || frame[3].__file__
+        if(file && $B.file_cache[file]){
+            src = $B.file_cache[file]
         }else{
-            var __file__ = $B.imported[frame[2]].__file__,
-                src = $B.file_cache[__file__]
+            console.log('pas de __file__ ou de file_cache[__file]')
+            if($B.imported[frame[2]] === undefined){
+                var file = frame[3].__file__,
+                    src = $B.file_cache[file]
+            }else{
+                var file = $B.imported[frame[2]].__file__,
+                    src = $B.file_cache[file]
+            }
         }
-        var file = frame[3].__file__ || "<string>",
-            module = line_info[1],
+        var module = line_info[1],
             is_exec = module.charAt(0) == "$"
         if(is_exec){
             module = "<module>"
@@ -529,7 +534,12 @@ var getExceptionTrace = function(exc, includeInternal) {
         if(src !== undefined && ! is_exec){
             var lines = src.split("\n"),
                 line = lines[parseInt(line_info[0]) - 1]
-            if(line){line = line.replace(/^[ ]+/g, "")}
+            if(line === undefined){
+                console.log('bizarre, src', src, 'frame', frame, 'line_info', line_info)
+            }
+            if(line){
+                line = line.replace(/^[ ]+/g, "")
+            }
             info += "\n    " + line
         }
     }
