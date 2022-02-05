@@ -139,16 +139,20 @@ BytesIO.write = function(){
 }
 $B.set_func_names(BytesIO, "_io")
 
+var BlockingIOError = $B.make_class('BlockingIOError')
+BlockingIOError.__bases__ = [_b_.OSError]
+
 var $module = (function($B){
     return {
-        _BufferedIOBase: _BufferedIOBase,
-        _IOBase: _IOBase,
-        _RawIOBase: _RawIOBase,
+        _BufferedIOBase,
+        _IOBase,
+        _RawIOBase,
         _TextIOBase: $B.make_class("_TextIOBase",
             function(){
                 return "fileio"
             }
         ),
+        BlockingIOError,
         BytesIO: BytesIO,
         FileIO: $B.make_class("_TextIOBase",
             function(){
