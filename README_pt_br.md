@@ -9,29 +9,29 @@ Brython (Browser Python) é uma implementação em Python 3 executada no navegad
 
 A seguir, um exemplo simples de uma página HTML utilizando Python:
 
-```xml
-    <html>
+```html
+<html>
 
-        <head>
+    <head>
             <script type="text/javascript" src="/path/to/brython.js"></script>
-        </head>
+    </head>
 
-        <body onload="brython()">
+    <body onload="brython()">
 
-            <script type="text/python">
-            from browser import document, alert
+        <script type="text/python">
+        from browser import document, alert
 
-            def echo(event):
-                alert(document["zone"].value)
+        def echo(event):
+            alert(document["zone"].value)
 
-            document["mybutton"].bind("click", echo)
-            </script>
+        document["mybutton"].bind("click", echo)
+        </script>
 
-            <input id="zone"><button id="mybutton">click !</button>
+        <input id="zone"><button id="mybutton">click !</button>
 
-        </body>
+    </body>
 
-    </html>
+</html>
 ```
 
 Para usar o Brython, tudo o que você precisará fazer é:
@@ -57,7 +57,7 @@ Zero install !
 --------------
 A maneira mais simles para começar sem instalação é utilizar a distribuição disponível em [cdnjs](https://cdnjs.com). Você pode escolher a versão estável mais recente em:
 
-```xml
+```html
 <script type="text/javascript"
     src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.1/brython.min.js">
 </script>
@@ -65,7 +65,7 @@ A maneira mais simles para começar sem instalação é utilizar a distribuiçã
 
 O código acima irá lhe permitir utilizar códigos python diretamente, mas, para importar módulos da biblioteca padrão é necessário carregar um único arquivo javascript com o [stdlib disponível](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
-```xml
+```html
 <script type="text/javascript"
     src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.7.1/brython_stdlib.js">
 </script>
