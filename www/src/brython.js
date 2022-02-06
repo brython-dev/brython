@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-06 08:36:58.935630"
-__BRYTHON__.timestamp=1644133018935
+__BRYTHON__.compiled_date="2022-02-06 21:22:47.953806"
+__BRYTHON__.timestamp=1644178967953
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4987,7 +4987,7 @@ C.tree.pop()
 this.tree=[]
 C.tree.push(this)
 this.expect='key_value_pattern'
-this.duplicate_keys=[]
+this.literal_keys=[]
 this.bound_names=[]}
 $PatternMappingCtx.prototype.ast=function(){
 var keys=[],patterns=[]
@@ -5024,14 +5024,6 @@ var p=new $PatternCtx(C)
 try{var lit_or_val=p.transition(token,value)}catch(err){$_SyntaxError(C,["mapping pattern keys may only "+
 "match literals and attribute lookups"])}
 if(lit_or_val instanceof $PatternLiteralCtx){C.tree.pop()
-for(var kv of C.tree){if(kv instanceof $PatternKeyValueCtx){var key=kv.tree[0]
-if(key instanceof $PatternLiteralCtx){var old_lit=key.tree[0],new_lit=lit_or_val.tree[0]
-key.to_js()
-lit_or_val.to_js()
-key_value=key.num_value
-lit_or_val_value=lit_or_val.num_value
-if(key_value==lit_or_val_value){$_SyntaxError(C,["duplicate literal key "+
-lit_or_val_value])}}}}
 new $PatternKeyValueCtx(C,lit_or_val)
 return lit_or_val}else if(lit_or_val instanceof $PatternCaptureCtx){C.has_value_pattern_keys=true
 C.tree.pop()
@@ -5077,10 +5069,15 @@ $PatternKeyValueCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
 $PatternKeyValueCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case ':':
 switch(token){case ':':
+var key_obj=this.tree[0]
+if(key_obj instanceof $PatternLiteralCtx){var key=$B.AST.$convert(key_obj.tree[0])
+if(_b_.list.__contains__(this.parent.literal_keys,key)){$pos--
+$_SyntaxError(C,[`mapping pattern checks `+
+`duplicate key (${_b_.repr(key)})`])}
+this.parent.literal_keys.push(key)}
 this.expect=','
 return new $PatternCtx(this)
 default:
-console.log('keyvalue',C,'expected :, got',token,value)
 $_SyntaxError(C,'expected :')}
 case ',':
 switch(token){case '}':
@@ -16104,14 +16101,22 @@ var constr=js_node.constructor
 if(constr && constr.$name){return $B.python_ast_classes[constr.$name].$factory(js_node)}else if(Array.isArray(js_node)){return js_node.map($B.AST.$convert)}else if(js_node.type){
 switch(js_node.type){case 'int':
 var res=parseInt(js_node.value[1],js_node.value[0])
-if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(js_node.value[1],js_node.value[0])}
-return res
+if(res < $B.min_int ||res > $B.max_int){var res=$B.long_int.$factory(js_node.value[1],js_node.value[0])
+if(js_node.sign=='-'){res.pos=false}
+return res}
+return js_node.sign=='-' ?-res :res
 case 'float':
 return new Number(js_node.value)
 case 'imaginary':
 return $B.make_complex(0,$B.AST.$convert(js_node.value))
 case 'ellipsis':
-return _b_.Ellipsis}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
+return _b_.Ellipsis
+case 'str':
+if(js_node.is_bytes){return _b_.bytes.$factory(js_node.value,'latin-1')}
+return js_node.value
+case 'id':
+if(['False','None','True'].indexOf(js_node.value)>-1){return _b_[js_node.value]}
+break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}})(__BRYTHON__)
 ;

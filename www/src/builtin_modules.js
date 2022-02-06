@@ -864,15 +864,19 @@
             }else if(Array.isArray(js_node)){
                 return js_node.map($B.AST.$convert)
             }else if(js_node.type){
-                // numeric constant
+                // literal constant
                 switch(js_node.type){
                     case 'int':
                         var res = parseInt(js_node.value[1], js_node.value[0])
                         if(res < $B.min_int || res > $B.max_int){
-                            return $B.long_int.$factory(js_node.value[1],
+                            var res = $B.long_int.$factory(js_node.value[1],
                                 js_node.value[0])
+                            if(js_node.sign == '-'){
+                                res.pos = false
+                            }
+                            return res
                         }
-                        return res
+                        return js_node.sign == '-' ? -res : res
                     case 'float':
                         return new Number(js_node.value)
                     case 'imaginary':
@@ -880,6 +884,16 @@
                             $B.AST.$convert(js_node.value))
                     case 'ellipsis':
                         return _b_.Ellipsis
+                    case 'str':
+                        if(js_node.is_bytes){
+                            return _b_.bytes.$factory(js_node.value, 'latin-1')
+                        }
+                        return js_node.value
+                    case 'id':
+                        if(['False', 'None', 'True'].indexOf(js_node.value) > -1){
+                            return _b_[js_node.value]
+                        }
+                        break
                 }
             }else if(['string', 'number'].indexOf(typeof js_node) > -1){
                 return js_node
