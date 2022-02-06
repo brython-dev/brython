@@ -132,7 +132,7 @@ function binding_scope(name, scopes){
         flags = block.symbols.$string_dict[name][0]
     }catch(err){
         console.log('name', name, 'not in symbols of block', block)
-        throw err
+        return `$B.resolve('${name}')`
     }
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
     if([LOCAL, CELL].indexOf(__scope) > -1){
@@ -472,8 +472,13 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
             `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n` +
             `locals_${scope.name}.${this.target.id} = ann`
     }else{
+        if(this.annotation instanceof $B.ast.Name){
+            var ann = `'${this.annotation.id}'`
+        }else{
+            var ann = $B.js_from_ast(this.annotation, scopes)
+        }
         var js = `$B.$setitem(locals.__annotations__, ` +
-            `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})`
+            `'${this.target.id}', ${ann})`
     }
     return js
 }
@@ -491,44 +496,53 @@ $B.ast.Assign.prototype.to_js = function(scopes){
             return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}` +
                 `, ${$B.js_from_ast(target.slice, scopes)}, ${value})`
         }else if(target instanceof $B.ast.Attribute){
+            var attr = mangle(scopes, last_scope(scopes), target.attr)
             return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}` +
-                `, "${target.attr}", ${value})`
+                `, "${attr}", ${value})`
         }
+    }
+
+    function assign_many(target, value){
+        var js = ''
+        var nb_targets = target.elts.length,
+            has_starred = false,
+            nb_after_starred
+        for(var i = 0, len = nb_targets; i < len; i++){
+            if(target.elts[i] instanceof $B.ast.Starred){
+                has_starred = true
+                nb_after_starred = len - i - 1
+                break
+            }
+        }
+        var id = $B.UUID()
+        js += `var it_${id} = $B.unpacker(${value}, ${nb_targets}, ` +
+             `${has_starred}`
+        if(nb_after_starred !== undefined){
+            js += `, ${nb_after_starred}`
+        }
+        js += `)\n`
+        var assigns = []
+        for(var elt of target.elts){
+            if(elt instanceof $B.ast.Starred){
+                assigns.push(assign_one(elt, `it_${id}.read_rest()`))
+            }else if(elt instanceof $B.ast.List){
+                assigns.push(assign_many(elt, `it_${id}.read_one()`))
+            }else{
+                assigns.push(assign_one(elt, `it_${id}.read_one()`))
+            }
+        }
+        js += assigns.join('\n')
+
+        return js
     }
 
     if(this.targets.length == 1){
         var target = this.targets[0]
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
-           return js + assign_one(target, value)
+            return js + assign_one(target, value)
         }else{
-            var nb_targets = target.elts.length,
-                has_starred = false,
-                nb_after_starred
-            for(var i = 0, len = nb_targets; i < len; i++){
-                if(target.elts[i] instanceof $B.ast.Starred){
-                    has_starred = true
-                    nb_after_starred = len - i - 1
-                    break
-                }
-            }
-            js += `var it = $B.unpacker(${value}, ${nb_targets}, ` +
-                 `${has_starred}`
-            if(nb_after_starred !== undefined){
-                js += `, ${nb_after_starred}`
-            }
-            js += `)\n`
-            var assigns = []
-            for(var elt of target.elts){
-                if(elt instanceof $B.ast.Starred){
-                    assigns.push(assign_one(elt, 'it.read_rest()'))
-                }else{
-                    assigns.push(assign_one(elt, 'it.read_one()'))
-                }
-            }
-            js += assigns.join('\n')
-
-            return js
+            return js + assign_many(target, value)
         }
     }
     var id = 'v' + $B.UUID()
@@ -544,8 +558,9 @@ $B.ast.AsyncFunctionDef.prototype.to_js = function(scopes){
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
+    var attr = mangle(scopes, last_scope(scopes), this.attr)
     return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, ` +
-        `'${this.attr}')`
+        `'${attr}')`
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
@@ -698,7 +713,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var enclosing_scope = bind(this.name, scopes)
     var class_scope = new Scope(this.name, 'class', this)
 
-    var js = '',
+    var js = `locals.$lineno = ${this.lineno}\n`,
         locals_name = make_scope_name(scopes, class_scope),
         ref = this.name + $B.UUID(),
         glob = scopes[0].name,
@@ -978,6 +993,11 @@ $B.ast.For.prototype.to_js = function(scopes){
     js += add_body(this.body, scopes)
 
     js += '\n}' // close 'while' loop
+
+    if(this.orelse.length > 0){
+        js += `\nif(no_break_${id}){\n` +
+              add_body(this.orelse, scopes) + '}\n'
+    }
 
     scopes.pop()
 
@@ -1350,8 +1370,9 @@ $B.ast.If.prototype.to_js = function(scopes){
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     js += add_body(this.body, scopes) + '\n}'
     if(this.orelse.length > 0){
-        if(this.orelse[0] instanceof $B.ast.If){
-            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes)
+        if(this.orelse[0] instanceof $B.ast.If && this.orelse.length == 1){
+            js += 'else ' + $B.js_from_ast(this.orelse[0], scopes) +
+                  add_body(this.orelse.slice(1), scopes)
         }else{
             js += '\nelse{\n' + add_body(this.orelse, scopes) + '\n}'
         }
@@ -1367,7 +1388,7 @@ $B.ast.IfExp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Import.prototype.to_js = function(scopes){
-    var js = ''
+    var js = `locals.$lineno = ${this.lineno}\n`
     for(var alias of this.names){
         js += `$B.$import("${alias.name}", [], `
         if(alias.asname){
@@ -1504,6 +1525,7 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
           `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n` +
           `var $top_frame = ["${name}", locals, "${gname}", ${globals_name}]
     locals.$f_trace = $B.enter_frame($top_frame)
+    locals.$lineno = ${this.lineno}
     var stack_length = $B.frames_stack.length\n`
 
     if(is_generator){
@@ -1638,8 +1660,9 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
 $B.ast.MatchMapping.prototype.to_js = function(scopes){
     var items = []
     for(var i = 0, len = this.keys.length; i < len; i++){
-        var key = $B.ast.MatchValue.prototype.to_js.bind({value: this.keys[i]})(scopes)
-        items.push(`[{${key}}, ` +
+        var key_prefix = this.keys[i] instanceof $B.ast.Constant ?
+                            'literal: ' : 'value: '
+        items.push(`[{${key_prefix}${$B.js_from_ast(this.keys[i], scopes)}}, ` +
                    `{${$B.js_from_ast(this.patterns[i], scopes)}}]`)
     }
     var js = 'mapping: [' + items.join(', ') + ']'

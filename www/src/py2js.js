@@ -2628,8 +2628,10 @@ $ClassCtx.prototype.ast = function(){
             }
         }
     }
-    return new ast.ClassDef(this.name, bases, keywords,
+    var ast_obj = new ast.ClassDef(this.name, bases, keywords,
                             ast_body(this.parent), decorators)
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $ClassCtx.prototype.toString = function(){
@@ -7373,7 +7375,9 @@ $LambdaCtx.prototype.ast = function(){
     }else{
         args = this.args[0].ast()
     }
-    return new ast.Lambda(args, ast_or_obj(this.tree[0]))
+    var ast_obj = new ast.Lambda(args, ast_or_obj(this.tree[0]))
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $LambdaCtx.prototype.toString = function(){
@@ -9637,13 +9641,12 @@ $PatternMappingCtx.prototype.ast = function(){
     var keys = [],
         patterns = []
     for(var item of this.tree){
+        keys.push(ast_or_obj(item.tree[0]).value)
         if(item.tree[0] instanceof $PatternLiteralCtx){
-            var k = ast_or_obj(item.tree[0])
-            keys.push(k.value)
+            patterns.push(ast_or_obj(item.tree[1]))
         }else{
-            keys.push(ast_or_obj(item.tree[0]))
+            patterns.push(ast_or_obj(item.tree[2]))
         }
-        patterns.push(ast_or_obj(item.tree[1]))
     }
     var res = new ast.MatchMapping(keys, patterns)
     if(this.double_star){
