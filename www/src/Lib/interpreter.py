@@ -207,12 +207,13 @@ class Interpreter:
 
     def focus(self, *args):
         """When the interpreter gets focus, set sys.stdout and stderr"""
-        # put other active windows in the background
-        for w in active:
-            if w is not self:
-                w.dialog.style.zIndex = 0
+        if hasattr(self, 'dialog'):
+            # put other active windows in the background
+            for w in active:
+                if w is not self:
+                    w.dialog.style.zIndex = 0
+            self.dialog.style.zIndex = 1
         sys.stdout = sys.stderr = Output(self)
-        self.dialog.style.zIndex = 1
         self.zone.focus()
 
     def get_col(self):
