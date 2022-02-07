@@ -82,6 +82,18 @@ style_sheet = """
 }
 """
 
+active = []
+
+class Output:
+
+    def __init__(self, interpreter):
+        self.interpreter = interpreter
+
+    def write(self, *args, **kw):
+        self.interpreter.write(*args, **kw)
+
+    def __len__(self):
+        return len(self.interpreter.buffer)
 
 class Trace:
 
@@ -127,6 +139,9 @@ class Interpreter:
         if elt_id is None:
             self.dialog = Dialog(title=title, top=10, left=10,
                 default_css=default_css)
+            self.dialog.bind('blur', self.blur)
+            self.dialog.bind('click', self.focus)
+            self.dialog.close_button.bind('click', self.close)
             self.zone = html.TEXTAREA(rows=rows, cols=cols,
                 Class="brython-interpreter")
             self.dialog.panel <= self.zone
@@ -169,19 +184,36 @@ class Interpreter:
         self.locals = self.globals if locals is None else locals
 
         self.buffer = ''
-        sys.stdout.write = sys.stderr.write = self.write
-        sys.stdout.__len__ = sys.stderr.__len__ = lambda: len(self.buffer)
-
         self.zone.bind('keypress', self.keypress)
         self.zone.bind('keydown', self.keydown)
         self.zone.bind('mouseup', self.mouseup)
 
+        self.zone.bind('focus', self.focus)
+        self.zone.bind('blur', self.blur)
         self.zone.focus()
+
+        active.append(self)
+
+    def blur(self, ev):
+        self.dialog.style.zIndex = 0
+
+    def close(self, ev):
+        active.remove(self)
 
     def cursor_to_end(self, *args):
         pos = len(self.zone.value)
         self.zone.setSelectionRange(pos, pos)
         self.zone.scrollTop = self.zone.scrollHeight
+
+    def focus(self, *args):
+        """When the interpreter gets focus, set sys.stdout and stderr"""
+        # put other active windows in the background
+        for w in active:
+            if w is not self:
+                w.dialog.style.zIndex = 0
+        sys.stdout = sys.stderr = Output(self)
+        self.dialog.style.zIndex = 1
+        self.zone.focus()
 
     def get_col(self):
         # returns the column num of cursor
