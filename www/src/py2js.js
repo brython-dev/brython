@@ -9628,8 +9628,8 @@ var $PatternMappingCtx = function(context){
     this.tree = []
     context.tree.push(this)
     this.expect = 'key_value_pattern'
-    // store duplicate literal keys
-    this.duplicate_keys = []
+    // store literal key values to detect duplicates
+    this.literal_keys = []
     this.bound_names = []
 }
 
@@ -9724,27 +9724,9 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context, ["mapping pattern keys may only " +
                     "match literals and attribute lookups"])
             }
+
             if(lit_or_val instanceof $PatternLiteralCtx){
                 context.tree.pop() // remove PatternCtx
-                // check duplicates
-                for(var kv of context.tree){
-                    if(kv instanceof $PatternKeyValueCtx){
-                        var key = kv.tree[0]
-                        if(key instanceof $PatternLiteralCtx){
-                            var old_lit = key.tree[0],
-                                new_lit = lit_or_val.tree[0]
-                            key.to_js()
-                            lit_or_val.to_js()
-                            key_value = key.num_value
-                            lit_or_val_value = lit_or_val.num_value
-                            if(key_value == lit_or_val_value){
-                                $_SyntaxError(context,
-                                    ["duplicate literal key " +
-                                    lit_or_val_value])
-                            }
-                        }
-                    }
-                }
                 new $PatternKeyValueCtx(context, lit_or_val)
                 return lit_or_val
             }else if(lit_or_val instanceof $PatternCaptureCtx){
@@ -9832,10 +9814,21 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
         case ':':
             switch(token){
                 case ':':
+                    // check duplicate literal keys
+                    var key_obj = this.tree[0]
+                    if(key_obj instanceof $PatternLiteralCtx){
+                        var key = $B.AST.$convert(key_obj.tree[0])
+                        // check if present in this.literal_keys
+                        if(_b_.list.__contains__(this.parent.literal_keys, key)){
+                            $pos--
+                            $_SyntaxError(context, [`mapping pattern checks ` +
+                                `duplicate key (${_b_.repr(key)})`])
+                        }
+                        this.parent.literal_keys.push(key)
+                    }
                     this.expect = ','
                     return new $PatternCtx(this)
                 default:
-                console.log('keyvalue', context, 'expected :, got', token, value)
                     $_SyntaxError(context, 'expected :')
             }
         case ',':

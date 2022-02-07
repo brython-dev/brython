@@ -6,29 +6,29 @@ browser, with an interface to the DOM elements and events.
 
 Here is a simple example of an HTML page running Python:
 
-```xml
-    <html>
+```html
+<html>
 
-        <head>
+    <head>
             <script type="text/javascript" src="/path/to/brython.js"></script>
-        </head>
+    </head>
 
-        <body onload="brython()">
+    <body onload="brython()">
 
-            <script type="text/python">
-            from browser import document, alert
+        <script type="text/python">
+        from browser import document, alert
 
-            def echo(event):
-                alert(document["zone"].value)
+        def echo(event):
+            alert(document["zone"].value)
 
-            document["mybutton"].bind("click", echo)
-            </script>
+        document["mybutton"].bind("click", echo)
+        </script>
 
-            <input id="zone"><button id="mybutton">click !</button>
+        <input id="zone"><button id="mybutton">click !</button>
 
-        </body>
+    </body>
 
-    </html>
+</html>
 ```
 
 To use Brython, all there is to do is:
@@ -61,7 +61,7 @@ The most simple way to get started, without anything to install, is to use the
 distribution available online through [jsDelivr](https://www.jsdelivr.com/).
 You can choose the latest stable release :
 
-```xml
+```html
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3.10.4/brython.min.js">
 </script>
@@ -71,7 +71,7 @@ The previous code will allow you to use raw python code, but if you import
 modules from the standard library you have to load a single javascript file
 with the [available stdlib](https://github.com/brython-dev/brython/tree/master/www/src/Lib):
 
-```xml
+```html
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3.10.4/brython_stdlib.js">
 </script>
@@ -80,7 +80,7 @@ with the [available stdlib](https://github.com/brython-dev/brython/tree/master/w
 jsDelivr supports version ranges, so if you want the latest of the
 3.10.x versions:
 
-```xml
+```html
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3.10/brython.min.js">
 </script>
@@ -91,7 +91,7 @@ jsDelivr supports version ranges, so if you want the latest of the
 
 or the latest of the 3.x.y versions:
 
-```xml
+```html
 <script type="text/javascript"
     src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js">
 </script>
@@ -102,7 +102,7 @@ or the latest of the 3.x.y versions:
 
 If you want to use the latest development version, you can load these scripts
 instead:
-```xml
+```html
 <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
 <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
 ```

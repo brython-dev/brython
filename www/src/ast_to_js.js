@@ -1612,7 +1612,11 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
 $B.ast.match_case.prototype.to_js = function(scopes){
     var js = `((locals.$lineno = ${this.lineno}) && ` +
              `$B.pattern_match(subject, {` +
-             `${$B.js_from_ast(this.pattern, scopes)}})){\n`
+             `${$B.js_from_ast(this.pattern, scopes)}})`
+    if(this.guard){
+        js += ` && $B.$bool(${$B.js_from_ast(this.guard, scopes)})`
+    }
+    js += `){\n`
 
     js += add_body(this.body, scopes) + '\n}'
 
@@ -1637,11 +1641,18 @@ $B.ast.Match.prototype.to_js = function(scopes){
 $B.ast.MatchAs.prototype.to_js = function(scopes){
     // if the pattern is None, the node represents a capture pattern
     // (i.e a bare name) and will always succeed.
+    var name = this.name === undefined ? '_' : this.name,
+        params
     if(this.pattern === undefined){
-        var params = `capture: '${this.name}'`
+        params = `capture: '${name}'`
     }else{
         var pattern = $B.js_from_ast(this.pattern, scopes)
-            params = `${pattern}, alias: '${this.name}'`
+        if(this.pattern instanceof $B.ast.MatchAs && this.pattern.name){
+            // put inner MatchAs pattern inside a one-element group, otherwise
+            // the inner MatchAs name would be overridden by this MatchAs name
+            pattern = `group: [{${pattern}}]`
+        }
+        params = `${pattern}, alias: '${name}'`
     }
     return params
 }
@@ -1650,9 +1661,9 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
     var cls = $B.js_from_ast(this.cls, scopes),
         patterns = this.patterns.map(x => `{${$B.js_from_ast(x, scopes)}}`)
     var kw = []
-    for(var i = 0, len = this.kw_patterns; i < len; i++){
-        kw.push(this.kw_attrs[i] + ': ' +
-            $B.js_from_ast(this.kw_patterns[i], scopes))
+    for(var i = 0, len = this.kwd_patterns.length; i < len; i++){
+        kw.push(this.kwd_attrs[i] + ': {' +
+            $B.js_from_ast(this.kwd_patterns[i], scopes) + '}')
     }
     return `class: ${cls}, args: [${patterns}], keywords: {${kw.join(', ')}}`
 }
@@ -1686,16 +1697,16 @@ $B.ast.MatchSingleton.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchStar.prototype.to_js = function(scopes){
-    return `capture_starred: '${this.name}'`
+    var name = this.name === undefined ? '_' : this.name
+    return `capture_starred: '${name}'`
 }
 
 $B.ast.MatchValue.prototype.to_js = function(scopes){
     if(this.value instanceof $B.ast.Constant){
         return `literal: ${$B.js_from_ast(this.value, scopes)}`
-    }else if(this.value instanceof $B.ast.Attribute){
+    }else{
         return `value: ${$B.js_from_ast(this.value, scopes)}`
     }
-    return `value : '<${this.value.constructor.$name}>'`
 }
 
 $B.ast.MatchSequence.prototype.to_js = function(scopes){
