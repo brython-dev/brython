@@ -34,6 +34,9 @@ function make_scope_name(scopes, scope){
     // Return the name of the locals object for a scope in scopes
     // scope defaults to the last item in scopes
     // If scope is not in scopes, add it at the end of scopes
+    if(scope === builtins_scope){
+        return `_b_`
+    }
     if(scope !== undefined && ! (scope instanceof Scope)){
         console.log('bizarre', scope)
         throw Error('scope étrange')
@@ -212,43 +215,120 @@ function binding_scope(name, scopes){
     return `$B.resolve('${name}')`
 }
 
+function _binding_scope(name, scopes){
+    var scope = binding_scope1(name, scopes)
+    if(scope.found){
+        return reference(scopes, scope.found, name)
+    }else if(scope.resolve == 'all'){
+        return `$B.resolve('${name}')`
+    }else if(scope.resolve == 'local'){
+        return `$B.resolve_local('${name}')`
+    }else if(scope.resolve == 'global'){
+        return `$B.resolve_local('${name}')`
+    }
+}
+
 function binding_scope1(name, scopes){
     // return the scope where name is bound, or undefined
-    var scope = last_scope(scopes)
-    if(scope.ast){
-        // Use symtable to detect if the name is local to the block
-        var block = scopes.symtable.table.blocks.get(_b_.id(scope.ast))
-        try{
-            flags = block.symbols.$string_dict[name][0]
-        }catch(err){
-            console.log(name, block)
-            throw err
+    var flags,
+        block
+    if(scopes.length == 0){
+        // case of Expression
+        return {found: false, resolve: 'all'} //`$B.resolve('${name}')`
+    }
+    var scope = last_scope(scopes),
+        name = mangle(scopes, scope, name)
+    // Use symtable to detect if the name is local to the block
+    if(scope.ast === undefined){
+        console.log('no ast', scope)
+    }
+    block = scopes.symtable.table.blocks.get(_b_.id(scope.ast))
+    if(block === undefined){
+        console.log('no block', scope, scope.ast, 'id', _b_.id(scope.ast))
+        console.log('symtable', scopes.symtable)
+    }
+    try{
+        flags = block.symbols.$string_dict[name][0]
+    }catch(err){
+        console.log('name', name, 'not in symbols of block', block)
+        return {found: false, resolve: 'all'}
+    }
+    var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
+    if([LOCAL, CELL].indexOf(__scope) > -1){
+        // name is local (symtable) but may not have yet been bound in scope
+        if(! scope.locals.has(name)){
+            if(block.type == TYPE_CLASS){
+                // In class definition, unbound local variables are looked up
+                // in the global namespace (Language Reference 4.2.2)
+                return {found: false, resolve: 'global'}
+            }else if(block.type == TYPE_MODULE){
+                return {found: false, resolve: 'global'}
+            }
+            return {found: false, resolve: 'local'}
+        }else{
+            return {found: scope} // reference(scopes, scope, name)
         }
-        var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
-        if([LOCAL, CELL].indexOf(__scope) > -1){
-            // name is local
-            return scope
+    }else if(scope.globals.has(name)){
+        var global_scope = scopes[0]
+        if(global_scope.locals.has(name)){
+            return {found: global_scope} // reference(scopes, scopes[0], name)
         }
-        if(scope.globals.has(name)){
-            return scopes[0]
-        }else if(scope.nonlocals.has(name)){
-            for(var i = scopes.length - 2; i >=0; i--){
-                if(scopes[i].locals.has(name)){
-                    return scopes[i]
-                }
+        return {found: false, resolve: 'global'}
+    }else if(scope.nonlocals.has(name)){
+        // Search name in the surrounding scopes, using symtable
+        for(var i = scopes.length - 2; i >= 0; i--){
+            block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+            if(block && block.symbols.$string_dict[name]){
+                return {found: scopes[i]} // reference(scopes, scopes[i], name)
             }
         }
     }
-    for(var i = scopes.length - 1; i >= 0; i--){
-        var block = scopes.symtable.table.blocks.get(scopes[i].ast)
+    if(scope.has_import_star){
+        return {found: false, resolve: 'all'}
+    }
+    for(var i = scopes.length - 2; i >= 0; i--){
+        block = undefined
+        if(scopes[i].ast){
+            block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+        }
         if(scopes[i].locals.has(name)){
-            return scopes[i]
+            return {found: scopes[i]} // reference(scopes, scopes[i], name)
+        }else if(block && block.symbols.$string_dict[name]){
+            flags = block.symbols.$string_dict[name][0]
+            var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
+            if([LOCAL, CELL].indexOf(__scope) > -1){
+                /* name is local to a surrounding scope but not yet bound
+                Example :
+                    i = 5
+                    def foo():
+                        def bar():
+                            return i
+                        res = []
+                        for i in range(5):
+                            res.append(bar())
+                        return res
+
+                    x = foo()
+                    assert x == [0, 1, 2, 3, 4]
+
+                The "i" in bar() is local to foo, but not bound. It is bound
+                at module level. The translation must be "resolve('id')", *not*
+                "locals_<module_id>.i"
+                */
+                return {found: false, resolve: 'all'}
+            }
+        }
+        if(scopes[i].has_import_star){
+            return {found: false, resolve: 'all'}
         }
     }
     if(builtins_scope.locals.has(name)){
-        return builtins_scope
+        return {found: builtins_scope} // `_b_.${name}`
     }
+
+    return {found: false, resolve: 'all'}
 }
+
 
 function resolve_in_namespace(name, ns){
     if(ns.hasOwnProperty(name)){
@@ -626,7 +706,8 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
-    var op_class = this.op.constructor
+    var js,
+        op_class = this.op.constructor
     for(var op in $B.op2ast_class){
         if($B.op2ast_class[op][1] === op_class){
             var iop = op + '='
@@ -634,33 +715,38 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
         }
     }
     var value = $B.js_from_ast(this.value, scopes)
+
     if(this.target instanceof $B.ast.Name){
         var scope = binding_scope1(this.target.id, scopes)
-        if(! scope || op == '@' || op == '//'){
-            return `locals.${this.target.id} = $B.augm_assign(` +
-                `$B.resolve('${this.target.id}'), '${iop}', ${value})`
+        if(! scope.found || op == '@' || op == '//'){
+            js = `locals.${this.target.id} = $B.augm_assign(` +
+                `$B.resolve_local('${this.target.id}', true), ` +
+                    `'${iop}', ${value})`
         }else{
-            var ref = `${make_scope_name(scopes, scope)}.${this.target.id}`
-            return ref + ` = typeof ${ref} == "number" && ` +
+            if(this.target.id == 'b'){
+                console.log('augm assign', this.target.id, 'scope', scope)
+            }
+            var ref = `${make_scope_name(scopes, scope.found)}.${this.target.id}`
+            js = ref + ` = typeof ${ref} == "number" && ` +
                 `$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n` +
                 `locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`
         }
     }else if(this.target instanceof $B.ast.Subscript){
         var op = opclass2dunder[this.op.constructor.$name]
-        return `$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
+        js = `$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
             `(locals.$key = ${this.target.slice.to_js(scopes)}), $B.rich_op('${op}', ` +
             `$B.$getitem(locals.$tg, locals.$key), ${value}))`
     }else if(this.target instanceof $B.ast.Attribute){
         var op = opclass2dunder[this.op.constructor.$name]
-        return `$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
+        js = `$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
             `'${this.target.attr}', $B.rich_op('${op}', ` +
             `$B.$getattr(locals.$tg, '${this.target.attr}'), ${value}))`
+    }else{
+        var target = $B.js_from_ast(this.target, scopes),
+            value = $B.js_from_ast(this.value, scopes)
+        js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     }
-    var js,
-        target = $B.js_from_ast(this.target, scopes),
-        value = $B.js_from_ast(this.value, scopes)
-    var js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
-    return js
+    return `locals.$lineno = ${this.lineno}\n` + js
 }
 
 $B.ast.Await.prototype.to_js = function(scopes){

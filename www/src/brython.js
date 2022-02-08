@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-08 18:06:16.704068"
-__BRYTHON__.timestamp=1644339976703
+__BRYTHON__.compiled_date="2022-02-08 18:59:29.461543"
+__BRYTHON__.timestamp=1644343169461
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1285,7 +1285,9 @@ var target=ast_or_obj(this.tree[0]),value=ast_or_obj(this.tree[1])
 target.ctx=new ast.Store()
 value.ctx=new ast.Load()
 var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_class=ast_type_class[1]
-return new ast.AugAssign(target,new ast_class(),value)}
+var ast_obj=new ast.AugAssign(target,new ast_class(),value)
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $AugmentedAssignCtx.prototype.toString=function(){return '(augm assign) '+this.tree}
 $AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+

@@ -1898,7 +1898,9 @@ $AugmentedAssignCtx.prototype.ast = function(){
         ast_type_class = op2ast_class[op],
         ast_class = ast_type_class[1]
 
-    return new ast.AugAssign(target, new ast_class(), value)
+    var ast_obj = new ast.AugAssign(target, new ast_class(), value)
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $AugmentedAssignCtx.prototype.toString = function(){
