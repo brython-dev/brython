@@ -1047,7 +1047,7 @@ DOMNode.__setattr__ = function(self, attr, value){
 
         // Set the property
         self[attr] = value
-
+        
         return _b_.None
     }
 }

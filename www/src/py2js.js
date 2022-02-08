@@ -6770,7 +6770,7 @@ $IdCtx.prototype.to_js = function(arg){
                         (! scope.parent_block ||
                          scope.parent_block.id == "__builtins__")){
                     found.push(scope)
-                    console.l                }
+                }
             }else if(scope.binding[val]){
                 found.push(scope)
             }
@@ -6894,9 +6894,7 @@ $IdCtx.prototype.to_js = function(arg){
                 }else{
                     // Builtin name ; it might be redefined inside the
                     // script, eg to redefine open()
-                    //if(val !== '__builtins__'){
-                        val = '_b_.' + val
-                    //}
+                    val = '_b_.' + val
                     this.is_builtin = true
                 }
             }else{
@@ -10122,7 +10120,9 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
 $RaiseCtx.prototype.ast = function(){
     // ast.Raise(exc, cause)
     // cause is the optional part in "raise exc from cause"
-    return new ast.Raise(...this.tree.map(ast_or_obj))
+    var ast_obj = new ast.Raise(...this.tree.map(ast_or_obj))
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $RaiseCtx.prototype.toString = function(){
@@ -10233,6 +10233,7 @@ $ReturnCtx.prototype.ast = function(){
     if(this.tree.length > 0){
         res.value = ast_or_obj(this.tree[0])
     }
+    res.lineno = $get_node(this).line_num
     return res
 }
 
@@ -11162,7 +11163,9 @@ $WithCtx.prototype.ast = function(){
         withitems.push(withitem)
     }
     var klass = this.async ? ast.AsyncWith : ast.With
-    return new klass(withitems, ast_body(this.parent))
+    var ast_obj = new klass(withitems, ast_body(this.parent))
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $WithCtx.prototype.toString = function(){

@@ -472,30 +472,39 @@ var getExceptionTrace = function(exc, includeInternal) {
         info += "\nJS stack:\n" + exc.$js_exc.stack + "\n"
     }
     info += "Traceback (most recent call last):"
-    var line_info = exc.$line_info
+    var line_info = exc.$line_info,
+        src
 
     for(var i = 0; i < exc.$stack.length; i++){
+        src = undefined
         var frame = exc.$stack[i]
         if(! frame[1]){
             continue
         }
-        if(frame[1].$line_info){
-            var $line_info = frame[1].$line_info,
-                line_info = $line_info.split(',')
+        if(frame.exec_obj){
+            // set for exec when globals is set to globals()
+            line_info = [frame.exec_obj.$lineno, frame[2]]
+            src = frame.exec_src
+        }else if(frame[1].$line_info){
+            var $line_info = frame[1].$line_info
+            line_info = $line_info.split(',')
         }else if(frame[1].$lineno){
-            var line_info = [frame[1].$lineno, frame[2]]
+            line_info = [frame[1].$lineno, frame[2]]
         }
         var file = frame[1].__file__ || frame[3].__file__
-        if(file && $B.file_cache[file]){
-            src = $B.file_cache[file]
-        }else{
-            console.log('pas de __file__ ou de file_cache[__file]')
-            if($B.imported[frame[2]] === undefined){
-                var file = frame[3].__file__,
-                    src = $B.file_cache[file]
+        if(src == undefined){
+            if(file && $B.file_cache[file]){
+                src = $B.file_cache[file]
             }else{
-                var file = $B.imported[frame[2]].__file__,
-                    src = $B.file_cache[file]
+                console.log('pas de __file__ ou de file_cache[__file]')
+                console.log(exc.$stack)
+                if($B.imported[frame[2]] === undefined){
+                    var file = frame[3].__file__,
+                        src = $B.file_cache[file]
+                }else{
+                    var file = $B.imported[frame[2]].__file__,
+                        src = $B.file_cache[file]
+                }
             }
         }
         var module = line_info[1],

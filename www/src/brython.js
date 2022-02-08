@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-07 08:38:30.631272"
-__BRYTHON__.timestamp=1644219510631
+__BRYTHON__.compiled_date="2022-02-08 18:06:16.704068"
+__BRYTHON__.timestamp=1644339976703
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -3565,8 +3565,7 @@ if($test){console.log(val,"found in",scope.id)}}}}else{if(scope.binding===undefi
 if(innermost.binding[val]&& innermost.ntype=="class"){
 if(scope.binding[val]&&
 (! scope.parent_block ||
-scope.parent_block.id=="__builtins__")){found.push(scope)
-console.l }}else if(scope.binding[val]){found.push(scope)}}
+scope.parent_block.id=="__builtins__")){found.push(scope)}}else if(scope.binding[val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}else{break}}
 this.found=found
 if($test){console.log(val,"found",found)
@@ -5209,7 +5208,9 @@ this.tree=[]
 C.tree[C.tree.length]=this
 this.scope_type=$get_scope(this).ntype}
 $RaiseCtx.prototype.ast=function(){
-return new ast.Raise(...this.tree.map(ast_or_obj))}
+var ast_obj=new ast.Raise(...this.tree.map(ast_or_obj))
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $RaiseCtx.prototype.toString=function(){return ' (raise) '+this.tree}
 $RaiseCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -5256,6 +5257,7 @@ break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw'
 node=node.parent}}
 $ReturnCtx.prototype.ast=function(){var res=new ast.Return()
 if(this.tree.length > 0){res.value=ast_or_obj(this.tree[0])}
+res.lineno=$get_node(this).line_num
 return res}
 $ReturnCtx.prototype.toString=function(){return 'return '+this.tree}
 $ReturnCtx.prototype.transition=function(token,value){var C=this
@@ -5705,7 +5707,9 @@ if(item.alias){withitem.optional_vars=ast_or_obj(item.alias.tree[0])
 withitem.optional_vars.ctx=new ast.Store()}
 withitems.push(withitem)}
 var klass=this.async ? ast.AsyncWith :ast.With
-return new klass(withitems,ast_body(this.parent))}
+var ast_obj=new klass(withitems,ast_body(this.parent))
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $WithCtx.prototype.toString=function(){return '(with) '+this.tree}
 $WithCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -7112,6 +7116,7 @@ if(typeof res=="function"){
 var meta_method=res.bind(null,klass)
 meta_method.__class__=$B.method
 meta_method.$infos={__self__:klass,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr,__module__:res.$infos ? res.$infos.__module__ :""}
+if($test){console.log('return method from meta',meta_method,meta_method+'')}
 return meta_method}}
 if(res===undefined){
 var getattr=meta.__getattr__
@@ -7973,13 +7978,15 @@ if(_b_.issubclass(y_class,x_class)){
 var reflected_left=$B.$getattr(x_class,rop),reflected_right=$B.$getattr(y_class,rop)
 if(reflected_right !==reflected_left){return reflected_right(y,x)}}
 var res
-try{method=$B.$call($B.$getattr(x,op))}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
+try{
+var attr=$B.$getattr(x,op)
+method=$B.$getattr(x_class,op)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
 res=$B.$call($B.$getattr(y,rop))(x)
 if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
-res=method(y)
+res=method(x,y)
 if(res===_b_.NotImplemented){var reflected=$B.$getattr(y,rop,null)
 if(reflected !==null){res=$B.$call(reflected)(x)
 if(res !==_b_.NotImplemented){return res}}
@@ -8497,17 +8504,17 @@ return new Proxy(dict,handler)}
 function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
 var lineno=frame[1].$lineno
 var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={}
+var handler={get:function(obj,prop){return obj[prop]},set:function(obj,prop,value){if(['__file__','$lineno'].indexOf(prop)==-1){obj[prop]=value}}}
 if(_globals===_b_.None){
-exec_locals={}
-for(var key in frame[1]){exec_locals[key]=frame[1][key]}
-exec_globals=frame[3]}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
+exec_locals=new Proxy(frame[1],handler)
+exec_globals=new Proxy(frame[3],handler)}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
 "a dict, not "+$B.class_name(_globals))}
 exec_globals={}
 if(_globals.$jsobj){
-exec_globals=_globals.$jsobj}else{
+exec_globals=new Proxy(_globals.$jsobj,handler)}else{
 if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jsobj={}}
 for(var key in _globals.$string_dict){_globals.$jsobj[key]=_globals.$string_dict[key][0]}}
-if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=make_builtins_dict()}
+if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name){
 global_name+='_globals'}
 if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
@@ -8520,7 +8527,8 @@ root.mode=mode
 $B.parser.dispatch_tokens(root)
 var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})
 var save_frames_stack=$B.frames_stack.slice()
-if(_globals !==_b_.None){$B.frames_stack.push([local_name,exec_locals,global_name,exec_globals])}
+if(_globals !==_b_.None){var top_frame=[local_name,exec_locals,global_name,exec_globals]
+exec_locals.$f_trace=$B.enter_frame(top_frame)}
 if(mode=='eval'){js='return '+js}
 var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){
@@ -8715,7 +8723,7 @@ var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=obj.$is_class ||obj.$factory
 var klass=obj.__class__
-var $test=false 
+var $test=attr=="__or__" && obj===_b_.list 
 if($test){console.log("$getattr",attr,'\nobj',obj,'\nklass',klass)}
 if(klass !==undefined &&(! klass.$native)&& klass.__bases__ &&
 klass.__getattribute__===undefined &&
@@ -9553,13 +9561,6 @@ else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
-function make_builtins_dict(){
-var builtins=$B.__builtins__
-if(builtins){return builtins}
-builtins={}
-for(var attr in _b_){if(attr !='__BRYTHON__'){builtins[attr]=_b_[attr]}}
-$B.__builtins__=builtins
-return builtins}
 $B.builtin_funcs=["__build_class__","abs","aiter","all","anext","any","ascii","bin","breakpoint","callable","chr","compile","delattr","dir","divmod","eval","exec","exit","format","getattr","globals","hasattr","hash","help","hex","id","input","isinstance","issubclass","iter","len","locals","max","min","next","oct","open","ord","pow","print","quit","repr","round","setattr","sorted","sum","vars"
 ]
 var builtin_function=$B.builtin_function=$B.make_class(
@@ -9792,13 +9793,18 @@ return exc+''}
 var info=''
 if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_exc.stack+"\n"}
 info+="Traceback (most recent call last):"
-var line_info=exc.$line_info
-for(var i=0;i < exc.$stack.length;i++){var frame=exc.$stack[i]
+var line_info=exc.$line_info,src
+for(var i=0;i < exc.$stack.length;i++){src=undefined
+var frame=exc.$stack[i]
 if(! frame[1]){continue}
-if(frame[1].$line_info){var $line_info=frame[1].$line_info,line_info=$line_info.split(',')}else if(frame[1].$lineno){var line_info=[frame[1].$lineno,frame[2]]}
+if(frame.exec_obj){
+line_info=[frame.exec_obj.$lineno,frame[2]]
+src=frame.exec_src}else if(frame[1].$line_info){var $line_info=frame[1].$line_info
+line_info=$line_info.split(',')}else if(frame[1].$lineno){line_info=[frame[1].$lineno,frame[2]]}
 var file=frame[1].__file__ ||frame[3].__file__
-if(file && $B.file_cache[file]){src=$B.file_cache[file]}else{console.log('pas de __file__ ou de file_cache[__file]')
-if($B.imported[frame[2]]===undefined){var file=frame[3].__file__,src=$B.file_cache[file]}else{var file=$B.imported[frame[2]].__file__,src=$B.file_cache[file]}}
+if(src==undefined){if(file && $B.file_cache[file]){src=$B.file_cache[file]}else{console.log('pas de __file__ ou de file_cache[__file]')
+console.log(exc.$stack)
+if($B.imported[frame[2]]===undefined){var file=frame[3].__file__,src=$B.file_cache[file]}else{var file=$B.imported[frame[2]].__file__,src=$B.file_cache[file]}}}
 var module=line_info[1],is_exec=module.charAt(0)=="$"
 if(is_exec){module="<module>"}
 info+="\n  File "+file+" line "+line_info[0]

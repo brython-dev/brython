@@ -113,6 +113,8 @@ var TYPE_CLASS = 1,
 
 function binding_scope(name, scopes){
     // return the scope where name is bound, or undefined
+    var flags,
+        block
     if(scopes.length == 0){
         // case of Expression
         return `$B.resolve('${name}')`
@@ -123,7 +125,7 @@ function binding_scope(name, scopes){
     if(scope.ast === undefined){
         console.log('no ast', scope)
     }
-    var block = scopes.symtable.table.blocks.get(_b_.id(scope.ast))
+    block = scopes.symtable.table.blocks.get(_b_.id(scope.ast))
     if(block === undefined){
         console.log('no block', scope, scope.ast, 'id', _b_.id(scope.ast))
         console.log('symtable', scopes.symtable)
@@ -142,6 +144,8 @@ function binding_scope(name, scopes){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
                 return `$B.resolve_global('${name}')`
+            }else if(block.type == TYPE_MODULE){
+                return `$B.resolve_global('${name}')`
             }
             return `$B.resolve_local('${name}')`
         }else{
@@ -154,8 +158,10 @@ function binding_scope(name, scopes){
         }
         return `$B.resolve_global('${name}')`
     }else if(scope.nonlocals.has(name)){
-        for(var i = scopes.length - 2; i >=0; i--){
-            if(scopes[i].locals.has(name)){
+        // Search name in the surrounding scopes, using symtable
+        for(var i = scopes.length - 2; i >= 0; i--){
+            block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+            if(block && block.symbols.$string_dict[name]){
                 return reference(scopes, scopes[i], name)
             }
         }
@@ -164,9 +170,36 @@ function binding_scope(name, scopes){
         return `$B.resolve('${name}')`
     }
     for(var i = scopes.length - 2; i >= 0; i--){
-        var block = scopes.symtable.table.blocks.get(scopes[i].ast)
+        block = undefined
+        if(scopes[i].ast){
+            block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+        }
         if(scopes[i].locals.has(name)){
             return reference(scopes, scopes[i], name)
+        }else if(block && block.symbols.$string_dict[name]){
+            flags = block.symbols.$string_dict[name][0]
+            var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
+            if([LOCAL, CELL].indexOf(__scope) > -1){
+                /* name is local to a surrounding scope but not yet bound
+                Example :
+                    i = 5
+                    def foo():
+                        def bar():
+                            return i
+                        res = []
+                        for i in range(5):
+                            res.append(bar())
+                        return res
+
+                    x = foo()
+                    assert x == [0, 1, 2, 3, 4]
+
+                The "i" in bar() is local to foo, but not bound. It is bound
+                at module level. The translation must be "resolve('id')", *not*
+                "locals_<module_id>.i"
+                */
+                return `$B.resolve('${name}')`
+            }
         }
         if(scopes[i].has_import_star){
             return `$B.resolve('${name}')`
@@ -217,26 +250,53 @@ function binding_scope1(name, scopes){
     }
 }
 
-$B.resolve = function(name){
-    for(var frame of $B.frames_stack.slice().reverse()){
-        for(var ns of [frame[1], frame[3]]){
-            if(ns.hasOwnProperty(name)){
-                return ns[name]
-            }else if(ns.$dict){
+function resolve_in_namespace(name, ns){
+    if(ns.hasOwnProperty(name)){
+        return {found: true, value: ns[name]}
+    }else if(ns.$dict){
+        try{
+            return {found: true, value: ns.$getitem(ns.$dict, name)}
+        }catch(err){
+            if(ns.$missing){
                 try{
-                    return ns.$getitem(ns.$dict, name)
+                    return {
+                        found: true,
+                        value: $B.$call(ns.$missing)(ns.$dict, name)
+                    }
                 }catch(err){
-                    if(ns.$missing){
-                        try{
-                            return $B.$call(ns.$missing)(ns.$dict, name)
-                        }catch(err){
-                            if(! $B.$is_exc(err, [_b_.KeyError])){
-                                throw err
-                            }
-                        }
+                    if(! $B.$is_exc(err, [_b_.KeyError])){
+                        throw err
                     }
                 }
             }
+        }
+    }
+    return {found: false}
+}
+
+$B.resolve = function(name){
+    var checked = new Set(),
+        current_globals
+    for(var frame of $B.frames_stack.slice().reverse()){
+        if(current_globals === undefined){
+            current_globals = frame[3]
+        }else if(frame[3] !== current_globals){
+            var v = resolve_in_namespace(name, current_globals)
+            if(v.found){
+                return v.value
+            }
+            checked.add(current_globals)
+            current_globals = frame[3]
+        }
+        var v = resolve_in_namespace(name, frame[1])
+        if(v.found){
+            return v.value
+        }
+    }
+    if(! checked.has(frame[3])){
+        var v = resolve_in_namespace(name, frame[3])
+        if(v.found){
+            return v.value
         }
     }
     if(builtins_scope.locals.has(name)){
@@ -264,11 +324,13 @@ $B.resolve_local = function(name){
 }
 
 $B.resolve_global = function(name){
-    // Translation of a reference to "name" when symtable reports that "name"
-    // is local, but it has not been bound in scope locals
+    // Resolve in globals or builtins
     var frame = $B.last($B.frames_stack)
     if(frame[3].hasOwnProperty(name)){
         return frame[3][name]
+    }
+    if(builtins_scope.locals.has(name)){
+        return _b_[name]
     }
     throw _b_.NameError.$factory(name)
 }
@@ -681,6 +743,7 @@ $B.ast.Call.prototype.to_js = function(scopes){
         js += '('
     }
     var args = ''
+    named_args = named_args.join(', ')
     if(! has_starred){
         args += `${named_args}`
     }else{
@@ -758,6 +821,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `locals.$qualname = "${qualname}"\n` +
           `locals.$is_class = true\n` +
           `var top_frame = ["${ref}", locals, "${glob}", ${globals_name}]\n` +
+          `top_frame.__file__ = '${scopes.filename}'\n` +
           `locals.$f_trace = $B.enter_frame(top_frame)\n`
 
     js += add_body(this.body, scopes)
@@ -1146,6 +1210,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    $top_frame.__file__ = '${scopes.filename}'
     locals.$f_trace = $B.enter_frame($top_frame)
     locals.$lineno = ${this.lineno}
     var stack_length = $B.frames_stack.length\n`
@@ -1221,7 +1286,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             free_vars.push(`'${ident}'`)
         }
     }
-
+    // Set attribute $is_func to distinguish Brython functions from JS
+    // Used in py_dom.js / DOMNode.__getattribute__
+    js += `${name2}.$is_func = true\n`
+    // Set admin infos
     js += `${name2}.$infos = {\n` +
         `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
         `__defaults__: $B.fast_tuple([${default_names}]), ` +
@@ -1454,6 +1522,9 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
 
 $B.ast.JoinedStr.prototype.to_js = function(scopes){
     var items = this.values.map(s => $B.js_from_ast(s, scopes))
+    if(items.length == 0){
+        return "''"
+    }
     return items.join(' + ')
 }
 
@@ -1734,23 +1805,26 @@ $B.ast.Module.prototype.to_js = function(scopes, namespaces){
               `globals = ${namespaces.global_name},\n` +
               `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
     }
+    js += `\n$top_frame.__file__ = '${scopes.filename}'\n`
     js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
-          `locals.__name__ = '${name}'\n` +
-          `locals.$f_trace = $B.enter_frame($top_frame)\n` +
-          `locals.$lineno = ${this.lineno}\n` +
-          `var stack_length = $B.frames_stack.length\n` +
-          `try{\n`
-
-    js += add_body(this.body, scopes) + '\n'
-
-    js += `$B.leave_frame(locals)
-    }catch(err){
-    $B.set_exc(err)
-    if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){
-    locals.$f_trace = $B.trace_exception()
+          `locals.__name__ = '${name}'\n`
+    if(! namespaces){
+        // for exec(), frame is put on top of the stack inside
+        // py_builtin_functions.js / eval1()
+        js += `locals.$f_trace = $B.enter_frame($top_frame)\n`
     }
-    $B.leave_frame(locals);throw err
-    }`
+    js += `locals.$lineno = ${this.lineno}\n` +
+          `var stack_length = $B.frames_stack.length\n` +
+          `try{\n` +
+              add_body(this.body, scopes) + '\n' +
+              `$B.leave_frame(locals)\n` +
+          `}catch(err){\n` +
+              `$B.set_exc(err)\n` +
+              `if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){\n` +
+                  `locals.$f_trace = $B.trace_exception()\n` +
+              `}\n` +
+              `$B.leave_frame(locals);throw err\n` +
+          `}`
     scopes.pop()
     return js
 }
@@ -1795,7 +1869,8 @@ $B.ast.Pass.prototype.to_js = function(scopes){
 }
 
 $B.ast.Raise.prototype.to_js = function(scopes){
-    var js = '$B.$raise('
+    var js = `locals.$lineno = ${this.lineno}\n` +
+             '$B.$raise('
     if(this.exc){
         js += $B.js_from_ast(this.exc, scopes)
     }
@@ -1806,7 +1881,8 @@ $B.ast.Raise.prototype.to_js = function(scopes){
 }
 
 $B.ast.Return.prototype.to_js = function(scopes){
-    var js = 'var result = ' +
+    var js = `locals.$lineno = ${this.lineno}\n` +
+             'var result = ' +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
     js += `\nif(locals.$f_trace !== _b_.None){\n` +
           `$B.trace_return(_b_.None)\n}\n` +
@@ -1956,15 +2032,26 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.While.prototype.to_js = function(scopes){
-    var scope = $B.last(scopes),
+    var id = $B.UUID(),
+        scope = $B.last(scopes),
         new_scope = new Scope(scope.name, scope.type)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     new_scope.parent = scope
     scopes.push(new_scope)
-    var js = `while((locals.$lineno = ${this.lineno}) && ` +
+
+    // Set a variable to detect a "break"
+    var js = `var no_break_${id} = true\n`
+
+    js += `while((locals.$lineno = ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     js += add_body(this.body, scopes) + '\n}'
+
+    if(this.orelse.length > 0){
+        js += `\nif(no_break_${id}){\n` +
+              add_body(this.orelse, scopes) + '}\n'
+    }
+
     scopes.pop()
     return js
 }
@@ -2023,18 +2110,21 @@ $B.ast.With.prototype.to_js = function(scopes){
         }
         s += js
         s += `}catch(err_${id}){\n` +
+              `locals.$lineno = ${lineno}\n` +
               `exc_${id} = false\n` +
               `err_${id} = $B.exception(err_${id}, true)\n` +
               `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
               `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n` +
               `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
         s += `}\nfinally{\n` +
+              `locals.$lineno = ${lineno}\n` +
               `if(exc_${id}){\n` +
               `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n}\n}`
         return s
     }
 
-    var scope = last_scope(scopes)
+    var scope = last_scope(scopes),
+        lineno = this.lineno
     delete scope.is_generator
 
     js = add_body(this.body, scopes) + '\n'
@@ -2042,7 +2132,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
-    return js
+    return `locals.$lineno = ${lineno}\n` + js
 }
 
 $B.ast.Yield.prototype.to_js = function(scopes){

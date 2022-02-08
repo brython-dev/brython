@@ -353,7 +353,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__init__" // && klass.$infos.__name__ == "generator"
+    var $test = false // attr == "__or__" && klass === _b_.list
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -417,6 +417,10 @@ type.__getattribute__ = function(klass, attr){
                         __name__: attr,
                         __qualname__: klass.$infos.__name__ + "." + attr,
                         __module__: res.$infos ? res.$infos.__module__ : ""
+                    }
+                    if($test){
+                        console.log('return method from meta', meta_method,
+                            meta_method + '')
                     }
                     return meta_method
                 }

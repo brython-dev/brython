@@ -580,13 +580,23 @@ function eval1(src, mode, _globals, _locals){
         exec_locals = {},
         exec_globals = {}
 
+    // proxy around globals.$jsobj, to avoid modifying __file__ and
+    // $lineno
+    var handler = {
+        get: function(obj, prop){
+            return obj[prop]
+        },
+        set: function(obj, prop, value){
+            if(['__file__', '$lineno'].indexOf(prop) == -1){
+                obj[prop] = value
+            }
+        }
+    }
+
     if(_globals === _b_.None){
         // create a copy of locals
-        exec_locals = {}
-        for(var key in frame[1]){
-            exec_locals[key] = frame[1][key]
-        }
-        exec_globals = frame[3]
+        exec_locals = new Proxy(frame[1], handler)
+        exec_globals = new Proxy(frame[3], handler)
     }else{
         if(_globals.__class__ !== _b_.dict){
             throw _b_.TypeError.$factory(`${mode}() globals must be ` +
@@ -595,7 +605,7 @@ function eval1(src, mode, _globals, _locals){
         // _globals is used for both globals and locals
         exec_globals = {}
         if(_globals.$jsobj){ // eg globals()
-            exec_globals = _globals.$jsobj
+            exec_globals = new Proxy(_globals.$jsobj, handler)
         }else{
             // The globals object must be the same across calls to exec()
             // with the same dictionary (cf. issue 690)
@@ -609,7 +619,7 @@ function eval1(src, mode, _globals, _locals){
             }
         }
         if(exec_globals.__builtins__ === undefined){
-            exec_globals.__builtins__ = make_builtins_dict()
+            exec_globals.__builtins__ = _b_.__builtins__
         }
         if(_locals === _b_.None){
             exec_locals = exec_globals
@@ -653,7 +663,8 @@ function eval1(src, mode, _globals, _locals){
     var save_frames_stack = $B.frames_stack.slice()
 
     if(_globals !== _b_.None){
-        $B.frames_stack.push([local_name, exec_locals, global_name, exec_globals])
+        var top_frame = [local_name, exec_locals, global_name, exec_globals]
+        exec_locals.$f_trace = $B.enter_frame(top_frame)
     }
 
     if(mode == 'eval'){
@@ -1233,7 +1244,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__update" // && obj === $B // "Point"
+    var $test = attr == "__or__" && obj === _b_.list // "Point"
     if($test){console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)}
 
     // Shortcut for classes without parents
@@ -3602,22 +3613,6 @@ $B.Function.$factory = function(){}
 $B.set_func_names($B.Function, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
-
-function make_builtins_dict(){
-    // Create a dictionary with Python builtins. Used in eval1
-    var builtins = $B.__builtins__
-    if(builtins){
-        return builtins
-    }
-    builtins = {}
-    for(var attr in _b_){
-        if(attr != '__BRYTHON__'){
-            builtins[attr] = _b_[attr]
-        }
-    }
-    $B.__builtins__ = builtins
-    return builtins
-}
 
 $B.builtin_funcs = [
     "__build_class__",
