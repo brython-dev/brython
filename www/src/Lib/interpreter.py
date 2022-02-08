@@ -195,7 +195,8 @@ class Interpreter:
         active.append(self)
 
     def blur(self, ev):
-        self.dialog.style.zIndex = 0
+        if hasattr(self, 'dialog'):
+            self.dialog.style.zIndex = 0
 
     def close(self, ev):
         active.remove(self)
