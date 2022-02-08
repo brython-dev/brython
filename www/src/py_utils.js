@@ -1766,10 +1766,18 @@ $B.rich_op = function(op, x, y){
             return reflected_right(y, x)
         }
     }
-    // For instances of different classes, try reversed operator
     var res
     try{
-        method = $B.$call($B.$getattr(x, op))
+        // Test if object has attribute op. If so, it is not used in the
+        // operation, but the attribute op of its class, if is exits
+        // This prevents a + b to succeed if the instance a has __add__
+        // but its class has no __add__
+        // It also prevents a | b to succeed if getattr(a, op) fails
+        // although getattr(type(a), op) succeeds, which is the case for
+        // [1] | 'a' : getattr(list, '__or__') succeeds because type.__or__ is 
+        // defined, but hasattr([1], '__or__') is False
+        var attr = $B.$getattr(x, op)
+        method = $B.$getattr(x_class, op)
     }catch(err){
         if(err.__class__ !== _b_.AttributeError){
             throw err
@@ -1782,7 +1790,7 @@ $B.rich_op = function(op, x, y){
             "' not supported between instances of '" + $B.class_name(x) +
             "' and '" + $B.class_name(y) + "'")
     }
-    res = method(y)
+    res = method(x, y)
     if(res === _b_.NotImplemented){
         var reflected = $B.$getattr(y, rop, null)
         if(reflected !== null){
