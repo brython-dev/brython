@@ -616,6 +616,9 @@ function eval1(src, mode, _globals, _locals){
             }
             for(var key in _globals.$string_dict){
                 _globals.$jsobj[key] = _globals.$string_dict[key][0]
+                if(key == '__name__'){
+                    global_name = _globals.$jsobj[key]
+                }
             }
         }
         if(exec_globals.__builtins__ === undefined){
