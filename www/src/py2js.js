@@ -10630,10 +10630,14 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
 }
 
 $SubCtx.prototype.ast = function(){
-    var slice = ast_or_obj(this.tree[0])
-    if(slice.ctx){
-        slice.ctx = new ast.Load()
+    var slice
+    if(this.tree.length > 1){
+        var slice_items = this.tree.map(x => ast_or_obj(x))
+        slice = new ast.Tuple(slice_items)
+    }else{
+        slice = ast_or_obj(this.tree[0])
     }
+    slice.ctx = new ast.Load()
     var value = ast_or_obj(this.value)
     if(value.ctx){
         value.ctx = new ast.Load()

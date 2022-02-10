@@ -367,7 +367,9 @@ int.__new__ = function(cls, value){
     }else if(! _b_.isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")
     }
-    if(cls === int){return int.$factory(value)}
+    if(cls === int){
+        return int.$factory(value)
+    }
     return {
         __class__: cls,
         __dict__: $B.empty_dict(),

@@ -1774,7 +1774,7 @@ $B.rich_op = function(op, x, y){
         // but its class has no __add__
         // It also prevents a | b to succeed if getattr(a, op) fails
         // although getattr(type(a), op) succeeds, which is the case for
-        // [1] | 'a' : getattr(list, '__or__') succeeds because type.__or__ is 
+        // [1] | 'a' : getattr(list, '__or__') succeeds because type.__or__ is
         // defined, but hasattr([1], '__or__') is False
         var attr = $B.$getattr(x, op)
         method = $B.$getattr(x_class, op)

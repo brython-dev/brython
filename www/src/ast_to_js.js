@@ -25,6 +25,19 @@ function Scope(name, type, ast){
     this.ast = ast
 }
 
+function copy_scope(scope, ast, id){
+    // Create a new scope inside scope
+    // Used for statements that create a block (If, While...) so that
+    // bindings don't use the enclosing scope
+    var new_scope = new Scope(scope.name, scope.type, ast)
+    if(id !== undefined){
+        // passed by ast.For, used in ast.Break to set the flag to execute
+        // the "else" clause or not
+        new_scope.id = id
+    }
+    new_scope.parent = scope
+    return new_scope
+}
 
 function make_local(module_id){
     return `locals_${module_id.replace(/\./g, '_')}`
@@ -94,12 +107,13 @@ function reference(scopes, scope, name){
 }
 
 function bind(name, scopes){
-    var scope = last_scope(scopes)
-    name = mangle(scopes, scope, name)
-    if(scope.globals && scope.globals.has(name)){
+    var scope = $B.last(scopes),
+        up_scope = last_scope(scopes)
+    name = mangle(scopes, up_scope, name)
+    if(up_scope.globals && up_scope.globals.has(name)){
         scope = scopes[0]
-    }else if(scope.nonlocals.has(name)){
-        for(var i = scopes.indexOf(scope) - 1; i >= 0; i--){
+    }else if(up_scope.nonlocals.has(name)){
+        for(var i = scopes.indexOf(up_scope) - 1; i >= 0; i--){
             if(scopes[i].locals.has(name)){
                 return scopes[i]
             }
@@ -137,6 +151,21 @@ function name_reference(name, scopes){
     }
 }
 
+function local_scope(name, scope){
+    // Search name in locals of scope, and of its parents if
+    // scope is a "subscope"
+    var s = scope
+    while(true){
+        if(s.locals.has(name)){
+            return {found: true, scope: s}
+        }
+        if(! s.parent){
+            return {found: false}
+        }
+        s = s.parent
+    }
+}
+
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
     var flags,
@@ -145,15 +174,17 @@ function name_scope(name, scopes){
         // case of Expression
         return {found: false, resolve: 'all'}
     }
-    var scope = last_scope(scopes),
+    var scope = $B.last(scopes),
+        up_scope = last_scope(scopes),
         name = mangle(scopes, scope, name)
+
     // Use symtable to detect if the name is local to the block
-    if(scope.ast === undefined){
+    if(up_scope.ast === undefined){
         console.log('no ast', scope)
     }
-    block = scopes.symtable.table.blocks.get(_b_.id(scope.ast))
+    block = scopes.symtable.table.blocks.get(_b_.id(up_scope.ast))
     if(block === undefined){
-        console.log('no block', scope, scope.ast, 'id', _b_.id(scope.ast))
+        console.log('no block', scope, scope.ast, 'id', _b_.id(up_scope.ast))
         console.log('symtable', scopes.symtable)
     }
     try{
@@ -166,7 +197,10 @@ function name_scope(name, scopes){
         is_local = [LOCAL, CELL].indexOf(__scope) > -1
     if(is_local){
         // name is local (symtable) but may not have yet been bound in scope
-        if(! scope.locals.has(name)){
+        // If scope is a "subscope", look in its parents
+        var l_scope = local_scope(name, scope)
+        if(! l_scope.found){
+        // if(! scope.locals.has(name)){
             if(block.type == TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
@@ -174,9 +208,12 @@ function name_scope(name, scopes){
             }else if(block.type == TYPE_MODULE){
                 return {found: false, resolve: 'global'}
             }
+            if(name == 'options'){
+                console.log('name', name, 'not in scope', scope)
+            }
             return {found: false, resolve: 'local'}
         }else{
-            return {found: scope} // reference(scopes, scope, name)
+            return {found: l_scope.scope} // reference(scopes, scope, name)
         }
     }else if(scope.globals.has(name)){
         var global_scope = scopes[0]
@@ -303,6 +340,9 @@ $B.resolve_local = function(name){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
     var frame = $B.last($B.frames_stack)
+    if(frame === undefined){
+        console.log('pas de frame, name', name)
+    }
     if(frame[1].hasOwnProperty){
         if(frame[1].hasOwnProperty(name)){
             return frame[1][name]
@@ -1073,12 +1113,10 @@ $B.ast.For.prototype.to_js = function(scopes){
     // scope.
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes)
-    var scope = $B.last(scopes),
-        new_scope = new Scope(scope.name, scope.type, this)
-    new_scope.id = id
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    new_scope.parent = scope
+    var scope = $B.last(scopes),
+        new_scope = copy_scope(scope, this, id)
     scopes.push(new_scope)
 
     var js = `var no_break_${id} = true\n` +
@@ -1098,12 +1136,12 @@ $B.ast.For.prototype.to_js = function(scopes){
 
     js += '\n}' // close 'while' loop
 
+    scopes.pop()
+
     if(this.orelse.length > 0){
         js += `\nif(no_break_${id}){\n` +
               add_body(this.orelse, scopes) + '}\n'
     }
-
-    scopes.pop()
 
     return js
 }
@@ -1379,7 +1417,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         }
         js += decorate
     }
-
     return js
 }
 
@@ -1470,14 +1507,14 @@ $B.ast.Global.prototype.to_js = function(scopes){
 
 $B.ast.If.prototype.to_js = function(scopes){
     var scope = $B.last(scopes),
-        new_scope = new Scope(scope.name, scope.type, this)
+        new_scope = copy_scope(scope, this)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    new_scope.parent = scope
-    scopes.push(new_scope)
     var js = `if((locals.$lineno = ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+    scopes.push(new_scope)
     js += add_body(this.body, scopes) + '\n}'
+    scopes.pop()
     if(this.orelse.length > 0){
         if(this.orelse[0] instanceof $B.ast.If && this.orelse.length == 1){
             js += 'else ' + $B.js_from_ast(this.orelse[0], scopes) +
@@ -1486,7 +1523,6 @@ $B.ast.If.prototype.to_js = function(scopes){
             js += '\nelse{\n' + add_body(this.orelse, scopes) + '\n}'
         }
     }
-    scopes.pop()
     return js
 }
 
@@ -1952,10 +1988,13 @@ $B.ast.Starred.prototype.to_js = function(scopes){
 }
 
 $B.ast.Subscript.prototype.to_js = function(scopes){
-    var func = this.slice instanceof $B.ast.Slice ? 'getitem_slice' :
-                                                    '$getitem'
-    return `$B.${func}(${$B.js_from_ast(this.value, scopes)}, ` +
-        `${$B.js_from_ast(this.slice, scopes)})`
+    var value = $B.js_from_ast(this.value, scopes),
+        slice = $B.js_from_ast(this.slice, scopes)
+    if(this.slice instanceof $B.ast.Slice){
+        return `$B.getitem_slice(${value}, ${slice})`
+    }else{
+        return `$B.$getitem(${value}, ${slice})`
+    }
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
@@ -2073,12 +2112,13 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.While.prototype.to_js = function(scopes){
-    var id = $B.UUID(),
-        scope = $B.last(scopes),
-        new_scope = new Scope(scope.name, scope.type)
+    var id = $B.UUID()
+
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    new_scope.parent = scope
+    var scope = $B.last(scopes),
+        new_scope = copy_scope(scope, this)
+
     scopes.push(new_scope)
 
     // Set a variable to detect a "break"
@@ -2088,12 +2128,14 @@ $B.ast.While.prototype.to_js = function(scopes){
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     js += add_body(this.body, scopes) + '\n}'
 
+    scopes.pop()
+
     if(this.orelse.length > 0){
         js += `\nif(no_break_${id}){\n` +
               add_body(this.orelse, scopes) + '}\n'
     }
 
-    scopes.pop()
+
     return js
 }
 

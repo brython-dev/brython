@@ -208,14 +208,11 @@ function run_py(module_contents, path, module, compiled) {
         }
         var src = js
         js = "var $module = (function(){\n" + js
-        if($B.js_from_ast){
-            js += 'return locals_'
-        }else{
-            js += "return $locals_"
-        }
+        var prefix = $B.js_from_ast ? 'locals_' : '$locals_'
+        js += 'return ' + prefix
         js += module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
             "return $module"
-        var module_id = "$locals_" + module.__name__.replace(/\./g, '_')
+        var module_id = prefix + module.__name__.replace(/\./g, '_')
         var $module = (new Function(module_id, js))(module)
     }catch(err){
         if($B.debug > 1){
@@ -1166,7 +1163,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     if(level > 0){
         mod_name = current_module +
             (mod_name.length > 0 ? '.' + mod_name : '')
-        
+
     }
     var parts = mod_name.split(".")
     // For . , .. and so on , remove one relative step
