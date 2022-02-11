@@ -113,11 +113,12 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-10 10:02:27.311929"
-__BRYTHON__.timestamp=1644483747311
+__BRYTHON__.compiled_date="2022-02-11 11:42:24.212509"
+__BRYTHON__.timestamp=1644576144212
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
-;(function($B){function ord(char){if(char.length==1){return char.charCodeAt(0)}
+;(function($B){var _b_=$B.builtins
+function ord(char){if(char.length==1){return char.charCodeAt(0)}
 var code=0x10000
 code+=(char.charCodeAt(0)& 0x03FF)<< 10
 code+=(char.charCodeAt(1)& 0x03FF)
@@ -131,6 +132,19 @@ res[2]=start.slice(0,2)
 res[3]=end
 res[4]=line
 return res}
+var errors={}
+function TokenError(message,position){if(errors.TokenError===undefined){var $error_2={$name:"TokenError",$qualname:"TokenError",$is_class:true,__module__:"tokenize"}
+var error=errors.TokenError=$B.$class_constructor("TokenError",$error_2,_b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
+error.__doc__=_b_.None
+error.$factory=function(message,position){return{
+__class__:error,msg:message,lineno:position[0],colno:position[1]}}
+error.__str__=function(self){var s=self.msg
+if(self.lineno > 1){s+=` (${self.lineno}, ${self.colno})`}
+return s}
+$B.set_func_names(error,"tokenize")}
+var exc=errors.TokenError.$factory(message,position)
+console.log('error',exc.__class__,exc.args)
+return exc}
 function get_line_at(src,pos){
 var end=src.substr(pos).search(/[\r\n]/)
 return end==-1 ? src.substr(pos):src.substr(pos,end)}
@@ -526,7 +540,7 @@ function report(wrong_type){if(augmented){$_SyntaxError(C,[`'${wrong_type}' is a
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'assign to '+ctx.type)}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
 if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('operator')}}else if(assigned.type=='call'){report('function call')}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
-if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){report('named expression')}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
+if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){report('named expression')}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
 if(once){break}
 ctx=ctx.parent}}
 function remove_abstract_expr(tree){if(tree.length > 0 && $B.last(tree).type=='abstract_expr'){tree.pop()}}
@@ -565,6 +579,7 @@ child.parent=this
 child.module=this.module}
 $Node.prototype.ast=function(){if(this.mode=="eval"){var root_ast=new ast.Expression()
 root_ast.lineno=this.line_num
+console.log('Node.ast',this)
 root_ast.body=ast_or_obj(this.children[0].C.tree[0])
 return root_ast}
 var root_ast=new ast.Module([],[])
@@ -2372,7 +2387,9 @@ for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].packed){keys.pus
 values.push(ast_or_obj(this.items[i]))}else{keys.push(ast_or_obj(this.items[i]))
 values.push(ast_or_obj(this.items[i+1]))
 i++}}
-return new ast.Dict(keys,values)}else if(this.real=='set'){return new ast.Set(this.items.map(ast_or_obj))}
+return new ast.Dict(keys,values)}else if(this.real=='set'){var items=[]
+for(var item of this.items){if(item.packed){items.push(new ast.Starred(ast_or_obj(item),new ast.Load()))}else{items.push(ast_or_obj(item))}}
+return new ast.Set(items)}
 return this}
 $DictOrSetCtx.prototype.toString=function(){switch(this.real){case 'dict':
 return '(dict) {'+this.items+'}'
@@ -5525,7 +5542,7 @@ this.tree=[]
 this.expect='id'
 this.nb_packed=0
 C.tree[C.tree.length]=this}
-$TargetListCtx.prototype.ast=function(){if(this.tree.length==1){var item=ast_or_obj(this.tree[0])
+$TargetListCtx.prototype.ast=function(){if(this.tree.length==1 && ! this.implicit_tuple){var item=ast_or_obj(this.tree[0])
 item.ctx=new ast.Store()
 if(item instanceof ast.Tuple){for(var target of item.elts){target.ctx=new ast.Store()}}
 return item}else{var items=[]
@@ -8507,6 +8524,11 @@ return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,
 return new Proxy(dict,handler)}
 function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
 var lineno=frame[1].$lineno
+if(src.endsWith('\\\n')){var exc=_b_.SyntaxError.$factory('')
+var lines=src.split('\n'),line=lines[lines.length-2]
+console.log('frame',frame,'lines',lines)
+exc.args=['unexpected EOF while parsing',['<string>',lines.length-1,1,line]]
+throw exc}
 var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={}
 var handler={get:function(obj,prop){return obj[prop]},set:function(obj,prop,value){if(['__file__','$lineno'].indexOf(prop)==-1){obj[prop]=value}}}
 if(_globals===_b_.None){
@@ -8675,7 +8697,8 @@ $B.clear_ns(globals_id)
 $B.clear_ns(locals_id)}}
 $$eval.$is_func=true
 function exec(src,globals,locals){var missing={}
-var $=$B.args("exec",3,{src:null,globals:null,locals:null},["src","globals","locals"],arguments,{globals:_b_.None,locals:_b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals
+try{var $=$B.args("exec",3,{src:null,globals:null,locals:null},["src","globals","locals"],arguments,{globals:_b_.None,locals:_b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals}catch(err){console.log('error',$B.frames_stack.slice())
+throw err}
 return $$eval(src,globals,locals,"exec")||_b_.None}
 exec.$is_func=true
 function exit(){throw _b_.SystemExit}
@@ -9864,6 +9887,7 @@ BaseException.$factory.$infos={__name__:"BaseException",__qualname__:"BaseExcept
 $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
 $B.exception=function(js_exc,in_ctx_manager){
+console.log('exception',js_exc)
 if(! js_exc.__class__){var exc=Error()
 exc.__name__="Internal Javascript error: "+
 (js_exc.__name__ ||js_exc.name)
@@ -9879,9 +9903,15 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-console.log('js error',exc.args,exc.__class__)
+console.log('js error',exc.args)
 console.log(js_exc.stack)
-console.log($B.frames_stack.slice())
+console.log('frames_stack',$B.frames_stack.slice())
+if($B.js_from_ast){for(var frame of $B.frames_stack){var src=undefined
+var file=frame[1].__file__ ||frame[3].__file__
+if(file && $B.file_cache[file]){src=$B.file_cache[file]}
+console.log('line',frame[1].$lineno,'in',frame[0])
+if(src !==undefined){var lines=src.split('\n'),line=lines[frame[1].$lineno-1]
+console.log('    '+line)}}}
 $B.freeze(exc)}else{var exc=js_exc
 $B.freeze(exc)
 if(in_ctx_manager){
@@ -9902,7 +9932,7 @@ var msg=js_exc+"",parts=msg.split(":"),err_type=parts[0].trim(),err_msg=parts[1]
 return(err_type=='InternalError' && err_msg=='too much recursion')||
 (err_type=='Error' && err_msg=='Out of stack space')||
 (err_type=='RangeError' && err_msg=='Maximum call stack size exceeded')}
-function $make_exc(names,parent){
+var $make_exc=$B.$make_exc=function(names,parent){
 if(parent===undefined){console.log('pas de parent',names)}
 var _str=[],pos=0
 for(var i=0;i < names.length;i++){var name=names[i],code=""
@@ -11760,7 +11790,8 @@ locals[alias]=$B.$getattr(modobj,name)}catch($err1){
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
-var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info,line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
+var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info ||
+frame[1].$lineinfo+','+frame[2],line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 $B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num,{filename:mod_name})}
 if($err3.$py_error){throw $err3}
 if($B.debug > 1){console.log($err3)

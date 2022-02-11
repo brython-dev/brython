@@ -1,5 +1,6 @@
 ;(function($B){
 
+var _b_ = $B.builtins
 
 function ord(char){
     if(char.length == 1){
@@ -28,6 +29,43 @@ function Token(type, string, start, end, line){
     res[3] = end
     res[4] = line
     return res
+}
+
+var errors = {}
+
+
+function TokenError(message, position){
+    if(errors.TokenError === undefined){
+        var $error_2 = {
+            $name: "TokenError",
+            $qualname: "TokenError",
+            $is_class: true,
+            __module__: "tokenize"
+        }
+
+        var error = errors.TokenError = $B.$class_constructor("TokenError",
+            $error_2, _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
+        error.__doc__ = _b_.None
+        error.$factory = function(message, position){
+            return {
+                __class__: error,
+                msg: message,
+                lineno: position[0],
+                colno: position[1]
+            }
+        }
+        error.__str__ = function(self){
+            var s = self.msg
+            if(self.lineno > 1){
+                s += ` (${self.lineno}, ${self.colno})`
+            }
+            return s
+        }
+        $B.set_func_names(error, "tokenize")
+    }
+    var exc = errors.TokenError.$factory(message, position)
+    console.log('error', exc.__class__, exc.args)
+    return exc
 }
 
 function get_line_at(src, pos){

@@ -1261,7 +1261,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
                             var frame = $B.last($B.frames_stack),
-                                line_info = frame[3].$line_info,
+                                line_info = frame[3].$line_info || 
+                                    frame[1].$lineinfo + ',' + frame[2],
                                 line_elts = line_info.split(','),
                                 line_num = parseInt(line_elts[0])
                             $B.$SyntaxError(frame[2],

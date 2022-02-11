@@ -402,6 +402,10 @@ function check_assignment(context, kwargs){
                 check_assignment(assigned.tree[0], {action, once: true})
             }else if(assigned.type == 'named_expr'){
                 report('named expression')
+            }else if(assigned.type == 'list_or_tuple'){
+                for(var item of ctx.tree){
+                    check_assignment(item, {action, once: true})
+                }
             }
         }else if(ctx.type == 'list_or_tuple'){
             for(var item of ctx.tree){
@@ -529,6 +533,7 @@ $Node.prototype.ast = function(){
     if(this.mode == "eval"){
         var root_ast = new ast.Expression()
         root_ast.lineno = this.line_num
+        console.log('Node.ast', this)
         root_ast.body = ast_or_obj(this.children[0].context.tree[0])
         return root_ast
     }
@@ -4196,7 +4201,15 @@ $DictOrSetCtx.prototype.ast = function(){
         }
         return new ast.Dict(keys, values)
     }else if(this.real == 'set'){
-        return new ast.Set(this.items.map(ast_or_obj))
+        var items = []
+        for(var item of this.items){
+            if(item.packed){
+                items.push(new ast.Starred(ast_or_obj(item), new ast.Load()))
+            }else{
+                items.push(ast_or_obj(item))
+            }
+        }
+        return new ast.Set(items)
     }
     return this
 }
@@ -10764,7 +10777,7 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
 }
 
 $TargetListCtx.prototype.ast = function(){
-    if(this.tree.length == 1){
+    if(this.tree.length == 1 && ! this.implicit_tuple){
         var item = ast_or_obj(this.tree[0])
         item.ctx = new ast.Store()
         if(item instanceof ast.Tuple){

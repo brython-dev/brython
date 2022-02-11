@@ -575,6 +575,17 @@ function make_proxy(dict, lineno){
 function eval1(src, mode, _globals, _locals){
     var frame = $B.last($B.frames_stack)
     var lineno = frame[1].$lineno
+
+    if(src.endsWith('\\\n')){
+        var exc = _b_.SyntaxError.$factory('')
+        var lines = src.split('\n'),
+            line = lines[lines.length - 2]
+        console.log('frame', frame, 'lines', lines)
+        exc.args = ['unexpected EOF while parsing',
+            ['<string>', lines.length - 1, 1, line]]
+        throw exc
+    }
+
     var local_name = 'locals_exec',
         global_name = 'globals_exec',
         exec_locals = {},
