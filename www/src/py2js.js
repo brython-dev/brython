@@ -2656,6 +2656,9 @@ $ClassCtx.prototype.transition = function(token, value){
             }
             break
         case '(':
+            if(context.name === undefined){
+                $_SyntaxError(context, 'missing class name')
+            }
             return new $CallCtx(context)
         case ':':
             if(this.args){

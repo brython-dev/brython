@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-14 13:51:22.022622"
-__BRYTHON__.timestamp=1644843082020
+__BRYTHON__.compiled_date="2022-02-14 13:55:25.209409"
+__BRYTHON__.timestamp=1644843325209
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1683,6 +1683,7 @@ C.expect='(:'
 return C}
 break
 case '(':
+if(C.name===undefined){$_SyntaxError(C,'missing class name')}
 return new $CallCtx(C)
 case ':':
 if(this.args){for(var arg of this.args.tree){var param=arg.tree[0]
