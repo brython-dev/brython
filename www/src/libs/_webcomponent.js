@@ -83,16 +83,7 @@ function define(tag_name, cls){
     // Override __getattribute__ to handle DOMNode attributes such as
     // attachShadow
     cls.__getattribute__ = function(self, attr){
-        try{
-            return $B.DOMNode.__getattribute__(self, attr)
-        }catch(err){
-            if(err.__class__ === _b_.AttributeError){
-                var ga = $B.$getattr(cls, "__getattribute__")
-                return ga(self, attr)
-            }else{
-                throw err
-            }
-        }
+        return $B.DOMNode.__getattribute__(self, attr)
     }
 
     var mro = [cls].concat(cls.__mro__)
