@@ -135,6 +135,16 @@ var TYPE_CLASS = 1,
     TYPE_FUNCTION = 0,
     TYPE_MODULE = 2
 
+var DEF_GLOBAL = 1,           /* global stmt */
+    DEF_LOCAL = 2 ,           /* assignment in code block */
+    DEF_PARAM = 2<<1,         /* formal parameter */
+    DEF_NONLOCAL = 2<<2,      /* nonlocal stmt */
+    USE = 2<<3 ,              /* name is used */
+    DEF_FREE = 2<<4 ,         /* name used but not defined in nested block */
+    DEF_FREE_CLASS = 2<<5,    /* free variable from class's method */
+    DEF_IMPORT = 2<<6,        /* assignment occurred via import */
+    DEF_ANNOT = 2<<7,         /* this name is annotated */
+    DEF_COMP_ITER = 2<<8     /* this name is a comprehension iteration variable */
 
 function name_reference(name, scopes){
     var scope = name_scope(name, scopes)
@@ -239,6 +249,9 @@ function name_scope(name, scopes){
         if(scopes[i].ast){
             block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
         }
+        if(scopes[i].globals.has(name)){
+            return {found: false, resolve: 'global'}
+        }
         if(scopes[i].locals.has(name)){
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
         }else if(block && block.symbols.$string_dict[name]){
@@ -275,8 +288,8 @@ function name_scope(name, scopes){
     }
 
     var scope_names = scopes.slice().reverse().map(scope => make_scope_name(scopes, scope))
-    if(name == 'y'){
-        console.log('scope names for', name, scope_names)
+    if(name == 'result'){
+        console.log('scopes for name', name, scopes.slice(), scope_names)
     }
     return {found: false, resolve: scope_names}
 }
@@ -359,9 +372,6 @@ $B.resolve_local = function(name){
 }
 
 $B.resolve_in_scopes = function(name, namespaces){
-    if(name == 'y'){
-        console.log('resolve',name, 'in namespaces', namespaces)
-    }
     for(var ns of namespaces){
         var v = resolve_in_namespace(name, ns)
         if(v.found){
@@ -373,9 +383,11 @@ $B.resolve_in_scopes = function(name, namespaces){
 
 $B.resolve_global = function(name){
     // Resolve in globals or builtins
-    var frame = $B.last($B.frames_stack)
-    if(frame[3].hasOwnProperty(name)){
-        return frame[3][name]
+    for(var frame of $B.frames_stack.slice().reverse()){
+        var v = resolve_in_namespace(name, frame[3])
+        if(v.found){
+            return v.value
+        }
     }
     if(builtins_scope.locals.has(name)){
         return _b_[name]
@@ -1392,8 +1404,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(this.args.kwarg){flags |= 8}
     if(is_generator){flags |= 32}
 
-    var varnames = symtable_block.varnames.map(x => `"${x}"`)
-    var identifiers = Object.keys(symtable_block.symbols.$string_dict)
+    var parameters = [],
+        locals = [],
+        identifiers = Object.keys(symtable_block.symbols.$string_dict)
 
     var free_vars = []
     for(var ident of identifiers){
@@ -1402,7 +1415,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         if(_scope == FREE){
             free_vars.push(`'${ident}'`)
         }
+        if(flag & DEF_PARAM){
+            parameters.push(`'${ident}'`)
+        }else if(flag & DEF_LOCAL){
+            locals.push(`'${ident}'`)
+        }
     }
+    var varnames = parameters.concat(locals)
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
     js += `${name2}.$is_func = true\n`
@@ -1422,7 +1441,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_name: '${this.name}',\n` +
         `co_nlocals: ${varnames.length},\n` +
         `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
-        `co_varnames: [${varnames}]\n` +
+        `co_varnames: $B.fast_tuple([${varnames}])\n` +
         `}\n}\n`
 
     if(is_async){
