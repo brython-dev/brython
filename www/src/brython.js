@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-14 13:55:25.209409"
-__BRYTHON__.timestamp=1644843325209
+__BRYTHON__.compiled_date="2022-02-14 14:23:27.443528"
+__BRYTHON__.timestamp=1644845007443
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -453,6 +453,9 @@ if(ops===undefined){throw Error(key)}
 for(var attr in ops){res[attr]=ops[attr]}}
 return res}}
 var $operators=$B.op2method.subset("all")
+$B.method_to_op={}
+for(var category in $B.op2method){for(var op in $B.op2method[category]){var method=`__${$B.op2method[category][op]}__`
+$B.method_to_op[method]=op}}
 var $augmented_assigns=$B.augmented_assigns=$B.op2method.augmented_assigns
 var noassign=$B.list2obj(['True','False','None','__debug__'])
 var $op_order=[['or'],['and'],['not'],['in','not_in'],['<','<=','>','>=','!=','==','is','is_not'],['|'],['^'],['&'],['>>','<<'],['+','-'],['*','@','/','//','%'],['unary_neg','unary_inv','unary_pos'],['**']
@@ -8005,16 +8008,19 @@ var attr=$B.$getattr(x,op)
 method=$B.$getattr(x_class,op)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
 res=$B.$call($B.$getattr(y,rop))(x)
 if(res !==_b_.NotImplemented){return res}
-throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
-"' not supported between instances of '"+$B.class_name(x)+
-"' and '"+$B.class_name(y)+"'")}
+throw _b_.TypeError.$factory(
+`unsupported operand type(s) for '${$B.method_to_op[op]}' :`+
+` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
 res=method(x,y)
-if(res===_b_.NotImplemented){var reflected=$B.$getattr(y,rop,null)
-if(reflected !==null){res=$B.$call(reflected)(x)
-if(res !==_b_.NotImplemented){return res}}
-throw _b_.TypeError.$factory("'"+(opname2opsign[op]||op)+
-"' not supported between instances of '"+$B.class_name(x)+
-"' and '"+$B.class_name(y)+"'")}else{return res}}
+if(res===_b_.NotImplemented){try{var reflected=$B.$getattr(y,rop),method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
+throw _b_.TypeError.$factory(
+`unsupported operand type(s) for '${$B.method_to_op[op]}' :`+
+` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
+res=method(y,x)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(
+`unsupported operand type(s) for '${$B.method_to_op[op]}' :`+
+` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
+return res}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
 var repr_stack=new Set()
 $B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)

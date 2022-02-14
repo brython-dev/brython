@@ -1786,22 +1786,31 @@ $B.rich_op = function(op, x, y){
         if(res !== _b_.NotImplemented){
             return res
         }
-        throw _b_.TypeError.$factory("'" + (opname2opsign[op] || op) +
-            "' not supported between instances of '" + $B.class_name(x) +
-            "' and '" + $B.class_name(y) + "'")
+        throw _b_.TypeError.$factory(
+            `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
+            ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
+
     }
     res = method(x, y)
     if(res === _b_.NotImplemented){
-        var reflected = $B.$getattr(y, rop, null)
-        if(reflected !== null){
-            res = $B.$call(reflected)(x)
-            if(res !== _b_.NotImplemented){
-                return res
+        try{
+            var reflected = $B.$getattr(y, rop),
+                method = $B.$getattr(y_class, rop)
+        }catch(err){
+            if(err.__class__ !== _b_.AttributeError){
+                throw err
             }
+            throw _b_.TypeError.$factory(
+                `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
+                ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
         }
-        throw _b_.TypeError.$factory("'" + (opname2opsign[op] || op) +
-            "' not supported between instances of '" + $B.class_name(x) +
-            "' and '" + $B.class_name(y) + "'")
+        res = method(y, x)
+        if(res === _b_.NotImplemented){
+            throw _b_.TypeError.$factory(
+                `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
+                ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
+        }
+        return res
     }else{
         return res
     }

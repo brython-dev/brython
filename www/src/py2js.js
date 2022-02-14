@@ -114,6 +114,14 @@ $B.op2method = {
 
 var $operators = $B.op2method.subset("all")
 
+$B.method_to_op = {}
+for(var category in $B.op2method){
+    for(var op in $B.op2method[category]){
+        var method = `__${$B.op2method[category][op]}__`
+        $B.method_to_op[method] = op
+    }
+}
+
 // Mapping between augmented assignment operators and method names
 var $augmented_assigns = $B.augmented_assigns = $B.op2method.augmented_assigns
 

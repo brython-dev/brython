@@ -670,4 +670,7 @@ assertRaises(SyntaxError, exec, "12.34e_56")
 assert 12.34e5_6 == 1.234e+57
 assertRaises(SyntaxError, exec, "12.34e56_")
 
+# issue 1885
+assertRaises(TypeError, exec, '1 / float')
+
 print('passed all tests...')
