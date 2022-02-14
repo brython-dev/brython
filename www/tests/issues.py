@@ -3035,6 +3035,13 @@ except Exception as e:
 # issue 1875
 assertRaises(SyntaxError, exec, "(a, b = b, a)")
 
+# issue 1886
+try:
+    exec("[i := i for i in range(5)]")
+except SyntaxError as exc:
+    assert "cannot rebind" in exc.args[0]
+
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

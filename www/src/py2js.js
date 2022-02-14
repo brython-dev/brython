@@ -5249,11 +5249,28 @@ $ForExpr.prototype.transition = function(token, value){
     switch(token) {
         case 'in':
             // bind single ids in target list
-            var targets = context.tree[0].tree
+            var targets = context.tree[0].tree,
+                named_expr_ids = {}
+            if(context.parent.comprehension){
+                // If there are named expressions in a comprehension
+                // expression, they cannot rebind target ids
+                // cf. issue 1886
+                for(var item of context.parent.tree[0].tree){
+                    if(item.type == 'named_expr' && item.target.type == 'id'){
+                        named_expr_ids[item.target.value] = item
+                    }
+                }
+            }
             for(var target_expr of context.tree[0].tree){
                 check_assignment(target_expr.tree[0])
                 if(target_expr.tree[0].type == 'id'){
                     var id = target_expr.tree[0]
+                    if(named_expr_ids[id.value]){
+                        var item = named_expr_ids[id.value]
+                        $_SyntaxError(item, ['assignment expression ' +
+                            'cannot rebind comprehension iteration variable ' +
+                            `'${id.value}'`])
+                    }
                     $bind(id.value, this.scope, id)
                 }
             }
@@ -7924,6 +7941,7 @@ var NamedExprCtx = function(context){
     this.parent = context
     this.target.parent = this
     this.tree = []
+    this.$pos = $pos
 }
 
 NamedExprCtx.prototype.ast = function(){

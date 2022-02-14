@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-14 14:23:27.443528"
-__BRYTHON__.timestamp=1644845007443
+__BRYTHON__.compiled_date="2022-02-14 14:47:29.778350"
+__BRYTHON__.timestamp=1644846449778
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -2914,9 +2914,15 @@ return res}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
 $ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
-var targets=C.tree[0].tree
+var targets=C.tree[0].tree,named_expr_ids={}
+if(C.parent.comprehension){
+for(var item of C.parent.tree[0].tree){if(item.type=='named_expr' && item.target.type=='id'){named_expr_ids[item.target.value]=item}}}
 for(var target_expr of C.tree[0].tree){check_assignment(target_expr.tree[0])
 if(target_expr.tree[0].type=='id'){var id=target_expr.tree[0]
+if(named_expr_ids[id.value]){var item=named_expr_ids[id.value]
+$_SyntaxError(item,['assignment expression '+
+'cannot rebind comprehension iteration variable '+
+`'${id.value}'`])}
 $bind(id.value,this.scope,id)}}
 if(C.tree[0].tree.length==0){
 $_SyntaxError(C,"missing target between 'for' and 'in'")}
@@ -4108,7 +4114,8 @@ C.tree.pop()
 C.tree.push(this)
 this.parent=C
 this.target.parent=this
-this.tree=[]}
+this.tree=[]
+this.$pos=$pos}
 NamedExprCtx.prototype.ast=function(){var res=new ast.NamedExpr(ast_or_obj(this.target),ast_or_obj(this.tree[0]))
 res.target.ctx=new ast.Store()
 return res}
@@ -9893,7 +9900,6 @@ BaseException.$factory.$infos={__name__:"BaseException",__qualname__:"BaseExcept
 $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
 $B.exception=function(js_exc,in_ctx_manager){
-console.log('exception',js_exc)
 if(! js_exc.__class__){var exc=Error()
 exc.__name__="Internal Javascript error: "+
 (js_exc.__name__ ||js_exc.name)
