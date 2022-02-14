@@ -1423,7 +1423,7 @@ class FileFinder:
         self._path_mtime = -1
         self._path_cache = set()
         self._relaxed_path_cache = set()
-        
+
     def invalidate_caches(self):
         """Invalidate the directory mtime."""
         self._path_mtime = -1
@@ -1499,7 +1499,8 @@ class FileFinder:
         path = self.path
         try:
             contents = _os.listdir(path or _os.getcwd())
-        except (FileNotFoundError, PermissionError, NotADirectoryError):
+        except (FileNotFoundError, PermissionError, NotADirectoryError, 
+                NotImplementedError):
             # Directory has either been removed, turned into a file, or made
             # unreadable.
             contents = []

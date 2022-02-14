@@ -127,7 +127,3 @@ var $module = {
                 " is not implemented")
         }
     });
-
-$module.listdir = function(){
-    throw _b_.PermissionError.$factory()
-}
