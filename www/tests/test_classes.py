@@ -770,4 +770,9 @@ D = type('C', (B, A,), {})
 d = D()
 assert t == ['MetaB Call', 'I am A', 'I am B']
 
+# issue 1884
+from tester import assertRaises
+
+assertRaises(SyntaxError, exec, 'class(x):\n pass')
+
 print('passed all tests..')
