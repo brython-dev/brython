@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-15 11:52:29.083480"
-__BRYTHON__.timestamp=1644922349083
+__BRYTHON__.compiled_date="2022-02-15 14:22:04.775314"
+__BRYTHON__.timestamp=1644931324775
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9921,7 +9921,7 @@ console.log('frames_stack',$B.frames_stack.slice())
 if($B.js_from_ast){for(var frame of $B.frames_stack){var src=undefined
 var file=frame[1].__file__ ||frame[3].__file__
 if(file && $B.file_cache[file]){src=$B.file_cache[file]}
-console.log('line',frame[1].$lineno,'in',frame[0])
+console.log('line',frame[1].$lineno,'file',file,'in',frame[0])
 if(src !==undefined){var lines=src.split('\n'),line=lines[frame[1].$lineno-1]
 console.log('    '+line)}}}
 $B.freeze(exc)}else{var exc=js_exc
@@ -14282,8 +14282,7 @@ self.$jsobj.hasOwnProperty(arg)){return $B.Undefined}
 throw _b_.KeyError.$factory(arg)}
 return self.$jsobj[arg]}
 switch(typeof arg){case "string":
-var x=self.$string_dict[arg]
-if(x !==undefined){return x[0]}
+if(self.$string_dict.hasOwnProperty(arg)){return self.$string_dict[arg][0]}
 break
 case "number":
 if(self.$numeric_dict[arg]!==undefined){return self.$numeric_dict[arg][0]}
@@ -14294,8 +14293,7 @@ var sk=self.$str_hash[hash]
 if(sk !==undefined && _eq(sk)){return self.$string_dict[sk][0]}
 if(self.$numeric_dict[hash]!==undefined && _eq(hash)){return self.$numeric_dict[hash][0]}
 if(_b_.isinstance(arg,_b_.str)){
-var res=self.$string_dict[arg.valueOf()]
-if(res !==undefined){return res[0]}}
+if(self.$string_dict.hasOwnProperty(arg.valueOf())){return self.$string_dict[arg.valueOf()][0]}}
 var ix=rank(self,hash,arg)
 if(ix >-1){return self.$object_dict[hash][ix][1][0]}
 if(! ignore_missing){if(self.__class__ !==dict && ! ignore_missing){try{var missing_method=$B.$getattr(self.__class__,"__missing__",_b_.None)}catch(err){console.log(err)}

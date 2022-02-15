@@ -707,7 +707,7 @@ $B.exception = function(js_exc, in_ctx_manager){
                 if(file && $B.file_cache[file]){
                     src = $B.file_cache[file]
                 }
-                console.log('line', frame[1].$lineno, 'in', frame[0])
+                console.log('line', frame[1].$lineno, 'file', file, 'in', frame[0])
                 if(src !== undefined){
                     var lines = src.split('\n'),
                         line = lines[frame[1].$lineno - 1]

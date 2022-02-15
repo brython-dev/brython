@@ -454,9 +454,8 @@ dict.$getitem = function(self, arg, ignore_missing){
 
     switch(typeof arg){
         case "string":
-            var x = self.$string_dict[arg]
-            if(x !== undefined){
-                return x[0]
+            if(self.$string_dict.hasOwnProperty(arg)){
+                return self.$string_dict[arg][0]
             }
             break
         case "number":
@@ -483,8 +482,9 @@ dict.$getitem = function(self, arg, ignore_missing){
     }
     if(_b_.isinstance(arg, _b_.str)){
         // string subclass
-        var res = self.$string_dict[arg.valueOf()]
-        if(res !== undefined){return res[0]}
+        if(self.$string_dict.hasOwnProperty(arg.valueOf())){
+            return self.$string_dict[arg.valueOf()][0]
+        }
     }
 
     var ix = rank(self, hash, arg)
