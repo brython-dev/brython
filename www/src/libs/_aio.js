@@ -225,6 +225,7 @@ function run(coro){
 
     if(onerror !== handle_error){
         function error_func(exc){
+            exc.$stack = coro.$stack.concat([$B.last(exc.$stack)])
             try{
                 onerror(exc)
             }catch(err){

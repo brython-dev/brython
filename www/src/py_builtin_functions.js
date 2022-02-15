@@ -1257,7 +1257,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = attr == "__or__" && obj === _b_.list // "Point"
+    var $test = false // attr == "__anext__" // && obj === _b_.list // "Point"
     if($test){console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)}
 
     // Shortcut for classes without parents

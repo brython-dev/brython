@@ -272,7 +272,51 @@ $B.async_generator.aclose = function(self){
     return _b_.None
 }
 
+$B.async_generator.asend1 = async function(self, value){
+    var gen = self.js_gen
+    if(gen.$finished){
+        throw _b_.StopAsyncIteration.$factory(value)
+    }
+    if(gen.ag_running === true){
+        throw _b_.ValueError.$factory("generator already executing")
+    }
+    gen.ag_running = true
+    // save frames before resuming the generator
+    var save_stack = $B.frames_stack.slice()
+    // put generator frame on top of stack
+    // generator expressions don't have $frame
+    if(self.$frame){
+        $B.frames_stack.push(self.$frame)
+    }
+    try{
+        var res = await gen.next(value)
+    }catch(err){
+        gen.$finished = true
+        $B.frames_stack = save_stack
+        throw err
+    }
+    // Call leave_frame to handle context managers
+    if($B.last($B.frames_stack) === self.$frame){
+        $B.leave_frame()
+    }
+    // restore stack
+    $B.frames_stack = save_stack
+    if(res.done){
+        throw _b_.StopAsyncIteration.$factory(value)
+    }
+    if(res.value.__class__ === $GeneratorReturn){
+        gen.$finished = true
+        throw _b_.StopAsyncIteration.$factory(res.value.value)
+    }
+    gen.ag_running = false
+    return res.value
+}
+
+
 $B.async_generator.asend = async function(self, value){
+    if($B.js_from_ast){
+        return $B.async_generator.asend1(self, value)
+    }
     var gen = self.js_gen
     if(gen.$finished){
         throw _b_.StopAsyncIteration.$factory(value)
@@ -299,6 +343,9 @@ $B.async_generator.asend = async function(self, value){
 }
 
 $B.async_generator.athrow = async function(self, type, value, traceback){
+    if($B.js_from_ast){
+        return $B.async_generator.athrow1(self, type, value, traceback)
+    }
     var gen = self.js_gen,
         exc = type
 
@@ -319,6 +366,34 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
     if(traceback !== undefined){exc.$traceback = traceback}
     await gen.throw(value)
 }
+
+$B.async_generator.athrow1 = async function(self, type, value, traceback){
+    var gen = self.js_gen,
+        exc = type
+
+    if(exc.$is_class){
+        if(! _b_.issubclass(type, _b_.BaseException)){
+            throw _b_.TypeError.$factory("exception value must be an " +
+                "instance of BaseException")
+        }else if(value === undefined){
+            value = $B.$call(exc)()
+        }
+    }else{
+        if(value === undefined){
+            value = exc
+        }else{
+            exc = $B.$call(exc)(value)
+        }
+    }
+    if(traceback !== undefined){exc.$traceback = traceback}
+    var save_stack = $B.frames_stack.slice()
+    if(self.$frame){
+        $B.frames_stack.push(self.$frame)
+    }
+    await gen.throw(value)
+    $B.frames_stack = save_stack
+}
+
 
 $B.set_func_names($B.async_generator, "builtins")
 

@@ -707,36 +707,72 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         else:
             await aexit(mgr, None, None, None)
     */
-    console.log('items', this.items)
 
-    var expr = $B.js_from_ast(this.items[0].context_expr, scopes),
-        id = $B.UUID(),
-        js = `var mgr_${id} = ${expr},\n` +
-                 `mgr_class${id} = $B.get_class(mgr_${id}),\n` +
-                 `aexit_${id} = $B.$getattr(mgr_class${id}, '__aexit__'),\n` +
-                 `aenter_${id} = $B.$getattr(mgr_class${id}, '__aenter__')\n` +
-             `aexit_${id} = $B.$call(aexit_${id})\n`
-        if(this.items[0].optional_vars){
-            var assign = new $B.ast.Assign([this.items[0].optional_vars],
-                {to_js: function(){
-                    return `await $B.$call(aenter_${id})(mgr_${id})\n`
-                }})
-            assign.lineno = this.lineno
-            js += assign.to_js(scopes) + '\n'
+    function bind_vars(vars, scopes){
+        if(vars instanceof $B.ast.Name){
+            bind(vars.id, scopes)
+        }else if(vars instanceof $B.ast.Tuple){
+            for(var var_item of vars.elts){
+                bind_vars(var_item, scopes)
+            }
         }
+    }
 
-        js += `try{\n` +
-                 add_body(this.body, scopes) + '\n' +
-              `}catch(err){\n` +
-                 `if(! await aexit_${id}(mgr_${id}, $B.get_class(err), err,` +
-                         ` $B.$getattr(err, "__traceback__"))){\n` +
-                     `$B.$raise()\n` +
-                 `}else{\n` +
-                     `await aexit_${id}(mgr_${id}, _b_.None, _b_.None, ` +
-                         `_b_.None)\n` +
-                 '}\n' +
-             '}'
-     return js
+    function add_item(item, js){
+        var id = $B.UUID()
+        var s = `var mgr_${id} = ` +
+              $B.js_from_ast(item.context_expr, scopes) + ',\n' +
+              `mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n` +
+              `aexit_${id} = $B.$getattr(mgr_type_${id}, '__aexit__'),\n` +
+              `aenter_${id} = $B.$getattr(mgr_type_${id}, '__aenter__'),\n` +
+              `value_${id} = await $B.promise($B.$call(aenter_${id})(mgr_${id})),\n` +
+              `exc_${id} = true\n`
+        if(has_generator){
+            // add/update attribute used to close context managers in
+            // leave_frame()
+            s += `locals.$context_managers = locals.$context_managers || []\n` +
+                 `locals.$context_managers.push(mgr_${id})\n`
+        }
+        s += 'try{\ntry{\n'
+        if(item.optional_vars){
+            //bind_vars(item.optional_vars, scopes)
+            var assign = new $B.ast.Assign([item.optional_vars],
+                {to_js: function(){return `value_${id}`}})
+            assign.lineno = lineno
+            s += assign.to_js(scopes) + '\n'
+        }
+        s += js
+        s += `}catch(err_${id}){\n` +
+              `locals.$lineno = ${lineno}\n` +
+              `exc_${id} = false\n` +
+              `err_${id} = $B.exception(err_${id}, true)\n` +
+              `var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, ` +
+              `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n` +
+              `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
+        s += `}\nfinally{\n` +
+              `locals.$lineno = ${lineno}\n` +
+              `if(exc_${id}){\n` +
+              `await $B.promise(aexit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None))\n}\n}\n`
+        return s
+    }
+
+    var scope = last_scope(scopes),
+        lineno = this.lineno
+    delete scope.is_generator
+
+    // bind context managers aliases first
+    for(var item of this.items.slice().reverse()){
+        if(item.optional_vars){
+            bind_vars(item.optional_vars, scopes)
+        }
+    }
+
+    js = add_body(this.body, scopes) + '\n'
+    var has_generator = scope.is_generator
+    for(var item of this.items.slice().reverse()){
+        js = add_item(item, js)
+    }
+    return `locals.$lineno = ${lineno}\n` + js
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
@@ -1390,7 +1426,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var js = decs
     js += `var ${name1} = function(defaults){\n`
 
-    if(is_async){
+    if(is_async && ! is_generator){
         js += 'async '
     }
 
@@ -1500,6 +1536,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
     js += `${name2}.$is_func = true\n`
+    if(is_async){
+        js += `${name2}.$is_async = true\n`
+    }
     // Set admin infos
     js += `${name2}.$infos = {\n` +
         `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
@@ -2213,7 +2252,6 @@ $B.ast.With.prototype.to_js = function(scopes){
     */
 
     function add_item(item, js){
-        console.log('dans add item', lineno)
         var id = $B.UUID()
         var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
@@ -2255,7 +2293,6 @@ $B.ast.With.prototype.to_js = function(scopes){
     delete scope.is_generator
 
     js = add_body(this.body, scopes) + '\n'
-    console.log('initial js', js)
     var has_generator = scope.is_generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
