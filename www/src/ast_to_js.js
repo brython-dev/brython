@@ -155,7 +155,9 @@ function make_ref(name, scopes, scope){
     if(scope.found){
         return reference(scopes, scope.found, name)
     }else if(scope.resolve == 'all'){
-        return `$B.resolve('${name}')`
+        var scope_names = scopes.slice().reverse().map(scope => make_scope_name(scopes, scope))
+        scope_names.push("_b_") // add builtins
+        return `$B.resolve_in_scopes('${name}', [${scope_names}])`
     }else if(scope.resolve == 'local'){
         return `$B.resolve_local('${name}')`
     }else if(scope.resolve == 'global'){
@@ -214,7 +216,6 @@ function name_scope(name, scopes){
         // If scope is a "subscope", look in its parents
         var l_scope = local_scope(name, scope)
         if(! l_scope.found){
-        // if(! scope.locals.has(name)){
             if(block.type == TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
@@ -287,16 +288,20 @@ function name_scope(name, scopes){
         return {found: builtins_scope} // `_b_.${name}`
     }
 
-    var scope_names = scopes.slice().reverse().map(scope => make_scope_name(scopes, scope))
-    if(name == 'result'){
-        console.log('scopes for name', name, scopes.slice(), scope_names)
-    }
+    var scope_names = scopes.slice().
+                             reverse().
+                             map(scope => make_scope_name(scopes, scope))
+    scope_names.push('_b_')
     return {found: false, resolve: scope_names}
 }
 
 
 function resolve_in_namespace(name, ns){
-    if(ns.hasOwnProperty(name)){
+    if(! ns.hasOwnProperty){
+        if(ns[name] !== undefined){
+            return {found: true, value: ns[name]}
+        }
+    }else if(ns.hasOwnProperty(name)){
         return {found: true, value: ns[name]}
     }else if(ns.$dict){
         try{
@@ -320,6 +325,9 @@ function resolve_in_namespace(name, ns){
 }
 
 $B.resolve = function(name){
+    if(name == 'tzinfo'){
+        console.log('resolve tzinfo', name, $B.frames_stack.slice())
+    }
     var checked = new Set(),
         current_globals
     for(var frame of $B.frames_stack.slice().reverse()){
@@ -1986,7 +1994,12 @@ $B.ast.Name.prototype.to_js = function(scopes){
         }
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
-        return name_reference(this.id, scopes)
+        var res = name_reference(this.id, scopes)
+        if(name == 'str'){
+            console.log('ref of', name, res)
+            alert()
+        }
+        return res
     }
 }
 

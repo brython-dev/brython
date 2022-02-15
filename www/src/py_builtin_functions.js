@@ -672,7 +672,7 @@ function eval1(src, mode, _globals, _locals){
         symtable = $B._PySymtable_Build(_ast, 'exec'),
         js = $B.js_from_root(_ast, symtable, '<string>',
                 {local_name, exec_locals, global_name, exec_globals})
-    
+
     var save_frames_stack = $B.frames_stack.slice()
 
     if(_globals !== _b_.None){
@@ -1735,8 +1735,9 @@ function isinstance(obj, cls){
         throw _b_.TypeError.$factory(
             'isinstance() arg 2 cannot be a parameterized generic')
     }
-    if(!cls.__class__ ||
+    if((!cls.__class__) ||
             !(cls.$factory !== undefined || cls.$is_class !== undefined)){
+        console.log('bad cls', cls)
         throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
             "or tuple of types")
     }
