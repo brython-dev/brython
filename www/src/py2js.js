@@ -492,6 +492,9 @@ $B.format_indent = function(js, indent){
             level++
         }else if(add_closing_brace){
             level--
+            if(level < 0){
+                level = 0
+            }
             try{
                 res += indentation.repeat(level) + '}\n'
             }catch(err){
@@ -541,7 +544,6 @@ $Node.prototype.ast = function(){
     if(this.mode == "eval"){
         var root_ast = new ast.Expression()
         root_ast.lineno = this.line_num
-        console.log('Node.ast', this)
         root_ast.body = ast_or_obj(this.children[0].context.tree[0])
         return root_ast
     }
@@ -5235,7 +5237,8 @@ $ForExpr.prototype.ast = function(){
         orelse = this.orelse ? ast_or_obj(this.orelse) : [],
         type_comment,
         body = ast_body(this.parent)
-    var res = new ast.For(target, iter, body, orelse, type_comment)
+    var klass = this.async ? ast.AsyncFor : ast.For
+    var res = new klass(target, iter, body, orelse, type_comment)
     res.lineno = this.parent.node.line_num
     return res
 }

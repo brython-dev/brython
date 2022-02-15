@@ -679,8 +679,64 @@ $B.ast.Assign.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.AsyncFor.prototype.to_js = function(scopes){
+    return $B.ast.For.prototype.to_js.bind(this)(scopes)
+}
+
 $B.ast.AsyncFunctionDef.prototype.to_js = function(scopes){
     return $B.ast.FunctionDef.prototype.to_js.bind(this)(scopes)
+}
+
+$B.ast.AsyncWith.prototype.to_js = function(scopes){
+    /*
+        async with EXPR as VAR:
+            BLOCK
+
+    is equivalent to
+
+        mgr = (EXPR)
+        aexit = type(mgr).__aexit__
+        aenter = type(mgr).__aenter__
+
+        VAR = await aenter(mgr)
+        try:
+            BLOCK
+        except:
+            if not await aexit(mgr, *sys.exc_info()):
+                raise
+        else:
+            await aexit(mgr, None, None, None)
+    */
+    console.log('items', this.items)
+
+    var expr = $B.js_from_ast(this.items[0].context_expr, scopes),
+        id = $B.UUID(),
+        js = `var mgr_${id} = ${expr},\n` +
+                 `mgr_class${id} = $B.get_class(mgr_${id}),\n` +
+                 `aexit_${id} = $B.$getattr(mgr_class${id}, '__aexit__'),\n` +
+                 `aenter_${id} = $B.$getattr(mgr_class${id}, '__aenter__')\n` +
+             `aexit_${id} = $B.$call(aexit_${id})\n`
+        if(this.items[0].optional_vars){
+            var assign = new $B.ast.Assign([this.items[0].optional_vars],
+                {to_js: function(){
+                    return `await $B.$call(aenter_${id})(mgr_${id})\n`
+                }})
+            assign.lineno = this.lineno
+            js += assign.to_js(scopes) + '\n'
+        }
+
+        js += `try{\n` +
+                 add_body(this.body, scopes) + '\n' +
+              `}catch(err){\n` +
+                 `if(! await aexit_${id}(mgr_${id}, $B.get_class(err), err,` +
+                         ` $B.$getattr(err, "__traceback__"))){\n` +
+                     `$B.$raise()\n` +
+                 `}else{\n` +
+                     `await aexit_${id}(mgr_${id}, _b_.None, _b_.None, ` +
+                         `_b_.None)\n` +
+                 '}\n' +
+             '}'
+     return js
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
@@ -1086,6 +1142,10 @@ $B.ast.Delete.prototype.to_js = function(scopes){
     var js = ''
     for(var target of this.targets){
         if(target instanceof $B.ast.Name){
+            var scope = name_scope(target.id, scopes)
+            if(scope.found){
+                scope.found.locals.delete(target.id)
+            }
             js += `$B.$delete("${target.id}")\n`
         }else if(target instanceof $B.ast.Subscript){
             js += `$B.$delitem(${$B.js_from_ast(target.value, scopes)}, ` +
@@ -1144,19 +1204,35 @@ $B.ast.For.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     var id = $B.UUID(),
-        iter = $B.js_from_ast(this.iter, scopes)
+        iter = $B.js_from_ast(this.iter, scopes),
+        js
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     var scope = $B.last(scopes),
         new_scope = copy_scope(scope, this, id)
     scopes.push(new_scope)
 
-    var js = `var no_break_${id} = true\n` +
+    if(this instanceof $B.ast.AsyncFor){
+        js = `var iter_${id} = ${iter},\n` +
+                 `type_${id} = _b_.type.$factory(iter_${id})\n` +
+            `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
+            `var next_func_${id} = $B.$call(` +
+            `$B.$getattr(type_${id}, '__anext__'))\n` +
+            `while(true){\n`+
+            `  try{\n`+
+            `    var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n` +
+            `  }catch(err){\n`+
+            `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n` +
+            `    else{\nthrow err}\n`+
+            `  }\n`
+    }else{
+        js = `var no_break_${id} = true\n` +
              `var next_func_${id} = $B.next_of(${iter})\n` +
              `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
              `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
              `break\n}else{\n ` +
              `throw err\n}\n}\n`
+    }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     name.to_js = function(){return `next_${id}`}
@@ -1299,8 +1375,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     // process body first to detect possible "yield"s
-    var is_lambda = this.name.startsWith('lambda_' + $B.lambda_magic)
-    if(is_lambda){
+    if(this.$is_lambda){
         var body = [new $B.ast.Return(this.body)],
             function_body = add_body(body, scopes)
     }else{
@@ -1347,7 +1422,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_generator){
         js += `locals.$is_generator = true\n`
         if(is_async){
-            js += `var gen_${id} = $B.async_generator.$factory(function*(){\n`
+            js += `var gen_${id} = $B.async_generator.$factory(async function*(){\n`
         }else{
             js += `var gen_${id} = $B.generator.$factory(function*(){\n`
         }
@@ -1367,7 +1442,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += function_body + '\n'
 
-    if(! ($B.last(this.body) instanceof $B.ast.Return)){
+    if((! this.$is_lambda) && ! ($B.last(this.body) instanceof $B.ast.Return)){
         // add an explicit "return None"
         js += 'var result = _b_.None\n' +
               'if(locals.$f_trace !== _b_.None){\n' +
@@ -1670,6 +1745,7 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
     var f = new $B.ast.FunctionDef(name, this.args, this.body, [])
     f.lineno = this.lineno
     f.$id = _b_.id(this) // FunctionDef accesses symtable through if
+    f.$is_lambda = true
     var js = f.to_js(scopes),
         lambda_ref = reference(scopes, last_scope(scopes), name)
 
@@ -2137,6 +2213,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     */
 
     function add_item(item, js){
+        console.log('dans add item', lineno)
         var id = $B.UUID()
         var s = `var mgr_${id} = ` +
               $B.js_from_ast(item.context_expr, scopes) + ',\n' +
@@ -2155,6 +2232,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         if(item.optional_vars){
             var assign = new $B.ast.Assign([item.optional_vars],
                 {to_js: function(){return `value_${id}`}})
+            assign.lineno = lineno
             s += assign.to_js(scopes) + '\n'
         }
         s += js
@@ -2168,7 +2246,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += `}\nfinally{\n` +
               `locals.$lineno = ${lineno}\n` +
               `if(exc_${id}){\n` +
-              `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n}\n}`
+              `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n}\n}\n`
         return s
     }
 
@@ -2177,6 +2255,7 @@ $B.ast.With.prototype.to_js = function(scopes){
     delete scope.is_generator
 
     js = add_body(this.body, scopes) + '\n'
+    console.log('initial js', js)
     var has_generator = scope.is_generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)

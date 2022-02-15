@@ -1712,7 +1712,7 @@ function symtable_handle_comprehension(st, e,
         return 0;
     }
     if (is_async) {
-        st.ur.coroutine = 1;
+        st.cur.coroutine = 1;
     }
     return 1;
 }

@@ -580,7 +580,6 @@ function eval1(src, mode, _globals, _locals){
         var exc = _b_.SyntaxError.$factory('')
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
-        console.log('frame', frame, 'lines', lines)
         exc.args = ['unexpected EOF while parsing',
             ['<string>', lines.length - 1, 1, line]]
         throw exc
