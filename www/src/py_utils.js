@@ -378,6 +378,12 @@ $B.rest_iter = function(next_func){
     }
 }
 
+$B.set_lineno = function(locals, lineno){
+    locals.$lineno = lineno
+    if(locals.$f_trace !== _b_.None){$B.trace_line()}
+    return true
+}
+
 $B.copy_namespace = function(){
     var ns = {}
     for(const frame of $B.frames_stack){

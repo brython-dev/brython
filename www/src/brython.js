@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-15 19:03:22.566369"
-__BRYTHON__.timestamp=1644948202565
+__BRYTHON__.compiled_date="2022-02-16 15:54:01.989248"
+__BRYTHON__.timestamp=1645023241989
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3128,7 +3128,7 @@ res[pos++]=names.join('","')+'"], {'
 var sep=''
 for(var attr in this.aliases){res[pos++]=sep+'"'+attr+'": "'+this.aliases[attr]+'"'
 sep=','}
-res[pos++]='}, {}, true);'
+res[pos++]='}, {});'
 if(this.names[0]=='*'){
 scope.blurred=true
 res[pos++]='\n'+head+'$B.import_all($locals, module);'}else{for(var name of this.names){var alias=name
@@ -4678,7 +4678,9 @@ this.type='pass'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$PassCtx.prototype.ast=function(){return new ast.Pass()}
+$PassCtx.prototype.ast=function(){var ast_obj=new ast.Pass()
+ast_obj.lineno=$get_node(this).line_num
+return ast_obj}
 $PassCtx.prototype.toString=function(){return '(pass)'}
 $PassCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
@@ -7502,6 +7504,9 @@ $B.rest_iter=function(next_func){
 var res=[]
 while(true){try{res.push(next_func())}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return $B.fast_tuple(res)}
 throw err}}}
+$B.set_lineno=function(locals,lineno){locals.$lineno=lineno
+if(locals.$f_trace !==_b_.None){$B.trace_line()}
+return true}
 $B.copy_namespace=function(){var ns={}
 for(const frame of $B.frames_stack){for(const kv of[frame[1],frame[3]]){for(var key in kv){if(! key.startsWith('$')){ns[key]=kv[key]}}}}
 return ns}
@@ -7908,7 +7913,7 @@ for(var cm of frame[1].$ctx_managers_in_gen){$B.$call($B.$getattr(cm,'__exit__')
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][2]==frame[2]){$B.frames_stack[i][3]=frame[3]}}}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
-if((typeof arg !="number")||
+if((typeof arg !="number")||isNaN(arg)||
 (arg < min_int ||arg > max_int)){return false}}
 return true}
 $B.add=function(x,y){if(x.valueOf && typeof x.valueOf()=="number" &&
@@ -9785,7 +9790,7 @@ throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}
 if(locals_id.startsWith("$exec")){filename="<string>"}
-if(_frame[1].$line_info===undefined){res.f_lineno=-1}else{var line_info=_frame[1].$line_info.split(",")
+if(_frame[1].$line_info===undefined){res.f_lineno=_frame[1].$lineno ||-1}else{var line_info=_frame[1].$line_info.split(",")
 res.f_lineno=parseInt(line_info[0])
 var module_name=line_info[1]
 if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
@@ -11515,9 +11520,9 @@ mod.__package__=parent}else{var elts=parent.split(".")
 elts.pop()
 mod.__package__=elts.join(".")}
 mod.__file__=path
-try{var parent_id=parent.replace(/\./g,"_")
-mod_js+="return $locals_"+parent_id
-var $module=new Function("$locals_"+parent_id,mod_js)(
+try{var parent_id=parent.replace(/\./g,"_"),prefix=$B.js_from_ast ? 'locals_' :'$locals_'
+mod_js+="return "+prefix+parent_id
+var $module=new Function(prefix+parent_id,mod_js)(
 mod)}catch(err){if($B.debug > 1){console.log('error in module',mod)
 console.log(err)
 for(var k in err){console.log(k,err[k])}
@@ -11744,6 +11749,7 @@ $B.imported[_mod_name][parsed_name[len]].__class__===
 $B.module){return $B.imported[_mod_name][parsed_name[len]]}
 if(has_from){
 import_error(mod_name)}else{
+console.log('mod_name',mod_name,'globals',globals,'locals',locals,'fromlist',fromlist)
 var exc=_b_.ModuleNotFoundError.$factory()
 exc.msg="No module named '"+mod_name+"'; '"+
 _mod_name+"' is not a package"

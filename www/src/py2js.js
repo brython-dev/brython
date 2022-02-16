@@ -8973,7 +8973,9 @@ var $PassCtx = $B.parser.$PassCtx = function(context){
 }
 
 $PassCtx.prototype.ast = function(){
-    return new ast.Pass()
+    var ast_obj = new ast.Pass()
+    ast_obj.lineno = $get_node(this).line_num
+    return ast_obj
 }
 
 $PassCtx.prototype.toString = function(){

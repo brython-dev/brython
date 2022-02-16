@@ -302,7 +302,8 @@ var frame = $B.make_class("frame",
                 filename = "<string>"
             }
             if(_frame[1].$line_info === undefined){
-                res.f_lineno = -1
+                res.f_lineno = _frame[1].$lineno || -1
+                
             }else{
                 var line_info = _frame[1].$line_info.split(",")
                 res.f_lineno = parseInt(line_info[0])

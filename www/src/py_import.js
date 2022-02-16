@@ -412,9 +412,10 @@ VFSLoader.exec_module = function(self, modobj){
             }
             mod.__file__ = path
             try{
-                var parent_id = parent.replace(/\./g, "_")
-                mod_js += "return $locals_" + parent_id
-                var $module = new Function("$locals_" + parent_id, mod_js)(
+                var parent_id = parent.replace(/\./g, "_"),
+                    prefix = $B.js_from_ast ? 'locals_' : '$locals_'
+                mod_js += "return " + prefix + parent_id
+                var $module = new Function(prefix + parent_id, mod_js)(
                     mod)
             }catch(err){
                 if($B.debug > 1){
@@ -1210,6 +1211,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         __import__ :
                         $B.$getattr(__import__, "__call__"),
         modobj = importer(mod_name, globals, undefined, fromlist, 0)
+
     // Apply bindings upon local namespace
     if(! fromlist || fromlist.length == 0){
         // import mod_name [as alias]
@@ -1261,7 +1263,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                         if(mod_name === "__future__"){
                             // special case for __future__, cf issue #584
                             var frame = $B.last($B.frames_stack),
-                                line_info = frame[3].$line_info || 
+                                line_info = frame[3].$line_info ||
                                     frame[1].$lineinfo + ',' + frame[2],
                                 line_elts = line_info.split(','),
                                 line_num = parseInt(line_elts[0])

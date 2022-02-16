@@ -255,7 +255,8 @@ function _PyST_GetSymbol(ste, name){
 
 function error_at_directive(ste, name){
     var data
-    assert(ste.ste_directives)
+    assert(ste.directives)
+    /*
     for (var data of ste.directives) {
         assert(PyTuple_CheckExact(data))
         assert(PyUnicode_CheckExact(PyTuple_GET_ITEM(data, 0)))
@@ -272,6 +273,7 @@ function error_at_directive(ste, name){
     PyErr_SetString(PyExc_RuntimeError,
                     "BUG: internal directive bookkeeping broken")
     return 0
+    */
 }
 
 
@@ -355,11 +357,10 @@ function analyze_name(ste, scopes, name, flags,
             return error_at_directive(ste, name)
         }
         if (! bound.has(name)) {
-            console.log('pas de binding pour nonlocal', name, 'bound', bound)
-            PyErr_Format(PyExc_SyntaxError,
+            /*PyErr_Format(PyExc_SyntaxError,
                          "no binding for nonlocal '%U' found",
                          name)
-
+            */
             return error_at_directive(ste, name)
         }
         SET_SCOPE(scopes, name, FREE)
@@ -577,7 +578,6 @@ function analyze_block(ste, bound, free, global){
         var flags = ste.symbols.$string_dict[name][0]
         if (!analyze_name(ste, scopes, name, flags,
                           bound, local, free, global)){
-            console.log('rturn 0 line 607')
             return 0
         }
     }

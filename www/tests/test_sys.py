@@ -22,7 +22,7 @@ def f(frame, event, arg):
         first_line = frame.f_lineno
     trace = [event, frame.f_code.co_name,
         frame.f_lineno - first_line, arg]
-    
+
     traces.append(trace)
     return f
 
@@ -80,8 +80,17 @@ expected = [
     ['return', 'h', 14, None],
     ['call', 'A', 18, None],
     ['line', 'A', 18, None],
-    ['line', 'A', 20, None], 
+    ['line', 'A', 20, None],
     ['return', 'A', 20, None]
 ]
 
-assert traces == expected
+if traces != expected:
+  for i, (line1, line2) in enumerate(zip(traces, expected)):
+    if line1 == line2:
+      print('same line', i, 'traces', line1, 'expected', line2)
+    else:
+      print('diff line', i, 'traces', line1, 'expected', line2)
+      break
+  else:
+      print('remaining in traces\n', traces[i:], 
+          '\nremaining in expected', expected[i:])

@@ -603,7 +603,7 @@ function init_scopes(type, scopes, namespaces){
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
-    return `if((locals.$lineno = ${this.lineno}) && !$B.$bool(${test})){\n` +
+    return `if($B.set_lineno(locals, ${this.lineno}) && !$B.$bool(${test})){\n` +
            `throw _b_.AssertionError.$factory(${msg})}\n`
 }
 
@@ -625,11 +625,11 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         var js = `$B.$setitem(locals.__annotations__, ` +
             `'${this.target.id}', ${ann})`
     }
-    return js
+    return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
-    var js = `locals.$lineno = ${this.lineno}\n`,
+    var js = this.lineno ? `$B.set_lineno(locals, ${this.lineno})\n` : '',
         value = $B.js_from_ast(this.value, scopes)
 
     function assign_one(target, value){
@@ -670,7 +670,8 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         for(var elt of target.elts){
             if(elt instanceof $B.ast.Starred){
                 assigns.push(assign_one(elt, `it_${id}.read_rest()`))
-            }else if(elt instanceof $B.ast.List){
+            }else if(elt instanceof $B.ast.List ||
+                    elt instanceof $B.ast.Tuple){
                 assigns.push(assign_many(elt, `it_${id}.read_one()`))
             }else{
                 assigns.push(assign_one(elt, `it_${id}.read_one()`))
@@ -791,7 +792,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
-    return `locals.$lineno = ${lineno}\n` + js
+    return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
@@ -845,7 +846,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
             value = $B.js_from_ast(this.value, scopes)
         js = `${target} = $B.augm_assign(${target}, '${iop}', ${value})`
     }
-    return `locals.$lineno = ${this.lineno}\n` + js
+    return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 
 $B.ast.Await.prototype.to_js = function(scopes){
@@ -991,7 +992,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var enclosing_scope = bind(this.name, scopes)
     var class_scope = new Scope(this.name, 'class', this)
 
-    var js = `locals.$lineno = ${this.lineno}\n`,
+    var js = `$B.set_lineno(locals, ${this.lineno})\n`,
         locals_name = make_scope_name(scopes, class_scope),
         ref = this.name + $B.UUID(),
         glob = scopes[0].name,
@@ -1037,13 +1038,19 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `locals.$is_class = true\n` +
           `var top_frame = ["${ref}", locals, "${glob}", ${globals_name}]\n` +
           `top_frame.__file__ = '${scopes.filename}'\n` +
-          `locals.$f_trace = $B.enter_frame(top_frame)\n`
+          `locals.$lineno = ${this.lineno}\n` +
+          `locals.$f_trace = $B.enter_frame(top_frame)\n` +
+          `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
 
     js += add_body(this.body, scopes)
 
     scopes.pop()
 
-    js += `\n$B.leave_frame({locals})\nreturn locals\n})()\n`
+    js += '\nif(locals.$f_trace !== _b_.None){\n' +
+              '$B.trace_return(_b_.None)\n' +
+          '}\n' +
+          '$B.leave_frame({locals})\n' +
+          'return locals\n})()\n'
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
@@ -1210,7 +1217,7 @@ $B.ast.Delete.prototype.to_js = function(scopes){
                   `'${target.attr}')\n`
         }
     }
-    return js
+    return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 $B.ast.Dict.prototype.to_js = function(scopes){
     var items = [],
@@ -1245,7 +1252,7 @@ $B.ast.DictComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Expr.prototype.to_js = function(scopes){
-    return `locals.$lineno = ${this.lineno};\n`+
+    return `$B.set_lineno(locals, ${this.lineno});\n`+
         $B.js_from_ast(this.value, scopes)
 }
 
@@ -1283,16 +1290,23 @@ $B.ast.For.prototype.to_js = function(scopes){
     }else{
         js = `var no_break_${id} = true\n` +
              `var next_func_${id} = $B.next_of(${iter})\n` +
-             `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-             `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-             `break\n}else{\n ` +
-             `throw err\n}\n}\n`
+             `while(true){\n` +
+                 `try{\n` +
+                     `$B.set_lineno(locals, ${this.lineno})\n` +
+                     `var next_${id} = next_func_${id}()\n` +
+                 `}catch(err){\n` +
+                     `if($B.is_exc(err, [_b_.StopIteration])){\n` +
+                         `break\n` +
+                     `}else{\n ` +
+                         `throw err\n` +
+                     `}\n` +
+                 `}\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
-    assign.lineno = this.lineno
+    //assign.lineno = this.lineno
     js += assign.to_js(scopes) + '\n'
 
     js += add_body(this.body, scopes)
@@ -1466,8 +1480,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     $top_frame.__file__ = '${scopes.filename}'
-    locals.$f_trace = $B.enter_frame($top_frame)
     locals.$lineno = ${this.lineno}
+    locals.$f_trace = $B.enter_frame($top_frame)
     var stack_length = $B.frames_stack.length\n`
 
     if(last_scope(scopes).has_annotation){
@@ -1608,7 +1622,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         }
         js += decorate
     }
-    return js
+    return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
@@ -1701,7 +1715,7 @@ $B.ast.If.prototype.to_js = function(scopes){
         new_scope = copy_scope(scope, this)
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    var js = `if((locals.$lineno = ${this.lineno}) && ` +
+    var js = `if($B.set_lineno(locals, ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     scopes.push(new_scope)
     js += add_body(this.body, scopes) + '\n}'
@@ -1724,7 +1738,7 @@ $B.ast.IfExp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Import.prototype.to_js = function(scopes){
-    var js = `locals.$lineno = ${this.lineno}\n`
+    var js = `$B.set_lineno(locals, ${this.lineno})\n`
     for(var alias of this.names){
         js += `$B.$import("${alias.name}", [], `
         if(alias.asname){
@@ -1767,24 +1781,26 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
         }
     }
 
-    var js = `locals.$lineno = ${this.lineno}\n` +
+    var js = `$B.set_lineno(locals, ${this.lineno})\n` +
              `var module = $B.$import("${module}",`
-    var names = this.names.map(x => `"${x.name}"`).join(', ')
-    js += `[${names}], {}, {});`
+    var names = this.names.map(x => `"${x.name}"`).join(', '),
+        aliases = []
+    for(var name of this.names){
+        if(name.asname){
+            aliases.push(`${name.name}: '${name.asname}'`)
+        }
+    }
+    js += `[${names}], {${aliases.join(', ')}}, locals);`
 
     for(var alias of this.names){
         if(alias.asname){
             bind(alias.asname, scopes)
-            js += `\nlocals.${alias.asname} = $B.$getattr(` +
-                  `$B.imported["${this.module}"], "${alias.name}")`
         }else if(alias.name == '*'){
             // mark scope as "blurred" by the presence of "from X import *"
             last_scope(scopes).blurred = true
             js += `\n$B.import_all(locals, module)`
         }else{
             bind(alias.name, scopes)
-            js += `\nlocals.${alias.name} = $B.$getattr(` +
-                  `$B.imported["${this.module}"], "${alias.name}")`
         }
     }
     return js
@@ -1849,7 +1865,7 @@ $B.ast.ListComp.prototype.to_js = function(scopes){
 }
 
 $B.ast.match_case.prototype.to_js = function(scopes){
-    var js = `((locals.$lineno = ${this.lineno}) && ` +
+    var js = `($B.set_lineno(locals, ${this.lineno}) && ` +
              `$B.pattern_match(subject, {` +
              `${$B.js_from_ast(this.pattern, scopes)}})`
     if(this.guard){
@@ -1874,7 +1890,7 @@ $B.ast.Match.prototype.to_js = function(scopes){
             js += 'else if' + case_js
         }
     }
-    return js
+    return `$B.set_lineno(locals, ${this.lineno})\n`+ js
 }
 
 $B.ast.MatchAs.prototype.to_js = function(scopes){
@@ -1981,17 +1997,17 @@ $B.ast.Module.prototype.to_js = function(scopes, namespaces){
         // py_builtin_functions.js / eval1()
         js += `locals.$f_trace = $B.enter_frame($top_frame)\n`
     }
-    js += `locals.$lineno = ${this.lineno}\n` +
+    js += `$B.set_lineno(locals, ${this.lineno})\n` +
           `var stack_length = $B.frames_stack.length\n` +
           `try{\n` +
               add_body(this.body, scopes) + '\n' +
-              `$B.leave_frame(locals)\n` +
+              `$B.leave_frame({locals, value: _b_.None})\n` +
           `}catch(err){\n` +
               `$B.set_exc(err)\n` +
               `if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){\n` +
                   `locals.$f_trace = $B.trace_exception()\n` +
               `}\n` +
-              `$B.leave_frame(locals);throw err\n` +
+              `$B.leave_frame({locals, value: _b_.None});throw err\n` +
           `}`
     scopes.pop()
     return js
@@ -2038,11 +2054,12 @@ $B.ast.Nonlocal.prototype.to_js = function(scopes){
 }
 
 $B.ast.Pass.prototype.to_js = function(scopes){
-    return 'void(0)'
+    return `$B.set_lineno(locals, ${this.lineno})\n` +
+           'void(0)'
 }
 
 $B.ast.Raise.prototype.to_js = function(scopes){
-    var js = `locals.$lineno = ${this.lineno}\n` +
+    var js = `$B.set_lineno(locals, ${this.lineno})\n` +
              '$B.$raise('
     if(this.exc){
         js += $B.js_from_ast(this.exc, scopes)
@@ -2054,11 +2071,11 @@ $B.ast.Raise.prototype.to_js = function(scopes){
 }
 
 $B.ast.Return.prototype.to_js = function(scopes){
-    var js = `locals.$lineno = ${this.lineno}\n` +
+    var js = `$B.set_lineno(locals, ${this.lineno})\n` +
              'var result = ' +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
     js += `\nif(locals.$f_trace !== _b_.None){\n` +
-          `$B.trace_return(_b_.None)\n}\n` +
+          `$B.trace_return(result)\n}\n` +
           `$B.leave_frame(locals)\nreturn result\n`
     return js
 }
@@ -2106,7 +2123,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         has_else = this.orelse.length > 0,
         has_finally = this.finalbody.length > 0
 
-    var js = `locals.$lineno = ${this.lineno}\ntry{\n`
+    var js = `$B.set_lineno(locals, ${this.lineno})\ntry{\n`
 
     // Save stack length. Used if there is an 'else' clause and no 'finally':
     // if the 'try' body ran without an exception and ended with a 'return',
@@ -2143,7 +2160,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
             }else{
                 js += '}else if'
             }
-            js += `(locals.$lineno = ${handler.lineno}`
+            js += `($B.set_lineno(locals, ${handler.lineno})`
             if(handler.type){
                 js += ` && $B.is_exc(${err}, `
                 if(handler.type instanceof $B.ast.Tuple){
@@ -2231,7 +2248,7 @@ $B.ast.While.prototype.to_js = function(scopes){
     // Set a variable to detect a "break"
     var js = `var no_break_${id} = true\n`
 
-    js += `while((locals.$lineno = ${this.lineno}) && ` +
+    js += `while($B.set_lineno(locals, ${this.lineno}) && ` +
         `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     js += add_body(this.body, scopes) + '\n}'
 
@@ -2323,15 +2340,13 @@ $B.ast.With.prototype.to_js = function(scopes){
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
-    return `locals.$lineno = ${lineno}\n` + js
+    return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 
 $B.ast.Yield.prototype.to_js = function(scopes){
     // Mark current scope as generator
     last_scope(scopes).is_generator = true
     var value = this.value ? $B.js_from_ast(this.value, scopes) : '_b_.None'
-
-    //return `yield (function(){\nreturn ${value}}\n)()`
     return `yield ${value}`
 }
 
