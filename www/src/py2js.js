@@ -5692,7 +5692,7 @@ $FromCtx.prototype.to_js = function(){
         res[pos++] = sep + '"' + attr + '": "' + this.aliases[attr] + '"'
         sep = ','
     }
-    res[pos++] = '}, {}, true);'
+    res[pos++] = '}, {});'
 
     // Add names to local namespace
     if(this.names[0] == '*'){
