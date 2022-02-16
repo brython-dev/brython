@@ -1489,7 +1489,7 @@ var min_int = Math.pow(-2, 53), max_int = Math.pow(2, 53) - 1
 $B.is_safe_int = function(){
     for(var i = 0; i < arguments.length; i++){
         var arg = arguments[i]
-        if((typeof arg != "number") ||
+        if((typeof arg != "number") || isNaN(arg) ||
                 (arg < min_int || arg > max_int)){
             return false
         }
