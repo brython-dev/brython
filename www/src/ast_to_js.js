@@ -81,6 +81,18 @@ function make_scope_name(scopes, scope){
     return 'locals_' + qualified_scope_name(scopes, scope)
 }
 
+function make_search_namespaces(scopes){
+    var namespaces = []
+    for(var scope of scopes.slice().reverse()){
+        if(scope.parent || scope.type == 'class'){
+            continue
+        }
+        namespaces.push(make_scope_name(scopes, scope))
+    }
+    namespaces.push('_b_')
+    return namespaces
+}
+
 function mangle(scopes, scope, name){
     if(name.startsWith('__') && ! name.endsWith('__')){
         var ix = scopes.indexOf(scope)
@@ -155,8 +167,7 @@ function make_ref(name, scopes, scope){
     if(scope.found){
         return reference(scopes, scope.found, name)
     }else if(scope.resolve == 'all'){
-        var scope_names = scopes.slice().reverse().map(scope => make_scope_name(scopes, scope))
-        scope_names.push("_b_") // add builtins
+        var scope_names = make_search_namespaces(scopes)
         return `$B.resolve_in_scopes('${name}', [${scope_names}])`
     }else if(scope.resolve == 'local'){
         return `$B.resolve_local('${name}')`
@@ -1759,7 +1770,7 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
     var js = `locals.$lineno = ${this.lineno}\n` +
              `var module = $B.$import("${module}",`
     var names = this.names.map(x => `"${x.name}"`).join(', ')
-    js += `[${names}], {}, locals);`
+    js += `[${names}], {}, {});`
 
     for(var alias of this.names){
         if(alias.asname){
@@ -1772,6 +1783,8 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
             js += `\n$B.import_all(locals, module)`
         }else{
             bind(alias.name, scopes)
+            js += `\nlocals.${alias.name} = $B.$getattr(` +
+                  `$B.imported["${this.module}"], "${alias.name}")`
         }
     }
     return js
