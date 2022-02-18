@@ -668,20 +668,8 @@ function eval1(src, mode, _globals, _locals){
     root.mode = mode
     $B.parser.dispatch_tokens(root)
 
-    var _ast = root.ast()
-    /*
-    if(mode == "eval"){
-        if(_ast.body.length == 1 && _ast.body[0] instanceof $B.ast.Expr){
-            _ast = new $B.ast.Expression(_ast.body[0])
-            _ast.lineno = frame[1].$lineno
-        }else{
-            throw $B.$SyntaxError(frame[2], 'invalid syntax: argument of ' +
-                'eval() is not an expression', src, 0, 1, root)
-        }
-    }
-    */
-
-    var symtable = $B._PySymtable_Build(_ast, 'exec'),
+    var _ast = root.ast(),
+        symtable = $B._PySymtable_Build(_ast, 'exec'),
         js = $B.js_from_root(_ast, symtable, '<string>',
                 {local_name, exec_locals, global_name, exec_globals})
 
@@ -1749,6 +1737,7 @@ function isinstance(obj, cls){
     }
     if((!cls.__class__) ||
             !(cls.$factory !== undefined || cls.$is_class !== undefined)){
+        console.log('bad cls', cls)
         throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
             "or tuple of types")
     }
