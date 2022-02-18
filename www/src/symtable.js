@@ -62,8 +62,6 @@ var TYPE_CLASS = 1,
 
 var NULL = undefined
 
-var DUPLICATE_ARGUMENT = "duplicate argument '{}' in function definition"
-
 var ModuleBlock = 2,
     ClassBlock = 1,
     FunctionBlock = 0,
@@ -78,12 +76,7 @@ function assert(test){
 
 function LOCATION(x){
     // (x)->lineno, (x)->col_offset, (x)->end_lineno, (x)->end_col_offset
-    var res = [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
-    res.lineno = x.lineno
-    res.col_offset = x.col_offset
-    res.end_lineno = x.end_lineno
-    res.end_col_offset = x.end_col_offset
-    return res
+    return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
 }
 
 function ST_LOCATION(x){
@@ -750,20 +743,6 @@ function symtable_lookup(st, name){
     return ret;
 }
 
-var PyExc_SyntaxError = _b_.SyntaxError
-
-var current_exc = {}
-function PyErr_Format(exc_class, msg_template, arg){
-    var message = _b_.str.format(msg_template, arg)
-    current_exc.value = {exc_class, message}
-}
-
-function PyErr_RangedSyntaxLocationObject(filename, lineno, col_offset,
-                                          end_lineno, end_col_offset){
-    current_exc.value.filename = filename
-    current_exc.value.lineno = lineno
-}
-
 function symtable_add_def_helper(st, name, flag, ste, _location){
     var test = name == "glob"
 
@@ -783,13 +762,11 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         val = o
         if ((flag & DEF_PARAM) && (val & DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */
-            console.log('st', st, 'ste', ste, '_location', _location)
-            var err = PyErr_Format(PyExc_SyntaxError, DUPLICATE_ARGUMENT, name);
+            PyErr_Format(PyExc_SyntaxError, DUPLICATE_ARGUMENT, name);
             PyErr_RangedSyntaxLocationObject(st.filename,
                                              lineno, col_offset + 1,
                                              end_lineno, end_col_offset + 1);
-            console.log('throw exc', current_exc.value.args)
-            throw current_exc.value
+            return 0
         }
         val |= flag
     }else{
@@ -1506,7 +1483,7 @@ function symtable_visit_params(st, args){
         return -1;
 
     for (var arg of args) {
-        if (! symtable_add_def(st, arg.arg, DEF_PARAM, LOCATION(arg)))
+        if (!symtable_add_def(st, arg.arg, DEF_PARAM, LOCATION(arg)))
             return 0;
     }
 
