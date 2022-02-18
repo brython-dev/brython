@@ -91,9 +91,7 @@ def run():
         'py_dom',
         'py_pattern_matching',
         'builtin_modules',
-        'async',
-        'ast_to_js',
-        'symtable'
+        'async'
     ]
 
     res = """// brython.js brython.info
