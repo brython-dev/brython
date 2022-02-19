@@ -13336,7 +13336,7 @@ $B.parse_options = function(options){
 // inserted in the page, instead of waiting for page load.
 // options are passed as attributes of the <script> tag, eg
 // <script type="text/python" debug=2>
-if(! $B.isWebWorker){
+if(!($B.isWebWorker || $B.isNode)){
     var observer = new MutationObserver(function(mutations){
       for (var i=0; i < mutations.length; i++){
         for (var j=0; j < mutations[i].addedNodes.length; j++){
