@@ -4831,6 +4831,11 @@ $ExprCtx.prototype.transition = function(token, value){
         case '.':
             return new $AttrCtx(context)
       case '[':
+          if(context.tree[0].type == 'id'){
+              // ids in "for" targets have attribute "bound" set
+              // remove it if target is a subscript
+              delete context.tree[0].bound
+          }
           return new $AbstractExprCtx(new $SubCtx(context), true)
       case '(':
           return new $CallCtx(context)

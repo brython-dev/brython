@@ -3041,6 +3041,14 @@ try:
 except SyntaxError as exc:
     assert "cannot rebind" in exc.args[0]
 
+# issue 1895
+s = [1, 2, 3]
+
+try:
+    [x1895 for s[0] in s]
+    raise Exception('should have raised NameError')
+except NameError:
+    pass
 
 # ==========================================
 # Finally, report that all tests have passed
