@@ -9,7 +9,7 @@ paramètres, _resolve_ et _reject_.
 
 Quand on crée l'objet, le corps de la fonction est exécutée:
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
     console.log("promise créée")
 })
@@ -20,7 +20,7 @@ var p = new Promise(function(resolve, reject){
 Le corps de la fonction peut comporter des appels de _resolve_ ou _reject_;
 ces appels ne font rien quand la promesse est créée:
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
         console.log("promesse créée")
         resolve()
@@ -35,7 +35,7 @@ La fonction _resolve_ est appelée si on utilise la méthode `then()` de
 l'objet Promise. `p.then(success)` déclenche l'exécution de `resolve`, qui 
 prend pour valeur la fonction _success_:
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
         resolve()
     })
@@ -52,7 +52,7 @@ p.then(success)
 Si la fonction possède _resolve_ et _reject_, c'est la première fonction
 rencontrée qui est exécutée, l'autre est ignorée.
 
-```
+```javascript
 // Promise qui appelle toujours resolve (le 1er argument de p.then())
 var p = new Promise(function(resolve, reject){
         resolve()
@@ -72,7 +72,7 @@ p.then(success, failure)
 -> tout fonctionne
 ```
 
-```
+```javascript
 // Promise qui appelle toujours reject (le 2ème argument de p.then())
 var p = new Promise(function(resolve, reject){
         reject()
@@ -95,7 +95,7 @@ p.then(success, failure)
 C'est la fonction passée au constructeur `Promise` qui permet d'appeler
 _resolve_ ou _reject_ selon certaines conditions.
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
     if(window.navigator.geolocation){
         resolve()
@@ -115,10 +115,10 @@ function failure(){
 p.then(success, failure)
 ```
 
-On peut aussi utilisée la même fonction pour succès et échec et lui passer
+On peut aussi utiliser la même fonction pour succès et échec et lui passer
 des paramètres différents dans _resolve_ ou _reject_.
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
     if(window.navigator.geolocation){
         resolve("geoloc supportée")
@@ -137,7 +137,7 @@ p.then(callback, callback)
 Si la fonction passée à `Promise` comporte du code asynchrone, _resolve_ et
 _reject_ peuvent être associés à des fonctions de rappel.
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
     var req = new XMLHttpRequest()
     req.open("GET", "test.html", true)
@@ -167,7 +167,7 @@ p.then(success, failure)
 Pour généraliser, on peut définir une fonction `get(url)` qui renvoie une
 `Promise`.
 
-```
+```javascript
 function get(url){
     return new Promise(function(resolve, reject){
         var req = new XMLHttpRequest()
@@ -209,7 +209,7 @@ _reject(args)_:
 - si c'est _reject(args)_, `await p` déclenche une exception dont la valeur
   est _args_
 
-```
+```javascript
 var p = new Promise(function(resolve, reject){
     resolve("ok")
 })
