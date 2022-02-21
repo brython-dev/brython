@@ -242,13 +242,24 @@ function string_at(s, i){
         len = s.length
     while(j < len){
         if(s[j] == '"' && ! escaped){
-            return [{type: 'str', value: s.substring(i + 1, j)}, j + 1]
+            var value = s.substring(i + 1, j)
+            value = value.replace(/\\u[0-9a-fA-F]{4}/g,
+                  function(c) {
+                      return String.fromCharCode(parseInt(c.substr(2), 16))
+                  }
+            )
+            return [{type: 'str', value}, j + 1]
         }else if(s[j] == '\\'){
             escaped = ! escaped
             j++
         }else if(escaped){
             if('"/bfn'.indexOf(s[j]) > -1){
                 j++
+                escaped = ! escaped
+            }else if(s[j] == 'u' &&
+                    s.substr(j + 1, 4).match(/[0-9a-fA-f]{4}/)){
+                // unicode escape
+                j += 5
                 escaped = ! escaped
             }else{
                 throw error('invalid escape "' + s[j] + '"', s, j)

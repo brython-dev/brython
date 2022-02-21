@@ -48,4 +48,8 @@ assert json.dumps(d) == '{"command": "settest setting_test_channel", "kwargs": {
 # issue 1858
 assert json.loads("[0, null]") == [0, None]
 
+# issue 1902
+s = json.loads('"\\u0160"')
+assert s == "Š"
+
 print('all tests ok..')
