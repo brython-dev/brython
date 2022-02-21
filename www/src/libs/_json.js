@@ -61,6 +61,7 @@ function to_json(obj, level){
     for(var key in kw){
         kwarg.kw[key] = kw[key]
     }
+    
     switch(typeof obj){
         case 'string':
             var res = JSON.stringify(obj)
@@ -93,6 +94,38 @@ function to_json(obj, level){
             }
             return obj.toString()
     }
+    if(obj instanceof String){
+        // string with surrogate pairs. cf. issue #1903.
+        var res = ''
+        if(obj.surrogates){
+            var s_ix = 0,
+                s_pos = obj.surrogates[s_ix]
+            for(var i = 0, len = obj.length; i < len; i++){
+                if(i == s_pos){
+                    var code = obj.codePointAt(i) - 0x10000
+                    res += '\\u' + (0xD800 | (code >> 10)).toString(16) +
+                           '\\u' + (0xDC00 | (code & 0x3FF)).toString(16)
+                    i++
+                    s_ix++
+                    s_pos = obj.surrogates[s_ix]
+                }else{
+                    var code = obj.charCodeAt(i)
+                    if(code < 127){
+                        var x = _b_.repr(obj[i])
+                        res += x.substr(1, x.length - 2)
+                    }else{
+                        var x = code.toString(16)
+                        while(x.length < 4){
+                            x = '0' + x
+                        }
+                        res += '\\u' + x
+                    }
+                }
+            }
+        }
+        return '"' + res.replace(new RegExp('"', "g"), '\\"') + '"'
+    }
+
     if(_b_.isinstance(obj, _b_.list)){
         var res = []
         var sep = item_separator,

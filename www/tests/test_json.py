@@ -52,4 +52,8 @@ assert json.loads("[0, null]") == [0, None]
 s = json.loads('"\\u0160"')
 assert s == "Š"
 
+# issue 1903
+assert json.dumps('\na🤭bŠé"') == r'"\na\ud83e\udd2db\u0160\u00e9\""'
+
+
 print('all tests ok..')
