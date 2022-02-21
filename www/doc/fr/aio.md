@@ -99,8 +99,8 @@ callbacks en fonctions asynchrones pouvant être utilisées avec le mot clef
 `await`.
 
 La version de Brython est basique, elle n'implémente à l'heure actuelle que les
-méthodes `set_result` et `set_exception`. Veuillez vous réferer à [la
-documentation de asyncio](https://docs.python.org/3/library/asyncio-future.html)
+méthodes `set_result` et `set_exception`. Veuillez vous réferer à 
+[la documentation de asyncio](https://docs.python.org/3/library/asyncio-future.html)
 pour les détails.
 
 ### Exemples

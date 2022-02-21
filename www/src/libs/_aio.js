@@ -256,15 +256,72 @@ function sleep(seconds){
     }
 }
 
+function make_error(name, module){
+    var error_obj = {
+        $name: name,
+        $qualname: module + '.' + name,
+        $is_class: true,
+        __module__: module
+    }
+    var error = $B.$class_constructor(name, error_obj,
+        _b_.tuple.$factory([_b_.Exception]), ["_b_.Exception"], [])
+    error.__doc__ = _b_.None
+    error.$factory = $B.$instance_creator(error)
+    $B.set_func_names(error, module)
+    return error
+}
+
+
+var InvalidStateError = make_error('InvalidStateError', 'browser.aio')
+var CancelledError = make_error('CancelledError', 'browser.aio')
+
+
+var Future = $B.make_class("Future",
+    function(){
+        var methods = {}
+        var promise = new Promise(function(resolve, reject){
+            methods.resolve = resolve
+            methods.reject = reject
+        })
+        promise._methods = methods
+        promise._done = false
+        promise.__class__ = Future
+        return promise
+    }
+)
+
+Future.done = function(){
+    var $ = $B.args('done', 1, {self:null},
+                    ['self'], arguments, {}, null, null)
+    return !! self._done
+}
+
+Future.set_result = function(self, value){
+    var $ = $B.args('set_result', 2, {self:null, value: null},
+                    ['self', 'value'], arguments, {}, null, null)
+    self._done = true
+    return self._methods.resolve(value)
+}
+
+Future.set_exception = function(self, exception){
+    var $ = $B.args('set_exception', 2, {self:null, exception: null},
+                    ['self', 'exception'], arguments, {}, null, null)
+    self._done = true
+    return self._methods.reject(exception)
+}
+
+$B.set_func_names(Future, 'browser.aio')
+
 return {
-    ajax: ajax,
-    event: event,
-    get: get,
-    iscoroutine: iscoroutine,
-    iscoroutinefunction: iscoroutinefunction,
-    post: post,
-    run: run,
-    sleep: sleep
+    ajax,
+    event,
+    get,
+    iscoroutine,
+    iscoroutinefunction,
+    post,
+    run,
+    sleep,
+    Future
 }
 
 })(__BRYTHON__)
