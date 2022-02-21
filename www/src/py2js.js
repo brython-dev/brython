@@ -6631,7 +6631,7 @@ $IdCtx.prototype.to_js = function(arg){
 
     var val = $mangle(this.value, this)
 
-    var $test = false // val == "ixq" //&& innermost.type == "listcomp"
+    var $test = false // val == "cs" //&& innermost.type == "listcomp"
     if($test){
         console.log("ENTER IdCtx.py2js line", $get_node(this).line_num,
             "\nthis", this, '\nscope', scope)
@@ -6841,7 +6841,7 @@ $IdCtx.prototype.to_js = function(arg){
     }
     this.found = found
     if($test){
-        console.log(val, "found", found)
+        console.log(val, "found", found || '<undef>')
         for(var item of found){
             console.log(item.id)
         }
@@ -12812,7 +12812,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
         }
         lnum = token.start[0]
         $pos = line2pos[lnum] + token.start[1]
-        //console.log(token, 'lnum', lnum)
+        //console.log('token', token, 'lnum', lnum, 'node', node)
         //console.log('context', context)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
@@ -12975,6 +12975,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 node.parent.children.pop()
                 // Attach new_node to new "current"
                 node.parent.parent.add(node)
+                // redefine context to set locals to bindings of node scope
+                context = new $NodeCtx(node)
                 continue
             case 'INDENT':
                 // The last node was added after a NEWLINE set the context

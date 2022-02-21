@@ -467,7 +467,9 @@ $B.$global_search = function(name, search_ids){
 $B.$local_search = function(name){
     // search in local namespace
     var frame = $B.last($B.frames_stack)
-    if(frame[1][name] !== undefined){return frame[1][name]}
+    if(frame[1][name] !== undefined){
+        return frame[1][name]
+    }
     else{
         throw _b_.UnboundLocalError.$factory("local variable '" +
             name + "' referenced before assignment")

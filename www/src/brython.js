@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-21 16:05:37.430206"
-__BRYTHON__.timestamp=1645455937430
+__BRYTHON__.compiled_date="2022-02-21 21:49:57.771150"
+__BRYTHON__.timestamp=1645476597771
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3597,7 +3597,7 @@ if(scope.binding[val]&&
 scope.parent_block.id=="__builtins__")){found.push(scope)}}else if(scope.binding[val]){found.push(scope)}}
 if(scope.parent_block){scope=scope.parent_block}else{break}}
 this.found=found
-if($test){console.log(val,"found",found)
+if($test){console.log(val,"found",found ||'<undef>')
 for(var item of found){console.log(item.id)}}
 if(this.nonlocal && found[0]===innermost){found.shift()}
 if(found.length > 0){
@@ -6425,6 +6425,7 @@ case 'DEDENT':
 indent--
 node.parent.children.pop()
 node.parent.parent.add(node)
+C=new $NodeCtx(node)
 continue
 case 'INDENT':
 indent++
