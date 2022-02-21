@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-21 15:25:19.879310"
-__BRYTHON__.timestamp=1645453519879
+__BRYTHON__.compiled_date="2022-02-21 16:05:37.430206"
+__BRYTHON__.timestamp=1645455937430
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -2915,18 +2915,15 @@ var res=new klass(target,iter,body,orelse,type_comment)
 res.lineno=this.parent.node.line_num
 return res}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
+function bind_target(targets,scope,C){
+check_assignment(targets)
+if(Array.isArray(targets)){for(var target of targets){bind_target(target,scope,C)}}else if(targets instanceof $ListOrTupleCtx){for(var target of targets.tree){bind_target(target,scope,C)}}else if(targets.type=='expr' && targets.tree[0]instanceof $IdCtx){$bind(targets.tree[0].value,scope,C)}}
 $ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
 var targets=C.tree[0].tree,named_expr_ids={}
 if(C.parent.comprehension){
 for(var item of C.parent.tree[0].tree){if(item.type=='named_expr' && item.target.type=='id'){named_expr_ids[item.target.value]=item}}}
-for(var target_expr of C.tree[0].tree){check_assignment(target_expr.tree[0])
-if(target_expr.tree[0].type=='id'){var id=target_expr.tree[0]
-if(named_expr_ids[id.value]){var item=named_expr_ids[id.value]
-$_SyntaxError(item,['assignment expression '+
-'cannot rebind comprehension iteration variable '+
-`'${id.value}'`])}
-$bind(id.value,this.scope,id)}}
+bind_target(targets,this.scope,this)
 if(C.tree[0].tree.length==0){
 $_SyntaxError(C,"missing target between 'for' and 'in'")}
 return new $AbstractExprCtx(

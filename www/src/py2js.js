@@ -5252,6 +5252,22 @@ $ForExpr.prototype.toString = function(){
     return '(for) ' + this.tree
 }
 
+function bind_target(targets, scope, context){
+    // Only bind names, not subscripts or attributes
+    check_assignment(targets)
+    if(Array.isArray(targets)){
+        for(var target of targets){
+            bind_target(target, scope, context)
+        }
+    }else if(targets instanceof $ListOrTupleCtx){
+        for(var target of targets.tree){
+            bind_target(target, scope, context)
+        }
+    }else if(targets.type == 'expr' && targets.tree[0] instanceof $IdCtx){
+        $bind(targets.tree[0].value, scope, context)
+    }
+}
+
 $ForExpr.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -5269,19 +5285,8 @@ $ForExpr.prototype.transition = function(token, value){
                     }
                 }
             }
-            for(var target_expr of context.tree[0].tree){
-                check_assignment(target_expr.tree[0])
-                if(target_expr.tree[0].type == 'id'){
-                    var id = target_expr.tree[0]
-                    if(named_expr_ids[id.value]){
-                        var item = named_expr_ids[id.value]
-                        $_SyntaxError(item, ['assignment expression ' +
-                            'cannot rebind comprehension iteration variable ' +
-                            `'${id.value}'`])
-                    }
-                    $bind(id.value, this.scope, id)
-                }
-            }
+            bind_target(targets, this.scope, this)
+
             if(context.tree[0].tree.length == 0){
                 // issue 1293 : "for in range(n)"
                 $_SyntaxError(context, "missing target between 'for' and 'in'")
@@ -6348,6 +6353,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
         // the name has no value (cf. issue 1233)
         this.no_bindings = true
         this.bound = true
+        //$bind(value, scope, this)
+        //console.log('set id', this, 'as bound in target list', target_list)
     }
 
     if(["def", "generator"].indexOf(scope.ntype) > -1){

@@ -3050,6 +3050,10 @@ try:
 except NameError:
     pass
 
+# issue 1905
+assert [1 for a in [2 for (a, b) in [(3, 4)]]] == [1]
+assert [1 for a in [2 for a, b in [(3, 4)]]] == [1]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
