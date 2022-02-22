@@ -2298,7 +2298,7 @@ str.startswith = function(){
     if(! _b_.isinstance(prefixes, _b_.tuple)){
         prefixes = [prefixes]
     }
-    var s = $.self.substring($.js_start, $.js_end)
+    var s = $.self.substring($.start, $.end)
     for(var prefix of prefixes){
         if(! _b_.isinstance(prefix, str)){
             throw _b_.TypeError.$factory("endswith first arg must be str " +
