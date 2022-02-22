@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-21 21:49:57.771150"
-__BRYTHON__.timestamp=1645476597771
+__BRYTHON__.compiled_date="2022-02-22 08:27:05.885737"
+__BRYTHON__.timestamp=1645514825870
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3057,17 +3057,23 @@ for(var name of this.names){if(Array.isArray(name)){name=name[1]}
 $bind(name,scope,this)}}
 $FromCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){C.add_name(value)
+if(C.expect=='module'){C.module+=value
+return C}else if(C.expect=='id'){C.add_name(value)
 C.expect=','
-return C}
-if(C.expect=='alias'){C.names[C.names.length-1]=
+return C}else if(C.expect=='alias'){C.names[C.names.length-1]=
 [$B.last(C.names),value]
 C.expect=','
 return C}
+break
 case '.':
 if(C.expect=='module'){if(token=='id'){C.module+=value}
 else{C.module+='.'}
 return C}
+break
+case 'ellipsis':
+if(C.expect=='module'){C.module+='...'
+return C}
+break
 case 'import':
 if(C.names.length > 0){
 $_SyntaxError(C,["only one 'import' allowed after 'from'"])}
@@ -3111,7 +3117,7 @@ var mod_elts=this.module.split(".")
 for(var i=0;i < mod_elts.length;i++){module.imports[mod_elts.slice(0,i+1).join(".")]=true}
 var _mod=this.module.replace(/\$/g,''),$package,packages=[]
 while(_mod.length > 0){if(_mod.charAt(0)=='.'){if($package===undefined){if($B.imported[mod]!==undefined){$package=$B.imported[mod].__package__
-packages=$package.split('.')}}else{$package=$B.imported[$package]
+packages=$package.split('.')}}else{$package=$B.imported[$package].__package__
 packages.pop()}
 if($package===undefined){return 'throw _b_.SystemError.$factory("Parent module \'\' '+
 'not loaded, cannot perform relative import")'}else if($package==='None'){console.log('package is None !')}

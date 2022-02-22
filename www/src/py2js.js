@@ -5557,23 +5557,33 @@ $FromCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case 'id':
-            if(context.expect == 'id'){
+            if(context.expect == 'module'){
+                context.module += value
+                return context
+            }else if(context.expect == 'id'){
                 context.add_name(value)
                 context.expect = ','
                 return context
-            }
-            if(context.expect == 'alias'){
+            }else if(context.expect == 'alias'){
                 context.names[context.names.length - 1] =
                     [$B.last(context.names), value]
                 context.expect = ','
                 return context
             }
+            break
         case '.':
           if(context.expect == 'module'){
               if(token == 'id'){context.module += value}
               else{context.module += '.'}
               return context
           }
+          break
+        case 'ellipsis':
+          if(context.expect == 'module'){
+              context.module += '...'
+              return context
+          }
+          break
         case 'import':
             if(context.names.length > 0){ // issue 1850
                 $_SyntaxError(context,
@@ -5667,7 +5677,7 @@ $FromCtx.prototype.to_js = function(){
                     packages = $package.split('.')
                 }
             }else{
-                $package = $B.imported[$package]
+                $package = $B.imported[$package].__package__
                 packages.pop()
             }
             if($package === undefined){
