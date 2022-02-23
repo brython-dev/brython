@@ -541,12 +541,14 @@ $Node.prototype.add = function(child){
 }
 
 $Node.prototype.ast = function(){
+    /*
     if(this.mode == "eval"){
         var root_ast = new ast.Expression()
         root_ast.lineno = this.line_num
         root_ast.body = ast_or_obj(this.children[0].context.tree[0])
         return root_ast
     }
+    */
 
     var root_ast = new ast.Module([], [])
     root_ast.lineno = this.line_num
@@ -564,11 +566,17 @@ $Node.prototype.ast = function(){
             node_ast = new ast.Expr(node_ast)
             node_ast.lineno = node.line_num
         }
-        if(this.mode == 'eval'){
-            root_ast.body = node_ast
-        }else{
-            root_ast.body.push(node_ast)
+        root_ast.body.push(node_ast)
+    }
+
+    if(this.mode == 'eval'){
+        if(root_ast.body.length > 1 ||
+                ! (root_ast.body[0] instanceof $B.ast.Expr)){
+            $_SyntaxError(this.children[0].context,
+                ['eval() argument must be an expression'])
         }
+        root_ast = new $B.ast.Expression(root_ast.body[0].value)
+        root_ast.lineno = this.line_num
     }
     return root_ast
 }

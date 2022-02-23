@@ -572,7 +572,7 @@ function make_comp(scopes){
     return js
 }
 
-function init_scopes(type, scopes, namespaces){
+function init_scopes(type, scopes){
     // Common to Expression and Module
     // Initializes the first scope in scopes
     // namespaces can be passed by exec() or eval()
@@ -583,6 +583,7 @@ function init_scopes(type, scopes, namespaces){
         top_scope.has_import_star = true
     }
     scopes.push(top_scope)
+    var namespaces = scopes.namespaces
     if(namespaces){
         for(var key in namespaces.exec_globals){
             if(! key.startsWith('$')){
@@ -1256,9 +1257,8 @@ $B.ast.Expr.prototype.to_js = function(scopes){
         $B.js_from_ast(this.value, scopes)
 }
 
-$B.ast.Expression.prototype.to_js = function(scopes, namespaces){
-    // create top scope; namespaces can be passed by exec()
-    init_scopes.bind(this)('expression', scopes, namespaces)
+$B.ast.Expression.prototype.to_js = function(scopes){
+    init_scopes.bind(this)('expression', scopes)
     return $B.js_from_ast(this.body, scopes)
 }
 
@@ -1972,9 +1972,10 @@ $B.ast.MatchSequence.prototype.to_js = function(scopes){
     return `sequence: [${items.join(', ')}]`
 }
 
-$B.ast.Module.prototype.to_js = function(scopes, namespaces){
+$B.ast.Module.prototype.to_js = function(scopes){
     // create top scope; namespaces can be passed by exec()
-    var name = init_scopes.bind(this)('module', scopes, namespaces)
+    var name = init_scopes.bind(this)('module', scopes),
+        namespaces = scopes.namespaces
 
     var module_id = name,
         global_name = make_scope_name(scopes)
@@ -2490,8 +2491,9 @@ $B.js_from_root = function(ast_root, symtable, filename, namespaces){
     var scopes = []
     scopes.symtable = symtable
     scopes.filename = filename
+    scopes.namespaces = namespaces
     scopes.imports = {}
-    var js = ast_root.to_js(scopes, namespaces)
+    var js = ast_root.to_js(scopes)
     return js
 }
 

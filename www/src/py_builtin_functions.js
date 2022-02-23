@@ -674,17 +674,20 @@ function eval1(src, mode, _globals, _locals){
                 {local_name, exec_locals, global_name, exec_globals})
 
     var save_frames_stack = $B.frames_stack.slice()
+    $B.frames_stack = []
 
-    if(_globals !== _b_.None){
+    //if(_globals !== _b_.None){
         var top_frame = [local_name, exec_locals, global_name, exec_globals]
         exec_locals.$f_trace = $B.enter_frame(top_frame)
-    }
+    //}
 
     if(mode == 'eval'){
         js = 'return ' + js
     }
 
     var exec_func = new Function('$B', '_b_', 'locals', local_name, global_name, js)
+
+    //console.log('exec_func', $B.format_indent(exec_func + '', 0))
 
     try{
         var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)

@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-22 08:27:05.885737"
-__BRYTHON__.timestamp=1645514825870
+__BRYTHON__.compiled_date="2022-02-23 08:16:39.841480"
+__BRYTHON__.timestamp=1645600599841
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -581,10 +581,7 @@ $Node.prototype.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
 child.module=this.module}
-$Node.prototype.ast=function(){if(this.mode=="eval"){var root_ast=new ast.Expression()
-root_ast.lineno=this.line_num
-root_ast.body=ast_or_obj(this.children[0].C.tree[0])
-return root_ast}
+$Node.prototype.ast=function(){
 var root_ast=new ast.Module([],[])
 root_ast.lineno=this.line_num
 for(var node of this.children){var t=node.C.tree[0]
@@ -593,7 +590,11 @@ if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
 var node_ast=ast_or_obj(node.C.tree[0])
 if(ast.expr.indexOf(node_ast.constructor)>-1){node_ast=new ast.Expr(node_ast)
 node_ast.lineno=node.line_num}
-if(this.mode=='eval'){root_ast.body=node_ast}else{root_ast.body.push(node_ast)}}
+root_ast.body.push(node_ast)}
+if(this.mode=='eval'){if(root_ast.body.length > 1 ||
+!(root_ast.body[0]instanceof $B.ast.Expr)){$_SyntaxError(this.children[0].C,['eval() argument must be an expression'])}
+root_ast=new $B.ast.Expression(root_ast.body[0].value)
+root_ast.lineno=this.line_num}
 return root_ast}
 $Node.prototype.get_indent=function(){var indent=0,node=this
 while(node.parent){indent++
@@ -8579,8 +8580,9 @@ root.mode=mode
 $B.parser.dispatch_tokens(root)
 var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})
 var save_frames_stack=$B.frames_stack.slice()
-if(_globals !==_b_.None){var top_frame=[local_name,exec_locals,global_name,exec_globals]
-exec_locals.$f_trace=$B.enter_frame(top_frame)}
+$B.frames_stack=[]
+var top_frame=[local_name,exec_locals,global_name,exec_globals]
+exec_locals.$f_trace=$B.enter_frame(top_frame)
 if(mode=='eval'){js='return '+js}
 var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){
@@ -9658,7 +9660,7 @@ _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
 frame[1].$current_exception=undefined}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
-if(frame===undefined){console.log("no frame",exc,exc.__class__,exc.args)}
+if(frame===undefined){console.log("no frame",exc,exc.__class__,exc.args,exc.$stack)}
 frame[1].$current_exception=$B.exception(exc)}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
