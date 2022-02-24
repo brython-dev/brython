@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-23 08:16:39.841480"
-__BRYTHON__.timestamp=1645600599841
+__BRYTHON__.compiled_date="2022-02-24 18:38:05.099636"
+__BRYTHON__.timestamp=1645724285091
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -788,6 +788,11 @@ for(var attr in this){res[attr]=this[attr]}
 res.children=[]
 for(var child of this.children){res.add(child.clone_tree())}
 return res}
+function set_position(ast_obj,C){var token=C.token.value
+ast_obj.lineno=token.start[0]
+ast_obj.col_offset=token.start[1]
+ast_obj.end_lineno=token.end[0]
+ast_obj.end_col_offset=token.end[1]}
 var $AbstractExprCtx=$B.parser.$AbstractExprCtx=function(C,with_commas){this.type='abstract_expr'
 this.with_commas=with_commas
 this.parent=C
@@ -3422,6 +3427,7 @@ this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
+this.token=$token.value
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
@@ -3454,7 +3460,9 @@ break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
 $IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return new ast.Constant(_b_[this.value])}
-return new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())}
+var ast_obj=new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())
+set_position(ast_obj,this)
+return ast_obj}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='case' && C.parent.parent.type=="node"){
@@ -6327,6 +6335,7 @@ function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){$_
 $_SyntaxError(C,'invalid token '+token[1]+_b_.ord(token[1]))}
 var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
 ]
+var $token={}
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root){var src=root.src
 var tokenizer=$B.tokenizer(src)
 var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
@@ -6350,6 +6359,7 @@ $_SyntaxError(C,[`'${last_brace.string}' was `+
 'never closed'])}
 $_SyntaxError(C,err.message)}
 throw err}
+$token.value=token 
 if(token.done){throw Error('token done without ENDMARKER.')}
 token=token.value
 if(token[2]===undefined){console.log('token incomplet',token,'module',module,root)
@@ -8551,6 +8561,7 @@ return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,
 return new Proxy(dict,handler)}
 function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
 var lineno=frame[1].$lineno
+$B.exec_scope=$B.exec_scope ||{}
 if(src.endsWith('\\\n')){var exc=_b_.SyntaxError.$factory('')
 var lines=src.split('\n'),line=lines[lines.length-2]
 exc.args=['unexpected EOF while parsing',['<string>',lines.length-1,1,line]]
@@ -8582,6 +8593,7 @@ var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_roo
 var save_frames_stack=$B.frames_stack.slice()
 $B.frames_stack=[]
 var top_frame=[local_name,exec_locals,global_name,exec_globals]
+top_frame.is_exec_top=true
 exec_locals.$f_trace=$B.enter_frame(top_frame)
 if(mode=='eval'){js='return '+js}
 var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
@@ -8961,8 +8973,7 @@ if(cls.__class__===$B.GenericAlias){
 throw _b_.TypeError.$factory(
 'isinstance() arg 2 cannot be a parameterized generic')}
 if((!cls.__class__)||
-!(cls.$factory !==undefined ||cls.$is_class !==undefined)){console.log('bad cls',cls)
-throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
+!(cls.$factory !==undefined ||cls.$is_class !==undefined)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
 "or tuple of types")}
 if(cls===_b_.int &&(obj===True ||obj===False)){return True}
 if(cls===_b_.bool){switch(typeof obj){case "string":

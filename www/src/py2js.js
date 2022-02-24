@@ -913,6 +913,14 @@ $Node.prototype.clone_tree = function(){
     return res
 }
 
+function set_position(ast_obj, context){
+    var token = context.token.value
+    ast_obj.lineno = token.start[0]
+    ast_obj.col_offset = token.start[1]
+    ast_obj.end_lineno = token.end[0]
+    ast_obj.end_col_offset = token.end[1]
+}
+
 /*
 Context classes
 ===============
@@ -6323,6 +6331,8 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
     this.tree = []
     context.tree[context.tree.length] = this
 
+    this.token = $token.value
+
     var scope = this.scope = $get_scope(this)
 
     this.blurred_scope = this.scope.blurred
@@ -6403,8 +6413,10 @@ $IdCtx.prototype.ast = function(){
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
         return new ast.Constant(_b_[this.value])
     }
-    return new ast.Name(this.value,
+    var ast_obj = new ast.Name(this.value,
         this.bound ? new ast.Store() : new ast.Load())
+    set_position(ast_obj, this)
+    return ast_obj
 }
 
 $IdCtx.prototype.toString = function(){
@@ -12762,6 +12774,8 @@ var python_keywords = [
     "async", "await"
 ]
 
+var $token = {}
+
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     var src = root.src
     var tokenizer = $B.tokenizer(src)
@@ -12817,6 +12831,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             }
             throw err
         }
+        $token.value = token // global variable
         if(token.done){
             throw Error('token done without ENDMARKER.')
         }

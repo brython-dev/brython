@@ -86,6 +86,8 @@ function make_search_namespaces(scopes){
     for(var scope of scopes.slice().reverse()){
         if(scope.parent || scope.type == 'class'){
             continue
+        }else if(scope.is_exec_scope){
+            namespaces.push('$B.exec_scope')
         }
         namespaces.push(make_scope_name(scopes, scope))
     }
@@ -253,6 +255,7 @@ function name_scope(name, scopes){
             }
         }
     }
+
     if(scope.has_import_star){
         return {found: false, resolve: is_local ? 'all' : 'global'}
     }
@@ -299,10 +302,12 @@ function name_scope(name, scopes){
         return {found: builtins_scope} // `_b_.${name}`
     }
 
-    var scope_names = scopes.slice().
+    var scope_names = make_search_namespaces(scopes)
+    /* scopes.slice().
                              reverse().
                              map(scope => make_scope_name(scopes, scope))
     scope_names.push('_b_')
+     */
     return {found: false, resolve: scope_names}
 }
 
@@ -392,9 +397,19 @@ $B.resolve_local = function(name){
 
 $B.resolve_in_scopes = function(name, namespaces){
     for(var ns of namespaces){
-        var v = resolve_in_namespace(name, ns)
-        if(v.found){
-            return v.value
+        if(ns === $B.exec_scope){
+            var exec_top = $B.frames_stack[0]
+            for(var ns of [exec_top[1], exec_top[3]]){
+                var v = resolve_in_namespace(name, ns)
+                if(v.found){
+                    return v.value
+                }
+            }
+        }else{
+            var v = resolve_in_namespace(name, ns)
+            if(v.found){
+                return v.value
+            }
         }
     }
     throw $B.name_error(name)
@@ -585,6 +600,7 @@ function init_scopes(type, scopes){
     scopes.push(top_scope)
     var namespaces = scopes.namespaces
     if(namespaces){
+        top_scope.is_exec_scope = true
         for(var key in namespaces.exec_globals){
             if(! key.startsWith('$')){
                 top_scope.globals.add(key)
@@ -1665,7 +1681,6 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
         js += `if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`
     }
 
-
     for(var comprehension of this.generators.slice(1)){
         js += comprehension.to_js(scopes)
         nb_paren++
@@ -2025,10 +2040,6 @@ $B.ast.Name.prototype.to_js = function(scopes){
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
         var res = name_reference(this.id, scopes)
-        if(name == 'str'){
-            console.log('ref of', name, res)
-            alert()
-        }
         return res
     }
 }

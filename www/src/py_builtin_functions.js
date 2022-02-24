@@ -576,6 +576,8 @@ function eval1(src, mode, _globals, _locals){
     var frame = $B.last($B.frames_stack)
     var lineno = frame[1].$lineno
 
+    $B.exec_scope = $B.exec_scope || {}
+
     if(src.endsWith('\\\n')){
         var exc = _b_.SyntaxError.$factory('')
         var lines = src.split('\n'),
@@ -674,12 +676,11 @@ function eval1(src, mode, _globals, _locals){
                 {local_name, exec_locals, global_name, exec_globals})
 
     var save_frames_stack = $B.frames_stack.slice()
+    // exec / eval runs in a frames stack of its own
     $B.frames_stack = []
-
-    //if(_globals !== _b_.None){
-        var top_frame = [local_name, exec_locals, global_name, exec_globals]
-        exec_locals.$f_trace = $B.enter_frame(top_frame)
-    //}
+    var top_frame = [local_name, exec_locals, global_name, exec_globals]
+    top_frame.is_exec_top = true
+    exec_locals.$f_trace = $B.enter_frame(top_frame)
 
     if(mode == 'eval'){
         js = 'return ' + js
@@ -1740,7 +1741,6 @@ function isinstance(obj, cls){
     }
     if((!cls.__class__) ||
             !(cls.$factory !== undefined || cls.$is_class !== undefined)){
-        console.log('bad cls', cls)
         throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
             "or tuple of types")
     }
