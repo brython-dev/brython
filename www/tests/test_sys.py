@@ -92,5 +92,8 @@ if traces != expected:
       print('diff line', i, 'traces', line1, 'expected', line2)
       break
   else:
-      print('remaining in traces\n', traces[i:], 
+      print('remaining in traces\n', traces[i:],
           '\nremaining in expected', expected[i:])
+
+# remove trace for next tests
+sys.settrace(None)
