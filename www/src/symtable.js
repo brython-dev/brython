@@ -15,9 +15,9 @@ var GLOBAL_PARAM = "name '%U' is parameter and global",
     NAMED_EXPR_COMP_IN_CLASS =
     "assignment expression within a comprehension cannot be used in a class body",
     NAMED_EXPR_COMP_CONFLICT =
-    "assignment expression cannot rebind comprehension iteration variable '%U'",
+    "assignment expression cannot rebind comprehension iteration variable '%s'",
     NAMED_EXPR_COMP_INNER_LOOP_CONFLICT =
-    "comprehension inner loop cannot rebind assignment expression target '%U'",
+    "comprehension inner loop cannot rebind assignment expression target '%s'",
     NAMED_EXPR_COMP_ITER_EXPR =
     "assignment expression cannot be used in a comprehension iterable expression",
     ANNOTATION_NOT_ALLOWED =
@@ -251,6 +251,13 @@ function _PyST_GetSymbol(ste, name){
         return 0
     }
     return ste.symbols.$string_dict[name][0]
+}
+
+function PyErr_Format(exc_type, message, arg){
+    if(arg){
+        message = _b_.str.__mod__(message, arg)
+    }
+    return exc_type.$factory(message)
 }
 
 function error_at_directive(ste, name){
@@ -1183,14 +1190,18 @@ function symtable_extend_namedexpr_scope(st, e){
          */
         if (ste.comprehension) {
             var target_in_scope = _PyST_GetSymbol(ste, target_name);
-            if (target_in_scope & DEF_COMP_ITER) {
-                PyErr_Format(PyExc_SyntaxError, NAMED_EXPR_COMP_CONFLICT, target_name);
+            if(target_in_scope & DEF_COMP_ITER){
+                var exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_CONFLICT, target_name);
+                exc.args[1] = [st.filename, e.lineno, e.col_offset + 1]
+                throw exc
+                /*
                 PyErr_RangedSyntaxLocationObject(st.filename,
                                                   e.lineno,
                                                   e.col_offset + 1,
                                                   e.end_lineno,
                                                   e.end_col_offset + 1);
                 VISIT_QUIT(st, 0);
+                */
             }
             continue;
         }
