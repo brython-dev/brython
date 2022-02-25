@@ -7,6 +7,13 @@ $B.set_func_infos = function(func, name, qualname, docstring){
     func.$is_func = true
 }
 
+function copy_position(target, origin){
+    target.lineno = origin.lineno
+    target.col_offset = origin.col_offset
+    target.end_lineno = origin.end_lineno
+    target.end_col_offset = origin.end_col_offset
+}
+
 function last_scope(scopes){
     var ix = scopes.length - 1
     while(scopes[ix].parent){
@@ -495,8 +502,7 @@ function make_comp(scopes){
         symtable_block = scopes.symtable.table.blocks.get(_b_.id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
-    var expr = this.elt,
-        first_for = this.generators[0],
+    var first_for = this.generators[0],
         // outmost expression is evaluated in enclosing scope
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
         nb_paren = 1
@@ -528,6 +534,7 @@ function make_comp(scopes){
           `throw err\n}\n}\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
+    copy_position(name, first_for.iter)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([first.target], name)
     assign.lineno = this.lineno
@@ -773,9 +780,10 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         s += 'try{\ntry{\n'
         if(item.optional_vars){
             //bind_vars(item.optional_vars, scopes)
-            var assign = new $B.ast.Assign([item.optional_vars],
-                {to_js: function(){return `value_${id}`}})
-            assign.lineno = lineno
+            var value = {to_js: function(){return `value_${id}`}}
+            copy_position(value, _with)
+            var assign = new $B.ast.Assign([item.optional_vars], value)
+            copy_position(assign, _with)
             s += assign.to_js(scopes) + '\n'
         }
         s += js
@@ -793,7 +801,8 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         return s
     }
 
-    var scope = last_scope(scopes),
+    var _with = this,
+        scope = last_scope(scopes),
         lineno = this.lineno
     delete scope.is_generator
 
@@ -1144,9 +1153,14 @@ $B.ast.comprehension.prototype.to_js = function(scopes){
              `throw err\n}\n}\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
+    copy_position(name, this.target)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
-    assign.lineno = this.lineno
+    copy_position(assign, this.target)
+    if(assign.col_offset === undefined){
+        console.log('pas de col offset', assign, 'target', this.target)
+        alert()
+    }
     js += assign.to_js(scopes) + ' // assign to target\n'
 
     for(var _if of this.ifs){
@@ -1320,6 +1334,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
+    copy_position(name, this.iter)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
     //assign.lineno = this.lineno
@@ -1461,7 +1476,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     // process body first to detect possible "yield"s
     if(this.$is_lambda){
-        var body = [new $B.ast.Return(this.body)],
+        var _return = new $B.ast.Return(this.body)
+        copy_position(_return, this.body)
+        var body = [_return],
             function_body = add_body(body, scopes)
     }else{
         var function_body = add_body(this.body, scopes)
@@ -1671,6 +1688,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
           `throw err\n}\n}\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
+    copy_position(name, first_for.iter)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([first.target], name)
     assign.lineno = this.lineno
@@ -1943,8 +1961,9 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
     for(var i = 0, len = this.keys.length; i < len; i++){
         var key_prefix = this.keys[i] instanceof $B.ast.Constant ?
                             'literal: ' : 'value: '
-        items.push(`[{${key_prefix}${$B.js_from_ast(this.keys[i], scopes)}}, ` +
-                   `{${$B.js_from_ast(this.patterns[i], scopes)}}]`)
+        var key = $B.js_from_ast(this.keys[i], scopes),
+            value = $B.js_from_ast(this.patterns[i], scopes)
+        items.push(`[{${key_prefix}${key}}, {${value}}]`)
     }
     var js = 'mapping: [' + items.join(', ') + ']'
     if(this.rest){
@@ -2323,9 +2342,10 @@ $B.ast.With.prototype.to_js = function(scopes){
         }
         s += 'try{\ntry{\n'
         if(item.optional_vars){
-            var assign = new $B.ast.Assign([item.optional_vars],
-                {to_js: function(){return `value_${id}`}})
-            assign.lineno = lineno
+            var value = {to_js: function(){return `value_${id}`}}
+            copy_position(value, _with)
+            var assign = new $B.ast.Assign([item.optional_vars], value)
+            copy_position(assign, _with)
             s += assign.to_js(scopes) + '\n'
         }
         s += js
@@ -2343,7 +2363,8 @@ $B.ast.With.prototype.to_js = function(scopes){
         return s
     }
 
-    var scope = last_scope(scopes),
+    var _with = this,
+        scope = last_scope(scopes),
         lineno = this.lineno
     delete scope.is_generator
 
@@ -2515,6 +2536,15 @@ $B.js_from_ast = function(ast, scopes){
     var js = ''
     scopes = scopes || []
     if(ast.to_js !== undefined){
+        if(ast.col_offset === undefined){
+            var klass = ast.constructor.$name
+            if(['match_case'].indexOf(klass) == -1){
+                console.log('pas de col offset pour', klass)
+                console.log(ast)
+                throw Error('ccc')
+                alert()
+            }
+        }
         return ast.to_js(scopes)
     }
     console.log("unhandled", ast.constructor.$name)

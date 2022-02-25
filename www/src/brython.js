@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-24 18:38:05.099636"
-__BRYTHON__.timestamp=1645724285091
+__BRYTHON__.compiled_date="2022-02-25 20:44:46.979917"
+__BRYTHON__.timestamp=1645818286979
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -471,8 +471,13 @@ for(var child of block_ctx.node.children){var ctx=child.C.tree[0]
 if(['single_kw','except','decorator'].indexOf(ctx.type)>-1 ||
 (ctx.type=='condition' && ctx.token=='elif')){continue}
 var child_ast=ast_or_obj(ctx)
-if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)
-child_ast.lineno=child.line_num}
+if(ast.expr.indexOf(child_ast.constructor)>-1){if($B.ast_from_js && child_ast.col_offset===undefined){console.log('no position',child_ast,child_ast.constructor.$name)
+alert()}
+child_ast=new ast.Expr(child_ast)
+copy_position(child_ast,child_ast.value)
+if($B.js_from_ast && child_ast.col_offset===undefined){console.log('Expr 179',child_ast)
+console.log('child',child)
+alert()}}
 body.push(child_ast)}
 return body}
 var ast_dump=$B.ast_dump=function(tree,indent){indent=indent ||0
@@ -581,20 +586,19 @@ $Node.prototype.add=function(child){
 this.children[this.children.length]=child
 child.parent=this
 child.module=this.module}
-$Node.prototype.ast=function(){
-var root_ast=new ast.Module([],[])
+$Node.prototype.ast=function(){var root_ast=new ast.Module([],[])
 root_ast.lineno=this.line_num
 for(var node of this.children){var t=node.C.tree[0]
 if(['single_kw','except','decorator'].indexOf(t.type)>-1 ||
 (t.type=='condition' && t.token=='elif')){continue}
 var node_ast=ast_or_obj(node.C.tree[0])
 if(ast.expr.indexOf(node_ast.constructor)>-1){node_ast=new ast.Expr(node_ast)
-node_ast.lineno=node.line_num}
+copy_position(node_ast,node_ast.value)}
 root_ast.body.push(node_ast)}
 if(this.mode=='eval'){if(root_ast.body.length > 1 ||
 !(root_ast.body[0]instanceof $B.ast.Expr)){$_SyntaxError(this.children[0].C,['eval() argument must be an expression'])}
 root_ast=new $B.ast.Expression(root_ast.body[0].value)
-root_ast.lineno=this.line_num}
+copy_position(root_ast,root_ast.body)}
 return root_ast}
 $Node.prototype.get_indent=function(){var indent=0,node=this
 while(node.parent){indent++
@@ -788,19 +792,23 @@ for(var attr in this){res[attr]=this[attr]}
 res.children=[]
 for(var child of this.children){res.add(child.clone_tree())}
 return res}
-function set_position(ast_obj,C){var token=C.token.value
-ast_obj.lineno=token.start[0]
-ast_obj.col_offset=token.start[1]
-ast_obj.end_lineno=token.end[0]
-ast_obj.end_col_offset=token.end[1]}
+function set_position(ast_obj,position){if($B.js_from_ast){ast_obj.lineno=position.start[0]
+ast_obj.col_offset=position.start[1]
+ast_obj.end_lineno=position.end[0]
+ast_obj.end_col_offset=position.end[1]}}
+function copy_position(target,origin){target.lineno=origin.lineno
+target.col_offset=origin.col_offset
+target.end_lineno=origin.end_lineno
+target.end_col_offset=origin.end_col_offset}
 var $AbstractExprCtx=$B.parser.$AbstractExprCtx=function(C,with_commas){this.type='abstract_expr'
 this.with_commas=with_commas
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree.push(this)}
 $AbstractExprCtx.prototype.toString=function(){return '(abstract_expr '+this.with_commas+') '+this.tree}
 $AbstractExprCtx.prototype.transition=function(token,value){var C=this
-var packed=C.packed,is_await=C.is_await
+var packed=C.packed,is_await=C.is_await,position=C.position
 switch(token){case 'await':
 case 'id':
 case 'imaginary':
@@ -821,7 +829,8 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.packed=packed
-C.is_await=is_await}
+C.is_await=is_await
+C.position=position}
 switch(token){case 'await':
 return new $AbstractExprCtx(new $AwaitCtx(
 new $ExprCtx(C,'await',false)),true)
@@ -864,6 +873,7 @@ switch(tg){case '*':
 C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
+C.position=$token.value
 return new $PackedCtx(
 new $ExprCtx(C,'expr',commas))
 case '-':
@@ -969,10 +979,11 @@ var $AssertCtx=$B.parser.$AssertCtx=function(C){
 this.type='assert'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this}
 $AssertCtx.prototype.ast=function(){
 var msg=this.tree[1],ast_obj=new ast.Assert(ast_or_obj(this.tree[0]),msg===undefined ? msg :ast_or_obj(msg))
-ast_obj.lineno=this.parent.node.line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $AssertCtx.prototype.toString=function(){return '(assert) '+this.tree}
 $AssertCtx.prototype.transition=function(token,value){var C=this
@@ -1010,6 +1021,7 @@ var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
 check_assignment(C)
 if(C.type=="expr" && C.tree[0].type=="lambda"){$_SyntaxError(C,["cannot assign to lambda"])}
 this.type='assign'
+this.position=$token.value
 C.parent.tree.pop()
 C.parent.tree.push(this)
 this.parent=C.parent
@@ -1047,7 +1059,7 @@ var lineno=$get_node(this).line_num
 if(target.annotation){var ast_obj=new ast.AnnAssign(
 ast_or_obj(target.tree[0]),ast_or_obj(target.annotation.tree[0]),value,1)
 ast_obj.target.ctx=new ast.Store()}else{var ast_obj=new ast.Assign(targets,value)}
-ast_obj.lineno=lineno
+set_position(ast_obj,this.position)
 return ast_obj}
 $AssignCtx.prototype.guess_type=function(){return}
 $AssignCtx.prototype.toString=function(){return '(assign) '+this.tree[0]+'='+this.tree[1]}
@@ -1240,7 +1252,8 @@ return left.to_js()+' = '+right.to_js()}
 var $AsyncCtx=$B.parser.$AsyncCtx=function(C){
 this.type='async'
 this.parent=C
-C.async=true}
+C.async=true
+C.position=$token.value}
 $AsyncCtx.prototype.toString=function(){return '(async)'}
 $AsyncCtx.prototype.transition=function(token,value){var C=this
 if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ntype=$get_scope(C).ntype
@@ -1254,6 +1267,9 @@ var $AttrCtx=$B.parser.$AttrCtx=function(C){
 this.type='attribute'
 this.value=C.tree[0]
 this.parent=C
+this.position=this.value.position
+if($B.js_from_ast && this.position===undefined){console.log('pas de position pour Attr value',this)
+alert()}
 C.tree.pop()
 C.tree[C.tree.length]=this
 this.tree=[]
@@ -1261,7 +1277,9 @@ this.func='getattr' }
 $AttrCtx.prototype.ast=function(){
 var value=ast_or_obj(this.value),attr=this.unmangled_name,ctx=new ast.Load()
 if(this.func=='setattr'){ctx=new ast.Store()}else if(this.func=='delattr'){ctx=new ast.Delete()}
-return new ast.Attribute(value,attr,ctx)}
+var ast_obj=new ast.Attribute(value,attr,ctx)
+set_position(ast_obj,this.position)
+return ast_obj}
 $AttrCtx.prototype.toString=function(){return '(attr) '+this.value+'.'+this.name}
 $AttrCtx.prototype.transition=function(token,value){var C=this
 if(token==='id'){var name=value
@@ -1291,6 +1309,7 @@ check_assignment(C,{augmented:true})
 this.type='augm_assign'
 this.C=C
 this.parent=C.parent
+this.position=$token.value
 C.parent.tree.pop()
 C.parent.tree[C.parent.tree.length]=this
 this.op=op
@@ -1310,7 +1329,7 @@ target.ctx=new ast.Store()
 value.ctx=new ast.Load()
 var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_class=ast_type_class[1]
 var ast_obj=new ast.AugAssign(target,new ast_class(),value)
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $AugmentedAssignCtx.prototype.toString=function(){return '(augm assign) '+this.tree}
 $AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
@@ -1349,6 +1368,7 @@ var $AwaitCtx=$B.parser.$AwaitCtx=function(C){
 this.type='await'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree.push(this)
 var p=C
 while(p){if(p.type=="list_or_tuple"){p.is_await=true}
@@ -1357,7 +1377,9 @@ var node=$get_node(this)
 node.awaits=node.awaits ||[]
 node.awaits.push(this)}
 $AwaitCtx.prototype.ast=function(){
-return new ast.Await(ast_or_obj(this.tree[0]))}
+var ast_obj=new ast.Await(ast_or_obj(this.tree[0]))
+set_position(ast_obj,this.position)
+return ast_obj}
 $AwaitCtx.prototype.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
@@ -1396,10 +1418,13 @@ loop_node=loop_node.parent}
 if(break_flag){break}}}}
 var $BreakCtx=$B.parser.$BreakCtx=function(C){
 this.type='break'
+this.position=$token.value
 this.parent=C
 C.tree[C.tree.length]=this
 set_loop_context.apply(this,[C,'break'])}
-$BreakCtx.prototype.ast=function(){return new ast.Break()}
+$BreakCtx.prototype.ast=function(){var ast_obj=new ast.Break()
+set_position(ast_obj,this.position)
+return ast_obj}
 $BreakCtx.prototype.toString=function(){return 'break '}
 $BreakCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return $transition(C.parent,'eol')}
@@ -1414,6 +1439,7 @@ this.type='call_arg'
 this.parent=C
 this.start=$pos
 this.tree=[]
+this.position=$token.value
 C.tree.push(this)
 this.expect='id'}
 $CallArgCtx.prototype.toString=function(){return 'call_arg '+this.tree}
@@ -1476,6 +1502,7 @@ $_SyntaxError(C,'token '+token+' after '+C)}
 $CallArgCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
 var $CallCtx=$B.parser.$CallCtx=function(C){
+this.position=$token.value
 this.type='call'
 this.func=C.tree[0]
 if(this.func !==undefined){
@@ -1495,11 +1522,13 @@ $CallCtx.prototype.ast=function(){var res=new ast.Call(ast_or_obj(this.func),[],
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=ast_or_obj(call_arg.tree[0].tree[0]),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
 res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){var starred=new ast.Starred(ast_or_obj(call_arg.tree[0]))
+set_position(starred,call_arg.position)
 starred.ctx=new ast.Load()
 res.args.push(starred)}else if(call_arg.type=='genexpr'){res.args.push(call_arg.ast())}else{var item=call_arg.tree[0]
 if(item===undefined){
 continue}
 if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,ast_or_obj(item.tree[1])))}else{res.args.push(ast_or_obj(item))}}}
+set_position(res,this.position)
 return res}
 $CallCtx.prototype.toString=function(){return '(call) '+this.func+'('+this.tree+')'}
 $CallCtx.prototype.transition=function(token,value){var C=this
@@ -1672,6 +1701,7 @@ var $ClassCtx=$B.parser.$ClassCtx=function(C){
 this.type='class'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='id'
 var scope=this.scope=$get_scope(this)
@@ -1682,7 +1712,7 @@ $ClassCtx.prototype.ast=function(){
 var decorators=get_decorators(this.parent.node),bases=[],keywords=[]
 if(this.args){for(var arg of this.args.tree){if(arg.tree[0].type=='kwarg'){keywords.push(new ast.keyword(arg.tree[0].tree[0].value,ast_or_obj(arg.tree[0].tree[1])))}else{bases.push(ast_or_obj(arg.tree[0]))}}}
 var ast_obj=new ast.ClassDef(this.name,bases,keywords,ast_body(this.parent),decorators)
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $ClassCtx.prototype.toString=function(){return '(class) '+this.name+' '+this.tree+' args '+this.args}
 $ClassCtx.prototype.transition=function(token,value){var C=this
@@ -1845,6 +1875,7 @@ this.type='condition'
 this.token=token
 this.parent=C
 this.tree=[]
+this.position=$token.value
 this.node=$get_node(this)
 this.scope=$get_scope(this)
 if(token=='while'){this.loop_num=$loop_num++}
@@ -1857,7 +1888,7 @@ var types={'if':'If','while':'While','elif':'If'}
 var res=new ast[types[this.token]](ast_or_obj(this.tree[0]))
 if(this.orelse){if(this.orelse.token=='elif'){res.orelse=[ast_or_obj(this.orelse)]}else{res.orelse=ast_or_obj(this.orelse)}}else{res.orelse=[]}
 res.body=ast_body(this)
-res.lineno=this.node.line_num
+set_position(res,this.position)
 return res}
 $ConditionCtx.prototype.toString=function(){return this.token+' '+this.tree}
 $ConditionCtx.prototype.transition=function(token,value){var C=this
@@ -1891,10 +1922,13 @@ return res.join('')}
 var $ContinueCtx=$B.parser.$ContinueCtx=function(C){
 this.type='continue'
 this.parent=C
+this.position=$token.value
 $get_node(this).is_continue=true
 C.tree[C.tree.length]=this
 set_loop_context.apply(this,[C,'continue'])}
-$ContinueCtx.prototype.ast=function(){return new ast.Continue()}
+$ContinueCtx.prototype.ast=function(){var ast_obj=new ast.Continue()
+set_position(ast_obj,this.position)
+return ast_obj}
 $ContinueCtx.prototype.toString=function(){return '(continue)'}
 $ContinueCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
@@ -1916,7 +1950,8 @@ var $DecoratorCtx=$B.parser.$DecoratorCtx=function(C){
 this.type='decorator'
 this.parent=C
 C.tree[C.tree.length]=this
-this.tree=[]}
+this.tree=[]
+this.position=$token.value}
 $DecoratorCtx.prototype.toString=function(){return '(decorator) '+this.tree}
 $DecoratorCtx.prototype.transition=function(token,value){var C=this
 if(token=='id' && C.tree.length==0){return $transition(new $AbstractExprCtx(C,false),token,value)}
@@ -1962,6 +1997,7 @@ this.name=null
 this.parent=C
 this.tree=[]
 this.async=C.async
+if(this.async){this.position=C.position}else{this.position=$token.value}
 this.locals=[]
 C.tree[C.tree.length]=this
 this.enclosing=[]
@@ -1993,7 +2029,7 @@ args=ast_or_obj(func_args)
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=ast_or_obj(this.annotation.tree[0])}
 res.body=ast_body(this.parent)
-res.lineno=this.parent.node.line_num
+set_position(res,this.position)
 return res}
 $DefCtx.prototype.set_name=function(name){if(["None","True","False"].indexOf(name)>-1){$_SyntaxError(this,'invalid function name')}
 var id_ctx=new $IdCtx(this,name)
@@ -2271,7 +2307,8 @@ var $DelCtx=$B.parser.$DelCtx=function(C){
 this.type='del'
 this.parent=C
 C.tree.push(this)
-this.tree=[]}
+this.tree=[]
+this.position=$token.value}
 $DelCtx.prototype.ast=function(){var targets
 if(this.tree[0].type=='list_or_tuple'){
 targets=this.tree[0].tree.map(ast_or_obj)}else if(this.tree[0].type=='expr' &&
@@ -2279,9 +2316,13 @@ this.tree[0].tree[0].type=='list_or_tuple'){
 targets=ast_or_obj(this.tree[0].tree[0])
 targets.ctx=new ast.Del()
 for(var elt of targets.elts){elt.ctx=new ast.Del()}
-return new ast.Delete([targets])}else{targets=[ast_or_obj(this.tree[0].tree[0])]}
+var ast_obj=new ast.Delete([targets])
+set_position(ast_obj,this.position)
+return ast_obj}else{targets=[ast_or_obj(this.tree[0].tree[0])]}
 for(var target of targets){target.ctx=new ast.Del()}
-return new ast.Delete(targets)}
+var ast_obj=new ast.Delete(targets)
+set_position(ast_obj,this.position)
+return ast_obj}
 $DelCtx.prototype.toString=function(){return 'del '+this.tree}
 $DelCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){check_assignment(this.tree[0],{action:'delete'})
@@ -2332,6 +2373,7 @@ C.tree[0].tree[0].comprehension){
 var comp=C.tree[0].tree[0]
 comp.parent_block=this}
 this.type='dictcomp'
+this.position=$token.value
 this.comprehension=true
 this.parent=C.parent
 this.key=C.tree[0]
@@ -2347,9 +2389,11 @@ C.parent.tree[C.parent.tree.length-1]=this
 this.type='dictcomp'
 Comprehension.make_comp(this,C)}
 DictCompCtx.prototype.ast=function(){
-return new ast.DictComp(
+var ast_obj=new ast.DictComp(
 ast_or_obj(this.key),ast_or_obj(this.value),Comprehension.generators(this.tree)
-)}
+)
+set_position(ast_obj,this.position)
+return ast_obj}
 DictCompCtx.prototype.transition=function(token,value){var C=this
 if(token=='}'){this.has_await=Comprehension.has_await(this)
 return this.parent}
@@ -2388,19 +2432,24 @@ this.real='dict_or_set'
 this.expect='id'
 this.closed=false
 this.start=$pos
+this.position=$token.value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
 $DictOrSetCtx.prototype.ast=function(){
+var ast_obj
 if(this.real=='dict'){var keys=[],values=[]
 for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].packed){keys.push(_b_.None)
 values.push(ast_or_obj(this.items[i]))}else{keys.push(ast_or_obj(this.items[i]))
 values.push(ast_or_obj(this.items[i+1]))
 i++}}
-return new ast.Dict(keys,values)}else if(this.real=='set'){var items=[]
-for(var item of this.items){if(item.packed){items.push(new ast.Starred(ast_or_obj(item),new ast.Load()))}else{items.push(ast_or_obj(item))}}
-return new ast.Set(items)}
-return this}
+ast_obj=new ast.Dict(keys,values)}else if(this.real=='set'){var items=[]
+for(var item of this.items){if(item.packed){var starred=new ast.Starred(ast_or_obj(item),new ast.Load())
+set_position(starred,item.position)
+items.push(starred)}else{items.push(ast_or_obj(item))}}
+ast_obj=new ast.Set(items)}
+set_position(ast_obj,this.position)
+return ast_obj}
 $DictOrSetCtx.prototype.toString=function(){switch(this.real){case 'dict':
 return '(dict) {'+this.items+'}'
 case 'set':
@@ -2562,9 +2611,11 @@ return '{$nat:"pdict",arg:'+$to_js(this.tree)+'}'}
 var $EllipsisCtx=$B.parser.$EllipsisCtx=function(C){
 this.type='ellipsis'
 this.parent=C
-this.start=$pos
+this.position=$token.value
 C.tree[C.tree.length]=this}
-$EllipsisCtx.prototype.ast=function(){return new ast.Constant({type:'ellipsis'})}
+$EllipsisCtx.prototype.ast=function(){var ast_obj=new ast.Constant({type:'ellipsis'})
+set_position(ast_obj,this.position)
+return ast_obj}
 $EllipsisCtx.prototype.toString=function(){return 'ellipsis'}
 $EllipsisCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
@@ -2665,6 +2716,9 @@ var $ExprCtx=$B.parser.$ExprCtx=function(C,name,with_commas){
 this.type='expr'
 this.name=name
 this.$pos=$pos
+this.position=C.position
+if($B.js_from_ast && this.position===undefined){console.log('no position',C)
+throw Error('...')}
 this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
@@ -2673,8 +2727,8 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 $ExprCtx.prototype.ast=function(){var res=ast_or_obj(this.tree[0])
 if(this.packed){}else if(this.annotation){res=new ast.AnnAssign(
-res,ast_or_obj(this.annotation.tree[0]),undefined,1)
-return res}
+res,ast_or_obj(this.annotation.tree[0]),undefined,1)}
+set_position(res,this.position)
 return res}
 $ExprCtx.prototype.toString=function(){return '(expr '+this.with_commas+') '+this.tree}
 $ExprCtx.prototype.transition=function(token,value){var C=this
@@ -2908,6 +2962,7 @@ C.node.parent.first_for=this}
 this.type='for'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree.push(this)
 this.loop_num=$loop_num
 this.scope=$get_scope(this)
@@ -2918,7 +2973,7 @@ $ForExpr.prototype.ast=function(){
 var target=ast_or_obj(this.tree[0]),iter=ast_or_obj(this.tree[1]),orelse=this.orelse ? ast_or_obj(this.orelse):[],type_comment,body=ast_body(this.parent)
 var klass=this.async ? ast.AsyncFor :ast.For
 var res=new klass(target,iter,body,orelse,type_comment)
-res.lineno=this.parent.node.line_num
+set_position(res,this.position)
 return res}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
 function bind_target(targets,scope,C){
@@ -3043,6 +3098,7 @@ this.type='from'
 this.parent=C
 this.module=''
 this.names=[]
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='module'
 this.scope=$get_scope(this)}
@@ -3053,7 +3109,7 @@ module=module.substr(1)}
 var res={module:module ||undefined,names:[],level}
 for(var name of this.names){if(Array.isArray(name)){res.names.push(new ast.alias(name[0],name[1]))}else{res.names.push(new ast.alias(name))}}
 var ast_obj=new ast.ImportFrom(res.module,res.names,res.level)
-ast_obj.lineno=this.parent.node.line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $FromCtx.prototype.add_name=function(name){this.names[this.names.length]=name
 if(name=='*'){this.scope.blurred=true}}
@@ -3219,6 +3275,7 @@ this.type='func_arg_id'
 if(["None","True","False"].indexOf(name)>-1){$_SyntaxError(C,'invalid name')}
 this.name=name
 this.parent=C
+this.position=$token.value
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
 if(C.parent.type !="lambda"){var node=$get_node(this)
 if(node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
@@ -3296,12 +3353,13 @@ var GeneratorExpCtx=function(C){
 this.type='genexpr'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
+this.position=C.position
 Comprehension.make_comp(this,C)}
 GeneratorExpCtx.prototype.ast=function(){
 var res=new ast.GeneratorExp(
 ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
 )
-res.lineno=$get_node(this).line_num
+set_position(res,this.position)
 return res}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
 if(token==')'){this.has_await=Comprehension.has_await(this)
@@ -3368,6 +3426,7 @@ var $GlobalCtx=$B.parser.$GlobalCtx=function(C){
 this.type='global'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
@@ -3378,7 +3437,9 @@ while(this.module.module !=this.module.id){this.module=this.module.parent_block}
 this.module.binding=this.module.binding ||{}
 this.$pos=$pos}
 $GlobalCtx.prototype.ast=function(){
-return new ast.Global(this.tree.map(item=> item.value))}
+var ast_obj=new ast.Global(this.tree.map(item=> item.value))
+set_position(ast_obj,this.position)
+return ast_obj}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
 function check_global_nonlocal(C,value,type){var scope=C.scope
 if(type=='nonlocal' && scope.globals && scope.globals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
@@ -3427,7 +3488,7 @@ this.value=value
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this
-this.token=$token.value
+this.position=$token.value
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
 this.env=clone(this.scope.binding)
@@ -3459,9 +3520,9 @@ while(_ctx){if(_ctx.comprehension){this.in_comp=true
 break}
 _ctx=_ctx.parent}
 if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
-$IdCtx.prototype.ast=function(){if(['True','False','None'].indexOf(this.value)>-1){return new ast.Constant(_b_[this.value])}
-var ast_obj=new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())
-set_position(ast_obj,this)
+$IdCtx.prototype.ast=function(){var ast_obj
+if(['True','False','None'].indexOf(this.value)>-1){ast_obj=new ast.Constant(_b_[this.value])}else{ast_obj=new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())}
+set_position(ast_obj,this.position)
 return ast_obj}
 $IdCtx.prototype.toString=function(){return '(id) '+this.value+':'+(this.tree ||'')}
 $IdCtx.prototype.transition=function(token,value){var C=this
@@ -3672,6 +3733,7 @@ var $ImportCtx=$B.parser.$ImportCtx=function(C){
 this.type='import'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='id'}
 $ImportCtx.prototype.ast=function(){
@@ -3680,7 +3742,7 @@ for(var item of this.tree){var alias=new ast.alias(item.name)
 if(item.alias !=item.name){alias.asname=item.alias}
 names.push(alias)}
 var ast_obj=new ast.Import(names)
-ast_obj.lineno=this.parent.node.line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $ImportCtx.prototype.toString=function(){return 'import '+this.tree}
 $ImportCtx.prototype.transition=function(token,value){var C=this
@@ -3744,6 +3806,7 @@ var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,values){
 this.type='JoinedStr'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 this.scope=$get_scope(C)
 var line_num=$get_node(C).line_num
 for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
@@ -3770,16 +3833,21 @@ this.$pos=$pos}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
 var state
 for(var item of this.tree){if(item instanceof $StringCtx){if(state=='string'){
-$B.last(res.values).value+=eval(item.value)}else{res.values.push(new ast.Constant(eval(item.value)))}
+$B.last(res.values).value+=eval(item.value)}else{var item_ast=new ast.Constant(eval(item.value))
+set_position(item_ast,item.position)
+res.values.push(item_ast)}
 state='string'}else{var conv_num={a:97,r:114,s:115},format=item.elt.format
 format=format===undefined ? format :ast_or_obj(format)
 value=new ast.FormattedValue(
 ast_or_obj(item),conv_num[item.elt.conversion]||-1,format)
+set_position(value,this.position)
 var format=item.format
 if(format !==undefined){value.format=item.format.ast()}
 res.values.push(value)
 state='formatted_value'}}
-return new ast.JoinedStr(res.values)}
+var ast_obj=new ast.JoinedStr(res.values)
+set_position(ast_obj,this.position)
+return ast_obj}
 JoinedStrCtx.prototype.toString=function(){return 'f-string '+(this.tree ||'')}
 JoinedStrCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
@@ -3829,6 +3897,7 @@ return this.js}
 var $KwArgCtx=$B.parser.$KwArgCtx=function(C){
 this.type='kwarg'
 this.parent=C.parent
+this.position=$token.value
 this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
@@ -3852,6 +3921,7 @@ this.type='lambda'
 this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
+this.position=$token.value
 this.args_start=$pos+6
 this.vars=[]
 this.locals=[]
@@ -3865,7 +3935,7 @@ $LambdaCtx.prototype.ast=function(){
 var args
 if(this.args.length==0){args=new ast.arguments([],[],undefined,[],[],undefined,[])}else{args=this.args[0].ast()}
 var ast_obj=new ast.Lambda(args,ast_or_obj(this.tree[0]))
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $LambdaCtx.prototype.toString=function(){return '(lambda) '+this.args_start+' '+this.body_start}
 $LambdaCtx.prototype.transition=function(token,value){var C=this
@@ -3902,11 +3972,12 @@ var ListCompCtx=function(C){
 this.type='listcomp'
 this.tree=[C.tree[0]]
 this.tree[0].parent=this
+this.position=$token.value
 Comprehension.make_comp(this,C)}
 ListCompCtx.prototype.ast=function(){
 var res=new ast.ListComp(
 ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1)))
-res.lineno=$get_node(this).line_num
+set_position(res,this.position)
 return res}
 ListCompCtx.prototype.transition=function(token,value){var C=this
 if(token==']'){this.has_await=Comprehension.has_await(this)
@@ -3947,10 +4018,13 @@ this.expect='id'
 this.closed=false
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this}
-$ListOrTupleCtx.prototype.ast=function(){var elts=this.tree.map(ast_or_obj)
-if(this.real=='list'){return new ast.List(elts,new ast.Load())}else if(this.real=='tuple'){return new ast.Tuple(elts,new ast.Load())}else{console.log('list_or_tuple ast, real',this.real)
-return this}}
+$ListOrTupleCtx.prototype.ast=function(){var elts=this.tree.map(ast_or_obj),ast_obj
+if(this.real=='list'){ast_obj=new ast.List(elts,new ast.Load())}else if(this.real=='tuple'){ast_obj=new ast.Tuple(elts,new ast.Load())}else{console.log('list_or_tuple ast, real',this.real)
+return this}
+set_position(ast_obj,this.position)
+return ast_obj}
 $ListOrTupleCtx.prototype.toString=function(){switch(this.real){case 'list':
 return '(list) ['+this.tree+']'
 default:
@@ -4101,6 +4175,7 @@ if(this.tree.length==1 && this.has_comma===undefined){return this.tree[0].to_js(
 return '$B.fast_tuple(['+$to_js(this.tree)+'])'}}
 var $MatchCtx=$B.parser.$MatchCtx=function(node_ctx){
 this.type="match"
+this.position=$token.value
 node_ctx.tree=[this]
 node_ctx.node.is_match=true
 this.parent=node_ctx
@@ -4108,6 +4183,7 @@ this.tree=[]
 this.expect='as'}
 $MatchCtx.prototype.ast=function(){
 var res=new ast.Match(ast_or_obj(this.tree[0]),ast_body(this.parent))
+set_position(res,this.position)
 res.$line_num=$get_node(this).line_num
 return res}
 $MatchCtx.prototype.transition=function(token,value){var C=this
@@ -4123,6 +4199,7 @@ break}}
 $MatchCtx.prototype.to_js=function(){return 'var subject = '+$to_js(this.tree)+';if(true)'}
 var NamedExprCtx=function(C){
 this.type='named_expr'
+this.position=$token.value
 this.target=C.tree[0]
 this.target.scope_ref=this.target.binding_scope.id.replace(/\./g,'_')
 C.tree.pop()
@@ -4133,6 +4210,7 @@ this.tree=[]
 this.$pos=$pos}
 NamedExprCtx.prototype.ast=function(){var res=new ast.NamedExpr(ast_or_obj(this.target),ast_or_obj(this.tree[0]))
 res.target.ctx=new ast.Store()
+set_position(res,this.position)
 return res}
 NamedExprCtx.prototype.transition=function(token,value){return $transition(this.parent,token,value)}
 NamedExprCtx.prototype.to_js=function(){return `($locals_${this.target.scope_ref}.${this.target.value} `+
@@ -4256,9 +4334,10 @@ return $transition(expr,token,value)
 case '+':
 case '-':
 case '~':
+C.position=$token.value
+var expr=new $ExprCtx(C,'unary',true)
 return new $AbstractExprCtx(
-new $UnaryCtx(
-new $ExprCtx(C,'unary',true),value),false)
+new $UnaryCtx(expr,value),false)
 case '@':
 return new $DecoratorCtx(C)}
 break
@@ -4327,6 +4406,7 @@ var $NonlocalCtx=$B.parser.$NonlocalCtx=function(C){
 this.type='nonlocal'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 this.names={}
 C.tree[C.tree.length]=this
 this.expect='id'
@@ -4335,7 +4415,9 @@ this.scope.nonlocals=this.scope.nonlocals ||new Set()
 if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])}}
 $NonlocalCtx.prototype.toString=function(){return 'nonlocal '+this.tree}
 $NonlocalCtx.prototype.ast=function(){
-return new ast.Nonlocal(this.tree.map(item=> item.value))}
+var ast_obj=new ast.Nonlocal(this.tree.map(item=> item.value))
+set_position(ast_obj,this.position)
+return ast_obj}
 $NonlocalCtx.prototype.add=function(name){if(this.scope.binding[name]=="arg"){$_SyntaxError(C,["name '"+name+"' is parameter and nonlocal"])}
 this.names[name]=[false,$pos]
 this.scope.nonlocals.add(name)}
@@ -4369,8 +4451,11 @@ var $NotCtx=$B.parser.$NotCtx=function(C){
 this.type='not'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this}
-$NotCtx.prototype.ast=function(){return new ast.UnaryOp(new ast.Not(),ast_or_obj(this.tree[0]))}
+$NotCtx.prototype.ast=function(){var ast_obj=new ast.UnaryOp(new ast.Not(),ast_or_obj(this.tree[0]))
+set_position(ast_obj,this.position)
+return ast_obj}
 $NotCtx.prototype.toString=function(){return 'not ('+this.tree+')'}
 $NotCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
@@ -4403,8 +4488,11 @@ this.type=type
 this.value=value
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this}
-$NumberCtx.prototype.ast=function(){return new ast.Constant({type:this.type,value:this.value})}
+$NumberCtx.prototype.ast=function(){var ast_obj=new ast.Constant({type:this.type,value:this.value})
+set_position(ast_obj,this.position)
+return ast_obj}
 $NumberCtx.prototype.toString=function(){return this.type+' '+this.value}
 $NumberCtx.prototype.transition=function(token,value){var C=this
 if(token=='id' && value=='_'){$_SyntaxError(C,['invalid decimal literal'])}
@@ -4421,6 +4509,7 @@ var $OpCtx=$B.parser.$OpCtx=function(C,op){
 this.type='op'
 this.op=op
 this.parent=C.parent
+this.position=$token.value
 this.tree=[C]
 this.scope=$get_scope(this)
 if(C.type=="expr"){if(['int','float','str'].indexOf(C.tree[0].type)>-1){this.left_type=C.tree[0].type}else if(C.tree[0].type=="id"){var binding=this.scope.binding[C.tree[0].value]
@@ -4428,19 +4517,18 @@ if(binding){this.left_type=binding.type}}}
 C.parent.tree.pop()
 C.parent.tree.push(this)}
 $OpCtx.prototype.ast=function(){
-var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1]
+var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1],ast_obj
 if(op_type===ast.Compare){var left=ast_or_obj(this.tree[0]),ops=[new ast_class()]
 if(this.ops){for(var op of this.ops.slice(1)){ops.push(new op2ast_class[op][1]())}
-return new ast.Compare(left,ops,this.tree.slice(1).map(ast_or_obj))}else{return new ast.Compare(left,ops,[ast_or_obj(this.tree[1])])}}
-if(op_type===ast.UnaryOp){return new op_type(new ast_class(),ast_or_obj(this.tree[1]))}
-if(op_type===ast.BoolOp){
+ast_obj=new ast.Compare(left,ops,this.tree.slice(1).map(ast_or_obj))}else{ast_obj=new ast.Compare(left,ops,[ast_or_obj(this.tree[1])])}}else if(op_type===ast.UnaryOp){ast_obj=new op_type(new ast_class(),ast_or_obj(this.tree[1]))}else if(op_type===ast.BoolOp){
 var values=[this.tree[1]],main_op=this.op,ctx=this
 while(ctx.tree[0].type=='op' && ctx.tree[0].op==main_op){values.splice(0,0,ctx.tree[0].tree[1])
 ctx=ctx.tree[0]}
 values.splice(0,0,ctx.tree[0])
-return new op_type(new ast_class(),values.map(ast_or_obj))}
-return new op_type(
+ast_obj=new op_type(new ast_class(),values.map(ast_or_obj))}else{ast_obj=new op_type(
 ast_or_obj(this.tree[0]),new ast_class(),ast_or_obj(this.tree[1]))}
+set_position(ast_obj,this.position)
+return ast_obj}
 $OpCtx.prototype.toString=function(){return '(op '+this.op+') ['+this.tree+']'}
 $OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){$_SyntaxError(C,['C op undefined '+C])}
@@ -4639,6 +4727,7 @@ sjs(this.tree[1])+')'}else if(op=='/'){return '$B.div('+sjs(this.tree[0])+','+
 sjs(this.tree[1])+')'}else{return sjs(this.tree[0])+op+sjs(this.tree[1])}}
 var $PackedCtx=$B.parser.$PackedCtx=function(C){
 this.type='packed'
+this.position=$token.value
 if(C.parent.type=='list_or_tuple' &&
 C.parent.parent.type=="node"){
 for(var i=0;i < C.parent.tree.length;i++){var child=C.parent.tree[i]
@@ -4648,7 +4737,9 @@ this.parent=C
 this.tree=[]
 this.pos=$pos-1 
 C.tree[C.tree.length]=this}
-$PackedCtx.prototype.ast=function(){return new ast.Starred(ast_or_obj(this.tree[0]),new ast.Load())}
+$PackedCtx.prototype.ast=function(){var ast_obj=new ast.Starred(ast_or_obj(this.tree[0]),new ast.Load())
+set_position(ast_obj,this.position)
+return ast_obj}
 $PackedCtx.prototype.toString=function(){return '(packed) '+this.tree}
 $PackedCtx.prototype.transition=function(token,value){var C=this
 if(C.tree.length > 0 && token=="["){
@@ -4691,9 +4782,10 @@ var $PassCtx=$B.parser.$PassCtx=function(C){
 this.type='pass'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this}
 $PassCtx.prototype.ast=function(){var ast_obj=new ast.Pass()
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $PassCtx.prototype.toString=function(){return '(pass)'}
 $PassCtx.prototype.transition=function(token,value){var C=this
@@ -4774,19 +4866,26 @@ this.parent=C.parent
 C.parent.tree.pop()
 C.parent.tree.push(this)
 this.tree=[value]
+this.position=$token.value
 this.expect='.'
 this.$pos=$pos}
 $PatternCaptureCtx.prototype.ast=function(){var ast_obj
 try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
-for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())}
-pattern=new ast.MatchValue(pattern)}else if(this.starred){var v=this.tree[0]
-if(v=='_'){ast_obj=new ast.MatchStar()}else{ast_obj=new ast.MatchStar(v)}}else{var pattern=this.tree[0]
+set_position(pattern,this.position)
+for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
+copy_position(pattern,pattern.value)}
+pattern=new ast.MatchValue(pattern)
+copy_position(pattern,pattern.value)}else if(this.starred){var v=this.tree[0]
+if(v=='_'){ast_obj=new ast.MatchStar()}else{ast_obj=new ast.MatchStar(v)}
+set_position(ast_obj,this.position)}else{var pattern=this.tree[0]
 if(typeof pattern=='string'){}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
 pattern=$NumberCtx.prototype.ast.bind(this)()}
-if(pattern=='_'){pattern=new ast.MatchAs()}}
-if(this.alias){if(typeof pattern=="string"){pattern=new ast.MatchAs(undefined,pattern)}
+if(pattern=='_'){pattern=new ast.MatchAs()
+set_position(pattern,this.position)}}
+if(this.alias){if(typeof pattern=="string"){pattern=new ast.MatchAs(undefined,pattern)
+set_position(pattern,this.position)}
 ast_obj=new ast.MatchAs(pattern,this.alias)}else if(this.tree.length > 1 ||pattern instanceof ast.MatchAs){ast_obj=pattern}else if(typeof pattern=='string'){ast_obj=new ast.MatchAs(undefined,pattern)}else if(! this.starred){ast_obj=new ast.MatchAs(undefined,pattern)}
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}catch(err){console.log('error capture ast')
 show_line(this)
 throw err}}
@@ -4822,6 +4921,7 @@ return js+'}'}
 $PatternClassCtx=function(C){this.type="class_pattern"
 this.tree=[]
 this.parent=C.parent
+this.position=$token.value
 this.class_id=new $IdCtx(C,C.tree[0])
 C.tree.pop()
 this.attrs=C.tree.slice(2)
@@ -4833,6 +4933,7 @@ this.positionals=[]
 this.bound_names=[]}
 $PatternClassCtx.prototype.ast=function(){
 var cls=new ast.Name(this.class_id.value)
+set_position(cls,this.position)
 cls.ctx=new ast.Load()
 var patterns=[],kwd_attrs=[],kwd_patterns=[]
 for(var item of this.tree){if(item.is_keyword){kwd_attrs.push(item.tree[0])
@@ -4840,8 +4941,9 @@ kwd_patterns.push(ast_or_obj(item.tree[1]))}else{try{patterns.push(ast_or_obj(it
 show_line(this)
 throw err}}}
 var ast_obj=new ast.MatchClass(cls,patterns,kwd_attrs,kwd_patterns)
-if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
+if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)
+set_position(ast_obj,this.position)}
 return ast_obj}
 $PatternClassCtx.prototype.bindings=function(){var bindings=this.bound_names
 if(this.alias){bindings.push(this.alias)}
@@ -4891,6 +4993,7 @@ return js+'}'}
 var $PatternGroupCtx=function(C){
 this.type="group_pattern"
 this.parent=C
+this.position=$token.value
 this.tree=[]
 var first_pattern=C.tree.pop()
 this.expect=',|'
@@ -4901,7 +5004,7 @@ last.tree.length==0){C.tree.pop()}}
 $PatternGroupCtx.prototype.ast=function(){var ast_obj
 if(this.tree.length==1 && ! this.has_comma){ast_obj=this.tree[0].ast()}else{ast_obj=$PatternSequenceCtx.prototype.ast.bind(this)()}
 if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $PatternGroupCtx.prototype.bindings=function(){var bindings=[]
 for(var item of this.tree){bindings=bindings.concat(item.bindings())}
@@ -4936,6 +5039,7 @@ return js+'}'}
 var $PatternLiteralCtx=function(C,token,value,sign){
 this.type="literal_pattern"
 this.parent=C.parent
+this.position=$token.value
 C.parent.tree.pop()
 C.parent.tree.push(this)
 if(token.sign){this.tree=[{sign:token.sign}]
@@ -4945,16 +5049,23 @@ this.expect='op'}}
 $PatternLiteralCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
 try{var first=this.tree[0],result
 if(first.type=='str'){var v=$StringCtx.prototype.ast.bind(first)()
-result=new ast.MatchValue(v)}else if(first.type=='id'){result=new ast.MatchSingleton(_b_[first.value])}else{var num=$NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
+result=new ast.MatchValue(v)}else if(first.type=='id'){result=new ast.MatchSingleton(_b_[first.value])}else{first.position=this.position
+var num=$NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
 if(first.sign && first.sign !='+'){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[first.sign]
-res=new ast.MatchValue(new ast.UnaryOp(new op(),res.value))}
-if(this.tree.length==1){result=res}else{var num2=$NumberCtx.prototype.ast.bind(this.tree[2])()
-result=new ast.MatchValue(new ast.BinOp(res.value,this.tree[1]=='+' ? new ast.Add():new ast.Sub(),num2))}}
+var unary_op=new ast.UnaryOp(new op(),res.value)
+set_position(unary_op,this.position)
+res=new ast.MatchValue(unary_op)
+set_position(res,this.position)}
+if(this.tree.length==1){result=res}else{this.tree[2].position=this.position
+var num2=$NumberCtx.prototype.ast.bind(this.tree[2])(),binop=new ast.BinOp(res.value,this.tree[1]=='+' ? new ast.Add():new ast.Sub(),num2)
+set_position(binop,this.position)
+result=new ast.MatchValue(binop)}}
+set_position(result,this.position)
 if(this.tree.length==2){
 result=new ast.MatchValue(new ast.BinOp(
 ast_or_obj(this.tree[0]),C.num_sign=='+' ? ast.Add :ast.Sub,ast_or_obj(this.tree[1])))}
 if(this.alias){result=new ast.MatchAs(result,this.alias)}
-result.lineno=lineno
+set_position(result,this.position)
 return result}catch(err){console.log('error pattern literal ast',this)
 show_line(this)
 throw err}}
@@ -5029,6 +5140,7 @@ return js+'}'}
 var $PatternMappingCtx=function(C){
 this.type="mapping_pattern"
 this.parent=C
+this.position=$token.value
 C.tree.pop()
 this.tree=[]
 C.tree.push(this)
@@ -5041,6 +5153,7 @@ for(var item of this.tree){keys.push(ast_or_obj(item.tree[0]).value)
 if(item.tree[0]instanceof $PatternLiteralCtx){patterns.push(ast_or_obj(item.tree[1]))}else{patterns.push(ast_or_obj(item.tree[2]))}}
 var res=new ast.MatchMapping(keys,patterns)
 if(this.double_star){res.rest=this.double_star.tree[0]}
+set_position(res,this.position)
 return res}
 $PatternMappingCtx.prototype.bindings=function(){var bindings=[]
 for(var item of this.tree){bindings=bindings.concat(item.bindings())}
@@ -5147,6 +5260,7 @@ return '['+key+','+value+']'}
 var $PatternOrCtx=function(C){
 this.type="or_pattern"
 this.parent=C
+this.position=$token.value
 var first_pattern=C.tree.pop()
 if(first_pattern instanceof $PatternGroupCtx &&
 first_pattern.expect !='as'){
@@ -5158,8 +5272,9 @@ C.tree.push(this)
 this.check_reachable()}
 $PatternOrCtx.prototype.ast=function(){
 var ast_obj=new ast.MatchOr(this.tree.map(ast_or_obj))
+set_position(ast_obj,this.position)
 if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $PatternOrCtx.prototype.bindings=function(){var names
 for(var subpattern of this.tree){if(subpattern.bindings===undefined){console.log('no binding',subpattern)}
@@ -5199,6 +5314,7 @@ return res+'}'}
 var $PatternSequenceCtx=function(C,token){
 this.type="sequence_pattern"
 this.parent=C
+this.position=$token.value
 this.tree=[]
 this.bound_names=[]
 var first_pattern=C.tree.pop()
@@ -5211,8 +5327,9 @@ this.token=token}
 this.expect=','
 C.tree.push(this)}
 $PatternSequenceCtx.prototype.ast=function(){var ast_obj=new ast.MatchSequence(this.tree.map(ast_or_obj))
-if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
+if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)
+set_position(ast_obj,this.position)}
 return ast_obj}
 $PatternSequenceCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
 $PatternSequenceCtx.prototype.transition=function(token,value){function check_duplicate_names(){var last=$B.last(C.tree)
@@ -5252,11 +5369,12 @@ var $RaiseCtx=$B.parser.$RaiseCtx=function(C){
 this.type='raise'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.scope_type=$get_scope(this).ntype}
 $RaiseCtx.prototype.ast=function(){
 var ast_obj=new ast.Raise(...this.tree.map(ast_or_obj))
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $RaiseCtx.prototype.toString=function(){return ' (raise) '+this.tree}
 $RaiseCtx.prototype.transition=function(token,value){var C=this
@@ -5294,6 +5412,7 @@ var $ReturnCtx=$B.parser.$ReturnCtx=function(C){
 this.type='return'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.scope=$get_scope(this)
 if(["def","generator"].indexOf(this.scope.ntype)==-1){$_SyntaxError(C,["'return' outside function"])}
@@ -5304,7 +5423,7 @@ break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw'
 node=node.parent}}
 $ReturnCtx.prototype.ast=function(){var res=new ast.Return()
 if(this.tree.length > 0){res.value=ast_or_obj(this.tree[0])}
-res.lineno=$get_node(this).line_num
+set_position(res,this.position)
 return res}
 $ReturnCtx.prototype.toString=function(){return 'return '+this.tree}
 $ReturnCtx.prototype.transition=function(token,value){var C=this
@@ -5405,12 +5524,14 @@ return this.token}
 var $SliceCtx=$B.parser.$SliceCtx=function(C){
 this.type='slice'
 this.parent=C
+this.position=$token.value
 this.tree=C.tree.length > 0 ?[C.tree.pop()]:[]
 C.tree.push(this)}
 $SliceCtx.prototype.ast=function(){var slice=new ast.Slice()
 var attrs=['lower','upper','step']
 for(var i=0;i < this.tree.length;i++){var item=this.tree[i]
 if(item.type !=='abstract_expr'){slice[attrs[i]]=ast_or_obj(item)}}
+set_position(slice,this.position)
 return slice}
 $SliceCtx.prototype.transition=function(token,value){var C=this
 if(token==":"){return new $AbstractExprCtx(C,false)}
@@ -5421,6 +5542,7 @@ var $StarArgCtx=$B.parser.$StarArgCtx=function(C){
 this.type='star_arg'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree[C.tree.length]=this}
 $StarArgCtx.prototype.toString=function(){return '(star arg) '+this.tree}
 $StarArgCtx.prototype.transition=function(token,value){var C=this
@@ -5453,6 +5575,7 @@ return '{$nat:"ptuple",arg:'+$to_js(this.tree)+'}'}
 var $StringCtx=$B.parser.$StringCtx=function(C,value){
 this.type='str'
 this.parent=C
+this.position=$token.value
 function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
 return value}
@@ -5465,7 +5588,9 @@ this.$pos=$pos}
 $StringCtx.prototype.ast=function(){var value
 if(! this.is_bytes){try{value=eval(this.value)}catch(err){console.log('error str ast',this.value)
 throw err}}else{value=_b_.bytes.$new(_b_.bytes,eval(this.value),'ISO-8859-1')}
-return new ast.Constant(value)}
+var ast_obj=new ast.Constant(value)
+set_position(ast_obj,this.position)
+return ast_obj}
 $StringCtx.prototype.toString=function(){return 'string '+(this.value ||'')}
 $StringCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
@@ -5491,17 +5616,23 @@ var $SubCtx=$B.parser.$SubCtx=function(C){
 this.type='sub'
 this.func='getitem' 
 this.value=C.tree[0]
+this.position=this.value.position
+if($B.js_from_ast && this.position===undefined){console.log('pas de position pour sub value',this.value)
+alert()}
 C.tree.pop()
 C.tree[C.tree.length]=this
 this.parent=C
 this.tree=[]}
 $SubCtx.prototype.ast=function(){var slice
 if(this.tree.length > 1){var slice_items=this.tree.map(x=> ast_or_obj(x))
-slice=new ast.Tuple(slice_items)}else{slice=ast_or_obj(this.tree[0])}
+slice=new ast.Tuple(slice_items)
+set_position(slice,this.position)}else{slice=ast_or_obj(this.tree[0])}
 slice.ctx=new ast.Load()
 var value=ast_or_obj(this.value)
 if(value.ctx){value.ctx=new ast.Load()}
-return new ast.Subscript(value,slice,new ast.Load())}
+var ast_obj=new ast.Subscript(value,slice,new ast.Load())
+set_position(ast_obj,this.position)
+return ast_obj}
 $SubCtx.prototype.toString=function(){return '(sub) (value) '+this.value+' (tree) '+this.tree}
 $SubCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -5567,6 +5698,7 @@ var $TargetListCtx=$B.parser.$TargetListCtx=function(C){
 this.type='target_list'
 this.parent=C
 this.tree=[]
+this.position=$token.value
 this.expect='id'
 this.nb_packed=0
 C.tree[C.tree.length]=this}
@@ -5577,7 +5709,9 @@ return item}else{var items=[]
 for(var item of this.tree){item=ast_or_obj(item)
 if(item.hasOwnProperty('ctx')){item.ctx=new ast.Store()}
 items.push(item)}
-return new ast.Tuple(items,new ast.Store())}}
+var ast_obj=new ast.Tuple(items,new ast.Store())
+set_position(ast_obj,this.position)
+return ast_obj}}
 $TargetListCtx.prototype.toString=function(){return '(target list) '+this.tree}
 $TargetListCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -5606,6 +5740,7 @@ $TargetListCtx.prototype.to_js=function(){this.js_processed=true
 return $to_js(this.tree)}
 var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
 this.type='ternary'
+this.position=$token.value
 C.parent.tree.pop()
 var expr=new $ExprCtx(C.parent,'ternary',false)
 expr.tree.push(this)
@@ -5613,7 +5748,9 @@ this.parent=expr
 this.tree=[C]
 C.parent=this}
 $TernaryCtx.prototype.ast=function(){
-return new ast.IfExp(ast_or_obj(this.tree[1]),ast_or_obj(this.tree[0]),ast_or_obj(this.tree[2]))}
+var ast_obj=new ast.IfExp(ast_or_obj(this.tree[1]),ast_or_obj(this.tree[0]),ast_or_obj(this.tree[2]))
+set_position(ast_obj,this.position)
+return ast_obj}
 $TernaryCtx.prototype.toString=function(){return '(ternary) '+this.tree}
 $TernaryCtx.prototype.transition=function(token,value){var C=this
 if(token=='else'){C.in_else=true
@@ -5634,6 +5771,7 @@ return res+this.tree[2].to_js()}
 var $TryCtx=$B.parser.$TryCtx=function(C){
 this.type='try'
 this.parent=C
+this.position=$token.value
 C.tree[C.tree.length]=this}
 $TryCtx.prototype.ast=function(){
 var node=this.parent.node,res={body:ast_body(this.parent),handlers:[],orelse:[],finalbody:[]}
@@ -5642,7 +5780,7 @@ for(var child of node.parent.children.slice(rank+1)){var t=child.C.tree[0],type=
 if(type=='single_kw'){type=t.token}
 if(type=='except'){res.handlers.push(ast_or_obj(t))}else if(type=='else'){res.orelse=ast_body(child.C)}else if(type=='finally'){res.finalbody=ast_body(child.C)}else{break}}
 var res=new ast.Try(res.body,res.handlers,res.orelse,res.finalbody)
-res.lineno=node.line_num
+set_position(res,this.position)
 return res}
 $TryCtx.prototype.toString=function(){return '(try) '}
 $TryCtx.prototype.transition=function(token,value){var C=this
@@ -5712,9 +5850,11 @@ this.type='unary'
 this.op=op
 this.parent=C
 this.tree=[]
+this.position=$token.value
 C.tree.push(this)}
-$UnaryCtx.prototype.ast=function(){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op]
-return new ast.UnaryOp(new op(),ast_or_obj(this.tree[0]))}
+$UnaryCtx.prototype.ast=function(){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op],ast_obj=new ast.UnaryOp(new op(),ast_or_obj(this.tree[0]))
+set_position(ast_obj,this.position)
+return ast_obj}
 $UnaryCtx.prototype.toString=function(){return '(unary) '+this.op}
 $UnaryCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'op':
@@ -5745,6 +5885,7 @@ method+'"))()'}
 var $WithCtx=$B.parser.$WithCtx=function(C){
 this.type='with'
 this.parent=C
+this.position=$token.value
 C.tree[C.tree.length]=this
 this.tree=[]
 this.expect='as'
@@ -5757,7 +5898,7 @@ withitem.optional_vars.ctx=new ast.Store()}
 withitems.push(withitem)}
 var klass=this.async ? ast.AsyncWith :ast.With
 var ast_obj=new klass(withitems,ast_body(this.parent))
-ast_obj.lineno=$get_node(this).line_num
+set_position(ast_obj,this.position)
 return ast_obj}
 $WithCtx.prototype.toString=function(){return '(with) '+this.tree}
 $WithCtx.prototype.transition=function(token,value){var C=this
@@ -5944,6 +6085,7 @@ this.type='yield'
 this.parent=C
 this.tree=[]
 this.is_await=is_await
+this.position=$token.value
 C.tree[C.tree.length]=this
 if(C.type=="list_or_tuple" && C.tree.length > 1){$_SyntaxError(C,"non-parenthesized yield")}
 if($parent_match(C,{type:"annotation"})){$_SyntaxError(C,["'yield' outside function"])}
@@ -5987,8 +6129,10 @@ break
 default:
 $_SyntaxError(C,'yield atom must be inside ()')}}}
 $YieldCtx.prototype.ast=function(){
-if(this.from){return new ast.YieldFrom(ast_or_obj(this.tree[0]))}
-if(this.tree.length==1){return new ast.Yield(ast_or_obj(this.tree[0]))}else{return new ast.Yield()}}
+var ast_obj
+if(this.from){ast_obj=new ast.YieldFrom(ast_or_obj(this.tree[0]))}else if(this.tree.length==1){ast_obj=new ast.Yield(ast_or_obj(this.tree[0]))}else{ast_obj=new ast.Yield()}
+set_position(ast_obj,this.position)
+return ast_obj}
 $YieldCtx.prototype.toString=function(){return '(yield) '+(this.from ? '(from) ' :'')+this.tree}
 $YieldCtx.prototype.transition=function(token,value){var C=this
 if(token=='from'){
@@ -6359,9 +6503,9 @@ $_SyntaxError(C,[`'${last_brace.string}' was `+
 'never closed'])}
 $_SyntaxError(C,err.message)}
 throw err}
-$token.value=token 
 if(token.done){throw Error('token done without ENDMARKER.')}
 token=token.value
+$token.value=token
 if(token[2]===undefined){console.log('token incomplet',token,'module',module,root)
 console.log('src',src)}
 if(token.start===undefined){console.log('no start',token)}

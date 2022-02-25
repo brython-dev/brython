@@ -170,8 +170,17 @@ if($B.ast_classes){
             }
             var child_ast = ast_or_obj(ctx)
             if(ast.expr.indexOf(child_ast.constructor) > -1){
+                if($B.ast_from_js && child_ast.col_offset === undefined){
+                    console.log('no position', child_ast, child_ast.constructor.$name)
+                    alert()
+                }
                 child_ast = new ast.Expr(child_ast)
-                child_ast.lineno = child.line_num
+                copy_position(child_ast, child_ast.value)
+                if($B.js_from_ast && child_ast.col_offset === undefined){
+                    console.log('Expr 179', child_ast)
+                    console.log('child', child)
+                    alert()
+                }
             }
             body.push(child_ast)
         }
@@ -541,15 +550,6 @@ $Node.prototype.add = function(child){
 }
 
 $Node.prototype.ast = function(){
-    /*
-    if(this.mode == "eval"){
-        var root_ast = new ast.Expression()
-        root_ast.lineno = this.line_num
-        root_ast.body = ast_or_obj(this.children[0].context.tree[0])
-        return root_ast
-    }
-    */
-
     var root_ast = new ast.Module([], [])
     root_ast.lineno = this.line_num
     for(var node of this.children){
@@ -564,7 +564,7 @@ $Node.prototype.ast = function(){
         var node_ast = ast_or_obj(node.context.tree[0])
         if(ast.expr.indexOf(node_ast.constructor) > -1){
             node_ast = new ast.Expr(node_ast)
-            node_ast.lineno = node.line_num
+            copy_position(node_ast, node_ast.value)
         }
         root_ast.body.push(node_ast)
     }
@@ -576,7 +576,8 @@ $Node.prototype.ast = function(){
                 ['eval() argument must be an expression'])
         }
         root_ast = new $B.ast.Expression(root_ast.body[0].value)
-        root_ast.lineno = this.line_num
+        copy_position(root_ast, root_ast.body)
+        //console.log('Expr 584', root_ast)
     }
     return root_ast
 }
@@ -913,12 +914,20 @@ $Node.prototype.clone_tree = function(){
     return res
 }
 
-function set_position(ast_obj, context){
-    var token = context.token.value
-    ast_obj.lineno = token.start[0]
-    ast_obj.col_offset = token.start[1]
-    ast_obj.end_lineno = token.end[0]
-    ast_obj.end_col_offset = token.end[1]
+function set_position(ast_obj, position){
+    if($B.js_from_ast){
+        ast_obj.lineno = position.start[0]
+        ast_obj.col_offset = position.start[1]
+        ast_obj.end_lineno = position.end[0]
+        ast_obj.end_col_offset = position.end[1]
+    }
+}
+
+function copy_position(target, origin){
+    target.lineno = origin.lineno
+    target.col_offset = origin.col_offset
+    target.end_lineno = origin.end_lineno
+    target.end_col_offset = origin.end_col_offset
 }
 
 /*
@@ -956,6 +965,7 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
     this.with_commas = with_commas
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree.push(this)
 }
 
@@ -966,7 +976,8 @@ $AbstractExprCtx.prototype.toString = function(){
 $AbstractExprCtx.prototype.transition = function(token, value){
     var context = this
     var packed = context.packed,
-        is_await = context.is_await
+        is_await = context.is_await,
+        position = context.position
 
     switch(token) {
         case 'await':
@@ -990,6 +1001,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             context = context.parent
             context.packed = packed
             context.is_await = is_await
+            context.position = position
     }
 
     switch(token) {
@@ -1044,6 +1056,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                     context.parent.tree.pop() // remove abstract expression
                     var commas = context.with_commas
                     context = context.parent
+                    context.position = $token.value
                     return new $PackedCtx(
                         new $ExprCtx(context, 'expr', commas))
                 case '-':
@@ -1216,6 +1229,7 @@ var $AssertCtx = $B.parser.$AssertCtx = function(context){
     this.type = 'assert'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
@@ -1224,7 +1238,7 @@ $AssertCtx.prototype.ast = function(){
     var msg = this.tree[1],
         ast_obj = new ast.Assert(ast_or_obj(this.tree[0]),
             msg === undefined ? msg : ast_or_obj(msg))
-    ast_obj.lineno = this.parent.node.line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -1305,6 +1319,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }
 
     this.type = 'assign'
+    this.position = $token.value
 
     // replace parent by "this" in parent tree
     context.parent.tree.pop()
@@ -1426,7 +1441,7 @@ $AssignCtx.prototype.ast = function(){
     }else{
         var ast_obj = new ast.Assign(targets, value)
     }
-    ast_obj.lineno = lineno
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -1781,7 +1796,7 @@ var $AsyncCtx = $B.parser.$AsyncCtx = function(context){
     this.type = 'async'
     this.parent = context
     context.async = true
-
+    context.position = $token.value
 }
 
 $AsyncCtx.prototype.toString = function(){return '(async)'}
@@ -1808,6 +1823,11 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
     this.type = 'attribute'
     this.value = context.tree[0]
     this.parent = context
+    this.position = this.value.position
+    if($B.js_from_ast && this.position === undefined){
+        console.log('pas de position pour Attr value', this)
+        alert()
+    }
     context.tree.pop()
     context.tree[context.tree.length] = this
     this.tree = []
@@ -1824,7 +1844,9 @@ $AttrCtx.prototype.ast = function(){
     }else if(this.func == 'delattr'){
         ctx = new ast.Delete()
     }
-    return new ast.Attribute(value, attr, ctx)
+    var ast_obj = new ast.Attribute(value, attr, ctx)
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $AttrCtx.prototype.toString = function(){return '(attr) ' + this.value + '.' + this.name}
@@ -1887,6 +1909,7 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     this.type = 'augm_assign'
     this.context = context
     this.parent = context.parent
+    this.position = $token.value
     context.parent.tree.pop()
     context.parent.tree[context.parent.tree.length] = this
     this.op = op
@@ -1930,7 +1953,7 @@ $AugmentedAssignCtx.prototype.ast = function(){
         ast_class = ast_type_class[1]
 
     var ast_obj = new ast.AugAssign(target, new ast_class(), value)
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -2007,6 +2030,7 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
     this.type = 'await'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree.push(this)
 
     var p = context
@@ -2023,7 +2047,9 @@ var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
 
 $AwaitCtx.prototype.ast = function(){
     // Await(expr value)
-    return new ast.Await(ast_or_obj(this.tree[0]))
+    var ast_obj = new ast.Await(ast_or_obj(this.tree[0]))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $AwaitCtx.prototype.transition = function(token, value){
@@ -2102,6 +2128,7 @@ var $BreakCtx = $B.parser.$BreakCtx = function(context){
     // so that the "else" clause of the loop, if present, is executed
 
     this.type = 'break'
+    this.position = $token.value
 
     this.parent = context
     context.tree[context.tree.length] = this
@@ -2110,7 +2137,9 @@ var $BreakCtx = $B.parser.$BreakCtx = function(context){
 }
 
 $BreakCtx.prototype.ast = function(){
-    return new ast.Break()
+    var ast_obj = new ast.Break()
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $BreakCtx.prototype.toString = function(){return 'break '}
@@ -2142,6 +2171,7 @@ var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
     this.parent = context
     this.start = $pos
     this.tree = []
+    this.position = $token.value
     context.tree.push(this)
     this.expect = 'id'
 }
@@ -2242,6 +2272,7 @@ $CallArgCtx.prototype.to_js = function(){
 var $CallCtx = $B.parser.$CallCtx = function(context){
     // Context of a call on a callable, ie what is inside the parenthesis
     // in "callable(...)"
+    this.position = $token.value
     this.type = 'call'
     this.func = context.tree[0]
     if(this.func !== undefined){ // undefined for lambda
@@ -2281,6 +2312,7 @@ $CallCtx.prototype.ast = function(){
             res.keywords.push(keyword)
         }else if(call_arg.type == 'star_arg'){
             var starred = new ast.Starred(ast_or_obj(call_arg.tree[0]))
+            set_position(starred, call_arg.position)
             starred.ctx = new ast.Load()
             res.args.push(starred)
         }else if(call_arg.type == 'genexpr'){
@@ -2299,6 +2331,7 @@ $CallCtx.prototype.ast = function(){
             }
         }
     }
+    set_position(res, this.position)
     return res
 }
 
@@ -2633,6 +2666,7 @@ var $ClassCtx = $B.parser.$ClassCtx = function(context){
     this.type = 'class'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
     this.expect = 'id'
 
@@ -2663,7 +2697,7 @@ $ClassCtx.prototype.ast = function(){
     }
     var ast_obj = new ast.ClassDef(this.name, bases, keywords,
                             ast_body(this.parent), decorators)
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -2980,6 +3014,7 @@ var $ConditionCtx = $B.parser.$ConditionCtx = function(context,token){
     this.token = token
     this.parent = context
     this.tree = []
+    this.position = $token.value
     this.node = $get_node(this)
     this.scope = $get_scope(this)
     if(token == 'while'){
@@ -3010,7 +3045,7 @@ $ConditionCtx.prototype.ast = function(){
         res.orelse = []
     }
     res.body = ast_body(this)
-    res.lineno = this.node.line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -3093,6 +3128,7 @@ var $ContinueCtx = $B.parser.$ContinueCtx = function(context){
     // Class for keyword "continue"
     this.type = 'continue'
     this.parent = context
+    this.position = $token.value
     $get_node(this).is_continue = true
     context.tree[context.tree.length] = this
 
@@ -3101,7 +3137,9 @@ var $ContinueCtx = $B.parser.$ContinueCtx = function(context){
 }
 
 $ContinueCtx.prototype.ast = function(){
-    return new ast.Continue()
+    var ast_obj = new ast.Continue()
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $ContinueCtx.prototype.toString = function(){
@@ -3158,6 +3196,7 @@ var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
     this.parent = context
     context.tree[context.tree.length] = this
     this.tree = []
+    this.position = $token.value
 }
 
 $DecoratorCtx.prototype.toString = function(){
@@ -3304,6 +3343,11 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
     this.parent = context
     this.tree = []
     this.async = context.async
+    if(this.async){
+        this.position = context.position
+    }else{
+        this.position = $token.value
+    }
 
     this.locals = []
     context.tree[context.tree.length] = this
@@ -3393,7 +3437,7 @@ $DefCtx.prototype.ast = function(){
         res.returns = ast_or_obj(this.annotation.tree[0])
     }
     res.body = ast_body(this.parent)
-    res.lineno = this.parent.node.line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -3998,6 +4042,7 @@ var $DelCtx = $B.parser.$DelCtx = function(context){
     this.parent = context
     context.tree.push(this)
     this.tree = []
+    this.position = $token.value
 }
 
 $DelCtx.prototype.ast = function(){
@@ -4013,14 +4058,18 @@ $DelCtx.prototype.ast = function(){
         for(var elt of targets.elts){
             elt.ctx = new ast.Del()
         }
-        return new ast.Delete([targets])
+        var ast_obj = new ast.Delete([targets])
+        set_position(ast_obj, this.position)
+        return ast_obj
     }else{
         targets = [ast_or_obj(this.tree[0].tree[0])]
     }
     for(var target of targets){
         target.ctx = new ast.Del()
     }
-    return new ast.Delete(targets)
+    var ast_obj = new ast.Delete(targets)
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $DelCtx.prototype.toString = function(){
@@ -4114,6 +4163,7 @@ var DictCompCtx = function(context){
         comp.parent_block = this
     }
     this.type = 'dictcomp'
+    this.position = $token.value
     this.comprehension = true
     this.parent = context.parent
     this.key = context.tree[0]
@@ -4134,11 +4184,13 @@ DictCompCtx.prototype.ast = function(){
     // ast.DictComp(key, value, generators)
     // key, value is the part evaluated for each item
     // generators is a list of comprehensions
-    return new ast.DictComp(
+    var ast_obj = new ast.DictComp(
         ast_or_obj(this.key),
         ast_or_obj(this.value),
         Comprehension.generators(this.tree)
     )
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 DictCompCtx.prototype.transition = function(token, value){
@@ -4207,6 +4259,7 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     this.expect = 'id'
     this.closed = false
     this.start = $pos
+    this.position = $token.value
 
     this.parent = context
     this.tree = []
@@ -4215,6 +4268,7 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
 
 $DictOrSetCtx.prototype.ast = function(){
     // Dict(expr* keys, expr* values) | Set(expr* elts)
+    var ast_obj
     if(this.real == 'dict'){
         var keys = [],
             values = []
@@ -4228,19 +4282,23 @@ $DictOrSetCtx.prototype.ast = function(){
                 i++
             }
         }
-        return new ast.Dict(keys, values)
+        ast_obj = new ast.Dict(keys, values)
     }else if(this.real == 'set'){
         var items = []
         for(var item of this.items){
             if(item.packed){
-                items.push(new ast.Starred(ast_or_obj(item), new ast.Load()))
+                var starred = new ast.Starred(ast_or_obj(item),
+                                              new ast.Load())
+                set_position(starred, item.position)
+                items.push(starred)
             }else{
                 items.push(ast_or_obj(item))
             }
         }
-        return new ast.Set(items)
+        ast_obj = new ast.Set(items)
     }
-    return this
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 $DictOrSetCtx.prototype.toString = function(){
     switch(this.real) {
@@ -4550,12 +4608,14 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
     // Class for "..."
     this.type = 'ellipsis'
     this.parent = context
-    this.start = $pos
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
 $EllipsisCtx.prototype.ast = function(){
-    return new ast.Constant({type: 'ellipsis'})
+    var ast_obj = new ast.Constant({type: 'ellipsis'})
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $EllipsisCtx.prototype.toString = function(){
@@ -4737,6 +4797,11 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.type = 'expr'
     this.name = name
     this.$pos = $pos
+    this.position = context.position
+    if($B.js_from_ast && this.position === undefined){
+        console.log('no position', context)
+        throw Error('...')
+    }
     // allow expression with comma-separted values, or a single value ?
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','
@@ -4758,8 +4823,8 @@ $ExprCtx.prototype.ast = function(){
             ast_or_obj(this.annotation.tree[0]),
             undefined,
             1)
-        return res
     }
+    set_position(res, this.position)
     return res
 }
 
@@ -5241,6 +5306,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     this.type = 'for'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree.push(this)
     this.loop_num = $loop_num
     this.scope = $get_scope(this)
@@ -5260,7 +5326,7 @@ $ForExpr.prototype.ast = function(){
         body = ast_body(this.parent)
     var klass = this.async ? ast.AsyncFor : ast.For
     var res = new klass(target, iter, body, orelse, type_comment)
-    res.lineno = this.parent.node.line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -5522,6 +5588,8 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
     this.parent = context
     this.module = ''
     this.names = []
+    this.position = $token.value
+
     context.tree[context.tree.length] = this
     this.expect = 'module'
     this.scope = $get_scope(this)
@@ -5548,7 +5616,7 @@ $FromCtx.prototype.ast = function(){
         }
     }
     var ast_obj = new ast.ImportFrom(res.module, res.names, res.level)
-    ast_obj.lineno = this.parent.node.line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -5931,6 +5999,7 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
 
     this.name = name
     this.parent = context
+    this.position = $token.value
 
     if(context.has_star_arg){
         context.parent.after_star.push(name)
@@ -6099,6 +6168,7 @@ var GeneratorExpCtx = function(context){
     this.type = 'genexpr'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
+    this.position = context.position
     Comprehension.make_comp(this, context)
 }
 
@@ -6110,7 +6180,7 @@ GeneratorExpCtx.prototype.ast = function(){
         ast_or_obj(this.tree[0]),
         Comprehension.generators(this.tree.slice(1))
     )
-    res.lineno = $get_node(this).line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -6209,6 +6279,7 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     this.type = 'global'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
     this.expect = 'id'
     this.scope = $get_scope(this)
@@ -6225,7 +6296,9 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
 
 $GlobalCtx.prototype.ast = function(){
     // Global(identifier* names)
-    return new ast.Global(this.tree.map(item => item.value))
+    var ast_obj = new ast.Global(this.tree.map(item => item.value))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $GlobalCtx.prototype.toString = function(){
@@ -6331,7 +6404,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
     this.tree = []
     context.tree[context.tree.length] = this
 
-    this.token = $token.value
+    this.position = $token.value
 
     var scope = this.scope = $get_scope(this)
 
@@ -6410,12 +6483,14 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
 }
 
 $IdCtx.prototype.ast = function(){
+    var ast_obj
     if(['True', 'False', 'None'].indexOf(this.value) > -1){
-        return new ast.Constant(_b_[this.value])
+        ast_obj = new ast.Constant(_b_[this.value])
+    }else{
+        ast_obj = new ast.Name(this.value,
+            this.bound ? new ast.Store() : new ast.Load())
     }
-    var ast_obj = new ast.Name(this.value,
-        this.bound ? new ast.Store() : new ast.Load())
-    set_position(ast_obj, this)
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -7072,6 +7147,8 @@ var $ImportCtx = $B.parser.$ImportCtx = function(context){
     this.type = 'import'
     this.parent = context
     this.tree = []
+    this.position = $token.value
+
     context.tree[context.tree.length] = this
     this.expect = 'id'
 }
@@ -7087,7 +7164,7 @@ $ImportCtx.prototype.ast = function(){
         names.push(alias)
     }
     var ast_obj = new ast.Import(names)
-    ast_obj.lineno = this.parent.node.line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -7214,6 +7291,7 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
     this.type = 'JoinedStr'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     this.scope = $get_scope(context)
     var line_num = $get_node(context).line_num
     for(var value of values){
@@ -7271,7 +7349,9 @@ JoinedStrCtx.prototype.ast = function(){
                 // eg in "'ab' f'c{x}'"
                 $B.last(res.values).value += eval(item.value)
             }else{
-                res.values.push(new ast.Constant(eval(item.value)))
+                var item_ast = new ast.Constant(eval(item.value))
+                set_position(item_ast, item.position)
+                res.values.push(item_ast)
             }
             state = 'string'
         }else{
@@ -7282,6 +7362,7 @@ JoinedStrCtx.prototype.ast = function(){
                     ast_or_obj(item),
                     conv_num[item.elt.conversion] || -1,
                     format)
+                set_position(value, this.position)
             var format = item.format
             if(format !== undefined){
                 value.format = item.format.ast()
@@ -7290,7 +7371,9 @@ JoinedStrCtx.prototype.ast = function(){
             state = 'formatted_value'
         }
     }
-    return new ast.JoinedStr(res.values)
+    var ast_obj = new ast.JoinedStr(res.values)
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 JoinedStrCtx.prototype.toString = function(){
@@ -7396,6 +7479,7 @@ var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
     // Class for keyword argument in a call
     this.type = 'kwarg'
     this.parent = context.parent
+    this.position = $token.value
     this.tree = [context.tree[0]]
     // operation replaces left operand
     context.parent.tree.pop()
@@ -7437,6 +7521,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     this.parent = context
     context.tree[context.tree.length] = this
     this.tree = []
+    this.position = $token.value
     this.args_start = $pos + 6
     this.vars = []
     this.locals = []
@@ -7462,7 +7547,7 @@ $LambdaCtx.prototype.ast = function(){
         args = this.args[0].ast()
     }
     var ast_obj = new ast.Lambda(args, ast_or_obj(this.tree[0]))
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -7541,6 +7626,7 @@ var ListCompCtx = function(context){
     this.type = 'listcomp'
     this.tree = [context.tree[0]]
     this.tree[0].parent = this
+    this.position = $token.value
     Comprehension.make_comp(this, context)
 }
 
@@ -7551,7 +7637,7 @@ ListCompCtx.prototype.ast = function(){
     var res = new ast.ListComp(
             ast_or_obj(this.tree[0]),
             Comprehension.generators(this.tree.slice(1)))
-    res.lineno = $get_node(this).line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -7625,19 +7711,23 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
     this.closed = false
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
 $ListOrTupleCtx.prototype.ast = function(){
-    var elts = this.tree.map(ast_or_obj)
+    var elts = this.tree.map(ast_or_obj),
+        ast_obj
     if(this.real == 'list'){
-        return new ast.List(elts, new ast.Load())
+        ast_obj = new ast.List(elts, new ast.Load())
     }else if(this.real == 'tuple'){
-        return new ast.Tuple(elts, new ast.Load())
+        ast_obj = new ast.Tuple(elts, new ast.Load())
     }else{
         console.log('list_or_tuple ast, real', this.real)
         return this
     }
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $ListOrTupleCtx.prototype.toString = function(){
@@ -7937,6 +8027,7 @@ $ListOrTupleCtx.prototype.to_js = function(){
 var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
     // node already has an expression with the id "match"
     this.type = "match"
+    this.position = $token.value
     node_ctx.tree = [this]
     node_ctx.node.is_match = true
     this.parent = node_ctx
@@ -7949,6 +8040,7 @@ $MatchCtx.prototype.ast = function(){
     // subject holds the subject of the match
     // cases contains an iterable of match_case nodes with the different cases
     var res = new ast.Match(ast_or_obj(this.tree[0]), ast_body(this.parent))
+    set_position(res, this.position)
     res.$line_num = $get_node(this).line_num
     return res
 }
@@ -7979,6 +8071,7 @@ $MatchCtx.prototype.to_js = function(){
 var NamedExprCtx = function(context){
     // context is an expression where context.tree[0] is an id
     this.type = 'named_expr'
+    this.position = $token.value
     this.target = context.tree[0]
     this.target.scope_ref = this.target.binding_scope.id.replace(/\./g, '_')
     context.tree.pop()
@@ -7991,8 +8084,9 @@ var NamedExprCtx = function(context){
 
 NamedExprCtx.prototype.ast = function(){
     var res = new ast.NamedExpr(ast_or_obj(this.target),
-        ast_or_obj(this.tree[0]))
+                                ast_or_obj(this.tree[0]))
     res.target.ctx = new ast.Store()
+    set_position(res, this.position)
     return res
 }
 
@@ -8175,9 +8269,10 @@ $NodeCtx.prototype.transition = function(token, value){
                 case '+':
                 case '-':
                 case '~':
+                    context.position = $token.value
+                    var expr = new $ExprCtx(context, 'unary', true)
                     return new $AbstractExprCtx(
-                        new $UnaryCtx(
-                            new $ExprCtx(context, 'unary', true), value), false)
+                        new $UnaryCtx(expr, value), false)
                 case '@':
                     return new $DecoratorCtx(context)
             }
@@ -8299,6 +8394,7 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     this.type = 'nonlocal'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     this.names = {}
     context.tree[context.tree.length] = this
     this.expect = 'id'
@@ -8318,7 +8414,9 @@ $NonlocalCtx.prototype.toString = function(){
 
 $NonlocalCtx.prototype.ast = function(){
     // Nonlocal(identifier* names)
-    return new ast.Nonlocal(this.tree.map(item => item.value))
+    var ast_obj = new ast.Nonlocal(this.tree.map(item => item.value))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $NonlocalCtx.prototype.add = function(name){
@@ -8394,11 +8492,14 @@ var $NotCtx = $B.parser.$NotCtx = function(context){
     this.type = 'not'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
 $NotCtx.prototype.ast = function(){
-    return new ast.UnaryOp(new ast.Not(), ast_or_obj(this.tree[0]))
+    var ast_obj = new ast.UnaryOp(new ast.Not(), ast_or_obj(this.tree[0]))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $NotCtx.prototype.toString = function(){
@@ -8452,11 +8553,14 @@ var $NumberCtx = $B.parser.$NumberCtx = function(type, context, value){
     this.value = value
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
 $NumberCtx.prototype.ast = function(){
-    return new ast.Constant({type: this.type, value: this.value})
+    var ast_obj = new ast.Constant({type: this.type, value: this.value})
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $NumberCtx.prototype.toString = function(){
@@ -8500,6 +8604,7 @@ var $OpCtx = $B.parser.$OpCtx = function(context, op){
     this.type = 'op'
     this.op = op
     this.parent = context.parent
+    this.position = $token.value
     this.tree = [context]
     this.scope = $get_scope(this)
 
@@ -8522,7 +8627,8 @@ $OpCtx.prototype.ast = function(){
     //console.log('op ast', this)
     var ast_type_class = op2ast_class[this.op],
         op_type = ast_type_class[0],
-        ast_class = ast_type_class[1]
+        ast_class = ast_type_class[1],
+        ast_obj
 
     if(op_type === ast.Compare){
         var left = ast_or_obj(this.tree[0]),
@@ -8531,17 +8637,15 @@ $OpCtx.prototype.ast = function(){
             for(var op of this.ops.slice(1)){
                 ops.push(new op2ast_class[op][1]())
             }
-            return new ast.Compare(left, ops,
+            ast_obj = new ast.Compare(left, ops,
                 this.tree.slice(1).map(ast_or_obj))
         }else{
-            return new ast.Compare(left, ops,
+            ast_obj = new ast.Compare(left, ops,
                 [ast_or_obj(this.tree[1])])
         }
-    }
-    if(op_type === ast.UnaryOp){
-        return new op_type(new ast_class(), ast_or_obj(this.tree[1]))
-    }
-    if(op_type === ast.BoolOp){
+    }else if(op_type === ast.UnaryOp){
+        ast_obj = new op_type(new ast_class(), ast_or_obj(this.tree[1]))
+    }else if(op_type === ast.BoolOp){
         // Consecutive operations with the same operator, such as a or b or c,
         // are collapsed into one node with several values
         var values = [this.tree[1]],
@@ -8552,10 +8656,13 @@ $OpCtx.prototype.ast = function(){
             ctx = ctx.tree[0]
         }
         values.splice(0, 0, ctx.tree[0])
-        return new op_type(new ast_class(), values.map(ast_or_obj))
+        ast_obj = new op_type(new ast_class(), values.map(ast_or_obj))
+    }else{
+        ast_obj = new op_type(
+            ast_or_obj(this.tree[0]), new ast_class(), ast_or_obj(this.tree[1]))
     }
-    return new op_type(
-        ast_or_obj(this.tree[0]), new ast_class(), ast_or_obj(this.tree[1]))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $OpCtx.prototype.toString = function(){
@@ -8930,6 +9037,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     // used for packed tuples in expressions, eg
     //     a, *b, c = [1, 2, 3, 4]
     this.type = 'packed'
+    this.position = $token.value
     if(context.parent.type == 'list_or_tuple' &&
             context.parent.parent.type == "node"){
         // SyntaxError for a, *b, *c = ...
@@ -8949,7 +9057,9 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
 }
 
 $PackedCtx.prototype.ast = function(){
-    return new ast.Starred(ast_or_obj(this.tree[0]), new ast.Load())
+    var ast_obj = new ast.Starred(ast_or_obj(this.tree[0]), new ast.Load())
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $PackedCtx.prototype.toString = function(){
@@ -9011,12 +9121,13 @@ var $PassCtx = $B.parser.$PassCtx = function(context){
     this.type = 'pass'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
 $PassCtx.prototype.ast = function(){
     var ast_obj = new ast.Pass()
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -9158,6 +9269,7 @@ var $PatternCaptureCtx = function(context, value){
     context.parent.tree.pop()
     context.parent.tree.push(this)
     this.tree = [value]
+    this.position = $token.value
     this.expect = '.'
     this.$pos = $pos
 }
@@ -9167,10 +9279,13 @@ $PatternCaptureCtx.prototype.ast = function(){
     try{
         if(this.tree.length > 1){
             var pattern = new ast.Name(this.tree[0].value, new ast.Load())
+            set_position(pattern, this.position)
             for(var i = 1; i < this.tree.length; i += 2){
                 pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
+                copy_position(pattern, pattern.value)
             }
             pattern = new ast.MatchValue(pattern)
+            copy_position(pattern, pattern.value)
         }else if(this.starred){
             var v = this.tree[0]
             if(v == '_'){
@@ -9178,6 +9293,7 @@ $PatternCaptureCtx.prototype.ast = function(){
             }else{
                 ast_obj = new ast.MatchStar(v)
             }
+            set_position(ast_obj, this.position)
         }else{
             var pattern = this.tree[0]
             if(typeof pattern == 'string'){
@@ -9190,11 +9306,13 @@ $PatternCaptureCtx.prototype.ast = function(){
             }
             if(pattern == '_'){
                 pattern = new ast.MatchAs()
+                set_position(pattern, this.position)
             }
         }
         if(this.alias){
             if(typeof pattern == "string"){
                 pattern = new ast.MatchAs(undefined, pattern)
+                set_position(pattern, this.position)
             }
             ast_obj = new ast.MatchAs(pattern, this.alias)
         }else if(this.tree.length > 1 || pattern instanceof ast.MatchAs){
@@ -9204,7 +9322,7 @@ $PatternCaptureCtx.prototype.ast = function(){
         }else if(! this.starred){
             ast_obj = new ast.MatchAs(undefined, pattern)
         }
-        ast_obj.lineno = $get_node(this).line_num
+        set_position(ast_obj, this.position)
         return ast_obj
     }catch(err){
         console.log('error capture ast')
@@ -9284,6 +9402,7 @@ $PatternClassCtx = function(context){
     this.type = "class_pattern"
     this.tree = []
     this.parent = context.parent
+    this.position = $token.value
     // create an id for class name
     this.class_id = new $IdCtx(context, context.tree[0])
     // remove this instance of $dCtx from tree
@@ -9306,6 +9425,7 @@ $PatternClassCtx.prototype.ast = function(){
     // `kwd_attrs` is a sequence of additional attributes to be matched
     // `kwd_patterns` are the corresponding patterns
     var cls = new ast.Name(this.class_id.value)
+    set_position(cls, this.position)
     cls.ctx = new ast.Load()
     var patterns = [],
         kwd_attrs = [],
@@ -9325,10 +9445,11 @@ $PatternClassCtx.prototype.ast = function(){
         }
     }
     var ast_obj = new ast.MatchClass(cls, patterns, kwd_attrs, kwd_patterns)
+    set_position(ast_obj, this.position)
     if(this.alias){
         ast_obj = new ast.MatchAs(ast_obj, this.alias)
+        set_position(ast_obj, this.position)
     }
-    ast_obj.lineno = $get_node(this).line_num
     return ast_obj
 }
 
@@ -9438,6 +9559,7 @@ var $PatternGroupCtx = function(context){
     // Class for group patterns, delimited by (), in a "case" statement
     this.type = "group_pattern"
     this.parent = context
+    this.position = $token.value
     this.tree = []
     var first_pattern = context.tree.pop()
     this.expect = ',|'
@@ -9462,7 +9584,7 @@ $PatternGroupCtx.prototype.ast = function(){
     if(this.alias){
         ast_obj = new ast.MatchAs(ast_obj, this.alias)
     }
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -9532,6 +9654,7 @@ var $PatternLiteralCtx = function(context, token, value, sign){
     // context is a $PatternCtx
     this.type = "literal_pattern"
     this.parent = context.parent
+    this.position = $token.value
     context.parent.tree.pop()
     context.parent.tree.push(this)
     if(token.sign){
@@ -9561,21 +9684,29 @@ $PatternLiteralCtx.prototype.ast = function(){
         }else if(first.type == 'id'){
             result = new ast.MatchSingleton(_b_[first.value])
         }else{
+            first.position = this.position
             var num = $NumberCtx.prototype.ast.bind(first)(),
                 res = new ast.MatchValue(num)
             if(first.sign && first.sign != '+'){
                 var op = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}[first.sign]
-                res = new ast.MatchValue(new ast.UnaryOp(new op(), res.value))
+                var unary_op = new ast.UnaryOp(new op(), res.value)
+                set_position(unary_op, this.position)
+                res = new ast.MatchValue(unary_op)
+                set_position(res, this.position)
             }
             if(this.tree.length == 1){
                 result = res
             }else{
-                var num2 = $NumberCtx.prototype.ast.bind(this.tree[2])()
-                result = new ast.MatchValue(new ast.BinOp(res.value,
-                    this.tree[1] == '+' ? new ast.Add() : new ast.Sub(),
-                    num2))
+                this.tree[2].position = this.position
+                var num2 = $NumberCtx.prototype.ast.bind(this.tree[2])(),
+                    binop = new ast.BinOp(res.value,
+                        this.tree[1] == '+' ? new ast.Add() : new ast.Sub(),
+                        num2)
+                set_position(binop, this.position)
+                result = new ast.MatchValue(binop)
             }
         }
+        set_position(result, this.position)
         if(this.tree.length == 2){
             // value = complex number
             result = new ast.MatchValue(new ast.BinOp(
@@ -9586,7 +9717,7 @@ $PatternLiteralCtx.prototype.ast = function(){
         if(this.alias){
             result = new ast.MatchAs(result, this.alias)
         }
-        result.lineno = lineno
+        set_position(result, this.position)
         return result
     }catch(err){
       console.log('error pattern literal ast', this)
@@ -9713,6 +9844,7 @@ var $PatternMappingCtx = function(context){
     // Class for sequence patterns in a "case" statement
     this.type = "mapping_pattern"
     this.parent = context
+    this.position = $token.value
     context.tree.pop()
     this.tree = []
     context.tree.push(this)
@@ -9741,6 +9873,7 @@ $PatternMappingCtx.prototype.ast = function(){
     if(this.double_star){
         res.rest = this.double_star.tree[0]
     }
+    set_position(res, this.position)
     return res
 }
 
@@ -9961,6 +10094,7 @@ var $PatternOrCtx = function(context){
     // context already has a pattern as its first child
     this.type = "or_pattern"
     this.parent = context
+    this.position = $token.value
     var first_pattern = context.tree.pop()
     if(first_pattern instanceof $PatternGroupCtx &&
             first_pattern.expect != 'as'){
@@ -9977,10 +10111,11 @@ var $PatternOrCtx = function(context){
 $PatternOrCtx.prototype.ast = function(){
     // ast.MatchOr(patterns)
     var ast_obj = new ast.MatchOr(this.tree.map(ast_or_obj))
+    set_position(ast_obj, this.position)
     if(this.alias){
         ast_obj = new ast.MatchAs(ast_obj, this.alias)
     }
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -10084,6 +10219,7 @@ var $PatternSequenceCtx = function(context, token){
     // Class for sequence patterns in a "case" statement
     this.type = "sequence_pattern"
     this.parent = context
+    this.position = $token.value
     this.tree = []
     this.bound_names = []
     var first_pattern = context.tree.pop()
@@ -10106,10 +10242,11 @@ var $PatternSequenceCtx = function(context, token){
 
 $PatternSequenceCtx.prototype.ast = function(){
     var ast_obj = new ast.MatchSequence(this.tree.map(ast_or_obj))
+    set_position(ast_obj, this.position)
     if(this.alias){
         ast_obj = new ast.MatchAs(ast_obj, this.alias)
+        set_position(ast_obj, this.position)
     }
-    ast_obj.lineno = $get_node(this).line_num
     return ast_obj
 }
 
@@ -10203,6 +10340,7 @@ var $RaiseCtx = $B.parser.$RaiseCtx = function(context){
     this.type = 'raise'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
     this.scope_type = $get_scope(this).ntype
 
@@ -10212,7 +10350,7 @@ $RaiseCtx.prototype.ast = function(){
     // ast.Raise(exc, cause)
     // cause is the optional part in "raise exc from cause"
     var ast_obj = new ast.Raise(...this.tree.map(ast_or_obj))
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -10291,6 +10429,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
     this.type = 'return'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 
     // Check if inside a function
@@ -10324,7 +10463,7 @@ $ReturnCtx.prototype.ast = function(){
     if(this.tree.length > 0){
         res.value = ast_or_obj(this.tree[0])
     }
-    res.lineno = $get_node(this).line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -10533,6 +10672,7 @@ var $SliceCtx = $B.parser.$SliceCtx = function(context){
     // Class for slices inside a subscription : t[1:2]
     this.type = 'slice'
     this.parent = context
+    this.position = $token.value
     this.tree = context.tree.length > 0 ? [context.tree.pop()] : []
     context.tree.push(this)
 }
@@ -10546,6 +10686,7 @@ $SliceCtx.prototype.ast = function(){
             slice[attrs[i]] = ast_or_obj(item)
         }
     }
+    set_position(slice, this.position)
     return slice
 }
 
@@ -10571,6 +10712,7 @@ var $StarArgCtx = $B.parser.$StarArgCtx = function(context){
     this.type = 'star_arg'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
@@ -10626,6 +10768,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     // value is the string with quotes, eg 'a', "b\"c" etc.
     this.type = 'str'
     this.parent = context
+    this.position = $token.value
 
     function prepare(value){
         value = value.replace(/\n/g,'\\n\\\n')
@@ -10657,7 +10800,9 @@ $StringCtx.prototype.ast = function(){
     }else{
         value = _b_.bytes.$new(_b_.bytes, eval(this.value), 'ISO-8859-1')
     }
-    return new ast.Constant(value)
+    var ast_obj = new ast.Constant(value)
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $StringCtx.prototype.toString = function(){
@@ -10712,6 +10857,11 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
     this.type = 'sub'
     this.func = 'getitem' // set to 'setitem' if assignment
     this.value = context.tree[0]
+    this.position = this.value.position
+    if($B.js_from_ast && this.position === undefined){
+        console.log('pas de position pour sub value', this.value)
+        alert()
+    }
     context.tree.pop()
     context.tree[context.tree.length] = this
     this.parent = context
@@ -10723,6 +10873,7 @@ $SubCtx.prototype.ast = function(){
     if(this.tree.length > 1){
         var slice_items = this.tree.map(x => ast_or_obj(x))
         slice = new ast.Tuple(slice_items)
+        set_position(slice, this.position)
     }else{
         slice = ast_or_obj(this.tree[0])
     }
@@ -10731,7 +10882,9 @@ $SubCtx.prototype.ast = function(){
     if(value.ctx){
         value.ctx = new ast.Load()
     }
-    return new ast.Subscript(value, slice, new ast.Load())
+    var ast_obj = new ast.Subscript(value, slice, new ast.Load())
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $SubCtx.prototype.toString = function(){
@@ -10847,6 +11000,7 @@ var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
     this.type = 'target_list'
     this.parent = context
     this.tree = []
+    this.position = $token.value
     this.expect = 'id'
     this.nb_packed = 0
     context.tree[context.tree.length] = this
@@ -10871,7 +11025,9 @@ $TargetListCtx.prototype.ast = function(){
             }
             items.push(item)
         }
-        return new ast.Tuple(items, new ast.Store())
+        var ast_obj = new ast.Tuple(items, new ast.Store())
+        set_position(ast_obj, this.position)
+        return ast_obj
     }
 }
 
@@ -10934,6 +11090,7 @@ var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
     // "context" represents the expression "x"
     // Replace it by an expression holding the ternary
     this.type = 'ternary'
+    this.position = $token.value
     context.parent.tree.pop()
     var expr = new $ExprCtx(context.parent, 'ternary', false)
     expr.tree.push(this)
@@ -10944,8 +11101,10 @@ var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
 
 $TernaryCtx.prototype.ast = function(){
     // ast.IfExp(test, body, orelse)
-    return new ast.IfExp(ast_or_obj(this.tree[1]), ast_or_obj(this.tree[0]),
+    var ast_obj = new ast.IfExp(ast_or_obj(this.tree[1]), ast_or_obj(this.tree[0]),
         ast_or_obj(this.tree[2]))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $TernaryCtx.prototype.toString = function(){
@@ -10986,6 +11145,7 @@ var $TryCtx = $B.parser.$TryCtx = function(context){
     // Class for the keyword "try"
     this.type = 'try'
     this.parent = context
+    this.position = $token.value
     context.tree[context.tree.length] = this
 }
 
@@ -11016,7 +11176,7 @@ $TryCtx.prototype.ast = function(){
         }
     }
     var res = new ast.Try(res.body, res.handlers, res.orelse, res.finalbody)
-    res.lineno = node.line_num
+    set_position(res, this.position)
     return res
 }
 
@@ -11169,12 +11329,15 @@ var $UnaryCtx = $B.parser.$UnaryCtx = function(context, op){
     this.op = op
     this.parent = context
     this.tree = []
+    this.position = $token.value
     context.tree.push(this)
 }
 
 $UnaryCtx.prototype.ast = function(){
-    var op = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}[this.op]
-    return new ast.UnaryOp(new op(), ast_or_obj(this.tree[0]))
+    var op = {'+': ast.UAdd, '-': ast.USub, '~': ast.Invert}[this.op],
+        ast_obj = new ast.UnaryOp(new op(), ast_or_obj(this.tree[0]))
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $UnaryCtx.prototype.toString = function(){
@@ -11235,6 +11398,7 @@ var $WithCtx = $B.parser.$WithCtx = function(context){
     // Class for keyword "with"
     this.type = 'with'
     this.parent = context
+    this.position = $token.value
     context.tree[context.tree.length] = this
     this.tree = []
     this.expect = 'as'
@@ -11259,7 +11423,7 @@ $WithCtx.prototype.ast = function(){
     }
     var klass = this.async ? ast.AsyncWith : ast.With
     var ast_obj = new klass(withitems, ast_body(this.parent))
-    ast_obj.lineno = $get_node(this).line_num
+    set_position(ast_obj, this.position)
     return ast_obj
 }
 
@@ -11680,6 +11844,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     this.parent = context
     this.tree = []
     this.is_await = is_await
+    this.position = $token.value
     context.tree[context.tree.length] = this
 
     if(context.type == "list_or_tuple" && context.tree.length > 1){
@@ -11820,14 +11985,16 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
 $YieldCtx.prototype.ast = function(){
     // ast.Yield(value)
     // ast.YieldFrom(value)
+    var ast_obj
     if(this.from){
-        return new ast.YieldFrom(ast_or_obj(this.tree[0]))
-    }
-    if(this.tree.length == 1){
-        return new ast.Yield(ast_or_obj(this.tree[0]))
+        ast_obj = new ast.YieldFrom(ast_or_obj(this.tree[0]))
+    }else if(this.tree.length == 1){
+        ast_obj = new ast.Yield(ast_or_obj(this.tree[0]))
     }else{
-        return new ast.Yield()
+        ast_obj = new ast.Yield()
     }
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 $YieldCtx.prototype.toString = function(){
@@ -12831,11 +12998,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             }
             throw err
         }
-        $token.value = token // global variable
         if(token.done){
             throw Error('token done without ENDMARKER.')
         }
         token = token.value
+        $token.value = token
         if(token[2] === undefined){
             console.log('token incomplet', token, 'module', module, root)
             console.log('src', src)
