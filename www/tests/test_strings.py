@@ -447,4 +447,7 @@ assert len(test) == 1
 # issue 1815
 assert 'a' * -1 == ''
 
+# PR 1911
+assert 'abc'.startswith('b', 1)
+
 print("passed all tests...")

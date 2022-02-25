@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-02-25 20:44:46.979917"
-__BRYTHON__.timestamp=1645818286979
+__BRYTHON__.compiled_date="2022-02-25 21:20:22.243238"
+__BRYTHON__.timestamp=1645820422243
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12786,7 +12786,7 @@ var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},["self"
 normalize_start_end($)
 var prefixes=$.prefix
 if(! _b_.isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
-var s=$.self.substring($.js_start,$.js_end)
+var s=$.self.substring($.start,$.end)
 for(var prefix of prefixes){if(! _b_.isinstance(prefix,str)){throw _b_.TypeError.$factory("endswith first arg must be str "+
 "or a tuple of str, not int")}
 if(s.substr(0,prefix.length)==prefix){return true}}
