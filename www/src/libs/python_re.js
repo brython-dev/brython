@@ -2674,12 +2674,13 @@ function transform_repl(data, pattern){
     data.repl1 = repl1
     if(has_backref){
         parts.push(repl.substr(next_pos))
-        data.repl = function(bmo){
+data.repl = function(bmo){
             var mo = bmo.mo,
                 res = parts[0],
                 groups = mo.$groups,
                 s = mo.string,
-                group
+                group,
+                is_bytes = s.type == 'bytes'
             for(var i = 1, len = parts.length; i < len; i += 2){
                 if(groups[parts[i]] === undefined){
                     if(mo.node.$groups[parts[i]] !== undefined){
@@ -2694,7 +2695,11 @@ function transform_repl(data, pattern){
                     }
                 }else{
                     group = groups[parts[i]]
-                    res += s.substring(group.start, group.end)
+                    var x = s.substring(group.start, group.end)
+                    if(is_bytes){
+                        x = _b_.bytes.decode(x, 'latin-1')
+                    }
+                    res += x
                 }
                 res += parts[i + 1]
             }
@@ -2837,10 +2842,13 @@ function subn(pattern, repl, string, count, flags){
     for(var bmo of $module.finditer(BPattern.$factory(pattern), string.to_str()).js_gen){
         // finditer yields instances of BMatchObject
         var mo = bmo.mo // instance of MatchObject
-        res += from_codepoint_list(string.codepoints.slice(pos, mo.start),
-            string.type)
+        res += from_codepoint_list(string.codepoints.slice(pos, mo.start))
         if(typeof repl == "function"){
-            res += $B.$call(repl)(bmo)
+            var x = $B.$call(repl)(bmo)
+            if(x.__class__ === _b_.bytes){
+                x = _b_.bytes.decode(x, 'latin-1')
+            }
+            res += x // $B.$call(repl)(bmo)
         }else{
             res += repl1
         }
@@ -2853,8 +2861,7 @@ function subn(pattern, repl, string, count, flags){
             break
         }
     }
-    res += from_codepoint_list(string.codepoints.slice(pos),
-        string.type)
+    res += from_codepoint_list(string.codepoints.slice(pos))
     if(pattern.type === "bytes"){
         res = _b_.str.encode(res, "latin-1")
     }
