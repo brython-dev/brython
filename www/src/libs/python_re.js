@@ -99,6 +99,15 @@ var Flag = $B.make_class("Flag",
     }
 )
 
+Flag.__and__ = function(self, other){
+    if(other.__class__ === Flag){
+        return Flag.$factory(self.value & other.value)
+    }else if(typeof other == "number" || typeof other == "boolean"){
+        return Flag.$factory(self.value & other)
+    }
+    return _b_.NotImplemented
+}
+
 Flag.__index__ = function(self){
     return self.value
 }
@@ -114,8 +123,18 @@ Flag.__eq__ = function(self, other){
 Flag.__or__ = function(self, other){
     if(other.__class__ === Flag){
         return Flag.$factory(self.value | other.value)
-    }else if(typeof other == "number"){
+    }else if(typeof other == "number" || typeof other == "boolean"){
         return Flag.$factory(self.value | other)
+    }
+    return _b_.NotImplemented
+}
+
+Flag.__rand__ = function(self, other){
+    if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
+        if(other == 0){
+            return false // Flag.$factory(self.value)
+        }
+        return self.value & other
     }
     return _b_.NotImplemented
 }
@@ -123,9 +142,9 @@ Flag.__or__ = function(self, other){
 Flag.__ror__ = function(self, other){
     if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
         if(other == 0){
-            return Flag.$factory(self.value)
+            return self.value
         }
-        return Flag.$factory(self.value | other)
+        return self.value | other
     }
     return _b_.NotImplemented
 }
@@ -1868,7 +1887,7 @@ function compile(pattern, flags){
                     if(previous instanceof CharSeq){
                         previous.chars.push(item)
                         added_to_charseq = true
-                    }else if(previous instanceof Char){
+                    }else if(previous instanceof Char && ! previous.repeater){
                         node.items.pop()
                         node.items.push(new CharSeq([previous, item]))
                         added_to_charseq = true
