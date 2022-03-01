@@ -1030,6 +1030,12 @@ str.__repr__ = function(self){
     return res
 }
 
+str.__rmod__ = function(){
+    var $ = $B.args('__rmod__', 2, {self: null, other: null},
+                    ['self', 'other'], arguments, {}, null, null)
+    return str.__mod__($.other, $.self)
+}
+
 str.__rmul__ = function(self, other){
     if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
