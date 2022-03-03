@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-01 18:19:05.758102"
-__BRYTHON__.timestamp=1646155145758
+__BRYTHON__.compiled_date="2022-03-03 15:50:51.180412"
+__BRYTHON__.timestamp=1646319051180
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -11000,8 +11000,10 @@ set.__contains__=function(self,item){if(typeof item=="number" ||item instanceof 
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
 return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}
 var hash=_b_.hash(item),
-is_tuple=item.__class__===_b_.tuple
-if(self.$hashes[hash]){for(var i=0,len=self.$hashes[hash].length;i < len;i++){if(is_tuple && self.$hashes[hash][i].__class__===_b_.tuple){return true}else if($B.rich_comp("__eq__",self.$hashes[hash][i],item)){return true}}}
+item_class=item.__class__ ||$B.get_class(item)
+if(self.$hashes[hash]){
+for(var i=0,len=self.$hashes[hash].length;i < len;i++){if(self.$hashes[hash][i]===item){return true}}
+for(var i=0,len=self.$hashes[hash].length;i < len;i++){if($B.rich_comp("__eq__",self.$hashes[hash][i],item)){return true}}}
 return false}
 set.__eq__=function(self,other){
 if(other===undefined){return self===set}
@@ -11065,7 +11067,12 @@ var head=klass_name+"({",tail="})"
 if(head=="set({"){head="{";tail="}"}
 var res=[]
 if($B.repr.enter(self)){return klass_name+"(...)"}
-self.$items.sort()
+try{self.$items.sort(function(x,y){var hx=_b_.hash(x),hy=_b_.hash(y)
+return hx > hy ? 1 :
+hx==hy ? 0 :
+-1}
+)}catch(err){
+console.log('erreur',err.message)}
 for(var i=0,len=self.$items.length;i < len;i++){var r=_b_.repr(self.$items[i])
 if(r===self ||r===self.$items[i]){res.push("{...}")}
 else{res.push(r)}}

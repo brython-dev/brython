@@ -75,12 +75,17 @@ set.__contains__ = function(self, item){
         return self.$items.indexOf(item) > -1
     }
     var hash = _b_.hash(item), // raises TypeError if item is not hashable
-        is_tuple = item.__class__ === _b_.tuple
+        item_class = item.__class__ || $B.get_class(item) // === _b_.tuple
     if(self.$hashes[hash]){
+        // test identity first
         for(var i = 0, len = self.$hashes[hash].length; i < len;i++){
-            if(is_tuple && self.$hashes[hash][i].__class__ === _b_.tuple){
+            if(self.$hashes[hash][i] === item){
                 return true
-            }else if($B.rich_comp("__eq__", self.$hashes[hash][i], item)){
+            }
+        }
+        // then equality
+        for(var i = 0, len = self.$hashes[hash].length; i < len;i++){
+            if($B.rich_comp("__eq__", self.$hashes[hash][i], item)){
                 return true
             }
         }
@@ -263,7 +268,21 @@ function set_repr(self){
     if($B.repr.enter(self)){
         return klass_name + "(...)"
     }
-    self.$items.sort()
+    // try ordering; sets that compare equal have the same repr(), ie with
+    // items in the same order
+    try{
+        self.$items.sort(function(x, y){
+            var hx = _b_.hash(x),
+                hy = _b_.hash(y)
+            return hx > hy ? 1 :
+                   hx == hy ? 0 :
+                   - 1
+            }
+        )
+    }catch(err){
+        // ignore
+        console.log('erreur', err.message)
+    }
     for(var i = 0, len = self.$items.length; i < len; i++){
         var r = _b_.repr(self.$items[i])
         if(r === self || r === self.$items[i]){res.push("{...}")}
