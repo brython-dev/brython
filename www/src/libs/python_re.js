@@ -1034,8 +1034,8 @@ CharacterClass.prototype.match = function(string, pos){
     // browse string codepoints until they don't match, or the number of
     // matches is above the maximum allowed
     while(pos + i <= len &&
-            this.test_func(string, pos + i, this.flags) &&
-            i < this.repeat.max){
+            i < this.repeat.max &&
+            this.test_func(string, pos + i, this.flags)){
         i++
     }
     var nb = i
@@ -1119,7 +1119,7 @@ CharacterSet.prototype.match = function(string, pos){
                         }
                     }
                 }else if(item instanceof CharacterClass){
-                    test = !! item.match(string, pos) // boolean
+                    test = !! item.match(string, pos + i) // boolean
                 }else{
                     if(item.ord == cp1){
                         test = true
