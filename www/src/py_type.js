@@ -635,7 +635,7 @@ type.__or__ = function(){
                 arguments, {}, null, null),
         cls = $.cls,
         other = $.other
-    if(! _b_.isinstance(other, type)){
+    if(other !== _b_.None && ! _b_.isinstance(other, type)){
         return _b_.NotImplemented
     }
     return $B.UnionType.$factory([cls, other])
@@ -997,6 +997,12 @@ $B.GenericAlias.__getitem__ = function(self, item){
     throw _b_.TypeError.$factory("descriptor '__getitem__' for '" +
         self.origin_class.$infos.__name__ +"' objects doesn't apply to a '" +
         $B.class_name(item) +"' object")
+}
+
+$B.GenericAlias.__or__ = function(self, other){
+    var $ = $B.args('__or__', 2, {self: null, other: null}, ['self', 'other'],
+                    arguments, {}, null, null)
+    return $B.UnionType.$factory([self, other])
 }
 
 $B.GenericAlias.__origin__ = {
