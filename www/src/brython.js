@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,4,'final',0]
 __BRYTHON__.__MAGIC__="3.10.4"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-03 16:36:40.812793"
-__BRYTHON__.timestamp=1646321800812
+__BRYTHON__.compiled_date="2022-03-05 21:22:45.540690"
+__BRYTHON__.timestamp=1646511765540
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -954,6 +954,10 @@ var $AnnotationCtx=$B.parser.$AnnotationCtx=function(C){
 this.type='annotation'
 this.parent=C
 this.tree=[]
+this.src=$get_module(this).src
+var rest=this.src.substr($pos)
+if(rest.startsWith(':')){this.start=$pos+1}else if(rest.startsWith('->')){this.start=$pos+2}
+this.string=''
 C.annotation=this
 var scope=$get_scope(C)
 if(scope.binding.__annotations__===undefined){
@@ -969,6 +973,7 @@ if(! C.$in_parens){scope.binding=scope.binding ||{}
 scope.binding[name]=true}}}
 $AnnotationCtx.prototype.toString=function(){return '(annotation) '+this.tree}
 $AnnotationCtx.prototype.transition=function(token,value){var C=this
+this.string=this.src.substring(this.start,$pos)
 if(token=="eol" && C.tree.length==1 &&
 C.tree[0].tree.length==0){$_SyntaxError(C,"empty annotation")}else if(token==':' && C.parent.type !="def"){$_SyntaxError(C,"more than one annotation")}else if(token=="augm_assign"){$_SyntaxError(C,"augmented assign as annotation")}else if(token=="op"){$_SyntaxError(C,"operator as annotation")}
 return $transition(C.parent,token)}
@@ -2086,7 +2091,10 @@ this.args=[]
 this.__defaults__=[]
 this.slots=[]
 var slot_list=[],slot_init=[],annotations=[]
-if(this.annotation){annotations.push('"return":'+this.annotation.to_js())}
+if(this.annotation){if(this.annotation.type=='expr' &&
+this.annotation.tree[0].type=='str'){annotations.push('"return":'+this.annotation.to_js())}else{var ann_string=this.annotation.string.trim()
+annotations.push(`"return": $B.handle_annotation(`+
+`"${ann_string.replace(/"/g, '\\"')}")`)}}
 this.func_name=this.tree[0].to_js()
 var func_name1=this.func_name
 if(this.decorated){this.func_name='var '+this.alias
@@ -2108,7 +2116,10 @@ defs1.push(arg.name+':'+$to_js(arg.tree))
 this.__defaults__.push($to_js(arg.tree))}}else if(arg.type=='func_star_arg'){if(arg.op=='*'){this.star_arg=arg.name}
 else if(arg.op=='**'){this.kw_arg=arg.name}}
 if(arg.annotation){var name=$mangle(arg.name,this)
-annotations.push(name+': '+arg.annotation.to_js())}}
+if(arg.annotation.type=='expr' &&
+arg.annotation.tree[0].type=='str'){annotations.push('"return":'+arg.annotation.to_js())}else{var ann_string=arg.annotation.string.trim()
+annotations.push(`"return": $B.handle_annotation(`+
+`"${ann_string.replace(/"/g, '\\"')}")`)}}}
 slot_init='{'+slot_init.join(", ")+'}'
 var flags=67
 if(this.star_arg){flags |=4}
@@ -4383,11 +4394,15 @@ if(this.create_annotations){this.js+="$locals.__annotations__ = $B.empty_dict();
 this.js+="var $value = "+right.to_js()+";"
 this.tree[0].tree.splice(1,1)
 new $RawJSCtx(this.tree[0],"$value")
+var ann=left.annotation
+if(ann.type=='expr' && ann.tree[0].type=='str'){ann_string=ann.to_js()}else{ann_string=ann.string.trim()
+ann_string=`"${ann_string.replace(/"/g, '\\"')}"`
+ann_string=`$B.handle_annotation(${ann_string})`}
 if(left.tree[0]&& left.tree[0].type=="id" && is_not_def){this.js+="_b_.dict.$setitem($locals.__annotations__, '"+
 left.tree[0].value+"', "+
-left.annotation.to_js()+");"}else{
+ann_string+");"}else{
 this.js+=$to_js(this.tree)+";"
-if(is_not_def){this.js+=left.annotation.to_js()}
+if(is_not_def){this.js+=ann_string}
 return this.js}}}
 if(this.node.children.length==0){this.js+=$to_js(this.tree)+';'}else{this.js+=$to_js(this.tree)}
 return this.js}
@@ -7375,7 +7390,7 @@ var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
 init_subclass(extra_kwargs)
 return class_dict}
 type.__or__=function(){var $=$B.args('__or__',2,{cls:null,other:null},['cls','other'],arguments,{},null,null),cls=$.cls,other=$.other
-if(! _b_.isinstance(other,type)){return _b_.NotImplemented}
+if(other !==_b_.None && ! _b_.isinstance(other,type)){return _b_.NotImplemented}
 return $B.UnionType.$factory([cls,other])}
 type.__prepare__=function(){return $B.empty_dict()}
 type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value},__str__:function(self){console.log("type.__qualname__")},__eq__:function(self,other){return self.$infos.__qualname__==other}}
@@ -7505,6 +7520,8 @@ $B.rich_comp("__eq__",self.items,other.items)}
 $B.GenericAlias.__getitem__=function(self,item){throw _b_.TypeError.$factory("descriptor '__getitem__' for '"+
 self.origin_class.$infos.__name__+"' objects doesn't apply to a '"+
 $B.class_name(item)+"' object")}
+$B.GenericAlias.__or__=function(self,other){var $=$B.args('__or__',2,{self:null,other:null},['self','other'],arguments,{},null,null)
+return $B.UnionType.$factory([self,other])}
 $B.GenericAlias.__origin__={__get__:function(self){return self.origin_class}}
 $B.GenericAlias.__parameters__={__get__:function(self){
 return $B.fast_tuple([])}}
@@ -7668,6 +7685,12 @@ throw err}}}
 $B.set_lineno=function(locals,lineno){locals.$lineno=lineno
 if(locals.$f_trace !==_b_.None){$B.trace_line()}
 return true}
+$B.handle_annotation=function(annotation_string){
+if($B.imported.__future__ &&
+$B.frames_stack.length > 0 &&
+$B.last($B.frames_stack)[3].annotations===
+$B.imported.__future__.annotations){
+return annotation_string}else{return _b_.eval(annotation_string)}}
 $B.copy_namespace=function(){var ns={}
 for(const frame of $B.frames_stack){for(const kv of[frame[1],frame[3]]){for(var key in kv){if(! key.startsWith('$')){ns[key]=kv[key]}}}}
 return ns}

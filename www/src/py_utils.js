@@ -384,6 +384,20 @@ $B.set_lineno = function(locals, lineno){
     return true
 }
 
+$B.handle_annotation = function(annotation_string){
+    // Evaluate the annotation string or not, depending on whether postponed
+    // evaluation is set (PEP 463)
+    if($B.imported.__future__ &&
+            $B.frames_stack.length > 0 &&
+            $B.last($B.frames_stack)[3].annotations ===
+                $B.imported.__future__.annotations){
+        // don't evaluate
+        return annotation_string
+    }else{
+        return _b_.eval(annotation_string)
+    }
+}
+
 $B.copy_namespace = function(){
     var ns = {}
     for(const frame of $B.frames_stack){

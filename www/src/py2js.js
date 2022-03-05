@@ -1170,6 +1170,15 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     this.type = 'annotation'
     this.parent = context
     this.tree = []
+    // get annotation string in source code for postponed evaluation
+    this.src = $get_module(this).src
+    var rest = this.src.substr($pos)
+    if(rest.startsWith(':')){
+        this.start = $pos + 1
+    }else if(rest.startsWith('->')){
+        this.start = $pos + 2
+    }
+    this.string = ''
     // annotation is stored in attribute "annotations" of parent, not "tree"
     context.annotation = this
 
@@ -1203,6 +1212,7 @@ $AnnotationCtx.prototype.toString = function(){
 
 $AnnotationCtx.prototype.transition = function(token, value){
     var context = this
+    this.string = this.src.substring(this.start, $pos)
     if(token == "eol" && context.tree.length == 1 &&
             context.tree[0].tree.length == 0){
         $_SyntaxError(context, "empty annotation")
@@ -3559,7 +3569,14 @@ $DefCtx.prototype.transform = function(node, rank){
         slot_init = [],
         annotations = []
     if(this.annotation){
-        annotations.push('"return":' + this.annotation.to_js())
+        if(this.annotation.type == 'expr' &&
+                this.annotation.tree[0].type == 'str'){
+            annotations.push('"return":' + this.annotation.to_js())
+        }else{
+            var ann_string = this.annotation.string.trim()
+            annotations.push(`"return": $B.handle_annotation(` +
+                `"${ann_string.replace(/"/g, '\\"')}")`)
+        }
     }
 
     this.func_name = this.tree[0].to_js()
@@ -3606,7 +3623,14 @@ $DefCtx.prototype.transform = function(node, rank){
         }
         if(arg.annotation){
             var name = $mangle(arg.name, this)
-            annotations.push(name + ': ' + arg.annotation.to_js())
+            if(arg.annotation.type == 'expr' &&
+                    arg.annotation.tree[0].type == 'str'){
+                annotations.push('"return":' + arg.annotation.to_js())
+            }else{
+                var ann_string = arg.annotation.string.trim()
+                annotations.push(`"return": $B.handle_annotation(` +
+                    `"${ann_string.replace(/"/g, '\\"')}")`)
+            }
         }
     }
 
@@ -8344,15 +8368,24 @@ $NodeCtx.prototype.to_js = function(){
             this.js += "var $value = " + right.to_js() + ";"
             this.tree[0].tree.splice(1, 1)
             new $RawJSCtx(this.tree[0], "$value")
+            var ann = left.annotation
+            if(ann.type == 'expr' && ann.tree[0].type == 'str'){
+                ann_string = ann.to_js()
+            }else{
+                ann_string = ann.string.trim()
+                ann_string = `"${ann_string.replace(/"/g, '\\"')}"`
+                ann_string = `$B.handle_annotation(${ann_string})`
+            }
+
             if(left.tree[0] && left.tree[0].type == "id" && is_not_def){
                 this.js += "_b_.dict.$setitem($locals.__annotations__, '" +
                     left.tree[0].value + "', " +
-                    left.annotation.to_js() + ");"
+                    ann_string + ");"
             }else{
                 // Evaluate annotation
                 this.js +=  $to_js(this.tree) + ";"
                 if(is_not_def){
-                    this.js += left.annotation.to_js()
+                    this.js += ann_string
                 }
                 return this.js
             }
