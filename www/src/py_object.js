@@ -318,6 +318,7 @@ object.__getattribute__ = function(obj, attr){
         return res
     }else{
         // search __getattr__
+        /*
         var _ga = obj["__getattr__"]
         if(_ga === undefined){
             _ga = klass["__getattr__"]
@@ -339,6 +340,8 @@ object.__getattribute__ = function(obj, attr){
         }else{
             throw $B.attr_error(attr, obj)
         }
+        */
+        throw _b_.AttributeError.$factory(attr)
     }
 }
 
@@ -393,7 +396,7 @@ object.__new__ = function(cls, ...args){
 object.__ne__ = function(self, other){
     //return ! $B.rich_comp("__eq__", self, other)
     if(self === other){return false}
-    var eq = $B.$getattr(self.__class__ || $B.get_class(self), 
+    var eq = $B.$getattr(self.__class__ || $B.get_class(self),
         "__eq__", null)
     if(eq !== null){
         var res = $B.$call(eq)(self, other)

@@ -1237,7 +1237,7 @@ function in_mro(klass, attr){
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-
+    var res
     if(obj.$method_cache &&
             obj.$method_cache[attr] &&
             obj.__class__ &&
@@ -1261,7 +1261,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__anext__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "strange" // && obj === _b_.list // "Point"
     if($test){console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)}
 
     // Shortcut for classes without parents
@@ -1306,7 +1306,7 @@ $B.$getattr = function(obj, attr, _default){
             if(klass === undefined){
                 // for native JS objects used in Python code
                 if($test){console.log("no class", attr, obj.hasOwnProperty(attr), obj[attr])}
-                var res = obj[attr]
+                res = obj[attr]
                 if(res !== undefined){
                     if(typeof res == "function"){
                         var f = function(){
@@ -1333,7 +1333,7 @@ $B.$getattr = function(obj, attr, _default){
     switch(attr) {
       case '__call__':
           if(typeof obj == 'function'){
-              var res = function(){return obj.apply(null, arguments)}
+              res = function(){return obj.apply(null, arguments)}
               res.__class__ = method_wrapper
               res.$infos = {__name__: "__call__"}
               return res
@@ -1493,13 +1493,13 @@ $B.$getattr = function(obj, attr, _default){
     if($test){console.log("attr_func is odga ?", attr_func,
         attr_func === odga, '\nobj[attr]', obj[attr])}
     if(attr_func === odga){
-        var res = obj[attr]
+        res = obj[attr]
         if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
             // Special case for list subclasses. Cf issue 1081.
             res = undefined
         }else if(res === null){
             return null
-        }else if(res === undefined && obj[attr] !== undefined){
+        }else if(false && res === undefined && obj[attr] !== undefined){
             if(_default === undefined){
                 throw $B.attr_error(attr, obj)
             }
@@ -1518,11 +1518,49 @@ $B.$getattr = function(obj, attr, _default){
             }
         }
     }
+    if($test){
+        console.log('no result with object.__getattribute__')
+    }
 
     try{
-        var res = attr_func(obj, attr)
+        res = attr_func(obj, attr)
         if($test){console.log("result of attr_func", res)}
     }catch(err){
+        var getattr
+        if(klass === $B.module){
+            // try __getattr__ at module level (PEP 562)
+            getattr = obj.__getattr__
+            if(getattr){
+                try{
+                    return getattr(attr)
+                }catch(err){
+                    if(_default !== undefined){
+                        return _default
+                    }
+                    throw err
+                }                    
+            }
+        }else{
+            var getattr = in_mro(klass, '__getattr__')
+            if(getattr){
+                if(attr == 'strange'){
+                    console.log('essaie getattr', obj, klass, attr)
+                }
+                try{
+                    if(klass === $B.module){
+                        res = getattr(attr)
+                    }else{
+                        res = getattr(obj, attr)
+                    }
+                    return res
+                }catch(err){
+                    if(_default !== undefined){
+                        return _default
+                    }
+                    throw err
+                }
+            }
+        }
         if(_default !== undefined){
             return _default
         }

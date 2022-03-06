@@ -303,7 +303,7 @@ var frame = $B.make_class("frame",
             }
             if(_frame[1].$line_info === undefined){
                 res.f_lineno = _frame[1].$lineno || -1
-                
+
             }else{
                 var line_info = _frame[1].$line_info.split(",")
                 res.f_lineno = parseInt(line_info[0])
@@ -562,7 +562,7 @@ var getExceptionTrace = function(exc, includeInternal) {
 }
 
 BaseException.__getattr__ = function(self, attr){
-
+    
     if(attr == "info"){
         return getExceptionTrace(self, false);
     }else if (attr == "infoWithInternal"){
