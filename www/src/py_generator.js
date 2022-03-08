@@ -58,7 +58,11 @@ $B.generator.__next__ = function(self){
 }
 
 $B.generator.__str__ = function(self){
-    return '<generator object ' + (self.js_gen.$name || 'generator') + '>'
+    var name = self.js_gen.$name || 'generator'
+    if(self.js_gen.$func && self.js_gen.$func.$infos){
+        name = self.js_gen.$func.$infos.__qualname__
+    }
+    return `<generator object ${name}>`
 }
 
 $B.generator.close = function(self){
