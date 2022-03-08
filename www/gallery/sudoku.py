@@ -19,31 +19,35 @@ w2q2w = data['w2q2w']
 class Completed(Exception) : pass
 
 def sudoku99(problem) :
-    givens = list(9*j+int(k)-1 for j,k in enumerate(problem[:81]) if '0'<k)
-    try :
-        search(givens,[9]*len(q2w),set(),set())
+    givens = list(9 * j + int(k) - 1
+                  for j, k in enumerate(problem[:81]) if '0' < k)
+    try:
+        search(givens, [9] * len(q2w), set(), set())
     except Completed as ws :
-        return ''.join(str(w%9+1) for w in sorted(ws.args[0]))
+        return ''.join(str(w % 9 + 1) for w in sorted(ws.args[0]))
 
-def search(w0s,q2nw,takens,ws) :
-    while 1 :
+def search(w0s, q2nw, takens, ws) :
+    while 1:
         i = 0
         while w0s:
             w0 = w0s.pop()
             takens.add(w0)
             ws.add(w0)
-            for q in w2q[w0] : q2nw[q]+=100
+            for q in w2q[w0]:
+                q2nw[q] += 100
 
-            for w in set(w2q2w[w0]) - takens :
+            for w in set(w2q2w[w0]) - takens:
                 takens.add(w)
-                for q in w2q[w] :
-                    n = q2nw[q] = q2nw[q]-1
-                    if n<2 :
-                        w0s.append((set(q2w[q])-takens).pop())
-        if len(ws)>80 :
+                for q in w2q[w]:
+                    n = q2nw[q] = q2nw[q] - 1
+                    if n < 2:
+                        w0s.append((set(q2w[q]) - takens).pop())
+        if len(ws) > 80:
+            input('raise Completed')
             raise Completed(ws)
-        w1,w0 = set(q2w[q2nw.index(2)])-takens
-        try : search([w1],q2nw[:],takens.copy(),ws.copy())
+        w1, w0 = set(q2w[q2nw.index(2)]) - takens
+        try:
+            search([w1], q2nw[:], takens.copy(), ws.copy())
         except KeyError :
             w0s.append(w0)
 

@@ -44,6 +44,7 @@ if 'set_debug' in document:
     __BRYTHON__.debug = int(document['set_debug'].checked)
 
 def reset_src():
+    console.log('reset src')
     if "code" in document.query:
         code = document.query.getlist("code")[0]
         editor.setValue(code)
