@@ -48,7 +48,9 @@ function $download_module(mod, url, $package){
         fake_qs = "?v=" + (new Date().getTime()),
         res = null,
         mod_name = mod.__name__
-
+    if(mod_name == 'exec'){
+        console.log('download exec ???', $B.frames_stack.slice())
+    }
     var timer = _window.setTimeout(function(){
             xhr.abort()
         }, 5000)
@@ -204,7 +206,7 @@ function run_py(module_contents, path, module, compiled) {
         js = compiled ? module_contents : root.to_js()
         if($B.$options.debug == 10){
            console.log("code for module " + module.__name__)
-           console.log(js)
+           console.log($B.format_indent(js, 0))
         }
         var src = js
         js = "var $module = (function(){\n" + js
@@ -1286,6 +1288,68 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
             }
         }
         return locals
+    }
+}
+
+$B.$import_from = function(module, names, aliases, level, locals){
+    // Import names from modules; level is 0 for absolute import, > 0
+    // for relative import (number of dots before module name)
+    var current_module_name = $B.last($B.frames_stack)[2],
+        parts = current_module_name.split('.'),
+        relative = level > 0
+    if(relative){
+        // form "from .. import X" or "from .foo import bar"
+        // If current module is a package, the first . is the package, else
+        // it is the module's package
+        var current_module = $B.imported[parts.join('.')]
+        if(current_module === undefined){
+            throw _b_.ImportError.$factory(
+                'attempted relative import with no known parent package')
+        }            
+        if(! current_module.$is_package){
+            if(parts.length == 1){
+                throw _b_.ImportError.$factory(
+                    'attempted relative import with no known parent package')
+            }else{
+                parts.pop()
+                current_module = $B.imported[parts.join('.')]
+            }
+        }else{
+            parts.pop()
+        }
+        level--
+        while(level > 0){
+            var current_module = $B.imported[parts.join('.')]
+            if(! current_module.$is_package){
+                console.log('error: not a package')
+                throw _b_.ImportError.$factory(
+                    'attempted relative import with no known parent package')
+            }
+            level--
+            parts.pop()
+        }
+        if(module){
+            // form "from .foo import bar"
+            var submodule = current_module.__name__ + '.' + module
+            $B.$import(submodule, [], {}, {})
+            current_module = $B.imported[submodule]
+        }
+        // get names from a package
+        for(var name of names){
+            var alias = aliases[name] || name
+            if(current_module[name] !== undefined){
+                // name is defined in the package module (__init__.py)
+                locals[alias] = current_module[name]
+            }else{
+                // try to import module in the package
+                var sub_module = current_module.__name__ + '.' + name
+                $B.$import(sub_module, [], {}, {})
+                locals[alias] = $B.imported[sub_module]
+            }
+        }
+    }else{
+        // import module
+        $B.$import(module, names, aliases, locals)
     }
 }
 
