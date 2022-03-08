@@ -13321,12 +13321,12 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             module, locals_id, parent_scope, line_num)
 
     dispatch_tokens(root)
-    if($B.produce_ast){
+    if($B.js_from_ast){
         var _ast = root.ast()
         if($B.produce_ast == 2){
             console.log(ast_dump(_ast))
         }
-        if($B.js_from_ast){
+        //if($B.js_from_ast){
             var symtable = $B._PySymtable_Build(_ast, locals_id)
 
             var js_from_ast = $B.js_from_root(_ast, symtable, filename)
@@ -13337,8 +13337,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
                 root.to_js = function(){return js_from_ast}
                 return root
             }
-        }
+        //}
     }
+
     if(ix != undefined){
         root.ix = ix
     }
@@ -13410,6 +13411,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
 
     $B.compile_time += t1 - t0
     return root
+
 }
 
 $B.set_import_paths = function(){

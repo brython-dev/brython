@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 10, 0, 'final', 0]
-// implementation [3, 10, 5, 'final', 0]
+// implementation [3, 10, 6, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -110,11 +110,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,10,5,'final',0]
-__BRYTHON__.__MAGIC__="3.10.5"
+__BRYTHON__.implementation=[3,10,6,'dev',0]
+__BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-08 08:39:38.604379"
-__BRYTHON__.timestamp=1646725178604
+__BRYTHON__.compiled_date="2022-03-08 17:07:32.751440"
+__BRYTHON__.timestamp=1646755652751
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6645,14 +6645,14 @@ if(locals_is_module){locals_id=locals_id[0]}
 var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root)
-if($B.produce_ast){var _ast=root.ast()
+if($B.js_from_ast){var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
-if($B.js_from_ast){var symtable=$B._PySymtable_Build(_ast,locals_id)
+var symtable=$B._PySymtable_Build(_ast,locals_id)
 var js_from_ast=$B.js_from_root(_ast,symtable,filename)
 if(true){
 root._ast=_ast
 root.to_js=function(){return js_from_ast}
-return root}}}
+return root}}
 if(ix !=undefined){root.ix=ix}
 root.transform()
 var js='var $B = __BRYTHON__,\n'+
@@ -11024,9 +11024,11 @@ return res}
 set.__class_getitem__=function(cls,item){
 if(! Array.isArray(item)){item=[item]}
 return $B.GenericAlias.$factory(cls,item)}
+var counter={value:0}
 set.__contains__=function(self,item){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
-return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}
+return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{
+return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}
 var hash=_b_.hash(item),
 item_class=item.__class__ ||$B.get_class(item)
 if(self.$hashes[hash]){
@@ -11568,6 +11570,7 @@ Module.__setattr__=function(self,attr,value){if(self.__name__=="__builtins__"){
 $B.builtins[attr]=value}else{self[attr]=value}}
 $B.set_func_names(Module,"builtins")
 function $download_module(mod,url,$package){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
+if(mod_name=='exec'){console.log('download exec ???',$B.frames_stack.slice())}
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
 if($B.$options.cache){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
 xhr.send()
@@ -11626,7 +11629,7 @@ root=$B.py2js(src,module,module.__name__,$B.builtins_scope)
 if(module.__package__ !==undefined){root.binding["__package__"]=true}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.$options.debug==10){console.log("code for module "+module.__name__)
-console.log(js)}
+console.log($B.format_indent(js,0))}
 var src=js
 js="var $module = (function(){\n"+js
 var prefix=$B.js_from_ast ? 'locals_' :'$locals_'
@@ -12015,6 +12018,33 @@ console.log($B.last($B.frames_stack))}
 throw _b_.ImportError.$factory(
 "cannot import name '"+name+"'")}}}}
 return locals}}
+$B.$import_from=function(module,names,aliases,level,locals){
+var current_module_name=$B.last($B.frames_stack)[2],parts=current_module_name.split('.'),relative=level > 0
+if(relative){
+var current_module=$B.imported[parts.join('.')]
+if(current_module===undefined){throw _b_.ImportError.$factory(
+'attempted relative import with no known parent package')}
+if(! current_module.$is_package){if(parts.length==1){throw _b_.ImportError.$factory(
+'attempted relative import with no known parent package')}else{parts.pop()
+current_module=$B.imported[parts.join('.')]}}else{parts.pop()}
+level--
+while(level > 0){var current_module=$B.imported[parts.join('.')]
+if(! current_module.$is_package){console.log('error: not a package')
+throw _b_.ImportError.$factory(
+'attempted relative import with no known parent package')}
+level--
+parts.pop()}
+if(module){
+var submodule=current_module.__name__+'.'+module
+$B.$import(submodule,[],{},{})
+current_module=$B.imported[submodule]}
+for(var name of names){var alias=aliases[name]||name
+if(current_module[name]!==undefined){
+locals[alias]=current_module[name]}else{
+var sub_module=current_module.__name__+'.'+name
+$B.$import(sub_module,[],{},{})
+locals[alias]=$B.imported[sub_module]}}}else{
+$B.$import(module,names,aliases,locals)}}
 $B.import_all=function(locals,module){
 for(var attr in module){if('_$'.indexOf(attr.charAt(0))==-1){locals[attr]=module[attr]}}}
 $B.$path_hooks=[url_hook]
@@ -16420,4 +16450,1913 @@ return f}
 $B.promise=function(obj){if(obj.__class__===coroutine){return coroutine.send(obj)}
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
+;
+(function($B){var _b_=$B.builtins
+$B.set_func_infos=function(func,name,qualname,docstring){func.$is_func=true}
+function copy_position(target,origin){target.lineno=origin.lineno
+target.col_offset=origin.col_offset
+target.end_lineno=origin.end_lineno
+target.end_col_offset=origin.end_col_offset}
+function last_scope(scopes){var ix=scopes.length-1
+while(scopes[ix].parent){ix--}
+return scopes[ix]}
+function Scope(name,type,ast){this.name=name
+this.locals=new Set()
+this.globals=new Set()
+this.nonlocals=new Set()
+this.freevars=new Set()
+this.type=type
+this.ast=ast}
+function copy_scope(scope,ast,id){
+var new_scope=new Scope(scope.name,scope.type,ast)
+if(id !==undefined){
+new_scope.id=id}
+new_scope.parent=scope
+return new_scope}
+function make_local(module_id){return `locals_${module_id.replace(/\./g, '_')}`}
+function qualified_scope_name(scopes,scope){
+if(scope !==undefined && !(scope instanceof Scope)){console.log('bizarre',scope)
+throw Error('scope étrange')}
+var _scopes
+if(! scope){_scopes=scopes.slice()}else{var ix=scopes.indexOf(scope)
+if(ix >-1){_scopes=scopes.slice(0,ix+1)}else{_scopes=scopes.concat(scope)}}
+var names=[]
+for(var _scope of _scopes){if(! _scope.parent){names.push(_scope.name)}}
+return names.join('_').replace(/\./g,'_')}
+function make_scope_name(scopes,scope){
+if(scope===builtins_scope){return `_b_`}
+return 'locals_'+qualified_scope_name(scopes,scope)}
+function make_search_namespaces(scopes){var namespaces=[]
+for(var scope of scopes.slice().reverse()){if(scope.parent ||scope.type=='class'){continue}else if(scope.is_exec_scope){namespaces.push('$B.exec_scope')}
+namespaces.push(make_scope_name(scopes,scope))}
+namespaces.push('_b_')
+return namespaces}
+function mangle(scopes,scope,name){if(name.startsWith('__')&& ! name.endsWith('__')){var ix=scopes.indexOf(scope)
+while(ix >=0){if(scopes[ix].ast instanceof $B.ast.ClassDef){var scope_name=scopes[ix].name
+while(scope_name.length > 0 && scope_name.startsWith('_')){scope_name=scope_name.substr(1)}
+if(scope_name.length==0){
+return name}
+return '_'+scope_name+name}
+ix--}}
+return name}
+function reference(scopes,scope,name){return make_scope_name(scopes,scope)+'.'+mangle(scopes,scope,name)}
+function bind(name,scopes){var scope=$B.last(scopes),up_scope=last_scope(scopes)
+name=mangle(scopes,up_scope,name)
+if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)){return scopes[i]}}}
+scope.locals.add(name)
+return scope}
+var CELL=5,FREE=4,LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,SCOPE_MASK=15,SCOPE_OFF=11
+var TYPE_CLASS=1,TYPE_FUNCTION=0,TYPE_MODULE=2
+var DEF_GLOBAL=1,
+DEF_LOCAL=2 ,
+DEF_PARAM=2<<1,
+DEF_NONLOCAL=2<<2,
+USE=2<<3 ,
+DEF_FREE=2<<4 ,
+DEF_FREE_CLASS=2<<5,
+DEF_IMPORT=2<<6,
+DEF_ANNOT=2<<7,
+DEF_COMP_ITER=2<<8 
+function name_reference(name,scopes){var scope=name_scope(name,scopes)
+return make_ref(name,scopes,scope)}
+function make_ref(name,scopes,scope){if(scope.found){return reference(scopes,scope.found,name)}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
+return `$B.resolve_in_scopes('${name}', [${scope_names}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}')`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}')`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}])`}}
+function local_scope(name,scope){
+var s=scope
+while(true){if(s.locals.has(name)){return{found:true,scope:s}}
+if(! s.parent){return{found:false}}
+s=s.parent}}
+function name_scope(name,scopes){
+var flags,block
+if(scopes.length==0){
+return{found:false,resolve:'all'}}
+var scope=$B.last(scopes),up_scope=last_scope(scopes),name=mangle(scopes,scope,name)
+if(up_scope.ast===undefined){console.log('no ast',scope)}
+block=scopes.symtable.table.blocks.get(_b_.id(up_scope.ast))
+if(block===undefined){console.log('no block',scope,scope.ast,'id',_b_.id(up_scope.ast))
+console.log('symtable',scopes.symtable)}
+try{flags=block.symbols.$string_dict[name][0]}catch(err){console.log('name',name,'not in symbols of block',block)
+return{found:false,resolve:'all'}}
+var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK,is_local=[LOCAL,CELL].indexOf(__scope)>-1
+if(is_local){
+var l_scope=local_scope(name,scope)
+if(! l_scope.found){if(block.type==TYPE_CLASS){
+return{found:false,resolve:'global'}}else if(block.type==TYPE_MODULE){return{found:false,resolve:'global'}}
+return{found:false,resolve:'local'}}else{return{found:l_scope.scope}}}else if(scope.globals.has(name)){var global_scope=scopes[0]
+if(global_scope.locals.has(name)){return{found:global_scope}}
+return{found:false,resolve:'global'}}else if(scope.nonlocals.has(name)){
+for(var i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+if(block && block.symbols.$string_dict[name]){return{found:scopes[i]}}}}
+if(scope.has_import_star){return{found:false,resolve:is_local ? 'all' :'global'}}
+for(var i=scopes.length-2;i >=0;i--){block=undefined
+if(scopes[i].ast){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))}
+if(scopes[i].globals.has(name)){return{found:false,resolve:'global'}}
+if(scopes[i].locals.has(name)){return{found:scopes[i]}}else if(block && block.symbols.$string_dict[name]){flags=block.symbols.$string_dict[name][0]
+var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK
+if([LOCAL,CELL].indexOf(__scope)>-1){
+return{found:false,resolve:'all'}}}
+if(scopes[i].has_import_star){return{found:false,resolve:'all'}}}
+if(builtins_scope.locals.has(name)){return{found:builtins_scope}}
+var scope_names=make_search_namespaces(scopes)
+return{found:false,resolve:scope_names}}
+function resolve_in_namespace(name,ns){if(! ns.hasOwnProperty){if(ns[name]!==undefined){return{found:true,value:ns[name]}}}else if(ns.hasOwnProperty(name)){return{found:true,value:ns[name]}}else if(ns.$dict){try{return{found:true,value:ns.$getitem(ns.$dict,name)}}catch(err){if(ns.$missing){try{return{
+found:true,value:$B.$call(ns.$missing)(ns.$dict,name)}}catch(err){if(! $B.$is_exc(err,[_b_.KeyError])){throw err}}}}}
+return{found:false}}
+$B.resolve=function(name){if(name=='tzinfo'){console.log('resolve tzinfo',name,$B.frames_stack.slice())}
+var checked=new Set(),current_globals
+for(var frame of $B.frames_stack.slice().reverse()){if(current_globals===undefined){current_globals=frame[3]}else if(frame[3]!==current_globals){var v=resolve_in_namespace(name,current_globals)
+if(v.found){return v.value}
+checked.add(current_globals)
+current_globals=frame[3]}
+var v=resolve_in_namespace(name,frame[1])
+if(v.found){return v.value}}
+if(! checked.has(frame[3])){var v=resolve_in_namespace(name,frame[3])
+if(v.found){return v.value}}
+if(builtins_scope.locals.has(name)){return _b_[name]}
+throw $B.name_error(name)}
+$B.resolve_local=function(name){
+var frame=$B.last($B.frames_stack)
+if(frame===undefined){console.log('pas de frame, name',name)}
+if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][name]}}else{var value=frame[1][name]
+if(value !==undefined){return value}}
+throw _b_.UnboundLocalError.$factory(`local variable '${name}' `+
+'referenced before assignment')}
+$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top=$B.frames_stack[0]
+for(var ns of[exec_top[1],exec_top[3]]){var v=resolve_in_namespace(name,ns)
+if(v.found){return v.value}}}else{var v=resolve_in_namespace(name,ns)
+if(v.found){return v.value}}}
+throw $B.name_error(name)}
+$B.resolve_global=function(name){
+for(var frame of $B.frames_stack.slice().reverse()){var v=resolve_in_namespace(name,frame[3])
+if(v.found){return v.value}}
+if(builtins_scope.locals.has(name)){return _b_[name]}
+throw _b_.NameError.$factory(name)}
+var $operators=$B.op2method.subset("all")
+var opname2opsign={}
+for(var key in $operators){opname2opsign[$operators[key]]=key}
+var opclass2dunder={}
+for(var op_type of $B.op_types){
+for(var operator in op_type){opclass2dunder[op_type[operator]]='__'+$operators[operator]+'__'}}
+opclass2dunder['UAdd']='__pos__'
+opclass2dunder['USub']='__neg__'
+opclass2dunder['Invert']='__invert__'
+var builtins_scope=new Scope("__builtins__")
+for(var name in $B.builtins){builtins_scope.locals.add(name)}
+function add_body(body,scopes){var res=''
+for(var item of body){js=$B.js_from_ast(item,scopes)
+if(js.length > 0){res+=js+'\n'}}
+return res.trimRight()}
+function init_comprehension(comp){
+var comp_id=comp.type+'_'+comp.id,varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
+return `var ${comp.locals_name} = {},\n`+
+`locals = ${comp.locals_name}\n`+
+`locals.$lineno = ${comp.ast.lineno}\n`+
+`locals.$comp_code = {\n`+
+`co_argcount: 1,\n`+
+`co_firstlineno:${comp.ast.lineno},\n`+
+`co_name: "<${comp.type}>",\n`+
+`co_flags: ${comp.type == 'genexpr' ? 115 : 83},\n`+
+`co_freevars: $B.fast_tuple([]),\n`+
+`co_kwonlyargcount: 0,\n`+
+`co_posonlyargount: 0,\n`+
+`co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
+`}\n`+
+`locals['.0'] = expr\n`+
+`var top_frame = ["${comp_id}", ${comp.locals_name}, `+
+`"${comp.module_name}", ${comp.globals_name}]\n`+
+`locals.$f_trace = $B.enter_frame(top_frame)\n`}
+function make_comp(scopes){
+var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
+var first_for=this.generators[0],
+outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
+var comp_scope=new Scope(`${type}_${id}`,'comprehension',this)
+scopes.push(comp_scope)
+var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
+var js=init_comprehension(comp)
+if(this instanceof $B.ast.ListComp){js+=`var result_${id} = []\n`}else if(this instanceof $B.ast.SetComp){js+=`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=`var result_${id} = $B.empty_dict()\n`}
+var first=this.generators[0]
+js+=`var next_func_${id} = $B.next_of(expr)\n`+
+`while(true){\ntry{\nvar next_${id} = next_func_${id}()\n`+
+`}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n`+
+`break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n `+
+`throw err\n}\n}\n`
+var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
+copy_position(name,first_for.iter)
+name.to_js=function(){return `next_${id}`}
+var assign=new $B.ast.Assign([first.target],name)
+assign.lineno=this.lineno
+js+=assign.to_js(scopes)+'\n'
+for(var _if of first.ifs){nb_paren++
+js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
+for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scopes)
+nb_paren++
+for(var _if of comprehension.ifs){nb_paren++}}
+if(this instanceof $B.ast.DictComp){var key=$B.js_from_ast(this.key,scopes),value=$B.js_from_ast(this.value,scopes)}else{var elt=$B.js_from_ast(this.elt,scopes)}
+var has_await=comp_scope.has_await
+js=`(${has_await ? 'async ' : ''}function(expr){\n`+js
+js+=has_await ? 'var save_stack = $B.save_stack();\n' :''
+js+=`try{\n`
+if(this instanceof $B.ast.ListComp){js+=`result_${id}.push(${elt})\n`}else if(this instanceof $B.ast.SetComp){js+=`_b_.set.add(result_${id}, ${elt})\n`}else if(this instanceof $B.ast.DictComp){js+=`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}
+js+=`}catch(err){\n`+
+(has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
+`$B.leave_frame(locals)\nthrow err\n}`+
+(has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
+for(var i=0;i < nb_paren;i++){js+='}\n'}
+js+=`\n$B.leave_frame({locals, value: _b_.None})`
+js+=`\nreturn result_${id}`
+js+=`\n}\n)(${outmost_expr})\n`
+scopes.pop()
+return js}
+function init_scopes(type,scopes){
+var name=scopes.symtable.table.filename
+var top_scope=new Scope(name,`${type}`,this),block=scopes.symtable.table.blocks.get(_b_.id(this))
+if(block.$has_import_star){top_scope.has_import_star=true}
+scopes.push(top_scope)
+var namespaces=scopes.namespaces
+if(namespaces){top_scope.is_exec_scope=true
+for(var key in namespaces.exec_globals){if(! key.startsWith('$')){top_scope.globals.add(key)}}
+if(namespaces.exec_locals !==namespaces.exec_globals){for(var key in namespaces.exec_locals){if(! key.startsWith('$')){top_scope.locals.add(key)}}}}
+return name}
+$B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
+return `if($B.set_lineno(locals, ${this.lineno}) && !$B.$bool(${test})){\n`+
+`throw _b_.AssertionError.$factory(${msg})}\n`}
+$B.ast.AnnAssign.prototype.to_js=function(scopes){last_scope(scopes).has_annotation=true
+if(this.value){var scope=bind(this.target.id,scopes)
+var js=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`+
+`$B.$setitem(locals.__annotations__, `+
+`'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n`
+var target_ref=name_reference(this.target.id,scopes)
+js+=`${target_ref} = ann`}else{if(this.annotation instanceof $B.ast.Name){var ann=`'${this.annotation.id}'`}else{var ann=$B.js_from_ast(this.annotation,scopes)}
+var js=`$B.$setitem(locals.__annotations__, `+
+`'${this.target.id}', ${ann})`}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.Assign.prototype.to_js=function(scopes){var js=this.lineno ? `$B.set_lineno(locals, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
+function assign_one(target,value){if(target instanceof $B.ast.Name){return $B.js_from_ast(target,scopes)+' = '+value}else if(target instanceof $B.ast.Starred){return assign_one(target.value,value)}else if(target instanceof $B.ast.Subscript){return `$B.$setitem(${$B.js_from_ast(target.value, scopes)}`+
+`, ${$B.js_from_ast(target.slice, scopes)}, ${value})`}else if(target instanceof $B.ast.Attribute){var attr=mangle(scopes,last_scope(scopes),target.attr)
+return `$B.$setattr(${$B.js_from_ast(target.value, scopes)}`+
+`, "${attr}", ${value})`}}
+function assign_many(target,value){var js=''
+var nb_targets=target.elts.length,has_starred=false,nb_after_starred
+for(var i=0,len=nb_targets;i < len;i++){if(target.elts[i]instanceof $B.ast.Starred){has_starred=true
+nb_after_starred=len-i-1
+break}}
+var id=$B.UUID()
+js+=`var it_${id} = $B.unpacker(${value}, ${nb_targets}, `+
+`${has_starred}`
+if(nb_after_starred !==undefined){js+=`, ${nb_after_starred}`}
+js+=`)\n`
+var assigns=[]
+for(var elt of target.elts){if(elt instanceof $B.ast.Starred){assigns.push(assign_one(elt,`it_${id}.read_rest()`))}else if(elt instanceof $B.ast.List ||
+elt instanceof $B.ast.Tuple){assigns.push(assign_many(elt,`it_${id}.read_one()`))}else{assigns.push(assign_one(elt,`it_${id}.read_one()`))}}
+js+=assigns.join('\n')
+return js}
+if(this.targets.length==1){var target=this.targets[0]
+if(!(target instanceof $B.ast.Tuple)&&
+!(target instanceof $B.ast.List)){return js+assign_one(target,value)}else{return js+assign_many(target,value)}}
+var id='v'+$B.UUID()
+js+=`var ${id} = ${value}\n`
+for(var target of this.targets){js+=assign_one(target,id)+'\n'}
+return js}
+$B.ast.AsyncFor.prototype.to_js=function(scopes){return $B.ast.For.prototype.to_js.bind(this)(scopes)}
+$B.ast.AsyncFunctionDef.prototype.to_js=function(scopes){return $B.ast.FunctionDef.prototype.to_js.bind(this)(scopes)}
+$B.ast.AsyncWith.prototype.to_js=function(scopes){
+function bind_vars(vars,scopes){if(vars instanceof $B.ast.Name){bind(vars.id,scopes)}else if(vars instanceof $B.ast.Tuple){for(var var_item of vars.elts){bind_vars(var_item,scopes)}}}
+function add_item(item,js){var id=$B.UUID()
+var s=`var mgr_${id} = `+
+$B.js_from_ast(item.context_expr,scopes)+',\n'+
+`mgr_type_${id} = _b_.type.$factory(mgr_${id}),\n`+
+`aexit_${id} = $B.$getattr(mgr_type_${id}, '__aexit__'),\n`+
+`aenter_${id} = $B.$getattr(mgr_type_${id}, '__aenter__'),\n`+
+`value_${id} = await $B.promise($B.$call(aenter_${id})(mgr_${id})),\n`+
+`exc_${id} = true\n`
+if(has_generator){
+s+=`locals.$context_managers = locals.$context_managers || []\n`+
+`locals.$context_managers.push(mgr_${id})\n`}
+s+='try{\ntry{\n'
+if(item.optional_vars){
+var value={to_js:function(){return `value_${id}`}}
+copy_position(value,_with)
+var assign=new $B.ast.Assign([item.optional_vars],value)
+copy_position(assign,_with)
+s+=assign.to_js(scopes)+'\n'}
+s+=js
+s+=`}catch(err_${id}){\n`+
+`locals.$lineno = ${lineno}\n`+
+`exc_${id} = false\n`+
+`err_${id} = $B.exception(err_${id}, true)\n`+
+`var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, `+
+`err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n`+
+`if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
+s+=`}\nfinally{\n`+
+`locals.$lineno = ${lineno}\n`+
+`if(exc_${id}){\n`+
+`await $B.promise(aexit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None))\n}\n}\n`
+return s}
+var _with=this,scope=last_scope(scopes),lineno=this.lineno
+delete scope.is_generator
+for(var item of this.items.slice().reverse()){if(item.optional_vars){bind_vars(item.optional_vars,scopes)}}
+js=add_body(this.body,scopes)+'\n'
+var has_generator=scope.is_generator
+for(var item of this.items.slice().reverse()){js=add_item(item,js)}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
+return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, `+
+`'${attr}')`}
+$B.ast.AugAssign.prototype.to_js=function(scopes){var js,op_class=this.op.constructor
+for(var op in $B.op2ast_class){if($B.op2ast_class[op][1]===op_class){var iop=op+'='
+break}}
+var value=$B.js_from_ast(this.value,scopes)
+if(this.target instanceof $B.ast.Name){var scope=name_scope(this.target.id,scopes)
+if(! scope.found){
+var left_scope=scope.resolve=='global' ?
+make_scope_name(scopes,scopes[0]):'locals'
+return `${left_scope}.${this.target.id} = $B.augm_assign(`+
+make_ref(this.target.id,scopes,scope)+`, '${iop}', ${value})`}else{var ref=`${make_scope_name(scopes, scope.found)}.${this.target.id}`
+if(op=='@' ||op=='//'){js=`${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`}else{js=ref+` = typeof ${ref} == "number" && `+
+`$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n`+
+`locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`}}}else if(this.target instanceof $B.ast.Subscript){var op=opclass2dunder[this.op.constructor.$name]
+js=`$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), `+
+`(locals.$key = ${this.target.slice.to_js(scopes)}), `+
+`$B.augm_assign($B.$getitem(locals.$tg, locals.$key), '${iop}', ${value}))`}else if(this.target instanceof $B.ast.Attribute){var op=opclass2dunder[this.op.constructor.$name]
+js=`$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), `+
+`'${this.target.attr}', $B.augm_assign(`+
+`$B.$getattr(locals.$tg, '${this.target.attr}'), '${iop}', ${value}))`}else{var target=$B.js_from_ast(this.target,scopes),value=$B.js_from_ast(this.value,scopes)
+js=`${target} = $B.augm_assign(${target}, '${iop}', ${value})`}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.Await.prototype.to_js=function(scopes){var ix=scopes.length-1
+while(scopes[ix].parent){ix--}
+scopes[ix].has_await=true
+return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`}
+$B.ast.BinOp.prototype.to_js=function(scopes){var op=opclass2dunder[this.op.constructor.$name]
+return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
+`${$B.js_from_ast(this.right, scopes)})`}
+$B.ast.BoolOp.prototype.to_js=function(scopes){
+var op=this.op instanceof $B.ast.And ? '! ' :'',items=[],js='(function(){\n'
+for(var value of this.values){js+=`var item = ${$B.js_from_ast(value, scopes)}\n`+
+`if(${op}$B.$bool(item)){\nreturn item\n}\n`}
+js+=`return item\n})()`
+return js}
+$B.ast.Break.prototype.to_js=function(scopes){var js=''
+for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For){js+=`no_break_${scope.id} = false\n`
+break}}
+js+=`break`
+return js}
+$B.ast.Call.prototype.to_js=function(scopes){var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')',args=make_args.bind(this)(scopes)
+return js+(args.has_starred ? `.apply(null, ${args.js})` :
+`(${args.js})`)}
+function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
+for(var arg of this.args){if(arg instanceof $B.ast.Starred){has_starred=true}else{named_args.push($B.js_from_ast(arg,scopes))}}
+for(var keyword of this.keywords){if(keyword.arg){named_kwargs.push(
+`${keyword.arg}: ${$B.js_from_ast(keyword.value, scopes)}`)}else{
+starred_kwargs.push($B.js_from_ast(keyword.value,scopes))}}
+var args=''
+named_args=named_args.join(', ')
+if(! has_starred){args+=`${named_args}`}else{var start=true,not_starred=[]
+for(var arg of this.args){if(arg instanceof $B.ast.Starred){if(not_starred.length > 0){var arg_list=not_starred.map(x=> $B.js_from_ast(x,scopes))
+if(start){args+=`[${arg_list.join(', ')}]`}else{args+=`.concat([${arg_list.join(', ')}])`}
+not_starred=[]}else if(args==''){args='[]'}
+var starred_arg=$B.js_from_ast(arg.value,scopes)
+args+=`.concat(_b_.list.$factory(${starred_arg}))`
+start=false}else{not_starred.push(arg)}}
+if(not_starred.length > 0){var arg_list=not_starred.map(x=> $B.js_from_ast(x,scopes))
+if(start){args+=`[${arg_list.join(', ')}]`
+start=false}else{args+=`.concat([${arg_list.join(', ')}])`}}
+if(args[0]=='.'){console.log('bizarre',args)}}
+if(named_kwargs.length+starred_kwargs.length==0){return{has_starred,js:js+`${args}`}}else{var kw=`{${named_kwargs.join(', ')}}`
+for(var starred_kwarg of starred_kwargs){kw+=`, ${starred_kwarg}`}
+kw=`{$nat: 'kw', kw:[${kw}]}`
+if(args.length > 0){if(has_starred){kw=`.concat([${kw}])`}else{kw=', '+kw}}
+return{has_starred,js:js+`${args}${kw}`}}}
+$B.ast.ClassDef.prototype.to_js=function(scopes){var enclosing_scope=bind(this.name,scopes)
+var class_scope=new Scope(this.name,'class',this)
+var js=`$B.set_lineno(locals, ${this.lineno})\n`,locals_name=make_scope_name(scopes,class_scope),ref=this.name+$B.UUID(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
+for(var dec of this.decorator_list){decorated=true
+var dec_id='decorator'+$B.UUID()
+decorators.push(dec_id)
+js+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
+var qualname=this.name
+var ix=scopes.length-1
+while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.ast.ClassDef){qualname=scopes[ix].name+'.'+qualname
+ix--}else{break}}
+scopes.push(class_scope)
+var docstring='_b_.None'
+if(this.body[0]instanceof $B.ast.Expr &&
+this.body[0].value instanceof $B.ast.Constant &&
+typeof this.body[0].value.value=="string"){docstring=this.body.splice(0,1)[0].to_js(scopes)}
+js+=`var ${ref} = (function(){\n`+
+`var ${locals_name} = {__annotations__: $B.empty_dict()},\n`+
+`locals = ${locals_name}\n`+
+`locals.$name = "${this.name}"\n`+
+`locals.$qualname = "${qualname}"\n`+
+`locals.$is_class = true\n`+
+`var top_frame = ["${ref}", locals, "${glob}", ${globals_name}]\n`+
+`top_frame.__file__ = '${scopes.filename}'\n`+
+`locals.$lineno = ${this.lineno}\n`+
+`locals.$f_trace = $B.enter_frame(top_frame)\n`+
+`if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
+js+=add_body(this.body,scopes)
+scopes.pop()
+js+='\nif(locals.$f_trace !== _b_.None){\n'+
+'$B.trace_return(_b_.None)\n'+
+'}\n'+
+'$B.leave_frame({locals})\n'+
+'return locals\n})()\n'
+var class_ref=reference(scopes,enclosing_scope,this.name)
+if(decorated){class_ref=`decorated${$B.UUID()}`
+js+='var '}
+var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
+var keywords=[]
+for(var keyword of this.keywords){keywords.push(`["${keyword.arg}", `+
+$B.js_from_ast(keyword.value,scopes)+']')}
+js+=`${class_ref} = $B.$class_constructor("${this.name}", ${ref}, `+
+`$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n`+
+`${class_ref}.__doc__ = ${docstring}\n`
+if(decorated){js+=reference(scopes,enclosing_scope,this.name)+' = '
+var decorate=class_ref
+for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
+js+=decorate+'\n'}
+return js}
+$B.ast.Compare.prototype.to_js=function(scopes){var left=$B.js_from_ast(this.left,scopes),comps=[]
+var len=this.ops.length,prefix=len > 1 ? 'locals.$op = ' :''
+for(var i=0;i < len;i++){var op=opclass2dunder[this.ops[i].constructor.$name],right=this.comparators[i]
+if(this.ops[i]instanceof $B.ast.In){comps.push(`$B.$is_member(${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.NotIn){comps.push(`! $B.$is_member(${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.Is){comps.push(`$B.$is(${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.IsNot){comps.push(`! $B.$is(${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}else{comps.push(`$B.rich_comp('${op}', ${left}, `+
+`${prefix}${$B.js_from_ast(right, scopes)})`)}
+if(len > 1){left='locals.$op'}}
+return comps.join(' && ')}
+$B.ast.comprehension.prototype.to_js=function(scopes){var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes)
+var js=`var next_func_${id} = $B.next_of(${iter})\n`+
+`while(true){\ntry{\nvar next_${id} = next_func_${id}()\n`+
+`}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n`+
+`break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n `+
+`throw err\n}\n}\n`
+var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
+copy_position(name,this.target)
+name.to_js=function(){return `next_${id}`}
+var assign=new $B.ast.Assign([this.target],name)
+copy_position(assign,this.target)
+if(assign.col_offset===undefined){console.log('pas de col offset',assign,'target',this.target)
+alert()}
+js+=assign.to_js(scopes)+' // assign to target\n'
+for(var _if of this.ifs){js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
+return js}
+$B.ast.Constant.prototype.to_js=function(scopes){if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){var type='str',value=this.value}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else{var type=this.value.type,value=this.value.value}
+switch(type){case 'int':
+var v=parseInt(value[1],value[0])
+if(v > $B.min_int && v < $B.max_int){return v+''}else{var v=$B.long_int.$factory(value[1],value[0])
+return '$B.fast_long_int("'+v.value+'", '+v.pos+')'}
+case 'float':
+if(/^\d+$/.exec(value)||/^\d+\.\d*$/.exec(value)){return '(new Number('+value+'))'}
+return '_b_.float.$factory('+value+')'
+case 'imaginary':
+var v=$B.ast.Constant.prototype.to_js.bind({value})(scopes)
+return '$B.make_complex(0,'+v+')'
+case 'ellipsis':
+return `_b_.Ellipsis`
+case 'str':
+var lines=value.split('\n')
+lines=lines.map(line=> line.replace(/\\/g,'\\\\'))
+value=lines.join('\\n\\\n')
+value=value.replace(new RegExp('\r','g'),'\\r').
+replace(new RegExp('\t','g'),'\\t').
+replace(new RegExp('\x07','g'),'\\x07')
+if(value.indexOf("'")==-1){return `$B.String('${value}')`}else if(value.indexOf('"')==-1){return `$B.String("${value}")`}else{value=value.replace(new RegExp("'","g"),"\\'")
+return `$B.String('${value}')`}}
+console.log('unknown constant',this,value,value===true)
+return '// unknown'}
+$B.ast.Continue.prototype.to_js=function(scopes){return 'continue'}
+$B.ast.Delete.prototype.to_js=function(scopes){var js=''
+for(var target of this.targets){if(target instanceof $B.ast.Name){var scope=name_scope(target.id,scopes)
+if(scope.found){scope.found.locals.delete(target.id)}
+js+=`$B.$delete("${target.id}")\n`}else if(target instanceof $B.ast.Subscript){js+=`$B.$delitem(${$B.js_from_ast(target.value, scopes)}, `+
+`${$B.js_from_ast(target.slice, scopes)})\n`}else if(target instanceof $B.ast.Attribute){js+=`_b_.delattr(${$B.js_from_ast(target.value, scopes)}, `+
+`'${target.attr}')\n`}}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.Dict.prototype.to_js=function(scopes){var items=[],has_packed=false
+for(var i=0,len=this.keys.length;i < len;i++){if(this.keys[i]===_b_.None){
+has_packed=true
+items.push('_b_.list.$factory(_b_.dict.items('+
+$B.js_from_ast(this.values[i],scopes)+'))')}else{items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, `+
+`${$B.js_from_ast(this.values[i], scopes)}]`)}}
+if(! has_packed){return `_b_.dict.$factory([${items}])`}
+var first=this.keys[0]!==_b_.None ? `[${items[0]}]` :items[0],js='_b_.dict.$factory('+first
+for(var i=1,len=items.length;i < len;i++){var arg=this.keys[i]!==_b_.None ? `[${items[i]}]` :items[i]
+js+=`.concat(${arg})`}
+return js+')'}
+$B.ast.DictComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
+$B.ast.Expr.prototype.to_js=function(scopes){return `$B.set_lineno(locals, ${this.lineno});\n`+
+$B.js_from_ast(this.value,scopes)}
+$B.ast.Expression.prototype.to_js=function(scopes){init_scopes.bind(this)('expression',scopes)
+return $B.js_from_ast(this.body,scopes)}
+$B.ast.For.prototype.to_js=function(scopes){
+var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js
+var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
+scopes.push(new_scope)
+if(this instanceof $B.ast.AsyncFor){js=`var iter_${id} = ${iter},\n`+
+`type_${id} = _b_.type.$factory(iter_${id})\n`+
+`iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
+`var next_func_${id} = $B.$call(`+
+`$B.$getattr(type_${id}, '__anext__'))\n`+
+`while(true){\n`+
+`  try{\n`+
+`    var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n`+
+`  }catch(err){\n`+
+`    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n`+
+`    else{\nthrow err}\n`+
+`  }\n`}else{js=`var no_break_${id} = true\n`+
+`var next_func_${id} = $B.next_of(${iter})\n`+
+`while(true){\n`+
+`try{\n`+
+`$B.set_lineno(locals, ${this.lineno})\n`+
+`var next_${id} = next_func_${id}()\n`+
+`}catch(err){\n`+
+`if($B.is_exc(err, [_b_.StopIteration])){\n`+
+`break\n`+
+`}else{\n `+
+`throw err\n`+
+`}\n`+
+`}\n`}
+var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
+copy_position(name,this.iter)
+name.to_js=function(){return `next_${id}`}
+var assign=new $B.ast.Assign([this.target],name)
+js+=assign.to_js(scopes)+'\n'
+js+=add_body(this.body,scopes)
+js+='\n}' 
+scopes.pop()
+if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+
+add_body(this.orelse,scopes)+'}\n'}
+return js}
+$B.ast.FormattedValue.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes)
+if(this.conversion==114){value=`_b_.repr(${value})`}else if(this.conversion==115){value=`_b_.str.$factory(${value})`}else if(this.conversion==97){value=`_b_.ascii(${value})`}
+if(this.format_spec){value=`_b_.str.format('{0:' + `+
+$B.js_from_ast(this.format_spec,scopes)+
+` + '}', ${value})`}else if(this.conversion==-1){value=`_b_.str.$factory(${value})`}
+return value}
+function transform_args(scopes){
+var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[]
+for(var i=ix;i < positional.length;i++){default_names.push(`defaults.${positional[i].arg}`)
+_defaults.push(`${positional[i].arg}: `+
+`${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)}
+var ix=0
+for(var arg of this.args.kwonlyargs){if(this.args.kw_defaults[ix]===_b_.None){break}
+_defaults.push(`${arg.arg}: `+
+$B.js_from_ast(this.args.kw_defaults[ix],scopes))
+ix++}
+var kw_default_names=[]
+for(var kw of this.args.kwonlyargs){kw_default_names.push(`defaults.${kw.arg}`)}
+var default_str=`{${_defaults.join(', ')}}`
+return{default_names,_defaults,positional,has_posonlyargs,kw_default_names,default_str}}
+$B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(_b_.id(this))
+var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
+if(in_class){var class_scope=last_scope(scopes)}
+var decorators=[],decorated=false,decs=''
+for(var dec of this.decorator_list){decorated=true
+var dec_id='decorator'+$B.UUID()
+decorators.push(dec_id)
+decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
+var docstring='_b_.None'
+if(this.body[0]instanceof $B.ast.Expr &&
+this.body[0].value instanceof $B.ast.Constant &&
+typeof this.body[0].value.value=="string"){docstring=this.body.splice(0,1)[0].value.to_js(scopes)}
+var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_default_names=parsed_args.kw_default_names,default_str=parsed_args.default_str
+var func_scope=new Scope(this.name,'def',this)
+scopes.push(func_scope)
+var args=positional.concat(this.args.kwonlyargs),parse_args=[`"${this.name}"`,positional.length],slots=[],arg_names=[]
+for(var arg of args){slots.push(arg.arg+': null')
+bind(arg.arg,scopes)}
+for(var arg of this.args.posonlyargs){arg_names.push(`'${arg.arg}'`)}
+if(has_posonlyargs){
+arg_names.push("'/'")}
+for(var arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${arg.arg}'`)}
+if(this.args.vararg){bind(this.args.vararg.arg,scopes)}
+if(this.args.kwarg){bind(this.args.kwarg.arg,scopes)}
+if(this.$is_lambda){var _return=new $B.ast.Return(this.body)
+copy_position(_return,this.body)
+var body=[_return],function_body=add_body(body,scopes)}else{var function_body=add_body(this.body,scopes)}
+var is_generator=func_scope.is_generator
+var id=$B.UUID(),name1=this.name+'$'+id,name2=this.name+id
+var js=decs
+js+=`var ${name1} = function(defaults){\n`
+if(is_async && ! is_generator){js+='async '}
+js+=`function ${name2}(){\n`
+var locals_name=make_scope_name(scopes,func_scope),gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
+js+=`var ${locals_name},
+               locals\n`
+parse_args.push('{'+slots.join(', ')+'} , '+
+'['+arg_names.join(', ')+'], '+
+'arguments, defaults, '+
+(this.args.vararg ? `'${this.args.vararg.arg}', ` :
+(this.args.kwonlyargs.length > 0 ? "'*', " :'null, '))+
+(this.args.kwarg ? `'${this.args.kwarg.arg}'` :'null'))
+js+=`${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
+js+=`var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    $top_frame.__file__ = '${scopes.filename}'
+    locals.$lineno = ${this.lineno}
+    locals.$f_trace = $B.enter_frame($top_frame)
+    var stack_length = $B.frames_stack.length\n`
+if(last_scope(scopes).has_annotation){js+=`locals.__annotations__ = $B.empty_dict()\n`}
+if(is_generator){js+=`locals.$is_generator = true\n`
+if(is_async){js+=`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=`var gen_${id} = $B.generator.$factory(function*(){\n`}}
+js+=`try{\n$B.js_this = this\n`
+if(in_class){
+var ix=scopes.indexOf(class_scope),parent=scopes[ix-1]
+var scope_ref=make_scope_name(scopes,parent),class_ref=class_scope.name 
+bind("__class__",scopes)
+js+=`locals.__class__ = `+
+`$B.get_method_class(${scope_ref}, "${class_ref}")\n`}
+js+=function_body+'\n'
+if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
+js+='var result = _b_.None\n'+
+'if(locals.$f_trace !== _b_.None){\n'+
+'$B.trace_return(_b_.None)\n}\n'+
+'$B.leave_frame(locals);return result\n'}
+js+=`}catch(err){
+    $B.set_exc(err)
+    if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){
+    ${locals_name}.$f_trace = $B.trace_exception()
+    }
+    $B.leave_frame(locals);throw err
+    }
+    }\n`
+if(is_generator){js+=`, '${this.name}')\n`+
+`var _gen_${id} = gen_${id}()\n`+
+`_gen_${id}.$frame = $top_frame\n`+
+`$B.leave_frame()\n`+
+`return _gen_${id}}\n` }
+scopes.pop()
+var func_name_scope=bind(this.name,scopes)
+var qualname=func_name_scope.type=='class' ?
+`${func_name_scope.name}.${this.name}` :this.name
+var flags=67
+if(this.args.vararg){flags |=4}
+if(this.args.kwarg){flags |=8}
+if(is_generator){flags |=32}
+var parameters=[],locals=[],identifiers=Object.keys(symtable_block.symbols.$string_dict)
+var free_vars=[]
+for(var ident of identifiers){var flag=symtable_block.symbols.$string_dict[ident][0],_scope=(flag >> SCOPE_OFF)& SCOPE_MASK
+if(_scope==FREE){free_vars.push(`'${ident}'`)}
+if(flag & DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & DEF_LOCAL){locals.push(`'${ident}'`)}}
+var varnames=parameters.concat(locals)
+js+=`${name2}.$is_func = true\n`
+if(is_async){js+=`${name2}.$is_async = true\n`}
+js+=`${name2}.$infos = {\n`+
+`__name__: "${this.name}", __qualname__: "${qualname}",\n`+
+`__defaults__: $B.fast_tuple([${default_names}]), `+
+`__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n`+
+`__doc__: ${docstring},\n`+
+`__code__:{\n`+
+`co_argcount: ${positional.length},\n `+
+`co_filename: ${make_local(scopes[0].name)}.__file__,\n`+
+`co_firstlineno: ${this.lineno},\n`+
+`co_flags: ${flags},\n`+
+`co_freevars: $B.fast_tuple([${free_vars}]),\n`+
+`co_kwonlyargcount: ${this.args.kwonlyargs.length},\n`+
+`co_name: '${this.name}',\n`+
+`co_nlocals: ${varnames.length},\n`+
+`co_posonlyargcount: ${this.args.posonlyargs.length},\n`+
+`co_varnames: $B.fast_tuple([${varnames}])\n`+
+`}\n}\n`
+if(is_async){if(is_generator){js+=`return ${name2}`}else{js+=`return $B.make_async(${name2})`}}else{js+=`return ${name2}`}
+js+=`}\n`
+var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
+if(decorated){func_ref=`decorated${$B.UUID()}`
+js+='var '}
+js+=`${func_ref} = ${name1}(${default_str})\n`+
+`${func_ref}.$set_defaults = function(value){\n`+
+`return ${func_ref} = ${name1}(value)\n}\n`
+if(decorated){js+=`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
+var decorate=func_ref
+for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
+js+=decorate}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
+var expr=this.elt,first_for=this.generators[0],
+outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
+var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
+scopes.push(comp_scope)
+var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
+var js=init_comprehension(comp)
+var first=this.generators[0]
+js+=`var next_func_${id} = $B.next_of(expr)\n`+
+`while(true){\ntry{\nvar next_${id} = next_func_${id}()\n`+
+`}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n`+
+`break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n `+
+`throw err\n}\n}\n`
+var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
+copy_position(name,first_for.iter)
+name.to_js=function(){return `next_${id}`}
+var assign=new $B.ast.Assign([first.target],name)
+assign.lineno=this.lineno
+js+=assign.to_js(scopes)+'\n'
+for(var _if of first.ifs){nb_paren++
+js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
+for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scopes)
+nb_paren++
+for(var _if of comprehension.ifs){nb_paren++}}
+var elt=$B.js_from_ast(this.elt,scopes),has_await=comp_scope.has_await
+js=`$B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`+js
+js+=has_await ? 'var save_stack = $B.save_stack();\n' :''
+js+=`try{\n`+
+` yield ${elt}\n`+
+`}catch(err){\n`+
+(has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
+`$B.leave_frame(locals)\nthrow err\n}\n`+
+(has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
+for(var i=0;i < nb_paren;i++){js+='}\n'}
+js+=`\n$B.leave_frame({locals, value: _b_.None})`+
+`}, "<genexpr>")(${outmost_expr})\n`
+scopes.pop()
+return js}
+$B.ast.Global.prototype.to_js=function(scopes){var scope=$B.last(scopes)
+for(var name of this.names){scope.globals.add(name)}
+return ''}
+$B.ast.If.prototype.to_js=function(scopes){var scope=$B.last(scopes),new_scope=copy_scope(scope,this)
+var js=`if($B.set_lineno(locals, ${this.lineno}) && `+
+`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+scopes.push(new_scope)
+js+=add_body(this.body,scopes)+'\n}'
+scopes.pop()
+if(this.orelse.length > 0){if(this.orelse[0]instanceof $B.ast.If && this.orelse.length==1){js+='else '+$B.js_from_ast(this.orelse[0],scopes)+
+add_body(this.orelse.slice(1),scopes)}else{js+='\nelse{\n'+add_body(this.orelse,scopes)+'\n}'}}
+return js}
+$B.ast.IfExp.prototype.to_js=function(scopes){return '($B.$bool('+$B.js_from_ast(this.test,scopes)+') ? '+
+$B.js_from_ast(this.body,scopes)+': '+
+$B.js_from_ast(this.orelse,scopes)+')'}
+$B.ast.Import.prototype.to_js=function(scopes){var js=`$B.set_lineno(locals, ${this.lineno})\n`
+for(var alias of this.names){js+=`$B.$import("${alias.name}", [], `
+if(alias.asname){js+=`{'${alias.name}' : '${alias.asname}'}, `
+bind(alias.asname,scopes)}else{js+='{}, '
+bind(alias.name,scopes)}
+var parts=alias.name.split('.')
+for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=true}
+js+=`locals, true)\n`}
+return js.trimRight()}
+$B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.level==0){module=this.module}else{var scope=last_scope(scopes),parts=scope.name.split('.')
+if(this.level > parts.length){return `throw _b_.ImportError.$factory(`+
+`"Parent module '' not loaded, cannot perform relative import")`}
+for(var i=0;i < this.level-1;i++){parts.pop()}
+var top_module=$B.imported[parts.join('.')]
+if(top_module && ! top_module.$is_package){parts.pop()}
+var module=parts.join('.')
+if(this.module){module+='.'+this.module}}
+var js=`$B.set_lineno(locals, ${this.lineno})\n`+
+`var module = $B.$import_from("${this.module || ''}", `
+var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
+for(var name of this.names){if(name.asname){aliases.push(`${name.name}: '${name.asname}'`)}}
+js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
+for(var alias of this.names){if(alias.asname){bind(alias.asname,scopes)}else if(alias.name=='*'){
+last_scope(scopes).blurred=true
+js+=`\n$B.import_all(locals, module)`}else{bind(alias.name,scopes)}}
+return js}
+$B.ast.JoinedStr.prototype.to_js=function(scopes){var items=this.values.map(s=> $B.js_from_ast(s,scopes))
+if(items.length==0){return "''"}
+return items.join(' + ')}
+$B.ast.Lambda.prototype.to_js=function(scopes){
+var id=$B.UUID(),name='lambda_'+$B.lambda_magic+'_'+id
+var f=new $B.ast.FunctionDef(name,this.args,this.body,[])
+f.lineno=this.lineno
+f.$id=_b_.id(this)
+f.$is_lambda=true
+var js=f.to_js(scopes),lambda_ref=reference(scopes,last_scope(scopes),name)
+return `(function(){ ${js}\n`+
+`return ${lambda_ref}\n})()`}
+function list_or_tuple_to_js(func,scopes){if(this.elts.filter(x=> x instanceof $B.ast.Starred).length > 0){var parts=[],simple=[]
+for(var elt of this.elts){if(elt instanceof $B.ast.Starred){parts.push(`[${simple.join(', ')}]`)
+simple=[]
+parts.push(`_b_.list.$factory(${$B.js_from_ast(elt, scopes)})`)}else{simple.push($B.js_from_ast(elt,scopes))}}
+if(simple.length > 0){parts.push(`[${simple.join(', ')}]`)}
+var js=parts[0]
+for(var part of parts.slice(1)){js+=`.concat(${part})`}
+return `${func}(${js})`}
+var elts=this.elts.map(x=> $B.js_from_ast(x,scopes))
+return `${func}([${elts.join(', ')}])`}
+$B.ast.List.prototype.to_js=function(scopes){return list_or_tuple_to_js.bind(this)('$B.$list',scopes)}
+$B.ast.ListComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
+$B.ast.match_case.prototype.to_js=function(scopes){var js=`($B.set_lineno(locals, ${this.lineno}) && `+
+`$B.pattern_match(subject, {`+
+`${$B.js_from_ast(this.pattern, scopes)}})`
+if(this.guard){js+=` && $B.$bool(${$B.js_from_ast(this.guard, scopes)})`}
+js+=`){\n`
+js+=add_body(this.body,scopes)+'\n}'
+return js}
+$B.ast.Match.prototype.to_js=function(scopes){var js=`var subject = ${$B.js_from_ast(this.subject, scopes)}\n`
+first=true
+for(var _case of this.cases){var case_js=$B.js_from_ast(_case,scopes)
+if(first){js+='if'+case_js
+first=false}else{js+='else if'+case_js}}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.MatchAs.prototype.to_js=function(scopes){
+var name=this.name===undefined ? '_' :this.name,params
+if(this.pattern===undefined){params=`capture: '${name}'`}else{var pattern=$B.js_from_ast(this.pattern,scopes)
+if(this.pattern instanceof $B.ast.MatchAs && this.pattern.name){
+pattern=`group: [{${pattern}}]`}
+params=`${pattern}, alias: '${name}'`}
+return params}
+$B.ast.MatchClass.prototype.to_js=function(scopes){var cls=$B.js_from_ast(this.cls,scopes),patterns=this.patterns.map(x=> `{${$B.js_from_ast(x, scopes)}}`)
+var kw=[]
+for(var i=0,len=this.kwd_patterns.length;i < len;i++){kw.push(this.kwd_attrs[i]+': {'+
+$B.js_from_ast(this.kwd_patterns[i],scopes)+'}')}
+return `class: ${cls}, args: [${patterns}], keywords: {${kw.join(', ')}}`}
+$B.ast.MatchMapping.prototype.to_js=function(scopes){var items=[]
+for(var i=0,len=this.keys.length;i < len;i++){var key_prefix=this.keys[i]instanceof $B.ast.Constant ?
+'literal: ' :'value: '
+var key=$B.js_from_ast(this.keys[i],scopes),value=$B.js_from_ast(this.patterns[i],scopes)
+items.push(`[{${key_prefix}${key}}, {${value}}]`)}
+var js='mapping: ['+items.join(', ')+']'
+if(this.rest){js+=`, rest: '${this.rest}'`}
+return js}
+$B.ast.MatchOr.prototype.to_js=function(scopes){var js=this.patterns.map(x=> `{${$B.js_from_ast(x, scopes)}}`).join(', ')
+return `or: [${js}]`}
+$B.ast.MatchSingleton.prototype.to_js=function(scopes){var value=this.value===true ? '_b_.True' :
+this.value===false ? '_b_.False' :
+'_b_.None'
+return `literal: ${value}`}
+$B.ast.MatchStar.prototype.to_js=function(scopes){var name=this.name===undefined ? '_' :this.name
+return `capture_starred: '${name}'`}
+$B.ast.MatchValue.prototype.to_js=function(scopes){if(this.value instanceof $B.ast.Constant){return `literal: ${$B.js_from_ast(this.value, scopes)}`}else{return `value: ${$B.js_from_ast(this.value, scopes)}`}}
+$B.ast.MatchSequence.prototype.to_js=function(scopes){var items=[]
+for(var pattern of this.patterns){items.push('{'+$B.js_from_ast(pattern,scopes)+'}')}
+return `sequence: [${items.join(', ')}]`}
+$B.ast.Module.prototype.to_js=function(scopes){
+var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
+var module_id=name,global_name=make_scope_name(scopes)
+var js=`// generated from ast\n`+
+`var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
+if(! namespaces){js+=`${global_name} = {},\nlocals = ${global_name},\n`+
+`$top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
+`globals = ${namespaces.global_name},\n`+
+`$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`}
+js+=`\n$top_frame.__file__ = '${scopes.filename}'\n`
+js+=`\nlocals.__file__ = '${scopes.filename || "<string>"}'\n`+
+`locals.__name__ = '${name}'\n`
+if(! namespaces){
+js+=`locals.$f_trace = $B.enter_frame($top_frame)\n`}
+js+=`$B.set_lineno(locals, ${this.lineno})\n`+
+`var stack_length = $B.frames_stack.length\n`+
+`try{\n`+
+add_body(this.body,scopes)+'\n'+
+`$B.leave_frame({locals, value: _b_.None})\n`+
+`}catch(err){\n`+
+`$B.set_exc(err)\n`+
+`if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){\n`+
+`locals.$f_trace = $B.trace_exception()\n`+
+`}\n`+
+`$B.leave_frame({locals, value: _b_.None});throw err\n`+
+`}`
+scopes.pop()
+return js}
+$B.ast.Name.prototype.to_js=function(scopes){if(this.ctx instanceof $B.ast.Store){
+var scope=bind(this.id,scopes)
+if(scope===$B.last(scopes)&& scope.freevars.has(this.id)){
+scope.freevars.delete(this.id)}
+return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var res=name_reference(this.id,scopes)
+return res}}
+$B.ast.NamedExpr.prototype.to_js=function(scopes){
+var i=scopes.length-1
+while(scopes[i].type=='comprehension'){i--}
+var enclosing_scopes=scopes.slice(0,i+1)
+enclosing_scopes.symtable=scopes.symtable
+bind(this.target.id,enclosing_scopes)
+return '('+$B.js_from_ast(this.target,enclosing_scopes)+' = '+
+$B.js_from_ast(this.value,scopes)+')'}
+$B.ast.Nonlocal.prototype.to_js=function(scopes){var scope=$B.last(scopes)
+for(var name of this.names){scope.nonlocals.add(name)}
+return ''}
+$B.ast.Pass.prototype.to_js=function(scopes){return `$B.set_lineno(locals, ${this.lineno})\n`+
+'void(0)'}
+$B.ast.Raise.prototype.to_js=function(scopes){var js=`$B.set_lineno(locals, ${this.lineno})\n`+
+'$B.$raise('
+if(this.exc){js+=$B.js_from_ast(this.exc,scopes)}
+if(this.cause){js+=', '+$B.js_from_ast(this.cause,scopes)}
+return js+')'}
+$B.ast.Return.prototype.to_js=function(scopes){var js=`$B.set_lineno(locals, ${this.lineno})\n`+
+'var result = '+
+(this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')
+js+=`\nif(locals.$f_trace !== _b_.None){\n`+
+`$B.trace_return(result)\n}\n`+
+`$B.leave_frame(locals)\nreturn result\n`
+return js}
+$B.ast.Set.prototype.to_js=function(scopes){var elts=this.elts.map(x=> $B.js_from_ast(x,scopes))
+var call_obj={args:this.elts,keywords:[]}
+var call=make_args.bind(call_obj)(scopes),js=call.js
+if(! call.has_starred){js=`[${js}]`}
+return `_b_.set.$factory(${js})`}
+$B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
+$B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_ast(this.lower,scopes):'_b_.None',upper=this.upper ? $B.js_from_ast(this.upper,scopes):'_b_.None',step=this.step ? $B.js_from_ast(this.step,scopes):'_b_.None'
+return `_b_.slice.$factory(${lower}, ${upper}, ${step})`}
+$B.ast.Starred.prototype.to_js=function(scopes){return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`}
+$B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
+if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{return `$B.$getitem(${value}, ${slice})`}}
+$B.ast.Try.prototype.to_js=function(scopes){var id=$B.UUID(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
+var js=`$B.set_lineno(locals, ${this.lineno})\ntry{\n`
+js+=`var stack_length_${id} = $B.frames_stack.length\n`
+if(has_finally){js+=`var save_stack_${id} = $B.frames_stack.slice()\n`}
+if(has_else){js+=`var failed${id} = false\n`}
+var try_scope=copy_scope($B.last(scopes))
+scopes.push(try_scope)
+js+=add_body(this.body,scopes)+'\n'
+if(has_except_handlers){var err='err'+id
+js+='}\n' 
+js+=`catch(${err}){\n`+
+`$B.set_exc(${err})\n`+
+`if(locals.$f_trace !== _b_.None){\n`+
+`locals.$f_trace = $B.trace_exception()}\n`
+if(has_else){js+=`failed${id} = true\n`}
+var first=true,has_untyped_except=false
+for(var handler of this.handlers){if(first){js+='if'
+first=false}else{js+='}else if'}
+js+=`($B.set_lineno(locals, ${handler.lineno})`
+if(handler.type){js+=` && $B.is_exc(${err}, `
+if(handler.type instanceof $B.ast.Tuple){js+=`${$B.js_from_ast(handler.type, scopes)}`}else{js+=`[${$B.js_from_ast(handler.type, scopes)}]`}
+js+=`)){\n`}else{has_untyped_except=true
+js+='){\n'}
+if(handler.name){bind(handler.name,scopes)
+js+=`locals.${handler.name} = ${err}\n`}
+js+=add_body(handler.body,scopes)+'\n'
+if(!($B.last(handler.body)instanceof $B.ast.Return)){
+js+='$B.del_exc()\n'}}
+if(false && ! has_untyped_except){
+js+=`}else{\nthrow ${err}\n`}
+js+='}\n'}
+if(has_else ||has_finally){js+='}\n' 
+js+='finally{\n'
+var finalbody=`$B.frames_stack = save_stack_${id}\n`+
+add_body(this.finalbody,scopes)
+var elsebody=`if($B.frames_stack.length == stack_length_${id} `+
+`&& ! failed${id}){\n`+
+add_body(this.orelse,scopes)+
+'\n}' 
+if(has_else && has_finally){js+=`try{\n`+
+elsebody+
+'\n}\n'+
+`finally{\n`+finalbody+'}\n'}else if(has_else && ! has_finally){js+=elsebody}else{js+=finalbody}
+js+='\n}\n' }else{js+='}\n' }
+scopes.pop()
+return js}
+$B.ast.Tuple.prototype.to_js=function(scopes){return list_or_tuple_to_js.bind(this)('$B.fast_tuple',scopes)}
+$B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
+if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
+if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $B.ast.UAdd){return operand+''}else if(this.op instanceof $B.ast.USub){return-operand+''}}
+var method=opclass2dunder[this.op.constructor.$name]
+return `$B.$getattr(${operand}, '${method}')()`}
+$B.ast.While.prototype.to_js=function(scopes){var id=$B.UUID()
+var scope=$B.last(scopes),new_scope=copy_scope(scope,this)
+scopes.push(new_scope)
+var js=`var no_break_${id} = true\n`
+js+=`while($B.set_lineno(locals, ${this.lineno}) && `+
+`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
+js+=add_body(this.body,scopes)+'\n}'
+scopes.pop()
+if(this.orelse.length > 0){js+=`\nif(no_break_${id}){\n`+
+add_body(this.orelse,scopes)+'}\n'}
+return js}
+var with_counter=[0]
+$B.ast.With.prototype.to_js=function(scopes){
+function add_item(item,js){var id=$B.UUID()
+var s=`var mgr_${id} = `+
+$B.js_from_ast(item.context_expr,scopes)+',\n'+
+`exit_${id} = $B.$getattr(mgr_${id}.__class__, `+
+`"__exit__"),\n`+
+`value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, `+
+`'__enter__'))(mgr_${id}),\n`+
+`exc_${id} = true\n`
+if(has_generator){
+s+=`locals.$context_managers = locals.$context_managers || []\n`+
+`locals.$context_managers.push(mgr_${id})\n`}
+s+='try{\ntry{\n'
+if(item.optional_vars){var value={to_js:function(){return `value_${id}`}}
+copy_position(value,_with)
+var assign=new $B.ast.Assign([item.optional_vars],value)
+copy_position(assign,_with)
+s+=assign.to_js(scopes)+'\n'}
+s+=js
+s+=`}catch(err_${id}){\n`+
+`locals.$lineno = ${lineno}\n`+
+`exc_${id} = false\n`+
+`err_${id} = $B.exception(err_${id}, true)\n`+
+`var $b = exit_${id}(mgr_${id}, err_${id}.__class__, `+
+`err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n`+
+`if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
+s+=`}\nfinally{\n`+
+`locals.$lineno = ${lineno}\n`+
+`if(exc_${id}){\n`+
+`exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n}\n}\n`
+return s}
+var _with=this,scope=last_scope(scopes),lineno=this.lineno
+delete scope.is_generator
+js=add_body(this.body,scopes)+'\n'
+var has_generator=scope.is_generator
+for(var item of this.items.slice().reverse()){js=add_item(item,js)}
+return `$B.set_lineno(locals, ${this.lineno})\n`+js}
+$B.ast.Yield.prototype.to_js=function(scopes){
+last_scope(scopes).is_generator=true
+var value=this.value ? $B.js_from_ast(this.value,scopes):'_b_.None'
+return `yield ${value}`}
+$B.ast.YieldFrom.prototype.to_js=function(scopes){
+last_scope(scopes).is_generator=true
+var value=$B.js_from_ast(this.value,scopes)
+var n=$B.UUID()
+return `yield* (function* f(){
+        var _i${n} = _b_.iter(${value}),
+                _r${n}
+            var failed${n} = false
+            try{
+                var _y${n} = _b_.next(_i${n})
+            }catch(_e){
+                $B.set_exc(_e)
+                failed${n} = true
+                $B.pmframe = $B.last($B.frames_stack)
+                _e = $B.exception(_e)
+                if(_e.__class__ === _b_.StopIteration){
+                    var _r${n} = $B.$getattr(_e, "value")
+                }else{
+                    throw _e
+                }
+            }
+            if(! failed${n}){
+                while(true){
+                    var failed1${n} = false
+                    try{
+                        $B.leave_frame({locals})
+                        var _s${n} = yield _y${n}
+                        $B.frames_stack.push($top_frame)
+                    }catch(_e){
+                        if(_e.__class__ === _b_.GeneratorExit){
+                            var failed2${n} = false
+                            try{
+                                var _m${n} = $B.$getattr(_i${n}, "close")
+                            }catch(_e1){
+                                failed2${n} = true
+                                if(_e1.__class__ !== _b_.AttributeError){
+                                    throw _e1
+                                }
+                            }
+                            if(! failed2${n}){
+                                $B.$call(_m${n})()
+                            }
+                            throw _e
+                        }else if($B.is_exc(_e, [_b_.BaseException])){
+                            var sys_module = $B.imported._sys,
+                                _x = sys_module.exc_info()
+                            var failed3${n} = false
+                            try{
+                                var _m${n} = $B.$getattr(_i${n}, "throw")
+                            }catch(err){
+                                failed3${n} = true
+                                if($B.is_exc(err, [_b_.AttributeError])){
+                                    throw err
+                                }
+                            }
+                            if(! failed3${n}){
+                                try{
+                                    _y${n} = $B.$call(_m${n}).apply(null,
+                                        _b_.list.$factory(_x${n}))
+                                }catch(err){
+                                    if($B.$is_exc(err, [_b_.StopIteration])){
+                                        _r${n} = $B.$getattr(err, "value")
+                                        break
+                                    }
+                                    throw err
+                                }
+                            }
+                        }
+                    }
+                    if(! failed1${n}){
+                        try{
+                            if(_s${n} === _b_.None){
+                                _y${n} = _b_.next(_i${n})
+                            }else{
+                                _y${n} = $B.$call($B.$getattr(_i${n}, "send"))(_s${n})
+                            }
+                        }catch(err){
+                            if($B.is_exc(err, [_b_.StopIteration])){
+                                _r${n} = $B.$getattr(err, "value")
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }
+            }
+            return _r${n}
+        })()`}
+$B.js_from_root=function(ast_root,symtable,filename,namespaces){var scopes=[]
+scopes.symtable=symtable
+scopes.filename=filename
+scopes.namespaces=namespaces
+scopes.imports={}
+var js=ast_root.to_js(scopes)
+return js}
+$B.js_from_ast=function(ast,scopes){if(! scopes.symtable){throw Error('perdu symtable')}
+var js=''
+scopes=scopes ||[]
+if(ast.to_js !==undefined){if(ast.col_offset===undefined){var klass=ast.constructor.$name
+if(['match_case'].indexOf(klass)==-1){console.log('pas de col offset pour',klass)
+console.log(ast)
+throw Error('ccc')
+alert()}}
+return ast.to_js(scopes)}
+console.log("unhandled",ast.constructor.$name)
+return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__)
+;
+(function($B){var _b_=$B.builtins
+var GLOBAL_PARAM="name '%U' is parameter and global",NONLOCAL_PARAM="name '%U' is parameter and nonlocal",GLOBAL_AFTER_ASSIGN="name '%U' is assigned to before global declaration",NONLOCAL_AFTER_ASSIGN="name '%U' is assigned to before nonlocal declaration",GLOBAL_AFTER_USE="name '%U' is used prior to global declaration",NONLOCAL_AFTER_USE="name '%U' is used prior to nonlocal declaration",GLOBAL_ANNOT="annotated name '%U' can't be global",NONLOCAL_ANNOT="annotated name '%U' can't be nonlocal",IMPORT_STAR_WARNING="import * only allowed at module level",NAMED_EXPR_COMP_IN_CLASS=
+"assignment expression within a comprehension cannot be used in a class body",NAMED_EXPR_COMP_CONFLICT=
+"assignment expression cannot rebind comprehension iteration variable '%s'",NAMED_EXPR_COMP_INNER_LOOP_CONFLICT=
+"comprehension inner loop cannot rebind assignment expression target '%s'",NAMED_EXPR_COMP_ITER_EXPR=
+"assignment expression cannot be used in a comprehension iterable expression",ANNOTATION_NOT_ALLOWED=
+"'%s' can not be used within an annotation"
+var DEF_GLOBAL=1,
+DEF_LOCAL=2 ,
+DEF_PARAM=2<<1,
+DEF_NONLOCAL=2<<2,
+USE=2<<3 ,
+DEF_FREE=2<<4 ,
+DEF_FREE_CLASS=2<<5,
+DEF_IMPORT=2<<6,
+DEF_ANNOT=2<<7,
+DEF_COMP_ITER=2<<8 
+var DEF_BOUND=DEF_LOCAL |DEF_PARAM |DEF_IMPORT
+var SCOPE_OFFSET=11,SCOPE_MASK=(DEF_GLOBAL |DEF_LOCAL |DEF_PARAM |DEF_NONLOCAL)
+var LOCAL=1,GLOBAL_EXPLICIT=2,GLOBAL_IMPLICIT=3,FREE=4,CELL=5
+var GENERATOR=1,GENERATOR_EXPRESSION=2
+var CO_FUTURE_ANNOTATIONS=0x100000 
+var TYPE_CLASS=1,TYPE_FUNCTION=0,TYPE_MODULE=2
+var NULL=undefined
+var ModuleBlock=2,ClassBlock=1,FunctionBlock=0,AnnotationBlock=4
+function assert(test){if(! $B.$bool(test)){console.log('test fails',test)
+throw Error('test fails')}}
+function LOCATION(x){
+return[x.lineno,x.col_offset,x.end_lineno,x.end_col_offset]}
+function ST_LOCATION(x){
+return[x.lineno,x.col_offset,x.end_lineno,x.end_col_offset]}
+function _Py_Mangle(privateobj,ident){
+var result,nlen,plen,ipriv,maxchar;
+if(privateobj==NULL ||! ident.startsWith('__')){return ident;}
+nlen=ident.length
+plen=privateobj.length
+if(ident.endsWith('__')||ident.search(/\./)!=-1){return ident;}
+ipriv=0;
+while(privateobj[ipriv]=='_')
+ipriv++;
+if(ipriv==plen){return ident;}
+var prefix=privateobj.substr(ipriv)
+return '_'+prefix+ident}
+var top=NULL,lambda=NULL,genexpr=NULL,listcomp=NULL,setcomp=NULL,dictcomp=NULL,__class__=NULL,_annotation=NULL
+var NoComprehension=0,ListComprehension=1,DictComprehension=2,SetComprehension=3,GeneratorExpression=4
+var internals={}
+function GET_IDENTIFIER(VAR){return VAR}
+function Symtable(){this.filename=NULL;
+this.stack=[]
+this.blocks=new Map()
+this.cur=NULL;
+this.private=NULL;}
+function ste_new(st,name,block,key,lineno,col_offset,end_lineno,end_col_offset){var ste
+ste={table:st,id:_b_.id(key),
+name:name,directives:NULL,type:block,nested:0,free:0,varargs:0,varkeywords:0,opt_lineno:0,opt_col_offset:0,lineno:lineno,col_offset:col_offset,end_lineno:end_lineno,end_col_offset:end_col_offset}
+if(st.cur !=NULL &&
+(st.cur.nested ||
+st.cur.type==FunctionBlock)){ste.nested=1;}
+ste.child_free=0
+ste.generator=0
+ste.coroutine=0
+ste.comprehension=NoComprehension
+ste.returns_value=0
+ste.needs_class_closure=0
+ste.comp_iter_target=0
+ste.comp_iter_expr=0
+ste.symbols=$B.empty_dict()
+ste.varnames=[]
+ste.children=[]
+st.blocks.set(ste.id,ste)
+return ste}
+$B._PySymtable_Build=function(mod,filename,future){var st=new Symtable(),seq
+st.filename=filename;
+st.future=future ||{}
+st.type=TYPE_MODULE
+if(!symtable_enter_block(st,'top',ModuleBlock,mod,0,0,0,0)){return NULL;}
+st.top=st.cur
+switch(mod.constructor){case $B.ast.Module:
+seq=mod.body
+for(var item of seq){symtable_visit_stmt(st,item)}
+break
+case $B.ast.Expression:
+symtable_visit_expr(st,mod.body)
+break
+case $B.ast.Interactive:
+seq=mod.body
+for(var item of seq){symtable_visit_stmt(st,item)}
+break}
+symtable_analyze(st)
+return st.top;}
+function PySymtable_Lookup(st,key){var v=st.blocks.get(key)
+if(v){assert(PySTEntry_Check(v))}
+return v}
+function _PyST_GetSymbol(ste,name){if(! ste.symbols.$string_dict.hasOwnProperty(name)){return 0}
+return ste.symbols.$string_dict[name][0]}
+function PyErr_Format(exc_type,message,arg){if(arg){message=_b_.str.__mod__(message,arg)}
+return exc_type.$factory(message)}
+function error_at_directive(ste,name){var data
+assert(ste.directives)}
+function SET_SCOPE(DICT,NAME,I){$B.$setitem(DICT,NAME,I)}
+function analyze_name(ste,scopes,name,flags,bound,local,free,global){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){PyErr_Format(PyExc_SyntaxError,"name '%U' is nonlocal and global",name)
+return error_at_directive(ste,name)}
+SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
+global.add(name)
+if(bound){bound.delete(name)}
+return 1}
+if(flags & DEF_NONLOCAL){if(!bound){PyErr_Format(PyExc_SyntaxError,"nonlocal declaration not allowed at module level");
+return error_at_directive(ste,name)}
+if(! bound.has(name)){
+return error_at_directive(ste,name)}
+SET_SCOPE(scopes,name,FREE)
+ste.free=1
+free.add(name)
+return 1}
+if(flags & DEF_BOUND){SET_SCOPE(scopes,name,LOCAL)
+local.add(name)
+global.delete(name)
+return 1}
+if(bound && bound.has(name)){SET_SCOPE(scopes,name,FREE)
+ste.free=1
+free.add(name)
+return 1}
+if(global && global.has(name)){SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
+return 1}
+if(ste.nested){ste.free=1}
+SET_SCOPE(scopes,name,GLOBAL_IMPLICIT)
+return 1}
+var SET_SCOPE
+function analyze_cells(scopes,free){var name,v,v_cell;
+var success=0,pos=0;
+v_cell=CELL;
+if(!v_cell){return 0;}
+for(var name in scopes){v=scopes[name]
+scope=v;
+if(scope !=LOCAL){continue;}
+if(free.has(name)){continue;}
+scopes[name]=v_cell
+free.delete(name)}
+return 1}
+function drop_class_free(ste,free){var res=free.delete('__class__')
+if(res){ste.needs_class_closure=1}
+return 1}
+function update_symbols(symbols,scopes,bound,free,classflag){var name,itr,v,v_scope,v_new,v_free,pos=0
+for(var name in symbols.$string_dict){var flags=symbols.$string_dict[name][0]
+v_scope=scopes[name]
+var scope=v_scope
+flags |=(scope << SCOPE_OFFSET)
+v_new=flags
+if(!v_new){return 0;}
+symbols.$string_dict[name][0]=v_new}
+v_free=FREE << SCOPE_OFFSET
+itr=_b_.iter(free)
+var next_func=$B.$getattr(itr,'__next__')
+while(true){try{name=next_func()}catch(err){break}
+v=symbols.$string_dict[name][0]
+if(v){
+if(classflag &&
+v &(DEF_BOUND |DEF_GLOBAL)){var flags=v |DEF_FREE_CLASS;
+v_new=flags;
+if(!v_new){return 0;}
+symbols.$string_dict[name][0]=v_new}
+continue;}
+if(bound && !bound.has(name)){continue;}
+symbols.$string_dict[name][0]=v_free}
+return 1}
+function analyze_block(ste,bound,free,global){var name,v,local=NULL,scopes=NULL,newbound=NULL,newglobal=NULL,newfree=NULL,allfree=NULL,temp,i,success=0,pos=0;
+local=new Set()
+scopes={}
+newglobal=new Set()
+newfree=new Set()
+newbound=new Set()
+if(ste.type===ClassBlock){
+Set_Union(newglobal,global)
+if(bound){Set_Union(newbound,bound)}}
+for(var name in ste.symbols.$string_dict){var flags=ste.symbols.$string_dict[name][0]
+if(!analyze_name(ste,scopes,name,flags,bound,local,free,global)){return 0}}
+if(ste.type !=ClassBlock){
+if(ste.type==FunctionBlock){Set_Union(newbound,local);}
+if(bound){Set_Union(newbound,bound)}
+Set_Union(newglobal,global);}else{
+newbound.add('__class__')}
+allfree=new Set()
+for(var c of ste.children){var entry=c
+if(! analyze_child_block(entry,newbound,newfree,newglobal,allfree)){return 0}
+if(entry.free ||entry.child_free){ste.child_free=1}}
+Set_Union(newfree,allfree)
+if(ste.type===FunctionBlock && !analyze_cells(scopes,newfree)){console.log('rturn 0 line 655')
+return 0}else if(ste.type===ClassBlock && !drop_class_free(ste,newfree)){return 0}
+if(!update_symbols(ste.symbols,scopes,bound,newfree,ste.type===ClassBlock)){return 0}
+Set_Union(free,newfree)
+success=1
+return success}
+function PySet_New(arg){if(arg===NULL){return new Set()}
+return new Set(arg)}
+function Set_Union(setA,setB){for(let elem of setB){setA.add(elem)}}
+function analyze_child_block(entry,bound,free,global,child_free){
+var temp_bound=PySet_New(bound),temp_free=PySet_New(free),temp_global=PySet_New(global)
+if(!analyze_block(entry,temp_bound,temp_free,temp_global)){return 0}
+Set_Union(child_free,temp_free);
+return 1;}
+function symtable_analyze(st){var free=new Set(),global=new Set()
+return analyze_block(st.top,NULL,free,global);}
+function symtable_exit_block(st){var size=st.stack.length
+st.cur=NULL;
+if(size){st.stack.pop()
+if(--size){st.cur=st.stack[size-1]}}
+return 1}
+function symtable_enter_block(st,name,block,ast,lineno,col_offset,end_lineno,end_col_offset){var prev
+var ste=ste_new(st,name,block,ast,lineno,col_offset,end_lineno,end_col_offset)
+st.stack.push(ste)
+prev=st.cur
+if(prev){ste.comp_iter_expr=prev.comp_iter_expr}
+st.cur=ste
+if(block===AnnotationBlock){return 1}
+if(block===ModuleBlock){st.global=st.cur.symbols}
+if(prev){prev.children.push(ste)}
+return 1;}
+function symtable_lookup(st,name){var mangled=_Py_Mangle(st.private,name)
+if(!mangled){return 0;}
+var ret=_PyST_GetSymbol(st.cur,mangled)
+return ret;}
+function symtable_add_def_helper(st,name,flag,ste,_location){var test=name=="glob"
+var lineno=_location.lineno,col_offset=_location.col_offset,end_lineno=_location.end_lineno,end_col_offset=_location.end_col_offset
+var o,dict,val,mangled=_Py_Mangle(st.private,name)
+if(!mangled){return 0}
+dict=ste.symbols
+if(dict.$string_dict.hasOwnProperty(mangled)){o=dict.$string_dict[mangled][0]
+val=o
+if((flag & DEF_PARAM)&&(val & DEF_PARAM)){
+PyErr_Format(PyExc_SyntaxError,DUPLICATE_ARGUMENT,name);
+PyErr_RangedSyntaxLocationObject(st.filename,lineno,col_offset+1,end_lineno,end_col_offset+1);
+return 0}
+val |=flag}else{val=flag}
+if(ste.comp_iter_target){
+if(val &(DEF_GLOBAL |DEF_NONLOCAL)){PyErr_Format(PyExc_SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
+PyErr_RangedSyntaxLocationObject(st.filename,lineno,col_offset+1,end_lineno,end_col_offset+1)
+return 0}
+val |=DEF_COMP_ITER}
+o=val
+if(o==NULL){return 0}
+_b_.dict.$setitem(dict,mangled,o)
+if(flag & DEF_PARAM){ste.varnames.push(mangled)}else if(flag & DEF_GLOBAL){
+val=flag
+if(st.global.hasOwnProperty(mangled)){
+val |=st.global[mangled]}
+o=val
+if(o==NULL){return 0}
+st.global[mangled]=o}
+return 1}
+function symtable_add_def(st,name,flag,_location){return symtable_add_def_helper(st,name,flag,st.cur,_location);}
+function VISIT_QUIT(ST,X){return X}
+function VISIT(ST,TYPE,V){var f=eval(`symtable_visit_${TYPE}`)
+if(!f(ST,V)){VISIT_QUIT(ST,0);}}
+function VISIT_SEQ(ST,TYPE,SEQ){for(var elt of SEQ){if(! eval(`symtable_visit_${TYPE}`)(ST,elt)){VISIT_QUIT(ST,0)}}}
+function VISIT_SEQ_TAIL(ST,TYPE,SEQ,START){for(var i=START,len=SEQ.length;i < len;i++){var elt=SEQ[i];
+if(! eval(`symtable_visit_${TYPE}`)((ST),elt)){VISIT_QUIT(ST,0)}}}
+function VISIT_SEQ_WITH_NULL(ST,TYPE,SEQ){for(var elt of SEQ){if(! elt){continue }
+if(! eval(`symtable_visit_${TYPE}`)(ST,elt)){VISIT_QUIT((ST),0)}}}
+function symtable_record_directive(st,name,lineno,col_offset,end_lineno,end_col_offset){var data,mangled,res;
+if(!st.cur.directives){st.cur.directives=[]}
+mangled=_Py_Mangle(st.private,name);
+if(!mangled){return 0;}
+data=$B.fast_tuple([mangled,lineno,col_offset,end_lineno,end_col_offset])
+st.cur.directives.push(data);
+return true}
+function symtable_visit_stmt(st,s){switch(s.constructor){case $B.ast.FunctionDef:
+if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
+VISIT_QUIT(st,0)
+if(s.args.defaults)
+VISIT_SEQ(st,expr,s.args.defaults)
+if(s.args.kw_defaults)
+VISIT_SEQ_WITH_NULL(st,expr,s.args.kw_defaults)
+if(!symtable_visit_annotations(st,s,s.args,s.returns))
+VISIT_QUIT(st,0)
+if(s.decorator_list){VISIT_SEQ(st,expr,s.decorator_list)}
+if(!symtable_enter_block(st,s.name,FunctionBlock,s,...LOCATION(s))){VISIT_QUIT(st,0)}
+VISIT(st,'arguments',s.args)
+VISIT_SEQ(st,stmt,s.body)
+if(!symtable_exit_block(st)){VISIT_QUIT(st,0)}
+break;
+case $B.ast.ClassDef:
+var tmp;
+if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
+VISIT_QUIT(st,0)
+VISIT_SEQ(st,expr,s.bases)
+VISIT_SEQ(st,keyword,s.keywords)
+if(s.decorator_list)
+VISIT_SEQ(st,expr,s.decorator_list);
+if(!symtable_enter_block(st,s.name,ClassBlock,s,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
+VISIT_QUIT(st,0)
+tmp=st.private
+st.private=s.name
+VISIT_SEQ(st,stmt,s.body)
+st.private=tmp
+if(! symtable_exit_block(st))
+VISIT_QUIT(st,0)
+break
+case $B.ast.Return:
+if(s.value){VISIT(st,expr,s.value)
+st.cur.returns_value=1}
+break
+case $B.ast.Delete:
+VISIT_SEQ(st,expr,s.targets)
+break
+case $B.ast.Assign:
+VISIT_SEQ(st,expr,s.targets)
+VISIT(st,expr,s.value)
+break
+case $B.ast.AnnAssign:
+if(s.target instanceof $B.ast.Name){var e_name=s.target
+var cur=symtable_lookup(st,e_name.id)
+if(cur < 0){VISIT_QUIT(st,0)}
+if((cur &(DEF_GLOBAL |DEF_NONLOCAL))
+&&(st.cur.symbols !=st.global)
+&& ssimple){PyErr_Format(PyExc_SyntaxError,cur & DEF_GLOBAL ? GLOBAL_ANNOT :NONLOCAL_ANNOT,e_name.id)
+PyErr_RangedSyntaxLocationObject(st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1)
+VISIT_QUIT(st,0)}
+if(s.simple &&
+! symtable_add_def(st,e_name.id,DEF_ANNOT |DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}else{if(s.value
+&& !symtable_add_def(st,e_name.id,DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}}}else{VISIT(st,expr,s.target)}
+if(!symtable_visit_annotation(st,s.annotation)){VISIT_QUIT(st,0)}
+if(s.value){VISIT(st,expr,s.value)}
+break
+case $B.ast.AugAssign:
+VISIT(st,expr,s.target)
+VISIT(st,expr,s.value)
+break
+case $B.ast.For:
+VISIT(st,expr,s.target)
+VISIT(st,expr,s.iter)
+VISIT_SEQ(st,stmt,s.body)
+if(s.orelse){VISIT_SEQ(st,stmt,s.orelse)}
+break
+case $B.ast.While:
+VISIT(st,expr,s.test)
+VISIT_SEQ(st,stmt,s.body)
+if(s.orelse){VISIT_SEQ(st,stmt,s.orelse)}
+break
+case $B.ast.If:
+VISIT(st,expr,s.test)
+VISIT_SEQ(st,stmt,s.body)
+if(s.orelse){VISIT_SEQ(st,stmt,s.orelse)}
+break
+case $B.ast.Match:
+VISIT(st,expr,s.subject)
+VISIT_SEQ(st,match_case,s.cases)
+break
+case $B.ast.Raise:
+if(s.exc){VISIT(st,expr,s.exc)
+if(s.cause){VISIT(st,expr,s.cause)}}
+break
+case $B.ast.Try:
+VISIT_SEQ(st,stmt,s.body)
+VISIT_SEQ(st,stmt,s.orelse)
+VISIT_SEQ(st,excepthandler,s.handlers)
+VISIT_SEQ(st,stmt,s.finalbody)
+break
+case $B.ast.TryStar:
+VISIT_SEQ(st,stmt,s.body)
+VISIT_SEQ(st,stmt,s.orelse)
+VISIT_SEQ(st,excepthandler,s.handlers)
+VISIT_SEQ(st,stmt,s.finalbody)
+break
+case $B.ast.Assert:
+VISIT(st,expr,s.test)
+if(s.msg){VISIT(st,expr,s.msg);}
+break
+case $B.ast.Import:
+VISIT_SEQ(st,alias,s.names)
+break
+case $B.ast.ImportFrom:
+VISIT_SEQ(st,alias,s.names)
+break
+case $B.ast.Global:
+var seq=s.names
+for(var name of seq){var cur=symtable_lookup(st,name)
+if(cur < 0){VISIT_QUIT(st,0)}
+if(cur &(DEF_PARAM |DEF_LOCAL |USE |DEF_ANNOT)){var msg
+if(cur & DEF_PARAM){msg=GLOBAL_PARAM}else if(cur & USE){msg=GLOBAL_AFTER_USE}else if(cur & DEF_ANNOT){msg=GLOBAL_ANNOT}else{
+msg=GLOBAL_AFTER_ASSIGN}
+PyErr_Format(PyExc_SyntaxError,msg,name)
+PyErr_RangedSyntaxLocationObject(st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1)
+VISIT_QUIT(st,0)}
+if(! symtable_add_def(st,name,DEF_GLOBAL,LOCATION(s)))
+VISIT_QUIT(st,0)
+if(! symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
+VISIT_QUIT(st,0)}
+break
+case $B.ast.Nonlocal:
+var seq=s.names;
+for(var name of seq){var cur=symtable_lookup(st,name)
+if(cur < 0){VISIT_QUIT(st,0)}
+if(cur &(DEF_PARAM |DEF_LOCAL |USE |DEF_ANNOT)){var msg
+if(cur & DEF_PARAM){msg=NONLOCAL_PARAM}else if(cur & USE){msg=NONLOCAL_AFTER_USE}else if(cur & DEF_ANNOT){msg=NONLOCAL_ANNOT}else{
+msg=NONLOCAL_AFTER_ASSIGN}
+PyErr_Format(PyExc_SyntaxError,msg,name)
+PyErr_RangedSyntaxLocationObject(st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1)
+VISIT_QUIT(st,0)}
+if(!symtable_add_def(st,name,DEF_NONLOCAL,LOCATION(s)))
+VISIT_QUIT(st,0)
+if(!symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
+VISIT_QUIT(st,0)}
+break
+case $B.ast.Expr:
+VISIT(st,expr,s.value)
+break
+case $B.ast.Pass:
+case $B.ast.Break:
+case $B.ast.Continue:
+break
+case $B.ast.With:
+VISIT_SEQ(st,'withitem',s.items)
+VISIT_SEQ(st,stmt,s.body)
+break
+case $B.ast.AsyncFunctionDef:
+if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
+VISIT_QUIT(st,0)
+if(s.args.defaults)
+VISIT_SEQ(st,expr,s.args.defaults)
+if(s.args.kw_defaults)
+VISIT_SEQ_WITH_NULL(st,expr,s.args.kw_defaults)
+if(!symtable_visit_annotations(st,s,s.args,s.returns))
+VISIT_QUIT(st,0)
+if(s.decorator_list)
+VISIT_SEQ(st,expr,s.decorator_list)
+if(!symtable_enter_block(st,s.name,FunctionBlock,s,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
+VISIT_QUIT(st,0)
+st.cur.coroutine=1
+VISIT(st,'arguments',s.args)
+VISIT_SEQ(st,stmt,s.body)
+if(! symtable_exit_block(st))
+VISIT_QUIT(st,0)
+break
+case $B.ast.AsyncWith:
+VISIT_SEQ(st,withitem,s.items)
+VISIT_SEQ(st,stmt,s.body)
+break
+case $B.ast.AsyncFor:
+VISIT(st,expr,s.target)
+VISIT(st,expr,s.iter)
+VISIT_SEQ(st,stmt,s.body)
+if(s.orelse){VISIT_SEQ(st,stmt,s.orelse)}
+break}
+VISIT_QUIT(st,1)}
+function symtable_extend_namedexpr_scope(st,e){assert(st.stack);
+assert(e instanceof $B.ast.Name);
+var target_name=e.id;
+var i,size,ste;
+size=st.stack.length
+assert(size);
+for(i=size-1;i >=0;i--){ste=st.stack[i]
+if(ste.comprehension){var target_in_scope=_PyST_GetSymbol(ste,target_name);
+if(target_in_scope & DEF_COMP_ITER){var exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name);
+exc.args[1]=[st.filename,e.lineno,e.col_offset+1]
+throw exc}
+continue;}
+if(ste.type==FunctionBlock){var target_in_scope=_PyST_GetSymbol(ste,target_name);
+if(target_in_scope & DEF_GLOBAL){if(!symtable_add_def(st,target_name,DEF_GLOBAL,LOCATION(e)))
+VISIT_QUIT(st,0);}else{
+if(!symtable_add_def(st,target_name,DEF_NONLOCAL,LOCATION(e)))
+VISIT_QUIT(st,0);}
+if(!symtable_record_directive(st,target_name,LOCATION(e)))
+VISIT_QUIT(st,0);
+return symtable_add_def_helper(st,target_name,DEF_LOCAL,ste,LOCATION(e));}
+if(ste.type==ModuleBlock){if(!symtable_add_def(st,target_name,DEF_GLOBAL,LOCATION(e)))
+VISIT_QUIT(st,0);
+if(!symtable_record_directive(st,target_name,LOCATION(e)))
+VISIT_QUIT(st,0);
+return symtable_add_def_helper(st,target_name,DEF_GLOBAL,ste,LOCATION(e));}
+if(ste.type==ClassBlock){PyErr_Format(PyExc_SyntaxError,NAMED_EXPR_COMP_IN_CLASS);
+PyErr_RangedSyntaxLocationObject(st.filename,e.lineno,e.col_offset+1,e.end_lineno,e.end_col_offset+1);
+VISIT_QUIT(st,0);}}
+assert(0);
+return 0;}
+function symtable_handle_namedexpr(st,e){if(st.cur.comp_iter_expr > 0){
+PyErr_Format(PyExc_SyntaxError,NAMED_EXPR_COMP_ITER_EXPR);
+PyErr_RangedSyntaxLocationObject(st.filename,e.lineno,e.col_offset+1,e.end_lineno,e.end_col_offset+1);
+return 0;}
+if(st.cur.comprehension){
+if(!symtable_extend_namedexpr_scope(st,e.target))
+return 0;}
+VISIT(st,expr,e.value);
+VISIT(st,expr,e.target);
+return 1;}
+const alias='alias',comprehension='comprehension',excepthandler='excepthandler',expr='expr',keyword='keyword',match_case='match_case',pattern='pattern',stmt='stmt',withitem='withitem'
+function symtable_visit_expr(st,e){switch(e.constructor){case $B.ast.NamedExpr:
+if(!symtable_raise_if_annotation_block(st,"named expression",e)){VISIT_QUIT(st,0);}
+if(!symtable_handle_namedexpr(st,e))
+VISIT_QUIT(st,0);
+break;
+case $B.ast.BoolOp:
+VISIT_SEQ(st,'expr',e.values);
+break;
+case $B.ast.BinOp:
+VISIT(st,'expr',e.left);
+VISIT(st,'expr',e.right);
+break;
+case $B.ast.UnaryOp:
+VISIT(st,'expr',e.operand);
+break;
+case $B.ast.Lambda:{if(!GET_IDENTIFIER('lambda'))
+VISIT_QUIT(st,0);
+if(e.args.defaults)
+VISIT_SEQ(st,'expr',e.args.defaults);
+if(e.args.kw_defaults)
+VISIT_SEQ_WITH_NULL(st,'expr',e.args.kw_defaults);
+if(!symtable_enter_block(st,lambda,FunctionBlock,e,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset))
+VISIT_QUIT(st,0);
+VISIT(st,'arguments',e.args);
+VISIT(st,'expr',e.body);
+if(!symtable_exit_block(st))
+VISIT_QUIT(st,0);
+break;}
+case $B.ast.IfExp:
+VISIT(st,'expr',e.test);
+VISIT(st,'expr',e.body);
+VISIT(st,'expr',e.orelse);
+break;
+case $B.ast.Dict:
+VISIT_SEQ_WITH_NULL(st,'expr',e.keys);
+VISIT_SEQ(st,'expr',e.values);
+break;
+case $B.ast.Set:
+VISIT_SEQ(st,'expr',e.elts);
+break;
+case $B.ast.GeneratorExp:
+if(!symtable_visit_genexp(st,e))
+VISIT_QUIT(st,0);
+break;
+case $B.ast.ListComp:
+if(!symtable_visit_listcomp(st,e))
+VISIT_QUIT(st,0);
+break;
+case $B.ast.SetComp:
+if(!symtable_visit_setcomp(st,e))
+VISIT_QUIT(st,0);
+break;
+case $B.ast.DictComp:
+if(!symtable_visit_dictcomp(st,e))
+VISIT_QUIT(st,0);
+break;
+case $B.ast.Yield:
+if(!symtable_raise_if_annotation_block(st,"yield expression",e)){VISIT_QUIT(st,0);}
+if(e.value)
+VISIT(st,'expr',e.value);
+st.cur.generator=1;
+if(st.cur.comprehension){return symtable_raise_if_comprehension_block(st,e);}
+break;
+case $B.ast.YieldFrom:
+if(!symtable_raise_if_annotation_block(st,"yield expression",e)){VISIT_QUIT(st,0);}
+VISIT(st,'expr',e.value);
+st.cur.generator=1;
+if(st.cur.comprehension){return symtable_raise_if_comprehension_block(st,e);}
+break;
+case $B.ast.Await:
+if(!symtable_raise_if_annotation_block(st,"await expression",e)){VISIT_QUIT(st,0);}
+VISIT(st,'expr',e.value);
+st.cur.coroutine=1;
+break;
+case $B.ast.Compare:
+VISIT(st,'expr',e.left);
+VISIT_SEQ(st,'expr',e.comparators);
+break;
+case $B.ast.Call:
+VISIT(st,'expr',e.func);
+VISIT_SEQ(st,'expr',e.args);
+VISIT_SEQ_WITH_NULL(st,'keyword',e.keywords);
+break;
+case $B.ast.FormattedValue:
+VISIT(st,'expr',e.value);
+if(e.format_spec)
+VISIT(st,'expr',e.format_spec);
+break;
+case $B.ast.JoinedStr:
+VISIT_SEQ(st,'expr',e.values);
+break;
+case $B.ast.Constant:
+break;
+case $B.ast.Attribute:
+VISIT(st,'expr',e.value);
+break;
+case $B.ast.Subscript:
+VISIT(st,'expr',e.value);
+VISIT(st,'expr',e.slice);
+break;
+case $B.ast.Starred:
+VISIT(st,'expr',e.value);
+break;
+case $B.ast.Slice:
+if(e.lower)
+VISIT(st,expr,e.lower)
+if(e.upper)
+VISIT(st,expr,e.upper)
+if(e.step)
+VISIT(st,expr,e.step)
+break;
+case $B.ast.Name:
+var flag=e.ctx instanceof $B.ast.Load ? USE :DEF_LOCAL
+if(! symtable_add_def(st,e.id,flag,LOCATION(e)))
+VISIT_QUIT(st,0);
+if(e.ctx instanceof $B.ast.Load &&
+st.cur.type===$B.ast.FunctionDef &&
+e.id=="super"){if(!GET_IDENTIFIER('__class__')||
+!symtable_add_def(st,'__class__',USE,LOCATION(e)))
+VISIT_QUIT(st,0);}
+break;
+case $B.ast.List:
+VISIT_SEQ(st,expr,e.elts);
+break;
+case $B.ast.Tuple:
+VISIT_SEQ(st,expr,e.elts);
+break;}
+VISIT_QUIT(st,1);}
+function symtable_visit_pattern(st,p){switch(p.constructor){case $B.ast.MatchValue:
+VISIT(st,expr,p.value);
+break;
+case $B.ast.MatchSingleton:
+break;
+case $B.ast.MatchSequence:
+VISIT_SEQ(st,pattern,p.patterns);
+break;
+case $B.ast.MatchStar:
+if(p.name){symtable_add_def(st,p.name,DEF_LOCAL,LOCATION(p));}
+break;
+case $B.ast.MatchMapping:
+VISIT_SEQ(st,expr,p.keys);
+VISIT_SEQ(st,pattern,p.patterns);
+if(p.rest){symtable_add_def(st,p.rest,DEF_LOCAL,LOCATION(p));}
+break;
+case $B.ast.MatchClass:
+VISIT(st,expr,p.cls);
+VISIT_SEQ(st,pattern,p.patterns);
+VISIT_SEQ(st,pattern,p.kwd_patterns);
+break;
+case $B.ast.MatchAs:
+if(p.pattern){VISIT(st,pattern,p.pattern);}
+if(p.name){symtable_add_def(st,p.name,DEF_LOCAL,LOCATION(p));}
+break;
+case $B.ast.MatchOr:
+VISIT_SEQ(st,pattern,p.patterns);
+break;}
+VISIT_QUIT(st,1);}
+function symtable_implicit_arg(st,pos){var id='.'+pos
+if(!symtable_add_def(st,id,DEF_PARAM,ST_LOCATION(st.cur))){return 0;}
+return 1;}
+function symtable_visit_params(st,args){var i;
+if(!args)
+return-1;
+for(var arg of args){if(!symtable_add_def(st,arg.arg,DEF_PARAM,LOCATION(arg)))
+return 0;}
+return 1;}
+function symtable_visit_annotation(st,annotation){var future_annotations=st.future.ff_features & CO_FUTURE_ANNOTATIONS;
+if(future_annotations &&
+!symtable_enter_block(st,'_annotation',AnnotationBlock,annotation,annotation.lineno,annotation.col_offset,annotation.end_lineno,annotation.end_col_offset)){VISIT_QUIT(st,0);}
+VISIT(st,expr,annotation);
+if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0);}
+return 1;}
+function symtable_visit_argannotations(st,args){var i;
+if(!args)
+return-1;
+for(var arg of args){if(arg.annotation)
+VISIT(st,expr,arg.annotation);}
+return 1;}
+function symtable_visit_annotations(st,o,a,returns){var future_annotations=st.future.ff_features & CO_FUTURE_ANNOTATIONS;
+if(future_annotations &&
+!symtable_enter_block(st,'_annotation',AnnotationBlock,o,o.lineno,o.col_offset,o.end_lineno,o.end_col_offset)){VISIT_QUIT(st,0);}
+if(a.posonlyargs && !symtable_visit_argannotations(st,a.posonlyargs))
+return 0;
+if(a.args && !symtable_visit_argannotations(st,a.args))
+return 0;
+if(a.vararg && a.vararg.annotation)
+VISIT(st,expr,a.vararg.annotation);
+if(a.kwarg && a.kwarg.annotation)
+VISIT(st,expr,a.kwarg.annotation);
+if(a.kwonlyargs && !symtable_visit_argannotations(st,a.kwonlyargs))
+return 0;
+if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0);}
+if(returns && !symtable_visit_annotation(st,returns)){VISIT_QUIT(st,0);}
+return 1;}
+function symtable_visit_arguments(st,a){
+if(a.posonlyargs && !symtable_visit_params(st,a.posonlyargs))
+return 0;
+if(a.args && !symtable_visit_params(st,a.args))
+return 0;
+if(a.kwonlyargs && !symtable_visit_params(st,a.kwonlyargs))
+return 0;
+if(a.vararg){if(!symtable_add_def(st,a.vararg.arg,DEF_PARAM,LOCATION(a.vararg)))
+return 0;
+st.cur.varargs=1;}
+if(a.kwarg){if(!symtable_add_def(st,a.kwarg.arg,DEF_PARAM,LOCATION(a.kwarg)))
+return 0;
+st.cur.varkeywords=1;}
+return 1;}
+function symtable_visit_excepthandler(st,eh){if(eh.type)
+VISIT(st,expr,eh.type);
+if(eh.name)
+if(!symtable_add_def(st,eh.name,DEF_LOCAL,LOCATION(eh)))
+return 0;
+VISIT_SEQ(st,stmt,eh.body);
+return 1;}
+function symtable_visit_withitem(st,item){VISIT(st,'expr',item.context_expr);
+if(item.optional_vars){VISIT(st,'expr',item.optional_vars);}
+return 1;}
+function symtable_visit_match_case(st,m){VISIT(st,pattern,m.pattern);
+if(m.guard){VISIT(st,expr,m.guard);}
+VISIT_SEQ(st,stmt,m.body);
+return 1;}
+function symtable_visit_alias(st,a){
+var store_name,name=(a.asname==NULL)? a.name :a.asname;
+var dot=name.search('\\.');
+if(dot !=-1){store_name=name.substring(0,dot);
+if(!store_name)
+return 0;}else{store_name=name;}
+if(name !="*"){var r=symtable_add_def(st,store_name,DEF_IMPORT,LOCATION(a));
+return r;}else{if(st.cur.type !=ModuleBlock){var lineno=a.lineno,col_offset=a.col_offset,end_lineno=a.end_lineno,end_col_offset=a.end_col_offset;
+PyErr_SetString(PyExc_SyntaxError,IMPORT_STAR_WARNING);
+PyErr_RangedSyntaxLocationObject(st.st_filename,lineno,col_offset+1,end_lineno,end_col_offset+1);
+return 0;}
+st.cur.$has_import_star=true
+return 1;}}
+function symtable_visit_comprehension(st,lc){st.cur.comp_iter_target=1;
+VISIT(st,expr,lc.target);
+st.cur.comp_iter_target=0;
+st.cur.comp_iter_expr++;
+VISIT(st,expr,lc.iter);
+st.cur.comp_iter_expr--;
+VISIT_SEQ(st,expr,lc.ifs);
+if(lc.is_async){st.cur.coroutine=1;}
+return 1;}
+function symtable_visit_keyword(st,k){VISIT(st,expr,k.value);
+return 1;}
+function symtable_handle_comprehension(st,e,scope_name,generators,elt,value){var is_generator=(e.constructor===$B.ast.GeneratorExp);
+var outermost=generators[0]
+st.cur.comp_iter_expr++;
+VISIT(st,expr,outermost.iter);
+st.cur.comp_iter_expr--;
+if(!scope_name ||
+!symtable_enter_block(st,scope_name,FunctionBlock,e,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)){return 0;}
+switch(e.constructor){case $B.ast.ListComp:
+st.cur.comprehension=ListComprehension;
+break;
+case $B.ast.SetComp:
+st.cur.comprehension=SetComprehension;
+break;
+case $B.ast.DictComp:
+st.cur.comprehension=DictComprehension;
+break;
+default:
+st.cur.comprehension=GeneratorExpression;
+break;}
+if(outermost.is_async){st.cur.coroutine=1;}
+if(!symtable_implicit_arg(st,0)){symtable_exit_block(st);
+return 0;}
+st.cur.comp_iter_target=1;
+VISIT(st,expr,outermost.target);
+st.cur.comp_iter_target=0;
+VISIT_SEQ(st,expr,outermost.ifs);
+VISIT_SEQ_TAIL(st,comprehension,generators,1);
+if(value)
+VISIT(st,expr,value);
+VISIT(st,expr,elt);
+st.cur.generator=is_generator;
+var is_async=st.cur.coroutine && !is_generator;
+if(!symtable_exit_block(st)){return 0;}
+if(is_async){st.cur.coroutine=1;}
+return 1;}
+function symtable_visit_genexp(st,e){return symtable_handle_comprehension(st,e,'genexpr',e.generators,e.elt,NULL);}
+function symtable_visit_listcomp(st,e){return symtable_handle_comprehension(st,e,'listcomp',e.generators,e.elt,NULL);}
+function symtable_visit_setcomp(st,e){return symtable_handle_comprehension(st,e,'setcomp',e.generators,e.elt,NULL);}
+function symtable_visit_dictcomp(st,e){return symtable_handle_comprehension(st,e,'dictcomp',e.generators,e.key,e.value);}
+function symtable_raise_if_annotation_block(st,name,e){if(st.cur.type !=AnnotationBlock){return 1;}
+PyErr_Format(PyExc_SyntaxError,ANNOTATION_NOT_ALLOWED,name);
+PyErr_RangedSyntaxLocationObject(st.filename,e.lineno,e.col_offset+1,e.end_lineno,e.end_col_offset+1);
+return 0;}
+function symtable_raise_if_comprehension_block(st,e){var type=st.cur.comprehension;
+PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' inside list comprehension" :
+(type==SetComprehension)? "'yield' inside set comprehension" :
+(type==DictComprehension)? "'yield' inside dict comprehension" :
+"'yield' inside generator expression");
+PyErr_RangedSyntaxLocationObject(st.filename,e.lineno,e.col_offset+1,e.end_lineno,e.end_col_offset+1);
+VISIT_QUIT(st,0);}
+function _Py_SymtableStringObjectFlags(str,filename,start,flags){var st,mod,arena;
+arena=_PyArena_New();
+if(arena==NULL)
+return NULL;
+mod=_PyParser_ASTFromString(str,filename,start,flags,arena);
+if(mod==NULL){_PyArena_Free(arena);
+return NULL;}
+var future=_PyFuture_FromAST(mod,filename);
+if(future==NULL){_PyArena_Free(arena);
+return NULL;}
+future.features |=flags.cf_flags;
+st=_PySymtable_Build(mod,filename,future);
+PyObject_Free(future);
+_PyArena_Free(arena);
+return st;}})(__BRYTHON__)
 ;

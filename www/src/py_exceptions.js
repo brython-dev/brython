@@ -562,7 +562,7 @@ var getExceptionTrace = function(exc, includeInternal) {
 }
 
 BaseException.__getattr__ = function(self, attr){
-    
+
     if(attr == "info"){
         return getExceptionTrace(self, false);
     }else if (attr == "infoWithInternal"){
