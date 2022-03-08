@@ -1815,7 +1815,7 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
     }
 
     var js = `$B.set_lineno(locals, ${this.lineno})\n` +
-             `var module = $B.$import("${module}",`
+             `var module = $B.$import_from("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),
         aliases = []
     for(var name of this.names){
@@ -1823,7 +1823,7 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
             aliases.push(`${name.name}: '${name.asname}'`)
         }
     }
-    js += `[${names}], {${aliases.join(', ')}}, locals);`
+    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals);`
 
     for(var alias of this.names){
         if(alias.asname){
@@ -2183,7 +2183,8 @@ $B.ast.Try.prototype.to_js = function(scopes){
         if(has_else){
             js += `failed${id} = true\n`
         }
-        var first = true
+        var first = true,
+            has_untyped_except = false
         for(var handler of this.handlers){
             if(first){
                 js += 'if'
@@ -2201,6 +2202,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
                 }
                 js += `)){\n`
             }else{
+                has_untyped_except = true
                 js += '){\n'
             }
             if(handler.name){
@@ -2212,6 +2214,10 @@ $B.ast.Try.prototype.to_js = function(scopes){
                 // delete current exception
                 js += '$B.del_exc()\n'
             }
+        }
+        if(! has_untyped_except){
+            // handle other exceptions
+            js += `}else{\nthrow ${err}\n`
         }
         // close last if
         js += '}\n'
