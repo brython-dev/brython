@@ -407,6 +407,7 @@ VFSLoader.exec_module = function(self, modobj){
             if(is_package){
                 mod.__path__ = "<stdlib>"
                 mod.__package__ = parent
+                mod.$is_package = true
             }else{
                 var elts = parent.split(".")
                 elts.pop()
@@ -425,7 +426,7 @@ VFSLoader.exec_module = function(self, modobj){
                     console.log(err)
                     for(var k in err){console.log(k, err[k])}
                     console.log(Object.keys($B.imported))
-                    if($B.debug > 2){console.log(modobj, "mod_js", mod_js)}
+                    if($B.debug > 1){console.log(modobj, "mod_js", mod_js)}
                 }
                 throw err
             }
@@ -1305,7 +1306,7 @@ $B.$import_from = function(module, names, aliases, level, locals){
         if(current_module === undefined){
             throw _b_.ImportError.$factory(
                 'attempted relative import with no known parent package')
-        }            
+        }
         if(! current_module.$is_package){
             if(parts.length == 1){
                 throw _b_.ImportError.$factory(
@@ -1321,7 +1322,6 @@ $B.$import_from = function(module, names, aliases, level, locals){
         while(level > 0){
             var current_module = $B.imported[parts.join('.')]
             if(! current_module.$is_package){
-                console.log('error: not a package')
                 throw _b_.ImportError.$factory(
                     'attempted relative import with no known parent package')
             }
