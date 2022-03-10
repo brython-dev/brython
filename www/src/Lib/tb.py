@@ -18,7 +18,7 @@ def format_exc():
     exc_info = sys.exc_info()
     exc_class = exc_info[0].__name__
     exc_msg = str(exc_info[1])
-    tb = exc_info[2].tb_next
+    tb = exc_info[2] 
     if exc_info[0] is SyntaxError:
         return syntax_error(exc_info[1].args)
     trace.write("Traceback (most recent call last):\n")
