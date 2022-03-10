@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-10 14:50:49.534615"
-__BRYTHON__.timestamp=1646920249534
+__BRYTHON__.compiled_date="2022-03-10 15:12:18.559276"
+__BRYTHON__.timestamp=1646921538559
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1235,25 +1235,7 @@ while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block}
-var Comprehension={admin_infos:function(comp){var id=comp.id,node=$get_node(comp)
-return `var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'\n`+
-Comprehension.code(comp)+
-`var $top_frame = ["${id}", $locals_${id}, "${comp.module}", $locals_${comp.module_ref}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        `},code:function(comp){var node=$get_node(comp),varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
-return `$locals.$comp_code = {
-            co_argcount: 1,
-            co_firstlineno:${node.line_num},
-            co_name: "<${comp.type}>",
-            co_flags: ${comp.type == 'genexpr' ? 115 : 83},
-            co_freevars: $B.fast_tuple([]),
-            co_kwonlyargcount: 0,
-            co_posonlyargount: 0,
-            co_varnames: $B.fast_tuple(['.0', ${varnames}])
-        }
-        $locals['.0'] = expr\n`},generators:function(comp){
+var Comprehension={generators:function(comp){
 var comprehensions=[]
 for(item of comp){if(item.type=='for'){comprehensions.push(
 new ast.comprehension(
@@ -1275,14 +1257,7 @@ comp.module=$get_module(C).module
 comp.module_ref=comp.module.replace(/\./g,'_')
 C.parent.tree[C.parent.tree.length-1]=comp
 Comprehension.set_parent_block(C.tree[0],comp)},set_parent_block:function(ctx,parent_block){if(ctx.tree){for(var item of ctx.tree){if(item.comprehension){item.parent_block=parent_block}
-Comprehension.set_parent_block(item,parent_block)}}},get_awaits:function(ctx,awaits){
-awaits=awaits ||[]
-if(ctx.type=='await'){awaits.push(ctx)}else if(ctx.tree){for(var item of ctx.tree){Comprehension.get_awaits(item,awaits)}}
-return awaits},has_await:function(ctx){
-var node=$get_node(ctx),awaits=Comprehension.get_awaits(ctx)
-for(var aw of awaits){var ix=node.awaits.indexOf(aw)
-if(ix >-1){node.awaits.splice(ix,1)}}
-return awaits.length > 0}}
+Comprehension.set_parent_block(item,parent_block)}}}}
 var $ConditionCtx=$B.parser.$ConditionCtx=function(C,token){
 this.type='condition'
 this.token=token
@@ -1472,8 +1447,7 @@ ast_or_obj(this.key),ast_or_obj(this.value),Comprehension.generators(this.tree)
 set_position(ast_obj,this.position)
 return ast_obj}
 DictCompCtx.prototype.transition=function(token,value){var C=this
-if(token=='}'){this.has_await=Comprehension.has_await(this)
-return this.parent}
+if(token=='}'){return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 var $DictOrSetCtx=$B.parser.$DictOrSetCtx=function(C){
 this.type='dict_or_set'
@@ -2274,8 +2248,7 @@ ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
 set_position(res,this.position)
 return res}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
-if(token==')'){this.has_await=Comprehension.has_await(this)
-if(this.parent.type=='call'){return this.parent.parent}
+if(token==')'){if(this.parent.type=='call'){return this.parent.parent}
 return this.parent}
 $_SyntaxError(C,'token '+token+'after gen expr')}
 var $GlobalCtx=$B.parser.$GlobalCtx=function(C){
@@ -2562,8 +2535,7 @@ ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1)))
 set_position(res,this.position)
 return res}
 ListCompCtx.prototype.transition=function(token,value){var C=this
-if(token==']'){this.has_await=Comprehension.has_await(this)
-return this.parent}
+if(token==']'){return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 var $ListOrTupleCtx=$B.parser.$ListOrTupleCtx=function(C,real){
 this.type='list_or_tuple'
@@ -3659,8 +3631,7 @@ ast_or_obj(this.tree[0]),Comprehension.generators(this.tree.slice(1))
 res.lineno=$get_node(this).line_num
 return res}
 SetCompCtx.prototype.transition=function(token,value){var C=this
-if(token=='}'){this.has_await=Comprehension.has_await(this)
-return this.parent}
+if(token=='}'){return this.parent}
 $_SyntaxError(C,'token '+token+'after list comp')}
 var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
 this.type='single_kw'

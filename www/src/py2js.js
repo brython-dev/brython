@@ -1788,32 +1788,6 @@ $ClassCtx.prototype.set_name = function(name){
 }
 
 var Comprehension = {
-    admin_infos: function(comp){
-        var id = comp.id,
-            node = $get_node(comp)
-        return `var $locals_${id} = {},
-            $locals = $locals_${id}
-        $locals.$line_info = '${node.line_num},${node.module}'\n` +
-        Comprehension.code(comp) +
-        `var $top_frame = ["${id}", $locals_${id}, "${comp.module}", $locals_${comp.module_ref}]
-        $locals.$f_trace = $B.enter_frame($top_frame)
-        `
-    },
-    code: function(comp){
-        var node = $get_node(comp),
-            varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
-        return `$locals.$comp_code = {
-            co_argcount: 1,
-            co_firstlineno:${node.line_num},
-            co_name: "<${comp.type}>",
-            co_flags: ${comp.type == 'genexpr' ? 115 : 83},
-            co_freevars: $B.fast_tuple([]),
-            co_kwonlyargcount: 0,
-            co_posonlyargount: 0,
-            co_varnames: $B.fast_tuple(['.0', ${varnames}])
-        }
-        $locals['.0'] = expr\n`
-    },
     generators: function(comp){
         // Return a list of comprehensions
         // ast.comprehension(target, iter, ifs, is_async)
@@ -1864,30 +1838,6 @@ var Comprehension = {
                 Comprehension.set_parent_block(item, parent_block)
             }
         }
-    },
-    get_awaits: function(ctx, awaits){
-        // Return the list of Await below context "ctx"
-        awaits = awaits || []
-        if(ctx.type == 'await'){
-            awaits.push(ctx)
-        }else if(ctx.tree){
-            for(var item of ctx.tree){
-                Comprehension.get_awaits(item, awaits)
-            }
-        }
-        return awaits
-    },
-    has_await: function(ctx){
-        //
-        var node = $get_node(ctx),
-            awaits = Comprehension.get_awaits(ctx)
-        for(var aw of awaits){
-            var ix = node.awaits.indexOf(aw)
-            if(ix > -1){
-                node.awaits.splice(ix, 1)
-            }
-        }
-        return awaits.length > 0
     }
 }
 
@@ -2298,7 +2248,6 @@ DictCompCtx.prototype.ast = function(){
 DictCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == '}'){
-        this.has_await = Comprehension.has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
@@ -3928,7 +3877,6 @@ GeneratorExpCtx.prototype.ast = function(){
 GeneratorExpCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ')'){
-        this.has_await = Comprehension.has_await(this)
         if(this.parent.type == 'call'){
             return this.parent.parent
         }
@@ -4464,6 +4412,7 @@ $LambdaCtx.prototype.transition = function(token, value){
     }
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
+
 var ListCompCtx = function(context){
     // create a List Comprehension
     // context is a $ListOrTupleCtx
@@ -4488,7 +4437,6 @@ ListCompCtx.prototype.ast = function(){
 ListCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ']'){
-        this.has_await = Comprehension.has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
@@ -6573,7 +6521,6 @@ SetCompCtx.prototype.ast = function(){
 SetCompCtx.prototype.transition = function(token, value){
     var context = this
     if(token == '}'){
-        this.has_await = Comprehension.has_await(this)
         return this.parent
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
