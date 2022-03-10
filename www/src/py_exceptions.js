@@ -144,6 +144,7 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root,
     }
     var exc = _b_.IndentationError.$factory(msg)
     $B.$syntax_err_line(exc, module, src, pos, line_num, root.filename)
+    $B.frames_stack.pop()
     throw exc
 }
 
@@ -1070,7 +1071,16 @@ $B.handle_error = function(err){
         console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
         console.log(err)
     }
-    if(err.__class__ !== undefined){
+    if(false && err.__class__ === _b_.SyntaxError){
+        var filename = err.args[1][0],
+            src = $B.file_cache[filename],
+            lines = src.split('\n'),
+            line = lines[err.args[1][1] - 1]
+        trace = `File ${filename}, line ${err.args[1][1]}\n` +
+                `${line}\n` +
+                ' '.repeat(err.args[1][2] - 1) + '^\n' +
+                `SyntaxError: ${err.args[0]}`
+    }else if(err.__class__ !== undefined){
         var name = $B.class_name(err),
             trace = $B.$getattr(err, 'info')
         if(name == 'SyntaxError' || name == 'IndentationError'){
