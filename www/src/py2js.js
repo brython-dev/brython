@@ -399,6 +399,8 @@ function check_assignment(context, kwargs){
                 }else{
                     report('operator')
                 }
+            }else if(assigned.type == 'unary'){
+                report('operator')
             }else if(assigned.type == 'call'){
                 report('function call')
             }else if(assigned.type == 'id'){
@@ -8435,10 +8437,11 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     this.scope = $get_scope(this)
     this.scope.nonlocals = this.scope.nonlocals || new Set()
 
-    if(this.scope.context === undefined){
+    /* if(this.scope.context === undefined){
         $_SyntaxError(context,
             ["nonlocal declaration not allowed at module level"])
     }
+    */
 }
 
 $NonlocalCtx.prototype.toString = function(){
@@ -13327,6 +13330,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             console.log(ast_dump(_ast))
         }
         //if($B.js_from_ast){
+            $B.file_cache[locals_id] = src
             var symtable = $B._PySymtable_Build(_ast, locals_id)
 
             var js_from_ast = $B.js_from_root(_ast, symtable, filename)
