@@ -491,9 +491,9 @@ assertRaises(TypeError, f)
 # issue 342
 try:
     from .spam import eggs
-except SystemError as ie:
+except ImportError as ie:
     assert str(ie) == \
-        "Parent module '' not loaded, cannot perform relative import"
+        "attempted relative import with no known parent package"
 
 # issue 343
 a76gf = 0
