@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-08 17:07:32.751440"
-__BRYTHON__.timestamp=1646755652751
+__BRYTHON__.compiled_date="2022-03-10 12:03:06.341659"
+__BRYTHON__.timestamp=1646910186341
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -546,7 +546,7 @@ forbidden.push('del')}
 function report(wrong_type){if(augmented){$_SyntaxError(C,[`'${wrong_type}' is an illegal expression `+
 'for augmented assignment'])}else{$_SyntaxError(C,[`cannot ${action} ${wrong_type}`])}}
 while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'assign to '+ctx.type)}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
-if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('operator')}}else if(assigned.type=='call'){report('function call')}else if(assigned.type=='id'){var name=assigned.value
+if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('operator')}}else if(assigned.type=='unary'){report('operator')}else if(assigned.type=='call'){report('function call')}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
 if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){report('named expression')}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report('conditional expression')}else if(ctx.type=='op'){report('operator')}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
 if(once){break}
@@ -4426,8 +4426,7 @@ this.names={}
 C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
-this.scope.nonlocals=this.scope.nonlocals ||new Set()
-if(this.scope.C===undefined){$_SyntaxError(C,["nonlocal declaration not allowed at module level"])}}
+this.scope.nonlocals=this.scope.nonlocals ||new Set()}
 $NonlocalCtx.prototype.toString=function(){return 'nonlocal '+this.tree}
 $NonlocalCtx.prototype.ast=function(){
 var ast_obj=new ast.Nonlocal(this.tree.map(item=> item.value))
@@ -6647,6 +6646,7 @@ var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module
 dispatch_tokens(root)
 if($B.js_from_ast){var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
+$B.file_cache[locals_id]=src
 var symtable=$B._PySymtable_Build(_ast,locals_id)
 var js_from_ast=$B.js_from_root(_ast,symtable,filename)
 if(true){
@@ -9915,6 +9915,7 @@ break}
 msg+=` after ${type} on line ${indented_node.line_num}`}
 var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
+$B.frames_stack.pop()
 throw exc}
 $B.print_stack=function(stack){stack=stack ||$B.frames_stack
 var trace=[]
@@ -10275,7 +10276,11 @@ if(err.$handled){return}
 err.$handled=true
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)
 console.log(err)}
-if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
+if(false && err.__class__===_b_.SyntaxError){var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1]
+trace=`File ${filename}, line ${err.args[1][1]}\n`+
+`${line}\n`+
+' '.repeat(err.args[1][2]-1)+'^\n'+
+`SyntaxError: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
 if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[1][2]
 trace+='\n    '+' '.repeat(offset)+'^'+
 '\n'+name+': '+err.args[0]}else{trace+='\n'+name+': '+_b_.str.$factory(err)}}else{console.log(err)
@@ -11024,11 +11029,9 @@ return res}
 set.__class_getitem__=function(cls,item){
 if(! Array.isArray(item)){item=[item]}
 return $B.GenericAlias.$factory(cls,item)}
-var counter={value:0}
 set.__contains__=function(self,item){if(typeof item=="number" ||item instanceof Number){if(isNaN(item)){
 for(var i=self.$items.length-1;i >=0;i--){if(isNaN(self.$items[i])){return true}}
-return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{
-return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}
+return false}else if(item instanceof Number){return self.$numbers.indexOf(item.valueOf())>-1}else{return self.$items.indexOf(item)>-1}}else if(typeof item=="string"){return self.$items.indexOf(item)>-1}
 var hash=_b_.hash(item),
 item_class=item.__class__ ||$B.get_class(item)
 if(self.$hashes[hash]){
@@ -11717,7 +11720,8 @@ if(Array.isArray(mod_js)){mod_js=mod_js[0]}
 var mod=$B.imported[parent]=Module.$factory(parent,undefined,is_package)
 mod.__initialized__=true
 if(is_package){mod.__path__="<stdlib>"
-mod.__package__=parent}else{var elts=parent.split(".")
+mod.__package__=parent
+mod.$is_package=true}else{var elts=parent.split(".")
 elts.pop()
 mod.__package__=elts.join(".")}
 mod.__file__=path
@@ -11728,7 +11732,7 @@ mod)}catch(err){if($B.debug > 1){console.log('error in module',mod)
 console.log(err)
 for(var k in err){console.log(k,err[k])}
 console.log(Object.keys($B.imported))
-if($B.debug > 2){console.log(modobj,"mod_js",mod_js)}}
+if($B.debug > 1){console.log(modobj,"mod_js",mod_js)}}
 throw err}
 for(var attr in $module){mod[attr]=$module[attr]}
 $module.__file__=path
@@ -12029,8 +12033,7 @@ if(! current_module.$is_package){if(parts.length==1){throw _b_.ImportError.$fact
 current_module=$B.imported[parts.join('.')]}}else{parts.pop()}
 level--
 while(level > 0){var current_module=$B.imported[parts.join('.')]
-if(! current_module.$is_package){console.log('error: not a package')
-throw _b_.ImportError.$factory(
+if(! current_module.$is_package){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
 level--
 parts.pop()}
@@ -17379,13 +17382,21 @@ js+=`locals.${handler.name} = ${err}\n`}
 js+=add_body(handler.body,scopes)+'\n'
 if(!($B.last(handler.body)instanceof $B.ast.Return)){
 js+='$B.del_exc()\n'}}
-if(false && ! has_untyped_except){
+if(! has_untyped_except){
 js+=`}else{\nthrow ${err}\n`}
 js+='}\n'}
 if(has_else ||has_finally){js+='}\n' 
 js+='finally{\n'
-var finalbody=`$B.frames_stack = save_stack_${id}\n`+
-add_body(this.finalbody,scopes)
+var finalbody=`var exit = false\n`+
+`if($B.frames_stack.length < stack_length_${id}){\n`+
+`exit = true\n`+
+`$B.frames_stack.push($top_frame)\n`+
+`}\n`+
+`// $B.frames_stack = save_stack_${id}\n`+
+add_body(this.finalbody,scopes)+
+`\nif(exit){\n`+
+`$B.leave_frame(locals)\n`+
+`}`
 var elsebody=`if($B.frames_stack.length == stack_length_${id} `+
 `&& ! failed${id}){\n`+
 add_body(this.orelse,scopes)+
@@ -17660,8 +17671,12 @@ function _PyST_GetSymbol(ste,name){if(! ste.symbols.$string_dict.hasOwnProperty(
 return ste.symbols.$string_dict[name][0]}
 function PyErr_Format(exc_type,message,arg){if(arg){message=_b_.str.__mod__(message,arg)}
 return exc_type.$factory(message)}
-function error_at_directive(ste,name){var data
-assert(ste.directives)}
+function error_at_directive(exc,ste,name){var data
+assert(ste.directives)
+for(var data of ste.directives){if(data[0]==name){exc.args[1]=[ste.table.filename,data[1],data[2]+1,data[3],data[4]+1]
+return 0}}
+PyErr_SetString(PyExc_RuntimeError,"BUG: internal directive bookkeeping broken")
+return 0}
 function SET_SCOPE(DICT,NAME,I){$B.$setitem(DICT,NAME,I)}
 function analyze_name(ste,scopes,name,flags,bound,local,free,global){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){PyErr_Format(PyExc_SyntaxError,"name '%U' is nonlocal and global",name)
 return error_at_directive(ste,name)}
@@ -17669,10 +17684,13 @@ SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
 global.add(name)
 if(bound){bound.delete(name)}
 return 1}
-if(flags & DEF_NONLOCAL){if(!bound){PyErr_Format(PyExc_SyntaxError,"nonlocal declaration not allowed at module level");
-return error_at_directive(ste,name)}
-if(! bound.has(name)){
-return error_at_directive(ste,name)}
+if(flags & DEF_NONLOCAL){if(!bound){var exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
+error_at_directive(exc,ste,name)
+console.log('exc.args',exc.args)
+throw exc}
+if(! bound.has(name)){var exc=PyErr_Format(_b_.SyntaxError,"no binding for nonlocal '%s' found",name)
+error_at_directive(exc,ste,name)
+throw exc}
 SET_SCOPE(scopes,name,FREE)
 ste.free=1
 free.add(name)

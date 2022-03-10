@@ -1538,7 +1538,7 @@ $B.$getattr = function(obj, attr, _default){
                         return _default
                     }
                     throw err
-                }                    
+                }
             }
         }else{
             var getattr = in_mro(klass, '__getattr__')
