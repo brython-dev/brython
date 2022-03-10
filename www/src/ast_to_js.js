@@ -2225,8 +2225,16 @@ $B.ast.Try.prototype.to_js = function(scopes){
     if(has_else || has_finally){
         js += '}\n' // close try
         js += 'finally{\n'
-        var finalbody = `$B.frames_stack = save_stack_${id}\n` +
-                        add_body(this.finalbody, scopes)
+        var finalbody = `var exit = false\n` +
+                        `if($B.frames_stack.length < stack_length_${id}){\n` +
+                            `exit = true\n` +
+                            `$B.frames_stack.push($top_frame)\n` +
+                        `}\n` +
+                        `// $B.frames_stack = save_stack_${id}\n` +
+                        add_body(this.finalbody, scopes) +
+                        `\nif(exit){\n` +
+                           `$B.leave_frame(locals)\n` +
+                        `}`
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
