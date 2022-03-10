@@ -589,10 +589,6 @@ $Node.prototype.insert = function(pos, child){
     child.module = this.module
 }
 
-$Node.prototype.toString = function(){
-    return "<object 'Node'>"
-}
-
 $Node.prototype.show = function(indent){
     // For debugging purposes
     var res = ''
@@ -693,10 +689,6 @@ var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_comma
     this.tree = []
     this.position = $token.value
     context.tree.push(this)
-}
-
-$AbstractExprCtx.prototype.toString = function(){
-    return '(abstract_expr ' + this.with_commas + ') ' + this.tree
 }
 
 $AbstractExprCtx.prototype.transition = function(token, value){
@@ -920,10 +912,6 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     }
 }
 
-$AnnotationCtx.prototype.toString = function(){
-    return '(annotation) ' + this.tree
-}
-
 $AnnotationCtx.prototype.transition = function(token, value){
     var context = this
     this.string = this.src.substring(this.start, $pos)
@@ -956,10 +944,6 @@ $AssertCtx.prototype.ast = function(){
             msg === undefined ? msg : msg.ast())
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$AssertCtx.prototype.toString = function(){
-    return '(assert) ' + this.tree
 }
 
 $AssertCtx.prototype.transition = function(token, value){
@@ -1091,10 +1075,6 @@ $AssignCtx.prototype.guess_type = function(){
     return
 }
 
-$AssignCtx.prototype.toString = function(){
-    return '(assign) ' + this.tree[0] + '=' + this.tree[1]
-}
-
 $AssignCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){
@@ -1117,8 +1097,6 @@ var $AsyncCtx = $B.parser.$AsyncCtx = function(context){
     context.async = true
     context.position = $token.value
 }
-
-$AsyncCtx.prototype.toString = function(){return '(async)'}
 
 $AsyncCtx.prototype.transition = function(token, value){
     var context = this
@@ -1167,8 +1145,6 @@ $AttrCtx.prototype.ast = function(){
     set_position(ast_obj, this.position)
     return ast_obj
 }
-
-$AttrCtx.prototype.toString = function(){return '(attr) ' + this.value + '.' + this.name}
 
 $AttrCtx.prototype.transition = function(token, value){
     var context = this
@@ -1219,10 +1195,6 @@ $AugmentedAssignCtx.prototype.ast = function(){
     var ast_obj = new ast.AugAssign(target, new ast_class(), value)
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$AugmentedAssignCtx.prototype.toString = function(){
-    return '(augm assign) ' + this.tree
 }
 
 $AugmentedAssignCtx.prototype.transition = function(token, value){
@@ -1350,8 +1322,6 @@ $BreakCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$BreakCtx.prototype.toString = function(){return 'break '}
-
 $BreakCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){
@@ -1369,10 +1339,6 @@ var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
     this.position = $token.value
     context.tree.push(this)
     this.expect = 'id'
-}
-
-$CallArgCtx.prototype.toString = function(){
-    return 'call_arg ' + this.tree
 }
 
 $CallArgCtx.prototype.transition = function(token, value){
@@ -1523,10 +1489,6 @@ $CallCtx.prototype.ast = function(){
     }
     set_position(res, this.position)
     return res
-}
-
-$CallCtx.prototype.toString = function(){
-    return '(call) ' + this.func + '(' + this.tree + ')'
 }
 
 $CallCtx.prototype.transition = function(token, value){
@@ -1708,10 +1670,6 @@ $ClassCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$ClassCtx.prototype.toString = function(){
-    return '(class) ' + this.name + ' ' + this.tree + ' args ' + this.args
-}
-
 $ClassCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -1871,10 +1829,6 @@ $ConditionCtx.prototype.ast = function(){
     return res
 }
 
-$ConditionCtx.prototype.toString = function(){
-    return this.token + ' ' + this.tree
-}
-
 $ConditionCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ':'){
@@ -1916,10 +1870,6 @@ $ContinueCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$ContinueCtx.prototype.toString = function(){
-    return '(continue)'
-}
-
 $ContinueCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){return context.parent}
@@ -1933,10 +1883,6 @@ var $DebuggerCtx = $B.parser.$DebuggerCtx = function(context){
     context.tree[context.tree.length] = this
 }
 
-$DebuggerCtx.prototype.toString = function(){
-    return '(debugger)'
-}
-
 $DebuggerCtx.prototype.transition = function(token, value){
     var context = this
 }
@@ -1948,10 +1894,6 @@ var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
     context.tree[context.tree.length] = this
     this.tree = []
     this.position = $token.value
-}
-
-$DecoratorCtx.prototype.toString = function(){
-    return '(decorator) ' + this.tree
 }
 
 $DecoratorCtx.prototype.transition = function(token, value){
@@ -2106,10 +2048,6 @@ $DefCtx.prototype.set_name = function(name){
 
 }
 
-$DefCtx.prototype.toString = function(){
-    return 'def ' + this.name + '(' + this.tree + ')'
-}
-
 $DefCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -2180,10 +2118,6 @@ $DelCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$DelCtx.prototype.toString = function(){
-    return 'del ' + this.tree
-}
-
 $DelCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){
@@ -2241,6 +2175,7 @@ DictCompCtx.prototype.transition = function(token, value){
     }
     $_SyntaxError(context, 'token ' + token + 'after list comp')
 }
+
 var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     // Context for literal dictionaries or sets
     // The real type (dist or set) is set inside $transition
@@ -2290,15 +2225,6 @@ $DictOrSetCtx.prototype.ast = function(){
     }
     set_position(ast_obj, this.position)
     return ast_obj
-}
-$DictOrSetCtx.prototype.toString = function(){
-    switch(this.real) {
-        case 'dict':
-            return '(dict) {' + this.items + '}'
-        case 'set':
-            return '(set) {' + this.tree + '}'
-    }
-    return '(dict_or_set) {' + this.tree + '}'
 }
 
 $DictOrSetCtx.prototype.transition = function(token, value){
@@ -2525,16 +2451,13 @@ $DictOrSetCtx.prototype.unpack_set = function(packed){
     })
     return js
 }
+
 var $DoubleStarArgCtx = $B.parser.$DoubleStarArgCtx = function(context){
     // Class for syntax "**kw" in a call
     this.type = 'double_star_arg'
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
-}
-
-$DoubleStarArgCtx.prototype.toString = function(){
-    return '**' + this.tree
 }
 
 $DoubleStarArgCtx.prototype.transition = function(token, value){
@@ -2580,18 +2503,9 @@ $EllipsisCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$EllipsisCtx.prototype.toString = function(){
-    return 'ellipsis'
-}
-
 $EllipsisCtx.prototype.transition = function(token, value){
     var context = this
     return $transition(context.parent, token, value)
-}
-
-$EllipsisCtx.prototype.to_js = function(){
-    this.js_processed = true
-    return '$B.builtins["Ellipsis"]'
 }
 
 var $EndOfPositionalCtx = $B.parser.$EndOfConditionalCtx = function(context){
@@ -2633,8 +2547,6 @@ $ExceptCtx.prototype.ast = function(){
     set_position(ast_obj, this.position)
     return ast_obj
 }
-
-$ExceptCtx.prototype.toString = function(){return '(except) '}
 
 $ExceptCtx.prototype.transition = function(token, value){
     var context = this
@@ -2741,10 +2653,6 @@ $ExprCtx.prototype.ast = function(){
     }
     set_position(res, this.position)
     return res
-}
-
-$ExprCtx.prototype.toString = function(){
-    return '(expr ' + this.with_commas + ') ' + this.tree
 }
 
 $ExprCtx.prototype.transition = function(token, value){
@@ -3185,10 +3093,6 @@ $ExprNot.prototype.transition = function(token, value){
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
-$ExprNot.prototype.toString = function(){
-    return '(expr_not)'
-}
-
 var $ForExpr = $B.parser.$ForExpr = function(context){
     // Class for keyword "for"
     if(context.node && context.node.parent.is_comp){
@@ -3220,10 +3124,6 @@ $ForExpr.prototype.ast = function(){
     var res = new klass(target, iter, body, orelse, type_comment)
     set_position(res, this.position)
     return res
-}
-
-$ForExpr.prototype.toString = function(){
-    return '(for) ' + this.tree
 }
 
 $ForExpr.prototype.transition = function(token, value){
@@ -3523,9 +3423,6 @@ $FromCtx.prototype.transition = function(token, value){
 
 }
 
-$FromCtx.prototype.toString = function(){
-    return '(from) ' + this.module + ' (import) ' + this.names
-}
 var $FuncArgs = $B.parser.$FuncArgs = function(context){
     // Class for arguments in a function definition
     this.type = 'func_args'
@@ -3588,10 +3485,6 @@ $FuncArgs.prototype.ast = function(){
     // ast.arguments(posonlyargs, args, vararg, kwonlyargs, kw_defaults, kwarg, defaults)
     return new ast.arguments(args.posonlyargs, args.args, args.vararg,
         args.kwonlyargs, args.kw_defaults, args.kwarg, args.defaults)
-}
-
-$FuncArgs.prototype.toString = function(){
-    return 'func args ' + this.tree
 }
 
 $FuncArgs.prototype.transition = function(token, value){
@@ -3718,10 +3611,6 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
     this.expect = '='
 }
 
-$FuncArgIdCtx.prototype.toString = function(){
-    return 'func arg id ' + this.name + '=' + this.tree
-}
-
 $FuncArgIdCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -3773,10 +3662,6 @@ var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
     context.has_star_arg = op == '*'
     context.has_kw_arg = op == '**'
     context.tree[context.tree.length] = this
-}
-
-$FuncStarArgCtx.prototype.toString = function(){
-    return '(func star arg ' + this.op + ') ' + this.name
 }
 
 $FuncStarArgCtx.prototype.transition = function(token, value){
@@ -3900,10 +3785,6 @@ $GlobalCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$GlobalCtx.prototype.toString = function(){
-    return 'global ' + this.tree
-}
-
 $GlobalCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -3991,10 +3872,6 @@ $IdCtx.prototype.ast = function(){
     }
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$IdCtx.prototype.toString = function(){
-    return '(id) ' + this.value + ':' + (this.tree || '')
 }
 
 $IdCtx.prototype.transition = function(token, value){
@@ -4103,10 +3980,6 @@ $ImportCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$ImportCtx.prototype.toString = function(){
-    return 'import ' + this.tree
-}
-
 $ImportCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -4164,10 +4037,6 @@ var $ImportedModuleCtx = $B.parser.$ImportedModuleCtx = function(context,name){
     this.name = name
     this.alias = name
     context.tree[context.tree.length] = this
-}
-
-$ImportedModuleCtx.prototype.toString = function(){
-    return ' (imported module) ' + this.name
 }
 
 $ImportedModuleCtx.prototype.transition = function(token, value){
@@ -4264,10 +4133,6 @@ JoinedStrCtx.prototype.ast = function(){
     return ast_obj
 }
 
-JoinedStrCtx.prototype.toString = function(){
-    return 'f-string ' + (this.tree || '')
-}
-
 JoinedStrCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -4309,8 +4174,6 @@ var $JSCode = $B.parser.$JSCode = function(js){
     this.js = js
 }
 
-$JSCode.prototype.toString = function(){return this.js}
-
 $JSCode.prototype.transition = function(token, value){
     var context = this
 }
@@ -4335,10 +4198,6 @@ var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
     if(ctx.kwargs === undefined){ctx.kwargs = [value]}
     else if(ctx.kwargs.indexOf(value) == -1){ctx.kwargs.push(value)}
     else{$_SyntaxError(context, ['keyword argument repeated'])}
-}
-
-$KwArgCtx.prototype.toString = function(){
-    return 'kwarg ' + this.tree[0] + '=' + this.tree[1]
 }
 
 $KwArgCtx.prototype.transition = function(token, value){
@@ -4379,10 +4238,6 @@ $LambdaCtx.prototype.ast = function(){
     var ast_obj = new ast.Lambda(args, this.tree[0].ast())
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$LambdaCtx.prototype.toString = function(){
-    return '(lambda) ' + this.args_start + ' ' + this.body_start
 }
 
 $LambdaCtx.prototype.transition = function(token, value){
@@ -4457,15 +4312,6 @@ $ListOrTupleCtx.prototype.ast = function(){
     }
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$ListOrTupleCtx.prototype.toString = function(){
-    switch(this.real) {
-      case 'list':
-        return '(list) [' + this.tree + ']'
-      default:
-        return '(tuple) (' + this.tree + ')'
-    }
 }
 
 $ListOrTupleCtx.prototype.transition = function(token, value){
@@ -4779,10 +4625,6 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
     this.scope = scope
 }
 
-$NodeCtx.prototype.toString = function(){
-    return 'node ' + this.tree
-}
-
 $NodeCtx.prototype.transition = function(token, value){
     var context = this
     if(this.node.parent && this.node.parent.context){
@@ -4960,10 +4802,6 @@ var $NodeJSCtx = $B.parser.$NodeJSCtx = function(node,js){
     this.tree = [js]
 }
 
-$NodeJSCtx.prototype.toString = function(){
-    return 'js ' + js
-}
-
 $NodeJSCtx.prototype.to_js = function(){
     this.js_processed = true
     return this.tree[0]
@@ -4982,15 +4820,6 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     this.scope = $get_scope(this)
     this.scope.nonlocals = this.scope.nonlocals || new Set()
 
-    /* if(this.scope.context === undefined){
-        $_SyntaxError(context,
-            ["nonlocal declaration not allowed at module level"])
-    }
-    */
-}
-
-$NonlocalCtx.prototype.toString = function(){
-    return 'nonlocal ' + this.tree
 }
 
 $NonlocalCtx.prototype.ast = function(){
@@ -5050,10 +4879,6 @@ $NotCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$NotCtx.prototype.toString = function(){
-    return 'not (' + this.tree + ')'
-}
-
 $NotCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -5104,10 +4929,6 @@ $NumberCtx.prototype.ast = function(){
     var ast_obj = new ast.Constant({type: this.type, value: this.value})
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$NumberCtx.prototype.toString = function(){
-    return this.type + ' ' + this.value
 }
 
 $NumberCtx.prototype.transition = function(token, value){
@@ -5184,10 +5005,6 @@ $OpCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$OpCtx.prototype.toString = function(){
-    return '(op ' + this.op + ') [' + this.tree + ']'
-}
-
 $OpCtx.prototype.transition = function(token, value){
     var context = this
     if(context.op === undefined){
@@ -5256,10 +5073,6 @@ $PackedCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$PackedCtx.prototype.toString = function(){
-    return '(packed) ' + this.tree
-}
-
 $PackedCtx.prototype.transition = function(token, value){
     var context = this
     if(context.tree.length > 0 && token == "["){
@@ -5317,10 +5130,6 @@ $PassCtx.prototype.ast = function(){
     var ast_obj = new ast.Pass()
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$PassCtx.prototype.toString = function(){
-    return '(pass)'
 }
 
 $PassCtx.prototype.transition = function(token, value){
@@ -6387,10 +6196,6 @@ $RaiseCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$RaiseCtx.prototype.toString = function(){
-    return ' (raise) ' + this.tree
-}
-
 $RaiseCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -6417,10 +6222,6 @@ var $RawJSCtx = $B.parser.$RawJSCtx = function(context, js){
     context.tree[context.tree.length] = this
     this.parent = context
     this.js = js
-}
-
-$RawJSCtx.prototype.toString = function(){
-    return '(js) ' + this.js
 }
 
 $RawJSCtx.prototype.transition = function(token, value){
@@ -6468,10 +6269,6 @@ $ReturnCtx.prototype.ast = function(){
     }
     set_position(res, this.position)
     return res
-}
-
-$ReturnCtx.prototype.toString = function(){
-    return 'return ' + this.tree
 }
 
 $ReturnCtx.prototype.transition = function(token, value){
@@ -6545,10 +6342,6 @@ $SingleKwCtx.prototype.ast = function(){
     return ast_body(this.parent)
 }
 
-$SingleKwCtx.prototype.toString = function(){
-    return this.token
-}
-
 $SingleKwCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ':'){return $BodyCtx(context)}
@@ -6592,10 +6385,6 @@ var $StarArgCtx = $B.parser.$StarArgCtx = function(context){
     this.tree = []
     this.position = $token.value
     context.tree[context.tree.length] = this
-}
-
-$StarArgCtx.prototype.toString = function(){
-    return '(star arg) ' + this.tree
 }
 
 $StarArgCtx.prototype.transition = function(token, value){
@@ -6678,10 +6467,6 @@ $StringCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$StringCtx.prototype.toString = function(){
-    return 'string ' + (this.value || '')
-}
-
 $StringCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -6749,10 +6534,6 @@ $SubCtx.prototype.ast = function(){
     var ast_obj = new ast.Subscript(value, slice, new ast.Load())
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$SubCtx.prototype.toString = function(){
-    return '(sub) (value) ' + this.value + ' (tree) ' + this.tree
 }
 
 $SubCtx.prototype.transition = function(token, value){
@@ -6827,10 +6608,6 @@ $TargetListCtx.prototype.ast = function(){
     }
 }
 
-$TargetListCtx.prototype.toString = function(){
-    return '(target list) ' + this.tree
-}
-
 $TargetListCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -6892,15 +6669,11 @@ var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
 
 $TernaryCtx.prototype.ast = function(){
     // ast.IfExp(test, body, orelse)
-    var ast_obj = new ast.IfExp(this.tree[1].ast(), 
+    var ast_obj = new ast.IfExp(this.tree[1].ast(),
                                 this.tree[0].ast(),
                                 this.tree[2].ast())
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$TernaryCtx.prototype.toString = function(){
-    return '(ternary) ' + this.tree
 }
 
 $TernaryCtx.prototype.transition = function(token, value){
@@ -6965,10 +6738,6 @@ $TryCtx.prototype.ast = function(){
     return res
 }
 
-$TryCtx.prototype.toString = function(){
-    return '(try) '
-}
-
 $TryCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ':'){
@@ -6992,10 +6761,6 @@ $UnaryCtx.prototype.ast = function(){
         ast_obj = new ast.UnaryOp(new op(), this.tree[0].ast())
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$UnaryCtx.prototype.toString = function(){
-    return '(unary) ' + this.op
 }
 
 $UnaryCtx.prototype.transition = function(token, value){
@@ -7062,10 +6827,6 @@ $WithCtx.prototype.ast = function(){
     var ast_obj = new klass(withitems, ast_body(this.parent))
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$WithCtx.prototype.toString = function(){
-    return '(with) ' + this.tree
 }
 
 $WithCtx.prototype.transition = function(token, value){
@@ -7294,10 +7055,6 @@ $YieldCtx.prototype.ast = function(){
     }
     set_position(ast_obj, this.position)
     return ast_obj
-}
-
-$YieldCtx.prototype.toString = function(){
-    return '(yield) ' + (this.from ? '(from) ' : '') + this.tree
 }
 
 $YieldCtx.prototype.transition = function(token, value){
