@@ -44,7 +44,6 @@ if 'set_debug' in document:
     __BRYTHON__.debug = int(document['set_debug'].checked)
 
 def reset_src():
-    console.log('reset src')
     if "code" in document.query:
         code = document.query.getlist("code")[0]
         editor.setValue(code)
@@ -53,7 +52,7 @@ def reset_src():
             editor.setValue(storage["py_src"])
         else:
             editor.setValue('for i in range(10):\n\tprint(i)')
-        if "py_test" in storage:
+        if "py_test" in storage and 'files' in document:
             document['files'].selectedIndex = int(storage["py_test"])
     editor.scrollToRow(0)
     editor.gotoLine(0)
