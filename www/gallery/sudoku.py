@@ -43,7 +43,6 @@ def search(w0s, q2nw, takens, ws) :
                     if n < 2:
                         w0s.append((set(q2w[q]) - takens).pop())
         if len(ws) > 80:
-            input('raise Completed')
             raise Completed(ws)
         w1, w0 = set(q2w[q2nw.index(2)]) - takens
         try:
