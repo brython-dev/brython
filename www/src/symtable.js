@@ -260,27 +260,22 @@ function PyErr_Format(exc_type, message, arg){
     return exc_type.$factory(message)
 }
 
-function error_at_directive(ste, name){
+function error_at_directive(exc, ste, name){
     var data
     assert(ste.directives)
-    /*
     for (var data of ste.directives) {
-        assert(PyTuple_CheckExact(data))
-        assert(PyUnicode_CheckExact(PyTuple_GET_ITEM(data, 0)))
-        if (PyUnicode_Compare(PyTuple_GET_ITEM(data, 0), name) == 0) {
-            PyErr_RangedSyntaxLocationObject(ste.table.filename,
-                                             PyLong_AsLong(PyTuple_GET_ITEM(data, 1)),
-                                             PyLong_AsLong(PyTuple_GET_ITEM(data, 2)) + 1,
-                                             PyLong_AsLong(PyTuple_GET_ITEM(data, 3)),
-                                             PyLong_AsLong(PyTuple_GET_ITEM(data, 4)) + 1)
-
+        if(data[0] == name){
+            exc.args[1] = [ste.table.filename,
+                           data[1],
+                           data[2] + 1,
+                           data[3],
+                           data[4] + 1]
             return 0
         }
     }
     PyErr_SetString(PyExc_RuntimeError,
                     "BUG: internal directive bookkeeping broken")
     return 0
-    */
 }
 
 
@@ -359,16 +354,24 @@ function analyze_name(ste, scopes, name, flags,
     }
     if (flags & DEF_NONLOCAL) {
         if (!bound) {
-            PyErr_Format(PyExc_SyntaxError,
+            var exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal declaration not allowed at module level");
-            return error_at_directive(ste, name)
+            error_at_directive(exc, ste, name)
+            console.log('exc.args', exc.args)
+            throw exc
         }
         if (! bound.has(name)) {
-            /*PyErr_Format(PyExc_SyntaxError,
+            var exc = PyErr_Format(_b_.SyntaxError,
+                "no binding for nonlocal '%s' found", name)
+            error_at_directive(exc, ste, name)
+            throw exc
+
+            /*
+            PyErr_Format(PyExc_SyntaxError,
                          "no binding for nonlocal '%U' found",
                          name)
+            return
             */
-            return error_at_directive(ste, name)
         }
         SET_SCOPE(scopes, name, FREE)
         ste.free = 1
