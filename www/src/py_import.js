@@ -197,9 +197,6 @@ function run_py(module_contents, path, module, compiled) {
         root = $B.py2js(src, module,
             module.__name__, $B.builtins_scope)
 
-        if(module.__package__ !== undefined){
-            root.binding["__package__"] = true
-        }
     }
 
     try{
