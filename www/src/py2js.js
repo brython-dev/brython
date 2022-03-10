@@ -922,10 +922,6 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     if(scope.ntype == "def" && context.tree && context.tree.length > 0 &&
             context.tree[0].type == "id"){
         var name = context.tree[0].value
-        if(scope.globals && scope.globals.has(name) > -1){
-            $_SyntaxError(context, ["annotated name '" + name +
-                "' can't be global"])
-        }
         scope.annotations = scope.annotations || new Set()
         scope.annotations.add(name)
         // If name was not inside a parenthesis, it is local in the scope
@@ -1028,51 +1024,11 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
 
     var scope = $get_scope(this)
 
-    if(context.type == 'list_or_tuple' ||
-            (context.type == 'expr' && context.tree[0].type == 'list_or_tuple')){
-        if(context.type == 'expr'){
-            context = context.tree[0]
-        }
-        // Bind all the ids in the list or tuple
-        context.bind_ids(scope)
-    }else if(context.type == 'assign'){
+    if(context.type == 'assign'){
         check_assignment(context.tree[1])
-        for(var elt of context.tree){
-            var assigned = elt.tree[0]
-            if(assigned.type == 'id'){
-                $bind(assigned.value, scope, this)
-            }
-        }
     }else{
         var assigned = context.tree[0]
-        if(assigned && assigned.type == 'id'){
-            var name = assigned.value
-            // Attribute bound of an id indicates if it is being
-            // bound, as it is the case in the left part of an assignment
-            assigned.bound = true
-            if(! scope.globals || ! scope.globals.has(assigned.value)){
-                // A value is going to be assigned to a name
-                // After assignment the name will be bound to the current
-                // scope
-                // We must keep track of the list of bound names before
-                // this assignment, because in code like
-                //
-                //    range = range
-                //
-                // the right part of the assignement must be evaluated
-                // first, and it is the builtin "range"
-                var node = $get_node(this)
-                node.bound_before = Object.keys(scope.binding)
-                $bind(assigned.value, scope, this)
-            }else{
-                // assignement to a variable defined as global : bind name at
-                // module level (issue #690)
-                var module = $get_module(context)
-                // Set attribute global_module to simplify IdCtx.to_js()
-                assigned.global_module = module.module
-                $bind(assigned.value, module, this)
-            }
-        }else if(assigned.type == "ellipsis"){
+        if(assigned.type == "ellipsis"){
                 $_SyntaxError(context, ['cannot assign to Ellipsis'])
         }else if(assigned.type == "unary"){
             $_SyntaxError(context, ["cannot assign to operator"])
@@ -1258,28 +1214,6 @@ var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
     this.tree = [context]
 
     var scope = this.scope = $get_scope(this)
-
-    if(context.type == 'expr'){
-        var assigned = context.tree[0]
-        if(assigned.type == 'id'){
-            var name = assigned.value
-            if((scope.ntype == 'def' || scope.ntype == 'generator') &&
-                    (! scope.binding.hasOwnProperty(name))){
-                if(scope.globals === undefined ||
-                        ! scope.globals.has(name)){
-                    // Augmented assign to a variable not yet defined in
-                    // local scope : set attribute "unbound" to the id. If not
-                    // defined in the rest of the block this will raise an
-                    // UnboundLocalError
-                    assigned.unbound = true
-                }
-            }
-        }
-    }
-
-    // Store the names already bound
-    $get_node(this).bound_before = Object.keys(scope.binding)
-
     this.module = scope.module
 
 }
@@ -1851,16 +1785,6 @@ $ClassCtx.prototype.set_name = function(name){
     }
     this.parent.node.parent_block = parent_block
 
-    // bind name
-    $bind(name, scope, this)
-
-    // if function is defined inside another function, add the name
-    // to local names
-    if(scope.is_function){
-        if(scope.context.tree[0].locals.indexOf(name) == -1){
-            scope.context.tree[0].locals.push(name)
-        }
-    }
 }
 
 var Comprehension = {
@@ -2134,7 +2058,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
         this.position = $token.value
     }
 
-    this.locals = []
     context.tree[context.tree.length] = this
 
     // store id of enclosing functions
@@ -2242,22 +2165,6 @@ $DefCtx.prototype.set_name = function(name){
 
     var scope = this.scope
 
-    if(scope.globals !== undefined &&
-            scope.globals.has(name)){
-        // function name was declared global
-        $bind(name, this.root, this)
-    }else{
-        $bind(name, scope, this)
-    }
-
-    // If function is defined inside another function, add the name
-    // to local names
-    id_ctx.bound = true
-    if(scope.is_function){
-        if(scope.context.tree[0].locals.indexOf(name) == -1){
-            scope.context.tree[0].locals.push(name)
-        }
-    }
 }
 
 $DefCtx.prototype.toString = function(){
@@ -2859,7 +2766,6 @@ $ExceptCtx.prototype.transition = function(token, value){
 
 $ExceptCtx.prototype.set_alias = function(alias){
     this.tree[0].alias = $mangle(alias, this)
-    $bind(alias, this.scope, this)
 }
 
 var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
@@ -3244,7 +3150,6 @@ $ExprCtx.prototype.transition = function(token, value){
               while(scope.comprehension){
                   scope = scope.parent_block
               }
-              context.tree[0].binding_scope = $bind(name, scope, context)
               return new $AbstractExprCtx(new NamedExprCtx(context), false)
           }
           $_SyntaxError(context, 'token ' + token + ' after ' + context)
@@ -3382,22 +3287,6 @@ $ForExpr.prototype.toString = function(){
     return '(for) ' + this.tree
 }
 
-function bind_target(targets, scope, context){
-    // Only bind names, not subscripts or attributes
-    check_assignment(targets)
-    if(Array.isArray(targets)){
-        for(var target of targets){
-            bind_target(target, scope, context)
-        }
-    }else if(targets instanceof $ListOrTupleCtx){
-        for(var target of targets.tree){
-            bind_target(target, scope, context)
-        }
-    }else if(targets.type == 'expr' && targets.tree[0] instanceof $IdCtx){
-        $bind(targets.tree[0].value, scope, context)
-    }
-}
-
 $ForExpr.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -3415,7 +3304,6 @@ $ForExpr.prototype.transition = function(token, value){
                     }
                 }
             }
-            bind_target(targets, this.scope, this)
 
             if(context.tree[0].tree.length == 0){
                 // issue 1293 : "for in range(n)"
@@ -3607,18 +3495,6 @@ $FromCtx.prototype.add_name = function(name){
     if(name == '*'){this.scope.blurred = true}
 }
 
-$FromCtx.prototype.bind_names = function(){
-    // Called at the end of the 'from' statement
-    // Binds the names or aliases in current scope
-    var scope = $get_scope(this)
-    for(var name of this.names){
-        if(Array.isArray(name)){
-            name = name[1]
-        }
-        $bind(name, scope, this)
-    }
-}
-
 $FromCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
@@ -3679,7 +3555,6 @@ $FromCtx.prototype.transition = function(token, value){
             switch(context.expect) {
                 case ',':
                 case 'eol':
-                    context.bind_names()
                     return $transition(context.parent, token)
                 case 'id':
                     $_SyntaxError(context,
@@ -3898,20 +3773,9 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
             $_SyntaxError(context,
                 ["duplicate argument '" + name + "' in function definition"])
         }
-        $bind(name, node, this)
     }
     this.tree = []
     context.tree[context.tree.length] = this
-    // add to locals of function
-    var ctx = context
-    while(ctx.parent !== undefined){
-        if(ctx.type == 'def'){
-            ctx.locals.push(name)
-            break
-        }
-        ctx = ctx.parent
-    }
-
     this.expect = '='
 }
 
@@ -4026,14 +3890,11 @@ $FuncStarArgCtx.prototype.set_name = function(name){
             $_SyntaxError(context,
                 ["duplicate argument '" + name + "' in function definition"])
         }
-        $bind(name, this.node, this)
     }
 
-    // add to locals of function
     var ctx = this.parent
     while(ctx.parent !== undefined){
         if(ctx.type == 'def'){
-            ctx.locals.push(name)
             break
         }
         ctx = ctx.parent
@@ -4084,7 +3945,6 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     context.tree[context.tree.length] = this
     this.expect = 'id'
     this.scope = $get_scope(this)
-    this.scope.globals = this.scope.globals || new Set()
     this.module = $get_module(this)
     if(this.module.module !== '<module>'){ // used by eval1
         while(this.module.module != this.module.id){
@@ -4106,41 +3966,11 @@ $GlobalCtx.prototype.toString = function(){
     return 'global ' + this.tree
 }
 
-function check_global_nonlocal(context, value, type){
-    var scope = context.scope
-    if(type == 'nonlocal' && scope.globals && scope.globals.has(value)){
-        $_SyntaxError(context,
-         [`name '${value}' is nonlocal and global`])
-    }
-    if(type == 'global' && scope.nonlocals && scope.nonlocals.has(value)){
-        $_SyntaxError(context,
-         [`name '${value}' is nonlocal and global`])
-    }
-
-    if(['def', 'generator'].indexOf(scope.ntype) > -1){
-        var params = scope.context.tree[0]
-        if(params.locals && params.locals.indexOf(value) > -1){
-            $_SyntaxError(context,
-             [`name '${value}' is parameter and ${type}`])
-        }
-        if(scope.binding[value]){
-            console.log('scope ntype', scope)
-            $_SyntaxError(context,
-             [`name '${value}' is assigned to before ${type} declaration`])
-        }
-        if(scope.referenced && scope.referenced[value]){
-            $_SyntaxError(context,
-             [`name '${value}' is used prior to ${type} declaration`])
-        }
-    }
-}
-
 $GlobalCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
-               check_global_nonlocal(context, value, 'global')
                new $IdCtx(context, value)
                context.add(value)
                context.expect = ','
@@ -4163,20 +3993,10 @@ $GlobalCtx.prototype.transition = function(token, value){
 }
 
 $GlobalCtx.prototype.add = function(name){
-    if(this.scope.annotations && this.scope.annotations.has(name)){
-        $_SyntaxError(this, ["annotated name '" + name +
-            "' can't be global"])
-    }
     if(this.scope.type == "module"){
         // "global x" at module level does nothing
         return
     }
-    if(this.scope.binding && this.scope.binding[name]){
-        console.log('error globals, scope', this.scope)
-        $pos = this.$pos - 1
-        $_SyntaxError(this, [`name '${name}' is parameter and global`])
-    }
-    this.scope.globals.add(name)
     // Remove bindings between scope and module
     var mod = this.scope.parent_block
     if(this.module.module.startsWith("$exec")){
@@ -4221,61 +4041,6 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
         this.call_arg = true
     }
 
-    var ctx = context
-    while(ctx.parent !== undefined){
-        switch(ctx.type) {
-          case 'ctx_manager_alias':
-              // an alias in "with ctx_manager as obj" is bound
-              $bind(value, scope, this)
-              break
-          case 'list_or_tuple':
-          case 'dict_or_set':
-          case 'call_arg':
-          case 'def':
-          case 'lambda':
-            if(ctx.vars === undefined){ctx.vars = [value]}
-            else if(ctx.vars.indexOf(value) == -1){ctx.vars.push(value)}
-            if(this.call_arg&&ctx.type == 'lambda'){
-                if(ctx.locals === undefined){ctx.locals = [value]}
-                else{ctx.locals.push(value)}
-            }
-        }
-        ctx = ctx.parent
-    }
-
-    var target_list = $parent_match(context, {type: 'target_list'})
-    if(target_list){
-        // An id defined as a target in a "for" loop is bound in the scope,
-        // but *not* in the node bindings, because if the iterable is empty
-        // the name has no value (cf. issue 1233)
-        this.no_bindings = true
-        this.bound = true
-        //$bind(value, scope, this)
-        //console.log('set id', this, 'as bound in target list', target_list)
-    }
-
-    if(["def", "generator"].indexOf(scope.ntype) > -1){
-        // if variable is declared inside a comprehension,
-        // don't add it to function namespace
-        var _ctx = this.parent
-        while(_ctx){
-            if(_ctx.comprehension){
-                this.in_comp = true
-                break
-            }
-            _ctx = _ctx.parent
-        }
-        if(context.type == 'expr' && context.parent.type == 'comp_if'){
-            // form {x for x in foo if x>5} : don't put x in referenced names
-
-        }else if(context.type == 'global'){
-            if(scope.globals === undefined){
-                scope.globals = new Set([value])
-            }else{
-                scope.globals.add(value)
-            }
-        }
-    }
 }
 
 $IdCtx.prototype.ast = function(){
@@ -4374,150 +4139,6 @@ $IdCtx.prototype.transition = function(token, value){
     return $transition(context.parent, token, value)
 }
 
-$IdCtx.prototype.firstBindingScopeId = function(){
-    // Returns the id of the first scope where this.name is bound
-    var scope = this.scope,
-        found = [],
-        nb = 0
-    while(scope){
-        if(scope.globals && scope.globals.has(this.value)){
-            return $get_module(this).id
-        }
-        if(scope.binding && scope.binding[this.value]){
-            return scope.id
-        }
-        scope = scope.parent
-    }
-}
-
-$IdCtx.prototype.boundBefore = function(scope){
-    // Returns true if we are sure that the id is bound in the scope,
-    // because there is at least one binding when going up the code tree.
-    // This is used to avoid checking that the name exists at run time.
-    // Example:
-    //
-    // def f():
-    //     if some_condition():
-    //         x = 9
-    //     print(x)
-    //
-    // For the second "x", this.boundBefore() will return false because
-    // the binding "x = 9" is not in the lines found when going up the
-    // code tree. It will be translated to $local_search("x"), which will
-    // check at run time if the name "x" exists and if not, raise an
-    // UnboundLocalError.
-    function test(node, name){
-        if(node.bindings && node.bindings[name]){
-            // Exclude function arguments, which are in node.bindings
-            // if the node is a function definition
-            // cf. issue #1688
-            var ctx = node.context.tree[0]
-            if(['def', 'generator'].indexOf(ctx.type) > -1 &&
-                    ctx.locals.indexOf(name) > -1){
-                return false
-            }
-            return true
-        }
-    }
-
-    var node = $get_node(this),
-        found = false
-    var $test = false // this.value == "wxc"
-    if($test){
-        console.log(this.value, "bound before")
-        console.log("node", node)
-        console.log('scope', scope)
-    }
-
-    if((scope.ntype == "def" || scope.ntype == "generator") &&
-            scope.context.tree[0].args.indexOf(this.value) > -1){
-        return true
-    }
-
-    while(!found && node.parent){
-        var pnode = node.parent
-        if(test(pnode, this.value)){
-            if($test){console.log("bound in", pnode)}
-            return pnode.bindings[this.value]
-        }
-        for(var i = 0; i < pnode.children.length; i++){
-            var child = pnode.children[i]
-            if(child === node){break}
-            if(test(child, this.value)){
-                if($test){console.log("bound in child", child)}
-                return child.bindings[this.value]
-            }
-        }
-        if(pnode === scope){
-            break
-        }
-        node = pnode
-    }
-
-    return found
-}
-
-$IdCtx.prototype.bindingType = function(scope){
-    // If a binding explicitely sets the type of a variable (eg "x = 1")
-    // the next references can use this type if there is no block
-    // inbetween.
-    // For code like:
-    //
-    //     x = 1
-    //     x += 2
-    //
-    // for the id "x" in the second line, this.bindingType will return
-    // "int".
-    //
-    // A block might reset the type, like in
-    //
-    //     x = 1
-    //     if True:
-    //         x = "a"
-    //     x += 2
-    //
-    // For the id "x" in the last line, this.bindingType will just return
-    // "true"
-    var nb = 0,
-        node = $get_node(this),
-        found = false,
-        unknown,
-        ix
-
-    while(!found && node.parent && nb++ < 100){
-        var pnode = node.parent
-        if(pnode.bindings && pnode.bindings[this.value]){
-            return pnode.bindings[this.value]
-        }
-        for(var i = 0; i < pnode.children.length; i++){
-            var child = pnode.children[i]
-            if(child === node){break}
-            if(child.bindings && child.bindings[this.value]){
-                found = child.bindings[this.value]
-                ix = i
-            }
-        }
-        if(found){
-            for(var j = ix + 1; j < pnode.children.length; j++){
-                child = pnode.children[j]
-                if(child.children.length > 0){
-                    unknown = true
-                    break
-                }else if(child === node){
-                    break
-                }
-            }
-            return found || unknown
-        }
-        if(pnode === scope){
-            break
-        }
-        node = pnode
-    }
-
-    return found
-}
-
 var $ImportCtx = $B.parser.$ImportCtx = function(context){
     // Class for keyword "import"
     this.type = 'import'
@@ -4592,7 +4213,6 @@ $ImportCtx.prototype.transition = function(token, value){
             break
         case 'eol':
             if(context.expect == ','){
-               context.bind_names()
                return $transition(context.parent, token)
             }
             break
@@ -4600,23 +4220,6 @@ $ImportCtx.prototype.transition = function(token, value){
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
-$ImportCtx.prototype.bind_names = function(){
-    // For "import X", set X in the list of names bound in current scope
-    var scope = $get_scope(this)
-    for(var item of this.tree){
-        if(item.name == item.alias){
-            var name = item.name,
-                parts = name.split('.'),
-                bound = name
-            if(parts.length>1){
-                bound = parts[0]
-            }
-        }else{
-            bound = item.alias
-        }
-        $bind(bound, scope, this)
-    }
-}
 var $ImportedModuleCtx = $B.parser.$ImportedModuleCtx = function(context,name){
     this.type = 'imported module'
     this.parent = context
@@ -4814,8 +4417,6 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     this.tree = []
     this.position = $token.value
     this.args_start = $pos + 6
-    this.vars = []
-    this.locals = []
 
     // initialize object for names bound in the function
     this.node = $get_node(this)
@@ -5134,46 +4735,6 @@ $ListOrTupleCtx.prototype.get_src = function(){
     return src
 }
 
-$ListOrTupleCtx.prototype.bind_ids = function(scope){
-    // Used by $AssignCtx for assignments to a list or tuple
-    // Binds all the "simple" ids (not the calls, subscriptions, etc.)
-    for(var item of this.tree){
-        if(item.type == 'id'){
-            $bind(item.value, scope, this)
-            item.bound = true
-        }else if(item.type == 'expr' && item.tree[0].type == "id"){
-            $bind(item.tree[0].value, scope, this)
-            item.tree[0].bound = true
-        }else if(item.type == 'expr' && item.tree[0].type == "packed"){
-            var ctx = item.tree[0].tree[0]
-            if(ctx.type == 'expr' && ctx.tree[0].type == 'id'){
-                $bind(ctx.tree[0].value, scope, this)
-                ctx.tree[0].bound = true
-            }
-        }else if(item.type == 'list_or_tuple' ||
-                (item.type == "expr" &&
-                    item.tree[0].type == 'list_or_tuple')){
-            if(item.type == "expr"){item = item.tree[0]}
-            item.bind_ids(scope)
-        }
-    }
-}
-
-$ListOrTupleCtx.prototype.packed_indices = function(){
-    var ixs = []
-    for(var i = 0; i < this.tree.length; i++){
-        var t = this.tree[i]
-        if(t.type == "expr"){
-            t = t.tree[0]
-            if(t.type == "packed" ||
-                    (t.type == "call" && t.func.type == "packed")){
-                ixs.push(i)
-            }
-        }
-    }
-    return ixs
-}
-
 $ListOrTupleCtx.prototype.unpack = function(packed){
     var js = "", res
     for(var i = 0; i < this.tree.length; i++){
@@ -5233,7 +4794,6 @@ var NamedExprCtx = function(context){
     this.type = 'named_expr'
     this.position = $token.value
     this.target = context.tree[0]
-    this.target.scope_ref = this.target.binding_scope.id.replace(/\./g, '_')
     context.tree.pop()
     context.tree.push(this)
     this.parent = context
@@ -5281,10 +4841,6 @@ var $NodeCtx = $B.parser.$NodeCtx = function(node){
         scope = tree_node.parent || tree_node // module
     }
 
-    // When a new node is created, a copy of the names currently
-    // bound in the scope is created. It is used in $IdCtx to detect
-    // names that are referenced but not yet bound in the scope
-    this.node.locals = clone(scope.binding)
     this.scope = scope
 }
 
@@ -5523,7 +5079,6 @@ $NonlocalCtx.prototype.transition = function(token, value){
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
-               check_global_nonlocal(context, value, 'nonlocal')
                new $IdCtx(context, value)
                context.add(value)
                context.expect = ','
@@ -7645,15 +7200,6 @@ $WithCtx.prototype.set_alias = function(ctx){
             }
         }
     }
-    for(var i = 0, len = ids.length; i < len; i++){
-        var id_ctx = ids[i]
-        $bind(id_ctx.value, this.scope, this)
-        id_ctx.bound = true
-        if(this.scope.ntype !== 'module'){
-            // add to function local names
-            this.scope.context.tree[0].locals.push(id_ctx.value)
-        }
-    }
 }
 
 var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
@@ -7910,68 +7456,6 @@ var $add_line_num = $B.parser.$add_line_num = function(node, rank, line_info){
     }else{
         return 1
     }
-}
-
-function find_scope(name, scope){
-    // find the scope of a name referenced or bound in "scope"
-    if(scope.binding[name]){
-        return scope
-    }else if(scope.globals && scope.globals.has(name)){
-        return $get_module(scope.context)
-    }else if(scope.nonlocals && scope.nonlocals.has(name)){
-        // check that one of the upper scopes has name
-        var parent_block = scope.parent_block
-        while(parent_block){
-            if(parent_block.binding[name]){
-                return parent_block
-            }
-            parent_block = parent_block.parent_block
-        }
-    }
-}
-
-var $bind = $B.parser.$bind = function(name, scope, context){
-    // Bind a name in scope:
-    // - add the name in the attribute "binding" of the scope
-    // - add it to the attribute "bindings" of the node, except if no_bindings
-    //   is set, which is the case for "for x in A" : if A is empty the name
-    //   has no value (issue #1233)
-
-    name = $mangle(name, context)
-    if(scope.nonlocals && scope.nonlocals.has(name)){
-        // name is declared nonlocal in the scope : don't bind
-        var parent_block = scope.parent_block
-        while(parent_block){
-            if(parent_block.binding[name]){
-                return parent_block
-            }
-            parent_block = parent_block.parent_block
-        }
-        return
-    }
-
-    if(scope.globals && scope.globals.has(name)){
-        var module = $get_module(context)
-        module.binding[name] = true
-        return module
-    }
-
-    if(! context.no_bindings){
-        var node = $get_node(context)
-        // Add name to attribute "bindings" of node. Used in $IdCtx.boundBefore()
-        node.bindings = node.bindings || {}
-        node.bindings[name] = true
-    }
-
-    scope.binding = scope.binding || {}
-    if(! scope.binding.hasOwnProperty(name)){
-        scope.binding[name] = true
-    }
-    scope.varnames = scope.varnames || {}
-    if(scope.varnames[name] === undefined){
-        scope.varnames[name] = true
-    }
-    return scope
 }
 
 function $parent_match(ctx, obj){

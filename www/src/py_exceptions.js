@@ -1071,7 +1071,7 @@ $B.handle_error = function(err){
         console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
         console.log(err)
     }
-    if(false && err.__class__ === _b_.SyntaxError){
+    if(err.__class__ === _b_.SyntaxError){
         var filename = err.args[1][0],
             src = $B.file_cache[filename],
             lines = src.split('\n'),

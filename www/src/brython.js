@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-10 13:49:25.836824"
-__BRYTHON__.timestamp=1646916565836
+__BRYTHON__.compiled_date="2022-03-10 14:50:49.534615"
+__BRYTHON__.timestamp=1646920249534
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -800,8 +800,6 @@ scope.binding.__annotations__=true
 C.create_annotations=true}
 if(scope.ntype=="def" && C.tree && C.tree.length > 0 &&
 C.tree[0].type=="id"){var name=C.tree[0].value
-if(scope.globals && scope.globals.has(name)>-1){$_SyntaxError(C,["annotated name '"+name+
-"' can't be global"])}
 scope.annotations=scope.annotations ||new Set()
 scope.annotations.add(name)
 if(! C.$in_parens){scope.binding=scope.binding ||{}
@@ -846,20 +844,8 @@ C.parent.tree.push(this)
 this.parent=C.parent
 this.tree=[C]
 var scope=$get_scope(this)
-if(C.type=='list_or_tuple' ||
-(C.type=='expr' && C.tree[0].type=='list_or_tuple')){if(C.type=='expr'){C=C.tree[0]}
-C.bind_ids(scope)}else if(C.type=='assign'){check_assignment(C.tree[1])
-for(var elt of C.tree){var assigned=elt.tree[0]
-if(assigned.type=='id'){$bind(assigned.value,scope,this)}}}else{var assigned=C.tree[0]
-if(assigned && assigned.type=='id'){var name=assigned.value
-assigned.bound=true
-if(! scope.globals ||! scope.globals.has(assigned.value)){
-var node=$get_node(this)
-node.bound_before=Object.keys(scope.binding)
-$bind(assigned.value,scope,this)}else{
-var module=$get_module(C)
-assigned.global_module=module.module
-$bind(assigned.value,module,this)}}else if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}else if(assigned.type=="packed"){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
+if(C.type=='assign'){check_assignment(C.tree[1])}else{var assigned=C.tree[0]
+if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}else if(assigned.type=="packed"){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
 if(['None','True','False','__debug__'].indexOf(id)>-1){$_SyntaxError(C,['cannot assign to '+id])}}
 if(assigned.parent.in_tuple===undefined){$_SyntaxError(C,["starred assignment target must be in a list or tuple"])}}}}
 $AssignCtx.prototype.ast=function(){var value=ast_or_obj(this.tree[1]),targets=[],target=this.tree[0]
@@ -940,13 +926,6 @@ C.parent.tree[C.parent.tree.length]=this
 this.op=op
 this.tree=[C]
 var scope=this.scope=$get_scope(this)
-if(C.type=='expr'){var assigned=C.tree[0]
-if(assigned.type=='id'){var name=assigned.value
-if((scope.ntype=='def' ||scope.ntype=='generator')&&
-(! scope.binding.hasOwnProperty(name))){if(scope.globals===undefined ||
-! scope.globals.has(name)){
-assigned.unbound=true}}}}
-$get_node(this).bound_before=Object.keys(scope.binding)
 this.module=scope.module}
 $AugmentedAssignCtx.prototype.ast=function(){
 var target=ast_or_obj(this.tree[0]),value=ast_or_obj(this.tree[1])
@@ -1255,9 +1234,7 @@ parent_block.C.tree[0].type=='class'){parent_block=parent_block.parent}
 while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
-this.parent.node.parent_block=parent_block
-$bind(name,scope,this)
-if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
+this.parent.node.parent_block=parent_block}
 var Comprehension={admin_infos:function(comp){var id=comp.id,node=$get_node(comp)
 return `var $locals_${id} = {},
             $locals = $locals_${id}
@@ -1381,7 +1358,6 @@ this.parent=C
 this.tree=[]
 this.async=C.async
 if(this.async){this.position=C.position}else{this.position=$token.value}
-this.locals=[]
 C.tree[C.tree.length]=this
 this.enclosing=[]
 var scope=this.scope=$get_scope(this)
@@ -1423,12 +1399,7 @@ this.id+='_'+$B.UUID()
 this.parent.node.id=this.id
 this.parent.node.module=this.module
 this.binding={}
-var scope=this.scope
-if(scope.globals !==undefined &&
-scope.globals.has(name)){
-$bind(name,this.root,this)}else{$bind(name,scope,this)}
-id_ctx.bound=true
-if(scope.is_function){if(scope.C.tree[0].locals.indexOf(name)==-1){scope.C.tree[0].locals.push(name)}}}
+var scope=this.scope}
 $DefCtx.prototype.toString=function(){return 'def '+this.name+'('+this.tree+')'}
 $DefCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -1753,8 +1724,7 @@ C.has_alias===undefined &&
 return C}else if(C.parenth===undefined){$_SyntaxError(C,["multiple exception types must be parenthesized"])}}
 console.log('error',C,token)
 $_SyntaxError(C,'token '+token+' after '+C.expect)}
-$ExceptCtx.prototype.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)
-$bind(alias,this.scope,this)}
+$ExceptCtx.prototype.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)}
 var $ExprCtx=$B.parser.$ExprCtx=function(C,name,with_commas){
 this.type='expr'
 this.name=name
@@ -1946,7 +1916,6 @@ $_SyntaxError(C,':= invalid inside function arguments' )}
 if(C.tree.length==1 && C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
 if(['None','True','False'].indexOf(name)>-1){$_SyntaxError(C,[`cannot use assignment expressions with ${name}`])}else if(name=='__debug__'){$_SyntaxError(C,['cannot assign to __debug__'])}
 while(scope.comprehension){scope=scope.parent_block}
-C.tree[0].binding_scope=$bind(name,scope,C)
 return new $AbstractExprCtx(new NamedExprCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)
 case 'if':
@@ -2011,15 +1980,11 @@ var res=new klass(target,iter,body,orelse,type_comment)
 set_position(res,this.position)
 return res}
 $ForExpr.prototype.toString=function(){return '(for) '+this.tree}
-function bind_target(targets,scope,C){
-check_assignment(targets)
-if(Array.isArray(targets)){for(var target of targets){bind_target(target,scope,C)}}else if(targets instanceof $ListOrTupleCtx){for(var target of targets.tree){bind_target(target,scope,C)}}else if(targets.type=='expr' && targets.tree[0]instanceof $IdCtx){$bind(targets.tree[0].value,scope,C)}}
 $ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
 var targets=C.tree[0].tree,named_expr_ids={}
 if(C.parent.comprehension){
 for(var item of C.parent.tree[0].tree){if(item.type=='named_expr' && item.target.type=='id'){named_expr_ids[item.target.value]=item}}}
-bind_target(targets,this.scope,this)
 if(C.tree[0].tree.length==0){
 $_SyntaxError(C,"missing target between 'for' and 'in'")}
 return new $AbstractExprCtx(
@@ -2112,10 +2077,6 @@ set_position(ast_obj,this.position)
 return ast_obj}
 $FromCtx.prototype.add_name=function(name){this.names[this.names.length]=name
 if(name=='*'){this.scope.blurred=true}}
-$FromCtx.prototype.bind_names=function(){
-var scope=$get_scope(this)
-for(var name of this.names){if(Array.isArray(name)){name=name[1]}
-$bind(name,scope,this)}}
 $FromCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.expect=='module'){C.module+=value
@@ -2152,7 +2113,6 @@ return C}
 case 'eol':
 switch(C.expect){case ',':
 case 'eol':
-C.bind_names()
 return $transition(C.parent,token)
 case 'id':
 $_SyntaxError(C,['trailing comma not allowed without '+
@@ -2239,14 +2199,9 @@ this.parent=C
 this.position=$token.value
 if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.push(name)}
 if(C.parent.type !="lambda"){var node=$get_node(this)
-if(node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
-$bind(name,node,this)}
+if(node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}}
 this.tree=[]
 C.tree[C.tree.length]=this
-var ctx=C
-while(ctx.parent !==undefined){if(ctx.type=='def'){ctx.locals.push(name)
-break}
-ctx=ctx.parent}
 this.expect='='}
 $FuncArgIdCtx.prototype.toString=function(){return 'func arg id '+this.name+'='+this.tree}
 $FuncArgIdCtx.prototype.transition=function(token,value){var C=this
@@ -2300,11 +2255,9 @@ return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
 $_SyntaxError(C,'token '+token+' after '+C)}
 $FuncStarArgCtx.prototype.set_name=function(name){this.name=name
-if(this.parent.parent.type !="lambda"){if(this.node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}
-$bind(name,this.node,this)}
+if(this.parent.parent.type !="lambda"){if(this.node.binding.hasOwnProperty(name)){$_SyntaxError(C,["duplicate argument '"+name+"' in function definition"])}}
 var ctx=this.parent
-while(ctx.parent !==undefined){if(ctx.type=='def'){ctx.locals.push(name)
-break}
+while(ctx.parent !==undefined){if(ctx.type=='def'){break}
 ctx=ctx.parent}
 if(this.op=='*'){ctx.other_args='"'+name+'"'}
 else{ctx.other_kw='"'+name+'"'}}
@@ -2333,7 +2286,6 @@ this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
-this.scope.globals=this.scope.globals ||new Set()
 this.module=$get_module(this)
 if(this.module.module !=='<module>'){
 while(this.module.module !=this.module.id){this.module=this.module.parent_block}}
@@ -2344,18 +2296,9 @@ var ast_obj=new ast.Global(this.tree.map(item=> item.value))
 set_position(ast_obj,this.position)
 return ast_obj}
 $GlobalCtx.prototype.toString=function(){return 'global '+this.tree}
-function check_global_nonlocal(C,value,type){var scope=C.scope
-if(type=='nonlocal' && scope.globals && scope.globals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
-if(type=='global' && scope.nonlocals && scope.nonlocals.has(value)){$_SyntaxError(C,[`name '${value}' is nonlocal and global`])}
-if(['def','generator'].indexOf(scope.ntype)>-1){var params=scope.C.tree[0]
-if(params.locals && params.locals.indexOf(value)>-1){$_SyntaxError(C,[`name '${value}' is parameter and ${type}`])}
-if(scope.binding[value]){console.log('scope ntype',scope)
-$_SyntaxError(C,[`name '${value}' is assigned to before ${type} declaration`])}
-if(scope.referenced && scope.referenced[value]){$_SyntaxError(C,[`name '${value}' is used prior to ${type} declaration`])}}}
 $GlobalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){check_global_nonlocal(C,value,'global')
-new $IdCtx(C,value)
+if(C.expect=='id'){new $IdCtx(C,value)
 C.add(value)
 C.expect=','
 return C}
@@ -2368,14 +2311,8 @@ case 'eol':
 if(C.expect==','){return $transition(C.parent,token)}
 break}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$GlobalCtx.prototype.add=function(name){if(this.scope.annotations && this.scope.annotations.has(name)){$_SyntaxError(this,["annotated name '"+name+
-"' can't be global"])}
-if(this.scope.type=="module"){
+$GlobalCtx.prototype.add=function(name){if(this.scope.type=="module"){
 return}
-if(this.scope.binding && this.scope.binding[name]){console.log('error globals, scope',this.scope)
-$pos=this.$pos-1
-$_SyntaxError(this,[`name '${name}' is parameter and global`])}
-this.scope.globals.add(name)
 var mod=this.scope.parent_block
 if(this.module.module.startsWith("$exec")){while(mod && mod.parent_block !==this.module){
 mod._globals=mod._globals ||new Map()
@@ -2396,31 +2333,7 @@ this.env=clone(this.scope.binding)
 if(["def","generator"].indexOf(scope.ntype)>-1){if((!(C instanceof $GlobalCtx))&&
 !(C instanceof $NonlocalCtx)){scope.referenced=scope.referenced ||{}
 if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}}
-if(C.parent.type=='call_arg'){this.call_arg=true}
-var ctx=C
-while(ctx.parent !==undefined){switch(ctx.type){case 'ctx_manager_alias':
-$bind(value,scope,this)
-break
-case 'list_or_tuple':
-case 'dict_or_set':
-case 'call_arg':
-case 'def':
-case 'lambda':
-if(ctx.vars===undefined){ctx.vars=[value]}
-else if(ctx.vars.indexOf(value)==-1){ctx.vars.push(value)}
-if(this.call_arg&&ctx.type=='lambda'){if(ctx.locals===undefined){ctx.locals=[value]}
-else{ctx.locals.push(value)}}}
-ctx=ctx.parent}
-var target_list=$parent_match(C,{type:'target_list'})
-if(target_list){
-this.no_bindings=true
-this.bound=true}
-if(["def","generator"].indexOf(scope.ntype)>-1){
-var _ctx=this.parent
-while(_ctx){if(_ctx.comprehension){this.in_comp=true
-break}
-_ctx=_ctx.parent}
-if(C.type=='expr' && C.parent.type=='comp_if'){}else if(C.type=='global'){if(scope.globals===undefined){scope.globals=new Set([value])}else{scope.globals.add(value)}}}}
+if(C.parent.type=='call_arg'){this.call_arg=true}}
 $IdCtx.prototype.ast=function(){var ast_obj
 if(['True','False','None'].indexOf(this.value)>-1){ast_obj=new ast.Constant(_b_[this.value])}else{ast_obj=new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())}
 set_position(ast_obj,this.position)
@@ -2464,49 +2377,6 @@ $_SyntaxError(C,'token '+token+' after '+
 C)}
 if(this.parent.parent.type=="packed"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return $transition(C.parent,token,value)}
-$IdCtx.prototype.firstBindingScopeId=function(){
-var scope=this.scope,found=[],nb=0
-while(scope){if(scope.globals && scope.globals.has(this.value)){return $get_module(this).id}
-if(scope.binding && scope.binding[this.value]){return scope.id}
-scope=scope.parent}}
-$IdCtx.prototype.boundBefore=function(scope){
-function test(node,name){if(node.bindings && node.bindings[name]){
-var ctx=node.C.tree[0]
-if(['def','generator'].indexOf(ctx.type)>-1 &&
-ctx.locals.indexOf(name)>-1){return false}
-return true}}
-var node=$get_node(this),found=false
-var $test=false 
-if($test){console.log(this.value,"bound before")
-console.log("node",node)
-console.log('scope',scope)}
-if((scope.ntype=="def" ||scope.ntype=="generator")&&
-scope.C.tree[0].args.indexOf(this.value)>-1){return true}
-while(!found && node.parent){var pnode=node.parent
-if(test(pnode,this.value)){if($test){console.log("bound in",pnode)}
-return pnode.bindings[this.value]}
-for(var i=0;i < pnode.children.length;i++){var child=pnode.children[i]
-if(child===node){break}
-if(test(child,this.value)){if($test){console.log("bound in child",child)}
-return child.bindings[this.value]}}
-if(pnode===scope){break}
-node=pnode}
-return found}
-$IdCtx.prototype.bindingType=function(scope){
-var nb=0,node=$get_node(this),found=false,unknown,ix
-while(!found && node.parent && nb++< 100){var pnode=node.parent
-if(pnode.bindings && pnode.bindings[this.value]){return pnode.bindings[this.value]}
-for(var i=0;i < pnode.children.length;i++){var child=pnode.children[i]
-if(child===node){break}
-if(child.bindings && child.bindings[this.value]){found=child.bindings[this.value]
-ix=i}}
-if(found){for(var j=ix+1;j < pnode.children.length;j++){child=pnode.children[j]
-if(child.children.length > 0){unknown=true
-break}else if(child===node){break}}
-return found ||unknown}
-if(pnode===scope){break}
-node=pnode}
-return found}
 var $ImportCtx=$B.parser.$ImportCtx=function(C){
 this.type='import'
 this.parent=C
@@ -2552,15 +2422,9 @@ if(C.expect==','){C.expect='alias'
 return C}
 break
 case 'eol':
-if(C.expect==','){C.bind_names()
-return $transition(C.parent,token)}
+if(C.expect==','){return $transition(C.parent,token)}
 break}
 $_SyntaxError(C,'token '+token+' after '+C)}
-$ImportCtx.prototype.bind_names=function(){
-var scope=$get_scope(this)
-for(var item of this.tree){if(item.name==item.alias){var name=item.name,parts=name.split('.'),bound=name
-if(parts.length>1){bound=parts[0]}}else{bound=item.alias}
-$bind(bound,scope,this)}}
 var $ImportedModuleCtx=$B.parser.$ImportedModuleCtx=function(C,name){this.type='imported module'
 this.parent=C
 this.name=name
@@ -2663,8 +2527,6 @@ C.tree[C.tree.length]=this
 this.tree=[]
 this.position=$token.value
 this.args_start=$pos+6
-this.vars=[]
-this.locals=[]
 this.node=$get_node(this)
 this.positional_list=[]
 this.default_list=[]
@@ -2834,21 +2696,6 @@ for(var comment of scope.comments){var start=comment[0],len=comment[1]
 src=src.substr(0,start)+' '.repeat(len+1)+
 src.substr(start+len+1)}
 return src}
-$ListOrTupleCtx.prototype.bind_ids=function(scope){
-for(var item of this.tree){if(item.type=='id'){$bind(item.value,scope,this)
-item.bound=true}else if(item.type=='expr' && item.tree[0].type=="id"){$bind(item.tree[0].value,scope,this)
-item.tree[0].bound=true}else if(item.type=='expr' && item.tree[0].type=="packed"){var ctx=item.tree[0].tree[0]
-if(ctx.type=='expr' && ctx.tree[0].type=='id'){$bind(ctx.tree[0].value,scope,this)
-ctx.tree[0].bound=true}}else if(item.type=='list_or_tuple' ||
-(item.type=="expr" &&
-item.tree[0].type=='list_or_tuple')){if(item.type=="expr"){item=item.tree[0]}
-item.bind_ids(scope)}}}
-$ListOrTupleCtx.prototype.packed_indices=function(){var ixs=[]
-for(var i=0;i < this.tree.length;i++){var t=this.tree[i]
-if(t.type=="expr"){t=t.tree[0]
-if(t.type=="packed" ||
-(t.type=="call" && t.func.type=="packed")){ixs.push(i)}}}
-return ixs}
 $ListOrTupleCtx.prototype.unpack=function(packed){var js="",res
 for(var i=0;i < this.tree.length;i++){if(packed.indexOf(i)>-1){res="_b_.list.$factory("+this.tree[i].to_js()+")"}else{res="["+this.tree[i].to_js()+"]"}
 if(i > 0){res=".concat("+res+")"}
@@ -2881,7 +2728,6 @@ var NamedExprCtx=function(C){
 this.type='named_expr'
 this.position=$token.value
 this.target=C.tree[0]
-this.target.scope_ref=this.target.binding_scope.id.replace(/\./g,'_')
 C.tree.pop()
 C.tree.push(this)
 this.parent=C
@@ -2909,7 +2755,6 @@ _break_flag=true}
 if(_break_flag){break}
 tree_node=tree_node.parent}
 if(scope===null){scope=tree_node.parent ||tree_node }
-this.node.locals=clone(scope.binding)
 this.scope=scope}
 $NodeCtx.prototype.toString=function(){return 'node '+this.tree}
 $NodeCtx.prototype.transition=function(token,value){var C=this
@@ -3069,8 +2914,7 @@ this.names[name]=[false,$pos]
 this.scope.nonlocals.add(name)}
 $NonlocalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){check_global_nonlocal(C,value,'nonlocal')
-new $IdCtx(C,value)
+if(C.expect=='id'){new $IdCtx(C,value)
 C.add(value)
 C.expect=','
 return C}
@@ -4136,12 +3980,7 @@ $_SyntaxError(C,'token '+token+' after '+
 C.expect)}
 $WithCtx.prototype.set_alias=function(ctx){var ids=[]
 if(ctx.type=="id"){ids=[ctx]}else if(ctx.type=="list_or_tuple"){
-for(var expr of ctx.tree){if(expr.type=="expr" && expr.tree[0].type=="id"){ids.push(expr.tree[0])}}}
-for(var i=0,len=ids.length;i < len;i++){var id_ctx=ids[i]
-$bind(id_ctx.value,this.scope,this)
-id_ctx.bound=true
-if(this.scope.ntype !=='module'){
-this.scope.C.tree[0].locals.push(id_ctx.value)}}}
+for(var expr of ctx.tree){if(expr.type=="expr" && expr.tree[0].type=="id"){ids.push(expr.tree[0])}}}}
 var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
 this.parent=C
@@ -4235,29 +4074,6 @@ offset=2}
 var i=0
 while(i < node.children.length){i+=$add_line_num(node.children[i],i,line_info)}
 return offset}else{return 1}}
-function find_scope(name,scope){
-if(scope.binding[name]){return scope}else if(scope.globals && scope.globals.has(name)){return $get_module(scope.C)}else if(scope.nonlocals && scope.nonlocals.has(name)){
-var parent_block=scope.parent_block
-while(parent_block){if(parent_block.binding[name]){return parent_block}
-parent_block=parent_block.parent_block}}}
-var $bind=$B.parser.$bind=function(name,scope,C){
-name=$mangle(name,C)
-if(scope.nonlocals && scope.nonlocals.has(name)){
-var parent_block=scope.parent_block
-while(parent_block){if(parent_block.binding[name]){return parent_block}
-parent_block=parent_block.parent_block}
-return}
-if(scope.globals && scope.globals.has(name)){var module=$get_module(C)
-module.binding[name]=true
-return module}
-if(! C.no_bindings){var node=$get_node(C)
-node.bindings=node.bindings ||{}
-node.bindings[name]=true}
-scope.binding=scope.binding ||{}
-if(! scope.binding.hasOwnProperty(name)){scope.binding[name]=true}
-scope.varnames=scope.varnames ||{}
-if(scope.varnames[name]===undefined){scope.varnames[name]=true}
-return scope}
 function $parent_match(ctx,obj){
 var flag
 while(ctx.parent){flag=true
@@ -8286,7 +8102,7 @@ if(err.$handled){return}
 err.$handled=true
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)
 console.log(err)}
-if(false && err.__class__===_b_.SyntaxError){var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1]
+if(err.__class__===_b_.SyntaxError){var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1]
 trace=`File ${filename}, line ${err.args[1][1]}\n`+
 `${line}\n`+
 ' '.repeat(err.args[1][2]-1)+'^\n'+
@@ -15585,12 +15401,12 @@ console.log("unhandled",ast.constructor.$name)
 return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
-var GLOBAL_PARAM="name '%U' is parameter and global",NONLOCAL_PARAM="name '%U' is parameter and nonlocal",GLOBAL_AFTER_ASSIGN="name '%U' is assigned to before global declaration",NONLOCAL_AFTER_ASSIGN="name '%U' is assigned to before nonlocal declaration",GLOBAL_AFTER_USE="name '%U' is used prior to global declaration",NONLOCAL_AFTER_USE="name '%U' is used prior to nonlocal declaration",GLOBAL_ANNOT="annotated name '%U' can't be global",NONLOCAL_ANNOT="annotated name '%U' can't be nonlocal",IMPORT_STAR_WARNING="import * only allowed at module level",NAMED_EXPR_COMP_IN_CLASS=
+var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' is parameter and nonlocal",GLOBAL_AFTER_ASSIGN="name '%s' is assigned to before global declaration",NONLOCAL_AFTER_ASSIGN="name '%s' is assigned to before nonlocal declaration",GLOBAL_AFTER_USE="name '%s' is used prior to global declaration",NONLOCAL_AFTER_USE="name '%s' is used prior to nonlocal declaration",GLOBAL_ANNOT="annotated name '%s' can't be global",NONLOCAL_ANNOT="annotated name '%s' can't be nonlocal",IMPORT_STAR_WARNING="import * only allowed at module level",NAMED_EXPR_COMP_IN_CLASS=
 "assignment expression within a comprehension cannot be used in a class body",NAMED_EXPR_COMP_CONFLICT=
 "assignment expression cannot rebind comprehension iteration variable '%s'",NAMED_EXPR_COMP_INNER_LOOP_CONFLICT=
 "comprehension inner loop cannot rebind assignment expression target '%s'",NAMED_EXPR_COMP_ITER_EXPR=
 "assignment expression cannot be used in a comprehension iterable expression",ANNOTATION_NOT_ALLOWED=
-"'%s' can not be used within an annotation"
+"'%s' can not be used within an annotation",DUPLICATE_ARGUMENT="duplicate argument '%s' in function definition"
 var DEF_GLOBAL=1,
 DEF_LOCAL=2 ,
 DEF_PARAM=2<<1,
@@ -15688,15 +15504,15 @@ return 0}}
 PyErr_SetString(PyExc_RuntimeError,"BUG: internal directive bookkeeping broken")
 return 0}
 function SET_SCOPE(DICT,NAME,I){$B.$setitem(DICT,NAME,I)}
-function analyze_name(ste,scopes,name,flags,bound,local,free,global){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){PyErr_Format(PyExc_SyntaxError,"name '%U' is nonlocal and global",name)
-return error_at_directive(ste,name)}
+function analyze_name(ste,scopes,name,flags,bound,local,free,global){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){var exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
+error_at_directive(exc,ste,name)
+throw exc}
 SET_SCOPE(scopes,name,GLOBAL_EXPLICIT)
 global.add(name)
 if(bound){bound.delete(name)}
 return 1}
 if(flags & DEF_NONLOCAL){if(!bound){var exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
 error_at_directive(exc,ste,name)
-console.log('exc.args',exc.args)
 throw exc}
 if(! bound.has(name)){var exc=PyErr_Format(_b_.SyntaxError,"no binding for nonlocal '%s' found",name)
 error_at_directive(exc,ste,name)
@@ -15820,9 +15636,9 @@ dict=ste.symbols
 if(dict.$string_dict.hasOwnProperty(mangled)){o=dict.$string_dict[mangled][0]
 val=o
 if((flag & DEF_PARAM)&&(val & DEF_PARAM)){
-PyErr_Format(PyExc_SyntaxError,DUPLICATE_ARGUMENT,name);
-PyErr_RangedSyntaxLocationObject(st.filename,lineno,col_offset+1,end_lineno,end_col_offset+1);
-return 0}
+var exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
+exc.args[1]=[st.filename,lineno,col_offset+1]
+throw exc}
 val |=flag}else{val=flag}
 if(ste.comp_iter_target){
 if(val &(DEF_GLOBAL |DEF_NONLOCAL)){PyErr_Format(PyExc_SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
@@ -15905,9 +15721,9 @@ var cur=symtable_lookup(st,e_name.id)
 if(cur < 0){VISIT_QUIT(st,0)}
 if((cur &(DEF_GLOBAL |DEF_NONLOCAL))
 &&(st.cur.symbols !=st.global)
-&& ssimple){PyErr_Format(PyExc_SyntaxError,cur & DEF_GLOBAL ? GLOBAL_ANNOT :NONLOCAL_ANNOT,e_name.id)
-PyErr_RangedSyntaxLocationObject(st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1)
-VISIT_QUIT(st,0)}
+&& s.simple){var exc=PyErr_Format(_b_.SyntaxError,cur & DEF_GLOBAL ? GLOBAL_ANNOT :NONLOCAL_ANNOT,e_name.id)
+exc.args[1]=[st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1]
+throw exc}
 if(s.simple &&
 ! symtable_add_def(st,e_name.id,DEF_ANNOT |DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}else{if(s.value
 && !symtable_add_def(st,e_name.id,DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}}}else{VISIT(st,expr,s.target)}
@@ -15971,9 +15787,10 @@ if(cur < 0){VISIT_QUIT(st,0)}
 if(cur &(DEF_PARAM |DEF_LOCAL |USE |DEF_ANNOT)){var msg
 if(cur & DEF_PARAM){msg=GLOBAL_PARAM}else if(cur & USE){msg=GLOBAL_AFTER_USE}else if(cur & DEF_ANNOT){msg=GLOBAL_ANNOT}else{
 msg=GLOBAL_AFTER_ASSIGN}
-PyErr_Format(PyExc_SyntaxError,msg,name)
-PyErr_RangedSyntaxLocationObject(st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1)
-VISIT_QUIT(st,0)}
+var exc=PyErr_Format(_b_.SyntaxError,msg,name)
+exc.args[1]=[st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1]
+console.log('args',exc.args)
+throw exc}
 if(! symtable_add_def(st,name,DEF_GLOBAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(! symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
@@ -15986,9 +15803,9 @@ if(cur < 0){VISIT_QUIT(st,0)}
 if(cur &(DEF_PARAM |DEF_LOCAL |USE |DEF_ANNOT)){var msg
 if(cur & DEF_PARAM){msg=NONLOCAL_PARAM}else if(cur & USE){msg=NONLOCAL_AFTER_USE}else if(cur & DEF_ANNOT){msg=NONLOCAL_ANNOT}else{
 msg=NONLOCAL_AFTER_ASSIGN}
-PyErr_Format(PyExc_SyntaxError,msg,name)
-PyErr_RangedSyntaxLocationObject(st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1)
-VISIT_QUIT(st,0)}
+var exc=PyErr_Format(_b_.SyntaxError,msg,name)
+exc.args[1]=[st.filename,s.lineno,s.col_offset+1,s.end_lineno,s.end_col_offset+1]
+throw exc}
 if(!symtable_add_def(st,name,DEF_NONLOCAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(!symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
