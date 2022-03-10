@@ -3,14 +3,14 @@
 var _b_ = $B.builtins
 
 /* error strings used for warnings */
-var GLOBAL_PARAM = "name '%U' is parameter and global",
-    NONLOCAL_PARAM = "name '%U' is parameter and nonlocal",
-    GLOBAL_AFTER_ASSIGN = "name '%U' is assigned to before global declaration",
-    NONLOCAL_AFTER_ASSIGN = "name '%U' is assigned to before nonlocal declaration",
-    GLOBAL_AFTER_USE = "name '%U' is used prior to global declaration",
-    NONLOCAL_AFTER_USE = "name '%U' is used prior to nonlocal declaration",
-    GLOBAL_ANNOT = "annotated name '%U' can't be global",
-    NONLOCAL_ANNOT = "annotated name '%U' can't be nonlocal",
+var GLOBAL_PARAM = "name '%s' is parameter and global",
+    NONLOCAL_PARAM = "name '%s' is parameter and nonlocal",
+    GLOBAL_AFTER_ASSIGN = "name '%s' is assigned to before global declaration",
+    NONLOCAL_AFTER_ASSIGN = "name '%s' is assigned to before nonlocal declaration",
+    GLOBAL_AFTER_USE = "name '%s' is used prior to global declaration",
+    NONLOCAL_AFTER_USE = "name '%s' is used prior to nonlocal declaration",
+    GLOBAL_ANNOT = "annotated name '%s' can't be global",
+    NONLOCAL_ANNOT = "annotated name '%s' can't be nonlocal",
     IMPORT_STAR_WARNING = "import * only allowed at module level",
     NAMED_EXPR_COMP_IN_CLASS =
     "assignment expression within a comprehension cannot be used in a class body",
@@ -21,7 +21,8 @@ var GLOBAL_PARAM = "name '%U' is parameter and global",
     NAMED_EXPR_COMP_ITER_EXPR =
     "assignment expression cannot be used in a comprehension iterable expression",
     ANNOTATION_NOT_ALLOWED =
-    "'%s' can not be used within an annotation"
+    "'%s' can not be used within an annotation",
+    DUPLICATE_ARGUMENT = "duplicate argument '%s' in function definition"
 
 /* Flags for def-use information */
 
@@ -340,10 +341,11 @@ function analyze_name(ste, scopes, name, flags,
              global){
     if(flags & DEF_GLOBAL){
         if(flags & DEF_NONLOCAL){
-            PyErr_Format(PyExc_SyntaxError,
-                         "name '%U' is nonlocal and global",
+            var exc = PyErr_Format(_b_.SyntaxError,
+                         "name '%s' is nonlocal and global",
                          name)
-            return error_at_directive(ste, name)
+            error_at_directive(exc, ste, name)
+            throw exc
         }
         SET_SCOPE(scopes, name, GLOBAL_EXPLICIT)
         global.add(name)
@@ -357,7 +359,6 @@ function analyze_name(ste, scopes, name, flags,
             var exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal declaration not allowed at module level");
             error_at_directive(exc, ste, name)
-            console.log('exc.args', exc.args)
             throw exc
         }
         if (! bound.has(name)) {
@@ -365,13 +366,6 @@ function analyze_name(ste, scopes, name, flags,
                 "no binding for nonlocal '%s' found", name)
             error_at_directive(exc, ste, name)
             throw exc
-
-            /*
-            PyErr_Format(PyExc_SyntaxError,
-                         "no binding for nonlocal '%U' found",
-                         name)
-            return
-            */
         }
         SET_SCOPE(scopes, name, FREE)
         ste.free = 1
@@ -772,11 +766,9 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         val = o
         if ((flag & DEF_PARAM) && (val & DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */
-            PyErr_Format(PyExc_SyntaxError, DUPLICATE_ARGUMENT, name);
-            PyErr_RangedSyntaxLocationObject(st.filename,
-                                             lineno, col_offset + 1,
-                                             end_lineno, end_col_offset + 1);
-            return 0
+            var exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_ARGUMENT, name);
+            exc.args[1] = [st.filename, lineno, col_offset + 1]
+            throw exc
         }
         val |= flag
     }else{
@@ -959,16 +951,16 @@ function symtable_visit_stmt(st, s){
             }
             if((cur & (DEF_GLOBAL | DEF_NONLOCAL))
                     && (st.cur.symbols != st.global)
-                    && ssimple){
-                PyErr_Format(PyExc_SyntaxError,
+                    && s.simple){
+                var exc = PyErr_Format(_b_.SyntaxError,
                              cur & DEF_GLOBAL ? GLOBAL_ANNOT : NONLOCAL_ANNOT,
                              e_name.id)
-                PyErr_RangedSyntaxLocationObject(st.filename,
-                                                 s.lineno,
-                                                 s.col_offset + 1,
-                                                 s.end_lineno,
-                                                 s.end_col_offset + 1)
-                VISIT_QUIT(st, 0)
+                exc.args[1] = [st.filename,
+                               s.lineno,
+                               s.col_offset + 1,
+                               s.end_lineno,
+                               s.end_col_offset + 1]
+                throw exc
             }
             if(s.simple &&
                ! symtable_add_def(st, e_name.id,
@@ -1072,14 +1064,14 @@ function symtable_visit_stmt(st, s){
                 }else{  /* DEF_LOCAL */
                     msg = GLOBAL_AFTER_ASSIGN
                 }
-                PyErr_Format(PyExc_SyntaxError,
-                             msg, name)
-                PyErr_RangedSyntaxLocationObject(st.filename,
-                                                 s.lineno,
-                                                 s.col_offset + 1,
-                                                 s.end_lineno,
-                                                 s.end_col_offset + 1)
-                VISIT_QUIT(st, 0)
+                var exc = PyErr_Format(_b_.SyntaxError, msg, name)
+                exc.args[1] = [st.filename,
+                               s.lineno,
+                               s.col_offset + 1,
+                               s.end_lineno,
+                               s.end_col_offset + 1]
+                console.log('args', exc.args)
+                throw exc
             }
             if(! symtable_add_def(st, name, DEF_GLOBAL, LOCATION(s)))
                 VISIT_QUIT(st, 0)
@@ -1107,13 +1099,13 @@ function symtable_visit_stmt(st, s){
                 }else{  /* DEF_LOCAL */
                     msg = NONLOCAL_AFTER_ASSIGN
                 }
-                PyErr_Format(PyExc_SyntaxError, msg, name)
-                PyErr_RangedSyntaxLocationObject(st.filename,
-                                                 s.lineno,
-                                                 s.col_offset + 1,
-                                                 s.end_lineno,
-                                                 s.end_col_offset + 1)
-                VISIT_QUIT(st, 0)
+                var exc = PyErr_Format(_b_.SyntaxError, msg, name)
+                exc.args[1] = [st.filename,
+                               s.lineno,
+                               s.col_offset + 1,
+                               s.end_lineno,
+                               s.end_col_offset + 1]
+                throw exc
             }
             if (!symtable_add_def(st, name, DEF_NONLOCAL, LOCATION(s)))
                 VISIT_QUIT(st, 0)
