@@ -109,8 +109,8 @@ $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
 }
 
 $B.$IndentationError = function(module, msg, src, pos, line_num, root,
-        indented_node) {
-    $B.frames_stack.push([module, {$line_info: line_num + "," + module},
+        indented_node){
+    $B.frames_stack.push([module, {$lineno: line_num},
         module, {$src: src}])
     if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
@@ -478,6 +478,8 @@ var getExceptionTrace = function(exc, includeInternal) {
             src = frame.exec_src
         }else if(frame[1].$lineno){
             line_info = [frame[1].$lineno, frame[2]]
+        }else{
+            console.log('bizarre', frame)
         }
         var file = frame[1].__file__ || frame[3].__file__
         if(src == undefined){
@@ -851,18 +853,15 @@ $B.attr_error = function(name, obj){
 }
 
 // NameError supports keyword-only "name" parameter
-var js = '\nvar $ = $B.args("NameError", 1, {"msg": null, "name":null}, ' +
-    '["msg", "name"], arguments, ' +
-    '{msg: _b_.None, name: _b_.None}, "*", null);\n' +
-    'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;' +
+var js = '\nvar $ = $B.args("NameError", 1, {"name":null}, ' +
+    '["name"], arguments, ' +
+    '{name: _b_.None}, "*", null);\n' +
+    'err.args = $B.fast_tuple($.name === _b_.None ? [] : [$.name])\n;' +
     'err.name = $.name\n'
 
 $make_exc([["NameError", js]], _b_.Exception)
 
 _b_.NameError.__str__ = function(self){
-    if(self.args.length > 0){
-        return self.args[0]
-    }
     var msg = `name '${self.name}' is not defined`,
         suggestion = offer_suggestions_for_name_error(self)
     if(suggestion){
@@ -877,7 +876,7 @@ $make_exc(["UnboundLocalError"], _b_.NameError)
 
 // Shortcut to create a NameError
 $B.name_error = function(name, obj){
-    return _b_.NameError.$factory({$nat:"kw",kw:{name}})
+    return _b_.NameError.$factory({$nat:"kw", kw:{name}})
 }
 
 $B.$TypeError = function(msg){
@@ -1048,7 +1047,9 @@ $B.handle_error = function(err){
         console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
         console.log(err)
     }
-    if(err.__class__ === _b_.SyntaxError){
+    if(err.__class__ === _b_.SyntaxError ||
+            err.__class__ === _b_.IndentationError){
+        console.log('args', err.args)
         var filename = err.args[1][0],
             src = $B.file_cache[filename],
             lines = src.split('\n'),

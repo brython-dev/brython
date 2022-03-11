@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-11 14:30:38.764604"
-__BRYTHON__.timestamp=1647005438764
+__BRYTHON__.compiled_date="2022-03-11 17:05:55.826474"
+__BRYTHON__.timestamp=1647014755826
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -798,23 +798,22 @@ if(C.type=='assign'){check_assignment(C.tree[1])}else{var assigned=C.tree[0]
 if(assigned.type=="ellipsis"){$_SyntaxError(C,['cannot assign to Ellipsis'])}else if(assigned.type=="unary"){$_SyntaxError(C,["cannot assign to operator"])}else if(assigned.type=="packed"){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
 if(['None','True','False','__debug__'].indexOf(id)>-1){$_SyntaxError(C,['cannot assign to '+id])}}
 if(assigned.parent.in_tuple===undefined){$_SyntaxError(C,["starred assignment target must be in a list or tuple"])}}}}
+function set_ctx_to_store(obj){if(Array.isArray(obj)){for(var item of obj){set_ctx_to_store(item)}}else if(obj instanceof ast.List ||
+obj instanceof ast.Tuple){for(var item of obj.elts){set_ctx_to_store(item)}}else if(obj instanceof ast.Starred){obj.value.ctx=new ast.Store()}else if(obj===undefined){}else if(obj.ctx){obj.ctx=new ast.Store()}else{console.log('bizarre',obj)}}
 $AssignCtx.prototype.ast=function(){var value=this.tree[1].ast(),targets=[],target=this.tree[0]
 if(target.type=='expr' && target.tree[0].type=='list_or_tuple'){target=target.tree[0]}
 if(target.type=='list_or_tuple'){target=target.ast()
-for(var elt of target.elts){elt.ctx=new ast.Store()
-if(elt instanceof ast.Starred){elt.value.ctx=new ast.Store()}}
 target.ctx=new ast.Store()
 targets=[target]}else{while(target.type=='assign'){targets.splice(0,0,target.tree[1].ast())
 target=target.tree[0]}
-targets.splice(0,0,target.ast())
-for(var tg of targets){tg.ctx=new ast.Store()
-if(tg instanceof ast.Tuple){for(var elt of tg.elts){elt.ctx=new ast.Store()}}}}
+targets.splice(0,0,target.ast())}
 value.ctx=new ast.Load()
 var lineno=$get_node(this).line_num
 if(target.annotation){var ast_obj=new ast.AnnAssign(
 target.tree[0].ast(),target.annotation.tree[0].ast(),value,1)
 ast_obj.target.ctx=new ast.Store()}else{var ast_obj=new ast.Assign(targets,value)}
 set_position(ast_obj,this.position)
+set_ctx_to_store(ast_obj.targets)
 return ast_obj}
 $AssignCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){$_SyntaxError(C,'token '+token+' after '+
@@ -4164,7 +4163,6 @@ var root=$create_root_node(
 dispatch_tokens(root)
 var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
-$B.file_cache[locals_id]=src
 var symtable=$B._PySymtable_Build(_ast,locals_id)
 var js_from_ast=$B.js_from_root(_ast,symtable,filename)
 root._ast=_ast
@@ -4286,7 +4284,9 @@ $B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src}])}else{
 src=(elt.innerHTML ||elt.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
-$B.tasks.push([$B.run_script,src,module_name,$B.script_path+"#"+module_name,true])}}}}
+var filename=$B.script_path+"#"+module_name
+$B.file_cache[filename]=src
+$B.tasks.push([$B.run_script,src,module_name,filename,true])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.run_script=function(src,name,url,run_loop){
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}
@@ -4304,7 +4304,6 @@ root=null}
 $B.tasks.push(["execute",script])
 if(run_loop){$B.loop()}}
 var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i+1,":",line)})}
-var _run_scripts=$B.parser._run_scripts=function(options){}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.brython=brython})(__BRYTHON__)
@@ -6094,7 +6093,8 @@ var lines=src.split('\n'),line=lines[lines.length-2]
 exc.args=['unexpected EOF while parsing',['<string>',lines.length-1,1,line]]
 throw exc}
 var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={}
-var handler={get:function(obj,prop){return obj[prop]},set:function(obj,prop,value){if(['__file__','$lineno'].indexOf(prop)==-1){obj[prop]=value}}}
+var handler={get:function(obj,prop){if(prop=='$lineno'){return lineno}
+return obj[prop]},set:function(obj,prop,value){if(['__file__','$lineno'].indexOf(prop)==-1){obj[prop]=value}}}
 if(_globals===_b_.None){
 exec_locals=new Proxy(frame[1],handler)
 exec_globals=new Proxy(frame[3],handler)}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
@@ -6115,6 +6115,7 @@ var missing=$B.$getattr(_locals.__class__,'__missing__',null)
 if(missing){exec_locals.$missing=$B.$call(missing)}}}}
 var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
 root.mode=mode
+root.filename='<string>'
 $B.parser.dispatch_tokens(root)
 var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})
 var save_frames_stack=$B.frames_stack.slice()
@@ -6122,6 +6123,7 @@ $B.frames_stack=[]
 var top_frame=[local_name,exec_locals,global_name,exec_globals]
 top_frame.is_exec_top=true
 exec_locals.$f_trace=$B.enter_frame(top_frame)
+exec_locals.$lineno=1
 if(mode=='eval'){js='return '+js}
 var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){
@@ -7124,7 +7126,7 @@ line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
-$B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){$B.frames_stack.push([module,{$line_info:line_num+","+module},module,{$src:src}])
+$B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){$B.frames_stack.push([module,{$lineno:line_num},module,{$src:src}])
 if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 if(indented_node){var type=indented_node.C.tree[0].type
@@ -7270,7 +7272,7 @@ var frame=exc.$stack[i]
 if(! frame[1]){continue}
 if(frame.exec_obj){
 line_info=[frame.exec_obj.$lineno,frame[2]]
-src=frame.exec_src}else if(frame[1].$lineno){line_info=[frame[1].$lineno,frame[2]]}
+src=frame.exec_src}else if(frame[1].$lineno){line_info=[frame[1].$lineno,frame[2]]}else{console.log('bizarre',frame)}
 var file=frame[1].__file__ ||frame[3].__file__
 if(src==undefined){if(file && $B.file_cache[file]){src=$B.file_cache[file]}else{console.log('pas de __file__ ou de file_cache[__file]')
 console.log(exc.$stack)
@@ -7419,14 +7421,13 @@ $B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){if(obj.$is_class){var msg=`type object '${obj.$infos.__name__}'`}else{var msg=`'${$B.class_name(obj)}' object`}
 msg+=` has no attribute '${name}'`
 return _b_.AttributeError.$factory({$nat:"kw",kw:{name,obj,msg}})}
-var js='\nvar $ = $B.args("NameError", 1, {"msg": null, "name":null}, '+
-'["msg", "name"], arguments, '+
-'{msg: _b_.None, name: _b_.None}, "*", null);\n'+
-'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;'+
+var js='\nvar $ = $B.args("NameError", 1, {"name":null}, '+
+'["name"], arguments, '+
+'{name: _b_.None}, "*", null);\n'+
+'err.args = $B.fast_tuple($.name === _b_.None ? [] : [$.name])\n;'+
 'err.name = $.name\n'
 $make_exc([["NameError",js]],_b_.Exception)
-_b_.NameError.__str__=function(self){if(self.args.length > 0){return self.args[0]}
-var msg=`name '${self.name}' is not defined`,suggestion=offer_suggestions_for_name_error(self)
+_b_.NameError.__str__=function(self){var msg=`name '${self.name}' is not defined`,suggestion=offer_suggestions_for_name_error(self)
 if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
 return msg}
 $B.set_func_names(_b_.NameError,'builtins')
@@ -7504,7 +7505,9 @@ if(err.$handled){return}
 err.$handled=true
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)
 console.log(err)}
-if(err.__class__===_b_.SyntaxError){var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1]
+if(err.__class__===_b_.SyntaxError ||
+err.__class__===_b_.IndentationError){console.log('args',err.args)
+var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1]
 trace=`File ${filename}, line ${err.args[1][1]}\n`+
 `${line}\n`+
 ' '.repeat(err.args[1][2]-1)+'^\n'+

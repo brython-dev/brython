@@ -624,6 +624,9 @@ function $$eval(src, _globals, _locals){
     // $lineno
     var handler = {
         get: function(obj, prop){
+            if(prop == '$lineno'){
+                return lineno
+            }
             return obj[prop]
         },
         set: function(obj, prop, value){
@@ -696,6 +699,7 @@ function $$eval(src, _globals, _locals){
     var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
             1)
     root.mode = mode
+    root.filename = '<string>'
     $B.parser.dispatch_tokens(root)
 
     var _ast = root.ast(),
@@ -709,6 +713,7 @@ function $$eval(src, _globals, _locals){
     var top_frame = [local_name, exec_locals, global_name, exec_globals]
     top_frame.is_exec_top = true
     exec_locals.$f_trace = $B.enter_frame(top_frame)
+    exec_locals.$lineno = 1
 
     if(mode == 'eval'){
         js = 'return ' + js
