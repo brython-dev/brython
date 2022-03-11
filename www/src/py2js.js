@@ -609,7 +609,7 @@ Context have a method .transition(token, value) called by the tokens
 dispatcher. It handles the next token in the token stream, raises errors if
 the token is invalid.
 
-Most contexts have a method ast() that returns the AST node for this context. 
+Most contexts have a method ast() that returns the AST node for this context.
 It is called by the method ast() of the root node.
 */
 
@@ -7709,9 +7709,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         locals_id = locals_id[0]
     }
 
-    var local_ns = '$locals_' + locals_id.replace(/\./g,'_'),
-        global_ns = '$locals_' + module.replace(/\./g,'_'),
-        root = $create_root_node(
+    var root = $create_root_node(
             {src: src, has_annotations: has_annotations,
                 filename: filename},
             module, locals_id, parent_scope, line_num)
@@ -7935,76 +7933,7 @@ var brython = $B.parser.brython = function(options){
     $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         observer.disconnect()
-        _run_scripts(options)
     }
-}
-
-$B.run_script = function(src, name, url, run_loop){
-    // run_loop is set to true if run_script is added to tasks in
-    // ajax_load_script
-    try{
-        var root = $B.py2js({src: src, filename: url}, name, name),
-            js = root.to_js(),
-            script = {
-                __doc__: root.__doc__,
-                js: js,
-                __name__: name,
-                $src: src,
-                __file__: url
-            }
-            $B.file_cache[script.__file__] = src
-            if($B.debug > 1){
-                console.log($B.format_indent(js, 0))
-            }
-    }catch(err){
-        $B.handle_error(err) // in loaders.js
-    }
-    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
-        // Build the list of stdlib modules required by the
-        // script
-        var imports1 = Object.keys(root.imports).slice(),
-            imports = imports1.filter(function(item){
-                return $B.VFS.hasOwnProperty(item)})
-        for(var name of Object.keys(imports)){
-            if($B.VFS.hasOwnProperty(name)){
-                var submodule = $B.VFS[name],
-                    type = submodule[0]
-                if(type==".py"){
-                    var src = submodule[1],
-                        subimports = submodule[2],
-                        is_package = submodule.length == 4
-                    // "subimports" is the list of stdlib modules
-                    // directly imported by the module.
-                    if(type==".py"){
-                        // Add stdlib modules recursively imported
-                        required_stdlib_imports(subimports)
-                    }
-                    for(var mod of subimports){
-                        if(imports.indexOf(mod) == -1){
-                            imports.push(mod)
-                        }
-                    }
-                }
-            }
-        }
-        // Add task to stack
-        for(var j = 0; j < imports.length; j++){
-            $B.tasks.push([$B.inImported, imports[j]])
-        }
-        root = null
-    }
-    $B.tasks.push(["execute", script])
-    if(run_loop){
-        $B.loop()
-    }
-}
-
-var $log = $B.$log = function(js){
-    js.split("\n").forEach(function(line, i){
-        console.log(i + 1, ":", line)
-    })
-}
-var _run_scripts = $B.parser._run_scripts = function(options){
     if(options === undefined){
         options = {}
     }
@@ -8057,7 +7986,6 @@ var _run_scripts = $B.parser._run_scripts = function(options){
     }
 
     // Get all scripts with type = text/python or text/python3 and run them
-
     var first_script = true, module_name
     if(options.ipy_id !== undefined){
         module_name = '__main__'
@@ -8203,7 +8131,74 @@ var _run_scripts = $B.parser._run_scripts = function(options){
         }
     }
     */
+}
 
+$B.run_script = function(src, name, url, run_loop){
+    // run_loop is set to true if run_script is added to tasks in
+    // ajax_load_script
+    try{
+        var root = $B.py2js({src: src, filename: url}, name, name),
+            js = root.to_js(),
+            script = {
+                __doc__: root.__doc__,
+                js: js,
+                __name__: name,
+                $src: src,
+                __file__: url
+            }
+            $B.file_cache[script.__file__] = src
+            if($B.debug > 1){
+                console.log($B.format_indent(js, 0))
+            }
+    }catch(err){
+        $B.handle_error(err) // in loaders.js
+    }
+    if($B.hasOwnProperty("VFS") && $B.has_indexedDB){
+        // Build the list of stdlib modules required by the
+        // script
+        var imports1 = Object.keys(root.imports).slice(),
+            imports = imports1.filter(function(item){
+                return $B.VFS.hasOwnProperty(item)})
+        for(var name of Object.keys(imports)){
+            if($B.VFS.hasOwnProperty(name)){
+                var submodule = $B.VFS[name],
+                    type = submodule[0]
+                if(type==".py"){
+                    var src = submodule[1],
+                        subimports = submodule[2],
+                        is_package = submodule.length == 4
+                    // "subimports" is the list of stdlib modules
+                    // directly imported by the module.
+                    if(type==".py"){
+                        // Add stdlib modules recursively imported
+                        required_stdlib_imports(subimports)
+                    }
+                    for(var mod of subimports){
+                        if(imports.indexOf(mod) == -1){
+                            imports.push(mod)
+                        }
+                    }
+                }
+            }
+        }
+        // Add task to stack
+        for(var j = 0; j < imports.length; j++){
+            $B.tasks.push([$B.inImported, imports[j]])
+        }
+        root = null
+    }
+    $B.tasks.push(["execute", script])
+    if(run_loop){
+        $B.loop()
+    }
+}
+
+var $log = $B.$log = function(js){
+    js.split("\n").forEach(function(line, i){
+        console.log(i + 1, ":", line)
+    })
+}
+var _run_scripts = $B.parser._run_scripts = function(options){
 }
 
 $B.$operators = $operators

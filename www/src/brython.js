@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-11 09:02:39.921281"
-__BRYTHON__.timestamp=1646985759921
+__BRYTHON__.compiled_date="2022-03-11 11:47:11.226600"
+__BRYTHON__.timestamp=1646995631226
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4166,7 +4166,7 @@ if(line_info !==undefined){line_num=parseInt(line_info.split(",")[0])}
 src=src.src}else if(line_num !==undefined){line_info=`${line_num},${module}`}else{line_num=1}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
-var local_ns='$locals_'+locals_id.replace(/\./g,'_'),global_ns='$locals_'+module.replace(/\./g,'_'),root=$create_root_node(
+var root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root)
 var _ast=root.ast()
@@ -4233,25 +4233,8 @@ observer.observe(document.documentElement,{childList:true,subtree:true});}
 function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){var options={}
 for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}
 var brython=$B.parser.brython=function(options){$B.parse_options(options)
-if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()
-_run_scripts(options)}}
-$B.run_script=function(src,name,url,run_loop){
-try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}
-$B.file_cache[script.__file__]=src
-if($B.debug > 1){console.log($B.format_indent(js,0))}}catch(err){$B.handle_error(err)}
-if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
-var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
-for(var name of Object.keys(imports)){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
-if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
-if(type==".py"){
-required_stdlib_imports(subimports)}
-for(var mod of subimports){if(imports.indexOf(mod)==-1){imports.push(mod)}}}}}
-for(var j=0;j < imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
-root=null}
-$B.tasks.push(["execute",script])
-if(run_loop){$B.loop()}}
-var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i+1,":",line)})}
-var _run_scripts=$B.parser._run_scripts=function(options){if(options===undefined){options={}}
+if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()}
+if(options===undefined){options={}}
 var kk=Object.keys(_window)
 var defined_ids={},$elts=[],webworkers=[]
 var ids=options.ids ||options.ipy_id
@@ -4312,6 +4295,23 @@ src=unindent(src)
 src=src.replace(/^\n/,'')
 $B.tasks.push([$B.run_script,src,module_name,$B.script_path+"#"+module_name,true])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
+$B.run_script=function(src,name,url,run_loop){
+try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}
+$B.file_cache[script.__file__]=src
+if($B.debug > 1){console.log($B.format_indent(js,0))}}catch(err){$B.handle_error(err)}
+if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
+var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
+for(var name of Object.keys(imports)){if($B.VFS.hasOwnProperty(name)){var submodule=$B.VFS[name],type=submodule[0]
+if(type==".py"){var src=submodule[1],subimports=submodule[2],is_package=submodule.length==4
+if(type==".py"){
+required_stdlib_imports(subimports)}
+for(var mod of subimports){if(imports.indexOf(mod)==-1){imports.push(mod)}}}}}
+for(var j=0;j < imports.length;j++){$B.tasks.push([$B.inImported,imports[j]])}
+root=null}
+$B.tasks.push(["execute",script])
+if(run_loop){$B.loop()}}
+var $log=$B.$log=function(js){js.split("\n").forEach(function(line,i){console.log(i+1,":",line)})}
+var _run_scripts=$B.parser._run_scripts=function(options){}
 $B.$operators=$operators
 $B.$Node=$Node
 $B.brython=brython})(__BRYTHON__)
@@ -4440,7 +4440,7 @@ if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\.
 module.$src=script.$src
 module.__file__=script.__file__
 $B.imported[script_id]=module
-new Function("$locals_"+script_id,script.js)(module)}catch(err){
+new Function(script.js)()}catch(err){
 if(err.__class__===undefined){console.log('Javascript error',err)
 var lineNumber=err.lineNumber
 if(lineNumber !==undefined){console.log('around line',lineNumber)

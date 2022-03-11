@@ -379,9 +379,7 @@ var loop = $B.loop = function(){
             module.$src = script.$src
             module.__file__ = script.__file__
             $B.imported[script_id] = module
-
-            new Function("$locals_" + script_id, script.js)(module)
-
+            new Function(script.js)()
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
@@ -390,8 +388,6 @@ var loop = $B.loop = function(){
                 var lineNumber = err.lineNumber
                 if(lineNumber !== undefined){
                     console.log('around line', lineNumber)
-                    //console.log($B.format_indent(script.js), 0)
-                    
                     console.log(script.js.split('\n').
                         slice(lineNumber - 4, lineNumber).join('\n'))
                 }
