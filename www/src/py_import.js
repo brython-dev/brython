@@ -207,7 +207,7 @@ function run_py(module_contents, path, module, compiled) {
         }
         var src = js
         js = "var $module = (function(){\n" + js
-        var prefix = $B.js_from_ast ? 'locals_' : '$locals_'
+        var prefix = 'locals_'
         js += 'return ' + prefix
         js += module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
             "return $module"
@@ -413,7 +413,7 @@ VFSLoader.exec_module = function(self, modobj){
             mod.__file__ = path
             try{
                 var parent_id = parent.replace(/\./g, "_"),
-                    prefix = $B.js_from_ast ? 'locals_' : '$locals_'
+                    prefix = 'locals_'
                 mod_js += "return " + prefix + parent_id
                 var $module = new Function(prefix + parent_id, mod_js)(
                     mod)

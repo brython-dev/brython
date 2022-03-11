@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-11 11:47:11.226600"
-__BRYTHON__.timestamp=1646995631226
+__BRYTHON__.compiled_date="2022-03-11 12:03:27.918609"
+__BRYTHON__.timestamp=1646996607918
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -470,13 +470,8 @@ for(var child of block_ctx.node.children){var ctx=child.C.tree[0]
 if(['single_kw','except','decorator'].indexOf(ctx.type)>-1 ||
 (ctx.type=='condition' && ctx.token=='elif')){continue}
 var child_ast=ctx.ast()
-if(ast.expr.indexOf(child_ast.constructor)>-1){if($B.ast_from_js && child_ast.col_offset===undefined){console.log('no position',child_ast,child_ast.constructor.$name)
-alert()}
-child_ast=new ast.Expr(child_ast)
-copy_position(child_ast,child_ast.value)
-if($B.js_from_ast && child_ast.col_offset===undefined){console.log('Expr 179',child_ast)
-console.log('child',child)
-alert()}}
+if(ast.expr.indexOf(child_ast.constructor)>-1){child_ast=new ast.Expr(child_ast)
+copy_position(child_ast,child_ast.value)}
 body.push(child_ast)}
 return body}
 var ast_dump=$B.ast_dump=function(tree,indent){indent=indent ||0
@@ -503,10 +498,10 @@ if(attrs.length > 0){res+='\n'
 res+=attrs.map(x=> '  '.repeat(indent+1)+x).join(',\n')}
 res+=')'
 return res}
-function set_position(ast_obj,position){if($B.js_from_ast){ast_obj.lineno=position.start[0]
+function set_position(ast_obj,position){ast_obj.lineno=position.start[0]
 ast_obj.col_offset=position.start[1]
 ast_obj.end_lineno=position.end[0]
-ast_obj.end_col_offset=position.end[1]}}
+ast_obj.end_col_offset=position.end[1]}
 function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
@@ -1575,8 +1570,6 @@ this.type='expr'
 this.name=name
 this.$pos=$pos
 this.position=C.position
-if($B.js_from_ast && this.position===undefined){console.log('no position',C)
-throw Error('...')}
 this.with_commas=with_commas
 this.expect=',' 
 this.parent=C
@@ -6085,7 +6078,15 @@ if(prop=='__class__'){return _b_.dict}else if(prop=='$lineno'){return lineno}
 if(target.$string_dict.hasOwnProperty(prop)){return target.$string_dict[prop][0]}
 return undefined},set:function(target,prop,value){_b_.dict.$setitem(target,prop,value)}}
 return new Proxy(dict,handler)}
-function eval1(src,mode,_globals,_locals){var frame=$B.last($B.frames_stack)
+function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
+if($.src.mode && $.src.mode=="single" &&
+["<console>","<stdin>"].indexOf($.src.filename)>-1){
+_b_.print(">",$.src.source.trim())}
+if(src.__class__===code){mode=src.mode
+src=src.source}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
+" bytes or code object")}else{
+src=src.valueOf()}
+var frame=$B.last($B.frames_stack)
 var lineno=frame[1].$lineno
 $B.exec_scope=$B.exec_scope ||{}
 if(src.endsWith('\\\n')){var exc=_b_.SyntaxError.$factory('')
@@ -6130,136 +6131,6 @@ if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){
 if(_locals !==_b_.None){for(var key in exec_locals){if(! key.startsWith('$')){_b_.dict.$setitem(_locals,key,exec_locals[key])}}}}
 $B.frames_stack=save_frames_stack
 return res}
-function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},["src","globals","locals","mode"],arguments,{globals:_b_.None,locals:_b_.None,mode:"eval"},null,null),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
-if($.src.mode && $.src.mode=="single" &&
-["<console>","<stdin>"].indexOf($.src.filename)>-1){
-_b_.print(">",$.src.source.trim())}
-if(src.__class__===code){mode=src.mode
-src=src.source}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
-" bytes or code object")}else{
-src=src.valueOf()}
-if($B.js_from_ast){return eval1(src,mode,_globals,_locals)}
-var current_frame=$B.frames_stack[$B.frames_stack.length-1]
-if(current_frame !==undefined){var current_locals_id=current_frame[0].replace(/\./g,'_'),current_globals_id=current_frame[2].replace(/\./g,'_')}
-var stack_len=$B.frames_stack.length
-var globals_id='$exec_'+$B.UUID(),globals_name=globals_id,locals_id='$exec_'+$B.UUID(),parent_scope
-if(_globals===_b_.None){if(current_locals_id==current_globals_id){locals_id=globals_id}
-var local_scope={module:globals_id,id:locals_id,binding:{},bindings:{}}
-for(var attr in current_frame[1]){local_scope.binding[attr]=true
-local_scope.bindings[attr]=true}
-var global_scope={module:globals_id,id:globals_id,binding:{},bindings:{}}
-for(var attr in current_frame[3]){global_scope.binding[attr]=true
-global_scope.bindings[attr]=true}
-local_scope.parent_block=global_scope
-global_scope.parent_block=$B.builtins_scope
-parent_scope=local_scope
-eval("$locals_"+parent_scope.id+" = current_frame[1]")}else{
-if(_globals.__class__ !=_b_.dict){throw _b_.TypeError.$factory("exec() globals must be a dict, not "+
-$B.class_name(_globals))}
-if(_globals.globals_id){globals_id=globals_name=_globals.globals_id}
-_globals.globals_id=globals_id
-if(_locals===_globals ||_locals===_b_.None){locals_id=globals_id
-parent_scope=$B.builtins_scope}else{
-var grandparent_scope={id:globals_id,parent_block:$B.builtins_scope,binding:{}}
-parent_scope={id:locals_id,parent_block:grandparent_scope,binding:{}}
-for(var attr in _globals.$string_dict){grandparent_scope.binding[attr]=true}
-for(var attr in _locals.$string_dict){parent_scope.binding[attr]=true}}}
-eval('var $locals_'+globals_id+' = {}\nvar $locals_'+
-locals_id+' = {}')
-if(_globals===_b_.None){var gobj=current_frame[3],ex='var $locals_'+globals_id+' = gobj;',obj={}
-eval(ex)
-for(var attr in gobj){if(attr.startsWith("$")){continue}
-obj[attr]=gobj[attr]}
-eval("$locals_"+globals_id+" = obj")}else{var globals_is_dict=false
-if(_globals.$jsobj){var items=_globals.$jsobj}else{var items=_b_.dict.$to_obj(_globals)
-_globals.$jsobj=items
-globals_is_dict=true}
-eval("$locals_"+globals_id+" = _globals.$jsobj")
-for(var item in items){try{eval('$locals_'+globals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
-console.log('error setting',item)
-break}}}
-_globals.$is_namespace=true
-if(_locals===_b_.None){if(_globals !==_b_.None){eval('var $locals_'+locals_id+' = $locals_'+globals_id)}else{var lobj=current_frame[1],ex='',obj={}
-for(var attr in current_frame[1]){if(attr.startsWith("$")){continue}
-obj[attr]=lobj[attr]}
-eval('$locals_'+locals_id+" = obj")}}else{var items
-if(_locals.$jsobj){items=_locals.$jsobj}else if(_locals.__class__ !==_b_.dict){items=_locals}else{items=_b_.dict.$to_obj(_locals)
-_locals.$jsobj=items}
-for(var item in items){try{eval('$locals_'+locals_id+'["'+item+'"] = items.'+item)}catch(err){console.log(err)
-console.log('error setting',item)
-break}}
-eval("$locals_"+locals_id+".$exec_locals = true")
-eval("$locals_"+locals_id+".$is_not_dict = "+
-(_locals.__class__ !==_b_.dict))}
-_locals.$is_namespace=true
-if(_globals===_b_.None && _locals===_b_.None &&
-current_frame[0]==current_frame[2]){}else{eval("$locals_"+locals_id+".$src = src")}
-var root=$B.py2js(src,globals_id,locals_id,parent_scope),js,gns,lns
-if(_globals !==_b_.None &&
-(_locals===_b_.None ||_locals===_globals)){for(var attr in _globals.$string_dict){root.binding[attr]=true}}
-function update_namespaces(){var gns=eval("$locals_"+globals_id)
-if($B.frames_stack[$B.frames_stack.length-1][2]==globals_id){gns=$B.frames_stack[$B.frames_stack.length-1][3]}
-if(_locals !==_b_.None){var lns=eval("$locals_"+locals_id)}
-if(_globals !==_b_.None){
-if(globals_is_dict){var jsobj=_globals.$jsobj
-delete _globals.$jsobj}
-for(var attr in gns){if(attr.charAt(0)!='$'){if(globals_is_dict){_b_.dict.$setitem(_globals,attr,gns[attr])}else{_globals.$jsobj[attr]=gns[attr]}}}
-for(var attr in _globals.$string_dict){if(attr.startsWith("$")){delete _globals.$string_dict[attr]}}}else{for(var attr in gns){if(attr !=="$src"){current_frame[3][attr]=gns[attr]}}}
-if(_locals !==_b_.None){for(var attr in lns){if(attr.charAt(0)!='$'){if(_locals.$jsobj){_locals.$jsobj[attr]=lns[attr]}else if(_locals.__class__ !==_b_.dict){$B.$setitem(_locals,attr,lns[attr])}else{_b_.dict.$setitem(_locals,attr,lns[attr])}}}}else{for(var attr in lns){if(attr !=="$src"){current_frame[1][attr]=lns[attr]}}}}
-try{
-var try_node=root.children[root.children.length-2],instr=try_node.children[try_node.children.length-2]
-var type=instr.C.tree[0].type
-switch(type){case 'expr':
-case 'list_or_tuple':
-case 'op':
-case 'ternary':
-case 'unary':
-var children=try_node.children
-root.children.splice(root.children.length-2,2)
-for(var i=0;i < children.length-1;i++){root.add(children[i])}
-break
-default:
-if(mode=="eval"){throw _b_.SyntaxError.$factory(
-"eval() argument must be an expression",'<string>',1,1,src)}}
-if(mode !="eval"){
-var last=$B.last(root.children),js=last.to_js()
-if(["node_js"].indexOf(last.C.type)==-1){last.to_js=function(){while(js.endsWith("\n")){js=js.substr(0,js.length-1)}
-while(js.endsWith(";")){js=js.substr(0,js.length-1)}
-return "return ("+js+")"}}
-js=root.to_js()
-var locals_obj=eval("$locals_"+locals_id),globals_obj=eval("$locals_"+globals_id)
-if(_globals===_b_.None){var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,js)(
-globals_obj,locals_obj)}else{current_globals_obj=current_frame[3]
-current_locals_obj=current_frame[1]
-var res=new Function("$locals_"+globals_id,"$locals_"+locals_id,"$locals_"+current_globals_id,"$locals_"+current_locals_id,js)(globals_obj,locals_obj,current_globals_obj,current_locals_obj)}
-if($.src.mode && $.src.mode=="single" &&
-$.src.filename=="<stdin>"){if(res !==_b_.None && res !==undefined){_b_.print(_b_.repr(res))}}}else{js=root.to_js()
-var res=eval(js)}
-if($.src.filename=="<console>" && $.src.mode=="single" &&
-res !==undefined && res !==_b_.None){_b_.print(res)}
-update_namespaces()
-if(res===undefined){return _b_.None}
-return res}catch(err){update_namespaces()
-err.src=src
-err.module=globals_id
-if(err.$py_error===undefined){console.log('Javascript error',Object.getPrototypeOf(err).name,err.message)
-var lineNumber=err.lineNumber
-if(lineNumber !==undefined){console.log('around JS line',lineNumber)
-console.log(js.split('\n').
-slice(lineNumber-5,lineNumber+5).join('\n'))
-var lines_before=js.split('\n').slice(0,lineNumber),re=new RegExp('line_info = "(.*?)"','g'),matches=(new String(lines_before)).matchAll(re),line_info
-for(var match of matches){line_info=match[1]}
-if(line_info){console.log('around source line',line_info.split(',')[0])}}
-throw $B.exception(err)}
-if(globals_is_dict){delete _globals.$jsobj}
-throw err}finally{
-if($B.frames_stack.length==stack_len+1){$B.frames_stack.pop()}
-root=null
-js=null
-gns=null
-lns=null
-$B.clear_ns(globals_id)
-$B.clear_ns(locals_id)}}
 $$eval.$is_func=true
 function exec(src,globals,locals){var missing={}
 var $=$B.args("exec",3,{src:null,globals:null,locals:null},["src","globals","locals"],arguments,{globals:_b_.None,locals:_b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals
@@ -7347,11 +7218,7 @@ throw err}
 res.f_globals=$B.obj_dict(_frame[3])
 if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}
 if(locals_id.startsWith("$exec")){filename="<string>"}
-if(_frame[1].$line_info===undefined){res.f_lineno=_frame[1].$lineno ||-1}else{var line_info=_frame[1].$line_info.split(",")
-res.f_lineno=parseInt(line_info[0])
-var module_name=line_info[1]
-if($B.imported.hasOwnProperty(module_name)){filename=$B.imported[module_name].__file__}
-res.f_lineno=parseInt(_frame[1].$line_info.split(',')[0])}
+res.f_lineno=_frame[1].$lineno ||-1
 var co_name=locals_id.startsWith("$exec")? "<module>" :
 locals_id
 if(locals_id==_frame[2]){co_name="<module>"}else if(locals_id.startsWith("lc"+$B.lambda_magic)){co_name="<listcomp>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$comprehension){co_name='<'+_frame[1].$comprehension+'>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
@@ -7397,14 +7264,13 @@ return exc+''}
 var info=''
 if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_exc.stack+"\n"}
 info+="Traceback (most recent call last):"
-var line_info=exc.$line_info,src
+var line_info,src
 for(var i=0;i < exc.$stack.length;i++){src=undefined
 var frame=exc.$stack[i]
 if(! frame[1]){continue}
 if(frame.exec_obj){
 line_info=[frame.exec_obj.$lineno,frame[2]]
-src=frame.exec_src}else if(frame[1].$line_info){var $line_info=frame[1].$line_info
-line_info=$line_info.split(',')}else if(frame[1].$lineno){line_info=[frame[1].$lineno,frame[2]]}
+src=frame.exec_src}else if(frame[1].$lineno){line_info=[frame[1].$lineno,frame[2]]}
 var file=frame[1].__file__ ||frame[3].__file__
 if(src==undefined){if(file && $B.file_cache[file]){src=$B.file_cache[file]}else{console.log('pas de __file__ ou de file_cache[__file]')
 console.log(exc.$stack)
@@ -7437,9 +7303,7 @@ $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
 $B.freeze=function(err){
-function get_line_info(frame){var line_info=frame[1].$line_info
-if(! line_info){line_info=`${frame[1].$lineno},${frame[2]}`}
-return line_info}
+function get_line_info(frame){return `${frame[1].$lineno},${frame[2]}`}
 if(err.$stack===undefined){err.$line_infos=[]
 for(var frame of $B.frames_stack){err.$line_infos.push(get_line_info(frame))}
 err.$stack=$B.frames_stack.slice()
@@ -7481,12 +7345,12 @@ exc.$py_error=true
 console.log('js error',exc.args)
 console.log(js_exc.stack)
 console.log('frames_stack',$B.frames_stack.slice())
-if($B.js_from_ast){for(var frame of $B.frames_stack){var src=undefined
+for(var frame of $B.frames_stack){var src=undefined
 var file=frame[1].__file__ ||frame[3].__file__
 if(file && $B.file_cache[file]){src=$B.file_cache[file]}
 console.log('line',frame[1].$lineno,'file',file,'in',frame[0])
 if(src !==undefined){var lines=src.split('\n'),line=lines[frame[1].$lineno-1]
-console.log('    '+line)}}}
+console.log('    '+line)}}
 $B.freeze(exc)}else{var exc=js_exc
 $B.freeze(exc)
 if(in_ctx_manager){
@@ -7573,8 +7437,7 @@ var se=_b_.SyntaxError.$factory
 _b_.SyntaxError.$factory=function(){var arg=arguments[0]
 if(arg.__class__===_b_.SyntaxError){return arg}
 var exc=se.apply(null,arguments),frame=$B.last($B.frames_stack)
-if(frame){line_info=frame[1].$line_info
-if(line_info===undefined){line_info=`${frame[1].$lineno},${frame[2]}`}
+if(frame){var line_info=`${frame[1].$lineno},${frame[2]}`
 exc.filename=frame[3].__file__
 exc.lineno=parseInt(line_info.split(",")[0])
 var src=$B.file_cache[frame[3].__file__]
@@ -8999,7 +8862,7 @@ if($B.$options.debug==10){console.log("code for module "+module.__name__)
 console.log($B.format_indent(js,0))}
 var src=js
 js="var $module = (function(){\n"+js
-var prefix=$B.js_from_ast ? 'locals_' :'$locals_'
+var prefix='locals_'
 js+='return '+prefix
 js+=module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
@@ -9089,7 +8952,7 @@ mod.$is_package=true}else{var elts=parent.split(".")
 elts.pop()
 mod.__package__=elts.join(".")}
 mod.__file__=path
-try{var parent_id=parent.replace(/\./g,"_"),prefix=$B.js_from_ast ? 'locals_' :'$locals_'
+try{var parent_id=parent.replace(/\./g,"_"),prefix='locals_'
 mod_js+="return "+prefix+parent_id
 var $module=new Function(prefix+parent_id,mod_js)(
 mod)}catch(err){if($B.debug > 1){console.log('error in module',mod)
@@ -12636,28 +12499,13 @@ $B.generator.__next__=function(self){return $B.generator.send(self,_b_.None)}
 $B.generator.__str__=function(self){var name=self.js_gen.$name ||'generator'
 if(self.js_gen.$func && self.js_gen.$func.$infos){name=self.js_gen.$func.$infos.__qualname__}
 return `<generator object ${name}>`}
-$B.generator.close=function(self){if($B.js_from_ast){return $B.generator.close1(self)}
-try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}}
-$B.generator.close1=function(self){var save_stack=$B.frames_stack.slice()
+$B.generator.close=function(self){var save_stack=$B.frames_stack.slice()
 if(self.$frame){$B.frames_stack.push(self.$frame)}
 try{$B.generator.throw(self,_b_.GeneratorExit.$factory())}catch(err){if(! $B.is_exc(err,[_b_.GeneratorExit,_b_.StopIteration])){$B.frames_stack=save_stack
 throw _b_.RuntimeError.$factory("generator ignored GeneratorExit")}}
 $B.frames_stack=save_stack}
-$B.generator.send=function(self,value){if($B.js_from_ast){return $B.generator.send1(self,value)}
-var gen=self.js_gen
-gen.$has_run=true
-if(gen.$finished){throw _b_.StopIteration.$factory(value)}
-if(gen.gi_running===true){throw _b_.ValueError.$factory("generator already executing")}
-gen.gi_running=true
-try{var res=gen.next(value)}catch(err){gen.$finished=true
-throw err}
-if(res.value && res.value.__class__===$GeneratorReturn){gen.$finished=true
-throw _b_.StopIteration.$factory(res.value.value)}
-gen.gi_running=false
-if(res.done){throw _b_.StopIteration.$factory(res.value)}
-return res.value}
 function trace(){return $B.frames_stack.slice()}
-$B.generator.send1=function(self,value){
+$B.generator.send=function(self,value){
 var gen=self.js_gen
 gen.$has_run=true
 if(gen.$finished){throw _b_.StopIteration.$factory(value)}
@@ -12675,15 +12523,7 @@ throw _b_.StopIteration.$factory(res.value.value)}
 gen.gi_running=false
 if(res.done){throw _b_.StopIteration.$factory(res.value)}
 return res.value}
-$B.generator.throw=function(self,type,value,traceback){if($B.js_from_ast){return $B.generator.throw1(self,type,value,traceback)}
-var gen=self.js_gen,exc=type
-if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}else if(value===undefined){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
-if(traceback !==undefined){exc.$traceback=traceback}
-var res=gen.throw(exc)
-if(res.done){throw _b_.StopIteration.$factory("StopIteration")}
-return res.value}
-$B.generator.throw1=function(self,type,value,traceback){var gen=self.js_gen,exc=type
+$B.generator.throw=function(self,type,value,traceback){var gen=self.js_gen,exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined){exc=$B.$call(exc)()}else if(_b_.isinstance(value,type)){exc=value}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
@@ -12706,7 +12546,7 @@ $B.async_generator.__aiter__=function(self){return self}
 $B.async_generator.__anext__=function(self){return $B.async_generator.asend(self,_b_.None)}
 $B.async_generator.aclose=function(self){self.js_gen.$finished=true
 return _b_.None}
-$B.async_generator.asend1=async function(self,value){var gen=self.js_gen
+$B.async_generator.asend=async function(self,value){var gen=self.js_gen
 if(gen.$finished){throw _b_.StopAsyncIteration.$factory(value)}
 if(gen.ag_running===true){throw _b_.ValueError.$factory("generator already executing")}
 gen.ag_running=true
@@ -12722,25 +12562,7 @@ if(res.value.__class__===$GeneratorReturn){gen.$finished=true
 throw _b_.StopAsyncIteration.$factory(res.value.value)}
 gen.ag_running=false
 return res.value}
-$B.async_generator.asend=async function(self,value){if($B.js_from_ast){return $B.async_generator.asend1(self,value)}
-var gen=self.js_gen
-if(gen.$finished){throw _b_.StopAsyncIteration.$factory(value)}
-if(gen.ag_running===true){throw _b_.ValueError.$factory("generator already executing")}
-gen.ag_running=true
-try{var res=await gen.next(value)}catch(err){gen.$finished=true
-throw err}
-if(res.done){throw _b_.StopAsyncIteration.$factory(value)}
-if(res.value.__class__===$GeneratorReturn){gen.$finished=true
-throw _b_.StopAsyncIteration.$factory(res.value.value)}
-gen.ag_running=false
-return res.value}
-$B.async_generator.athrow=async function(self,type,value,traceback){if($B.js_from_ast){return $B.async_generator.athrow1(self,type,value,traceback)}
-var gen=self.js_gen,exc=type
-if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
-"instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
-if(traceback !==undefined){exc.$traceback=traceback}
-await gen.throw(value)}
-$B.async_generator.athrow1=async function(self,type,value,traceback){var gen=self.js_gen,exc=type
+$B.async_generator.athrow=async function(self,type,value,traceback){var gen=self.js_gen,exc=type
 if(exc.$is_class){if(! _b_.issubclass(type,_b_.BaseException)){throw _b_.TypeError.$factory("exception value must be an "+
 "instance of BaseException")}else if(value===undefined){value=$B.$call(exc)()}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc)(value)}}
 if(traceback !==undefined){exc.$traceback=traceback}

@@ -166,17 +166,8 @@ function ast_body(block_ctx){
         }
         var child_ast = ctx.ast()
         if(ast.expr.indexOf(child_ast.constructor) > -1){
-            if($B.ast_from_js && child_ast.col_offset === undefined){
-                console.log('no position', child_ast, child_ast.constructor.$name)
-                alert()
-            }
             child_ast = new ast.Expr(child_ast)
             copy_position(child_ast, child_ast.value)
-            if($B.js_from_ast && child_ast.col_offset === undefined){
-                console.log('Expr 179', child_ast)
-                console.log('child', child)
-                alert()
-            }
         }
         body.push(child_ast)
     }
@@ -253,12 +244,10 @@ var ast_dump = $B.ast_dump = function(tree, indent){
 
 // Functions used to set position attributes to AST nodes
 function set_position(ast_obj, position){
-    if($B.js_from_ast){
-        ast_obj.lineno = position.start[0]
-        ast_obj.col_offset = position.start[1]
-        ast_obj.end_lineno = position.end[0]
-        ast_obj.end_col_offset = position.end[1]
-    }
+    ast_obj.lineno = position.start[0]
+    ast_obj.col_offset = position.start[1]
+    ast_obj.end_lineno = position.end[0]
+    ast_obj.end_col_offset = position.end[1]
 }
 
 function copy_position(target, origin){
@@ -2390,10 +2379,6 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.name = name
     this.$pos = $pos
     this.position = context.position
-    if($B.js_from_ast && this.position === undefined){
-        console.log('no position', context)
-        throw Error('...')
-    }
     // allow expression with comma-separted values, or a single value ?
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','

@@ -302,18 +302,7 @@ var frame = $B.make_class("frame",
             if(locals_id.startsWith("$exec")){
                 filename = "<string>"
             }
-            if(_frame[1].$line_info === undefined){
-                res.f_lineno = _frame[1].$lineno || -1
-
-            }else{
-                var line_info = _frame[1].$line_info.split(",")
-                res.f_lineno = parseInt(line_info[0])
-                var module_name = line_info[1]
-                if($B.imported.hasOwnProperty(module_name)){
-                    filename = $B.imported[module_name].__file__
-                }
-                res.f_lineno = parseInt(_frame[1].$line_info.split(',')[0])
-            }
+            res.f_lineno = _frame[1].$lineno || -1
             var co_name = locals_id.startsWith("$exec") ? "<module>" :
                           locals_id
             if(locals_id == _frame[2]){
@@ -474,7 +463,7 @@ var getExceptionTrace = function(exc, includeInternal) {
         info += "\nJS stack:\n" + exc.$js_exc.stack + "\n"
     }
     info += "Traceback (most recent call last):"
-    var line_info = exc.$line_info,
+    var line_info,
         src
 
     for(var i = 0; i < exc.$stack.length; i++){
@@ -487,9 +476,6 @@ var getExceptionTrace = function(exc, includeInternal) {
             // set for exec when globals is set to globals()
             line_info = [frame.exec_obj.$lineno, frame[2]]
             src = frame.exec_src
-        }else if(frame[1].$line_info){
-            var $line_info = frame[1].$line_info
-            line_info = $line_info.split(',')
         }else if(frame[1].$lineno){
             line_info = [frame[1].$lineno, frame[2]]
         }
@@ -613,11 +599,7 @@ $B.restore_stack = function(stack, locals){
 $B.freeze = function(err){
     // Store line numbers in frames stack when the exception occured
     function get_line_info(frame){
-        var line_info = frame[1].$line_info
-        if(! line_info){
-            line_info = `${frame[1].$lineno},${frame[2]}`
-        }
-        return line_info
+        return `${frame[1].$lineno},${frame[2]}`
     }
     if(err.$stack === undefined){
         err.$line_infos = []
@@ -702,19 +684,17 @@ $B.exception = function(js_exc, in_ctx_manager){
         console.log('js error', exc.args)
         console.log(js_exc.stack)
         console.log('frames_stack', $B.frames_stack.slice())
-        if($B.js_from_ast){
-            for(var frame of $B.frames_stack){
-                var src = undefined
-                var file = frame[1].__file__ || frame[3].__file__
-                if(file && $B.file_cache[file]){
-                    src = $B.file_cache[file]
-                }
-                console.log('line', frame[1].$lineno, 'file', file, 'in', frame[0])
-                if(src !== undefined){
-                    var lines = src.split('\n'),
-                        line = lines[frame[1].$lineno - 1]
-                    console.log('    ' + line)
-                }
+        for(var frame of $B.frames_stack){
+            var src = undefined
+            var file = frame[1].__file__ || frame[3].__file__
+            if(file && $B.file_cache[file]){
+                src = $B.file_cache[file]
+            }
+            console.log('line', frame[1].$lineno, 'file', file, 'in', frame[0])
+            if(src !== undefined){
+                var lines = src.split('\n'),
+                    line = lines[frame[1].$lineno - 1]
+                console.log('    ' + line)
             }
         }
         $B.freeze(exc)
@@ -914,10 +894,7 @@ _b_.SyntaxError.$factory = function(){
     var exc = se.apply(null, arguments),
         frame = $B.last($B.frames_stack)
     if(frame){
-        line_info = frame[1].$line_info
-        if(line_info === undefined){
-            line_info = `${frame[1].$lineno},${frame[2]}`
-        }
+        var line_info = `${frame[1].$lineno},${frame[2]}`
         exc.filename = frame[3].__file__
         exc.lineno = parseInt(line_info.split(",")[0])
         var src = $B.file_cache[frame[3].__file__]
