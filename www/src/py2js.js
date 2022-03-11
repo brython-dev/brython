@@ -151,120 +151,121 @@ for(var _tmp of $op_order){
     $weight++
 }
 
-// Variable used to generate random names used in loops
-var $loop_num = 0
+// $B.ast is in generated script py_ast.js
+var ast = $B.ast,
+    op2ast_class = $B.op2ast_class
 
-// ast is in generated script py_ast.js
-if($B.ast_classes){
-    var ast = $B.ast,
-        op2ast_class = $B.op2ast_class
-
-    function ast_body(block_ctx){
-        // return the attribute body of nodes with a block (def, class etc.)
-        var body = []
-        for(var child of block_ctx.node.children){
-            var ctx = child.context.tree[0]
-            if(['single_kw', 'except', 'decorator'].indexOf(ctx.type) > -1 ||
-                (ctx.type == 'condition' && ctx.token == 'elif')){
-                continue
-            }
-            var child_ast = ctx.ast()
-            if(ast.expr.indexOf(child_ast.constructor) > -1){
-                if($B.ast_from_js && child_ast.col_offset === undefined){
-                    console.log('no position', child_ast, child_ast.constructor.$name)
-                    alert()
-                }
-                child_ast = new ast.Expr(child_ast)
-                copy_position(child_ast, child_ast.value)
-                if($B.js_from_ast && child_ast.col_offset === undefined){
-                    console.log('Expr 179', child_ast)
-                    console.log('child', child)
-                    alert()
-                }
-            }
-            body.push(child_ast)
+function ast_body(block_ctx){
+    // return the attribute body of nodes with a block (def, class etc.)
+    var body = []
+    for(var child of block_ctx.node.children){
+        var ctx = child.context.tree[0]
+        if(['single_kw', 'except', 'decorator'].indexOf(ctx.type) > -1 ||
+            (ctx.type == 'condition' && ctx.token == 'elif')){
+            continue
         }
-        return body
+        var child_ast = ctx.ast()
+        if(ast.expr.indexOf(child_ast.constructor) > -1){
+            if($B.ast_from_js && child_ast.col_offset === undefined){
+                console.log('no position', child_ast, child_ast.constructor.$name)
+                alert()
+            }
+            child_ast = new ast.Expr(child_ast)
+            copy_position(child_ast, child_ast.value)
+            if($B.js_from_ast && child_ast.col_offset === undefined){
+                console.log('Expr 179', child_ast)
+                console.log('child', child)
+                alert()
+            }
+        }
+        body.push(child_ast)
     }
+    return body
+}
 
-    var ast_dump = $B.ast_dump = function(tree, indent){
-        indent = indent || 0
-        if(tree === _b_.None){
-            // happens in dictionary keys for **kw
-            return 'None'
-        }else if(typeof tree == 'string'){
-            return `'${tree}'`
-        }else if(typeof tree == 'number'){
-            return tree + ''
-        }else if(tree.imaginary){
-            return tree.value + 'j'
-        }else if(Array.isArray(tree)){
-            if(tree.length == 0){
-                return '[]'
-            }
-            res = '[\n'
-            var items = []
-            for(var x of tree){
-                try{
-                    items.push(ast_dump(x, indent + 1))
-                }catch(err){
-                    console.log('error', tree)
-                    console.log('for item', x)
-                    throw err
-                }
-            }
-            res += items.join(',\n')
-
-            //res += tree.map(x => ast_dump(x, indent + 1)).join(',\n')
-            return res + ']'
-        }else if(tree.$name){
-            return tree.$name + '()'
-        }else if(tree instanceof ast.MatchSingleton){
-            console.log('dump singleton')
-            return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
-        }else if(tree instanceof ast.Constant){
-
-            var value = tree.value
-            if(value === undefined){
-                console.log('bizarre', tree)
-            }
-            // For imaginary numbers, value is an object with
-            // attribute "imaginary" set
-            if(value.imaginary){
-                return `Constant(value=${_b_.repr(value.value)}j)`
-            }
-            return `Constant(value=${$B.AST.$convert(value)})`
+var ast_dump = $B.ast_dump = function(tree, indent){
+    indent = indent || 0
+    if(tree === _b_.None){
+        // happens in dictionary keys for **kw
+        return 'None'
+    }else if(typeof tree == 'string'){
+        return `'${tree}'`
+    }else if(typeof tree == 'number'){
+        return tree + ''
+    }else if(tree.imaginary){
+        return tree.value + 'j'
+    }else if(Array.isArray(tree)){
+        if(tree.length == 0){
+            return '[]'
         }
-        var proto = Object.getPrototypeOf(tree).constructor
-        var res = '  ' .repeat(indent) + proto.$name + '('
-        if($B.ast_classes[proto.$name] === undefined){
-            console.log('pas dans ast_classes', tree, proto, proto.$name)
-        }
-        var attr_names = $B.ast_classes[proto.$name].split(','),
-            attrs = []
-        if([ast.Name].indexOf(proto) > -1){
-            for(var attr of attr_names){
-                if(tree[attr] !== undefined){
-                    attrs.push(`${attr}=${ast_dump(tree[attr])}`)
-                }
+        res = '[\n'
+        var items = []
+        for(var x of tree){
+            try{
+                items.push(ast_dump(x, indent + 1))
+            }catch(err){
+                console.log('error', tree)
+                console.log('for item', x)
+                throw err
             }
-            return res + attrs.join(', ') + ')'
         }
+        res += items.join(',\n')
+        return res + ']'
+    }else if(tree.$name){
+        return tree.$name + '()'
+    }else if(tree instanceof ast.MatchSingleton){
+        return `MatchSingleton(value=${$B.AST.$convert(tree.value)})`
+    }else if(tree instanceof ast.Constant){
+        var value = tree.value
+        // For imaginary numbers, value is an object with
+        // attribute "imaginary" set
+        if(value.imaginary){
+            return `Constant(value=${_b_.repr(value.value)}j)`
+        }
+        return `Constant(value=${$B.AST.$convert(value)})`
+    }
+    var proto = Object.getPrototypeOf(tree).constructor
+    var res = '  ' .repeat(indent) + proto.$name + '('
+    var attr_names = $B.ast_classes[proto.$name].split(','),
+        attrs = []
+    if([ast.Name].indexOf(proto) > -1){
         for(var attr of attr_names){
             if(tree[attr] !== undefined){
-                var value = tree[attr]
-                attrs.push(attr + '=' +
-                    ast_dump(tree[attr], indent + 1).trimStart())
+                attrs.push(`${attr}=${ast_dump(tree[attr])}`)
             }
         }
-        if(attrs.length > 0){
-            res += '\n'
-            res += attrs.map(x => '  '.repeat(indent + 1) + x).join(',\n')
-
-        }
-        res  += ')'
-        return res
+        return res + attrs.join(', ') + ')'
     }
+    for(var attr of attr_names){
+        if(tree[attr] !== undefined){
+            var value = tree[attr]
+            attrs.push(attr + '=' +
+                ast_dump(tree[attr], indent + 1).trimStart())
+        }
+    }
+    if(attrs.length > 0){
+        res += '\n'
+        res += attrs.map(x => '  '.repeat(indent + 1) + x).join(',\n')
+    }
+    res  += ')'
+    return res
+}
+
+// Functions used to set position attributes to AST nodes
+function set_position(ast_obj, position){
+    if($B.js_from_ast){
+        ast_obj.lineno = position.start[0]
+        ast_obj.col_offset = position.start[1]
+        ast_obj.end_lineno = position.end[0]
+        ast_obj.end_col_offset = position.end[1]
+    }
+}
+
+function copy_position(target, origin){
+    target.lineno = origin.lineno
+    target.col_offset = origin.col_offset
+    target.end_lineno = origin.end_lineno
+    target.end_col_offset = origin.end_col_offset
 }
 
 /*
@@ -495,8 +496,8 @@ function show_line(ctx){
 }
 
 /*
-Class for Python abstract syntax tree
-=====================================
+Class for syntax tree
+=====================
 
 An instance is created for the whole Python program as the root of the tree.
 
@@ -583,21 +584,6 @@ $Node.prototype.show = function(indent){
     return res
 }
 
-function set_position(ast_obj, position){
-    if($B.js_from_ast){
-        ast_obj.lineno = position.start[0]
-        ast_obj.col_offset = position.start[1]
-        ast_obj.end_lineno = position.end[0]
-        ast_obj.end_col_offset = position.end[1]
-    }
-}
-
-function copy_position(target, origin){
-    target.lineno = origin.lineno
-    target.col_offset = origin.col_offset
-    target.end_lineno = origin.end_lineno
-    target.end_col_offset = origin.end_col_offset
-}
 
 /*
 Context classes
@@ -611,7 +597,7 @@ new context is created by a call like :
 For each new instruction, an instance of $Node is created ; it receives an
 attribute "context" which is an initial, empty context.
 
-For instance, if the first token is the keyword "assert", the new_context
+For instance, if the first token is the keyword "assert", the new context
 is an instance of class $AssertCtx, in a state where it expects an
 expression.
 
@@ -619,8 +605,12 @@ Most contexts have an attribute "tree", a list of the elements associated
 with the keyword or the syntax element (eg the arguments in a function
 definition).
 
-Most contexts have a method ast() that return the AST node for
-this context. It is called by the method ast() of the root node.
+Context have a method .transition(token, value) called by the tokens
+dispatcher. It handles the next token in the token stream, raises errors if
+the token is invalid.
+
+Most contexts have a method ast() that returns the AST node for this context. 
+It is called by the method ast() of the root node.
 */
 
 var $AbstractExprCtx = $B.parser.$AbstractExprCtx = function(context, with_commas){
@@ -835,7 +825,7 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     context.annotation = this
 
     var scope = $get_scope(context)
-    
+
     if(scope.ntype == "def" && context.tree && context.tree.length > 0 &&
             context.tree[0].type == "id"){
         var name = context.tree[0].value
@@ -1788,7 +1778,7 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
     if(scope.context && scope.context.tree[0].type == "class"){
         this.class_name = scope.context.tree[0].name
     }
-    
+
     // For functions inside classes, the parent scope is not the class body
     // but the block where the class is defined
     //
@@ -1828,10 +1818,6 @@ var $DefCtx = $B.parser.$DefCtx = function(context){
 
     this.module = scope.module
     this.root = $get_module(this)
-
-    // num used if several functions have the same name
-    this.num = $loop_num
-    $loop_num++
 
     // Arrays for arguments
     this.positional_list = []
@@ -2884,11 +2870,7 @@ var $ForExpr = $B.parser.$ForExpr = function(context){
     this.position = $token.value
     context.tree.push(this)
     this.scope = $get_scope(this)
-    if(this.scope.is_comp){
-        //console.log("for in comp", this)
-    }
     this.module = this.scope.module
-    $loop_num++
 }
 
 $ForExpr.prototype.ast = function(){
@@ -3500,7 +3482,7 @@ var $IdCtx = $B.parser.$IdCtx = function(context, value){
     var scope = this.scope = $get_scope(this)
 
     this.blurred_scope = this.scope.blurred
-    
+
     // Store variables referenced in scope
     if(["def", "generator"].indexOf(scope.ntype) > -1){
         if((! (context instanceof $GlobalCtx)) &&
@@ -3869,7 +3851,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
 
     // initialize object for names bound in the function
     this.node = $get_node(this)
-    
+
     // Arrays for arguments
     this.positional_list = []
     this.default_list = []
@@ -4152,35 +4134,6 @@ $ListOrTupleCtx.prototype.close = function(){
     }
 }
 
-$ListOrTupleCtx.prototype.get_src = function(){
-    // Return the Python source code
-    var src = $get_module(this).src
-    // replace comments by whitespace, cf. issue #658
-    var scope = $get_scope(this)
-    if(scope.comments === undefined){return src}
-    for(var comment of scope.comments){
-        var start = comment[0],
-            len = comment[1]
-        src = src.substr(0, start) + ' '.repeat(len + 1) +
-            src.substr(start + len + 1)
-    }
-    return src
-}
-
-$ListOrTupleCtx.prototype.unpack = function(packed){
-    var js = "", res
-    for(var i = 0; i < this.tree.length; i++){
-        if(packed.indexOf(i) > -1){
-            res = "_b_.list.$factory(" + this.tree[i].to_js() +")"
-        }else{
-            res = "[" + this.tree[i].to_js() + "]"
-        }
-        if(i > 0){res = ".concat(" + res + ")"}
-        js += res
-    }
-    return js
-}
-
 var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
     // node already has an expression with the id "match"
     this.type = "match"
@@ -4439,25 +4392,6 @@ $NodeCtx.prototype.transition = function(token, value){
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
 }
 
-var $NodeJS = $B.parser.$NodeJS = function(js){
-    var node = new $Node()
-    new $NodeJSCtx(node, js)
-    return node
-}
-
-var $NodeJSCtx = $B.parser.$NodeJSCtx = function(node,js){
-    // Class used for raw JS code
-    this.node = node
-    node.context = this
-    this.type = 'node_js'
-    this.tree = [js]
-}
-
-$NodeJSCtx.prototype.to_js = function(){
-    this.js_processed = true
-    return this.tree[0]
-}
-
 var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     // Class for keyword "nonlocal"
     this.type = 'nonlocal'
@@ -4480,17 +4414,13 @@ $NonlocalCtx.prototype.ast = function(){
     return ast_obj
 }
 
-$NonlocalCtx.prototype.add = function(name){
-    this.names[name] = [false, $pos]
-}
-
 $NonlocalCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case 'id':
             if(context.expect == 'id'){
                new $IdCtx(context, value)
-               context.add(value)
+               this.names[value] = [false, $pos]
                context.expect = ','
                return context
             }
@@ -5858,17 +5788,6 @@ $RaiseCtx.prototype.transition = function(token, value){
             return $transition(context.parent, token)
     }
     $_SyntaxError(context, 'token ' + token + ' after ' + context)
-}
-
-var $RawJSCtx = $B.parser.$RawJSCtx = function(context, js){
-    this.type = "raw_js"
-    context.tree[context.tree.length] = this
-    this.parent = context
-    this.js = js
-}
-
-$RawJSCtx.prototype.transition = function(token, value){
-    var context = this
 }
 
 var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
@@ -8289,7 +8208,6 @@ var _run_scripts = $B.parser._run_scripts = function(options){
 
 $B.$operators = $operators
 $B.$Node = $Node
-$B.$NodeJSCtx = $NodeJSCtx
 
 // in case the name 'brython' is used in a Javascript library,
 // we can use $B.brython
