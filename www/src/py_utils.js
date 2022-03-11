@@ -423,73 +423,6 @@ $B.clear_ns = function(name){
     if(alt_name != name){$B.clear_ns(alt_name)}
 }
 
-// Function used to resolve names not defined in Python source
-// but introduced by "from A import *" or by exec
-
-$B.$search = function(name, global_ns){
-    // search in local and global namespaces
-    var frame = $B.last($B.frames_stack)
-    if(frame[1][name] !== undefined){return frame[1][name]}
-    else if(frame[3][name] !== undefined){return frame[3][name]}
-    else if(_b_[name] !== undefined){return _b_[name]}
-    else{
-        if(frame[0] == frame[2] || frame[1].$type == "class" ||
-                frame[1].$exec_locals){
-            throw $B.name_error(name)
-        }else{
-            throw _b_.UnboundLocalError.$factory("local variable '" +
-                name + "' referenced before assignment")
-        }
-    }
-}
-
-$B.$global_search = function(name, search_ids){
-    // search in all namespaces above current stack frame
-    var ns = {}
-    for(var i = 0; i < $B.frames_stack.length; i++){
-        var frame = $B.frames_stack[i]
-        if(search_ids.indexOf(frame[0]) > -1){
-            if(frame[1].$is_not_dict){
-                // locals is not a dictionary (might be the case with exec(),
-                // cf. issue #1597
-                try{
-                    return $B.$getitem(frame[1], name)
-                }catch(err){
-                    if(! $B.is_exc(err, [_b_.KeyError])){
-                        throw err
-                    }
-                }
-            }else if(frame[1][name] !== undefined){
-                return frame[1][name]
-            }
-        }
-        if(search_ids.indexOf(frame[2]) > -1){
-            if(frame[3][name] !== undefined){
-                return frame[3][name]
-            }
-        }
-    }
-    for(var i = 0; i < search_ids.length; i++){
-        var search_id = search_ids[i]
-        if($B.imported[search_id] && $B.imported[search_id][name]){
-            return $B.imported[search_id][name]
-        }
-    }
-    throw $B.name_error(name)
-}
-
-$B.$local_search = function(name){
-    // search in local namespace
-    var frame = $B.last($B.frames_stack)
-    if(frame[1][name] !== undefined){
-        return frame[1][name]
-    }
-    else{
-        throw _b_.UnboundLocalError.$factory("local variable '" +
-            name + "' referenced before assignment")
-    }
-}
-
 $B.get_method_class = function(ns, qualname){
     // Used to set the cell __class__ in a method. ns is the namespace
     // and qualname is the qualified name of the class
@@ -509,85 +442,6 @@ $B.get_method_class = function(ns, qualname){
     return klass
 }
 
-$B.$check_def = function(name, value){
-    // Check if value is not undefined
-    if(value !== undefined){
-        return value
-    }else if(_b_[name] !== undefined){ // issue 1133
-        return _b_[name]
-    }else{
-        var frame = $B.last($B.frames_stack)
-        if(frame[1].$is_not_dict){
-            // Cf. issue #1597
-            try{
-                return $B.$getitem(frame[1], name)
-            }catch(err){
-                if(! $B.is_exc(err, [_b_.KeyError])){
-                    throw err
-                }
-            }
-        }else if(frame[1][name] !== undefined){
-            return frame[1][name]
-        }
-        if(frame[3][name] !== undefined){
-            return frame[3][name]
-        }
-    }
-    throw $B.name_error(name)
-}
-
-$B.$check_def_global = function(name, ns){
-    var res = ns[name]
-    if(res === undefined){
-        throw $B.name_error(name)
-    }
-    return res
-}
-
-$B.$check_def_local = function(name, value){
-    // Check if value is not undefined
-    if(value !== undefined){return value}
-    throw _b_.UnboundLocalError.$factory("local variable '" +
-        name + "' referenced before assignment")
-}
-
-$B.$check_def_free = function(name, value){
-    // Check if value is not undefined
-    if(value !== undefined){return value}
-    var res
-    for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-        res = $B.frames_stack[i][1][name]
-        if(res !== undefined){return res}
-        res = $B.frames_stack[i][3][name]
-        if(res !== undefined){return res}
-    }
-    throw _b_.NameError.$factory("free variable '" + name +
-        "' referenced before assignment in enclosing scope")
-}
-
-$B.$check_def_free1 = function(name, scope_id){
-    // Check if value is not undefined
-    var res
-    for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-        var frame = $B.frames_stack[i]
-        res = frame[1][name]
-        if(res !== undefined){
-            return res
-        }
-        if(frame[1].$parent){
-            res = frame[1].$parent[name]
-            if(res !== undefined){return res}
-        }
-        if(frame[2] == scope_id){
-            res = frame[3][name]
-            if(res !== undefined){return res}
-        }
-    }
-    throw _b_.NameError.$factory("free variable '" + name +
-        "' referenced before assignment in enclosing scope")
-}
-
-
 // transform native JS types into Brython types
 $B.$JS2Py = function(src){
     if(typeof src === "number"){
@@ -600,55 +454,6 @@ $B.$JS2Py = function(src){
         src.$brython_class = "js" // used in make_iterator_class
     }
     return src
-}
-
-// Functions used if we can guess the type from lexical analysis
-$B.list_key = function(obj, key){
-    key = $B.$GetInt(key)
-    if(key < 0){key += obj.length}
-    var res = obj[key]
-    if(res === undefined){
-        throw _b_.IndexError.$factory("list index out of range")
-    }
-    return res
-}
-
-$B.list_slice = function(obj, start, stop){
-    if(start === null){start = 0}
-    else{
-        start = $B.$GetInt(start)
-        if(start < 0){start = Math.max(0, start + obj.length)}
-    }
-    if(stop === null){return obj.slice(start)}
-    stop = $B.$GetInt(stop)
-    if(stop < 0){stop += obj.length}
-    return obj.slice(start, stop)
-}
-
-$B.list_slice_step = function(obj, start, stop, step){
-    if(step === null || step == 1){return $B.list_slice(obj, start, stop)}
-
-    if(step == 0){throw _b_.ValueError.$factory("slice step cannot be zero")}
-    step = $B.$GetInt(step)
-
-    if(start === null){start = step >= 0 ? 0 : obj.length - 1}
-    else{
-        start = $B.$GetInt(start)
-        if(start < 0){start = Math.min(0, start + obj.length)}
-    }
-    if(stop === null){stop = step >= 0 ? obj.length : -1}
-    else{
-        stop = $B.$GetInt(stop)
-        if(stop < 0){stop = Math.max(0, stop + obj.length)}
-    }
-
-    var res = []
-    if(step > 0){
-        for(var i = start; i < stop; i += step){res.push(obj[i])}
-    }else{
-        for(var i = start; i > stop; i += step){res.push(obj[i])}
-    }
-    return res
 }
 
 // get item
@@ -746,23 +551,6 @@ $B.getitem_slice = function(obj, slice){
 }
 
 // Set list key or slice
-$B.set_list_key = function(obj, key, value){
-    try{key = $B.$GetInt(key)}
-    catch(err){
-        if(_b_.isinstance(key, _b_.slice)){
-            var s = _b_.slice.$conv_for_seq(key, obj.length)
-            return $B.set_list_slice_step(obj, s.start,
-                s.stop, s.step, value)
-        }
-    }
-    if(key < 0){key += obj.length}
-    if(obj[key] === undefined){
-        console.log(obj, key)
-        throw _b_.IndexError.$factory("list assignment index out of range")
-    }
-    obj[key] = value
-}
-
 $B.set_list_slice = function(obj, start, stop, value){
     if(start === null){
         start = 0
@@ -874,46 +662,6 @@ $B.$delitem = function(obj, item){
     return di(obj, item)
 }
 
-$B.delitem_slice = function(obj, slice){
-    if(Array.isArray(obj) && obj.__class__ === _b_.list){
-        if(slice.start === _b_.None && slice.stop === _b_.None){
-            if(slice.step === _b_.None || slice.step == 1 ||
-                    slice.step == -1){
-                while(obj.length > 0){
-                    obj.pop()
-                }
-                return _b_.None
-            }
-        }else if(slice.step === _b_.None){
-            if(slice.start === _b_.None){
-                slice.start = 0
-            }
-            if(slice.stop === _b_.None){
-                slice.stop = obj.length
-            }
-            if(typeof slice.start == "number" &&
-                    typeof slice.stop == "number"){
-                if(slice.start < 0){
-                    slice.start += obj.length
-                }
-                if(slice.stop < 0){
-                    slice.stop += obj.length
-                }
-                obj.splice(slice.start, slice.stop - slice.start)
-                return _b_.None
-            }
-        }
-    }
-    var di = $B.$getattr(obj.__class__ || $B.get_class(obj), "__delitem__",
-        null)
-
-    if(di === null){
-        throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
-            "' object doesn't support item deletion")
-    }
-    return di(obj, slice)
-}
-
 $B.augm_assign = function(left, op, right){
     // augmented assignment
     var op1 = op.substr(0, op.length - 1)
@@ -980,38 +728,6 @@ $B.extend = function(fname, arg){
     return arg
 }
 
-// function used if a function call has an argument *args
-$B.extend_list = function(){
-    // The last argument is the iterable to unpack
-    var res = Array.prototype.slice.call(arguments, 0, arguments.length - 1),
-        last = $B.last(arguments)
-    var it = _b_.iter(last)
-    while (true){
-        try{
-            res.push(_b_.next(it))
-        }catch(err){
-            if(_b_.isinstance(err, [_b_.StopIteration])){
-                break
-            }
-            throw err
-        }
-    }
-    return res
-}
-
-$B.$test_item = function(expr){
-    // used to evaluate expressions with "and" or "or"
-    // returns a Javascript boolean (true or false) and stores
-    // the evaluation in a global variable $test_result
-    $B.$test_result = expr
-    return _b_.bool.$factory(expr)
-}
-
-$B.$test_expr = function(){
-    // returns the last evaluated item
-    return $B.$test_result
-}
-
 $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // but new Number(1) === new Number(1) is false, and so is
@@ -1025,16 +741,6 @@ $B.$is = function(a, b){
         return true
     }
     return a === b
-}
-
-$B.conv_undef = function(obj){
-    // Used inside functions to convert Javascript undefined to $B.Undefined
-    // defined in builtin_modules.js
-    var res = {}
-    for(var key in obj){
-        res[key] = obj[key] === undefined ? $B.Undefined : obj[key]
-    }
-    return res
 }
 
 $B.$is_member = function(item, _set){
@@ -1484,28 +1190,6 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
-$B.leave_frame_exec = function(arg){
-    // Leave execution frame in an "exec" or "eval" : may have side effects
-    // on the englobing namespace
-    if($B.profile > 0){$B.$profile.return()}
-    if($B.frames_stack.length == 0){console.log("empty stack"); return}
-    var frame = $B.last($B.frames_stack)
-    $B.frames_stack.pop()
-    if(frame[1].$ctx_managers_in_gen){
-        // If the frame used generators with context managers, exit them.
-        // Simulates garbage collection.
-        for(var cm of frame[1].$ctx_managers_in_gen){
-            $B.$call($B.$getattr(cm, '__exit__'))(_b_.None, _b_.None, _b_.None)
-        }
-    }
-
-    for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-        if($B.frames_stack[i][2] == frame[2]){
-            $B.frames_stack[i][3] = frame[3]
-        }
-    }
-}
-
 var min_int = Math.pow(-2, 53), max_int = Math.pow(2, 53) - 1
 
 $B.is_safe_int = function(){
@@ -1558,16 +1242,6 @@ $B.add = function(x, y){
         return $B.rich_op("__add__", x, y)
     }
     return res
-}
-
-$B.div = function(x, y){
-    var z = x / y
-    if(x > min_int && x < max_int && y > min_int && y < max_int
-        && z > min_int && z < max_int){return z}
-    else{
-        return $B.long_int.__truediv__($B.long_int.$factory(x),
-            $B.long_int.$factory(y))
-    }
 }
 
 $B.eq = function(x, y){
