@@ -923,6 +923,27 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }
 }
 
+function set_ctx_to_store(obj){
+    if(Array.isArray(obj)){
+        for(var item of obj){
+            set_ctx_to_store(item)
+        }
+    }else if(obj instanceof ast.List ||
+            obj instanceof ast.Tuple){
+        for(var item of obj.elts){
+            set_ctx_to_store(item)
+        }
+    }else if(obj instanceof ast.Starred){
+        obj.value.ctx = new ast.Store()
+    }else if(obj === undefined){
+        // ignore
+    }else if(obj.ctx){
+        obj.ctx = new ast.Store()
+    }else{
+        console.log('bizarre', obj)
+    }
+}
+
 $AssignCtx.prototype.ast = function(){
     var value = this.tree[1].ast(),
         targets = [],
@@ -932,12 +953,6 @@ $AssignCtx.prototype.ast = function(){
     }
     if(target.type == 'list_or_tuple'){
         target = target.ast()
-        for(var elt of target.elts){
-            elt.ctx = new ast.Store()
-            if(elt instanceof ast.Starred){
-                elt.value.ctx = new ast.Store()
-            }
-        }
         target.ctx = new ast.Store()
         targets = [target]
     }else{
@@ -946,14 +961,6 @@ $AssignCtx.prototype.ast = function(){
             target = target.tree[0]
         }
         targets.splice(0, 0, target.ast())
-        for(var tg of targets){
-            tg.ctx = new ast.Store()
-            if(tg instanceof ast.Tuple){
-                for(var elt of tg.elts){
-                    elt.ctx = new ast.Store()
-                }
-            }
-        }
     }
     value.ctx = new ast.Load()
     var lineno = $get_node(this).line_num
@@ -968,6 +975,7 @@ $AssignCtx.prototype.ast = function(){
         var ast_obj = new ast.Assign(targets, value)
     }
     set_position(ast_obj, this.position)
+    set_ctx_to_store(ast_obj.targets)
     return ast_obj
 }
 
@@ -7704,7 +7712,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     if($B.produce_ast == 2){
         console.log(ast_dump(_ast))
     }
-    $B.file_cache[locals_id] = src
     var symtable = $B._PySymtable_Build(_ast, locals_id)
     var js_from_ast = $B.js_from_root(_ast, symtable, filename)
     root._ast = _ast
@@ -8097,8 +8104,11 @@ var brython = $B.parser.brython = function(options){
                     src = unindent(src) // remove global indentation
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
+                    var filename = $B.script_path + "#" + module_name
+                    // store source code
+                    $B.file_cache[filename] = src
                     $B.tasks.push([$B.run_script, src, module_name,
-                        $B.script_path + "#" + module_name, true])
+                                   filename, true])
                 }
             }
         }
@@ -8182,8 +8192,6 @@ var $log = $B.$log = function(js){
     js.split("\n").forEach(function(line, i){
         console.log(i + 1, ":", line)
     })
-}
-var _run_scripts = $B.parser._run_scripts = function(options){
 }
 
 $B.$operators = $operators

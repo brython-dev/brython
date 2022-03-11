@@ -848,4 +848,9 @@ def try_except_else_finally():
 
 #assert try_except_else_finally() == 4
 
+args = ['invalid syntax', ['<string>', 1, 2, 'a f']]
+
+info, [filename, lineno, offset, line] = args
+assert filename == '<string>'
+
 print('passed all tests...')
