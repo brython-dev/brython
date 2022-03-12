@@ -405,7 +405,15 @@ $B.resolve_local = function(name){
 $B.resolve_in_scopes = function(name, namespaces){
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
-            var exec_top = $B.frames_stack[0]
+            console.log('search exec top', $B.frames_stack.slice())
+            for(var frame of $B.frames_stack.slice().reverse()){
+                if(frame.is_exec_top){
+                    var exec_top = frame
+                    break
+                }
+            }
+            console.log('resolve in exec scope', exec_top)
+
             for(var ns of [exec_top[1], exec_top[3]]){
                 var v = resolve_in_namespace(name, ns)
                 if(v.found){
@@ -428,6 +436,9 @@ $B.resolve_global = function(name){
         var v = resolve_in_namespace(name, frame[3])
         if(v.found){
             return v.value
+        }
+        if(frame.is_exec_top){
+            break
         }
     }
     if(builtins_scope.locals.has(name)){
@@ -490,7 +501,7 @@ function init_comprehension(comp){
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
            `locals['.0'] = expr\n` +
-           `var top_frame = ["${comp_id}", ${comp.locals_name}, ` +
+           `var top_frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
            `locals.$f_trace = $B.enter_frame(top_frame)\n`
 }

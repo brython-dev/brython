@@ -393,7 +393,6 @@ function trace_from_stack(stack){
         var lineno = frame[1].$lineno,
             filename = frame[3].__file__,
             src = $B.file_cache[filename]
-        console.log('frame', frame)
         trace += `  File ${frame[3].__file__}, line ${lineno}, in `
         if(frame[0] == frame[2]){
             trace += '<module>'
@@ -994,7 +993,6 @@ function offer_suggestions_for_name_error(exc){
 
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
-    console.log('handle error', err.args)
     if(err.$handled){
         return
     }

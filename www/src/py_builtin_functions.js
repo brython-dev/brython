@@ -702,8 +702,10 @@ function $$eval(src, _globals, _locals){
     var save_frames_stack = $B.frames_stack.slice()
 
     var top_frame = [__name__, exec_locals, __name__, exec_globals]
-    $B.frames_stack.push(top_frame)
-    
+    top_frame.is_exec_top = true
+    exec_locals.$f_trace = $B.enter_frame(top_frame)
+    exec_locals.$lineno = 1
+
     try{
         var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
                 1)
@@ -721,13 +723,6 @@ function $$eval(src, _globals, _locals){
         $B.frames_stack = save_frames_stack
         throw err
     }
-
-    // exec / eval runs in a frames stack of its own
-    $B.frames_stack = []
-    var top_frame = [__name__, exec_locals, __name__, exec_globals]
-    top_frame.is_exec_top = true
-    exec_locals.$f_trace = $B.enter_frame(top_frame)
-    exec_locals.$lineno = 1
 
     if(mode == 'eval'){
         js = 'return ' + js

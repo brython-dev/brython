@@ -198,8 +198,10 @@ function run_py(module_contents, path, module, compiled) {
             root = $B.py2js(src, module,
                 module.__name__, $B.builtins_scope)
         }catch(err){
-            console.log('error in imported module', module)
-            console.log('stack', $B.frames_stack.slice())
+            if($B.debug > 1){
+                console.log('error in imported module', module)
+                console.log('stack', $B.frames_stack.slice())
+            }
             err.$stack = $B.frames_stack.slice()
             throw err
         }

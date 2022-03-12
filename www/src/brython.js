@@ -113,9 +113,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-12 18:19:54.614849"
-__BRYTHON__.timestamp=1647105594614
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
+__BRYTHON__.compiled_date="2022-03-12 21:38:02.902643"
+__BRYTHON__.timestamp=1647117482902
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -6115,7 +6115,9 @@ var missing=$B.$getattr(_locals.__class__,'__missing__',null)
 if(missing){exec_locals.$missing=$B.$call(missing)}}}}
 var save_frames_stack=$B.frames_stack.slice()
 var top_frame=[__name__,exec_locals,__name__,exec_globals]
-$B.frames_stack.push(top_frame)
+top_frame.is_exec_top=true
+exec_locals.$f_trace=$B.enter_frame(top_frame)
+exec_locals.$lineno=1
 try{var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
 root.mode=mode
 root.filename='<string>'
@@ -6124,11 +6126,6 @@ var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_roo
 exec_locals.$lineno=lineno
 $B.frames_stack=save_frames_stack
 throw err}
-$B.frames_stack=[]
-var top_frame=[__name__,exec_locals,__name__,exec_globals]
-top_frame.is_exec_top=true
-exec_locals.$f_trace=$B.enter_frame(top_frame)
-exec_locals.$lineno=1
 if(mode=='eval'){js='return '+js}
 var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){if(err.$stack){err.$stack=save_frames_stack.concat(err.$stack)}else{err.$stack=save_frames_stack.concat($B.frames_stack)}
@@ -7239,7 +7236,6 @@ err.__dict__=$B.empty_dict()
 return err}
 function trace_from_stack(stack){var trace=''
 for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
-console.log('frame',frame)
 trace+=`  File ${frame[3].__file__}, line ${lineno}, in `
 if(frame[0]==frame[2]){trace+='<module>'}else{trace+=frame[0]}
 trace+='\n'
@@ -7486,7 +7482,6 @@ if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWi
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
 $B.handle_error=function(err){
-console.log('handle error',err.args)
 if(err.$handled){return}
 err.$handled=true
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)
@@ -8764,11 +8759,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','json','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -8844,8 +8839,8 @@ $B.file_cache[path]=module_contents
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 var src={src:module_contents,has_annotations:false,filename:path}
-try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){console.log('error in imported module',module)
-console.log('stack',$B.frames_stack.slice())
+try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){if($B.debug > 1){console.log('error in imported module',module)
+console.log('stack',$B.frames_stack.slice())}
 err.$stack=$B.frames_stack.slice()
 throw err}}
 try{js=compiled ? module_contents :root.to_js()
@@ -13760,14 +13755,18 @@ if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][na
 if(value !==undefined){return value}}
 throw _b_.UnboundLocalError.$factory(`local variable '${name}' `+
 'referenced before assignment')}
-$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top=$B.frames_stack[0]
+$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){console.log('search exec top',$B.frames_stack.slice())
+for(var frame of $B.frames_stack.slice().reverse()){if(frame.is_exec_top){var exec_top=frame
+break}}
+console.log('resolve in exec scope',exec_top)
 for(var ns of[exec_top[1],exec_top[3]]){var v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}else{var v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}
 throw $B.name_error(name)}
 $B.resolve_global=function(name){
 for(var frame of $B.frames_stack.slice().reverse()){var v=resolve_in_namespace(name,frame[3])
-if(v.found){return v.value}}
+if(v.found){return v.value}
+if(frame.is_exec_top){break}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
 throw _b_.NameError.$factory(name)}
 var $operators=$B.op2method.subset("all")
@@ -13801,7 +13800,7 @@ return `var ${comp.locals_name} = {},\n`+
 `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
 `}\n`+
 `locals['.0'] = expr\n`+
-`var top_frame = ["${comp_id}", ${comp.locals_name}, `+
+`var top_frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
 `"${comp.module_name}", ${comp.globals_name}]\n`+
 `locals.$f_trace = $B.enter_frame(top_frame)\n`}
 function make_comp(scopes){
