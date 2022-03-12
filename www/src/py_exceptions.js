@@ -108,44 +108,6 @@ $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
     throw exc
 }
 
-$B.$IndentationError = function(module, msg, src, pos, line_num, root,
-        indented_node){
-    if(root !== undefined && root.line_info !== undefined){
-        // this may happen for syntax errors inside a lambda
-        line_num = root.line_info
-    }
-    if(indented_node){
-        var type = indented_node.context.tree[0].type
-        switch(type){
-            case 'class':
-                type = 'class definition'
-                break
-            case 'condition':
-                type = `'${indented_node.context.tree[0].token}' statement`
-                break
-            case 'def':
-                type = 'function definition'
-                break
-            case 'case':
-            case 'for':
-            case 'match':
-            case 'try':
-            case 'while':
-            case 'with':
-                type = `'${type}' statement`
-                break
-            case 'single_kw':
-                type = `'${indented_node.context.tree[0].token}' statement`
-                break
-        }
-        msg += ` after ${type} on line ${indented_node.line_num}`
-    }
-    var exc = _b_.IndentationError.$factory(msg)
-    $B.$syntax_err_line(exc, module, src, pos, line_num, root.filename)
-    // $B.frames_stack.pop()
-    throw exc
-}
-
 $B.print_stack = function(stack){
     stack = stack || $B.frames_stack
     var trace = []
@@ -839,6 +801,7 @@ $B.$TypeError = function(msg){
 
 // SyntaxError instances have special attributes
 var se = _b_.SyntaxError.$factory
+
 _b_.SyntaxError.$factory = function(){
     var arg = arguments[0]
     if(arg.__class__ === _b_.SyntaxError){
@@ -847,15 +810,15 @@ _b_.SyntaxError.$factory = function(){
     var exc = se.apply(null, arguments),
         frame = $B.last($B.frames_stack)
     if(frame){
-        var line_info = `${frame[1].$lineno},${frame[2]}`
         exc.filename = frame[3].__file__
-        exc.lineno = parseInt(line_info.split(",")[0])
+        exc.lineno = frame[1].$lineno
         var src = $B.file_cache[frame[3].__file__]
         if(src){
             lines = src.split("\n")
             exc.text = lines[exc.lineno - 1]
         }
         exc.offset = arg.offset
+        exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text]
     }
     return exc
 }
@@ -998,7 +961,8 @@ $B.handle_error = function(err){
     }
     err.$handled = true
     if($B.debug > 1){
-        console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
+        console.log("handle error", err.__class__, err.args)
+        console.log('stack', err.$stack)
         console.log(err)
     }
     var trace = ''
@@ -1008,15 +972,15 @@ $B.handle_error = function(err){
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
         trace += trace_from_stack(err.$stack)
-        var filename = err.args[1][0],
-            src = $B.file_cache[filename],
-            lines = src.split('\n'),
-            line = lines[err.args[1][1] - 1],
+        var filename = err.filename,
+            line = err.text,
             indent = line.length - line.trimLeft().length
-        trace += `  File ${filename}, line ${err.args[1][1]}\n` +
-                `    ${line.trim()}\n` +
-                '    ' + ' '.repeat(err.args[1][2] - indent - 1) + '^\n' +
-                `${err.__class__.$infos.__name__}: ${err.args[0]}`
+        if(! err.$stack || err.$stack.length == 0){
+            trace += `  File ${filename}, line ${err.args[1][1]}\n` +
+                     `    ${line.trim()}\n`
+        }
+        trace += '    ' + ' '.repeat(err.args[1][2] - indent) + '^\n' +
+                 `${err.__class__.$infos.__name__}: ${err.args[0]}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
         trace += trace_from_stack(err.$stack)

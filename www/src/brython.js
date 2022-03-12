@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-12 21:38:02.902643"
-__BRYTHON__.timestamp=1647117482902
+__BRYTHON__.compiled_date="2022-03-12 23:13:55.492085"
+__BRYTHON__.timestamp=1647123235492
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -507,21 +507,46 @@ target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
 var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){
-var ctx_node=C
-while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
-var tree_node=ctx_node.node,root=tree_node
-while(root.parent !==undefined){root=root.parent}
-var module=tree_node.module ||$get_module(C).module,src=root.src,line_num=tree_node.line_num
-if(C.$pos !==undefined){$pos=C.$pos}
-if(src){line_num=src.substr(0,$pos).split("\n").length}
-if(root.line_info){line_num=root.line_info}
-if(indent===undefined){if(msg && Array.isArray(msg)){$B.$SyntaxError(module,msg[0],src,$pos,line_num,root)}
-if(msg==="Triple string end not found"){
-$B.$SyntaxError(module,'invalid syntax : triple string end not found',src,$pos,line_num,root)}
-var message='invalid syntax'
-if(msg && !(msg.startsWith("token "))){message+=' ('+msg+')'}
-$B.$SyntaxError(module,message,src,$pos,line_num,root)}else if(typeof indent=='number'){throw $B.$IndentationError(module,msg,src,$pos,line_num,root)}else{
-throw $B.$IndentationError(module,msg,src,$pos,line_num,root,indent)}}
+var exc,klass=indent ? _b_.IndentationError :_b_.SyntaxError
+if(indent===undefined){
+if(msg && Array.isArray(msg)){message=msg[0]}else if(msg==="Triple string end not found"){
+message='invalid syntax : triple string end not found'}else{var message='invalid syntax'
+if(msg && !(msg.startsWith("token "))){message+=' ('+msg+')'}}}else{
+message='expected an indented block'
+if(typeof indent !='number'){
+var type=indent.C.tree[0].type
+switch(type){case 'class':
+type='class definition'
+break
+case 'condition':
+type=`'${indent.C.tree[0].token}' statement`
+break
+case 'def':
+type='function definition'
+break
+case 'case':
+case 'for':
+case 'match':
+case 'try':
+case 'while':
+case 'with':
+type=`'${type}' statement`
+break
+case 'single_kw':
+type=`'${indent.C.tree[0].token}' statement`
+break}
+message+=` after ${type} on line ${indent.line_num}`}}
+exc=klass.$factory(message)
+var position=$token.value,module=$get_module(C),src=$B.file_cache[module.filename],text=''
+if(src){lines=src.split('\n'),text=lines[position.start[0]-1]}
+exc.filename=module.filename
+exc.text=text
+exc.lineno=position.start[0]
+exc.col_offset=position.start[1]
+exc.end_lineno=position.end[0]
+exc.end_col_offset=position.end[1]
+exc.args[1]=[exc.filename,exc.lineno,exc.col_offset,exc.text,exc.end_lineno,exc.end_col_offset]
+throw exc}
 function check_assignment(C,kwargs){
 var once,action='assign to',augmented=false
 if(kwargs){once=kwargs.once
@@ -7128,33 +7153,6 @@ line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
-$B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){if(root !==undefined && root.line_info !==undefined){
-line_num=root.line_info}
-if(indented_node){var type=indented_node.C.tree[0].type
-switch(type){case 'class':
-type='class definition'
-break
-case 'condition':
-type=`'${indented_node.C.tree[0].token}' statement`
-break
-case 'def':
-type='function definition'
-break
-case 'case':
-case 'for':
-case 'match':
-case 'try':
-case 'while':
-case 'with':
-type=`'${type}' statement`
-break
-case 'single_kw':
-type=`'${indented_node.C.tree[0].token}' statement`
-break}
-msg+=` after ${type} on line ${indented_node.line_num}`}
-var exc=_b_.IndentationError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
-throw exc}
 $B.print_stack=function(stack){stack=stack ||$B.frames_stack
 var trace=[]
 stack.forEach(function(frame){var line_info=frame[1].$line_info
@@ -7419,13 +7417,13 @@ var se=_b_.SyntaxError.$factory
 _b_.SyntaxError.$factory=function(){var arg=arguments[0]
 if(arg.__class__===_b_.SyntaxError){return arg}
 var exc=se.apply(null,arguments),frame=$B.last($B.frames_stack)
-if(frame){var line_info=`${frame[1].$lineno},${frame[2]}`
-exc.filename=frame[3].__file__
-exc.lineno=parseInt(line_info.split(",")[0])
+if(frame){exc.filename=frame[3].__file__
+exc.lineno=frame[1].$lineno
 var src=$B.file_cache[frame[3].__file__]
 if(src){lines=src.split("\n")
 exc.text=lines[exc.lineno-1]}
-exc.offset=arg.offset}
+exc.offset=arg.offset
+exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text]}
 return exc}
 var MAX_CANDIDATE_ITEMS=750,MAX_STRING_SIZE=40,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
@@ -7484,16 +7482,17 @@ if(suggestion){return suggestion}}}
 $B.handle_error=function(err){
 if(err.$handled){return}
 err.$handled=true
-if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)
+if($B.debug > 1){console.log("handle error",err.__class__,err.args)
+console.log('stack',err.$stack)
 console.log(err)}
 var trace=''
 if(err.$stack && err.$stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
 err.__class__===_b_.IndentationError){trace+=trace_from_stack(err.$stack)
-var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1],indent=line.length-line.trimLeft().length
-trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
-`    ${line.trim()}\n`+
-'    '+' '.repeat(err.args[1][2]-indent-1)+'^\n'+
+var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
+if(! err.$stack ||err.$stack.length==0){trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
+`    ${line.trim()}\n`}
+trace+='    '+' '.repeat(err.args[1][2]-indent)+'^\n'+
 `${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
 trace+=trace_from_stack(err.$stack)
 trace+=name+': '+_b_.str.$factory(err)}else{console.log(err)
@@ -9226,7 +9225,9 @@ locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
 var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info ||
 frame[1].$lineinfo+','+frame[2],line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
-$B.$SyntaxError(frame[2],"future feature "+name+" is not defined",current_frame[3].src,undefined,line_num,{filename:mod_name})}
+var exc=_b_.SyntaxError.$factory(
+"future feature "+name+" is not defined")
+throw exc}
 if($err3.$py_error){throw $err3}
 if($B.debug > 1){console.log($err3)
 console.log($B.last($B.frames_stack))}
@@ -13755,12 +13756,11 @@ if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][na
 if(value !==undefined){return value}}
 throw _b_.UnboundLocalError.$factory(`local variable '${name}' `+
 'referenced before assignment')}
-$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){console.log('search exec top',$B.frames_stack.slice())
-for(var frame of $B.frames_stack.slice().reverse()){if(frame.is_exec_top){var exec_top=frame
+$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top
+for(var frame of $B.frames_stack.slice().reverse()){if(frame.is_exec_top){exec_top=frame
 break}}
-console.log('resolve in exec scope',exec_top)
-for(var ns of[exec_top[1],exec_top[3]]){var v=resolve_in_namespace(name,ns)
-if(v.found){return v.value}}}else{var v=resolve_in_namespace(name,ns)
+if(exec_top){for(var ns of[exec_top[1],exec_top[3]]){var v=resolve_in_namespace(name,ns)
+if(v.found){return v.value}}}}else{var v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}
 throw $B.name_error(name)}
 $B.resolve_global=function(name){

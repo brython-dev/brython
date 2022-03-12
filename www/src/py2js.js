@@ -258,56 +258,82 @@ function copy_position(target, origin){
 }
 
 /*
-Function called in case of SyntaxError
-======================================
+Function called in case of SyntaxError or IndentationError
+==========================================================
 */
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     // console.log("syntax error", context, "msg", msg, "indent", indent, '$pos', $pos)
-    var ctx_node = context
-    while(ctx_node.type !== 'node'){
-        ctx_node = ctx_node.parent
-    }
-    var tree_node = ctx_node.node,
-        root = tree_node
-    while(root.parent !== undefined){
-        root = root.parent
-    }
-    var module = tree_node.module || $get_module(context).module,
-        src = root.src,
-        line_num = tree_node.line_num
-    if(context.$pos !== undefined){
-        $pos = context.$pos
-    }
-    if(src){
-        line_num = src.substr(0, $pos).split("\n").length
-    }
-    if(root.line_info){
-        line_num = root.line_info
-    }
+    var exc,
+        klass = indent ? _b_.IndentationError : _b_.SyntaxError
     if(indent === undefined){
+        // SyntaxError
         if(msg && Array.isArray(msg)){
-            $B.$SyntaxError(module, msg[0], src, $pos, line_num, root)
-        }
-        if(msg === "Triple string end not found"){
+            message = msg[0]
+        }else if(msg === "Triple string end not found"){
             // add an extra argument : used in interactive mode to
             // prompt for the rest of the triple-quoted string
-            $B.$SyntaxError(module,
-                'invalid syntax : triple string end not found',
-                src, $pos, line_num, root)
+            message = 'invalid syntax : triple string end not found'
+        }else{
+            var message = 'invalid syntax'
+            if(msg && ! (msg.startsWith("token "))){
+                message += ' (' + msg + ')'
+            }
+
         }
-        var message = 'invalid syntax'
-        if(msg && ! (msg.startsWith("token "))){
-            message += ' (' + msg + ')'
-        }
-        $B.$SyntaxError(module, message, src, $pos, line_num, root)
-    }else if(typeof indent == 'number'){
-        throw $B.$IndentationError(module, msg, src, $pos, line_num, root)
     }else{
-        // indent is the node that expected indentation
-        throw $B.$IndentationError(module, msg, src, $pos, line_num, root,
-            indent)
+        // IndentationError
+        message = 'expected an indented block'
+        if(typeof indent != 'number'){
+            // indent is the node that expected an indentation
+            var type = indent.context.tree[0].type
+            switch(type){
+                case 'class':
+                    type = 'class definition'
+                    break
+                case 'condition':
+                    type = `'${indent.context.tree[0].token}' statement`
+                    break
+                case 'def':
+                    type = 'function definition'
+                    break
+                case 'case':
+                case 'for':
+                case 'match':
+                case 'try':
+                case 'while':
+                case 'with':
+                    type = `'${type}' statement`
+                    break
+                case 'single_kw':
+                    type = `'${indent.context.tree[0].token}' statement`
+                    break
+            }
+            message += ` after ${type} on line ${indent.line_num}`
+        }
     }
+    exc = klass.$factory(message)
+    var position = $token.value,
+        module = $get_module(context),
+        src = $B.file_cache[module.filename],
+        text = ''
+    if(src){
+        lines = src.split('\n'),
+        text = lines[position.start[0] - 1]
+    }
+    exc.filename = module.filename
+    exc.text = text
+    exc.lineno = position.start[0]
+    exc.col_offset = position.start[1]
+    exc.end_lineno = position.end[0]
+    exc.end_col_offset = position.end[1]
+    exc.args[1] = [ exc.filename,
+                    exc.lineno,
+                    exc.col_offset,
+                    exc.text,
+                    exc.end_lineno,
+                    exc.end_col_offset]
+    throw exc
 }
 
 /*

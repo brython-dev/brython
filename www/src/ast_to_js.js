@@ -405,19 +405,19 @@ $B.resolve_local = function(name){
 $B.resolve_in_scopes = function(name, namespaces){
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
-            console.log('search exec top', $B.frames_stack.slice())
+            var exec_top
             for(var frame of $B.frames_stack.slice().reverse()){
                 if(frame.is_exec_top){
-                    var exec_top = frame
+                    exec_top = frame
                     break
                 }
             }
-            console.log('resolve in exec scope', exec_top)
-
-            for(var ns of [exec_top[1], exec_top[3]]){
-                var v = resolve_in_namespace(name, ns)
-                if(v.found){
-                    return v.value
+            if(exec_top){
+                for(var ns of [exec_top[1], exec_top[3]]){
+                    var v = resolve_in_namespace(name, ns)
+                    if(v.found){
+                        return v.value
+                    }
                 }
             }
         }else{

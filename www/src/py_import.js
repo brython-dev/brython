@@ -1272,10 +1272,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                     frame[1].$lineinfo + ',' + frame[2],
                                 line_elts = line_info.split(','),
                                 line_num = parseInt(line_elts[0])
-                            $B.$SyntaxError(frame[2],
-                                "future feature " + name + " is not defined",
-                                current_frame[3].src, undefined, line_num,
-                                {filename: mod_name})
+                            var exc = _b_.SyntaxError.$factory(
+                                "future feature " + name + " is not defined")
+                            throw exc
                         }
                         if($err3.$py_error){
                             throw $err3
