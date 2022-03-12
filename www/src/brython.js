@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-11 17:05:55.826474"
-__BRYTHON__.timestamp=1647014755826
+__BRYTHON__.compiled_date="2022-03-12 18:19:54.614849"
+__BRYTHON__.timestamp=1647105594614
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6092,8 +6092,8 @@ if(src.endsWith('\\\n')){var exc=_b_.SyntaxError.$factory('')
 var lines=src.split('\n'),line=lines[lines.length-2]
 exc.args=['unexpected EOF while parsing',['<string>',lines.length-1,1,line]]
 throw exc}
-var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={}
-var handler={get:function(obj,prop){if(prop=='$lineno'){return lineno}
+var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>'
+var handler={get:function(obj,prop){if(prop=='$lineno'){return lineno}else if(prop=='__file__'){return '<string>'}
 return obj[prop]},set:function(obj,prop,value){if(['__file__','$lineno'].indexOf(prop)==-1){obj[prop]=value}}}
 if(_globals===_b_.None){
 exec_locals=new Proxy(frame[1],handler)
@@ -6104,7 +6104,7 @@ if(_globals.$jsobj){
 exec_globals=new Proxy(_globals.$jsobj,handler)}else{
 if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jsobj={}}
 for(var key in _globals.$string_dict){_globals.$jsobj[key]=_globals.$string_dict[key][0]
-if(key=='__name__'){global_name=_globals.$jsobj[key]}}}
+if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name){
 global_name+='_globals'}
@@ -6113,20 +6113,25 @@ for(var key in _locals.$string_dict){_locals.$jsobj[key]=_locals.$string_dict[ke
 exec_locals.$getitem=$B.$call($B.$getattr(_locals.__class__,'__getitem__'))
 var missing=$B.$getattr(_locals.__class__,'__missing__',null)
 if(missing){exec_locals.$missing=$B.$call(missing)}}}}
-var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
+var save_frames_stack=$B.frames_stack.slice()
+var top_frame=[__name__,exec_locals,__name__,exec_globals]
+$B.frames_stack.push(top_frame)
+try{var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
 root.mode=mode
 root.filename='<string>'
 $B.parser.dispatch_tokens(root)
-var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})
-var save_frames_stack=$B.frames_stack.slice()
+var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})}catch(err){var lineno=err.args[1][1]
+exec_locals.$lineno=lineno
+$B.frames_stack=save_frames_stack
+throw err}
 $B.frames_stack=[]
-var top_frame=[local_name,exec_locals,global_name,exec_globals]
+var top_frame=[__name__,exec_locals,__name__,exec_globals]
 top_frame.is_exec_top=true
 exec_locals.$f_trace=$B.enter_frame(top_frame)
 exec_locals.$lineno=1
 if(mode=='eval'){js='return '+js}
 var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
-try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){
+try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){if(err.$stack){err.$stack=save_frames_stack.concat(err.$stack)}else{err.$stack=save_frames_stack.concat($B.frames_stack)}
 $B.frames_stack=save_frames_stack
 throw err}
 if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}
@@ -7126,8 +7131,7 @@ line_num=root.line_info}
 var exc=_b_.SyntaxError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
 throw exc}
-$B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){$B.frames_stack.push([module,{$lineno:line_num},module,{$src:src}])
-if(root !==undefined && root.line_info !==undefined){
+$B.$IndentationError=function(module,msg,src,pos,line_num,root,indented_node){if(root !==undefined && root.line_info !==undefined){
 line_num=root.line_info}
 if(indented_node){var type=indented_node.C.tree[0].type
 switch(type){case 'class':
@@ -7153,7 +7157,6 @@ break}
 msg+=` after ${type} on line ${indented_node.line_num}`}
 var exc=_b_.IndentationError.$factory(msg)
 $B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
-$B.frames_stack.pop()
 throw exc}
 $B.print_stack=function(stack){stack=stack ||$B.frames_stack
 var trace=[]
@@ -7171,41 +7174,14 @@ if(stack===undefined){stack=exc.$stack}
 return{
 __class__ :traceback,$stack:stack,exc:exc}}
 )
-traceback.__getattribute__=function(self,attr){var line_info
-if(attr==='tb_frame' ||
-attr==='tb_lineno' ||
-attr==='tb_lasti' ||
-attr==='tb_next'){if(self.$stack.length==0){console.log("no stack",attr)}
-var first_frame=self.$stack[0]
-line_info=self.exc.$line_infos[self.exc.$line_infos.length-
-self.$stack.length]}
-switch(attr){case "tb_frame":
+traceback.__getattribute__=function(self,attr){switch(attr){case "tb_frame":
 return frame.$factory(self.$stack)
 case "tb_lineno":
-var lineno
-if(line_info===undefined ||
-first_frame[0].startsWith($B.lambda_magic)){if(first_frame[4]&& first_frame[4].$infos &&
-first_frame[4].$infos.__code__){lineno=first_frame[4].$infos.__code__.co_firstlineno}else{lineno=-1}}else{lineno=parseInt(line_info.split(",")[0])}
-return lineno
+return self.$stack[0][1].$lineno
 case "tb_lasti":
-if(line_info===undefined){console.log("no line info",self.$stack)
-return ""}else{var info=line_info.split(","),src,file
-for(var i=self.$stack.length-1;i >=0;i--){var fr=self.$stack[i]
-if(fr[2]==info[1].replace(/\./g,'_')){file=fr[3].__file__
-src=fr[3].$src
-break}}
-if(src===undefined){if($B.file_cache.hasOwnProperty(file)){src=$B.file_cache[file]}else if($B.imported[info[1]]&&
-$B.imported[info[1]].__file__ ){src=$B.file_cache[$B.imported[info[1]].__file__]
-console.log("from filecache",line_info,$B.imported[info[1]].__file__)}}
-if(src !==undefined){try{return src.split("\n")[parseInt(info[0]-1)].trim()}catch(err){console.log("error in attr tb_lasti of",self)
-console.log(src,info)
-throw err}}else{console.log('stack',self.$stack)
-console.log(file)
-console.log("no src for",info)
-return ""}}
+throw _b_.NotImplementedError.$factory(attr)
 case "tb_next":
-if(self.$stack.length <=1){return _b_.None}
-else{return traceback.$factory(self.exc,self.$stack.slice(1))}
+if(self.$stack.length <=1){return _b_.None}else{return traceback.$factory(self.exc,self.$stack.slice(1))}
 default:
 return _b_.object.__getattribute__(self,attr)}}
 $B.set_func_names(traceback,"builtins")
@@ -7261,6 +7237,15 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=$B.empty_dict()
 return err}
+function trace_from_stack(stack){var trace=''
+for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
+console.log('frame',frame)
+trace+=`  File ${frame[3].__file__}, line ${lineno}, in `
+if(frame[0]==frame[2]){trace+='<module>'}else{trace+=frame[0]}
+trace+='\n'
+if(src){var lines=src.split('\n'),line=lines[lineno-1]
+if(line){trace+='    '+line.trim()+'\n'}}}
+return trace}
 var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
 return exc+''}
 var info=''
@@ -7289,7 +7274,7 @@ info+="\n    "+line}}
 if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1][0]+", line "+
 exc.args[1][1]+"\n    "+exc.args[1][3]}
 return info}
-BaseException.__getattr__=function(self,attr){if(attr=="info"){return getExceptionTrace(self,false);}else if(attr=="infoWithInternal"){return getExceptionTrace(self,true);}else if(attr=="__traceback__"){
+BaseException.__getattr__=function(self,attr){if(attr=="__traceback__"){
 if(self.$traceback !==undefined){return self.$traceback}
 return traceback.$factory(self)}else if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
 return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
@@ -7501,20 +7486,22 @@ if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWi
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
 $B.handle_error=function(err){
+console.log('handle error',err.args)
 if(err.$handled){return}
 err.$handled=true
 if($B.debug > 1){console.log("handle error",err.__class__,err.args,'stderr',$B.stderr)
 console.log(err)}
+var trace=''
+if(err.$stack && err.$stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
-err.__class__===_b_.IndentationError){console.log('args',err.args)
-var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1]
-trace=`File ${filename}, line ${err.args[1][1]}\n`+
-`${line}\n`+
-' '.repeat(err.args[1][2]-1)+'^\n'+
-`SyntaxError: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err),trace=$B.$getattr(err,'info')
-if(name=='SyntaxError' ||name=='IndentationError'){var offset=err.args[1][2]
-trace+='\n    '+' '.repeat(offset)+'^'+
-'\n'+name+': '+err.args[0]}else{trace+='\n'+name+': '+_b_.str.$factory(err)}}else{console.log(err)
+err.__class__===_b_.IndentationError){trace+=trace_from_stack(err.$stack)
+var filename=err.args[1][0],src=$B.file_cache[filename],lines=src.split('\n'),line=lines[err.args[1][1]-1],indent=line.length-line.trimLeft().length
+trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
+`    ${line.trim()}\n`+
+'    '+' '.repeat(err.args[1][2]-indent-1)+'^\n'+
+`${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
+trace+=trace_from_stack(err.$stack)
+trace+=name+': '+_b_.str.$factory(err)}else{console.log(err)
 trace=err+""}
 try{$B.$getattr($B.stderr,'write')(trace)
 var flush=$B.$getattr($B.stderr,'flush',_b_.None)
@@ -8641,9 +8628,7 @@ return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
 if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
-return pyobj2jsobj(res)}catch(err){console.log(err)
-console.log($B.$getattr(err,'info'))
-console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )
+return pyobj2jsobj(res)}catch(err){if($B.debug > 1){console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )}
 throw err}}}else{
 return pyobj}}
 $B.JSConstructor=JSConstructor
@@ -8859,7 +8844,10 @@ $B.file_cache[path]=module_contents
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
 var src={src:module_contents,has_annotations:false,filename:path}
-root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}
+try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){console.log('error in imported module',module)
+console.log('stack',$B.frames_stack.slice())
+err.$stack=$B.frames_stack.slice()
+throw err}}
 try{js=compiled ? module_contents :root.to_js()
 if($B.$options.debug==10){console.log("code for module "+module.__name__)
 console.log($B.format_indent(js,0))}
@@ -8875,11 +8863,9 @@ console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log(js)}
 for(var attr in err){console.log(attr,err[attr])}
-console.log('info',$B.$getattr(err,"info","[no info]"))
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)}
-if($B.debug > 0){console.log("line info "+$B.line_info)}
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
 var mod=eval("$module")
@@ -14492,13 +14478,14 @@ js+=`$B.set_lineno(locals, ${this.lineno})\n`+
 `var stack_length = $B.frames_stack.length\n`+
 `try{\n`+
 add_body(this.body,scopes)+'\n'+
-`$B.leave_frame({locals, value: _b_.None})\n`+
+(namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
 `}catch(err){\n`+
 `$B.set_exc(err)\n`+
 `if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){\n`+
 `locals.$f_trace = $B.trace_exception()\n`+
 `}\n`+
-`$B.leave_frame({locals, value: _b_.None});throw err\n`+
+(namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
+'throw err\n'+
 `}`
 scopes.pop()
 return js}

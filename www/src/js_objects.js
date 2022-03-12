@@ -276,18 +276,16 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 }
                 return pyobj2jsobj(res)
             }catch(err){
-                console.log(err)
-                console.log($B.$getattr(err,'info'))
-                console.log($B.class_name(err) + ':',
-                    err.args.length > 0 ? err.args[0] : '' )
+                if($B.debug > 1){
+                    console.log($B.class_name(err) + ':',
+                        err.args.length > 0 ? err.args[0] : '' )
+                }
                 throw err
             }
         }
     }else{
         // other types are left unchanged
-
         return pyobj
-
     }
 }
 

@@ -2029,20 +2029,21 @@ $B.ast.Module.prototype.to_js = function(scopes){
           `locals.__name__ = '${name}'\n`
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
-        // py_builtin_functions.js / eval1()
+        // py_builtin_functions.js / $$eval()
         js += `locals.$f_trace = $B.enter_frame($top_frame)\n`
     }
     js += `$B.set_lineno(locals, ${this.lineno})\n` +
           `var stack_length = $B.frames_stack.length\n` +
           `try{\n` +
               add_body(this.body, scopes) + '\n' +
-              `$B.leave_frame({locals, value: _b_.None})\n` +
+              (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
           `}catch(err){\n` +
               `$B.set_exc(err)\n` +
               `if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){\n` +
                   `locals.$f_trace = $B.trace_exception()\n` +
               `}\n` +
-              `$B.leave_frame({locals, value: _b_.None});throw err\n` +
+              (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
+              'throw err\n' +
           `}`
     scopes.pop()
     return js

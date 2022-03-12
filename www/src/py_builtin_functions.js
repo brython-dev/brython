@@ -618,7 +618,8 @@ function $$eval(src, _globals, _locals){
     var local_name = 'locals_exec',
         global_name = 'globals_exec',
         exec_locals = {},
-        exec_globals = {}
+        exec_globals = {},
+        __name__ = '<module>'
 
     // proxy around globals.$jsobj, to avoid modifying __file__ and
     // $lineno
@@ -626,6 +627,8 @@ function $$eval(src, _globals, _locals){
         get: function(obj, prop){
             if(prop == '$lineno'){
                 return lineno
+            }else if(prop == '__file__'){
+                return '<string>'
             }
             return obj[prop]
         },
@@ -660,7 +663,7 @@ function $$eval(src, _globals, _locals){
             for(var key in _globals.$string_dict){
                 _globals.$jsobj[key] = _globals.$string_dict[key][0]
                 if(key == '__name__'){
-                    global_name = _globals.$jsobj[key]
+                    __name__ = _globals.$jsobj[key]
                 }
             }
         }
@@ -696,21 +699,32 @@ function $$eval(src, _globals, _locals){
         }
     }
 
-    var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
-            1)
-    root.mode = mode
-    root.filename = '<string>'
-    $B.parser.dispatch_tokens(root)
-
-    var _ast = root.ast(),
-        symtable = $B._PySymtable_Build(_ast, 'exec'),
-        js = $B.js_from_root(_ast, symtable, '<string>',
-                {local_name, exec_locals, global_name, exec_globals})
-
     var save_frames_stack = $B.frames_stack.slice()
+
+    var top_frame = [__name__, exec_locals, __name__, exec_globals]
+    $B.frames_stack.push(top_frame)
+    
+    try{
+        var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
+                1)
+        root.mode = mode
+        root.filename = '<string>'
+        $B.parser.dispatch_tokens(root)
+
+        var _ast = root.ast(),
+            symtable = $B._PySymtable_Build(_ast, 'exec'),
+            js = $B.js_from_root(_ast, symtable, '<string>',
+                    {local_name, exec_locals, global_name, exec_globals})
+    }catch(err){
+        var lineno = err.args[1][1]
+        exec_locals.$lineno = lineno
+        $B.frames_stack = save_frames_stack
+        throw err
+    }
+
     // exec / eval runs in a frames stack of its own
     $B.frames_stack = []
-    var top_frame = [local_name, exec_locals, global_name, exec_globals]
+    var top_frame = [__name__, exec_locals, __name__, exec_globals]
     top_frame.is_exec_top = true
     exec_locals.$f_trace = $B.enter_frame(top_frame)
     exec_locals.$lineno = 1
@@ -726,8 +740,11 @@ function $$eval(src, _globals, _locals){
     try{
         var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
     }catch(err){
-        //console.log('err', err.message, err.args)
-        //console.log('exec source\n', src)
+        if(err.$stack){
+            err.$stack = save_frames_stack.concat(err.$stack)
+        }else{
+            err.$stack = save_frames_stack.concat($B.frames_stack)
+        }
         $B.frames_stack = save_frames_stack
         throw err
     }

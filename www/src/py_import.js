@@ -194,8 +194,15 @@ function run_py(module_contents, path, module, compiled) {
             filename: path
         }
 
-        root = $B.py2js(src, module,
-            module.__name__, $B.builtins_scope)
+        try{
+            root = $B.py2js(src, module,
+                module.__name__, $B.builtins_scope)
+        }catch(err){
+            console.log('error in imported module', module)
+            console.log('stack', $B.frames_stack.slice())
+            err.$stack = $B.frames_stack.slice()
+            throw err
+        }
 
     }
 
@@ -222,17 +229,13 @@ function run_py(module_contents, path, module, compiled) {
             if($B.debug > 1){
                 console.log(js)
             }
-            //console.log(module_contents
             for(var attr in err){
                 console.log(attr, err[attr])
             }
-            console.log('info', $B.$getattr(err, "info", "[no info]"))
             console.log("message: " + err.$message)
             console.log("filename: " + err.fileName)
             console.log("linenum: " + err.lineNumber)
         }
-        if($B.debug > 0){console.log("line info " + $B.line_info)}
-
         throw err
     }finally{
         $B.clear_ns(module.__name__)

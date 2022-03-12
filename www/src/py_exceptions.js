@@ -110,8 +110,6 @@ $B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
 
 $B.$IndentationError = function(module, msg, src, pos, line_num, root,
         indented_node){
-    $B.frames_stack.push([module, {$lineno: line_num},
-        module, {$src: src}])
     if(root !== undefined && root.line_info !== undefined){
         // this may happen for syntax errors inside a lambda
         line_num = root.line_info
@@ -144,7 +142,7 @@ $B.$IndentationError = function(module, msg, src, pos, line_num, root,
     }
     var exc = _b_.IndentationError.$factory(msg)
     $B.$syntax_err_line(exc, module, src, pos, line_num, root.filename)
-    $B.frames_stack.pop()
+    // $B.frames_stack.pop()
     throw exc
 }
 
@@ -187,80 +185,17 @@ var traceback = $B.traceback = $B.make_class("traceback",
 )
 
 traceback.__getattribute__ = function(self, attr){
-    var line_info
-    if(attr === 'tb_frame' ||
-            attr === 'tb_lineno' ||
-            attr === 'tb_lasti' ||
-            attr === 'tb_next'){
-        if(self.$stack.length == 0){
-            console.log("no stack", attr)
-        }
-        var first_frame = self.$stack[0]
-        line_info = self.exc.$line_infos[self.exc.$line_infos.length -
-            self.$stack.length]
-    }
-
     switch(attr){
         case "tb_frame":
             return frame.$factory(self.$stack)
         case "tb_lineno":
-            var lineno
-            if(line_info === undefined ||
-                    first_frame[0].startsWith($B.lambda_magic)){
-                if(first_frame[4] && first_frame[4].$infos &&
-                        first_frame[4].$infos.__code__){
-                    lineno = first_frame[4].$infos.__code__.co_firstlineno
-                }else{
-                    lineno = -1
-                }
-            }else{
-                lineno = parseInt(line_info.split(",")[0])
-            }
-            return lineno
+            return self.$stack[0][1].$lineno
         case "tb_lasti":
-            if(line_info === undefined){
-                console.log("no line info", self.$stack)
-                return ""
-            }else{
-                var info = line_info.split(","),
-                    src,
-                    file
-                for(var i = self.$stack.length - 1; i >= 0; i--){
-                    var fr = self.$stack[i]
-                    if(fr[2] == info[1].replace(/\./g, '_')){
-                        file = fr[3].__file__
-                        src = fr[3].$src
-                        break
-                    }
-                }
-                if(src === undefined){
-                    if($B.file_cache.hasOwnProperty(file)){
-                        src = $B.file_cache[file]
-                    }else if($B.imported[info[1]] &&
-                            $B.imported[info[1]].__file__ ){
-                        src = $B.file_cache[$B.imported[info[1]].__file__]
-                        console.log("from filecache", line_info,
-                            $B.imported[info[1]].__file__)
-                    }
-                }
-                if(src !== undefined){
-                    try{
-                        return src.split("\n")[parseInt(info[0] - 1)].trim()
-                    }catch(err){
-                        console.log("error in attr tb_lasti of", self)
-                        console.log(src, info)
-                        throw err
-                    }
-                }else{
-                    console.log('stack', self.$stack)
-                    console.log(file)
-                    console.log("no src for", info)
-                    return ""
-                }
-            }
+            throw _b_.NotImplementedError.$factory(attr)
         case "tb_next":
-            if(self.$stack.length <= 1){return _b_.None}
-            else{
+            if(self.$stack.length <= 1){
+                return _b_.None
+            }else{
                 return traceback.$factory(self.exc,
                     self.$stack.slice(1))
             }
@@ -452,6 +387,31 @@ BaseException.__new__ = function(cls){
     return err
 }
 
+function trace_from_stack(stack){
+    var trace = ''
+    for(var frame of stack){
+        var lineno = frame[1].$lineno,
+            filename = frame[3].__file__,
+            src = $B.file_cache[filename]
+        console.log('frame', frame)
+        trace += `  File ${frame[3].__file__}, line ${lineno}, in `
+        if(frame[0] == frame[2]){
+            trace += '<module>'
+        }else{
+            trace += frame[0]
+        }
+        trace += '\n'
+        if(src){
+            var lines = src.split('\n'),
+                line = lines[lineno - 1]
+            if(line){
+                trace += '    ' + line.trim() + '\n'
+            }
+        }
+    }
+    return trace
+}
+
 var getExceptionTrace = function(exc, includeInternal) {
     if(exc.__class__ === undefined){
         if($B.debug > 1){console.log("no class", exc)}
@@ -551,12 +511,7 @@ var getExceptionTrace = function(exc, includeInternal) {
 }
 
 BaseException.__getattr__ = function(self, attr){
-
-    if(attr == "info"){
-        return getExceptionTrace(self, false);
-    }else if (attr == "infoWithInternal"){
-        return getExceptionTrace(self, true);
-    }else if(attr == "__traceback__"){
+    if(attr == "__traceback__"){
         // Return traceback object
         if(self.$traceback !== undefined){return self.$traceback}
         return traceback.$factory(self)
@@ -1039,6 +994,7 @@ function offer_suggestions_for_name_error(exc){
 
 $B.handle_error = function(err){
     // Print the error traceback on the standard error stream
+    console.log('handle error', err.args)
     if(err.$handled){
         return
     }
@@ -1047,27 +1003,26 @@ $B.handle_error = function(err){
         console.log("handle error", err.__class__, err.args, 'stderr', $B.stderr)
         console.log(err)
     }
+    var trace = ''
+    if(err.$stack && err.$stack.length > 0){
+        trace = 'Traceback (most recent call last):\n'
+    }
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
-        console.log('args', err.args)
+        trace += trace_from_stack(err.$stack)
         var filename = err.args[1][0],
             src = $B.file_cache[filename],
             lines = src.split('\n'),
-            line = lines[err.args[1][1] - 1]
-        trace = `File ${filename}, line ${err.args[1][1]}\n` +
-                `${line}\n` +
-                ' '.repeat(err.args[1][2] - 1) + '^\n' +
-                `SyntaxError: ${err.args[0]}`
+            line = lines[err.args[1][1] - 1],
+            indent = line.length - line.trimLeft().length
+        trace += `  File ${filename}, line ${err.args[1][1]}\n` +
+                `    ${line.trim()}\n` +
+                '    ' + ' '.repeat(err.args[1][2] - indent - 1) + '^\n' +
+                `${err.__class__.$infos.__name__}: ${err.args[0]}`
     }else if(err.__class__ !== undefined){
-        var name = $B.class_name(err),
-            trace = $B.$getattr(err, 'info')
-        if(name == 'SyntaxError' || name == 'IndentationError'){
-            var offset = err.args[1][2]
-            trace += '\n    ' + ' '.repeat(offset) + '^' +
-                '\n' + name + ': '+ err.args[0]
-        }else{
-            trace += '\n' + name + ': ' + _b_.str.$factory(err)
-        }
+        var name = $B.class_name(err)
+        trace += trace_from_stack(err.$stack)
+        trace += name + ': ' + _b_.str.$factory(err)
     }else{
         console.log(err)
         trace = err + ""
