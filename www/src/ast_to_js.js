@@ -274,7 +274,7 @@ function name_scope(name, scopes){
         if(scopes[i].globals.has(name)){
             return {found: false, resolve: 'global'}
         }
-        if(scopes[i].locals.has(name)){
+        if(scopes[i].locals.has(name) && scopes[i].type != 'class'){
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
         }else if(block && block.symbols.$string_dict[name]){
             flags = block.symbols.$string_dict[name][0]
