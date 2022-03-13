@@ -2124,7 +2124,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                   }
                   if(context.real == 'dict'){
                       context.expect = 'value'
-                      context.value_pos = $pos
+                      context.value_pos = $token.value
                       return context
                   }else{
                       $_SyntaxError(context, 'token ' + token +
@@ -2133,7 +2133,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                 case 'for':
                     // comprehension
                     if(context.real == "set" && context.tree.length > 1){
-                        context.$pos = context.tree[0].$pos
+                        $token.value = context.tree[0].position
                         $_SyntaxError(context, ["did you forget " +
                             "parentheses around the comprehension target?"])
                     }
@@ -2219,7 +2219,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                 return $transition(new $AbstractExprCtx(context, false),
                     token, value)
             }catch(err){
-                context.$pos = context.value_pos
+                $token.value = context.value_pos
                 $_SyntaxError(context, ["expression expected after " +
                     "dictionary key and ':'"])
             }
@@ -2842,11 +2842,11 @@ $ExprCtx.prototype.transition = function(token, value){
           if(["dict_or_set", "list_or_tuple", "str"].indexOf(context.parent.type) == -1){
               var t = context.tree[0]
               if(t.type == "packed"){
-                  $pos = t.pos
-                  $_SyntaxError(context, ["can't use starred expression here"])
+                  $token.value = t.position
+                  $_SyntaxError(context, ["cannot use starred expression here"])
               }else if(t.type == "call" && t.func.type == "packed"){
-                  $pos = t.func.pos
-                  $_SyntaxError(context, ["can't use starred expression here"])
+                  $token.value = t.func.position
+                  $_SyntaxError(context, ["cannot use starred expression here"])
               }
           }
     }
@@ -7081,7 +7081,8 @@ function test_escape(context, text, string_start, antislash_pos){
             var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 2){
                 seq_end = antislash_pos + mo[0].length + 1
-                $pos = string_start + seq_end + 2
+                $token.value.start[1] = seq_end
+                // $pos = string_start + seq_end + 2
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
@@ -7093,7 +7094,7 @@ function test_escape(context, text, string_start, antislash_pos){
             var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 4){
                 seq_end = antislash_pos + mo[0].length + 1
-                $pos = string_start + seq_end + 2
+                $token.value.start[1] = seq_end
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
@@ -7105,7 +7106,7 @@ function test_escape(context, text, string_start, antislash_pos){
             var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
             if(mo[0].length != 8){
                 seq_end = antislash_pos + mo[0].length + 1
-                $pos = string_start + seq_end + 2
+                $token.value.start[1] = seq_end
                 $_SyntaxError(context,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
@@ -7448,7 +7449,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 if(braces_stack.length > 0){
                     var last_brace = $B.last(braces_stack),
                         start = last_brace.start
-                    context.$pos = line2pos[start[0]] + start[1]
+                    $token.value = last_brace
                     $_SyntaxError(context, [`'${last_brace.string}' was ` +
                        'never closed'])
                 }
@@ -7484,7 +7485,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 if(root.yields_func_check){
                     var save_pos = $pos
                     for(const _yield of root.yields_func_check){
-                        $pos = _yield[1]
+                        $token.value = _yield[0].position
                         _yield[0].check_in_function()
                     }
                     $pos = save_pos

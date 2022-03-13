@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-12 23:13:55.492085"
-__BRYTHON__.timestamp=1647123235492
+__BRYTHON__.compiled_date="2022-03-13 07:59:51.351632"
+__BRYTHON__.timestamp=1647154791351
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -125,10 +125,11 @@ code+=(char.charCodeAt(1)& 0x03FF)
 return code}
 function $last(array){return array[array.length-1]}
 var ops='.,:;+-*/%~^|&=<>[](){}@',op2=['**','//','>>','<<'],augm_op='+-*/%~^|&=<>@',closing={'}':'{',']':'[',')':'('}
-function Token(type,string,start,end,line){var res={type,string,start,end,line}
+function Token(type,string,start,end,line){start=start.slice(0,2)
+var res={type,string,start,end,line}
 res[0]=type
 res[1]=string
-res[2]=start.slice(0,2)
+res[2]=start
 res[3]=end
 res[4]=line
 return res}
@@ -1422,11 +1423,11 @@ return C
 case ':':
 if(C.real=='dict_or_set'){C.real='dict'}
 if(C.real=='dict'){C.expect='value'
-C.value_pos=$pos
+C.value_pos=$token.value
 return C}else{$_SyntaxError(C,'token '+token+
 ' after '+C)}
 case 'for':
-if(C.real=="set" && C.tree.length > 1){C.$pos=C.tree[0].$pos
+if(C.real=="set" && C.tree.length > 1){$token.value=C.tree[0].position
 $_SyntaxError(C,["did you forget "+
 "parentheses around the comprehension target?"])}
 if(C.real=='dict_or_set'){return new $TargetListCtx(new $ForExpr(
@@ -1479,7 +1480,7 @@ return new $AbstractExprCtx(op_expr,false)}
 $_SyntaxError(C,'token '+token+
 ' after '+C)}
 $_SyntaxError(C,'token '+token+' after '+C)}else if(C.expect=='value'){try{C.expect=','
-return $transition(new $AbstractExprCtx(C,false),token,value)}catch(err){C.$pos=C.value_pos
+return $transition(new $AbstractExprCtx(C,false),token,value)}catch(err){$token.value=C.value_pos
 $_SyntaxError(C,["expression expected after "+
 "dictionary key and ':'"])}}
 return $transition(C.parent,token,value)}}
@@ -1804,9 +1805,9 @@ C.tree[0].type=="id" &&
 ["print","exec"].indexOf(C.tree[0].value)>-1){$_SyntaxError(C,["Missing parentheses in call "+
 "to '"+C.tree[0].value+"'."])}
 if(["dict_or_set","list_or_tuple","str"].indexOf(C.parent.type)==-1){var t=C.tree[0]
-if(t.type=="packed"){$pos=t.pos
-$_SyntaxError(C,["can't use starred expression here"])}else if(t.type=="call" && t.func.type=="packed"){$pos=t.func.pos
-$_SyntaxError(C,["can't use starred expression here"])}}}
+if(t.type=="packed"){$token.value=t.position
+$_SyntaxError(C,["cannot use starred expression here"])}else if(t.type=="call" && t.func.type=="packed"){$token.value=t.func.position
+$_SyntaxError(C,["cannot use starred expression here"])}}}
 return $transition(C.parent,token)}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
@@ -3910,21 +3911,21 @@ if(mo){return[String.fromCharCode(parseInt(mo[0],8)),1+mo[0].length]}
 switch(text[antislash_pos+1]){case "x":
 var mo=/^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=2){seq_end=antislash_pos+mo[0].length+1
-$pos=string_start+seq_end+2
+$token.value.start[1]=seq_end
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\xXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "u":
 var mo=/^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=4){seq_end=antislash_pos+mo[0].length+1
-$pos=string_start+seq_end+2
+$token.value.start[1]=seq_end
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape"])}else{return[String.fromCharCode(parseInt(mo[0],16)),2+mo[0].length]}
 case "U":
 var mo=/^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos+2))
 if(mo[0].length !=8){seq_end=antislash_pos+mo[0].length+1
-$pos=string_start+seq_end+2
+$token.value.start[1]=seq_end
 $_SyntaxError(C,["(unicode error) 'unicodeescape' codec can't decode "+
 `bytes in position ${antislash_pos}-${seq_end}: truncated `+
 "\\uXXXX escape"])}else{var value=parseInt(mo[0],16)
@@ -4056,7 +4057,7 @@ line2pos[line_num]=pos+1}}
 while(true){try{var token=tokenizer.next()}catch(err){C=C ||new $NodeCtx(node)
 if(err.type=='IndentationError'){$pos=line2pos[err.line_num]
 $_SyntaxError(C,err.message,1)}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
-C.$pos=line2pos[start[0]]+start[1]
+$token.value=last_brace
 $_SyntaxError(C,[`'${last_brace.string}' was `+
 'never closed'])}
 $_SyntaxError(C,err.message)}
@@ -4074,7 +4075,7 @@ if(expect_indent &&
 $_SyntaxError(C,"expected an indented block",expect_indent)}
 switch(token.type){case 'ENDMARKER':
 if(root.yields_func_check){var save_pos=$pos
-for(const _yield of root.yields_func_check){$pos=_yield[1]
+for(const _yield of root.yields_func_check){$token.value=_yield[0].position
 _yield[0].check_in_function()}
 $pos=save_pos}
 if(indent !=0){$_SyntaxError(node.C,'expected an indented block',1)}
@@ -7128,31 +7129,6 @@ exc.__context__=active_exc===undefined ? _b_.None :active_exc
 exc.__cause__=cause ||_b_.None
 exc.__suppress_context__=cause !==undefined
 throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
-$B.$syntax_err_line=function(exc,module,src,pos,line_num,filename){
-var pos2line={},lnum=1,module=module.charAt(0)=="$" ? "<string>" :module
-if(src===undefined){exc.$line_info=line_num+','+module
-exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([module,line_num,0,0])])}else{var line_pos={1:0}
-for(var i=0,len=src.length;i < len;i++){pos2line[i]=lnum
-if(src.charAt(i)=="\n"){line_pos[++lnum]=i}}
-while(line_num===undefined){line_num=pos2line[pos]
-pos--}
-exc.$line_info=line_num+","+module
-var lines=src.split("\n"),line=lines[line_num-1],lpos=pos-line_pos[line_num],len=line.length
-exc.text=line+'\n'
-lpos-=len-line.length
-if(lpos < 0){lpos=0}
-while(line.charAt(0)==' '){line=line.substr(1)
-if(lpos > 0){lpos--}}
-exc.offset=lpos+1 
-exc.args=$B.fast_tuple([$B.$getitem(exc.args,0),$B.fast_tuple([filename,line_num,lpos,line])])}
-exc.lineno=line_num
-exc.msg=exc.args[0]
-exc.filename=filename}
-$B.$SyntaxError=function(module,msg,src,pos,line_num,root){if(root !==undefined && root.line_info !==undefined){
-line_num=root.line_info}
-var exc=_b_.SyntaxError.$factory(msg)
-$B.$syntax_err_line(exc,module,src,pos,line_num,root.filename)
-throw exc}
 $B.print_stack=function(stack){stack=stack ||$B.frames_stack
 var trace=[]
 stack.forEach(function(frame){var line_info=frame[1].$line_info
@@ -7232,42 +7208,6 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=$B.empty_dict()
 return err}
-function trace_from_stack(stack){var trace=''
-for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
-trace+=`  File ${frame[3].__file__}, line ${lineno}, in `
-if(frame[0]==frame[2]){trace+='<module>'}else{trace+=frame[0]}
-trace+='\n'
-if(src){var lines=src.split('\n'),line=lines[lineno-1]
-if(line){trace+='    '+line.trim()+'\n'}}}
-return trace}
-var getExceptionTrace=function(exc,includeInternal){if(exc.__class__===undefined){if($B.debug > 1){console.log("no class",exc)}
-return exc+''}
-var info=''
-if(exc.$js_exc !==undefined && includeInternal){info+="\nJS stack:\n"+exc.$js_exc.stack+"\n"}
-info+="Traceback (most recent call last):"
-var line_info,src
-for(var i=0;i < exc.$stack.length;i++){src=undefined
-var frame=exc.$stack[i]
-if(! frame[1]){continue}
-if(frame.exec_obj){
-line_info=[frame.exec_obj.$lineno,frame[2]]
-src=frame.exec_src}else if(frame[1].$lineno){line_info=[frame[1].$lineno,frame[2]]}else{console.log('bizarre',frame)}
-var file=frame[1].__file__ ||frame[3].__file__
-if(src==undefined){if(file && $B.file_cache[file]){src=$B.file_cache[file]}else{console.log('pas de __file__ ou de file_cache[__file]')
-console.log(exc.$stack)
-if($B.imported[frame[2]]===undefined){var file=frame[3].__file__,src=$B.file_cache[file]}else{var file=$B.imported[frame[2]].__file__,src=$B.file_cache[file]}}}
-var module=line_info[1],is_exec=module.charAt(0)=="$"
-if(is_exec){module="<module>"}
-info+="\n  File "+file+" line "+line_info[0]
-if(frame.length > 4){if(frame[4].$infos){var name=frame[4].$infos.__name__
-if(name.startsWith("lc"+$B.lambda_magic)){info+=', in <listcomp>'}else if(name.startsWith("lambda_"+$B.lambda_magic)){info+=', in <lambda>'}else{info+=', in '+name}}else if(frame[4].name.startsWith("__ge")){info+=', in <genexpr>'}else if(frame[4].name.startsWith("set_comp"+$B.lambda_magic)){info+=', in <setcomp>'}else if(frame[4].name.startsWith("lc"+$B.lambda_magic)){info+=', in <listcomp>'}else{console.log("frame[4]",frame[4])}}else if(frame[1].$list_comp){info+=', in <listcomp>'}else if(frame[1].$dict_comp){info+=', in <dictcomp>'}else{info+=', in <module>'}
-if(src !==undefined && ! is_exec){var lines=src.split("\n"),line=lines[parseInt(line_info[0])-1]
-if(line===undefined){console.log('bizarre, src',src,'frame',frame,'line_info',line_info)}
-if(line){line=line.replace(/^[ ]+/g,"")}
-info+="\n    "+line}}
-if(exc.__class__===_b_.SyntaxError){info+="\n  File "+exc.args[1][0]+", line "+
-exc.args[1][1]+"\n    "+exc.args[1][3]}
-return info}
 BaseException.__getattr__=function(self,attr){if(attr=="__traceback__"){
 if(self.$traceback !==undefined){return self.$traceback}
 return traceback.$factory(self)}else if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
@@ -7479,6 +7419,14 @@ if(suggestion){return suggestion}
 if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
+function trace_from_stack(stack){var trace=''
+for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
+trace+=`  File ${frame[3].__file__}, line ${lineno}, in `
+if(frame[0]==frame[2]){trace+='<module>'}else{trace+=frame[0]}
+trace+='\n'
+if(src){var lines=src.split('\n'),line=lines[lineno-1]
+if(line){trace+='    '+line.trim()+'\n'}}}
+return trace}
 $B.handle_error=function(err){
 if(err.$handled){return}
 err.$handled=true

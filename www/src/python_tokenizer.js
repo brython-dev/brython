@@ -22,10 +22,11 @@ var ops = '.,:;+-*/%~^|&=<>[](){}@',
     closing = {'}': '{', ']': '[', ')': '('}
 
 function Token(type, string, start, end, line){
+    start = start.slice(0, 2)
     var res = {type, string, start, end, line}
     res[0] = type
     res[1] = string
-    res[2] = start.slice(0, 2)
+    res[2] = start
     res[3] = end
     res[4] = line
     return res

@@ -57,57 +57,6 @@ $B.$raise = function(arg, cause){
     }
 }
 
-$B.$syntax_err_line = function(exc, module, src, pos, line_num, filename){
-    // map position to line number
-    var pos2line = {},
-        lnum = 1,
-        module = module.charAt(0) == "$" ? "<string>" : module
-    if(src === undefined){
-        exc.$line_info = line_num + ',' + module
-        exc.args = $B.fast_tuple([$B.$getitem(exc.args, 0),
-            $B.fast_tuple([module, line_num, 0, 0])])
-    }else{
-        var line_pos = {1:0}
-        for(var i = 0, len = src.length; i < len; i++){
-            pos2line[i] = lnum
-            if(src.charAt(i) == "\n"){line_pos[++lnum] = i}
-        }
-        while(line_num === undefined){
-            line_num = pos2line[pos]
-            pos--
-        }
-        exc.$line_info = line_num + "," + module
-
-        var lines = src.split("\n"),
-            line = lines[line_num - 1],
-            lpos = pos - line_pos[line_num],
-            len = line.length
-        exc.text = line + '\n'
-        lpos -= len - line.length
-        if(lpos < 0){lpos = 0}
-        while(line.charAt(0) == ' '){
-            line = line.substr(1)
-            if(lpos > 0){lpos--}
-        }
-        exc.offset = lpos + 1 // starts at column 1, not 0
-        exc.args = $B.fast_tuple([$B.$getitem(exc.args, 0),
-            $B.fast_tuple([filename, line_num, lpos, line])])
-    }
-    exc.lineno = line_num
-    exc.msg = exc.args[0]
-    exc.filename = filename
-}
-
-$B.$SyntaxError = function(module, msg, src, pos, line_num, root) {
-    if(root !== undefined && root.line_info !== undefined){
-        // this may happen for syntax errors inside a lambda
-        line_num = root.line_info
-    }
-    var exc = _b_.SyntaxError.$factory(msg)
-    $B.$syntax_err_line(exc, module, src, pos, line_num, root.filename)
-    throw exc
-}
-
 $B.print_stack = function(stack){
     stack = stack || $B.frames_stack
     var trace = []
@@ -347,128 +296,6 @@ BaseException.__new__ = function(cls){
     err.__class__ = cls
     err.__dict__ = $B.empty_dict()
     return err
-}
-
-function trace_from_stack(stack){
-    var trace = ''
-    for(var frame of stack){
-        var lineno = frame[1].$lineno,
-            filename = frame[3].__file__,
-            src = $B.file_cache[filename]
-        trace += `  File ${frame[3].__file__}, line ${lineno}, in `
-        if(frame[0] == frame[2]){
-            trace += '<module>'
-        }else{
-            trace += frame[0]
-        }
-        trace += '\n'
-        if(src){
-            var lines = src.split('\n'),
-                line = lines[lineno - 1]
-            if(line){
-                trace += '    ' + line.trim() + '\n'
-            }
-        }
-    }
-    return trace
-}
-
-var getExceptionTrace = function(exc, includeInternal) {
-    if(exc.__class__ === undefined){
-        if($B.debug > 1){console.log("no class", exc)}
-        return exc + ''
-    }
-
-    var info = ''
-    if(exc.$js_exc !== undefined && includeInternal){
-        info += "\nJS stack:\n" + exc.$js_exc.stack + "\n"
-    }
-    info += "Traceback (most recent call last):"
-    var line_info,
-        src
-
-    for(var i = 0; i < exc.$stack.length; i++){
-        src = undefined
-        var frame = exc.$stack[i]
-        if(! frame[1]){
-            continue
-        }
-        if(frame.exec_obj){
-            // set for exec when globals is set to globals()
-            line_info = [frame.exec_obj.$lineno, frame[2]]
-            src = frame.exec_src
-        }else if(frame[1].$lineno){
-            line_info = [frame[1].$lineno, frame[2]]
-        }else{
-            console.log('bizarre', frame)
-        }
-        var file = frame[1].__file__ || frame[3].__file__
-        if(src == undefined){
-            if(file && $B.file_cache[file]){
-                src = $B.file_cache[file]
-            }else{
-                console.log('pas de __file__ ou de file_cache[__file]')
-                console.log(exc.$stack)
-                if($B.imported[frame[2]] === undefined){
-                    var file = frame[3].__file__,
-                        src = $B.file_cache[file]
-                }else{
-                    var file = $B.imported[frame[2]].__file__,
-                        src = $B.file_cache[file]
-                }
-            }
-        }
-        var module = line_info[1],
-            is_exec = module.charAt(0) == "$"
-        if(is_exec){
-            module = "<module>"
-        }
-        info += "\n  File " + file + " line " + line_info[0]
-        if(frame.length > 4){
-            if(frame[4].$infos){
-                var name = frame[4].$infos.__name__
-                if(name.startsWith("lc" + $B.lambda_magic)){
-                    info += ', in <listcomp>'
-                }else if(name.startsWith("lambda_" + $B.lambda_magic)){
-                    info += ', in <lambda>'
-                }else{
-                    info += ', in ' + name
-                }
-            }else if(frame[4].name.startsWith("__ge")){
-                info += ', in <genexpr>'
-            }else if(frame[4].name.startsWith("set_comp" + $B.lambda_magic)){
-                info += ', in <setcomp>'
-            }else if(frame[4].name.startsWith("lc" + $B.lambda_magic)){
-                info += ', in <listcomp>'
-            }else{
-                console.log("frame[4]", frame[4])
-            }
-        }else if(frame[1].$list_comp){
-            info += ', in <listcomp>'
-        }else if(frame[1].$dict_comp){
-            info += ', in <dictcomp>'
-        }else{
-            info += ', in <module>'
-        }
-
-        if(src !== undefined && ! is_exec){
-            var lines = src.split("\n"),
-                line = lines[parseInt(line_info[0]) - 1]
-            if(line === undefined){
-                console.log('bizarre, src', src, 'frame', frame, 'line_info', line_info)
-            }
-            if(line){
-                line = line.replace(/^[ ]+/g, "")
-            }
-            info += "\n    " + line
-        }
-    }
-    if(exc.__class__ === _b_.SyntaxError){
-        info += "\n  File " + exc.args[1][0] + ", line " +
-            exc.args[1][1] + "\n    " + exc.args[1][3]
-
-    }
-    return info
 }
 
 BaseException.__getattr__ = function(self, attr){
@@ -952,6 +779,31 @@ function offer_suggestions_for_name_error(exc){
             return suggestion
         }
     }
+}
+
+
+function trace_from_stack(stack){
+    var trace = ''
+    for(var frame of stack){
+        var lineno = frame[1].$lineno,
+            filename = frame[3].__file__,
+            src = $B.file_cache[filename]
+        trace += `  File ${frame[3].__file__}, line ${lineno}, in `
+        if(frame[0] == frame[2]){
+            trace += '<module>'
+        }else{
+            trace += frame[0]
+        }
+        trace += '\n'
+        if(src){
+            var lines = src.split('\n'),
+                line = lines[lineno - 1]
+            if(line){
+                trace += '    ' + line.trim() + '\n'
+            }
+        }
+    }
+    return trace
 }
 
 $B.handle_error = function(err){
