@@ -772,8 +772,21 @@ def compressobj(level=-1, method=DEFLATED, wbits=MAX_WBITS,
 
 
 def decompress(data, /, wbits=MAX_WBITS, bufsize=DEF_BUF_SIZE):
-    return _Decompressor(wbits, bufsize).decompress(data)
-
+    if wbits > 0:
+        decompressor = _Decompressor(wbits, bufsize)
+        source = BitIO(data)
+        assert source.read(4) == 8
+        nb = source.read(4)
+        window_size = 2 ** (nb + 8)
+        assert source.read(8) == 0x9c
+        checksum = data[-4:]
+        a = 256 * checksum[2] + checksum[3]
+        b = 256 * checksum[0] + checksum[1]
+        assert a, b == adler32(data)
+        return decompressor.decompress(data[2:-4])
+    else:
+        decompressor = _Decompressor(-wbits, bufsize)
+        return decompressor.decompress(data)
 
 class _Decompressor:
 
