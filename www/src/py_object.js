@@ -317,31 +317,7 @@ object.__getattribute__ = function(obj, attr){
         // attribute is not a descriptor : return it unchanged
         return res
     }else{
-        // search __getattr__
-        /*
-        var _ga = obj["__getattr__"]
-        if(_ga === undefined){
-            _ga = klass["__getattr__"]
-            if(_ga === undefined){
-                var mro = klass.__mro__
-                for(var i = 0, len = mro.length; i < len; i++){
-                    _ga = mro[i]["__getattr__"]
-                    if(_ga !== undefined){
-                        break
-                    }
-                }
-            }
-        }
-        if(_ga !== undefined){
-            if(klass === $B.module){
-                return _ga(attr)
-            }
-            return _ga(obj, attr)
-        }else{
-            throw $B.attr_error(attr, obj)
-        }
-        */
-        throw _b_.AttributeError.$factory(attr)
+        throw $B.attr_error(attr, obj)
     }
 }
 
