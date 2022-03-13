@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-13 20:32:47.899008"
-__BRYTHON__.timestamp=1647199967899
+__BRYTHON__.compiled_date="2022-03-13 22:51:40.072865"
+__BRYTHON__.timestamp=1647208300072
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4589,8 +4589,7 @@ if(is_own_class_instance_method){obj.$method_cache=obj.$method_cache ||{}
 obj.$method_cache[attr]=[method,res]}
 return method}}else{
 return res1}}
-return res}else{
-throw _b_.AttributeError.$factory(attr)}}
+return res}else{throw $B.attr_error(attr,obj)}}
 object.__gt__=function(){return _b_.NotImplemented}
 object.__hash__=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
@@ -13676,7 +13675,7 @@ if(scope.has_import_star){return{found:false,resolve:is_local ? 'all' :'global'}
 for(var i=scopes.length-2;i >=0;i--){block=undefined
 if(scopes[i].ast){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))}
 if(scopes[i].globals.has(name)){return{found:false,resolve:'global'}}
-if(scopes[i].locals.has(name)){return{found:scopes[i]}}else if(block && block.symbols.$string_dict[name]){flags=block.symbols.$string_dict[name][0]
+if(scopes[i].locals.has(name)&& scopes[i].type !='class'){return{found:scopes[i]}}else if(block && block.symbols.$string_dict[name]){flags=block.symbols.$string_dict[name][0]
 var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK
 if([LOCAL,CELL].indexOf(__scope)>-1){
 return{found:false,resolve:'all'}}}

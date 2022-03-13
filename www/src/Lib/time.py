@@ -352,6 +352,14 @@ class struct_time:
     def tm_isdst(self):
         return self.args[8]
 
+    @property
+    def tm_gmtoff(self):
+        return - date().getTimezoneOffset() * 60
+
+    @property
+    def tm_zone(self):
+        return 'UTC'
+
     def __eq__(self, other):
         return self.args == other.args
 
