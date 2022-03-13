@@ -302,7 +302,7 @@ function parse(grammar, tokens){
         }
     }
     console.log('parse succeeds !', match)
-    //console.log(show(match, tokens))
+    console.log(show(match, tokens))
 }
 
 function show(match, tokens, level){

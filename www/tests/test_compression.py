@@ -29,4 +29,8 @@ compressed = gzip.compress(text)
 
 assert gzip.decompress(compressed) == text
 
+# issue 1914
+dbytes = bytes([203, 72, 205, 201, 201, 7, 0])
+assert zlib.decompress(dbytes, wbits=-zlib.MAX_WBITS) == b'hello'
+
 print('all tests passed...')
