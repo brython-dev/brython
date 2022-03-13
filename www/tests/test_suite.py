@@ -853,4 +853,11 @@ args = ['invalid syntax', ['<string>', 1, 2, 'a f']]
 info, [filename, lineno, offset, line] = args
 assert filename == '<string>'
 
+items = [(1, 2), (3, 4)]
+t = []
+for i, (key, value) in enumerate(items):
+  t.append((key, value))
+
+assert t == items
+
 print('passed all tests...')

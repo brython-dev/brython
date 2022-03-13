@@ -113,8 +113,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-13 07:59:51.351632"
-__BRYTHON__.timestamp=1647154791351
+__BRYTHON__.compiled_date="2022-03-13 08:20:05.906714"
+__BRYTHON__.timestamp=1647156005906
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1833,6 +1833,7 @@ this.scope=$get_scope(this)
 this.module=this.scope.module}
 $ForExpr.prototype.ast=function(){
 var target=this.tree[0].ast(),iter=this.tree[1].ast(),orelse=this.orelse ? this.orelse.ast():[],type_comment,body=ast_body(this.parent)
+set_ctx_to_store(target)
 var klass=this.async ? ast.AsyncFor :ast.For
 var res=new klass(target,iter,body,orelse,type_comment)
 set_position(res,this.position)
@@ -4250,7 +4251,7 @@ observer.observe(document.documentElement,{childList:true,subtree:true});}
 function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){var options={}
 for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}
 var brython=$B.parser.brython=function(options){$B.parse_options(options)
-if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()}
+if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()}else{return}
 if(options===undefined){options={}}
 var kk=Object.keys(_window)
 var defined_ids={},$elts=[],webworkers=[]

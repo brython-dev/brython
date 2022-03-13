@@ -2899,6 +2899,7 @@ $ForExpr.prototype.ast = function(){
         orelse = this.orelse ? this.orelse.ast() : [],
         type_comment,
         body = ast_body(this.parent)
+    set_ctx_to_store(target)
     var klass = this.async ? ast.AsyncFor : ast.For
     var res = new klass(target, iter, body, orelse, type_comment)
     set_position(res, this.position)
@@ -7952,6 +7953,8 @@ var brython = $B.parser.brython = function(options){
     $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         observer.disconnect()
+    }else{
+        return
     }
     if(options === undefined){
         options = {}
