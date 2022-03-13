@@ -109,8 +109,12 @@ function define(tag_name, cls){
                     typeof pcls[key] == "function"){
                 webcomp.prototype[key] = (function(attr, klass){
                     return function(){
-                        return $B.pyobj2jsobj(klass[attr]).call(null,
-                            $B.DOMNode.$factory(this), ...arguments)
+                        try{
+                            return $B.pyobj2jsobj(klass[attr]).call(null,
+                                $B.DOMNode.$factory(this), ...arguments)
+                        }catch(err){
+                            $B.show_error(err)
+                        }
                     }
                 })(key, pcls)
             }

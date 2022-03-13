@@ -806,12 +806,7 @@ function trace_from_stack(stack){
     return trace
 }
 
-$B.handle_error = function(err){
-    // Print the error traceback on the standard error stream
-    if(err.$handled){
-        return
-    }
-    err.$handled = true
+$B.show_error = function(err){
     if($B.debug > 1){
         console.log("handle error", err.__class__, err.args)
         console.log('stack', err.$stack)
@@ -850,6 +845,17 @@ $B.handle_error = function(err){
     }catch(print_exc_err){
         console.debug(trace)
     }
+}
+
+$B.handle_error = function(err){
+    // Print the error traceback on the standard error stream
+    if(err.$handled){
+        return
+    }
+    err.$handled = true
+
+    $B.show_error(err)
+    
     // Throw the error to stop execution
     throw err
 }
