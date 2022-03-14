@@ -1,3 +1,4 @@
+from browser import window
 import _locale
 import javascript
 
@@ -358,7 +359,7 @@ class struct_time:
 
     @property
     def tm_zone(self):
-        return 'UTC'
+        return __BRYTHON__.tz_name
 
     def __eq__(self, other):
         return self.args == other.args

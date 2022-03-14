@@ -132,6 +132,23 @@ $B.__setattr__ = function(attr, value){
 $B.language = _window.navigator.userLanguage || _window.navigator.language
 
 $B.locale = "C" // can be reset by locale.setlocale
+
+// Set attribute "tz_name", used in module time to return the
+// attribute tm_zone of struct_time instances
+var date = new Date()
+var formatter = new Intl.DateTimeFormat($B.language, {timeZoneName: 'short'}),
+    short = formatter.format(date)
+formatter = new Intl.DateTimeFormat($B.language, {timeZoneName: 'shortGeneric'})
+var long = formatter.format(date)
+var ix = 0,
+    minlen = Math.min(short.length, long.length)
+while(ix < minlen && short[ix] == long[ix]){
+    ix++
+}
+$B.tz_name = long.substr(ix).trim()
+
+console.log('tz name', $B.tz_name)
+
 $B.PyCF_ONLY_AST = 1024 // compiler flag, used in libs/_ast.js
 
 if($B.isWebWorker){

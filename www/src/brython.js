@@ -52,6 +52,13 @@ if(['debug','stdout','stderr'].indexOf(attr)>-1){$B[attr]=value}else{throw $B.bu
 '__BRYTHON__ object has no attribute '+attr)}}
 $B.language=_window.navigator.userLanguage ||_window.navigator.language
 $B.locale="C" 
+var date=new Date()
+var formatter=new Intl.DateTimeFormat($B.language,{timeZoneName:'short'}),short=formatter.format(date)
+formatter=new Intl.DateTimeFormat($B.language,{timeZoneName:'long'})
+var long=formatter.format(date)
+var ix=0,minlen=Math.min(short.length,long.length)
+while(ix < minlen && short[ix]==long[ix]){ix++}
+$B.tz_name=long.substr(ix).trim()
 $B.PyCF_ONLY_AST=1024 
 if($B.isWebWorker){$B.charset="utf-8"}else{
 $B.charset=document.characterSet ||document.inputEncoding ||"utf-8"}
@@ -113,8 +120,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-14 08:19:03.894281"
-__BRYTHON__.timestamp=1647242343894
+__BRYTHON__.compiled_date="2022-03-14 12:02:43.376062"
+__BRYTHON__.timestamp=1647255763376
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins

@@ -1,4 +1,4 @@
-from datetime import MINYEAR, MAXYEAR, timedelta, date, datetime
+from datetime import MINYEAR, MAXYEAR, timedelta, date, datetime, timezone
 #todo: issue when importing from a module, one object at a time.
 # for example, the next three lines
 #from datetime import tzinfo
@@ -163,5 +163,8 @@ assert list(time.strptime('09-09-2013', '%d-%m-%Y')) == \
 
 assert list(time.strptime('9-9-2013', '%d-%m-%Y')) == \
     [2013, 9, 9, 0, 0, 0, 0, 252, -1]
-    
+
+# issue 1917
+datetime.utcnow().replace(tzinfo=timezone.utc).astimezone(tz=None)
+
 print('passed all tests')
