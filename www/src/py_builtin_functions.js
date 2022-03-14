@@ -2875,6 +2875,10 @@ function $url_open(){
         mode = $.mode,
         encoding = $.encoding,
         result = {}
+    if(encoding == 'locale'){
+        // cf. PEP 597
+        encoding = 'utf-8'
+    }
     if(mode.search('w') > -1){
         throw _b_.IOError.$factory("Browsers cannot write on disk")
     }else if(['r', 'rb'].indexOf(mode) == -1){
