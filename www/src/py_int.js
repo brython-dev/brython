@@ -561,8 +561,19 @@ int.__truediv__ = function(self, other){
     return _b_.NotImplemented
 }
 
+int.bit_count = function(self){
+    var s = _b_.bin(_b_.abs(self)),
+        nb = 0
+    for(var x of s){
+        if(x == '1'){
+            nb++
+        }
+    }
+    return nb
+}
+
 int.bit_length = function(self){
-    s = _b_.bin(self)
+    var s = _b_.bin(self)
     s = $B.$getattr(s, "lstrip")("-0b") // remove leading zeros and minus sign
     return s.length       // len('100101') --> 6
 }

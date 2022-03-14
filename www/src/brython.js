@@ -120,8 +120,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-03-14 12:02:43.376062"
-__BRYTHON__.timestamp=1647255763376
+__BRYTHON__.compiled_date="2022-03-14 12:37:18.130797"
+__BRYTHON__.timestamp=1647257838130
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10479,7 +10479,10 @@ if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 if(other.__class__===$B.long_int){return new Number(self/parseInt(other.value))}
 return new Number(self/other)}
 return _b_.NotImplemented}
-int.bit_length=function(self){s=_b_.bin(self)
+int.bit_count=function(self){var s=_b_.bin(_b_.abs(self)),nb=0
+for(var x of s){if(x=='1'){nb++}}
+return nb}
+int.bit_length=function(self){var s=_b_.bin(self)
 s=$B.$getattr(s,"lstrip")("-0b")
 return s.length }
 int.numerator=function(self){return int_value(self)}
@@ -10867,6 +10870,9 @@ for(var i=0;i < v2.length;i++){if(v1.charAt(start+i)=="1" && v2.charAt(i)=="0"){
 else if(v1.charAt(start+i)=="0" && v2.charAt(i)=="1"){res+="1"}
 else{res+="0"}}
 return intOrLong(long_int.$factory(res,2))}
+long_int.bit_count=function(self){var s=_b_.bin(_b_.abs(self)),nb=0
+for(var x of s){if(x=='1'){nb++}}
+return nb}
 long_int.bit_length=function(self){return binary(self).length}
 function _infos(self){
 var nbits=$B.long_int.bit_length(self),pow2=2n**BigInt(nbits-1),rest=BigInt(self.value)-pow2,relative_rest=new Number(rest)/new Number(pow2)

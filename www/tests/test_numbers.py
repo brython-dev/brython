@@ -673,4 +673,12 @@ assertRaises(SyntaxError, exec, "12.34e56_")
 # issue 1885
 assertRaises(TypeError, exec, '1 / float')
 
+# issue 1924
+n = 19
+assert n.bit_count() == 3
+assert (-n).bit_count() == 3
+
+n = 2 ** 70 + 567444332
+assert n.bit_count() == 14
+
 print('passed all tests...')

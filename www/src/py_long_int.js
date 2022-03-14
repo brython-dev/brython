@@ -679,6 +679,17 @@ long_int.__xor__ = function(self, other){
     return intOrLong(long_int.$factory(res, 2))
 }
 
+long_int.bit_count = function(self){
+    var s = _b_.bin(_b_.abs(self)),
+        nb = 0
+    for(var x of s){
+        if(x == '1'){
+            nb++
+        }
+    }
+    return nb
+}
+
 long_int.bit_length = function(self){
     return binary(self).length
 }
