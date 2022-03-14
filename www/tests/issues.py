@@ -3054,6 +3054,16 @@ except NameError:
 assert [1 for a in [2 for (a, b) in [(3, 4)]]] == [1]
 assert [1 for a in [2 for a, b in [(3, 4)]]] == [1]
 
+# issue 1927
+alist = [1, 2, 3, 4]
+
+def length(alist):
+    match alist:
+        case []: return 0
+        case [x, *xs]: return 1 + length(xs)
+
+assert length(alist) == 4
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

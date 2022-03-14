@@ -3540,6 +3540,7 @@ $IdCtx.prototype.transition = function(token, value){
             src = $get_module(this).src
         try{
             var flag = line_ends_with_comma(src.substr(start))
+            console.log('line ends with comma ?', flag)
         }catch(err){
             $pos = start + err.offset
             $_SyntaxError(context, [err.message])
@@ -6968,36 +6969,31 @@ var opening = {')': '(', '}': '{', ']': '['}
 function line_ends_with_comma(src){
     // used to check if 'match' or 'case' are the "soft keywords" for pattern
     // matching, or ordinary ids
-    var expect = ':',
-        braces = []
+    var braces = []
     for(token of $B.tokenizer(src)){
-        if(expect == ':'){
-            if(token.type == 'OP' && token.string == ':' && braces.length == 0){
-                expect = 'eol'
-            }else if(token.type == 'OP'){
-                if('([{'.indexOf(token.string) > -1){
-                    braces.push(token)
-                }else if(')]}'.indexOf(token.string) > -1){
-                    if(braces.length == 0){
-                        var err = SyntaxError(
-                            `unmatched '${token.string}'`)
-                        err.offset = token.start[1]
-                        throw err
-                    }else if($B.last(braces).string != opening[token.string]){
-                        var err = SyntaxError("closing parenthesis " +
-                            `'${token.string}' does not match opening ` +
-                            `parenthesis '${$B.last(braces).string}'`)
-                        err.offset = token.start[1]
-                        throw err
-                    }else{
-                        braces.pop()
-                    }
+        if(token.type == 'OP' && token.string == ':' && braces.length == 0){
+            return true
+        }else if(token.type == 'OP'){
+            if('([{'.indexOf(token.string) > -1){
+                braces.push(token)
+            }else if(')]}'.indexOf(token.string) > -1){
+                if(braces.length == 0){
+                    var err = SyntaxError(
+                        `unmatched '${token.string}'`)
+                    err.offset = token.start[1]
+                    throw err
+                }else if($B.last(braces).string != opening[token.string]){
+                    var err = SyntaxError("closing parenthesis " +
+                        `'${token.string}' does not match opening ` +
+                        `parenthesis '${$B.last(braces).string}'`)
+                    err.offset = token.start[1]
+                    throw err
+                }else{
+                    braces.pop()
                 }
-            }else if(token.type == 'NEWLINE'){
-                return false
             }
-        }else{
-            return token.type == 'NEWLINE'
+        }else if(token.type == 'NEWLINE'){
+            return false
         }
     }
     return false
