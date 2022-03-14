@@ -120,6 +120,7 @@ var BytesIO = $B.make_class("BytesIO",
             __class__: BytesIO,
             $binary: true,
             $content: $.value,
+            $length: $.value.source.length,
             $counter: 0
         }
     }
@@ -144,6 +145,7 @@ BytesIO.write = function(){
     $.self.$counter += $.data.source.length
     return _b_.None
 }
+
 $B.set_func_names(BytesIO, "_io")
 
 var BlockingIOError = $B.make_class('BlockingIOError')

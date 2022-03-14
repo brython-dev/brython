@@ -84,4 +84,13 @@ assert (
 
 assert len(io.StringIO("foo\n\n\n").readlines()) == 3, r"readlines failed with \n\n!"
 
+# issue 1925
+flike = io.BytesIO(bytes('trucmuche', encoding='ascii'))
+flike.seek(-5, 2)
+assert flike.read() == b'muche'
+
+flike.seek(0, 2)
+assert flike.tell() == 9
+
+
 print('all tests passed...')
