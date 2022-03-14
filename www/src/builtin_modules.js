@@ -437,6 +437,7 @@
                 }
             }
         },
+        JSObject: $B.JSObj,
         JSON: {
             __class__: $B.make_class("JSON"),
             parse: function(){

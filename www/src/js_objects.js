@@ -320,7 +320,7 @@ function pyargs2jsargs(pyargs){
     return args
 }
 
-$B.JSObj = $B.make_class("JSObj",
+$B.JSObj = $B.make_class("JSObject",
     function(jsobj){
         if(Array.isArray(jsobj)){
             //jsobj.__class__ = _b_.list
