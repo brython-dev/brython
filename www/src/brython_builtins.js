@@ -138,7 +138,7 @@ $B.locale = "C" // can be reset by locale.setlocale
 var date = new Date()
 var formatter = new Intl.DateTimeFormat($B.language, {timeZoneName: 'short'}),
     short = formatter.format(date)
-formatter = new Intl.DateTimeFormat($B.language, {timeZoneName: 'shortGeneric'})
+formatter = new Intl.DateTimeFormat($B.language, {timeZoneName: 'long'})
 var long = formatter.format(date)
 var ix = 0,
     minlen = Math.min(short.length, long.length)
@@ -147,7 +147,6 @@ while(ix < minlen && short[ix] == long[ix]){
 }
 $B.tz_name = long.substr(ix).trim()
 
-console.log('tz name', $B.tz_name)
 
 $B.PyCF_ONLY_AST = 1024 // compiler flag, used in libs/_ast.js
 
