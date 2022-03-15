@@ -35,6 +35,12 @@
  * other compatibility work.
  */
 
+function assert(condition){
+    if(! condition){
+        throw Error('condition is false')
+    }
+}
+
 const copyright =
     " SRE 2.2.2 Copyright (c) 1997-2002 by Secret Labs AB ";
 
@@ -44,10 +50,13 @@ const copyright =
 #include "Python.h"
 #include "pycore_long.h"          // _PyLong_GetZero()
 #include "pycore_moduleobject.h"  // _PyModule_GetState()
-#include "structmember.h"         // PyMemberDef
-
-#include "sre.h"
 */
+function _PyModule_GetState(mod) {
+    return mod.md_state;
+}
+// #include "structmember.h"         // PyMemberDef
+
+// #include "sre.h"
 
 var SRE_CODE_BITS = 32 // (8 * sizeof(SRE_CODE))
 
@@ -255,6 +264,7 @@ function _sremodulestate(PatternType, MatchType, ScannerType){
 }
 
 function get_sre_module_state(m){
+    console.log('get module state', m)
     var state = _PyModule_GetState(m);
     assert(state);
     return state;
@@ -1339,12 +1349,13 @@ _sre.compile
 
 [clinic start generated code]*/
 
-function _sre_compile_impl(module, pattern, flags,
+function _sre_compile_impl(pattern, flags,
                   code, groups, groupindex,
                   indexgroup){
+    console.log('arguments', arguments)
     /* "compile" pattern descriptor to pattern object */
 
-    var module_state = get_sre_module_state(module),
+    var module_state = get_sre_module_state($module),
         self,
         i, n;
 
@@ -2944,3 +2955,11 @@ PyInit__sre(void)
 */
 /* vim:ts=4:sw=4:et
 */
+
+var $module = {
+    compile: _sre_compile_impl,
+    CODESIZE: 4,
+    MAGIC: 20171005,
+    MAXGROUPS: 2147483647,
+    MAXREPEAT: 2147483648
+}
