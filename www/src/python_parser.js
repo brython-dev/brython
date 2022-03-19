@@ -302,18 +302,22 @@ function parse(grammar, tokens){
         }
     }
     console.log('parse succeeds !', match)
-    //console.log(show(match, tokens))
+    console.log(show(match, tokens))
 }
 
 function show(match, tokens, level){
     level = level || 0
     var s = '',
         prefix = '  '.repeat(level),
-        name = match.rule.name || match.rule.parent_rule
+        name = match.rule.name || match.rule.parent_rule,
+        action = match.rule.action,
+        alias = match.rule.alias
 
     if(name !== undefined){
          s += prefix + name +
-             (match.rank === undefined ? '' : ' #' + match.rank) + '\n'
+             (match.rank === undefined ? '' : ' #' + match.rank) +
+             (alias ? ' = ' + alias : '') +
+             (action ? ` {${action}}` : '') + '\n'
          level += 1
     }
     if(match.matches){
