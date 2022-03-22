@@ -198,7 +198,6 @@ class GrammarExpression:
         return self.show()
 
     def add(self, item):
-        print('add', self.sequence, item)
         if self.joining():
             item.join = self.sequence.pop()
         if (self.sequence and
@@ -213,11 +212,13 @@ class GrammarExpression:
         self.sequence.append(item)
 
     def feed(self, token):
-        print('feed token', token)
         if token == ['op', '|']:
             if self.sequence:
+                #self.feed(['eol', ''])
                 ge = GrammarExpression(parent=self)
                 ge.sequence = self.sequence
+                ge.action = self.action
+                self.action = None
                 self.options.append(ge)
             self.sequence = []
         elif token == ['op', '*']: # repeat 0 or more
@@ -258,6 +259,10 @@ class GrammarExpression:
             print('alias', self.sequence[-1])
             input()
         elif token[0] == 'eol':
+            if self.action:
+                if self.options:
+                    self.sequence[-1].action = self.action
+                    self.action = None
             if self.sequence and self.options:
                 ge = GrammarExpression()
                 ge.sequence = self.sequence
@@ -265,14 +270,10 @@ class GrammarExpression:
                 self.sequence = []
         else:
             if token[0] == 'id':
-                print('add id', token[1], self.sequence)
                 self.add(Rule(token[1]))
             elif token[0] == 'action':
                 self.action = Literal(*token)
-                if '_PyAST_Assign' in token[1]:
-                    print('action', token)
-                    print(self.show())
-                    input()
+
             elif token[0] == 'alias':
                 # store alias for next expression
                 self.add(Alias(*token[1:]))

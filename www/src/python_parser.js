@@ -1,3 +1,36 @@
+var $B = __BRYTHON__,
+    Store = $B.ast.Store
+
+function _PyPegen_set_expr_context(p, a, ctx){
+    console.log('set context', p, a, ctx)
+    a.ctx = new ctx()
+    return a
+}
+
+function _PyPegen_singleton_seq(p, a){
+    return [a]
+}
+
+function _PyPegen_seq_flatten(p, seqs){
+    console.log('flatten', seqs)
+    return seqs
+}
+
+function _PyPegen_make_module(p, a){
+    var res = new $B.ast.Module(a)
+    return res
+}
+
+function _PyAST_Assign(a, b, tc, EXTRA){
+    console.log('Assign', a, b)
+    var ast_obj = new $B.ast.Assign(a, b)
+    return ast_obj
+}
+
+function NEW_TYPE_COMMENT(x){
+    return x
+}
+
 var debug = 0
 
 var inf = Number.POSITIVE_INFINITY
@@ -11,13 +44,19 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     'try', 'if', 'else', 'del', 'import', 'nonlocal', 'pass'
     ]
 
-function Parser(){
+function Parser(src){
   this.state = {type: 'program', pos: 0}
+  this.src = src
 }
 
-Parser.prototype.feed = function(tokens){
-  console.log('grammar', grammar)
-  return parse(grammar, tokens)
+Parser.prototype.feed = function(){
+  var tokens = []
+  for(var token of __BRYTHON__.tokenizer(this.src)){
+      if(['COMMENT', 'NL', 'ENCODING', 'TYPE_COMMENT'].indexOf(token[0]) == -1){
+          tokens.push(token)
+      }
+  }
+  return parse(grammar, tokens, this.src)
 }
 
 function MemoEntry(match, end){
@@ -121,6 +160,13 @@ function eval_body(rule, tokens, position){
                     result = FAIL
                 }
                 break
+        }
+    }
+    if(result.matches){
+        for(var m of result.matches){
+            if(m.from_choices && m.from_choices.alias){
+                console.log('--', m.from_choices.alias)
+            }
         }
     }
     return result
@@ -278,7 +324,7 @@ function apply_rule(rule, tokens, position){
     }
 }
 
-function parse(grammar, tokens){
+function parse(grammar, tokens, src){
     var position = 0,
         rule = grammar.file,
         match
@@ -302,24 +348,42 @@ function parse(grammar, tokens){
         }
     }
     console.log('parse succeeds !', match)
-    console.log(show(match, tokens))
+    console.log('make', make(match, src))
 }
 
 function show(match, tokens, level){
+    if(match.from_choices && match.from_choices.alias){
+        console.log('***', match.from_choices.alias)
+    }
     level = level || 0
     var s = '',
         prefix = '  '.repeat(level),
         name = match.rule.name || match.rule.parent_rule,
         action = match.rule.action,
-        alias = match.rule.alias
+        alias = match.rule.alias,
+        parent
 
-    if(name !== undefined){
-         s += prefix + name +
-             (match.rank === undefined ? '' : ' #' + match.rank) +
-             (alias ? ' = ' + alias : '') +
-             (action ? ` {${action}}` : '') + '\n'
-         level += 1
+    if(match.from_sequence){
+        parent = match.from_sequence
+    }else if(match.from_choices){
+        parent = match.from_choices
+        if(parent.alias){
+            console.log('choices parent has alias', parent.alias)
+            alert()
+        }
     }
+    if(parent && (parent.action || parent.alias)){
+        s += prefix + '<parent>' +
+             (parent.alias ? ' = ' + parent.alias : '') +
+             (parent.action ? `{${parent.action}}` : '') + '\n'
+    }
+    s += prefix +
+        (name === undefined ? '' : name) +
+        (match.rank === undefined ? '' : ' #' + match.rank) +
+        (alias ? ' = ' + alias : '') +
+        (action ? ` {${action}}` : '') + '\n'
+    level += 1
+
     if(match.matches){
         for(var match of match.matches){
             s += show(match, tokens, level)
@@ -337,4 +401,105 @@ function show(match, tokens, level){
         }
     }
     return s
+}
+
+function make(match, src){
+    // match.rule succeeds; make() returns a value for the match, based on the
+    // grammar action for the rule
+    // If there is an explicit grammar action, it takes named arguments. The
+    // names match the value of the sub-matches in the rule. make() returns
+    // the evaluation of the grammar action.
+    // Otherwise
+    console.log('make', match)
+    var rule = match.rule,
+        names = {},
+        p = {}
+
+    // If there is an explicit action, get the names in the rule expression
+    if(rule.action){
+        console.log('rule has action', rule.action, 'get names')
+        for(var i = 0; i < match.matches.length; i++){
+            if(rule.items[i].alias){
+                names[rule.items[i].alias] = make(match.matches[i], src)
+            }
+        }
+        console.log('action', rule.action, 'names', names)
+        for(var name in names){
+            eval(`var ${name} = names.${name}`)
+            console.log('eval of', name, eval(name))
+        }
+        var EXTRA = {lineno: 1},
+            action = rule.action.trim()
+        action = action.replace(/^\(.*?\)/, '')
+        console.log('eval action', action)
+        return eval(action)
+    }else{
+        // If rule has items, each submatch matches one of the items
+        // Otherwise, rule.name is in the grammar and each submatch matches
+        // the grammar rule
+        if(rule.items){
+            if(rule.repeat || rule.items.length > 1){
+                var elts = []
+                for(var i = 0; i < match.matches.length; i++){
+                    elts.push(make(match.matches[i], src))
+                }
+                return {name: rule.alias, elts}
+            }else{
+                return make(match.matches[0], src)
+            }
+        }else{
+            if(['NAME', 'NUMBER', 'STRING', 'string'].indexOf(rule.type) > -1){
+                return {type: rule.type, value: src.substring(match.start, match.end)}
+            }else if(grammar[rule.name] === undefined){
+                console.log('anomalie', rule.name, 'not in grammar')
+                alert()
+            }
+            if(rule.repeat){
+                var elts = []
+                for(var i = 0; i < match.matches.length; i++){
+                    console.log('i', i,
+                        'submatch', match.matches[i])
+                    elts.push(make(match.matches[i], src))
+                }
+                return {name: rule.alias, elts}
+            }else{
+                return '<...>'
+            }
+        }
+    }
+    if(! rule.items){
+        if(match.matches){
+            for(var m of match.matches){
+                make(m, src)
+            }
+        }
+        return
+    }else{
+        for(var i = 0; i < match.matches.length; i++){
+            if(rule.items[i].alias){
+                names[rule.items[i].alias] = match.matches[i]
+            }
+            if(['NAME', 'NUMBER', 'STRING', 'string'].indexOf(rule.items[i].type) > -1){
+                var m = match.matches[i]
+                if(m.end > m.start){
+                    console.log(rule.items[i].type, src.substring(m.start, m.end))
+                }
+            }
+        }
+        if(rule.action){
+            for(var name in names){
+                console.log(`var ${name} = make(names['${name}'])`, names[name])
+                eval(`var ${name} = make(names['${name}'], src)`)
+            }
+        }else{
+            console.log('no action, rule', rule, 'names', names)
+            if(rule.alias){
+                console.log('alias', rule.alias, 'for match', match)
+            }
+        }
+
+        /*for(var m of match.matches){
+            make(m, src)
+        }*/
+    }
 }
