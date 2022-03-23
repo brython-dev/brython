@@ -55,5 +55,12 @@ assert s == "Š"
 # issue 1903
 assert json.dumps('\na🤭bŠé"') == r'"\na\ud83e\udd2db\u0160\u00e9\""'
 
+# issue 1930
+assert json.loads('"one\\ntwo"') == 'one\ntwo'
+assert json.loads('"one\\ttwo"') == 'one\ttwo'
+assert json.loads('"one\\rtwo"') == 'one\rtwo'
+assert json.loads('"one\\btwo"') == 'one\btwo'
+assert json.loads('"one\\ftwo"') == 'one\ftwo'
+
 
 print('all tests ok..')

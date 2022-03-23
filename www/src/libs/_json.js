@@ -61,7 +61,7 @@ function to_json(obj, level){
     for(var key in kw){
         kwarg.kw[key] = kw[key]
     }
-    
+
     switch(typeof obj){
         case 'string':
             var res = JSON.stringify(obj)
@@ -276,6 +276,11 @@ function string_at(s, i){
     while(j < len){
         if(s[j] == '"' && ! escaped){
             var value = s.substring(i + 1, j)
+            value = value.replace('\\n', '\n').
+                          replace('\\t', '\t').
+                          replace('\\b', '\b').
+                          replace('\\r', '\r').
+                          replace('\\f', '\f')
             value = value.replace(/\\u[0-9a-fA-F]{4}/g,
                   function(c) {
                       return String.fromCharCode(parseInt(c.substr(2), 16))
@@ -286,7 +291,7 @@ function string_at(s, i){
             escaped = ! escaped
             j++
         }else if(escaped){
-            if('"/bfn'.indexOf(s[j]) > -1){
+            if('"/bfnrt'.indexOf(s[j]) > -1){
                 j++
                 escaped = ! escaped
             }else if(s[j] == 'u' &&
@@ -524,7 +529,7 @@ function parse(s){
       }catch(err){
           console.log('error, item', item)
           console.log(err, err.message)
-          console.log('n,ode', node)
+          console.log('node', node)
           if(err.__class__){
               throw err
           }else{
