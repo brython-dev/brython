@@ -276,11 +276,12 @@ function string_at(s, i){
     while(j < len){
         if(s[j] == '"' && ! escaped){
             var value = s.substring(i + 1, j)
-            value = value.replace('\\n', '\n').
-                          replace('\\t', '\t').
-                          replace('\\b', '\b').
-                          replace('\\r', '\r').
-                          replace('\\f', '\f')
+            value = value.replace(/\\n/g, '\n').
+                          replace(/\\t/g, '\t').
+                          replace(/\\b/g, '\b').
+                          replace(/\\r/g, '\r').
+                          replace(/\\f/g, '\f').
+                          replace(new RegExp('\\\\"', 'g'), '"')
             value = value.replace(/\\u[0-9a-fA-F]{4}/g,
                   function(c) {
                       return String.fromCharCode(parseInt(c.substr(2), 16))
