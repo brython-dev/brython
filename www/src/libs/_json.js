@@ -266,44 +266,47 @@ function to_py(obj, kw){
     }
 }
 
+var escapes = {'n': '\n',
+               't': '\t',
+               'b': '\b',
+               'r': '\r',
+               'f': '\f',
+               '\\': '\\',
+               '"': '\"',
+               "'": "\\'",
+               '/': '/'
+               }
 
 function string_at(s, i){
     var error = $B.$call($B.imported["json"].JSONDecodeError)
 
     var j = i + 1,
         escaped = false,
-        len = s.length
+        len = s.length,
+        value = ''
     while(j < len){
         if(s[j] == '"' && ! escaped){
-            var value = s.substring(i + 1, j)
-            value = value.replace(/\\n/g, '\n').
-                          replace(/\\t/g, '\t').
-                          replace(/\\b/g, '\b').
-                          replace(/\\r/g, '\r').
-                          replace(/\\f/g, '\f').
-                          replace(new RegExp('\\\\"', 'g'), '"')
-            value = value.replace(/\\u[0-9a-fA-F]{4}/g,
-                  function(c) {
-                      return String.fromCharCode(parseInt(c.substr(2), 16))
-                  }
-            )
             return [{type: 'str', value}, j + 1]
-        }else if(s[j] == '\\'){
+        }else if(! escaped && s[j] == '\\'){
             escaped = ! escaped
             j++
         }else if(escaped){
-            if('"/bfnrt'.indexOf(s[j]) > -1){
+            var esc = escapes[s[j]]
+            if(esc){
+                value += esc
                 j++
-                escaped = ! escaped
+                escaped = false
             }else if(s[j] == 'u' &&
                     s.substr(j + 1, 4).match(/[0-9a-fA-f]{4}/)){
                 // unicode escape
+                value += String.fromCharCode(parseInt(s.substr(j + 1, 4), 16))
                 j += 5
                 escaped = ! escaped
             }else{
                 throw error('invalid escape "' + s[j] + '"', s, j)
             }
         }else{
+            value += s[j]
             j++
         }
     }
