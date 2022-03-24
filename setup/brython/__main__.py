@@ -127,201 +127,17 @@ def main():
 
     args = parser.parse_args()
 
-    files = ['README.txt', 'demo.html', 'index.html',
-        'brython.js', 'brython_stdlib.js', 'unicode.txt']
+    match args.subcommand:
 
-    if args.subcommand == 'add_package':
-        print('add package {}...'.format(args.package))
-        package = __import__(args.package)
-        package_file = package.__file__
-        package_dir = os.path.dirname(package_file)
-        lib_dir = os.path.join(os.getcwd(), 'Lib')
-        if not os.path.exists(lib_dir):
-            os.mkdir(lib_dir)
-        dest_dir = os.path.join(lib_dir, 'site-packages') if (not args.dest_dir) else args.dest_dir
-        if not os.path.exists(dest_dir):
-            os.mkdir(dest_dir)
-
-        if os.path.splitext(package_dir)[1] == '.egg':
-            import zipfile
-            zf = zipfile.ZipFile(package_dir)
-            for info in zf.infolist():
-                if info.filename.startswith(('__pycache__', 'EGG-INFO')):
-                    continue
-                zf.extract(info, dest_dir)
-                print('extract', info.filename)
-            zf.close()
-            print('done')
-        elif not package_dir.split(os.sep)[-1] == "site-packages":
-            print('copy folder', package_dir)
-            dest_dir = os.path.join(dest_dir, args.package)
-            if os.path.exists(dest_dir):
-                shutil.rmtree(dest_dir)
-            shutil.copytree(package_dir, dest_dir)
-        else:
-            print('copy single file', package_file)
-            shutil.copyfile(package_file, os.path.join(dest_dir,
-                os.path.basename(package_file)))
-
-    if args.subcommand == 'install' or args.subcommand == 'init':
-        print('Installing Brython {}'.format(implementation))
-
-        data_path = os.path.join(os.path.dirname(__file__), 'data')
-        install_dir = args.install_dir
-        install_dir_files = os.listdir(install_dir)
-
-        if install_dir_files and 'brython.js' in install_dir_files:
-            override = input(
-                'brython.js is already present in this directory.'
-                ' Override ? (Y/N)'
-            )
-            if override.lower() != 'y':
-                import sys
-                print('exiting')
-                sys.exit()
-
-        for path in os.listdir(data_path):
-            # note: here '/' is pathlib.Path join operator
-            dest_path = pathlib.Path(install_dir) / pathlib.Path(path)
-            try:
-                shutil.copyfile(os.path.join(data_path, path), dest_path)
-            except shutil.SameFileError:
-                print(f'{path} has not been moved. Are the same file.')
-
-        print('done')
-
-    if args.subcommand == 'update':
-        print('Update Brython scripts to version {}'.format(implementation))
-        # here '/' is Path join operator
-        data_path = pathlib.Path(os.path.dirname(__file__)) / 'data'
-        update_dir = pathlib.Path(args.update_dir)
-
-        # Update only specific safe files, as user may have customized index.html etc
-        for path in ['brython.js', 'brython_stdlib.js']:
-            dest_path = pathlib.Path(update_dir) / pathlib.Path(path)
-            shutil.copyfile(os.path.join(data_path, path), dest_path)
-
-    if args.subcommand == 'make_modules':
-        if args.reset:
-            print('Reset brython_modules.js to local standard distribution')
-            stdlib_file_path = pathlib.Path.cwd() / 'brython_stdlib.js'
-            modules_file_path = (
-                args.output_path if args.output_path
-                else pathlib.Path.cwd() / 'brython_modules.js')
-            shutil.copyfile(stdlib_file_path, modules_file_path)
-        else:
-            print('Create brython_modules.js with all the modules used by the '
-                'application')
-            from . import list_modules
-
-            print('searching brython_stdlib.js...')
-            stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
-
-            print('finding packages...')
-            user_modules = list_modules.load_user_modules()
-            finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
-            finder.inspect()
-            path = os.path.join(stdlib_dir, "brython_modules.js")
-            output_path = path if (not args.output_path) else args.output_path
-            finder.make_brython_modules(output_path)
-
-    if args.subcommand == 'make_dist':
-        print('Make a Python distribution for the application')
-        from . import list_modules
-
-        print('searching brython_stdlib.js...')
-        stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
-
-        print('finding packages...')
-        user_modules = list_modules.load_user_modules()
-        finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
-        finder.inspect()
-        path = os.path.join(stdlib_dir, "brython_modules.js")
-        finder.make_brython_modules(path)
-        finder.make_setup()
-        print('done')
-
-    if args.subcommand == 'make_file_system':
-        print('Create a Javascript file for all the files in the directory')
-        args_fs = args.make_file_system.split("#")
-        if len(args_fs) > 2:
-            raise ValueError("--make_file_systems expects at most 2 "
-                "arguments, got " + str(len(args_fs)))
-        vfs_name = args_fs[0]
-        prefix = args_fs[1] if len(args_fs) > 1 else None
-        from .make_file_system import make
-        make(vfs_name, prefix)
-        print('done')
-
-    if args.subcommand == 'make_package':
-        package_name = args.package_name
-        package_path = args.src_dir
-        exclude_dirs = args.exclude_dirs
-        output_path = args.output_path
-        from . import make_package
-        make_package.make(package_name, package_path, exclude_dirs, output_path)
-        print("done")
-
-    if args.subcommand == 'start_server':
-        # start development server
-        import http.server
-        import sysconfig
-        cpython_site_packages = sysconfig.get_path("purelib")
-
-        class Handler(http.server.CGIHTTPRequestHandler):
-
-            def guess_type(self, path):
-                ctype = super().guess_type(path)
-                # in case the mimetype associated with .js in the Windows
-                # registry is not correctly set
-                if os.path.splitext(path)[1] == ".js":
-                    ctype = "application/javascript"
-                return ctype
-
-            def translate_path(self, path):
-                """Map /cpython_site_packages to local CPython site-packages
-                directory."""
-                elts = path.split('/')
-                if len(elts) > 1 and elts[0] == '':
-                    if elts[1] == 'cpython_site_packages':
-                        elts[-1] = elts[-1].split("?")[0]
-                        return os.path.join(cpython_site_packages, *elts[2:])
-                return super().translate_path(path)
-
-        print("Brython development server. "
-              "Not meant to be used in production.")
-
-        print("For a different port provide command-line option "
-              "'--port PORT'.")
-        print("Press CTRL+C to Quit.\n")
-        http.server.test(HandlerClass=Handler, port=args.port, bind=args.bind)
-
-    if args.subcommand is None:
-        # # Note: This section may be uncommented when compat mode is removed
-        # Arguments independent of subcommand
-        # if args.version:
-        #     print('Brython version', implementation)
-
-        # For totally clueless -> print_help
-        import sys
-        if len(sys.argv[1:]) == 0:
-            parser.print_help()
-
-        # Compatibility mode (old style)
-        import warnings
-
-        if args.add_package:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
-            print('add package {}...'.format(args.add_package))
-            package = __import__(args.add_package)
+        case 'add_package':
+            print('add package {}...'.format(args.package))
+            package = __import__(args.package)
             package_file = package.__file__
             package_dir = os.path.dirname(package_file)
             lib_dir = os.path.join(os.getcwd(), 'Lib')
             if not os.path.exists(lib_dir):
                 os.mkdir(lib_dir)
-            dest_dir = os.path.join(lib_dir, 'site-packages')
+            dest_dir = os.path.join(lib_dir, 'site-packages') if (not args.dest_dir) else args.dest_dir
             if not os.path.exists(dest_dir):
                 os.mkdir(dest_dir)
 
@@ -337,7 +153,7 @@ def main():
                 print('done')
             elif not package_dir.split(os.sep)[-1] == "site-packages":
                 print('copy folder', package_dir)
-                dest_dir = os.path.join(dest_dir, args.add_package)
+                dest_dir = os.path.join(dest_dir, args.package)
                 if os.path.exists(dest_dir):
                     shutil.rmtree(dest_dir)
                 shutil.copytree(package_dir, dest_dir)
@@ -346,16 +162,14 @@ def main():
                 shutil.copyfile(package_file, os.path.join(dest_dir,
                     os.path.basename(package_file)))
 
-        if args.install:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
+        case 'install' | 'init':
             print('Installing Brython {}'.format(implementation))
 
             data_path = os.path.join(os.path.dirname(__file__), 'data')
-            current_path_files = os.listdir(os.getcwd())
+            install_dir = args.install_dir
+            install_dir_files = os.listdir(install_dir)
 
-            if current_path_files and 'brython.js' in current_path_files:
+            if install_dir_files and 'brython.js' in install_dir_files:
                 override = input(
                     'brython.js is already present in this directory.'
                     ' Override ? (Y/N)'
@@ -366,54 +180,51 @@ def main():
                     sys.exit()
 
             for path in os.listdir(data_path):
+                # note: here '/' is pathlib.Path join operator
+                dest_path = pathlib.Path(install_dir) / pathlib.Path(path)
                 try:
-                    shutil.copyfile(os.path.join(data_path, path), path)
+                    shutil.copyfile(os.path.join(data_path, path), dest_path)
                 except shutil.SameFileError:
                     print(f'{path} has not been moved. Are the same file.')
 
             print('done')
 
-        if args.update:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
+        case 'update':
             print('Update Brython scripts to version {}'.format(implementation))
+            # here '/' is Path join operator
+            data_path = pathlib.Path(os.path.dirname(__file__)) / 'data'
+            update_dir = pathlib.Path(args.update_dir)
 
-            data_path = os.path.join(os.path.dirname(__file__), 'data')
+            # Update only specific safe files, as user may have customized index.html etc
+            for path in ['brython.js', 'brython_stdlib.js']:
+                dest_path = pathlib.Path(update_dir) / pathlib.Path(path)
+                shutil.copyfile(os.path.join(data_path, path), dest_path)
 
-            for path in os.listdir(data_path):
-                shutil.copyfile(os.path.join(data_path, path), path)
+        case 'make_modules':
+            if args.reset:
+                print('Reset brython_modules.js to local standard distribution')
+                stdlib_file_path = pathlib.Path.cwd() / 'brython_stdlib.js'
+                modules_file_path = (
+                    args.output_path if args.output_path
+                    else pathlib.Path.cwd() / 'brython_modules.js')
+                shutil.copyfile(stdlib_file_path, modules_file_path)
+            else:
+                print('Create brython_modules.js with all the modules used by the '
+                    'application')
+                from . import list_modules
 
-        if args.reset:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
-            print('Reset brython_modules.js to standard distribution')
-            shutil.copyfile(os.path.join(os.getcwd(), 'brython_stdlib.js'),
-                os.path.join(os.getcwd(), 'brython_modules.js'))
+                print('searching brython_stdlib.js...')
+                stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
 
-        if args.modules:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
-            print('Create brython_modules.js with all the modules used by the '
-                'application')
-            from . import list_modules
+                print('finding packages...')
+                user_modules = list_modules.load_user_modules()
+                finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
+                finder.inspect()
+                path = os.path.join(stdlib_dir, "brython_modules.js")
+                output_path = path if (not args.output_path) else args.output_path
+                finder.make_brython_modules(output_path)
 
-            print('searching brython_stdlib.js...')
-            stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
-
-            print('finding packages...')
-            user_modules = list_modules.load_user_modules()
-            finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
-            finder.inspect()
-            path = os.path.join(stdlib_dir, "brython_modules.js")
-            finder.make_brython_modules(path)
-
-        if args.make_dist:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
+        case 'make_dist':
             print('Make a Python distribution for the application')
             from . import list_modules
 
@@ -429,10 +240,7 @@ def main():
             finder.make_setup()
             print('done')
 
-        if args.make_file_system:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
+        case 'make_file_system':
             print('Create a Javascript file for all the files in the directory')
             args_fs = args.make_file_system.split("#")
             if len(args_fs) > 2:
@@ -444,19 +252,16 @@ def main():
             make(vfs_name, prefix)
             print('done')
 
-        if args.make_package:
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
-            package_name = args.make_package
+        case 'make_package':
+            package_name = args.package_name
+            package_path = args.src_dir
+            exclude_dirs = args.exclude_dirs
+            output_path = args.output_path
             from . import make_package
-            make_package.make(package_name, os.getcwd())
+            make_package.make(package_name, package_path, exclude_dirs, output_path)
             print("done")
 
-        if args.server != "absent":
-            warnings.warn("Options style primary args may be deprecated soon. "
-                          "Please use subcommands instead (see '--help')",
-                          DeprecationWarning)
+        case 'start_server':
             # start development server
             import http.server
             import sysconfig
@@ -467,7 +272,7 @@ def main():
                 def guess_type(self, path):
                     ctype = super().guess_type(path)
                     # in case the mimetype associated with .js in the Windows
-                    # registery is not correctly set
+                    # registry is not correctly set
                     if os.path.splitext(path)[1] == ".js":
                         ctype = "application/javascript"
                     return ctype
@@ -482,20 +287,218 @@ def main():
                             return os.path.join(cpython_site_packages, *elts[2:])
                     return super().translate_path(path)
 
-
-            # port to be used when the server runs locally
-            port = 8000 if args.server is None else int(args.server)
-
             print("Brython development server. "
-                "Not meant to be used in production.")
-            if args.server is None:
-                print("For a different port provide command-line option "
-                    '"--server PORT".')
-            print("Press CTRL+C to Quit.\n")
-            http.server.test(HandlerClass=Handler, port=port)
+                  "Not meant to be used in production.")
 
-        if args.version:
-            print('Brython version', implementation)
+            print("For a different port provide start_server PORT. (ex 8888, 8080).")
+            print("For a different listening address provide command-line option "
+                  "'--bind ADDRESS' (ex 'localhost', '0.0.0.0').")
+            print("Press CTRL+C to Quit.\n")
+            http.server.test(HandlerClass=Handler, port=args.port, bind=args.bind)
+
+        case None:
+            # # Note: This may be uncommented when compat mode is removed
+            # Arguments independent of subcommand
+            # if args.version:
+            #     print('Brython version', implementation)
+
+            # For totally clueless -> print_help
+            import sys
+            if len(sys.argv[1:]) == 0:
+                parser.print_help()
+
+            # Compatibility mode (old style)
+            import warnings
+
+            if args.add_package:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('add package {}...'.format(args.add_package))
+                package = __import__(args.add_package)
+                package_file = package.__file__
+                package_dir = os.path.dirname(package_file)
+                lib_dir = os.path.join(os.getcwd(), 'Lib')
+                if not os.path.exists(lib_dir):
+                    os.mkdir(lib_dir)
+                dest_dir = os.path.join(lib_dir, 'site-packages')
+                if not os.path.exists(dest_dir):
+                    os.mkdir(dest_dir)
+
+                if os.path.splitext(package_dir)[1] == '.egg':
+                    import zipfile
+                    zf = zipfile.ZipFile(package_dir)
+                    for info in zf.infolist():
+                        if info.filename.startswith(('__pycache__', 'EGG-INFO')):
+                            continue
+                        zf.extract(info, dest_dir)
+                        print('extract', info.filename)
+                    zf.close()
+                    print('done')
+                elif not package_dir.split(os.sep)[-1] == "site-packages":
+                    print('copy folder', package_dir)
+                    dest_dir = os.path.join(dest_dir, args.add_package)
+                    if os.path.exists(dest_dir):
+                        shutil.rmtree(dest_dir)
+                    shutil.copytree(package_dir, dest_dir)
+                else:
+                    print('copy single file', package_file)
+                    shutil.copyfile(package_file, os.path.join(dest_dir,
+                        os.path.basename(package_file)))
+
+            if args.install:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('Installing Brython {}'.format(implementation))
+
+                data_path = os.path.join(os.path.dirname(__file__), 'data')
+                current_path_files = os.listdir(os.getcwd())
+
+                if current_path_files and 'brython.js' in current_path_files:
+                    override = input(
+                        'brython.js is already present in this directory.'
+                        ' Override ? (Y/N)'
+                    )
+                    if override.lower() != 'y':
+                        import sys
+                        print('exiting')
+                        sys.exit()
+
+                for path in os.listdir(data_path):
+                    try:
+                        shutil.copyfile(os.path.join(data_path, path), path)
+                    except shutil.SameFileError:
+                        print(f'{path} has not been moved. Are the same file.')
+
+                print('done')
+
+            if args.update:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('Update Brython scripts to version {}'.format(implementation))
+
+                data_path = os.path.join(os.path.dirname(__file__), 'data')
+
+                for path in os.listdir(data_path):
+                    shutil.copyfile(os.path.join(data_path, path), path)
+
+            if args.reset:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('Reset brython_modules.js to standard distribution')
+                shutil.copyfile(os.path.join(os.getcwd(), 'brython_stdlib.js'),
+                    os.path.join(os.getcwd(), 'brython_modules.js'))
+
+            if args.modules:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('Create brython_modules.js with all the modules used by the '
+                    'application')
+                from . import list_modules
+
+                print('searching brython_stdlib.js...')
+                stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
+
+                print('finding packages...')
+                user_modules = list_modules.load_user_modules()
+                finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
+                finder.inspect()
+                path = os.path.join(stdlib_dir, "brython_modules.js")
+                finder.make_brython_modules(path)
+
+            if args.make_dist:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('Make a Python distribution for the application')
+                from . import list_modules
+
+                print('searching brython_stdlib.js...')
+                stdlib_dir, stdlib = list_modules.load_stdlib_sitepackages()
+
+                print('finding packages...')
+                user_modules = list_modules.load_user_modules()
+                finder = list_modules.ModulesFinder(stdlib=stdlib, user_modules=user_modules)
+                finder.inspect()
+                path = os.path.join(stdlib_dir, "brython_modules.js")
+                finder.make_brython_modules(path)
+                finder.make_setup()
+                print('done')
+
+            if args.make_file_system:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                print('Create a Javascript file for all the files in the directory')
+                args_fs = args.make_file_system.split("#")
+                if len(args_fs) > 2:
+                    raise ValueError("--make_file_systems expects at most 2 "
+                        "arguments, got " + str(len(args_fs)))
+                vfs_name = args_fs[0]
+                prefix = args_fs[1] if len(args_fs) > 1 else None
+                from .make_file_system import make
+                make(vfs_name, prefix)
+                print('done')
+
+            if args.make_package:
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                package_name = args.make_package
+                from . import make_package
+                make_package.make(package_name, os.getcwd())
+                print("done")
+
+            if args.server != "absent":
+                warnings.warn("Options style primary args may be deprecated soon. "
+                            "Please use subcommands instead (see '--help')",
+                            DeprecationWarning)
+                # start development server
+                import http.server
+                import sysconfig
+                cpython_site_packages = sysconfig.get_path("purelib")
+
+                class Handler(http.server.CGIHTTPRequestHandler):
+
+                    def guess_type(self, path):
+                        ctype = super().guess_type(path)
+                        # in case the mimetype associated with .js in the Windows
+                        # registery is not correctly set
+                        if os.path.splitext(path)[1] == ".js":
+                            ctype = "application/javascript"
+                        return ctype
+
+                    def translate_path(self, path):
+                        """Map /cpython_site_packages to local CPython site-packages
+                        directory."""
+                        elts = path.split('/')
+                        if len(elts) > 1 and elts[0] == '':
+                            if elts[1] == 'cpython_site_packages':
+                                elts[-1] = elts[-1].split("?")[0]
+                                return os.path.join(cpython_site_packages, *elts[2:])
+                        return super().translate_path(path)
+
+
+                # port to be used when the server runs locally
+                port = 8000 if args.server is None else int(args.server)
+
+                print("Brython development server. "
+                    "Not meant to be used in production.")
+                if args.server is None:
+                    print("For a different port provide command-line option "
+                        '"--server PORT".')
+                print("Press CTRL+C to Quit.\n")
+                http.server.test(HandlerClass=Handler, port=port)
+
+            if args.version:
+                print('Brython version', implementation)
+
+        case _:
+            print("This subcommand is unknown or not yet implemented")
 
 
 if __name__ == "__main__":
