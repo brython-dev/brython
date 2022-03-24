@@ -78,10 +78,13 @@ def main():
     start_server_parser.add_argument('port', nargs="?", default=8000, type=int,
         help='Start development server on given port')
 
+    start_server_parser.add_argument('--bind', metavar='ADDRESS', default='localhost',
+        help='Address on which server should listen (default: localhost)')
+
     # Others
     make_dist_parser = subparsers.add_parser('make_dist',
-        help="Make a Python distribution",
-        description="Make a Python distribution")
+        help="Make a Python (PyPI) distribution",
+        description="Make a Python distribution https://brython.info/static_doc/en/deploy.html")
 
     make_file_system_parser = subparsers.add_parser('make_file_system',
         help="Make a virtual file system",
@@ -259,7 +262,7 @@ def main():
         print("For a different port provide command-line option "
               "'--port PORT'.")
         print("Press CTRL+C to Quit.\n")
-        http.server.test(HandlerClass=Handler, port=args.port)
+        http.server.test(HandlerClass=Handler, port=args.port, bind=args.bind)
 
     if args.subcommand is None:
         if not args.version:
