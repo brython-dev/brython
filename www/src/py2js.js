@@ -7805,7 +7805,7 @@ $B.parse_options = function(options){
             options)
         options = {debug: 1}
     }
-
+    
     // If the argument provided to brython() is a number, it is the debug
     // level
 
@@ -7908,6 +7908,8 @@ $B.parse_options = function(options){
     }else{
         $B.__ARGV = _b_.list.$factory([])
     }
+
+    return options
 }
 
 // Reserved for future use : execute Python scripts as soon as they are
@@ -7946,7 +7948,7 @@ function checkPythonScripts(addedNode) {
 }
 
 var brython = $B.parser.brython = function(options){
-    $B.parse_options(options)
+    options = $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         observer.disconnect()
     }else{
