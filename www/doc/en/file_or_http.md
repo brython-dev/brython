@@ -6,7 +6,7 @@ different ways:
 - by the File / Open browser menu: in this case the browser uses the "file"
   protocol (the address in the address bar starts with _file://_)
 - by launching a local web server (for instance the one provided by Python
-  standard distribution: `brython-cli --server`) and entering the file
+  standard distribution: `brython-cli server`) and entering the file
   address in the browser address bar (for instance _localhost:8000//app.html_).
   The protocol is "http" (or "https")
 
@@ -27,5 +27,5 @@ With this protocol, it is always possible to import the modules in the
 standard library if the file __`brython_stdlib.js`__ is loaded in the page, as
 well as [Brython packages](brython-packages.html), or the modules bundled in
 file __`brython_modules.js`__ created by the command 
-`brython-cli`&nbsp;`--modules`
+`brython-cli`&nbsp;`modules`
 (cf. section [import implementation](import.html)).

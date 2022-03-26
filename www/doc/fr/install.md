@@ -36,7 +36,7 @@ Le package installe un logiciel client `brython-cli` (équivalent à `python -m 
 
 > puis dans un répertoire vide, exécutez
 >```console
->brython-cli --install
+>brython-cli install
 >```
 
 - si vous ne pouvez pas utiliser cette méthode, aller sur la [page des publications]
@@ -74,7 +74,7 @@ Dans le répertoire de l'application, vous pouvez ensuite mettre à jour les
 fichiers Brython (__brython.js__ et __brython_stdlib.js__) par:
 
 ```console
-brython-cli --update
+brython-cli update
 ```
 
 Installer un package CPython
@@ -85,7 +85,7 @@ Brython par la commande `--add_package <nom du package>`.
 Par exemple:
 ```console
 pip install attrs
-brython-cli --add_package attrs
+brython-cli add_package attrs
 ```
 
 Pour cela il faut naturellement que tous les fichiers du package soient
@@ -95,18 +95,18 @@ exemple.
 Autres commandes
 ----------------
 
-`-- modules`
+`modules`
 
 > crée une distribution propre à l'application, pour remplacer
 > __`brython_stdlib.js`__ par un fichier moins volumineux. Voir la section
 > [import](import.html)
 
-`-- make_dist`
+`make_dist`
 
 > génère un package CPython, distribuable par PyPI, pour installer une
 > application Brython. Voir la section [Déployer une application](deploy.html)
 
-`-- make_package`
+`make_package`
 
 > génère un "package Brython" permettant de distribuer très simplement un
 > module ou un package. Voir la section [Packages Brython](brython-packages.html)

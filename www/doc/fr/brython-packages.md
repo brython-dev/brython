@@ -19,7 +19,7 @@ Pour générer un "package Brython", il faut utiliser le package CPython
 le package, exécuter:
 
 ```console
-brython-cli --make_package <nom_package>
+brython-cli make_package <nom_package>
 ```
 
 Si le répertoire contient un fichier __`__init.py__`__, les modules seront

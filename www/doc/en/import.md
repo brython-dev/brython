@@ -87,7 +87,7 @@ For that, open a console window, navigate to the application directory and
 execute
 
 ```console
-brython-cli --modules
+brython-cli modules
 ```
 
 Note that this program parses the Brython code in all the scripts, modules

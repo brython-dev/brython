@@ -6,7 +6,7 @@ navigateur de deux façons différentes:
 - par le menu Fichier / Ouvrir du navigateur : dans ce cas le protocole
   utilisé est "file"
 - en lançant un serveur web (par exemple celui de la distribution standard
-  Python : `brython-cli --server`) et en entrant l'adresse du fichier dans la
+  Python : `brython-cli server`) et en entrant l'adresse du fichier dans la
   barre d'adresse du navigateur (par exemple _localhost:8000//app.html_). Le
   protocole correspondant est "http" (ou "https")
 
@@ -28,5 +28,5 @@ Avec ce protocole, il est toujours possible d'importer les modules de la
 bibliothèque standard si le fichier __`brython_stdlib.js`__ est chargé dans la
 page, ainsi que les [packages Brython](brython-packages.html), ou les modules
 qui ont été regroupés dans le fichier __`brython_modules.js`__ créé par la
-commande `brython-cli`&nbsp;`--modules` 
+commande `brython-cli`&nbsp;` modules` 
 (voir la section [Implémentation de import](import.html)).

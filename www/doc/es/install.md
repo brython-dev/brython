@@ -36,7 +36,7 @@ El paquete instala un sotfware del cliente `brython-cli` (equivalente a `python 
 
 > Una vez hecho lo anterior, en un directorio vacio ejecuta
 >```console
->brython-cli --install
+>brython-cli install
 >```
 
 - Si no puedes instalar Brython de esta forma, ve a la [página de _releases_](https://github.com/brython-dev/brython/releases)
@@ -72,7 +72,7 @@ En el directorio de la aplicación puedes actualizar los ficheros Brython
 (__brython.js__ y __brython_stdlib.js__) usando:
 
 ```console
-brython-cli --update
+brython-cli update
 ```
 
 Instalando un paquete CPython
@@ -83,7 +83,7 @@ mediante el comando `--add_package <package name>`.
 Por ejemplo:
 ```console
 pip install attrs
-brython-cli --add_package attrs
+brython-cli add_package attrs
 ```
 
 Todos los ficheros en el paquete deben, por supuesto, ser usables por Brython; esto,
@@ -92,13 +92,13 @@ por ejemplo, excluye ficheros escritos en C.
 Otros comandos
 --------------
 
-`-- modules`
+`modules`
 
 > crea una distribución específica para la aplicación, para reemplazar
 > __`brython_stdlib.js`__ por un fichero más pequeño. Ver sección
 > [import](import.html).
 
-`-- make_dist`
+`make_dist`
 
 > genera un paquete CPython, apto para ser distribuido mediante PyPI, para instalar
 > una aplicación Brython. Ver sección [Desplegando una aplicación Brython](deploy.html)
