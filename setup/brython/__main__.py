@@ -308,12 +308,11 @@ def main():
                 parser.print_help()
 
             # Compatibility mode (old style)
-            import warnings
+            warning = ("Option --{0} will be deprecated in the next release. "
+                      "Please use `brython-cli {0}` instead (see '--help')")
 
             if args.add_package:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('add_package'))
                 print('add package {}...'.format(args.add_package))
                 package = __import__(args.add_package)
                 package_file = package.__file__
@@ -347,9 +346,7 @@ def main():
                         os.path.basename(package_file)))
 
             if args.install:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('install'))
                 print('Installing Brython {}'.format(implementation))
 
                 data_path = os.path.join(os.path.dirname(__file__), 'data')
@@ -374,9 +371,7 @@ def main():
                 print('done')
 
             if args.update:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('update'))
                 print('Update Brython scripts to version {}'.format(implementation))
 
                 data_path = os.path.join(os.path.dirname(__file__), 'data')
@@ -385,17 +380,13 @@ def main():
                     shutil.copyfile(os.path.join(data_path, path), path)
 
             if args.reset:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('reset'))
                 print('Reset brython_modules.js to standard distribution')
                 shutil.copyfile(os.path.join(os.getcwd(), 'brython_stdlib.js'),
                     os.path.join(os.getcwd(), 'brython_modules.js'))
 
             if args.modules:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('modules'))
                 print('Create brython_modules.js with all the modules used by the '
                     'application')
                 from . import list_modules
@@ -411,9 +402,7 @@ def main():
                 finder.make_brython_modules(path)
 
             if args.make_dist:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('make_dist'))
                 print('Make a Python distribution for the application')
                 from . import list_modules
 
@@ -430,9 +419,7 @@ def main():
                 print('done')
 
             if args.make_file_system:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('make_file_system'))
                 print('Create a Javascript file for all the files in the directory')
                 args_fs = args.make_file_system.split("#")
                 if len(args_fs) > 2:
@@ -445,18 +432,14 @@ def main():
                 print('done')
 
             if args.make_package:
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('make_package'))
                 package_name = args.make_package
                 from . import make_package
                 make_package.make(package_name, os.getcwd())
                 print("done")
 
             if args.server != "absent":
-                warnings.warn("Options style primary args may be deprecated soon. "
-                            "Please use subcommands instead (see '--help')",
-                            DeprecationWarning)
+                print(warning.format('server'))
                 # start development server
                 import http.server
                 import sysconfig
