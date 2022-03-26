@@ -7,7 +7,7 @@ function _PyPegen_set_expr_context(p, a, ctx){
 }
 
 function _PyPegen_singleton_seq(p, a){
-    return [a]
+    return a
 }
 
 function _PyPegen_seq_flatten(p, seqs){
@@ -17,11 +17,11 @@ function _PyPegen_seq_flatten(p, seqs){
             res.push(item)
         }
     }
-    console.log('flatten', seqs, res)
     return res
 }
 
 function _PyPegen_make_module(p, a){
+    console.log('make module, a', a)
     var res = new $B.ast.Module(a)
     return res
 }
@@ -167,11 +167,8 @@ function eval_body(rule, tokens, position){
                 break
         }
     }
-    if(result.rule && (! result.rule.repeat) &&
-            result.rule.items &&
-            result.rule.items.length != result.matches.length){
-        console.log('bizarre', result)
-        alert()
+    if(result !== FAIL){
+        // console.log('result for rule', show_rule(rule), result)
     }
     return result
 }
@@ -358,41 +355,37 @@ function parse(grammar, tokens, src){
         }
     }
     console.log('parse succeeds !', match)
-    console.log('make', make(match, tokens))
+    console.log(show(match, tokens))
+
+    var _ast = make(match, tokens)
+    console.log(_ast)
+    var symtable = $B._PySymtable_Build(_ast, 'main')
+    var js_from_ast = $B.js_from_root(_ast, symtable, 'filename')
+    console.log('js', js_from_ast)
+
 }
 
 function show(match, tokens, level){
-    if(match.from_choices && match.from_choices.alias){
-        console.log('***', match.from_choices.alias)
-    }
     level = level || 0
     var s = '',
         prefix = '  '.repeat(level),
-        name = match.rule.name || match.rule.parent_rule,
-        action = match.rule.action,
-        alias = match.rule.alias,
-        parent
+        rule = match.rule
 
-    if(match.from_sequence){
-        parent = match.from_sequence
-    }else if(match.from_choices){
-        parent = match.from_choices
-        if(parent.alias){
-            console.log('choices parent has alias', parent.alias)
-            alert()
+    s += prefix + show_rule(rule)
+    if(match.matches){
+        s += ' (' + match.matches.length + ' matches'
+        for(var m of match.matches){
+            if(m.rule === rule){
+                s += 'same rule ' + show_rule(m.rule)
+            }
         }
+        s += ')'
     }
-    if(parent && (parent.action || parent.alias)){
-        s += prefix + '<parent>' +
-             (parent.alias ? ' = ' + parent.alias : '') +
-             (parent.action ? `{${parent.action}}` : '') + '\n'
+
+    s += '\n'
+    if(! match.rule.repeat){
+        level += 1
     }
-    s += prefix +
-        (name === undefined ? '' : name) +
-        (match.rank === undefined ? '' : ' #' + match.rank) +
-        (alias ? ' = ' + alias : '') +
-        (action ? ` {${action}}` : '') + '\n'
-    level += 1
 
     if(match.matches){
         for(var match of match.matches){
@@ -453,6 +446,9 @@ function show_rule(rule){
     if(rule.alias){
         res = (rule.alias + '=' + res)
     }
+    if(rule.parent_rule){
+        res = '<' + rule.parent_rule +' #' + rule.rank +'>' + res
+    }
 
     return res
 }
@@ -469,18 +465,14 @@ function make(match, tokens){
 
     if(rule.repeat){
         // if a repeated rule has an alias, it applies to the repetition list
-        if(rule.alias){
-            console.log('repeated has alias', rule.alias)
-        }
-        if(rule.action && rule.action.trim() == 'z'){
-            console.log('repeated has action', rule.action)
-        }
         // The number of repetitions is len(match.matches)
-        var res = []
+        var res = [],
+            same_rule
         for(var one_match of match.matches){
             // Each of the matches matches rule.items
+            same_rule = one_match.rule === rule
             var makes = []
-            for(var i=0; i < one_match.matches.length; i++){
+            for(var i = 0; i < one_match.matches.length; i++){
                 var m = one_match.matches[i],
                     _make = make(m, tokens)
                 makes.push(_make)
@@ -490,16 +482,25 @@ function make(match, tokens){
                         eval(r.alias + ' = _make')
                     }
                 }else{
-                    console.log('submatch', m, 'rule', rule)
+                    console.log('submatch', m, 'rule', show_rule(rule))
                 }
             }
+            console.log('for one match of repeated', show_rule(rule),
+                'makes', makes)
             if(rule.action){
                 res.push(eval(rule.action))
             }else{
                 res.push(makes)
             }
         }
+        if(same_rule){
+            console.log('repeated with same rule', show_rule(rule), res)
+            return res[0]
+        }
         if(rule.repeat[1] == 1){
+            console.log('repeated rule', show_rule(rule),
+                'returns single item', res[0])
+            console.log('   match', match)
             return res[0]
         }
         return res
@@ -521,7 +522,7 @@ function make(match, tokens){
             action = rule.action.trim()
         action = action.replace(/^\(.*?\)/, '')
         var res = eval(action)
-        console.log('    eval action', action, 'returns', res)
+        console.log('rule', show_rule(rule), 'evals to', res)
         return res
     }else{
         // If rule has items, each submatch matches one of the items
@@ -534,10 +535,12 @@ function make(match, tokens){
                 for(var i = 0; i < match.matches.length; i++){
                     elts.push(make(match.matches[i], tokens))
                 }
-                return {name: rule.alias, elts}
+                var res = {name: rule.alias, elts}
             }else{
-                return make(match.matches[0], tokens)
+                var res = make(match.matches[0], tokens)
             }
+            console.log('rule', show_rule(rule), 'evals to', res)
+            return res
         }else{
             if(rule.type == 'NAME'){
                 return new $B.ast.Name(tokens[match.start].string)
@@ -555,58 +558,9 @@ function make(match, tokens){
                 for(var m of match.matches){
                     elts.push(make(m, tokens))
                 }
+                console.log('rule', show_rule(rule), 'evals to', elts)
                 return elts
             }
-            /*
-            if(rule.repeat){
-                var elts = []
-                for(var i = 0; i < match.matches.length; i++){
-                    console.log('i', i,
-                        'submatch', match.matches[i])
-                    elts.push(make(match.matches[i], tokens))
-                }
-                return {name: rule.alias, elts}
-            }else{
-                return '<...>'
-            }
-            */
         }
     }
-    /*
-    if(! rule.items){
-        if(match.matches){
-            for(var m of match.matches){
-                make(m, tokens)
-            }
-        }
-        return
-    }else{
-        for(var i = 0; i < match.matches.length; i++){
-            if(rule.items[i].alias){
-                names[rule.items[i].alias] = match.matches[i]
-            }
-            if(['NAME', 'NUMBER', 'STRING', 'string'].indexOf(rule.items[i].type) > -1){
-                var m = match.matches[i]
-                if(m.end > m.start){
-                    console.log(rule.items[i].type, src.substring(m.start, m.end))
-                }
-            }
-        }
-        if(rule.action){
-            for(var name in names){
-                console.log(`var ${name} = make(names['${name}'])`, names[name])
-                eval(`var ${name} = make(names['${name}'], src)`)
-            }
-        }else{
-            console.log('no action, rule', rule, 'names', names)
-            if(rule.alias){
-                console.log('alias', rule.alias, 'for match', match)
-            }
-        }
-
-        for(var m of match.matches){
-            make(m, src)
-
-    }
-    */
 }
