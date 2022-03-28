@@ -386,11 +386,11 @@ def pack(fmt, *args):
         else:
             if len(args) < num:
                 raise StructError("insufficient arguments to pack")
-            for var in args[:num]:
+            if len(result) and alignment:
                 # pad with 0 until position is a multiple of size
-                if len(result) and alignment:
-                    padding = format['size'] - len(result) % format['size']
-                    result += [bytes([0])] * padding
+                padding = format['size'] - len(result) % format['size']
+                result += [bytes([0])] * padding
+            for var in args[:num]:
                 result += [format['pack'](var, format['size'], endianness)]
             args = args[num:]
         num = None

@@ -58,3 +58,8 @@ assert struct.unpack('I', struct.pack ('I', 1234)) == (1234,)
 
 # issue 1134
 assert struct.calcsize('>4s   c 15x 6l') == 44
+
+# issue 1935
+d = struct.pack('8B', 137, 80, 78, 71, 13, 10, 26, 10)
+assert list(d) == [137, 80, 78, 71, 13, 10, 26, 10]
+assert struct.unpack('8B', d) == (137, 80, 78, 71, 13, 10, 26, 10)
