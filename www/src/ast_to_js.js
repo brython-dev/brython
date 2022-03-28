@@ -2242,11 +2242,13 @@ $B.ast.Try.prototype.to_js = function(scopes){
                             `exit = true\n` +
                             `$B.frames_stack.push($top_frame)\n` +
                         `}\n` +
-                        `// $B.frames_stack = save_stack_${id}\n` +
-                        add_body(this.finalbody, scopes) +
-                        `\nif(exit){\n` +
+                        add_body(this.finalbody, scopes)
+        if(this.finalbody.length > 0 &&
+                ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
+            finalbody += `\nif(exit){\n` +
                            `$B.leave_frame(locals)\n` +
                         `}`
+        }
         // The 'else' clause is executed if no exception was raised, and if
         // there was no 'return' in the 'try' block (in which case the stack
         // was popped from)
