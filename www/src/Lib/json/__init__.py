@@ -115,7 +115,9 @@ class codecs:
     BOM_UTF32_LE = b'\xff\xfe\x00\x00'
     BOM_UTF32_BE = b'\x00\x00\xfe\xff'
 
+# Brython-specific : import module libs/_json.js
 import _json
+from .encoder import JSONEncoder
 
 JSONDecoder = _json.JSONDecoder
 
@@ -150,7 +152,9 @@ class JSONDecodeError(ValueError):
 def dump(obj, fp, **kw):
     fp.write(dumps(obj, **kw))
 
-def dumps(obj, *, cls=None, **kw):
+def dumps(obj, *, skipkeys=False, ensure_ascii=True, check_circular=True,
+        allow_nan=True, cls=None, indent=None, separators=None,
+        default=None, sort_keys=False, **kw):
     """Serialize ``obj`` to a JSON formatted ``str``.
 
     If ``skipkeys`` is true then ``dict`` keys that are not basic types
