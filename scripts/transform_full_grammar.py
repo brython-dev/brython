@@ -145,6 +145,8 @@ class Element:
             res = '/' + self.type + self.value + '\\'
         if self.join:
             res += f", join: '{self.join.value}'"
+            if hasattr(self.join, 'alias'):
+                res += f", alias: '{self.join.alias}'"
         if self.repeat != [1, 1]:
             res += f', repeat: {self.repeat}'
         if self.lookahead:
@@ -255,9 +257,6 @@ class GrammarExpression:
             self.feed(['eol', ''])
             self.parent.add(self)
             return self.parent
-        elif token == ['op', '=']: # alias for grammar action
-            print('alias', self.sequence[-1])
-            input()
         elif token[0] == 'eol':
             if self.action:
                 if self.options:
@@ -273,7 +272,6 @@ class GrammarExpression:
                 self.add(Rule(token[1]))
             elif token[0] == 'action':
                 self.action = Literal(*token)
-
             elif token[0] == 'alias':
                 # store alias for next expression
                 self.add(Alias(*token[1:]))
@@ -305,6 +303,8 @@ class GrammarExpression:
             res += '\n' + prefix1 + ']'
         if self.join:
             res += f", join: '{self.join.value}'"
+            if hasattr(self.join, 'alias'):
+                res += f", alias: '{self.join.alias}'"
         if self.repeat != [1, 1]:
             res += ',\n' + prefix1 + f'repeat: [{self.repeat[0]}, {self.repeat[1]}]'
         if self.lookahead:

@@ -7805,7 +7805,7 @@ $B.parse_options = function(options){
             options)
         options = {debug: 1}
     }
-    
+
     // If the argument provided to brython() is a number, it is the debug
     // level
 
