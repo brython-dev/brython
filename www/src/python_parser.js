@@ -1,9 +1,97 @@
 var $B = __BRYTHON__,
-    Store = $B.ast.Store
+    Store = $B.ast.Store,
+    NULL = undefined
 
-function _PyPegen_collect_call_seqs(p, a, b, EXTRA){
-    console.log('collect call seqs', a, b, EXTRA)
-    return 'args'
+function _seq_number_of_starred_exprs(seq){
+    var n = 0
+    for(var k of seq){
+        if(! k.is_keyword){
+            n++;
+        }
+    }
+    return n
+}
+
+function _PyPegen_dummy_name(p){
+    var cache = NULL;
+
+    if (cache != NULL) {
+        return cache;
+    }
+
+    var id = "",
+        ast_obj = new $B.ast.Name(id, new $B.ast.Load())
+    set_position_from_list(ast_obj, [1, 0, 1, 0])
+    return cache;
+}
+
+function _PyPegen_seq_delete_starred_exprs(p, kwargs){
+    var len = kwargs.length,
+        new_len = len - _seq_number_of_starred_exprs(kwargs)
+    if (new_len == 0) {
+        return NULL;
+    }
+    var new_seq = []
+
+    for (var k of kwargs){
+        if (k.is_keyword) {
+            new_seq.push(k.element)
+        }
+    }
+    return new_seq
+}
+
+function _PyPegen_seq_extract_starred_exprs(p, kwargs){
+    var new_len = _seq_number_of_starred_exprs(kwargs);
+    if (new_len == 0) {
+        return NULL;
+    }
+    var new_seq = []
+
+    var idx = 0;
+    for (var k of kwargs) {
+        if (! k.is_keyword) {
+            new_seq[idx++] = k.element
+        }
+    }
+    return new_seq
+}
+
+function _PyPegen_collect_call_seqs(p, a, b,
+                     lineno, col_offset, end_lineno,
+                     end_col_offset, arena) {
+    var args_len = a.length,
+        total_len = args_len;
+
+    if (b == NULL) {
+        return _PyAST_Call(_PyPegen_dummy_name(p), a, NULL, lineno, col_offset,
+                        end_lineno, end_col_offset, arena);
+
+    }
+
+    var starreds = _PyPegen_seq_extract_starred_exprs(p, b),
+        keywords = _PyPegen_seq_delete_starred_exprs(p, b);
+
+    if (starreds) {
+        total_len += starreds.length
+    }
+
+    var args = []
+
+
+    for (var i = 0; i < args_len; i++) {
+        args[i] = a[i]
+    }
+    for (; i < total_len; i++) {
+        args[i] = starreds[i - args_len]
+    }
+
+    return _PyAST_Call(_PyPegen_dummy_name(p), args, keywords, lineno,
+                       col_offset, end_lineno, end_col_offset, arena);
+}
+
+function _PyPegen_join_sequences(p, a, b){
+    return a.concat(b)
 }
 
 function _PyPegen_concatenate_strings(p, strings){
@@ -30,7 +118,7 @@ function _PyPegen_set_expr_context(p, a, ctx){
 }
 
 function _PyPegen_singleton_seq(p, a){
-    return a
+    return [a]
 }
 
 function _PyPegen_seq_flatten(p, seqs){
@@ -55,9 +143,31 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
     }
 }
 
+var positions = ['lineno', 'col_offset', 'end_lineno', 'end_col_offset']
+
+function set_position_from_list(ast_obj, EXTRA){
+    for(var i = 0; i < 4; i++){
+        ast_obj[positions[i]] = EXTRA[i]
+    }
+}
+
 function _PyAST_Assign(a, b, tc, EXTRA){
-    console.log('Assign', a, b, EXTRA)
     var ast_obj = new $B.ast.Assign(a, b)
+    set_position_from_EXTRA(ast_obj, EXTRA)
+    return ast_obj
+}
+
+function _PyAST_Call(func, args, keywords, EXTRA){
+    if(func instanceof $B.ast.Name){
+        func.ctx = new $B.ast.Load()
+    }
+    var ast_obj = new $B.ast.Call(func, args, keywords || [])
+    set_position_from_EXTRA(ast_obj, EXTRA)
+    return ast_obj
+}
+
+function _PyAST_Expr(e, EXTRA){
+    var ast_obj = new $B.ast.Expr(e)
     set_position_from_EXTRA(ast_obj, EXTRA)
     return ast_obj
 }
@@ -473,13 +583,15 @@ function show_rule(rule){
             res += '+'
         }
     }
+    if(rule.join){
+        res = `'${rule.join}'.` + res
+    }
     if(rule.alias){
         res = (rule.alias + '=' + res)
     }
     if(rule.parent_rule){
         res = '<' + rule.parent_rule +' #' + rule.rank +'>' + res
     }
-
     return res
 }
 
@@ -508,7 +620,6 @@ function make(match, tokens){
         var res = [],
             same_rule
         if(rule.type == 'STRING'){
-            console.log('repeat string', match)
             for(var m of match.matches){
                 res.push(tokens[m.start])
             }
@@ -541,7 +652,7 @@ function make(match, tokens){
             if(rule.action){
                 res.push(eval(rule.action))
             }else{
-                if(rule.items && rule.items.length == 1){
+                if(makes.length == 1){
                     res.push(makes[0])
                 }else{
                     res.push(makes)
@@ -562,7 +673,7 @@ function make(match, tokens){
                 names[rule.items[i].alias] = make(match.matches[i], tokens)
             }
         }
-        console.log('action', rule.action, 'names', names)
+        console.log('action', rule.action, 'of rule', show_rule(rule), 'names', names)
         for(var name in names){
             eval(`var ${name} = names.${name}`)
             console.log('    name', name, 'evals to', eval(name))
@@ -599,13 +710,24 @@ function make(match, tokens){
             return res
         }else{
             if(rule.type == 'NAME'){
-                var ast_obj = new $B.ast.Name(tokens[match.start].string)
+                var ast_obj = new $B.ast.Name(tokens[match.start].string,
+                                              new $B.ast.Load())
                 set_position_from_EXTRA(ast_obj, EXTRA)
                 return ast_obj
-            }else if(['NUMBER', 'STRING', 'string'].indexOf(rule.type) > -1){
-                if(rule.lookahead){
-                    return
+            }else if(rule.type == 'NUMBER'){
+                try{
+                    var prepared = $B.prepare_number(token[1])
+                }catch(err){
+                    $_SyntaxError(context, [err.message])
                 }
+                if(prepared.type == 'int'){
+                    var ast_obj = new $B.ast.Constant(prepared)
+                    ast_obj.type = prepared.type
+                    set_position_from_EXTRA(ast_obj, EXTRA)
+                    return ast_obj
+                }
+            }else if(['STRING', 'string'].indexOf(rule.type) > -1){
+                console.log('native type', rule.type, tokens[match.start].string)
                 var ast_obj = new $B.ast.Constant(tokens[match.start].string)
                 set_position_from_EXTRA(ast_obj, EXTRA)
                 return ast_obj
