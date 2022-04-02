@@ -161,7 +161,7 @@ function _PyAST_Call(func, args, keywords, EXTRA){
     if(func instanceof $B.ast.Name){
         func.ctx = new $B.ast.Load()
     }
-    var ast_obj = new $B.ast.Call(func, args, keywords || [])
+    var ast_obj = new $B.ast.Call(func, args || [], keywords || [])
     set_position_from_EXTRA(ast_obj, EXTRA)
     return ast_obj
 }
@@ -649,6 +649,9 @@ function make(match, tokens){
                     }
                 }
             }
+            if(rule.alias){
+                eval(rule.alias + ' = makes')
+            }
             if(rule.action){
                 res.push(eval(rule.action))
             }else{
@@ -688,25 +691,26 @@ function make(match, tokens){
         // Otherwise, rule.name is in the grammar and each submatch matches
         // the grammar rule
         if(rule.items){
-            if(rule.items.length > 1){
-                var elts = []
-                for(var m of match.matches){
-                    if(m.end > m.start){
-                        elts.push(make(m, tokens))
-                    }
+            var elts = []
+            for(var m of match.matches){
+                if(m.end > m.start){
+                    var _make = make(m, tokens)
+                    elts.push(_make)
                 }
-                if(elts.length == 1){
-                    elts = elts[0]
-                }
-                if(rule.alias){
-                    var res = {name: rule.alias, elts}
-                }else{
-                    res = elts
-                }
+            }
+            if(elts.length == 1){
+                elts = elts[0]
+            }
+            if(rule.alias){
+                var res = {name: rule.alias, elts}
             }else{
-                var res = make(match.matches[0], tokens)
+                res = elts
             }
             console.log('rule', show_rule(rule), rule, 'evals to', res)
+            if(rule.parent_rule == 'args'){
+                console.log('matches', match.matches)
+                alert()
+            }
             return res
         }else{
             if(rule.type == 'NAME'){
@@ -720,14 +724,11 @@ function make(match, tokens){
                 }catch(err){
                     $_SyntaxError(context, [err.message])
                 }
-                if(prepared.type == 'int'){
-                    var ast_obj = new $B.ast.Constant(prepared)
-                    ast_obj.type = prepared.type
-                    set_position_from_EXTRA(ast_obj, EXTRA)
-                    return ast_obj
-                }
+                var ast_obj = new $B.ast.Constant(prepared)
+                ast_obj.type = prepared.type
+                set_position_from_EXTRA(ast_obj, EXTRA)
+                return ast_obj
             }else if(['STRING', 'string'].indexOf(rule.type) > -1){
-                console.log('native type', rule.type, tokens[match.start].string)
                 var ast_obj = new $B.ast.Constant(tokens[match.start].string)
                 set_position_from_EXTRA(ast_obj, EXTRA)
                 return ast_obj

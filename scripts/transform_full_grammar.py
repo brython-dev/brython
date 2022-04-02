@@ -145,7 +145,7 @@ class Element:
             res = '/' + self.type + self.value + '\\'
         if self.join:
             res += f", join: '{self.join.value}'"
-            if hasattr(self.join, 'alias'):
+            if hasattr(self.join, 'alias') and self.join.alias is not None:
                 res += f", alias: '{self.join.alias}'"
         if self.repeat != [1, 1]:
             res += f', repeat: {self.repeat}'
@@ -258,19 +258,24 @@ class GrammarExpression:
             self.parent.add(self)
             return self.parent
         elif token[0] == 'eol':
-            if self.action:
-                if self.options:
-                    self.sequence[-1].action = self.action
-                    self.action = None
             if self.sequence and self.options:
                 ge = GrammarExpression()
                 ge.sequence = self.sequence
+                if self.action:
+                    ge.action = self.action
+                    self.action = None
                 self.options.append(ge)
                 self.sequence = []
+            else:
+                if self.action:
+                    self.sequence[-1].action = self.action
+                    self.action = None
         else:
             if token[0] == 'id':
                 self.add(Rule(token[1]))
             elif token[0] == 'action':
+                token[1] = re.sub("^\(.*?\)", "", token[1].strip())
+                print('action', token[1])
                 self.action = Literal(*token)
             elif token[0] == 'alias':
                 # store alias for next expression
@@ -303,7 +308,7 @@ class GrammarExpression:
             res += '\n' + prefix1 + ']'
         if self.join:
             res += f", join: '{self.join.value}'"
-            if hasattr(self.join, 'alias'):
+            if hasattr(self.join, 'alias') and self.join.alias is not None:
                 res += f", alias: '{self.join.alias}'"
         if self.repeat != [1, 1]:
             res += ',\n' + prefix1 + f'repeat: [{self.repeat[0]}, {self.repeat[1]}]'
