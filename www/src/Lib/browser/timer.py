@@ -1,4 +1,4 @@
-from browser import console, window
+from browser import console, self as window
 
 def wrap(func, *args):
     # Transforms a function f into another function that prints a
