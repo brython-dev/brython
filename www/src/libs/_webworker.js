@@ -4,8 +4,46 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
-var brython_scripts = ['brython', 'brython_stdlib']
+if($B.debug > 2){
+    var brython_scripts = [
+        'brython_builtins',
+        'version_info',
+        'python_tokenizer',
+        'py_ast',
+        'py2js',
+        'loaders',
+        'py_object',
+        'py_type',
+        'py_utils',
+        'py_sort',
+        'py_builtin_functions',
+        'py_exceptions',
+        'py_range_slice',
+        'py_bytes',
+        'py_set',
+        'js_objects',
+        'stdlib_paths',
+        'py_import',
+        'unicode_data',
+        'py_string',
+        'py_int',
+        'py_long_int',
+        'py_float',
+        'py_complex',
+        'py_dict',
+        'py_list',
+        'py_generator',
+        'py_dom',
+        'py_pattern_matching',
+        'builtin_modules',
+        'async',
+        'ast_to_js',
+        'symtable',
+        'brython_stdlib']
 
+}else{
+    var brython_scripts = ['brython', 'brython_stdlib']
+}
 var wclass = $B.make_class("Worker",
     function(worker){
         var res = worker
@@ -41,8 +79,9 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         // restore path for imports (cf. issue #1305)
         header += '__BRYTHON__.path = "' + $B.path +'".split(",")\n'
         // Call brython() to initialize internal Brython values
-        header += 'brython(1)\n'
+        header += `brython($B.debug)\n`
         js = header + js
+        js = `try{${js}}catch(err){$B.handle_error(err)}`
         var blob = new Blob([js], {type: "application/js"}),
             url = URL.createObjectURL(blob),
             w = new Worker(url),
