@@ -2,6 +2,8 @@ var $B = __BRYTHON__,
     Store = $B.ast.Store,
     NULL = undefined
 
+var keyword_ty = $B.ast.keyword
+
 function _seq_number_of_starred_exprs(seq){
     var n = 0
     for(var k of seq){
@@ -23,6 +25,24 @@ function _PyPegen_dummy_name(p){
         ast_obj = new $B.ast.Name(id, new $B.ast.Load())
     set_position_from_list(ast_obj, [1, 0, 1, 0])
     return cache;
+}
+
+function CHECK(type, obj){
+    return obj instanceof type ? obj : undefined
+}
+
+function CHECK_NULL_ALLOWED(type, obj){
+    if(obj !== NULL){
+        return obj instanceof type ? obj : undefined
+    }
+    return obj
+}
+
+function _PyPegen_keyword_or_starred(p, element, is_keyword){
+    return {
+        element,
+        is_keyword
+    }
 }
 
 function _PyPegen_seq_delete_starred_exprs(p, kwargs){
@@ -101,7 +121,6 @@ function _PyPegen_concatenate_strings(p, strings){
         last = $B.last(strings)
     for(var token of strings){
         var s = $B.prepare_string(token.string)
-        console.log('result of prepare string', s)
         res += eval(s.value)
     }
     var ast_obj = new $B.ast.Constant(res)
@@ -109,6 +128,7 @@ function _PyPegen_concatenate_strings(p, strings){
     ast_obj.col_offset = first.start[1]
     ast_obj.end_lineno = last.end[0]
     ast_obj.end_col_offset = last.end[1]
+    console.log('concat strings returns', ast_obj)
     return ast_obj
 }
 
@@ -169,6 +189,12 @@ function _PyAST_Call(func, args, keywords, EXTRA){
 function _PyAST_Expr(e, EXTRA){
     var ast_obj = new $B.ast.Expr(e)
     set_position_from_EXTRA(ast_obj, EXTRA)
+    return ast_obj
+}
+
+function _PyAST_keyword(arg, value, EXTRA){
+    var ast_obj = new $B.ast.keyword(arg, value)
+    set_position_from_EXTRA(EXTRA)
     return ast_obj
 }
 
@@ -334,8 +360,6 @@ function eval_body_once(rule, tokens, position){
         var start = position,
             matches = [],
             frozen_choice = false // set to true if we reach a COMMIT_CHOICE (~)
-        var test = rule.items[0].name == 'star_targets' &&
-                   rule.items[0].alias == 'z'
         for(var item of rule.items){
             if(item.type == 'COMMIT_CHOICE'){
                 frozen_choice = true
@@ -476,7 +500,7 @@ function parse(grammar, tokens, src){
         rule = grammar.file,
         match
     clear_memo()
-    for(rule_name in grammar){
+    for(var rule_name in grammar){
         grammar[rule_name].name = rule_name
         if(grammar[rule_name].choices){
             grammar[rule_name].choices.forEach(function(item, rank){
@@ -516,7 +540,7 @@ function show(match, tokens, level){
         s += ' (' + match.matches.length + ' matches'
         for(var m of match.matches){
             if(m.rule === rule){
-                s += 'same rule ' + show_rule(m.rule)
+                s += ' same rule ' + show_rule(m.rule)
             }
         }
         s += ')'
@@ -528,8 +552,8 @@ function show(match, tokens, level){
     }
 
     if(match.matches){
-        for(var match of match.matches){
-            s += show(match, tokens, level)
+        for(var m of match.matches){
+            s += show(m, tokens, level)
         }
     }else{
         if(match.end > match.start){
@@ -602,8 +626,8 @@ function make(match, tokens){
         names = {},
         p = {}
 
-    console.log('make, rule', show_rule(rule), rule)
-    console.log('    match', match.matches, match.start, match.end)
+    console.log('make, rule', show_rule(rule),
+        (match.matches ? match.matches.length + ' matches' : match))
 
     if(match.end > match.start){
         var token = tokens[match.start],
@@ -615,138 +639,136 @@ function make(match, tokens){
     }
 
     if(rule.repeat){
-        // if a repeated rule has an alias, it applies to the repetition list
+        // If a repeated rule has an alias, it applies to the repetition list
         // The number of repetitions is len(match.matches)
-        var res = [],
-            same_rule
+        var res = []
         if(rule.type == 'STRING'){
+            console.log('repetaed string', show_rule(rule))
             for(var m of match.matches){
                 res.push(tokens[m.start])
             }
             if(rule.alias){
-                eval(rule.alias + ' = res')
+                eval('var ' + rule.alias + ' = res')
             }
             if(rule.action){
                 return eval(rule.action)
             }
             return res
         }
+        var makes = []
         for(var one_match of match.matches){
             // Each of the matches matches rule.items
-            same_rule = one_match.rule === rule
-            var makes = []
-            for(var i = 0; i < one_match.matches.length; i++){
-                var m = one_match.matches[i]
-                if(m.end == m.start){
-                    continue
-                }
-                var _make = make(m, tokens)
-                makes.push(_make)
-                if(rule.items){
-                    var r = rule.items[i]
-                    if(r.alias){
-                        eval(r.alias + ' = _make')
+            if(one_match.rule === rule){
+                console.log('same rule', show_rule(rule))
+                var elts = []
+                for(var i = 0; i < one_match.matches.length; i++){
+                    var m = one_match.matches[i]
+                    if(m.end > m.start){
+                        var _make = make(m, tokens)
+                        if(rule.items[i].alias){
+                            eval('var ' + rule.items[i].alias + ' = _make')
+                        }
+                        elts.push(_make)
                     }
                 }
-            }
-            if(rule.alias){
-                eval(rule.alias + ' = makes')
-            }
-            if(rule.action){
-                res.push(eval(rule.action))
-            }else{
-                if(makes.length == 1){
-                    res.push(makes[0])
+                if(rule.action){
+                    makes.push(eval(rule.action))
+                }else if(elts.length == 1){
+                    makes.push(elts[0])
                 }else{
-                    res.push(makes)
+                    makes.push(elts)
                 }
+            }else{
+                makes.push(make(one_match, tokens))
             }
         }
-
-        if(rule.repeat[1] == 1){
-            return res[0]
+        if(makes.length == 0){
+            return
         }
-        return res
+        if(rule.repeat[1] == 1){
+            console.log('rule', show_rule(rule), 'evals to', makes[0])
+            return makes[0]
+        }
+        console.log('rule', show_rule(rule), 'evals to', makes)
+        return makes
     }
 
-    // If there is an explicit action, get the names in the rule expression
-    if(rule.action){
+    if(rule.items){
+        if(rule.items.length != match.matches.length){
+            alert('rule items and match.matches have different lengths')
+        }
+        var makes = [],
+            nb_consuming = 0,
+            ast,
+            _make
         for(var i = 0; i < match.matches.length; i++){
+            var m = match.matches[i]
+            if(m.end > m.start){
+                _make = make(match.matches[i], tokens)
+                makes.push(_make)
+            }else{
+                _make = undefined
+            }
             if(rule.items[i].alias){
-                names[rule.items[i].alias] = make(match.matches[i], tokens)
+                names[rule.items[i].alias] = _make
+                eval('var ' + rule.items[i].alias + ' = _make')
+            }
+            if(! rule.items[i].lookahead){
+                nb_consuming++
             }
         }
-        console.log('action', rule.action, 'of rule', show_rule(rule), 'names', names)
-        for(var name in names){
-            eval(`var ${name} = names.${name}`)
-            console.log('    name', name, 'evals to', eval(name))
+        if(rule.action){
+            try{
+                ast = eval(rule.action)
+            }catch(err){
+                console.log('error eval of rule', show_rule(rule))
+                console.log('names', names)
+                throw err
+            }
+        }else if(nb_consuming == 1){
+            ast = makes[0]
+        }else{
+            ast = makes
         }
-        var action = rule.action.trim()
-        action = action.replace(/^\(.*?\)/, '')
-        var res = eval(action)
-        console.log('rule', show_rule(rule), 'evals to', res)
-        return res
+        console.log(show_rule(rule), '\nevals to', ast, 'match', match)
+        return ast
     }else{
-        // If rule has items, each submatch matches one of the items
-        // Otherwise, rule.name is in the grammar and each submatch matches
-        // the grammar rule
-        if(rule.items){
+        if(match.matches){
+            alert('rule without items has matches')
+        }
+        if(rule.type == 'NAME'){
+            var ast_obj = new $B.ast.Name(tokens[match.start].string,
+                                          new $B.ast.Load())
+            set_position_from_EXTRA(ast_obj, EXTRA)
+            return ast_obj
+        }else if(rule.type == 'NUMBER'){
+            try{
+                var prepared = $B.prepare_number(token[1])
+            }catch(err){
+                $_SyntaxError(context, [err.message])
+            }
+            var ast_obj = new $B.ast.Constant(prepared)
+            ast_obj.type = prepared.type
+            set_position_from_EXTRA(ast_obj, EXTRA)
+            return ast_obj
+        }else if(['STRING', 'string'].indexOf(rule.type) > -1){
+            var ast_obj = new $B.ast.Constant(tokens[match.start].string)
+            set_position_from_EXTRA(ast_obj, EXTRA)
+            return ast_obj
+        }else if(grammar[rule.name] === undefined){
+            console.log('anomalie', rule.name, 'not in grammar, match', match,
+                tokens[match.start])
+        }else{
+            var grammar_rule = grammar[rule_name]
+            console.log('apply grammar rule', show_rule(grammar_rule))
+            console.log('    rule', grammar_rule)
+            console.log('    match', match)
             var elts = []
             for(var m of match.matches){
-                if(m.end > m.start){
-                    var _make = make(m, tokens)
-                    elts.push(_make)
-                }
+                elts.push(make(m, tokens))
             }
-            if(elts.length == 1){
-                elts = elts[0]
-            }
-            if(rule.alias){
-                var res = {name: rule.alias, elts}
-            }else{
-                res = elts
-            }
-            console.log('rule', show_rule(rule), rule, 'evals to', res)
-            if(rule.parent_rule == 'args'){
-                console.log('matches', match.matches)
-                alert()
-            }
-            return res
-        }else{
-            if(rule.type == 'NAME'){
-                var ast_obj = new $B.ast.Name(tokens[match.start].string,
-                                              new $B.ast.Load())
-                set_position_from_EXTRA(ast_obj, EXTRA)
-                return ast_obj
-            }else if(rule.type == 'NUMBER'){
-                try{
-                    var prepared = $B.prepare_number(token[1])
-                }catch(err){
-                    $_SyntaxError(context, [err.message])
-                }
-                var ast_obj = new $B.ast.Constant(prepared)
-                ast_obj.type = prepared.type
-                set_position_from_EXTRA(ast_obj, EXTRA)
-                return ast_obj
-            }else if(['STRING', 'string'].indexOf(rule.type) > -1){
-                var ast_obj = new $B.ast.Constant(tokens[match.start].string)
-                set_position_from_EXTRA(ast_obj, EXTRA)
-                return ast_obj
-            }else if(grammar[rule.name] === undefined){
-                console.log('anomalie', rule.name, 'not in grammar')
-                alert()
-            }else{
-                var grammar_rule = grammar[rule_name]
-                console.log('apply grammar rule', show_rule(grammar_rule))
-                console.log('    rule', grammar_rule)
-                console.log('    match', match)
-                var elts = []
-                for(var m of match.matches){
-                    elts.push(make(m, tokens))
-                }
-                console.log('rule', show_rule(rule), 'evals to', elts)
-                return elts
-            }
+            console.log('rule', show_rule(rule), 'evals to', elts)
+            return elts
         }
     }
 }

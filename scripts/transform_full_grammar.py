@@ -216,7 +216,6 @@ class GrammarExpression:
     def feed(self, token):
         if token == ['op', '|']:
             if self.sequence:
-                #self.feed(['eol', ''])
                 ge = GrammarExpression(parent=self)
                 ge.sequence = self.sequence
                 ge.action = self.action
@@ -267,16 +266,15 @@ class GrammarExpression:
                 self.options.append(ge)
                 self.sequence = []
             else:
-                if self.action:
+                if False: #self.action:
                     self.sequence[-1].action = self.action
                     self.action = None
+        elif token[0] == 'action':
+            token[1] = re.sub("^\(.*?\)", "", token[1].strip())
+            self.action = Literal(*token)
         else:
             if token[0] == 'id':
                 self.add(Rule(token[1]))
-            elif token[0] == 'action':
-                token[1] = re.sub("^\(.*?\)", "", token[1].strip())
-                print('action', token[1])
-                self.action = Literal(*token)
             elif token[0] == 'alias':
                 # store alias for next expression
                 self.add(Alias(*token[1:]))
