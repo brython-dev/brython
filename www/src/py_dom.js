@@ -285,13 +285,12 @@ $B.set_func_names(Attributes, "<dom>")
 
 // Class for DOM events
 
-var DOMEvent = $B.DOMEvent = {
-    __class__: _b_.type,
-    __mro__: [object],
-    $infos:{
-        __name__: "DOMEvent"
+var DOMEvent = $B.DOMEvent = $B.make_class("DOMEvent",
+    function(evt_name){
+        // Factory to create instances of DOMEvent, based on an event name
+        return DOMEvent.__new__(DOMEvent, evt_name)
     }
-}
+)
 
 DOMEvent.__new__ = function(cls, evt_name){
     var ev = new Event(evt_name)
@@ -370,11 +369,6 @@ DOMEvent.__getattribute__ = function(self, attr){
     throw $B.attr_error(attr, self)
 }
 
-DOMEvent.$factory = function(evt_name){
-    // Factory to create instances of DOMEvent, based on an event name
-    return DOMEvent.__new__(DOMEvent, evt_name)
-}
-
 // Function to transform a DOM event into an instance of DOMEvent
 var $DOMEvent = $B.$DOMEvent = function(ev){
     ev.__class__ = DOMEvent
@@ -390,30 +384,22 @@ var $DOMEvent = $B.$DOMEvent = function(ev){
 
 $B.set_func_names(DOMEvent, "browser")
 
-var Clipboard = {
-    __class__: _b_.type,
-    $infos: {
-        __module__: "browser",
-        __name__: "Clipboard"
+var Clipboard = $B.make_class('Clipboard',
+    function(data){
+        return {
+            __class__ : Clipboard,
+            __dict__: $B.empty_dict(),
+            data : data
+        }
     }
-}
+)
 
 Clipboard.__getitem__ = function(self, name){
     return self.data.getData(name)
 }
 
-Clipboard.__mro__ = [object]
-
 Clipboard.__setitem__ = function(self, name, value){
     self.data.setData(name, value)
-}
-
-Clipboard.$factory = function(data){ // drag and drop dataTransfer
-    return {
-        __class__ : Clipboard,
-        __dict__: $B.empty_dict(),
-        data : data
-    }
 }
 
 $B.set_func_names(Clipboard, "<dom>")
@@ -446,7 +432,8 @@ var OpenFile = $B.OpenFile = {
     $infos: {
         __module__: "<pydom>",
         __name__: "OpenFile"
-    }
+    },
+    $is_class: true
 }
 
 OpenFile.$factory = function(file, mode, encoding) {
@@ -496,19 +483,11 @@ dom.FileReader.__str__ = function(){return "<class 'FileReader'>"}
 
 // Class for DOM nodes
 
-var DOMNode = {
-    __class__ : _b_.type,
-    __mro__: [object],
-    $infos: {
-        __module__: "browser",
-        __name__: "DOMNode"
+var DOMNode = $B.make_class('browser',
+    function(elt){
+        return elt
     }
-}
-
-DOMNode.$factory = function(elt){
-    return elt
-}
-
+)
 
 DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
@@ -1552,13 +1531,7 @@ $B.set_func_names(DOMNode, "browser")
 
 // return query string as an object with methods to access keys and values
 // same interface as cgi.FieldStorage, with getvalue / getlist / getfirst
-var Query = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    $infos:{
-        __name__: "query"
-    }
-}
+var Query = $B.make_class("query")
 
 Query.__contains__ = function(self, key){
     return self._keys.indexOf(key) > -1
@@ -1633,14 +1606,15 @@ Query.keys = function(self){
 $B.set_func_names(Query, "<dom>")
 
 // class used for tag sums
-var TagSum = {
-    __class__ : _b_.type,
-    __mro__: [object],
-    $infos: {
-        __module__: "<pydom>",
-        __name__: "TagSum"
+var TagSum = $B.make_class("TagSum",
+    function(){
+        return {
+            __class__: TagSum,
+            children: [],
+            toString: function(){return "(TagSum)"}
+        }
     }
-}
+)
 
 TagSum.appendChild = function(self, child){
     self.children.push(child)
@@ -1683,14 +1657,6 @@ TagSum.clone = function(self){
         res.children.push(self.children[i].cloneNode(true))
     }
     return res
-}
-
-TagSum.$factory = function(){
-    return {
-        __class__: TagSum,
-        children: [],
-        toString: function(){return "(TagSum)"}
-    }
 }
 
 $B.set_func_names(TagSum, "<dom>")
