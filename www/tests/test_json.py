@@ -78,4 +78,7 @@ assert json.dumps(2 + 1j, cls=ComplexEncoder) == '[2.0, 1.0]'
 assert ComplexEncoder().encode(2 + 1j) == '[2.0, 1.0]'
 assert list(ComplexEncoder().iterencode(2 + 1j)) == ['[2.0', ', 1.0', ']']
 
+# issue 1944
+assert json.loads('{"a":[]}') == {'a': []}
+
 print('all tests ok..')

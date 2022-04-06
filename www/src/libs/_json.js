@@ -224,7 +224,6 @@ function to_py(obj, kw){
             for(var i = 0, len = obj.keys.length; i < len; i++){
                 _b_.dict.$setitem(dict, obj.keys[i], to_py(obj.values[i], kw))
             }
-
             return kw.object_hook === _b_.None ? dict :
                 $B.$call(kw.object_hook)(dict)
         }
@@ -497,6 +496,9 @@ List.prototype.transition = function(token){
             return new List(this)
         }else if(token == ']'){
             if(this.items.length == 0){
+                if(this.parent instanceof Dict){
+                    this.parent.values.push(this)
+                }
                 return this.parent
             }
             throw Error('unexpected ]')
