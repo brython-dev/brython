@@ -46,9 +46,16 @@ def parse(line):
                 keywords.add(s)
             yield ['string', s]
             pos += end + 2
-        elif line[pos] in '()[]?!*+|~.&=':
+        elif line[pos] in '()[]?!*+|~.=':
             yield ['op', line[pos]]
             pos += 1
+        elif line[pos] == '&':
+            if pos + 1 < len(line) and line[pos + 1] == '&':
+                # sequence &&
+                pos += 2
+            else:
+                yield ['op', line[pos]]
+                pos += 1
         elif mo := re.match('\w+', line[pos:]):
             s = line[pos:pos + mo.end()]
             end_pos = pos + mo.end()
