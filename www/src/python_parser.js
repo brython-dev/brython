@@ -1,8 +1,13 @@
 var $B = __BRYTHON__,
     Store = $B.ast.Store,
+    Load = $B.ast.Load,
     NULL = undefined
 
-var keyword_ty = $B.ast.keyword
+
+var debug = 0
+
+var keyword_ty = $B.ast.keyword,
+    arguments_ty = $B.ast.arguments
 
 function _seq_number_of_starred_exprs(seq){
     var n = 0
@@ -36,6 +41,15 @@ function CHECK_NULL_ALLOWED(type, obj){
         return obj instanceof type ? obj : undefined
     }
     return obj
+}
+
+
+function NEW_TYPE_COMMENT(x){
+    return x
+}
+
+function _PyPegen_empty_arguments(p){
+    return _PyAST_arguments([], [], NULL, [], [], NULL, [], p.arena)
 }
 
 function _PyPegen_keyword_or_starred(p, element, is_keyword){
@@ -84,7 +98,7 @@ function _PyPegen_collect_call_seqs(p, a, b,
         total_len = args_len;
 
     if (b == NULL) {
-        return _PyAST_Call(_PyPegen_dummy_name(p), a, NULL, lineno, col_offset,
+        return _PyAST_Call(_PyPegen_dummy_name(p), a, [], lineno, col_offset,
                         end_lineno, end_col_offset, arena);
 
     }
@@ -171,38 +185,23 @@ function set_position_from_list(ast_obj, EXTRA){
     }
 }
 
-function _PyAST_Assign(a, b, tc, EXTRA){
-    var ast_obj = new $B.ast.Assign(a, b)
+// Generate functions to create AST instances
+var template = `
+function _PyAST_<ast_class>(<args><sep>EXTRA){
+    var ast_obj = new $B.ast.<ast_class>(<args>)
     set_position_from_EXTRA(ast_obj, EXTRA)
     return ast_obj
 }
+`
 
-function _PyAST_Call(func, args, keywords, EXTRA){
-    if(func instanceof $B.ast.Name){
-        func.ctx = new $B.ast.Load()
-    }
-    var ast_obj = new $B.ast.Call(func, args || [], keywords || [])
-    set_position_from_EXTRA(ast_obj, EXTRA)
-    return ast_obj
+for(var ast_class in $B.ast_classes){ // in py_ast.js
+    var args = $B.ast_classes[ast_class]
+    var sep = args.length > 0 ? ', ' : ''
+    var function_code = template.replace(/<ast_class>/g, ast_class)
+                                .replace(/<sep>/, sep)
+                                .replace(/<args>/g, args)
+    eval(function_code)
 }
-
-function _PyAST_Expr(e, EXTRA){
-    var ast_obj = new $B.ast.Expr(e)
-    set_position_from_EXTRA(ast_obj, EXTRA)
-    return ast_obj
-}
-
-function _PyAST_keyword(arg, value, EXTRA){
-    var ast_obj = new $B.ast.keyword(arg, value)
-    set_position_from_EXTRA(EXTRA)
-    return ast_obj
-}
-
-function NEW_TYPE_COMMENT(x){
-    return x
-}
-
-var debug = 0
 
 var inf = Number.POSITIVE_INFINITY
 
@@ -341,11 +340,16 @@ function eval_body(rule, tokens, position){
 
 function eval_body_once(rule, tokens, position){
     if(debug){
-        console.log('eval_body_once of rule', rule, 'position', position)
+        console.log('eval_body_once of rule', show_rule(rule), 'position', position, tokens[position])
     }
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
             var choice = rule.choices[i]
+            if(choice.items && choice.items.length == 1 &&
+                    choice.items.name &&
+                    choice.items.name.startsWith('invalid_')){
+                continue
+            }
             var match = eval_body(choice, tokens, position)
             if(match === FROZEN_FAIL){
                 // if a choice with a ~ fails, don't try other alternatives
@@ -380,7 +384,8 @@ function eval_body_once(rule, tokens, position){
                 }
             }else{
                 if(debug){
-                    console.log('item', item, 'of sequence', rule, 'fails')
+                    console.log('item', show_rule(item), 'of sequence', show_rule(rule),
+                        'at position', position, tokens[position].string, 'fails')
                 }
                 if(frozen_choice){
                     return FROZEN_FAIL
@@ -392,6 +397,7 @@ function eval_body_once(rule, tokens, position){
             console.log('bizarre', rule, matches)
             alert()
         }
+        console.log('rule', show_rule(rule), 'succeeds', matches)
         return {rule, matches, start, end: position}
     }else if(rule.type == "rule"){
         return apply_rule(grammar[rule.name], tokens, position)
@@ -445,7 +451,7 @@ function grow_lr(rule, tokens, position, m){
 function apply_rule(rule, tokens, position){
     // apply rule at position
     if(debug){
-        console.log('apply rule', rule, position, 'memo', memo)
+        console.log('apply rule', show_rule(rule), position, 'memo', memo)
     }
     // search if result is in memo
     var memoized = get_memo(rule, position)
@@ -477,7 +483,7 @@ function apply_rule(rule, tokens, position){
         }
     }else{
         if(debug){
-            console.log('read from memo', memoized)
+            console.log('read from memo', show_rule(rule), memoized)
         }
         if(memoized.match instanceof LeftRecursion){
             if(debug){
@@ -512,7 +518,7 @@ function parse(grammar, tokens, src){
     while(position < tokens.length){
         match = apply_rule(rule, tokens, position)
         if(match === FAIL){
-            console.log('rule', rule, 'fails')
+            console.log('rule', show_rule(rule), 'fails')
             return
         }else{
             position = match.end
@@ -525,8 +531,7 @@ function parse(grammar, tokens, src){
     console.log(_ast)
     var symtable = $B._PySymtable_Build(_ast, 'main')
     var js_from_ast = $B.js_from_root(_ast, symtable, 'filename')
-    console.log('js', js_from_ast)
-
+    console.log('js', $B.format_indent(js_from_ast, 0))
 }
 
 function show(match, tokens, level){
@@ -636,6 +641,7 @@ function make(match, tokens){
                      end_lineno: token.end[0],
                      end_col_offset: token.end[1]
                      }
+        p.arena = EXTRA
     }
 
     if(rule.repeat){
@@ -643,7 +649,6 @@ function make(match, tokens){
         // The number of repetitions is len(match.matches)
         var res = []
         if(rule.type == 'STRING'){
-            console.log('repetaed string', show_rule(rule))
             for(var m of match.matches){
                 res.push(tokens[m.start])
             }
