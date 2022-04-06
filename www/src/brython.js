@@ -120,8 +120,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-04-05 08:40:05.973954"
-__BRYTHON__.timestamp=1649140805964
+__BRYTHON__.compiled_date="2022-04-06 20:20:13.416727"
+__BRYTHON__.timestamp=1649269213415
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8589,12 +8589,10 @@ $B.JSConstructor=JSConstructor
 function pyargs2jsargs(pyargs){var args=[]
 for(var i=0,len=pyargs.length;i < len;i++){var arg=pyargs[i]
 if(arg !==undefined && arg !==null &&
-arg.$nat !==undefined){var kw=arg.kw
-if(Array.isArray(kw)){kw=$B.extend(js_attr.name,...kw)}
-if(Object.keys(kw).length > 0){
+arg.$nat !==undefined){
 throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
-"keyword arguments")}}else{args.push($B.pyobj2jsobj(arg))}}
+"keyword arguments")}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
 $B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
 jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return new Number(jsobj)}
@@ -8632,7 +8630,9 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof self.addEventListener=="function"){return function(event,callback){return self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,self)}
-if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=self.$js_func ||self
+if(typeof js_attr==='function'){var res=function(){if(false && arguments.length > 0 && $B.last(arguments).$nat=='kw'){throw _b_.TypeError.$factory('Javascript functions cannot '+
+'be called with keyword arguments')}
+var args=pyargs2jsargs(arguments),target=self.$js_func ||self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
 console.log("attribute",attr,"of self",self,js_attr,args,arguments)
 throw err}

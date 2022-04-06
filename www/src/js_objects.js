@@ -297,22 +297,15 @@ function pyargs2jsargs(pyargs){
         var arg = pyargs[i]
         if(arg !== undefined && arg !== null &&
                 arg.$nat !== undefined){
-            var kw = arg.kw
-            if(Array.isArray(kw)){
-                kw = $B.extend(js_attr.name, ...kw)
-            }
-            if(Object.keys(kw).length > 0){
-                //
-                // Passing keyword arguments to a Javascript function
-                // raises a TypeError : since we don't know the
-                // signature of the function, the result of Brython
-                // code like foo(y=1, x=2) applied to a JS function
-                // defined by function foo(x, y) can't be determined.
-                //
-                throw _b_.TypeError.$factory(
-                    "A Javascript function can't take " +
-                        "keyword arguments")
-            }
+            // Passing keyword arguments to a Javascript function
+            // raises a TypeError : since we don't know the
+            // signature of the function, the result of Brython
+            // code like foo(y=1, x=2) applied to a JS function
+            // defined by function foo(x, y) can't be determined.
+            //
+            throw _b_.TypeError.$factory(
+                "A Javascript function can't take " +
+                    "keyword arguments")
         }else{
             args.push($B.pyobj2jsobj(arg))
         }
@@ -437,6 +430,10 @@ $B.JSObj.__getattribute__ = function(self, attr){
     }
     if(typeof js_attr === 'function'){
         var res = function(){
+            if(false && arguments.length > 0 && $B.last(arguments).$nat == 'kw'){
+                throw _b_.TypeError.$factory('Javascript functions cannot ' +
+                    'be called with keyword arguments')
+            }
             var args = pyargs2jsargs(arguments),
                 target = self.$js_func || self
             try{
