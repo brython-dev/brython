@@ -853,7 +853,6 @@ $B.handle_error = function(err){
         return
     }
     err.$handled = true
-
     $B.show_error(err)
 
     // Throw the error to stop execution

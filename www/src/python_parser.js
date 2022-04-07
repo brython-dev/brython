@@ -1,4 +1,5 @@
 var $B = __BRYTHON__,
+    _b_ = $B.builtins,
     Store = $B.ast.Store,
     Load = $B.ast.Load,
     NULL = undefined
@@ -17,6 +18,10 @@ function _seq_number_of_starred_exprs(seq){
         }
     }
     return n
+}
+
+function _PyPegen_check_legacy_stmt(p, name) {
+    return ["print", "exec"].indexOf(name) > -1
 }
 
 function _PyPegen_dummy_name(p){
@@ -47,6 +52,25 @@ function NEW_TYPE_COMMENT(x){
     return x
 }
 
+function RAISE_ERROR_KNOWN_LOCATION(errtype,
+                           lineno, col_offset,
+                           end_lineno, end_col_offset,
+                           errmsg){
+    var va = [errmsg]
+    var _col_offset = col_offset //Py_ssize_t _col_offset = (col_offset == CURRENT_POS ? CURRENT_POS : col_offset + 1);
+    var _end_col_offset = end_col_offset //Py_ssize_t _end_col_offset = (end_col_offset == CURRENT_POS ? CURRENT_POS : end_col_offset + 1);
+    _PyPegen_raise_error_known_location(errtype, lineno, _col_offset, end_lineno, _end_col_offset, errmsg, va);
+    return NULL;
+}
+
+function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
+    var extra_args = arguments[3]
+    RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+        a.lineno, a.col_offset,
+        b.end_lineno, b.end_col_offset,
+        msg, extra_args)
+}
+
 function _PyPegen_empty_arguments(p){
     return _PyAST_arguments([], [], NULL, [], [], NULL, [], p.arena)
 }
@@ -56,6 +80,20 @@ function _PyPegen_keyword_or_starred(p, element, is_keyword){
         element,
         is_keyword
     }
+}
+
+function _PyPegen_raise_error_known_location(errtype,
+        lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
+    var exc = errtype.$factory(errmsg)
+    exc.lineno = lineno
+    exc.offset = col_offset
+    exc.end_lineno = end_lineno
+    exc.end_offset = end_col_offset
+    var lines = state.src.split('\n'),
+        line = lines[exc.lineno - 1]
+    exc.text = line
+    exc.args[1] = ['filename', lineno, col_offset, line]
+    $B.handle_error(exc)
 }
 
 function _PyPegen_seq_delete_starred_exprs(p, kwargs){
@@ -349,11 +387,11 @@ function eval_body_once(rule, tokens, position){
     }
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
-            var choice = rule.choices[i]
-            if(choice.items && choice.items.length == 1 &&
+            var choice = rule.choices[i],
+                invalid = choice.items && choice.items.length == 1 &&
                     choice.items.name &&
-                    choice.items.name.startsWith('invalid_') &&
-                    ! use_invalid.value){
+                    choice.items.name.startsWith('invalid_')
+            if(invalid && ! use_invalid.value){
                 continue
             }
             var match = eval_body(choice, tokens, position)
@@ -361,6 +399,11 @@ function eval_body_once(rule, tokens, position){
                 // if a choice with a ~ fails, don't try other alternatives
                 return FAIL
             }else if(match !== FAIL){
+                if(invalid){
+                    console.log('invalid match', match)
+                    alert()
+                    match.invalid = true
+                }
                 match.rank = i
                 return match
             }
@@ -403,8 +446,16 @@ function eval_body_once(rule, tokens, position){
             console.log('bizarre', rule, matches)
             alert()
         }
-        console.log('rule', show_rule(rule), 'succeeds', matches)
-        return {rule, matches, start, end: position}
+        var match = {rule, matches, start, end: position}
+        if(use_invalid.value && rule.parent_rule &&
+                rule.parent_rule.startsWith('invalid_')){
+            handle_invalid_match(match, tokens)
+            match.invalid = true
+        }
+        if(debug){
+            console.log('rule', show_rule(rule), 'succeeds', matches, match)
+        }
+        return match
     }else if(rule.type == "rule"){
         return apply_rule(grammar[rule.name], tokens, position)
     }else if(rule.type == "string"){
@@ -507,11 +558,14 @@ function apply_rule(rule, tokens, position){
     }
 }
 
+var state = {}
+
 function parse(grammar, tokens, src){
     var position = 0,
         rule = grammar.file,
         match
     clear_memo()
+    state.src = src
     for(var rule_name in grammar){
         grammar[rule_name].name = rule_name
         if(grammar[rule_name].choices){
@@ -526,7 +580,6 @@ function parse(grammar, tokens, src){
     while(position < tokens.length){
         match = apply_rule(rule, tokens, position)
         if(match === FAIL){
-            console.log('rule', show_rule(rule), 'fails')
             break
         }else{
             position = match.end
@@ -539,12 +592,7 @@ function parse(grammar, tokens, src){
         use_invalid.value = true
         while(position < tokens.length){
             match = apply_rule(rule, tokens, position)
-            if(match === FAIL){
-                console.log('rule', show_rule(rule), 'fails')
-                return
-            }else{
-                position = match.end
-            }
+            position = match.end
         }
     }
     console.log('parse succeeds !', match)
@@ -555,6 +603,10 @@ function parse(grammar, tokens, src){
     var symtable = $B._PySymtable_Build(_ast, 'main')
     var js_from_ast = $B.js_from_root(_ast, symtable, 'filename')
     console.log('js', $B.format_indent(js_from_ast, 0))
+}
+
+function handle_invalid_match(match, tokens){
+    var res = make(match, tokens)
 }
 
 function show(match, tokens, level){
@@ -647,15 +699,19 @@ function show_rule(rule){
     return res
 }
 
+// Global parser object
+var p = {}
+
 function make(match, tokens){
     // match.rule succeeds; make() returns a value for the match, based on the
     // grammar action for the rule
     var rule = match.rule,
-        names = {},
-        p = {}
+        names = {}
+    p.tokens = tokens
+    p.mark = match.start
 
-    console.log('make, rule', show_rule(rule),
-        (match.matches ? match.matches.length + ' matches' : match))
+    /* console.log('make, rule', show_rule(rule),
+        (match.matches ? match.matches.length + ' matches' : match)) */
 
     if(match.end > match.start){
         var token = tokens[match.start],
@@ -758,7 +814,7 @@ function make(match, tokens){
         }else{
             ast = makes
         }
-        console.log(show_rule(rule), '\nevals to', ast, 'match', match)
+        //console.log(show_rule(rule), '\nevals to', ast, 'match', match)
         return ast
     }else{
         if(match.matches){
