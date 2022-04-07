@@ -595,14 +595,15 @@ function parse(grammar, tokens, src){
             position = match.end
         }
     }
-    console.log('parse succeeds !', match)
-    console.log(show(match, tokens))
+    // console.log('parse succeeds !', match)
+    // console.log(show(match, tokens))
 
     var _ast = make(match, tokens)
-    console.log(_ast)
+    // console.log(_ast)
     var symtable = $B._PySymtable_Build(_ast, 'main')
     var js_from_ast = $B.js_from_root(_ast, symtable, 'filename')
-    console.log('js', $B.format_indent(js_from_ast, 0))
+    console.log('js\n', $B.format_indent(js_from_ast, 0))
+    eval(js_from_ast)
 }
 
 function handle_invalid_match(match, tokens){
