@@ -43,7 +43,6 @@ function CHECK_NULL_ALLOWED(type, obj){
     return obj
 }
 
-
 function NEW_TYPE_COMMENT(x){
     return x
 }
@@ -196,6 +195,10 @@ function _PyAST_<ast_class>(<args><sep>EXTRA){
 
 for(var ast_class in $B.ast_classes){ // in py_ast.js
     var args = $B.ast_classes[ast_class]
+    if(Array.isArray(args)){
+        continue
+    }
+    args = args.replace(/\*/g, '')
     var sep = args.length > 0 ? ', ' : ''
     var function_code = template.replace(/<ast_class>/g, ast_class)
                                 .replace(/<sep>/, sep)
@@ -338,6 +341,8 @@ function eval_body(rule, tokens, position){
     return result
 }
 
+var use_invalid = {value: false}
+
 function eval_body_once(rule, tokens, position){
     if(debug){
         console.log('eval_body_once of rule', show_rule(rule), 'position', position, tokens[position])
@@ -347,7 +352,8 @@ function eval_body_once(rule, tokens, position){
             var choice = rule.choices[i]
             if(choice.items && choice.items.length == 1 &&
                     choice.items.name &&
-                    choice.items.name.startsWith('invalid_')){
+                    choice.items.name.startsWith('invalid_') &&
+                    ! use_invalid.value){
                 continue
             }
             var match = eval_body(choice, tokens, position)
@@ -515,13 +521,30 @@ function parse(grammar, tokens, src){
             })
         }
     }
+    // first pass skipping invalid_ rules
+    use_invalid.value = false
     while(position < tokens.length){
         match = apply_rule(rule, tokens, position)
         if(match === FAIL){
             console.log('rule', show_rule(rule), 'fails')
-            return
+            break
         }else{
             position = match.end
+        }
+    }
+    if(match === FAIL){
+        // second pass using invalid_ rules
+        position = 0
+        clear_memo()
+        use_invalid.value = true
+        while(position < tokens.length){
+            match = apply_rule(rule, tokens, position)
+            if(match === FAIL){
+                console.log('rule', show_rule(rule), 'fails')
+                return
+            }else{
+                position = match.end
+            }
         }
     }
     console.log('parse succeeds !', match)
