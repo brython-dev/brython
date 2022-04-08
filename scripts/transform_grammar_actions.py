@@ -7,6 +7,22 @@ import re
 with open('python.gram', encoding='utf-8') as f:
     src = f.read()
 
+operators = [
+    # binary operators
+    'Add', 'Sub', 'Mult', 'Div', 'FloorDiv',
+    'Mod', 'Pow', 'LShift', 'RShift', 'BitOr',
+    'BitXor', 'BitAnd', 'MatMult',
+    # boolean operators
+    'And', 'Or',
+    # comparison operators
+    'Eq', 'NotEq', 'Lt', 'LtE', 'Gt', 'GtE',
+    'Is', 'IsNot', 'In', 'NotIn',
+    # unary operators
+    'Invert', 'UAdd', 'USub'
+    ]
+
+operators_re = r'\b(' + '|'.join(operators) + ')'
+
 sep = re.search("^'''", src, flags=re.M).start()
 head = src[:sep]
 src = src[sep:]
@@ -24,7 +40,10 @@ for mo in action_re.finditer(src):
     action4 = re.sub(r'\([a-z_]*\*?\)_Py', '_Py', action3)
     action5 = re.sub(r'([a-z_]+)\*', r'\1', action4)
     action6 = re.sub('->', '.', action5)
-    new_src += action6
+    action7 = re.sub('_PyPegen_', '$B._PyPegen.', action6)
+    action8 = re.sub(operators_re, r'$B.ast.\1', action7)
+    action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
+    new_src += action9
 
 new_src += src[pos:]
 

@@ -896,7 +896,9 @@ $B.ast.Await.prototype.to_js = function(scopes){
 }
 
 $B.ast.BinOp.prototype.to_js = function(scopes){
-    var op = opclass2dunder[this.op.constructor.$name]
+    // temporarily support old (py2js.js) and new (python_parser.js) versions
+    var name = this.op.$name ? this.op.$name : this.op.constructor.$name
+    var op = opclass2dunder[name]
     return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
         `${$B.js_from_ast(this.right, scopes)})`
 }
