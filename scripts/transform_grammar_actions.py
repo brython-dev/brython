@@ -21,7 +21,7 @@ operators = [
     'Invert', 'UAdd', 'USub'
     ]
 
-operators_re = r'\b(' + '|'.join(operators) + ')'
+operators_re = r'\b(' + '|'.join(operators) + r')\b'
 
 sep = re.search("^'''", src, flags=re.M).start()
 head = src[:sep]
@@ -41,9 +41,10 @@ for mo in action_re.finditer(src):
     action5 = re.sub(r'([a-z_]+)\*', r'\1', action4)
     action6 = re.sub('->', '.', action5)
     action7 = re.sub('_PyPegen_', '$B._PyPegen.', action6)
-    action8 = re.sub(operators_re, r'$B.ast.\1', action7)
-    action9 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action8)
-    new_src += action9
+    action8 = re.sub('_PyAST_', '$B._PyAST.', action7)
+    action9 = re.sub(operators_re, r'$B.ast.\1', action8)
+    action10 = re.sub(r'([a-z]+)_ty\b', r'$B.ast.\1', action9)
+    new_src += action10
 
 new_src += src[pos:]
 

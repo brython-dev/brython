@@ -1,5 +1,7 @@
-var $B = __BRYTHON__,
-    _b_ = $B.builtins,
+(function($B){
+
+var _b_ = $B.builtins,
+    grammar = $B.grammar,
     Store = $B.ast.Store,
     Load = $B.ast.Load,
     NULL = undefined
@@ -48,29 +50,17 @@ function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
         msg, extra_args)
 }
 
-function set_list(list, other){
-    for(var item of other){
-        list.push(item)
-    }
-}
-
 function set_position_from_EXTRA(ast_obj, EXTRA){
     for(var key in EXTRA){
         ast_obj[key] = EXTRA[key]
     }
 }
 
-var positions = ['lineno', 'col_offset', 'end_lineno', 'end_col_offset']
-
-function set_position_from_list(ast_obj, EXTRA){
-    for(var i = 0; i < 4; i++){
-        ast_obj[positions[i]] = EXTRA[i]
-    }
-}
-
 // Generate functions to create AST instances
+$B._PyAST = {}
+
 var template = `
-function _PyAST_<ast_class>(<args><sep>EXTRA){
+$B._PyAST.<ast_class> = function(<args><sep>EXTRA){
     var ast_obj = new $B.ast.<ast_class>(<args>)
     set_position_from_EXTRA(ast_obj, EXTRA)
     return ast_obj
@@ -101,7 +91,7 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     'try', 'if', 'else', 'del', 'import', 'nonlocal', 'pass'
     ]
 
-function Parser(src){
+var Parser = $B.Parser = function(src){
   this.state = {type: 'program', pos: 0}
   this.src = src
 }
@@ -450,6 +440,7 @@ function parse(grammar, tokens, src){
     var symtable = $B._PySymtable_Build(_ast, 'main')
     var js_from_ast = $B.js_from_root(_ast, symtable, 'filename')
     console.log('js\n', $B.format_indent(js_from_ast, 0))
+    $B.set_import_paths()
     eval(js_from_ast)
 }
 
@@ -702,3 +693,5 @@ function make(match, tokens){
         }
     }
 }
+
+})(__BRYTHON__)

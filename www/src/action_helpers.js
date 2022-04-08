@@ -4,6 +4,21 @@
 var _b_ = $B.builtins,
     NULL = undefined
 
+
+function set_list(list, other){
+    for(var item of other){
+        list.push(item)
+    }
+}
+
+var positions = ['lineno', 'col_offset', 'end_lineno', 'end_col_offset']
+
+function set_position_from_list(ast_obj, EXTRA){
+    for(var i = 0; i < 4; i++){
+        ast_obj[positions[i]] = EXTRA[i]
+    }
+}
+
 function _get_names(p, names_with_defaults){
     var seq = []
     for (var pair of names_with_defaults) {
@@ -44,23 +59,18 @@ function _make_posargs(p,
               plain_names,
               names_with_default,
               posargs) {
-    console.log('make posargs', plain_names, names_with_default, posargs)
     if (plain_names != NULL && names_with_default != NULL) {
         names_with_default_names = _get_names(p, names_with_default);
         if (!names_with_default_names) {
             return -1;
         }
-        console.log('cas 1, plain names', plain_names, 'names with default', names_with_default_names)
         var seqs = $B._PyPegen.join_sequences(
                 p, plain_names,  names_with_default_names)
-        console.log('seqs', seqs)
         set_list(posargs, seqs);
     }else if (plain_names == NULL && names_with_default != NULL) {
-        console.log('cas 2')
         set_list(posargs, _get_names(p, names_with_default))
     }
     else if (plain_names != NULL && names_with_default == NULL) {
-        console.log('cas 3')
         set_list(posargs, plain_names)
     }
     return posargs == NULL ? -1 : 0;
@@ -157,7 +167,7 @@ $B._PyPegen.seq_count_dots = function(seq){
 $B._PyPegen.alias_for_star = function(p, lineno, col_offset, end_lineno,
                         end_col_offset, arena) {
     var str = "*"
-    return _PyAST_alias(str, NULL, lineno, col_offset, end_lineno, end_col_offset, arena);
+    return $B._PyAST.alias(str, NULL, lineno, col_offset, end_lineno, end_col_offset, arena);
 }
 
 /* Constructs a CmpopExprPair */
@@ -191,35 +201,35 @@ function _set_seq_context(p, seq, ctx){
 }
 
 function _set_name_context(p, e, ctx){
-    return _PyAST_Name(e.id, ctx, EXTRA_EXPR(e, e))
+    return $B._PyAST.Name(e.id, ctx, EXTRA_EXPR(e, e))
 }
 
 function _set_tuple_context(p, e, ctx){
-    return _PyAST_Tuple(
+    return $B._PyAST.Tuple(
             _set_seq_context(p, e.elts, ctx),
             ctx,
             EXTRA_EXPR(e, e));
 }
 
 function _set_list_context(p, e, ctx){
-    return _PyAST_List(
+    return $B._PyAST.List(
             _set_seq_context(p, e.elts, ctx),
             ctx,
             EXTRA_EXPR(e, e));
 }
 
 function _set_subscript_context(p, e, ctx){
-    return _PyAST_Subscript(e.value, e.slice,
+    return $B._PyAST.Subscript(e.value, e.slice,
                             ctx, EXTRA_EXPR(e, e));
 }
 
 function _set_attribute_context(p, e, ctx){
-    return _PyAST_Attribute(e.value, e.attr,
+    return $B._PyAST.Attribute(e.value, e.attr,
                             ctx, EXTRA_EXPR(e, e));
 }
 
 function _set_starred_context(p, e, ctx){
-    return _PyAST_Starred($B._PyPegen.set_expr_context(p, e.value, ctx),
+    return $B._PyAST.Starred($B._PyPegen.set_expr_context(p, e.value, ctx),
                           ctx, EXTRA_EXPR(e, e));
 }
 
@@ -274,13 +284,13 @@ $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
     }
     var bytes = _b_.bytes.$factory(tc),
         tco = $B._PyPegen.new_type_comment(p, bytes);
-    return _PyAST_arg(a.arg, a.annotation, tco,
+    return $B._PyAST.arg(a.arg, a.annotation, tco,
                       a.lineno, a.col_offset, a.end_lineno, a.end_col_offset,
                       parena);
 }
 
 $B._PyPegen.empty_arguments = function(p){
-    return _PyAST_arguments([], [], NULL, [], [], NULL, [], p.arena)
+    return $B._PyAST.arguments([], [], NULL, [], [], NULL, [], p.arena)
 }
 
 $B._PyPegen.keyword_or_starred = function(p, element, is_keyword){
@@ -294,23 +304,15 @@ $B._PyPegen.make_arguments = function(p, slash_without_default,
                         slash_with_default, plain_names,
                         names_with_default, star_etc){
     /* Constructs an arguments_ty object out of all the parsed constructs in the parameters rule */
-    console.log('make arguments',
-        'slash without default', slash_without_default,
-        'slash with default', slash_with_default,
-        'plain names', plain_names,
-        'names with default', names_with_default,
-        'star etc', star_etc)
     var posonlyargs = []
     if (_make_posonlyargs(p, slash_without_default, slash_with_default, posonlyargs) == -1) {
         return NULL;
     }
-    console.log('posonlyargs', posonlyargs)
 
     var posargs = []
     if (_make_posargs(p, plain_names, names_with_default, posargs) == -1) {
         return NULL;
     }
-    console.log('posargs', posargs)
 
     var posdefaults = []
     if (_make_posdefaults(p,slash_with_default, names_with_default, posdefaults) == -1) {
@@ -333,7 +335,7 @@ $B._PyPegen.make_arguments = function(p, slash_without_default,
         kwarg = star_etc.kwarg;
     }
 
-    return _PyAST_arguments(posonlyargs, posargs, vararg, kwonlyargs,
+    return $B._PyAST.arguments(posonlyargs, posargs, vararg, kwonlyargs,
                             kwdefaults, kwarg, posdefaults, p.arena);
 }
 
@@ -401,7 +403,7 @@ $B._PyPegen.collect_call_seqs = function(p, a, b,
         total_len = args_len;
 
     if (b == NULL) {
-        return _PyAST_Call($B._PyPegen.dummy_name(p), a, [], lineno, col_offset,
+        return $B._PyAST.Call($B._PyPegen.dummy_name(p), a, [], lineno, col_offset,
                         end_lineno, end_col_offset, arena);
 
     }
@@ -423,7 +425,7 @@ $B._PyPegen.collect_call_seqs = function(p, a, b,
         args[i] = starreds[i - args_len]
     }
 
-    return _PyAST_Call($B._PyPegen.dummy_name(p), args, keywords, lineno,
+    return $B._PyAST.Call($B._PyPegen.dummy_name(p), args, keywords, lineno,
                        col_offset, end_lineno, end_col_offset, arena);
 }
 
@@ -476,7 +478,6 @@ $B._PyPegen.seq_flatten = function(p, seqs){
 }
 
 $B._PyPegen.make_module = function(p, a){
-    console.log('make module, a', a)
     var res = new $B.ast.Module(a)
     return res
 }

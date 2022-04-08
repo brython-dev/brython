@@ -136,7 +136,7 @@ class Element:
     def show(self, level=1, indent = 4):
         prefix = level * indent * ' '
         if self.type == 'rule':
-            res = f"{{type: 'rule', name:'{self.value}'"
+            res = f"{{type: 'rule', name: '{self.value}'"
         elif self.type == 'builtin':
             res = f"{{type: '{self.value}'"
         elif self.type == 'string':
@@ -330,14 +330,17 @@ def generate_javascript():
     dest = os.path.join(os.path.dirname(os.getcwd()),
         'www', 'src', 'full_grammar.js')
     with open(dest, 'w', encoding='utf-8') as out:
-        out.write('var grammar = {\n')
+        out.write('(function($B){\n')
+        out.write('var inf = Number.POSITIVE_INFINITY\n')
+        out.write('$B.grammar = {\n')
         for token, descr in grammar.items():
             ge = GrammarExpression(token)
             for x in parse(descr):
                 ge = ge.feed(x)
             out.write(token + ':\n')
             out.write(ge.show(indent=2) + ',\n')
-        out.write('}')
+        out.write('}\n')
+        out.write('})(__BRYTHON__)')
 
 if __name__ == '__main__':
     generate_javascript()
