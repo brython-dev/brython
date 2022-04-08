@@ -219,6 +219,9 @@ var ast_dump = $B.ast_dump = function(tree, indent){
     var res = '  ' .repeat(indent) + proto.$name + '('
     var attr_names = $B.ast_classes[proto.$name].split(','),
         attrs = []
+    // remove trailing * in attribute names
+    attr_names = attr_names.map(x => x.endsWith('*') ?
+                                     x.substr(0, x.length - 1) : x)
     if([ast.Name].indexOf(proto) > -1){
         for(var attr of attr_names){
             if(tree[attr] !== undefined){
