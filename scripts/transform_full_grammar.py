@@ -9,7 +9,7 @@ action = {}
 
 keywords = set()
 
-with open("python.gram", encoding="utf-8", newline=None) as f:
+with open("python.gram.js_actions", encoding="utf-8", newline=None) as f:
     trailer = False
     for line in f:
         if line.startswith("@trailer"):
