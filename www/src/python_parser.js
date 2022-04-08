@@ -71,6 +71,118 @@ function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
         msg, extra_args)
 }
 
+function set_list(list, other){
+    for(var item of other){
+        list.push(other)
+    }
+}
+
+function _make_posonlyargs(p,
+                  slash_without_default,
+                  slash_with_default,
+                  posonlyargs) {
+    if (slash_without_default != NULL) {
+        set_list(posonlyargs, slash_without_default)
+    }else if (slash_with_default != NULL) {
+        slash_with_default_names =
+                _get_names(p, slash_with_default.names_with_defaults);
+        if (!slash_with_default_names) {
+            return -1;
+        }
+        set_list(posonlyargs, _PyPegen_join_sequences(
+                p,
+                slash_with_default.plain_names,
+                slash_with_default_names))
+    }
+    return posonlyargs == NULL ? -1 : 0;
+}
+
+function _make_posargs(p,
+              plain_names,
+              names_with_default,
+              posargs) {
+    if (plain_names != NULL && names_with_default != NULL) {
+        names_with_default_names = _get_names(p, names_with_default);
+        if (!names_with_default_names) {
+            return -1;
+        }
+        set_list(posargs, _PyPegen_join_sequences(
+                p, plain_names,  names_with_default_names));
+    }else if (plain_names == NULL && names_with_default != NULL) {
+        set_list(posargs, _get_names(p, names_with_default))
+    }
+    else if (plain_names != NULL && names_with_default == NULL) {
+        set_list(posargs, plain_names)
+    }
+    return posargs == NULL ? -1 : 0;
+}
+
+function _make_posdefaults(p,
+                  slash_with_default,
+                  names_with_default,
+                  posdefaults) {
+    if (slash_with_default != NULL && names_with_default != NULL) {
+        var slash_with_default_values =
+                _get_defaults(p, slash_with_default.names_with_defaults);
+        if (!slash_with_default_values) {
+            return -1;
+        }
+        var names_with_default_values = _get_defaults(p, names_with_default);
+        if (!names_with_default_values) {
+            return -1;
+        }
+        set_list(posdefaults, _PyPegen_join_sequences(
+                p,
+                slash_with_default_values,
+                names_with_default_values))
+    }else if (slash_with_default == NULL && names_with_default != NULL) {
+        set_list(posdefaults, _get_defaults(p, names_with_default))
+    }
+    else if (slash_with_default != NULL && names_with_default == NULL) {
+        set_list(posdefaults,
+             _get_defaults(p, slash_with_default.names_with_defaults))
+    }
+    return posdefaults == NULL ? -1 : 0;
+}
+
+function _make_kwargs(p, star_etc,
+             kwonlyargs,
+             kwdefaults) {
+    if (star_etc != NULL && star_etc.kwonlyargs != NULL) {
+        set_list(kwonlyargs, _get_names(p, star_etc.kwonlyargs))
+    }else {
+        set_list(kwonlyargs, [])
+    }
+
+    if (kwonlyargs == NULL) {
+        return -1;
+    }
+
+    if (star_etc != NULL && star_etc.kwonlyargs != NULL) {
+        set_list(kwdefaults, _get_defaults(p, star_etc.kwonlyargs))
+    }
+    else {
+        set_list(kwdefaults, [])
+    }
+
+    if (kwdefaults == NULL) {
+        return -1;
+    }
+
+    return 0;
+}
+
+function _PyPegen_add_type_comment_to_arg(p, a, tc){
+    if (tc == NULL) {
+        return a
+    }
+    var bytes = _b_.bytes.$factory(tc),
+        tco = _PyPegen_new_type_comment(p, bytes);
+    return _PyAST_arg(a.arg, a.annotation, tco,
+                      a.lineno, a.col_offset, a.end_lineno, a.end_col_offset,
+                      parena);
+}
+
 function _PyPegen_empty_arguments(p){
     return _PyAST_arguments([], [], NULL, [], [], NULL, [], p.arena)
 }
@@ -80,6 +192,46 @@ function _PyPegen_keyword_or_starred(p, element, is_keyword){
         element,
         is_keyword
     }
+}
+
+function _PyPegen_make_arguments(p, slash_without_default,
+                        slash_with_default, plain_names,
+                        names_with_default, star_etc){
+    /* Constructs an arguments_ty object out of all the parsed constructs in the parameters rule */
+
+    var posonlyargs = []
+    if (_make_posonlyargs(p, slash_without_default, slash_with_default, posonlyargs) == -1) {
+        return NULL;
+    }
+
+    var posargs = []
+    if (_make_posargs(p, plain_names, names_with_default, posargs) == -1) {
+        return NULL;
+    }
+
+    var posdefaults = []
+    if (_make_posdefaults(p,slash_with_default, names_with_default, posdefaults) == -1) {
+        return NULL;
+    }
+
+    var vararg = NULL;
+    if (star_etc != NULL && star_etc.vararg != NULL) {
+        vararg = star_etc.vararg;
+    }
+
+    var kwonlyargs = [],
+        kwdefaults = [];
+    if (_make_kwargs(p, star_etc, kwonlyargs, kwdefaults) == -1) {
+        return NULL;
+    }
+
+    var kwarg = NULL;
+    if (star_etc != NULL && star_etc.kwarg != NULL) {
+        kwarg = star_etc.kwarg;
+    }
+
+    return _PyAST_arguments(posonlyargs, posargs, vararg, kwonlyargs,
+                            kwdefaults, kwarg, posdefaults, p.arena);
 }
 
 function _PyPegen_raise_error_known_location(errtype,
@@ -172,14 +324,18 @@ function _PyPegen_concatenate_strings(p, strings){
         last = $B.last(strings)
     for(var token of strings){
         var s = $B.prepare_string(token.string)
-        res += eval(s.value)
+        try{
+            res += eval(s.value)
+        }catch(err){
+            console.log('error eval string', s.value)
+            throw err
+        }
     }
     var ast_obj = new $B.ast.Constant(res)
     ast_obj.lineno = first.start[0]
     ast_obj.col_offset = first.start[1]
     ast_obj.end_lineno = last.end[0]
     ast_obj.end_col_offset = last.end[1]
-    console.log('concat strings returns', ast_obj)
     return ast_obj
 }
 
@@ -744,7 +900,6 @@ function make(match, tokens){
         for(var one_match of match.matches){
             // Each of the matches matches rule.items
             if(one_match.rule === rule){
-                console.log('same rule', show_rule(rule))
                 var elts = []
                 for(var i = 0; i < one_match.matches.length; i++){
                     var m = one_match.matches[i]
@@ -771,10 +926,10 @@ function make(match, tokens){
             return
         }
         if(rule.repeat[1] == 1){
-            console.log('rule', show_rule(rule), 'evals to', makes[0])
+            //console.log('rule', show_rule(rule), 'evals to', makes[0])
             return makes[0]
         }
-        console.log('rule', show_rule(rule), 'evals to', makes)
+        //console.log('rule', show_rule(rule), 'evals to', makes)
         return makes
     }
 
@@ -841,8 +996,7 @@ function make(match, tokens){
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }else if(grammar[rule.name] === undefined){
-            console.log('anomalie', rule.name, 'not in grammar, match', match,
-                tokens[match.start])
+            //
         }else{
             var grammar_rule = grammar[rule_name]
             console.log('apply grammar rule', show_rule(grammar_rule))
