@@ -4,6 +4,14 @@
 var _b_ = $B.builtins,
     NULL = undefined
 
+function EXTRA_EXPR(head, tail){
+    return {
+            lineno: head.lineno,
+            col_offset: head.col_offset,
+            end_lineno: tail.end_lineno,
+            end_col_offset: tail.end_col_offset
+            }
+}
 
 function set_list(list, other){
     for(var item of other){
@@ -17,6 +25,13 @@ function set_position_from_list(ast_obj, EXTRA){
     for(var i = 0; i < 4; i++){
         ast_obj[positions[i]] = EXTRA[i]
     }
+}
+
+function set_position_from_token(ast_obj, token){
+    ast_obj.lineno = token.start[0]
+    ast_obj.col_offset = token.start[1]
+    ast_obj.end_lineno = token.end[0]
+    ast_obj.end_col_offset = token.end[1]
 }
 
 function _get_names(p, names_with_defaults){
@@ -164,6 +179,11 @@ $B._PyPegen.seq_count_dots = function(seq){
     return number_of_dots;
 }
 
+/* Creates a new asdl_seq* with the identifiers of all the names in seq */
+$B._PyPegen.map_names_to_ids = function(p, seq){
+    return seq.map(e => e.id)
+}
+
 $B._PyPegen.alias_for_star = function(p, lineno, col_offset, end_lineno,
                         end_col_offset, arena) {
     var str = "*"
@@ -261,6 +281,21 @@ $B._PyPegen.set_expr_context = function(p, expr, ctx){
     return _new;
 }
 
+/* Constructs a KeyValuePair that is used when parsing a dict's key value pairs */
+$B._PyPegen.key_value_pair = function(p, key, value){
+    return {key, value}
+}
+
+/* Extracts all keys from an asdl_seq* of KeyValuePair*'s */
+$B._PyPegen.get_keys = function(p, seq){
+    return seq === undefined ? [] : seq.map(pair => pair.key)
+}
+
+/* Extracts all values from an asdl_seq* of KeyValuePair*'s */
+$B._PyPegen.get_values = function(p, seq){
+    return seq === undefined ? [] : seq.map(pair => pair.value)
+}
+
 $B._PyPegen.check_legacy_stmt = function(p, name) {
     return ["print", "exec"].indexOf(name) > -1
 }
@@ -289,10 +324,45 @@ $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
                       parena);
 }
 
+/* Checks if the NOTEQUAL token is valid given the current parser flags
+0 indicates success and nonzero indicates failure (an exception may be set) */
+$B._PyPegen.check_barry_as_flufl = function(p, t){
+    return false
+}
+
 $B._PyPegen.empty_arguments = function(p){
     return $B._PyAST.arguments([], [], NULL, [], [], NULL, [], p.arena)
 }
 
+/* Encapsulates the value of an operator_ty into an AugOperator struct */
+$B._PyPegen.augoperator = function(p, kind){
+    return {kind}
+}
+
+/* Construct a FunctionDef equivalent to function_def, but with decorators */
+$B._PyPegen.function_def_decorators = function(p, decorators, function_def){
+    var constr = function_def instanceof $B.ast.AsyncFunctionDef ?
+                     $B.ast.AsyncFunctionDef : $B.ast.FunctionDef
+    var ast_obj = new constr(
+        function_def.name, function_def.args,
+        function_def.body, decorators, function_def.returns,
+        function_def.type_comment)
+    for(var position of positions){
+        ast_obj[position] = function_def[position]
+    }
+    return ast_obj
+}
+
+/* Construct a ClassDef equivalent to class_def, but with decorators */
+$B._PyPegen.class_def_decorators = function(p, decorators, class_def){
+    return $B._PyAST.ClassDef(
+        class_def.name, class_def.bases,
+        class_def.keywords, class_def.body, decorators,
+        class_def.lineno, class_def.col_offset, class_def.end_lineno,
+        class_def.end_col_offset, p.arena)
+}
+
+/* Construct a KeywordOrStarred */
 $B._PyPegen.keyword_or_starred = function(p, element, is_keyword){
     return {
         element,
@@ -353,7 +423,7 @@ $B._PyPegen.raise_error_known_location = function(errtype,
     exc.offset = col_offset
     exc.end_lineno = end_lineno
     exc.end_offset = end_col_offset
-    var lines = state.src.split('\n'),
+    var lines = $B.parser_state.src.split('\n'),
         line = lines[exc.lineno - 1]
     exc.text = line
     exc.args[1] = ['filename', lineno, col_offset, line]
@@ -438,19 +508,61 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     var res = '',
         first = strings[0],
         last = $B.last(strings)
+
+    var state = {
+        last_str: NULL,
+        fmode: 0,
+        expr_list: []
+    }
+
     for(var token of strings){
         var s = $B.prepare_string(token.string),
-            value = s.value
-        value = value.replace(/\n/g,'\\n\\\n')
-        value = value.replace(/\r/g,'\\r\\\r')
-        try{
-            res += eval(value)
-        }catch(err){
-            console.log('error eval string', s)
-            throw err
+            values = s.value
+        if(Array.isArray(values)){
+            // fstring
+            var jstr_values = []
+            for(var value of values){
+                if(typeof value == "string"){
+                    value = value.replace(/\n/g,'\\n\\\n')
+                    value = value.replace(/\r/g,'\\r\\\r')
+                    try{
+                        var str_ast = new $B.ast.Constant(value)
+                        set_position_from_token(str_ast, token)
+                        jstr_values.push(str_ast)
+                    }catch(err){
+                        console.log('error eval string', value)
+                        throw err
+                    }
+                }else{
+                    if(value.format !== undefined){
+                        value.format = new $B.ast.JoinedStr(value.format)
+                    }
+                    var src = value.expression.trimStart() // ignore leading whitespace
+                    var tokens = []
+                    for(var token of __BRYTHON__.tokenizer(src)){
+                      if(['COMMENT', 'NL', 'ENCODING', 'TYPE_COMMENT'].indexOf(token[0]) == -1){
+                        tokens.push(token)
+                      }
+                    }
+                    var _ast = new __BRYTHON__.Parser(src).feed(tokens)
+                    // _ast is a Module with a single Expr in attribute body
+                    _ast = _ast.body[0].value
+                    jstr_values.push(_ast)
+                }
+            }
+            var ast_obj = new $B.ast.JoinedStr(jstr_values)
+        }else{
+            value = values.replace(/\n/g,'\\n\\\n')
+            value = value.replace(/\r/g,'\\r\\\r')
+            try{
+                res += eval(value)
+            }catch(err){
+                console.log('error eval string', s)
+                throw err
+            }
+            var ast_obj = new $B.ast.Constant(res)
         }
     }
-    var ast_obj = new $B.ast.Constant(res)
     ast_obj.lineno = first.start[0]
     ast_obj.col_offset = first.start[1]
     ast_obj.end_lineno = last.end[0]
@@ -467,6 +579,11 @@ $B._PyPegen.singleton_seq = function(p, a){
     return [a]
 }
 
+/* Creates a copy of seq and prepends a to it */
+$B._PyPegen.seq_insert_in_front = function(p, a, seq){
+    return seq ? [a].concat(seq) : [a]
+}
+
 $B._PyPegen.seq_flatten = function(p, seqs){
     var res = []
     for(var seq of seqs){
@@ -475,6 +592,13 @@ $B._PyPegen.seq_flatten = function(p, seqs){
         }
     }
     return res
+}
+
+/* Creates a new name of the form <first_name>.<second_name> */
+$B._PyPegen.join_names_with_dot = function(p, first_name, second_name){
+    var str = first_name.id + '.' + second_name.id
+    return $B._PyAST.Name(str, new $B.ast.Load(),
+        EXTRA_EXPR(first_name, second_name))
 }
 
 $B._PyPegen.make_module = function(p, a){

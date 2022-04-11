@@ -18,7 +18,7 @@ operators = [
     'Eq', 'NotEq', 'Lt', 'LtE', 'Gt', 'GtE',
     'Is', 'IsNot', 'In', 'NotIn',
     # unary operators
-    'Invert', 'UAdd', 'USub'
+    'Invert', 'Not', 'UAdd', 'USub'
     ]
 
 operators_re = r'\b(' + '|'.join(operators) + r')\b'

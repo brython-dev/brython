@@ -840,13 +840,14 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
     var js,
-        op_class = this.op.constructor
+        op_class = $B.parser_to_ast ? this.op : this.op.constructor
     for(var op in $B.op2ast_class){
         if($B.op2ast_class[op][1] === op_class){
             var iop = op + '='
             break
         }
     }
+    
     var value = $B.js_from_ast(this.value, scopes)
 
     if(this.target instanceof $B.ast.Name){
@@ -2027,7 +2028,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
     var module_id = name,
         global_name = make_scope_name(scopes)
 
-    var js = `// generated from ast\n` +
+    var js = `// Javascript code generated from ast\n` +
              `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
         js += `${global_name} = {},\nlocals = ${global_name},\n` +
@@ -2556,7 +2557,8 @@ $B.js_from_root = function(ast_root, symtable, filename, namespaces){
     scopes.namespaces = namespaces
     scopes.imports = {}
     var js = ast_root.to_js(scopes)
-    return js
+    console.log('imports', scopes.imports)
+    return {js, imports: scopes.imports}
 }
 
 $B.js_from_ast = function(ast, scopes){
