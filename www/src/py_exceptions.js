@@ -826,7 +826,19 @@ $B.show_error = function(err){
             trace += `  File ${filename}, line ${err.args[1][1]}\n` +
                      `    ${line.trim()}\n`
         }
-        trace += '    ' + ' '.repeat(err.args[1][2] - indent) + '^\n' +
+        // add ^ under the line
+        var start = err.offset,
+            marks = '    ' + ' '.repeat(start - indent),
+            nb_marks = 1
+        if(err.end_lineno){
+            if(err.end_lineno > err.lineno){
+                nb_marks = line.length - start - indent
+            }else{
+                nb_mark = err.end_offset - start
+            }
+        }
+        marks += '^'.repeat(nb_marks) + '\n'
+        trace += marks +
                  `${err.__class__.$infos.__name__}: ${err.args[0]}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
