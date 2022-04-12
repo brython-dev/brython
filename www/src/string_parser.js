@@ -1,5 +1,11 @@
 (function($B){
 
+var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',
+    is_escaped = {}
+for(var i = 0; i < s_escaped.length; i++){
+    is_escaped[s_escaped.charAt(i)] = true
+}
+
 function test_escape(context, text, string_start, antislash_pos){
     // Test if the escape sequence starting at position "antislah_pos" in text
     // is is valid

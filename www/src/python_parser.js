@@ -435,6 +435,10 @@ function apply_rule(rule, tokens, position){
 $B.parser_state = {}
 
 function parse(grammar, tokens, src){
+    if(src.trim().length == 0){
+        // eg empty __init__.py
+        return new $B.ast.Module([])
+    }
     var position = 0,
         rule = grammar.file,
         match
@@ -481,14 +485,6 @@ function parse(grammar, tokens, src){
 
     var _ast = make(match, tokens)
     return _ast
-    /*
-    // console.log('ast', _ast, $B.ast_dump(_ast))
-    var symtable = $B._PySymtable_Build(_ast, 'main')
-    var js_from_ast = $B.js_from_root(_ast, symtable, 'filename')
-    console.log('js\n', $B.format_indent(js_from_ast, 0))
-    $B.parse_options()
-    eval(js_from_ast)
-    */
 }
 
 function handle_invalid_match(match, tokens){
@@ -651,16 +647,21 @@ function make(match, tokens){
                 }
                 for(var i = 0; i < one_match.matches.length; i++){
                     var m = one_match.matches[i]
-                    if(m.end > m.start){
+                    //if(m.end > m.start){
                         var _make = make(m, tokens)
                         if(rule.items[i].alias){
                             eval('var ' + rule.items[i].alias + ' = _make')
                         }
                         elts.push(_make)
-                    }
+                    //}
                 }
                 if(rule.action){
-                    makes.push(eval(rule.action))
+                    try{
+                        makes.push(eval(rule.action))
+                    }catch(err){
+                        console.log('error eval action of', show_rule(rule), match)
+                        throw err
+                    }
                 }else if(elts.length == 1){
                     makes.push(elts[0])
                 }else{

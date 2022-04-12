@@ -507,7 +507,8 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     // strings is a list of tokens
     var res = '',
         first = strings[0],
-        last = $B.last(strings)
+        last = $B.last(strings),
+        type
 
     var state = {
         last_str: NULL,
@@ -554,11 +555,35 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         }else{
             value = values.replace(/\n/g,'\\n\\\n')
             value = value.replace(/\r/g,'\\r\\\r')
-            try{
-                res += eval(value)
-            }catch(err){
-                console.log('error eval string', s)
-                throw err
+            var is_byte = value.startsWith('b')
+            if(is_byte){
+                value = value.substr(1)
+                if(type === undefined){
+                    type = 'bytes'
+                    res = _b_.bytes.$factory()
+                }else if(type == 'str'){
+                    throw Error('cannot mix str and bytes')
+                }
+                try{
+                    console.log('new bytes, strings', strings, 'value', value)
+                    var bv = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
+                    res.source = res.source.concat(bv.source)
+                }catch(err){
+                    console.log('error eval string', token, 'value', value)
+                    throw err
+                }
+            }else{
+                if(type === undefined){
+                    type = 'str'
+                }else if(type == 'bytes'){
+                    throw Error('cannot mix str and bytes')
+                }
+                try{
+                    res += eval(value)
+                }catch(err){
+                    console.log('error eval string', token, 'value', value)
+                    throw err
+                }
             }
             var ast_obj = new $B.ast.Constant(res)
         }
