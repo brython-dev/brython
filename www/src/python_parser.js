@@ -2,11 +2,18 @@
 
 var _b_ = $B.builtins,
     grammar = $B.grammar,
-    Store = $B.ast.Store,
-    Load = $B.ast.Load,
-    Del = $B.ast.Del,
+    Store = new $B.ast.Store(),
+    Load = new $B.ast.Load(),
+    Del = new $B.ast.Del(),
     NULL = undefined
 
+// Set variables used in grammar actions such as Add, Not, etc.
+for(var op_type of $B.op_types){
+    for(var key in op_type){
+        var klass_name = op_type[key]
+        eval(`var ${klass_name} = new $B.ast.${klass_name}()`)
+    }
+}
 
 var debug = 0
 

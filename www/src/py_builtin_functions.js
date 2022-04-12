@@ -715,8 +715,9 @@ function $$eval(src, _globals, _locals){
 
         var _ast = root.ast(),
             symtable = $B._PySymtable_Build(_ast, 'exec'),
-            js = $B.js_from_root(_ast, symtable, '<string>',
-                    {local_name, exec_locals, global_name, exec_globals})
+            js_obj = $B.js_from_root(_ast, symtable, '<string>',
+                    {local_name, exec_locals, global_name, exec_globals}),
+            js = js_obj.js
     }catch(err){
         var lineno = err.args[1][1]
         exec_locals.$lineno = lineno
@@ -728,8 +729,12 @@ function $$eval(src, _globals, _locals){
         js = 'return ' + js
     }
 
-    var exec_func = new Function('$B', '_b_', 'locals', local_name, global_name, js)
-
+    try{
+        var exec_func = new Function('$B', '_b_', 'locals', local_name, global_name, js)
+    }catch(err){
+        console.log('error\n', js)
+        throw err
+    }
     //console.log('exec_func', $B.format_indent(exec_func + '', 0))
 
     try{

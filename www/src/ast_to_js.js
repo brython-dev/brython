@@ -840,7 +840,7 @@ $B.ast.Attribute.prototype.to_js = function(scopes){
 
 $B.ast.AugAssign.prototype.to_js = function(scopes){
     var js,
-        op_class = $B.parser_to_ast ? this.op : this.op.constructor
+        op_class = this.op.$name ? this.op : this.op.constructor
     for(var op in $B.op2ast_class){
         if($B.op2ast_class[op][1] === op_class){
             var iop = op + '='
@@ -1131,8 +1131,13 @@ $B.ast.Compare.prototype.to_js = function(scopes){
         prefix = len > 1 ? 'locals.$op = ' : ''
 
     for(var i = 0; i < len; i++){
-        var op = opclass2dunder[this.ops[i].constructor.$name],
+        var name = this.ops[i].$name ? this.ops[i].$name : this.ops[i].constructor.$name,
+            op = opclass2dunder[name],
             right = this.comparators[i]
+        if(op === undefined){
+            console.log('op undefined', this.ops[i])
+            alert()
+        }
         if(this.ops[i] instanceof $B.ast.In){
             comps.push(`$B.$is_member(${left}, ` +
                 `${prefix}${$B.js_from_ast(right, scopes)})`)
@@ -2557,7 +2562,6 @@ $B.js_from_root = function(ast_root, symtable, filename, namespaces){
     scopes.namespaces = namespaces
     scopes.imports = {}
     var js = ast_root.to_js(scopes)
-    console.log('imports', scopes.imports)
     return {js, imports: scopes.imports}
 }
 

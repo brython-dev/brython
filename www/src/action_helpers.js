@@ -571,7 +571,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 }
 
 $B._PyPegen.set_expr_context = function(p, a, ctx){
-    a.ctx = new ctx()
+    a.ctx = ctx
     return a
 }
 
