@@ -24,7 +24,9 @@ var alias_ty = $B.ast.alias,
     asdl_int_seq = Array,
     asdl_expr_seq = Array,
     asdl_keyword_seq = Array,
-    asdl_identifier_seq = Array
+    asdl_identifier_seq = Array,
+    AugOperator = $B.ast.AugAssign,
+    Py_Ellipsis = {type: 'ellipsis'}
 
 var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_BARRY_AS_BDFL = 0x0020,
@@ -32,8 +34,45 @@ var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_ASYNC_HACKS = 0x0080,
     PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 
+
+var Parser = $B.Parser = function(src){
+  this.state = {type: 'program', pos: 0}
+  this.src = src
+}
+
+Parser.prototype.feed = function(){
+  var tokens = $B.tokens = []
+  for(var token of __BRYTHON__.tokenizer(this.src)){
+      if(['COMMENT', 'NL', 'ENCODING', 'TYPE_COMMENT'].indexOf(token[0]) == -1){
+          tokens.push(token)
+      }
+  }
+  return parse(grammar, tokens, this.src)
+}
+
+function asdl_seq_LEN(t){
+    return t.length
+}
+
+function asdl_seq_GET(t, i){
+    return t[i]
+}
+
 function CHECK(type, obj){
-    return obj instanceof type ? obj : undefined
+    if(Array.isArray(type)){
+        var check
+        for(var t of type){
+            check = CHECK(t, obj)
+            if(check){
+                return check
+            }
+        }
+        return undefined
+    }
+    if(obj instanceof type){
+        return obj
+    }
+    return undefined
 }
 
 function CHECK_VERSION(type, version, msg, node){
@@ -75,9 +114,18 @@ function RAISE_ERROR_KNOWN_LOCATION(errtype,
     return NULL;
 }
 
+var RAISE_SYNTAX_ERROR = $B.Parser.RAISE_SYNTAX_ERROR = function(msg){
+    var extra_args = []
+    for(var i = 1, len = arguments.length; i < len; i++){
+        extra_args.push(arguments[i])
+    }
+    console.log('raise error', p, msg, extra_args)
+    $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
+}
+
 function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
     var extra_args = arguments[3]
-    RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+    RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
         a.lineno, a.col_offset,
         b.end_lineno, b.end_col_offset,
         msg, extra_args)
@@ -124,20 +172,6 @@ var keywords = ['and', 'as', 'elif', 'for', 'yield', 'while', 'assert', 'or',
     'try', 'if', 'else', 'del', 'import', 'nonlocal', 'pass'
     ]
 
-var Parser = $B.Parser = function(src){
-  this.state = {type: 'program', pos: 0}
-  this.src = src
-}
-
-Parser.prototype.feed = function(){
-  var tokens = $B.tokens = []
-  for(var token of __BRYTHON__.tokenizer(this.src)){
-      if(['COMMENT', 'NL', 'ENCODING', 'TYPE_COMMENT'].indexOf(token[0]) == -1){
-          tokens.push(token)
-      }
-  }
-  return parse(grammar, tokens, this.src)
-}
 
 function MemoEntry(match, end){
     this.match = match
@@ -251,7 +285,7 @@ function eval_body(rule, tokens, position){
 var use_invalid = {value: false}
 
 function eval_body_once(rule, tokens, position){
-    if(debug){
+    if(debug || rule.debug){
         console.log('eval_body_once of rule', show_rule(rule), rule, 'position', position, tokens[position])
     }
     if(rule.choices){
@@ -286,7 +320,7 @@ function eval_body_once(rule, tokens, position){
                 frozen_choice = true
             }
             var match = eval_body(item, tokens, position)
-            if(item.debug){
+            if(rule.debug){
                 console.log('eval item', item, 'at position', position,
                     tokens[position], 'previous matches', matches,
                     'match', match)
@@ -300,7 +334,7 @@ function eval_body_once(rule, tokens, position){
                     alert()
                 }
             }else{
-                if(debug){
+                if(rule.debug){
                     console.log('item', show_rule(item), 'of sequence', show_rule(rule),
                         'at position', position, tokens[position].string, 'fails')
                 }
@@ -320,8 +354,9 @@ function eval_body_once(rule, tokens, position){
             handle_invalid_match(match, tokens)
             match.invalid = true
         }
-        if(debug){
+        if(rule.debug){
             console.log('rule', show_rule(rule), 'succeeds', matches, match)
+            alert()
         }
         return match
     }else if(rule.type == "rule"){
@@ -591,6 +626,7 @@ function make(match, tokens){
         names = {}
     p.tokens = tokens
     p.mark = match.start
+    p.fill = match.start
 
     if(! rule){
         console.log('match without rule', match)

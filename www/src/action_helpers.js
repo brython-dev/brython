@@ -2,7 +2,9 @@
 (function($B){
 
 var _b_ = $B.builtins,
-    NULL = undefined
+    NULL = undefined,
+    DOT = '.',
+    ELLIPSIS = '...'
 
 function EXTRA_EXPR(head, tail){
     return {
@@ -164,15 +166,17 @@ $B._PyPegen.seq_count_dots = function(seq){
     }
     var number_of_dots = 0;
     for (var current_expr of seq) {
-        switch (current_expr.type) {
-            case ELLIPSIS:
-                number_of_dots += 3;
-                break;
-            case DOT:
-                number_of_dots += 1;
-                break;
-            default:
-                Py_UNREACHABLE();
+        if(current_expr instanceof $B.ast.Constant){
+            switch (current_expr.value) {
+                case ELLIPSIS:
+                    number_of_dots += 3;
+                    break;
+                case DOT:
+                    number_of_dots += 1;
+                    break;
+                default:
+                    Py_UNREACHABLE();
+            }
         }
     }
 
@@ -416,7 +420,40 @@ $B._PyPegen.name_default_pair = function(p, arg, value, tc){
     }
 }
 
-$B._PyPegen.raise_error_known_location = function(errtype,
+
+$B._PyPegen.raise_error = function(p, errtype, errmsg){
+    if(p.fill == 0){
+        var va = [errmsg]
+        $B._PyPegen.raise_error_known_location(p, errtype, 0, 0, 0, -1, errmsg, va);
+        return NULL
+    }
+
+    var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1];
+    var col_offset,
+        end_col_offset = -1;
+    if (t.col_offset == -1) {
+        if (p.tok.cur == p.tok.buf) {
+            col_offset = 0;
+        } else {
+            var start = p.tok.buf  ? p.tok.line_start : p.tok.buf;
+            col_offset = Py_SAFE_DOWNCAST(p.tok.cur - start, intptr_t, int);
+        }
+    } else {
+        col_offset = t.col_offset + 1;
+    }
+
+    if (t.end_col_offset != -1) {
+        end_col_offset = t.end_col_offset + 1;
+    }
+
+    var va = errmsg
+    _PyPegen_raise_error_known_location(p, errtype,
+        t.lineno, col_offset, t.end_lineno, end_col_offset, errmsg, va);
+    return NULL;
+}
+
+
+$B._PyPegen.raise_error_known_location = function(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
     var exc = errtype.$factory(errmsg)
     exc.lineno = lineno
@@ -460,6 +497,11 @@ $B._PyPegen.seq_extract_starred_exprs = function(p, kwargs){
         }
     }
     return new_seq
+}
+
+/* Constructs a SlashWithDefault */
+$B._PyPegen.slash_with_default = function(p, plain_names, names_with_defaults){
+    return {plain_names, names_with_defaults}
 }
 
 $B._PyPegen.star_etc = function(p, vararg, kwonlyargs, kwarg){
@@ -562,10 +604,9 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                     type = 'bytes'
                     res = _b_.bytes.$factory()
                 }else if(type == 'str'){
-                    throw Error('cannot mix str and bytes')
+                    $B.Parser.RAISE_SYNTAX_ERROR('cannot mix str and bytes')
                 }
                 try{
-                    console.log('new bytes, strings', strings, 'value', value)
                     var bv = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
                     res.source = res.source.concat(bv.source)
                 }catch(err){
@@ -576,7 +617,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                 if(type === undefined){
                     type = 'str'
                 }else if(type == 'bytes'){
-                    throw Error('cannot mix str and bytes')
+                    $B.Parser.RAISE_SYNTAX_ERROR('cannot mix str and bytes')
                 }
                 try{
                     res += eval(value)

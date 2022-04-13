@@ -847,7 +847,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
             break
         }
     }
-    
+
     var value = $B.js_from_ast(this.value, scopes)
 
     if(this.target instanceof $B.ast.Name){
@@ -1274,14 +1274,19 @@ $B.ast.Dict.prototype.to_js = function(scopes){
         has_packed = false
     // Build arguments = a list of 2-element lists
     for(var i = 0, len = this.keys.length; i < len; i++){
-        if(this.keys[i] === _b_.None){
+        if(this.keys[i] === _b_.None || this.keys[i] === undefined){
             // format **t
             has_packed = true
             items.push('_b_.list.$factory(_b_.dict.items(' +
                       $B.js_from_ast(this.values[i], scopes) + '))')
         }else{
-            items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, ` +
-                       `${$B.js_from_ast(this.values[i], scopes)}]`)
+            try{
+                items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, ` +
+                           `${$B.js_from_ast(this.values[i], scopes)}]`)
+            }catch(err){
+                console.log('error', this.keys[i], this.values[i])
+                throw err
+            }
         }
     }
     if(! has_packed){
