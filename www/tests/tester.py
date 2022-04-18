@@ -218,7 +218,9 @@ class Tester:
 
     def run(self, *methods):
         if not methods:
-            methods = [m for m in dir(self) if m.startswith('test_')
+            # don't use dir(self) but type(self).__dict__ to preserve methods
+            # order
+            methods = [m for m in type(self).__dict__ if m.startswith('test_')
                 and callable(getattr(self, m))]
         report = TestReport(type(self).__name__)
         for method in methods:
