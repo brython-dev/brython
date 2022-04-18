@@ -120,8 +120,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-04-06 21:53:23.596405"
-__BRYTHON__.timestamp=1649274803595
+__BRYTHON__.compiled_date="2022-04-18 18:19:29.434749"
+__BRYTHON__.timestamp=1650298769434
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -406,19 +406,25 @@ while(indents.length > 0){indents.pop()
 yield Token('DEDENT','',[line_num,0],[line_num,0],'')}
 yield Token('ENDMARKER','',[line_num,0],[line_num,0],'')}})(__BRYTHON__)
 ;
-;(function($B){$B.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value,simple',Assert:'test,msg',Assign:'targets,value,type_comment',AsyncFor:'target,iter,body,orelse,type_comment',AsyncFunctionDef:'name,args,body,decorator_list,returns,type_comment',AsyncWith:'items,body,type_comment',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values',Break:'',Call:'func,args,keywords',ClassDef:'name,bases,keywords,body,decorator_list',Compare:'left,ops,comparators',Constant:'value,kind',Continue:'',Del:'',Delete:'targets',Dict:'keys,values',DictComp:'key,value,generators',Div:'',Eq:'',ExceptHandler:'type,name,body',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body,orelse,type_comment',FormattedValue:'value,conversion,format_spec',FunctionDef:'name,args,body,decorator_list,returns,type_comment',FunctionType:'argtypes,returns',GeneratorExp:'elt,generators',Global:'names',Gt:'',GtE:'',If:'test,body,orelse',IfExp:'test,body,orelse',Import:'names',ImportFrom:'module,names,level',In:'',Interactive:'body',Invert:'',Is:'',IsNot:'',JoinedStr:'values',LShift:'',Lambda:'args,body',List:'elts,ctx',ListComp:'elt,generators',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases',MatchAs:'pattern,name',MatchClass:'cls,patterns,kwd_attrs,kwd_patterns',MatchMapping:'keys,patterns,rest',MatchOr:'patterns',MatchSequence:'patterns',MatchSingleton:'value',MatchStar:'name',MatchValue:'value',Mod:'',Module:'body,type_ignores',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc,cause',Return:'value',Set:'elts',SetComp:'elt,generators',Slice:'lower,upper,step',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body,handlers,orelse,finalbody',Tuple:'elts,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body,orelse',With:'items,body,type_comment',Yield:'value',YieldFrom:'value',alias:'name,asname',arg:'arg,annotation,type_comment',arguments:'posonlyargs,args,vararg,kwonlyargs,kw_defaults,kwarg,defaults',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg,value',match_case:'pattern,guard,body',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars'}
+;(function($B){$B.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value,simple',Assert:'test,msg',Assign:'targets*,value,type_comment',AsyncFor:'target,iter,body*,orelse*,type_comment',AsyncFunctionDef:'name,args,body*,decorator_list*,returns,type_comment',AsyncWith:'items*,body*,type_comment',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*',Compare:'left,ops*,comparators*',Constant:'value,kind',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type,name,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment',FormattedValue:'value,conversion,format_spec',FunctionDef:'name,args,body*,decorator_list*,returns,type_comment',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module,names*,level',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern,name',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc,cause',Return:'value',Set:'elts*',SetComp:'elt,generators*',Slice:'lower,upper,step',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment',Yield:'value',YieldFrom:'value',alias:'name,asname',arg:'arg,annotation,type_comment',arguments:'posonlyargs*,args*,vararg,kwonlyargs*,kw_defaults*,kwarg,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg,value',match_case:'pattern,guard,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars'}
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
 var boolean_ops={'and':'And','or':'Or'}
 var comparison_ops={'==':'Eq','!=':'NotEq','<':'Lt','<=':'LtE','>':'Gt','>=':'GtE','is':'Is','is_not':'IsNot','in':'In','not_in':'NotIn'}
-var unary_ops={unary_inv:'Invert',unary_pos:'UAdd',unary_neg:'USub'}
+var unary_ops={unary_inv:'Invert',unary_pos:'UAdd',unary_neg:'USub',not:'Not'}
 var op_types=$B.op_types=[binary_ops,boolean_ops,comparison_ops,unary_ops]
 var _b_=$B.builtins
 var ast=$B.ast={}
 for(var kl in $B.ast_classes){var args=$B.ast_classes[kl],js=''
-if(typeof args=="string"){js=`ast.${kl} = function(${args}){\n`
-if(args.length > 0){for(var arg of args.split(',')){js+=` this.${arg} = ${arg}\n`}}
-js+='}'}else{js=`ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]\n`}
-eval(js)
+if(typeof args=="string"){js=`ast.${kl} = function(${args.replace(/\*/g, '')}){
+`
+if(args.length > 0){for(var arg of args.split(',')){if(arg.endsWith('*')){arg=arg.substr(0,arg.length-1)
+js+=` this.${arg} = ${arg} === undefined ? [] : ${arg}
+`}else{js+=` this.${arg} = ${arg}
+`}}}
+js+='}'}else{js=`ast.${kl} = [${args.map(x => 'ast.' + x).join(',')}]
+`}
+try{eval(js)}catch(err){console.log('error',js)
+throw err}
 ast[kl].$name=kl
 if(typeof args=="string"){ast[kl]._fields=args.split(',')}}
 $B.create_python_ast_classes=function(){if($B.python_ast_classes){return}
@@ -497,6 +503,8 @@ return `Constant(value=${$B.AST.$convert(value)})`}
 var proto=Object.getPrototypeOf(tree).constructor
 var res='  ' .repeat(indent)+proto.$name+'('
 var attr_names=$B.ast_classes[proto.$name].split(','),attrs=[]
+attr_names=attr_names.map(x=> x.endsWith('*')?
+x.substr(0,x.length-1):x)
 if([ast.Name].indexOf(proto)>-1){for(var attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
 return res+attrs.join(', ')+')'}
 for(var attr of attr_names){if(tree[attr]!==undefined){var value=tree[attr]
@@ -4193,16 +4201,25 @@ if(line_info !==undefined){line_num=parseInt(line_info.split(",")[0])}
 src=src.src}else if(line_num !==undefined){line_info=`${line_num},${module}`}else{line_num=1}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
-var root=$create_root_node(
+if($B.parser_to_ast){var tokens=[]
+for(var token of __BRYTHON__.tokenizer(src)){if(['COMMENT','NL','ENCODING','TYPE_COMMENT'].indexOf(token[0])==-1){tokens.push(token)}}
+var _ast=new __BRYTHON__.Parser(src).feed(tokens)
+var symtable=$B._PySymtable_Build(_ast,locals_id)
+var js_obj=$B.js_from_root(_ast,symtable,filename)
+js_from_ast='// ast generated by parser\n'+js_obj.js
+return{
+imports:js_obj.imports,to_js:function(){return js_from_ast}}}else{var root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope,line_num)
 dispatch_tokens(root)
 var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
 var symtable=$B._PySymtable_Build(_ast,locals_id)
-var js_from_ast=$B.js_from_root(_ast,symtable,filename)
+var js_obj=$B.js_from_root(_ast,symtable,filename)
+js_from_ast='// ast generated by parser\n'+js_obj.js
 root._ast=_ast
 root.to_js=function(){return js_from_ast}
-return root}
+root.imports=js_obj.imports
+return root}}
 $B.set_import_paths=function(){
 var meta_path=[],path_hooks=[]
 if($B.use_VFS){meta_path.push($B.finders.VFS)}
@@ -6157,12 +6174,13 @@ try{var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
 root.mode=mode
 root.filename='<string>'
 $B.parser.dispatch_tokens(root)
-var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals})}catch(err){var lineno=err.args[1][1]
+var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,'exec'),js_obj=$B.js_from_root(_ast,symtable,'<string>',{local_name,exec_locals,global_name,exec_globals}),js=js_obj.js}catch(err){var lineno=err.args[1][1]
 exec_locals.$lineno=lineno
 $B.frames_stack=save_frames_stack
 throw err}
 if(mode=='eval'){js='return '+js}
-var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)
+try{var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)}catch(err){console.log('error\n',js)
+throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){if(err.$stack){err.$stack=save_frames_stack.concat(err.$stack)}else{err.$stack=save_frames_stack.concat($B.frames_stack)}
 $B.frames_stack=save_frames_stack
 throw err}
@@ -7448,7 +7466,10 @@ err.__class__===_b_.IndentationError){trace+=trace_from_stack(err.$stack)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
 if(! err.$stack ||err.$stack.length==0){trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`}
-trace+='    '+' '.repeat(err.args[1][2]-indent)+'^\n'+
+var start=err.offset,marks='    '+' '.repeat(start-indent),nb_marks=1
+if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_mark=err.end_offset-start}}
+marks+='^'.repeat(nb_marks)+'\n'
+trace+=marks+
 `${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
 trace+=trace_from_stack(err.$stack)
 trace+=name+': '+_b_.str.$factory(err)}else{console.log(err)
@@ -13904,7 +13925,7 @@ return `$B.set_lineno(locals, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
 return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}')`}
-$B.ast.AugAssign.prototype.to_js=function(scopes){var js,op_class=this.op.constructor
+$B.ast.AugAssign.prototype.to_js=function(scopes){var js,op_class=this.op.$name ? this.op :this.op.constructor
 for(var op in $B.op2ast_class){if($B.op2ast_class[op][1]===op_class){var iop=op+'='
 break}}
 var value=$B.js_from_ast(this.value,scopes)
@@ -13929,7 +13950,9 @@ $B.ast.Await.prototype.to_js=function(scopes){var ix=scopes.length-1
 while(scopes[ix].parent){ix--}
 scopes[ix].has_await=true
 return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`}
-$B.ast.BinOp.prototype.to_js=function(scopes){var op=opclass2dunder[this.op.constructor.$name]
+$B.ast.BinOp.prototype.to_js=function(scopes){
+var name=this.op.$name ? this.op.$name :this.op.constructor.$name
+var op=opclass2dunder[name]
 return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
 `${$B.js_from_ast(this.right, scopes)})`}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
@@ -14020,7 +14043,9 @@ js+=decorate+'\n'}
 return js}
 $B.ast.Compare.prototype.to_js=function(scopes){var left=$B.js_from_ast(this.left,scopes),comps=[]
 var len=this.ops.length,prefix=len > 1 ? 'locals.$op = ' :''
-for(var i=0;i < len;i++){var op=opclass2dunder[this.ops[i].constructor.$name],right=this.comparators[i]
+for(var i=0;i < len;i++){var name=this.ops[i].$name ? this.ops[i].$name :this.ops[i].constructor.$name,op=opclass2dunder[name],right=this.comparators[i]
+if(op===undefined){console.log('op undefined',this.ops[i])
+alert()}
 if(this.ops[i]instanceof $B.ast.In){comps.push(`$B.$is_member(${left}, `+
 `${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.NotIn){comps.push(`! $B.$is_member(${left}, `+
 `${prefix}${$B.js_from_ast(right, scopes)})`)}else if(this.ops[i]instanceof $B.ast.Is){comps.push(`$B.$is(${left}, `+
@@ -14078,11 +14103,12 @@ js+=`$B.$delete("${target.id}")\n`}else if(target instanceof $B.ast.Subscript){j
 `'${target.attr}')\n`}}
 return `$B.set_lineno(locals, ${this.lineno})\n`+js}
 $B.ast.Dict.prototype.to_js=function(scopes){var items=[],has_packed=false
-for(var i=0,len=this.keys.length;i < len;i++){if(this.keys[i]===_b_.None){
+for(var i=0,len=this.keys.length;i < len;i++){if(this.keys[i]===_b_.None ||this.keys[i]===undefined){
 has_packed=true
 items.push('_b_.list.$factory(_b_.dict.items('+
-$B.js_from_ast(this.values[i],scopes)+'))')}else{items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, `+
-`${$B.js_from_ast(this.values[i], scopes)}]`)}}
+$B.js_from_ast(this.values[i],scopes)+'))')}else{try{items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, `+
+`${$B.js_from_ast(this.values[i], scopes)}]`)}catch(err){console.log('error',this.keys[i],this.values[i])
+throw err}}}
 if(! has_packed){return `_b_.dict.$factory([${items}])`}
 var first=this.keys[0]!==_b_.None ? `[${items[0]}]` :items[0],js='_b_.dict.$factory('+first
 for(var i=1,len=items.length;i < len;i++){var arg=this.keys[i]!==_b_.None ? `[${items[i]}]` :items[i]
@@ -14426,7 +14452,7 @@ return `sequence: [${items.join(', ')}]`}
 $B.ast.Module.prototype.to_js=function(scopes){
 var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
 var module_id=name,global_name=make_scope_name(scopes)
-var js=`// generated from ast\n`+
+var js=`// Javascript code generated from ast\n`+
 `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
 if(! namespaces){js+=`${global_name} = {},\nlocals = ${global_name},\n`+
 `$top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
@@ -14701,7 +14727,7 @@ scopes.filename=filename
 scopes.namespaces=namespaces
 scopes.imports={}
 var js=ast_root.to_js(scopes)
-return js}
+return{js,imports:scopes.imports}}
 $B.js_from_ast=function(ast,scopes){if(! scopes.symtable){throw Error('perdu symtable')}
 var js=''
 scopes=scopes ||[]

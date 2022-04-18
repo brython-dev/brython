@@ -83,9 +83,43 @@ function fail(message, pos, pattern){
     throw err
 }
 
-function warn(klass, message, pos){
+function warn(klass, message, pos, text){
+    var frame = $B.last($B.frames_stack),
+        file = frame[3].__file__,
+        src = $B.file_cache[file]
+    if(text === undefined){
+        var lineno = frame[1].$lineno
+        var lines = src.split('\n'),
+            line = lines[lineno - 1]
+    }else{
+        if(Array.isArray(text)){
+            text = from_codepoint_list(text)
+        }
+        var lineno = 1,
+            line_start = 0
+        for(var i = 0; i < pos; i++){
+            if(text[i] == '\n'){
+                lineno++
+                line_start = i + 1
+            }
+        }
+        var line_end = text.substr(line_start).search('\n'),
+            line
+        if(line_end == -1){
+            line = text.substr(line_start)
+        }else{
+            line = text.substr(line_start, line_end)
+        }
+        var col_offset = pos - line_start
+    }
     var warning = klass.$factory(message)
     warning.pos = pos
+    warning.args[1] = [file, lineno, col_offset, lineno, col_offset,
+        line]
+    warning.filename = file
+    warning.lineno = warning.end_lineno = lineno
+    warning.offset = warning.end_offset = col_offset
+    warning.line = line
     // module _warning is in builtin_modules.js
     $B.imported._warnings.warn(warning)
 }
@@ -1548,7 +1582,7 @@ function parse_character_set(text, pos, is_bytes){
         pos++
     }else if(text[pos] == ord('[')){
         // send FutureWarning
-        warn(_b_.FutureWarning, "Possible nested set", pos)
+        warn(_b_.FutureWarning, "Possible nested set", pos, text)
     }
     var range = false
     while(pos < text.length){
@@ -1608,7 +1642,7 @@ function parse_character_set(text, pos, is_bytes){
                     }
                 })
                 if(text[pos + 1] == cp){
-                    warn(_b_.FutureWarning, "Possible set difference", pos)
+                    warn(_b_.FutureWarning, "Possible set difference", pos, text)
                 }
                 pos++
                 if(range){
@@ -1618,7 +1652,7 @@ function parse_character_set(text, pos, is_bytes){
             }else{
                 range = true
                 if(text[pos + 1] == cp){
-                    warn(_b_.FutureWarning, "Possible set difference", pos)
+                    warn(_b_.FutureWarning, "Possible set difference", pos, text)
                 }
                 pos++
             }
@@ -1637,12 +1671,12 @@ function parse_character_set(text, pos, is_bytes){
             range = false
             // FutureWarning for consecutive "&", "|" or "~"
             if(char == "&" && text[pos + 1] == cp){
-                warn(_b_.FutureWarning, "Possible set intersection", pos)
+                warn(_b_.FutureWarning, "Possible set intersection", pos, text)
             }else if(char == "|" && text[pos + 1] == cp){
-                warn(_b_.FutureWarning, "Possible set union", pos)
+                warn(_b_.FutureWarning, "Possible set union", pos, text)
             }else if(char == "~" && text[pos + 1] == cp){
                 warn(_b_.FutureWarning, "Possible set symmetric difference",
-                    pos)
+                    pos, text)
             }
             pos++
         }
