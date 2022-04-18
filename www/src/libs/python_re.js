@@ -1055,7 +1055,7 @@ function CharacterClass(pos, cp, length, groups){
 }
 
 CharacterClass.prototype.fixed_length = function(){
-    return 1
+    return this.repeat ? false : 1
 }
 
 CharacterClass.prototype.match = function(string, pos){
