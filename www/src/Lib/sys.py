@@ -51,6 +51,10 @@ class flag_class:
       self.bytes_warning = 0
       self.quiet = 0
       self.hash_randomization = 1
+      self.isolated = 0
+      self.dev_mode = False
+      self.utf8_mode = 0
+      self.warn_default_encoding = 0
 
 flags = flag_class()
 
