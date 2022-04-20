@@ -34,20 +34,81 @@ var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_ASYNC_HACKS = 0x0080,
     PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 
+for(var rule_name in grammar){
+    grammar[rule_name].name = rule_name
+    if(grammar[rule_name].choices){
+        grammar[rule_name].choices.forEach(function(item, rank){
+            item.parent_rule = rule_name
+            item.rank = rank
+        })
+    }
+}
+
+function generator_as_list(generator){
+    // Returns an object that has the interface of a list and consumes the
+    // generator on demand, if the index was not yet read.
+    return new Proxy(generator,
+      {
+        get: function(target, ix){
+          if(this.tokens === undefined){
+              this.tokens = []
+          }
+          if(ix >= this.tokens.length){
+              while(true){
+                  var next = target.next()
+                  if(! next.done){
+                      var value = next.value
+                      if(['ENCODING', 'NL', 'COMMENT'].indexOf(value.type) == -1){
+                          this.tokens.push(value)
+                          break
+                      }
+                  }else{
+                      throw Error('tokenizer exhausted')
+                  }
+              }
+          }
+          return this.tokens[ix]
+        }
+      }
+    )
+}
 
 var Parser = $B.Parser = function(src){
-  this.state = {type: 'program', pos: 0}
-  this.src = src
+    var tokenizer = $B.tokenizer(src)
+    this.tokens = generator_as_list(tokenizer)
+    $B.parser_state.src = src
+    this.src = src
 }
 
 Parser.prototype.feed = function(){
-  var tokens = $B.tokens = []
-  for(var token of __BRYTHON__.tokenizer(this.src)){
-      if(['COMMENT', 'NL', 'ENCODING', 'TYPE_COMMENT'].indexOf(token[0]) == -1){
-          tokens.push(token)
-      }
-  }
-  return parse(grammar, tokens, this.src)
+  return this.parse('file')
+}
+
+Parser.prototype.parse = function(top_rule){
+    if(this.src.trim().length == 0){
+        // eg empty __init__.py
+        return new $B.ast.Module([])
+    }
+    var rule = grammar[top_rule],
+        match
+    clear_memo()
+    // first pass skipping invalid_ rules
+    use_invalid.value = false
+    match = apply_rule(rule, this.tokens, 0)
+    if(match === FAIL){
+        // second pass using invalid_ rules
+        clear_memo()
+        use_invalid.value = true
+        match = apply_rule(rule, this.tokens, 0)
+    }
+    // console.log('parse succeeds !', match)
+    // console.log(show(match, tokens))
+    if(match === FAIL){
+        console.log('match fails')
+    }
+
+    var _ast = make(match, this.tokens)
+    return _ast
 }
 
 function asdl_seq_LEN(t){
@@ -468,59 +529,6 @@ function apply_rule(rule, tokens, position){
 }
 
 $B.parser_state = {}
-
-function parse(grammar, tokens, src){
-    if(src.trim().length == 0){
-        // eg empty __init__.py
-        return new $B.ast.Module([])
-    }
-    var position = 0,
-        rule = grammar.file,
-        match
-    clear_memo()
-    $B.parser_state.src = src
-    for(var rule_name in grammar){
-        grammar[rule_name].name = rule_name
-        if(grammar[rule_name].choices){
-            grammar[rule_name].choices.forEach(function(item, rank){
-                item.parent_rule = rule_name
-                item.rank = rank
-            })
-        }
-    }
-    // first pass skipping invalid_ rules
-    use_invalid.value = false
-    while(position < tokens.length){
-        match = apply_rule(rule, tokens, position)
-        if(match === FAIL){
-            break
-        }else{
-            position = match.end
-        }
-    }
-    if(match === FAIL){
-        // second pass using invalid_ rules
-        position = 0
-        clear_memo()
-        use_invalid.value = true
-        while(position < tokens.length){
-            match = apply_rule(rule, tokens, position)
-            if(match === FAIL){
-                console.log('rule fails', rule, tokens, position)
-                console.log(src.substr(0, 200))
-            }
-            position = match.end
-        }
-    }
-    // console.log('parse succeeds !', match)
-    // console.log(show(match, tokens))
-    if(match === FAIL){
-        console.log('match fails')
-    }
-
-    var _ast = make(match, tokens)
-    return _ast
-}
 
 function handle_invalid_match(match, tokens){
     var res = make(match, tokens)
