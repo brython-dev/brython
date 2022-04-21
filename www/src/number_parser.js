@@ -135,7 +135,7 @@ $B.prepare_number = function(n){
     if(n.startsWith('.')){
         if(n.endsWith("j")){
             return {type: 'imaginary',
-                value: prepare_number(n.substr(0, n.length - 1))}
+                value: $B.prepare_number(n.substr(0, n.length - 1))}
         }else{
             return {type: 'float', value: n}
         }
@@ -145,7 +145,7 @@ $B.prepare_number = function(n){
         var num = test_num(n),
             base
         if(num.imaginary){
-            return {type: 'imaginary', value: prepare_number(num.value)}
+            return {type: 'imaginary', value: $B.prepare_number(num.value)}
         }
         if(num.subtype == 'float'){
             return {type: num.subtype, value: num.value}
@@ -164,7 +164,7 @@ $B.prepare_number = function(n){
             if(num.imaginary){
                 return {
                     type: 'imaginary',
-                    value: prepare_number(num.value)
+                    value: $B.prepare_number(num.value)
                 }
             }else{
                return {
@@ -176,7 +176,7 @@ $B.prepare_number = function(n){
             if(num.imaginary){
                 return {
                     type: 'imaginary',
-                    value: prepare_number(num.value)
+                    value: $B.prepare_number(num.value)
                 }
             }else{
                 return {

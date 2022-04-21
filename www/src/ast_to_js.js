@@ -1416,8 +1416,12 @@ function transform_args(scopes){
         if(this.args.kw_defaults[ix] === _b_.None){
             break
         }
-        _defaults.push(`${arg.arg}: ` +
-            $B.js_from_ast(this.args.kw_defaults[ix], scopes))
+        if(this.args.kw_defaults[ix] === undefined){
+            _defaults.push(`${arg.arg}: _b_.None`)
+        }else{
+            _defaults.push(`${arg.arg}: ` +
+                $B.js_from_ast(this.args.kw_defaults[ix], scopes))
+        }
         ix++
     }
     var kw_default_names = []

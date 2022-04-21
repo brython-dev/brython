@@ -36,6 +36,12 @@ function set_position_from_token(ast_obj, token){
     ast_obj.end_col_offset = token.end[1]
 }
 
+function set_position_from_obj(ast_obj, obj){
+    for(var position of positions){
+        ast_obj[position] = obj[position]
+    }
+}
+
 function _get_names(p, names_with_defaults){
     var seq = []
     for (var pair of names_with_defaults) {
@@ -59,6 +65,7 @@ function _make_posonlyargs(p,
     if (slash_without_default != NULL) {
         set_list(posonlyargs, slash_without_default)
     }else if (slash_with_default != NULL) {
+        console.log('make posonlyargs from slash_with_default', slash_with_default)
         slash_with_default_names =
                 _get_names(p, slash_with_default.names_with_defaults);
         if (!slash_with_default_names) {
@@ -300,6 +307,21 @@ $B._PyPegen.get_values = function(p, seq){
     return seq === undefined ? [] : seq.map(pair => pair.value)
 }
 
+/* Constructs a KeyPatternPair that is used when parsing mapping & class patterns */
+$B._PyPegen.key_pattern_pair = function(p, key, pattern){
+    return {key, pattern}
+}
+
+/* Extracts all keys from an asdl_seq* of KeyPatternPair*'s */
+$B._PyPegen.get_pattern_keys = function(p, seq){
+    return seq === undefined ? [] : seq.map(x => x.key)
+}
+
+/* Extracts all patterns from an asdl_seq* of KeyPatternPair*'s */
+$B._PyPegen.get_patterns = function(p, seq){
+    return seq === undefined ? [] : seq.map(x => x.pattern)
+}
+
 $B._PyPegen.check_legacy_stmt = function(p, name) {
     return ["print", "exec"].indexOf(name) > -1
 }
@@ -323,9 +345,11 @@ $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
     }
     var bytes = _b_.bytes.$factory(tc),
         tco = $B._PyPegen.new_type_comment(p, bytes);
-    return $B._PyAST.arg(a.arg, a.annotation, tco,
+    var ast_obj = $B._PyAST.arg(a.arg, a.annotation, tco,
                       a.lineno, a.col_offset, a.end_lineno, a.end_col_offset,
-                      parena);
+                      p.arena);
+    console.log('arg with type comment', ast_obj)
+    return ast_obj
 }
 
 /* Checks if the NOTEQUAL token is valid given the current parser flags
@@ -359,11 +383,11 @@ $B._PyPegen.function_def_decorators = function(p, decorators, function_def){
 
 /* Construct a ClassDef equivalent to class_def, but with decorators */
 $B._PyPegen.class_def_decorators = function(p, decorators, class_def){
-    return $B._PyAST.ClassDef(
+    var ast_obj = $B._PyAST.ClassDef(
         class_def.name, class_def.bases,
-        class_def.keywords, class_def.body, decorators,
-        class_def.lineno, class_def.col_offset, class_def.end_lineno,
-        class_def.end_col_offset, p.arena)
+        class_def.keywords, class_def.body, decorators)
+    set_position_from_obj(ast_obj, class_def)
+    return ast_obj
 }
 
 /* Construct a KeywordOrStarred */
@@ -409,8 +433,13 @@ $B._PyPegen.make_arguments = function(p, slash_without_default,
         kwarg = star_etc.kwarg;
     }
 
-    return $B._PyAST.arguments(posonlyargs, posargs, vararg, kwonlyargs,
-                            kwdefaults, kwarg, posdefaults, p.arena);
+    var ast_obj = $B._PyAST.arguments(posonlyargs, posargs, vararg, kwonlyargs,
+                            kwdefaults, kwarg, posdefaults, p.arena)
+    if(ast_obj.posonlyargs === undefined){
+        console.log('pas de posonlyargs', ast_bj)
+        alert()
+    }
+    return ast_obj
 }
 
 $B._PyPegen.name_default_pair = function(p, arg, value, tc){
@@ -455,6 +484,7 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
+    console.log('raise error', errtype, errmsg)
     var exc = errtype.$factory(errmsg)
     exc.lineno = lineno
     exc.offset = col_offset
@@ -636,6 +666,22 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     return ast_obj
 }
 
+$B._PyPegen.ensure_imaginary = function(p, exp){
+    if (! (exp instanceof $B.ast.Constant) || exp.value.type != 'imaginary') {
+        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp, "imaginary number required in complex literal");
+        return NULL
+    }
+    return exp
+}
+
+$B._PyPegen.ensure_real = function(p, exp){
+    if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
+        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp, "real number required in complex literal");
+        return NULL
+    }
+    return exp
+}
+
 $B._PyPegen.set_expr_context = function(p, a, ctx){
     a.ctx = ctx
     return a
@@ -670,6 +716,13 @@ $B._PyPegen.join_names_with_dot = function(p, first_name, second_name){
 $B._PyPegen.make_module = function(p, a){
     var res = new $B.ast.Module(a)
     return res
+}
+
+$B._PyPegen.new_type_comment = function(p, s){
+    if(s.length === 0){
+        return NULL
+    }
+    return s
 }
 
 })(__BRYTHON__)
