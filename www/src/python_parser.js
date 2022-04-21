@@ -63,7 +63,7 @@ function generator_as_list(generator){
                           break
                       }
                   }else{
-                      throw Error('tokenizer exhausted')
+                      throw Error('tokenizer exhausted, ix ' + ix)
                   }
               }
           }
@@ -77,6 +77,7 @@ var Parser = $B.Parser = function(src){
     var tokenizer = $B.tokenizer(src)
     this.tokens = generator_as_list(tokenizer)
     $B.parser_state.src = src
+    $B.parser_state.tokens = this.tokens
     this.src = src
 }
 
@@ -94,12 +95,12 @@ Parser.prototype.parse = function(top_rule){
     clear_memo()
     // first pass skipping invalid_ rules
     use_invalid.value = false
-    match = apply_rule(rule, this.tokens, 0)
+    match = apply_rule(rule, 0)
     if(match === FAIL){
         // second pass using invalid_ rules
         clear_memo()
         use_invalid.value = true
-        match = apply_rule(rule, this.tokens, 0)
+        match = apply_rule(rule, 0)
     }
     // console.log('parse succeeds !', match)
     // console.log(show(match, tokens))
@@ -273,17 +274,18 @@ function LeftRecursion(detected){
     this.detected = detected // true or false
 }
 
-function eval_body(rule, tokens, position){
-    var result,
+function eval_option(rule, position){
+    var tokens = $B.parser_state.tokens,
+        result,
         start = position,
         join_position = false
     if(! rule.repeat){
-        result = eval_body_once(rule, tokens, position)
+        result = eval_option_once(rule, position)
     }else{
         var matches = [],
             start = position
         while(matches.length < rule.repeat[1]){
-            var match = eval_body_once(rule, tokens, position)
+            var match = eval_option_once(rule, position)
             if(match === FAIL){
                 if(join_position){
                     result = {rule, matches, start, end: join_position - 1}
@@ -345,9 +347,11 @@ function eval_body(rule, tokens, position){
 
 var use_invalid = {value: false}
 
-function eval_body_once(rule, tokens, position){
+function eval_option_once(rule, position){
+    var tokens = $B.parser_state.tokens
     if(debug || rule.debug){
-        console.log('eval_body_once of rule', show_rule(rule), rule, 'position', position, tokens[position])
+        console.log('eval_option_once of rule', show_rule(rule), rule,
+            'position', position, tokens[position])
     }
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
@@ -358,7 +362,7 @@ function eval_body_once(rule, tokens, position){
             if(invalid && ! use_invalid.value){
                 continue
             }
-            var match = eval_body(choice, tokens, position)
+            var match = eval_option(choice, position)
             if(match === FROZEN_FAIL){
                 // if a choice with a ~ fails, don't try other alternatives
                 return FAIL
@@ -380,34 +384,24 @@ function eval_body_once(rule, tokens, position){
             if(item.type == 'COMMIT_CHOICE'){
                 frozen_choice = true
             }
-            var match = eval_body(item, tokens, position)
+            var match = eval_option(item, position)
             if(rule.debug){
                 console.log('eval item', item, 'at position', position,
-                    tokens[position], 'previous matches', matches,
                     'match', match)
             }
             if(match !== FAIL){
                 matches.push(match)
                 position = match.end
-                if(match.end === undefined){
-                    console.log('no end, rule', rule, 'item', item,
-                        'result of eval_body', match)
-                    alert()
-                }
             }else{
                 if(rule.debug){
                     console.log('item', show_rule(item), 'of sequence', show_rule(rule),
-                        'at position', position, tokens[position].string, 'fails')
+                        'at position', position, 'fails')
                 }
                 if(frozen_choice){
                     return FROZEN_FAIL
                 }
                 return FAIL
             }
-        }
-        if(rule.items && rule.items.length != matches.length){
-            console.log('bizarre', rule, matches)
-            alert()
         }
         var match = {rule, matches, start, end: position}
         if(use_invalid.value && rule.parent_rule &&
@@ -421,7 +415,7 @@ function eval_body_once(rule, tokens, position){
         }
         return match
     }else if(rule.type == "rule"){
-        return apply_rule(grammar[rule.name], tokens, position)
+        return apply_rule(grammar[rule.name], position)
     }else if(rule.type == "string"){
         return tokens[position][1] == rule.value ?
             {rule, start: position, end: position + 1} :
@@ -447,7 +441,77 @@ function eval_body_once(rule, tokens, position){
     }
 }
 
-function grow_lr(rule, tokens, position, m){
+function eval_body(rule, position){
+    // Only for grammar rules
+    var tokens = $B.parser_state.tokens
+    if(debug || rule.debug){
+        console.log('eval_body of rule', show_rule(rule), rule, 'position', position)
+    }
+    if(rule.choices){
+        for(var i = 0, len = rule.choices.length; i < len; i++){
+            var choice = rule.choices[i],
+                invalid = choice.items && choice.items.length == 1 &&
+                    choice.items[0].name &&
+                    choice.items[0].name.startsWith('invalid_')
+            if(invalid && ! use_invalid.value){
+                continue
+            }
+            var match = eval_option(choice, position)
+            if(match === FROZEN_FAIL){
+                // if a choice with a ~ fails, don't try other alternatives
+                return FAIL
+            }else if(match !== FAIL){
+                if(invalid){
+                    handle_invalid_match(match, tokens)
+                    match.invalid = true
+                }
+                match.rank = i
+                return match
+            }
+        }
+        return FAIL
+    }else if(rule.items){
+        var start = position,
+            matches = [],
+            frozen_choice = false // set to true if we reach a COMMIT_CHOICE (~)
+        for(var item of rule.items){
+            if(item.type == 'COMMIT_CHOICE'){
+                frozen_choice = true
+            }
+            var match = eval_option(item, position)
+            if(rule.debug){
+                console.log('eval item', item, 'at position', position,
+                    'match', match)
+            }
+            if(match !== FAIL){
+                matches.push(match)
+                position = match.end
+            }else{
+                if(rule.debug){
+                    console.log('item', show_rule(item), 'of sequence', show_rule(rule),
+                        'at position', position, 'fails')
+                }
+                if(frozen_choice){
+                    return FROZEN_FAIL
+                }
+                return FAIL
+            }
+        }
+        var match = {rule, matches, start, end: position}
+        if(use_invalid.value && rule.parent_rule &&
+                rule.parent_rule.startsWith('invalid_')){
+            handle_invalid_match(match, tokens)
+            match.invalid = true
+        }
+        if(rule.debug){
+            console.log('rule', show_rule(rule), 'succeeds', matches, match)
+            alert()
+        }
+        return match
+    }
+}
+
+function grow_lr(rule, position, m){
     // Called after eval_body(rule, position) produced a match and ignored
     // an option that referenced itself (recursion) because at that time,
     // memo(rule, position) was a LeftReference.
@@ -465,7 +529,7 @@ function grow_lr(rule, tokens, position, m){
         console.log('grow_lr, rule', rule, position, 'current MemoEntry', m)
     }
     while(true){
-        var match = eval_body(rule, tokens, position)
+        var match = eval_body(rule, position)
         if(match === FAIL || match.end <= m.end){
             break
         }
@@ -475,7 +539,7 @@ function grow_lr(rule, tokens, position, m){
     return m.match
 }
 
-function apply_rule(rule, tokens, position){
+function apply_rule(rule, position){
     // apply rule at position
     if(debug){
         console.log('apply rule', show_rule(rule), position, 'memo', memo)
@@ -492,7 +556,7 @@ function apply_rule(rule, tokens, position){
         // in memo as LR; LR.detected will be set to true and the branch of
         // eval_body containing rule will return FAIL, but eval_body can
         // match with another branch that doesn't contain rule
-        var match = eval_body(rule, tokens, position)
+        var match = eval_body(rule, position)
 
         // change memo(rule, position) with result of match
         m.match = match
@@ -504,7 +568,7 @@ function apply_rule(rule, tokens, position){
             // without recursion
             // grow_lr will try again at position, and use memo(rule, position)
             // to search a longer match
-            return grow_lr(rule, tokens, position, m)
+            return grow_lr(rule, position, m)
         }else{
             return match
         }
@@ -644,8 +708,14 @@ function make(match, tokens){
         (match.matches ? match.matches.length + ' matches' : match)) */
 
     if(match.end > match.start){
-        var token = tokens[match.start],
-            EXTRA = {lineno: token.start[0],
+        try{
+            var token = tokens[match.start]
+        }catch(err){
+            console.log('match', match)
+            console.log('parser state', $B.parser_state)
+            throw err
+        }
+        var EXTRA = {lineno: token.start[0],
                      col_offset: token.start[1],
                      end_lineno: token.end[0],
                      end_col_offset: token.end[1]
