@@ -237,6 +237,7 @@ function run_py(module_contents, path, module, compiled) {
             console.log("message: " + err.$message)
             console.log("filename: " + err.fileName)
             console.log("linenum: " + err.lineNumber)
+            console.log(err.stack)
         }
         throw err
     }finally{

@@ -505,8 +505,6 @@ $B.tokenizer = function*(src){
                                 pos--
                             }
                             while(pos < quote_pos){
-                                console.log('yield ERRORTOKEN, escaped',
-                                    escaped)
                                 yield Token('ERRORTOKEN', ' ',
                                     [line_num, pos - line_start + 1],
                                     [line_num, pos - line_start + 2],

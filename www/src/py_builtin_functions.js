@@ -706,18 +706,28 @@ function $$eval(src, _globals, _locals){
     exec_locals.$f_trace = $B.enter_frame(top_frame)
     exec_locals.$lineno = 1
 
-    try{
-        var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
-                1)
-        root.mode = mode
-        root.filename = '<string>'
-        $B.parser.dispatch_tokens(root)
+    var filename = '<string>'
 
-        var _ast = root.ast(),
-            symtable = $B._PySymtable_Build(_ast, 'exec'),
-            js_obj = $B.js_from_root(_ast, symtable, '<string>',
-                    {local_name, exec_locals, global_name, exec_globals}),
+    try{
+        if($B.parser_to_ast){
+            var _ast = new $B.Parser(src, filename).feed(mode == 'eval' ? 'eval' : 'file')
+            var symtable = $B._PySymtable_Build(_ast, 'exec')
+            var js_obj = $B.js_from_root(_ast, symtable, filename,
+                    {local_name, exec_locals, global_name, exec_globals})
             js = js_obj.js
+        }else{
+            var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
+                    1)
+            root.mode = mode
+            root.filename = filename
+            $B.parser.dispatch_tokens(root)
+
+            var _ast = root.ast(),
+                symtable = $B._PySymtable_Build(_ast, 'exec'),
+                js_obj = $B.js_from_root(_ast, symtable, filename,
+                        {local_name, exec_locals, global_name, exec_globals}),
+                js = js_obj.js
+        }
     }catch(err){
         var lineno = err.args[1][1]
         exec_locals.$lineno = lineno
