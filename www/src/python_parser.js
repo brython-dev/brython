@@ -20,19 +20,28 @@ var debug = 0
 var alias_ty = $B.ast.alias,
     keyword_ty = $B.ast.keyword,
     arguments_ty = $B.ast.arguments,
+    expr_ty = $B.ast.expr,
     asdl_stmt_seq = Array,
     asdl_int_seq = Array,
     asdl_expr_seq = Array,
     asdl_keyword_seq = Array,
     asdl_identifier_seq = Array,
+    asdl_pattern_seq = Array,
     AugOperator = $B.ast.AugAssign,
-    Py_Ellipsis = {type: 'ellipsis'}
+    Py_Ellipsis = {type: 'ellipsis'},
+    Py_False = false,
+    Py_True = true,
+    Py_None = _b_.None
 
 var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_BARRY_AS_BDFL = 0x0020,
     PyPARSE_TYPE_COMMENTS = 0x0040,
     PyPARSE_ASYNC_HACKS = 0x0080,
     PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
+
+var STAR_TARGETS = 'star_targets',
+    FOR_TARGETS = 'for_targets',
+    DEL_TARGETS = 'del_targets'
 
 for(var rule_name in grammar){
     grammar[rule_name].name = rule_name
@@ -44,12 +53,39 @@ for(var rule_name in grammar){
     }
 }
 
+// Generate functions to create AST instances
+$B._PyAST = {}
+
+var template = `
+$B._PyAST.<ast_class> = function(<args><sep>EXTRA){
+    var ast_obj = new $B.ast.<ast_class>(<args>)
+    set_position_from_EXTRA(ast_obj, EXTRA)
+    return ast_obj
+}
+`
+
+for(var ast_class in $B.ast_classes){ // in py_ast.js
+    var args = $B.ast_classes[ast_class]
+    if(Array.isArray(args)){
+        continue
+    }
+    args = args.replace(/\*/g, '')
+    var sep = args.length > 0 ? ', ' : ''
+    var function_code = template.replace(/<ast_class>/g, ast_class)
+                                .replace(/<sep>/, sep)
+                                .replace(/<args>/g, args)
+    eval(function_code)
+}
+
 function generator_as_list(generator){
     // Returns an object that has the interface of a list and consumes the
     // generator on demand, if the index was not yet read.
     return new Proxy(generator,
       {
         get: function(target, ix){
+            if(ix == 'last'){
+                return $B.last(this.tokens)
+            }
           if(this.tokens === undefined){
               this.tokens = []
           }
@@ -63,7 +99,7 @@ function generator_as_list(generator){
                           break
                       }
                   }else{
-                      throw Error('tokenizer exhausted, ix ' + ix)
+                      throw Error('tokenizer exhausted')
                   }
               }
           }
@@ -73,16 +109,29 @@ function generator_as_list(generator){
     )
 }
 
-var Parser = $B.Parser = function(src){
+var Parser = $B.Parser = function(src, filename){
+    // Normalize line ends
+    src = src.replace(/\r\n/gm, "\n")
+    // Remove trailing \, cf issue 970
+    // but don't hide syntax error if ends with \\, cf issue 1210
+    if(src.endsWith("\\") && !src.endsWith("\\\\")){
+        src = src.substr(0, src.length - 1)
+    }
+    // Normalise script end
+    if(src.charAt(src.length - 1) != "\n"){src += "\n"}
+
     var tokenizer = $B.tokenizer(src)
     this.tokens = generator_as_list(tokenizer)
     $B.parser_state.src = src
-    $B.parser_state.tokens = this.tokens
     this.src = src
+    this.filename = filename
+    if(filename){
+        p.filename = filename
+    }
 }
 
-Parser.prototype.feed = function(){
-  return this.parse('file')
+Parser.prototype.feed = function(top_rule){
+    return this.parse(top_rule)
 }
 
 Parser.prototype.parse = function(top_rule){
@@ -93,19 +142,36 @@ Parser.prototype.parse = function(top_rule){
     var rule = grammar[top_rule],
         match
     clear_memo()
+    this.HEADS = {}
+    this.LRStack = []
     // first pass skipping invalid_ rules
     use_invalid.value = false
-    match = apply_rule(rule, 0)
+    match = this.apply_rule(rule, 0)
     if(match === FAIL){
         // second pass using invalid_ rules
         clear_memo()
+        this.HEADS = {}
+        this.LRStack = []
         use_invalid.value = true
-        match = apply_rule(rule, 0)
+        try{
+            match = this.apply_rule(rule, 0)
+        }catch(err){
+            //console.log('raised err', err)
+            //console.log(this)
+            throw err
+        }
     }
     // console.log('parse succeeds !', match)
     // console.log(show(match, tokens))
     if(match === FAIL){
-        console.log('match fails')
+        var err_token = this.tokens.last
+        p.filename = this.filename
+        RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+            err_token.start[0],
+            err_token.start[1],
+            err_token.end[0],
+            err_token.end[1],
+            'invalid syntax')
     }
 
     var _ast = make(match, this.tokens)
@@ -143,7 +209,16 @@ function CHECK_VERSION(type, version, msg, node){
 
 function CHECK_NULL_ALLOWED(type, obj){
     if(obj !== NULL){
-        return obj instanceof type ? obj : undefined
+        if(type instanceof Array){
+            for(var t of type){
+                if(obj instanceof t){
+                    return obj
+                }
+            }
+            return
+        }else{
+            return obj instanceof type ? obj : undefined
+        }
     }
     return obj
 }
@@ -172,7 +247,7 @@ function RAISE_ERROR_KNOWN_LOCATION(errtype,
     var va = [errmsg]
     var _col_offset = col_offset //Py_ssize_t _col_offset = (col_offset == CURRENT_POS ? CURRENT_POS : col_offset + 1);
     var _end_col_offset = end_col_offset //Py_ssize_t _end_col_offset = (end_col_offset == CURRENT_POS ? CURRENT_POS : end_col_offset + 1);
-    $B._PyPegen.raise_error_known_location(errtype, lineno, _col_offset, end_lineno, _end_col_offset, errmsg, va);
+    $B._PyPegen.raise_error_known_location(p, errtype, lineno, _col_offset, end_lineno, _end_col_offset, errmsg, va);
     return NULL;
 }
 
@@ -181,16 +256,47 @@ var RAISE_SYNTAX_ERROR = $B.Parser.RAISE_SYNTAX_ERROR = function(msg){
     for(var i = 1, len = arguments.length; i < len; i++){
         extra_args.push(arguments[i])
     }
-    console.log('raise error', p, msg, extra_args)
     $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
+}
+
+function RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, fmt, value){
+    var extra_args = arguments[3]
+    var err_msg = _b_.str.__mod__(fmt, value)
+    RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+        a.lineno, a.col_offset,
+        a.end_lineno, a.end_col_offset,
+        err_msg, extra_args)
 }
 
 function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
     var extra_args = arguments[3]
-    RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
+    RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
         a.lineno, a.col_offset,
         b.end_lineno, b.end_col_offset,
         msg, extra_args)
+}
+
+function RAISE_SYNTAX_ERROR_INVALID_TARGET(type, e){
+    return _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e)
+}
+
+function _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
+    var invalid_target = CHECK_NULL_ALLOWED(expr_ty, $B._PyPegen.get_invalid_target(e, type));
+    if (invalid_target != NULL) {
+        var msg;
+        if (type == STAR_TARGETS || type == FOR_TARGETS) {
+            msg = "cannot assign to %s";
+        }else{
+            msg = "cannot delete %s";
+        }
+        return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+            invalid_target,
+            msg,
+            $B._PyPegen.get_expr_name(invalid_target)
+        );
+        //return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(invalid_target, "invalid syntax");
+    }
+    return NULL;
 }
 
 function set_position_from_EXTRA(ast_obj, EXTRA){
@@ -199,29 +305,6 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
     }
 }
 
-// Generate functions to create AST instances
-$B._PyAST = {}
-
-var template = `
-$B._PyAST.<ast_class> = function(<args><sep>EXTRA){
-    var ast_obj = new $B.ast.<ast_class>(<args>)
-    set_position_from_EXTRA(ast_obj, EXTRA)
-    return ast_obj
-}
-`
-
-for(var ast_class in $B.ast_classes){ // in py_ast.js
-    var args = $B.ast_classes[ast_class]
-    if(Array.isArray(args)){
-        continue
-    }
-    args = args.replace(/\*/g, '')
-    var sep = args.length > 0 ? ', ' : ''
-    var function_code = template.replace(/<ast_class>/g, ast_class)
-                                .replace(/<sep>/, sep)
-                                .replace(/<args>/g, args)
-    eval(function_code)
-}
 
 var inf = Number.POSITIVE_INFINITY
 
@@ -274,18 +357,28 @@ function LeftRecursion(detected){
     this.detected = detected // true or false
 }
 
-function eval_option(rule, position){
-    var tokens = $B.parser_state.tokens,
+function LR(seed, rule){
+    this.seed = seed
+    this.rule = rule
+}
+
+Parser.prototype.eval_option = function(rule, position){
+    var tokens = this.tokens,
         result,
         start = position,
         join_position = false
+    var test = false // rule.action && rule.action.search('FunctionDef') > -1
+
     if(! rule.repeat){
-        result = eval_option_once(rule, position)
+        result = this.eval_option_once(rule, position)
     }else{
         var matches = [],
             start = position
+        if(test){
+            console.log('repeated', show_rule(rule))
+        }
         while(matches.length < rule.repeat[1]){
-            var match = eval_option_once(rule, position)
+            var match = this.eval_option_once(rule, position)
             if(match === FAIL){
                 if(join_position){
                     result = {rule, matches, start, end: join_position - 1}
@@ -319,6 +412,9 @@ function eval_option(rule, position){
                  position = match.end
              }
         }
+        if(test){
+            console.log('result', result, 'matches', matches)
+        }
         if(! result){
             result = {rule, start, matches, end: position}
         }
@@ -342,13 +438,20 @@ function eval_option(rule, position){
     if(result !== FAIL){
         // console.log('result for rule', show_rule(rule), result)
     }
+    if(test){
+        console.log('eval option', show_rule(rule, true), 'returns', result)
+    }
     return result
 }
 
 var use_invalid = {value: false}
 
-function eval_option_once(rule, position){
-    var tokens = $B.parser_state.tokens
+Parser.prototype.eval_option_once = function(rule, position){
+    if(position === undefined){
+        console.log('pos undef in eval option once', rule)
+        throw Error('no pos')
+    }
+    var tokens = this.tokens
     if(debug || rule.debug){
         console.log('eval_option_once of rule', show_rule(rule), rule,
             'position', position, tokens[position])
@@ -362,9 +465,14 @@ function eval_option_once(rule, position){
             if(invalid && ! use_invalid.value){
                 continue
             }
-            var match = eval_option(choice, position)
+            stack.push('#' + i)
+            if(debug){
+                console.log(debug_head(stack.length), '#' + i, show_rule(choice))
+            }
+            var match = this.eval_option(choice, position)
             if(match === FROZEN_FAIL){
                 // if a choice with a ~ fails, don't try other alternatives
+                stack.pop()
                 return FAIL
             }else if(match !== FAIL){
                 if(invalid){
@@ -372,8 +480,10 @@ function eval_option_once(rule, position){
                     match.invalid = true
                 }
                 match.rank = i
+                stack.pop()
                 return match
             }
+            stack.pop()
         }
         return FAIL
     }else if(rule.items){
@@ -384,19 +494,14 @@ function eval_option_once(rule, position){
             if(item.type == 'COMMIT_CHOICE'){
                 frozen_choice = true
             }
-            var match = eval_option(item, position)
-            if(rule.debug){
-                console.log('eval item', item, 'at position', position,
-                    'match', match)
+            var match = this.eval_option(item, position)
+            if(match === undefined){
+                console.log('eval of item', item, 'returns undef')
             }
             if(match !== FAIL){
                 matches.push(match)
                 position = match.end
             }else{
-                if(rule.debug){
-                    console.log('item', show_rule(item), 'of sequence', show_rule(rule),
-                        'at position', position, 'fails')
-                }
                 if(frozen_choice){
                     return FROZEN_FAIL
                 }
@@ -409,14 +514,14 @@ function eval_option_once(rule, position){
             handle_invalid_match(match, tokens)
             match.invalid = true
         }
-        if(rule.debug){
-            console.log('rule', show_rule(rule), 'succeeds', matches, match)
-            alert()
-        }
         return match
     }else if(rule.type == "rule"){
-        return apply_rule(grammar[rule.name], position)
+        return this.apply_rule(grammar[rule.name], position)
     }else if(rule.type == "string"){
+        if(debug){
+            console.log(debug_head(stack.length), 'test str', rule.value,
+                'at', position, tokens[position].string)
+        }
         return tokens[position][1] == rule.value ?
             {rule, start: position, end: position + 1} :
             FAIL
@@ -424,8 +529,17 @@ function eval_option_once(rule, position){
         // mark current option as frozen
         return {rule, start: position, end: position}
     }else if(rule.type == 'NAME'){
-        var test = tokens[position][0] == rule.type &&
-            keywords.indexOf(tokens[position][1]) == -1 &&
+        if(debug){
+            console.log(debug_head(stack.length), 'test NAME at', position, tokens[position].string)
+        }
+        if(tokens[position] === undefined){
+            console.log('no token in', tokens, 'at position', position)
+        }
+        var token = tokens[position],
+            string = token.string,
+            test = token.type == rule.type &&
+            keywords.indexOf(token.string) == -1 &&
+            ['True', 'False', 'None'].indexOf(token.string) == -1 &&
             (rule.value === undefined ? true : tokens[position][1] == rule.value)
         return test ? {rule, start: position, end: position + 1} : FAIL
     }else if(rule.type == 'ASYNC'){
@@ -441,12 +555,14 @@ function eval_option_once(rule, position){
     }
 }
 
-function eval_body(rule, position){
-    // Only for grammar rules
-    var tokens = $B.parser_state.tokens
-    if(debug || rule.debug){
-        console.log('eval_body of rule', show_rule(rule), rule, 'position', position)
+Parser.prototype.eval_body = function(rule, position){
+    if(position === undefined){
+        console.log('pos undef in eval_body', rule)
+        throw Error('no pos')
     }
+
+    // Only for grammar rules
+    var start = position
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
             var choice = rule.choices[i],
@@ -456,13 +572,16 @@ function eval_body(rule, position){
             if(invalid && ! use_invalid.value){
                 continue
             }
-            var match = eval_option(choice, position)
+            if(debug){
+                console.log(debug_head(stack.length), '#' + i, show_rule(choice))
+            }
+            var match = this.eval_option(choice, position)
             if(match === FROZEN_FAIL){
                 // if a choice with a ~ fails, don't try other alternatives
                 return FAIL
             }else if(match !== FAIL){
                 if(invalid){
-                    handle_invalid_match(match, tokens)
+                    handle_invalid_match(match, this.tokens)
                     match.invalid = true
                 }
                 match.rank = i
@@ -471,26 +590,17 @@ function eval_body(rule, position){
         }
         return FAIL
     }else if(rule.items){
-        var start = position,
-            matches = [],
+        var matches = [],
             frozen_choice = false // set to true if we reach a COMMIT_CHOICE (~)
         for(var item of rule.items){
             if(item.type == 'COMMIT_CHOICE'){
                 frozen_choice = true
             }
-            var match = eval_option(item, position)
-            if(rule.debug){
-                console.log('eval item', item, 'at position', position,
-                    'match', match)
-            }
+            var match = this.eval_option(item, position)
             if(match !== FAIL){
                 matches.push(match)
                 position = match.end
             }else{
-                if(rule.debug){
-                    console.log('item', show_rule(item), 'of sequence', show_rule(rule),
-                        'at position', position, 'fails')
-                }
                 if(frozen_choice){
                     return FROZEN_FAIL
                 }
@@ -500,18 +610,84 @@ function eval_body(rule, position){
         var match = {rule, matches, start, end: position}
         if(use_invalid.value && rule.parent_rule &&
                 rule.parent_rule.startsWith('invalid_')){
-            handle_invalid_match(match, tokens)
+            handle_invalid_match(match, this.tokens)
             match.invalid = true
-        }
-        if(rule.debug){
-            console.log('rule', show_rule(rule), 'succeeds', matches, match)
-            alert()
         }
         return match
     }
 }
 
-function grow_lr(rule, position, m){
+Parser.prototype.matched_string = function(match){
+    var s = ''
+    for(var i = match.start; i < match.end; i++){
+        s += this.tokens[i].string
+    }
+    return s
+}
+
+function HEAD(rule, involvedSet, evalSet){
+    this.rule = rule
+    this.involvedSet = involvedSet
+    this.evalSet = evalSet
+}
+
+Parser.prototype.RECALL = function(R, P){
+    let m = get_memo(R, P)
+    let h = this.HEADS[P]
+    // If not growing a seed parse, just return what is stored
+    // in the memo table.
+    if(! h){
+        return m
+    }
+    // Do not evaluate any rule that is not involved in this
+    // left recursion.
+    var set = new Set([h.head])
+    for(var s of h.involvedSet){
+        set.add(s)
+    }
+    if((! m) && ! set.has(R)){
+        return new MemoEntry(FAIL, P)
+    }
+    // Allow involved rules to be evaluated, but only once,
+    // during a seed-growing iteration.
+    if(h.evalSet.has(R)){
+        h.evalSet.delete(R)
+        let ans = this.eval_body(R, P)
+        m.match = ans
+        m.end = ans === FAIL ? P : ans.end
+    }
+    return m
+}
+
+Parser.prototype.SETUP_LR = function(R, L){
+    if(! L.head){
+        L.head = new HEAD(R, new Set(), new Set())
+    }
+    let ix = this.LRStack.length -1,
+        s = this.LRStack[ix]
+    while(s && s.head !== L.head){
+        s.head = L.head
+        L.head.involvedSet.add(s.rule)
+        ix--
+        s = this.LRStack[ix]
+    }
+}
+
+Parser.prototype.LR_ANSWER = function(R, P, M){
+    let h = M.match.head
+    if(h.rule != R){
+        return M.match.seed
+    }else{
+        M.match = M.match.seed
+    }
+    if(M.match === FAIL){
+        return FAIL
+    }else{
+        return this.grow_lr(R, P, M, h)
+    }
+}
+
+Parser.prototype.grow_lr = function(rule, position, m, H){
     // Called after eval_body(rule, position) produced a match and ignored
     // an option that referenced itself (recursion) because at that time,
     // memo(rule, position) was a LeftReference.
@@ -525,71 +701,81 @@ function grow_lr(rule, position, m){
     // which uses the MemoEntry m for the rule. This allows an
     // expression such as "1 + 2 + 3" to set a first match for "1 + 2",
     // then a second for "1 + 2 + 3"
-    if(debug){
-        console.log('grow_lr, rule', rule, position, 'current MemoEntry', m)
-    }
+    this.HEADS[position] = H
     while(true){
-        var match = eval_body(rule, position)
+        if(H){
+            H.evalSet = new Set(H.involvedSet)
+        }
+        var match = this.eval_body(rule, position)
         if(match === FAIL || match.end <= m.end){
             break
         }
         m.match = match
         m.end = match.end
     }
+    delete this.HEADS[position]
     return m.match
 }
 
-function apply_rule(rule, position){
+var stack = []
+
+Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
     if(debug){
-        console.log('apply rule', show_rule(rule), position, 'memo', memo)
+        console.log(debug_head(stack.length), 'apply rule', rule.name, 'at', position)
     }
     // search if result is in memo
-    var memoized = get_memo(rule, position)
+    stack.push(rule.name)
+    var memoized = this.RECALL(rule, position),
+        result
     if(memoized === null){
         // for left recursion, initialize with LeftRecursion set to false
-        var LR = new LeftRecursion(false),
-            m = new MemoEntry(LR, position)
+        var lr = new LR(FAIL, rule)
+        this.LRStack.push(lr)
+        var m = new MemoEntry(lr, position)
         set_memo(rule, position, m)
         // evaluate body of rule
         // if the rule includes itself at the same position, it will be found
         // in memo as LR; LR.detected will be set to true and the branch of
         // eval_body containing rule will return FAIL, but eval_body can
         // match with another branch that doesn't contain rule
-        var match = eval_body(rule, position)
+        var match = this.eval_body(rule, position)
+        this.LRStack.pop()
 
         // change memo(rule, position) with result of match
-        m.match = match
+        // m.match = match
         m.end = match.end
 
-        if(LR.detected && match !== FAIL){
-            // recursion detected when executing eval_body
-            // memo(rule, position) now contains the match with a branch
-            // without recursion
-            // grow_lr will try again at position, and use memo(rule, position)
-            // to search a longer match
-            return grow_lr(rule, position, m)
+        if(lr.head){
+            lr.seed = match
+            result = this.LR_ANSWER(rule, position, m)
         }else{
-            return match
+            m.match = match
+            result = match
         }
     }else{
         if(debug){
             console.log('read from memo', show_rule(rule), memoized)
         }
-        if(memoized.match instanceof LeftRecursion){
+        if(memoized.match instanceof LR){
             if(debug){
                 console.log('recursion !')
             }
-            memoized.match.detected = true
-            return FAIL
+            this.SETUP_LR(rule, memoized.match)
+            result = memoized.match.seed
         }else{
-            if(memoized !== FAIL && memoized.match.start === undefined){
-                console.log('pas de start', rule, position, memoized)
-                alert()
-            }
-            return memoized === FAIL ? memoized : memoized.match
+            result = memoized === FAIL ? memoized : memoized.match
         }
     }
+    if(debug){
+        if(result === FAIL){
+            console.log('rule', rule.name, 'fails')
+        }else{
+            console.log('rule', rule.name, 'matches', this.matched_string(result))
+        }
+    }
+    stack.pop()
+    return result
 }
 
 $B.parser_state = {}
@@ -639,7 +825,16 @@ function show(match, tokens, level){
     return s
 }
 
-function show_rule(rule){
+function debug_head(n){
+    var signs = '|:.',
+        s = ''
+    for(var i = 0; i < n; i++){
+        s += '| '
+    }
+    return s
+}
+
+function show_rule(rule, show_action){
     var res = rule.name || ''
     if(rule.type && rule.type != 'rule'){
         if(rule.lookahead == 'positive'){
@@ -660,7 +855,7 @@ function show_rule(rule){
         res += ' ' + rule.items.map(show_rule).join(' ')
     }
 
-    if(rule.action){
+    if(rule.action && show_action){
         res += ' {' + rule.action + '}'
     }
 
@@ -700,6 +895,11 @@ function make(match, tokens){
     p.mark = match.start
     p.fill = match.start
 
+    var test = false // show_rule(rule).indexOf('star_etc') > -1
+    if(test){
+        console.log('make', show_rule(rule, true), '\n    match', match)
+    }
+
     if(! rule){
         console.log('match without rule', match)
     }
@@ -708,14 +908,8 @@ function make(match, tokens){
         (match.matches ? match.matches.length + ' matches' : match)) */
 
     if(match.end > match.start){
-        try{
-            var token = tokens[match.start]
-        }catch(err){
-            console.log('match', match)
-            console.log('parser state', $B.parser_state)
-            throw err
-        }
-        var EXTRA = {lineno: token.start[0],
+        var token = tokens[match.start],
+            EXTRA = {lineno: token.start[0],
                      col_offset: token.start[1],
                      end_lineno: token.end[0],
                      end_col_offset: token.end[1]
@@ -727,7 +921,7 @@ function make(match, tokens){
         // If a repeated rule has an alias, it applies to the repetition list
         // The number of repetitions is len(match.matches)
         var res = []
-        if(rule.type == 'STRING'){
+        if(['STRING', 'string', 'NEWLINE'].indexOf(rule.type) > -1){
             for(var m of match.matches){
                 res.push(tokens[m.start])
             }
@@ -735,6 +929,9 @@ function make(match, tokens){
                 eval('var ' + rule.alias + ' = res')
             }
             if(rule.action){
+                if(test){
+                    console.log('eval action of', show_rule(rule, true))
+                }
                 return eval(rule.action)
             }
             return res
@@ -757,7 +954,14 @@ function make(match, tokens){
             if(one_match.rule === rule){
                 var elts = []
                 if(! one_match.matches){
-                    console.log('one match no matches', match)
+                    if(rule.repeat[1] == 1){
+                        console.log('optional, match', one_match, 'repeat', rule.repeat)
+                        var _make = make(one_match, tokens)
+                        console.log('_make', _make)
+                        alert()
+                    }else{
+                        console.log('one match no matches', match)
+                    }
                 }
                 for(var i = 0; i < one_match.matches.length; i++){
                     var m = one_match.matches[i]
@@ -804,17 +1008,39 @@ function make(match, tokens){
             nb_consuming = 0,
             ast,
             _make
+        if(match.matches.length > 0){
+            var first = match.matches[0],
+                last = $B.last(match.matches)
+            EXTRA = {
+                    lineno: tokens[first.start].start[0],
+                    col_offset: tokens[first.start].start[1],
+                    end_lineno: tokens[last.end - 1].end[0],
+                    end_col_offset: tokens[last.end - 1].end[1]
+                    }
+        }
         for(var i = 0; i < match.matches.length; i++){
             var m = match.matches[i]
+            if(test){
+                console.log('  match', i, m)
+            }
             if(m.end > m.start){
                 _make = make(match.matches[i], tokens)
                 makes.push(_make)
             }else{
-                _make = undefined
+                if(m.rule.repeat && m.rule.repeat[1] > 1){
+                    // If m.rule has * or + modifier, return empty list
+                    _make = []
+                }else{
+                    _make = undefined
+                }
             }
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
                 eval('var ' + rule.items[i].alias + ' = _make')
+                if(test){
+                    console.log('set alias', rule.items[i].alias,
+                        'to', eval(rule.items[i].alias))
+                }
             }
             if(! rule.items[i].lookahead){
                 nb_consuming++
@@ -824,7 +1050,10 @@ function make(match, tokens){
             try{
                 ast = eval(rule.action)
             }catch(err){
-                console.log('error eval action of', show_rule(rule))
+                var rule_str = show_rule(rule, true)
+                if(true){ // && rule_str.search('invalid') == -1){
+                    console.log('error eval action of', rule_str)
+                }
                 throw err
             }
         }else if(nb_consuming == 1){
@@ -847,7 +1076,9 @@ function make(match, tokens){
             try{
                 var prepared = $B.prepare_number(token[1])
             }catch(err){
-                $_SyntaxError(context, [err.message])
+                RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p.arena,
+                    'wrong number %s', token[1])
+
             }
             var ast_obj = new $B.ast.Constant(prepared)
             ast_obj.type = prepared.type

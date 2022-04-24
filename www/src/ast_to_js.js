@@ -221,6 +221,7 @@ function name_scope(name, scopes){
     block = scopes.symtable.table.blocks.get(_b_.id(up_scope.ast))
     if(block === undefined){
         console.log('no block', scope, scope.ast, 'id', _b_.id(up_scope.ast))
+        console.log('scopes', scopes.slice())
         console.log('symtable', scopes.symtable)
     }
     try{
@@ -612,7 +613,7 @@ function init_scopes(type, scopes){
     var name = scopes.symtable.table.filename
     var top_scope = new Scope(name, `${type}`, this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
-    if(block.$has_import_star){
+    if(block && block.$has_import_star){
         top_scope.has_import_star = true
     }
     scopes.push(top_scope)
@@ -2236,7 +2237,8 @@ $B.ast.Try.prototype.to_js = function(scopes){
             }
             if(handler.name){
                 bind(handler.name, scopes)
-                js += `locals.${handler.name} = ${err}\n`
+                var mangled = mangle(scopes, try_scope, handler.name)
+                js += `locals.${mangled} = ${err}\n`
             }
             js += add_body(handler.body, scopes) + '\n'
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){

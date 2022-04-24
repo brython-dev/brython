@@ -4,7 +4,8 @@
 var _b_ = $B.builtins,
     NULL = undefined,
     DOT = '.',
-    ELLIPSIS = '...'
+    ELLIPSIS = '...',
+    DEL_TARGETS = 'del_targets'
 
 function EXTRA_EXPR(head, tail){
     return {
@@ -65,7 +66,6 @@ function _make_posonlyargs(p,
     if (slash_without_default != NULL) {
         set_list(posonlyargs, slash_without_default)
     }else if (slash_with_default != NULL) {
-        console.log('make posonlyargs from slash_with_default', slash_with_default)
         slash_with_default_names =
                 _get_names(p, slash_with_default.names_with_defaults);
         if (!slash_with_default_names) {
@@ -297,6 +297,71 @@ $B._PyPegen.key_value_pair = function(p, key, value){
     return {key, value}
 }
 
+$B._PyPegen.get_expr_name = function(e){
+    switch(e.constructor.$name){
+        case 'Attribute':
+        case 'Subscript':
+        case 'Starred':
+        case 'Name':
+        case 'List':
+        case 'Tuple':
+        case 'Lambda':
+            return e.constructor.$name.toLowerCase()
+        case 'Call':
+            return "function call"
+        case 'BoolOp':
+        case 'BinOp':
+        case 'UnaryOp':
+            return "expression"
+        case 'GeneratorExp':
+            return "generator expression";
+        case 'Yield':
+        case 'YieldFrom':
+            return "yield expression";
+        case 'Await':
+            return "await expression";
+        case 'ListComp':
+            return "list comprehension";
+        case 'SetComp':
+            return "set comprehension";
+        case 'DictComp':
+            return "dict comprehension";
+        case 'Dict':
+            return "dict literal";
+        case 'Set':
+            return "set display";
+        case 'JoinedStr':
+        case 'FormattedValue':
+            return "f-string expression";
+        case 'Constant':
+            var value = e.value
+            if (value === _b_.None) {
+                return "None";
+            }
+            if (value === false) {
+                return "False";
+            }
+            if (value === true) {
+                return "True";
+            }
+            if (value.type == 'ellipsis') {
+                return "ellipsis";
+            }
+            return "literal";
+        case 'Compare':
+            return "comparison";
+        case 'IfExp':
+            return "conditional expression";
+        case 'NamedExpr':
+            return "named expression";
+        default:
+            PyErr_Format(PyExc_SystemError,
+                         "unexpected expression in assignment %d (line %d)",
+                         e.kind, e.lineno);
+            return NULL;
+    }
+}
+
 /* Extracts all keys from an asdl_seq* of KeyValuePair*'s */
 $B._PyPegen.get_keys = function(p, seq){
     return seq === undefined ? [] : seq.map(pair => pair.key)
@@ -449,7 +514,6 @@ $B._PyPegen.name_default_pair = function(p, arg, value, tc){
     }
 }
 
-
 $B._PyPegen.raise_error = function(p, errtype, errmsg){
     if(p.fill == 0){
         var va = [errmsg]
@@ -481,11 +545,10 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
     return NULL;
 }
 
-
 $B._PyPegen.raise_error_known_location = function(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
-    console.log('raise error', errtype, errmsg)
     var exc = errtype.$factory(errmsg)
+    exc.filename = p.filename
     exc.lineno = lineno
     exc.offset = col_offset
     exc.end_lineno = end_lineno
@@ -493,8 +556,8 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
     var lines = $B.parser_state.src.split('\n'),
         line = lines[exc.lineno - 1]
     exc.text = line
-    exc.args[1] = ['filename', lineno, col_offset, line]
-    $B.handle_error(exc)
+    exc.args[1] = [p.filename, lineno, col_offset, line]
+    throw exc
 }
 
 $B._PyPegen.seq_delete_starred_exprs = function(p, kwargs){
@@ -608,22 +671,23 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                     }
                 }else{
                     if(value.format !== undefined){
-                        value.format = new $B.ast.JoinedStr(value.format)
+                        var fmt_ast = new $B.ast.Constant({type: 'str', value: value.format[0]})
+                        set_position_from_obj(fmt_ast, p.arena)
+                        var _format = new $B.ast.JoinedStr([fmt_ast])
+                        set_position_from_obj(_format, p.arena)
                     }
                     var src = value.expression.trimStart() // ignore leading whitespace
-                    var tokens = []
-                    for(var token of __BRYTHON__.tokenizer(src)){
-                      if(['COMMENT', 'NL', 'ENCODING', 'TYPE_COMMENT'].indexOf(token[0]) == -1){
-                        tokens.push(token)
-                      }
-                    }
-                    var _ast = new __BRYTHON__.Parser(src).feed(tokens)
-                    // _ast is a Module with a single Expr in attribute body
-                    _ast = _ast.body[0].value
-                    jstr_values.push(_ast)
+                    var _ast = new $B.Parser(src).feed('eval', p.filename)
+                    var raw_value = _ast.body
+                    var formatted = new $B.ast.FormattedValue(raw_value,
+                        value.conversion === null ? -1 : value.conversion,
+                        _format)
+                    set_position_from_obj(formatted, _ast)
+                    jstr_values.push(formatted)
                 }
             }
             var ast_obj = new $B.ast.JoinedStr(jstr_values)
+            set_position_from_obj(ast_obj, p.arena)
         }else{
             value = values.replace(/\n/g,'\\n\\\n')
             value = value.replace(/\r/g,'\\r\\\r')
@@ -723,6 +787,58 @@ $B._PyPegen.new_type_comment = function(p, s){
         return NULL
     }
     return s
+}
+
+$B._PyPegen.get_invalid_target = function(e, targets_type){
+
+    if (e == NULL) {
+        return NULL;
+    }
+
+    function VISIT_CONTAINER(CONTAINER, TYPE){
+        for (var elt of CONTAINER.elts) {
+            var child = $B._PyPegen.get_invalid_target(elt, targets_type);
+            if (child != NULL) {
+                return child;
+            }
+        }
+    }
+
+    // We only need to visit List and Tuple nodes recursively as those
+    // are the only ones that can contain valid names in targets when
+    // they are parsed as expressions. Any other kind of expression
+    // that is a container (like Sets or Dicts) is directly invalid and
+    // we don't need to visit it recursively.
+
+    switch (e.constructor) {
+        case $B.ast.List:
+        case $B.ast.Tuple:
+            VISIT_CONTAINER(e, e.constructor);
+            return NULL;
+        case $B.ast.Starred:
+            if (targets_type == DEL_TARGETS) {
+                return e;
+            }
+            return _PyPegen_get_invalid_target(e.value, targets_type);
+        case $B.ast.Compare:
+            // This is needed, because the `a in b` in `for a in b` gets parsed
+            // as a comparison, and so we need to search the left side of the comparison
+            // for invalid targets.
+            if (targets_type == FOR_TARGETS) {
+                var cmpop = e.ops[0]
+                if (cmpop == $B.ast.In) {
+                    return _PyPegen_get_invalid_target(e.left, targets_type);
+                }
+                return NULL;
+            }
+            return e;
+        case $B.ast.Name:
+        case $B.ast.Subscript:
+        case $B.ast.Attribute:
+            return NULL;
+        default:
+            return e;
+    }
 }
 
 })(__BRYTHON__)
