@@ -79,8 +79,11 @@ $B.__ARGV = []
 // script name and its source code
 $B.webworkers = {}
 
-// File cache, indexed by module names
+// File cache, indexed by module paths
 $B.file_cache = {}
+
+// Mapping between script url and script name
+$B.url2name = {}
 
 // Mapping between a Python module name and its source code
 $B.$py_src = {}

@@ -711,7 +711,7 @@ function $$eval(src, _globals, _locals){
     try{
         if($B.parser_to_ast){
             var _ast = new $B.Parser(src, filename).feed(mode == 'eval' ? 'eval' : 'file')
-            var symtable = $B._PySymtable_Build(_ast, 'exec')
+            var symtable = $B._PySymtable_Build(_ast, filename)
             var js_obj = $B.js_from_root(_ast, symtable, filename,
                     {local_name, exec_locals, global_name, exec_globals})
             js = js_obj.js
@@ -723,7 +723,7 @@ function $$eval(src, _globals, _locals){
             $B.parser.dispatch_tokens(root)
 
             var _ast = root.ast(),
-                symtable = $B._PySymtable_Build(_ast, 'exec'),
+                symtable = $B._PySymtable_Build(_ast, filename),
                 js_obj = $B.js_from_root(_ast, symtable, filename,
                         {local_name, exec_locals, global_name, exec_globals}),
                 js = js_obj.js

@@ -268,6 +268,8 @@ function RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, fmt, value){
         err_msg, extra_args)
 }
 
+$B.Parser.RAISE_ERROR_KNOWN_LOCATION = RAISE_ERROR_KNOWN_LOCATION
+
 function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
     var extra_args = arguments[3]
     RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,

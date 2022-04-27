@@ -181,6 +181,7 @@ function show_ns(){
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
     $B.file_cache[path] = module_contents
+    $B.url2name[path] = module.__name__
     var root,
         js,
         mod_name = module.__name__ // might be modified inside module, eg _pydecimal
@@ -381,6 +382,7 @@ VFSLoader.exec_module = function(self, modobj){
     path += modobj.$is_package ? "/__init__.py" : ext
     modobj.__file__ = path
     $B.file_cache[modobj.__file__] = $B.VFS[modobj.__name__][1]
+    $B.url2name[modobj.__file__] = modobj.__name__
     if(ext == '.js'){
         run_js(module_contents, modobj.__path__, modobj)
     }else if($B.precompiled.hasOwnProperty(modobj.__name__)){
@@ -512,6 +514,7 @@ var finder_cpython = {
         modobj.$is_package = loader_state.is_package
         modobj.__file__ = loader_state.__file__
         $B.file_cache[modobj.__file__] = content
+        $B.url2file[modobj.__file__] = modobj.__name__
         var mod_name = modobj.__name__
         if($B.debug > 1){
             console.log("run Python code from CPython", mod_name)
