@@ -68,6 +68,8 @@ var ModuleBlock = 2,
     FunctionBlock = 0,
     AnnotationBlock = 4
 
+var PyExc_SyntaxError = _b_.SyntaxError
+
 function assert(test){
     if(! $B.$bool(test)){
         console.log('test fails', test)
@@ -261,16 +263,33 @@ function PyErr_Format(exc_type, message, arg){
     return exc_type.$factory(message)
 }
 
+function PyErr_SetString(exc_type, message){
+    return exc_type.$factory(message)
+}
+
+function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset){
+    exc.filename = filename
+    exc.lineno = lineno
+    exc.offset = offset
+    exc.end_lineno = end_lineno
+    exc.end_offset = end_offset
+    var src = $B.file_cache[filename]
+    if(src !== undefined){
+        var lines = src.split('\n')
+        exc.text = lines[lineno - 1]
+    }else{
+        exc.text = ''
+    }
+    exc.args[1] = [filename, lineno, offset, exc.text, end_lineno, end_offset]
+}
+
 function error_at_directive(exc, ste, name){
     var data
     assert(ste.directives)
     for (var data of ste.directives) {
         if(data[0] == name){
-            exc.args[1] = [ste.table.filename,
-                           data[1],
-                           data[2] + 1,
-                           data[3],
-                           data[4] + 1]
+            set_exc_info(exc, ste.table.filename,
+                data[1], data[2], data[3], data[4])
             return 0
         }
     }
@@ -629,7 +648,6 @@ function analyze_block(ste, bound, free, global){
 
     /* Check if any local variables must be converted to cell variables */
     if (ste.type === FunctionBlock && !analyze_cells(scopes, newfree)){
-        console.log('rturn 0 line 655')
         return 0
     }else if (ste.type === ClassBlock && !drop_class_free(ste, newfree)){
         return 0
@@ -748,12 +766,6 @@ function symtable_lookup(st, name){
 }
 
 function symtable_add_def_helper(st, name, flag, ste, _location){
-    var test = name == "glob"
-
-    var lineno = _location.lineno,
-        col_offset = _location.col_offset,
-        end_lineno = _location.end_lineno,
-        end_col_offset = _location.end_col_offset
 
     var o, dict, val, mangled = _Py_Mangle(st.private, name)
 
@@ -767,7 +779,7 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         if ((flag & DEF_PARAM) && (val & DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */
             var exc = PyErr_Format(_b_.SyntaxError, DUPLICATE_ARGUMENT, name);
-            exc.args[1] = [st.filename, lineno, col_offset + 1]
+            set_exc_info(exc, st.filename, ..._location)
             throw exc
         }
         val |= flag
@@ -781,12 +793,13 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
          * named expressions can check for conflicts.
          */
         if (val & (DEF_GLOBAL | DEF_NONLOCAL)) {
-            PyErr_Format(PyExc_SyntaxError,
+            console.log('error !')
+            var exc = PyErr_Format(_b_.SyntaxError,
                 NAMED_EXPR_COMP_INNER_LOOP_CONFLICT, name);
-            PyErr_RangedSyntaxLocationObject(st.filename,
-                                             lineno, col_offset + 1,
-                                             end_lineno, end_col_offset + 1)
-            return 0
+            set_exc_info(exc, st.filename, ..._location)
+            console.log(exc.args)
+            alert()
+            throw exc
         }
         val |= DEF_COMP_ITER
     }
@@ -1065,12 +1078,8 @@ function symtable_visit_stmt(st, s){
                     msg = GLOBAL_AFTER_ASSIGN
                 }
                 var exc = PyErr_Format(_b_.SyntaxError, msg, name)
-                exc.args[1] = [st.filename,
-                               s.lineno,
-                               s.col_offset + 1,
-                               s.end_lineno,
-                               s.end_col_offset + 1]
-                console.log('args', exc.args)
+                set_exc_info(exc, st.filename, s.lineno, s.col_offset,
+                               s.end_lineno, s.end_col_offset)
                 throw exc
             }
             if(! symtable_add_def(st, name, DEF_GLOBAL, LOCATION(s)))
@@ -1100,11 +1109,8 @@ function symtable_visit_stmt(st, s){
                     msg = NONLOCAL_AFTER_ASSIGN
                 }
                 var exc = PyErr_Format(_b_.SyntaxError, msg, name)
-                exc.args[1] = [st.filename,
-                               s.lineno,
-                               s.col_offset + 1,
-                               s.end_lineno,
-                               s.end_col_offset + 1]
+                set_exc_info(exc, st.filename, s.lineno, s.col_offset,
+                               s.end_lineno, s.end_col_offset)
                 throw exc
             }
             if (!symtable_add_def(st, name, DEF_NONLOCAL, LOCATION(s)))
@@ -1187,16 +1193,9 @@ function symtable_extend_namedexpr_scope(st, e){
             var target_in_scope = _PyST_GetSymbol(ste, target_name);
             if(target_in_scope & DEF_COMP_ITER){
                 var exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_CONFLICT, target_name);
-                exc.args[1] = [st.filename, e.lineno, e.col_offset + 1]
+                set_exc_info(exc, st.filename, e.lineno, e.col_offset,
+                    e.ed_lineno, e.end_col_offset)
                 throw exc
-                /*
-                PyErr_RangedSyntaxLocationObject(st.filename,
-                                                  e.lineno,
-                                                  e.col_offset + 1,
-                                                  e.end_lineno,
-                                                  e.end_col_offset + 1);
-                VISIT_QUIT(st, 0);
-                */
             }
             continue;
         }
@@ -1227,13 +1226,10 @@ function symtable_extend_namedexpr_scope(st, e){
         }
         /* Disallow usage in ClassBlock */
         if (ste.type == ClassBlock) {
-            PyErr_Format(PyExc_SyntaxError, NAMED_EXPR_COMP_IN_CLASS);
-            PyErr_RangedSyntaxLocationObject(st.filename,
-                                              e.lineno,
-                                              e.col_offset + 1,
-                                              e.end_lineno,
-                                              e.end_col_offset + 1);
-            VISIT_QUIT(st, 0);
+            var exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_IN_CLASS);
+            set_exc_info(exc, st.filename, e.lineno, e.col_offset,
+                              e.end_lineno, e.end_col_offset);
+            throw exc
         }
     }
 
@@ -1247,13 +1243,10 @@ function symtable_extend_namedexpr_scope(st, e){
 function symtable_handle_namedexpr(st, e){
     if (st.cur.comp_iter_expr > 0) {
         /* Assignment isn't allowed in a comprehension iterable expression */
-        PyErr_Format(PyExc_SyntaxError, NAMED_EXPR_COMP_ITER_EXPR);
-        PyErr_RangedSyntaxLocationObject(st.filename,
-                                          e.lineno,
-                                          e.col_offset + 1,
-                                          e.end_lineno,
-                                          e.end_col_offset + 1);
-        return 0;
+        var exc = PyErr_Format(PyExc_SyntaxError, NAMED_EXPR_COMP_ITER_EXPR);
+        set_exc_info(exc, st.filename, e.lineno, e.col_offset,
+                                       e.end_lineno, e.end_col_offset);
+        throw exc
     }
     if (st.cur.comprehension) {
         /* Inside a comprehension body, so find the right target scope */
@@ -1628,14 +1621,13 @@ function symtable_visit_alias(st, a){
                 col_offset = a.col_offset,
                 end_lineno = a.end_lineno,
                 end_col_offset = a.end_col_offset;
-            PyErr_SetString(PyExc_SyntaxError, IMPORT_STAR_WARNING);
-            PyErr_RangedSyntaxLocationObject(st.st_filename,
-                                             lineno, col_offset + 1,
-                                             end_lineno, end_col_offset + 1);
-            return 0;
+            var exc = PyErr_SetString(PyExc_SyntaxError, IMPORT_STAR_WARNING);
+            set_exc_info(exc, st.filename, lineno, col_offset,
+                                              end_lineno, end_col_offset);
+            throw exc
         }
         // Brython-specific : set attribute $has_import_star, used in name
-        // resolution in as_to_js.js
+        // resolution in ast_to_js.js
         st.cur.$has_import_star = true
         return 1;
     }
@@ -1753,13 +1745,10 @@ function symtable_raise_if_annotation_block(st, name, e){
         return 1;
     }
 
-    PyErr_Format(PyExc_SyntaxError, ANNOTATION_NOT_ALLOWED, name);
-    PyErr_RangedSyntaxLocationObject(st.filename,
-                                     e.lineno,
-                                     e.col_offset + 1,
-                                     e.end_lineno,
-                                     e.end_col_offset + 1);
-    return 0;
+    var exc = PyErr_Format(PyExc_SyntaxError, ANNOTATION_NOT_ALLOWED, name);
+    set_exc_info(exc, st.filename, e.lineno, e.col_offset,
+                                   e.end_lineno, e.end_col_offset);
+    throw exc
 }
 
 function symtable_raise_if_comprehension_block(st, e) {
