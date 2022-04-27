@@ -659,8 +659,8 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             var jstr_values = []
             for(var value of values){
                 if(typeof value == "string"){
-                    value = value.replace(/\n/g,'\\n\\\n')
-                    value = value.replace(/\r/g,'\\r\\\r')
+                    value = value.replace(/\\n/g,'\n')
+                    value = value.replace(/\\r/g,'\r')
                     try{
                         var str_ast = new $B.ast.Constant(value)
                         set_position_from_token(str_ast, token)
