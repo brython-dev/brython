@@ -473,6 +473,22 @@ for(var name in $B.builtins){
     builtins_scope.locals.add(name)
 }
 
+function mark_parents(node){
+    if(node.body && node.body instanceof Array){
+        for(var child of node.body){
+            child.$parent = node
+            mark_parents(child)
+        }
+    }else if(node.handlers){
+        // handlers in try block
+        var p = {$parent: node, 'type': 'except_handler'}
+        for(var child of node.handlers){
+            child.$parent = p
+            mark_parents(child)
+        }
+    }
+}
+
 function add_body(body, scopes){
     var res = ''
     for(var item of body){
@@ -606,11 +622,17 @@ function make_comp(scopes){
     return js
 }
 
+var exec_num = {value: 0}
+
 function init_scopes(type, scopes){
     // Common to Expression and Module
     // Initializes the first scope in scopes
     // namespaces can be passed by exec() or eval()
-    var name = scopes.symtable.table.filename
+    var filename = scopes.symtable.table.filename,
+        name = $B.url2name[filename]
+    if(filename == '<string>'){
+        name = 'exec'
+    }
     var top_scope = new Scope(name, `${type}`, this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
     if(block && block.$has_import_star){
@@ -636,6 +658,13 @@ function init_scopes(type, scopes){
     return name
 }
 
+function compile_check(obj){
+    var check_func = Object.getPrototypeOf(obj)._check
+    if(check_func){
+        obj._check()
+    }
+}
+
 $B.ast.Assert.prototype.to_js = function(scopes){
     var test = $B.js_from_ast(this.test, scopes),
         msg = this.msg ? $B.js_from_ast(this.msg, scopes) : ''
@@ -646,12 +675,21 @@ $B.ast.Assert.prototype.to_js = function(scopes){
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
     last_scope(scopes).has_annotation = true
     if(this.value){
-        var scope = bind(this.target.id, scopes)
-        var js = `var ann = ${$B.js_from_ast(this.value, scopes)}\n` +
-            `$B.$setitem(locals.__annotations__, ` +
-            `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n`
-        var target_ref = name_reference(this.target.id, scopes)
-        js += `${target_ref} = ann`
+        var js = `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
+        if(this.target instanceof $B.ast.Name){
+            var scope = bind(this.target.id, scopes)
+            js += `$B.$setitem(locals.__annotations__, ` +
+                  `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n`
+            var target_ref = name_reference(this.target.id, scopes)
+            js += `${target_ref} = ann`
+        }else if(this.target instanceof $B.ast.Attribute){
+            js += `$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}` +
+                `, "${this.target.attr}", ann)`
+        }else if(this.target instanceof $B.ast.Subscript){
+            console.log(this.target)
+            js += `$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}` +
+                `, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`
+        }
     }else{
         if(this.annotation instanceof $B.ast.Name){
             var ann = `'${this.annotation.id}'`
@@ -665,6 +703,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
+    compile_check(this)
     var js = this.lineno ? `$B.set_lineno(locals, ${this.lineno})\n` : '',
         value = $B.js_from_ast(this.value, scopes)
 
@@ -736,6 +775,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 }
 
 $B.ast.AsyncFor.prototype.to_js = function(scopes){
+    compile_check(this)
     return $B.ast.For.prototype.to_js.bind(this)(scopes)
 }
 
@@ -928,6 +968,7 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Break.prototype.to_js = function(scopes){
+    compile_check(this)
     var js = ''
     for(var scope of scopes.slice().reverse()){
         if(scope.ast instanceof $B.ast.For){
@@ -940,6 +981,7 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
+    compile_check(this)
     var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')',
         args = make_args.bind(this)(scopes)
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
@@ -1248,10 +1290,12 @@ $B.ast.Constant.prototype.to_js = function(scopes){
 }
 
 $B.ast.Continue.prototype.to_js = function(scopes){
+    compile_check(this)
     return 'continue'
 }
 
 $B.ast.Delete.prototype.to_js = function(scopes){
+    compile_check(this)
     var js = ''
     for(var target of this.targets){
         if(target instanceof $B.ast.Name){
@@ -1512,7 +1556,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         var function_body = add_body(this.body, scopes)
     }
-    var is_generator = func_scope.is_generator
+    var is_generator = symtable_block.generator
 
     var id = $B.UUID(),
         name1 = this.name + '$' + id,
@@ -1541,7 +1585,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
-    $top_frame.__file__ = '${scopes.filename}'
     locals.$lineno = ${this.lineno}
     locals.$f_trace = $B.enter_frame($top_frame)
     var stack_length = $B.frames_stack.length\n`
@@ -1821,6 +1864,7 @@ $B.ast.Import.prototype.to_js = function(scopes){
 }
 
 $B.ast.ImportFrom.prototype.to_js = function(scopes){
+    compile_check(this)
     if(this.level == 0){
         module = this.module
     }else{
@@ -1923,6 +1967,7 @@ $B.ast.List.prototype.to_js = function(scopes){
 }
 
 $B.ast.ListComp.prototype.to_js = function(scopes){
+    compile_check(this)
     return make_comp.bind(this)(scopes)
 }
 
@@ -2036,6 +2081,7 @@ $B.ast.MatchSequence.prototype.to_js = function(scopes){
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
+    mark_parents(this)
     // create top scope; namespaces can be passed by exec()
     var name = init_scopes.bind(this)('module', scopes),
         namespaces = scopes.namespaces
@@ -2053,7 +2099,6 @@ $B.ast.Module.prototype.to_js = function(scopes){
               `globals = ${namespaces.global_name},\n` +
               `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
     }
-    js += `\n$top_frame.__file__ = '${scopes.filename}'\n`
     js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n`
     if(! namespaces){
@@ -2132,6 +2177,8 @@ $B.ast.Raise.prototype.to_js = function(scopes){
 }
 
 $B.ast.Return.prototype.to_js = function(scopes){
+    // check that return is inside a function
+    compile_check(this)
     var js = `$B.set_lineno(locals, ${this.lineno})\n` +
              'var result = ' +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
@@ -2179,6 +2226,7 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
+    compile_check(this)
     var id = $B.UUID(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
@@ -2567,6 +2615,9 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
 }
 
 $B.js_from_root = function(ast_root, symtable, filename, namespaces){
+    if($B.compiler_check){
+        // $B.compiler_check(ast_root, symtable)
+    }
     var scopes = []
     scopes.symtable = symtable
     scopes.filename = filename
