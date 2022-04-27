@@ -44,8 +44,10 @@ function idb_load(evt, module){
                 }
                 $B.imported[module] = $B.module.$factory(module, "",
                     __package__)
+                $B.url2name[module] = module
                 try{
-                    var root = $B.py2js(source, module, module),
+                    var root = $B.py2js(
+                            {src:source, filename: module}, module, module),
                         js = root.to_js()
                 }catch(err){
                     $B.handle_error(err)

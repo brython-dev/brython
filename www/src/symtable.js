@@ -793,12 +793,9 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
          * named expressions can check for conflicts.
          */
         if (val & (DEF_GLOBAL | DEF_NONLOCAL)) {
-            console.log('error !')
             var exc = PyErr_Format(_b_.SyntaxError,
                 NAMED_EXPR_COMP_INNER_LOOP_CONFLICT, name);
             set_exc_info(exc, st.filename, ..._location)
-            console.log(exc.args)
-            alert()
             throw exc
         }
         val |= DEF_COMP_ITER
