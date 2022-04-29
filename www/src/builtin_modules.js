@@ -861,6 +861,7 @@
             }
             var constr = js_node.constructor
             if(constr && constr.$name){
+                $B.create_python_ast_classes()
                 return $B.python_ast_classes[constr.$name].$factory(js_node)
             }else if(Array.isArray(js_node)){
                 return js_node.map($B.AST.$convert)

@@ -732,7 +732,11 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type != 'imaginary') {
-        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp, "imaginary number required in complex literal");
+        $B.Parser.RAISE_ERROR_KNOWN_LOCATION(
+            _b_.SyntaxError,
+            exp.lineno, exp.col_offset,
+            exp.end_lineno, exp.end_col_offset,
+            "imaginary number required in complex literal");
         return NULL
     }
     return exp
@@ -740,7 +744,11 @@ $B._PyPegen.ensure_imaginary = function(p, exp){
 
 $B._PyPegen.ensure_real = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
-        RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp, "real number required in complex literal");
+        $B.Parser.RAISE_ERROR_KNOWN_LOCATION(
+            _b_.SyntaxError,
+            exp.lineno, exp.col_offset,
+            exp.end_lineno, exp.end_col_offset,
+            "real number required in complex literal");
         return NULL
     }
     return exp

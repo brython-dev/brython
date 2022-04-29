@@ -259,13 +259,11 @@ var RAISE_SYNTAX_ERROR = $B.Parser.RAISE_SYNTAX_ERROR = function(msg){
     $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
 }
 
-function RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, fmt, value){
-    var extra_args = arguments[3]
-    var err_msg = _b_.str.__mod__(fmt, value)
+function RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, err_msg){
     RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
         a.lineno, a.col_offset,
         a.end_lineno, a.end_col_offset,
-        err_msg, extra_args)
+        err_msg)
 }
 
 $B.Parser.RAISE_ERROR_KNOWN_LOCATION = RAISE_ERROR_KNOWN_LOCATION

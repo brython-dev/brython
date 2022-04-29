@@ -2,6 +2,13 @@
 
 var _b_ = $B.builtins
 
+function compiler_error(ast_obj, message){
+    console.log('compiler check throws error', message, ast_obj)
+    $B.Parser.RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+        ast_obj.lineno, ast_obj.col_offset,
+        ast_obj.end_lineno, ast_obj.end_col_offset,
+        message)
+}
 
 $B.set_func_infos = function(func, name, qualname, docstring){
     func.$is_func = true
@@ -658,7 +665,7 @@ function init_scopes(type, scopes){
     return name
 }
 
-function compile_check(obj){
+function compiler_check(obj){
     var check_func = Object.getPrototypeOf(obj)._check
     if(check_func){
         obj._check()
@@ -703,7 +710,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     var js = this.lineno ? `$B.set_lineno(locals, ${this.lineno})\n` : '',
         value = $B.js_from_ast(this.value, scopes)
 
@@ -775,7 +782,7 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 }
 
 $B.ast.AsyncFor.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     return $B.ast.For.prototype.to_js.bind(this)(scopes)
 }
 
@@ -968,7 +975,7 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Break.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     var js = ''
     for(var scope of scopes.slice().reverse()){
         if(scope.ast instanceof $B.ast.For){
@@ -981,7 +988,7 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')',
         args = make_args.bind(this)(scopes)
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
@@ -1290,12 +1297,12 @@ $B.ast.Constant.prototype.to_js = function(scopes){
 }
 
 $B.ast.Continue.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     return 'continue'
 }
 
 $B.ast.Delete.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     var js = ''
     for(var target of this.targets){
         if(target instanceof $B.ast.Name){
@@ -1864,7 +1871,7 @@ $B.ast.Import.prototype.to_js = function(scopes){
 }
 
 $B.ast.ImportFrom.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     if(this.level == 0){
         module = this.module
     }else{
@@ -1967,7 +1974,7 @@ $B.ast.List.prototype.to_js = function(scopes){
 }
 
 $B.ast.ListComp.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     return make_comp.bind(this)(scopes)
 }
 
@@ -1985,10 +1992,85 @@ $B.ast.match_case.prototype.to_js = function(scopes){
     return js
 }
 
+function is_irrefutable(pattern){
+    switch(pattern.constructor){
+        case $B.ast.MatchAs:
+            if(pattern.pattern === undefined){
+                return pattern
+            }else{
+                return is_irrefutable(pattern.pattern)
+            }
+        case $B.ast.MatchOr:
+            for(var i = 0; i < pattern.patterns.length; i++){
+                if(is_irrefutable(pattern.patterns[i])){
+                    if(i == pattern.patterns.length - 1){
+                        // Only the last alt in a MatchOr may be irrefutable
+                        return pattern
+                    }
+                    // Otherwise it's a SyntaxError
+                    irrefutable_error(pattern.patterns[i])
+                }
+            }
+            break
+    }
+}
+
+function irrefutable_error(pattern){
+    var msg = pattern.name ? `name capture '${pattern.name}'` : 'wildcard'
+    msg +=  ' makes remaining patterns unreachable'
+    compiler_error(pattern, msg)
+}
+
+function pattern_bindings(pattern){
+    var bindings = []
+    switch(pattern.constructor){
+        case $B.ast.MatchAs:
+            if(pattern.name){
+                bindings.push(pattern.name)
+            }
+            break
+        case $B.ast.MatchSequence:
+            for(var p of pattern.patterns){
+                bindings = bindings.concat(pattern_bindings(p))
+            }
+            break
+        case $B.ast.MatchOr:
+            bindings = pattern_bindings(pattern.patterns[0])
+            err_msg = 'alternative patterns bind different names'
+            for(var i = 1; i < pattern.patterns.length; i++){
+                var _bindings = pattern_bindings(pattern.patterns[i])
+                if(_bindings.length != bindings.length){
+                    console.log('binding of first alt', bindings)
+                    console.log('bindings of alt #' + i, _bindings)
+                    compiler_error(pattern, err_msg)
+                }else{
+                    for(var j = 0; j < bindings.length; j++){
+                        if(bindings[j] != _bindings[j]){
+                    console.log('binding of first alt', bindings)
+                    console.log('bindings of alt #' + i, _bindings)
+                            compiler_error(pattern, err_msg)
+                        }
+                    }
+                }
+            }
+            break
+    }
+    return bindings.sort()
+}
+
 $B.ast.Match.prototype.to_js = function(scopes){
+    var scope = $B.last(scopes),
+        irrefutable
     var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`
         first = true
     for(var _case of this.cases){
+        if(! _case.guard){
+            if(irrefutable){
+                irrefutable_error(irrefutable)
+            }
+            irrefutable = is_irrefutable(_case.pattern)
+        }
+
         var case_js = $B.js_from_ast(_case, scopes)
         if(first){
             js += 'if' + case_js
@@ -2003,6 +2085,7 @@ $B.ast.Match.prototype.to_js = function(scopes){
 $B.ast.MatchAs.prototype.to_js = function(scopes){
     // if the pattern is None, the node represents a capture pattern
     // (i.e a bare name) and will always succeed.
+    var scope = $B.last(scopes)
     var name = this.name === undefined ? '_' : this.name,
         params
     if(this.pattern === undefined){
@@ -2016,10 +2099,38 @@ $B.ast.MatchAs.prototype.to_js = function(scopes){
         }
         params = `${pattern}, alias: '${name}'`
     }
+    if(scope.bindings){
+        if(scope.bindings.indexOf(name) > -1){
+            compiler_error(this,
+                `multiple assignment to name '${name}' in pattern`)
+        }
+        scope.bindings.push(name)
+    }
     return params
 }
 
 $B.ast.MatchClass.prototype.to_js = function(scopes){
+    var names = []
+    for(var pattern of this.patterns){
+        var name = pattern.name
+        if(name){
+            if(names.indexOf(name) > -1){
+                compiler_error(pattern,
+                     `multiple assignment to name '${name}' in pattern`)
+            }
+            names.push(name)
+        }
+    }
+    names = []
+    for(var i = 0; i < this.kwd_attrs.length; i++){
+        var kwd_attr = this.kwd_attrs[i]
+        if(names.indexOf(kwd_attr) > -1){
+            compiler_error(this.kwd_patterns[i],
+                `attribute name repeated in class pattern: ${kwd_attr}`)
+        }
+        names.push(kwd_attr)
+    }
+
     var cls = $B.js_from_ast(this.cls, scopes),
         patterns = this.patterns.map(x => `{${$B.js_from_ast(x, scopes)}}`)
     var kw = []
@@ -2031,6 +2142,25 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchMapping.prototype.to_js = function(scopes){
+    var keys = []
+    for(var key of this.keys){
+        if(key instanceof $B.ast.Attribute){
+            continue
+        }else if(key instanceof $B.ast.Constant ||
+                key instanceof $B.ast.UnaryOp ||
+                key instanceof $B.ast.BinOp){
+            var value = eval(key.to_js(scopes))
+            if(_b_.list.__contains__(keys, value)){
+                compiler_error(this, 'mapping pattern checks duplicate key ' +
+                    `(${_b_.repr(value)})`)
+            }
+            keys.push(value)
+        }else{
+            console.log('clé bizarre', key)
+            compiler_error(key,
+                'mapping pattern keys may only match literals and attribute lookups')
+        }
+    }
     var items = []
     for(var i = 0, len = this.keys.length; i < len; i++){
         var key_prefix = this.keys[i] instanceof $B.ast.Constant ?
@@ -2047,7 +2177,12 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchOr.prototype.to_js = function(scopes){
-    var js = this.patterns.map(x => `{${$B.js_from_ast(x, scopes)}}`).join(', ')
+    pattern_bindings(this)
+    var items = []
+    for(var alt of this.patterns){
+        items.push(`{${$B.js_from_ast(alt, scopes)}}`)
+    }
+    var js = items.join(', ')
     return `or: [${js}]`
 }
 
@@ -2178,7 +2313,7 @@ $B.ast.Raise.prototype.to_js = function(scopes){
 
 $B.ast.Return.prototype.to_js = function(scopes){
     // check that return is inside a function
-    compile_check(this)
+    compiler_check(this)
     var js = `$B.set_lineno(locals, ${this.lineno})\n` +
              'var result = ' +
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
@@ -2226,7 +2361,7 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
 }
 
 $B.ast.Try.prototype.to_js = function(scopes){
-    compile_check(this)
+    compiler_check(this)
     var id = $B.UUID(),
         has_except_handlers = this.handlers.length > 0,
         has_else = this.orelse.length > 0,
@@ -2615,8 +2750,11 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
 }
 
 $B.js_from_root = function(ast_root, symtable, filename, namespaces){
+    if($B.show_ast_dump){
+        console.log($B.ast_dump(ast_root))
+    }
     if($B.compiler_check){
-        // $B.compiler_check(ast_root, symtable)
+        $B.compiler_check(ast_root, symtable)
     }
     var scopes = []
     scopes.symtable = symtable
