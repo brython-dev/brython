@@ -245,9 +245,8 @@ function RAISE_ERROR_KNOWN_LOCATION(errtype,
                            end_lineno, end_col_offset,
                            errmsg){
     var va = [errmsg]
-    var _col_offset = col_offset //Py_ssize_t _col_offset = (col_offset == CURRENT_POS ? CURRENT_POS : col_offset + 1);
-    var _end_col_offset = end_col_offset //Py_ssize_t _end_col_offset = (end_col_offset == CURRENT_POS ? CURRENT_POS : end_col_offset + 1);
-    $B._PyPegen.raise_error_known_location(p, errtype, lineno, _col_offset, end_lineno, _end_col_offset, errmsg, va);
+    $B._PyPegen.raise_error_known_location(p, errtype, 
+        lineno, col_offset, end_lineno, end_col_offset, errmsg, va);
     return NULL;
 }
 

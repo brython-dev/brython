@@ -557,6 +557,7 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
         line = lines[exc.lineno - 1]
     exc.text = line
     exc.args[1] = [p.filename, lineno, col_offset, line]
+    console.log('error', exc.args)
     throw exc
 }
 
@@ -638,6 +639,32 @@ $B._PyPegen.join_sequences = function(p, a, b){
     return a.concat(b)
 }
 
+function make_formatted_value(p, fmt_values){
+    // format is a sequence of strings and instances of fstring_expression
+    if(! fmt_values){
+        return
+    }
+    var seq = []
+    for(var item of fmt_values){
+        if(typeof item == 'string'){
+            var fmt_ast = new $B.ast.Constant({type: 'str', value: item})
+            set_position_from_obj(fmt_ast, p.arena)
+        }else{
+            var src = item.expression.trimStart() // ignore leading whitespace
+            var _ast = new $B.Parser(src).feed('eval', p.filename)
+            var raw_value = _ast.body
+            var fmt_ast = new $B.ast.FormattedValue(raw_value,
+                item.conversion === null ? -1 : item.conversion,
+                make_formatted_value(p, item.fmt))
+            set_position_from_obj(fmt_ast, _ast)
+        }
+        seq.push(fmt_ast)
+    }
+    var ast_obj = new $B.ast.JoinedStr(seq)
+    set_position_from_obj(ast_obj, p.arena)
+    return ast_obj
+}
+
 $B._PyPegen.concatenate_strings = function(p, strings){
     // strings is a list of tokens
     var res = '',
@@ -645,88 +672,113 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         last = $B.last(strings),
         type
 
-    var state = {
-        last_str: NULL,
-        fmode: 0,
-        expr_list: []
+    var state = NULL,
+        value,
+        values = []
+
+    function error(message){
+        $B.Parser.RAISE_ERROR_KNOWN_LOCATION(
+            _b_.SyntaxError,
+            first.start[0], first.start[1],
+            last.end[0], last.end[1],
+            message)
     }
 
+    function set_position(ast_obj){
+        ast_obj.lineno = first.start[0]
+        ast_obj.col_offset = first.start[1]
+        ast_obj.end_lineno = last.end[0]
+        ast_obj.end_col_offset = last.end[1]
+    }
+
+    // make a single list with all the strings
+    var items = [],
+        has_fstring = false,
+        state
     for(var token of strings){
-        var s = $B.prepare_string(token.string),
-            values = s.value
-        if(Array.isArray(values)){
-            // fstring
-            var jstr_values = []
-            for(var value of values){
-                if(typeof value == "string"){
-                    value = value.replace(/\\n/g,'\n')
-                    value = value.replace(/\\r/g,'\r')
-                    try{
-                        var str_ast = new $B.ast.Constant(value)
-                        set_position_from_token(str_ast, token)
-                        jstr_values.push(str_ast)
-                    }catch(err){
-                        console.log('error eval string', value)
-                        throw err
-                    }
-                }else{
-                    if(value.format !== undefined){
-                        var fmt_ast = new $B.ast.Constant({type: 'str', value: value.format[0]})
-                        set_position_from_obj(fmt_ast, p.arena)
-                        var _format = new $B.ast.JoinedStr([fmt_ast])
-                        set_position_from_obj(_format, p.arena)
-                    }
-                    var src = value.expression.trimStart() // ignore leading whitespace
-                    var _ast = new $B.Parser(src).feed('eval', p.filename)
-                    var raw_value = _ast.body
-                    var formatted = new $B.ast.FormattedValue(raw_value,
-                        value.conversion === null ? -1 : value.conversion,
-                        _format)
-                    set_position_from_obj(formatted, _ast)
-                    jstr_values.push(formatted)
-                }
+        var s = $B.prepare_string(token),
+            v = s.value
+        if(Array.isArray(v)){ // fstring
+            has_fstring = true
+            if(state == 'bytestring'){
+                error('cannot mix bytes and nonbytes literals')
             }
-            var ast_obj = new $B.ast.JoinedStr(jstr_values)
-            set_position_from_obj(ast_obj, p.arena)
+            items = items.concat(v)
+            state = 'string'
         }else{
-            value = values.replace(/\n/g,'\\n\\\n')
-            value = value.replace(/\r/g,'\\r\\\r')
-            var is_byte = value.startsWith('b')
-            if(is_byte){
-                value = value.substr(1)
-                if(type === undefined){
-                    type = 'bytes'
-                    res = _b_.bytes.$factory()
-                }else if(type == 'str'){
-                    $B.Parser.RAISE_SYNTAX_ERROR('cannot mix str and bytes')
-                }
-                try{
-                    var bv = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
-                    res.source = res.source.concat(bv.source)
-                }catch(err){
-                    console.log('error eval string', token, 'value', value)
-                    throw err
-                }
-            }else{
-                if(type === undefined){
-                    type = 'str'
-                }else if(type == 'bytes'){
-                    $B.Parser.RAISE_SYNTAX_ERROR('cannot mix str and bytes')
-                }
-                try{
-                    res += eval(value)
-                }catch(err){
-                    console.log('error eval string', token, 'value', value)
-                    throw err
-                }
+            if((state == 'string' && s.bytes) ||
+                    (state == 'bytestring' && ! s.bytes)){
+                error('cannot mix bytes and nonbytes literals')
             }
-            var ast_obj = new $B.ast.Constant(res)
+            state = s.bytes ? 'bytestring' : 'string'
+            v = v.replace(/\n/g,'\\n\\\n')
+            v = v.replace(/\r/g,'\\r\\\r')
+            try{
+                items.push(s.bytes ? eval(v.substr(1)) : eval(v))
+            }catch(err){
+                console.log('error eval', v, 's', s)
+                throw err
+            }
         }
     }
-    ast_obj.lineno = first.start[0]
-    ast_obj.col_offset = first.start[1]
-    ast_obj.end_lineno = last.end[0]
-    ast_obj.end_col_offset = last.end[1]
+
+    if(state == 'bytestring'){
+        // only bytestrings
+        var s = items.join(''),
+            b = _b_.str.encode(s, 'iso-8859-1')
+        var ast_obj = new $B.ast.Constant(b)
+        set_position(ast_obj)
+        return ast_obj
+    }
+
+    if(! has_fstring){
+        var ast_obj = new $B.ast.Constant(items.join(''))
+        set_position(ast_obj)
+        return ast_obj
+    }
+
+    // concatenate consecutive strings
+    var items1 = [],
+        has_fstring,
+        i = 0
+    while(i < items.length){
+        if(typeof items[i] != 'string'){
+            items1.push(items[i])
+            i++
+        }else{
+            items1.push(items[i])
+            i++
+            while(i < items.length & typeof items[i] == 'string'){
+                items1[items1.length - 1] += items[i]
+                i++
+            }
+        }
+    }
+
+    var jstr_values = []
+
+    for(var item of items1){
+        if(typeof item == 'string'){
+            var ast_obj = new $B.ast.Constant(item)
+            set_position_from_token(ast_obj, token)
+            jstr_values.push(ast_obj)
+        }else{
+            if(item.format !== undefined){
+                var _format = make_formatted_value(p, item.format)
+            }
+            var src = item.expression.trimStart() // ignore leading whitespace
+            var _ast = new $B.Parser(src).feed('eval', p.filename)
+            var raw_value = _ast.body
+            var formatted = new $B.ast.FormattedValue(raw_value,
+                item.conversion === null ? -1 : item.conversion,
+                _format)
+            set_position(formatted)
+            jstr_values.push(formatted)
+        }
+    }
+
+    var ast_obj = new $B.ast.JoinedStr(jstr_values)
+    set_position(ast_obj)
     return ast_obj
 }
 

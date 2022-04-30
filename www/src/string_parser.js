@@ -1,12 +1,23 @@
 (function($B){
 
+var _b_ = $B.builtins
+
 var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',
     is_escaped = {}
 for(var i = 0; i < s_escaped.length; i++){
     is_escaped[s_escaped.charAt(i)] = true
 }
 
-function test_escape(context, text, string_start, antislash_pos){
+function string_error(token, msg){
+    $B.Parser.RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+        token.start[0],
+        token.start[1],
+        token.end[0],
+        token.end[1],
+        msg)
+}
+
+function test_escape(token, context, text, string_start, antislash_pos){
     // Test if the escape sequence starting at position "antislah_pos" in text
     // is is valid
     // $pos is set at the position before the string quote in original string
@@ -27,7 +38,7 @@ function test_escape(context, text, string_start, antislash_pos){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
                 // $pos = string_start + seq_end + 2
-                $_SyntaxError(context,
+                string_error(token,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\xXX escape"])
@@ -39,7 +50,7 @@ function test_escape(context, text, string_start, antislash_pos){
             if(mo[0].length != 4){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                $_SyntaxError(context,
+                string_error(token,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape"])
@@ -51,14 +62,14 @@ function test_escape(context, text, string_start, antislash_pos){
             if(mo[0].length != 8){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                $_SyntaxError(context,
+                string_error(token,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape"])
             }else{
                 var value = parseInt(mo[0], 16)
                 if(value > 0x10FFFF){
-                    $_SyntaxError('invalid unicode escape ' + mo[0])
+                    string_error(token, 'invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
                     return [SurrogatePair(value), 2 + mo[0].length]
                 }else{
@@ -68,8 +79,9 @@ function test_escape(context, text, string_start, antislash_pos){
     }
 }
 
-$B.prepare_string = function(s){
-    var len = s.length,
+$B.prepare_string = function(token){
+    var s = token.string,
+        len = s.length,
         pos = 0,
         string_modifier,
         _type = "string",
@@ -170,12 +182,12 @@ $B.prepare_string = function(s){
                         re = new RegExp("[-a-zA-Z0-9 ]+"),
                         search = re.exec(src.substr(end_lit))
                     if(search === null){
-                        $_SyntaxError(context,"(unicode error) " +
+                        string_error(token, "(unicode error) " +
                             "malformed \\N character escape", pos)
                     }
                     var end_lit = end_lit + search[0].length
                     if(src.charAt(end_lit) != "}"){
-                        $_SyntaxError(context, "(unicode error) " +
+                        string_error(token, "(unicode error) " +
                             "malformed \\N character escape")
                     }
                     var description = search[0].toUpperCase()
@@ -201,7 +213,7 @@ $B.prepare_string = function(s){
                             description + ";.*$", "m")
                         search = re.exec($B.unicodedb)
                         if(search === null){
-                            $_SyntaxError(context, "(unicode error) " +
+                            string_error(token, "(unicode error) " +
                                 "unknown Unicode character name")
                         }
                         var cp = "0x" + search[1] // code point
@@ -211,7 +223,7 @@ $B.prepare_string = function(s){
                         end++
                     }
                 }else{
-                    var esc = test_escape(context, src, string_start,
+                    var esc = test_escape(token, context, src, string_start,
                                           end)
                     if(esc){
                         if(esc[0] == '\\'){
@@ -235,7 +247,7 @@ $B.prepare_string = function(s){
             // In a string with single quotes, line feed not following
             // a backslash raises SyntaxError
             console.log(pos, end, src.substring(pos, end))
-            $_SyntaxError(context, ["EOL while scanning string literal"])
+            string_error(token, ["EOL while scanning string literal"])
         }else{
             zone += src.charAt(end)
             end++
@@ -273,10 +285,7 @@ $B.prepare_string = function(s){
                 string_no_bs = string.replace(re, quote)
             var elts = $B.parse_fstring(string_no_bs) // in py_string.js
         }catch(err){
-            if(err.position){
-                $pos += err.position
-            }
-            $_SyntaxError(context, [err.message])
+            string_error(token, err.message)
         }
     }
 

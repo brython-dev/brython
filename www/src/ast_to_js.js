@@ -2040,14 +2040,10 @@ function pattern_bindings(pattern){
             for(var i = 1; i < pattern.patterns.length; i++){
                 var _bindings = pattern_bindings(pattern.patterns[i])
                 if(_bindings.length != bindings.length){
-                    console.log('binding of first alt', bindings)
-                    console.log('bindings of alt #' + i, _bindings)
                     compiler_error(pattern, err_msg)
                 }else{
                     for(var j = 0; j < bindings.length; j++){
                         if(bindings[j] != _bindings[j]){
-                    console.log('binding of first alt', bindings)
-                    console.log('bindings of alt #' + i, _bindings)
                             compiler_error(pattern, err_msg)
                         }
                     }
@@ -2111,7 +2107,7 @@ $B.ast.MatchAs.prototype.to_js = function(scopes){
 
 $B.ast.MatchClass.prototype.to_js = function(scopes){
     var names = []
-    for(var pattern of this.patterns){
+    for(var pattern of this.patterns.concat(this.kwd_patterns)){
         var name = pattern.name
         if(name){
             if(names.indexOf(name) > -1){
@@ -2121,6 +2117,7 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
             names.push(name)
         }
     }
+
     names = []
     for(var i = 0; i < this.kwd_attrs.length; i++){
         var kwd_attr = this.kwd_attrs[i]
@@ -2156,9 +2153,18 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
             }
             keys.push(value)
         }else{
-            console.log('clé bizarre', key)
             compiler_error(key,
                 'mapping pattern keys may only match literals and attribute lookups')
+        }
+    }
+    var names = []
+    for(var pattern of this.patterns){
+        if(pattern instanceof $B.ast.MatchAs && pattern.name){
+            if(names.indexOf(pattern.name) > -1){
+                compiler_error(pattern,
+                    `multiple assignments to name '${pattern.name}' in pattern`)
+            }
+            names.push(pattern.name)
         }
     }
     var items = []
@@ -2177,6 +2183,7 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchOr.prototype.to_js = function(scopes){
+    is_irrefutable(this)
     pattern_bindings(this)
     var items = []
     for(var alt of this.patterns){
@@ -2184,6 +2191,22 @@ $B.ast.MatchOr.prototype.to_js = function(scopes){
     }
     var js = items.join(', ')
     return `or: [${js}]`
+}
+
+$B.ast.MatchSequence.prototype.to_js = function(scopes){
+    var items = [],
+        names = []
+    for(var pattern of this.patterns){
+        if(pattern instanceof $B.ast.MatchAs && pattern.name){
+            if(names.indexOf(pattern.name) > -1){
+                compiler_error(pattern,
+                    `multiple assignments to name '${pattern.name}' in pattern`)
+            }
+            names.push(pattern.name)
+        }
+        items.push('{' + $B.js_from_ast(pattern, scopes) + '}')
+    }
+    return `sequence: [${items.join(', ')}]`
 }
 
 $B.ast.MatchSingleton.prototype.to_js = function(scopes){
@@ -2202,17 +2225,16 @@ $B.ast.MatchStar.prototype.to_js = function(scopes){
 $B.ast.MatchValue.prototype.to_js = function(scopes){
     if(this.value instanceof $B.ast.Constant){
         return `literal: ${$B.js_from_ast(this.value, scopes)}`
-    }else{
+    }else if(this.value instanceof $B.ast.Constant ||
+                this.value instanceof $B.ast.UnaryOp ||
+                this.value instanceof $B.ast.BinOp ||
+                this.value instanceof $B.ast.Attribute){
         return `value: ${$B.js_from_ast(this.value, scopes)}`
+    }else{
+        console.log(this.value)
+        compiler_error(this,
+            'patterns may only match literals and attribute lookups')
     }
-}
-
-$B.ast.MatchSequence.prototype.to_js = function(scopes){
-    var items = []
-    for(var pattern of this.patterns){
-        items.push('{' + $B.js_from_ast(pattern, scopes) + '}')
-    }
-    return `sequence: [${items.join(', ')}]`
 }
 
 $B.ast.Module.prototype.to_js = function(scopes){
