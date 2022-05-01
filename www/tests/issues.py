@@ -1856,7 +1856,7 @@ try:
     exec("a = +25, b = 25")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "cannot assign to operator"
+    assert exc.args[0] == "invalid syntax. Maybe you meant '==' or ':=' instead of '='?"
 
 # issue 949
 class A(object):

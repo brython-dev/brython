@@ -1003,6 +1003,7 @@ function make_args(scopes){
         has_starred = false
     for(var arg of this.args){
         if(arg instanceof $B.ast.Starred){
+            arg.$handled = true
             has_starred = true
         }else{
             named_args.push($B.js_from_ast(arg, scopes))
@@ -1948,6 +1949,7 @@ function list_or_tuple_to_js(func, scopes){
             simple = []
         for(var elt of this.elts){
             if(elt instanceof $B.ast.Starred){
+                elt.$handled = true
                 parts.push(`[${simple.join(', ')}]`)
                 simple = []
                 parts.push(`_b_.list.$factory(${$B.js_from_ast(elt, scopes)})`)
@@ -2369,7 +2371,16 @@ $B.ast.Slice.prototype.to_js = function(scopes){
 }
 
 $B.ast.Starred.prototype.to_js = function(scopes){
-    return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`
+    if(this.$handled){
+        return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`
+    }
+    if(this.ctx instanceof $B.ast.Store){
+        compiler_error(this,
+            "starred assignment target must be in a list or tuple")
+    }else{
+        compiler_error(this,
+            "can't use starred expression here")
+    }
 }
 
 $B.ast.Subscript.prototype.to_js = function(scopes){
