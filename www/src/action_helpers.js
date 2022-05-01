@@ -703,7 +703,13 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             if(state == 'bytestring'){
                 error('cannot mix bytes and nonbytes literals')
             }
-            items = items.concat(v)
+            for(var fs_item of v){
+                if(typeof fs_item == 'string'){
+                    fs_item = fs_item.replace(/\\n/g,'\n')
+                    fs_item = fs_item.replace(/\\r/g,'\r')
+                }
+                items.push(fs_item)
+            }
             state = 'string'
         }else{
             if((state == 'string' && s.bytes) ||
