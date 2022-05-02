@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-02 22:32:25.225063"
-__BRYTHON__.timestamp=1651523545225
+__BRYTHON__.compiled_date="2022-05-02 22:59:41.338242"
+__BRYTHON__.timestamp=1651525181338
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13863,6 +13863,7 @@ return js}
 var exec_num={value:0}
 function init_scopes(type,scopes){
 var filename=scopes.symtable.table.filename,name=$B.url2name[filename]
+if(name){name=name.replace(/-/g,'_')}
 if(filename=='<string>'){name='exec'}
 var top_scope=new Scope(name,`${type}`,this),block=scopes.symtable.table.blocks.get(_b_.id(this))
 if(block && block.$has_import_star){top_scope.has_import_star=true}

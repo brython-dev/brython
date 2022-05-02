@@ -639,6 +639,11 @@ function init_scopes(type, scopes){
     // namespaces can be passed by exec() or eval()
     var filename = scopes.symtable.table.filename,
         name = $B.url2name[filename]
+    
+    if(name){
+        name = name.replace(/-/g, '_') // issue 1958
+    }
+
     if(filename == '<string>'){
         name = 'exec'
     }

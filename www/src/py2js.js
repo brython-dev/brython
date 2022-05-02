@@ -2724,7 +2724,7 @@ $ExprCtx.prototype.transition = function(token, value){
                      }catch(err){
                          $_SyntaxError(context, ["invalid syntax. " +
                              "Maybe you meant '==' or ':=' instead of '='?"])
-                     }                 
+                     }
                      if(item.type == "expr" && item.name == "operand"){
                          $_SyntaxError(context, ["cannot assign to operator"])
                      }
@@ -7749,7 +7749,6 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
                 {src: src, has_annotations: has_annotations,
                     filename: filename},
                 module, locals_id, parent_scope, line_num)
-
         dispatch_tokens(root)
         var _ast = root.ast()
         if($B.produce_ast == 2){
@@ -8182,6 +8181,7 @@ var brython = $B.parser.brython = function(options){
 $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
+
     try{
         var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),
