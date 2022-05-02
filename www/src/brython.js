@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-02 21:27:36.750009"
-__BRYTHON__.timestamp=1651519656750
+__BRYTHON__.compiled_date="2022-05-02 22:23:59.405103"
+__BRYTHON__.timestamp=1651523039405
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5049,7 +5049,8 @@ __class__:$B.GenericAlias,origin_class,items}}
 )
 $B.GenericAlias.__args__={__get__:function(self){return $B.fast_tuple(self.items)}}
 $B.GenericAlias.__call__=function(self,...args){return self.origin_class.$factory.apply(null,args)}
-$B.GenericAlias.__eq__=function(self,other){return $B.rich_comp("__eq__",self.origin_class,other.origin_class)&&
+$B.GenericAlias.__eq__=function(self,other){if(! _b_.isinstance(other,$B.GenericAlias)){return false}
+return $B.rich_comp("__eq__",self.origin_class,other.origin_class)&&
 $B.rich_comp("__eq__",self.items,other.items)}
 $B.GenericAlias.__getitem__=function(self,item){throw _b_.TypeError.$factory("descriptor '__getitem__' for '"+
 self.origin_class.$infos.__name__+"' objects doesn't apply to a '"+
@@ -5067,6 +5068,8 @@ $B.set_func_names($B.GenericAlias,"types")
 $B.UnionType=$B.make_class("UnionType",function(items){return{
 __class__:$B.UnionType,items}}
 )
+$B.UnionType.__args__={__get__:function(self){return $B.fast_tuple(self.items)}}
+$B.UnionType.__parameters__={__get__:function(){return $B.fast_tuple([])}}
 $B.UnionType.__repr__=function(self){var t=[]
 for(var item of self.items){if(item.$is_class){t.push(item.$infos.__name__)}else{t.push(_b_.repr(item))}}
 return t.join(' | ')}

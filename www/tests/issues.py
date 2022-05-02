@@ -3067,6 +3067,14 @@ assert length(alist) == 4
 # issue 1940
 state:str = ""
 
+# issue 1953
+from typing import Callable, List, Tuple, Union
+Callable[[int], tuple[int, int]]
+Callable[[int], Tuple[int, int]]
+Callable[[int], list[int]]
+Callable[[int], List[int]]
+Callable[[int], int | str]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

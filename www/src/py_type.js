@@ -989,6 +989,9 @@ $B.GenericAlias.__call__ = function(self, ...args){
 }
 
 $B.GenericAlias.__eq__ = function(self, other){
+    if(! _b_.isinstance(other, $B.GenericAlias)){
+        return false
+    }
     return $B.rich_comp("__eq__", self.origin_class, other.origin_class) &&
         $B.rich_comp("__eq__", self.items, other.items)
 }
@@ -1047,6 +1050,18 @@ $B.UnionType = $B.make_class("UnionType",
         }
     }
 )
+
+$B.UnionType.__args__ = {
+    __get__: function(self){
+        return $B.fast_tuple(self.items)
+    }
+}
+
+$B.UnionType.__parameters__ = {
+    __get__: function(){
+        return $B.fast_tuple([])
+    }
+}
 
 $B.UnionType.__repr__ = function(self){
     var t = []
