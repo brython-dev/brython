@@ -666,7 +666,9 @@ $B.augm_assign = function(left, op, right){
     // augmented assignment
     var op1 = op.substr(0, op.length - 1)
     if(typeof left == 'number' && typeof right == 'number'
-            && op != '//='){ // operator "//" not supported by Javascript
+            && op != '//='  // operator "//" not supported by Javascript
+            && op != '%='   // % doesn't work the same in JS and Python for ints < 0
+            ){
         var res = eval(left + ' ' + op1 + ' ' + right)
         if(res <= $B.max_int && res >= $B.min_int &&
                 res.toString().search(/e/i) == -1){

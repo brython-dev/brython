@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-02 22:23:59.405103"
-__BRYTHON__.timestamp=1651523039405
+__BRYTHON__.compiled_date="2022-05-02 22:32:25.225063"
+__BRYTHON__.timestamp=1651523545225
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5326,8 +5326,9 @@ return di(obj,item)}
 $B.augm_assign=function(left,op,right){
 var op1=op.substr(0,op.length-1)
 if(typeof left=='number' && typeof right=='number'
-&& op !='//='){
-var res=eval(left+' '+op1+' '+right)
+&& op !='//=' 
+&& op !='%=' 
+){var res=eval(left+' '+op1+' '+right)
 if(res <=$B.max_int && res >=$B.min_int &&
 res.toString().search(/e/i)==-1){return res}else{res=eval(`${BigInt(left)}n ${op1} ${BigInt(right)}n`)
 var pos=res > 0n,res=res+''
@@ -13976,7 +13977,7 @@ var left_scope=scope.resolve=='global' ?
 make_scope_name(scopes,scopes[0]):'locals'
 return `${left_scope}.${this.target.id} = $B.augm_assign(`+
 make_ref(this.target.id,scopes,scope)+`, '${iop}', ${value})`}else{var ref=`${make_scope_name(scopes, scope.found)}.${this.target.id}`
-if(op=='@' ||op=='//'){js=`${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`}else{js=ref+` = typeof ${ref} == "number" && `+
+if(op=='@' ||op=='//' ||op=='%'){js=`${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`}else{js=ref+` = typeof ${ref} == "number" && `+
 `$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n`+
 `locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`}}}else if(this.target instanceof $B.ast.Subscript){var op=opclass2dunder[this.op.constructor.$name]
 js=`$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), `+

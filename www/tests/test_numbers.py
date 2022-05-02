@@ -681,4 +681,9 @@ assert (-n).bit_count() == 3
 n = 2 ** 70 + 567444332
 assert n.bit_count() == 14
 
+# issue 1955
+a = -1
+a %= 2
+assert(a == 1)
+
 print('passed all tests...')

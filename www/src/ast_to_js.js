@@ -916,7 +916,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
                 make_ref(this.target.id, scopes, scope) + `, '${iop}', ${value})`
         }else{
             var ref = `${make_scope_name(scopes, scope.found)}.${this.target.id}`
-            if(op == '@' || op == '//'){
+            if(op == '@' || op == '//' || op == '%'){
                 js = `${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`
             }else{
                 js = ref + ` = typeof ${ref} == "number" && ` +
