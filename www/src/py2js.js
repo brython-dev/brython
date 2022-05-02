@@ -2719,6 +2719,12 @@ $ExprCtx.prototype.transition = function(token, value){
                  // issue 973
                  for(var i = 0; i < context.parent.tree.length; i++){
                      var item = context.parent.tree[i]
+                     try{
+                         check_assignment(item, {once: true})
+                     }catch(err){
+                         $_SyntaxError(context, ["invalid syntax. " +
+                             "Maybe you meant '==' or ':=' instead of '='?"])
+                     }                 
                      if(item.type == "expr" && item.name == "operand"){
                          $_SyntaxError(context, ["cannot assign to operator"])
                      }
@@ -2728,7 +2734,7 @@ $ExprCtx.prototype.transition = function(token, value){
                          (context.parent.real == 'tuple' &&
                           ! context.parent.implicit)){
                      $_SyntaxError(context, ["invalid syntax. " +
-                         "Maybe you meant '==' or ':=' instead of '=' ?"])
+                         "Maybe you meant '==' or ':=' instead of '='?"])
                  }
              }else if(context.parent.type == "expr" &&
                      context.parent.name == "iterator"){

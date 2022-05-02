@@ -1914,7 +1914,7 @@ try:
     exec("x = 400 - a, y = 400 - b")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "cannot assign to operator"
+    assert exc.args[0] == "invalid syntax. Maybe you meant '==' or ':=' instead of '='?"
 
 # issue 975
 l = [1, 2, 3]
@@ -3063,6 +3063,9 @@ def length(alist):
         case [x, *xs]: return 1 + length(xs)
 
 assert length(alist) == 4
+
+# issue 1940
+state:str = ""
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -121,9 +121,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-04-29 21:11:13.811397"
-__BRYTHON__.timestamp=1651259473811
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
+__BRYTHON__.compiled_date="2022-05-02 21:27:36.750009"
+__BRYTHON__.timestamp=1651519656750
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -1768,11 +1768,13 @@ return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent
 $_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="not"){
 $_SyntaxError(C,["cannot assign to operator"])}else if(C.parent.type=="with"){$_SyntaxError(C,["expected :"])}else if(C.parent.type=="list_or_tuple"){
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
+try{check_assignment(item,{once:true})}catch(err){$_SyntaxError(C,["invalid syntax. "+
+"Maybe you meant '==' or ':=' instead of '='?"])}
 if(item.type=="expr" && item.name=="operand"){$_SyntaxError(C,["cannot assign to operator"])}}
 if(C.parent.real=='list' ||
 (C.parent.real=='tuple' &&
 ! C.parent.implicit)){$_SyntaxError(C,["invalid syntax. "+
-"Maybe you meant '==' or ':=' instead of '=' ?"])}}else if(C.parent.type=="expr" &&
+"Maybe you meant '==' or ':=' instead of '='?"])}}else if(C.parent.type=="expr" &&
 C.parent.name=="iterator"){$_SyntaxError(C,['expected :'])}else if(C.parent.type=="lambda"){if(C.parent.parent.parent.type !="node"){$_SyntaxError(C,['expression cannot contain'+
 ' assignment, perhaps you meant "=="?'])}}else if(C.parent.type=='target_list'){$_SyntaxError(C,"assign to target in iteration")}
 while(C.parent !==undefined){C=C.parent
@@ -6180,8 +6182,8 @@ js=js_obj.js}else{var root=$B.parser.$create_root_node(src,'<module>',frame[0],f
 root.mode=mode
 root.filename=filename
 $B.parser.dispatch_tokens(root)
-var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,filename,{local_name,exec_locals,global_name,exec_globals}),js=js_obj.js}}catch(err){var lineno=err.args[1][1]
-exec_locals.$lineno=lineno
+var _ast=root.ast(),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,filename,{local_name,exec_locals,global_name,exec_globals}),js=js_obj.js}}catch(err){if(err.args){var lineno=err.args[1][1]
+exec_locals.$lineno=lineno}else{console.log('JS Error',err.message)}
 $B.frames_stack=save_frames_stack
 throw err}
 if(mode=='eval'){js='return '+js}
@@ -8745,11 +8747,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','re1','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.html','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.webworker','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','re1','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -13624,7 +13626,12 @@ return obj}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 function compiler_error(ast_obj,message){console.log('compiler check throws error',message,ast_obj)
-$B.Parser.RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,ast_obj.lineno,ast_obj.col_offset,ast_obj.end_lineno,ast_obj.end_col_offset,message)}
+var exc=_b_.SyntaxError.$factory(message)
+exc.lineno=ast_obj.lineno
+exc.offset=ast_obj.col_offset
+exc.end_lineno=ast_obj.end_lineno
+exc.end_offset=ast_obj.end_col_offset
+throw exc}
 $B.set_func_infos=function(func,name,qualname,docstring){func.$is_func=true}
 function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
@@ -13866,8 +13873,11 @@ if(check_func){obj._check()}}
 $B.ast.Assert.prototype.to_js=function(scopes){var test=$B.js_from_ast(this.test,scopes),msg=this.msg ? $B.js_from_ast(this.msg,scopes):''
 return `if($B.set_lineno(locals, ${this.lineno}) && !$B.$bool(${test})){\n`+
 `throw _b_.AssertionError.$factory(${msg})}\n`}
-$B.ast.AnnAssign.prototype.to_js=function(scopes){last_scope(scopes).has_annotation=true
-if(this.value){var js=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
+$B.ast.AnnAssign.prototype.to_js=function(scopes){var scope=last_scope(scopes)
+var js=''
+if(! scope.has_annotation){js+='locals.__annotations__ = $B.empty_dict()\n'}
+scope.has_annotation=true
+if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
 if(this.target instanceof $B.ast.Name){var scope=bind(this.target.id,scopes)
 js+=`$B.$setitem(locals.__annotations__, `+
 `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n`
@@ -13876,7 +13886,7 @@ js+=`${target_ref} = ann`}else if(this.target instanceof $B.ast.Attribute){js+=`
 `, "${this.target.attr}", ann)`}else if(this.target instanceof $B.ast.Subscript){console.log(this.target)
 js+=`$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}`+
 `, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.annotation instanceof $B.ast.Name){var ann=`'${this.annotation.id}'`}else{var ann=$B.js_from_ast(this.annotation,scopes)}
-var js=`$B.$setitem(locals.__annotations__, `+
+js+=`$B.$setitem(locals.__annotations__, `+
 `'${this.target.id}', ${ann})`}
 return `$B.set_lineno(locals, ${this.lineno})\n`+js}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
@@ -14000,7 +14010,8 @@ var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')',args=make_args.bind(this
 return js+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
-for(var arg of this.args){if(arg instanceof $B.ast.Starred){has_starred=true}else{named_args.push($B.js_from_ast(arg,scopes))}}
+for(var arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
+has_starred=true}else{named_args.push($B.js_from_ast(arg,scopes))}}
 for(var keyword of this.keywords){if(keyword.arg){named_kwargs.push(
 `${keyword.arg}: ${$B.js_from_ast(keyword.value, scopes)}`)}else{
 starred_kwargs.push($B.js_from_ast(keyword.value,scopes))}}
@@ -14425,7 +14436,8 @@ var js=f.to_js(scopes),lambda_ref=reference(scopes,last_scope(scopes),name)
 return `(function(){ ${js}\n`+
 `return ${lambda_ref}\n})()`}
 function list_or_tuple_to_js(func,scopes){if(this.elts.filter(x=> x instanceof $B.ast.Starred).length > 0){var parts=[],simple=[]
-for(var elt of this.elts){if(elt instanceof $B.ast.Starred){parts.push(`[${simple.join(', ')}]`)
+for(var elt of this.elts){if(elt instanceof $B.ast.Starred){elt.$handled=true
+parts.push(`[${simple.join(', ')}]`)
 simple=[]
 parts.push(`_b_.list.$factory(${$B.js_from_ast(elt, scopes)})`)}else{simple.push($B.js_from_ast(elt,scopes))}}
 if(simple.length > 0){parts.push(`[${simple.join(', ')}]`)}
@@ -14465,11 +14477,7 @@ case $B.ast.MatchOr:
 bindings=pattern_bindings(pattern.patterns[0])
 err_msg='alternative patterns bind different names'
 for(var i=1;i < pattern.patterns.length;i++){var _bindings=pattern_bindings(pattern.patterns[i])
-if(_bindings.length !=bindings.length){console.log('binding of first alt',bindings)
-console.log('bindings of alt #'+i,_bindings)
-compiler_error(pattern,err_msg)}else{for(var j=0;j < bindings.length;j++){if(bindings[j]!=_bindings[j]){console.log('binding of first alt',bindings)
-console.log('bindings of alt #'+i,_bindings)
-compiler_error(pattern,err_msg)}}}}
+if(_bindings.length !=bindings.length){compiler_error(pattern,err_msg)}else{for(var j=0;j < bindings.length;j++){if(bindings[j]!=_bindings[j]){compiler_error(pattern,err_msg)}}}}
 break}
 return bindings.sort()}
 $B.ast.Match.prototype.to_js=function(scopes){var scope=$B.last(scopes),irrefutable
@@ -14492,7 +14500,7 @@ if(scope.bindings){if(scope.bindings.indexOf(name)>-1){compiler_error(this,`mult
 scope.bindings.push(name)}
 return params}
 $B.ast.MatchClass.prototype.to_js=function(scopes){var names=[]
-for(var pattern of this.patterns){var name=pattern.name
+for(var pattern of this.patterns.concat(this.kwd_patterns)){var name=pattern.name
 if(name){if(names.indexOf(name)>-1){compiler_error(pattern,`multiple assignment to name '${name}' in pattern`)}
 names.push(name)}}
 names=[]
@@ -14510,8 +14518,10 @@ key instanceof $B.ast.UnaryOp ||
 key instanceof $B.ast.BinOp){var value=eval(key.to_js(scopes))
 if(_b_.list.__contains__(keys,value)){compiler_error(this,'mapping pattern checks duplicate key '+
 `(${_b_.repr(value)})`)}
-keys.push(value)}else{console.log('clé bizarre',key)
-compiler_error(key,'mapping pattern keys may only match literals and attribute lookups')}}
+keys.push(value)}else{compiler_error(key,'mapping pattern keys may only match literals and attribute lookups')}}
+var names=[]
+for(var pattern of this.patterns){if(pattern instanceof $B.ast.MatchAs && pattern.name){if(names.indexOf(pattern.name)>-1){compiler_error(pattern,`multiple assignments to name '${pattern.name}' in pattern`)}
+names.push(pattern.name)}}
 var items=[]
 for(var i=0,len=this.keys.length;i < len;i++){var key_prefix=this.keys[i]instanceof $B.ast.Constant ?
 'literal: ' :'value: '
@@ -14520,21 +14530,28 @@ items.push(`[{${key_prefix}${key}}, {${value}}]`)}
 var js='mapping: ['+items.join(', ')+']'
 if(this.rest){js+=`, rest: '${this.rest}'`}
 return js}
-$B.ast.MatchOr.prototype.to_js=function(scopes){pattern_bindings(this)
+$B.ast.MatchOr.prototype.to_js=function(scopes){is_irrefutable(this)
+pattern_bindings(this)
 var items=[]
 for(var alt of this.patterns){items.push(`{${$B.js_from_ast(alt, scopes)}}`)}
 var js=items.join(', ')
 return `or: [${js}]`}
+$B.ast.MatchSequence.prototype.to_js=function(scopes){var items=[],names=[]
+for(var pattern of this.patterns){if(pattern instanceof $B.ast.MatchAs && pattern.name){if(names.indexOf(pattern.name)>-1){compiler_error(pattern,`multiple assignments to name '${pattern.name}' in pattern`)}
+names.push(pattern.name)}
+items.push('{'+$B.js_from_ast(pattern,scopes)+'}')}
+return `sequence: [${items.join(', ')}]`}
 $B.ast.MatchSingleton.prototype.to_js=function(scopes){var value=this.value===true ? '_b_.True' :
 this.value===false ? '_b_.False' :
 '_b_.None'
 return `literal: ${value}`}
 $B.ast.MatchStar.prototype.to_js=function(scopes){var name=this.name===undefined ? '_' :this.name
 return `capture_starred: '${name}'`}
-$B.ast.MatchValue.prototype.to_js=function(scopes){if(this.value instanceof $B.ast.Constant){return `literal: ${$B.js_from_ast(this.value, scopes)}`}else{return `value: ${$B.js_from_ast(this.value, scopes)}`}}
-$B.ast.MatchSequence.prototype.to_js=function(scopes){var items=[]
-for(var pattern of this.patterns){items.push('{'+$B.js_from_ast(pattern,scopes)+'}')}
-return `sequence: [${items.join(', ')}]`}
+$B.ast.MatchValue.prototype.to_js=function(scopes){if(this.value instanceof $B.ast.Constant){return `literal: ${$B.js_from_ast(this.value, scopes)}`}else if(this.value instanceof $B.ast.Constant ||
+this.value instanceof $B.ast.UnaryOp ||
+this.value instanceof $B.ast.BinOp ||
+this.value instanceof $B.ast.Attribute){return `value: ${$B.js_from_ast(this.value, scopes)}`}else{console.log(this.value)
+compiler_error(this,'patterns may only match literals and attribute lookups')}}
 $B.ast.Module.prototype.to_js=function(scopes){mark_parents(this)
 var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
 var module_id=name,global_name=make_scope_name(scopes)
@@ -14596,7 +14613,7 @@ js+=`\nif(locals.$f_trace !== _b_.None){\n`+
 `$B.trace_return(result)\n}\n`+
 `$B.leave_frame(locals)\nreturn result\n`
 return js}
-$B.ast.Set.prototype.to_js=function(scopes){var elts=this.elts.map(x=> $B.js_from_ast(x,scopes))
+$B.ast.Set.prototype.to_js=function(scopes){for(var elt of this.elts){if(elt instanceof $B.ast.Starred){elt.$handled=true}}
 var call_obj={args:this.elts,keywords:[]}
 var call=make_args.bind(call_obj)(scopes),js=call.js
 if(! call.has_starred){js=`[${js}]`}
@@ -14604,7 +14621,8 @@ return `_b_.set.$factory(${js})`}
 $B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
 $B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_ast(this.lower,scopes):'_b_.None',upper=this.upper ? $B.js_from_ast(this.upper,scopes):'_b_.None',step=this.step ? $B.js_from_ast(this.step,scopes):'_b_.None'
 return `_b_.slice.$factory(${lower}, ${upper}, ${step})`}
-$B.ast.Starred.prototype.to_js=function(scopes){return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`}
+$B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`}
+if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
 if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{return `$B.$getitem(${value}, ${slice})`}}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)

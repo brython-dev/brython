@@ -729,8 +729,12 @@ function $$eval(src, _globals, _locals){
                 js = js_obj.js
         }
     }catch(err){
-        var lineno = err.args[1][1]
-        exec_locals.$lineno = lineno
+        if(err.args){
+            var lineno = err.args[1][1]
+            exec_locals.$lineno = lineno
+        }else{
+            console.log('JS Error', err.message)
+        }
         $B.frames_stack = save_frames_stack
         throw err
     }
