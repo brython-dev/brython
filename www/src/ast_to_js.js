@@ -4,10 +4,12 @@ var _b_ = $B.builtins
 
 function compiler_error(ast_obj, message){
     console.log('compiler check throws error', message, ast_obj)
-    $B.Parser.RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
-        ast_obj.lineno, ast_obj.col_offset,
-        ast_obj.end_lineno, ast_obj.end_col_offset,
-        message)
+    var exc = _b_.SyntaxError.$factory(message)
+    exc.lineno = ast_obj.lineno
+    exc.offset = ast_obj.col_offset
+    exc.end_lineno = ast_obj.end_lineno
+    exc.end_offset = ast_obj.end_col_offset
+    throw exc
 }
 
 $B.set_func_infos = function(func, name, qualname, docstring){
@@ -680,9 +682,14 @@ $B.ast.Assert.prototype.to_js = function(scopes){
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
-    last_scope(scopes).has_annotation = true
+    var scope = last_scope(scopes)
+    var js = ''
+    if(! scope.has_annotation){
+        js += 'locals.__annotations__ = $B.empty_dict()\n'
+    }
+    scope.has_annotation = true
     if(this.value){
-        var js = `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
+        js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
         if(this.target instanceof $B.ast.Name){
             var scope = bind(this.target.id, scopes)
             js += `$B.$setitem(locals.__annotations__, ` +
@@ -703,7 +710,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         }else{
             var ann = $B.js_from_ast(this.annotation, scopes)
         }
-        var js = `$B.$setitem(locals.__annotations__, ` +
+        js += `$B.$setitem(locals.__annotations__, ` +
             `'${this.target.id}', ${ann})`
     }
     return `$B.set_lineno(locals, ${this.lineno})\n` + js
@@ -2348,7 +2355,11 @@ $B.ast.Return.prototype.to_js = function(scopes){
 }
 
 $B.ast.Set.prototype.to_js = function(scopes){
-    var elts = this.elts.map(x => $B.js_from_ast(x, scopes))
+    for(var elt of this.elts){
+        if(elt instanceof $B.ast.Starred){
+            elt.$handled = true
+        }
+    }
     var call_obj = {args: this.elts, keywords: []}
     var call = make_args.bind(call_obj)(scopes),
         js = call.js
