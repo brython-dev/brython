@@ -118,7 +118,9 @@ var Parser = $B.Parser = function(src, filename){
         src = src.substr(0, src.length - 1)
     }
     // Normalise script end
-    if(src.charAt(src.length - 1) != "\n"){src += "\n"}
+    if(src.charAt(src.length - 1) != "\n"){
+        src += "\n"
+    }
 
     var tokenizer = $B.tokenizer(src)
     this.tokens = generator_as_list(tokenizer)
@@ -156,13 +158,9 @@ Parser.prototype.parse = function(top_rule){
         try{
             match = this.apply_rule(rule, 0)
         }catch(err){
-            //console.log('raised err', err)
-            //console.log(this)
             throw err
         }
     }
-    // console.log('parse succeeds !', match)
-    // console.log(show(match, tokens))
     if(match === FAIL){
         var err_token = this.tokens.last
         p.filename = this.filename
@@ -245,7 +243,7 @@ function RAISE_ERROR_KNOWN_LOCATION(errtype,
                            end_lineno, end_col_offset,
                            errmsg){
     var va = [errmsg]
-    $B._PyPegen.raise_error_known_location(p, errtype, 
+    $B._PyPegen.raise_error_known_location(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va);
     return NULL;
 }
@@ -292,8 +290,7 @@ function _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
             invalid_target,
             msg,
             $B._PyPegen.get_expr_name(invalid_target)
-        );
-        //return RAISE_SYNTAX_ERROR_KNOWN_LOCATION(invalid_target, "invalid syntax");
+        )
     }
     return NULL;
 }
@@ -303,7 +300,6 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
         ast_obj[key] = EXTRA[key]
     }
 }
-
 
 var inf = Number.POSITIVE_INFINITY
 
@@ -366,16 +362,12 @@ Parser.prototype.eval_option = function(rule, position){
         result,
         start = position,
         join_position = false
-    var test = false // rule.action && rule.action.search('FunctionDef') > -1
-
+    
     if(! rule.repeat){
         result = this.eval_option_once(rule, position)
     }else{
         var matches = [],
             start = position
-        if(test){
-            console.log('repeated', show_rule(rule))
-        }
         while(matches.length < rule.repeat[1]){
             var match = this.eval_option_once(rule, position)
             if(match === FAIL){
@@ -411,9 +403,6 @@ Parser.prototype.eval_option = function(rule, position){
                  position = match.end
              }
         }
-        if(test){
-            console.log('result', result, 'matches', matches)
-        }
         if(! result){
             result = {rule, start, matches, end: position}
         }
@@ -434,27 +423,13 @@ Parser.prototype.eval_option = function(rule, position){
                 break
         }
     }
-    if(result !== FAIL){
-        // console.log('result for rule', show_rule(rule), result)
-    }
-    if(test){
-        console.log('eval option', show_rule(rule, true), 'returns', result)
-    }
     return result
 }
 
 var use_invalid = {value: false}
 
 Parser.prototype.eval_option_once = function(rule, position){
-    if(position === undefined){
-        console.log('pos undef in eval option once', rule)
-        throw Error('no pos')
-    }
     var tokens = this.tokens
-    if(debug || rule.debug){
-        console.log('eval_option_once of rule', show_rule(rule), rule,
-            'position', position, tokens[position])
-    }
     if(rule.choices){
         for(var i = 0, len = rule.choices.length; i < len; i++){
             var choice = rule.choices[i],
@@ -465,9 +440,6 @@ Parser.prototype.eval_option_once = function(rule, position){
                 continue
             }
             stack.push('#' + i)
-            if(debug){
-                console.log(debug_head(stack.length), '#' + i, show_rule(choice))
-            }
             var match = this.eval_option(choice, position)
             if(match === FROZEN_FAIL){
                 // if a choice with a ~ fails, don't try other alternatives
@@ -517,10 +489,6 @@ Parser.prototype.eval_option_once = function(rule, position){
     }else if(rule.type == "rule"){
         return this.apply_rule(grammar[rule.name], position)
     }else if(rule.type == "string"){
-        if(debug){
-            console.log(debug_head(stack.length), 'test str', rule.value,
-                'at', position, tokens[position].string)
-        }
         return tokens[position][1] == rule.value ?
             {rule, start: position, end: position + 1} :
             FAIL
@@ -528,12 +496,6 @@ Parser.prototype.eval_option_once = function(rule, position){
         // mark current option as frozen
         return {rule, start: position, end: position}
     }else if(rule.type == 'NAME'){
-        if(debug){
-            console.log(debug_head(stack.length), 'test NAME at', position, tokens[position].string)
-        }
-        if(tokens[position] === undefined){
-            console.log('no token in', tokens, 'at position', position)
-        }
         var token = tokens[position],
             string = token.string,
             test = token.type == rule.type &&
@@ -555,11 +517,6 @@ Parser.prototype.eval_option_once = function(rule, position){
 }
 
 Parser.prototype.eval_body = function(rule, position){
-    if(position === undefined){
-        console.log('pos undef in eval_body', rule)
-        throw Error('no pos')
-    }
-
     // Only for grammar rules
     var start = position
     if(rule.choices){
@@ -571,9 +528,6 @@ Parser.prototype.eval_body = function(rule, position){
             if(invalid && ! use_invalid.value){
                 continue
             }
-            if(debug){
-                console.log(debug_head(stack.length), '#' + i, show_rule(choice))
-            }
             var match = this.eval_option(choice, position)
             if(match === FROZEN_FAIL){
                 // if a choice with a ~ fails, don't try other alternatives
@@ -581,7 +535,6 @@ Parser.prototype.eval_body = function(rule, position){
             }else if(match !== FAIL){
                 if(invalid){
                     handle_invalid_match(match, this.tokens)
-                    match.invalid = true
                 }
                 match.rank = i
                 return match
@@ -610,7 +563,6 @@ Parser.prototype.eval_body = function(rule, position){
         if(use_invalid.value && rule.parent_rule &&
                 rule.parent_rule.startsWith('invalid_')){
             handle_invalid_match(match, this.tokens)
-            match.invalid = true
         }
         return match
     }
@@ -720,9 +672,6 @@ var stack = []
 
 Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
-    if(debug){
-        console.log(debug_head(stack.length), 'apply rule', rule.name, 'at', position)
-    }
     // search if result is in memo
     stack.push(rule.name)
     var memoized = this.RECALL(rule, position),
@@ -753,24 +702,11 @@ Parser.prototype.apply_rule = function(rule, position){
             result = match
         }
     }else{
-        if(debug){
-            console.log('read from memo', show_rule(rule), memoized)
-        }
         if(memoized.match instanceof LR){
-            if(debug){
-                console.log('recursion !')
-            }
             this.SETUP_LR(rule, memoized.match)
             result = memoized.match.seed
         }else{
             result = memoized === FAIL ? memoized : memoized.match
-        }
-    }
-    if(debug){
-        if(result === FAIL){
-            console.log('rule', rule.name, 'fails')
-        }else{
-            console.log('rule', rule.name, 'matches', this.matched_string(result))
         }
     }
     stack.pop()
