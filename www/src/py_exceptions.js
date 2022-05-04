@@ -826,10 +826,11 @@ $B.show_error = function(err){
             trace += `  File ${filename}, line ${err.args[1][1]}\n` +
                      `    ${line.trim()}\n`
         }
-        if(filename !== '<string>'){
+        if(err.__class__ !== _b_.IndentationError &&
+                filename !== '<string>'){
             // add ^ under the line
             var start = err.offset,
-                marks = '    ' + ' '.repeat(start - indent),
+                marks = '    ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){
@@ -839,9 +840,9 @@ $B.show_error = function(err){
                 }
             }
             marks += '^'.repeat(nb_marks) + '\n'
-            trace += marks +
-                     `${err.__class__.$infos.__name__}: ${err.args[0]}`
+            trace += marks
         }
+        trace += `${err.__class__.$infos.__name__}: ${err.args[0]}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
         trace += trace_from_stack(err.$stack)

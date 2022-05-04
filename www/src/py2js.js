@@ -286,7 +286,7 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
         }
     }else{
         // IndentationError
-        message = 'expected an indented block'
+        var message = msg
         if(typeof indent != 'number'){
             // indent is the node that expected an indentation
             var type = indent.context.tree[0].type
@@ -327,15 +327,15 @@ var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     exc.filename = module.filename
     exc.text = text
     exc.lineno = position.start[0]
-    exc.col_offset = position.start[1]
+    exc.offset = position.start[1]
     exc.end_lineno = position.end[0]
-    exc.end_col_offset = position.end[1]
+    exc.end_offset = position.end[1]
     exc.args[1] = [ exc.filename,
                     exc.lineno,
-                    exc.col_offset,
+                    exc.offset,
                     exc.text,
                     exc.end_lineno,
-                    exc.end_col_offset]
+                    exc.end_offset]
     throw exc
 }
 
@@ -795,7 +795,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                     }
                     break
                 case 'annotation':
-                    $_SyntaxError(context, "empty annotation")
+                    $_SyntaxError(context, "token " + token)
                 default:
                     $_SyntaxError(context, token)
             }
@@ -857,7 +857,7 @@ $AnnotationCtx.prototype.transition = function(token, value){
     this.string = this.src.substring(this.start, $pos)
     if(token == "eol" && context.tree.length == 1 &&
             context.tree[0].tree.length == 0){
-        $_SyntaxError(context, "empty annotation")
+        $_SyntaxError(context, "token " + token)
     }else if(token == ':' && context.parent.type != "def"){
         $_SyntaxError(context, "more than one annotation")
     }else if(token == "augm_assign"){
