@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-04 11:37:26.889150"
-__BRYTHON__.timestamp=1651657046889
+__BRYTHON__.compiled_date="2022-05-04 19:25:57.979886"
+__BRYTHON__.timestamp=1651685157979
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -11527,8 +11527,31 @@ if(cos==0){angle=sin==1 ? Math.PI/2 :3*Math.PI/2}
 else if(sin==0){angle=cos==1 ? 0 :Math.PI}
 else{angle=Math.atan(sin/cos)}
 return{norm:norm,angle:angle}}
+function hypot(){var $=$B.args("hypot",0,{},[],arguments,{},"args",null)
+return _b_.float.$factory(Math.hypot(...$.args))}
+function c_powi(x,n){if(n > 0){return c_powu(x,n)}else{return c_quot(c_1,c_powu(x,-n))}}
+function c_powu(x,n){var r,p,mask=1,r=c_1,p=x
+while(mask > 0 && n >=mask){if(n & mask){r=c_prod(r,p);}
+mask <<=1;
+p=c_prod(p,p)}
+return r;}
+function c_prod(a,b){return make_complex(
+a.$real*b.$real-a.$imag*b.$imag,a.$real*b.$imag+a.$imag*b.$real)}
+function c_quot(a,b){var r,
+abs_breal=_b_.abs(b.$real),abs_bimag=_b_.abs(b.$imag)
+if($B.rich_comp('__ge__',abs_breal,abs_bimag)){
+if(abs_breal==0.0){throw _b_.ZeroDivisionError.$factory()}else{var ratio=b.$imag/b.$real,denom=b.$real+b.$imag*ratio
+return make_complex((a.$real+a.$imag*ratio)/denom,(a.$imag-a.$real*ratio)/denom)}}else if(abs_bimag >=abs_breal){
+var ratio=b.$real/b.$imag,denom=b.$real*ratio+b.$imag;
+if(b.$imag==0.0){throw _b_.ZeroDivisionError.$factory()}
+return make_complex(
+(a.real*ratio+a.imag)/denom,(a.imag*ratio-a.real)/denom)}else{
+return _b_.float('nan')}}
 complex.__pow__=function(self,other){
 if(other==1){return self}
+if((_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100)||
+(other.$imag==0.0 && other.$real==_b_.floor(other.$real)&&
+_b_.abs(other.$real)<=100.0)){return c_powi(self,other)}
 var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,[_b_.int,_b_.float])){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,complex)){
 var x=other.$real,y=other.$imag
@@ -11594,6 +11617,7 @@ if(method !==missing){return method(num)}}
 return null}
 var make_complex=$B.make_complex=function(real,imag){return{
 __class__:complex,$real:real,$imag:imag}}
+var c_1=make_complex(1,0)
 complex.$factory=function(){return complex.__new__(complex,...arguments)}
 $B.set_func_names(complex,"builtins")
 _b_.complex=complex})(__BRYTHON__)

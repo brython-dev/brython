@@ -681,6 +681,14 @@ assert (-n).bit_count() == 3
 n = 2 ** 70 + 567444332
 assert n.bit_count() == 14
 
+# issue 1947
+a = -1 + 1j
+assert a ** 3 == 2+2j
+assert a ** -1 == (-0.5-0.5j)
+
+assert (-0.5 + math.sqrt(3) / 2 * 1j) ** 3 == (0.9999999999999998 +
+    1.1102230246251565e-16j)
+
 # issue 1955
 a = -1
 a %= 2

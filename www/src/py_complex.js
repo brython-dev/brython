@@ -237,11 +237,87 @@ function complex2expo(cx){
     return {norm: norm, angle: angle}
 }
 
+function hypot(){
+    var $ = $B.args("hypot", 0, {}, [],
+                arguments, {}, "args", null)
+    return _b_.float.$factory(Math.hypot(...$.args))
+}
+
+// functions copied from CPython Objects/complexobject.c
+function c_powi(x, n){
+    if (n > 0){
+        return c_powu(x,n)
+    }else{
+        return c_quot(c_1, c_powu(x,-n))
+    }
+}
+
+function c_powu(x, n){
+    var r,
+        p,
+        mask = 1,
+        r = c_1,
+        p = x
+    while (mask > 0 && n >= mask) {
+        if (n & mask){
+            r = c_prod(r,p);
+        }
+        mask <<= 1;
+        p = c_prod(p,p)
+    }
+    return r;
+}
+
+function c_prod(a, b){
+    return make_complex(
+        a.$real * b.$real - a.$imag * b.$imag,
+        a.$real * b.$imag + a.$imag * b.$real)
+}
+
+function c_quot(a, b){
+     var r,      /* the result */
+         abs_breal = _b_.abs(b.$real),
+         abs_bimag = _b_.abs(b.$imag)
+
+    if ($B.rich_comp('__ge__', abs_breal, abs_bimag)){
+        /* divide tops and bottom by b.real */
+        if (abs_breal == 0.0) {
+            throw _b_.ZeroDivisionError.$factory()
+        }else{
+            var ratio = b.$imag / b.$real,
+                denom = b.$real + b.$imag * ratio
+            return make_complex((a.$real + a.$imag * ratio) / denom,
+                (a.$imag - a.$real * ratio) / denom)
+        }
+    }else if (abs_bimag >= abs_breal) {
+        /* divide tops and bottom by b.imag */
+        var ratio = b.$real / b.$imag,
+            denom = b.$real * ratio + b.$imag;
+        if(b.$imag == 0.0){
+            throw _b_.ZeroDivisionError.$factory()
+        }
+        return make_complex(
+            (a.real * ratio + a.imag) / denom,
+            (a.imag * ratio - a.real) / denom)
+    }else{
+        /* At least one of b.real or b.imag is a NaN */
+        return _b_.float('nan')
+    }
+}
+
 complex.__pow__ = function(self, other){
     // complex power : use Moivre formula
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
     if(other == 1){
         return self
+    }
+
+    // Check whether the exponent has a small integer value, and if so use
+    // a faster and more accurate algorithm.
+    if ((_b_.isinstance(other, _b_.int) && _b_.abs(other) < 100) ||
+            (other.$imag == 0.0 && other.$real == _b_.floor(other.$real) &&
+            _b_.abs(other.$real) <= 100.0)) {
+        return c_powi(self, other)
     }
     var exp = complex2expo(self),
         angle = exp.angle,
@@ -450,6 +526,8 @@ var make_complex = $B.make_complex = function(real, imag){
         $imag: imag
     }
 }
+
+var c_1 = make_complex(1, 0)
 
 complex.$factory = function(){
     return complex.__new__(complex, ...arguments)
