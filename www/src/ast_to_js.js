@@ -639,7 +639,7 @@ function init_scopes(type, scopes){
     // namespaces can be passed by exec() or eval()
     var filename = scopes.symtable.table.filename,
         name = $B.url2name[filename]
-    
+
     if(name){
         name = name.replace(/-/g, '_') // issue 1958
     }
@@ -972,18 +972,19 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
     // returned; otherwise, y is evaluated and the resulting value is
     // returned.
 
-    // Implement this as a JS anonymous self-executing function
-    // The test on each item is "! $B.$bool(item)" for And, "$B.$bool(item)"
-    // for Or
-    var op = this.op instanceof $B.ast.And ? '! ' : '',
-        items = [],
-        js = '(function(){\n'
-    for(var value of this.values){
-        js += `var item = ${$B.js_from_ast(value, scopes)}\n` +
-              `if(${op}$B.$bool(item)){\nreturn item\n}\n`
+    var op = this.op instanceof $B.ast.And ? '! ' : ''
+    var tests = []
+    for(var i = 0, len = this.values.length; i < len; i++){
+        var value = this.values[i]
+        if(i < len - 1){
+            tests.push(`${op}$B.$bool(locals.$test = ` +
+                `${$B.js_from_ast(value, scopes)}) ? locals.$test : `)
+        }else{
+            tests.push(`${$B.js_from_ast(value, scopes)}`)
+        }
     }
-    js += `return item\n})()`
-    return js
+    return '(' + tests.join('') + ')'
+
 }
 
 $B.ast.Break.prototype.to_js = function(scopes){
@@ -1001,8 +1002,8 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
-    var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')',
-        args = make_args.bind(this)(scopes)
+    var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')'
+    var args = make_args.bind(this)(scopes)
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
 }

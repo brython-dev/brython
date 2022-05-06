@@ -230,7 +230,7 @@ function run_py(module_contents, path, module, compiled) {
             console.log(root)
             // console.log(err)
             if($B.debug > 1){
-                console.log(js)
+                console.log($B.format_indent(js, 0))
             }
             for(var attr in err){
                 console.log(attr, err[attr])

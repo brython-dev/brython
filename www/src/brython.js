@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-05 10:25:52.121068"
-__BRYTHON__.timestamp=1651739152110
+__BRYTHON__.compiled_date="2022-05-06 16:22:55.821320"
+__BRYTHON__.timestamp=1651846975821
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8850,7 +8850,7 @@ var module_id=prefix+module.__name__.replace(/\./g,'_')
 var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
-if($B.debug > 1){console.log(js)}
+if($B.debug > 1){console.log($B.format_indent(js,0))}
 for(var attr in err){console.log(attr,err[attr])}
 console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
@@ -14024,11 +14024,12 @@ var op=opclass2dunder[name]
 return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
 `${$B.js_from_ast(this.right, scopes)})`}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
-var op=this.op instanceof $B.ast.And ? '! ' :'',items=[],js='(function(){\n'
-for(var value of this.values){js+=`var item = ${$B.js_from_ast(value, scopes)}\n`+
-`if(${op}$B.$bool(item)){\nreturn item\n}\n`}
-js+=`return item\n})()`
-return js}
+var op=this.op instanceof $B.ast.And ? '! ' :''
+var tests=[]
+for(var i=0,len=this.values.length;i < len;i++){var value=this.values[i]
+if(i < len-1){tests.push(`${op}$B.$bool(locals.$test = `+
+`${$B.js_from_ast(value, scopes)}) ? locals.$test : `)}else{tests.push(`${$B.js_from_ast(value, scopes)}`)}}
+return '('+tests.join('')+')'}
 $B.ast.Break.prototype.to_js=function(scopes){compiler_check(this)
 var js=''
 for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For){js+=`no_break_${scope.id} = false\n`
@@ -14036,7 +14037,8 @@ break}}
 js+=`break`
 return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
-var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')',args=make_args.bind(this)(scopes)
+var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')'
+var args=make_args.bind(this)(scopes)
 return js+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
