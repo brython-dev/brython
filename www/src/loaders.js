@@ -381,7 +381,12 @@ var loop = $B.loop = function(){
             module.$src = script.$src
             module.__file__ = script.__file__
             $B.imported[script_id] = module
-            new Function(script.js)()
+            var module = new Function(script.js + `\nreturn locals`)()
+            for(var key in module){
+                if(! key.startsWith('$')){
+                    $B.imported[script_id][key] = module[key]
+                }
+            }
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception

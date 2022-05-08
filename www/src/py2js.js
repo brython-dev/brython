@@ -8146,7 +8146,7 @@ var brython = $B.parser.brython = function(options){
                     // format <script type="text/python" src="python_script.py">
                     // get source code by an Ajax call
                     $B.tasks.push([$B.ajax_load_script,
-                        {name: module_name, url: elt.src}])
+                        {name: module_name, url: elt.src, id: elt.id}])
                 }else{
                     // Get source code inside the script element
                     src = (elt.innerHTML || elt.textContent)
@@ -8181,7 +8181,8 @@ var brython = $B.parser.brython = function(options){
 $B.run_script = function(src, name, url, run_loop){
     // run_loop is set to true if run_script is added to tasks in
     // ajax_load_script
-
+    $B.file_cache[url] = src
+    $B.url2name[url] = name
     try{
         var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),
@@ -8192,8 +8193,6 @@ $B.run_script = function(src, name, url, run_loop){
                 $src: src,
                 __file__: url
             }
-            $B.file_cache[script.__file__] = src
-            $B.url2name[script.__file__] = name
             if($B.debug > 1){
                 console.log($B.format_indent(js, 0))
             }
