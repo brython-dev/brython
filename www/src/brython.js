@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-06 16:22:55.821320"
-__BRYTHON__.timestamp=1651846975821
+__BRYTHON__.compiled_date="2022-05-08 19:15:02.945165"
+__BRYTHON__.timestamp=1652030102945
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4333,7 +4333,7 @@ if(first_script){module_name='__main__'
 first_script=false}else{module_name='__main__'+$B.UUID()}
 while(defined_ids[module_name]!==undefined){module_name='__main__'+$B.UUID()}}
 if(elt.src){
-$B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src}])}else{
+$B.tasks.push([$B.ajax_load_script,{name:module_name,url:elt.src,id:elt.id}])}else{
 src=(elt.innerHTML ||elt.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
@@ -4343,9 +4343,9 @@ $B.url2name[filename]=module_name
 $B.tasks.push([$B.run_script,src,module_name,filename,true])}}}}
 if(options.ipy_id===undefined){$B.loop()}}
 $B.run_script=function(src,name,url,run_loop){
+$B.file_cache[url]=src
+$B.url2name[url]=name
 try{var root=$B.py2js({src:src,filename:url},name,name),js=root.to_js(),script={__doc__:root.__doc__,js:js,__name__:name,$src:src,__file__:url}
-$B.file_cache[script.__file__]=src
-$B.url2name[script.__file__]=name
 if($B.debug > 1){console.log($B.format_indent(js,0))}}catch(err){return $B.handle_error(err)}
 if($B.hasOwnProperty("VFS")&& $B.has_indexedDB){
 var imports1=Object.keys(root.imports).slice(),imports=imports1.filter(function(item){return $B.VFS.hasOwnProperty(item)})
@@ -4489,7 +4489,8 @@ if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\.
 module.$src=script.$src
 module.__file__=script.__file__
 $B.imported[script_id]=module
-new Function(script.js)()}catch(err){
+var module=new Function(script.js+`\nreturn locals`)()
+for(var key in module){if(! key.startsWith('$')){$B.imported[script_id][key]=module[key]}}}catch(err){
 if(err.__class__===undefined){console.log('Javascript error',err)
 var lineNumber=err.lineNumber
 if(lineNumber !==undefined){console.log('around line',lineNumber)
@@ -7392,6 +7393,8 @@ if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
 return msg}
 $B.set_func_names(_b_.NameError,'builtins')
 $make_exc(["UnboundLocalError"],_b_.NameError)
+_b_.UnboundLocalError.__str__=function(self){return self.args[0]}
+$B.set_func_names(_b_.UnboundLocalError,'builtins')
 $B.name_error=function(name,obj){return _b_.NameError.$factory({$nat:"kw",kw:{name}})}
 $B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}
 var se=_b_.SyntaxError.$factory

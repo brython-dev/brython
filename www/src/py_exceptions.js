@@ -617,6 +617,12 @@ $B.set_func_names(_b_.NameError, 'builtins')
 
 $make_exc(["UnboundLocalError"], _b_.NameError)
 
+_b_.UnboundLocalError.__str__ = function(self){
+    return self.args[0]
+}
+
+$B.set_func_names(_b_.UnboundLocalError, 'builtins')
+
 // Shortcut to create a NameError
 $B.name_error = function(name, obj){
     return _b_.NameError.$factory({$nat:"kw", kw:{name}})

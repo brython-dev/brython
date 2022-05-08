@@ -860,6 +860,23 @@ for i, (key, value) in enumerate(items):
 
 assert t == items
 
+# issue 1961
+src = '''
+xs = ["a", "a", "b", "a", "c"]
+n = 0
+def count(xs):
+    for x in xs:
+        print("So far, n is", n)
+        n += 1
+count(xs)
+'''
+
+try:
+    exec(src)
+    raise Exception('should have raises UnboundLocalError')
+except UnboundLocalError as exc:
+    assert str(exc) == "local variable 'n' referenced before assignment"
+
 # symtable syntax errors
 def test_syntax_error(code, message):
     try:
