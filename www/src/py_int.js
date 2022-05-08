@@ -764,7 +764,12 @@ int.$factory = function(value, base){
         value = value.valueOf()
     }
     if(typeof value == "string") {
-        var _value = value.trim()    // remove leading/trailing whitespace
+        var _value = value.trim(),    // remove leading/trailing whitespace
+            sign = ''
+        if(_value.startsWith('+') || value.startsWith('-')){
+            var sign = _value[0]
+            _value = _value.substr(1)
+        }
         if(_value.length == 2 && base == 0 &&
                 (_value == "0b" || _value == "0o" || _value == "0x")){
            throw _b_.ValueError.$factory("invalid value")
@@ -792,6 +797,7 @@ int.$factory = function(value, base){
             "[" + _digits + "_]*$", "i"),
             match = _re.exec(_value)
         if(match === null){
+            console.log('value', _value, "doesn't match re", _re)
             invalid(value, base)
         }else{
             value = _value.replace(/_/g, "")
@@ -799,7 +805,7 @@ int.$factory = function(value, base){
         if(base <= 10 && ! isFinite(value)){
             invalid(_value, base)
         }
-        var res = parseInt(value, base)
+        var res = parseInt(sign + value, base)
         if(res < $B.min_int || res > $B.max_int){
             return $B.long_int.$factory(value, base)
         }

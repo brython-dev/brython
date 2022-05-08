@@ -716,5 +716,11 @@ expected = [-62.208243223652396,
 
 for x, r in zip(args, expected):
     assert math.lgamma(x) == r
-    
+
+# issue 1960
+assert int('-10', 0) == -10
+assert int('-0b010', 0) == -2
+assert int('-0o010', 0) == -8
+assert int('-0x010', 0) == -16
+
 print('passed all tests...')

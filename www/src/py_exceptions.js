@@ -816,7 +816,7 @@ $B.show_error = function(err){
     if($B.debug > 1){
         console.log("handle error", err.__class__, err.args)
         console.log('stack', err.$stack)
-        //console.log(err)
+        console.log(err.stack)
     }
     var trace = ''
     if(err.$stack && err.$stack.length > 0){
