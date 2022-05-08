@@ -797,7 +797,6 @@ int.$factory = function(value, base){
             "[" + _digits + "_]*$", "i"),
             match = _re.exec(_value)
         if(match === null){
-            console.log('value', _value, "doesn't match re", _re)
             invalid(value, base)
         }else{
             value = _value.replace(/_/g, "")
