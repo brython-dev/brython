@@ -620,6 +620,19 @@ $B._PyPegen.join_sequences = function(p, a, b){
     return a.concat(b)
 }
 
+function make_conversion_code(conv){
+    switch(conv){
+        case null:
+            return -1
+        case 'a':
+            return 97
+        case 'r':
+            return 114
+        case 's':
+            return 115
+    }
+}
+
 function make_formatted_value(p, fmt_values){
     // format is a sequence of strings and instances of fstring_expression
     if(! fmt_values){
@@ -635,7 +648,7 @@ function make_formatted_value(p, fmt_values){
             var _ast = new $B.Parser(src).feed('eval', p.filename)
             var raw_value = _ast.body
             var fmt_ast = new $B.ast.FormattedValue(raw_value,
-                item.conversion === null ? -1 : item.conversion,
+                make_conversion_code(item.conversion),
                 make_formatted_value(p, item.fmt))
             set_position_from_obj(fmt_ast, _ast)
         }
@@ -758,7 +771,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             var _ast = new $B.Parser(src).feed('eval', p.filename)
             var raw_value = _ast.body
             var formatted = new $B.ast.FormattedValue(raw_value,
-                item.conversion === null ? -1 : item.conversion,
+                make_conversion_code(item.conversion),
                 _format)
             set_position(formatted)
             jstr_values.push(formatted)
@@ -830,6 +843,36 @@ $B._PyPegen.new_type_comment = function(p, s){
         return NULL
     }
     return s
+}
+
+$B._PyPegen.get_last_comprehension_item = function(comprehension) {
+    if (comprehension.ifs == NULL || comprehension.ifs.length == 0) {
+        return comprehension.iter;
+    }
+    return $B.last(comprehension.ifs);
+}
+
+$B._PyPegen._nonparen_genexp_in_call = function(p, args, comprehensions){
+    /* The rule that calls this function is 'args for_if_clauses'.
+       For the input f(L, x for x in y), L and x are in args and
+       the for is parsed as a for_if_clause. We have to check if
+       len <= 1, so that input like dict((a, b) for a, b in x)
+       gets successfully parsed and then we pass the last
+       argument (x in the above example) as the location of the
+       error */
+    var len = args.args.length
+    if (len <= 1) {
+        return NULL;
+    }
+
+    var last_comprehension = $B.last(comprehensions);
+    console.log('last arg', args)
+
+    return RAISE_SYNTAX_ERROR_KNOWN_RANGE(
+        args.args[len - 1],
+        _PyPegen_get_last_comprehension_item(last_comprehension),
+        "Generator expression must be parenthesized"
+    );
 }
 
 $B._PyPegen.get_invalid_target = function(e, targets_type){
