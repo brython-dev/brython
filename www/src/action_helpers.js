@@ -522,27 +522,9 @@ $B._PyPegen.raise_error = function(p, errtype, errmsg){
     }
 
     var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1];
-    var col_offset,
-        end_col_offset = -1;
-    if (t.col_offset == -1) {
-        if (p.tok.cur == p.tok.buf) {
-            col_offset = 0;
-        } else {
-            var start = p.tok.buf  ? p.tok.line_start : p.tok.buf;
-            col_offset = Py_SAFE_DOWNCAST(p.tok.cur - start, intptr_t, int);
-        }
-    } else {
-        col_offset = t.col_offset + 1;
-    }
-
-    if (t.end_col_offset != -1) {
-        end_col_offset = t.end_col_offset + 1;
-    }
-
     var va = errmsg
-    _PyPegen_raise_error_known_location(p, errtype,
-        t.lineno, col_offset, t.end_lineno, end_col_offset, errmsg, va);
-    return NULL;
+    $B._PyPegen.raise_error_known_location(p, errtype,
+        t.start[0], t.start[1], t.end[0], t.end[1], errmsg, va);
 }
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
@@ -557,7 +539,6 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
         line = lines[exc.lineno - 1]
     exc.text = line
     exc.args[1] = [p.filename, lineno, col_offset, line]
-    console.log('error', exc.args)
     throw exc
 }
 
@@ -677,11 +658,12 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         values = []
 
     function error(message){
-        $B.Parser.RAISE_ERROR_KNOWN_LOCATION(
-            _b_.SyntaxError,
-            first.start[0], first.start[1],
-            last.end[0], last.end[1],
-            message)
+        var a = {lineno: first.start[0],
+                 col_offset: first.start[1],
+                 end_lineno : last.end[0],
+                 end_col_offset: last.end[1]
+                }
+        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
     }
 
     function set_position(ast_obj){
@@ -790,10 +772,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type != 'imaginary') {
-        $B.Parser.RAISE_ERROR_KNOWN_LOCATION(
-            _b_.SyntaxError,
-            exp.lineno, exp.col_offset,
-            exp.end_lineno, exp.end_col_offset,
+        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
             "imaginary number required in complex literal");
         return NULL
     }
@@ -802,10 +781,8 @@ $B._PyPegen.ensure_imaginary = function(p, exp){
 
 $B._PyPegen.ensure_real = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
-        $B.Parser.RAISE_ERROR_KNOWN_LOCATION(
-            _b_.SyntaxError,
-            exp.lineno, exp.col_offset,
-            exp.end_lineno, exp.end_col_offset,
+       $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+            exp,
             "real number required in complex literal");
         return NULL
     }

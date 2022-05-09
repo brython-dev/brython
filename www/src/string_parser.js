@@ -9,12 +9,13 @@ for(var i = 0; i < s_escaped.length; i++){
 }
 
 function string_error(token, msg){
-    $B.Parser.RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
-        token.start[0],
-        token.start[1],
-        token.end[0],
-        token.end[1],
-        msg)
+    var a = {
+        lineno: token.start[0],
+        col_offset: token.start[1],
+        end_lineno: token.end[0],
+        end_col_offset: token.end[1]
+    }
+    $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, msg)
 }
 
 function test_escape(token, context, text, string_start, antislash_pos){

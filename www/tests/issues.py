@@ -1,5 +1,7 @@
 from tester import assertRaises
 
+parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
+
 # issue 5
 assert(isinstance(__debug__, bool))
 
@@ -1902,7 +1904,10 @@ try:
     exec("x + x += 10")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "cannot assign to operator"
+    if parser_to_ast:
+        assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
+    else:
+        assert exc.args[0] == "cannot assign to operator"
 
 # issue 965
 assertRaises(SyntaxError, exec, "if:x=2")
@@ -2390,7 +2395,10 @@ try:
     exec("(x.a * 2) += 100")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "'operator' is an illegal expression for augmented assignment"
+    if parser_to_ast:
+        assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
+    else:
+        assert exc.args[0] == "'operator' is an illegal expression for augmented assignment"
 
 # issue 1278
 import textwrap
@@ -2650,7 +2658,10 @@ try:
     exec("not x = 1")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    assert exc.args[0] == "cannot assign to operator"
+    if parser_to_ast:
+        assert exc.args[0] == "cannot assign to expression"
+    else:
+        assert exc.args[0] == "cannot assign to operator"
     pass
 
 # issue 1501

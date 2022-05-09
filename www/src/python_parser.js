@@ -31,7 +31,8 @@ var alias_ty = $B.ast.alias,
     Py_Ellipsis = {type: 'ellipsis'},
     Py_False = false,
     Py_True = true,
-    Py_None = _b_.None
+    Py_None = _b_.None,
+    PyExc_SyntaxError = _b_.SyntaxError
 
 var PyPARSE_IGNORE_COOKIE = 0x0010,
     PyPARSE_BARRY_AS_BDFL = 0x0020,
@@ -164,7 +165,7 @@ Parser.prototype.parse = function(top_rule){
     if(match === FAIL){
         var err_token = this.tokens.last
         p.filename = this.filename
-        RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+        RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             err_token.start[0],
             err_token.start[1],
             err_token.end[0],
@@ -238,7 +239,7 @@ function NEW_TYPE_COMMENT(p, x){
     return x
 }
 
-function RAISE_ERROR_KNOWN_LOCATION(errtype,
+function RAISE_ERROR_KNOWN_LOCATION(p, errtype,
                            lineno, col_offset,
                            end_lineno, end_col_offset,
                            errmsg){
@@ -256,8 +257,20 @@ var RAISE_SYNTAX_ERROR = $B.Parser.RAISE_SYNTAX_ERROR = function(msg){
     $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
 }
 
-function RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, err_msg){
-    RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+var RAISE_INDENTATION_ERROR = function(msg, arg){
+    if(arg !== undefined){
+        msg = _b_.str.__mod__(msg, arg)
+    }
+    $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
+}
+
+var RAISE_SYNTAX_ERROR_KNOWN_LOCATION =
+        $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION = function(a, err_msg, arg){
+    if(arg !== undefined){
+        err_msg = _b_.str.__mod__(err_msg, arg)
+    }
+
+    RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
         a.lineno, a.col_offset,
         a.end_lineno, a.end_col_offset,
         err_msg)
@@ -267,7 +280,7 @@ $B.Parser.RAISE_ERROR_KNOWN_LOCATION = RAISE_ERROR_KNOWN_LOCATION
 
 function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
     var extra_args = arguments[3]
-    RAISE_ERROR_KNOWN_LOCATION(_b_.SyntaxError,
+    RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
         a.lineno, a.col_offset,
         b.end_lineno, b.end_col_offset,
         msg, extra_args)
@@ -363,6 +376,7 @@ Parser.prototype.eval_option = function(rule, position){
         start = position,
         join_position = false
 
+    this.current_rule = rule
     if(! rule.repeat){
         result = this.eval_option_once(rule, position)
     }else{
@@ -447,7 +461,11 @@ Parser.prototype.eval_option_once = function(rule, position){
                 return FAIL
             }else if(match !== FAIL){
                 if(invalid){
-                    handle_invalid_match(match, tokens)
+                    var _ast = handle_invalid_match(match, tokens)
+                    if(_ast === undefined){
+                        console.log('invalid match returns undefined', show_rule(rule))
+                        return FAIL
+                    }
                     match.invalid = true
                 }
                 match.rank = i
@@ -482,7 +500,10 @@ Parser.prototype.eval_option_once = function(rule, position){
         var match = {rule, matches, start, end: position}
         if(use_invalid.value && rule.parent_rule &&
                 rule.parent_rule.startsWith('invalid_')){
-            handle_invalid_match(match, tokens)
+            var _ast = handle_invalid_match(match, tokens)
+            if(_ast === undefined){
+                return FAIL
+            }
             match.invalid = true
         }
         return match
@@ -517,6 +538,7 @@ Parser.prototype.eval_option_once = function(rule, position){
 }
 
 Parser.prototype.eval_body = function(rule, position){
+    this.current_rule = rule
     // Only for grammar rules
     var start = position
     if(rule.choices){
@@ -534,7 +556,11 @@ Parser.prototype.eval_body = function(rule, position){
                 return FAIL
             }else if(match !== FAIL){
                 if(invalid){
-                    handle_invalid_match(match, this.tokens)
+                    var _ast = handle_invalid_match(match, this.tokens)
+                    if(_ast === undefined){
+                        // ignore invalid match if its action returns NULL
+                        continue
+                    }
                 }
                 match.rank = i
                 return match
@@ -673,6 +699,7 @@ var stack = []
 Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
     // search if result is in memo
+    this.current_rule = rule
     stack.push(rule.name)
     var memoized = this.RECALL(rule, position),
         result
@@ -830,7 +857,9 @@ function make(match, tokens){
     p.mark = match.start
     p.fill = match.start
 
-    var test = false // show_rule(rule).indexOf('star_etc') > -1
+    var invalid_rule = show_rule(rule).search('invalid_') > -1
+
+    var test = false // show_rule(rule).indexOf('star_expressions') > -1
     if(test){
         console.log('make', show_rule(rule, true), '\n    match', match)
     }
@@ -959,7 +988,12 @@ function make(match, tokens){
                 console.log('  match', i, m)
             }
             if(m.end > m.start){
-                _make = make(match.matches[i], tokens)
+                _make = make(m, tokens)
+                if(_make === undefined && m.action){
+                    console.log('_make undef avec m.end > m.start ???')
+                    console.log(m)
+                    alert()
+                }
                 makes.push(_make)
             }else{
                 if(m.rule.repeat && m.rule.repeat[1] > 1){
@@ -970,6 +1004,26 @@ function make(match, tokens){
                 }
             }
             if(rule.items[i].alias){
+                /*
+                if(test && rule.items[i].alias == 'a' && _make === undefined){
+                    console.log('rule #' + i, show_rule(rule.items[i]))
+                    console.log('match #' + i, match.matches[i])
+                    console.log('rule for match #' + i, show_rule(match.matches[i].rule),
+                        match.matches[i].rule)
+                    console.log('_make', _make)
+                    console.log('set alias to undefined', rule.items[i].alias)
+                    if(invalid_rule){
+                        console.log('invalid rule', invalid_rule)
+                        var token = tokens[match.matches[i].start]
+                        _make = {lineno: token.start[0],
+                                 col_offset: token.start[1],
+                                 end_lineno: token.end[0],
+                                 end_col_offset: token.end[1]
+                                }
+                    }
+                    alert()
+                }
+                */
                 names[rule.items[i].alias] = _make
                 eval('var ' + rule.items[i].alias + ' = _make')
                 if(test){
@@ -986,8 +1040,10 @@ function make(match, tokens){
                 ast = eval(rule.action)
             }catch(err){
                 var rule_str = show_rule(rule, true)
-                if(true){ // && rule_str.search('invalid') == -1){
+                if($B.debug > 1){
                     console.log('error eval action of', rule_str)
+                    console.log('p', p)
+                    console.log($B.frames_stack.slice())
                     console.log(err.message)
                     console.log(err.stack)
                 }
@@ -998,7 +1054,6 @@ function make(match, tokens){
         }else{
             ast = makes
         }
-        //console.log(show_rule(rule), '\nevals to', ast, 'match', match)
         return ast
     }else{
         if(match.matches){
@@ -1026,7 +1081,7 @@ function make(match, tokens){
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }else if(grammar[rule.name] === undefined){
-            //
+            // ignore NEWLINE, DEDENT...
         }else{
             var grammar_rule = grammar[rule_name]
             console.log('apply grammar rule', show_rule(grammar_rule))
