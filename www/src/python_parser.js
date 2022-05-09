@@ -185,6 +185,10 @@ function asdl_seq_GET(t, i){
     return t[i]
 }
 
+function PyPegen_last_item(seq){
+    return seq[seq.length - 1]
+}
+
 function CHECK(type, obj){
     if(Array.isArray(type)){
         var check
@@ -285,6 +289,8 @@ function RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, msg){
         b.end_lineno, b.end_col_offset,
         msg, extra_args)
 }
+
+$B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE = RAISE_SYNTAX_ERROR_KNOWN_RANGE
 
 function RAISE_SYNTAX_ERROR_INVALID_TARGET(type, e){
     return _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e)
@@ -1039,8 +1045,8 @@ function make(match, tokens){
             try{
                 ast = eval(rule.action)
             }catch(err){
-                var rule_str = show_rule(rule, true)
-                if($B.debug > 1){
+                if($B.debug > 2){
+                    var rule_str = show_rule(rule, true)
                     console.log('error eval action of', rule_str)
                     console.log('p', p)
                     console.log($B.frames_stack.slice())

@@ -852,7 +852,7 @@ $B._PyPegen.get_last_comprehension_item = function(comprehension) {
     return $B.last(comprehension.ifs);
 }
 
-$B._PyPegen._nonparen_genexp_in_call = function(p, args, comprehensions){
+$B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
     /* The rule that calls this function is 'args for_if_clauses'.
        For the input f(L, x for x in y), L and x are in args and
        the for is parsed as a for_if_clause. We have to check if
@@ -866,11 +866,10 @@ $B._PyPegen._nonparen_genexp_in_call = function(p, args, comprehensions){
     }
 
     var last_comprehension = $B.last(comprehensions);
-    console.log('last arg', args)
-
-    return RAISE_SYNTAX_ERROR_KNOWN_RANGE(
+    
+    return $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
         args.args[len - 1],
-        _PyPegen_get_last_comprehension_item(last_comprehension),
+        $B._PyPegen.get_last_comprehension_item(last_comprehension),
         "Generator expression must be parenthesized"
     );
 }
