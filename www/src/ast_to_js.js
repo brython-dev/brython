@@ -3,12 +3,23 @@
 var _b_ = $B.builtins
 
 function compiler_error(ast_obj, message){
-    console.log('compiler check throws error', message, ast_obj)
+    //console.log('compiler check throws error', message, ast_obj, state.filename)
     var exc = _b_.SyntaxError.$factory(message)
+    exc.filename = state.filename
+    if(exc.filename != '<string>'){
+        var src = $B.file_cache[exc.filename],
+            lines = src.split('\n'),
+            line = lines[ast_obj.lineno - 1]
+        exc.text = line
+    }else{
+        exc.text = _b_.none
+    }
     exc.lineno = ast_obj.lineno
     exc.offset = ast_obj.col_offset
     exc.end_lineno = ast_obj.end_lineno
     exc.end_offset = ast_obj.end_col_offset
+    exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
+                   exc.end_lineno, exc.end_offset]
     throw exc
 }
 
@@ -1001,7 +1012,14 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
-    compiler_check(this)
+    var kw_names = []
+    for(var kw of this.keywords){
+        if(kw.arg && kw_names.indexOf(kw.arg) > -1){
+            compiler_error(kw, `keyword argument repeated: ${kw.arg}`)
+        }else{
+            kw_names.push(kw.arg)
+        }
+    }
     var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')'
     var args = make_args.bind(this)(scopes)
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
@@ -1337,10 +1355,16 @@ $B.ast.Delete.prototype.to_js = function(scopes){
 }
 $B.ast.Dict.prototype.to_js = function(scopes){
     var items = [],
+        keys = this.keys,
         has_packed = false
+
+    function no_key(i){
+        return keys[i] === _b_.None || keys[i] === undefined
+    }
+
     // Build arguments = a list of 2-element lists
     for(var i = 0, len = this.keys.length; i < len; i++){
-        if(this.keys[i] === _b_.None || this.keys[i] === undefined){
+        if(no_key(i)){
             // format **t
             has_packed = true
             items.push('_b_.list.$factory(_b_.dict.items(' +
@@ -1359,10 +1383,10 @@ $B.ast.Dict.prototype.to_js = function(scopes){
         return `_b_.dict.$factory([${items}])`
     }
     // dict display has items of the form **t
-    var first = this.keys[0] !== _b_.None ? `[${items[0]}]` : items[0],
+    var first = no_key(0) ? items[0] : `[${items[0]}]`,
         js = '_b_.dict.$factory(' + first
     for(var i = 1, len = items.length; i < len; i++){
-        var arg = this.keys[i] !== _b_.None ? `[${items[i]}]` : items[i]
+        var arg = no_key(i) ? items[i] : `[${items[i]}]`
         js += `.concat(${arg})`
     }
     return js + ')'
@@ -2395,8 +2419,7 @@ $B.ast.Starred.prototype.to_js = function(scopes){
         compiler_error(this,
             "starred assignment target must be in a list or tuple")
     }else{
-        compiler_error(this,
-            "can't use starred expression here")
+        compiler_error(this, "can't use starred expression here")
     }
 }
 
@@ -2798,6 +2821,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
             return _r${n}
         })()`
 }
+var state = {}
 
 $B.js_from_root = function(ast_root, symtable, filename, namespaces){
     if($B.show_ast_dump){
@@ -2807,6 +2831,7 @@ $B.js_from_root = function(ast_root, symtable, filename, namespaces){
         $B.compiler_check(ast_root, symtable)
     }
     var scopes = []
+    state.filename = filename
     scopes.symtable = symtable
     scopes.filename = filename
     scopes.namespaces = namespaces

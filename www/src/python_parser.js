@@ -362,7 +362,7 @@ Parser.prototype.eval_option = function(rule, position){
         result,
         start = position,
         join_position = false
-    
+
     if(! rule.repeat){
         result = this.eval_option_once(rule, position)
     }else{
@@ -988,6 +988,8 @@ function make(match, tokens){
                 var rule_str = show_rule(rule, true)
                 if(true){ // && rule_str.search('invalid') == -1){
                     console.log('error eval action of', rule_str)
+                    console.log(err.message)
+                    console.log(err.stack)
                 }
                 throw err
             }
