@@ -2270,7 +2270,6 @@ $B.ast.MatchValue.prototype.to_js = function(scopes){
                 this.value instanceof $B.ast.Attribute){
         return `value: ${$B.js_from_ast(this.value, scopes)}`
     }else{
-        console.log(this.value)
         compiler_error(this,
             'patterns may only match literals and attribute lookups')
     }

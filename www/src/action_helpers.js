@@ -535,10 +535,15 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
     exc.offset = col_offset
     exc.end_lineno = end_lineno
     exc.end_offset = end_col_offset
-    var lines = $B.parser_state.src.split('\n'),
-        line = lines[exc.lineno - 1]
-    exc.text = line
-    exc.args[1] = [p.filename, lineno, col_offset, line]
+    var src = $B.file_cache[p.filename]
+    if(src !== undefined){
+        var lines = src.split('\n'),
+            line = lines[exc.lineno - 1]
+        exc.text = line
+    }else{
+        exc.text = _b_.None
+    }
+    exc.args[1] = [p.filename, lineno, col_offset, exc.text]
     throw exc
 }
 
@@ -866,7 +871,7 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions){
     }
 
     var last_comprehension = $B.last(comprehensions);
-    
+
     return $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE(
         args.args[len - 1],
         $B._PyPegen.get_last_comprehension_item(last_comprehension),
