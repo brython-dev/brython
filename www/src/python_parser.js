@@ -861,18 +861,11 @@ function make_ast(match, tokens){
     p.tokens = tokens
     p.mark = match.start
     p.fill = match.start
-    
+
     var test = false // show_rule(rule).indexOf('star_expressions') > -1
     if(test){
         console.log('make_ast', show_rule(rule, true), '\n    match', match)
     }
-
-    if(! rule){
-        console.log('match without rule', match)
-    }
-
-    /* console.log('make_ast, rule', show_rule(rule),
-        (match.matches ? match.matches.length + ' matches' : match)) */
 
     if(match.end > match.start){
         var token = tokens[match.start],
@@ -917,7 +910,7 @@ function make_ast(match, tokens){
         }
         var makes = []
         for(var one_match of match.matches){
-            // Each of the matches matches rule.items
+            // Each match matches rule.items
             if(one_match.rule === rule){
                 var elts = []
                 if(! one_match.matches){
@@ -925,20 +918,17 @@ function make_ast(match, tokens){
                         console.log('optional, match', one_match, 'repeat', rule.repeat)
                         var _make = make_ast(one_match, tokens)
                         console.log('_make', _make)
-                        alert()
                     }else{
                         console.log('one match no matches', match)
                     }
                 }
                 for(var i = 0; i < one_match.matches.length; i++){
                     var m = one_match.matches[i]
-                    //if(m.end > m.start){
-                        var _make = make_ast(m, tokens)
-                        if(rule.items[i].alias){
-                            eval('var ' + rule.items[i].alias + ' = _make')
-                        }
-                        elts.push(_make)
-                    //}
+                    var _make = make_ast(m, tokens)
+                    if(rule.items[i].alias){
+                        eval('var ' + rule.items[i].alias + ' = _make')
+                    }
+                    elts.push(_make)
                 }
                 if(rule.action){
                     try{
@@ -960,17 +950,12 @@ function make_ast(match, tokens){
             return
         }
         if(rule.repeat[1] == 1){
-            //console.log('rule', show_rule(rule), 'evals to', makes[0])
             return makes[0]
         }
-        //console.log('rule', show_rule(rule), 'evals to', makes)
         return makes
     }
 
     if(rule.items){
-        if(rule.items.length != match.matches.length){
-            alert('rule items and match.matches have different lengths')
-        }
         var makes = [],
             nb_consuming = 0,
             ast,
@@ -1034,9 +1019,6 @@ function make_ast(match, tokens){
         }
         return ast
     }else{
-        if(match.matches){
-            alert('rule without items has matches')
-        }
         if(rule.type == 'NAME'){
             var ast_obj = new $B.ast.Name(tokens[match.start].string,
                                           new $B.ast.Load())
@@ -1058,16 +1040,8 @@ function make_ast(match, tokens){
             var ast_obj = new $B.ast.Constant(tokens[match.start].string)
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
-        }else if(grammar[rule.name] === undefined){
-            // ignore NEWLINE, DEDENT...
-        }else{
-            var grammar_rule = grammar[rule_name]
-            var elts = []
-            for(var m of match.matches){
-                elts.push(make_ast(m, tokens))
-            }
-            return elts
         }
+        // ignore other rules such as DEDENT, NEWLINE etc.
     }
 }
 
