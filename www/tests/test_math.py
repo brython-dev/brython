@@ -263,4 +263,28 @@ except OverflowError:
 # issue 1842
 assert not math.isclose(0.1, 0)
 
+# issue 1957
+assert math.isclose(math.gamma(-26.7), -9.622839430100812e-28)
+
+assert math.gamma(0.25) == 3.6256099082219087
+assert math.gamma(-0.25) == -4.90166680986071
+
+assert math.gamma(1.25) == 0.9064024770554773
+assert math.gamma(0.75) == 1.2254167024651779
+assert math.gamma(0.25) == 3.6256099082219087
+assert math.gamma(-0.25) == -4.90166680986071, math.gamma(-0.25)
+assert math.gamma(-0.75) == -4.834146544295877
+
+args = [-26.7, 0.25, -0.25, 1.25, 0.75, -0.75]
+expected = [-62.208243223652396,
+1.2880225246980772,
+1.5895753125511862,
+-0.0982718364218127,
+0.203280951431295,
+1.5757045971498584]
+
+for x, r in zip(args, expected):
+    assert math.isclose(math.lgamma(x), r)
+
+
 print("passed all tests..")
