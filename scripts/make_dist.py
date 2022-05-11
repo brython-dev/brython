@@ -2,14 +2,15 @@
 
 """Script to compact all Brython scripts in a single one."""
 
-import time
 import datetime
 import os
 import re
 import sys
+import time
 
-import javascript_minifier
-from version import version, implementation
+from manage import BASE_DIR
+import scripts.javascript_minifier
+from scripts.version import implementation, version
 
 cpython_version = sys.version_info
 if cpython_version[0] < version[0] or \
@@ -18,7 +19,7 @@ if cpython_version[0] < version[0] or \
     sys.exit()
 
 # path of parent directory
-pdir = os.path.dirname(os.getcwd())
+pdir = script_dir = BASE_DIR
 
 # version name
 vname = '.'.join(str(x) for x in implementation[:3])
@@ -27,7 +28,6 @@ if implementation[3] == 'rc':
 vname2 = '.'.join(str(x) for x in implementation[:2])
 vname1 = str(implementation[0])
 
-script_dir = os.path.dirname(os.getcwd())
 abs_path = lambda _pth: os.path.join(script_dir, 'www',
     'src', _pth)
 
@@ -58,7 +58,6 @@ def run():
         vinfo_file_out.write(',\n    '.join(_modules))
         vinfo_file_out.write(']\n')
 
-    import make_stdlib_static
     # build brython.js from base Javascript files
     sources = [
         'brython_builtins',
@@ -107,10 +106,12 @@ def run():
     src_size = 0
 
     for fname in sources:
-        src = open(abs_path(fname)+'.js').read() + '\n'
+        with open(abs_path(fname)+'.js') as f:
+            src = f.read() + '\n'
+
         src_size += len(src)
         try:
-            mini = javascript_minifier.minify(src) + ";\n"
+            mini = scripts.javascript_minifier.minify(src) + ";\n"
         except:
             print('error in', fname)
             raise
