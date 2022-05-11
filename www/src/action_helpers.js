@@ -650,7 +650,7 @@ function make_formatted_value(p, fmt_values){
             set_position_from_obj(fmt_ast, p.arena)
         }else{
             var src = item.expression.trimStart() // ignore leading whitespace
-            var _ast = new $B.Parser(src).feed('eval', p.filename)
+            var _ast = new $B.Parser(src).parse('eval', p.filename)
             var raw_value = _ast.body
             var fmt_ast = new $B.ast.FormattedValue(raw_value,
                 make_conversion_code(item.conversion),
@@ -773,7 +773,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                 var _format = make_formatted_value(p, item.format)
             }
             var src = item.expression.trimStart() // ignore leading whitespace
-            var _ast = new $B.Parser(src).feed('eval', p.filename)
+            var _ast = new $B.Parser(src).parse('eval', p.filename)
             var raw_value = _ast.body
             var formatted = new $B.ast.FormattedValue(raw_value,
                 make_conversion_code(item.conversion),

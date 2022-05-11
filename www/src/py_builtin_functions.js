@@ -710,7 +710,7 @@ function $$eval(src, _globals, _locals){
 
     try{
         if($B.parser_to_ast){
-            var _ast = new $B.Parser(src, filename).feed(mode == 'eval' ? 'eval' : 'file')
+            var _ast = new $B.Parser(src, filename).parse(mode == 'eval' ? 'eval' : 'file')
             var symtable = $B._PySymtable_Build(_ast, filename)
             var js_obj = $B.js_from_root(_ast, symtable, filename,
                     {local_name, exec_locals, global_name, exec_globals})

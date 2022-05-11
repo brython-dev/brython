@@ -21,7 +21,11 @@ for(var rule_name in grammar){
 }
 
 
-// Define names used by grammar actions
+// ---- Define names used by grammar actions
+
+// Global parser object
+var p = {feature_version: $B.version_info[1]}
+
 var Store = new $B.ast.Store(),
     Load = new $B.ast.Load(),
     Del = new $B.ast.Del(),
@@ -239,17 +243,12 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
 }
 
 
-// --- end of names used by grammar actions
+// ---- end of names used by grammar actions
 
 
 // JS classes and functions used by the parsing algorithm
 
 // Class and functions for memoization of matches at a given position
-function MemoEntry(match, end){
-    this.match = match
-    this.position = end
-}
-
 
 // Returns an object that has the interface of a list and consumes the
 // generator on demand, if the index was not yet read.
@@ -293,6 +292,11 @@ var FAIL = {name: 'FAIL'},
     FROZEN_FAIL = {name: 'FROZEN_FAIL'}
 
 // Classes used in the algorithm
+function MemoEntry(match, end){
+    this.match = match
+    this.position = end
+}
+
 function LR(seed, rule){
     this.seed = seed
     this.rule = rule
@@ -304,10 +308,8 @@ function HEAD(rule, involvedSet, evalSet){
     this.evalSet = evalSet
 }
 
-function handle_invalid_match(match, tokens){
-    return make_ast(match, tokens)
-}
-
+// An instance of Parser is created for each script / exec /
+// f-string expression
 var Parser = $B.Parser = function(src, filename){
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
@@ -331,11 +333,8 @@ var Parser = $B.Parser = function(src, filename){
     }
 }
 
-Parser.prototype.feed = function(top_rule){
-    return this.parse(top_rule)
-}
-
 Parser.prototype.parse = function(top_rule){
+    // top_rule is 'file' for a script or exec(), 'eval' for eval()
     if(this.src.trim().length == 0){
         // eg empty __init__.py
         return new $B.ast.Module([])
@@ -400,25 +399,16 @@ Parser.prototype.set_memo = function(rule, position, value){
 
 Parser.prototype.apply_rule = function(rule, position){
     // apply rule at position
-    // search if result is in memo
     var memoized = this.RECALL(rule, position),
         result
     if(memoized === null){
-        // for left recursion, initialize with LeftRecursion set to false
         var lr = new LR(FAIL, rule)
         this.LRStack.push(lr)
         var m = new MemoEntry(lr, position)
         this.set_memo(rule, position, m)
-        // evaluate body of rule
-        // if the rule includes itself at the same position, it will be found
-        // in memo as LR; LR.detected will be set to true and the branch of
-        // eval_body containing rule will return FAIL, but eval_body can
-        // match with another branch that doesn't contain rule
+        // evaluate rule body
         var match = this.eval_body(rule, position)
         this.LRStack.pop()
-
-        // change memo(rule, position) with result of match
-        // m.match = match
         m.end = match.end
 
         if(lr.head){
@@ -525,7 +515,7 @@ Parser.prototype.eval_option_once = function(rule, position){
                 return FAIL
             }else if(match !== FAIL){
                 if(invalid){
-                    var _ast = handle_invalid_match(match, tokens)
+                    var _ast = make_ast(match, tokens)
                     if(_ast === undefined){
                         continue
                     }
@@ -561,7 +551,7 @@ Parser.prototype.eval_option_once = function(rule, position){
         var match = {rule, matches, start, end: position}
         if(this.use_invalid && rule.parent_rule &&
                 rule.parent_rule.startsWith('invalid_')){
-            var _ast = handle_invalid_match(match, tokens)
+            var _ast = make_ast(match, tokens)
             if(_ast === undefined){
                 return FAIL
             }
@@ -616,7 +606,7 @@ Parser.prototype.eval_body = function(rule, position){
                 return FAIL
             }else if(match !== FAIL){
                 if(invalid){
-                    var _ast = handle_invalid_match(match, this.tokens)
+                    var _ast = make_ast(match, this.tokens)
                     if(_ast === undefined){
                         // ignore invalid match if its action returns NULL
                         continue
@@ -648,7 +638,7 @@ Parser.prototype.eval_body = function(rule, position){
         var match = {rule, matches, start, end: position}
         if(this.use_invalid && rule.parent_rule &&
                 rule.parent_rule.startsWith('invalid_')){
-            handle_invalid_match(match, this.tokens)
+            make_ast(match, this.tokens)
         }
         return match
     }
@@ -748,109 +738,7 @@ Parser.prototype.grow_lr = function(rule, position, m, H){
     return m.match
 }
 
-
-function show(match, tokens, level){
-    level = level || 0
-    var s = '',
-        prefix = '  '.repeat(level),
-        rule = match.rule
-
-    s += prefix + show_rule(rule)
-    if(match.matches){
-        s += ' (' + match.matches.length + ' matches'
-        for(var m of match.matches){
-            if(m.rule === rule){
-                s += ' same rule ' + show_rule(m.rule)
-            }
-        }
-        s += ')'
-    }
-
-    s += '\n'
-    if(! match.rule.repeat){
-        level += 1
-    }
-
-    if(match.matches){
-        for(var m of match.matches){
-            s += show(m, tokens, level)
-        }
-    }else{
-        if(match.end > match.start){
-            s += prefix
-            if(['NAME', 'STRING', 'NUMBER', 'string'].indexOf(match.rule.type) > -1){
-                s += match.rule.type + ' ' + tokens[match.start][1]
-            }else{
-                s += match.rule.type + ' ' + (match.rule.value || '') +
-                    match.start + '-' + match.end
-            }
-            s += '\n'
-        }
-    }
-    return s
-}
-
-function debug_head(n){
-    var signs = '|:.',
-        s = ''
-    for(var i = 0; i < n; i++){
-        s += '| '
-    }
-    return s
-}
-
-function show_rule(rule, show_action){
-    var res = rule.name || ''
-    if(rule.type && rule.type != 'rule'){
-        if(rule.lookahead == 'positive'){
-            res += '&'
-        }else if(rule.lookahead == 'negative'){
-            res += '!'
-        }
-        if(rule.type == 'string'){
-            res += "'" + rule.value + "'"
-        }else{
-            res += rule.type
-        }
-    }
-
-    if(rule.choices){
-        res += ' (' + rule.choices.map(show_rule).join(' | ') + ')'
-    }else if(rule.items){
-        res += ' ' + rule.items.map(show_rule).join(' ')
-    }
-
-    if(rule.action && show_action){
-        res += ' {' + rule.action + '}'
-    }
-
-    if(rule.repeat){
-        if(rule.items && rule.items.length > 1){
-            res = '(' + res + ')'
-        }
-        if(rule.repeat[0] == 0 && rule.repeat[1] == 1){
-            res += '?'
-        }else if(rule.repeat[0] == 0 && rule.repeat[1] == Number.POSITIVE_INFINITY){
-            res += '*'
-        }else if(rule.repeat[0] == 1 && rule.repeat[1] == Number.POSITIVE_INFINITY){
-            res += '+'
-        }
-    }
-    if(rule.join){
-        res = `'${rule.join}'.` + res
-    }
-    if(rule.alias){
-        res = (rule.alias + '=' + res)
-    }
-    if(rule.parent_rule){
-        res = '<' + rule.parent_rule +' #' + rule.rank +'>' + res
-    }
-    return res
-}
-
-// Global parser object
-var p = {feature_version: $B.version_info[1]}
-
+// Function that generates the AST for a match
 function make_ast(match, tokens){
     // match.rule succeeds; make_ast() returns a value for the match, based on
     // the grammar action for the rule
@@ -1035,6 +923,107 @@ function make_ast(match, tokens){
         // ignore other rules such as DEDENT, NEWLINE etc.
     }
 }
+
+// Functions for debugging
+function show(match, tokens, level){
+    level = level || 0
+    var s = '',
+        prefix = '  '.repeat(level),
+        rule = match.rule
+
+    s += prefix + show_rule(rule)
+    if(match.matches){
+        s += ' (' + match.matches.length + ' matches'
+        for(var m of match.matches){
+            if(m.rule === rule){
+                s += ' same rule ' + show_rule(m.rule)
+            }
+        }
+        s += ')'
+    }
+
+    s += '\n'
+    if(! match.rule.repeat){
+        level += 1
+    }
+
+    if(match.matches){
+        for(var m of match.matches){
+            s += show(m, tokens, level)
+        }
+    }else{
+        if(match.end > match.start){
+            s += prefix
+            if(['NAME', 'STRING', 'NUMBER', 'string'].indexOf(match.rule.type) > -1){
+                s += match.rule.type + ' ' + tokens[match.start][1]
+            }else{
+                s += match.rule.type + ' ' + (match.rule.value || '') +
+                    match.start + '-' + match.end
+            }
+            s += '\n'
+        }
+    }
+    return s
+}
+
+function debug_head(n){
+    var signs = '|:.',
+        s = ''
+    for(var i = 0; i < n; i++){
+        s += '| '
+    }
+    return s
+}
+
+function show_rule(rule, show_action){
+    var res = rule.name || ''
+    if(rule.type && rule.type != 'rule'){
+        if(rule.lookahead == 'positive'){
+            res += '&'
+        }else if(rule.lookahead == 'negative'){
+            res += '!'
+        }
+        if(rule.type == 'string'){
+            res += "'" + rule.value + "'"
+        }else{
+            res += rule.type
+        }
+    }
+
+    if(rule.choices){
+        res += ' (' + rule.choices.map(show_rule).join(' | ') + ')'
+    }else if(rule.items){
+        res += ' ' + rule.items.map(show_rule).join(' ')
+    }
+
+    if(rule.action && show_action){
+        res += ' {' + rule.action + '}'
+    }
+
+    if(rule.repeat){
+        if(rule.items && rule.items.length > 1){
+            res = '(' + res + ')'
+        }
+        if(rule.repeat[0] == 0 && rule.repeat[1] == 1){
+            res += '?'
+        }else if(rule.repeat[0] == 0 && rule.repeat[1] == Number.POSITIVE_INFINITY){
+            res += '*'
+        }else if(rule.repeat[0] == 1 && rule.repeat[1] == Number.POSITIVE_INFINITY){
+            res += '+'
+        }
+    }
+    if(rule.join){
+        res = `'${rule.join}'.` + res
+    }
+    if(rule.alias){
+        res = (rule.alias + '=' + res)
+    }
+    if(rule.parent_rule){
+        res = '<' + rule.parent_rule +' #' + rule.rank +'>' + res
+    }
+    return res
+}
+
 
 // export names for use in other scripts (action_helpers.js)
 $B.Parser.RAISE_SYNTAX_ERROR = RAISE_SYNTAX_ERROR
