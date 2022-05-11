@@ -68,6 +68,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
                continue  # skip these modules
             if '__pycache__' in _dir:
                 _dir.remove("__pycache__")
+            if '.mypy_cache' in _dir:
+                _dir.remove(".mypy_cache")
             nb += 1
 
             if stdlib_dir == "Lib":

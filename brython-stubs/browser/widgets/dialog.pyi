@@ -1,0 +1,36 @@
+from _typeshed import Incomplete
+from browser import aio as aio, console as console, document as document, html as html, window as window
+
+style_sheet: str
+
+class Dialog(html.DIV):
+    title_bar: Incomplete
+    close_button: Incomplete
+    panel: Incomplete
+    ok_button: Incomplete
+    cancel_button: Incomplete
+    left: Incomplete
+    top: Incomplete
+    is_moving: bool
+    def __init__(self, title: str = ..., *, top: Incomplete | None = ..., left: Incomplete | None = ..., ok_cancel: bool = ..., default_css: bool = ...) -> None: ...
+    def close(self, *args) -> None: ...
+    initial: Incomplete
+    def mousedown(self, event) -> None: ...
+    def mousemove(self, event) -> None: ...
+    def mouseup(self, event) -> None: ...
+
+class EntryDialog(Dialog):
+    message: Incomplete
+    entry: Incomplete
+    def __init__(self, title, message: Incomplete | None = ..., *, top: Incomplete | None = ..., left: Incomplete | None = ..., default_css: bool = ...) -> None: ...
+    @property
+    def value(self): ...
+    def callback(self, evt) -> None: ...
+
+async def Input(message: Incomplete | None = ...): ...
+
+class InfoDialog(Dialog):
+    ok_button: Incomplete
+    def __init__(self, title, message, *, top: Incomplete | None = ..., left: Incomplete | None = ..., default_css: bool = ..., remove_after: Incomplete | None = ..., ok: bool = ...): ...
+
+def Info(message: Incomplete | None = ...) -> None: ...
