@@ -20,7 +20,6 @@ for(var rule_name in grammar){
     }
 }
 
-
 // ---- Define names used by grammar actions
 
 // Global parser object
@@ -219,7 +218,8 @@ function RAISE_SYNTAX_ERROR_INVALID_TARGET(type, e){
 }
 
 function _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
-    var invalid_target = CHECK_NULL_ALLOWED(expr_ty, $B._PyPegen.get_invalid_target(e, type));
+    var invalid_target = CHECK_NULL_ALLOWED(expr_ty,
+        $B._PyPegen.get_invalid_target(e, type));
     if (invalid_target != NULL) {
         var msg;
         if (type == STAR_TARGETS || type == FOR_TARGETS) {
@@ -247,8 +247,6 @@ function set_position_from_EXTRA(ast_obj, EXTRA){
 
 
 // JS classes and functions used by the parsing algorithm
-
-// Class and functions for memoization of matches at a given position
 
 // Returns an object that has the interface of a list and consumes the
 // generator on demand, if the index was not yet read.
@@ -292,9 +290,8 @@ var FAIL = {name: 'FAIL'},
     FROZEN_FAIL = {name: 'FROZEN_FAIL'}
 
 // Classes used in the algorithm
-function MemoEntry(match, end){
+function MemoEntry(match){
     this.match = match
-    this.position = end
 }
 
 function LR(seed, rule){
@@ -370,7 +367,7 @@ Parser.prototype.parse = function(top_rule){
             'invalid syntax')
     }
 
-    // Return AST object
+    // If parsing succeeds, return AST object
     return make_ast(match, this.tokens)
 }
 
@@ -404,7 +401,7 @@ Parser.prototype.apply_rule = function(rule, position){
     if(memoized === null){
         var lr = new LR(FAIL, rule)
         this.LRStack.push(lr)
-        var m = new MemoEntry(lr, position)
+        var m = new MemoEntry(lr)
         this.set_memo(rule, position, m)
         // evaluate rule body
         var match = this.eval_body(rule, position)
@@ -535,9 +532,6 @@ Parser.prototype.eval_option_once = function(rule, position){
                 frozen_choice = true
             }
             var match = this.eval_option(item, position)
-            if(match === undefined){
-                console.log('eval of item', item, 'returns undef')
-            }
             if(match !== FAIL){
                 matches.push(match)
                 position = match.end
@@ -629,10 +623,7 @@ Parser.prototype.eval_body = function(rule, position){
                 matches.push(match)
                 position = match.end
             }else{
-                if(frozen_choice){
-                    return FROZEN_FAIL
-                }
-                return FAIL
+                return frozen_choice ? FROZEN_FAIL : FAIL
             }
         }
         var match = {rule, matches, start, end: position}
@@ -667,7 +658,7 @@ Parser.prototype.RECALL = function(R, P){
         set.add(s)
     }
     if((! m) && ! set.has(R)){
-        return new MemoEntry(FAIL, P)
+        return new MemoEntry(FAIL)
     }
     // Allow involved rules to be evaluated, but only once,
     // during a seed-growing iteration.
@@ -713,8 +704,7 @@ Parser.prototype.grow_lr = function(rule, position, m, H){
     // an option that referenced itself (recursion) because at that time,
     // memo(rule, position) was a LeftReference.
     //
-    // m is the MemoEntry for (rule, position); m.match is the latest match,
-    // m.pos is the last position in tokens
+    // m is the MemoEntry for (rule, position); m.match is the latest match
     //
     // apply_rule(rule, position) will return this match
     //
@@ -754,6 +744,7 @@ function make_ast(match, tokens){
     }
 
     if(match.end > match.start){
+        // name EXTRA is used in grammar actions
         var token = tokens[match.start],
             EXTRA = {lineno: token.start[0],
                      col_offset: token.start[1],
@@ -796,15 +787,6 @@ function make_ast(match, tokens){
             // Each match matches rule.items
             if(one_match.rule === rule){
                 var elts = []
-                if(! one_match.matches){
-                    if(rule.repeat[1] == 1){
-                        console.log('optional, match', one_match, 'repeat', rule.repeat)
-                        var _make = make_ast(one_match, tokens)
-                        console.log('_make', _make)
-                    }else{
-                        console.log('one match no matches', match)
-                    }
-                }
                 for(var i = 0; i < one_match.matches.length; i++){
                     var m = one_match.matches[i]
                     var _make = make_ast(m, tokens)
@@ -1023,7 +1005,6 @@ function show_rule(rule, show_action){
     }
     return res
 }
-
 
 // export names for use in other scripts (action_helpers.js)
 $B.Parser.RAISE_SYNTAX_ERROR = RAISE_SYNTAX_ERROR
