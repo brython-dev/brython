@@ -23,7 +23,7 @@ operators = [
 
 operators_re = r'\b(' + '|'.join(operators) + r')\b'
 
-sep = re.search("^'''", src, flags=re.M).start()
+sep = re.search("^'''", src, flags=re.M).end()
 head = src[:sep]
 src = src[sep:]
 
@@ -49,17 +49,6 @@ for mo in action_re.finditer(src):
 new_src += src[pos:]
 
 with open('python.gram.js_actions', 'w', encoding='utf-8') as out:
-    out.write(head + new_src)
-
-
-
-
-
-
-
-
-
-
-
-
-
+    for line in new_src.split('\n'):
+        if not line.startswith('#') and line.strip():
+            out.write(line + '\n')

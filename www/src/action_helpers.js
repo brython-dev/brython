@@ -543,7 +543,7 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
     }else{
         exc.text = _b_.None
     }
-    exc.args[1] = [p.filename, lineno, col_offset, exc.text]
+    exc.args[1] = [p.filename, lineno, col_offset, exc.text, end_lineno, end_col_offset]
     throw exc
 }
 

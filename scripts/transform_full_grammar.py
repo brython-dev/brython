@@ -1,24 +1,15 @@
 import os
 import re
-import pprint
 import json
 
+import transform_grammar_actions
+
 grammar = {}
-rule_type = {}
-action = {}
 
 keywords = set()
 
 with open("python.gram.js_actions", encoding="utf-8", newline=None) as f:
-    trailer = False
     for line in f:
-        if line.startswith("@trailer"):
-            trailer = True
-            continue
-        elif trailer:
-            if line.startswith("'''"):
-                trailer = False
-            continue
 
         if line.startswith('#') or not line.strip():
             continue
@@ -30,7 +21,6 @@ with open("python.gram.js_actions", encoding="utf-8", newline=None) as f:
 
         if mo := re.match(r'^(\w+)(\[[a-zA-Z_*]+\])?\s*(\(\w+\))?:(.*)$', line):
             decl = mo.group(1)
-            rule_type[decl] = mo.group(2)
             grammar[decl] = mo.group(4).strip()
         else:
             grammar[decl] += ' ' + line.strip()
@@ -155,7 +145,7 @@ class Element:
             if hasattr(self.join, 'alias') and self.join.alias is not None:
                 res += f", alias: '{self.join.alias}'"
         if self.repeat != [1, 1]:
-            res += f', repeat: {self.repeat}'
+            res += f", repeat: '{self.repeat}'"
         if self.lookahead:
             res += f", lookahead: '{self.lookahead}'"
         if self.alias:
@@ -230,9 +220,11 @@ class GrammarExpression:
                 self.options.append(ge)
             self.sequence = []
         elif token == ['op', '*']: # repeat 0 or more
-            self.sequence[-1].repeat = [0, float('inf')]
+            self.sequence[-1].repeat = '*' #[0, float('inf')]
         elif token == ['op', '+']: # repeat 1 or more
-            self.sequence[-1].repeat = [1, float('inf')]
+            self.sequence[-1].repeat = '+' #[1, float('inf')]
+        elif token == ['op', '?']: # previous is optional
+            self.sequence[-1].repeat = '?' #[0, 1]
         elif token == ['op', '.']:
             assert self.sequence[-1].type == 'string'
             self.sequence[-1].type = 'join'
@@ -248,11 +240,9 @@ class GrammarExpression:
             sub_ge.parent = self
             return sub_ge
         elif token == ['op', ']']: # can only happen in a sub expression
-            self.repeat = [0, 1]
+            self.repeat = '?' #[0, 1]
             self.parent.add(self)
             return self.parent
-        elif token == ['op', '?']: # previous is optional
-            self.sequence[-1].repeat = [0, 1]
         elif token == ['op', '~']: # commit to current choice
             self.add(CommitChoice)
         elif token == ['op', '&']: # positive lookahead
@@ -272,10 +262,6 @@ class GrammarExpression:
                     self.action = None
                 self.options.append(ge)
                 self.sequence = []
-            else:
-                if False: #self.action:
-                    self.sequence[-1].action = self.action
-                    self.action = None
         elif token[0] == 'action':
             token[1] = re.sub("^\(.*?\)", "", token[1].strip())
             self.action = Literal(*token)
@@ -316,7 +302,7 @@ class GrammarExpression:
             if hasattr(self.join, 'alias') and self.join.alias is not None:
                 res += f", alias: '{self.join.alias}'"
         if self.repeat != [1, 1]:
-            res += ',\n' + prefix1 + f'repeat: [{self.repeat[0]}, {self.repeat[1]}]'
+            res += ',\n' + prefix1 + f"repeat: '{self.repeat}'"
         if self.lookahead:
             res += f", lookahead: '{self.lookahead}'"
         if self.alias:
@@ -326,13 +312,23 @@ class GrammarExpression:
             res += f", action: '{code}'"
         return res + '\n' + prefix + '}'
 
+end = """for(var rule_name in grammar){
+    grammar[rule_name].name = rule_name
+    if(grammar[rule_name].choices){
+        grammar[rule_name].choices.forEach(function(item, rank){
+            item.parent_rule = rule_name
+            item.rank = rank
+        })
+    }
+}
+"""
+
 def generate_javascript():
     dest = os.path.join(os.path.dirname(os.getcwd()),
         'www', 'src', 'full_grammar.js')
     with open(dest, 'w', encoding='utf-8') as out:
         out.write('(function($B){\n')
-        out.write('var inf = Number.POSITIVE_INFINITY\n')
-        out.write('$B.grammar = {\n')
+        out.write('var grammar = $B.grammar = {\n')
         for token, descr in grammar.items():
             ge = GrammarExpression(token)
             for x in parse(descr):
@@ -340,6 +336,7 @@ def generate_javascript():
             out.write(token + ':\n')
             out.write(ge.show(indent=2) + ',\n')
         out.write('}\n')
+        out.write(end)
         out.write('})(__BRYTHON__)')
 
 if __name__ == '__main__':

@@ -6,19 +6,7 @@
 (function($B){
 
 var _b_ = $B.builtins,
-    grammar = $B.grammar,
     debug = 0
-
-
-for(var rule_name in grammar){
-    grammar[rule_name].name = rule_name
-    if(grammar[rule_name].choices){
-        grammar[rule_name].choices.forEach(function(item, rank){
-            item.parent_rule = rule_name
-            item.rank = rank
-        })
-    }
-}
 
 // ---- Define names used by grammar actions
 
@@ -190,6 +178,8 @@ var RAISE_INDENTATION_ERROR = function(msg, arg){
     if(arg !== undefined){
         msg = _b_.str.__mod__(msg, arg)
     }
+    console.log('indentation error, last token', p.tokens.last)
+    p.known_err_token = p.tokens.last
     $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
 }
 
@@ -285,6 +275,13 @@ function generator_as_list(generator){
     )
 }
 
+// transform repeat string to min and max number of repetitions
+var repeater = {
+    '?' : [0, 1],
+    '*': [0, inf],
+    '+': [1, inf]
+}
+
 // Singletons for failure
 var FAIL = {name: 'FAIL'},
     FROZEN_FAIL = {name: 'FROZEN_FAIL'}
@@ -315,10 +312,6 @@ var Parser = $B.Parser = function(src, filename){
     if(src.endsWith("\\") && !src.endsWith("\\\\")){
         src = src.substr(0, src.length - 1)
     }
-    // Normalise script end
-    if(src.charAt(src.length - 1) != "\n"){
-        src += "\n"
-    }
 
     var tokenizer = $B.tokenizer(src)
     this.tokens = generator_as_list(tokenizer)
@@ -336,7 +329,7 @@ Parser.prototype.parse = function(top_rule){
         // eg empty __init__.py
         return new $B.ast.Module([])
     }
-    var rule = grammar[top_rule],
+    var rule = $B.grammar[top_rule],
         match
     this.clear_memo()
     this.HEADS = {}
@@ -436,15 +429,16 @@ Parser.prototype.eval_option = function(rule, position){
         result = this.eval_option_once(rule, position)
     }else{
         var matches = [],
-            start = position
-        while(matches.length < rule.repeat[1]){
+            start = position,
+            repeat = repeater[rule.repeat]
+        while(matches.length < repeat[1]){
             var match = this.eval_option_once(rule, position)
             if(match === FAIL){
                 if(join_position){
                     result = {rule, matches, start, end: join_position - 1}
                     join_position = false
                     position = join_position - 1
-                }else if(matches.length >= rule.repeat[0]){
+                }else if(matches.length >= repeat[0]){
                     // Enough repetitions
                     result = {rule, matches, start, end: position}
                 }else{
@@ -553,7 +547,7 @@ Parser.prototype.eval_option_once = function(rule, position){
         }
         return match
     }else if(rule.type == "rule"){
-        return this.apply_rule(grammar[rule.name], position)
+        return this.apply_rule($B.grammar[rule.name], position)
     }else if(rule.type == "string"){
         return tokens[position][1] == rule.value ?
             {rule, start: position, end: position + 1} :
@@ -738,12 +732,12 @@ function make_ast(match, tokens){
     p.mark = match.start
     p.fill = match.start
 
-    var test = false // show_rule(rule).indexOf('star_expressions') > -1
+    var test = false // show_rule(rule).indexOf('invalid_def_raw') > -1
     if(test){
         console.log('make_ast', show_rule(rule, true), '\n    match', match)
     }
 
-    if(match.end > match.start){
+    //if(match.end > match.start){
         // name EXTRA is used in grammar actions
         var token = tokens[match.start],
             EXTRA = {lineno: token.start[0],
@@ -752,7 +746,7 @@ function make_ast(match, tokens){
                      end_col_offset: token.end[1]
                      }
         p.arena = EXTRA
-    }
+    //}
 
     if(rule.repeat){
         // If a repeated rule has an alias, it applies to the repetition list
@@ -814,7 +808,7 @@ function make_ast(match, tokens){
         if(makes.length == 0){
             return
         }
-        if(rule.repeat[1] == 1){
+        if(repeater[rule.repeat][1] == 1){
             return makes[0]
         }
         return makes
@@ -834,6 +828,27 @@ function make_ast(match, tokens){
                     end_lineno: tokens[last.end - 1].end[0],
                     end_col_offset: tokens[last.end - 1].end[1]
                     }
+            var pos = last.end - 1,
+                last_line = tokens[pos].start[0]
+            if(last_line > tokens[last.end - 1].start[0] + 1){
+                last_token = {type: 'NL',
+                              start: [last_line - 1, 0],
+                              end: [last_line - 1, 0],
+                              line: '\n'}
+            }else{
+                last_token = tokens[last.end - 1]
+            }
+
+            p.arena = {
+                lineno: last_token.start[0],
+                offset: last_token.start[1],
+                end_lineno: last_token.end[0],
+                end_col_offset: last_token.end[1]
+            }
+            if(test){
+                console.log('last token', tokens[last.end])
+                console.log('extra', EXTRA)
+            }
         }
         for(var i = 0; i < match.matches.length; i++){
             var m = match.matches[i]
@@ -844,7 +859,7 @@ function make_ast(match, tokens){
                 _make = make_ast(m, tokens)
                 makes.push(_make)
             }else{
-                if(m.rule.repeat && m.rule.repeat[1] > 1){
+                if(m.rule.repeat && repeater[m.rule.repeat][1] > 1){
                     // If m.rule has * or + modifier, return empty list
                     _make = []
                 }else{
@@ -854,6 +869,7 @@ function make_ast(match, tokens){
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
                 eval('var ' + rule.items[i].alias + ' = _make')
+                console.log('alias', rule.items[i].alias, show_rule(rule.items[i]), _make)
             }
             if(! rule.items[i].lookahead){
                 nb_consuming++
@@ -861,6 +877,7 @@ function make_ast(match, tokens){
         }
         if(rule.action){
             try{
+                console.log(show_rule(rule, true))
                 ast = eval(rule.action)
             }catch(err){
                 if($B.debug > 2){
@@ -959,12 +976,12 @@ function debug_head(n){
 
 function show_rule(rule, show_action){
     var res = rule.name || ''
+    if(rule.lookahead == 'positive'){
+        res += '&'
+    }else if(rule.lookahead == 'negative'){
+        res += '!'
+    }
     if(rule.type && rule.type != 'rule'){
-        if(rule.lookahead == 'positive'){
-            res += '&'
-        }else if(rule.lookahead == 'negative'){
-            res += '!'
-        }
         if(rule.type == 'string'){
             res += "'" + rule.value + "'"
         }else{
@@ -986,13 +1003,7 @@ function show_rule(rule, show_action){
         if(rule.items && rule.items.length > 1){
             res = '(' + res + ')'
         }
-        if(rule.repeat[0] == 0 && rule.repeat[1] == 1){
-            res += '?'
-        }else if(rule.repeat[0] == 0 && rule.repeat[1] == Number.POSITIVE_INFINITY){
-            res += '*'
-        }else if(rule.repeat[0] == 1 && rule.repeat[1] == Number.POSITIVE_INFINITY){
-            res += '+'
-        }
+        res += rule.repeat
     }
     if(rule.join){
         res = `'${rule.join}'.` + res
