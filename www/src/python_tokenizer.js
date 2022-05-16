@@ -72,7 +72,7 @@ function TokenError(message, position){
 function get_line_at(src, pos){
     // Get the line in source code src starting at position pos
     var end = src.substr(pos).search(/[\r\n]/)
-    return end == -1 ? src.substr(pos) : src.substr(pos, end)
+    return end == -1 ? src.substr(pos) : src.substr(pos, end + 1)
 }
 
 function get_comment(src, pos, line_num, line_start, token_name, line){
