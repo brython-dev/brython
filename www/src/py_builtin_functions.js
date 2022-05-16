@@ -398,18 +398,29 @@ function compile() {
             throw _b_.SyntaxError.$factory("unexpected EOF while parsing")
         }
     }
-
-    var root = $B.parser.$create_root_node(
-            {src: $.source, filename: $.filename},
-            module_name, module_name)
-    root.mode = $.mode
-    root.parent_block = $B.builtins_scope
-    $B.parser.dispatch_tokens(root, $.source)
-    if($.flags == $B.PyCF_ONLY_AST){
-        $B.create_python_ast_classes() // in py_ast
-        var _ast = root.ast(),
-            klass = _ast.constructor.$name
-        return $B.python_ast_classes[klass].$factory(_ast)
+    
+    if($B.parser_to_ast){
+        var _ast = new $B.Parser($.source, $.filename).parse(
+            interactive ? 'interactive' : 'file')
+        var symtable = $B._PySymtable_Build(_ast, $.filename)
+        // var js_obj = $B.js_from_root(_ast, symtable, $.filename)
+        if($.flags == $B.PyCF_ONLY_AST){
+            return _ast
+        }
+    }else{
+        var root = $B.parser.$create_root_node(
+                {src: $.source, filename: $.filename},
+                module_name, module_name)
+        root.mode = $.mode
+        root.parent_block = $B.builtins_scope
+        $B.parser.dispatch_tokens(root, $.source)
+        if($.flags == $B.PyCF_ONLY_AST){
+            $B.create_python_ast_classes() // in py_ast
+            var _ast = root.ast(),
+                klass = _ast.constructor.$name
+            var res = $B.python_ast_classes[klass].$factory(_ast)
+            return res
+        }
     }
     return $
 }
