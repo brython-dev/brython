@@ -264,6 +264,45 @@ function copy_position(target, origin){
 Function called in case of SyntaxError or IndentationError
 ==========================================================
 */
+function last_position(context){
+    var ctx = context
+    while(ctx.tree && ctx.tree.length > 0){
+        ctx = $B.last(ctx.tree)
+    }
+    return ctx.end_position || ctx.position
+}
+
+function raise_error_known_location(type, filename, lineno, col_offset,
+        end_lineno, end_col_offset, message){
+    var exc = type.$factory(message)
+    exc.filename = filename
+    exc.lineno = lineno
+    exc.offset = col_offset
+    exc.end_lineno = end_lineno
+    exc.end_offset = end_col_offset
+    var src = $B.file_cache[filename]
+    if(src !== undefined){
+        var lines = src.split('\n')
+        exc.text = lines[lineno - 1]
+    }else{
+        exc.text = _b_.None
+    }
+    exc.args[1] = [filename, lineno, col_offset, exc.text,
+                   end_lineno, end_col_offset]
+    console.log('exc args', exc.args)
+    throw exc
+}
+
+function raise_syntax_error_known_range(filename, a, b, msg){
+    // a and b are the first and last tokens for the exception
+    raise_error_known_location(_b_.SyntaxError, filename,
+        a.start[0], a.start[1], b.end[0], b.end[1], msg)
+}
+
+function raise_syntax_error(filename, token, msg){
+    raise_error_known_location(_b_.SyntaxError, filename,
+        token.start[0], token.start[1], token.end[0], token.end[1], msg)
+}
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
     // console.log("syntax error", context, "msg", msg, "indent", indent, '$pos', $pos)
@@ -364,15 +403,39 @@ function check_assignment(context, kwargs){
         // "del x = ..." is invalid
         forbidden.push('del')
     }
-    function report(wrong_type){
+    function report(wrong_type, a, b){
+        a = a || context.position
+        b = b || $token.value
         if(augmented){
-            $_SyntaxError(context,
-                [`'${wrong_type}' is an illegal expression ` +
-                    'for augmented assignment'])
+            console.log('context', ctx)
+            raise_syntax_error_known_range(
+                $get_module(context).filename,
+                a, b,
+                `'${wrong_type}' is an illegal expression ` +
+                    'for augmented assignment')
         }else{
-            $_SyntaxError(context, [`cannot ${action} ${wrong_type}`])
+            raise_syntax_error_known_range(
+                $get_module(context).filename,
+                a, b,
+                `cannot ${action} ${wrong_type}`)
         }
     }
+    if(context.type == 'expr'){
+        var upper_expr = context
+        var ctx = context
+        while(ctx.parent){
+            if(ctx.parent.type == 'expr'){
+                upper_expr = ctx.parent
+            }
+            ctx = ctx.parent
+        }
+        // context = upper_expr
+    }
+    if($parent_match(context, {type: 'augm_assign'})){
+        raise_syntax_error($get_module(context).filename,
+            $token.value, 'invalid syntax')
+    }
+    ctx = context
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'assign to ' + ctx.type)
@@ -382,12 +445,12 @@ function check_assignment(context, kwargs){
                 if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
                     report('comparison')
                 }else{
-                    report('operator')
+                    report('expression')
                 }
             }else if(assigned.type == 'unary'){
                 report('operator')
             }else if(assigned.type == 'call'){
-                report('function call')
+                report('function call', assigned.position, assigned.end_position)
             }else if(assigned.type == 'id'){
                 var name = assigned.value
                 if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
@@ -405,7 +468,17 @@ function check_assignment(context, kwargs){
             }else if(assigned.type == 'packed'){
                 check_assignment(assigned.tree[0], {action, once: true})
             }else if(assigned.type == 'named_expr'){
-                report('named expression')
+                if(! assigned.parenthesized){
+                    report('named expression')
+                }else if(ctx.parent.type == 'node'){
+                    console.log(context)
+                    raise_syntax_error_known_range(
+                        $get_module(context).filename,
+                        assigned.target.position,
+                        last_position(assigned),
+                        "cannot assign to named expression here. " +
+                            "Maybe you meant '==' instead of '='?")
+                }
             }else if(assigned.type == 'list_or_tuple'){
                 for(var item of ctx.tree){
                     check_assignment(item, {action, once: true})
@@ -418,7 +491,14 @@ function check_assignment(context, kwargs){
         }else if(ctx.type == 'ternary'){
             report('conditional expression')
         }else if(ctx.type == 'op'){
-            report('operator')
+            var a = ctx.tree[0].position,
+                last = $B.last(ctx.tree).tree[0],
+                b = last.end_position || last.position
+            if($B.op2method.comparisons[ctx.op] !== undefined){
+                report('comparison', a, b)
+            }else{
+                report('expression', a, b)
+            }
         }else if(ctx.type == 'yield'){
             report('yield expression')
         }else if(ctx.comprehension){
@@ -1313,6 +1393,7 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
     this.func = context.tree[0]
     if(this.func !== undefined){ // undefined for lambda
         this.func.parent = this
+        this.position = this.func.position
     }
     this.parent = context
     if(context.type != 'class'){
@@ -1387,6 +1468,7 @@ $CallCtx.prototype.transition = function(token, value){
                 value)
         case ')':
             context.end = $pos
+            context.end_position = $token.value
             return context.parent
         case 'op':
             context.expect = ','
@@ -2447,7 +2529,9 @@ $ExprCtx.prototype.transition = function(token, value){
     if(python_keywords.indexOf(token) > -1 &&
             ['as', 'else', 'if', 'for', 'from', 'in'].indexOf(token) == -1){
         context.$pos = $pos
-        $_SyntaxError(context, `'${token}' after expression`)
+        raise_syntax_error($get_module(this).filename, $token.value,
+            'invalid syntax')
+        // $_SyntaxError(context, `'${token}' after expression`)
     }
     switch(token) {
         case 'bytes':
@@ -2464,8 +2548,9 @@ $ExprCtx.prototype.transition = function(token, value){
                 $_SyntaxError(context,
                     ["invalid syntax. Perhaps you forgot a comma?"])
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            var msg = 'invalid syntax. Maybe you forgot a comma?'
+            raise_syntax_error_known_range($get_module(this).filename,
+                this.position, $token.value, msg)
             break
         case '{':
             // Special case : "print {...}" must raise a SyntaxError
@@ -2502,6 +2587,19 @@ $ExprCtx.prototype.transition = function(token, value){
             }
         case ',':
             if(context.expect == ','){
+                if(context.parent.type == 'assign'){
+                    var assigned = context.parent.tree[0]
+                    if(assigned.type == 'expr' && assigned.tree[0].type == 'id'){
+                        if(context.name == 'unary' || context.name == 'operand'){
+                            var a = context.parent.tree[0].position,
+                                b = last_position(context)
+                            raise_syntax_error_known_range(
+                                $get_module(context).filename,
+                                a, b, "invalid syntax. " +
+                                    "Maybe you meant '==' or ':=' instead of '='?")
+                        }
+                    }
+                }
                 if(context.with_commas ||
                         ["assign", "return"].indexOf(context.parent.type) > -1){
                     if($parent_match(context, {type: "yield", "from": true})){
@@ -2639,12 +2737,14 @@ $ExprCtx.prototype.transition = function(token, value){
           var new_op = new $OpCtx(repl,op) // replace old operation
           return new $AbstractExprCtx(new_op,false)
       case 'augm_assign':
+          check_assignment(context, {augmented: true})
           var parent = context
           while(parent){
               if(parent.type == "assign" || parent.type == "augm_assign"){
                   $_SyntaxError(context,
                       "augmented assignment inside assignment")
               }else if(parent.type == "op"){
+                  console.log('parent', parent)
                   $_SyntaxError(context, ["cannot assign to operator"])
               }else if(parent.type == "list_or_tuple"){
                   $_SyntaxError(context, [`'${parent.real}' is an illegal` +
@@ -2688,6 +2788,7 @@ $ExprCtx.prototype.transition = function(token, value){
           }
           break
       case '=':
+          check_assignment(context)
           function has_parent(ctx, type){
               // Tests if one of ctx parents is of specified type
               while(ctx.parent){
@@ -2722,6 +2823,7 @@ $ExprCtx.prototype.transition = function(token, value){
                      try{
                          check_assignment(item, {once: true})
                      }catch(err){
+                         console.log(context)
                          $_SyntaxError(context, ["invalid syntax. " +
                              "Maybe you meant '==' or ':=' instead of '='?"])
                      }
@@ -2919,20 +3021,6 @@ $ForExpr.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case 'in':
-            // bind single ids in target list
-            var targets = context.tree[0].tree,
-                named_expr_ids = {}
-            if(context.parent.comprehension){
-                // If there are named expressions in a comprehension
-                // expression, they cannot rebind target ids
-                // cf. issue 1886
-                for(var item of context.parent.tree[0].tree){
-                    if(item.type == 'named_expr' && item.target.type == 'id'){
-                        named_expr_ids[item.target.value] = item
-                    }
-                }
-            }
-
             if(context.tree[0].tree.length == 0){
                 // issue 1293 : "for in range(n)"
                 $_SyntaxError(context, "missing target between 'for' and 'in'")
@@ -3606,12 +3694,15 @@ $IdCtx.prototype.transition = function(token, value){
         case 'float':
         case 'imaginary':
             if(["print", "exec"].indexOf(context.value) > -1 ){
-                $_SyntaxError(context,
-                    ["missing parenthesis in call to '" +
-                    context.value + "'"])
+                var f = context.value,
+                    msg = `Missing parentheses in call to '${f}'.` +
+                    ` Did you mean ${f}(...)?`
+            }else{
+                var msg = 'invalid syntax. Maybe you forgot a comma?'
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            raise_syntax_error_known_range($get_module(this).filename,
+                this.position, $token.value, msg)
+
     }
     if(this.parent.parent.type == "packed"){
         if(['.', '[', '('].indexOf(token) == -1){
@@ -4215,6 +4306,11 @@ var NamedExprCtx = function(context){
     this.target.parent = this
     this.tree = []
     this.$pos = $pos
+    if(context.parent.type == 'list_or_tuple' &&
+            context.parent.real == 'tuple'){
+        // used to check assignments
+        this.parenthesized = true
+    }
 }
 
 NamedExprCtx.prototype.ast = function(){
@@ -7736,6 +7832,9 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     }
 
     if($B.parser_to_ast){
+        if(filename == '<console>'){
+            console.log('src in py2js', src, '\nlength', src.length)
+        }
         var _ast = new $B.Parser(src, filename).parse('file')
         var symtable = $B._PySymtable_Build(_ast, filename)
         var js_obj = $B.js_from_root(_ast, symtable, filename)

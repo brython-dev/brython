@@ -551,7 +551,7 @@ $make_exc(["BlockingIOError", "ChildProcessError", "ConnectionError",
 $make_exc(["BrokenPipeError", "ConnectionAbortedError",
     "ConnectionRefusedError", "ConnectionResetError"], _b_.ConnectionError)
 $make_exc(["NotImplementedError", "RecursionError"], _b_.RuntimeError)
-$make_exc(["IndentationError"], _b_.SyntaxError)
+$make_exc([["IndentationError", "err.msg = arguments[0]"]], _b_.SyntaxError)
 $make_exc(["TabError"], _b_.IndentationError)
 $make_exc(["UnicodeError"], _b_.ValueError)
 $make_exc(["UnicodeDecodeError", "UnicodeEncodeError",
@@ -630,30 +630,6 @@ $B.name_error = function(name, obj){
 
 $B.$TypeError = function(msg){
     throw _b_.TypeError.$factory(msg)
-}
-
-// SyntaxError instances have special attributes
-var se = _b_.SyntaxError.$factory
-
-_b_.SyntaxError.$factory = function(){
-    var arg = arguments[0]
-    if(arg.__class__ === _b_.SyntaxError){
-        return arg
-    }
-    var exc = se.apply(null, arguments),
-        frame = $B.last($B.frames_stack)
-    if(frame){
-        exc.filename = frame[3].__file__
-        exc.lineno = frame[1].$lineno
-        var src = $B.file_cache[frame[3].__file__]
-        if(src){
-            lines = src.split("\n")
-            exc.text = lines[exc.lineno - 1]
-        }
-        exc.offset = arg.offset
-        exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text]
-    }
-    return exc
 }
 
 // Suggestions in case of NameError or AttributeError

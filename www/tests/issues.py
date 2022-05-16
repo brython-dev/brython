@@ -1904,10 +1904,7 @@ try:
     exec("x + x += 10")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    if parser_to_ast:
-        assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
-    else:
-        assert exc.args[0] == "cannot assign to operator"
+    assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
 
 # issue 965
 assertRaises(SyntaxError, exec, "if:x=2")
@@ -2395,11 +2392,8 @@ try:
     exec("(x.a * 2) += 100")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    if parser_to_ast:
-        assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
-    else:
-        assert exc.args[0] == "'operator' is an illegal expression for augmented assignment"
-
+    assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
+    
 # issue 1278
 import textwrap
 assert textwrap.wrap('1234 123', width=5) == ['1234', '123']
