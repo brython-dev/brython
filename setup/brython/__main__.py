@@ -441,7 +441,7 @@ def main():
                 print("done")
 
             if args.server != "absent":
-                print(warning.format('server'))
+                print(warning1.format('server', 'start_server'))
                 # start development server
                 import http.server
                 import sysconfig
