@@ -28,7 +28,8 @@ Module.__new__ = function(cls, name, doc, $package){
 
 Module.__repr__ = Module.__str__ = function(self){
     var res = "<module " + self.__name__
-    if(self.__file__ === undefined){ res += " (built-in)"}
+    res += self.__file__ === undefined ? " (built-in)" :
+        ' at ' + self.__file__
     return res + ">"
 }
 

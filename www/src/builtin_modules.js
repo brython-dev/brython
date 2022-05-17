@@ -437,6 +437,39 @@
                 }
             }
         },
+        import_js: function(url, name){
+            // load JS script at specified url
+            // If it exposes a variable $module, use it as the namespace of imported
+            // module named "name"
+            var xhr = new XMLHttpRequest(),
+                result
+            xhr.open('GET', url, false)
+            xhr.onreadystatechange = function(){
+                if(this.readyState == 4){
+                    if(this.status == 200){
+                        eval(this.responseText)
+                        if(typeof $module !== 'undefined'){
+                            result = $B.module.$factory(name)
+                            for(var key in $module){
+                                result[key] = $B.jsobj2pyobj($module[key])
+                            }
+                            result.__file__ = url
+                        }else{
+                            result = _b_.ImportError.$factory('Javascript ' +
+                                `module at ${url} doesn't define $module`)
+                        }
+                    }else{
+                        result = _b_.ModuleNotFoundError.$factory(name)
+                    }
+                }
+            }
+            xhr.send()
+            if(_b_.isinstance(result, _b_.BaseException)){
+                $B.handle_error(result)
+            }else{
+                $B.imported[name] = result
+            }
+        },
         JSObject: $B.JSObj,
         JSON: {
             __class__: $B.make_class("JSON"),

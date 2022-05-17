@@ -2,8 +2,34 @@ module **javascript**
 ---------------------
 
 Le module **javascript** permet d'interagir avec les objets définis dans les
-bibliothèques et programmes Javascript présents dans la même page que le
-programme Brython.
+bibliothèques et programmes Javascript.
+
+**javascript**.`import_js(`_url, name_`)`
+> Rend le module Javascript à l'_url_ spécifiée importable par `import <name>`.
+> Le module doit exposer le nom `$module`, un objet dont les attributs constituent
+> l'espace de noms du script importé.
+
+> Exemple: si le script Javascript à l'adresse _js_test.js_ est
+
+<blockquote>
+```xml
+var $module = {
+    x: 1
+}
+```
+</blockquote>
+
+> un script Python peut l'utiliser de la façon suivante:
+
+<blockquote>
+```python
+import javascript
+
+javascript.import_js("js_test.js", "js_module")
+import js_module
+assert js_module.x == 1
+```
+</blockquote>
 
 **javascript**.`py2js(`_src_`)`
 > Renvoie le code Javascript généré à partir du code source Python _src_.
