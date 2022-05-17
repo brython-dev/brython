@@ -61,6 +61,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
             {onmessage: _b_.None, onerror: _b_.None}, null, null),
         id = $.id,
         src = $B.webworkers[id]
+
         if(src === undefined){
             throw _b_.KeyError.$factory(id)
         }
@@ -69,8 +70,10 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
                 script_id),
             header = 'var $locals_' + script_id +' = {}\n';
         brython_scripts.forEach(function(script){
-            var url = $B.brython_path + script + ".js?" +
-                (new Date()).getTime()
+            var url = $B.brython_path + script + ".js"
+            if(! $B.$options.cache){ // cf. issue 1954
+                url += '?' + (new Date()).getTime()
+            }
             header += 'importScripts("' + url + '")\n'
         })
         // restore brython_path
