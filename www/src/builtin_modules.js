@@ -463,6 +463,7 @@
         NULL: null,
         "Number": self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
+            console.log('javascript.py2js', src, module_name)
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
             }

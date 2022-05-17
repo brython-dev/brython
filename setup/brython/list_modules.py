@@ -352,9 +352,18 @@ class ModulesFinder:
         with open(path, "w", encoding="utf-8") as out:
             # Add VFS_timestamp ; used to test if the indexedDB must be
             # refreshed
-            out.write("__BRYTHON__.VFS_timestamp = {}\n".format(
+            out.write("__BRYTHON__.VFS_timestamp = {}".format(
                 int(1000 * time.time())))
-            out.write("__BRYTHON__.use_VFS = true\nvar scripts = ")
+            # if run outside a Web Worker, the script sets the attribute
+            # __BRYTHON__.brython_modules to the path of brython_modules.js,
+            # so that it is imported by libs/_webworker.js instead of
+            # brython_stdlib.js (cf. issue #1964)
+            out.write(
+                "\nif(typeof document !== 'undefined'){\n"
+                "    __BRYTHON__.brython_modules = "
+                "$B.last(document.getElementsByTagName('script')).src\n"
+                "}")
+            out.write("\n__BRYTHON__.use_VFS = true\nvar scripts = ")
             json.dump(vfs, out)
             out.write("\n__BRYTHON__.update_VFS(scripts)")
 
@@ -700,3 +709,5 @@ if __name__ == "__main__":
     finder = ModulesFinder()
     finder.inspect()
     # print(sorted(list(finder.modules)))
+
+

@@ -4,6 +4,8 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
+var VFS = $B.brython_modules ? 'brython_modules' : 'brython_stdlib'
+
 if($B.debug > 2){
     var brython_scripts = [
         'brython_builtins',
@@ -39,10 +41,10 @@ if($B.debug > 2){
         'async',
         'ast_to_js',
         'symtable',
-        'brython_stdlib']
+        VFS]
 
 }else{
-    var brython_scripts = ['brython', 'brython_stdlib']
+    var brython_scripts = ['brython', VFS]
 }
 var wclass = $B.make_class("Worker",
     function(worker){
@@ -66,11 +68,20 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
             throw _b_.KeyError.$factory(id)
         }
         var script_id = "worker" + $B.UUID(),
-            js = __BRYTHON__.imported.javascript.py2js(src,
-                script_id),
+            filename = $B.script_dir + "#" + id
+        $B.url2name[filename] = script_id
+
+        var js = $B.py2js({src, filename},
+                script_id).to_js(),
             header = 'var $locals_' + script_id +' = {}\n';
         brython_scripts.forEach(function(script){
-            var url = $B.brython_path + script + ".js"
+            if(script != VFS || VFS == "brython_stlib"){
+                var url = $B.brython_path + script + ".js"
+            }else{
+                // attribute $B.brython_modules is set to the path of
+                // brython_modules.js by the script itself
+                var url = $B.brython_modules
+            }
             if(! $B.$options.cache){ // cf. issue 1954
                 url += '?' + (new Date()).getTime()
             }
