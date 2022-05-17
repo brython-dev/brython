@@ -79,7 +79,7 @@ brython-cli update
 Installing a CPython package
 ----------------------------
 A CPython package installed by `pip` can be installed in a Brython application
-by the command `--add_package <package name>`.
+by the command `add_package <package name>`.
 
 For example:
 ```console
@@ -93,7 +93,7 @@ excludes files written in C for instance.
 Other commands
 --------------
 
-`modules`
+`make_modules`
 
 > creates an application-specific distribution, to replace
 > __`brython_stdlib.js`__ by a smaller file. See section

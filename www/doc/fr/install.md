@@ -95,7 +95,7 @@ exemple.
 Autres commandes
 ----------------
 
-`modules`
+`make_modules`
 
 > crée une distribution propre à l'application, pour remplacer
 > __`brython_stdlib.js`__ par un fichier moins volumineux. Voir la section
