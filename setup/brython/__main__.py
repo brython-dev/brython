@@ -310,6 +310,8 @@ def main():
             # Compatibility mode (old style)
             warning = ("Option --{0} will be deprecated in the next release. "
                       "Please use `brython-cli {0}` instead (see '--help')")
+            warning1 = ("Option --{0} will be deprecated in the next release. "
+                      "Please use `brython-cli {1}` instead (see '--help')")
 
             if args.add_package:
                 print(warning.format('add_package'))
@@ -386,7 +388,7 @@ def main():
                     os.path.join(os.getcwd(), 'brython_modules.js'))
 
             if args.modules:
-                print(warning.format('modules'))
+                print(warning1.format('modules', 'make_modules'))
                 print('Create brython_modules.js with all the modules used by the '
                     'application')
                 from . import list_modules
