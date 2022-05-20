@@ -12,6 +12,7 @@ $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
+$B.hasSharedArrayBuffer=typeof SharedArrayBuffer !='undefined'
 var _window
 if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
 _window=self}
@@ -121,8 +122,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-20 09:50:50.883208"
-__BRYTHON__.timestamp=1653033050883
+__BRYTHON__.compiled_date="2022-05-20 19:05:12.222258"
+__BRYTHON__.timestamp=1653066312222
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4369,7 +4370,10 @@ $B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true}])}
 src=(worker.innerHTML ||worker.textContent)
 src=unindent(src)
 src=src.replace(/^\n/,'')
-$B.webworkers[worker.id]=src}}
+$B.webworkers[worker.id]=src
+var filename=$B.script_path+"#"+worker.id
+$B.url2name[filename]=worker.id
+$B.file_cache[filename]=src}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.type=="text/python" ||elt.type=="text/python3"){
 if(elt.id){module_name=elt.id}else{
@@ -7515,12 +7519,12 @@ if(err.$stack && err.$stack.length > 0){trace='Traceback (most recent call last)
 if(err.__class__===_b_.SyntaxError ||
 err.__class__===_b_.IndentationError){trace+=trace_from_stack(err.$stack)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
-if(! err.$stack ||err.$stack.length==0){trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
-`    ${line.trim()}\n`}
+trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
+`    ${line.trim()}\n`
 if(err.__class__ !==_b_.IndentationError &&
 filename !=='<string>'){
-var start=err.offset,marks='    '+' '.repeat(start),nb_marks=1
-if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start}}
+var start=err.offset-indent,marks='    '+' '.repeat(start),nb_marks=1
+if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent}}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
@@ -8704,9 +8708,7 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof self.addEventListener=="function"){return function(event,callback){return self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,self)}
-if(typeof js_attr==='function'){var res=function(){if(false && arguments.length > 0 && $B.last(arguments).$nat=='kw'){throw _b_.TypeError.$factory('Javascript functions cannot '+
-'be called with keyword arguments')}
-var args=pyargs2jsargs(arguments),target=self.$js_func ||self
+if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=self.$js_func ||self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
 console.log("attribute",attr,"of self",self,js_attr,args,arguments)
 throw err}

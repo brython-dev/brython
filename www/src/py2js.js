@@ -8213,6 +8213,9 @@ var brython = $B.parser.brython = function(options){
                 // remove leading CR if any
                 src = src.replace(/^\n/, '')
                 $B.webworkers[worker.id] = src
+                var filename = $B.script_path + "#" + worker.id
+                $B.url2name[filename] = worker.id
+                $B.file_cache[filename] = src
             }
         }
 

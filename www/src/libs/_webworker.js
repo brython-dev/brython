@@ -49,7 +49,13 @@ if($B.debug > 2){
 var wclass = $B.make_class("Worker",
     function(worker){
         var res = worker
-        res.send = res.postMessage
+        res.send = function(){
+            var args = []
+            for(var i = 0; i < arguments.length; i++){
+                args.push($B.pyobj2jsobj(arguments[i]))
+            }
+            return res.postMessage.apply(this, args)
+        }
         return res
     }
 )
@@ -68,7 +74,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
             throw _b_.KeyError.$factory(id)
         }
         var script_id = "worker" + $B.UUID(),
-            filename = $B.script_dir + "#" + id
+            filename = $B.script_path + "#" + id
         $B.url2name[filename] = script_id
 
         var js = $B.py2js({src, filename},
@@ -93,7 +99,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         // restore path for imports (cf. issue #1305)
         header += '__BRYTHON__.path = "' + $B.path +'".split(",")\n'
         // Call brython() to initialize internal Brython values
-        header += `brython($B.debug)\n`
+        header += `brython(${JSON.stringify($B.$options)})\n`
         js = header + js
         js = `try{${js}}catch(err){$B.handle_error(err)}`
         var blob = new Blob([js], {type: "application/js"}),
