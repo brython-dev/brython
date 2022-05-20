@@ -430,10 +430,6 @@ $B.JSObj.__getattribute__ = function(self, attr){
     }
     if(typeof js_attr === 'function'){
         var res = function(){
-            if(false && arguments.length > 0 && $B.last(arguments).$nat == 'kw'){
-                throw _b_.TypeError.$factory('Javascript functions cannot ' +
-                    'be called with keyword arguments')
-            }
             var args = pyargs2jsargs(arguments),
                 target = self.$js_func || self
             try{
