@@ -75,7 +75,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
                 script_id).to_js(),
             header = 'var $locals_' + script_id +' = {}\n';
         brython_scripts.forEach(function(script){
-            if(script != VFS || VFS == "brython_stlib"){
+            if(script != VFS || VFS == "brython_stdlib"){
                 var url = $B.brython_path + script + ".js"
             }else{
                 // attribute $B.brython_modules is set to the path of
