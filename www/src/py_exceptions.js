@@ -804,21 +804,19 @@ $B.show_error = function(err){
         var filename = err.filename,
             line = err.text,
             indent = line.length - line.trimLeft().length
-        if(! err.$stack || err.$stack.length == 0){
-            trace += `  File ${filename}, line ${err.args[1][1]}\n` +
+        trace += `  File ${filename}, line ${err.args[1][1]}\n` +
                      `    ${line.trim()}\n`
-        }
         if(err.__class__ !== _b_.IndentationError &&
                 filename !== '<string>'){
             // add ^ under the line
-            var start = err.offset,
+            var start = err.offset - indent,
                 marks = '    ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){
                     nb_marks = line.length - start - indent
                 }else{
-                    nb_marks = err.end_offset - start
+                    nb_marks = err.end_offset - start - indent
                 }
             }
             marks += '^'.repeat(nb_marks) + '\n'
