@@ -206,6 +206,12 @@ class CompressedHandler(CGIHTTPRequestHandler):
                 # Return a generator of pieces of compressed data
                 return producer(f)
 
+    def end_headers(self):
+        """Add headers that make SharedArrayBuffer available in Web Workers.
+        """
+        self.send_header('cross-origin-embedder-policy', 'require-corp')
+        self.send_header('cross-origin-opener-policy', 'same-origin')
+        super().end_headers()
 
 # port to be used when the server runs locally
 parser = argparse.ArgumentParser()

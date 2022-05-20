@@ -729,6 +729,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         has nothing further to do.
 
         """
+        sys.stderr.write('self ' + str(self))
         path = self.translate_path(self.path)
         f = None
         if os.path.isdir(path):
@@ -789,6 +790,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
             if self.content_length: # Not set for Chunked Transfer Encoding
                 self.send_header("Content-Length", str(self.content_length))
+
             self.end_headers()
             return f
         except:

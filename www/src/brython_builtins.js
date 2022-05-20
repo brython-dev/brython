@@ -15,6 +15,9 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   (navigator instanceof WorkerNavigator)
 $B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
 
+
+$B.hasSharedArrayBuffer = typeof SharedArrayBuffer != 'undefined'
+
 var _window
 if($B.isNode){
     _window = {
