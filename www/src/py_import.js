@@ -1055,8 +1055,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             modsep = "."
             var modobj = $B.imported[_mod_name]
             if($test){
-                console.log("iter", i, _mod_name, "modobj", modobj,
-                    "__path__", __path__, Array.isArray(__path__))
+                console.log("iter", i, _mod_name, "\nmodobj", modobj,
+                    "\n__path__", __path__, Array.isArray(__path__))
                 alert()
             }
             if(modobj == _b_.None){

@@ -7555,7 +7555,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     $_SyntaxError(context, [`'${last_brace.string}' was ` +
                        'never closed'])
                 }
-                $_SyntaxError(context, err.message)
+                $_SyntaxError(context, [err.message])
             }
             throw err
         }
@@ -7780,8 +7780,6 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     if(src.endsWith("\\") && !src.endsWith("\\\\")){
         src = src.substr(0, src.length - 1)
     }
-    // Normalise script end
-    if(src.charAt(src.length - 1) != "\n"){src += "\n"}
 
     root.src = src
     return root
@@ -7796,7 +7794,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     //
     // Returns a tree structure representing the Python source code
     $pos = 0
-
+   
     if(typeof module == "object"){
         var __package__ = module.__package__
         module = module.__name__
@@ -8255,6 +8253,10 @@ var brython = $B.parser.brython = function(options){
                     src = unindent(src) // remove global indentation
                     // remove leading CR if any
                     src = src.replace(/^\n/, '')
+                    // remove trailing \n
+                    if(src.endsWith('\n')){
+                        src = src.substr(0, src.length - 1)
+                    }
                     var filename = $B.script_path + "#" + module_name
                     // store source code
                     $B.file_cache[filename] = src
