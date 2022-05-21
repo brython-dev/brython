@@ -285,7 +285,7 @@ class Interpreter:
                 self.zone.value += '... '
                 self._status = "block"
             except SyntaxError as msg:
-                if str(msg) == 'invalid syntax : triple string end not found':
+                if str(msg).startswith('unterminated triple-quoted string literal'):
                     self.zone.value += '... '
                     self._status = "3string"
                 elif str(msg) == 'eval() argument must be an expression':
