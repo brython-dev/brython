@@ -13,7 +13,7 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
     out.write(simple_javascript_template_string)
 
     pylist = []
-    pkglist = []
+    pkglist = ['browser']
     pypath = os.path.join(libfolder, 'Lib')
     for dirpath, dirnames, filenames in os.walk(pypath):
         if os.path.exists(os.path.join(dirpath,'__init__.py')):
