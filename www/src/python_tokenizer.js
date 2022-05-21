@@ -619,8 +619,9 @@ $B.tokenizer = function*(src){
               line)
             break
         case 'STRING':
-            throw SyntaxError(
-                `unterminated string literal (detected at line ${line_num})`)
+            var msg = `unterminated ${triple_quote ? 'triple-quoted ' : ''}` +
+                `string literal (detected at line ${line_num})`
+            throw SyntaxError(msg)
     }
 
     if(! src.endsWith('\n') && char != ' ' && state != line_start){
