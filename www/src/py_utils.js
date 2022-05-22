@@ -344,7 +344,6 @@ $B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
             `not enough values to unpack (expected ${min_length}, got ${len})`)
     }
     if((! has_starred) && len > nb_targets){
-        console.log('iterable', obj, 't', t, 'nb_targets', nb_targets)
         throw _b_.ValueError.$factory(
             `too many values to unpack (expected ${nb_targets})`)
     }
