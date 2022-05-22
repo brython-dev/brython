@@ -7794,7 +7794,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
     //
     // Returns a tree structure representing the Python source code
     $pos = 0
-   
+
     if(typeof module == "object"){
         var __package__ = module.__package__
         module = module.__name__

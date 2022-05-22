@@ -531,19 +531,30 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
     var exc = errtype.$factory(errmsg)
     exc.filename = p.filename
-    exc.lineno = lineno
-    exc.offset = col_offset
-    exc.end_lineno = end_lineno
-    exc.end_offset = end_col_offset
-    var src = $B.file_cache[p.filename]
-    if(src !== undefined){
-        var lines = src.split('\n'),
-            line = lines[exc.lineno - 1]
-        exc.text = line
+    if(p.knwon_err_token){
+        var token = p.known_err_token
+        exc.lineno = token.start[0]
+        exc.offset = token.start[1]
+        exc.end_lineno = token.end[0]
+        exc.end_offset = token.end[1]
+        exc.text = token.line
+        exc.args[1] = [p.filename, exc.lineno, exc.offset, exc.text,
+            exc.end_lineno, exc.end_offset]
     }else{
-        exc.text = _b_.None
+        exc.lineno = lineno
+        exc.offset = col_offset
+        exc.end_lineno = end_lineno
+        exc.end_offset = end_col_offset
+        var src = $B.file_cache[p.filename]
+        if(src !== undefined){
+            var lines = src.split('\n'),
+                line = lines[exc.lineno - 1]
+            exc.text = line + '\n'
+        }else{
+            exc.text = _b_.None
+        }
+        exc.args[1] = [p.filename, lineno, col_offset, exc.text, end_lineno, end_col_offset]
     }
-    exc.args[1] = [p.filename, lineno, col_offset, exc.text, end_lineno, end_col_offset]
     throw exc
 }
 

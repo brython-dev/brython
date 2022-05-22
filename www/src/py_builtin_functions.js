@@ -322,7 +322,7 @@ $B.set_func_names(classmethod, "builtins")
 var code = $B.code = $B.make_class("code")
 
 code.__repr__ = code.__str__ = function(self){
-    return '<code object ' + self.co_name + ', file ' + self.co_filename + '>'
+    return `<code object ${self.co_name}, file '${self.co_filename}'>`
 }
 
 code.__getattribute__ = function(self, attr){
@@ -345,9 +345,11 @@ function compile() {
     var module_name = '$exec_' + $B.UUID()
     $.__class__ = code
     $.co_flags = $.flags
-    $.name = "<module>"
+    $.co_name = "<module>"
+    $.co_filename = $.filename
     var interactive = $.mode == "single" && ($.flags & 0x200)
-
+    $B.file_cache[$.filename] = $.source
+    
     if(_b_.isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
             lfpos = $.source.source.indexOf(10),
@@ -398,10 +400,10 @@ function compile() {
             throw _b_.SyntaxError.$factory("unexpected EOF while parsing")
         }
     }
-    
+
     if($B.parser_to_ast){
         var _ast = new $B.Parser($.source, $.filename).parse(
-            interactive ? 'interactive' : 'file')
+            'file')
         var symtable = $B._PySymtable_Build(_ast, $.filename)
         // var js_obj = $B.js_from_root(_ast, symtable, $.filename)
         if($.flags == $B.PyCF_ONLY_AST){

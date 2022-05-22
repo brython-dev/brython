@@ -171,15 +171,47 @@ var RAISE_SYNTAX_ERROR = function(msg){
     for(var i = 1, len = arguments.length; i < len; i++){
         extra_args.push(arguments[i])
     }
+    get_last_token(p)
     $B._PyPegen.raise_error(p, _b_.SyntaxError, msg, ...extra_args)
+}
+
+function get_last_token(p){
+    var last_token = p.tokens.last
+    if(p.tokens.last.type == "ENDMARKER"){
+        var src = $B.file_cache[p.filename]
+        if(src){
+            for(var token of $B.tokenizer(src)){
+                if(token.type == "ENDMARKER"){
+                    break
+                }
+                if(token.type != "DEDENT"){
+                    last_token = token
+                }
+            }
+        }else{
+            last_token = undefined
+        }
+    }
+    p.known_err_token = last_token
 }
 
 var RAISE_INDENTATION_ERROR = function(msg, arg){
     if(arg !== undefined){
         msg = _b_.str.__mod__(msg, arg)
     }
-    console.log('indentation error, last token', p.tokens.last)
-    p.known_err_token = p.tokens.last
+    var last_token = p.tokens.last
+    if(p.tokens.last.type == "ENDMARKER"){
+        var src = $B.file_cache[p.filename]
+        if(src){
+            for(var token of $B.tokenizer(src)){
+                if(token.type == "ENDMARKER"){
+                    break
+                }
+                last_token = token
+            }
+        }
+    }
+    get_last_token(p)
     $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
 }
 
@@ -869,7 +901,7 @@ function make_ast(match, tokens){
             if(rule.items[i].alias){
                 names[rule.items[i].alias] = _make
                 eval('var ' + rule.items[i].alias + ' = _make')
-                console.log('alias', rule.items[i].alias, show_rule(rule.items[i]), _make)
+                // console.log('alias', rule.items[i].alias, show_rule(rule.items[i]), _make)
             }
             if(! rule.items[i].lookahead){
                 nb_consuming++
@@ -877,7 +909,7 @@ function make_ast(match, tokens){
         }
         if(rule.action){
             try{
-                console.log(show_rule(rule, true))
+                // console.log(show_rule(rule, true))
                 ast = eval(rule.action)
             }catch(err){
                 if($B.debug > 2){
