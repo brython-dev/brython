@@ -729,7 +729,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         has nothing further to do.
 
         """
-        sys.stderr.write('self ' + str(self))
         path = self.translate_path(self.path)
         f = None
         if os.path.isdir(path):
