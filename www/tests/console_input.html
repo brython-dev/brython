@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+
+<title>Interactive interpreter</title>
+
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+</style>
+
+<script type="text/javascript" src="brython.js"></script>
+<script type="text/javascript" src="brython_stdlib.js"></script>
+
+<style>
+body{
+  max-width:800px;
+  margin:0 auto
+}
+#code{
+  width:100%;
+  height:180px
+}
+.button-container{
+  display:flex;
+  justify-content:end;
+  height:50px;
+  align-items:center;
+  gap:10px
+}
+button{
+  padding:6px 18px
+}
+</style>
+<script>
+
+</script>
+</head>
+<body onLoad="__BRYTHON__.produce_ast = 0;__BRYTHON__.track_transitions = 0;brython();">
+
+<script type="text/python" class="webworker" id="python-worker">
+import tb as traceback
+
+from browser import self as _self, bind, console
+
+# implementation of blocking time.sleep()
+import time
+
+def _sleep(secs):
+    sab = _self.SharedArrayBuffer.new(128 * _self.Int32Array.BYTES_PER_ELEMENT)
+    buffer = _self.Int32Array.new(sab)
+    _self.Atomics.store(buffer, 0, -1)
+    _self.send({'status': 'sleep', 'seconds': secs, 'buffer': sab})
+    # block until main program resets buffer[0] to 1
+    _self.Atomics.wait(buffer, 0, -1)
+
+time.sleep = _sleep
+
+# implementation of blocking input()
+class StdinBuffer:
+
+    def __init__(self):
+        self.sab = _self.SharedArrayBuffer.new(128 * _self.Int32Array.BYTES_PER_ELEMENT)
+        self.buffer = _self.Int32Array.new(self.sab)
+        self.readIndex = 1;
+        self.numberOfCharacters = 0;
+
+    def prompt(self):
+        self.readIndex = 1
+        _self.Atomics.store(self.buffer, 0, -1)
+        _self.send({'status': 'stdin', 'buffer': self.sab})
+        # block until main program resets self.buffer[0] to the number of
+        # characters entered
+        _self.Atomics.wait(self.buffer, 0, -1)
+        self.numberOfCharacters = self.buffer[0]
+
+    def stdin(self):
+        self.prompt()
+        s = ''
+        for i in range(1, self.numberOfCharacters + 1):
+            s += chr(self.buffer[i])
+        return s
+
+
+stdin = StdinBuffer()
+
+
+def _input(prompt=None):
+    if prompt is not None:
+        print(prompt, end='')
+    res = stdin.stdin()
+    return res
+
+def _print(*args, **kw):
+    _self.send({'status': 'print', 'args': args, 'kw': kw})
+
+# replace built-ins input() and print()
+__builtins__.input = _input
+__builtins__.print = _print
+
+
+# execution namespaces
+_globals = {}
+_locals = {}
+
+
+class Trace:
+
+    def __init__(self):
+        self.buf = ""
+
+    def write(self, data):
+        self.buf += str(data)
+
+    def format(self):
+        """Remove calls to function in this script from the traceback."""
+        lines = self.buf.split("\n")
+        stripped = [lines[0]]
+        for i in range(1, len(lines), 2):
+            if __file__ in lines[i]:
+                continue
+            stripped += lines[i: i+2]
+        return "\n".join(stripped)
+
+def print_tb():
+    trace = Trace()
+    traceback.print_exc(file=trace)
+    block.code = ''
+    _self.send({'status': 'error', 'value': trace.format()})
+
+
+class Block:
+
+    def __init__(self):
+        self.code = ''
+
+block = Block()
+
+
+@bind(_self, "message")
+def message(ev):
+    message = ev.data
+    console.log('worker receives', message)
+    if not isinstance(message, str):
+        return
+
+    if block.code:
+        if message:
+            block.code += '\n' + message
+            if not hasattr(block, "multiline_string"):
+                _self.send({'status': 'block'})
+                return
+    else:
+        block.code = message
+
+    try:
+        _ = _globals['_'] = eval(block.code,
+                                  _globals,
+                                  _locals)
+        if _ is not None:
+            _self.send({'result': repr(_), 'status': 'main'})
+        else:
+            _self.send({'status': 'main'})
+        block.code = ''
+    except IndentationError:
+        _self.send({'status': 'block'})
+    except SyntaxError as msg:
+        if str(msg).startswith('unterminated triple-quoted string literal'):
+            _self.send({'status': "3string"})
+            block.multiline_string = True
+        elif str(msg) == 'eval() argument must be an expression':
+            try:
+                exec(block.code,
+                    _globals,
+                    _locals)
+            except:
+                print_tb()
+                return
+            _self.send({'status': "main"})
+
+            block.code = ''
+        elif str(msg) == 'decorator expects function':
+            _self.send({'status': "block"})
+        elif str(msg).endswith('was never closed'):
+            _self.send({'status': "block"})
+        else:
+            msg.args[1][3] = block.code
+            _self.send({'status': "syntax_error", 'args': msg.args})
+            block.code = ''
+    except:
+        # the full traceback includes the call to eval(); to
+        # remove it, it is stored in a buffer and the 2nd and 3rd
+        # lines are removed
+        print_tb()
+        block.code = ''
+
+</script>
+
+<script type="text/python" debug=2 id="__main__">
+import input_interpreter
+</script>
+
+<script>
+
+</script>
+
+</body>
+</html>
