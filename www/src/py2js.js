@@ -289,19 +289,23 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     }
     exc.args[1] = [filename, lineno, col_offset, exc.text,
                    end_lineno, end_col_offset]
-    console.log('exc args', exc.args)
     throw exc
 }
 
-function raise_syntax_error_known_range(filename, a, b, msg){
+function raise_syntax_error_known_range(context, a, b, msg){
     // a and b are the first and last tokens for the exception
-    raise_error_known_location(_b_.SyntaxError, filename,
+    raise_error_known_location(_b_.SyntaxError, $get_module(context).filename,
         a.start[0], a.start[1], b.end[0], b.end[1], msg)
 }
 
-function raise_syntax_error(filename, token, msg){
+function raise_syntax_error(context, token, msg){
+    var filename = $get_module(context).filename
     raise_error_known_location(_b_.SyntaxError, filename,
         token.start[0], token.start[1], token.end[0], token.end[1], msg)
+}
+
+function syntax_error(context){
+    raise_syntax_error(context, $token.value, 'invalid syntax')
 }
 
 var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
@@ -407,15 +411,13 @@ function check_assignment(context, kwargs){
         a = a || context.position
         b = b || $token.value
         if(augmented){
-            console.log('context', ctx)
             raise_syntax_error_known_range(
-                $get_module(context).filename,
-                a, b,
+                context, a, b,
                 `'${wrong_type}' is an illegal expression ` +
                     'for augmented assignment')
         }else{
             raise_syntax_error_known_range(
-                $get_module(context).filename,
+                context,
                 a, b,
                 `cannot ${action} ${wrong_type}`)
         }
@@ -432,11 +434,15 @@ function check_assignment(context, kwargs){
         // context = upper_expr
     }
     if($parent_match(context, {type: 'augm_assign'})){
-        raise_syntax_error($get_module(context).filename,
-            $token.value, 'invalid syntax')
+        syntax_error(context)
     }
     ctx = context
     while(ctx){
+        if(ctx.type == "decorator" &&
+                ctx.tree.length == 1 && ctx.tree[0].type == 'expr' &&
+                ctx.tree[0].tree[0].type == 'id'){
+            return
+        }
         if(forbidden.indexOf(ctx.type) > -1){
             $_SyntaxError(context, 'assign to ' + ctx.type)
         }else if(ctx.type == "expr"){
@@ -471,9 +477,8 @@ function check_assignment(context, kwargs){
                 if(! assigned.parenthesized){
                     report('named expression')
                 }else if(ctx.parent.type == 'node'){
-                    console.log(context)
                     raise_syntax_error_known_range(
-                        $get_module(context).filename,
+                        context,
                         assigned.target.position,
                         last_position(assigned),
                         "cannot assign to named expression here. " +
@@ -827,22 +832,19 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                 case '...':
                     return new $EllipsisCtx(new $ExprCtx(context, 'ellipsis', commas))
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            syntax_error(context)
         case 'in':
             if(context.parent.type == 'op' && context.parent.op == 'not'){
                 context.parent.op = 'not_in'
                 return context
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            syntax_error(context)
         case '=':
             if(context.parent.type == "yield"){
                 $_SyntaxError(context,
                     ["assignment to yield expression not possible"])
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            syntax_error(context)
         case 'yield':
             return new $AbstractExprCtx(new $YieldCtx(context), true)
         case ':':
@@ -875,13 +877,13 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                     }
                     break
                 case 'annotation':
-                    $_SyntaxError(context, "token " + token)
+                    syntax_error(context)
                 default:
                     $_SyntaxError(context, token)
             }
             break
         case '.':
-            $_SyntaxError(context, 'token ' + token)
+            syntax_error(context)
     }
     return $transition(context.parent, token, value)
 }
@@ -970,7 +972,8 @@ $AssertCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ","){
         if(this.tree.length > 1){
-            $_SyntaxError(context, "too many commas after assert")
+            raise_syntax_error(context, $token.value,
+                'invalid syntax (too many commas after assert)')
         }
         return new $AbstractExprCtx(this, false)
     }
@@ -1094,6 +1097,12 @@ $AssignCtx.prototype.transition = function(token, value){
         if(context.tree[1].type == 'abstract_expr'){
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
+        }else if(context.tree[0].type == 'decorator'){
+            // invalid rule : '@' NAME '=' expr
+            raise_syntax_error_known_range(context,
+                context.tree[0].position,
+                last_position(context.tree[1]),
+                "invalid syntax. Maybe you meant '==' or ':=' instead of '='?")
         }
         return $transition(context.parent, 'eol')
     }
@@ -2529,9 +2538,7 @@ $ExprCtx.prototype.transition = function(token, value){
     if(python_keywords.indexOf(token) > -1 &&
             ['as', 'else', 'if', 'for', 'from', 'in'].indexOf(token) == -1){
         context.$pos = $pos
-        raise_syntax_error($get_module(this).filename, $token.value,
-            'invalid syntax')
-        // $_SyntaxError(context, `'${token}' after expression`)
+        syntax_error(context)
     }
     switch(token) {
         case 'bytes':
@@ -2543,13 +2550,8 @@ $ExprCtx.prototype.transition = function(token, value){
         case 'pass':
         case 'str':
         case 'JoinedStr':
-            if(context.parent.type == 'dict_or_set' &&
-                    context.parent.expect == ','){
-                $_SyntaxError(context,
-                    ["invalid syntax. Perhaps you forgot a comma?"])
-            }
-            var msg = 'invalid syntax. Maybe you forgot a comma?'
-            raise_syntax_error_known_range($get_module(this).filename,
+            var msg = 'invalid syntax. Perhaps you forgot a comma?'
+            raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)
             break
         case '{':
@@ -2557,8 +2559,7 @@ $ExprCtx.prototype.transition = function(token, value){
             // with "Missing parenthesis"...
             if(context.tree[0].type != "id" ||
                     ["print", "exec"].indexOf(context.tree[0].value) == -1){
-                $_SyntaxError(context, 'token ' + token + ' after ' +
-                    context)
+                syntax_error(context)
             }
             return new $DictOrSetCtx(context)
         case '[':
@@ -2594,7 +2595,7 @@ $ExprCtx.prototype.transition = function(token, value){
                             var a = context.parent.tree[0].position,
                                 b = last_position(context)
                             raise_syntax_error_known_range(
-                                $get_module(context).filename,
+                                context,
                                 a, b, "invalid syntax. " +
                                     "Maybe you meant '==' or ':=' instead of '='?")
                         }
@@ -2947,8 +2948,12 @@ $ExprCtx.prototype.transition = function(token, value){
           if(context.tree.length == 2 &&
                   context.tree[0].type == "id" &&
                   ["print", "exec"].indexOf(context.tree[0].value) > -1){
-              $_SyntaxError(context, ["Missing parentheses in call " +
-                  "to '" + context.tree[0].value + "'."])
+              var func = context.tree[0].value
+              raise_syntax_error_known_range(context,
+                  context.position,
+                  $token.value,
+                  "Missing parentheses in call " +
+                  `to '${func}'. Did you mean ${func}(...)?`)
           }
           if(["dict_or_set", "list_or_tuple", "str"].indexOf(context.parent.type) == -1){
               var t = context.tree[0]
@@ -3700,7 +3705,7 @@ $IdCtx.prototype.transition = function(token, value){
             }else{
                 var msg = 'invalid syntax. Maybe you forgot a comma?'
             }
-            raise_syntax_error_known_range($get_module(this).filename,
+            raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)
 
     }

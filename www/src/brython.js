@@ -12,7 +12,6 @@ $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
 $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
-$B.hasSharedArrayBuffer=typeof SharedArrayBuffer !='undefined'
 var _window
 if($B.isNode){_window={location:{href:'',origin:'',pathname:''},navigator:{userLanguage:''}}}else{
 _window=self}
@@ -122,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-22 18:35:31.474521"
-__BRYTHON__.timestamp=1653237331474
+__BRYTHON__.compiled_date="2022-05-23 10:55:56.006038"
+__BRYTHON__.timestamp=1653296156006
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7535,8 +7534,7 @@ trace+=name+': '+_b_.str.$factory(err)}else{console.log(err)
 trace=err+""}
 try{$B.$getattr($B.stderr,'write')(trace)
 var flush=$B.$getattr($B.stderr,'flush',_b_.None)
-if(flush !==_b_.None){flush()}}catch(print_exc_err){console.log('error print exc',print_exc_err.message,print_exc_err.__class__,print_exc_err.args)
-console.debug(trace)}}
+if(flush !==_b_.None){flush()}}catch(print_exc_err){console.debug(trace)}}
 $B.handle_error=function(err){
 if(err.$handled){return}
 err.$handled=true
@@ -9263,7 +9261,7 @@ for(var attr in modobj){if(attr[0]!=="_"){locals[attr]=modobj[attr]}}}else{
 for(var i=0,l=__all__.length;i < l;++i){var name=__all__[i]
 var alias=aliases[name]||name
 try{
-locals[alias]=$B.$getattr(modobj,name)}catch($err1){
+locals[alias]=$B.$getattr(modobj,name)}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){throw $err1}
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
@@ -13444,8 +13442,11 @@ if($B.isNode){delete browser.window
 delete browser.win}else if($B.isWebWorker){browser.is_webworker=true
 delete browser.window
 delete browser.win
-browser.self.send=self.postMessage}else{
-browser.is_webworker=false
+browser.self.send=self.postMessage
+browser.document=_b_.property.$factory(
+function(){throw _b_.ValueError.$factory(
+"document is not available in Web Workers")},function(self,value){browser.document=value}
+)}else{browser.is_webworker=false
 update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.JSObj.$factory(window.confirm),"document":$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)

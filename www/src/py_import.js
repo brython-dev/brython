@@ -1261,6 +1261,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     // [Import spec] Check if module has an attribute by that name
                     locals[alias] = $B.$getattr(modobj, name)
                 }catch($err1){
+                    if(! $B.is_exc($err1, [_b_.AttributeError])){
+                        throw $err1
+                    }
                     // [Import spec] attempt to import a submodule with that name ...
                     // FIXME : level = 0 ? level = 1 ?
                     try{
