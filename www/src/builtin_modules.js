@@ -92,14 +92,23 @@
         delete browser.win
         // browser.send is an alias for postMessage
         browser.self.send = self.postMessage
-    } else {
+        browser.document = _b_.property.$factory(
+            function(){
+                throw _b_.ValueError.$factory(
+                    "'document' is not available in Web Workers")
+            },
+            function(self, value){
+                browser.document = value
+            }
+        )
+    }else{
         browser.is_webworker = false
         update(browser, {
             "alert":function(message){
                 window.alert($B.builtins.str.$factory(message || ""))
             },
             confirm: $B.JSObj.$factory(window.confirm),
-            "document":$B.DOMNode.$factory(document),
+            "document": $B.DOMNode.$factory(document),
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
             DOMNode: $B.DOMNode,
