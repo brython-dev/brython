@@ -288,16 +288,6 @@ class Interpreter:
                 if str(msg).startswith('unterminated triple-quoted string literal'):
                     self.zone.value += '... '
                     self._status = "3string"
-                elif str(msg) == 'eval() argument must be an expression':
-                    try:
-                        exec(currentLine,
-                            self.globals,
-                            self.locals)
-                    except:
-                        self.print_tb()
-                    self.flush()
-                    self.zone.value += '>>> '
-                    self._status = "main"
                 elif str(msg) == 'decorator expects function':
                     self.zone.value += '... '
                     self._status = "block"
@@ -305,7 +295,13 @@ class Interpreter:
                     self.zone.value += '... '
                     self._status = "block"
                 else:
-                    self.syntax_error(msg.args)
+                    try:
+                        exec(currentLine,
+                            self.globals,
+                            self.locals)
+                    except:
+                        self.print_tb()
+                    #self.syntax_error(msg.args)
                     self.zone.value += '>>> '
                     self._status = "main"
             except:
@@ -399,7 +395,7 @@ class Interpreter:
     def syntax_error(self, args):
         info, [filename, lineno, offset, line] = args
         print(f"  File {filename}, line {lineno}")
-        print("    " + line)
+        print("    " + line.rstrip())
         print("    " + offset * " " + "^")
         print("SyntaxError:", info)
         self.flush()
