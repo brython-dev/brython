@@ -46,7 +46,15 @@ def syntax_error(args):
     trace = Trace()
     info, [filename, lineno, offset, line, *extra] = args
     trace.write(f"  File {filename}, line {lineno}\n")
-    trace.write("    " + line + "\n")
-    trace.write("    " + offset * " " + "^\n")
+    indent = len(line) - len(line.lstrip())
+    trace.write("    " + line.lstrip())
+    nb_marks = 1
+    if extra:
+        end_lineno, end_offset = extra
+        if end_lineno > lineno:
+            nb_marks = len(line) - offset
+        else:
+            nb_marks = end_offset - offset
+    trace.write("    " + offset * " " + "^" * nb_marks + "\n")
     trace.write("SyntaxError:", info, "\n")
     return trace.buf
