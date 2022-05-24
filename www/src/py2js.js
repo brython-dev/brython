@@ -273,7 +273,7 @@ function last_position(context){
 }
 
 function raise_error_known_location(type, filename, lineno, col_offset,
-        end_lineno, end_col_offset, message){
+        end_lineno, end_col_offset, line, message){
     var exc = type.$factory(message)
     exc.filename = filename
     exc.lineno = lineno
@@ -287,6 +287,7 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     }else{
         exc.text = _b_.None
     }
+    exc.text = line
     exc.args[1] = [filename, lineno, col_offset, exc.text,
                    end_lineno, end_col_offset]
     throw exc
@@ -295,13 +296,13 @@ function raise_error_known_location(type, filename, lineno, col_offset,
 function raise_syntax_error_known_range(context, a, b, msg){
     // a and b are the first and last tokens for the exception
     raise_error_known_location(_b_.SyntaxError, $get_module(context).filename,
-        a.start[0], a.start[1], b.end[0], b.end[1], msg)
+        a.start[0], a.start[1], b.end[0], b.end[1], a.line, msg)
 }
 
 function raise_syntax_error(context, token, msg){
     var filename = $get_module(context).filename
     raise_error_known_location(_b_.SyntaxError, filename,
-        token.start[0], token.start[1], token.end[0], token.end[1], msg)
+        token.start[0], token.start[1], token.end[0], token.end[1], token.line, msg)
 }
 
 function syntax_error(context){
@@ -438,20 +439,23 @@ function check_assignment(context, kwargs){
     }
     ctx = context
     while(ctx){
-        if(ctx.type == "decorator" &&
-                ctx.tree.length == 1 && ctx.tree[0].type == 'expr' &&
-                ctx.tree[0].tree[0].type == 'id'){
-            return
-        }
         if(forbidden.indexOf(ctx.type) > -1){
-            $_SyntaxError(context, 'assign to ' + ctx.type)
+            raise_syntax_error(context, $token.value,
+                `invalid syntax (assign to ${ctx.type})`)
         }else if(ctx.type == "expr"){
+            if(ctx.parent.type == 'yield'){
+                raise_syntax_error_known_range(ctx, ctx.parent.position,
+                   last_position(ctx),
+                   "assignment to yield expression not possible")
+            }
             var assigned = ctx.tree[0]
             if(assigned.type == "op"){
                 if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
-                    report('comparison')
+                    report('comparison', assigned.tree[0].position,
+                        last_position(assigned))
                 }else{
-                    report('expression')
+                    report('expression', assigned.tree[0].position,
+                        last_position(assigned))
                 }
             }else if(assigned.type == 'unary'){
                 report('operator')
@@ -644,8 +648,8 @@ $Node.prototype.ast = function(){
     if(this.mode == 'eval'){
         if(root_ast.body.length > 1 ||
                 ! (root_ast.body[0] instanceof $B.ast.Expr)){
-            $_SyntaxError(this.children[0].context,
-                ['eval() argument must be an expression'])
+            raise_syntax_error(this.children[0].context, $token.value,
+                'eval() argument must be an expression')
         }
         root_ast = new $B.ast.Expression(root_ast.body[0].value)
         copy_position(root_ast, root_ast.body)
@@ -754,7 +758,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             context = context.parent
             context.packed = packed
             context.is_await = is_await
-            context.position = position
+            context.position = $token.value
     }
 
     switch(token) {
@@ -841,8 +845,10 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             syntax_error(context)
         case '=':
             if(context.parent.type == "yield"){
-                $_SyntaxError(context,
-                    ["assignment to yield expression not possible"])
+                console.log('parent is yield', context)
+                raise_syntax_error(context,
+                    context.parent.position,
+                    "assignment to yield expression not possible")
             }
             syntax_error(context)
         case 'yield':
@@ -901,6 +907,7 @@ $AliasCtx.prototype.transition = function(token, value){
     switch(token){
         case ',':
         case ':':
+            check_assignment(context.tree[0])
             context.parent.set_alias(context.tree[0].tree[0])
             return $transition(context.parent, token, value)
     }
@@ -1097,12 +1104,6 @@ $AssignCtx.prototype.transition = function(token, value){
         if(context.tree[1].type == 'abstract_expr'){
             $_SyntaxError(context, 'token ' + token + ' after ' +
                 context)
-        }else if(context.tree[0].type == 'decorator'){
-            // invalid rule : '@' NAME '=' expr
-            raise_syntax_error_known_range(context,
-                context.tree[0].position,
-                last_position(context.tree[1]),
-                "invalid syntax. Maybe you meant '==' or ':=' instead of '='?")
         }
         return $transition(context.parent, 'eol')
     }
@@ -2677,7 +2678,8 @@ $ExprCtx.prototype.transition = function(token, value){
                   var new_op = new $OpCtx(expr, op)
                   return new $AbstractExprCtx(new_op, false)
               }
-
+              var position = context.position
+              
               while(context.parent !== op1){
                   context = context.parent
                   op_parent = context.parent
@@ -2685,6 +2687,7 @@ $ExprCtx.prototype.transition = function(token, value){
               context.parent.tree.pop()
               var expr = new $ExprCtx(op_parent, 'operand',
                   context.with_commas)
+              expr.position = position
               expr.expect = ','
               context.parent = expr
               var new_op = new $OpCtx(context, op)
@@ -2732,8 +2735,9 @@ $ExprCtx.prototype.transition = function(token, value){
               }
           }
           repl.parent.tree.pop()
-          var expr = new $ExprCtx(repl.parent,'operand',false)
+          var expr = new $ExprCtx(repl.parent, 'operand', false)
           expr.tree = [op1]
+          expr.position = op1.position
           repl.parent = expr
           var new_op = new $OpCtx(repl,op) // replace old operation
           return new $AbstractExprCtx(new_op,false)
@@ -3642,7 +3646,6 @@ $IdCtx.prototype.transition = function(token, value){
             src = $get_module(this).src
         try{
             var flag = line_ends_with_comma(src.substr(start))
-            console.log('line ends with comma ?', flag)
         }catch(err){
             $pos = start + err.offset
             $_SyntaxError(context, [err.message])
@@ -3703,7 +3706,7 @@ $IdCtx.prototype.transition = function(token, value){
                     msg = `Missing parentheses in call to '${f}'.` +
                     ` Did you mean ${f}(...)?`
             }else{
-                var msg = 'invalid syntax. Maybe you forgot a comma?'
+                var msg = 'invalid syntax. Perhaps you forgot a comma?'
             }
             raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)

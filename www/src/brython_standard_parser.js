@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-23 10:55:56.006038"
-__BRYTHON__.timestamp=1653296156006
+__BRYTHON__.compiled_date="2022-05-24 22:27:53.452412"
+__BRYTHON__.timestamp=1653424073452
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -155,8 +155,8 @@ var exc=errors.TokenError.$factory(message,position)
 console.log('error',exc.__class__,exc.args)
 return exc}
 function get_line_at(src,pos){
-var end=src.substr(pos).search(/[\r\n]/)
-return end==-1 ? src.substr(pos):src.substr(pos,end+1)}
+var end=src.substr(pos).search(/[\r\n]/),line=end==-1 ? src.substr(pos):src.substr(pos,end+1)
+return line+'\n'}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
 while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),[line_num,start-line_start],[line_num,pos-line_start+1],line))
@@ -526,7 +526,7 @@ target.end_col_offset=origin.end_col_offset}
 function last_position(C){var ctx=C
 while(ctx.tree && ctx.tree.length > 0){ctx=$B.last(ctx.tree)}
 return ctx.end_position ||ctx.position}
-function raise_error_known_location(type,filename,lineno,col_offset,end_lineno,end_col_offset,message){var exc=type.$factory(message)
+function raise_error_known_location(type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=type.$factory(message)
 exc.filename=filename
 exc.lineno=lineno
 exc.offset=col_offset
@@ -535,12 +535,14 @@ exc.end_offset=end_col_offset
 var src=$B.file_cache[filename]
 if(src !==undefined){var lines=src.split('\n')
 exc.text=lines[lineno-1]}else{exc.text=_b_.None}
+exc.text=line
 exc.args[1]=[filename,lineno,col_offset,exc.text,end_lineno,end_col_offset]
-console.log('exc args',exc.args)
 throw exc}
-function raise_syntax_error_known_range(filename,a,b,msg){
-raise_error_known_location(_b_.SyntaxError,filename,a.start[0],a.start[1],b.end[0],b.end[1],msg)}
-function raise_syntax_error(filename,token,msg){raise_error_known_location(_b_.SyntaxError,filename,token.start[0],token.start[1],token.end[0],token.end[1],msg)}
+function raise_syntax_error_known_range(C,a,b,msg){
+raise_error_known_location(_b_.SyntaxError,$get_module(C).filename,a.start[0],a.start[1],b.end[0],b.end[1],a.line,msg)}
+function raise_syntax_error(C,token,msg){var filename=$get_module(C).filename
+raise_error_known_location(_b_.SyntaxError,filename,token.start[0],token.start[1],token.end[0],token.end[1],token.line,msg)}
+function syntax_error(C){raise_syntax_error(C,$token.value,'invalid syntax')}
 var $_SyntaxError=$B.parser.$_SyntaxError=function(C,msg,indent){
 var exc,klass=indent ? _b_.IndentationError :_b_.SyntaxError
 if(indent===undefined){
@@ -592,23 +594,22 @@ if(action !='delete'){
 forbidden.push('del')}
 function report(wrong_type,a,b){a=a ||C.position
 b=b ||$token.value
-if(augmented){console.log('C',ctx)
-raise_syntax_error_known_range(
-$get_module(C).filename,a,b,`'${wrong_type}' is an illegal expression `+
+if(augmented){raise_syntax_error_known_range(
+C,a,b,`'${wrong_type}' is an illegal expression `+
 'for augmented assignment')}else{raise_syntax_error_known_range(
-$get_module(C).filename,a,b,`cannot ${action} ${wrong_type}`)}}
+C,a,b,`cannot ${action} ${wrong_type}`)}}
 if(C.type=='expr'){var upper_expr=C
 var ctx=C
 while(ctx.parent){if(ctx.parent.type=='expr'){upper_expr=ctx.parent}
 ctx=ctx.parent}}
-if($parent_match(C,{type:'augm_assign'})){raise_syntax_error($get_module(C).filename,$token.value,'invalid syntax')}
+if($parent_match(C,{type:'augm_assign'})){syntax_error(C)}
 ctx=C
-while(ctx){if(forbidden.indexOf(ctx.type)>-1){$_SyntaxError(C,'assign to '+ctx.type)}else if(ctx.type=="expr"){var assigned=ctx.tree[0]
-if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison')}else{report('expression')}}else if(assigned.type=='unary'){report('operator')}else if(assigned.type=='call'){report('function call',assigned.position,assigned.end_position)}else if(assigned.type=='id'){var name=assigned.value
+while(ctx){if(forbidden.indexOf(ctx.type)>-1){raise_syntax_error(C,$token.value,`invalid syntax (assign to ${ctx.type})`)}else if(ctx.type=="expr"){if(ctx.parent.type=='yield'){raise_syntax_error_known_range(ctx,ctx.parent.position,last_position(ctx),"assignment to yield expression not possible")}
+var assigned=ctx.tree[0]
+if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){report('comparison',assigned.tree[0].position,last_position(assigned))}else{report('expression',assigned.tree[0].position,last_position(assigned))}}else if(assigned.type=='unary'){report('operator')}else if(assigned.type=='call'){report('function call',assigned.position,assigned.end_position)}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){report(name)}
-if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){if(! assigned.parenthesized){report('named expression')}else if(ctx.parent.type=='node'){console.log(C)
-raise_syntax_error_known_range(
-$get_module(C).filename,assigned.target.position,last_position(assigned),"cannot assign to named expression here. "+
+if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){report('literal')}else if(assigned.type=="ellipsis"){report('Ellipsis')}else if(assigned.type=='genexpr'){report('generator expression')}else if(assigned.type=='packed'){check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){if(! assigned.parenthesized){report('named expression')}else if(ctx.parent.type=='node'){raise_syntax_error_known_range(
+C,assigned.target.position,last_position(assigned),"cannot assign to named expression here. "+
 "Maybe you meant '==' instead of '='?")}}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report('conditional expression')}else if(ctx.type=='op'){var a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
 if($B.op2method.comparisons[ctx.op]!==undefined){report('comparison',a,b)}else{report('expression',a,b)}}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
 if(once){break}
@@ -658,7 +659,7 @@ if(ast.expr.indexOf(node_ast.constructor)>-1){node_ast=new ast.Expr(node_ast)
 copy_position(node_ast,node_ast.value)}
 root_ast.body.push(node_ast)}
 if(this.mode=='eval'){if(root_ast.body.length > 1 ||
-!(root_ast.body[0]instanceof $B.ast.Expr)){$_SyntaxError(this.children[0].C,['eval() argument must be an expression'])}
+!(root_ast.body[0]instanceof $B.ast.Expr)){raise_syntax_error(this.children[0].C,$token.value,'eval() argument must be an expression')}
 root_ast=new $B.ast.Expression(root_ast.body[0].value)
 copy_position(root_ast,root_ast.body)}
 return root_ast}
@@ -708,7 +709,7 @@ var commas=C.with_commas
 C=C.parent
 C.packed=packed
 C.is_await=is_await
-C.position=position}
+C.position=$token.value}
 switch(token){case 'await':
 return new $AbstractExprCtx(new $AwaitCtx(
 new $ExprCtx(C,'await',false)),true)
@@ -770,17 +771,15 @@ return new $NotCtx(
 new $ExprCtx(C,'not',commas))
 case '...':
 return new $EllipsisCtx(new $ExprCtx(C,'ellipsis',commas))}
-$_SyntaxError(C,'token '+token+' after '+
-C)
+syntax_error(C)
 case 'in':
 if(C.parent.type=='op' && C.parent.op=='not'){C.parent.op='not_in'
 return C}
-$_SyntaxError(C,'token '+token+' after '+
-C)
+syntax_error(C)
 case '=':
-if(C.parent.type=="yield"){$_SyntaxError(C,["assignment to yield expression not possible"])}
-$_SyntaxError(C,'token '+token+' after '+
-C)
+if(C.parent.type=="yield"){console.log('parent is yield',C)
+raise_syntax_error(C,C.parent.position,"assignment to yield expression not possible")}
+syntax_error(C)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx(C),true)
 case ':':
@@ -807,12 +806,12 @@ C.parent=tuple
 return tuple}
 break
 case 'annotation':
-$_SyntaxError(C,"token "+token)
+syntax_error(C)
 default:
 $_SyntaxError(C,token)}
 break
 case '.':
-$_SyntaxError(C,'token '+token)}
+syntax_error(C)}
 return $transition(C.parent,token,value)}
 var $AliasCtx=$B.parser.$AliasCtx=function(C){
 this.type='ctx_manager_alias'
@@ -822,6 +821,7 @@ C.tree[C.tree.length-1].alias=this}
 $AliasCtx.prototype.transition=function(token,value){var C=this
 switch(token){case ',':
 case ':':
+check_assignment(C.tree[0])
 C.parent.set_alias(C.tree[0].tree[0])
 return $transition(C.parent,token,value)}
 $_SyntaxError(C,'token '+token+' after '+C)}
@@ -855,7 +855,7 @@ var msg=this.tree[1],ast_obj=new ast.Assert(this.tree[0].ast(),msg===undefined ?
 set_position(ast_obj,this.position)
 return ast_obj}
 $AssertCtx.prototype.transition=function(token,value){var C=this
-if(token==","){if(this.tree.length > 1){$_SyntaxError(C,"too many commas after assert")}
+if(token==","){if(this.tree.length > 1){raise_syntax_error(C,$token.value,'invalid syntax (too many commas after assert)')}
 return new $AbstractExprCtx(this,false)}
 if(token=='eol'){return $transition(C.parent,token)}
 $_SyntaxError(C,token)}
@@ -1660,7 +1660,7 @@ return res}
 $ExprCtx.prototype.transition=function(token,value){var C=this
 if(python_keywords.indexOf(token)>-1 &&
 ['as','else','if','for','from','in'].indexOf(token)==-1){C.$pos=$pos
-raise_syntax_error($get_module(this).filename,$token.value,'invalid syntax')}
+syntax_error(C)}
 switch(token){case 'bytes':
 case 'float':
 case 'id':
@@ -1670,15 +1670,12 @@ case 'lambda':
 case 'pass':
 case 'str':
 case 'JoinedStr':
-if(C.parent.type=='dict_or_set' &&
-C.parent.expect==','){$_SyntaxError(C,["invalid syntax. Perhaps you forgot a comma?"])}
-var msg='invalid syntax. Maybe you forgot a comma?'
-raise_syntax_error_known_range($get_module(this).filename,this.position,$token.value,msg)
+var msg='invalid syntax. Perhaps you forgot a comma?'
+raise_syntax_error_known_range(C,this.position,$token.value,msg)
 break
 case '{':
 if(C.tree[0].type !="id" ||
-["print","exec"].indexOf(C.tree[0].value)==-1){$_SyntaxError(C,'token '+token+' after '+
-C)}
+["print","exec"].indexOf(C.tree[0].value)==-1){syntax_error(C)}
 return new $DictOrSetCtx(C)
 case '[':
 case '(':
@@ -1697,7 +1694,7 @@ case ',':
 if(C.expect==','){if(C.parent.type=='assign'){var assigned=C.parent.tree[0]
 if(assigned.type=='expr' && assigned.tree[0].type=='id'){if(C.name=='unary' ||C.name=='operand'){var a=C.parent.tree[0].position,b=last_position(C)
 raise_syntax_error_known_range(
-$get_module(C).filename,a,b,"invalid syntax. "+
+C,a,b,"invalid syntax. "+
 "Maybe you meant '==' or ':=' instead of '='?")}}}
 if(C.with_commas ||
 ["assign","return"].indexOf(C.parent.type)>-1){if($parent_match(C,{type:"yield","from":true})){$_SyntaxError(C,"no implicit tuple for yield from")}
@@ -1736,10 +1733,12 @@ expr.tree.push(right)
 right.parent=expr
 var new_op=new $OpCtx(expr,op)
 return new $AbstractExprCtx(new_op,false)}
+var position=C.position
 while(C.parent !==op1){C=C.parent
 op_parent=C.parent}
 C.parent.tree.pop()
 var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
+expr.position=position
 expr.expect=','
 C.parent=expr
 var new_op=new $OpCtx(C,op)
@@ -1773,6 +1772,7 @@ return new $AbstractExprCtx(repl,false)}}}
 repl.parent.tree.pop()
 var expr=new $ExprCtx(repl.parent,'operand',false)
 expr.tree=[op1]
+expr.position=op1.position
 repl.parent=expr
 var new_op=new $OpCtx(repl,op)
 return new $AbstractExprCtx(new_op,false)
@@ -1864,8 +1864,9 @@ return new $AbstractExprCtx(new $TernaryCtx(ctx),true)
 case 'eol':
 if(C.tree.length==2 &&
 C.tree[0].type=="id" &&
-["print","exec"].indexOf(C.tree[0].value)>-1){$_SyntaxError(C,["Missing parentheses in call "+
-"to '"+C.tree[0].value+"'."])}
+["print","exec"].indexOf(C.tree[0].value)>-1){var func=C.tree[0].value
+raise_syntax_error_known_range(C,C.position,$token.value,"Missing parentheses in call "+
+`to '${func}'. Did you mean ${func}(...)?`)}
 if(["dict_or_set","list_or_tuple","str"].indexOf(C.parent.type)==-1){var t=C.tree[0]
 if(t.type=="packed"){$token.value=t.position
 $_SyntaxError(C,["cannot use starred expression here"])}else if(t.type=="call" && t.func.type=="packed"){$token.value=t.func.position
@@ -2199,8 +2200,7 @@ return ast_obj}
 $IdCtx.prototype.transition=function(token,value){var C=this
 if(C.value=='case' && C.parent.parent.type=="node"){
 var start=C.parent.$pos,src=$get_module(this).src
-try{var flag=line_ends_with_comma(src.substr(start))
-console.log('line ends with comma ?',flag)}catch(err){$pos=start+err.offset
+try{var flag=line_ends_with_comma(src.substr(start))}catch(err){$pos=start+err.offset
 $_SyntaxError(C,[err.message])}
 if(flag){var node=$get_node(C),parent=node.parent
 if((! node.parent)||!(node.parent.is_match)){$_SyntaxError(C,'"case" not inside "match"')}else{if(node.parent.irrefutable){
@@ -2230,8 +2230,8 @@ case 'int':
 case 'float':
 case 'imaginary':
 if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value,msg=`Missing parentheses in call to '${f}'.`+
-` Did you mean ${f}(...)?`}else{var msg='invalid syntax. Maybe you forgot a comma?'}
-raise_syntax_error_known_range($get_module(this).filename,this.position,$token.value,msg)}
+` Did you mean ${f}(...)?`}else{var msg='invalid syntax. Perhaps you forgot a comma?'}
+raise_syntax_error_known_range(C,this.position,$token.value,msg)}
 if(this.parent.parent.type=="packed"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return $transition(C.parent,token,value)}
 var $ImportCtx=$B.parser.$ImportCtx=function(C){
@@ -13445,7 +13445,7 @@ delete browser.win
 browser.self.send=self.postMessage
 browser.document=_b_.property.$factory(
 function(){throw _b_.ValueError.$factory(
-"document is not available in Web Workers")},function(self,value){browser.document=value}
+"'document' is not available in Web Workers")},function(self,value){browser.document=value}
 )}else{browser.is_webworker=false
 update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.JSObj.$factory(window.confirm),"document":$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
