@@ -44,7 +44,7 @@ def print_exc(file=None):
 
 def syntax_error(args):
     trace = Trace()
-    info, [filename, lineno, offset, line] = args
+    info, [filename, lineno, offset, line, *extra] = args
     trace.write(f"  File {filename}, line {lineno}\n")
     trace.write("    " + line + "\n")
     trace.write("    " + offset * " " + "^\n")
