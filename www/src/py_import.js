@@ -999,8 +999,8 @@ function import_error(mod_name){
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
-    var $test = false // mod_name == "__main__"
-    if($test){console.log("__import__", mod_name)}
+    var $test = false // mod_name == "tatsu.utils._command"
+    if($test){console.log("__import__", mod_name, 'fromlist', fromlist);alert()}
     // Main entry point for __import__
     //
     // If the module name mod_name is already in $B.imported, return it.
@@ -1157,6 +1157,11 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
+    var test = false // mod_name == "tatsu.utils._command"
+    if(test){
+        console.log('mod name', mod_name, 'fromlist', fromlist)
+        alert()
+    }
     var level = 0,
         frame = $B.last($B.frames_stack),
         current_module = frame[2],
@@ -1200,6 +1205,11 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     aliases = aliases === undefined ? {} : aliases
     locals = locals === undefined ? {} : locals
 
+    if(test){
+        console.log('step 2, mod_name', mod_name, 'fromlist', fromlist)
+        alert()
+    }
+
     if($B.$options.debug == 10){
        console.log("$import "+mod_name)
        console.log("use VFS ? "+$B.use_VFS)
@@ -1219,8 +1229,17 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     // FIXME: Should we need locals dict supply it in, now it is useless
     var importer = typeof __import__ == "function" ?
                         __import__ :
-                        $B.$getattr(__import__, "__call__"),
-        modobj = importer(mod_name, globals, undefined, fromlist, 0)
+                        $B.$getattr(__import__, "__call__")
+    if(test){
+        console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
+        alert()
+    }
+    var modobj = importer(mod_name, globals, undefined, fromlist, 0)
+
+    if(test){
+        console.log('step 3, mod_name', mod_name, 'fromlist', fromlist)
+        alert()
+    }
 
     // Apply bindings upon local namespace
     if(! fromlist || fromlist.length == 0){
@@ -1237,6 +1256,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         var __all__ = fromlist,
             thunk = {}
         if(fromlist && fromlist[0] == "*"){
+            if(test){
+                console.log('import *', modobj)
+                alert()
+            }
             __all__ = $B.$getattr(modobj, "__all__", thunk);
             if(__all__ !== thunk){
                 // from modname import * ... when __all__ is defined
@@ -1344,16 +1367,26 @@ $B.$import_from = function(module, names, aliases, level, locals){
             current_module = $B.imported[submodule]
         }
         // get names from a package
-        for(var name of names){
-            var alias = aliases[name] || name
-            if(current_module[name] !== undefined){
-                // name is defined in the package module (__init__.py)
-                locals[alias] = current_module[name]
-            }else{
-                // try to import module in the package
-                var sub_module = current_module.__name__ + '.' + name
-                $B.$import(sub_module, [], {}, {})
-                locals[alias] = $B.imported[sub_module]
+        if(names.length > 0 && names[0] == '*'){
+            // eg "from .common import *"
+            for(var key in current_module){
+                if(key.startsWith('$') || key.startsWith('_')){
+                    continue
+                }
+                locals[key] = current_module[key]
+            }
+        }else{
+            for(var name of names){
+                var alias = aliases[name] || name
+                if(current_module[name] !== undefined){
+                    // name is defined in the package module (__init__.py)
+                    locals[alias] = current_module[name]
+                }else{
+                    // try to import module in the package
+                    var sub_module = current_module.__name__ + '.' + name
+                    $B.$import(sub_module, [], {}, {})
+                    locals[alias] = $B.imported[sub_module]
+                }
             }
         }
     }else{
