@@ -55,7 +55,7 @@ var LOCAL = 1,
 var GENERATOR = 1,
     GENERATOR_EXPRESSION = 2
 
-var CO_FUTURE_ANNOTATIONS = 0x100000 // CPython Include/code.h
+var CO_FUTURE_ANNOTATIONS = 0x1000000 // CPython Include/code.h
 
 var TYPE_CLASS = 1,
     TYPE_FUNCTION = 0,
@@ -1487,7 +1487,7 @@ function symtable_visit_params(st, args){
 }
 
 function symtable_visit_annotation(st, annotation){
-    var future_annotations = st.future.ff_features & CO_FUTURE_ANNOTATIONS;
+    var future_annotations = st.future.features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
                               annotation, annotation.lineno,

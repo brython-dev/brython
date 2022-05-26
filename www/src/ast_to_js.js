@@ -224,6 +224,11 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
+    var test = false // name == '__annotations__'
+    if(test){
+        console.log('name scope', name, scopes)
+        alert()
+    }
     var flags,
         block
     if(scopes.length == 0){
@@ -252,6 +257,17 @@ function name_scope(name, scopes){
     }
     var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK,
         is_local = [LOCAL, CELL].indexOf(__scope) > -1
+    if(test){
+        console.log('block', block, 'is local', is_local)
+    }
+    // special case
+    if(name == '__annotations__'){
+        if(block.type == TYPE_CLASS && up_scope.has_annotation){
+            is_local = true
+        }else if(block.type == TYPE_MODULE){
+            is_local = true
+        }
+    }
     if(is_local){
         // name is local (symtable) but may not have yet been bound in scope
         // If scope is a "subscope", look in its parents
@@ -424,6 +440,10 @@ $B.resolve_local = function(name){
 }
 
 $B.resolve_in_scopes = function(name, namespaces){
+    if(name == '__annotations__'){
+        console.log('resolve', name, namespaces)
+        alert()
+    }
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top
@@ -697,7 +717,30 @@ $B.ast.Assert.prototype.to_js = function(scopes){
            `throw _b_.AssertionError.$factory(${msg})}\n`
 }
 
+var CO_FUTURE_ANNOTATIONS = 0x1000000
+
+function annotation_to_str(obj){
+    var s
+    if(obj instanceof $B.ast.Name){
+        s = obj.id
+    }else if(obj instanceof $B.ast.BinOp){
+        s = annotation_to_str(obj.left) + '|' + annotation_to_str(obj.right)
+    }else if(obj instanceof $B.ast.Subscript){
+        s = annotation_to_str(obj.value) + '[' + 
+                annotation_to_str(obj.slice) + ']'
+    }else{
+        console.log('other annotation', obj)
+    }
+    return s
+}
+
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
+    var postpone_annotation = scopes.symtable.table.future.features &
+            CO_FUTURE_ANNOTATIONS
+    if(postpone_annotation){
+        console.log('annotation to str', this.annotation)
+        console.log(annotation_to_str(this.annotation, ''))
+    }
     var scope = last_scope(scopes)
     var js = ''
     if(! scope.has_annotation){
@@ -706,6 +749,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     scope.has_annotation = true
     if(this.value){
         js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
+        console.log('ann', js)
         if(this.target instanceof $B.ast.Name){
             var scope = bind(this.target.id, scopes)
             js += `$B.$setitem(locals.__annotations__, ` +
@@ -716,7 +760,6 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
             js += `$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}` +
                 `, "${this.target.attr}", ann)`
         }else if(this.target instanceof $B.ast.Subscript){
-            console.log(this.target)
             js += `$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}` +
                 `, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`
         }
@@ -2295,7 +2338,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
               `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
     }
     js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
-          `locals.__name__ = '${name}'\n`
+          `locals.__name__ = '${name}'\n` +
+          `locals.__annotations__ = $B.empty_dict()\n`
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()

@@ -245,10 +245,109 @@ var ast_dump = $B.ast_dump = function(tree, indent){
     return res
 }
 
+// Get options set by "from __future__ import XXX"
+var VALID_FUTURES = ["nested_scopes", "generators", "division",
+        "absolute_import", "with_statement", "print_function",
+        "unicode_literals", "barry_as_FLUFL", "generator_stop"],
+    CO_FUTURE_ANNOTATIONS = 0x1000000
+
+function future_check_features(ff, s, filename){
+    var i;
+    var names = s.names;
+    for (var feature of names) {
+        var name = feature.name
+        if (name == "braces") {
+            raise_syntax_error("not a chance");
+            return 0;
+        }else if(name == "annotations"){
+            ff.features |= CO_FUTURE_ANNOTATIONS
+        }else if(VALID_FUTURES.indexOf(name) == -1){
+            var msg = `future feature ${feature.name} is not defined`
+            raise_syntax_error(msg)
+            return 0;
+        }
+    }
+    return 1;
+}
+
+function future_parse(ff, mod, filename){
+    var i,
+        done = 0,
+        prev_line = 0;
+
+    if (!(mod instanceof $B.ast.Module)){
+        return 1;
+    }
+    if (mod.body.length == 0){
+        return 1;
+    }
+    /* A subsequent pass will detect future imports that don't
+       appear at the beginning of the file.  There's one case,
+       however, that is easier to handle here: A series of imports
+       joined by semi-colons, where the first import is a future
+       statement but some subsequent import has the future form
+       but is preceded by a regular import.
+    */
+
+    i = 0;
+    if(mod.body[0] instanceof $B.ast.Constant){
+        i++
+    }
+
+    for (s of mod.body.slice(i)) {
+        if (done && s.lineno > prev_line){
+            return 1;
+        }
+        prev_line = s.lineno;
+
+        /* The tests below will return from this function unless it is
+           still possible to find a future statement.  The only things
+           that can precede a future statement are another future
+           statement and a doc string.
+        */
+
+        if(s instanceof $B.ast.ImportFrom){
+            var modname = s.module
+            if(modname == "__future__"){
+                if (done) {
+                    raise_syntax_error(
+                        "from __future__ imports must occur at the " +
+                        "beginning of the file")
+                    return 0;
+                }
+                if (! future_check_features(ff, s, filename)){
+                    return 0;
+                }
+                ff.lineno = s.lineno;
+            } else {
+                done = 1;
+            }
+        }
+        else {
+            done = 1;
+        }
+    }
+    return 1;
+}
+
+
+function _PyFuture_FromAST(mod, filename){
+    var ff = {
+        features: 0,
+        lineno: -1
+    }
+
+    if (! future_parse(ff, mod, filename)) {
+        return NULL;
+    }
+    return ff;
+}
+
 // Functions used to set position attributes to AST nodes
-function set_position(ast_obj, position){
+function set_position(ast_obj, position, end_position){
     ast_obj.lineno = position.start[0]
     ast_obj.col_offset = position.start[1]
+    position = end_position || position
     ast_obj.end_lineno = position.end[0]
     ast_obj.end_col_offset = position.end[1]
 }
@@ -443,11 +542,15 @@ function check_assignment(context, kwargs){
             raise_syntax_error(context, $token.value,
                 `invalid syntax (assign to ${ctx.type})`)
         }else if(ctx.type == "expr"){
+            if($parent_match(ctx, {type: 'annotation'})){
+                return true
+            }
             if(ctx.parent.type == 'yield'){
                 raise_syntax_error_known_range(ctx, ctx.parent.position,
                    last_position(ctx),
                    "assignment to yield expression not possible")
             }
+
             var assigned = ctx.tree[0]
             if(assigned.type == "op"){
                 if($B.op2method.comparisons[ctx.tree[0].op] !== undefined){
@@ -648,6 +751,7 @@ $Node.prototype.ast = function(){
     if(this.mode == 'eval'){
         if(root_ast.body.length > 1 ||
                 ! (root_ast.body[0] instanceof $B.ast.Expr)){
+            console.log('root_ast', root_ast, 'this', this)
             raise_syntax_error(this.children[0].context, $token.value,
                 'eval() argument must be an expression')
         }
@@ -1089,6 +1193,10 @@ $AssignCtx.prototype.ast = function(){
             target.annotation.tree[0].ast(),
             value,
             1)
+        // set position of annotation to get annotation string
+        // in ast_to_js.js
+        set_position(ast_obj.annotation, target.annotation.position,
+            last_position(target.annotation))
         ast_obj.target.ctx = new ast.Store()
     }else{
         var ast_obj = new ast.Assign(targets, value)
@@ -2679,7 +2787,7 @@ $ExprCtx.prototype.transition = function(token, value){
                   return new $AbstractExprCtx(new_op, false)
               }
               var position = context.position
-              
+
               while(context.parent !== op1){
                   context = context.parent
                   op_parent = context.parent
@@ -7859,7 +7967,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         if($B.produce_ast == 2){
             console.log(ast_dump(_ast))
         }
-        var symtable = $B._PySymtable_Build(_ast, filename)
+        var future = _PyFuture_FromAST(_ast, filename)
+        var symtable = $B._PySymtable_Build(_ast, filename, future)
         var js_obj = $B.js_from_root(_ast, symtable, filename)
         js_from_ast = '// ast generated by parser\n' + js_obj.js
         root._ast = _ast

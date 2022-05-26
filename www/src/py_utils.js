@@ -393,6 +393,7 @@ $B.handle_annotation = function(annotation_string){
         // don't evaluate
         return annotation_string
     }else{
+        console.log('eval annotation', annotation_string)
         return _b_.eval(annotation_string)
     }
 }
