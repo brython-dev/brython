@@ -885,7 +885,10 @@
 
     $B.AST = {
         __class__: _b_.type,
-        __getattr__: function(self, attr){
+        __Xgetattr__: function(self, attr){
+            if(self.js_node === undefined){
+                console.log('AST __getattr__', attr, self)
+            }
             var res = self.js_node[attr]
             if(res === undefined){
                 throw $B.attr_error(attr, self)

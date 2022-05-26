@@ -57,6 +57,8 @@ def parse_arguments(arg_string):
         arg_type, arg_name = arg.split()
         if arg_type[-1] == '*':
             arg_name += '*'
+        elif arg_type[-1] == '?':
+            arg_name += '?'
         arg_dict[arg_name] = arg_type
     return arg_dict
 
@@ -112,12 +114,15 @@ for(var kl in $B.ast_classes){
     var args = $B.ast_classes[kl],
         js = ''
     if(typeof args == "string"){
-        js = `ast.${kl} = function(${args.replace(/\*/g, '')}){\n`
+        js = `ast.${kl} = function(${args.replace(/[*?]/g, '')}){\n`
         if(args.length > 0){
             for(var arg of args.split(',')){
                 if(arg.endsWith('*')){
                    arg = arg.substr(0, arg.length - 1)
                    js += ` this.${arg} = ${arg} === undefined ? [] : ${arg}\n`
+                }else if(arg.endsWith('?')){
+                   arg = arg.substr(0, arg.length - 1)
+                   js += ` this.${arg} = ${arg}\n`
                 }else{
                     js += ` this.${arg} = ${arg}\n`
                 }
@@ -140,6 +145,27 @@ for(var kl in $B.ast_classes){
 }
 
 // Function that creates Python classes for ast classes.
+function ast_js_to_py(obj){
+    if(obj === undefined){
+        return _b_.None
+    }else if(Array.isArray(obj)){
+        return obj.map(ast_js_to_py)
+    }else{
+        var class_name = obj.constructor.$name,
+            py_class = $B.python_ast_classes[class_name],
+            res = {
+                __class__: py_class
+            }
+        if(py_class === undefined){
+            return obj
+        }
+        for(var field of py_class._fields){
+            res[field] = ast_js_to_py(obj[field])
+        }
+        return res
+    }
+}
+
 $B.create_python_ast_classes = function(){
     if($B.python_ast_classes){
         return
@@ -147,22 +173,35 @@ $B.create_python_ast_classes = function(){
     $B.python_ast_classes = {}
     for(var klass in $B.ast_classes){
         $B.python_ast_classes[klass] = (function(kl){
-            var cls = $B.make_class(kl,
-                function(js_node){
-                    return {
-                        __class__: $B.python_ast_classes[kl],
-                        js_node
+            var _fields,
+                raw_fields
+            if(typeof $B.ast_classes[kl] == "string"){
+                if($B.ast_classes[kl] == ''){
+                    _fields = []
+                }else{
+                    var raw_fields = $B.ast_classes[kl].split(',')
+                    _fields = raw_fields.map(x =>
+                        (x.endsWith('*') || x.endsWith('?')) ?
+                        x.substr(0, x.length - 1) : x)
+                }
+            }
+            var cls = $B.make_class(kl, ast_js_to_py)
+            if(_fields){
+                cls._fields = _fields
+            }
+            if(raw_fields){
+                for(var field of raw_fields){
+                    if(field.endsWith('?')){
+                        cls[field.substr(0, field.length - 1)] = _b_.None
                     }
                 }
-            )
-            if(typeof $B.ast_classes[kl] == "string"){
-                cls._fields = $B.ast_classes[kl].split(',')
             }
             cls.__mro__ = [$B.AST, _b_.object]
             return cls
         })(klass)
     }
 }
+
 // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
 var op2ast_class = $B.op2ast_class = {},
     ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]

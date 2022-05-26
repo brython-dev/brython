@@ -349,7 +349,7 @@ function compile() {
     $.co_filename = $.filename
     var interactive = $.mode == "single" && ($.flags & 0x200)
     $B.file_cache[$.filename] = $.source
-    
+
     if(_b_.isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
             lfpos = $.source.source.indexOf(10),
@@ -420,8 +420,7 @@ function compile() {
             $B.create_python_ast_classes() // in py_ast
             var _ast = root.ast(),
                 klass = _ast.constructor.$name
-            var res = $B.python_ast_classes[klass].$factory(_ast)
-            return res
+            return $B.python_ast_classes[klass].$factory(_ast)
         }
     }
     return $
