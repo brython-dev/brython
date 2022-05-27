@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-27 09:36:23.387364"
-__BRYTHON__.timestamp=1653636983387
+__BRYTHON__.compiled_date="2022-05-27 21:13:35.178041"
+__BRYTHON__.timestamp=1653678815177
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4598,7 +4598,8 @@ if(err.__class__===undefined){console.log('Javascript error',err)
 var lineNumber=err.lineNumber
 if(lineNumber !==undefined){console.log('around line',lineNumber)
 console.log(script.js.split('\n').
-slice(lineNumber-4,lineNumber).join('\n'))}
+slice(lineNumber-4,lineNumber).join('\n'))
+console.log('script\n',script.js)}
 if($B.is_recursion_error(err)){err=_b_.RecursionError.$factory("too much recursion")}else{$B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')}}
 $B.handle_error(err)}
@@ -7259,8 +7260,9 @@ _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
 frame[1].$current_exception=undefined}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
-if(frame===undefined){console.log("no frame",exc,exc.__class__,exc.args,exc.$stack)}
-frame[1].$current_exception=$B.exception(exc)}
+if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
+console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
+throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
 $B.$raise=function(arg,cause){
@@ -7279,16 +7281,15 @@ exc.__context__=active_exc===undefined ? _b_.None :active_exc
 exc.__cause__=cause ||_b_.None
 exc.__suppress_context__=cause !==undefined
 throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
-$B.print_stack=function(stack){stack=stack ||$B.frames_stack
+$B.print_stack=function(stack){
+stack=stack ||$B.frames_stack
 var trace=[]
-stack.forEach(function(frame){var line_info=frame[1].$line_info
-if(line_info !==undefined){var info=line_info.split(",")
-if(info[1].startsWith("$exec")){info[1]="<module>"}
-trace.push(info[1]+" line "+info[0])
-var src=$B.file_cache[frame[3].__file__]
-if(src){var lines=src.split("\n"),line=lines[parseInt(info[0])-1]
-trace.push("  "+line.trim())}}})
-console.log("print stack ok",trace)
+for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__
+if(lineno !==undefined){var local=frame[0]==frame[2]? "<module>" :frame[0]
+trace.push(`  File "${filename}" line ${lineno}, in ${local}`)
+var src=$B.file_cache[filename]
+if(src){var lines=src.split("\n"),line=lines[lineno-1]
+trace.push("    "+line.trim())}}}
 return trace.join("\n")}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc,stack){var frame=$B.last($B.frames_stack)
 if(stack===undefined){stack=exc.$stack}
@@ -14047,7 +14048,7 @@ return `if($B.set_lineno(locals, ${this.lineno}) && !$B.$bool(${test})){\n`+
 var CO_FUTURE_ANNOTATIONS=0x1000000
 function annotation_to_str(obj){var s
 if(obj instanceof $B.ast.Name){s=obj.id}else if(obj instanceof $B.ast.BinOp){s=annotation_to_str(obj.left)+'|'+annotation_to_str(obj.right)}else if(obj instanceof $B.ast.Subscript){s=annotation_to_str(obj.value)+'['+
-annotation_to_str(obj.slice)+']'}else{console.log('other annotation',obj)}
+annotation_to_str(obj.slice)+']'}else if(obj instanceof $B.ast.Constant){if(obj.value===_b_.None){s='None'}else{console.log('other constant',obj)}}else{console.log('other annotation',obj)}
 return s}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes.symtable.table.future.features &
 CO_FUTURE_ANNOTATIONS

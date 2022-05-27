@@ -10,9 +10,14 @@ $B.del_exc = function(){
 $B.set_exc = function(exc){
     var frame = $B.last($B.frames_stack)
     if(frame === undefined){
-        console.log("no frame", exc, exc.__class__, exc.args, exc.$stack)
+        var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
+        console.error(['Traceback (most recent call last):',
+            $B.print_stack(exc.$stack),
+            msg].join('\n'))
+        throw Error(msg)
+    }else{
+        frame[1].$current_exception = $B.exception(exc)
     }
-    frame[1].$current_exception = $B.exception(exc)
 }
 
 $B.get_exc = function(){
@@ -58,25 +63,23 @@ $B.$raise = function(arg, cause){
 }
 
 $B.print_stack = function(stack){
+    // Print frames stack with traceback format
     stack = stack || $B.frames_stack
     var trace = []
-    stack.forEach(function(frame){
-        var line_info = frame[1].$line_info
-        if(line_info !== undefined){
-            var info = line_info.split(",")
-            if(info[1].startsWith("$exec")){
-                info[1] = "<module>"
-            }
-            trace.push(info[1] + " line " + info[0])
-            var src = $B.file_cache[frame[3].__file__]
+    for(var frame of stack){
+        var lineno = frame[1].$lineno,
+            filename = frame[3].__file__
+        if(lineno !== undefined){
+            var local = frame[0] == frame[2] ? "<module>" : frame[0]
+            trace.push(`  File "${filename}" line ${lineno}, in ${local}`)
+            var src = $B.file_cache[filename]
             if(src){
                 var lines = src.split("\n"),
-                    line = lines[parseInt(info[0]) - 1]
-                trace.push("  " + line.trim())
+                    line = lines[lineno - 1]
+                trace.push("    " + line.trim())
             }
         }
-    })
-    console.log("print stack ok", trace)
+    }
     return trace.join("\n")
 }
 

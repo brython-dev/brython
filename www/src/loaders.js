@@ -397,6 +397,7 @@ var loop = $B.loop = function(){
                     console.log('around line', lineNumber)
                     console.log(script.js.split('\n').
                         slice(lineNumber - 4, lineNumber).join('\n'))
+                    console.log('script\n', script.js)
                 }
                 if($B.is_recursion_error(err)){
                     err = _b_.RecursionError.$factory("too much recursion")
