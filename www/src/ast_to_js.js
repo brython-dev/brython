@@ -728,6 +728,12 @@ function annotation_to_str(obj){
     }else if(obj instanceof $B.ast.Subscript){
         s = annotation_to_str(obj.value) + '[' +
                 annotation_to_str(obj.slice) + ']'
+    }else if(obj instanceof $B.ast.Constant){
+        if(obj.value === _b_.None){
+            s = 'None'
+        }else{
+            console.log('other constant', obj)
+        }
     }else{
         console.log('other annotation', obj)
     }
