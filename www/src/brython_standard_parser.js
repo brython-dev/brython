@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-26 21:15:27.810075"
-__BRYTHON__.timestamp=1653592527809
+__BRYTHON__.compiled_date="2022-05-27 09:36:23.387364"
+__BRYTHON__.timestamp=1653636983387
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -526,19 +526,25 @@ res+=attrs.map(x=> '  '.repeat(indent+1)+x).join(',\n')}
 res+=')'
 return res}
 var VALID_FUTURES=["nested_scopes","generators","division","absolute_import","with_statement","print_function","unicode_literals","barry_as_FLUFL","generator_stop"],CO_FUTURE_ANNOTATIONS=0x1000000
+function get_line(filename,lineno){var src=$B.file_cache[filename],line=_b_.None
+if(src !==undefined){var lines=src.split('\n')
+line=lines[s.lineno-1]}
+return line}
 function future_check_features(ff,s,filename){var i;
 var names=s.names;
 for(var feature of names){var name=feature.name
-if(name=="braces"){raise_syntax_error("not a chance");
+if(name=="braces"){raise_error_known_location(_b_.SyntaxError,filename,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset,get_line(filename,s.lineno),"not a chance")
 return 0;}else if(name=="annotations"){ff.features |=CO_FUTURE_ANNOTATIONS}else if(VALID_FUTURES.indexOf(name)==-1){var msg=`future feature ${feature.name} is not defined`
-raise_syntax_error(msg)
+raise_error_known_location(_b_.SyntaxError,filename,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset,get_line(filename,s.lineno),msg)
 return 0;}}
 return 1;}
 function future_parse(ff,mod,filename){var i,done=0,prev_line=0;
 if(!(mod instanceof $B.ast.Module)){return 1;}
 if(mod.body.length==0){return 1;}
 i=0;
-if(mod.body[0]instanceof $B.ast.Constant){i++}
+if(mod.body[0]instanceof $B.ast.Expr){if(mod.body[0].value instanceof $B.ast.Constant &&
+typeof mod.body[0].value.value=="string"){
+i++}}
 for(s of mod.body.slice(i)){if(done && s.lineno > prev_line){return 1;}
 prev_line=s.lineno;
 if(s instanceof $B.ast.ImportFrom){var modname=s.module
@@ -573,9 +579,6 @@ exc.lineno=lineno
 exc.offset=col_offset
 exc.end_lineno=end_lineno
 exc.end_offset=end_col_offset
-var src=$B.file_cache[filename]
-if(src !==undefined){var lines=src.split('\n')
-exc.text=lines[lineno-1]}else{exc.text=_b_.None}
 exc.text=line
 exc.args[1]=[filename,lineno,col_offset,exc.text,end_lineno,end_col_offset]
 throw exc}
@@ -1992,7 +1995,8 @@ var ast_obj=new ast.ImportFrom(res.module,res.names,res.level)
 set_position(ast_obj,this.position)
 return ast_obj}
 $FromCtx.prototype.add_name=function(name){this.names[this.names.length]=name
-if(name=='*'){this.scope.blurred=true}}
+if(name=='*'){this.scope.blurred=true}
+this.end_position=$token.value}
 $FromCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.expect=='module'){C.module+=value
@@ -2029,6 +2033,12 @@ return C}
 case 'eol':
 switch(C.expect){case ',':
 case 'eol':
+if(C.module=="__future__"){var node=$get_node(C),docstring=false
+for(var child of node.parent.children){if(child===node){break}else{if(child.C.tree && child.C.tree[0]&&
+child.C.tree[0].type=="expr" &&
+child.C.tree[0].tree[0].type=="str" &&
+! docstring){docstring=true}else{raise_syntax_error_known_range(C,C.position,C.end_position,"from __future__ imports must occur"+
+" at the beginning of the file")}}}}
 return $transition(C.parent,token)
 case 'id':
 $_SyntaxError(C,['trailing comma not allowed without '+
@@ -6174,9 +6184,7 @@ root.parent_block=$B.builtins_scope
 $B.parser.dispatch_tokens(root,$.source)
 if($.flags==$B.PyCF_ONLY_AST){$B.create_python_ast_classes()
 var _ast=root.ast(),klass=_ast.constructor.$name
-var res=$B.python_ast_classes[klass].$factory(_ast)
-console.log('compile returns ast',res)
-return res}}
+return $B.python_ast_classes[klass].$factory(_ast)}}
 return $}
 var __debug__=$B.debug > 0
 function delattr(obj,attr){
@@ -14043,23 +14051,24 @@ annotation_to_str(obj.slice)+']'}else{console.log('other annotation',obj)}
 return s}
 $B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes.symtable.table.future.features &
 CO_FUTURE_ANNOTATIONS
-if(postpone_annotation){console.log('annotation to str',this.annotation)
-console.log(annotation_to_str(this.annotation,''))}
 var scope=last_scope(scopes)
 var js=''
 if(! scope.has_annotation){js+='locals.__annotations__ = $B.empty_dict()\n'}
 scope.has_annotation=true
+if(this.target instanceof $B.ast.Name){var ann_value=postpone_annotation ?
+`'${annotation_to_str(this.annotation)}'` :
+$B.js_from_ast(this.annotation,scopes)}
 if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
-console.log('ann',js)
-if(this.target instanceof $B.ast.Name){var scope=bind(this.target.id,scopes)
+if(this.target instanceof $B.ast.Name){
+var scope=bind(this.target.id,scopes)
 js+=`$B.$setitem(locals.__annotations__, `+
-`'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n`
+`'${this.target.id}', ${ann_value})\n`
 var target_ref=name_reference(this.target.id,scopes)
 js+=`${target_ref} = ann`}else if(this.target instanceof $B.ast.Attribute){js+=`$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}`+
 `, "${this.target.attr}", ann)`}else if(this.target instanceof $B.ast.Subscript){js+=`$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}`+
-`, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.annotation instanceof $B.ast.Name){var ann=`'${this.annotation.id}'`}else{var ann=$B.js_from_ast(this.annotation,scopes)}
+`, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.target instanceof $B.ast.Name){var ann=`'${this.annotation.id}'`
 js+=`$B.$setitem(locals.__annotations__, `+
-`'${this.target.id}', ${ann})`}
+`'${this.target.id}', ${ann_value})`}else{var ann=$B.js_from_ast(this.annotation,scopes)}}
 return `$B.set_lineno(locals, ${this.lineno})\n`+js}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
 var js=this.lineno ? `$B.set_lineno(locals, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)

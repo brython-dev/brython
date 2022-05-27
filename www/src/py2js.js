@@ -251,19 +251,36 @@ var VALID_FUTURES = ["nested_scopes", "generators", "division",
         "unicode_literals", "barry_as_FLUFL", "generator_stop"],
     CO_FUTURE_ANNOTATIONS = 0x1000000
 
+function get_line(filename, lineno){
+    var src = $B.file_cache[filename],
+        line = _b_.None
+    if(src !== undefined){
+        var lines = src.split('\n')
+        line = lines[s.lineno - 1]
+    }
+    return line
+}
+
+// Adapted from Python/future.c
 function future_check_features(ff, s, filename){
     var i;
     var names = s.names;
     for (var feature of names) {
         var name = feature.name
         if (name == "braces") {
-            raise_syntax_error("not a chance");
+            raise_error_known_location(_b_.SyntaxError, filename,
+                s.lineno, s.col_offset,
+                s.end_lineno, s.end_col_offset,
+                get_line(filename, s.lineno), "not a chance")
             return 0;
         }else if(name == "annotations"){
             ff.features |= CO_FUTURE_ANNOTATIONS
         }else if(VALID_FUTURES.indexOf(name) == -1){
             var msg = `future feature ${feature.name} is not defined`
-            raise_syntax_error(msg)
+            raise_error_known_location(_b_.SyntaxError, filename,
+                s.lineno, s.col_offset,
+                s.end_lineno, s.end_col_offset,
+                get_line(filename, s.lineno), msg)
             return 0;
         }
     }
@@ -290,8 +307,12 @@ function future_parse(ff, mod, filename){
     */
 
     i = 0;
-    if(mod.body[0] instanceof $B.ast.Constant){
-        i++
+    if(mod.body[0] instanceof $B.ast.Expr){
+        if(mod.body[0].value instanceof $B.ast.Constant &&
+                typeof mod.body[0].value.value == "string"){
+            // docstring
+            i++
+        }
     }
 
     for (s of mod.body.slice(i)) {
@@ -379,13 +400,6 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     exc.offset = col_offset
     exc.end_lineno = end_lineno
     exc.end_offset = end_col_offset
-    var src = $B.file_cache[filename]
-    if(src !== undefined){
-        var lines = src.split('\n')
-        exc.text = lines[lineno - 1]
-    }else{
-        exc.text = _b_.None
-    }
     exc.text = line
     exc.args[1] = [filename, lineno, col_offset, exc.text,
                    end_lineno, end_col_offset]
@@ -3223,6 +3237,7 @@ $FromCtx.prototype.ast = function(){
 $FromCtx.prototype.add_name = function(name){
     this.names[this.names.length] = name
     if(name == '*'){this.scope.blurred = true}
+    this.end_position = $token.value
 }
 
 $FromCtx.prototype.transition = function(token, value){
@@ -3285,6 +3300,28 @@ $FromCtx.prototype.transition = function(token, value){
             switch(context.expect) {
                 case ',':
                 case 'eol':
+                    if(context.module == "__future__"){
+                        var node = $get_node(context),
+                            docstring = false
+                        for(var child of node.parent.children){
+                            if(child === node){
+                                break
+                            }else{
+                                if(child.context.tree && child.context.tree[0] &&
+                                        child.context.tree[0].type == "expr" &&
+                                        child.context.tree[0].tree[0].type == "str" &&
+                                        ! docstring){
+                                    docstring = true
+                                }else{
+                                    raise_syntax_error_known_range(context,
+                                        context.position, context.end_position,
+                                        "from __future__ imports must occur" +
+                                        " at the beginning of the file")
+                                }
+                            }
+                        }
+                    }
+
                     return $transition(context.parent, token)
                 case 'id':
                     $_SyntaxError(context,
