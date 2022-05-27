@@ -726,7 +726,7 @@ function annotation_to_str(obj){
     }else if(obj instanceof $B.ast.BinOp){
         s = annotation_to_str(obj.left) + '|' + annotation_to_str(obj.right)
     }else if(obj instanceof $B.ast.Subscript){
-        s = annotation_to_str(obj.value) + '[' + 
+        s = annotation_to_str(obj.value) + '[' +
                 annotation_to_str(obj.slice) + ']'
     }else{
         console.log('other annotation', obj)
@@ -737,23 +737,24 @@ function annotation_to_str(obj){
 $B.ast.AnnAssign.prototype.to_js = function(scopes){
     var postpone_annotation = scopes.symtable.table.future.features &
             CO_FUTURE_ANNOTATIONS
-    if(postpone_annotation){
-        console.log('annotation to str', this.annotation)
-        console.log(annotation_to_str(this.annotation, ''))
-    }
     var scope = last_scope(scopes)
     var js = ''
     if(! scope.has_annotation){
         js += 'locals.__annotations__ = $B.empty_dict()\n'
     }
     scope.has_annotation = true
+    if(this.target instanceof $B.ast.Name){
+        var ann_value = postpone_annotation ?
+                `'${annotation_to_str(this.annotation)}'` :
+                $B.js_from_ast(this.annotation, scopes)
+    }
     if(this.value){
         js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
-        console.log('ann', js)
         if(this.target instanceof $B.ast.Name){
+            // update __annotations__
             var scope = bind(this.target.id, scopes)
             js += `$B.$setitem(locals.__annotations__, ` +
-                  `'${this.target.id}', ${$B.js_from_ast(this.annotation, scopes)})\n`
+                  `'${this.target.id}', ${ann_value})\n`
             var target_ref = name_reference(this.target.id, scopes)
             js += `${target_ref} = ann`
         }else if(this.target instanceof $B.ast.Attribute){
@@ -764,13 +765,13 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
                 `, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`
         }
     }else{
-        if(this.annotation instanceof $B.ast.Name){
+        if(this.target instanceof $B.ast.Name){
             var ann = `'${this.annotation.id}'`
+            js += `$B.$setitem(locals.__annotations__, ` +
+                `'${this.target.id}', ${ann_value})`
         }else{
             var ann = $B.js_from_ast(this.annotation, scopes)
         }
-        js += `$B.$setitem(locals.__annotations__, ` +
-            `'${this.target.id}', ${ann})`
     }
     return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
