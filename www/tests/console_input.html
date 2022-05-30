@@ -14,8 +14,42 @@ body,td,th{
 }
 </style>
 
-<script type="text/javascript" src="brython.js"></script>
-<script type="text/javascript" src="brython_stdlib.js"></script>
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
+
+<!-- script type="text/javascript" src="/src/brython_stdlib.js"></script -->
 
 <style>
 body{
@@ -41,7 +75,7 @@ button{
 
 </script>
 </head>
-<body onLoad="__BRYTHON__.produce_ast = 0;__BRYTHON__.track_transitions = 0;brython();">
+<body onLoad="__BRYTHON__.produce_ast = 0;__BRYTHON__.track_transitions = 0;brython(3);">
 
 <script type="text/python" class="webworker" id="python-worker">
 import tb as traceback
@@ -173,7 +207,7 @@ def message(ev):
         if str(msg).startswith('unterminated triple-quoted string literal'):
             _self.send({'status': "3string"})
             block.multiline_string = True
-        elif str(msg) == 'eval() argument must be an expression':
+        elif str(msg) == 'deval() argument must be an expression':
             try:
                 exec(block.code,
                     _globals,
@@ -189,8 +223,14 @@ def message(ev):
         elif str(msg).endswith('was never closed'):
             _self.send({'status': "block"})
         else:
-            msg.args[1][3] = block.code
-            _self.send({'status': "syntax_error", 'args': msg.args})
+            try:
+                exec(block.code,
+                    _globals,
+                    _locals)
+            except:
+                print_tb()
+                return
+            _self.send({'status': "main"})
             block.code = ''
     except:
         # the full traceback includes the call to eval(); to
