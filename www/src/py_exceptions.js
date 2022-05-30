@@ -14,6 +14,10 @@ $B.set_exc = function(exc){
         console.error(['Traceback (most recent call last):',
             $B.print_stack(exc.$stack),
             msg].join('\n'))
+        if($B.debug > 1){
+            console.log(exc.args)
+            console.log(exc.stack)
+        }
         throw Error(msg)
     }else{
         frame[1].$current_exception = $B.exception(exc)
@@ -535,7 +539,7 @@ var $make_exc = $B.$make_exc = function(names, parent){
 
 $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
     BaseException)
-$make_exc([["StopIteration","err.value = arguments[0]"],
+$make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "BufferError", "EOFError",
     ["ImportError", "err.name = arguments[0]"],
