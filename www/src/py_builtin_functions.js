@@ -1438,10 +1438,11 @@ function isinstance(obj, cls){
         throw _b_.TypeError.$factory(
             'isinstance() arg 2 cannot be a parameterized generic')
     }
-    if((!cls.__class__) ||
-            !(cls.$factory !== undefined || cls.$is_class !== undefined)){
-        throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
-            "or tuple of types")
+    if((!cls.__class__) || (! cls.$is_class)){
+        if(! $B.$getattr(cls, '__instancecheck__', false)){
+            throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
+                "or tuple of types")
+        }
     }
 
     if(cls === _b_.int && (obj === True || obj === False)){return True}
