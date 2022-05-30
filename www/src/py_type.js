@@ -853,6 +853,10 @@ var $instance_creator = $B.$instance_creator = function(klass){
         }
     }
     factory.__class__ = $B.Function
+    if(klass.$infos === undefined){
+        console.log('no klaas $infos', klass)
+        console.log($B.frames_stack.slice())
+    }
     factory.$infos = {
         __name__: klass.$infos.__name__,
         __module__: klass.$infos.__module__

@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'dev',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-05-27 21:13:35.178041"
-__BRYTHON__.timestamp=1653678815177
+__BRYTHON__.compiled_date="2022-05-30 11:09:07.339553"
+__BRYTHON__.timestamp=1653901747339
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5108,6 +5108,8 @@ $B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
 return res}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
 var factory=function(){return call_func.bind(null,klass).apply(null,arguments)}}
 factory.__class__=$B.Function
+if(klass.$infos===undefined){console.log('no klaas $infos',klass)
+console.log($B.frames_stack.slice())}
 factory.$infos={__name__:klass.$infos.__name__,__module__:klass.$infos.__module__}
 return factory}
 var method_wrapper=$B.method_wrapper=$B.make_class("method_wrapper",function(attr,klass,method){var f=function(){return method.apply(null,arguments)}
@@ -5603,17 +5605,12 @@ if($B.frames_stack.length==0){console.log("empty stack");return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
-if(frame[1].$is_generator){
-if(frame[1].$context_managers){
-var ctx_managers=frame[1].$context_managers}else{var ctx_managers=[]
-for(var key in frame[1]){if(key.startsWith('$ctx_manager')){ctx_managers.push(frame[1][key])}}}
-if(ctx_managers.length > 0 && $B.frames_stack.length > 0){
-var caller=$B.last($B.frames_stack)
-caller[1].$ctx_managers_in_gen=caller[1].$ctx_managers_in_gen ||
-new Set()
-for(var cm of ctx_managers){caller[1].$ctx_managers_in_gen.add(cm)}}}
+for(var key in frame[1]){if(! key.startsWith('$')){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
+if(gen.$frame===undefined){continue}
+var ctx_managers=gen.$frame[1].$context_managers
+if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__'))(
+_b_.None,_b_.None,_b_.None)}}}}}
 frame[1].$current_exception=undefined
-if(frame[1].$ctx_managers_in_gen){for(var cm of frame[1].$ctx_managers_in_gen){$B.$call($B.$getattr(cm,'__exit__'))(_b_.None,_b_.None,_b_.None)}}
 return _b_.None}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(){for(var i=0;i < arguments.length;i++){var arg=arguments[i]
@@ -6559,9 +6556,8 @@ return false}
 if(cls.__class__===$B.GenericAlias){
 throw _b_.TypeError.$factory(
 'isinstance() arg 2 cannot be a parameterized generic')}
-if((!cls.__class__)||
-!(cls.$factory !==undefined ||cls.$is_class !==undefined)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
-"or tuple of types")}
+if((!cls.__class__)||(! cls.$is_class)){if(! $B.$getattr(cls,'__instancecheck__',false)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
+"or tuple of types")}}
 if(cls===_b_.int &&(obj===True ||obj===False)){return True}
 if(cls===_b_.bool){switch(typeof obj){case "string":
 return false
@@ -7262,6 +7258,8 @@ frame[1].$current_exception=undefined}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
+if($B.debug > 1){console.log(exc.args)
+console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
@@ -7464,7 +7462,7 @@ _str[pos++]="$B.set_func_names(_b_."+name+", 'builtins')"}
 try{eval(_str.join(";"))}catch(err){console.log("--err"+err)
 throw err}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
-$make_exc([["StopIteration","err.value = arguments[0]"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","BufferError","EOFError",["ImportError","err.name = arguments[0]"],"LookupError","MemoryError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
+$make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","BufferError","EOFError",["ImportError","err.name = arguments[0]"],"LookupError","MemoryError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
 $make_exc(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
 $make_exc([["ModuleNotFoundError","err.name = arguments[0]"]],_b_.ImportError)
 $make_exc(["IndexError","KeyError"],_b_.LookupError)
@@ -13931,9 +13929,7 @@ if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][na
 if(value !==undefined){return value}}
 throw _b_.UnboundLocalError.$factory(`local variable '${name}' `+
 'referenced before assignment')}
-$B.resolve_in_scopes=function(name,namespaces){if(name=='__annotations__'){console.log('resolve',name,namespaces)
-alert()}
-for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top
+$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top
 for(var frame of $B.frames_stack.slice().reverse()){if(frame.is_exec_top){exec_top=frame
 break}}
 if(exec_top){for(var ns of[exec_top[1],exec_top[3]]){var v=resolve_in_namespace(name,ns)
@@ -14894,7 +14890,7 @@ $B.js_from_ast(item.context_expr,scopes)+',\n'+
 `value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, `+
 `'__enter__'))(mgr_${id}),\n`+
 `exc_${id} = true\n`
-if(has_generator){
+if(in_generator){
 s+=`locals.$context_managers = locals.$context_managers || []\n`+
 `locals.$context_managers.push(mgr_${id})\n`}
 s+='try{\ntry{\n'
@@ -14910,16 +14906,28 @@ s+=`}catch(err_${id}){\n`+
 `err_${id} = $B.exception(err_${id}, true)\n`+
 `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, `+
 `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n`+
-`if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
+`if(! $B.$bool($b)){\n`+
+`throw err_${id}\n`+
+`}\n`+
+`}\n`
 s+=`}\nfinally{\n`+
 `locals.$lineno = ${lineno}\n`+
+(in_generator ? `locals.$context_managers.pop()\n` :'')+
 `if(exc_${id}){\n`+
-`exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n}\n}\n`
+`try{\n`+
+`exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n`+
+`}catch(err){\n`+
+`if($B.frames_stack.length < stack_length){\n`+
+`$B.frames_stack.push($top_frame)\n`+
+`}\n`+
+`throw err\n`+
+`}\n`+
+`}\n`+
+`}\n`
 return s}
 var _with=this,scope=last_scope(scopes),lineno=this.lineno
-delete scope.is_generator
 js=add_body(this.body,scopes)+'\n'
-var has_generator=scope.is_generator
+var in_generator=scopes.symtable.table.blocks.get(_b_.id(scope.ast)).generator
 for(var item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(locals, ${this.lineno})\n`+js}
 $B.ast.Yield.prototype.to_js=function(scopes){

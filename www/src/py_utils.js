@@ -1160,35 +1160,27 @@ $B.leave_frame = function(arg){
         }
     }
     var frame = $B.frames_stack.pop()
-
-    if(frame[1].$is_generator){
-        // Get context managers in a generator
-        if(frame[1].$context_managers){ // set by code produced by js_from_ast
-            var ctx_managers = frame[1].$context_managers
-        }else{
-            var ctx_managers = []
-            for(var key in frame[1]){
-                if(key.startsWith('$ctx_manager')){
-                    ctx_managers.push(frame[1][key])
+    // For generators in locals, if their execution frame has context
+    // managers, close them. In standard Python this happens when the
+    // generator is garbage-collected.
+    for(var key in frame[1]){
+        if(! key.startsWith('$')){
+            if(frame[1][key] && frame[1][key].__class__ === $B.generator){
+                var gen = frame[1][key]
+                if(gen.$frame === undefined){
+                    continue
                 }
-            }
-        }
-        if(ctx_managers.length > 0 && $B.frames_stack.length > 0){
-            // store context managers in previous frame
-            var caller = $B.last($B.frames_stack)
-            caller[1].$ctx_managers_in_gen = caller[1].$ctx_managers_in_gen ||
-                new Set()
-            for(var cm of ctx_managers){
-                caller[1].$ctx_managers_in_gen.add(cm)
+                var ctx_managers = gen.$frame[1].$context_managers
+                if(ctx_managers){
+                    for(var cm of ctx_managers){
+                        $B.$call($B.$getattr(cm, '__exit__'))(
+                            _b_.None, _b_.None, _b_.None)
+                    }
+                }
             }
         }
     }
     frame[1].$current_exception = undefined
-    if(frame[1].$ctx_managers_in_gen){
-        for(var cm of frame[1].$ctx_managers_in_gen){
-            $B.$call($B.$getattr(cm, '__exit__'))(_b_.None, _b_.None, _b_.None)
-        }
-    }
     return _b_.None
 }
 
@@ -1390,10 +1382,10 @@ $B.rich_comp = function(op, x, y){
     if(x.__class__ && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
-        // "If the operands are of different types, and right operand’s type
-        // is a direct or indirect subclass of the left operand’s type, the
+        // "If the operands are of different types, and right operand's type
+        // is a direct or indirect subclass of the left operand's type, the
         // reflected method of the right operand has priority, otherwise the
-        // left operand’s method has priority."
+        // left operand's method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__) > -1){
             var rev_func = $B.$getattr(y, rev_op)
             res = $B.$call($B.$getattr(y, rev_op))(x)

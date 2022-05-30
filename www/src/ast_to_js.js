@@ -440,10 +440,6 @@ $B.resolve_local = function(name){
 }
 
 $B.resolve_in_scopes = function(name, namespaces){
-    if(name == '__annotations__'){
-        console.log('resolve', name, namespaces)
-        alert()
-    }
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top
@@ -1822,6 +1818,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         }
         js += decorate
     }
+
     return `$B.set_lineno(locals, ${this.lineno})\n` + js
 }
 
@@ -2687,7 +2684,7 @@ $B.ast.With.prototype.to_js = function(scopes){
               `value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, ` +
                   `'__enter__'))(mgr_${id}),\n` +
               `exc_${id} = true\n`
-        if(has_generator){
+        if(in_generator){
             // add/update attribute used to close context managers in
             // leave_frame()
             s += `locals.$context_managers = locals.$context_managers || []\n` +
@@ -2703,26 +2700,42 @@ $B.ast.With.prototype.to_js = function(scopes){
         }
         s += js
         s += `}catch(err_${id}){\n` +
-              `locals.$lineno = ${lineno}\n` +
-              `exc_${id} = false\n` +
-              `err_${id} = $B.exception(err_${id}, true)\n` +
-              `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
-              `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n` +
-              `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
+                  `locals.$lineno = ${lineno}\n` +
+                  `exc_${id} = false\n` +
+                  `err_${id} = $B.exception(err_${id}, true)\n` +
+                  `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
+                  `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n` +
+                  `if(! $B.$bool($b)){\n` +
+                      `throw err_${id}\n` +
+                  `}\n` +
+              `}\n`
+
         s += `}\nfinally{\n` +
-              `locals.$lineno = ${lineno}\n` +
-              `if(exc_${id}){\n` +
-              `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n}\n}\n`
+                  `locals.$lineno = ${lineno}\n` +
+                  (in_generator ? `locals.$context_managers.pop()\n` : '') +
+                  `if(exc_${id}){\n` +
+                      `try{\n` +
+                          `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n` +
+                      `}catch(err){\n` +
+                          // If an error occurs in __exit__, make sure the
+                          // stack frame is preserved (it may have been
+                          // modified by a "return" in the "with" block)
+                          `if($B.frames_stack.length < stack_length){\n` +
+                              `$B.frames_stack.push($top_frame)\n` +
+                          `}\n` +
+                          `throw err\n` +
+                      `}\n` +
+                  `}\n` +
+              `}\n`
         return s
     }
 
     var _with = this,
         scope = last_scope(scopes),
         lineno = this.lineno
-    delete scope.is_generator
 
     js = add_body(this.body, scopes) + '\n'
-    var has_generator = scope.is_generator
+    var in_generator = scopes.symtable.table.blocks.get(_b_.id(scope.ast)).generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
