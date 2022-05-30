@@ -62,6 +62,21 @@ function jspos2pypos(s, jspos){
     return jspos - nb
 }
 
+function to_string(args){
+    if(Array.isArray(args)){
+        for(var i = 0, len = args.length; i < len; i++){
+            args[i] = to_string(args[i])
+        }
+        return args
+    }else{
+        if(args.__class__ && ! (args instanceof String)){
+            return args.$brython_value
+        }else{
+            return args
+        }
+    }
+}
+
 var str = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
@@ -121,6 +136,7 @@ function check_str(obj, prefix){
 function to_chars(s){
     // Transform Javascript string s into a list of Python characters
     // (2 JS chars if surrogate, 1 otherwise)
+    s = to_string(s)
     var chars = []
     for(var i = 0, len = s.length; i < len; i++){
         var code = s.charCodeAt(i)
@@ -163,6 +179,7 @@ str.__add__ = function(self, other){
             throw _b_.TypeError.$factory("Can't convert " +
                 $B.class_name(other) + " to str implicitly")}
     }
+    [self, other] = to_string([self, other])
     return $B.String(self + other)
 }
 
@@ -171,6 +188,8 @@ str.__contains__ = function(self, item){
         throw _b_.TypeError.$factory("'in <string>' requires " +
             "string as left operand, not " + $B.class_name(item))
     }
+    [self, item] = to_string([self, item])
+
     if(item.__class__ === str || _b_.isinstance(item, str)){
         var nbcar = item.length
     }else{
@@ -201,8 +220,9 @@ str.__delitem__ = function(){
 str.__dir__ = _b_.object.__dir__
 
 str.__eq__ = function(self, other){
-    if(_b_.isinstance(other, _b_.str)){
-       return other.valueOf() == self.valueOf()
+    if(_b_.isinstance(other, str)){
+        [self, other] = to_string([self, other])
+        return self == other
     }
     return _b_.NotImplemented
 }
@@ -219,6 +239,7 @@ function preformat(self, fmt){
 }
 
 str.__format__ = function(self, format_spec) {
+    [self, format_spec] = to_string([self, format_spec])
     var fmt = new $B.parse_format_spec(format_spec)
     if(fmt.sign !== undefined){
         throw _b_.ValueError.$factory(
@@ -233,6 +254,7 @@ str.__format__ = function(self, format_spec) {
 }
 
 str.__getitem__ = function(self, arg){
+    self = to_string(self)
     var len = str.__len__(self)
     if(_b_.isinstance(arg, _b_.int)){
         var pos = arg
@@ -324,17 +346,18 @@ str.__hash__ = function(self) {
 }
 
 str.__init__ = function(self, arg){
-    self.valueOf = function(){return arg}
-    self.toString = function(){return arg}
+    // no-op
     return _b_.None
 }
 
 var str_iterator = $B.make_iterator_class("str_iterator")
+
 str.__iter__ = function(self){
     return str_iterator.$factory(to_chars(self))
 }
 
 str.__len__ = function(self){
+    self = to_string(self)
     if(self.surrogates === undefined){
         return self.length
     }
@@ -820,6 +843,7 @@ var UnsupportedChar = function(){
 }
 
 str.__mod__ = function(self, args){
+    self = to_string(self)
     var length = self.length,
         pos = 0 | 0,
         argpos = null,
@@ -960,17 +984,33 @@ str.__mro__ = [_b_.object]
 
 str.__mul__ = function(){
     var $ = $B.args("__mul__", 2, {self: null, other: null},
-        ["self", "other"], arguments, {}, null, null)
+        ["self", "other"], arguments, {}, null, null),
+        self = to_string($.self)
     if(! _b_.isinstance($.other, _b_.int)){
         throw _b_.TypeError.$factory(
         "Can't multiply sequence by non-int of type '" +
             $B.class_name($.other) + "'")
     }
-    return $.self.valueOf().repeat($.other < 0 ? 0 : $.other)
+    return self.repeat($.other < 0 ? 0 : $.other)
 }
 
 str.__ne__ = function(self, other){
-    return other.valueOf() !== self.valueOf()
+    var eq = str.__eq__(self, other)
+    return eq === _b_.NotImplemented ? eq : ! eq
+}
+
+str.__new__ = function(cls, value){
+    if(cls === undefined){
+        throw _b_.TypeError.$factory("str.__new__(): not enough arguments")
+    }else if(cls === _b_.str){
+        return value
+    }else{
+        return {
+            __class__: cls,
+            $brython_value: str.$factory(value),
+            __dict__: $B.empty_dict()
+            }
+    }
 }
 
 function __newobj__(){
@@ -983,6 +1023,7 @@ function __newobj__(){
 }
 
 str.__reduce_ex__ = function(self){
+    self = to_string(self)
     return $B.fast_tuple([
         __newobj__,
         $B.fast_tuple([self.__class__ || _b_.str, self]),
@@ -992,6 +1033,7 @@ str.__reduce_ex__ = function(self){
 
 str.__repr__ = function(self){
     // special cases
+    self = to_string(self)
     var t = $B.special_string_repr, // in brython_builtins.js
         repl = '',
         chars = to_chars(self)
@@ -1037,6 +1079,7 @@ str.__rmod__ = function(){
 }
 
 str.__rmul__ = function(self, other){
+    self = to_string(self)
     if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
         var res = ''
@@ -1061,7 +1104,7 @@ str.__setattr__ = function(self, attr, value){
     }
     // str subclass : use __dict__
     _b_.dict.$setitem(self.__dict__, attr, value)
-    return $N
+    return _b_.None
 }
 
 str.__setitem__ = function(self, attr, value){
@@ -1076,6 +1119,7 @@ for(var cp = 0x300; cp <= 0x36F; cp++){
 var combining_re = new RegExp("(" + combining.join("|") + ")", "g")
 
 str.__str__ = function(self){
+    self = to_string(self)
     var repl = '',
         chars = to_chars(self)
     if(chars.length == self.length){
@@ -1095,9 +1139,14 @@ str.__str__ = function(self){
 str.toString = function(){return "string!"}
 
 // generate comparison methods
-var $comp_func = function(self,other){
-    if(typeof other !== "string"){return _b_.NotImplemented}
-    return self > other
+var $comp_func = function(self, other){
+    if(typeof other !== typeof self){
+        return _b_.NotImplemented
+    }else if(typeof self == "string"){
+        return self > other
+    }else{
+        return self.$brython_value > other.$brython_value
+    }
 }
 $comp_func += "" // source code
 var $comps = {">": "gt", ">=": "ge", "<": "lt", "<=": "le"}
@@ -1113,7 +1162,8 @@ var $notimplemented = function(self, other){
 
 str.capitalize = function(self){
     var $ = $B.args("capitalize", 1, {self}, ["self"],
-            arguments, {}, null, null)
+            arguments, {}, null, null);
+    self = to_string(self)
     if(self.length == 0){
         return ""
     }
@@ -1126,8 +1176,8 @@ str.casefold = function(self){
         res = "",
         char,
         cf,
-        chars = to_chars($.self)
-
+        chars = to_chars($.self);
+    self = to_string(self)
     for(var i = 0, len = chars.length; i < len; i++){
         char = chars[i]
         cf = $B.unicode_casefold[char]
@@ -1146,7 +1196,8 @@ str.center = function(){
     var $ = $B.args("center", 3, {self: null, width: null, fillchar: null},
         ["self", "width", "fillchar"],
         arguments, {fillchar:" "}, null, null),
-        self = $.self
+        self = $.self;
+    self = to_string(self)
 
     if($.width <= self.length) {return self}
 
@@ -1159,30 +1210,32 @@ str.center = function(){
     return res
 }
 
-str.count = function(){
+str.count = function(self, sub){
     var $ = $B.args("count", 4, {self:null, sub:null, start:null, stop:null},
         ["self", "sub", "start", "stop"], arguments, {start:null, stop:null},
         null, null)
-    if(!(typeof $.sub.valueOf() == "string")){
+
+    if(! _b_.isinstance(sub, str)){
         throw _b_.TypeError.$factory("Can't convert '" + $B.class_name($.sub) +
             "' object to str implicitly")
     }
-    var substr = $.self
+    [self, sub] = to_string([self, sub])
+    var substr = self
     if($.start !== null){
         var _slice
         if($.stop !== null){
             _slice = _b_.slice.$factory($.start, $.stop)
         }else{
-            _slice = _b_.slice.$factory($.start, $.self.length)
+            _slice = _b_.slice.$factory($.start, self.length)
         }
-        substr = str.__getitem__.apply(null, [$.self].concat(_slice))
+        substr = str.__getitem__.apply(null, [self].concat(_slice))
     }else{
-        if($.self.length + $.sub.length == 0){
+        if(self.length + sub.length == 0){
             return 1
         }
     }
-    if($.sub.length == 0){
-        if($.start == $.self.length){
+    if(sub.length == 0){
+        if($.start == self.length){
             return 1
         }else if(substr.length == 0){
             return 0
@@ -1192,10 +1245,10 @@ str.count = function(){
     var n = 0,
         pos = 0
     while(pos < substr.length){
-        pos = substr.indexOf($.sub, pos)
+        pos = substr.indexOf(sub, pos)
         if(pos >= 0){
             n++
-            pos += $.sub.length
+            pos += sub.length
         }else{
             break
         }
@@ -1203,10 +1256,11 @@ str.count = function(){
     return n
 }
 
-str.encode = function(){
+str.encode = function(self){
     var $ = $B.args("encode", 3, {self: null, encoding: null, errors: null},
             ["self", "encoding", "errors"], arguments,
-            {encoding: "utf-8", errors: "strict"}, null, null)
+            {encoding: "utf-8", errors: "strict"}, null, null);
+    self = to_string(self)
     if($.encoding == "rot13" || $.encoding == "rot_13"){
         // Special case : returns a string
         var res = ""
@@ -1224,7 +1278,7 @@ str.encode = function(){
     return _b_.bytes.__new__(_b_.bytes, $.self, $.encoding, $.errors)
 }
 
-str.endswith = function(){
+str.endswith = function(self, suffix){
     // Return True if the string ends with the specified suffix, otherwise
     // return False. suffix can also be a tuple of suffixes to look for.
     // With optional start, test beginning at that position. With optional
@@ -1234,14 +1288,16 @@ str.endswith = function(){
         ["self", "suffix", "start", "end"],
         arguments, {start: 0, end: null}, null, null)
 
-    normalize_start_end($)
+    normalize_start_end($);
+
+    self = to_string(self)
 
     var suffixes = $.suffix
-    if(! _b_.isinstance(suffixes,_b_.tuple)){
+    if(! _b_.isinstance(suffixes, _b_.tuple)){
         suffixes = [suffixes]
     }
 
-    var chars = to_chars($.self),
+    var chars = to_chars(self),
         s = chars.slice($.start, $.end)
     for(var i = 0, len = suffixes.length; i < len; i++){
         var suffix = suffixes[i]
@@ -1249,6 +1305,7 @@ str.endswith = function(){
             throw _b_.TypeError.$factory(
                 "endswith first arg must be str or a tuple of str, not int")
         }
+        suffix = suffix.__class__ ? suffix.$brython_value : suffix
         if(suffix.length <= s.length &&
                 s.slice(s.length - suffix.length).join('') == suffix){
             return true
@@ -1259,7 +1316,8 @@ str.endswith = function(){
 
 str.expandtabs = function(self, tabsize) {
     var $ = $B.args("expandtabs", 2, {self: null, tabsize: null},
-        ["self", "tabsize"], arguments, {tabsize: 8}, null, null)
+        ["self", "tabsize"], arguments, {tabsize: 8}, null, null);
+    self = to_string(self)
     var s = $B.$GetInt($.tabsize),
         col = 0,
         pos = 0,
@@ -1302,10 +1360,12 @@ str.find = function(){
             ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null)
     check_str($.sub)
-    normalize_start_end($)
+    normalize_start_end($);
 
-    var len = str.__len__($.self),
-        sub_len = str.__len__($.sub)
+    [self, sub] = to_string([$.self, $.sub])
+
+    var len = str.__len__(self),
+        sub_len = str.__len__(sub)
 
     if(sub_len == 0 && $.start == len){
         return len
@@ -1314,13 +1374,13 @@ str.find = function(){
         return -1
     }
     // Use .indexOf(), not .search(), to avoid conversion to reg exp
-    var js_start = pypos2jspos($.self, $.start),
-        js_end = pypos2jspos($.self, $.end),
-        ix = $.self.substring(js_start, js_end).indexOf($.sub)
+    var js_start = pypos2jspos(self, $.start),
+        js_end = pypos2jspos(self, $.end),
+        ix = self.substring(js_start, js_end).indexOf(sub)
     if(ix == -1){
         return -1
     }
-    return jspos2pypos($.self, js_start + ix)
+    return jspos2pypos(self, js_start + ix)
 }
 
 // Next function used by method .format()
@@ -1467,6 +1527,7 @@ str.format = function(self) {
     // Special management of keyword arguments if str.format is called by
     // str.format_map(mapping) : the argument "mapping" might not be a
     // dictionary
+    self = to_string(self)
     var last_arg = $B.last(arguments)
     if(last_arg.$nat == "mapping"){
         var mapping = last_arg.mapping,
@@ -1579,6 +1640,7 @@ str.isascii = function(self){
     /* Return true if the string is empty or all characters in the string are
     ASCII, false otherwise. ASCII characters have code points in the range
     U+0000-U+007F. */
+    self = to_string(self)
     for(var i = 0, len = self.length; i < len; i++){
         if(self.charCodeAt(i) > 127){
             return false
@@ -1594,7 +1656,8 @@ str.isalnum = function(self){
     c.isdigit(), or c.isnumeric(). */
     var $ = $B.args("isalnum", 1, {self: null}, ["self"],
         arguments, {}, null, null),
-        cp
+        cp;
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp] ||
@@ -1620,7 +1683,8 @@ str.isalpha = function(self){
     or "Lo". */
     var $ = $B.args("isalpha", 1, {self: null}, ["self"],
         arguments, {}, null, null),
-        cp
+        cp;
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp] ||
@@ -1643,7 +1707,8 @@ str.isdecimal = function(self){
     the Unicode General Category "Nd". */
     var $ = $B.args("isdecimal", 1, {self: null}, ["self"],
         arguments, {}, null, null),
-        cp
+        cp;
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(! unicode_tables.Nd[cp]){
@@ -1658,7 +1723,8 @@ str.isdigit = function(self){
     least one character, false otherwise. */
     var $ = $B.args("isdigit", 1, {self: null}, ["self"],
         arguments, {}, null, null),
-        cp
+        cp;
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(! unicode_tables.digits[cp]){
@@ -1672,7 +1738,8 @@ str.isidentifier = function(self){
     /* Return true if the string is a valid identifier according to the
     language definition. */
     var $ = $B.args("isidentifier", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
+        arguments, {}, null, null);
+    self = to_string(self)
     if(self.length == 0){
         return false
     }
@@ -1696,7 +1763,8 @@ str.islower = function(self){
     var $ = $B.args("islower", 1, {self: null}, ["self"],
         arguments, {}, null, null),
         has_cased = false,
-        cp
+        cp;
+    self = to_string(self)
 
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
@@ -1718,7 +1786,8 @@ str.isnumeric = function(self){
     characters are those with the property value Numeric_Type=Digit,
     Numeric_Type=Decimal or Numeric_Type=Numeric.*/
     var $ = $B.args("isnumeric", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
+        arguments, {}, null, null);
+    self = to_string(self)
     for(var char of to_chars(self)){
         if(! unicode_tables.numeric[_b_.ord(char)]){
             return false
@@ -1735,6 +1804,8 @@ str.isprintable = function(self){
     is empty, false otherwise. Nonprintable characters are those characters
     defined in the Unicode character database as "Other" or "Separator",
     excepting the ASCII space (0x20) which is considered printable. */
+
+    self = to_string(self)
 
     // Set unprintable if not set yet
     if(Object.keys(unprintable).length == 0){
@@ -1765,7 +1836,8 @@ str.isspace = function(self){
     one of WS, B, or S.*/
     var $ = $B.args("isspace", 1, {self: null}, ["self"],
         arguments, {}, null, null),
-        cp
+        cp;
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(! unicode_tables.Zs[cp] &&
@@ -1782,7 +1854,8 @@ str.istitle = function(self){
     characters and lowercase characters only cased ones. Return false
     otherwise. */
     var $ = $B.args("istitle", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
+        arguments, {}, null, null);
+    self = to_string(self)
     return self.length > 0 && str.title(self) == self
 }
 
@@ -1792,7 +1865,8 @@ str.isupper = function(self){
     var $ = $B.args("islower", 1, {self: null}, ["self"],
         arguments, {}, null, null),
         is_upper = false,
-        cp
+        cp;
+    self = to_string(self)
 
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
@@ -1809,7 +1883,8 @@ str.isupper = function(self){
 
 str.join = function(){
     var $ = $B.args("join", 2, {self: null, iterable: null},
-        ["self", "iterable"], arguments, {}, null, null)
+        ["self", "iterable"], arguments, {}, null, null);
+    self = to_string(self)
 
     var iterable = _b_.iter($.iterable),
         res = [],
@@ -1837,7 +1912,9 @@ str.ljust = function(self) {
     var $ = $B.args("ljust", 3, {self: null, width: null, fillchar:null},
         ["self", "width", "fillchar"],
         arguments, {fillchar: " "}, null, null),
-        len = str.__len__(self)
+        len = str.__len__(self);
+
+    self = to_string(self)
 
     if($.width <= len){
         return self
@@ -1847,7 +1924,8 @@ str.ljust = function(self) {
 
 str.lower = function(self){
     var $ = $B.args("lower", 1, {self: null}, ["self"],
-            arguments, {}, null, null)
+            arguments, {}, null, null);
+    self = to_string($.self)
     return self.toLowerCase()
 }
 
@@ -1859,6 +1937,7 @@ str.lstrip = function(self, x){
     if(chars === _b_.None){
         return self.trimStart()
     }
+    [self, chars] = to_string([self, chars])
     while(self.length > 0){
         var flag = false
         for(var char of chars){
@@ -1951,14 +2030,15 @@ str.partition = function() {
     if($.sep == ""){
         throw _b_.ValueError.$factory("empty separator")
     }
-    check_str($.sep)
-    var chars = to_chars($.self),
-        i = $.self.indexOf($.sep)
+    check_str($.sep);
+    [self, sep] = to_string([$.self, $.sep])
+    var chars = to_chars(self),
+        i = $.self.indexOf(sep)
     if(i == -1){
-        return _b_.tuple.$factory([$.self, "", ""])
+        return _b_.tuple.$factory([self, "", ""])
     }
-    return _b_.tuple.$factory([chars.slice(0, i).join(''), $.sep,
-        chars.slice(i + $.sep.length).join('')])
+    return _b_.tuple.$factory([chars.slice(0, i).join(''), sep,
+        chars.slice(i + sep.length).join('')])
 }
 
 str.removeprefix = function(){
@@ -1968,23 +2048,25 @@ str.removeprefix = function(){
         throw _b_.ValueError.$factory("prefix should be str, not " +
             `'${$B.class_name($.prefix)}'`)
     }
-    if(str.startswith($.self, $.prefix)){
-        return $.self.substr($.prefix.length)
+    [self, prefix] = to_string([$.self, $.prefix])
+    if(str.startswith(self, prefix)){
+        return self.substr(prefix.length)
     }
-    return $.self.substr(0)
+    return self.substr(0)
 }
 
 str.removesuffix = function(){
-    var $ = $B.args("removesuffix", 2, {self: null, prefix: null},
+    var $ = $B.args("removesuffix", 2, {self: null, suffix: null},
                     ["self", "suffix"], arguments, {}, null, null)
     if(!_b_.isinstance($.suffix, str)){
         throw _b_.ValueError.$factory("suffix should be str, not " +
             `'${$B.class_name($.prefix)}'`)
     }
-    if($.suffix.length > 0 && str.endswith($.self, $.suffix)){
-        return $.self.substr(0, $.self.length - $.suffix.length)
+    [self, suffix] = to_string([$.self, $.suffix])
+    if(suffix.length > 0 && str.endswith(self, suffix)){
+        return self.substr(0, self.length - suffix.length)
     }
-    return $.self.substr(0)
+    return self.substr(0)
 }
 
 function $re_escape(str){
@@ -2024,6 +2106,7 @@ str.replace = function(self, old, _new, count) {
     if(count.__class__ == $B.long_int){
         count = parseInt(count.value)
     }
+    [old, _new] = to_string([old, _new])
     if(old == ""){
         if(_new == ""){
             return self
@@ -2077,27 +2160,29 @@ str.rfind = function(self, substr){
         arguments, {start: 0, end: null}, null, null)
 
     normalize_start_end($)
-    check_str($.sub)
+    check_str($.sub);
 
-    var len = str.__len__($.self),
-        sub_len = str.__len__($.sub)
+    [self, sub] = to_string([$.self, $.sub])
+
+    var len = str.__len__(self),
+        sub_len = str.__len__(sub)
 
     if(sub_len == 0){
         if($.js_start > len){
             return -1
         }else{
-            return str.__len__($.self)
+            return str.__len__(self)
         }
     }
 
     // Use .indexOf(), not .search(), to avoid conversion to reg exp
-    var js_start = pypos2jspos($.self, $.start),
-        js_end = pypos2jspos($.self, $.end),
-        ix = $.self.substring(js_start, js_end).lastIndexOf($.sub)
+    var js_start = pypos2jspos(self, $.start),
+        js_end = pypos2jspos(self, $.end),
+        ix = self.substring(js_start, js_end).lastIndexOf(sub)
     if(ix == -1){
         return -1
     }
-    return jspos2pypos($.self, js_start + ix) - $.start
+    return jspos2pypos(self, js_start + ix) - $.start
 }
 
 str.rindex = function(){
@@ -2113,8 +2198,9 @@ str.rjust = function(self) {
     var $ = $B.args("rjust",3,
         {self: null, width: null, fillchar: null},
         ["self", "width", "fillchar"],
-        arguments, {fillchar: " "}, null, null)
+        arguments, {fillchar: " "}, null, null);
 
+    self = to_string(self)
     var len = str.__len__(self)
     if($.width <= len){
         return self
@@ -2125,9 +2211,10 @@ str.rjust = function(self) {
 str.rpartition = function(self,sep) {
     var $ = $B.args("rpartition", 2, {self: null, sep: null}, ["self", "sep"],
         arguments, {}, null, null)
-    check_str($.sep)
-    var self = reverse($.self),
-        sep = reverse($.sep)
+    check_str($.sep);
+    [self, sep] = [$.self, $.sep]
+    self = reverse(self),
+    sep = reverse(sep)
     var items = str.partition(self, sep).reverse()
     for(var i = 0; i < items.length; i++){
         items[i] = items[i].split("").reverse().join("")
@@ -2139,11 +2226,13 @@ str.rsplit = function(self) {
     var $ = $B.args("rsplit", 3, {self: null, sep: null, maxsplit: null},
         ["self", "sep", "maxsplit"], arguments,
         {sep: _b_.None, maxsplit: -1}, null, null),
-        sep = $.sep
+        sep = $.sep;
+
+    [self, sep] = to_string([$.self, $.sep])
 
     // Use split on the reverse of the string and of separator
-    var rev_str = reverse($.self),
-        rev_sep = sep === _b_.None ? sep : reverse($.sep),
+    var rev_str = reverse(self),
+        rev_sep = sep === _b_.None ? sep : reverse(sep),
         rev_res = str.split(rev_str, rev_sep, $.maxsplit)
 
     // Reverse the list, then each string inside the list
@@ -2154,7 +2243,7 @@ str.rsplit = function(self) {
     return rev_res
 }
 
-str.rstrip = function(self, x){
+str.rstrip = function(){
     var $ = $B.args("rstrip", 2, {self: null, chars: null}, ["self", "chars"],
             arguments, {chars: _b_.None}, null, null),
         self = $.self,
@@ -2162,6 +2251,7 @@ str.rstrip = function(self, x){
     if(chars === _b_.None){
         return self.trimEnd()
     }
+    [self, chars] = to_string([self, chars])
     while(self.length > 0){
         var flag = false
         for(var char of chars){
@@ -2182,10 +2272,11 @@ str.split = function(){
     var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
         ["self", "sep", "maxsplit"], arguments,
         {sep: _b_.None, maxsplit: -1}, null, null),
-        sep = $.sep,
         maxsplit = $.maxsplit,
-        self = $.self,
-        pos = 0
+        sep = $.sep,
+        pos = 0;
+
+    self = to_string($.self)
     if(maxsplit.__class__ === $B.long_int){
         maxsplit = parseInt(maxsplit.value)
     }
@@ -2230,6 +2321,7 @@ str.split = function(){
         }
         return res.map($B.String)
     }else{
+        sep = to_string(sep)
         var res = [],
             s = "",
             seplen = sep.length
@@ -2259,15 +2351,15 @@ str.splitlines = function(self) {
     var $ = $B.args('splitlines', 2, {self: null, keepends: null},
                     ['self','keepends'], arguments, {keepends: false},
                     null, null)
-    if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
+    if(!_b_.isinstance($.keepends, [_b_.bool, _b_.int])){
         throw _b_.TypeError('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
     var keepends = _b_.int.$factory($.keepends),
         res = [],
-        self = $.self,
         start = 0,
-        pos = 0
+        pos = 0;
+    self = to_string($.self)
     if(!self.length){
         return res
     }
@@ -2304,7 +2396,9 @@ str.startswith = function(){
     if(! _b_.isinstance(prefixes, _b_.tuple)){
         prefixes = [prefixes]
     }
-    var s = $.self.substring($.start, $.end)
+    self = to_string($.self)
+    prefixes = to_string(prefixes)
+    var s = self.substring($.start, $.end)
     for(var prefix of prefixes){
         if(! _b_.isinstance(prefix, str)){
             throw _b_.TypeError.$factory("endswith first arg must be str " +
@@ -2331,7 +2425,7 @@ str.swapcase = function(self){
             arguments, {}, null, null),
         res = "",
         cp
-
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp]){
@@ -2351,6 +2445,7 @@ str.title = function(self){
         state,
         cp,
         res = ""
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         if(unicode_tables.Ll[cp]){
@@ -2375,6 +2470,7 @@ str.translate = function(self, table){
     var res = [],
         getitem = $B.$getattr(table, "__getitem__"),
         cp
+    self = to_string(self)
     for(var char of to_chars(self)){
         cp = _b_.ord(char)
         try{
@@ -2396,13 +2492,15 @@ str.translate = function(self, table){
 str.upper = function(self){
     var $ = $B.args("upper", 1, {self: null}, ["self"],
             arguments, {}, null, null)
+    self = to_string(self)
     return self.toUpperCase()
 }
 
 str.zfill = function(self, width){
     var $ = $B.args("zfill", 2, {self: null, width: null},
-        ["self", "width"], arguments, {}, null, null),
-        len = str.__len__(self)
+        ["self", "width"], arguments, {}, null, null)
+    self = to_string(self)
+    var len = str.__len__(self)
     if($.width <= len){
         return self
     }
@@ -2482,52 +2580,8 @@ str.$factory = function(arg, encoding, errors){
     return $B.$call(method)(arg)
 }
 
-str.__new__ = function(cls){
-    if(cls === undefined){
-        throw _b_.TypeError.$factory("str.__new__(): not enough arguments")
-    }
-    return {__class__: cls}
-}
 
 $B.set_func_names(str, "builtins")
-
-// dictionary and factory for subclasses of string
-var StringSubclass = $B.StringSubclass = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "str"
-    },
-    $is_class: true
-}
-
-// the methods in subclass apply the methods in str to the
-// result of instance.valueOf(), which is a Javascript string
-for(var $attr in str){
-    if(typeof str[$attr] == "function"){
-        StringSubclass[$attr] = (function(attr){
-            return function(){
-                var args = [],
-                    pos = 0
-                if(arguments.length > 0){
-                    var args = [arguments[0].valueOf()],
-                        pos = 1
-                    for(var i = 1, len = arguments.length; i < len; i++){
-                        args[pos++] = arguments[i]
-                    }
-                }
-                return str[attr].apply(null, args)
-            }
-        })($attr)
-    }
-}
-
-StringSubclass.__new__ = function(cls){
-    return {__class__: cls}
-}
-
-$B.set_func_names(StringSubclass, "builtins")
 
 _b_.str = str
 

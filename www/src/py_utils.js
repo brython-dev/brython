@@ -840,7 +840,7 @@ var $io = $B.make_class("io",
 )
 
 $io.flush = function(self){
-    console[self.out].apply(null, self.buf)
+    console[self.out](self.buf.join(''))
     self.buf = []
 }
 
@@ -1450,9 +1450,10 @@ $B.rich_op = function(op, x, y){
 
     if(_b_.issubclass(y_class, x_class)){
         // issue #1686
-        var reflected_left = $B.$getattr(x_class, rop),
-            reflected_right = $B.$getattr(y_class, rop)
-        if(reflected_right !== reflected_left){
+        var reflected_left = $B.$getattr(x_class, rop, false),
+            reflected_right = $B.$getattr(y_class, rop, false)
+        if(reflected_right && reflected_left && 
+                reflected_right !== reflected_left){
             return reflected_right(y, x)
         }
     }
