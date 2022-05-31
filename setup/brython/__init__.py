@@ -1,1 +1,1 @@
-__version__ = implementation = "3.10.5"
+__version__ = implementation = "3.10.6"
