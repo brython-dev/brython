@@ -43,8 +43,11 @@
 import json
 from browser import aio, alert, document, window, html
 
+href = window.location.href
+protocol = href[:href.find(':')]
+iss_url = protocol + "://api.open-notify.org/iss-now.json"
+
 world_map = document["mapid"]
-iss_url = "http://api.open-notify.org/iss-now.json"
 
 # Access the leaflet.js API
 
