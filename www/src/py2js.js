@@ -246,10 +246,7 @@ var ast_dump = $B.ast_dump = function(tree, indent){
 }
 
 // Get options set by "from __future__ import XXX"
-var VALID_FUTURES = ["nested_scopes", "generators", "division",
-        "absolute_import", "with_statement", "print_function",
-        "unicode_literals", "barry_as_FLUFL", "generator_stop"],
-    CO_FUTURE_ANNOTATIONS = 0x1000000
+var CO_FUTURE_ANNOTATIONS = 0x1000000
 
 function get_line(filename, lineno){
     var src = $B.file_cache[filename],
@@ -412,88 +409,54 @@ function raise_syntax_error_known_range(context, a, b, msg){
         a.start[0], a.start[1], b.end[0], b.end[1], a.line, msg)
 }
 
-function raise_syntax_error(context, token, msg){
+function raise_error(errtype, context, msg, token){
     var filename = $get_module(context).filename
-    raise_error_known_location(_b_.SyntaxError, filename,
+    token = token || $token.value
+    msg = msg || 'invalid syntax'
+    if(msg.startsWith('(')){
+        msg = 'invalid syntax ' + msg
+    }
+    msg = msg.trim()
+    raise_error_known_location(errtype, filename,
         token.start[0], token.start[1], token.end[0], token.end[1], token.line, msg)
 }
 
-function syntax_error(context){
-    raise_syntax_error(context, $token.value, 'invalid syntax')
+function raise_syntax_error(context, msg, token){
+    raise_error(_b_.SyntaxError, context, msg, token)
 }
 
-var $_SyntaxError = $B.parser.$_SyntaxError = function(context, msg, indent){
-    // console.log("syntax error", context, "msg", msg, "indent", indent, '$pos', $pos)
-    var exc,
-        klass = indent ? _b_.IndentationError : _b_.SyntaxError
-    if(indent === undefined){
-        // SyntaxError
-        if(msg && Array.isArray(msg)){
-            message = msg[0]
-        }else if(msg === "Triple string end not found"){
-            // add an extra argument : used in interactive mode to
-            // prompt for the rest of the triple-quoted string
-            message = 'invalid syntax : triple string end not found'
-        }else{
-            var message = 'invalid syntax'
-            if(msg && ! (msg.startsWith("token "))){
-                message += ' (' + msg + ')'
-            }
-
+function raise_indentation_error(context, msg, indented_node){
+    // IndentationError
+    if(indented_node){
+        // indent is the node that expected an indentation
+        var type = indented_node.context.tree[0].type,
+            token = indented_node.context.tree[0].token,
+            lineno = indented_node.line_num
+        switch(type){
+            case 'class':
+                type = 'class definition'
+                break
+            case 'condition':
+                type = `'${token}' statement`
+                break
+            case 'def':
+                type = 'function definition'
+                break
+            case 'case':
+            case 'for':
+            case 'match':
+            case 'try':
+            case 'while':
+            case 'with':
+                type = `'${type}' statement`
+                break
+            case 'single_kw':
+                type = `'${token}' statement`
+                break
         }
-    }else{
-        // IndentationError
-        var message = msg
-        if(typeof indent != 'number'){
-            // indent is the node that expected an indentation
-            var type = indent.context.tree[0].type
-            switch(type){
-                case 'class':
-                    type = 'class definition'
-                    break
-                case 'condition':
-                    type = `'${indent.context.tree[0].token}' statement`
-                    break
-                case 'def':
-                    type = 'function definition'
-                    break
-                case 'case':
-                case 'for':
-                case 'match':
-                case 'try':
-                case 'while':
-                case 'with':
-                    type = `'${type}' statement`
-                    break
-                case 'single_kw':
-                    type = `'${indent.context.tree[0].token}' statement`
-                    break
-            }
-            message += ` after ${type} on line ${indent.line_num}`
-        }
+        msg += ` after ${type} on line ${lineno}`
     }
-    exc = klass.$factory(message)
-    var position = $token.value,
-        module = $get_module(context),
-        src = $B.file_cache[module.filename],
-        text = ''
-    if(src){
-        lines = src.split('\n'),
-        text = lines[position.start[0] - 1]
-    }
-    exc.filename = module.filename
-    exc.text = text
-    exc.lineno = position.start[0]
-    exc.offset = position.start[1]
-    exc.end_lineno = position.end[0]
-    exc.end_offset = position.end[1]
-    exc.args[1] = [ exc.filename,
-                    exc.lineno,
-                    exc.offset,
-                    exc.text,
-                    exc.end_lineno,
-                    exc.end_offset]
-    throw exc
+    raise_error(_b_.IndentationError, context, msg)
 }
 
 /*
@@ -548,13 +511,13 @@ function check_assignment(context, kwargs){
         // context = upper_expr
     }
     if($parent_match(context, {type: 'augm_assign'})){
-        syntax_error(context)
+        raise_syntax_error(context)
     }
     ctx = context
     while(ctx){
         if(forbidden.indexOf(ctx.type) > -1){
-            raise_syntax_error(context, $token.value,
-                `invalid syntax (assign to ${ctx.type})`)
+            raise_syntax_error(context,
+                `(assign to ${ctx.type})`)
         }else if(ctx.type == "expr"){
             if($parent_match(ctx, {type: 'annotation'})){
                 return true
@@ -609,6 +572,8 @@ function check_assignment(context, kwargs){
                 for(var item of ctx.tree){
                     check_assignment(item, {action, once: true})
                 }
+            }else if(assigned.type == 'lambda'){
+                report('lambda')
             }
         }else if(ctx.type == 'list_or_tuple'){
             for(var item of ctx.tree){
@@ -766,7 +731,7 @@ $Node.prototype.ast = function(){
         if(root_ast.body.length > 1 ||
                 ! (root_ast.body[0] instanceof $B.ast.Expr)){
             console.log('root_ast', root_ast, 'this', this)
-            raise_syntax_error(this.children[0].context, $token.value,
+            raise_syntax_error(this.children[0].context,
                 'eval() argument must be an expression')
         }
         root_ast = new $B.ast.Expression(root_ast.body[0].value)
@@ -876,7 +841,9 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             context = context.parent
             context.packed = packed
             context.is_await = is_await
-            context.position = $token.value
+            if(context.position === undefined){
+                context.position = $token.value
+            }
     }
 
     switch(token) {
@@ -954,21 +921,21 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                 case '...':
                     return new $EllipsisCtx(new $ExprCtx(context, 'ellipsis', commas))
             }
-            syntax_error(context)
+            raise_syntax_error(context)
         case 'in':
             if(context.parent.type == 'op' && context.parent.op == 'not'){
                 context.parent.op = 'not_in'
                 return context
             }
-            syntax_error(context)
+            raise_syntax_error(context)
         case '=':
             if(context.parent.type == "yield"){
                 console.log('parent is yield', context)
                 raise_syntax_error(context,
-                    context.parent.position,
-                    "assignment to yield expression not possible")
+                    "assignment to yield expression not possible",
+                    context.parent.position,)
             }
-            syntax_error(context)
+            raise_syntax_error(context)
         case 'yield':
             return new $AbstractExprCtx(new $YieldCtx(context), true)
         case ':':
@@ -1000,14 +967,13 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                         return tuple
                     }
                     break
-                case 'annotation':
-                    syntax_error(context)
                 default:
-                    $_SyntaxError(context, token)
+                    raise_syntax_error(context)
+
             }
             break
         case '.':
-            syntax_error(context)
+            raise_syntax_error(context)
     }
     return $transition(context.parent, token, value)
 }
@@ -1029,7 +995,7 @@ $AliasCtx.prototype.transition = function(token, value){
             context.parent.set_alias(context.tree[0].tree[0])
             return $transition(context.parent, token, value)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
@@ -1064,13 +1030,13 @@ $AnnotationCtx.prototype.transition = function(token, value){
     this.string = this.src.substring(this.start, $pos)
     if(token == "eol" && context.tree.length == 1 &&
             context.tree[0].tree.length == 0){
-        $_SyntaxError(context, "token " + token)
+        raise_syntax_error(context)
     }else if(token == ':' && context.parent.type != "def"){
-        $_SyntaxError(context, "more than one annotation")
+        raise_syntax_error(context, "more than one annotation")
     }else if(token == "augm_assign"){
-        $_SyntaxError(context, "augmented assign as annotation")
+        raise_syntax_error(context, "augmented assign as annotation")
     }else if(token == "op"){
-        $_SyntaxError(context, "operator as annotation")
+        raise_syntax_error(context, "operator as annotation")
     }
     return $transition(context.parent, token)
 }
@@ -1097,15 +1063,15 @@ $AssertCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ","){
         if(this.tree.length > 1){
-            raise_syntax_error(context, $token.value,
-                'invalid syntax (too many commas after assert)')
+            raise_syntax_error(context,
+                '(too many commas after assert)')
         }
         return new $AbstractExprCtx(this, false)
     }
     if(token == 'eol'){
         return $transition(context.parent, token)
     }
-    $_SyntaxError(context, token)
+    raise_syntax_error(context)
 }
 
 var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
@@ -1117,9 +1083,6 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     transform()
     */
     check_assignment(context)
-    if(context.type == "expr" && context.tree[0].type == "lambda"){
-        $_SyntaxError(context, ["cannot assign to lambda"])
-    }
 
     this.type = 'assign'
     this.position = $token.value
@@ -1138,23 +1101,22 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
     }else{
         var assigned = context.tree[0]
         if(assigned.type == "ellipsis"){
-                $_SyntaxError(context, ['cannot assign to Ellipsis'])
-        }else if(assigned.type == "unary"){
-            $_SyntaxError(context, ["cannot assign to operator"])
-        }else if(assigned.type == "packed"){
+            raise_syntax_error(context, 'cannot assign to Ellipsis')
+        }else if(assigned.type == 'unary'){
+            raise_syntax_error(context, 'cannot assign to operator')
+        }else if(assigned.type == 'packed'){
             if(assigned.tree[0].name == 'id'){
                 var id = assigned.tree[0].tree[0].value
                 if(['None', 'True', 'False', '__debug__'].indexOf(id) > -1){
-                    $_SyntaxError(context,
-                        ['cannot assign to ' + id])
+                    raise_syntax_error(context, 'cannot assign to ' + id)
                 }
             }
             // If the packed item was in a tuple (eg "a, *b = X") the
             // assignment is valid; in this case the attribute in_tuple
             // is set
             if(assigned.parent.in_tuple === undefined){
-                $_SyntaxError(context,
-                    ["starred assignment target must be in a list or tuple"])
+                raise_syntax_error(context,
+                    "starred assignment target must be in a list or tuple")
             }
         }
     }
@@ -1224,13 +1186,11 @@ $AssignCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){
         if(context.tree[1].type == 'abstract_expr'){
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            raise_syntax_error(context)
         }
         return $transition(context.parent, 'eol')
     }
-    console.log('token', token, 'after context', context)
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $AsyncCtx = $B.parser.$AsyncCtx = function(context){
@@ -1248,14 +1208,14 @@ $AsyncCtx.prototype.transition = function(token, value){
     }else if(token == "for" || token == "with"){
         var ntype = $get_scope(context).ntype
         if(ntype !== "def" && ntype != "generator"){
-            $_SyntaxError(context, ["'async " + token +
-                "' outside async function"])
+            raise_syntax_error(context, "'async " + token +
+                "' outside async function")
         }
         var ctx = $transition(context.parent, token, value)
         ctx.parent.async = true // set attr "async" of for/with context
         return ctx
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $AttrCtx = $B.parser.$AttrCtx = function(context){
@@ -1290,16 +1250,16 @@ $AttrCtx.prototype.transition = function(token, value){
     if(token === 'id'){
         var name = value
         if(name == '__debug__'){
-            $_SyntaxError(context, ['cannot assign to __debug__'])
+            raise_syntax_error(context, 'cannot assign to __debug__')
         }else if(noassign[name] === true){
-            $_SyntaxError(context, `'${name}' cannot be an attribute`)
+            raise_syntax_error(context, `'${name}' cannot be an attribute`)
         }
         context.unmangled_name = name
         name = $mangle(name, context)
         context.name = name
         return context.parent
     }
-    $_SyntaxError(context,token)
+    raise_syntax_error(context)
 }
 
 var $AugmentedAssignCtx = $B.parser.$AugmentedAssignCtx = function(context, op){
@@ -1339,12 +1299,11 @@ $AugmentedAssignCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){
         if(context.tree[1].type == 'abstract_expr'){
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            raise_syntax_error(context)
         }
         return $transition(context.parent, 'eol')
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $AwaitCtx = $B.parser.$AwaitCtx = function(context){
@@ -1419,7 +1378,7 @@ $BreakCtx.prototype.transition = function(token, value){
     if(token == 'eol'){
         return $transition(context.parent, 'eol')
     }
-    $_SyntaxError(context, token)
+    raise_syntax_error(context)
 }
 
 var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
@@ -1466,7 +1425,7 @@ $CallArgCtx.prototype.transition = function(token, value){
         case 'for':
             // comprehension
             if(this.parent.tree.length > 1){
-                $_SyntaxError(context,
+                raise_syntax_error(context,
                     "non-parenthesized generator expression")
             }
             return new $TargetListCtx(new $ForExpr(new GeneratorExpCtx(context)))
@@ -1487,14 +1446,14 @@ $CallArgCtx.prototype.transition = function(token, value){
                        return new $DoubleStarArgCtx(context.parent)
                }
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            raise_syntax_error(context)
         case ')':
             if(context.parent.kwargs &&
                     $B.last(context.parent.tree).tree[0] && // if call ends with ,)
                     ['kwarg', 'star_arg', 'double_star_arg'].
                         indexOf($B.last(context.parent.tree).tree[0].type) == -1){
-                $_SyntaxError(context,
-                    ['non-keyword argument after keyword argument'])
+                raise_syntax_error(context,
+                    'non-keyword argument after keyword argument')
             }
             return $transition(context.parent,token)
         case ':':
@@ -1508,13 +1467,13 @@ $CallArgCtx.prototype.transition = function(token, value){
                 if(context.parent.kwargs &&
                         ['kwarg','star_arg', 'double_star_arg'].
                             indexOf($B.last(context.parent.tree).tree[0].type) == -1){
-                    $_SyntaxError(context,
-                        ['non-keyword argument after keyword argument'])
+                    raise_syntax_error(context,
+                        'non-keyword argument after keyword argument')
                 }
                 return $transition(context.parent, token, value)
             }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $CallCtx = $B.parser.$CallCtx = function(context){
@@ -1577,7 +1536,9 @@ $CallCtx.prototype.transition = function(token, value){
     var context = this
     switch(token) {
         case ',':
-            if(context.expect == 'id'){$_SyntaxError(context, token)}
+            if(context.expect == 'id'){
+                raise_syntax_error(context)
+            }
             context.expect = 'id'
             return context
         case 'await':
@@ -1618,9 +1579,9 @@ $CallCtx.prototype.transition = function(token, value){
                     context.has_dstar = true
                     return new $DoubleStarArgCtx(context)
             }
-            $_SyntaxError(context, token)
+            raise_syntax_error(context)
         case 'yield':
-            $_SyntaxError(context, token)
+            raise_syntax_error(context)
     }
 
     return $transition(context.parent, token, value)
@@ -1698,7 +1659,7 @@ $CaseCtx.prototype.transition = function(token, value){
             if(value == '|'){
                 return new $PatternCtx(new $PatternOrCtx(context))
             }
-            $_SyntaxError(context, ['expected :'])
+            raise_syntax_error(context, 'expected :')
         case ',':
             if(context.expect == ':' || context.expect == 'as'){
                 return new $PatternCtx(new $PatternSequenceCtx(context))
@@ -1709,7 +1670,7 @@ $CaseCtx.prototype.transition = function(token, value){
             return new $AbstractExprCtx(new $ConditionCtx(context, token),
                 false)
         default:
-            $_SyntaxError(context, ['expected :'])
+            raise_syntax_error(context, 'expected :')
     }
 }
 
@@ -1761,7 +1722,7 @@ $ClassCtx.prototype.transition = function(token, value){
             break
         case '(':
             if(context.name === undefined){
-                $_SyntaxError(context, 'missing class name')
+                raise_syntax_error(context, 'missing class name')
             }
             return new $CallCtx(context)
         case ':':
@@ -1772,12 +1733,12 @@ $ClassCtx.prototype.transition = function(token, value){
                             param.type == "kwarg"){
                         continue
                     }
-                    $_SyntaxError(context, 'invalid class parameter')
+                    raise_syntax_error(context, 'invalid class parameter')
                 }
             }
             return $BodyCtx(context)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 $ClassCtx.prototype.set_name = function(name){
@@ -1908,7 +1869,7 @@ $ConditionCtx.prototype.transition = function(token, value){
     if(token == ':'){
         if(context.tree[0].type == "abstract_expr" &&
                 context.tree[0].tree.length == 0){ // issue #965
-            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            raise_syntax_error(context)
         }
         return $BodyCtx(context)
     }else if(this.in_comp && this.token == 'if'){
@@ -1923,7 +1884,7 @@ $ConditionCtx.prototype.transition = function(token, value){
             return $transition(this.parent, token, value)
         }
     }
-    $_SyntaxError(context, ["expected ':'"])
+    raise_syntax_error(context, "expected ':'")
 }
 
 var $ContinueCtx = $B.parser.$ContinueCtx = function(context){
@@ -1944,7 +1905,7 @@ $ContinueCtx.prototype.ast = function(){
 $ContinueCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'eol'){return context.parent}
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $DebuggerCtx = $B.parser.$DebuggerCtx = function(context){
@@ -1976,7 +1937,7 @@ $DecoratorCtx.prototype.transition = function(token, value){
     if(token == 'eol') {
         return $transition(context.parent, token)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 function get_decorators(node){
@@ -2097,7 +2058,7 @@ $DefCtx.prototype.ast = function(){
 
 $DefCtx.prototype.set_name = function(name){
     if(["None", "True", "False"].indexOf(name) > -1){
-        $_SyntaxError(this, 'invalid function name')
+        raise_syntax_error(this, '(invalid function name)')
     }
     var id_ctx = new $IdCtx(this, name)
     this.name = name
@@ -2113,13 +2074,13 @@ $DefCtx.prototype.transition = function(token, value){
     switch(token) {
         case 'id':
             if(context.name) {
-                $_SyntaxError(context, 'token ' + token + ' after ' + context)
+                raise_syntax_error(context)
             }
             context.set_name(value)
             return context
         case '(':
             if(context.name == null){
-                $_SyntaxError(context,
+                raise_syntax_error(context,
                     "missing name in function definition")
             }
             context.has_args = true;
@@ -2132,14 +2093,14 @@ $DefCtx.prototype.transition = function(token, value){
             if(context.has_args){
                 return $BodyCtx(context)
             }else{
-                $_SyntaxError(context, "missing function parameters")
+                raise_syntax_error(context, "missing function parameters")
             }
         case 'eol':
             if(context.has_args){
-                $_SyntaxError(context, "missing colon")
+                raise_syntax_error(context, "missing colon")
             }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $DelCtx = $B.parser.$DelCtx = function(context){
@@ -2184,7 +2145,7 @@ $DelCtx.prototype.transition = function(token, value){
         check_assignment(this.tree[0], {action: 'delete'})
         return $transition(context.parent, token)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var DictCompCtx = function(context){
@@ -2232,7 +2193,7 @@ DictCompCtx.prototype.transition = function(token, value){
     if(token == '}'){
         return this.parent
     }
-    $_SyntaxError(context, 'token ' + token + 'after list comp')
+    raise_syntax_error(context)
 }
 
 var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
@@ -2311,27 +2272,26 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                              return context
                         case 'dict':
                             if($B.last(this.tree).type == 'abstract_expr'){
-                                $_SyntaxError(context,
-                                    ["expression expected after dictionary key and ':'"])
+                                raise_syntax_error(context,
+                                    "expression expected after dictionary key and ':'")
                             }else if(context.nb_dict_items() % 2 != 0){
-                                $_SyntaxError(context,
-                                    ["':' expected after dictionary key"])
+                                raise_syntax_error(context,
+                                    "':' expected after dictionary key")
                             }
                             context.items = context.tree
                             context.tree = []
                             context.closed = true
                             return context
                       }
-                      $_SyntaxError(context, 'token ' + token +
-                          ' after ' + context)
+                      raise_syntax_error(context)
                 case ',':
                     if(context.real == 'dict_or_set'){
                         context.real = 'set'
                     }
                     if(context.real == 'dict' &&
                             context.nb_dict_items() % 2){
-                        $_SyntaxError(context,
-                            ["':' expected after dictionary key"])
+                        raise_syntax_error(context,
+                            "':' expected after dictionary key")
                     }
                     context.expect = 'id'
                     return context
@@ -2344,15 +2304,14 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                       context.value_pos = $token.value
                       return context
                   }else{
-                      $_SyntaxError(context, 'token ' + token +
-                      ' after ' + context)
+                      raise_syntax_error(context)
                   }
                 case 'for':
                     // comprehension
                     if(context.real == "set" && context.tree.length > 1){
                         $token.value = context.tree[0].position
-                        $_SyntaxError(context, ["did you forget " +
-                            "parentheses around the comprehension target?"])
+                        raise_syntax_error(context, "did you forget " +
+                            "parentheses around the comprehension target?")
                     }
                     if(context.real == 'dict_or_set'){
                         return new $TargetListCtx(new $ForExpr(
@@ -2362,7 +2321,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                             new DictCompCtx(this)))
                     }
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            raise_syntax_error(context)
         }else if(context.expect == 'id'){
             switch(token) {
                 case '}':
@@ -2404,8 +2363,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                             }else if(
                                     (context.real == "set" && value == "**") ||
                                     (context.real == "dict" && value == "*")){
-                                $_SyntaxError(context, 'token ' + token +
-                                    ' after ' + context)
+                                raise_syntax_error(context)
                             }
                             return expr
                         case '+':
@@ -2426,10 +2384,9 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                             }
                             return new $AbstractExprCtx(op_expr,false)
                     }
-                    $_SyntaxError(context, 'token ' + token +
-                        ' after ' + context)
+                    raise_syntax_error(context)
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            raise_syntax_error(context)
         }else if(context.expect == 'value'){
             try{
                 context.expect = ','
@@ -2437,8 +2394,8 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                     token, value)
             }catch(err){
                 $token.value = context.value_pos
-                $_SyntaxError(context, ["expression expected after " +
-                    "dictionary key and ':'"])
+                raise_syntax_error(context, "expression expected after " +
+                    "dictionary key and ':'")
             }
         }
         return $transition(context.parent, token, value)
@@ -2491,7 +2448,7 @@ $DoubleStarArgCtx.prototype.transition = function(token, value){
               return $transition(context.parent.parent, token)
             }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
@@ -2528,7 +2485,7 @@ $EndOfPositionalCtx.prototype.transition = function(token, value){
     if(token == "," || token == ")"){
         return $transition(context.parent, token, value)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
@@ -2612,12 +2569,11 @@ $ExceptCtx.prototype.transition = function(token, value){
                 context.expect = 'id'
                 return context
             }else if(context.parenth === undefined){
-                $_SyntaxError(context,
-                    ["multiple exception types must be parenthesized"])
+                raise_syntax_error(context,
+                    "multiple exception types must be parenthesized")
             }
     }
-    console.log('error', context, token)
-    $_SyntaxError(context, 'token ' + token + ' after ' + context.expect)
+    raise_syntax_error(context)
 }
 
 $ExceptCtx.prototype.set_alias = function(alias){
@@ -2661,7 +2617,7 @@ $ExprCtx.prototype.transition = function(token, value){
     if(python_keywords.indexOf(token) > -1 &&
             ['as', 'else', 'if', 'for', 'from', 'in'].indexOf(token) == -1){
         context.$pos = $pos
-        syntax_error(context)
+        raise_syntax_error(context)
     }
     switch(token) {
         case 'bytes':
@@ -2682,7 +2638,7 @@ $ExprCtx.prototype.transition = function(token, value){
             // with "Missing parenthesis"...
             if(context.tree[0].type != "id" ||
                     ["print", "exec"].indexOf(context.tree[0].value) == -1){
-                syntax_error(context)
+                raise_syntax_error(context)
             }
             return new $DictOrSetCtx(context)
         case '[':
@@ -2727,7 +2683,7 @@ $ExprCtx.prototype.transition = function(token, value){
                 if(context.with_commas ||
                         ["assign", "return"].indexOf(context.parent.type) > -1){
                     if($parent_match(context, {type: "yield", "from": true})){
-                        $_SyntaxError(context, "no implicit tuple for yield from")
+                        raise_syntax_error(context, "no implicit tuple for yield from")
                     }
                      // implicit tuple
                      context.parent.tree.pop()
@@ -2868,20 +2824,19 @@ $ExprCtx.prototype.transition = function(token, value){
           var parent = context
           while(parent){
               if(parent.type == "assign" || parent.type == "augm_assign"){
-                  $_SyntaxError(context,
+                  raise_syntax_error(context,
                       "augmented assignment inside assignment")
               }else if(parent.type == "op"){
-                  console.log('parent', parent)
-                  $_SyntaxError(context, ["cannot assign to operator"])
+                  raise_syntax_error(context, "cannot assign to operator")
               }else if(parent.type == "list_or_tuple"){
-                  $_SyntaxError(context, [`'${parent.real}' is an illegal` +
-                      " expression for augmented assignment"])
+                  raise_syntax_error(context, `'${parent.real}' is an illegal` +
+                      " expression for augmented assignment")
               }else if(['list', 'tuple'].indexOf(parent.name) > -1){
-                  $_SyntaxError(context, [`'${parent.name}' is an illegal` +
-                      " expression for augmented assignment"])
+                  raise_syntax_error(context, `'${parent.name}' is an illegal` +
+                      " expression for augmented assignment")
               }else if(['dict_or_set'].indexOf(parent.name) > -1){
-                  $_SyntaxError(context, [`'${parent.tree[0].real } display'` +
-                      " is an illegal expression for augmented assignment"])
+                  raise_syntax_error(context, `'${parent.tree[0].real } display'` +
+                      " is an illegal expression for augmented assignment")
               }
               parent = parent.parent
           }
@@ -2911,7 +2866,7 @@ $ExprCtx.prototype.transition = function(token, value){
                       return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]), false)
                   }
               }
-              $_SyntaxError(context, "invalid target for annotation")
+              raise_syntax_error(context, "invalid target for annotation")
           }
           break
       case '=':
@@ -2929,20 +2884,20 @@ $ExprCtx.prototype.transition = function(token, value){
              if(context.parent.type == "call_arg"){
                  // issue 708
                  if(context.tree[0].type != "id"){
-                     $_SyntaxError(context, ['expression cannot contain' +
-                         ' assignment, perhaps you meant "=="?'])
+                     raise_syntax_error(context, 'expression cannot contain' +
+                         ' assignment, perhaps you meant "=="?')
                  }
                  return new $AbstractExprCtx(new $KwArgCtx(context), true)
              }else if(annotation = has_parent(context, "annotation")){
                  return $transition(annotation, token, value)
              }else if(context.parent.type == "op"){
                   // issue 811
-                  $_SyntaxError(context, ["cannot assign to operator"])
+                  raise_syntax_error(context, "cannot assign to operator")
              }else if(context.parent.type == "not"){
                   // issue 1496
-                  $_SyntaxError(context, ["cannot assign to operator"])
+                  raise_syntax_error(context, "cannot assign to operator")
              }else if(context.parent.type == "with"){
-                  $_SyntaxError(context, ["expected :"])
+                  raise_syntax_error(context, "expected :")
              }else if(context.parent.type == "list_or_tuple"){
                  // issue 973
                  for(var i = 0; i < context.parent.tree.length; i++){
@@ -2951,39 +2906,39 @@ $ExprCtx.prototype.transition = function(token, value){
                          check_assignment(item, {once: true})
                      }catch(err){
                          console.log(context)
-                         $_SyntaxError(context, ["invalid syntax. " +
-                             "Maybe you meant '==' or ':=' instead of '='?"])
+                         raise_syntax_error(context, "invalid syntax. " +
+                             "Maybe you meant '==' or ':=' instead of '='?")
                      }
                      if(item.type == "expr" && item.name == "operand"){
-                         $_SyntaxError(context, ["cannot assign to operator"])
+                         raise_syntax_error(context, "cannot assign to operator")
                      }
                  }
                  // issue 1875
                  if(context.parent.real == 'list' ||
                          (context.parent.real == 'tuple' &&
                           ! context.parent.implicit)){
-                     $_SyntaxError(context, ["invalid syntax. " +
-                         "Maybe you meant '==' or ':=' instead of '='?"])
+                     raise_syntax_error(context, "invalid syntax. " +
+                         "Maybe you meant '==' or ':=' instead of '='?")
                  }
              }else if(context.parent.type == "expr" &&
                      context.parent.name == "iterator"){
-                 $_SyntaxError(context, ['expected :'])
+                 raise_syntax_error(context, 'expected :')
              }else if(context.parent.type == "lambda"){
                  if(context.parent.parent.parent.type != "node"){
-                     $_SyntaxError(context, ['expression cannot contain' +
-                         ' assignment, perhaps you meant "=="?'])
+                     raise_syntax_error(context, 'expression cannot contain' +
+                         ' assignment, perhaps you meant "=="?')
                  }
              }else if(context.parent.type == 'target_list'){
-                 $_SyntaxError(context, "assign to target in iteration")
+                 raise_syntax_error(context, "(assign to target in iteration)")
              }
              while(context.parent !== undefined){
                  context = context.parent
                  if(context.type == "condition"){
-                     $_SyntaxError(context, ["invalid syntax. Maybe you" +
-                         " meant '==' or ':=' instead of '='?"])
+                     raise_syntax_error(context, "invalid syntax. Maybe you" +
+                         " meant '==' or ':=' instead of '='?")
                  }else if(context.type == "augm_assign"){
-                     $_SyntaxError(context,
-                         "assignment inside augmented assignment")
+                     raise_syntax_error(context,
+                         "(assignment inside augmented assignment)")
                  }
              }
              context = context.tree[0]
@@ -2995,33 +2950,35 @@ $ExprCtx.prototype.transition = function(token, value){
           var ptype = context.parent.type
           if(["node", "assign", "kwarg", "annotation"].
                   indexOf(ptype) > -1){
-              $_SyntaxError(context, ':= invalid, parent ' + ptype)
+              raise_syntax_error(context,
+                  '(:= invalid, parent ' + ptype + ')')
           }else if(ptype == "func_arg_id" &&
                   context.parent.tree.length > 0){
               // def foo(answer = p := 42):
-              $_SyntaxError(context, ':= invalid, parent ' + ptype)
+              raise_syntax_error(context,
+                  '(:= invalid, parent ' + ptype + ')')
           }else if(ptype == "call_arg" &&
                   context.parent.parent.type == "call" &&
                   context.parent.parent.parent.type == "lambda"){
               // lambda x := 1
-              $_SyntaxError(context,
-                  ':= invalid inside function arguments' )
+              raise_syntax_error(context,
+                  '(:= invalid inside function arguments)' )
           }
           if(context.tree.length == 1 && context.tree[0].type == "id"){
               var scope = $get_scope(context),
                   name = context.tree[0].value
               if(['None', 'True', 'False'].indexOf(name) > -1){
-                  $_SyntaxError(context,
-                      [`cannot use assignment expressions with ${name}`])
+                  raise_syntax_error(context,
+                      `cannot use assignment expressions with ${name}`)
               }else if(name == '__debug__'){
-                  $_SyntaxError(context, ['cannot assign to __debug__'])
+                  raise_syntax_error(context, 'cannot assign to __debug__')
               }
               while(scope.comprehension){
                   scope = scope.parent_block
               }
               return new $AbstractExprCtx(new NamedExprCtx(context), false)
           }
-          $_SyntaxError(context, 'token ' + token + ' after ' + context)
+          raise_syntax_error(context)
       case 'if':
           var in_comp = false,
               ctx = context.parent
@@ -3085,10 +3042,10 @@ $ExprCtx.prototype.transition = function(token, value){
               var t = context.tree[0]
               if(t.type == "packed"){
                   $token.value = t.position
-                  $_SyntaxError(context, ["cannot use starred expression here"])
+                  raise_syntax_error(context, "cannot use starred expression here")
               }else if(t.type == "call" && t.func.type == "packed"){
                   $token.value = t.func.position
-                  $_SyntaxError(context, ["cannot use starred expression here"])
+                  raise_syntax_error(context, "cannot use starred expression here")
               }
           }
     }
@@ -3116,7 +3073,7 @@ $ExprNot.prototype.transition = function(token, value){
         }
         return op1.transition('op', 'not_in')
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $ForExpr = $B.parser.$ForExpr = function(context){
@@ -3154,15 +3111,15 @@ $ForExpr.prototype.transition = function(token, value){
         case 'in':
             if(context.tree[0].tree.length == 0){
                 // issue 1293 : "for in range(n)"
-                $_SyntaxError(context, "missing target between 'for' and 'in'")
+                raise_syntax_error(context,
+                    "(missing target between 'for' and 'in')")
             }
             return new $AbstractExprCtx(
                 new $ExprCtx(context, 'iterator', true), false)
         case ':':
             if(context.tree.length < 2 // issue 638
                     || context.tree[1].tree[0].type == "abstract_expr"){
-                $_SyntaxError(context, 'token ' + token + ' after ' +
-                    context)
+                raise_syntax_error(context)
             }
             return $BodyCtx(context)
     }
@@ -3193,7 +3150,7 @@ $ForExpr.prototype.transition = function(token, value){
 
         }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $FromCtx = $B.parser.$FromCtx = function(context){
@@ -3273,8 +3230,8 @@ $FromCtx.prototype.transition = function(token, value){
           break
         case 'import':
             if(context.names.length > 0){ // issue 1850
-                $_SyntaxError(context,
-                    ["only one 'import' allowed after 'from'"])
+                raise_syntax_error(context,
+                    "only one 'import' allowed after 'from'")
             }
             if(context.expect == 'module'){
                 context.expect = 'id'
@@ -3284,8 +3241,8 @@ $FromCtx.prototype.transition = function(token, value){
             if(value == '*' && context.expect == 'id'
                     && context.names.length == 0){
                if($get_scope(context).ntype !== 'module'){
-                   $_SyntaxError(context,
-                       ["import * only allowed at module level"])
+                   raise_syntax_error(context,
+                       "import * only allowed at module level")
                }
                context.add_name('*')
                context.expect = 'eol'
@@ -3324,11 +3281,11 @@ $FromCtx.prototype.transition = function(token, value){
 
                     return $transition(context.parent, token)
                 case 'id':
-                    $_SyntaxError(context,
-                        ['trailing comma not allowed without ' +
-                            'surrounding parentheses'])
+                    raise_syntax_error(context,
+                        'trailing comma not allowed without ' +
+                            'surrounding parentheses')
                 default:
-                    $_SyntaxError(context, ['invalid syntax'])
+                    raise_syntax_error(context)
             }
         case 'as':
           if(context.expect == ',' || context.expect == 'eol'){
@@ -3347,7 +3304,7 @@ $FromCtx.prototype.transition = function(token, value){
              return context
           }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 
 }
 
@@ -3383,8 +3340,14 @@ $FuncArgs.prototype.ast = function(){
             state = 'kwonly'
             if(arg.op == '*' && arg.name != '*'){
                 args.vararg = new ast.arg(arg.name)
+                if(arg.position === undefined){
+                    console.log('pas de position', arg)
+                    alert()
+                }
+                set_position(args.vararg, arg.position)
             }else if(arg.op == '**'){
                 args.kwarg = new ast.arg(arg.name)
+                set_position(args.kwarg, arg.position)
             }
         }else{
             default_value = false
@@ -3392,6 +3355,8 @@ $FuncArgs.prototype.ast = function(){
                 default_value = arg.tree[0].ast()
             }
             var argument = new ast.arg(arg.name)
+            set_position(argument, arg.position,
+                last_position(arg))
             if(arg.annotation){
                 argument.annotation = arg.annotation.tree[0].ast()
             }
@@ -3432,8 +3397,8 @@ $FuncArgs.prototype.transition = function(token, value){
                 // keyword-only parameters, eg arg "z" in "f(x, *, y=1, z)"
                 return
             }
-            $_SyntaxError(context,
-                ['non-default argument follows default argument'])
+            raise_syntax_error(context,
+                'non-default argument follows default argument')
         }
         if(last.has_default){
             context.has_default = true
@@ -3443,14 +3408,14 @@ $FuncArgs.prototype.transition = function(token, value){
     switch (token) {
         case 'id':
             if(context.has_kw_arg){
-                $_SyntaxError(context, 'duplicate keyword argument')
+                raise_syntax_error(context, 'duplicate keyword argument')
             }
             if(context.expect == 'id'){
                 context.expect = ','
                 if(context.names.indexOf(value) > -1){
-                  $_SyntaxError(context,
-                      ['duplicate argument ' + value +
-                          ' in function definition'])
+                  raise_syntax_error(context,
+                      'duplicate argument ' + value +
+                          ' in function definition')
                 }
             }
             return new $FuncArgIdCtx(context, value)
@@ -3460,8 +3425,7 @@ $FuncArgs.prototype.transition = function(token, value){
                 context.expect = 'id'
                 return context
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' +
-                context)
+            raise_syntax_error(context)
         case ')':
             check()
             var last = $B.last(context.tree)
@@ -3469,44 +3433,46 @@ $FuncArgs.prototype.transition = function(token, value){
                 if(last.name == "*"){
                     if(context.op == '*'){
                         // Form "def f(x, *)" is invalid
-                        $_SyntaxError(context,
-                            ['named arguments must follow bare *'])
+                        raise_syntax_error(context,
+                            'named arguments must follow bare *')
                     }else{
-                        $_SyntaxError(context, 'invalid syntax')
+                        raise_syntax_error(context)
                     }
                 }
             }
             return $transition(context.parent, token, value)
         case 'op':
             if(context.has_kw_arg){
-                $_SyntaxError(context, 'duplicate keyword argument')
+                raise_syntax_error(context,
+                    "(only one '**' argument allowed)")
             }
             var op = value
             context.expect = ','
             if(op == '*'){
                 if(context.has_star_arg){
-                    $_SyntaxError(context,'duplicate star argument')
+                    raise_syntax_error(context,
+                        "(only one '*' argument allowed)")
                 }
                 return new $FuncStarArgCtx(context, '*')
             }else if(op == '**'){
                 return new $FuncStarArgCtx(context, '**')
             }else if(op == '/'){ // PEP 570
                 if(context.has_end_positional){
-                    $_SyntaxError(context,
-                        ['duplicate / in function parameters'])
+                    raise_syntax_error(context,
+                        'duplicate / in function parameters')
                 }else if(context.has_star_arg){
-                    $_SyntaxError(context,
-                        ['/ after * in function parameters'])
+                    raise_syntax_error(context,
+                        '/ after * in function parameters')
                 }
                 return new $EndOfPositionalCtx(context)
             }
-            $_SyntaxError(context, 'token ' + op + ' after ' + context)
+            raise_syntax_error(context)
         case ':':
             if(context.parent.type == "lambda"){
                 return $transition(context.parent, token)
             }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
@@ -3514,7 +3480,7 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
     // may be followed by = for default value
     this.type = 'func_arg_id'
     if(["None", "True", "False"].indexOf(name) > -1){
-        $_SyntaxError(context, 'invalid name')
+        raise_syntax_error(context, `(invalid argument name '${name}')`)
     }
 
     this.name = name
@@ -3551,8 +3517,8 @@ $FuncArgIdCtx.prototype.transition = function(token, value){
             if(context.parent.has_default && context.tree.length == 0 &&
                     context.parent.has_star_arg === undefined){
                 $pos -= context.name.length
-                $_SyntaxError(context,
-                    ['non-default argument follows default argument'])
+                raise_syntax_error(context,
+                    'non-default argument follows default argument')
             }else{
                 return $transition(context.parent, token)
             }
@@ -3563,13 +3529,12 @@ $FuncArgIdCtx.prototype.transition = function(token, value){
             }
             // annotation associated with a function parameter
             if(context.has_default){ // issue 610
-                $_SyntaxError(context, 'token ' + token + ' after ' +
-                    context)
+                raise_syntax_error(context)
             }
             return new $AbstractExprCtx(new $AnnotationCtx(context),
                 false)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
@@ -3578,6 +3543,7 @@ var $FuncStarArgCtx = $B.parser.$FuncStarArgCtx = function(context,op){
     this.op = op
     this.parent = context
     this.node = $get_node(this)
+    this.position = $token.value
 
     context.has_star_arg = op == '*'
     context.has_kw_arg = op == '**'
@@ -3590,13 +3556,14 @@ $FuncStarArgCtx.prototype.transition = function(token, value){
         case 'id':
             if(context.name === undefined){
                if(context.parent.names.indexOf(value) > -1){
-                 $_SyntaxError(context,
-                     ['duplicate argument ' + value +
-                         ' in function definition'])
+                 raise_syntax_error(context,
+                     'duplicate argument ' + value +
+                         ' in function definition')
                }
             }
             if(["None", "True", "False"].indexOf(value) > -1){
-                $_SyntaxError(context, 'invalid name')
+                raise_syntax_error(context,
+                    `(invalid starred argument name: '${value}')`)
             }
             context.set_name(value)
             context.parent.names.push(value)
@@ -3616,13 +3583,13 @@ $FuncStarArgCtx.prototype.transition = function(token, value){
             }
             // annotation associated with a function parameter
             if(context.name === undefined){
-                $_SyntaxError(context,
-                    'annotation on an unnamed parameter')
+                raise_syntax_error(context,
+                    '(annotation on an unnamed parameter)')
             }
             return new $AbstractExprCtx(
                 new $AnnotationCtx(context), false)
-    }// switch
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    }
+    raise_syntax_error(context)
 }
 
 $FuncStarArgCtx.prototype.set_name = function(name){
@@ -3635,8 +3602,11 @@ $FuncStarArgCtx.prototype.set_name = function(name){
         }
         ctx = ctx.parent
     }
-    if(this.op == '*'){ctx.other_args = '"' + name + '"'}
-    else{ctx.other_kw = '"' + name + '"'}
+    if(this.op == '*'){
+        ctx.other_args = '"' + name + '"'
+    }else{
+        ctx.other_kw = '"' + name + '"'
+    }
 }
 
 var GeneratorExpCtx = function(context){
@@ -3669,7 +3639,7 @@ GeneratorExpCtx.prototype.transition = function(token, value){
         }
         return this.parent
     }
-    $_SyntaxError(context, 'token ' + token + 'after gen expr')
+    raise_syntax_error(context)
 }
 var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
     // Class for keyword "global"
@@ -3719,7 +3689,7 @@ $GlobalCtx.prototype.transition = function(token, value){
             }
             break
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 $GlobalCtx.prototype.add = function(name){
@@ -3793,21 +3763,21 @@ $IdCtx.prototype.transition = function(token, value){
             var flag = line_ends_with_comma(src.substr(start))
         }catch(err){
             $pos = start + err.offset
-            $_SyntaxError(context, [err.message])
+            raise_syntax_error(context, [err.message])
         }
         if(flag){
             var node = $get_node(context),
                 parent = node.parent
             if((! node.parent) || !(node.parent.is_match)){
-                $_SyntaxError(context, '"case" not inside "match"')
+                raise_syntax_error(context, "('case' not inside 'match')")
             }else{
                 if(node.parent.irrefutable){
                     // "match" statement already has an irrefutable pattern
                     var name = node.parent.irrefutable,
                         msg = name == '_' ? 'wildcard' :
                             `name capture '${name}'`
-                    $_SyntaxError(context,
-                        [`${msg} makes remaining patterns unreachable`])
+                    raise_syntax_error(context,
+                        `${msg} makes remaining patterns unreachable`)
                 }
             }
             return $transition(new $PatternCtx(
@@ -3939,7 +3909,7 @@ $ImportCtx.prototype.transition = function(token, value){
             }
             break
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $ImportedModuleCtx = $B.parser.$ImportedModuleCtx = function(context,name){
@@ -4103,9 +4073,12 @@ var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
     // used to avoid passing the id as argument of a list comprehension
     var value = this.tree[0].value
     var ctx = context.parent.parent // type 'call'
-    if(ctx.kwargs === undefined){ctx.kwargs = [value]}
-    else if(ctx.kwargs.indexOf(value) == -1){ctx.kwargs.push(value)}
-    else{$_SyntaxError(context, ['keyword argument repeated'])}
+    if(ctx.kwargs === undefined){ctx.kwargs = [value]
+    }else if(ctx.kwargs.indexOf(value) == -1){
+        ctx.kwargs.push(value)
+    }else{
+        raise_syntax_error(context, 'keyword argument repeated')
+    }
 }
 
 $KwArgCtx.prototype.transition = function(token, value){
@@ -4162,7 +4135,7 @@ $LambdaCtx.prototype.transition = function(token, value){
     if(context.args === undefined && token != "("){
         return $transition(new $FuncArgs(context), token, value)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var ListCompCtx = function(context){
@@ -4191,7 +4164,7 @@ ListCompCtx.prototype.transition = function(token, value){
     if(token == ']'){
         return this.parent
     }
-    $_SyntaxError(context, 'token ' + token + 'after list comp')
+    raise_syntax_error(context)
 }
 
 var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
@@ -4251,9 +4224,9 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                                  context.tree.length == 1 &&
                                  context.tree[0].type == 'expr' &&
                                  context.tree[0].tree[0].type == 'packed')){
-                             // syntax "(*x)"
-                            $_SyntaxError(context,
-                                ["cannot use starred expression here"])
+                            // syntax "(*x)"
+                            raise_syntax_error(context,
+                                "cannot use starred expression here")
                         }
                         if(close){
                             context.close()
@@ -4291,8 +4264,8 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                     if(context.real == 'list'){
                         if(this.tree.length > 1){
                             // eg [x, y for x in A for y in B]
-                            $_SyntaxError(context, ["did you forget " +
-                                "parentheses around the comprehension target?"])
+                            raise_syntax_error(context, "did you forget " +
+                                "parentheses around the comprehension target?")
                         }
                         return new $TargetListCtx(new $ForExpr(
                             new ListCompCtx(context)))
@@ -4336,8 +4309,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         context.parent = expr
                         return $transition(context.parent, token)
                     }
-                    $_SyntaxError(context,
-                        'unexpected = inside list')
+                    raise_syntax_error(context, "(unexpected '=' inside list)")
                     break
                 case ')':
                     break
@@ -4350,10 +4322,9 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                     }else{
                         break
                     }
-                    $_SyntaxError(context, 'unexpected "if" inside list')
+                    raise_syntax_error(context, '(unexpected "if" inside list)')
                 case ',':
-                    $_SyntaxError(context,
-                        'unexpected comma inside list')
+                    raise_syntax_error(context, '(unexpected comma inside list)')
                 case 'str':
                 case 'JoinedStr':
                 case 'int':
@@ -4378,9 +4349,10 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         var expr = new $AbstractExprCtx(context, false)
                         return $transition(expr, token, value)
                     }
-                    $_SyntaxError(context, 'unexpected operator: ' + value)
+                    raise_syntax_error(context,
+                        `(unexpected operator: ${value})`)
                 default:
-                    $_SyntaxError(context, 'token ' + token)
+                    raise_syntax_error(context)
             }
 
         }else{
@@ -4516,7 +4488,7 @@ $NodeCtx.prototype.transition = function(token, value){
                 pctx.tree[0].type == "match"){
             if(token != 'eol' && (token !== 'id' || value !== 'case')){
                 context.$pos = $pos
-                $_SyntaxError(context,
+                raise_syntax_error(context,
                     'line does not start with "case"')
             }
         }
@@ -4527,15 +4499,15 @@ $NodeCtx.prototype.transition = function(token, value){
             var previous = this.node.parent.children[rank - 1]
             if(previous.context.tree[0].type == 'try' &&
                     ['except', 'finally'].indexOf(token) == -1){
-                $_SyntaxError(context, ["expected 'except' or 'finally' block"])
+                raise_syntax_error(context,
+                    "expected 'except' or 'finally' block")
             }
         }
     }
     switch(token) {
         case ',':
             if(context.tree && context.tree.length == 0){
-                $_SyntaxError(context,
-                    'token ' + token + ' after ' + context)
+                raise_syntax_error(context)
             }
             // Implicit tuple
             var first = context.tree[0]
@@ -4584,11 +4556,11 @@ $NodeCtx.prototype.transition = function(token, value){
             try{
                 var previous = $previous(context)
             }catch(err){
-                $_SyntaxError(context, "'elif' does not follow 'if'")
+                raise_syntax_error(context, "('elif' does not follow 'if')")
             }
             if(['condition'].indexOf(previous.type) == -1 ||
                     previous.token == 'while'){
-                $_SyntaxError(context, 'elif after ' + previous.type)
+                raise_syntax_error(context, `(elif after ${previous.type})`)
             }
             return new $AbstractExprCtx(
                 new $ConditionCtx(context, token), false)
@@ -4599,13 +4571,13 @@ $NodeCtx.prototype.transition = function(token, value){
             var previous = $previous(context)
             if(['condition', 'except', 'for'].
                     indexOf(previous.type) == -1){
-                $_SyntaxError(context, 'else after ' + previous.type)
+                raise_syntax_error(context, `(else after ${previous.type})`)
             }
             return new $SingleKwCtx(context,token)
         case 'except':
             var previous = $previous(context)
             if(['try', 'except'].indexOf(previous.type) == -1){
-                $_SyntaxError(context, 'except after ' + previous.type)
+                raise_syntax_error(context, `(except after ${previous.type})`)
             }
             return new $ExceptCtx(context)
         case 'finally':
@@ -4613,7 +4585,7 @@ $NodeCtx.prototype.transition = function(token, value){
             if(['try', 'except'].indexOf(previous.type) == -1 &&
                     (previous.type != 'single_kw' ||
                         previous.token != 'else')){
-                $_SyntaxError(context, 'finally after ' + previous.type)
+                raise_syntax_error(context, `finally after ${previous.type})`)
             }
             return new $SingleKwCtx(context,token)
         case 'for':
@@ -4668,7 +4640,7 @@ $NodeCtx.prototype.transition = function(token, value){
             return context
     }
     console.log('token', token, value)
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
@@ -4716,7 +4688,7 @@ $NonlocalCtx.prototype.transition = function(token, value){
             }
             break
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $NotCtx = $B.parser.$NotCtx = function(context){
@@ -4789,7 +4761,7 @@ $NumberCtx.prototype.ast = function(){
 $NumberCtx.prototype.transition = function(token, value){
     var context = this
     if(token == 'id' && value == '_'){
-        $_SyntaxError(context, ['invalid decimal literal'])
+        raise_syntax_error(context, 'invalid decimal literal')
     }
     return $transition(context.parent, token, value)
 }
@@ -4860,7 +4832,8 @@ $OpCtx.prototype.ast = function(){
 $OpCtx.prototype.transition = function(token, value){
     var context = this
     if(context.op === undefined){
-        $_SyntaxError(context,['context op undefined ' + context])
+        console.log('context has no op', context)
+        raise_syntax_error(context)
     }
 
     switch(token) {
@@ -4889,8 +4862,7 @@ $OpCtx.prototype.transition = function(token, value){
         default:
             if(context.tree[context.tree.length - 1].type ==
                     'abstract_expr'){
-                $_SyntaxError(context, 'token ' + token + ' after ' +
-                    context)
+                raise_syntax_error(context)
             }
     }
     return $transition(context.parent, token)
@@ -4908,8 +4880,8 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
             var child = context.parent.tree[i]
             if(child.type == 'expr' && child.tree.length > 0
                     && child.tree[0].type == 'packed'){
-                $_SyntaxError(context,
-                    ["two starred expressions in assignment"])
+                raise_syntax_error(context,
+                    "two starred expressions in assignment")
             }
         }
     }
@@ -4963,7 +4935,8 @@ $PackedCtx.prototype.transition = function(token, value){
                     context.parent.expect = ','
                     return new $UnaryCtx(context, value)
                 default:
-                    $_SyntaxError(context, ["can't use starred expression here"])
+                    raise_syntax_error(context,
+                        "can't use starred expression here")
             }
     }
     return context.parent.transition(token, context)
@@ -4986,8 +4959,10 @@ $PassCtx.prototype.ast = function(){
 
 $PassCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == 'eol'){return context.parent}
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    if(token == 'eol'){
+        return context.parent
+    }
+    raise_syntax_error(context)
 }
 
 var $PatternCtx = $B.parser.$PatternCtx = function(context){
@@ -5021,7 +4996,7 @@ $PatternCtx.prototype.transition = function(token, value){
                             context.expect = 'starred_id'
                             return context
                         default:
-                            $_SyntaxError(context)
+                            raise_syntax_error(context)
                     }
                 case 'id':
                     context.expect = ','
@@ -5040,8 +5015,8 @@ $PatternCtx.prototype.transition = function(token, value){
                 case '{':
                     return new $PatternMappingCtx(context.parent, token)
                 case 'JoinedStr':
-                    $_SyntaxError(context, ["patterns may only match " +
-                        "literals and attribute lookups"])
+                    raise_syntax_error(context, "patterns may only match " +
+                        "literals and attribute lookups")
             }
             break
         case 'starred_id':
@@ -5050,7 +5025,7 @@ $PatternCtx.prototype.transition = function(token, value){
                 capture.starred = true
                 return capture
             }
-            $_SyntaxError(context, 'expected id after *')
+            raise_syntax_error(context, "(expected id after '*')")
         case 'number':
             // if pattern starts with unary - or +
             switch(token){
@@ -5061,7 +5036,7 @@ $PatternCtx.prototype.transition = function(token, value){
                     return new $PatternLiteralCtx(context, token,
                         value, context.sign)
                 default:
-                    $_SyntaxError(context)
+                    raise_syntax_error(context)
             }
         case ',':
             switch(token){
@@ -5090,16 +5065,16 @@ function as_pattern(context, token, value){
     }else if(context.expect == 'alias'){
         if(token == 'id'){
             if(value == '_'){
-                $_SyntaxError(context, ["alias cannot be _"])
+                raise_syntax_error(context, "alias cannot be _")
             }
             if(context.bindings().indexOf(value) > -1){
-                $_SyntaxError(context,
-                    [`multiple assignments to name '${value}' in pattern`])
+                raise_syntax_error(context,
+                    `multiple assignments to name '${value}' in pattern`)
             }
             context.alias = value
             return context.parent
         }else{
-            $_SyntaxError(context, 'bad alias')
+            raise_syntax_error(context, '(bad alias)')
         }
     }
 }
@@ -5293,13 +5268,13 @@ $PatternClassCtx.prototype.transition = function(token, value){
         if(last instanceof $PatternCaptureCtx){
             if(! last.is_keyword &&
                     context.keywords.length > 0){
-                $_SyntaxError(context,
-                        'positional argument after keyword')
+                raise_syntax_error(context,
+                        '(positional argument after keyword)')
             }
             if(last.is_keyword){
                 if(context.keywords.indexOf(last.tree[0]) > -1){
-                    $_SyntaxError(context,
-                        [`keyword argument repeated: ${last.tree[0]}`])
+                    raise_syntax_error(context,
+                        `keyword argument repeated: ${last.tree[0]}`)
                 }
                 context.keywords.push(last.tree[0])
                 bound = last.tree[1].bindings()
@@ -5308,8 +5283,8 @@ $PatternClassCtx.prototype.transition = function(token, value){
             }
             for(var b of bound){
                 if(context.bound_names.indexOf(b) > -1){
-                    $_SyntaxError(context, ['multiple assignments ' +
-                        `to name '${b}' in pattern`])
+                    raise_syntax_error(context, 'multiple assignments ' +
+                        `to name '${b}' in pattern`)
                 }
             }
             context.bound_names = context.bound_names.concat(bound)
@@ -5325,14 +5300,14 @@ $PatternClassCtx.prototype.transition = function(token, value){
                     if(current instanceof $PatternCaptureCtx){
                         // check duplicate
                         if(this.keywords.indexOf(current.tree[0]) > -1){
-                            $_SyntaxError(context,
-                                ['attribute name repeated in class pattern: ' +
-                                 current.tree[0]])
+                            raise_syntax_error(context,
+                                'attribute name repeated in class pattern: ' +
+                                 current.tree[0])
                         }
                         current.is_keyword = true
                         return new $PatternCtx(current)
                     }
-                    $_SyntaxError(this, '= after non-capture')
+                    raise_syntax_error(this, "'=' after non-capture")
                 case ',':
                     check_last_arg()
                     return new $PatternCtx(this)
@@ -5344,7 +5319,7 @@ $PatternClassCtx.prototype.transition = function(token, value){
                     context.expect = 'as'
                     return context
                 default:
-                    $_SyntaxError(this)
+                    raise_syntax_error(context)
             }
         case 'as':
         case 'alias':
@@ -5418,7 +5393,7 @@ $PatternGroupCtx.prototype.transition = function(token, value){
             }else if(this.token === undefined){
                 return $transition(context.parent, token, value)
             }
-            $_SyntaxError(context)
+            raise_syntax_error(context)
         case 'as':
         case 'alias':
             return as_pattern(context, token, value)
@@ -5432,8 +5407,7 @@ $PatternGroupCtx.prototype.transition = function(token, value){
             context.expect = ',|'
             return $transition(new $PatternCtx(context), token, value)
     }
-    console.log('error', this, token, value)
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $PatternLiteralCtx = function(context, token, value, sign){
@@ -5452,7 +5426,7 @@ var $PatternLiteralCtx = function(context, token, value, sign){
             this.tree = []
             new $StringCtx(this, value)
         }else if(token == 'JoinedStr'){
-            $_SyntaxError(this, ["patterns cannot include f-strings"])
+            raise_syntax_error(this, "patterns cannot include f-strings")
         }else{
             this.tree = [{type: token, value, sign}]
         }
@@ -5507,7 +5481,6 @@ $PatternLiteralCtx.prototype.ast = function(){
         set_position(result, this.position)
         return result
     }catch(err){
-      console.log('error pattern literal ast', this)
       show_line(this)
       throw err
     }
@@ -5534,8 +5507,8 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                             context.num_sign = value
                             return context
                         }
-                        $_SyntaxError(context,
-                            ['patterns cannot include operators'])
+                        raise_syntax_error(context,
+                            'patterns cannot include operators')
                     default:
                         return $transition(context.parent, token, value)
                 }
@@ -5555,7 +5528,7 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                         return context
                     }
                 default:
-                    $_SyntaxError(context)
+                    raise_syntax_error(context)
             }
 
         case 'imaginary':
@@ -5564,7 +5537,7 @@ $PatternLiteralCtx.prototype.transition = function(token, value){
                     context.tree.push({type: token, value, sign: context.num_sign})
                     return context.parent
                 default:
-                    $_SyntaxError(context, 'expected imaginary')
+                    raise_syntax_error(context, '(expected imaginary)')
 
             }
         case 'as':
@@ -5638,8 +5611,8 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             if(context.double_star){
                 // key-value after double star is not allowed
                 context.$pos = context.double_star.$pos
-                $_SyntaxError(context,
-                    ["can't use starred name here (consider moving to end)"])
+                raise_syntax_error(context,
+                    "can't use starred name here (consider moving to end)")
             }
             if(last.tree[0].type == 'value_pattern'){
                 bindings = last.tree[2].bindings()
@@ -5648,9 +5621,9 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             }
             for(var binding of bindings){
                 if(context.bound_names.indexOf(binding) > -1){
-                    $_SyntaxError(context,
-                        [`multiple assignments to name '${binding}'` +
-                         ' in pattern'])
+                    raise_syntax_error(context,
+                        `multiple assignments to name '${binding}'` +
+                         ' in pattern')
                 }
             }
             context.bound_names = context.bound_names.concat(bindings)
@@ -5666,8 +5639,8 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                     var ix = context.tree.indexOf(context.double_star)
                     if(ix != context.tree.length - 1){
                         context.$pos = context.double_star.$pos
-                        $_SyntaxError(context,
-                            ["can't use starred name here (consider moving to end)"])
+                        raise_syntax_error(context,
+                            "can't use starred name here (consider moving to end)")
                     }
                     context.rest = context.tree.pop()
                 }
@@ -5681,8 +5654,8 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             try{
                 var lit_or_val = p.transition(token, value)
             }catch(err){
-                $_SyntaxError(context, ["mapping pattern keys may only " +
-                    "match literals and attribute lookups"])
+                raise_syntax_error(context, "mapping pattern keys may only " +
+                    "match literals and attribute lookups")
             }
 
             if(lit_or_val instanceof $PatternLiteralCtx){
@@ -5697,8 +5670,7 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 context.expect = '.'
                 return this
             }else{
-                console.log('lit_or_val', lit_or_val)
-                $_SyntaxError(context, 'expected key or **')
+                raise_syntax_error(context, '(expected key or **)')
             }
         case 'capture_pattern':
             var p = new $PatternCtx(context)
@@ -5706,14 +5678,14 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             if(capture instanceof $PatternCaptureCtx){
                 if(context.double_star){
                     context.$pos = capture.$pos
-                    $_SyntaxError(context,
-                     ["only one double star pattern is accepted"])
+                    raise_syntax_error(context,
+                        "only one double star pattern is accepted")
                 }
                 if(value == '_'){
-                    $_SyntaxError(context, '**_ is not valid')
+                    raise_syntax_error(context, "('**_' is not valid)")
                 }
                 if(context.bound_names.indexOf(value) > -1){
-                    $_SyntaxError(context, ['duplicate binding: ' + value])
+                    raise_syntax_error(context, 'duplicate binding: ' + value)
                 }
                 context.bound_names.push(value)
                 capture.double_star = true
@@ -5721,7 +5693,7 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 context.expect = ','
                 return context
             }else{
-                $_SyntaxError(this, 'expected identifier')
+                raise_syntax_error(context, '(expected identifier)')
             }
         case ',':
             // after a **rest item
@@ -5732,7 +5704,7 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 context.expect = 'key_value_pattern'
                 return context.transition(token, value)
             }
-            $_SyntaxError(context, 'token ' + token + 'after context ' +context)
+            raise_syntax_error(context)
         case '.':
             // value pattern
             if(context.tree.length > 0){
@@ -5744,7 +5716,7 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                     return $transition(last.tree[0], token, value)
                 }
             }
-            $_SyntaxError(context, 'token ' + token + 'after ' + context)
+            raise_syntax_error(context)
     }
     return $transition(context.parent, token, value)
 }
@@ -5773,15 +5745,15 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
                         // check if present in this.literal_keys
                         if(_b_.list.__contains__(this.parent.literal_keys, key)){
                             $pos--
-                            $_SyntaxError(context, [`mapping pattern checks ` +
-                                `duplicate key (${_b_.repr(key)})`])
+                            raise_syntax_error(context, `mapping pattern checks ` +
+                                `duplicate key (${_b_.repr(key)})`)
                         }
                         this.parent.literal_keys.push(key)
                     }
                     this.expect = ','
                     return new $PatternCtx(this)
                 default:
-                    $_SyntaxError(context, 'expected :')
+                    raise_syntax_error(context, '(expected :)')
             }
         case ',':
             switch(token){
@@ -5796,7 +5768,7 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
                         return new $PatternCtx(new $PatternOrCtx(context))
                     }
             }
-            $_SyntaxError(context, 'expected , or }')
+            raise_syntax_error(context, "(expected ',' or '}')")
     }
     return $transition(context.parent, token, value)
 }
@@ -5843,14 +5815,14 @@ $PatternOrCtx.prototype.bindings = function(){
         }else{
             for(var item of names){
                 if(subbindings.indexOf(item) == -1){
-                    $_SyntaxError(this,
-                        ["alternative patterns bind different names"])
+                    raise_syntax_error(this,
+                        "alternative patterns bind different names")
                 }
             }
             for(var item of subbindings){
                 if(names.indexOf(item) == -1){
-                    $_SyntaxError(this,
-                        ["alternative patterns bind different names"])
+                    raise_syntax_error(this,
+                        "alternative patterns bind different names")
                 }
             }
         }
@@ -5877,8 +5849,8 @@ $PatternOrCtx.prototype.check_reachable = function(){
     if(capture){
         var msg = capture == '_' ? 'wildcard' :
             `name capture '${capture}'`
-        $_SyntaxError(this,
-            [`${msg} makes remaining patterns unreachable`])
+        raise_syntax_error(this,
+            `${msg} makes remaining patterns unreachable`)
     }
 }
 
@@ -5901,7 +5873,7 @@ $PatternOrCtx.prototype.transition = function(token, value){
         // items cannot be aliased
         for(var item of context.tree){
             if(item.alias){
-                $_SyntaxError(context, 'no as pattern inside or pattern')
+                raise_syntax_error(context, '(no as pattern inside or pattern)')
             }
         }
         context.check_reachable()
@@ -5963,14 +5935,14 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
             var last_bindings = last.bindings()
             for(var b of last_bindings){
                 if(context.bound_names.indexOf(b) > -1){
-                    $_SyntaxError(context, ["multiple assignments to name '" +
-                        b + "' in pattern"])
+                    raise_syntax_error(context, "multiple assignments to" +
+                        ` name '${b}' in pattern`)
                 }
             }
             if(last.starred){
                 if(context.has_star){
-                    $_SyntaxError(context,
-                        ['multiple starred names in sequence pattern'])
+                    raise_syntax_error(context,
+                        'multiple starred names in sequence pattern')
                 }
                 context.has_star = true
             }
@@ -5988,8 +5960,8 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
                 if(item instanceof $PatternCaptureCtx && item.starred){
                     nb_starred++
                     if(nb_starred > 1){
-                        $_SyntaxError(context,
-                            ['multiple starred names in sequence pattern'])
+                        raise_syntax_error(context,
+                            'multiple starred names in sequence pattern')
                     }
                 }
             }
@@ -6010,7 +5982,7 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
             check_duplicate_names()
             return $transition(context.parent, token, value)
         }
-        $_SyntaxError(context)
+        raise_syntax_error(context)
     }else if(context.expect == 'as'){
         if(token == 'as'){
             this.expect = 'alias'
@@ -6022,7 +5994,7 @@ $PatternSequenceCtx.prototype.transition = function(token, value){
             context.alias = value
             return context.parent
         }
-        $_SyntaxError(context, 'expected alias')
+        raise_syntax_error(context, 'expected alias')
     }else if(context.expect == 'id'){
         context.expect = ','
         return $transition(new $PatternCtx(context), token, value)
@@ -6066,7 +6038,7 @@ $RaiseCtx.prototype.transition = function(token, value){
             remove_abstract_expr(this.tree)
             return $transition(context.parent, token)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
@@ -6080,7 +6052,7 @@ var $ReturnCtx = $B.parser.$ReturnCtx = function(context){
     // Check if inside a function
     this.scope = $get_scope(this)
     if(["def", "generator"].indexOf(this.scope.ntype) == -1){
-        $_SyntaxError(context, ["'return' outside function"])
+        raise_syntax_error(context, "'return' outside function")
     }
 
     // Check if return is inside a "for" loop
@@ -6148,7 +6120,7 @@ SetCompCtx.prototype.transition = function(token, value){
     if(token == '}'){
         return this.parent
     }
-    $_SyntaxError(context, 'token ' + token + 'after list comp')
+    raise_syntax_error(context)
 }
 
 var $SingleKwCtx = $B.parser.$SingleKwCtx = function(context,token){
@@ -6184,8 +6156,10 @@ $SingleKwCtx.prototype.ast = function(){
 
 $SingleKwCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == ':'){return $BodyCtx(context)}
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    if(token == ':'){
+        return $BodyCtx(context)
+    }
+    raise_syntax_error(context)
 }
 
 var $SliceCtx = $B.parser.$SliceCtx = function(context){
@@ -6254,7 +6228,7 @@ $StarArgCtx.prototype.transition = function(token, value){
         case ',':
         case ')':
             if(context.tree.length == 0){
-                $_SyntaxError(context, "unnamed star argument")
+                raise_syntax_error(context, "(unnamed star argument)")
             }
             return $transition(context.parent, token)
         case ':':
@@ -6262,7 +6236,7 @@ $StarArgCtx.prototype.transition = function(token, value){
               return $transition(context.parent.parent, token)
             }
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $StringCtx = $B.parser.$StringCtx = function(context, value){
@@ -6322,8 +6296,8 @@ $StringCtx.prototype.transition = function(token, value){
             if((this.is_bytes && ! value.startsWith('b')) ||
                     (! this.is_bytes && value.startsWith('b'))){
                 context.$pos = $pos
-                $_SyntaxError(context,
-                    ["cannot mix bytes and nonbytes literals"])
+                raise_syntax_error(context,
+                    "cannot mix bytes and nonbytes literals")
             }
             context.value += ' + ' + (this.is_bytes ? value.substr(1) : value)
             return context
@@ -6404,7 +6378,7 @@ $SubCtx.prototype.transition = function(token, value){
         case ',':
             return new $AbstractExprCtx(context, false)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $TargetListCtx = $B.parser.$TargetListCtx = function(context){
@@ -6486,7 +6460,7 @@ $TargetListCtx.prototype.transition = function(token, value){
         // Support syntax "for x, in ..."
         return $transition(context.parent, token, value)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $TernaryCtx = $B.parser.$TernaryCtx = function(context){
@@ -6518,7 +6492,7 @@ $TernaryCtx.prototype.transition = function(token, value){
         context.in_else = true
         return new $AbstractExprCtx(context, false)
     }else if(! context.in_else){
-        $_SyntaxError(context, 'token ' + token + ' after ' + context)
+        raise_syntax_error(context)
     }else if(token == ","){
         // eg x = a if b else c, 2, 3
         if(["assign", "augm_assign", "node", "return"].
@@ -6579,7 +6553,7 @@ $TryCtx.prototype.transition = function(token, value){
     if(token == ':'){
         return $BodyCtx(context)
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' + context)
+    raise_syntax_error(context)
 }
 
 var $UnaryCtx = $B.parser.$UnaryCtx = function(context, op){
@@ -6615,8 +6589,8 @@ $UnaryCtx.prototype.transition = function(token, value){
         case 'float':
         case 'imaginary':
             if(context.parent.type == "packed"){
-                $_SyntaxError(context,
-                    ["can't use starred expression here"])
+                raise_syntax_error(context,
+                    "can't use starred expression here")
             }
             var res = new $NumberCtx(token, context, value)
             return res
@@ -6625,7 +6599,7 @@ $UnaryCtx.prototype.transition = function(token, value){
                 token, value)
     }
     if(this.tree.length == 0 || this.tree[0].type == 'abstract_expr'){
-        $_SyntaxError(context, 'token ' + token + 'after context' + context)
+        raise_syntax_error(context)
     }
     return $transition(context.parent, token, value)
 }
@@ -6673,7 +6647,7 @@ $WithCtx.prototype.transition = function(token, value){
                     new $AbstractExprCtx(context, false), token,
                         value)
             }
-            $_SyntaxError(context, 'token ' + token + ' after ' + context)
+            raise_syntax_error(context)
         case 'as':
             return new $AbstractExprCtx(new $AliasCtx(context))
         case ':':
@@ -6714,8 +6688,7 @@ $WithCtx.prototype.transition = function(token, value){
             }
             break
     }
-    $_SyntaxError(context, 'token ' + token + ' after ' +
-        context.expect)
+    raise_syntax_error(context)
 }
 
 $WithCtx.prototype.set_alias = function(ctx){
@@ -6742,12 +6715,11 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     context.tree[context.tree.length] = this
 
     if(context.type == "list_or_tuple" && context.tree.length > 1){
-        $_SyntaxError(context, "non-parenthesized yield")
+        raise_syntax_error(context, "(non-parenthesized yield)")
     }
 
     if($parent_match(context, {type: "annotation"})){
-        $_SyntaxError(context,
-            ["'yield' outside function"])
+        raise_syntax_error(context, "'yield' outside function")
     }
 
     // Store "this" in the attribute "yields" of the list_or_tuple
@@ -6828,7 +6800,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
             parent = parent.parent
         }
         if(! parent){
-            $_SyntaxError(context, ["'yield' inside list comprehension"])
+            raise_syntax_error(context, "'yield' inside list comprehension")
         }
     }
 
@@ -6870,7 +6842,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
                 break
            default:
                 // else it is a SyntaxError
-                $_SyntaxError(context, 'yield atom must be inside ()')
+                raise_syntax_error(context, '(non-parenthesized yield)')
         }
     }
 
@@ -6896,7 +6868,7 @@ $YieldCtx.prototype.transition = function(token, value){
     if(token == 'from'){ // form "yield from <expr>"
         if(context.tree[0].type != 'abstract_expr'){
             // 'from' must follow 'yield' immediately
-            $_SyntaxError(context, "'from' must follow 'yield'")
+            raise_syntax_error(context, "('from' must follow 'yield')")
         }
 
         context.from = true
@@ -6924,7 +6896,7 @@ $YieldCtx.prototype.check_in_function = function(){
         func_scope = parent
     }
     if(! in_func){
-        $_SyntaxError(this.parent, ["'yield' outside function"])
+        raise_syntax_error(this.parent, "'yield' outside function")
     }else{
         var def = func_scope.context.tree[0]
         if(! this.is_await){
@@ -6957,7 +6929,7 @@ var $previous = $B.parser.$previous = function(context){
     var previous = context.node.parent.children[
             context.node.parent.children.length - 2]
     if(!previous || !previous.context){
-        $_SyntaxError(context, 'keyword not following correct keyword')
+        raise_syntax_error(context, '(keyword not following correct keyword)')
     }
     return previous.context.tree[0]
 }
@@ -7338,10 +7310,10 @@ function test_escape(context, text, string_start, antislash_pos){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
                 // $pos = string_start + seq_end + 2
-                $_SyntaxError(context,
-                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                raise_syntax_error(context,
+                     "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
-                     "\\xXX escape"])
+                     "\\xXX escape")
             }else{
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
@@ -7350,10 +7322,10 @@ function test_escape(context, text, string_start, antislash_pos){
             if(mo[0].length != 4){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                $_SyntaxError(context,
-                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                raise_syntax_error(context,
+                     "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
-                     "\\uXXXX escape"])
+                     "\\uXXXX escape")
             }else{
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
@@ -7362,14 +7334,14 @@ function test_escape(context, text, string_start, antislash_pos){
             if(mo[0].length != 8){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                $_SyntaxError(context,
-                     ["(unicode error) 'unicodeescape' codec can't decode " +
+                raise_syntax_error(context,
+                     "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
-                     "\\uXXXX escape"])
+                     "\\uXXXX escape")
             }else{
                 var value = parseInt(mo[0], 16)
                 if(value > 0x10FFFF){
-                    $_SyntaxError('invalid unicode escape ' + mo[0])
+                    raise_syntax_error(context, 'invalid unicode escape ' + mo[0])
                 }else if(value >= 0x10000){
                     return [SurrogatePair(value), 2 + mo[0].length]
                 }else{
@@ -7480,12 +7452,12 @@ function prepare_string(context, s, position){
                         re = new RegExp("[-a-zA-Z0-9 ]+"),
                         search = re.exec(src.substr(end_lit))
                     if(search === null){
-                        $_SyntaxError(context,"(unicode error) " +
+                        raise_syntax_error(context," (unicode error) " +
                             "malformed \\N character escape", pos)
                     }
                     var end_lit = end_lit + search[0].length
                     if(src.charAt(end_lit) != "}"){
-                        $_SyntaxError(context, "(unicode error) " +
+                        raise_syntax_error(context, " (unicode error) " +
                             "malformed \\N character escape")
                     }
                     var description = search[0].toUpperCase()
@@ -7511,7 +7483,7 @@ function prepare_string(context, s, position){
                             description + ";.*$", "m")
                         search = re.exec($B.unicodedb)
                         if(search === null){
-                            $_SyntaxError(context, "(unicode error) " +
+                            raise_syntax_error(context, " (unicode error) " +
                                 "unknown Unicode character name")
                         }
                         var cp = "0x" + search[1] // code point
@@ -7544,8 +7516,7 @@ function prepare_string(context, s, position){
         }else if(src.charAt(end) == '\n' && _type != 'triple_string'){
             // In a string with single quotes, line feed not following
             // a backslash raises SyntaxError
-            console.log(pos, end, src.substring(pos, end))
-            $_SyntaxError(context, ["EOL while scanning string literal"])
+            raise_syntax_error(context, "EOL while scanning string literal")
         }else{
             zone += src.charAt(end)
             end++
@@ -7586,7 +7557,7 @@ function prepare_string(context, s, position){
             if(err.position){
                 $pos += err.position
             }
-            $_SyntaxError(context, [err.message])
+            raise_syntax_error(context, err.message)
         }
     }
 
@@ -7641,10 +7612,10 @@ function unindent(src){
 
 function handle_errortoken(context, token){
     if(token.string == "'" || token.string == '"'){
-        $_SyntaxError(context, ['unterminated string literal ' +
-            `(detected at line ${token.start[0]})`])
+        raise_syntax_error(context, 'unterminated string literal ' +
+            `(detected at line ${token.start[0]})`)
     }
-    $_SyntaxError(context, 'invalid token ' + token[1] + _b_.ord(token[1]))
+    raise_syntax_error(context, 'invalid token ' + token[1] + _b_.ord(token[1]))
 }
 
 var python_keywords = [
@@ -7699,16 +7670,16 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             context = context || new $NodeCtx(node)
             if(err.type == 'IndentationError'){
                 $pos = line2pos[err.line_num]
-                $_SyntaxError(context, err.message, 1)
+                raise_indentation_error(context, err.message)
             }else if(err instanceof SyntaxError){
                 if(braces_stack.length > 0){
                     var last_brace = $B.last(braces_stack),
                         start = last_brace.start
                     $token.value = last_brace
-                    $_SyntaxError(context, [`'${last_brace.string}' was ` +
-                       'never closed'])
+                    raise_syntax_error(context, `'${last_brace.string}'` +
+                       ' was never closed')
                 }
-                $_SyntaxError(context, [err.message])
+                raise_syntax_error(context, err.message)
             }
             throw err
         }
@@ -7731,7 +7702,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
             context = context || new $NodeCtx(node)
-            $_SyntaxError(context, "expected an indented block", expect_indent)
+            raise_indentation_error(context, "expected an indented block",
+                expect_indent)
         }
 
         switch(token.type){
@@ -7746,8 +7718,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     $pos = save_pos
                 }
                 if(indent != 0){
-                    $_SyntaxError(node.context, 'expected an indented block',
-                        1)
+                    raise_indentation_error(node.context,
+                        'expected an indented block')
                 }
                 if(node.context === undefined || node.context.tree.length == 0){
                     node.parent.children.pop()
@@ -7786,8 +7758,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 var name = token[1]
                 if(python_keywords.indexOf(name) > -1){
                     if(unsupported.indexOf(name) > -1){
-                        $_SyntaxError(context,
-                            "Unsupported Python keyword '" + name + "'")
+                        raise_syntax_error(context,
+                            "(Unsupported Python keyword '" + name + "')")
                     }
                     context = $transition(context, name)
                 }else if(name == 'not'){
@@ -7807,16 +7779,16 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                         braces_stack.push(token)
                     }else if(braces_close[op]){
                         if(braces_stack.length == 0){
-                            $_SyntaxError(context, "unmatched '" + op + "'")
+                            raise_syntax_error(context, "(unmatched '" + op + "')")
                         }else{
                             var last_brace = $B.last(braces_stack)
                             if(last_brace.string == braces_close[op]){
                                 braces_stack.pop()
                             }else{
-                                $_SyntaxError(context,
-                                    [`closing parenthesis '${op}' does not ` +
+                                raise_syntax_error(context,
+                                    `closing parenthesis '${op}' does not ` +
                                     `match opening parenthesis '` +
-                                    `${last_brace.string}'`])
+                                    `${last_brace.string}'`)
                            }
                        }
                     }
@@ -7832,7 +7804,8 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     context = $transition(context, 'annotation')
                 }else if(op == ';'){
                     if(context.type == 'node' && context.tree.length == 0){
-                        $_SyntaxError(context, 'statement cannot start with ;')
+                        raise_syntax_error(context, 
+                            '(statement cannot start with ;)')
                     }
                     // same as NEWLINE
                     $transition(context, 'eol')
@@ -7859,7 +7832,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 try{
                     var prepared = prepare_number(token[1])
                 }catch(err){
-                    $_SyntaxError(context, [err.message])
+                    raise_syntax_error(context, err.message)
                 }
                 context = $transition(context, prepared.type, prepared.value)
                 continue
@@ -7901,7 +7874,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 // Check that it supports indentation
                 if(! expect_indent){
                     context = context || new $NodeCtx(node)
-                    $_SyntaxError(context, 'unexpected indent', $pos)
+                    raise_indentation_error(context, 'unexpected indent')
                 }
                 expect_indent = false
                 continue
