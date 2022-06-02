@@ -121,8 +121,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-02 10:03:29.582576"
-__BRYTHON__.timestamp=1654157009581
+__BRYTHON__.compiled_date="2022-06-02 12:11:53.809917"
+__BRYTHON__.timestamp=1654164713808
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -570,8 +570,12 @@ function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
 target.end_col_offset=origin.end_col_offset}
+function first_position(C){var ctx=C
+while(ctx.tree && ctx.tree.length > 0){ctx=ctx.tree[0]}
+return ctx.position}
 function last_position(C){var ctx=C
-while(ctx.tree && ctx.tree.length > 0){ctx=$B.last(ctx.tree)}
+while(ctx.tree && ctx.tree.length > 0){ctx=$B.last(ctx.tree)
+if(ctx.end_position){return ctx.end_position}}
 return ctx.end_position ||ctx.position}
 function raise_error_known_location(type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=type.$factory(message)
 exc.filename=filename
@@ -1057,7 +1061,6 @@ case '=':
 if(C.expect==','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
 break
 case 'for':
-if(this.parent.tree.length > 1){raise_syntax_error(C,"non-parenthesized generator expression")}
 return new $TargetListCtx(new $ForExpr(new GeneratorExpCtx(C)))
 case 'op':
 if(C.expect=='id'){var op=value
@@ -1720,6 +1723,10 @@ if(assigned.type=='expr' && assigned.tree[0].type=='id'){if(C.name=='unary' ||C.
 raise_syntax_error_known_range(
 C,a,b,"invalid syntax. "+
 "Maybe you meant '==' or ':=' instead of '='?")}}}
+if(C.name=='iterator' &&
+C.parent.parent.type !='node'){
+var for_expr=C.parent.parent
+raise_syntax_error_known_range(C,first_position(for_expr),last_position(for_expr),'Generator expression must be parenthesized')}
 if(C.with_commas ||
 ["assign","return"].indexOf(C.parent.type)>-1){if($parent_match(C,{type:"yield","from":true})){raise_syntax_error(C,"no implicit tuple for yield from")}
 C.parent.tree.pop()
@@ -1950,6 +1957,7 @@ case 'if':
 var if_ctx=new $ConditionCtx(this.parent,'if')
 if_ctx.in_comp=true
 return new $AbstractExprCtx(if_ctx,false)}}
+console.log('-- error for, C',C,'token',token,value,$token.value)
 raise_syntax_error(C)}
 var $FromCtx=$B.parser.$FromCtx=function(C){
 this.type='from'
@@ -2083,7 +2091,7 @@ if(last && last.type=="func_star_arg"){if(last.name=="*"){if(C.op=='*'){
 raise_syntax_error(C,'named arguments must follow bare *')}else{raise_syntax_error(C)}}}
 return $transition(C.parent,token,value)
 case 'op':
-if(C.has_kw_arg){raise_syntax_error(C,"(only one '**' argument allowed)")}
+if(C.has_kw_arg){raise_syntax_error(C,"(unpacking after '**' argument)")}
 var op=value
 C.expect=','
 if(op=='*'){if(C.has_star_arg){raise_syntax_error(C,"(only one '*' argument allowed)")}
@@ -2171,7 +2179,9 @@ this.tree[0].ast(),Comprehension.generators(this.tree.slice(1))
 set_position(res,this.position)
 return res}
 GeneratorExpCtx.prototype.transition=function(token,value){var C=this
-if(token==')'){if(this.parent.type=='call'){return this.parent.parent}
+if(token==')'){if(this.parent.type=='call'){
+if(C.parent.tree.length > 1){raise_syntax_error_known_range(C,first_position(C),last_position(C),'Generator expression must be parenthesized')}
+return this.parent.parent}
 return this.parent}
 raise_syntax_error(C)}
 var $GlobalCtx=$B.parser.$GlobalCtx=function(C){
@@ -2390,7 +2400,8 @@ $JSCode.prototype.transition=function(token,value){var C=this}
 var $KwArgCtx=$B.parser.$KwArgCtx=function(C){
 this.type='kwarg'
 this.parent=C.parent
-this.position=$token.value
+this.position=first_position(C)
+this.equal_sign_position=$token.value
 this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
@@ -2399,7 +2410,9 @@ var value=this.tree[0].value
 var ctx=C.parent.parent 
 if(ctx.kwargs===undefined){ctx.kwargs=[value]}else if(ctx.kwargs.indexOf(value)==-1){ctx.kwargs.push(value)}else{raise_syntax_error(C,'keyword argument repeated')}}
 $KwArgCtx.prototype.transition=function(token,value){var C=this
-if(token==','){return new $CallArgCtx(C.parent.parent)}
+if(token==','){return new $CallArgCtx(C.parent.parent)}else if(token=='for'){
+raise_syntax_error_known_range(C,C.position,C.equal_sign_position,"invalid syntax. "+
+"Maybe you meant '==' or ':=' instead of '='?")}
 return $transition(C.parent,token)}
 var $LambdaCtx=$B.parser.$LambdaCtx=function(C){
 this.type='lambda'
@@ -2463,7 +2476,8 @@ if(C.closed){if(token=='['){return new $AbstractExprCtx(
 new $SubCtx(C.parent),false)}
 if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
-if(token==')'){var close=true
+if(token==')'){if(C.implicit){return $transition(C.parent,token,value)}
+var close=true
 if(C.tree.length==1){
 var grandparent=C.parent.parent
 grandparent.tree.pop()

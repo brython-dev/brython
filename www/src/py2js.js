@@ -381,10 +381,21 @@ function copy_position(target, origin){
 Function called in case of SyntaxError or IndentationError
 ==========================================================
 */
+function first_position(context){
+    var ctx = context
+    while(ctx.tree && ctx.tree.length > 0){
+        ctx = ctx.tree[0]
+    }
+    return ctx.position
+}
+
 function last_position(context){
     var ctx = context
     while(ctx.tree && ctx.tree.length > 0){
         ctx = $B.last(ctx.tree)
+        if(ctx.end_position){
+            return ctx.end_position
+        }
     }
     return ctx.end_position || ctx.position
 }
@@ -1423,11 +1434,6 @@ $CallArgCtx.prototype.transition = function(token, value){
             }
             break
         case 'for':
-            // comprehension
-            if(this.parent.tree.length > 1){
-                raise_syntax_error(context,
-                    "non-parenthesized generator expression")
-            }
             return new $TargetListCtx(new $ForExpr(new GeneratorExpCtx(context)))
         case 'op':
             if(context.expect == 'id'){
@@ -2680,6 +2686,15 @@ $ExprCtx.prototype.transition = function(token, value){
                         }
                     }
                 }
+                if(context.name == 'iterator' &&
+                        context.parent.parent.type != 'node'){
+                    // case "(x for x in expr, y)" : we must detect that the
+                    // expression is the iterator of a generator expression
+                    var for_expr = context.parent.parent
+                    raise_syntax_error_known_range(context,
+                        first_position(for_expr), last_position(for_expr),
+                        'Generator expression must be parenthesized')
+                }
                 if(context.with_commas ||
                         ["assign", "return"].indexOf(context.parent.type) > -1){
                     if($parent_match(context, {type: "yield", "from": true})){
@@ -3150,6 +3165,7 @@ $ForExpr.prototype.transition = function(token, value){
 
         }
     }
+    console.log('-- error for, context', context, 'token', token, value, $token.value)
     raise_syntax_error(context)
 }
 
@@ -3444,7 +3460,7 @@ $FuncArgs.prototype.transition = function(token, value){
         case 'op':
             if(context.has_kw_arg){
                 raise_syntax_error(context,
-                    "(only one '**' argument allowed)")
+                    "(unpacking after '**' argument)")
             }
             var op = value
             context.expect = ','
@@ -3635,6 +3651,13 @@ GeneratorExpCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ')'){
         if(this.parent.type == 'call'){
+            // If the call had a previous argument, raise syntax error
+            if(context.parent.tree.length > 1){
+                raise_syntax_error_known_range(context,
+                    first_position(context),
+                    last_position(context),
+                    'Generator expression must be parenthesized')
+            }
             return this.parent.parent
         }
         return this.parent
@@ -4060,7 +4083,8 @@ var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
     // Class for keyword argument in a call
     this.type = 'kwarg'
     this.parent = context.parent
-    this.position = $token.value
+    this.position = first_position(context)
+    this.equal_sign_position = $token.value
     this.tree = [context.tree[0]]
     // operation replaces left operand
     context.parent.tree.pop()
@@ -4083,7 +4107,16 @@ var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
 
 $KwArgCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == ','){return new $CallArgCtx(context.parent.parent)}
+    if(token == ','){
+        return new $CallArgCtx(context.parent.parent)
+    }else if(token == 'for'){
+        // generator expression is invalid
+        raise_syntax_error_known_range(context,
+            context.position,
+            context.equal_sign_position,
+            "invalid syntax. " +
+            "Maybe you meant '==' or ':=' instead of '='?")
+    }
     return $transition(context.parent, token)
 }
 
@@ -4208,6 +4241,9 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
             switch(context.real){
                 case 'tuple':
                     if(token == ')'){
+                        if(context.implicit){
+                            return $transition(context.parent, token, value)
+                        }
                         var close = true
                         if(context.tree.length == 1){
                             // make single element replace tuple as child of
@@ -7804,7 +7840,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     context = $transition(context, 'annotation')
                 }else if(op == ';'){
                     if(context.type == 'node' && context.tree.length == 0){
-                        raise_syntax_error(context, 
+                        raise_syntax_error(context,
                             '(statement cannot start with ;)')
                     }
                     // same as NEWLINE
