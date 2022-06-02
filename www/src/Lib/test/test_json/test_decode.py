@@ -35,7 +35,7 @@ class TestDecode:
         self.assertEqual(self.loads(s, object_pairs_hook=OrderedDict,
                                     object_hook=lambda x: None),
                          OrderedDict(p))
-        # check that empty objects literals work (see #17368)
+        # check that empty object literals work (see #17368)
         self.assertEqual(self.loads('{}', object_pairs_hook=OrderedDict),
                          OrderedDict())
         self.assertEqual(self.loads('{"empty": {}}',
@@ -58,17 +58,42 @@ class TestDecode:
     def test_keys_reuse(self):
         s = '[{"a_key": 1, "b_\xe9": 2}, {"a_key": 3, "b_\xe9": 4}]'
         self.check_keys_reuse(s, self.loads)
-        self.check_keys_reuse(s, self.json.decoder.JSONDecoder().decode)
+        decoder = self.json.decoder.JSONDecoder()
+        self.check_keys_reuse(s, decoder.decode)
+        self.assertFalse(decoder.memo)
 
     def test_extra_data(self):
         s = '[1, 2, 3]5'
         msg = 'Extra data'
-        self.assertRaisesRegex(ValueError, msg, self.loads, s)
+        self.assertRaisesRegex(self.JSONDecodeError, msg, self.loads, s)
 
     def test_invalid_escape(self):
         s = '["abc\\y"]'
         msg = 'escape'
-        self.assertRaisesRegex(ValueError, msg, self.loads, s)
+        self.assertRaisesRegex(self.JSONDecodeError, msg, self.loads, s)
+
+    def test_invalid_input_type(self):
+        msg = 'the JSON object must be str'
+        for value in [1, 3.14, [], {}, None]:
+            self.assertRaisesRegex(TypeError, msg, self.loads, value)
+
+    def test_string_with_utf8_bom(self):
+        # see #18958
+        bom_json = "[1,2,3]".encode('utf-8-sig').decode('utf-8')
+        with self.assertRaises(self.JSONDecodeError) as cm:
+            self.loads(bom_json)
+        self.assertIn('BOM', str(cm.exception))
+        with self.assertRaises(self.JSONDecodeError) as cm:
+            self.json.load(StringIO(bom_json))
+        self.assertIn('BOM', str(cm.exception))
+        # make sure that the BOM is not detected in the middle of a string
+        bom_in_str = '"{}"'.format(''.encode('utf-8-sig').decode('utf-8'))
+        self.assertEqual(self.loads(bom_in_str), '\ufeff')
+        self.assertEqual(self.json.load(StringIO(bom_in_str)), '\ufeff')
+
+    def test_negative_index(self):
+        d = self.json.JSONDecoder()
+        self.assertRaises(ValueError, d.raw_decode, 'a'*42, -50000)
 
 class TestPyDecode(TestDecode, PyTest): pass
 class TestCDecode(TestDecode, CTest): pass

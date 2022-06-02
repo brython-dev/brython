@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from test.test_json import PyTest, CTest
+from test.support import bigaddrspacetest
 
 
 CASES = [
@@ -10,9 +11,6 @@ CASES = [
     ('{"object with 1 member":["array with 1 element"]}', '"{\\"object with 1 member\\":[\\"array with 1 element\\"]}"'),
     (' s p a c e d ', '" s p a c e d "'),
     ('\U0001d120', '"\\ud834\\udd20"'),
-    ('\u03b1\u03a9', '"\\u03b1\\u03a9"'),
-    ('\u03b1\u03a9', '"\\u03b1\\u03a9"'),
-    ('\u03b1\u03a9', '"\\u03b1\\u03a9"'),
     ('\u03b1\u03a9', '"\\u03b1\\u03a9"'),
     ("`1~!@#$%^&*()_+-={':[,]}|;.</>?", '"`1~!@#$%^&*()_+-={\':[,]}|;.</>?"'),
     ('\x08\x0c\n\r\t', '"\\b\\f\\n\\r\\t"'),
@@ -41,4 +39,10 @@ class TestEncodeBasestringAscii:
 
 
 class TestPyEncodeBasestringAscii(TestEncodeBasestringAscii, PyTest): pass
-class TestCEncodeBasestringAscii(TestEncodeBasestringAscii, CTest): pass
+class TestCEncodeBasestringAscii(TestEncodeBasestringAscii, CTest):
+    @bigaddrspacetest
+    def test_overflow(self):
+        size = (2**32)//6 + 1
+        s = "\x00"*size
+        with self.assertRaises(OverflowError):
+            self.json.encoder.encode_basestring_ascii(s)

@@ -7,6 +7,7 @@ producing RFC valid messages.
 import io
 import unittest
 from email import policy, message_from_bytes
+from email.message import EmailMessage
 from email.generator import BytesGenerator
 from test.test_email import TestEmailBase, parameterize
 
@@ -23,7 +24,10 @@ def dedent(bstr):
 
 
 @parameterize
-class TestInversion(TestEmailBase, unittest.TestCase):
+class TestInversion(TestEmailBase):
+
+    policy = policy.default
+    message = EmailMessage
 
     def msg_as_input(self, msg):
         m = message_from_bytes(msg, policy=policy.SMTP)
@@ -42,7 +46,32 @@ class TestInversion(TestEmailBase, unittest.TestCase):
             foo
             """),),
 
+        'header_with_invalid_date': (dedent(b"""\
+            Date: Tue, 06 Jun 2017 27:39:33 +0600
+            From: abc@xyz.com
+            Subject: timezones
+
+            How do they work even?
+            """),),
+
             }
+
+    payload_params = {
+        'plain_text': dict(payload='This is a test\n'*20),
+        'base64_text': dict(payload=(('xy a'*40+'\n')*5), cte='base64'),
+        'qp_text': dict(payload=(('xy a'*40+'\n')*5), cte='quoted-printable'),
+        }
+
+    def payload_as_body(self, payload, **kw):
+        msg = self._make_message()
+        msg['From'] = 'foo'
+        msg['To'] = 'bar'
+        msg['Subject'] = 'payload round trip test'
+        msg.set_content(payload, **kw)
+        b = bytes(msg)
+        msg2 = message_from_bytes(b, policy=self.policy)
+        self.assertEqual(bytes(msg2), b)
+        self.assertEqual(msg2.get_content(), payload)
 
 
 if __name__ == '__main__':

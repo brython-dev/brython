@@ -61,13 +61,6 @@ class StatsTestCase(unittest.TestCase):
             self.assertEqual(self.stats.sort_type,
                              self.stats.sort_arg_dict_default[sortkey][-1])
 
-    def test_sort_stats_enum(self):
-        for member in SortKey:
-            self.stats.sort_stats(member)
-            self.assertEqual(
-                    self.stats.sort_type,
-                    self.stats.sort_arg_dict_default[member.value][-1])
-
     def test_sort_starts_mix(self):
         self.assertRaises(TypeError, self.stats.sort_stats,
                           'calls',
@@ -94,6 +87,10 @@ class StatsTestCase(unittest.TestCase):
         self.assertIn('pass1', funcs_called)
         self.assertIn('pass2', funcs_called)
         self.assertIn('pass3', funcs_called)
+
+    def test_SortKey_enum(self):
+        self.assertEqual(SortKey.FILENAME, 'filename')
+        self.assertNotEqual(SortKey.FILENAME, SortKey.CALLS)
 
 if __name__ == "__main__":
     unittest.main()

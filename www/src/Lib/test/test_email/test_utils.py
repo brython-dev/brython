@@ -48,18 +48,28 @@ class DateTimeTests(unittest.TestCase):
             utils.parsedate_to_datetime(self.datestring + ' -0000'),
             self.naive_dt)
 
+    def test_parsedate_to_datetime_with_invalid_raises_valueerror(self):
+        invalid_dates = ['',
+                         '0',
+                         'A Complete Waste of Time'
+                         'Tue, 06 Jun 2017 27:39:33 +0600',
+                         'Tue, 06 Jun 2017 07:39:33 +2600',
+                         'Tue, 06 Jun 2017 27:39:33']
+        for dtstr in invalid_dates:
+            with self.subTest(dtstr=dtstr):
+                self.assertRaises(ValueError, utils.parsedate_to_datetime, dtstr)
 
 class LocaltimeTests(unittest.TestCase):
 
     def test_localtime_is_tz_aware_daylight_true(self):
         test.support.patch(self, time, 'daylight', True)
         t = utils.localtime()
-        self.assertIsNot(t.tzinfo, None)
+        self.assertIsNotNone(t.tzinfo)
 
     def test_localtime_is_tz_aware_daylight_false(self):
         test.support.patch(self, time, 'daylight', False)
         t = utils.localtime()
-        self.assertIsNot(t.tzinfo, None)
+        self.assertIsNotNone(t.tzinfo)
 
     def test_localtime_daylight_true_dst_false(self):
         test.support.patch(self, time, 'daylight', True)
@@ -75,6 +85,7 @@ class LocaltimeTests(unittest.TestCase):
         t2 = utils.localtime(t1)
         self.assertEqual(t1, t2)
 
+    @test.support.run_with_tz('Europe/Minsk')
     def test_localtime_daylight_true_dst_true(self):
         test.support.patch(self, time, 'daylight', True)
         t0 = datetime.datetime(2012, 3, 12, 1, 1)
@@ -82,6 +93,7 @@ class LocaltimeTests(unittest.TestCase):
         t2 = utils.localtime(t1)
         self.assertEqual(t1, t2)
 
+    @test.support.run_with_tz('Europe/Minsk')
     def test_localtime_daylight_false_dst_true(self):
         test.support.patch(self, time, 'daylight', False)
         t0 = datetime.datetime(2012, 3, 12, 1, 1)
@@ -135,6 +147,29 @@ class LocaltimeTests(unittest.TestCase):
         t0 = datetime.datetime(1994, 1, 1, tzinfo=datetime.timezone.utc)
         t1 = utils.localtime(t0)
         self.assertEqual(t1.tzname(), 'EET')
+
+# Issue #24836: The timezone files are out of date (pre 2011k)
+# on Mac OS X Snow Leopard.
+@test.support.requires_mac_ver(10, 7)
+class FormatDateTests(unittest.TestCase):
+
+    @test.support.run_with_tz('Europe/Minsk')
+    def test_formatdate(self):
+        timeval = time.mktime((2011, 12, 1, 18, 0, 0, 4, 335, 0))
+        string = utils.formatdate(timeval, localtime=False, usegmt=False)
+        self.assertEqual(string, 'Thu, 01 Dec 2011 15:00:00 -0000')
+        string = utils.formatdate(timeval, localtime=False, usegmt=True)
+        self.assertEqual(string, 'Thu, 01 Dec 2011 15:00:00 GMT')
+
+    @test.support.run_with_tz('Europe/Minsk')
+    def test_formatdate_with_localtime(self):
+        timeval = time.mktime((2011, 1, 1, 18, 0, 0, 6, 1, 0))
+        string = utils.formatdate(timeval, localtime=True)
+        self.assertEqual(string, 'Sat, 01 Jan 2011 18:00:00 +0200')
+        # Minsk moved from +0200 (with DST) to +0300 (without DST) in 2011
+        timeval = time.mktime((2011, 12, 1, 18, 0, 0, 4, 335, 0))
+        string = utils.formatdate(timeval, localtime=True)
+        self.assertEqual(string, 'Thu, 01 Dec 2011 18:00:00 +0300')
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,3 +1,4 @@
+import codecs
 from collections import OrderedDict
 from test.test_json import PyTest, CTest
 
@@ -52,9 +53,31 @@ class TestUnicode:
         self.assertRaises(TypeError, self.dumps, [b"hi"])
 
     def test_bytes_decode(self):
-        self.assertRaises(TypeError, self.loads, b'"hi"')
-        self.assertRaises(TypeError, self.loads, b'["hi"]')
-
+        for encoding, bom in [
+                ('utf-8', codecs.BOM_UTF8),
+                ('utf-16be', codecs.BOM_UTF16_BE),
+                ('utf-16le', codecs.BOM_UTF16_LE),
+                ('utf-32be', codecs.BOM_UTF32_BE),
+                ('utf-32le', codecs.BOM_UTF32_LE),
+            ]:
+            data = ["a\xb5\u20ac\U0001d120"]
+            encoded = self.dumps(data).encode(encoding)
+            self.assertEqual(self.loads(bom + encoded), data)
+            self.assertEqual(self.loads(encoded), data)
+        self.assertRaises(UnicodeDecodeError, self.loads, b'["\x80"]')
+        # RFC-7159 and ECMA-404 extend JSON to allow documents that
+        # consist of only a string, which can present a special case
+        # not covered by the encoding detection patterns specified in
+        # RFC-4627 for utf-16-le (XX 00 XX 00).
+        self.assertEqual(self.loads('"\u2600"'.encode('utf-16-le')),
+                         '\u2600')
+        # Encoding detection for small (<4) bytes objects
+        # is implemented as a special case. RFC-7159 and ECMA-404
+        # allow single codepoint JSON documents which are only two
+        # bytes in utf-16 encodings w/o BOM.
+        self.assertEqual(self.loads(b'5\x00'), 5)
+        self.assertEqual(self.loads(b'\x007'), 7)
+        self.assertEqual(self.loads(b'57'), 57)
 
     def test_object_pairs_hook_with_unicode(self):
         s = '{"xkd":1, "kcw":2, "art":3, "hxm":4, "qrt":5, "pad":6, "hoy":7}'

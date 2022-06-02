@@ -1,46 +1,43 @@
-from importlib import machinery
 from .. import abc
-from . import util
+from .. import util
+
+machinery = util.import_importlib('importlib.machinery')
 
 import unittest
+import warnings
+
 
 class FinderTests(abc.FinderTests):
 
     """Test the finder for extension modules."""
 
-    def find_module(self, fullname):
-        importer = machinery.FileFinder(util.PATH,
-                                        (machinery.ExtensionFileLoader,
-                                         machinery.EXTENSION_SUFFIXES))
-        return importer.find_module(fullname)
+    def find_spec(self, fullname):
+        importer = self.machinery.FileFinder(util.EXTENSIONS.path,
+                                            (self.machinery.ExtensionFileLoader,
+                                             self.machinery.EXTENSION_SUFFIXES))
+
+        return importer.find_spec(fullname)
 
     def test_module(self):
-        self.assertTrue(self.find_module(util.NAME))
+        self.assertTrue(self.find_spec(util.EXTENSIONS.name))
 
-    def test_package(self):
-        # No extension module as an __init__ available for testing.
-        pass
+    # No extension module as an __init__ available for testing.
+    test_package = test_package_in_package = None
 
-    def test_module_in_package(self):
-        # No extension module in a package available for testing.
-        pass
+    # No extension module in a package available for testing.
+    test_module_in_package = None
 
-    def test_package_in_package(self):
-        # No extension module as an __init__ available for testing.
-        pass
-
-    def test_package_over_module(self):
-        # Extension modules cannot be an __init__ for a package.
-        pass
+    # Extension modules cannot be an __init__ for a package.
+    test_package_over_module = None
 
     def test_failure(self):
-        self.assertIsNone(self.find_module('asdfjkl;'))
+        self.assertIsNone(self.find_spec('asdfjkl;'))
 
 
-def test_main():
-    from test.support import run_unittest
-    run_unittest(FinderTests)
+(Frozen_FinderTests,
+ Source_FinderTests
+ ) = util.test_both(FinderTests, machinery=machinery)
 
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

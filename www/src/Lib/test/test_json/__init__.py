@@ -1,20 +1,24 @@
 import os
-import sys
 import json
 import doctest
 import unittest
 
 from test import support
+from test.support import import_helper
+
 
 # import json with and without accelerations
-cjson = support.import_fresh_module('json', fresh=['_json'])
-pyjson = support.import_fresh_module('json', blocked=['_json'])
+cjson = import_helper.import_fresh_module('json', fresh=['_json'])
+pyjson = import_helper.import_fresh_module('json', blocked=['_json'])
+# JSONDecodeError is cached inside the _json module
+cjson.JSONDecodeError = cjson.decoder.JSONDecodeError = json.JSONDecodeError
 
 # create two base classes that will be used by the other tests
 class PyTest(unittest.TestCase):
     json = pyjson
     loads = staticmethod(pyjson.loads)
     dumps = staticmethod(pyjson.dumps)
+    JSONDecodeError = staticmethod(pyjson.JSONDecodeError)
 
 @unittest.skipUnless(cjson, 'requires _json')
 class CTest(unittest.TestCase):
@@ -22,6 +26,7 @@ class CTest(unittest.TestCase):
         json = cjson
         loads = staticmethod(cjson.loads)
         dumps = staticmethod(cjson.dumps)
+        JSONDecodeError = staticmethod(cjson.JSONDecodeError)
 
 # test PyTest and CTest checking if the functions come from the right module
 class TestPyTest(PyTest):
@@ -42,23 +47,12 @@ class TestCTest(CTest):
                          '_json')
 
 
-here = os.path.dirname(__file__)
-
-def load_tests(*args):
-    suite = additional_tests()
-    loader = unittest.TestLoader()
-    for fn in os.listdir(here):
-        if fn.startswith("test") and fn.endswith(".py"):
-            modname = "test.test_json." + fn[:-3]
-            __import__(modname)
-            module = sys.modules[modname]
-            suite.addTests(loader.loadTestsFromModule(module))
-    return suite
-
-def additional_tests():
+def load_tests(loader, _, pattern):
     suite = unittest.TestSuite()
     for mod in (json, json.encoder, json.decoder):
         suite.addTest(doctest.DocTestSuite(mod))
     suite.addTest(TestPyTest('test_pyjson'))
     suite.addTest(TestCTest('test_cjson'))
-    return suite
+
+    pkg_dir = os.path.dirname(__file__)
+    return support.load_package_tests(pkg_dir, loader, suite, pattern)

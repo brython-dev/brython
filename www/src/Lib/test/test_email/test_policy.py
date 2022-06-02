@@ -2,9 +2,11 @@ import io
 import types
 import textwrap
 import unittest
+import email.errors
 import email.policy
 import email.parser
 import email.generator
+import email.message
 from email import headerregistry
 
 def make_defaults(base_defaults, differences):
@@ -22,14 +24,20 @@ class PolicyAPITests(unittest.TestCase):
         'linesep':                  '\n',
         'cte_type':                 '8bit',
         'raise_on_defect':          False,
+        'mangle_from_':             True,
+        'message_factory':          None,
         }
     # These default values are the ones set on email.policy.default.
     # If any of these defaults change, the docs must be updated.
     policy_defaults = compat32_defaults.copy()
     policy_defaults.update({
+        'utf8':                     False,
         'raise_on_defect':          False,
         'header_factory':           email.policy.EmailPolicy.header_factory,
         'refold_source':            'long',
+        'content_manager':          email.policy.EmailPolicy.content_manager,
+        'mangle_from_':             False,
+        'message_factory':          email.message.EmailMessage,
         })
 
     # For each policy under test, we give here what we expect the defaults to
@@ -41,6 +49,9 @@ class PolicyAPITests(unittest.TestCase):
         email.policy.default: make_defaults(policy_defaults, {}),
         email.policy.SMTP: make_defaults(policy_defaults,
                                          {'linesep': '\r\n'}),
+        email.policy.SMTPUTF8: make_defaults(policy_defaults,
+                                             {'linesep': '\r\n',
+                                              'utf8': True}),
         email.policy.HTTP: make_defaults(policy_defaults,
                                          {'linesep': '\r\n',
                                           'max_line_length': None}),
@@ -55,20 +66,22 @@ class PolicyAPITests(unittest.TestCase):
     def test_defaults(self):
         for policy, expected in self.policies.items():
             for attr, value in expected.items():
-                self.assertEqual(getattr(policy, attr), value,
-                                ("change {} docs/docstrings if defaults have "
-                                "changed").format(policy))
+                with self.subTest(policy=policy, attr=attr):
+                    self.assertEqual(getattr(policy, attr), value,
+                                    ("change {} docs/docstrings if defaults have "
+                                    "changed").format(policy))
 
     def test_all_attributes_covered(self):
         for policy, expected in self.policies.items():
             for attr in dir(policy):
-                if (attr.startswith('_') or
-                        isinstance(getattr(email.policy.EmailPolicy, attr),
-                              types.FunctionType)):
-                    continue
-                else:
-                    self.assertIn(attr, expected,
-                                  "{} is not fully tested".format(attr))
+                with self.subTest(policy=policy, attr=attr):
+                    if (attr.startswith('_') or
+                            isinstance(getattr(email.policy.EmailPolicy, attr),
+                                  types.FunctionType)):
+                        continue
+                    else:
+                        self.assertIn(attr, expected,
+                                      "{} is not fully tested".format(attr))
 
     def test_abc(self):
         with self.assertRaises(TypeError) as cm:
@@ -122,6 +135,18 @@ class PolicyAPITests(unittest.TestCase):
         for attr, value in expected.items():
             self.assertEqual(getattr(added, attr), value)
 
+    def test_fold_zero_max_line_length(self):
+        expected = 'Subject: =?utf-8?q?=C3=A1?=\n'
+
+        msg = email.message.EmailMessage()
+        msg['Subject'] = 'á'
+
+        p1 = email.policy.default.clone(max_line_length=0)
+        p2 = email.policy.default.clone(max_line_length=None)
+
+        self.assertEqual(p1.fold('Subject', msg['Subject']), expected)
+        self.assertEqual(p2.fold('Subject', msg['Subject']), expected)
+
     def test_register_defect(self):
         class Dummy:
             def __init__(self):
@@ -170,7 +195,7 @@ class PolicyAPITests(unittest.TestCase):
         with self.assertRaisesRegex(self.MyDefect, "the telly is broken"):
             self.MyPolicy(raise_on_defect=True).handle_defect(foo, defect)
 
-    def test_overriden_register_defect_works(self):
+    def test_overridden_register_defect_works(self):
         foo = self.MyObj()
         defect1 = self.MyDefect("one")
         my_policy = self.MyPolicy()
@@ -225,10 +250,40 @@ class PolicyAPITests(unittest.TestCase):
                          email.policy.EmailPolicy.header_factory)
         self.assertEqual(newpolicy.__dict__, {'raise_on_defect': True})
 
+    def test_non_ascii_chars_do_not_cause_inf_loop(self):
+        policy = email.policy.default.clone(max_line_length=20)
+        actual = policy.fold('Subject', 'ą' * 12)
+        self.assertEqual(
+            actual,
+            'Subject: \n' +
+            12 * ' =?utf-8?q?=C4=85?=\n')
+
+    def test_short_maxlen_error(self):
+        # RFC 2047 chrome takes up 7 characters, plus the length of the charset
+        # name, so folding should fail if maxlen is lower than the minimum
+        # required length for a line.
+
+        # Note: This is only triggered when there is a single word longer than
+        # max_line_length, hence the 1234567890 at the end of this whimsical
+        # subject. This is because when we encounter a word longer than
+        # max_line_length, it is broken down into encoded words to fit
+        # max_line_length. If the max_line_length isn't large enough to even
+        # contain the RFC 2047 chrome (`?=<charset>?q??=`), we fail.
+        subject = "Melt away the pounds with this one simple trick! 1234567890"
+
+        for maxlen in [3, 7, 9]:
+            with self.subTest(maxlen=maxlen):
+                policy = email.policy.default.clone(max_line_length=maxlen)
+                with self.assertRaises(email.errors.HeaderParseError):
+                    policy.fold("Subject", subject)
+
     # XXX: Need subclassing tests.
     # For adding subclassed objects, make sure the usual rules apply (subclass
     # wins), but that the order still works (right overrides left).
 
+
+class TestException(Exception):
+    pass
 
 class TestPolicyPropagation(unittest.TestCase):
 
@@ -237,40 +292,40 @@ class TestPolicyPropagation(unittest.TestCase):
     # policy was actually propagated all the way to feedparser.
     class MyPolicy(email.policy.Policy):
         def badmethod(self, *args, **kw):
-            raise Exception("test")
+            raise TestException("test")
         fold = fold_binary = header_fetch_parser = badmethod
         header_source_parse = header_store_parse = badmethod
 
     def test_message_from_string(self):
-        with self.assertRaisesRegex(Exception, "^test$"):
+        with self.assertRaisesRegex(TestException, "^test$"):
             email.message_from_string("Subject: test\n\n",
                                       policy=self.MyPolicy)
 
     def test_message_from_bytes(self):
-        with self.assertRaisesRegex(Exception, "^test$"):
+        with self.assertRaisesRegex(TestException, "^test$"):
             email.message_from_bytes(b"Subject: test\n\n",
                                      policy=self.MyPolicy)
 
     def test_message_from_file(self):
         f = io.StringIO('Subject: test\n\n')
-        with self.assertRaisesRegex(Exception, "^test$"):
+        with self.assertRaisesRegex(TestException, "^test$"):
             email.message_from_file(f, policy=self.MyPolicy)
 
     def test_message_from_binary_file(self):
         f = io.BytesIO(b'Subject: test\n\n')
-        with self.assertRaisesRegex(Exception, "^test$"):
+        with self.assertRaisesRegex(TestException, "^test$"):
             email.message_from_binary_file(f, policy=self.MyPolicy)
 
     # These are redundant, but we need them for black-box completeness.
 
     def test_parser(self):
         p = email.parser.Parser(policy=self.MyPolicy)
-        with self.assertRaisesRegex(Exception, "^test$"):
+        with self.assertRaisesRegex(TestException, "^test$"):
             p.parsestr('Subject: test\n\n')
 
     def test_bytes_parser(self):
         p = email.parser.BytesParser(policy=self.MyPolicy)
-        with self.assertRaisesRegex(Exception, "^test$"):
+        with self.assertRaisesRegex(TestException, "^test$"):
             p.parsebytes(b'Subject: test\n\n')
 
     # Now that we've established that all the parse methods get the
@@ -316,6 +371,15 @@ class TestPolicyPropagation(unittest.TestCase):
         msg = self._make_msg("Subject: test\nTo: foo\n\n",
                              policy=email.policy.default.clone(linesep='X'))
         self.assertEqual(msg.as_string(), "Subject: testXTo: fooXX")
+
+
+class TestConcretePolicies(unittest.TestCase):
+
+    def test_header_store_parse_rejects_newlines(self):
+        instance = email.policy.EmailPolicy()
+        self.assertRaises(ValueError,
+                          instance.header_store_parse,
+                          'From', 'spam\negg@foo.py')
 
 
 if __name__ == '__main__':

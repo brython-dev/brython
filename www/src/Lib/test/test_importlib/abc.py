@@ -1,8 +1,7 @@
 import abc
-import unittest
 
 
-class FinderTests(unittest.TestCase, metaclass=abc.ABCMeta):
+class FinderTests(metaclass=abc.ABCMeta):
 
     """Basic tests for a finder to pass."""
 
@@ -39,7 +38,7 @@ class FinderTests(unittest.TestCase, metaclass=abc.ABCMeta):
         pass
 
 
-class LoaderTests(unittest.TestCase, metaclass=abc.ABCMeta):
+class LoaderTests(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def test_module(self):
@@ -78,11 +77,6 @@ class LoaderTests(unittest.TestCase, metaclass=abc.ABCMeta):
     def test_lacking_parent(self):
         """A loader should not be dependent on it's parent package being
         imported."""
-        pass
-
-    @abc.abstractmethod
-    def test_module_reuse(self):
-        """If a module is already in sys.modules, it should be reused."""
         pass
 
     @abc.abstractmethod

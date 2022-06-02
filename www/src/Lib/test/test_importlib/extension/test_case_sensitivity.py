@@ -1,50 +1,48 @@
-import imp
-import sys
-from test import support
+from importlib import _bootstrap_external
+from test.support import os_helper
 import unittest
-from importlib import _bootstrap
+import sys
 from .. import util
-from . import util as ext_util
+
+importlib = util.import_importlib('importlib')
+machinery = util.import_importlib('importlib.machinery')
 
 
+@unittest.skipIf(util.EXTENSIONS.filename is None, '_testcapi not available')
 @util.case_insensitive_tests
-class ExtensionModuleCaseSensitivityTest(unittest.TestCase):
+class ExtensionModuleCaseSensitivityTest(util.CASEOKTestBase):
 
-    def find_module(self):
-        good_name = ext_util.NAME
+    def find_spec(self):
+        good_name = util.EXTENSIONS.name
         bad_name = good_name.upper()
         assert good_name != bad_name
-        finder = _bootstrap.FileFinder(ext_util.PATH,
-                                        (_bootstrap.ExtensionFileLoader,
-                                         _bootstrap.EXTENSION_SUFFIXES))
-        return finder.find_module(bad_name)
+        finder = self.machinery.FileFinder(util.EXTENSIONS.path,
+                                          (self.machinery.ExtensionFileLoader,
+                                           self.machinery.EXTENSION_SUFFIXES))
+        return finder.find_spec(bad_name)
 
+    @unittest.skipIf(sys.flags.ignore_environment, 'ignore_environment flag was set')
     def test_case_sensitive(self):
-        with support.EnvironmentVarGuard() as env:
+        with os_helper.EnvironmentVarGuard() as env:
             env.unset('PYTHONCASEOK')
-            if b'PYTHONCASEOK' in _bootstrap._os.environ:
-                self.skipTest('os.environ changes not reflected in '
-                              '_os.environ')
-            loader = self.find_module()
-            self.assertIsNone(loader)
+            self.caseok_env_changed(should_exist=False)
+            spec = self.find_spec()
+            self.assertIsNone(spec)
 
+    @unittest.skipIf(sys.flags.ignore_environment, 'ignore_environment flag was set')
     def test_case_insensitivity(self):
-        with support.EnvironmentVarGuard() as env:
+        with os_helper.EnvironmentVarGuard() as env:
             env.set('PYTHONCASEOK', '1')
-            if b'PYTHONCASEOK' not in _bootstrap._os.environ:
-                self.skipTest('os.environ changes not reflected in '
-                              '_os.environ')
-            loader = self.find_module()
-            self.assertTrue(hasattr(loader, 'load_module'))
+            self.caseok_env_changed(should_exist=True)
+            spec = self.find_spec()
+            self.assertTrue(spec)
 
 
-
-
-def test_main():
-    if ext_util.FILENAME is None:
-        return
-    support.run_unittest(ExtensionModuleCaseSensitivityTest)
+(Frozen_ExtensionCaseSensitivity,
+ Source_ExtensionCaseSensitivity
+ ) = util.test_both(ExtensionModuleCaseSensitivityTest, importlib=importlib,
+                    machinery=machinery)
 
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

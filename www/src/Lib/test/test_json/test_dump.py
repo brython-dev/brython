@@ -12,6 +12,16 @@ class TestDump:
     def test_dumps(self):
         self.assertEqual(self.dumps({}), '{}')
 
+    def test_dump_skipkeys(self):
+        v = {b'invalid_key': False, 'valid_key': True}
+        with self.assertRaises(TypeError):
+            self.json.dumps(v)
+
+        s = self.json.dumps(v, skipkeys=True)
+        o = self.json.loads(s)
+        self.assertIn('valid_key', o)
+        self.assertNotIn(b'invalid_key', o)
+
     def test_encode_truefalse(self):
         self.assertEqual(self.dumps(
                  {True: False, False: True}, sort_keys=True),
@@ -27,6 +37,25 @@ class TestDump:
             del a[-1]
         self.assertEqual(self.dumps(a, default=crasher),
                  '[null, null, null, null, null]')
+
+    # Issue 24094
+    def test_encode_evil_dict(self):
+        class D(dict):
+            def keys(self):
+                return L
+
+        class X:
+            def __hash__(self):
+                del L[0]
+                return 1337
+
+            def __lt__(self, o):
+                return 0
+
+        L = [X() for i in range(1122)]
+        d = D()
+        d[1337] = "true.dat"
+        self.assertEqual(self.dumps(d, sort_keys=True), '{"1337": "true.dat"}')
 
 
 class TestPyDump(TestDump, PyTest): pass

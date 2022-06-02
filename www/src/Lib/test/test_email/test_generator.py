@@ -2,7 +2,9 @@ import io
 import textwrap
 import unittest
 from email import message_from_string, message_from_bytes
+from email.message import EmailMessage
 from email.generator import Generator, BytesGenerator
+from email.headerregistry import Address
 from email import policy
 from test.test_email import TestEmailBase, parameterize
 
@@ -26,7 +28,6 @@ class TestGeneratorBase:
 
             None
             """),
-        # From is wrapped because wrapped it fits in 40.
         40: textwrap.dedent("""\
             To: whom_it_may_concern@example.com
             From:
@@ -39,11 +40,11 @@ class TestGeneratorBase:
 
             None
             """),
-        # Neither to nor from fit even if put on a new line,
-        # so we leave them sticking out on the first line.
         20: textwrap.dedent("""\
-            To: whom_it_may_concern@example.com
-            From: nobody_you_want_to_know@example.com
+            To:
+             whom_it_may_concern@example.com
+            From:
+             nobody_you_want_to_know@example.com
             Subject: We the
              willing led by the
              unknowing are doing
@@ -139,6 +140,82 @@ class TestGeneratorBase:
         g.flatten(msg, linesep='\n')
         self.assertEqual(s.getvalue(), self.typ(expected))
 
+    def test_set_mangle_from_via_policy(self):
+        source = textwrap.dedent("""\
+            Subject: test that
+             from is mangled in the body!
+
+            From time to time I write a rhyme.
+            """)
+        variants = (
+            (None, True),
+            (policy.compat32, True),
+            (policy.default, False),
+            (policy.default.clone(mangle_from_=True), True),
+            )
+        for p, mangle in variants:
+            expected = source.replace('From ', '>From ') if mangle else source
+            with self.subTest(policy=p, mangle_from_=mangle):
+                msg = self.msgmaker(self.typ(source))
+                s = self.ioclass()
+                g = self.genclass(s, policy=p)
+                g.flatten(msg)
+                self.assertEqual(s.getvalue(), self.typ(expected))
+
+    def test_compat32_max_line_length_does_not_fold_when_none(self):
+        msg = self.msgmaker(self.typ(self.refold_long_expected[0]))
+        s = self.ioclass()
+        g = self.genclass(s, policy=policy.compat32.clone(max_line_length=None))
+        g.flatten(msg)
+        self.assertEqual(s.getvalue(), self.typ(self.refold_long_expected[0]))
+
+    def test_rfc2231_wrapping(self):
+        # This is pretty much just to make sure we don't have an infinite
+        # loop; I don't expect anyone to hit this in the field.
+        msg = self.msgmaker(self.typ(textwrap.dedent("""\
+            To: nobody
+            Content-Disposition: attachment;
+             filename="afilenamelongenoghtowraphere"
+
+            None
+            """)))
+        expected = textwrap.dedent("""\
+            To: nobody
+            Content-Disposition: attachment;
+             filename*0*=us-ascii''afilename;
+             filename*1*=longenoghtowraphere
+
+            None
+            """)
+        s = self.ioclass()
+        g = self.genclass(s, policy=self.policy.clone(max_line_length=33))
+        g.flatten(msg)
+        self.assertEqual(s.getvalue(), self.typ(expected))
+
+    def test_rfc2231_wrapping_switches_to_default_len_if_too_narrow(self):
+        # This is just to make sure we don't have an infinite loop; I don't
+        # expect anyone to hit this in the field, so I'm not bothering to make
+        # the result optimal (the encoding isn't needed).
+        msg = self.msgmaker(self.typ(textwrap.dedent("""\
+            To: nobody
+            Content-Disposition: attachment;
+             filename="afilenamelongenoghtowraphere"
+
+            None
+            """)))
+        expected = textwrap.dedent("""\
+            To: nobody
+            Content-Disposition:
+             attachment;
+             filename*0*=us-ascii''afilenamelongenoghtowraphere
+
+            None
+            """)
+        s = self.ioclass()
+        g = self.genclass(s, policy=self.policy.clone(max_line_length=20))
+        g.flatten(msg)
+        self.assertEqual(s.getvalue(), self.typ(expected))
+
 
 class TestGenerator(TestGeneratorBase, TestEmailBase):
 
@@ -191,6 +268,48 @@ class TestBytesGenerator(TestGeneratorBase, TestEmailBase):
         s = io.BytesIO()
         g = BytesGenerator(s, policy=self.policy.clone(cte_type='7bit',
                                                        linesep='\n'))
+        g.flatten(msg)
+        self.assertEqual(s.getvalue(), expected)
+
+    def test_smtputf8_policy(self):
+        msg = EmailMessage()
+        msg['From'] = "Páolo <főo@bar.com>"
+        msg['To'] = 'Dinsdale'
+        msg['Subject'] = 'Nudge nudge, wink, wink \u1F609'
+        msg.set_content("oh là là, know what I mean, know what I mean?")
+        expected = textwrap.dedent("""\
+            From: Páolo <főo@bar.com>
+            To: Dinsdale
+            Subject: Nudge nudge, wink, wink \u1F609
+            Content-Type: text/plain; charset="utf-8"
+            Content-Transfer-Encoding: 8bit
+            MIME-Version: 1.0
+
+            oh là là, know what I mean, know what I mean?
+            """).encode('utf-8').replace(b'\n', b'\r\n')
+        s = io.BytesIO()
+        g = BytesGenerator(s, policy=policy.SMTPUTF8)
+        g.flatten(msg)
+        self.assertEqual(s.getvalue(), expected)
+
+    def test_smtp_policy(self):
+        msg = EmailMessage()
+        msg["From"] = Address(addr_spec="foo@bar.com", display_name="Páolo")
+        msg["To"] = Address(addr_spec="bar@foo.com", display_name="Dinsdale")
+        msg["Subject"] = "Nudge nudge, wink, wink"
+        msg.set_content("oh boy, know what I mean, know what I mean?")
+        expected = textwrap.dedent("""\
+            From: =?utf-8?q?P=C3=A1olo?= <foo@bar.com>
+            To: Dinsdale <bar@foo.com>
+            Subject: Nudge nudge, wink, wink
+            Content-Type: text/plain; charset="utf-8"
+            Content-Transfer-Encoding: 7bit
+            MIME-Version: 1.0
+
+            oh boy, know what I mean, know what I mean?
+            """).encode().replace(b"\n", b"\r\n")
+        s = io.BytesIO()
+        g = BytesGenerator(s, policy=policy.SMTP)
         g.flatten(msg)
         self.assertEqual(s.getvalue(), expected)
 
