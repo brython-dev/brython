@@ -69,11 +69,12 @@ for(var ast_class in $B.ast_classes){ // in py_ast.js
     if(Array.isArray(args)){
         continue
     }
-    args = args.replace(/\*/g, '')
+    args = args.replace(/\*/g, '').replace(/\?/g, '')
     var sep = args.length > 0 ? ', ' : ''
     var function_code = template.replace(/<ast_class>/g, ast_class)
                                 .replace(/<sep>/, sep)
                                 .replace(/<args>/g, args)
+    console.log(function_code)
     eval(function_code)
 }
 
