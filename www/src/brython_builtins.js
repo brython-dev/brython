@@ -66,6 +66,13 @@ if($B.brython_path === undefined){
     $path = $B.brython_path
 }
 
+var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
+    mo = parts_re.exec($B.brython_path)
+if(mo){
+    $B.full_url = {protocol: mo[1],
+                   host: mo[2],
+                   address: mo[3]}
+}
 
 // Get the URL of the directory where the script stands
 var path = _window.location.origin + _window.location.pathname,

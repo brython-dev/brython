@@ -88,7 +88,7 @@ var $module = {
     },
     getcwd: function(){return $B.brython_path},
     getpid: function(){return 0},
-    lstat: function(){return stat_result.$factory()},
+    lstat: function(filename){return stat_result.$factory(filename)},
     open: function(path, flags){return _b_.open(path, flags)},
     stat: function(filename){return stat_result.$factory(filename)},
     stat_result: function(filename){return stat_result.$factory(filename)},
