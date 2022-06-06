@@ -346,9 +346,9 @@ function compile() {
     $.__class__ = code
     $.co_flags = $.flags
     $.co_name = "<module>"
-    $.co_filename = $.filename
+    var filename = $.co_filename = $.filename
     var interactive = $.mode == "single" && ($.flags & 0x200)
-    $B.file_cache[$.filename] = $.source
+    $B.file_cache[filename] = $.source
 
     if(_b_.isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
@@ -385,11 +385,11 @@ function compile() {
         $.source = _b_.bytes.decode($.source, encoding)
     }
 
-    if(!_b_.isinstance($.filename, [_b_.bytes, _b_.str])){
+    if(!_b_.isinstance(filename, [_b_.bytes, _b_.str])){
         // module _warning is in builtin_modules.js
         $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
             `path should be string, bytes, or os.PathLike, ` +
-                `not ${$B.class_name($.filename)}`))
+                `not ${$B.class_name(filename)}`))
     }
     if(interactive && ! $.source.endsWith("\n")){
         // This is used in codeop.py to raise SyntaxError until a block in the
@@ -402,24 +402,28 @@ function compile() {
     }
 
     if($B.parser_to_ast){
-        var _ast = new $B.Parser($.source, $.filename).parse(
+        var _ast = new $B.Parser($.source, filename).parse(
             'file')
-        var symtable = $B._PySymtable_Build(_ast, $.filename)
+        var symtable = $B._PySymtable_Build(_ast, filename)
         // var js_obj = $B.js_from_root(_ast, symtable, $.filename)
         if($.flags == $B.PyCF_ONLY_AST){
             return _ast
         }
     }else{
         var root = $B.parser.$create_root_node(
-                {src: $.source, filename: $.filename},
+                {src: $.source, filename},
                 module_name, module_name)
         root.mode = $.mode
         root.parent_block = $B.builtins_scope
         $B.parser.dispatch_tokens(root, $.source)
+        var _ast = root.ast()
+        var future = $B._PyFuture_FromAST(_ast, filename)
+        var symtable = $B._PySymtable_Build(_ast, filename, future)
+        var js_obj = $B.js_from_root(_ast, symtable, filename)
+        
         if($.flags == $B.PyCF_ONLY_AST){
             $B.create_python_ast_classes() // in py_ast
-            var _ast = root.ast(),
-                klass = _ast.constructor.$name
+            var klass = _ast.constructor.$name
             return $B.python_ast_classes[klass].$factory(_ast)
         }
     }
@@ -2309,10 +2313,6 @@ $B.$setattr = function(obj, attr, value){
     if(res !== undefined && res !== null){
         // descriptor protocol : if obj has attribute attr and this attribute
         // has a method __set__(), use it
-        if(res.__get__ && res.__set__ === undefined){
-            throw _b_.AttributeError.$factory("can't set attribute '" + attr +
-                "'")
-        }
         if(res.__set__ !== undefined){
             res.__set__(res, obj, value); return None
         }
