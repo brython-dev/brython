@@ -349,7 +349,7 @@ function future_parse(ff, mod, filename){
 }
 
 
-function _PyFuture_FromAST(mod, filename){
+$B._PyFuture_FromAST = function(mod, filename){
     var ff = {
         features: 0,
         lineno: -1
@@ -549,7 +549,7 @@ function check_assignment(context, kwargs){
                         last_position(assigned))
                 }
             }else if(assigned.type == 'unary'){
-                report('operator')
+                report('expression', assigned.position, last_position(assigned))
             }else if(assigned.type == 'call'){
                 report('function call', assigned.position, assigned.end_position)
             }else if(assigned.type == 'id'){
@@ -567,6 +567,9 @@ function check_assignment(context, kwargs){
             }else if(assigned.type == 'genexpr'){
                 report('generator expression')
             }else if(assigned.type == 'packed'){
+                if(action == 'delete'){
+                    report('starred', assigned.position, last_position(assigned))
+                }
                 check_assignment(assigned.tree[0], {action, once: true})
             }else if(assigned.type == 'named_expr'){
                 if(! assigned.parenthesized){
@@ -578,6 +581,9 @@ function check_assignment(context, kwargs){
                         last_position(assigned),
                         "cannot assign to named expression here. " +
                             "Maybe you meant '==' instead of '='?")
+                }else if(action == 'delete'){
+                    report('named expression', assigned.position,
+                        last_position(assigned))
                 }
             }else if(assigned.type == 'list_or_tuple'){
                 for(var item of ctx.tree){
@@ -585,6 +591,8 @@ function check_assignment(context, kwargs){
                 }
             }else if(assigned.type == 'lambda'){
                 report('lambda')
+            }else if(assigned.type == 'ternary'){
+                report('conditional expression')
             }
         }else if(ctx.type == 'list_or_tuple'){
             for(var item of ctx.tree){
@@ -2591,7 +2599,7 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     this.type = 'expr'
     this.name = name
     this.$pos = $pos
-    this.position = context.position
+    this.position = $token.value //context.position
     // allow expression with comma-separted values, or a single value ?
     this.with_commas = with_commas
     this.expect = ',' // can be 'expr' or ','
@@ -3057,6 +3065,9 @@ $ExprCtx.prototype.transition = function(token, value){
               var t = context.tree[0]
               if(t.type == "packed"){
                   $token.value = t.position
+                  if($parent_match(context, {type: 'del'})){
+                      raise_syntax_error(context, 'cannot delete starred')
+                  }
                   raise_syntax_error(context, "cannot use starred expression here")
               }else if(t.type == "call" && t.func.type == "packed"){
                   $token.value = t.func.position
@@ -4246,6 +4257,14 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         }
                         var close = true
                         if(context.tree.length == 1){
+                            if($parent_match(context, {type: 'del'}) &&
+                                    context.tree[0].type == 'expr' &&
+                                    context.tree[0].tree[0].type == 'packed'){
+                                raise_syntax_error_known_range(context,
+                                    context.tree[0].tree[0].position,
+                                    last_position(context.tree[0]),
+                                    'cannot use starred expression here')
+                            }
                             // make single element replace tuple as child of
                             // context.parent.parent
                             var grandparent = context.parent.parent
@@ -4459,7 +4478,7 @@ $MatchCtx.prototype.transition = function(token, value){
 var NamedExprCtx = function(context){
     // context is an expression where context.tree[0] is an id
     this.type = 'named_expr'
-    this.position = $token.value
+    this.position = context.position
     this.target = context.tree[0]
     context.tree.pop()
     context.tree.push(this)
@@ -4908,7 +4927,7 @@ var $PackedCtx = $B.parser.$PackedCtx = function(context){
     // used for packed tuples in expressions, eg
     //     a, *b, c = [1, 2, 3, 4]
     this.type = 'packed'
-    this.position = $token.value
+    this.position = context.position
     if(context.parent.type == 'list_or_tuple' &&
             context.parent.parent.type == "node"){
         // SyntaxError for a, *b, *c = ...
@@ -6589,7 +6608,7 @@ $TryCtx.prototype.transition = function(token, value){
     if(token == ':'){
         return $BodyCtx(context)
     }
-    raise_syntax_error(context)
+    raise_syntax_error(context, "expected ':'")
 }
 
 var $UnaryCtx = $B.parser.$UnaryCtx = function(context, op){
@@ -7080,7 +7099,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
         $B.nb_debug_lines = 0
     }
     if($B.track_transitions){
-        console.log("context", context, "token", token, value, '$pos', $pos)
+        console.log("context", context, "token", token, value, 'pos', $token.value)
         $B.nb_debug_lines++
     }
     return context.transition(token, value)
@@ -8013,7 +8032,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         if($B.produce_ast == 2){
             console.log(ast_dump(_ast))
         }
-        var future = _PyFuture_FromAST(_ast, filename)
+        var future = $B._PyFuture_FromAST(_ast, filename)
         var symtable = $B._PySymtable_Build(_ast, filename, future)
         var js_obj = $B.js_from_root(_ast, symtable, filename)
         js_from_ast = '// ast generated by parser\n' + js_obj.js

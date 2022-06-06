@@ -669,9 +669,7 @@ function init_scopes(type, scopes){
 
     if(name){
         name = name.replace(/-/g, '_') // issue 1958
-    }
-
-    if(filename == '<string>'){
+    }else if(filename.startsWith('<') && filename.endsWith('>')){
         name = 'exec'
     }
     var top_scope = new Scope(name, `${type}`, this),
@@ -1045,7 +1043,17 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Break.prototype.to_js = function(scopes){
-    compiler_check(this)
+    var in_loop = false
+    for(var scope of scopes.slice().reverse()){
+        if(scope.ast instanceof $B.ast.For ||
+                scope.ast instanceof $B.ast.While){
+            in_loop = true
+            break
+        }
+    }
+    if(! in_loop){
+        compiler_error(this, "'break' outside loop")
+    }
     var js = ''
     for(var scope of scopes.slice().reverse()){
         if(scope.ast instanceof $B.ast.For){
