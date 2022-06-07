@@ -160,7 +160,7 @@ $B.generator.throw = function(self, type, value, traceback){
     var res = gen.throw(exc)
     $B.frames_stack = save_stack
     if(res.done){
-        throw _b_.StopIteration.$factory("StopIteration")
+        throw _b_.StopIteration.$factory(res.value)
     }
     return res.value
 }
