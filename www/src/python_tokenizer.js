@@ -73,7 +73,7 @@ function get_line_at(src, pos){
     // Get the line in source code src starting at position pos
     var end = src.substr(pos).search(/[\r\n]/),
         line = end == -1 ? src.substr(pos) : src.substr(pos, end + 1)
-    return line + '\n'
+    return line
 }
 
 function get_comment(src, pos, line_num, line_start, token_name, line){

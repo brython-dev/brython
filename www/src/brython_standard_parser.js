@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-07 13:01:23.581511"
-__BRYTHON__.timestamp=1654599683581
+__BRYTHON__.compiled_date="2022-06-08 11:49:31.983937"
+__BRYTHON__.timestamp=1654681771983
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -158,7 +158,7 @@ console.log('error',exc.__class__,exc.args)
 return exc}
 function get_line_at(src,pos){
 var end=src.substr(pos).search(/[\r\n]/),line=end==-1 ? src.substr(pos):src.substr(pos,end+1)
-return line+'\n'}
+return line }
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
 while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),[line_num,start-line_start],[line_num,pos-line_start+1],line))
@@ -4251,14 +4251,16 @@ node=new_node
 continue
 case 'DEDENT':
 indent--
-node.parent.children.pop()
+if(! indent_continuation){node.parent.children.pop()
 node.parent.parent.add(node)
-C=new $NodeCtx(node)
+C=new $NodeCtx(node)}
 continue
 case 'INDENT':
 indent++
-if(! expect_indent){C=C ||new $NodeCtx(node)
-raise_indentation_error(C,'unexpected indent')}
+var indent_continuation=false
+if(! expect_indent){if(token.line.trim()=='\\'){
+indent_continuation=true}else{C=C ||new $NodeCtx(node)
+raise_indentation_error(C,'unexpected indent')}}
 expect_indent=false
 continue}}}
 var $create_root_node=$B.parser.$create_root_node=function(src,module,locals_id,parent_block,line_num){var root=new $Node('module')
@@ -14195,11 +14197,10 @@ for(var i=0,len=this.values.length;i < len;i++){var value=this.values[i]
 if(i < len-1){tests.push(`${op}$B.$bool(locals.$test = `+
 `${$B.js_from_ast(value, scopes)}) ? locals.$test : `)}else{tests.push(`${$B.js_from_ast(value, scopes)}`)}}
 return '('+tests.join('')+')'}
-$B.ast.Break.prototype.to_js=function(scopes){var in_loop=false
-for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For ||
-scope.ast instanceof $B.ast.While){in_loop=true
-break}}
-if(! in_loop){compiler_error(this,"'break' outside loop")}
+function in_loop(scopes){for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For ||
+scope.ast instanceof $B.ast.While){return true}}
+return false}
+$B.ast.Break.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'break' outside loop")}
 var js=''
 for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For){js+=`no_break_${scope.id} = false\n`
 break}}
@@ -14337,7 +14338,7 @@ if(value.indexOf("'")==-1){return `$B.String('${value}')`}else if(value.indexOf(
 return `$B.String('${value}')`}}
 console.log('unknown constant',this,value,value===true)
 return '// unknown'}
-$B.ast.Continue.prototype.to_js=function(scopes){compiler_check(this)
+$B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
 return 'continue'}
 $B.ast.Delete.prototype.to_js=function(scopes){compiler_check(this)
 var js=''

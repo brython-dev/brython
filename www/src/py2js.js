@@ -7752,7 +7752,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
         }
         lnum = token.start[0]
         $pos = line2pos[lnum] + token.start[1]
-        //console.log('token', token, 'lnum', lnum, 'node', node)
+        // console.log('token', token, 'lnum', lnum, 'node', node)
         //console.log('context', context)
         if(expect_indent &&
                 ['INDENT', 'COMMENT', 'NL'].indexOf(token.type) == -1){
@@ -7914,22 +7914,27 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 // to the current node's parent.
                 // Detach it
                 indent--
-                node.parent.children.pop()
-                // Attach new_node to new "current"
-                node.parent.parent.add(node)
-                // redefine context to set locals to bindings of node scope
-                context = new $NodeCtx(node)
+                if(! indent_continuation){
+                    node.parent.children.pop()
+                    // Attach new_node to new "current"
+                    node.parent.parent.add(node)
+                    // redefine context to set locals to bindings of node scope
+                    context = new $NodeCtx(node)
+                }
                 continue
             case 'INDENT':
-                // The last node was added after a NEWLINE set the context
-                // to "null". It was attached to the current parent. Detach
-                // it
                 indent++
-                // node.parent.children.pop()
+                var indent_continuation =  false
                 // Check that it supports indentation
                 if(! expect_indent){
-                    context = context || new $NodeCtx(node)
-                    raise_indentation_error(context, 'unexpected indent')
+                    if(token.line.trim() == '\\'){
+                        // Strange special case
+                        // See test_syntax.py/test_empty_line_after_linecont
+                        indent_continuation = true
+                    }else{
+                        context = context || new $NodeCtx(node)
+                        raise_indentation_error(context, 'unexpected indent')
+                    }
                 }
                 expect_indent = false
                 continue

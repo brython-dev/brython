@@ -1042,16 +1042,18 @@ $B.ast.BoolOp.prototype.to_js = function(scopes){
 
 }
 
-$B.ast.Break.prototype.to_js = function(scopes){
-    var in_loop = false
+function in_loop(scopes){
     for(var scope of scopes.slice().reverse()){
         if(scope.ast instanceof $B.ast.For ||
                 scope.ast instanceof $B.ast.While){
-            in_loop = true
-            break
+            return true
         }
     }
-    if(! in_loop){
+    return false
+}
+
+$B.ast.Break.prototype.to_js = function(scopes){
+    if(! in_loop(scopes)){
         compiler_error(this, "'break' outside loop")
     }
     var js = ''
@@ -1383,7 +1385,9 @@ $B.ast.Constant.prototype.to_js = function(scopes){
 }
 
 $B.ast.Continue.prototype.to_js = function(scopes){
-    compiler_check(this)
+    if(! in_loop(scopes)){
+        compiler_error(this, "'continue' not properly in loop")
+    }
     return 'continue'
 }
 
