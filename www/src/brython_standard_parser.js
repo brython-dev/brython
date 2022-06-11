@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-08 11:49:31.983937"
-__BRYTHON__.timestamp=1654681771983
+__BRYTHON__.compiled_date="2022-06-11 21:27:34.483121"
+__BRYTHON__.timestamp=1654975654482
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -158,7 +158,7 @@ console.log('error',exc.__class__,exc.args)
 return exc}
 function get_line_at(src,pos){
 var end=src.substr(pos).search(/[\r\n]/),line=end==-1 ? src.substr(pos):src.substr(pos,end+1)
-return line }
+return line}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
 var t=[]
 while(true){if(pos >=src.length ||(ix='\r\n'.indexOf(src[pos]))>-1){t.push(Token('COMMENT',src.substring(start-1,pos),[line_num,start-line_start],[line_num,pos-line_start+1],line))
@@ -277,7 +277,8 @@ for(var i=0;i < op.length;i++){yield Token('OP','.',[line_num,dot_pos],[line_num
 dot_pos++}}
 break
 case '\\':
-if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){line_num++
+if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){if(pos==src.length-1){throw SyntaxError('EOF in multi-line statement')}
+line_num++
 pos+=mo[0].length
 line_start=pos+1
 line=get_line_at(src,pos)}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}
@@ -582,11 +583,11 @@ return ctx.end_position ||ctx.position}
 function raise_error_known_location(type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=type.$factory(message)
 exc.filename=filename
 exc.lineno=lineno
-exc.offset=col_offset
+exc.offset=col_offset+1
 exc.end_lineno=end_lineno
-exc.end_offset=end_col_offset
+exc.end_offset=end_col_offset+1
 exc.text=line
-exc.args[1]=[filename,lineno,col_offset,exc.text,end_lineno,end_col_offset]
+exc.args[1]=[filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 throw exc}
 function raise_syntax_error_known_range(C,a,b,msg){
 raise_error_known_location(_b_.SyntaxError,$get_module(C).filename,a.start[0],a.start[1],b.end[0],b.end[1],a.line,msg)}
@@ -818,8 +819,7 @@ if(C.parent.type=='op' && C.parent.op=='not'){C.parent.op='not_in'
 return C}
 raise_syntax_error(C)
 case '=':
-if(C.parent.type=="yield"){console.log('parent is yield',C)
-raise_syntax_error(C,"assignment to yield expression not possible",C.parent.position,)}
+if(C.parent.type=="yield"){raise_syntax_error(C,"assignment to yield expression not possible",C.parent.position,)}
 raise_syntax_error(C)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx(C),true)
@@ -850,6 +850,7 @@ default:
 raise_syntax_error(C)}
 break
 case '.':
+case 'for':
 raise_syntax_error(C)}
 return $transition(C.parent,token,value)}
 var $AliasCtx=$B.parser.$AliasCtx=function(C){
@@ -1080,20 +1081,13 @@ C.parent.tree.pop()
 return new $DoubleStarArgCtx(C.parent)}}
 raise_syntax_error(C)
 case ')':
-if(C.parent.kwargs &&
-$B.last(C.parent.tree).tree[0]&& 
-['kwarg','star_arg','double_star_arg'].
-indexOf($B.last(C.parent.tree).tree[0].type)==-1){raise_syntax_error(C,'non-keyword argument after keyword argument')}
 return $transition(C.parent,token)
 case ':':
 if(C.expect==',' &&
 C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}
 break
 case ',':
-if(C.expect==','){if(C.parent.kwargs &&
-['kwarg','star_arg','double_star_arg'].
-indexOf($B.last(C.parent.tree).tree[0].type)==-1){raise_syntax_error(C,'non-keyword argument after keyword argument')}
-return $transition(C.parent,token,value)}}
+if(C.expect==','){return $transition(C.parent,token,value)}}
 raise_syntax_error(C)}
 var $CallCtx=$B.parser.$CallCtx=function(C){
 this.position=$token.value
@@ -1112,13 +1106,15 @@ this.start=$pos}
 $CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[])
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=call_arg.tree[0].tree[0].ast(),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
-res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){var starred=new ast.Starred(call_arg.tree[0].ast())
+res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){if(res.keywords.length > 0){if(! res.keywords[0].arg){raise_syntax_error(this,'iterable argument unpacking follows keyword argument unpacking')}}
+var starred=new ast.Starred(call_arg.tree[0].ast())
 set_position(starred,call_arg.position)
 starred.ctx=new ast.Load()
 res.args.push(starred)}else if(call_arg.type=='genexpr'){res.args.push(call_arg.ast())}else{var item=call_arg.tree[0]
 if(item===undefined){
 continue}
-if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,item.tree[1].ast()))}else{res.args.push(item.ast())}}}
+if(item.type=='kwarg'){res.keywords.push(new ast.keyword(item.tree[0].value,item.tree[1].ast()))}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error(this,'positional argument follows keyword argument')}else{raise_syntax_error(this,'positional argument follows keyword argument unpacking')}}
+res.args.push(item.ast())}}}
 set_position(res,this.position)
 return res}
 $CallCtx.prototype.transition=function(token,value){var C=this
@@ -1300,10 +1296,11 @@ $ConditionCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){if(C.tree[0].type=="abstract_expr" &&
 C.tree[0].tree.length==0){
 raise_syntax_error(C)}
-return $BodyCtx(C)}else if(this.in_comp && this.token=='if'){
+return $BodyCtx(C)}else if(C.in_comp && C.token=='if'){
 if(token==']'){return $transition(C.parent,token,value)}else if(token=='if'){var if_exp=new $ConditionCtx(C.parent,'if')
-if_exp.in_comp=true
-return new $AbstractExprCtx(if_exp,false)}else if(')]}'.indexOf(token)>-1){return $transition(this.parent,token,value)}}
+if_exp.in_comp=C.in_comp
+return new $AbstractExprCtx(if_exp,false)}else if(')]}'.indexOf(token)>-1){return $transition(this.parent,token,value)}
+if(token==',' && $parent_match(C,{type:'call'})){raise_syntax_error_known_range(C,C.in_comp.position,last_position(C),'Generator expression must be parenthesized')}}
 raise_syntax_error(C,"expected ':'")}
 var $ContinueCtx=$B.parser.$ContinueCtx=function(C){
 this.type='continue'
@@ -1446,6 +1443,7 @@ C.parent.tree[C.parent.tree.length-1]=this
 this.type='dictcomp'
 Comprehension.make_comp(this,C)}
 DictCompCtx.prototype.ast=function(){
+if(this.value.ast===undefined){console.log('dict comp ast, no value.ast',this)}
 var ast_obj=new ast.DictComp(
 this.key.ast(),this.value.ast(),Comprehension.generators(this.tree)
 )
@@ -1832,16 +1830,14 @@ child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[
 raise_syntax_error(C,"invalid target for annotation")}
 break
 case '=':
-check_assignment(C)
-function has_parent(ctx,type){
-while(ctx.parent){if(ctx.parent.type==type){return ctx.parent}
-ctx=ctx.parent}
-return false}
+var call_arg=$parent_match(C,{type:'call_arg'})
+try{check_assignment(C)}catch(err){if(call_arg){var ctx=C
+while(ctx.parent !==call_arg){ctx=ctx.parent}
+raise_syntax_error_known_range(ctx,ctx.position,$token.value,'expression cannot contain assignment, perhaps you meant "=="?')}else{throw err}}
 var annotation
 if(C.expect==','){if(C.parent.type=="call_arg"){
-if(C.tree[0].type !="id"){raise_syntax_error(C,'expression cannot contain'+
-' assignment, perhaps you meant "=="?')}
-return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=has_parent(C,"annotation")){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
+if(C.tree[0].type !="id"){raise_syntax_error_known_range(C,C.position,$token.value,'expression cannot contain assignment, perhaps you meant "=="?')}
+return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=$parent_match(C,{type:"annotation"})){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
 raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="not"){
 raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="with"){raise_syntax_error(C,"expected :")}else if(C.parent.type=="list_or_tuple"){
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
@@ -1959,7 +1955,7 @@ case 'for':
 return new $TargetListCtx(new $ForExpr(this.parent))
 case 'if':
 var if_ctx=new $ConditionCtx(this.parent,'if')
-if_ctx.in_comp=true
+if_ctx.in_comp=this.parent
 return new $AbstractExprCtx(if_ctx,false)}}
 console.log('-- error for, C',C,'token',token,value,$token.value)
 raise_syntax_error(C)}
@@ -3940,7 +3936,7 @@ return '_'+class_name+name}else{if(scope.parent && scope.parent.C){scope=$get_sc
 $B.nb_debug_lines=0
 var $transition=$B.parser.$transition=function(C,token,value){if($B.nb_debug_lines > 100){alert('too many debug lines')
 $B.nb_debug_lines=0}
-if($B.track_transitions){console.log("C",C,"token",token,value,'pos',$token.value)
+if($B.track_transitions){console.log("C",C,"token",token,value,'\n  pos',$token.value)
 $B.nb_debug_lines++}
 return C.transition(token,value)}
 $B.forbidden=[]
@@ -4141,8 +4137,10 @@ unindented_lines.push(line.substr(start))}else if(line.startsWith(global_indent)
 `column ${start}, line ${line_num} at column `+
 line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
 return unindented_lines.join('\n')}
-function handle_errortoken(C,token){if(token.string=="'" ||token.string=='"'){raise_syntax_error(C,'unterminated string literal '+
+function handle_errortoken(C,token,tokenizer){if(token.string=="'" ||token.string=='"'){raise_syntax_error(C,'unterminated string literal '+
 `(detected at line ${token.start[0]})`)}
+if(token.string=='\\'){var nxt=tokenizer.next()
+if(nxt.done ||nxt.value.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while parsing')}else{raise_syntax_error_known_range(C,nxt.value,nxt.value,'unexpected character after line continuation character')}}
 raise_syntax_error(C,'invalid token '+token[1]+_b_.ord(token[1]))}
 var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
 ]
@@ -4168,7 +4166,9 @@ raise_indentation_error(C,err.message)}else if(err instanceof SyntaxError){if(br
 $token.value=last_brace
 raise_syntax_error(C,`'${last_brace.string}'`+
 ' was never closed')}
-raise_syntax_error(C,err.message)}
+var err_msg=err.message
+if(err_msg=='EOF in multi-line statement'){err_msg='unexpected EOF while parsing'}
+raise_syntax_error(C,err_msg)}
 throw err}
 if(token.done){throw Error('token done without ENDMARKER.')}
 token=token.value
@@ -4201,7 +4201,7 @@ root.comments.push([$pos,end-$pos])
 continue
 case 'ERRORTOKEN':
 C=C ||new $NodeCtx(node)
-if(token.string !=' '){handle_errortoken(C,token)}
+if(token.string !=' '){handle_errortoken(C,token,tokenizer)}
 continue}
 switch(token[0]){case 'NAME':
 case 'NUMBER':
@@ -4275,7 +4275,7 @@ if(typeof src=="object"){root.is_comp=src.is_comp
 root.filename=src.filename
 src=src.src}
 src=src.replace(/\r\n/gm,"\n")
-if(src.endsWith("\\")&& !src.endsWith("\\\\")){src=src.substr(0,src.length-1)}
+if(src.endsWith("\\")&& ! src.endsWith("\\\\")){}
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope,line_num){
@@ -4653,7 +4653,7 @@ return _b_.getattr($.self,"__str__")()}
 object.__ge__=function(){return _b_.NotImplemented}
 object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
 var $test=false 
-if($test){console.log("attr",attr,"de",obj,"klass",klass)}
+if($test){console.log("object.__getattribute__, attr",attr,"de",obj,"klass",klass)}
 if(attr==="__class__"){return klass}
 var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
@@ -4667,14 +4667,14 @@ if(v !==undefined){return v}}
 res=check(obj,klass,attr)
 if(res===undefined){var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){res=check(obj,mro[i],attr)
+if($test){console.log('in class',mro[i],'res',res)}
 if(res !==undefined){if($test){console.log("found in",mro[i])}
-break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){
-is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
+break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
 return res}}
 if(res !==undefined){if($test){console.log(res)}
 if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}
-if(res.__class__===$B.method){if($test){console.log("res is method")}
-if(res.__get__===undefined){console.log("bizarre",obj,attr,res)}
+if(res.__class__===$B.method){if(res.$infos.__self__){
+return res}
 return res.__get__(obj,klass)}
 var get=res.__get__
 if(get===undefined && res.__class__){var get=res.__class__.__get__
@@ -4697,8 +4697,7 @@ var res1=__get__.apply(null,[res,obj,klass])
 if($test){console.log("res",res,"res1",res1)}
 if(typeof res1=="function"){
 if(res1.__class__===$B.method){return res}
-if(res.$type=="staticmethod"){return res}
-else{var self=res.__class__===$B.method ? klass :obj,method=function(){var args=[self]
+if(res.$type=="staticmethod"){return res}else{var self=res.__class__===$B.method ? klass :obj,method=function(){var args=[self]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return res.apply(this,args)}
 method.__class__=$B.method
@@ -4968,7 +4967,10 @@ break}}}
 if(getattr !==undefined){return getattr(klass,attr)}}}}
 if(res !==undefined){if($test){console.log("res",res)}
 if(res.__class__===_b_.property){return res}
-if(res.__get__){if(res.__class__===method){var result=res.__get__(res.__func__,klass)
+if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
+if(res.$infos.__self__){
+return res}
+var result=res.__get__(res.__func__,klass)
 result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
 return result}else if(res.__class__ && res.__class__.__get__){
 if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
@@ -5478,7 +5480,7 @@ return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof calla
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 var $io=$B.make_class("io",function(out){return{
-__class__:$io,out}}
+__class__:$io,out,encoding:'utf-8'}}
 )
 $io.flush=function(self){console[self.out](self.buf.join(''))
 self.buf=[]}
@@ -5703,7 +5705,7 @@ throw err}
 return method(x,y)}
 if(_b_.issubclass(y_class,x_class)){
 var reflected_left=$B.$getattr(x_class,rop,false),reflected_right=$B.$getattr(y_class,rop,false)
-if(reflected_right && reflected_left && 
+if(reflected_right && reflected_left &&
 reflected_right !==reflected_left){return reflected_right(y,x)}}
 var res
 try{
@@ -6371,14 +6373,14 @@ console.log('\nobj[attr]',obj[attr])}
 if(obj[attr]!==undefined){return obj[attr]}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
-klass[attr].__get__)){return obj.__dict__.$string_dict[attr][0]}else if(klass.hasOwnProperty(attr)){if(typeof klass[attr]!="function" &&
+klass[attr].__get__)){return obj.__dict__.$string_dict[attr][0]}else if(klass.hasOwnProperty(attr)){if($test){console.log('class has attr',attr,klass[attr])}
+if(typeof klass[attr]!="function" &&
 attr !="__dict__" &&
 klass[attr].__get__===undefined){var kl=klass[attr].__class__
 if(! in_mro(kl,"__get__")){return klass[attr]}}}}
 if($test){console.log("attr",attr,"of",obj,"class",klass,"isclass",is_class)}
 if(klass===undefined){
-if(typeof obj=='string'){klass=_b_.str}
-else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int :_b_.float}else if(obj instanceof Number){klass=_b_.float}else{klass=$B.get_class(obj)
+if(typeof obj=='string'){klass=_b_.str}else if(typeof obj=='number'){klass=obj % 1==0 ? _b_.int :_b_.float}else if(obj instanceof Number){klass=_b_.float}else{klass=$B.get_class(obj)
 if(klass===undefined){
 if($test){console.log("no class",attr,obj.hasOwnProperty(attr),obj[attr])}
 res=obj[attr]
@@ -6988,9 +6990,13 @@ throw err}}}
 var $Reader=$B.make_class("Reader")
 $Reader.__enter__=function(self){return self}
 $Reader.__exit__=function(self){return false}
+$Reader.__init__=function(_self,initial_value='',newline='\n'){_self.$content=initial_value
+_self.$counter=0}
 $Reader.__iter__=function(self){
 return iter($Reader.readlines(self))}
 $Reader.__len__=function(self){return self.lines.length}
+$Reader.__new__=function(cls){return{
+__class__:cls}}
 $Reader.close=function(self){self.closed=true}
 $Reader.flush=function(self){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
@@ -7556,9 +7562,9 @@ var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
 function trace_from_stack(stack){var trace=''
 for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
-trace+=`  File ${frame[3].__file__}, line ${lineno}, in `
+if(filename !='<string>'){trace+=`  File ${filename}, line ${lineno}, in `
 if(frame[0]==frame[2]){trace+='<module>'}else{trace+=frame[0]}
-trace+='\n'
+trace+='\n'}
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
 if(line){trace+='    '+line.trim()+'\n'}}}
 return trace}
@@ -7569,13 +7575,14 @@ var trace=''
 if(err.$stack && err.$stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
 err.__class__===_b_.IndentationError){trace+=trace_from_stack(err.$stack)
+console.log('in show error',err.text,'offset',err.offset,err.end_offset)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
 trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
 if(err.__class__ !==_b_.IndentationError &&
-filename !=='<string>'){
-var start=err.offset-indent,marks='    '+' '.repeat(start),nb_marks=1
-if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent}}
+err.text){
+var start=err.offset-indent-1,marks='    '+' '.repeat(start),nb_marks=1
+if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent-1}}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
@@ -13809,9 +13816,9 @@ exc.filename=state.filename
 if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
 exc.text=line}else{exc.text=_b_.none}
 exc.lineno=ast_obj.lineno
-exc.offset=ast_obj.col_offset
+exc.offset=ast_obj.col_offset+1
 exc.end_lineno=ast_obj.end_lineno
-exc.end_offset=ast_obj.end_col_offset
+exc.end_offset=ast_obj.end_col_offset+1
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 throw exc}
 $B.set_func_infos=function(func,name,qualname,docstring){func.$is_func=true}
@@ -13982,6 +13989,15 @@ function add_body(body,scopes){var res=''
 for(var item of body){js=$B.js_from_ast(item,scopes)
 if(js.length > 0){res+=js+'\n'}}
 return res.trimRight()}
+function extract_docstring(ast_obj,scopes){
+var js='_b_.None' 
+if(ast_obj.body.length &&
+ast_obj.body[0]instanceof $B.ast.Expr &&
+ast_obj.body[0].value instanceof $B.ast.Constant){
+var value=ast_obj.body[0].value.value
+if(typeof value=='string'){js=ast_obj.body[0].value.to_js(scopes)
+ast_obj.body.shift()}}
+return js}
 function init_comprehension(comp){
 var comp_id=comp.type+'_'+comp.id,varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
 return `var ${comp.locals_name} = {},\n`+
@@ -14248,10 +14264,9 @@ var ix=scopes.length-1
 while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.ast.ClassDef){qualname=scopes[ix].name+'.'+qualname
 ix--}else{break}}
 scopes.push(class_scope)
-var docstring='_b_.None'
-if(this.body[0]instanceof $B.ast.Expr &&
-this.body[0].value instanceof $B.ast.Constant &&
-typeof this.body[0].value.value=="string"){docstring=this.body.splice(0,1)[0].to_js(scopes)}
+var defs=[]
+for(var statement of this.body){if(statement instanceof $B.ast.FunctionDef){}}
+var docstring=extract_docstring(this,scopes)
 js+=`var ${ref} = (function(){\n`+
 `var ${locals_name} = {__annotations__: $B.empty_dict()},\n`+
 `locals = ${locals_name}\n`+
@@ -14433,10 +14448,7 @@ for(var dec of this.decorator_list){decorated=true
 var dec_id='decorator'+$B.UUID()
 decorators.push(dec_id)
 decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
-var docstring='_b_.None'
-if(this.body[0]instanceof $B.ast.Expr &&
-this.body[0].value instanceof $B.ast.Constant &&
-typeof this.body[0].value.value=="string"){docstring=this.body.splice(0,1)[0].value.to_js(scopes)}
+var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_default_names=parsed_args.kw_default_names,default_str=parsed_args.default_str
 var func_scope=new Scope(this.name,'def',this)
 scopes.push(func_scope)
@@ -14502,9 +14514,9 @@ if(is_generator){js+=`, '${this.name}')\n`+
 `$B.leave_frame()\n`+
 `return _gen_${id}}\n` }
 scopes.pop()
-var func_name_scope=bind(this.name,scopes)
-var qualname=func_name_scope.type=='class' ?
-`${func_name_scope.name}.${this.name}` :this.name
+var func_name_scope=bind(this.name,scopes),in_class=func_name_scope.ast instanceof $B.ast.ClassDef
+var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
+this.name
 var flags=67
 if(this.args.vararg){flags |=4}
 if(this.args.kwarg){flags |=8}
@@ -14516,6 +14528,7 @@ if(_scope==FREE){free_vars.push(`'${ident}'`)}
 if(flag & DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 js+=`${name2}.$is_func = true\n`
+if(in_class){js+=`${name2}.$is_method = true\n`}
 if(is_async){js+=`${name2}.$is_async = true\n`}
 js+=`${name2}.$infos = {\n`+
 `__name__: "${this.name}", __qualname__: "${qualname}",\n`+
@@ -14766,7 +14779,8 @@ if(! namespaces){js+=`${global_name} = {},\nlocals = ${global_name},\n`+
 `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`}
 js+=`\nlocals.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
-`locals.__annotations__ = $B.empty_dict()\n`
+`locals.__annotations__ = $B.empty_dict()\n`+
+`locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! namespaces){
 js+=`locals.$f_trace = $B.enter_frame($top_frame)\n`}
 js+=`$B.set_lineno(locals, ${this.lineno})\n`+
@@ -15168,13 +15182,13 @@ return exc_type.$factory(message)}
 function PyErr_SetString(exc_type,message){return exc_type.$factory(message)}
 function set_exc_info(exc,filename,lineno,offset,end_lineno,end_offset){exc.filename=filename
 exc.lineno=lineno
-exc.offset=offset
+exc.offset=offset+1
 exc.end_lineno=end_lineno
-exc.end_offset=end_offset
+exc.end_offset=end_offset+1
 var src=$B.file_cache[filename]
 if(src !==undefined){var lines=src.split('\n')
 exc.text=lines[lineno-1]}else{exc.text=''}
-exc.args[1]=[filename,lineno,offset,exc.text,end_lineno,end_offset]}
+exc.args[1]=[filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]}
 function error_at_directive(exc,ste,name){var data
 assert(ste.directives)
 for(var data of ste.directives){if(data[0]==name){set_exc_info(exc,ste.table.filename,data[1],data[2],data[3],data[4])
