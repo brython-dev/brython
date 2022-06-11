@@ -338,6 +338,9 @@ $B.tokenizer = function*(src){
                         break
                     case '\\':
                         if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
+                            if(pos == src.length - 1){
+                                throw SyntaxError('EOF in multi-line statement')
+                            }
                             line_num++
                             pos += mo[0].length
                             line_start = pos + 1
