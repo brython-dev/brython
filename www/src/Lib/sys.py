@@ -36,6 +36,8 @@ def displayhook(value):
     if value is not None:
         stdout.write(repr(value))
 
+__displayhook__ = displayhook
+
 def exit(i=None):
     raise SystemExit('')
 
