@@ -300,7 +300,7 @@ type.__call__ = function(){
         extra_args.push(arguments[i])
     }
     var new_func = _b_.type.__getattribute__(klass, "__new__")
-    
+
     // create an instance with __new__
     var instance = new_func.apply(null, arguments),
         instance_class = instance.__class__ || $B.get_class(instance)
@@ -354,7 +354,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__or__" && klass === _b_.list
+    var $test = false // attr == "f" // && klass === _b_.list
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -453,6 +453,13 @@ type.__getattribute__ = function(klass, attr){
         }
         if(res.__get__){
             if(res.__class__ === method){
+                if($test){
+                    console.log('__get__ of method', res.$infos.__self__, klass)
+                }
+                if(res.$infos.__self__){
+                    // method is already bound
+                    return res
+                }
                 var result = res.__get__(res.__func__, klass)
                 result.$infos = {
                     __func__: res,

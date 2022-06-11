@@ -110,8 +110,10 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == "toString"
-    if($test){console.log("attr", attr, "de", obj, "klass", klass)}
+    var $test = false // attr == "f"
+    if($test){
+        console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
+    }
     if(attr === "__class__"){
         return klass
     }
@@ -145,6 +147,9 @@ object.__getattribute__ = function(obj, attr){
             var mro = klass.__mro__
             for(var i = 0, len = mro.length; i < len; i++){
                 res = check(obj, mro[i], attr)
+                if($test){
+                    console.log('in class', mro[i], 'res', res)
+                }
                 if(res !== undefined){
                     if($test){console.log("found in", mro[i])}
                     break
@@ -152,7 +157,6 @@ object.__getattribute__ = function(obj, attr){
             }
         }else{
             if(res.__class__ !== $B.method && res.__get__ === undefined){
-                // console.log("simple instance method", obj, klass, attr, res)
                 is_own_class_instance_method = true
             }
         }
@@ -171,8 +175,10 @@ object.__getattribute__ = function(obj, attr){
             return $B.$getattr(res, '__get__')(obj, klass)
         }
         if(res.__class__ === $B.method){
-            if($test){console.log("res is method")}
-            if(res.__get__ === undefined){console.log("bizarre", obj, attr, res)}
+            if(res.$infos.__self__){
+                // Bound method
+                return res
+            }
             return res.__get__(obj, klass)
         }
 
@@ -267,8 +273,9 @@ object.__getattribute__ = function(obj, attr){
                 }
 
                 // instance method object
-                if(res.$type == "staticmethod"){return res}
-                else{
+                if(res.$type == "staticmethod"){
+                    return res
+                }else{
                     var self = res.__class__ === $B.method ? klass : obj,
                         method = function(){
                             var args = [self] // add self as first argument
