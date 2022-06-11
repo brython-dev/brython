@@ -420,7 +420,7 @@ function compile() {
         var future = $B._PyFuture_FromAST(_ast, filename)
         var symtable = $B._PySymtable_Build(_ast, filename, future)
         var js_obj = $B.js_from_root(_ast, symtable, filename)
-        
+
         if($.flags == $B.PyCF_ONLY_AST){
             $B.create_python_ast_classes() // in py_ast
             var klass = _ast.constructor.$name
@@ -926,7 +926,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "strange" // && obj === _b_.list // "Point"
+    var $test = false // attr == "f" // && obj === _b_.list // "Point"
     if($test){console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)}
 
     // Shortcut for classes without parents
@@ -947,6 +947,9 @@ $B.$getattr = function(obj, attr, _default){
                    klass[attr].__get__)){
             return obj.__dict__.$string_dict[attr][0]
         }else if(klass.hasOwnProperty(attr)){
+            if($test){
+                console.log('class has attr', attr, klass[attr])
+            }
             if(typeof klass[attr] != "function" &&
                     attr != "__dict__" &&
                     klass[attr].__get__ === undefined){
@@ -961,8 +964,9 @@ $B.$getattr = function(obj, attr, _default){
     if($test){console.log("attr", attr, "of", obj, "class", klass, "isclass", is_class)}
     if(klass === undefined){
         // avoid calling $B.get_class in simple cases for performance
-        if(typeof obj == 'string'){klass = _b_.str}
-        else if(typeof obj == 'number'){
+        if(typeof obj == 'string'){
+            klass = _b_.str
+        }else if(typeof obj == 'number'){
             klass = obj % 1 == 0 ? _b_.int : _b_.float
         }else if(obj instanceof Number){
             klass = _b_.float
@@ -2674,6 +2678,11 @@ $Reader.__exit__ = function(self){
     return false
 }
 
+$Reader.__init__ = function(_self, initial_value='', newline='\n'){
+    _self.$content = initial_value
+    _self.$counter = 0
+}
+
 $Reader.__iter__ = function(self){
     // Iteration ignores last empty lines (issue #1059)
     return iter($Reader.readlines(self))
@@ -2681,6 +2690,12 @@ $Reader.__iter__ = function(self){
 
 $Reader.__len__ = function(self){
     return self.lines.length
+}
+
+$Reader.__new__ = function(cls){
+    return {
+        __class__: cls
+    }
 }
 
 $Reader.close = function(self){
