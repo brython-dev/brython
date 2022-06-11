@@ -183,7 +183,6 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
         }
     }
 
-
     if(missing.length > 0){
         if(missing.length == 1){
             var arg_type = 'positional'
@@ -228,7 +227,6 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     }
 
     return slots
-
 }
 
 $B.wrong_nb_args = function(name, received, expected, positional){
@@ -243,7 +241,6 @@ $B.wrong_nb_args = function(name, received, expected, positional){
             " but more were given")
     }
 }
-
 
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
@@ -834,7 +831,8 @@ var $io = $B.make_class("io",
     function(out){
         return {
             __class__: $io,
-            out
+            out,
+            encoding: 'utf-8'
         }
     }
 )
@@ -1452,7 +1450,7 @@ $B.rich_op = function(op, x, y){
         // issue #1686
         var reflected_left = $B.$getattr(x_class, rop, false),
             reflected_right = $B.$getattr(y_class, rop, false)
-        if(reflected_right && reflected_left && 
+        if(reflected_right && reflected_left &&
                 reflected_right !== reflected_left){
             return reflected_right(y, x)
         }
