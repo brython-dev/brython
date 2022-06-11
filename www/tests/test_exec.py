@@ -105,7 +105,17 @@ def test():
 test()
 
 # issue 970
-exec("\\")
+try:
+    exec("\\")
+    raise Exception('should have raised SyntaxError')
+except SyntaxError as exc:
+    assert exc.msg == 'unexpected EOF while parsing'
+
+try:
+    exec('\\\\')
+    raise Exception('should have raised SyntaxError')
+except SyntaxError as exc:
+    assert exc.msg == 'unexpected character after line continuation character'
 
 # issue 1188
 try:
