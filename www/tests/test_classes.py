@@ -151,6 +151,10 @@ b = myclass1()
 assert b.__doc__ == None
 
 # classmethod
+def g(obj, x):
+  assert type(obj) is A
+  return A(x)
+
 class A:
 
     def __init__(self, arg):
@@ -160,8 +164,33 @@ class A:
     def foo(cls, x):
         return cls(x)
 
+    bar = g
 
 assert A(5).foo(88).arg == 88
+assert A(6).bar(89).arg == 89
+
+assert A(5).foo.__self__ is A
+
+import re
+_IS_BLANK_OR_COMMENT = re.compile(r'^[ ]*(#.*)?$').match
+
+class B:
+
+  def f(self):
+    return 'f'
+
+class A:
+    f = B().f
+    g = _IS_BLANK_OR_COMMENT
+    def h(self):
+      pass
+    @classmethod
+    def m(cls):
+      pass
+
+assert A.m.__self__ is A
+assert A().f() == 'f'
+assert A().g('# comment')
 
 # If a rich-comparison method returns NotImplemented
 # we should retry with the reflected operator of the other object.
