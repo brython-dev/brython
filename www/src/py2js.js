@@ -405,12 +405,12 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     var exc = type.$factory(message)
     exc.filename = filename
     exc.lineno = lineno
-    exc.offset = col_offset
+    exc.offset = col_offset + 1
     exc.end_lineno = end_lineno
-    exc.end_offset = end_col_offset
+    exc.end_offset = end_col_offset + 1
     exc.text = line
-    exc.args[1] = [filename, lineno, col_offset, exc.text,
-                   end_lineno, end_col_offset]
+    exc.args[1] = [filename, exc.lineno, exc.offset, exc.text,
+                   exc.end_lineno, exc.end_offset]
     throw exc
 }
 
@@ -949,7 +949,6 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             raise_syntax_error(context)
         case '=':
             if(context.parent.type == "yield"){
-                console.log('parent is yield', context)
                 raise_syntax_error(context,
                     "assignment to yield expression not possible",
                     context.parent.position,)
@@ -992,6 +991,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             }
             break
         case '.':
+        case 'for':
             raise_syntax_error(context)
     }
     return $transition(context.parent, token, value)
@@ -1462,13 +1462,6 @@ $CallArgCtx.prototype.transition = function(token, value){
             }
             raise_syntax_error(context)
         case ')':
-            if(context.parent.kwargs &&
-                    $B.last(context.parent.tree).tree[0] && // if call ends with ,)
-                    ['kwarg', 'star_arg', 'double_star_arg'].
-                        indexOf($B.last(context.parent.tree).tree[0].type) == -1){
-                raise_syntax_error(context,
-                    'non-keyword argument after keyword argument')
-            }
             return $transition(context.parent,token)
         case ':':
             if(context.expect == ',' &&
@@ -1478,12 +1471,6 @@ $CallArgCtx.prototype.transition = function(token, value){
             break
         case ',':
             if(context.expect == ','){
-                if(context.parent.kwargs &&
-                        ['kwarg','star_arg', 'double_star_arg'].
-                            indexOf($B.last(context.parent.tree).tree[0].type) == -1){
-                    raise_syntax_error(context,
-                        'non-keyword argument after keyword argument')
-                }
                 return $transition(context.parent, token, value)
             }
     }
@@ -1522,6 +1509,12 @@ $CallCtx.prototype.ast = function(){
             delete keyword.arg
             res.keywords.push(keyword)
         }else if(call_arg.type == 'star_arg'){
+            if(res.keywords.length > 0){
+                if(! res.keywords[0].arg){
+                    raise_syntax_error(this,
+                        'iterable argument unpacking follows keyword argument unpacking')
+                }
+            }
             var starred = new ast.Starred(call_arg.tree[0].ast())
             set_position(starred, call_arg.position)
             starred.ctx = new ast.Load()
@@ -1538,6 +1531,15 @@ $CallCtx.prototype.ast = function(){
                 res.keywords.push(new ast.keyword(item.tree[0].value,
                     item.tree[1].ast()))
             }else{
+                if(res.keywords.length > 0){
+                    if(res.keywords[0].arg){
+                        raise_syntax_error(this,
+                            'positional argument follows keyword argument')
+                    }else{
+                        raise_syntax_error(this,
+                            'positional argument follows keyword argument unpacking')
+                    }
+                }
                 res.args.push(item.ast())
             }
         }
@@ -1886,16 +1888,22 @@ $ConditionCtx.prototype.transition = function(token, value){
             raise_syntax_error(context)
         }
         return $BodyCtx(context)
-    }else if(this.in_comp && this.token == 'if'){
+    }else if(context.in_comp && context.token == 'if'){
         // [x for x in A if cond1 if cond2]
         if(token == ']'){
             return $transition(context.parent, token, value)
         }else if(token == 'if'){
             var if_exp = new $ConditionCtx(context.parent, 'if')
-            if_exp.in_comp = true
+            if_exp.in_comp = context.in_comp
             return new $AbstractExprCtx(if_exp, false)
         }else if(')]}'.indexOf(token) > -1){
             return $transition(this.parent, token, value)
+        }
+        if(token == ',' && $parent_match(context, {type: 'call'})){
+            raise_syntax_error_known_range(context,
+                context.in_comp.position,
+                last_position(context),
+                'Generator expression must be parenthesized')
         }
     }
     raise_syntax_error(context, "expected ':'")
@@ -2193,6 +2201,9 @@ DictCompCtx.prototype.ast = function(){
     // ast.DictComp(key, value, generators)
     // key, value is the part evaluated for each item
     // generators is a list of comprehensions
+    if(this.value.ast === undefined){
+        console.log('dict comp ast, no value.ast', this)
+    }
     var ast_obj = new ast.DictComp(
                     this.key.ast(),
                     this.value.ast(),
@@ -2893,79 +2904,90 @@ $ExprCtx.prototype.transition = function(token, value){
           }
           break
       case '=':
-          check_assignment(context)
-          function has_parent(ctx, type){
-              // Tests if one of ctx parents is of specified type
-              while(ctx.parent){
-                  if(ctx.parent.type == type){return ctx.parent}
-                  ctx = ctx.parent
+          var call_arg = $parent_match(context, {type: 'call_arg'})
+          // Special case for '=' inside a call
+          try{
+              check_assignment(context)
+          }catch(err){
+              if(call_arg){
+                  var ctx = context
+                  while(ctx.parent !== call_arg){
+                      ctx = ctx.parent
+                  }
+                  raise_syntax_error_known_range(ctx,
+                      ctx.position,
+                      $token.value,
+                      'expression cannot contain assignment, perhaps you meant "=="?')
+              }else{
+                  throw err
               }
-              return false
           }
           var annotation
           if(context.expect == ','){
-             if(context.parent.type == "call_arg"){
+              if(context.parent.type == "call_arg"){
                  // issue 708
                  if(context.tree[0].type != "id"){
-                     raise_syntax_error(context, 'expression cannot contain' +
-                         ' assignment, perhaps you meant "=="?')
+                      raise_syntax_error_known_range(context,
+                          context.position,
+                          $token.value,
+                          'expression cannot contain assignment, perhaps you meant "=="?')
                  }
                  return new $AbstractExprCtx(new $KwArgCtx(context), true)
-             }else if(annotation = has_parent(context, "annotation")){
-                 return $transition(annotation, token, value)
-             }else if(context.parent.type == "op"){
-                  // issue 811
-                  raise_syntax_error(context, "cannot assign to operator")
-             }else if(context.parent.type == "not"){
-                  // issue 1496
-                  raise_syntax_error(context, "cannot assign to operator")
-             }else if(context.parent.type == "with"){
-                  raise_syntax_error(context, "expected :")
-             }else if(context.parent.type == "list_or_tuple"){
-                 // issue 973
-                 for(var i = 0; i < context.parent.tree.length; i++){
-                     var item = context.parent.tree[i]
-                     try{
-                         check_assignment(item, {once: true})
-                     }catch(err){
-                         console.log(context)
-                         raise_syntax_error(context, "invalid syntax. " +
-                             "Maybe you meant '==' or ':=' instead of '='?")
-                     }
-                     if(item.type == "expr" && item.name == "operand"){
-                         raise_syntax_error(context, "cannot assign to operator")
-                     }
-                 }
-                 // issue 1875
-                 if(context.parent.real == 'list' ||
-                         (context.parent.real == 'tuple' &&
-                          ! context.parent.implicit)){
-                     raise_syntax_error(context, "invalid syntax. " +
-                         "Maybe you meant '==' or ':=' instead of '='?")
-                 }
-             }else if(context.parent.type == "expr" &&
-                     context.parent.name == "iterator"){
-                 raise_syntax_error(context, 'expected :')
-             }else if(context.parent.type == "lambda"){
-                 if(context.parent.parent.parent.type != "node"){
-                     raise_syntax_error(context, 'expression cannot contain' +
-                         ' assignment, perhaps you meant "=="?')
-                 }
-             }else if(context.parent.type == 'target_list'){
-                 raise_syntax_error(context, "(assign to target in iteration)")
-             }
-             while(context.parent !== undefined){
-                 context = context.parent
-                 if(context.type == "condition"){
-                     raise_syntax_error(context, "invalid syntax. Maybe you" +
-                         " meant '==' or ':=' instead of '='?")
-                 }else if(context.type == "augm_assign"){
-                     raise_syntax_error(context,
+              }else if(annotation = $parent_match(context, {type: "annotation"})){
+                  return $transition(annotation, token, value)
+              }else if(context.parent.type == "op"){
+                   // issue 811
+                   raise_syntax_error(context, "cannot assign to operator")
+              }else if(context.parent.type == "not"){
+                   // issue 1496
+                   raise_syntax_error(context, "cannot assign to operator")
+              }else if(context.parent.type == "with"){
+                   raise_syntax_error(context, "expected :")
+              }else if(context.parent.type == "list_or_tuple"){
+                   // issue 973
+                   for(var i = 0; i < context.parent.tree.length; i++){
+                       var item = context.parent.tree[i]
+                       try{
+                           check_assignment(item, {once: true})
+                       }catch(err){
+                           console.log(context)
+                           raise_syntax_error(context, "invalid syntax. " +
+                               "Maybe you meant '==' or ':=' instead of '='?")
+                       }
+                       if(item.type == "expr" && item.name == "operand"){
+                           raise_syntax_error(context, "cannot assign to operator")
+                       }
+                   }
+                   // issue 1875
+                   if(context.parent.real == 'list' ||
+                           (context.parent.real == 'tuple' &&
+                            ! context.parent.implicit)){
+                       raise_syntax_error(context, "invalid syntax. " +
+                           "Maybe you meant '==' or ':=' instead of '='?")
+                   }
+              }else if(context.parent.type == "expr" &&
+                      context.parent.name == "iterator"){
+                  raise_syntax_error(context, 'expected :')
+              }else if(context.parent.type == "lambda"){
+                  if(context.parent.parent.parent.type != "node"){
+                      raise_syntax_error(context, 'expression cannot contain' +
+                          ' assignment, perhaps you meant "=="?')
+                  }
+              }else if(context.parent.type == 'target_list'){
+                  raise_syntax_error(context, "(assign to target in iteration)")
+              }
+              while(context.parent !== undefined){
+                  context = context.parent
+                  if(context.type == "condition"){
+                      raise_syntax_error(context, "invalid syntax. Maybe you" +
+                          " meant '==' or ':=' instead of '='?")
+                  }else if(context.type == "augm_assign"){
+                      raise_syntax_error(context,
                          "(assignment inside augmented assignment)")
-                 }
-             }
-             context = context.tree[0]
-             return new $AbstractExprCtx(new $AssignCtx(context), true)
+                  }
+              }
+              context = context.tree[0]
+              return new $AbstractExprCtx(new $AssignCtx(context), true)
           }
           break
       case ':=':
@@ -3171,7 +3193,7 @@ $ForExpr.prototype.transition = function(token, value){
                 return new $TargetListCtx(new $ForExpr(this.parent))
             case 'if':
                 var if_ctx = new $ConditionCtx(this.parent, 'if')
-                if_ctx.in_comp = true
+                if_ctx.in_comp = this.parent
                 return new $AbstractExprCtx(if_ctx, false)
 
         }
@@ -7099,7 +7121,7 @@ var $transition = $B.parser.$transition = function(context, token, value){
         $B.nb_debug_lines = 0
     }
     if($B.track_transitions){
-        console.log("context", context, "token", token, value, 'pos', $token.value)
+        console.log("context", context, "token", token, value, '\n  pos', $token.value)
         $B.nb_debug_lines++
     }
     return context.transition(token, value)
@@ -7665,10 +7687,20 @@ function unindent(src){
     return unindented_lines.join('\n')
 }
 
-function handle_errortoken(context, token){
+function handle_errortoken(context, token, tokenizer){
     if(token.string == "'" || token.string == '"'){
         raise_syntax_error(context, 'unterminated string literal ' +
             `(detected at line ${token.start[0]})`)
+    }
+    if(token.string == '\\'){
+        var nxt = tokenizer.next()
+        if(nxt.done || nxt.value.type == 'NEWLINE'){
+            raise_syntax_error(context, 'unexpected EOF while parsing')
+        }else{
+            raise_syntax_error_known_range(context,
+                nxt.value, nxt.value,
+                'unexpected character after line continuation character')
+        }
     }
     raise_syntax_error(context, 'invalid token ' + token[1] + _b_.ord(token[1]))
 }
@@ -7734,7 +7766,11 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                     raise_syntax_error(context, `'${last_brace.string}'` +
                        ' was never closed')
                 }
-                raise_syntax_error(context, err.message)
+                var err_msg = err.message
+                if(err_msg == 'EOF in multi-line statement'){
+                    err_msg = 'unexpected EOF while parsing'
+                }
+                raise_syntax_error(context, err_msg)
             }
             throw err
         }
@@ -7795,7 +7831,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             case 'ERRORTOKEN':
                 context = context || new $NodeCtx(node)
                 if(token.string != ' '){
-                    handle_errortoken(context, token)
+                    handle_errortoken(context, token, tokenizer)
                 }
                 continue
         }
@@ -7963,8 +7999,8 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     src = src.replace(/\r\n/gm, "\n")
     // Remove trailing \, cf issue 970
     // but don't hide syntax error if ends with \\, cf issue 1210
-    if(src.endsWith("\\") && !src.endsWith("\\\\")){
-        src = src.substr(0, src.length - 1)
+    if(src.endsWith("\\") && ! src.endsWith("\\\\")){
+        //
     }
 
     root.src = src
