@@ -15,9 +15,9 @@ function compiler_error(ast_obj, message){
         exc.text = _b_.none
     }
     exc.lineno = ast_obj.lineno
-    exc.offset = ast_obj.col_offset
+    exc.offset = ast_obj.col_offset + 1
     exc.end_lineno = ast_obj.end_lineno
-    exc.end_offset = ast_obj.end_col_offset
+    exc.end_offset = ast_obj.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     throw exc
@@ -534,6 +534,27 @@ function add_body(body, scopes){
         }
     }
     return res.trimRight()
+}
+
+function extract_docstring(ast_obj, scopes){
+    /*
+    Extract docstring from ast_obj body.
+    Used for modules, classes and functions.
+    The result is a Javascript "template string" to preserve multi-line
+    docstrings.
+    */
+    var js = '_b_.None' // default
+    if(ast_obj.body.length &&
+            ast_obj.body[0] instanceof $B.ast.Expr &&
+            ast_obj.body[0].value instanceof $B.ast.Constant){
+        // docstring
+        var value = ast_obj.body[0].value.value
+        if(typeof value == 'string'){
+            js = ast_obj.body[0].value.to_js(scopes)
+            ast_obj.body.shift()
+        }
+    }
+    return js
 }
 
 function init_comprehension(comp){
@@ -1199,14 +1220,8 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.push(class_scope)
 
-
     // Detect doc string
-    var docstring = '_b_.None'
-    if(this.body[0] instanceof $B.ast.Expr &&
-            this.body[0].value instanceof $B.ast.Constant &&
-            typeof this.body[0].value.value == "string"){
-        docstring = this.body.splice(0, 1)[0].to_js(scopes)
-    }
+    var docstring = extract_docstring(this, scopes)
 
     js += `var ${ref} = (function(){\n` +
           `var ${locals_name} = {__annotations__: $B.empty_dict()},\n` +
@@ -1255,7 +1270,6 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
             decorate = `$B.$call(${dec})(${decorate})`
         }
         js += decorate + '\n'
-        //js += `locals_${enclosing_scope.name}.${this.name} = ${class_ref}`
     }
 
     return js
@@ -1604,12 +1618,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     // Detect doc string
-    var docstring = '_b_.None'
-    if(this.body[0] instanceof $B.ast.Expr &&
-            this.body[0].value instanceof $B.ast.Constant &&
-            typeof this.body[0].value.value == "string"){
-        docstring = this.body.splice(0, 1)[0].value.to_js(scopes)
-    }
+    var docstring = extract_docstring(this, scopes)
 
     // Parse args
     var parsed_args = transform_args.bind(this)(scopes),
@@ -1746,9 +1755,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
-    var func_name_scope = bind(this.name, scopes)
-    var qualname = func_name_scope.type == 'class' ?
-        `${func_name_scope.name}.${this.name}` : this.name
+    var func_name_scope = bind(this.name, scopes),
+        in_class = func_name_scope.ast instanceof $B.ast.ClassDef
+
+    var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
+                              this.name
 
     // Flags
     var flags = 67
@@ -1777,6 +1788,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set attribute $is_func to distinguish Brython functions from JS
     // Used in py_dom.js / DOMNode.__getattribute__
     js += `${name2}.$is_func = true\n`
+    if(in_class){
+        js += `${name2}.$is_method = true\n`
+    }
     if(is_async){
         js += `${name2}.$is_async = true\n`
     }
@@ -2355,7 +2369,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
-          `locals.__annotations__ = $B.empty_dict()\n`
+          `locals.__annotations__ = $B.empty_dict()\n` +
+          `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
