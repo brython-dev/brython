@@ -777,13 +777,15 @@ function trace_from_stack(stack){
         var lineno = frame[1].$lineno,
             filename = frame[3].__file__,
             src = $B.file_cache[filename]
-        trace += `  File ${frame[3].__file__}, line ${lineno}, in `
-        if(frame[0] == frame[2]){
-            trace += '<module>'
-        }else{
-            trace += frame[0]
+        if(filename != '<string>'){
+            trace += `  File ${filename}, line ${lineno}, in `
+            if(frame[0] == frame[2]){
+                trace += '<module>'
+            }else{
+                trace += frame[0]
+            }
+            trace += '\n'
         }
-        trace += '\n'
         if(src){
             var lines = src.split('\n'),
                 line = lines[lineno - 1]
@@ -808,22 +810,23 @@ $B.show_error = function(err){
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
         trace += trace_from_stack(err.$stack)
+        console.log('in show error', err.text, 'offset', err.offset, err.end_offset)
         var filename = err.filename,
             line = err.text,
             indent = line.length - line.trimLeft().length
         trace += `  File ${filename}, line ${err.args[1][1]}\n` +
                      `    ${line.trim()}\n`
         if(err.__class__ !== _b_.IndentationError &&
-                filename !== '<string>'){
+                err.text){
             // add ^ under the line
-            var start = err.offset - indent,
+            var start = err.offset - indent - 1,
                 marks = '    ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){
                     nb_marks = line.length - start - indent
                 }else{
-                    nb_marks = err.end_offset - start - indent
+                    nb_marks = err.end_offset - start - indent - 1
                 }
             }
             marks += '^'.repeat(nb_marks) + '\n'
