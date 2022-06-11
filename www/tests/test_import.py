@@ -1,5 +1,7 @@
 import simple
 
+assert simple.__doc__ == "Documentation string of module simple.", simple.__doc__
+
 class Simple2:
 
     def __init__(self):
@@ -52,7 +54,7 @@ except NameError:
 
 # use "__getattr__" and "__dir__" at module level (PEP 562)
 assert simple.strange == "a strange name"
-assert dir(simple) == ["Simple", "text", "strange", "unknown"]
+assert set(dir(simple)) == {"Simple", "text", "strange", "unknown"}, dir(simple)
 
 # issue 1483
 # search in site-packages, but only if the script is served at the right

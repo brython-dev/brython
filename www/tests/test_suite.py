@@ -881,9 +881,10 @@ except UnboundLocalError as exc:
 def test_syntax_error(code, message):
     try:
         exec(code)
-        raise Exception(f'{code} should have raised\nSyntaxError: {message}')
+        print(f'{code} should have raised\nSyntaxError: {message}')
     except SyntaxError as exc:
-        assert exc.msg == message, exc.msg
+        if exc.msg != message:
+            print(f'code {code} expected {message}, got {exc.msg}')
 
 tests = [
     ("[p for n in (p := ['a', 'b', 'c'])]",
@@ -900,8 +901,18 @@ tests = [
     "duplicate argument 'x' in function definition")
     ]
 
-if hasattr(__BRYTHON__, "parser_to_ast"):
-    for code, expected in tests:
-        test_syntax_error(code, expected)
+for code, expected in tests:
+    test_syntax_error(code, expected)
+
+# docstrings
+def f():
+    """Docstring of function f()."""
+
+assert f.__doc__ == "Docstring of function f()."
+
+class A:
+    """Docstring of class A."""
+
+assert A.__doc__ == "Docstring of class A."
 
 print('passed all tests...')

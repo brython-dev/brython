@@ -1,3 +1,5 @@
+"""Documentation of module a."""
+
 def range(*args):
     return ['a', 'b', 'c']
 
