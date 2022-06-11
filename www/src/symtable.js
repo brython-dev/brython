@@ -270,9 +270,9 @@ function PyErr_SetString(exc_type, message){
 function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset){
     exc.filename = filename
     exc.lineno = lineno
-    exc.offset = offset
+    exc.offset = offset + 1
     exc.end_lineno = end_lineno
-    exc.end_offset = end_offset
+    exc.end_offset = end_offset + 1
     var src = $B.file_cache[filename]
     if(src !== undefined){
         var lines = src.split('\n')
@@ -280,7 +280,8 @@ function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset){
     }else{
         exc.text = ''
     }
-    exc.args[1] = [filename, lineno, offset, exc.text, end_lineno, end_offset]
+    exc.args[1] = [filename, exc.lineno, exc.offset, exc.text, 
+                   exc.end_lineno, exc.end_offset]
 }
 
 function error_at_directive(exc, ste, name){
