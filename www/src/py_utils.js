@@ -247,8 +247,12 @@ $B.get_class = function(obj){
     // but Javascript builtins used by Brython (functions, numbers, strings...)
     // don't have this attribute so we must return it
 
-    if(obj === null){return $B.$NoneDict}
-    if(obj === undefined){return $B.UndefinedClass} // in builtin_modules.js
+    if(obj === null){
+        return $B.imported.javascript.NullType // in builtin_modules.js
+    }
+    if(obj === undefined){
+        return $B.imported.javascript.UndefinedType // idem
+    }
     var klass = obj.__class__
     if(klass === undefined){
         switch(typeof obj) {
@@ -737,6 +741,10 @@ $B.$is = function(a, b){
     }
     if((a === _b_.int && b == $B.long_int) ||
             (a === $B.long_int && b === _b_.int)){
+        return true
+    }
+    if((a === undefined || a === $B.Undefined) &&
+            (b === undefined || b === $B.Undefined)){
         return true
     }
     return a === b

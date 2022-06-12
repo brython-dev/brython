@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-11 21:27:34.483121"
-__BRYTHON__.timestamp=1654975654482
+__BRYTHON__.compiled_date="2022-06-12 15:27:34.514255"
+__BRYTHON__.timestamp=1655040454514
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4896,7 +4896,7 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}
 return metaclass}
 var type=$B.make_class("type",function(obj,bases,cl_dict){var len=arguments.length
-if(len==1){if(obj===undefined){return $B.UndefinedClass}
+if(len==1){if(obj===undefined ||obj===null){return $B.get_class(obj)}
 return obj.__class__ ||$B.get_class(obj)}else if(len==3){var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases)
 return type.__new__(meta,obj,bases,cl_dict)}else{throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}}
 )
@@ -5264,8 +5264,8 @@ positional.slice(received))}else{throw _b_.TypeError.$factory(name+"() takes "+e
 " positional argument"+(expected > 1 ? "s" :"")+
 " but more were given")}}
 $B.get_class=function(obj){
-if(obj===null){return $B.$NoneDict}
-if(obj===undefined){return $B.UndefinedClass}
+if(obj===null){return $B.imported.javascript.NullType }
+if(obj===undefined){return $B.imported.javascript.UndefinedType }
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case "number":
 if(obj % 1===0){
@@ -5454,6 +5454,8 @@ $B.$is=function(a,b){
 if(a instanceof Number && b instanceof Number){return a.valueOf()==b.valueOf()}
 if((a===_b_.int && b==$B.long_int)||
 (a===$B.long_int && b===_b_.int)){return true}
+if((a===undefined ||a===$B.Undefined)&&
+(b===undefined ||b===$B.Undefined)){return true}
 return a===b}
 $B.$is_member=function(item,_set){
 var f,_iter,method
@@ -10249,7 +10251,7 @@ return _self.charAt(0)+
 default:
 return "0".repeat($.width-len)+_self}}
 str.$factory=function(arg,encoding,errors){if(arguments.length==0){return ""}
-if(arg===undefined){return $B.UndefinedClass.__str__()}else if(arg===null){return '<Javascript null>'}
+if(arg===undefined){return $B.UndefinedType.__str__()}else if(arg===null){return '<Javascript null>'}
 if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
 if(typeof arg=="string" ||arg instanceof String ||
@@ -13617,13 +13619,13 @@ html.maketag=maketag
 html.attribute_mapper=function(attr){return attr.replace(/_/g,'-')}
 return html})(__BRYTHON__)}
 modules['browser']=browser
-$B.UndefinedClass=$B.make_class("Undefined",function(){return $B.Undefined}
+$B.UndefinedType=$B.make_class("UndefinedType",function(){return $B.Undefined}
 )
-$B.UndefinedClass.__mro__=[_b_.object]
-$B.UndefinedClass.__bool__=function(self){return false}
-$B.UndefinedClass.__repr__=$B.UndefinedClass.__str__=function(self){return "<Javascript undefined>"}
-$B.Undefined={__class__:$B.UndefinedClass}
-$B.set_func_names($B.UndefinedClass,"javascript")
+$B.UndefinedType.__mro__=[_b_.object]
+$B.UndefinedType.__bool__=function(self){return false}
+$B.UndefinedType.__repr__=function(self){return "<Javascript undefined>"}
+$B.Undefined={__class__:$B.UndefinedType}
+$B.set_func_names($B.UndefinedType,"javascript")
 var super_class=$B.make_class("JavascriptSuper",function(){
 var b_super=_b_.super.$factory(),b_self=b_super.__self_class__,proto=Object.getPrototypeOf(b_self),parent=proto.constructor.$parent
 var factory=function(){var p=parent.bind(b_self),res
@@ -13662,10 +13664,12 @@ JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
-eval(content)},"Math":self.Math && $B.JSObj.$factory(self.Math),NULL:null,"Number":self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){console.log('javascript.py2js',src,module_name)
+eval(content)},"Math":self.Math && $B.JSObj.$factory(self.Math),NULL:null,NullType:$B.make_class('NullType'),"Number":self.Number && $B.JSObj.$factory(self.Number),py2js:function(src,module_name){console.log('javascript.py2js',src,module_name)
 if(module_name===undefined){module_name='__main__'+$B.UUID()}
 var js=$B.py2js(src,module_name,module_name,$B.builtins_scope).to_js()
-return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},"RegExp":self.RegExp && $B.JSObj.$factory(self.RegExp),"String":self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedClass}
+return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},"RegExp":self.RegExp && $B.JSObj.$factory(self.RegExp),"String":self.String && $B.JSObj.$factory(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedType}
+modules.javascript.NullType.$infos.__module__='javascript'
+modules.javascript.UndefinedType.$infos.__module__='javascript'
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
 var _b_=$B.builtins
@@ -14264,8 +14268,6 @@ var ix=scopes.length-1
 while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.ast.ClassDef){qualname=scopes[ix].name+'.'+qualname
 ix--}else{break}}
 scopes.push(class_scope)
-var defs=[]
-for(var statement of this.body){if(statement instanceof $B.ast.FunctionDef){}}
 var docstring=extract_docstring(this,scopes)
 js+=`var ${ref} = (function(){\n`+
 `var ${locals_name} = {__annotations__: $B.empty_dict()},\n`+

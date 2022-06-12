@@ -279,8 +279,8 @@ var type = $B.make_class("type",
     function(obj, bases, cl_dict){
         var len = arguments.length
         if(len == 1){
-            if(obj === undefined){
-                return $B.UndefinedClass
+            if(obj === undefined || obj === null){
+                return $B.get_class(obj)
             }
             return obj.__class__ || $B.get_class(obj)
         }else if(len == 3){

@@ -2533,7 +2533,7 @@ str.$factory = function(arg, encoding, errors){
         return ""
     }
     if(arg === undefined){
-        return $B.UndefinedClass.__str__()
+        return $B.UndefinedType.__str__()
     }else if(arg === null){
         return '<Javascript null>'
     }

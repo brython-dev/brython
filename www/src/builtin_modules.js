@@ -355,20 +355,20 @@
     modules['browser'] = browser
 
     // Class for Javascript "undefined"
-    $B.UndefinedClass = $B.make_class("Undefined",
+    $B.UndefinedType = $B.make_class("UndefinedType",
         function(){return $B.Undefined}
     )
-    $B.UndefinedClass.__mro__ = [_b_.object]
-    $B.UndefinedClass.__bool__ = function(self){
+    $B.UndefinedType.__mro__ = [_b_.object]
+    $B.UndefinedType.__bool__ = function(self){
         return false
     }
-    $B.UndefinedClass.__repr__ = $B.UndefinedClass.__str__ = function(self){
+    $B.UndefinedType.__repr__ = function(self){
         return "<Javascript undefined>"
     }
 
-    $B.Undefined = {__class__: $B.UndefinedClass}
+    $B.Undefined = {__class__: $B.UndefinedType}
 
-    $B.set_func_names($B.UndefinedClass, "javascript")
+    $B.set_func_names($B.UndefinedType, "javascript")
 
     // Class used by javascript.super()
     var super_class = $B.make_class("JavascriptSuper",
@@ -503,6 +503,7 @@
         },
         "Math": self.Math && $B.JSObj.$factory(self.Math),
         NULL: null,
+        NullType: $B.make_class('NullType'),
         "Number": self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
             console.log('javascript.py2js', src, module_name)
@@ -518,9 +519,12 @@
         "String": self.String && $B.JSObj.$factory(self.String),
         "super": super_class,
         UNDEFINED: $B.Undefined,
-        UndefinedType: $B.UndefinedClass
+        UndefinedType: $B.UndefinedType
     }
 
+    modules.javascript.NullType.$infos.__module__ = 'javascript'
+    modules.javascript.UndefinedType.$infos.__module__ = 'javascript'
+    
     var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
         "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
         "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
