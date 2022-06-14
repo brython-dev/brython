@@ -89,4 +89,7 @@ assert s.find('🐑') == 2
 assert s.find('d') == 3
 assert s.rfind('🐑') == 4
 
+s = '£ف🐑'
+assert s.encode('ASCII', 'backslashreplace') == b'\\xa3\\u0641\\U0001f411'
+
 print("passed all tests...")
