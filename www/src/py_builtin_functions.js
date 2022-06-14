@@ -349,6 +349,7 @@ function compile() {
     var filename = $.co_filename = $.filename
     var interactive = $.mode == "single" && ($.flags & 0x200)
     $B.file_cache[filename] = $.source
+    $B.url2name[filename] = module_name
 
     if(_b_.isinstance($.source, _b_.bytes)){
         var encoding = 'utf-8',
@@ -407,6 +408,7 @@ function compile() {
         var symtable = $B._PySymtable_Build(_ast, filename)
         // var js_obj = $B.js_from_root(_ast, symtable, $.filename)
         if($.flags == $B.PyCF_ONLY_AST){
+            delete $B.url2name[filename]
             return _ast
         }
     }else{
@@ -419,6 +421,7 @@ function compile() {
         var _ast = root.ast()
         var future = $B._PyFuture_FromAST(_ast, filename)
         var symtable = $B._PySymtable_Build(_ast, filename, future)
+        delete $B.url2name[filename]
         var js_obj = $B.js_from_root(_ast, symtable, filename)
 
         if($.flags == $B.PyCF_ONLY_AST){
@@ -427,6 +430,7 @@ function compile() {
             return $B.python_ast_classes[klass].$factory(_ast)
         }
     }
+    delete $B.url2name[filename]
     return $
 }
 
@@ -623,11 +627,13 @@ function $$eval(src, _globals, _locals){
     $B.exec_scope = $B.exec_scope || {}
 
     if(src.endsWith('\\\n')){
-        var exc = _b_.SyntaxError.$factory('')
+        var exc = _b_.SyntaxError.$factory('unexpected EOF while parsing')
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
         exc.args = ['unexpected EOF while parsing',
             ['<string>', lines.length - 1, 1, line]]
+        exc.filename = '<string>'
+        exc.text = line
         throw exc
     }
 
@@ -762,10 +768,12 @@ function $$eval(src, _globals, _locals){
     try{
         var exec_func = new Function('$B', '_b_', 'locals', local_name, global_name, js)
     }catch(err){
-        console.log('error\n', js)
+        if($B.debug > 1){
+            console.log('eval() error\n', js)
+            console.log('-- python source\n', src)
+        }
         throw err
     }
-    //console.log('exec_func', $B.format_indent(exec_func + '', 0))
 
     try{
         var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
@@ -774,6 +782,16 @@ function $$eval(src, _globals, _locals){
             err.$stack = save_frames_stack.concat(err.$stack)
         }else{
             err.$stack = save_frames_stack.concat($B.frames_stack)
+        }
+        if($B.debug > 2){
+            console.log('exec func', $B.format_indent(exec_func + '', 0),
+                '\n    filename', filename,
+                '\n    local_name', local_name,
+                '\n    exec_locals', exec_locals,
+                '\n    global_name', global_name,
+                '\n    exec_globals', exec_globals,
+                '\n    frame', frame,
+                '\n    _ast', _ast)
         }
         $B.frames_stack = save_frames_stack
         throw err
@@ -795,6 +813,7 @@ function $$eval(src, _globals, _locals){
     $B.frames_stack = save_frames_stack
     return res
 }
+
 $$eval.$is_func = true
 
 function exec(src, globals, locals){
