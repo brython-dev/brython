@@ -1560,10 +1560,26 @@ var encode = $B.encode = function(){
             }
             break
         case "ascii":
-          for(var i = 0, len = s.length; i < len; i++){
-              var cp = s.charCodeAt(i) // code point
-              if(cp <= 127){t[pos++] = cp}
-              else if(errors != "ignore"){$UnicodeEncodeError(encoding, i)}
+          for(var i = 0, len = _b_.str.__len__(s); i < len; i++){
+              var cp = s.charCodeAt(i), // code point
+                  char = _b_.str.__getitem__(s, i)
+              if(cp <= 127){
+                  t[pos++] = cp
+              }else if(errors == "backslashreplace"){
+                  var hex = _b_.hex(_b_.ord(char))
+                  if(hex.length < 5){
+                      hex = '\\x' + '0'.repeat(4 - hex.length) + hex.substr(2)
+                  }else if(hex.length < 7){
+                      hex = '\\u' + '0'.repeat(6 - hex.length) + hex.substr(2)
+                  }else{
+                      hex = '\\U' + '0'.repeat(10 - hex.length) + hex.substr(2)
+                  }
+                  for(var char of hex){
+                      t[pos++] = char.charCodeAt(0)
+                  }
+              }else if(errors !== 'ignore'){
+                  $UnicodeEncodeError(encoding, i)
+              }
           }
           break
         case "raw_unicode_escape":
