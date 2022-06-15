@@ -406,7 +406,7 @@ function compile() {
         var _ast = new $B.Parser($.source, filename).parse(
             'file')
         var symtable = $B._PySymtable_Build(_ast, filename)
-        // var js_obj = $B.js_from_root(_ast, symtable, $.filename)
+        var js_obj = $B.js_from_root(_ast, symtable, $.filename)
         if($.flags == $B.PyCF_ONLY_AST){
             delete $B.url2name[filename]
             return _ast
@@ -419,6 +419,21 @@ function compile() {
         root.parent_block = $B.builtins_scope
         $B.parser.dispatch_tokens(root, $.source)
         var _ast = root.ast()
+        if($.mode == 'single' && _ast.body.length == 1 &&
+                _ast.body[0] instanceof $B.ast.Expr){
+            // If mode is 'single' and the source is a single expression,
+            // set _ast to an Expression and set attribute .single_expression
+            // to compile() result. This is used in exec() to print the
+            // expression if it is not None
+            root = $B.parser.$create_root_node(
+                {src: $.source, filename},
+                module_name, module_name)
+            root.mode = 'eval'
+            $.single_expression = true
+            root.parent_block = $B.builtins_scope
+            $B.parser.dispatch_tokens(root, $.source)
+            _ast = root.ast()
+        }
         var future = $B._PyFuture_FromAST(_ast, filename)
         var symtable = $B._PySymtable_Build(_ast, filename, future)
         delete $B.url2name[filename]
@@ -431,6 +446,9 @@ function compile() {
         }
     }
     delete $B.url2name[filename]
+    // Set attribute ._ast to avoid compiling again if result is passed to
+    // exec()
+    $._ast = _ast
     return $
 }
 
@@ -610,8 +628,7 @@ function $$eval(src, _globals, _locals){
     }
 
     if(src.__class__ === code){
-        mode = src.mode
-        src = src.source
+        // result of compile()
     }else if((! src.valueOf) || typeof src.valueOf() !== 'string'){
         throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,` +
             " bytes or code object")
@@ -626,7 +643,7 @@ function $$eval(src, _globals, _locals){
 
     $B.exec_scope = $B.exec_scope || {}
 
-    if(src.endsWith('\\\n')){
+    if(typeof src == 'string' && src.endsWith('\\\n')){
         var exc = _b_.SyntaxError.$factory('unexpected EOF while parsing')
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
@@ -728,28 +745,32 @@ function $$eval(src, _globals, _locals){
     exec_locals.$f_trace = $B.enter_frame(top_frame)
     exec_locals.$lineno = 1
 
-    var filename = '<string>'
+    var filename = '<string>',
+        _ast
+
+    if(src.__class__ === code){
+        _ast = src._ast
+    }
 
     try{
         if($B.parser_to_ast){
-            var _ast = new $B.Parser(src, filename).parse(mode == 'eval' ? 'eval' : 'file')
-            var symtable = $B._PySymtable_Build(_ast, filename)
-            var js_obj = $B.js_from_root(_ast, symtable, filename,
-                    {local_name, exec_locals, global_name, exec_globals})
-            js = js_obj.js
+            if(! _ast){
+                _ast = new $B.Parser(src, filename).parse(mode == 'eval' ? 'eval' : 'file')
+            }
         }else{
-            var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
-                    1)
-            root.mode = mode
-            root.filename = filename
-            $B.parser.dispatch_tokens(root)
-
-            var _ast = root.ast(),
-                symtable = $B._PySymtable_Build(_ast, filename),
-                js_obj = $B.js_from_root(_ast, symtable, filename,
-                        {local_name, exec_locals, global_name, exec_globals}),
-                js = js_obj.js
+            if(! _ast){
+                var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
+                        1)
+                root.mode = mode
+                root.filename = filename
+                $B.parser.dispatch_tokens(root)
+                _ast = root.ast()
+            }
         }
+        var symtable = $B._PySymtable_Build(_ast, filename),
+            js_obj = $B.js_from_root(_ast, symtable, filename,
+                    {local_name, exec_locals, global_name, exec_globals}),
+            js = js_obj.js
     }catch(err){
         if(err.args){
             var lineno = err.args[1][1]
@@ -763,6 +784,11 @@ function $$eval(src, _globals, _locals){
 
     if(mode == 'eval'){
         js = 'return ' + js
+    }else if(src.single_expression){
+        js = `var result = ${js}\n` +
+             `if(result !== _b_.None){\n` +
+                 `_b_.print(result)\n` +
+             `}`
     }
 
     try{
@@ -774,6 +800,7 @@ function $$eval(src, _globals, _locals){
         }
         throw err
     }
+
 
     try{
         var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
