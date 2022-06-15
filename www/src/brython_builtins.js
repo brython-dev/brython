@@ -310,7 +310,7 @@ $B.python_to_js = function(src, script_id){
     if(!$B.use_VFS){$B.meta_path.shift()}
     if(script_id === undefined){script_id = "__main__"}
 
-    var root = __BRYTHON__.py2js(src, script_id, script_id),
+    var root = __BRYTHON__.py2js({src, filename: '<string>'}, script_id, script_id, __BRYTHON__.builtins_scope),
         js = root.to_js()
 
     js = "(function() {\n var $locals_" + script_id + " = {}\n" + js + "\n}())"

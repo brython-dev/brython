@@ -510,7 +510,7 @@
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
             }
-            var js = $B.py2js(src, module_name, module_name,
+            var js = $B.py2js({src, filename: '<string>'}, module_name, module_name,
                 $B.builtins_scope).to_js()
             return $B.format_indent(js, 0)
         },
