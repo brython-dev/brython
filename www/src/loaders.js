@@ -380,6 +380,7 @@ var loop = $B.loop = function(){
                 module = $B.module.$factory(script.__name__)
             module.$src = script.$src
             module.__file__ = script.__file__
+            module.__doc__ = script.__doc__
             $B.imported[script_id] = module
             var module = new Function(script.js + `\nreturn locals`)()
             for(var key in module){
