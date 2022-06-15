@@ -810,7 +810,6 @@ $B.show_error = function(err){
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
         trace += trace_from_stack(err.$stack)
-        console.log('in show error', err.text, 'offset', err.offset, err.end_offset)
         var filename = err.filename,
             line = err.text,
             indent = line.length - line.trimLeft().length

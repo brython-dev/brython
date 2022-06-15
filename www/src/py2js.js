@@ -593,6 +593,12 @@ function check_assignment(context, kwargs){
                 var name = assigned.value
                 if(['None', 'True', 'False', '__debug__'].indexOf(name) > -1){
                     // argument as Array to avoid adding "Maybe you meant =="
+                    if(name == '__debug__' && augmented){
+                        // special case (or inconsistency ?)
+                        $token.value = assigned.position
+                        raise_syntax_error(assigned,
+                            'cannot assign to __debug__')
+                    }
                     report([name])
                 }
                 if(noassign[name] === true){
@@ -1054,6 +1060,7 @@ $AliasCtx.prototype.transition = function(token, value){
     var context = this
     switch(token){
         case ',':
+        case ')':
         case ':':
             check_assignment(context.tree[0])
             context.parent.set_alias(context.tree[0].tree[0])
@@ -1576,6 +1583,18 @@ $CallCtx.prototype.ast = function(){
                 continue
             }
             if(item.type == 'kwarg'){
+                var key = item.tree[0].value
+                if(key == '__debug__'){
+                    raise_syntax_error_known_range(this,
+                        this.position,
+                        this.end_position,
+                        "cannot assign to __debug__")
+                }else if(['True', 'False', 'None'].indexOf(key) > -1){
+                    raise_syntax_error_known_range(this,
+                        item.position,
+                        item.equal_sign_position,
+                        'expression cannot contain assignment, perhaps you meant "=="?')
+                }
                 res.keywords.push(new ast.keyword(item.tree[0].value,
                     item.tree[1].ast()))
             }else{
@@ -1788,19 +1807,27 @@ $ClassCtx.prototype.transition = function(token, value){
             if(context.name === undefined){
                 raise_syntax_error(context, 'missing class name')
             }
+            context.parenthesis_position = $token.value
             return new $CallCtx(context)
         case ':':
             if(this.args){
                 for(var arg of this.args.tree){
                     var param = arg.tree[0]
+                    if(arg.type != 'call_arg'){
+                        $token.value = context.parenthesis_position
+                        raise_syntax_error(context, "expected ':'")
+                    }
                     if((param.type == 'expr' && param.name == 'id') ||
                             param.type == "kwarg"){
                         continue
                     }
-                    raise_syntax_error(context, 'invalid class parameter')
+                    $token.value = arg.position
+                    raise_syntax_error(arg, 'invalid class parameter')
                 }
             }
             return $BodyCtx(context)
+        case 'eol':
+            raise_syntax_error(context, "expected ':'")
     }
     raise_syntax_error(context)
 }
@@ -2128,7 +2155,7 @@ $DefCtx.prototype.ast = function(){
 
 $DefCtx.prototype.set_name = function(name){
     if(["None", "True", "False"].indexOf(name) > -1){
-        raise_syntax_error(this, '(invalid function name)')
+        raise_syntax_error(this) // invalid function name
     }
     var id_ctx = new $IdCtx(this, name)
     this.name = name
@@ -2167,7 +2194,7 @@ $DefCtx.prototype.transition = function(token, value){
             }
         case 'eol':
             if(context.has_args){
-                raise_syntax_error(context, "missing colon")
+                raise_syntax_error(context, "expected ':'")
             }
     }
     raise_syntax_error(context)
@@ -2461,6 +2488,9 @@ $DictOrSetCtx.prototype.transition = function(token, value){
             }
             raise_syntax_error(context)
         }else if(context.expect == 'value'){
+            if(python_keywords.indexOf(token) > -1){
+                raise_syntax_error(context)
+            }
             try{
                 context.expect = ','
                 return $transition(new $AbstractExprCtx(context, false),
@@ -2645,6 +2675,8 @@ $ExceptCtx.prototype.transition = function(token, value){
                 raise_syntax_error(context,
                     "multiple exception types must be parenthesized")
             }
+        case 'eol':
+            raise_syntax_error(context, "expected ':'")
     }
     raise_syntax_error(context)
 }
@@ -3586,7 +3618,7 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
     // may be followed by = for default value
     this.type = 'func_arg_id'
     if(["None", "True", "False"].indexOf(name) > -1){
-        raise_syntax_error(context, `(invalid argument name '${name}')`)
+        raise_syntax_error(context) // invalid argument name
     }
 
     this.name = name
@@ -3668,8 +3700,7 @@ $FuncStarArgCtx.prototype.transition = function(token, value){
                }
             }
             if(["None", "True", "False"].indexOf(value) > -1){
-                raise_syntax_error(context,
-                    `(invalid starred argument name: '${value}')`)
+                raise_syntax_error(context) // invalid starred argument name
             }
             context.set_name(value)
             context.parent.names.push(value)
@@ -3875,16 +3906,11 @@ $IdCtx.prototype.transition = function(token, value){
         // case at the beginning of a line : if the line ends with a colon
         // (:), it is the "soft keyword" `case` for pattern matching
         var start = context.parent.$pos,
-            src = $get_module(this).src
-        try{
-            var flag = line_ends_with_comma(src.substr(start))
-        }catch(err){
-            $pos = start + err.offset
-            raise_syntax_error(context, [err.message])
-        }
-        if(flag){
-            var node = $get_node(context),
-                parent = node.parent
+            src = $get_module(this).src,
+            line = get_first_line(src.substr(start)),
+            node = $get_node(context)
+        if(line === true || line.text.endsWith(':')){
+            var parent = node.parent
             if((! node.parent) || !(node.parent.is_match)){
                 raise_syntax_error(context, "('case' not inside 'match')")
             }else{
@@ -3900,16 +3926,49 @@ $IdCtx.prototype.transition = function(token, value){
             return $transition(new $PatternCtx(
                 new $CaseCtx(context.parent.parent)),
                     token, value)
+        }else if(node.parent && node.parent.is_match){
+            // "case" starts a line whose parent is a match statement. The
+            // line does not end with a ':'
+            $token.value = line.newline_token
+            raise_syntax_error(context, "expected ':'")
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
         // same for match
         var start = context.parent.$pos,
-            src = $get_module(this).src,
-            flag = line_ends_with_comma(src.substr(start))
-        if(flag){
+            root = $get_module(this),
+            src = root.src
+        var line = get_first_line(src.substr(start))
+        if(line === true || line.text.endsWith(':')){
             return $transition(new $AbstractExprCtx(
                 new $MatchCtx(context.parent.parent), true),
                 token, value)
+        }else{
+            // The line starting with "match" does not end with ':'. Check
+            // if line is ok without a trailing ':'
+            try{
+                $B.py2js({src: line.text.substr(5), filename: '<string>'},
+                    'fake', 'fake', $B.builtins_scope)
+                // no syntax error
+            }catch(err){
+                // If not, check if line would have been a valid match
+                // statement if it had ended with ':'
+
+                // Build a fake match block with a valid "case" block
+                var fake_match = line.text + ':\n case _:\n  pass',
+                    misses_colon = false
+                try{
+                    $B.py2js({src: fake_match, filename: '<string>'},
+                        'fake', 'fake', $B.builtins_scope)
+                    // no syntax error with ':'
+                    misses_colon = true
+                }catch(err){
+                    // not a match statement
+                }
+                if(misses_colon){
+                    $token.value = line.newline_token
+                    raise_syntax_error(context, "expected ':'")
+                }
+            }
         }
     }
     switch(token) {
@@ -4527,6 +4586,7 @@ var $MatchCtx = $B.parser.$MatchCtx = function(node_ctx){
     this.parent = node_ctx
     this.tree = []
     this.expect = 'as'
+    this.token_position = $get_module(this).token_reader.position
 }
 
 $MatchCtx.prototype.ast = function(){
@@ -4542,8 +4602,6 @@ $MatchCtx.prototype.ast = function(){
 $MatchCtx.prototype.transition = function(token, value){
     var context = this
     switch(token){
-        case 'as':
-            return new $AbstractExprCtx(new $AliasCtx(context))
         case ':':
             if(this.tree[0].type == 'list_or_tuple'){
                 remove_abstract_expr(this.tree[0].tree)
@@ -4555,7 +4613,10 @@ $MatchCtx.prototype.transition = function(token, value){
                     return $BodyCtx(context)
             }
             break
+        case 'eol':
+            raise_syntax_error(context, "expected ':'")
     }
+    raise_syntax_error(context)
 }
 
 var NamedExprCtx = function(context){
@@ -5822,7 +5883,7 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                         "only one double star pattern is accepted")
                 }
                 if(value == '_'){
-                    raise_syntax_error(context, "('**_' is not valid)")
+                    raise_syntax_error(context) // , "('**_' is not valid)")
                 }
                 if(context.bound_names.indexOf(value) > -1){
                     raise_syntax_error(context, 'duplicate binding: ' + value)
@@ -6298,6 +6359,8 @@ $SingleKwCtx.prototype.transition = function(token, value){
     var context = this
     if(token == ':'){
         return $BodyCtx(context)
+    }else if(token == 'eol'){
+        raise_syntax_error(context, "expected ':'")
     }
     raise_syntax_error(context)
 }
@@ -6837,6 +6900,8 @@ $WithCtx.prototype.transition = function(token, value){
                 return context
             }
             break
+        case 'eol':
+            raise_syntax_error(context, "expected ':'")
     }
     raise_syntax_error(context)
 }
@@ -7090,10 +7155,12 @@ var $get_docstring = $B.parser.$get_docstring = function(node){
         var firstchild = node.children[0]
         if(firstchild.context.tree && firstchild.context.tree.length > 0 &&
                 firstchild.context.tree[0].type == 'expr'){
-            var expr = firstchild.context.tree[0].tree[0]
+            var expr = firstchild.context.tree[0]
             // Set as docstring if first child is a string, but not a f-string
-            if(expr.type == 'str' && !Array.isArray(expr.tree[0])){
-                doc_string = firstchild.context.tree[0].tree[0].to_js()
+            if(expr.tree && expr.tree.length > 0 &&
+                    expr.tree[0].type == 'str'){
+
+                doc_string = eval(expr.tree[0].value)
             }
         }
     }
@@ -7346,11 +7413,16 @@ function test_num(num_lit){
 
 var opening = {')': '(', '}': '{', ']': '['}
 
-function line_ends_with_comma(src){
+function get_first_line(src){
     // used to check if 'match' or 'case' are the "soft keywords" for pattern
     // matching, or ordinary ids
-    var braces = []
-    for(token of $B.tokenizer(src)){
+    var braces = [],
+        token_reader = new $B.TokenReader(src)
+    while(true){
+        var token = token_reader.read()
+        if(! token){
+            return {line: src}
+        }
         if(token.type == 'OP' && token.string == ':' && braces.length == 0){
             return true
         }else if(token.type == 'OP'){
@@ -7373,7 +7445,11 @@ function line_ends_with_comma(src){
                 }
             }
         }else if(token.type == 'NEWLINE'){
-            return false
+            var end = token.end,
+                lines = src.split('\n'),
+                match_lines = lines.slice(0, end[0] - 1)
+            match_lines.push(lines[end[0] - 1].substr(0, end[1]))
+            return {text: match_lines.join('\n'), newline_token: token}
         }
     }
     return false
@@ -7760,22 +7836,22 @@ function unindent(src){
     return unindented_lines.join('\n')
 }
 
-function handle_errortoken(context, token, tokenizer){
+function handle_errortoken(context, token, token_reader){
     if(token.string == "'" || token.string == '"'){
         raise_syntax_error(context, 'unterminated string literal ' +
             `(detected at line ${token.start[0]})`)
     }
     if(token.string == '\\'){
-        var nxt = tokenizer.next()
-        if(nxt.done || nxt.value.type == 'NEWLINE'){
+        var nxt = token_reader.read()
+        if((! nxt) || nxt.type == 'NEWLINE'){
             raise_syntax_error(context, 'unexpected EOF while parsing')
         }else{
             raise_syntax_error_known_range(context,
-                nxt.value, nxt.value,
+                nxt, nxt,
                 'unexpected character after line continuation character')
         }
     }
-    raise_syntax_error(context) // , 'invalid token ' + token[1] + _b_.ord(token[1]))
+    raise_syntax_error(context)
 }
 
 var python_keywords = [
@@ -7790,7 +7866,7 @@ var $token = {}
 
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     var src = root.src
-    var tokenizer = $B.tokenizer(src)
+    root.token_reader = new $B.TokenReader(src)
     var braces_close = {")": "(", "]": "[", "}": "{"},
         braces_open = "([{",
         braces_stack = []
@@ -7825,7 +7901,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
 
     while(true){
         try{
-            var token = tokenizer.next()
+            var token = root.token_reader.read()
         }catch(err){
             context = context || new $NodeCtx(node)
             if(err.type == 'IndentationError'){
@@ -7847,10 +7923,9 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             }
             throw err
         }
-        if(token.done){
+        if(! token){
             throw Error('token done without ENDMARKER.')
         }
-        token = token.value
         $token.value = token
         if(token[2] === undefined){
             console.log('token incomplet', token, 'module', module, root)
@@ -7904,7 +7979,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             case 'ERRORTOKEN':
                 context = context || new $NodeCtx(node)
                 if(token.string != ' '){
-                    handle_errortoken(context, token, tokenizer)
+                    handle_errortoken(context, token, root.token_reader)
                 }
                 continue
         }
@@ -8587,7 +8662,7 @@ $B.run_script = function(src, name, url, run_loop){
         var root = $B.py2js({src: src, filename: url}, name, name),
             js = root.to_js(),
             script = {
-                __doc__: root.__doc__,
+                __doc__: $get_docstring(root),
                 js: js,
                 __name__: name,
                 $src: src,
