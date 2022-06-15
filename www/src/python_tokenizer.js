@@ -127,6 +127,32 @@ function test_num(num_type, char){
     }
 }
 
+$B.TokenReader = function(src){
+    this.tokens = []
+    this.tokenizer = $B.tokenizer(src)
+    this.position = 0
+}
+
+$B.TokenReader.prototype.read = function(){
+    if(this.position < this.tokens.length){
+        var res = this.tokens[this.position]
+    }else{
+        var res = this.tokenizer.next()
+        if(res.done){
+            this.done = true
+            return
+        }
+        res = res.value
+        this.tokens.push(res)
+    }
+    this.position++
+    return res
+}
+
+$B.TokenReader.prototype.seek = function(position){
+    this.position = position
+}
+
 $B.tokenizer = function*(src){
     var unicode_tables = $B.unicode_tables,
         whitespace = ' \t\n',
