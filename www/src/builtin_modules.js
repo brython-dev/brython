@@ -135,7 +135,6 @@
                         }
                     }
                 })
-                console.log(js_scripts)
                 // Check if imported scripts have been modified
                 for(var mod in $B.imported){
                     if($B.imported[mod].$last_modified){
@@ -506,7 +505,6 @@
         NullType: $B.make_class('NullType'),
         "Number": self.Number && $B.JSObj.$factory(self.Number),
         py2js: function(src, module_name){
-            console.log('javascript.py2js', src, module_name)
             if(module_name === undefined){
                 module_name = '__main__' + $B.UUID()
             }
