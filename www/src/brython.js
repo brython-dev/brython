@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-15 21:28:48.518016"
-__BRYTHON__.timestamp=1655321328518
+__BRYTHON__.compiled_date="2022-06-17 15:47:14.891207"
+__BRYTHON__.timestamp=1655473634891
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -670,13 +670,15 @@ if(ctx.parent.type=='yield'){raise_syntax_error_known_range(ctx,ctx.parent.posit
 var assigned=ctx.tree[0]
 if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){if($parent_match(ctx,{type:'target_list'})){
 raise_syntax_error(C)}
-report('comparison',assigned.tree[0].position,last_position(assigned))}else{report('expression',assigned.tree[0].position,last_position(assigned))}}else if(assigned.type=='unary'){report('expression',assigned.position,last_position(assigned))}else if(assigned.type=='call'){report('function call',assigned.position,assigned.end_position)}else if(assigned.type=='id'){var name=assigned.value
+report('comparison',assigned.tree[0].position,last_position(assigned))}else{report('expression',assigned.tree[0].position,last_position(assigned))}}else if(assigned.type=='attribute' &&
+$parent_match(ctx,{type:'condition'})){report('attribute',ctx.position,last_position(C))}else if(assigned.type=='sub' &&
+$parent_match(ctx,{type:'condition'})){report('subscript',ctx.position,last_position(C))}else if(assigned.type=='unary'){report('expression',assigned.position,last_position(assigned))}else if(assigned.type=='call'){report('function call',assigned.position,assigned.end_position)}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){
 if(name=='__debug__' && augmented){
 $token.value=assigned.position
 raise_syntax_error(assigned,'cannot assign to __debug__')}
 report([name])}
-if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){if(ctx.parent.type !='op'){report('literal')}}else if(assigned.type=="ellipsis"){report('ellipsis')}else if(assigned.type=='genexpr'){report(['generator expression'])}else if(assigned.type=='packed'){if(action=='delete'){report('starred',assigned.position,last_position(assigned))}
+if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){if(ctx.parent.type !='op'){report('literal')}}else if(assigned.type=="ellipsis"){report('ellipsis')}else if(assigned.type=='genexpr'){report(['generator expression'])}else if(assigned.type=='starred'){if(action=='delete'){report('starred',assigned.position,last_position(assigned))}
 check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){if(! assigned.parenthesized){report('named expression')}else if(ctx.parent.type=='node'){raise_syntax_error_known_range(
 C,assigned.target.position,last_position(assigned),"cannot assign to named expression here. "+
 "Maybe you meant '==' instead of '='?")}else if(action=='delete'){report('named expression',assigned.position,last_position(assigned))}}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(assigned.type=='lambda'){report('lambda')}else if(assigned.type=='ternary'){report(['conditional expression'])}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report(['conditional expression'],ctx.position,last_position(C))}else if(ctx.type=='op'){var a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
@@ -825,8 +827,9 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.position=$token.value
-return new $PackedCtx(
-new $ExprCtx(C,'expr',commas))
+return new $AbstractExprCtx(
+new $StarredCtx(
+new $ExprCtx(C,'expr',commas)),false)
 case '-':
 case '~':
 case '+':
@@ -943,7 +946,7 @@ this.parent=C.parent
 this.tree=[C]
 var scope=$get_scope(this)
 if(C.type=='assign'){check_assignment(C.tree[1])}else{var assigned=C.tree[0]
-if(assigned.type=="ellipsis"){raise_syntax_error(C,'cannot assign to Ellipsis')}else if(assigned.type=='unary'){raise_syntax_error(C,'cannot assign to operator')}else if(assigned.type=='packed'){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
+if(assigned.type=="ellipsis"){raise_syntax_error(C,'cannot assign to Ellipsis')}else if(assigned.type=='unary'){raise_syntax_error(C,'cannot assign to operator')}else if(assigned.type=='starred'){if(assigned.tree[0].name=='id'){var id=assigned.tree[0].tree[0].value
 if(['None','True','False','__debug__'].indexOf(id)>-1){raise_syntax_error(C,'cannot assign to '+id)}}
 if(assigned.parent.in_tuple===undefined){raise_syntax_error(C,"starred assignment target must be in a list or tuple")}}}}
 function set_ctx_to_store(obj){if(Array.isArray(obj)){for(var item of obj){set_ctx_to_store(item)}}else if(obj instanceof ast.List ||
@@ -985,7 +988,7 @@ var $AttrCtx=$B.parser.$AttrCtx=function(C){
 this.type='attribute'
 this.value=C.tree[0]
 this.parent=C
-this.position=this.value.position
+this.position=$token.value
 C.tree.pop()
 C.tree[C.tree.length]=this
 this.tree=[]
@@ -1000,6 +1003,7 @@ $AttrCtx.prototype.transition=function(token,value){var C=this
 if(token==='id'){var name=value
 if(name=='__debug__'){raise_syntax_error(C,'cannot assign to __debug__')}else if(noassign[name]===true){raise_syntax_error(C)}
 C.unmangled_name=name
+C.position=$token.value
 name=$mangle(name,C)
 C.name=name
 return C.parent}
@@ -1091,7 +1095,8 @@ case '.':
 case 'ellipsis':
 case 'not':
 case 'lambda':
-if(C.expect=='id'){C.expect=','
+if(C.expect=='id'){this.position=$token.value
+C.expect=','
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)}
 break
@@ -1942,10 +1947,10 @@ C.tree[0].type=="id" &&
 raise_syntax_error_known_range(C,C.position,$token.value,"Missing parentheses in call "+
 `to '${func}'. Did you mean ${func}(...)?`)}
 if(["dict_or_set","list_or_tuple","str"].indexOf(C.parent.type)==-1){var t=C.tree[0]
-if(t.type=="packed"){$token.value=t.position
+if(t.type=="starred"){$token.value=t.position
 if($parent_match(C,{type:'del'})){raise_syntax_error(C,'cannot delete starred')}
-raise_syntax_error(C,"cannot use starred expression here")}else if(t.type=="call" && t.func.type=="packed"){$token.value=t.func.position
-raise_syntax_error(C,"cannot use starred expression here")}}}
+raise_syntax_error_known_range(C,t.position,last_position(t),"can't use starred expression here")}else if(t.type=="call" && t.func.type=="starred"){$token.value=t.func.position
+raise_syntax_error(C,"can't use starred expression here")}}}
 return $transition(C.parent,token)}
 var $ExprNot=$B.parser.$ExprNot=function(C){
 this.type='expr_not'
@@ -2331,8 +2336,10 @@ case 'float':
 case 'imaginary':
 if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value,msg=`Missing parentheses in call to '${f}'.`+
 ` Did you mean ${f}(...)?`}else{var msg='invalid syntax. Perhaps you forgot a comma?'}
+var call_arg=$parent_match(C,{type:'call_arg'})
+console.log(C,'in call arg',call_arg)
 raise_syntax_error_known_range(C,this.position,$token.value,msg)}
-if(this.parent.parent.type=="packed"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
+if(this.parent.parent.type=="starred"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return $transition(C.parent,token,value)}
 var $ImportCtx=$B.parser.$ImportCtx=function(C){
 this.type='import'
@@ -2536,9 +2543,10 @@ if(token=='('){return new $CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
 if(token==')'){if(C.implicit){return $transition(C.parent,token,value)}
 var close=true
+C.end_position=$token.value
 if(C.tree.length==1){if($parent_match(C,{type:'del'})&&
 C.tree[0].type=='expr' &&
-C.tree[0].tree[0].type=='packed'){raise_syntax_error_known_range(C,C.tree[0].tree[0].position,last_position(C.tree[0]),'cannot use starred expression here')}
+C.tree[0].tree[0].type=='starred'){raise_syntax_error_known_range(C,C.tree[0].tree[0].position,last_position(C.tree[0]),'cannot use starred expression here')}
 var grandparent=C.parent.parent
 grandparent.tree.pop()
 grandparent.tree.push(C.tree[0])
@@ -2548,15 +2556,16 @@ if(C.packed ||
 (C.type=='list_or_tuple' &&
 C.tree.length==1 &&
 C.tree[0].type=='expr' &&
-C.tree[0].tree[0].type=='packed')){
+C.tree[0].tree[0].type=='starred')){
 raise_syntax_error(C,"cannot use starred expression here")}
 if(close){C.close()}
-if(C.parent.type=="packed"){return C.parent.parent}
+if(C.parent.type=="starred"){return C.parent.parent}
 return C.parent}
 break
 case 'list':
 if(token==']'){C.close()
-if(C.parent.type=="packed"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
+C.end_position=$token.value
+if(C.parent.type=="starred"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
 return C.parent}
 break}
 switch(token){case ',':
@@ -2946,56 +2955,6 @@ default:
 if(C.tree[C.tree.length-1].type==
 'abstract_expr'){raise_syntax_error(C)}}
 return $transition(C.parent,token)}
-var $PackedCtx=$B.parser.$PackedCtx=function(C){
-this.type='packed'
-this.position=C.position
-if(C.parent.type=='list_or_tuple' &&
-C.parent.parent.type=="node"){
-for(var i=0;i < C.parent.tree.length;i++){var child=C.parent.tree[i]
-if(child.type=='expr' && child.tree.length > 0
-&& child.tree[0].type=='packed'){raise_syntax_error(C,"two starred expressions in assignment")}}}
-this.parent=C
-this.tree=[]
-this.pos=$pos-1 
-C.tree[C.tree.length]=this}
-$PackedCtx.prototype.ast=function(){var ast_obj=new ast.Starred(this.tree[0].ast(),new ast.Load())
-set_position(ast_obj,this.position)
-return ast_obj}
-$PackedCtx.prototype.transition=function(token,value){var C=this
-if(C.tree.length > 0 && token=="["){
-return $transition(C.tree[0],token,value)}
-switch(token){case 'id':
-var expr=new $AbstractExprCtx(C,false)
-expr.packed=true
-C.parent.expect=','
-var id=$transition(expr,token,value)
-return id
-case "[":
-C.parent.expect=','
-return new $ListOrTupleCtx(C,"list")
-case "(":
-C.parent.expect=','
-return new $ListOrTupleCtx(C,"tuple")
-case 'str':
-C.parent.expect=","
-return new $StringCtx(C,value)
-case 'JoinedStr':
-C.parent.expect=","
-return new JoinedStrCtx(C,value)
-case "]":
-return $transition(C.parent,token,value)
-case "{":
-C.parent.expect=','
-return new $DictOrSetCtx(C)
-case 'op':
-switch(value){case '+':
-case '-':
-case '~':
-C.parent.expect=','
-return new $UnaryCtx(C,value)
-default:
-raise_syntax_error(C,"can't use starred expression here")}}
-return C.parent.transition(token,C)}
 var $PassCtx=$B.parser.$PassCtx=function(C){
 this.type='pass'
 this.parent=C
@@ -3633,10 +3592,26 @@ return $transition(C.parent,token)
 case ':':
 if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
 raise_syntax_error(C)}
+var $StarredCtx=$B.parser.$StarredCtx=function(C){
+this.type='starred'
+this.position=C.position
+if(C.parent.type=='list_or_tuple' &&
+C.parent.parent.type=="node"){
+for(var i=0;i < C.parent.tree.length;i++){var child=C.parent.tree[i]
+if(child.type=='expr' && child.tree.length > 0
+&& child.tree[0].type=='starred'){raise_syntax_error(C,"two starred expressions in assignment")}}}
+this.parent=C
+this.tree=[]
+C.tree[C.tree.length]=this}
+$StarredCtx.prototype.ast=function(){var ast_obj=new ast.Starred(this.tree[0].ast(),new ast.Load())
+set_position(ast_obj,this.position)
+return ast_obj}
+$StarredCtx.prototype.transition=function(token,value){var C=this
+return $transition(C.parent,token,value)}
 var $StringCtx=$B.parser.$StringCtx=function(C,value){
 this.type='str'
 this.parent=C
-this.position=$token.value
+this.position=this.end_position=$token.value
 function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
 return value}
@@ -3706,7 +3681,8 @@ case 'lambda':
 var expr=new $AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case ']':
-if(C.parent.packed){return C.parent }
+C.end_position=$token.value
+if(C.parent.packed){return C.parent}
 if(C.tree[0].tree.length > 0){return C.parent}
 break
 case ':':
@@ -3740,7 +3716,9 @@ new $ExprCtx(C,'target',false),value)}
 case 'op':
 if(C.expect=='id' && value=='*'){
 this.nb_packed++
-return new $PackedCtx(C)}
+C.expect=','
+return new $AbstractExprCtx(
+new $StarredCtx(C),false)}
 case '(':
 case '[':
 if(C.expect=='id'){C.expect=','
@@ -3754,6 +3732,8 @@ C.implicit_tuple=true
 return C}}
 if(C.expect==','){return $transition(C.parent,token,value)}else if(token=='in'){
 return $transition(C.parent,token,value)}
+console.log('unexpected token for target list',token,value)
+console.log(C)
 raise_syntax_error(C)}
 var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
 this.type='ternary'
@@ -3817,7 +3797,7 @@ return C}
 case 'int':
 case 'float':
 case 'imaginary':
-if(C.parent.type=="packed"){raise_syntax_error(C,"can't use starred expression here")}
+if(C.parent.type=="starred"){raise_syntax_error(C,"can't use starred expression here")}
 var res=new $NumberCtx(token,C,value)
 return res
 case 'id':

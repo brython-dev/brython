@@ -507,6 +507,7 @@ function check_assignment(context, kwargs){
         // "del x = ..." is invalid
         forbidden.push('del')
     }
+
     function report(wrong_type, a, b){
         a = a || context.position
         b = b || $token.value
@@ -535,6 +536,7 @@ function check_assignment(context, kwargs){
                 `cannot ${action} ${msg}`)
         }
     }
+
     if(context.type == 'expr'){
         var upper_expr = context
         var ctx = context
@@ -546,6 +548,7 @@ function check_assignment(context, kwargs){
         }
         // context = upper_expr
     }
+
     // no assign in left side of augmented assignment
     if(in_left_side(context, 'augm_assign')){
         raise_syntax_error(context)
@@ -585,6 +588,12 @@ function check_assignment(context, kwargs){
                     report('expression', assigned.tree[0].position,
                         last_position(assigned))
                 }
+            }else if(assigned.type == 'attribute' &&
+                    $parent_match(ctx, {type: 'condition'})){
+                report('attribute', ctx.position, last_position(context))
+            }else if(assigned.type == 'sub' &&
+                    $parent_match(ctx, {type: 'condition'})){
+                report('subscript', ctx.position, last_position(context))
             }else if(assigned.type == 'unary'){
                 report('expression', assigned.position, last_position(assigned))
             }else if(assigned.type == 'call'){
@@ -612,7 +621,7 @@ function check_assignment(context, kwargs){
                 report('ellipsis')
             }else if(assigned.type == 'genexpr'){
                 report(['generator expression'])
-            }else if(assigned.type == 'packed'){
+            }else if(assigned.type == 'starred'){
                 if(action == 'delete'){
                     report('starred', assigned.position, last_position(assigned))
                 }
@@ -969,8 +978,10 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                     var commas = context.with_commas
                     context = context.parent
                     context.position = $token.value
-                    return new $PackedCtx(
-                        new $ExprCtx(context, 'expr', commas))
+                    return new $AbstractExprCtx(
+                        new $StarredCtx(
+                            new $ExprCtx(context, 'expr', commas)),
+                        false)
                 case '-':
                 case '~':
                 case '+':
@@ -1178,7 +1189,7 @@ var $AssignCtx = $B.parser.$AssignCtx = function(context, expression){
             raise_syntax_error(context, 'cannot assign to Ellipsis')
         }else if(assigned.type == 'unary'){
             raise_syntax_error(context, 'cannot assign to operator')
-        }else if(assigned.type == 'packed'){
+        }else if(assigned.type == 'starred'){
             if(assigned.tree[0].name == 'id'){
                 var id = assigned.tree[0].tree[0].value
                 if(['None', 'True', 'False', '__debug__'].indexOf(id) > -1){
@@ -1297,7 +1308,7 @@ var $AttrCtx = $B.parser.$AttrCtx = function(context){
     this.type = 'attribute'
     this.value = context.tree[0]
     this.parent = context
-    this.position = this.value.position
+    this.position = $token.value
     context.tree.pop()
     context.tree[context.tree.length] = this
     this.tree = []
@@ -1329,6 +1340,7 @@ $AttrCtx.prototype.transition = function(token, value){
             raise_syntax_error(context) // , `'${name}' cannot be an attribute`)
         }
         context.unmangled_name = name
+        context.position = $token.value
         name = $mangle(name, context)
         context.name = name
         return context.parent
@@ -1485,9 +1497,10 @@ $CallArgCtx.prototype.transition = function(token, value){
         case 'not':
         case 'lambda':
             if(context.expect == 'id'){
-                 context.expect = ','
-                 var expr = new $AbstractExprCtx(context, false)
-                 return $transition(expr, token, value)
+                this.position = $token.value
+                context.expect = ','
+                var expr = new $AbstractExprCtx(context, false)
+                return $transition(expr, token, value)
             }
             break
         case '=':
@@ -3165,15 +3178,19 @@ $ExprCtx.prototype.transition = function(token, value){
           }
           if(["dict_or_set", "list_or_tuple", "str"].indexOf(context.parent.type) == -1){
               var t = context.tree[0]
-              if(t.type == "packed"){
+              if(t.type == "starred"){
                   $token.value = t.position
                   if($parent_match(context, {type: 'del'})){
                       raise_syntax_error(context, 'cannot delete starred')
                   }
-                  raise_syntax_error(context, "cannot use starred expression here")
-              }else if(t.type == "call" && t.func.type == "packed"){
+                  raise_syntax_error_known_range(context,
+                      t.position,
+                      last_position(t),
+                      "can't use starred expression here")
+              }else if(t.type == "call" && t.func.type == "starred"){
                   $token.value = t.func.position
-                  raise_syntax_error(context, "cannot use starred expression here")
+                  raise_syntax_error(context,
+                      "can't use starred expression here")
               }
           }
     }
@@ -3999,11 +4016,13 @@ $IdCtx.prototype.transition = function(token, value){
             }else{
                 var msg = 'invalid syntax. Perhaps you forgot a comma?'
             }
+            var call_arg = $parent_match(context, {type: 'call_arg'})
+            console.log(context, 'in call arg', call_arg)
             raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)
 
     }
-    if(this.parent.parent.type == "packed"){
+    if(this.parent.parent.type == "starred"){
         if(['.', '[', '('].indexOf(token) == -1){
             return this.parent.parent.transition(token, value)
         }
@@ -4398,10 +4417,11 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                             return $transition(context.parent, token, value)
                         }
                         var close = true
+                        context.end_position = $token.value
                         if(context.tree.length == 1){
                             if($parent_match(context, {type: 'del'}) &&
                                     context.tree[0].type == 'expr' &&
-                                    context.tree[0].tree[0].type == 'packed'){
+                                    context.tree[0].tree[0].type == 'starred'){
                                 raise_syntax_error_known_range(context,
                                     context.tree[0].tree[0].position,
                                     last_position(context.tree[0]),
@@ -4420,7 +4440,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                                 (context.type == 'list_or_tuple' &&
                                  context.tree.length == 1 &&
                                  context.tree[0].type == 'expr' &&
-                                 context.tree[0].tree[0].type == 'packed')){
+                                 context.tree[0].tree[0].type == 'starred')){
                             // syntax "(*x)"
                             raise_syntax_error(context,
                                 "cannot use starred expression here")
@@ -4428,7 +4448,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                         if(close){
                             context.close()
                         }
-                        if(context.parent.type == "packed"){
+                        if(context.parent.type == "starred"){
                             return context.parent.parent
                         }
                         return context.parent
@@ -4437,7 +4457,8 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                 case 'list':
                     if(token == ']'){
                          context.close()
-                         if(context.parent.type == "packed"){
+                         context.end_position = $token.value
+                         if(context.parent.type == "starred"){
                              if(context.parent.tree.length > 0){
                                  return context.parent.tree[0]
                              }else{
@@ -5064,80 +5085,6 @@ $OpCtx.prototype.transition = function(token, value){
             }
     }
     return $transition(context.parent, token)
-}
-
-var $PackedCtx = $B.parser.$PackedCtx = function(context){
-    // used for packed tuples in expressions, eg
-    //     a, *b, c = [1, 2, 3, 4]
-    this.type = 'packed'
-    this.position = context.position
-    if(context.parent.type == 'list_or_tuple' &&
-            context.parent.parent.type == "node"){
-        // SyntaxError for a, *b, *c = ...
-        for(var i = 0; i < context.parent.tree.length; i++){
-            var child = context.parent.tree[i]
-            if(child.type == 'expr' && child.tree.length > 0
-                    && child.tree[0].type == 'packed'){
-                raise_syntax_error(context,
-                    "two starred expressions in assignment")
-            }
-        }
-    }
-    this.parent = context
-    this.tree = []
-    this.pos = $pos - 1 // for SyntaxError reporting
-    context.tree[context.tree.length] = this
-}
-
-$PackedCtx.prototype.ast = function(){
-    var ast_obj = new ast.Starred(this.tree[0].ast(), new ast.Load())
-    set_position(ast_obj, this.position)
-    return ast_obj
-}
-
-$PackedCtx.prototype.transition = function(token, value){
-    var context = this
-    if(context.tree.length > 0 && token == "["){
-        // Apply subscription to packed element (issue #1139)
-        return $transition(context.tree[0], token, value)
-    }
-    switch(token){
-        case 'id':
-            var expr = new $AbstractExprCtx(context, false)
-            expr.packed = true
-            context.parent.expect = ','
-            var id = $transition(expr, token, value)
-            return id
-        case "[":
-            context.parent.expect = ','
-            return new $ListOrTupleCtx(context, "list")
-        case "(":
-            context.parent.expect = ','
-            return new $ListOrTupleCtx(context, "tuple")
-        case 'str':
-            context.parent.expect = ","
-            return new $StringCtx(context, value)
-        case 'JoinedStr':
-            context.parent.expect = ","
-            return new JoinedStrCtx(context, value)
-        case "]":
-            return $transition(context.parent, token, value)
-        case "{":
-            context.parent.expect = ','
-            return new $DictOrSetCtx(context)
-        case 'op':
-            switch(value){
-                case '+':
-                case '-':
-                case '~':
-                    context.parent.expect = ','
-                    return new $UnaryCtx(context, value)
-                default:
-                    raise_syntax_error(context,
-                        "can't use starred expression here")
-            }
-    }
-    return context.parent.transition(token, context)
 }
 
 var $PassCtx = $B.parser.$PassCtx = function(context){
@@ -6442,12 +6389,47 @@ $StarArgCtx.prototype.transition = function(token, value){
     raise_syntax_error(context)
 }
 
+var $StarredCtx = $B.parser.$StarredCtx = function(context){
+    // used for packed tuples in expressions, eg
+    //     a, *b, c = [1, 2, 3, 4]
+    // and for targets in "for" loops
+    //    for a, *b in t: pass
+    this.type = 'starred'
+    this.position = context.position
+    if(context.parent.type == 'list_or_tuple' &&
+            context.parent.parent.type == "node"){
+        // SyntaxError for a, *b, *c = ...
+        for(var i = 0; i < context.parent.tree.length; i++){
+            var child = context.parent.tree[i]
+            if(child.type == 'expr' && child.tree.length > 0
+                    && child.tree[0].type == 'starred'){
+                raise_syntax_error(context,
+                    "two starred expressions in assignment")
+            }
+        }
+    }
+    this.parent = context
+    this.tree = []
+    context.tree[context.tree.length] = this
+}
+
+$StarredCtx.prototype.ast = function(){
+    var ast_obj = new ast.Starred(this.tree[0].ast(), new ast.Load())
+    set_position(ast_obj, this.position)
+    return ast_obj
+}
+
+$StarredCtx.prototype.transition = function(token, value){
+    var context = this
+    return $transition(context.parent, token, value)
+}
+
 var $StringCtx = $B.parser.$StringCtx = function(context, value){
     // Class for literal strings
     // value is the string with quotes, eg 'a', "b\"c" etc.
     this.type = 'str'
     this.parent = context
-    this.position = $token.value
+    this.position = this.end_position = $token.value
 
     function prepare(value){
         value = value.replace(/\n/g,'\\n\\\n')
@@ -6569,8 +6551,9 @@ $SubCtx.prototype.transition = function(token, value){
             var expr = new $AbstractExprCtx(context,false)
             return $transition(expr, token, value)
         case ']':
+            context.end_position = $token.value
             if(context.parent.packed){
-                return context.parent //.tree[0]
+                return context.parent
             }
             if(context.tree[0].tree.length > 0){
                 return context.parent
@@ -6635,7 +6618,9 @@ $TargetListCtx.prototype.transition = function(token, value){
             if(context.expect == 'id' && value == '*'){
                 // form "for a, *b in X"
                 this.nb_packed++
-                return new $PackedCtx(context)
+                context.expect = ','
+                return new $AbstractExprCtx(
+                    new $StarredCtx(context), false)
             }
         case '(':
         case '[':
@@ -6663,6 +6648,8 @@ $TargetListCtx.prototype.transition = function(token, value){
         // Support syntax "for x, in ..."
         return $transition(context.parent, token, value)
     }
+    console.log('unexpected token for target list', token, value)
+    console.log(context)
     raise_syntax_error(context)
 }
 
@@ -6801,7 +6788,7 @@ $UnaryCtx.prototype.transition = function(token, value){
         case 'int':
         case 'float':
         case 'imaginary':
-            if(context.parent.type == "packed"){
+            if(context.parent.type == "starred"){
                 raise_syntax_error(context,
                     "can't use starred expression here")
             }
