@@ -103,7 +103,7 @@ StringIO.truncate = function(self, size){
         size = self.$counter
     }
     self.$content = self.$content.substr(0, size)
-    self.$counter = self.$content.length - 1
+    self.$counter = self.$content.length
     return self.$counter
 }
 
