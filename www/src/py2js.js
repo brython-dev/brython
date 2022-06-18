@@ -2502,7 +2502,13 @@ $DictOrSetCtx.prototype.transition = function(token, value){
             raise_syntax_error(context)
         }else if(context.expect == 'value'){
             if(python_keywords.indexOf(token) > -1){
-                raise_syntax_error(context)
+                var ae = new $AbstractExprCtx(context, false)
+                try{
+                    $transition(ae, token, value)
+                    context.tree.pop()
+                }catch(err){
+                    raise_syntax_error(context)
+                }
             }
             try{
                 context.expect = ','
