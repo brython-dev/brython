@@ -321,8 +321,9 @@ $B.set_func_names(classmethod, "builtins")
 
 var code = $B.code = $B.make_class("code")
 
-code.__repr__ = code.__str__ = function(self){
-    return `<code object ${self.co_name}, file '${self.co_filename}'>`
+code.__repr__ = code.__str__ = function(_self){
+    return `<code object ${_self.co_name}, file '${_self.co_filename}', ` +
+        `line ${_self.co_firstlineno || 1}>`
 }
 
 code.__getattribute__ = function(self, attr){
@@ -533,6 +534,7 @@ function dir(obj){
     }catch (err){
         // ignore, default
         //console.log(err)
+        console.log('error in dir', err.message)
     }
 
     var res = [], pos = 0
@@ -665,14 +667,16 @@ function $$eval(src, _globals, _locals){
     var handler = {
         get: function(obj, prop){
             if(prop == '$lineno'){
-                return lineno
+                return obj.$exec_lineno
             }else if(prop == '__file__'){
                 return '<string>'
             }
             return obj[prop]
         },
         set: function(obj, prop, value){
-            if(['__file__', '$lineno'].indexOf(prop) == -1){
+            if(prop == '$lineno'){
+                obj.$exec_lineno = value
+            }else if(['__file__'].indexOf(prop) == -1){
                 obj[prop] = value
             }
         }
@@ -800,7 +804,6 @@ function $$eval(src, _globals, _locals){
         }
         throw err
     }
-
 
     try{
         var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
@@ -2549,13 +2552,15 @@ var $$super = $B.make_class("super",
         var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
             var frame = $B.last($B.frames_stack),
-                pyframe = $B.imported["_sys"].Getframe()
-            if(pyframe.f_code && pyframe.f_code.co_varnames){
+                pyframe = $B.imported["_sys"].Getframe(),
+                code = $B.frame.f_code.__get__(pyframe),
+                co_varnames = code.co_varnames
+            if(co_varnames.length > 0){
                 _type = frame[1].__class__
                 if(_type === undefined){
                     throw _b_.RuntimeError.$factory("super(): no arguments")
                 }
-                object_or_type = frame[1][pyframe.f_code.co_varnames[0]]
+                object_or_type = frame[1][code.co_varnames[0]]
             }else{
                 throw _b_.RuntimeError.$factory("super(): no arguments")
             }

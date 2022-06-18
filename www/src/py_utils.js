@@ -380,7 +380,9 @@ $B.rest_iter = function(next_func){
 
 $B.set_lineno = function(locals, lineno){
     locals.$lineno = lineno
-    if(locals.$f_trace !== _b_.None){$B.trace_line()}
+    if(locals.$f_trace !== _b_.None){
+        $B.trace_line()
+    }
     return true
 }
 
@@ -1069,6 +1071,7 @@ $B.int_or_bool = function(v){
 
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
+    frame.__class__ = $B.frame
     $B.frames_stack.push(frame)
     if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
@@ -1087,13 +1090,14 @@ $B.enter_frame = function(frame){
                 }
             }
             try{
-                return $B.tracefunc($B._frame.$factory($B.frames_stack,
-                    $B.frames_stack.length - 1), 'call', _b_.None)
+                return $B.tracefunc($B.last($B.frames_stack), 'call', _b_.None)
             }catch(err){
                 err.$in_trace_func = true
                 throw err
             }
         }
+    }else{
+        $B.tracefunc = _b_.None
     }
     return _b_.None
 }
@@ -1105,8 +1109,7 @@ $B.trace_exception = function(){
     }
     var trace_func = top_frame[1].$f_trace,
         exc = top_frame[1].$current_exception,
-        frame_obj = $B._frame.$factory($B.frames_stack,
-            $B.frames_stack.length - 1)
+        frame_obj = $B.last($B.frames_stack)
     return trace_func(frame_obj, 'exception', $B.fast_tuple([
         exc.__class__, exc, $B.traceback.$factory(exc)]))
 }
@@ -1117,8 +1120,7 @@ $B.trace_line = function(){
         return _b_.None
     }
     var trace_func = top_frame[1].$f_trace,
-        frame_obj = $B._frame.$factory($B.frames_stack,
-            $B.frames_stack.length - 1)
+        frame_obj = $B.last($B.frames_stack)
     return trace_func(frame_obj, 'line', _b_.None)
 }
 
@@ -1131,8 +1133,7 @@ $B.set_line = function(line_info){
     top_frame[1].$line_info = line_info
     var trace_func = top_frame[1].$f_trace
     if(trace_func !== _b_.None){
-        var frame_obj = $B._frame.$factory($B.frames_stack,
-            $B.frames_stack.length - 1)
+        var frame_obj = $B.last($B.frames_stack)
         top_frame[1].$ftrace = trace_func(frame_obj, 'line', _b_.None)
     }
     return true
@@ -1141,8 +1142,7 @@ $B.set_line = function(line_info){
 $B.trace_return = function(value){
     var top_frame = $B.last($B.frames_stack),
         trace_func = top_frame[1].$f_trace,
-        frame_obj = $B._frame.$factory($B.frames_stack,
-            $B.frames_stack.length - 1)
+        frame_obj = $B.last($B.frames_stack)
     if(top_frame[0] == $B.tracefunc.$current_frame_id){
         // don't call trace func when returning from the frame where
         // sys.settrace was called

@@ -8491,7 +8491,6 @@ var brython = $B.parser.brython = function(options){
         }
         try{
             // Conversion of Python source code to Javascript
-
             root = $B.py2js($src, module_name, module_name)
             js = root.to_js()
             if($B.debug > 1){

@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-17 16:13:13.942266"
-__BRYTHON__.timestamp=1655475193942
+__BRYTHON__.compiled_date="2022-06-18 15:54:55.131221"
+__BRYTHON__.timestamp=1655560495131
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5618,6 +5618,7 @@ default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
+frame.__class__=$B.frame
 $B.frames_stack.push(frame)
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
@@ -5625,26 +5626,26 @@ frame[4]===$B.tracefunc.$infos.__func__)){
 $B.tracefunc.$frame_id=frame[0]
 return _b_.None}else{
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.tracefunc.$frame_id){return _b_.None}}
-try{return $B.tracefunc($B._frame.$factory($B.frames_stack,$B.frames_stack.length-1),'call',_b_.None)}catch(err){err.$in_trace_func=true
-throw err}}}
+try{return $B.tracefunc($B.last($B.frames_stack),'call',_b_.None)}catch(err){err.$in_trace_func=true
+throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
 $B.trace_exception=function(){var top_frame=$B.last($B.frames_stack)
 if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=top_frame[1].$f_trace,exc=top_frame[1].$current_exception,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+var trace_func=top_frame[1].$f_trace,exc=top_frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
 $B.trace_line=function(){var top_frame=$B.last($B.frames_stack)
 if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+var trace_func=top_frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'line',_b_.None)}
 $B.set_line=function(line_info){
 var top_frame=$B.last($B.frames_stack)
 if($B.tracefunc && top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 top_frame[1].$line_info=line_info
 var trace_func=top_frame[1].$f_trace
-if(trace_func !==_b_.None){var frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+if(trace_func !==_b_.None){var frame_obj=$B.last($B.frames_stack)
 top_frame[1].$ftrace=trace_func(frame_obj,'line',_b_.None)}
 return true}
-$B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B._frame.$factory($B.frames_stack,$B.frames_stack.length-1)
+$B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
 if(top_frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame_obj,'return',value)}
@@ -6190,7 +6191,8 @@ return f}
 )
 $B.set_func_names(classmethod,"builtins")
 var code=$B.code=$B.make_class("code")
-code.__repr__=code.__str__=function(self){return `<code object ${self.co_name}, file '${self.co_filename}'>`}
+code.__repr__=code.__str__=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
+`line ${_self.co_firstlineno || 1}>`}
 code.__getattribute__=function(self,attr){return self[attr]}
 $B.set_func_names(code,"builtins")
 function compile(){var $=$B.args('compile',6,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
@@ -6285,7 +6287,8 @@ var dir_func=$B.$getattr(obj.__class__,"__dir__")
 return $B.$call(dir_func)(obj)}
 try{var res=$B.$call($B.$getattr(obj,'__dir__'))()
 res=_b_.list.$factory(res)
-return res}catch(err){}
+return res}catch(err){
+console.log('error in dir',err.message)}
 var res=[],pos=0
 for(var attr in obj){if(attr.charAt(0)!=='$' && attr !=='__class__' &&
 obj[attr]!==undefined){res[pos++]=attr}}
@@ -6329,8 +6332,8 @@ exc.filename='<string>'
 exc.text=line
 throw exc}
 var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>'
-var handler={get:function(obj,prop){if(prop=='$lineno'){return lineno}else if(prop=='__file__'){return '<string>'}
-return obj[prop]},set:function(obj,prop,value){if(['__file__','$lineno'].indexOf(prop)==-1){obj[prop]=value}}}
+var handler={get:function(obj,prop){if(prop=='$lineno'){return obj.$exec_lineno}else if(prop=='__file__'){return '<string>'}
+return obj[prop]},set:function(obj,prop,value){if(prop=='$lineno'){obj.$exec_lineno=value}else if(['__file__'].indexOf(prop)==-1){obj[prop]=value}}}
 if(_globals===_b_.None){
 exec_locals=new Proxy(frame[1],handler)
 exec_globals=new Proxy(frame[3],handler)}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
@@ -7008,10 +7011,10 @@ return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
 var $$super=$B.make_class("super",function(_type,object_or_type){var no_object_or_type=object_or_type===undefined
-if(_type===undefined && object_or_type===undefined){var frame=$B.last($B.frames_stack),pyframe=$B.imported["_sys"].Getframe()
-if(pyframe.f_code && pyframe.f_code.co_varnames){_type=frame[1].__class__
+if(_type===undefined && object_or_type===undefined){var frame=$B.last($B.frames_stack),pyframe=$B.imported["_sys"].Getframe(),code=$B.frame.f_code.__get__(pyframe),co_varnames=code.co_varnames
+if(co_varnames.length > 0){_type=frame[1].__class__
 if(_type===undefined){throw _b_.RuntimeError.$factory("super(): no arguments")}
-object_or_type=frame[1][pyframe.f_code.co_varnames[0]]}else{throw _b_.RuntimeError.$factory("super(): no arguments")}}
+object_or_type=frame[1][code.co_varnames[0]]}else{throw _b_.RuntimeError.$factory("super(): no arguments")}}
 if(! no_object_or_type && Array.isArray(object_or_type)){object_or_type=object_or_type[0]}
 return{
 __class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
@@ -7365,59 +7368,45 @@ var src=$B.file_cache[filename]
 if(src){var lines=src.split("\n"),line=lines[lineno-1]
 trace.push("    "+line.trim())}}}
 return trace.join("\n")}
-var traceback=$B.traceback=$B.make_class("traceback",function(exc,stack){var frame=$B.last($B.frames_stack)
-if(stack===undefined){stack=exc.$stack}
+var traceback=$B.traceback=$B.make_class("traceback",function(exc){var stack=exc.$stack ||$B.frames_stack.slice()
+if(typeof stack.map !=="function"){console.log('pas dde map',stack)}
 return{
-__class__ :traceback,$stack:stack,exc:exc}}
+__class__ :traceback,$stack:stack,
+linenos:stack.map(x=> x[1].$lineno),pos:0}}
 )
-traceback.__getattribute__=function(self,attr){switch(attr){case "tb_frame":
-return frame.$factory(self.$stack)
+traceback.__getattribute__=function(_self,attr){switch(attr){case "tb_frame":
+return _self.$stack[_self.pos]
 case "tb_lineno":
-return self.$stack[0][1].$lineno
+return _self.linenos[_self.pos]
 case "tb_lasti":
 throw _b_.NotImplementedError.$factory(attr)
 case "tb_next":
-if(self.$stack.length <=1){return _b_.None}else{return traceback.$factory(self.exc,self.$stack.slice(1))}
+if(_self.pos < _self.$stack.length-1){_self.pos++
+return _self}else{return _b_.None}
 default:
-return _b_.object.__getattribute__(self,attr)}}
+return _b_.object.__getattribute__(_self,attr)}}
 $B.set_func_names(traceback,"builtins")
-var frame=$B.make_class("frame",function(stack,pos){var fs=stack
-var res={__class__:frame,f_builtins :{},
-$stack:stack.slice()}
-if(pos===undefined){pos=0}
-res.$pos=pos
-if(fs.length){var _frame=fs[pos],locals_id=_frame[0],filename
-try{res.f_locals=$B.obj_dict(_frame[1])}catch(err){console.log("err "+err)
-throw err}
-res.f_globals=$B.obj_dict(_frame[3])
-if(_frame[3].__file__ !==undefined){filename=_frame[3].__file__}
-if(locals_id.startsWith("$exec")){filename="<string>"}
-res.f_lineno=_frame[1].$lineno ||-1
-var co_name=locals_id.startsWith("$exec")? "<module>" :
-locals_id
-if(locals_id==_frame[2]){co_name="<module>"}else if(locals_id.startsWith("lc"+$B.lambda_magic)){co_name="<listcomp>"}else{if(_frame[1].$name){co_name=_frame[1].$name}else if(_frame[1].$comprehension){co_name='<'+_frame[1].$comprehension+'>'}else if(_frame[1].$list_comp){co_name='<listcomp>'}else if(_frame.length > 4){if(_frame[4].$infos){co_name=_frame[4].$infos.__name__}else{co_name=_frame[4].name}
-if(_frame[4].$infos===undefined){
-if(_frame[4].name.startsWith("__ge")){co_name="<genexpr>"}else if(_frame[4].name.startsWith("set_comp"+
-$B.lambda_magic)){co_name="<setcomp>"}else if(_frame[4].name.startsWith("lambda"+
-$B.lambda_magic)){co_name="<lambda>"}}else if(filename===undefined && _frame[4].$infos.__code__){filename=_frame[4].$infos.__code__.co_filename
-if(filename===undefined){filename=_frame[4].$infos.__module__}
-res.f_lineno=_frame[4].$infos.__code__.co_firstlineno}}}
-if(_frame.length > 4 && _frame[4].$infos !==undefined){res.f_code=_frame[4].$infos.__code__}else{res.f_code={co_name:co_name,co_filename:filename}
-if(_frame[1].$comp_code){$B.update_obj(res.f_code,_frame[1].$comp_code)}}
-res.f_code.__class__=$B.code
-res.f_code.co_code=_b_.None
-if(filename===undefined){res.f_code.co_filename="<string>"}}
-return res}
-)
-frame.__delattr__=function(self,attr){if(attr=="f_trace"){$B.last(self.$stack)[1].$f_trace=_b_.None}}
-frame.__getattr__=function(self,attr){
-if(attr=="f_back"){if(self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1),self.$pos-1)}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=$B.last(self.$stack)[1]
+var frame=$B.frame=$B.make_class("frame")
+frame.__delattr__=function(_self,attr){if(attr=="f_trace"){_self[1].$f_trace=_b_.None}}
+frame.__dir__=function(_self){console.log('frame dict')
+return _b_.object.__dir__(frame).concat(['clear','f_back','f_builtins','f_code','f_globals','f_lasti','f_lineno','f_locals','f_trace','f_trace_lines','f_trace_opcodes'])}
+frame.__getattr__=function(_self,attr){
+if(attr=="f_back"){if(_self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1),self.$pos-1)}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
 if(locals.$f_trace===undefined){return _b_.None}
 return locals.$f_trace}}
-frame.__setattr__=function(self,attr,value){if(attr=="f_trace"){
-$B.last(self.$stack)[1].$f_trace=value}}
-frame.__str__=frame.__repr__=function(self){return '<frame object, file '+self.f_code.co_filename+
-', line '+self.f_lineno+', code '+self.f_code.co_name+'>'}
+frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
+_self[1].$f_trace=value}}
+frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self[3].__file__+
+', line '+_self[1].$lineno+', code '+
+frame.f_code.__get__(_self).co_name+'>'}
+frame.f_code={__get__:function(_self){var res
+if(_self[4]){res=_self[4].$infos.__code__}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self[3].__file__,co_varnames:$B.fast_tuple([])}}
+res.__class__=$B.code
+return res}}
+frame.f_globals={__get__:function(_self){return $B.obj_dict(_self[3])}}
+frame.f_lineno={__get__:function(_self){return _self[1].$lineno}}
+frame.f_locals={__get__:function(_self){return $B.obj_dict(_self[1])}}
+frame.f_trace={__get__:function(_self){return _self[1].$f_trace}}
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
 var BaseException=_b_.BaseException={__class__:_b_.type,__bases__ :[_b_.object],__mro__:[_b_.object],args:[],$infos:{__name__:"BaseException",__module__:"builtins"},$is_class:true}
@@ -7435,10 +7424,10 @@ err.__dict__=$B.empty_dict()
 return err}
 BaseException.__getattr__=function(self,attr){if(attr=="__traceback__"){
 if(self.$traceback !==undefined){return self.$traceback}
-return traceback.$factory(self)}else if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
+return self.$traceback=traceback.$factory(self)}else if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
 return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
-BaseException.with_traceback=function(self,tb){self.$traceback=tb
-return self}
+BaseException.with_traceback=function(_self,tb){_self.__traceback__=tb
+return _self}
 $B.deep_copy=function(stack){var res=[]
 for(const s of stack){var item=[s[0],{},s[2],{}]
 if(s[4]!==undefined){item.push(s[4])}
@@ -7450,10 +7439,7 @@ $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
 $B.freeze=function(err){
 function get_line_info(frame){return `${frame[1].$lineno},${frame[2]}`}
-if(err.$stack===undefined){err.$line_infos=[]
-for(var frame of $B.frames_stack){err.$line_infos.push(get_line_info(frame))}
-err.$stack=$B.frames_stack.slice()
-if($B.frames_stack.length){err.$line_info=get_line_info($B.last($B.frames_stack))}}}
+if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()}}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 var be_factory=`
@@ -7461,6 +7447,7 @@ function (){
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
+    err.__traceback__ = traceback.$factory($B.frames_stack.slice())
     err.$py_error = true
     $B.freeze(err)
     // placeholder
@@ -7635,10 +7622,10 @@ if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWi
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
 function trace_from_stack(stack){var trace=''
-for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
-if(filename !='<string>'){trace+=`  File ${filename}, line ${lineno}, in `
-if(frame[0]==frame[2]){trace+='<module>'}else{trace+=frame[0]}
-trace+='\n'}
+for(var frame of stack){console.log('frame',frame,'lineno',frame[1].$lineno)
+var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
+trace+=`  File ${filename}, line ${lineno}, in `+
+(frame[0]==frame[2]? '<module>' :frame[0])+'\n'
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
 if(line){trace+='    '+line.trim()+'\n'}}}
 return trace}
@@ -13746,7 +13733,7 @@ arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript']
 var _b_=$B.builtins
 modules['_sys']={
 Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
-return $B._frame.$factory($B.frames_stack,$B.frames_stack.length-depth-1)},breakpointhook:function(){var hookname=$B.$options.breakpoint,modname,dot,funcname,hook
+return $B.frames_stack[$B.frames_stack.length-depth-1]},breakpointhook:function(){var hookname=$B.$options.breakpoint,modname,dot,funcname,hook
 if(hookname===undefined){hookname="pdb.set_trace"}
 [modname,dot,funcname]=_b_.str.rpartition(hookname,'.')
 if(dot==""){modname="builtins"}
@@ -14346,7 +14333,7 @@ js+=`var ${ref} = (function(){\n`+
 `locals.$name = "${this.name}"\n`+
 `locals.$qualname = "${qualname}"\n`+
 `locals.$is_class = true\n`+
-`var top_frame = ["${ref}", locals, "${glob}", ${globals_name}]\n`+
+`var top_frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n`+
 `top_frame.__file__ = '${scopes.filename}'\n`+
 `locals.$lineno = ${this.lineno}\n`+
 `locals.$f_trace = $B.enter_frame(top_frame)\n`+

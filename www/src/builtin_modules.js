@@ -544,8 +544,7 @@
             var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
                     arguments, {depth: 0}, null, null),
                 depth = $.depth
-            return $B._frame.$factory($B.frames_stack,
-                $B.frames_stack.length - depth - 1)
+            return $B.frames_stack[$B.frames_stack.length - depth - 1]
         },
         breakpointhook: function(){
             var hookname = $B.$options.breakpoint,
