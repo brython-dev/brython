@@ -96,6 +96,7 @@ def populate_testmod_input(elem, selected=None):
 
 def trace_exc():
     exc_type, exc_value, traceback = sys.exc_info()
+    this_frame = sys._getframe()
 
     def show_line(filename, lineno):
         if filename.startswith('<'):
@@ -108,15 +109,20 @@ def trace_exc():
 
     print('Traceback (most recent call last):')
     show = False
+    started = False
+
     while traceback:
         frame = traceback.tb_frame
-        lineno = traceback.tb_lineno
-        filename = frame.f_code.co_filename
-        if filename == '<string>':
-            show = True
-        if show:
-            print(f'  File {filename}, line {lineno}')
-            show_line(filename, lineno)
+        if frame is this_frame:
+            started = True
+        elif started:
+            lineno = traceback.tb_lineno
+            filename = frame.f_code.co_filename
+            if filename == '<string>':
+                show = True
+            if show:
+                print(f'  File {filename}, line {lineno}')
+                show_line(filename, lineno)
         traceback = traceback.tb_next
 
     if isinstance(exc_value, [SyntaxError, IndentationError]):
