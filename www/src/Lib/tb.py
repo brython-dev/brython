@@ -32,7 +32,7 @@ def format_exc():
             src = open(filename, encoding='utf-8').read()
             lines = src.split('\n')
             line = lines[tb.tb_lineno - 1]
-            trace.write(f"    {line}\n")
+            trace.write(f"    {line.strip()}\n")
         tb = tb.tb_next
     trace.write(f"{exc_class}: {exc_msg}\n")
     return trace.format()
