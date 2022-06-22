@@ -870,7 +870,9 @@ $B.ast.Assign.prototype.to_js = function(scopes){
 }
 
 $B.ast.AsyncFor.prototype.to_js = function(scopes){
-    compiler_check(this)
+    if(! (last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){
+        compiler_error(this, "'async for' outside async function")
+    }
     return $B.ast.For.prototype.to_js.bind(this)(scopes)
 }
 
@@ -898,6 +900,10 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         else:
             await aexit(mgr, None, None, None)
     */
+
+    if(! (last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){
+        compiler_error(this, "'async with' outside async function")
+    }
 
     function bind_vars(vars, scopes){
         if(vars instanceof $B.ast.Name){
@@ -1089,14 +1095,6 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
-    var kw_names = []
-    for(var kw of this.keywords){
-        if(kw.arg && kw_names.indexOf(kw.arg) > -1){
-            compiler_error(kw, `keyword argument repeated: ${kw.arg}`)
-        }else{
-            kw_names.push(kw.arg)
-        }
-    }
     var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')'
     var args = make_args.bind(this)(scopes)
     return js + (args.has_starred ? `.apply(null, ${args.js})` :
@@ -1446,7 +1444,6 @@ $B.ast.Dict.prototype.to_js = function(scopes){
                 items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, ` +
                            `${$B.js_from_ast(this.values[i], scopes)}]`)
             }catch(err){
-                console.log('error', this.keys[i], this.values[i])
                 throw err
             }
         }
@@ -2487,7 +2484,7 @@ $B.ast.Slice.prototype.to_js = function(scopes){
 
 $B.ast.Starred.prototype.to_js = function(scopes){
     if(this.$handled){
-        return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`
+        return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`
     }
     if(this.ctx instanceof $B.ast.Store){
         compiler_error(this,

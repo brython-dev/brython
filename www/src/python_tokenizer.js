@@ -439,6 +439,7 @@ $B.tokenizer = function*(src){
                         }else if(char == ' ' || char == '\t'){
                             // ignore
                         }else{
+                            // invalid character
                             yield Token('ERRORTOKEN', char,
                                 [line_num, pos - line_start],
                                 [line_num, pos - line_start + 1],

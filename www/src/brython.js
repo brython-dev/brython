@@ -123,9 +123,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-18 21:59:31.577826"
-__BRYTHON__.timestamp=1655582371577
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
+__BRYTHON__.compiled_date="2022-06-22 11:45:46.473504"
+__BRYTHON__.timestamp=1655891146473
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -319,7 +319,8 @@ pos++}else if((char=='-' && src[pos]=='>')||
 pos++}
 if('[({'.indexOf(char)>-1){braces.push(char)}else if('])}'.indexOf(char)>-1){if(braces && $last(braces)==closing[char]){braces.pop()}else{braces.push(char)}}
 yield Token('OP',op,[line_num,pos-line_start-op.length+1],[line_num,pos-line_start+1],line)}else if(char=='!' && src[pos]=='='){yield Token('OP','!=',[line_num,pos-line_start],[line_num,pos-line_start+2],line)
-pos++}else if(char==' ' ||char=='\t'){}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}}
+pos++}else if(char==' ' ||char=='\t'){}else{
+yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}}
 break
 case 'NAME':
 if(unicode_tables.XID_Continue[ord(char)]){name+=char}else if(char=='"' ||char=="'"){if(string_prefix.exec(name)||bytes_prefix.exec(name)){
@@ -622,6 +623,7 @@ case 'def':
 type='function definition'
 break
 case 'case':
+case 'except':
 case 'for':
 case 'match':
 case 'try':
@@ -681,7 +683,7 @@ report([name])}
 if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex'].indexOf(assigned.type)>-1){if(ctx.parent.type !='op'){report('literal')}}else if(assigned.type=="ellipsis"){report('ellipsis')}else if(assigned.type=='genexpr'){report(['generator expression'])}else if(assigned.type=='starred'){if(action=='delete'){report('starred',assigned.position,last_position(assigned))}
 check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){if(! assigned.parenthesized){report('named expression')}else if(ctx.parent.type=='node'){raise_syntax_error_known_range(
 C,assigned.target.position,last_position(assigned),"cannot assign to named expression here. "+
-"Maybe you meant '==' instead of '='?")}else if(action=='delete'){report('named expression',assigned.position,last_position(assigned))}}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(assigned.type=='lambda'){report('lambda')}else if(assigned.type=='ternary'){report(['conditional expression'])}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report(['conditional expression'],ctx.position,last_position(C))}else if(ctx.type=='op'){var a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
+"Maybe you meant '==' instead of '='?")}else if(action=='delete'){report('named expression',assigned.position,last_position(assigned))}}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(assigned.type=='dict_or_set'){if(assigned.closed){report(assigned.real=='set' ? 'set display' :'dict literal',ctx.position,last_position(assigned))}}else if(assigned.type=='lambda'){report('lambda')}else if(assigned.type=='ternary'){report(['conditional expression'])}else if(assigned.type=='JoinedStr'){report('f-string expression',assigned.position,last_position(assigned))}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report(['conditional expression'],ctx.position,last_position(C))}else if(ctx.type=='op'){var a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
 if($B.op2method.comparisons[ctx.op]!==undefined){if($parent_match(C,{type:'target_list'})){
 raise_syntax_error(C)}
 report('comparison',a,b)}else{report('expression',a,b)}}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
@@ -975,13 +977,10 @@ var $AsyncCtx=$B.parser.$AsyncCtx=function(C){
 this.type='async'
 this.parent=C
 C.async=true
-C.position=$token.value}
+this.position=C.position=$token.value}
 $AsyncCtx.prototype.transition=function(token,value){var C=this
-if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ntype=$get_scope(C).ntype
-if(ntype !=="def" && ntype !="generator"){raise_syntax_error(C,"'async "+token+
-"' outside async function")}
-var ctx=$transition(C.parent,token,value)
-ctx.parent.async=true 
+if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ctx=$transition(C.parent,token,value)
+ctx.parent.async=C 
 return ctx}
 raise_syntax_error(C)}
 var $AttrCtx=$B.parser.$AttrCtx=function(C){
@@ -1142,7 +1141,7 @@ C.args=this}
 this.expect='id'
 this.tree=[]
 this.start=$pos}
-$CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[])
+$CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[]),keywords=new Set()
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=call_arg.tree[0].tree[0].ast(),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
 res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){if(res.keywords.length > 0){if(! res.keywords[0].arg){raise_syntax_error(this,'iterable argument unpacking follows keyword argument unpacking')}}
@@ -1154,7 +1153,11 @@ if(item===undefined){
 continue}
 if(item.type=='kwarg'){var key=item.tree[0].value
 if(key=='__debug__'){raise_syntax_error_known_range(this,this.position,this.end_position,"cannot assign to __debug__")}else if(['True','False','None'].indexOf(key)>-1){raise_syntax_error_known_range(this,item.position,item.equal_sign_position,'expression cannot contain assignment, perhaps you meant "=="?')}
-res.keywords.push(new ast.keyword(item.tree[0].value,item.tree[1].ast()))}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error(this,'positional argument follows keyword argument')}else{raise_syntax_error(this,'positional argument follows keyword argument unpacking')}}
+if(keywords.has(key)){raise_syntax_error_known_range(item,item.position,last_position(item),`keyword argument repeated: ${key}`)}
+keywords.add(key)
+var keyword=new ast.keyword(item.tree[0].value,item.tree[1].ast())
+set_position(keyword,item.position)
+res.keywords.push(keyword)}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error(this,'positional argument follows keyword argument')}else{raise_syntax_error(this,'positional argument follows keyword argument unpacking')}}
 res.args.push(item.ast())}}}
 set_position(res,this.position)
 return res}
@@ -1528,7 +1531,11 @@ if(C.closed){switch(token){case '[':
 return new $AbstractExprCtx(new $SubCtx(C.parent),false)
 case '(':
 return new $CallArgCtx(new $CallCtx(C.parent))}
-return $transition(C.parent,token,value)}else{if(C.expect==','){switch(token){case '}':
+return $transition(C.parent,token,value)}else{if(C.expect==','){function check_last(){var last=$B.last(C.tree)
+if(last && last.wrong_assignment){raise_syntax_error_known_range(C,last.position,last_position(last),"invalid syntax. Maybe you meant '==' or ':=' instead of '='?")}}
+switch(token){case '}':
+check_last()
+C.end_position=$token.value
 switch(C.real){case 'dict_or_set':
 if(C.tree.length !=1){break}
 C.real='set' 
@@ -1545,6 +1552,7 @@ C.closed=true
 return C}
 raise_syntax_error(C)
 case ',':
+check_last()
 if(C.real=='dict_or_set'){C.real='set'}
 if(C.real=='dict' &&
 C.nb_dict_items()% 2){raise_syntax_error(C,"':' expected after dictionary key")}
@@ -1879,7 +1887,8 @@ if(C.tree.length==1){var child=C.tree[0]
 check_assignment(child)
 if(["id","sub","attribute"].indexOf(child.type)>-1){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
 child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]),false)}}
-raise_syntax_error(C,"invalid target for annotation")}
+var type=C.tree[0].real
+raise_syntax_error_known_range(C,C.position,last_position(C),`only single target (not ${type}) can be annotated`)}
 break
 case '=':
 var call_arg=$parent_match(C,{type:'call_arg'})
@@ -1891,7 +1900,9 @@ if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !="id"){raise_syntax_error_known_range(C,C.position,$token.value,'expression cannot contain assignment, perhaps you meant "=="?')}
 return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=$parent_match(C,{type:"annotation"})){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
 raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="not"){
-raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="with"){raise_syntax_error(C,"expected :")}else if(C.parent.type=="list_or_tuple"){
+raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="with"){raise_syntax_error(C,"expected :")}else if(C.parent.type=='dict_or_set'){if(C.parent.expect==','){
+C.wrong_assignment=true
+return $transition(C,':=')}}else if(C.parent.type=="list_or_tuple"){
 for(var i=0;i < C.parent.tree.length;i++){var item=C.parent.tree[i]
 try{check_assignment(item,{once:true})}catch(err){console.log(C)
 raise_syntax_error(C,"invalid syntax. "+
@@ -1980,9 +1991,9 @@ $ForExpr.prototype.ast=function(){
 var target=this.tree[0].ast(),iter=this.tree[1].ast(),orelse=this.orelse ? this.orelse.ast():[],type_comment,body=ast_body(this.parent)
 set_ctx_to_store(target)
 var klass=this.async ? ast.AsyncFor :ast.For
-var res=new klass(target,iter,body,orelse,type_comment)
-set_position(res,this.position)
-return res}
+var ast_obj=new klass(target,iter,body,orelse,type_comment)
+set_position(ast_obj,this.async ? this.async.position :this.position,last_position(this))
+return ast_obj}
 $ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
 if(C.tree[0].tree.length==0){
@@ -2162,6 +2173,7 @@ raise_syntax_error(C)}
 var $FuncArgIdCtx=$B.parser.$FuncArgIdCtx=function(C,name){
 this.type='func_arg_id'
 if(["None","True","False"].indexOf(name)>-1){raise_syntax_error(C)}
+if(name=='__debug__'){raise_syntax_error(C,'cannot assign to __debug__')}
 this.name=name
 this.parent=C
 this.position=$token.value
@@ -2219,7 +2231,8 @@ if(C.name===undefined){raise_syntax_error(C,'(annotation on an unnamed parameter
 return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
 raise_syntax_error(C)}
-$FuncStarArgCtx.prototype.set_name=function(name){this.name=name
+$FuncStarArgCtx.prototype.set_name=function(name){if(name=='__debug__'){raise_syntax_error_known_range(this,this.position,$token.value,'cannot assign to debug')}
+this.name=name
 var ctx=this.parent
 while(ctx.parent !==undefined){if(ctx.type=='def'){break}
 ctx=ctx.parent}
@@ -2339,7 +2352,6 @@ case 'imaginary':
 if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value,msg=`Missing parentheses in call to '${f}'.`+
 ` Did you mean ${f}(...)?`}else{var msg='invalid syntax. Perhaps you forgot a comma?'}
 var call_arg=$parent_match(C,{type:'call_arg'})
-console.log(C,'in call arg',call_arg)
 raise_syntax_error_known_range(C,this.position,$token.value,msg)}
 if(this.parent.parent.type=="starred"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return $transition(C.parent,token,value)}
@@ -2352,7 +2364,8 @@ C.tree[C.tree.length]=this
 this.expect='id'}
 $ImportCtx.prototype.ast=function(){
 var names=[]
-for(var item of this.tree){var alias=new ast.alias(item.name)
+for(var item of this.tree){
+var alias=new ast.alias(item.name)
 if(item.alias !=item.name){alias.asname=item.alias}
 names.push(alias)}
 var ast_obj=new ast.Import(names)
@@ -2472,10 +2485,7 @@ this.equal_sign_position=$token.value
 this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
-C.parent.parent.has_kw=true
-var value=this.tree[0].value
-var ctx=C.parent.parent 
-if(ctx.kwargs===undefined){ctx.kwargs=[value]}else if(ctx.kwargs.indexOf(value)==-1){ctx.kwargs.push(value)}else{raise_syntax_error(C,'keyword argument repeated')}}
+C.parent.parent.has_kw=true}
 $KwArgCtx.prototype.transition=function(token,value){var C=this
 if(token==','){return new $CallArgCtx(C.parent.parent)}else if(token=='for'){
 raise_syntax_error_known_range(C,C.position,C.equal_sign_position,"invalid syntax. "+
@@ -2566,7 +2576,6 @@ return C.parent}
 break
 case 'list':
 if(token==']'){C.close()
-C.end_position=$token.value
 if(C.parent.type=="starred"){if(C.parent.tree.length > 0){return C.parent.tree[0]}else{return C.parent.parent}}
 return C.parent}
 break}
@@ -2638,6 +2647,7 @@ raise_syntax_error(C,`(unexpected operator: ${value})`)
 default:
 raise_syntax_error(C)}}else{return $transition(C.parent,token,value)}}}
 $ListOrTupleCtx.prototype.close=function(){this.closed=true
+this.end_position=$token.value
 this.src=$get_module(this).src
 for(var i=0,len=this.tree.length;i < len;i++){
 var elt=this.tree[i]
@@ -2817,7 +2827,7 @@ break
 case 'pass':
 return new $PassCtx(C)
 case 'raise':
-return new $AbstractExprCtx(new $RaiseCtx(C),true)
+return new $AbstractExprCtx(new $RaiseCtx(C),false)
 case 'return':
 return new $AbstractExprCtx(new $ReturnCtx(C),true)
 case 'try':
@@ -3032,10 +3042,10 @@ return $BodyCtx(C)}}
 return C.parent.transition(token,value)}
 function as_pattern(C,token,value){
 if(C.expect=='as'){if(token=='as'){C.expect='alias'
-return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias'){if(token=='id'){if(value=='_'){raise_syntax_error(C,"alias cannot be _")}
+return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias'){if(token=='id'){if(value=='_'){raise_syntax_error(C,"cannot use '_' as a target")}
 if(C.bindings().indexOf(value)>-1){raise_syntax_error(C,`multiple assignments to name '${value}' in pattern`)}
 C.alias=value
-return C.parent}else{raise_syntax_error(C,'(bad alias)')}}}
+return C.parent}else{raise_syntax_error(C,'invalid pattern target')}}}
 var $PatternCaptureCtx=function(C,value){
 this.type="capture_pattern"
 this.parent=C.parent
@@ -3119,7 +3129,8 @@ return bindings}
 $PatternClassCtx.prototype.transition=function(token,value){var C=this
 function check_last_arg(){var last=$B.last(C.tree),bound
 if(last instanceof $PatternCaptureCtx){if(! last.is_keyword &&
-C.keywords.length > 0){raise_syntax_error(C,'(positional argument after keyword)')}
+C.keywords.length > 0){$token.value=last.position
+raise_syntax_error(C,'positional patterns follow keyword patterns')}
 if(last.is_keyword){if(C.keywords.indexOf(last.tree[0])>-1){raise_syntax_error(C,`keyword argument repeated: ${last.tree[0]}`)}
 C.keywords.push(last.tree[0])
 bound=last.tree[1].bindings()}else{bound=last.bindings()}
@@ -3822,7 +3833,7 @@ withitem.optional_vars.ctx=new ast.Store()}
 withitems.push(withitem)}
 var klass=this.async ? ast.AsyncWith :ast.With
 var ast_obj=new klass(withitems,ast_body(this.parent))
-set_position(ast_obj,this.position)
+set_position(ast_obj,this.async ? this.async.position :this.position,last_position(this))
 return ast_obj}
 $WithCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
@@ -4192,9 +4203,10 @@ unindented_lines.push(line.substr(start))}else if(line.startsWith(global_indent)
 line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
 return unindented_lines.join('\n')}
 function handle_errortoken(C,token,token_reader){if(token.string=="'" ||token.string=='"'){raise_syntax_error(C,'unterminated string literal '+
-`(detected at line ${token.start[0]})`)}
-if(token.string=='\\'){var nxt=token_reader.read()
-if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while parsing')}else{raise_syntax_error_known_range(C,nxt,nxt,'unexpected character after line continuation character')}}
+`(detected at line ${token.start[0]})`)}else if(token.string=='\\'){var nxt=token_reader.read()
+if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while parsing')}else{raise_syntax_error_known_range(C,nxt,nxt,'unexpected character after line continuation character')}}else if(' `$'.indexOf(token.string)==-1){var u=token.string.codePointAt(0).toString(16).toUpperCase()
+u='U+'+'0'.repeat(4-u.length)+u
+raise_syntax_error(C,`invalid character '${token.string}' (${u})`)}
 raise_syntax_error(C)}
 var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
 ]
@@ -6940,7 +6952,7 @@ return None}
 if(attr=="__module__"){obj.$infos.__module__=value
 return _b_.None}
 if(obj.$infos && obj.$infos.__module__=="builtins"){throw _b_.TypeError.$factory(
-"can't set attributes of built-in/extension type '"+
+`cannot set '${attr}' attribute of immutable type '`+
 obj.$infos.__name__+"'")}
 obj[attr]=value
 if(attr=="__init__" ||attr=="__new__"){
@@ -8916,11 +8928,11 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','re1','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','re1','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.crashers.bogus_code_obj','test.crashers.gc_inspection','test.crashers.infinite_loop_re','test.crashers.mutation_inside_cyclegc','test.crashers.recursive_call','test.crashers.trace_at_recursion_limit','test.crashers.underlying_dict','test.namespace_pkgs.module_and_namespace_package.a_test','test.subprocessdata.fd_status','test.subprocessdata.input_reader','test.subprocessdata.qcat','test.subprocessdata.qgrep','test.subprocessdata.sigchild_ignore','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.pkg_resources','site-packages.pkg_resources._vendor','site-packages.pkg_resources._vendor.packaging','site-packages.pkg_resources.extern','site-packages.simpleaio','site-packages.simpy','site-packages.simpy.resources','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.libregrtest','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_asyncio','test.test_email','test.test_import','test.test_import.data.package','test.test_import.data.unwritable','test.test_importlib','test.test_importlib.builtin','test.test_importlib.data','test.test_importlib.data01','test.test_importlib.data01.subdirectory','test.test_importlib.data02','test.test_importlib.data02.one','test.test_importlib.data02.two','test.test_importlib.data03','test.test_importlib.data03.namespace.portion1','test.test_importlib.data03.namespace.portion2','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.namespace_pkgs.not_a_namespace_pkg.foo','test.test_importlib.source','test.test_importlib.zipdata01','test.test_importlib.zipdata02','test.test_json','test.test_peg_generator','test.test_tools','test.test_warnings','test.test_zoneinfo','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}})(__BRYTHON__)
 ;
 
@@ -12630,6 +12642,11 @@ while(1){try{res[pos++]=next_func()}catch(err){if(!isinstance(err,_b_.StopIterat
 break}}
 res.__brython__=true 
 return res}
+list.$unpack=function(obj){
+try{return _b_.list.$factory(obj)}catch(err){try{var it=$B.$iter(obj),next_func=$B.$call($B.$getattr(it,"__next__"))}catch(err1){if($B.is_exc(err1,[_b_.TypeError])){throw _b_.TypeError.$factory(
+`Value after * must be an iterable, not ${$B.class_name(obj)}`)}
+throw err1}
+throw err}}
 $B.set_func_names(list,"builtins")
 list.__class_getitem__=_b_.classmethod.$factory(list.__class_getitem__)
 var JSArray=$B.JSArray=$B.make_class("JSArray",function(array){return{
@@ -14194,10 +14211,11 @@ var id='v'+$B.UUID()
 js+=`var ${id} = ${value}\n`
 for(var target of this.targets){js+=assign_one(target,id)+'\n'}
 return js}
-$B.ast.AsyncFor.prototype.to_js=function(scopes){compiler_check(this)
+$B.ast.AsyncFor.prototype.to_js=function(scopes){if(!(last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){compiler_error(this,"'async for' outside async function")}
 return $B.ast.For.prototype.to_js.bind(this)(scopes)}
 $B.ast.AsyncFunctionDef.prototype.to_js=function(scopes){return $B.ast.FunctionDef.prototype.to_js.bind(this)(scopes)}
 $B.ast.AsyncWith.prototype.to_js=function(scopes){
+if(!(last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){compiler_error(this,"'async with' outside async function")}
 function bind_vars(vars,scopes){if(vars instanceof $B.ast.Name){bind(vars.id,scopes)}else if(vars instanceof $B.ast.Tuple){for(var var_item of vars.elts){bind_vars(var_item,scopes)}}}
 function add_item(item,js){var id=$B.UUID()
 var s=`var mgr_${id} = `+
@@ -14286,9 +14304,7 @@ for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For){j
 break}}
 js+=`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){var kw_names=[]
-for(var kw of this.keywords){if(kw.arg && kw_names.indexOf(kw.arg)>-1){compiler_error(kw,`keyword argument repeated: ${kw.arg}`)}else{kw_names.push(kw.arg)}}
-var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')'
+$B.ast.Call.prototype.to_js=function(scopes){var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')'
 var args=make_args.bind(this)(scopes)
 return js+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
@@ -14431,8 +14447,7 @@ for(var i=0,len=this.keys.length;i < len;i++){if(no_key(i)){
 has_packed=true
 items.push('_b_.list.$factory(_b_.dict.items('+
 $B.js_from_ast(this.values[i],scopes)+'))')}else{try{items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, `+
-`${$B.js_from_ast(this.values[i], scopes)}]`)}catch(err){console.log('error',this.keys[i],this.values[i])
-throw err}}}
+`${$B.js_from_ast(this.values[i], scopes)}]`)}catch(err){throw err}}}
 if(! has_packed){return `_b_.dict.$factory([${items}])`}
 var first=no_key(0)? items[0]:`[${items[0]}]`,js='_b_.dict.$factory('+first
 for(var i=1,len=items.length;i < len;i++){var arg=no_key(i)? items[i]:`[${items[i]}]`
@@ -14901,7 +14916,7 @@ return `_b_.set.$factory(${js})`}
 $B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
 $B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_ast(this.lower,scopes):'_b_.None',upper=this.upper ? $B.js_from_ast(this.upper,scopes):'_b_.None',step=this.step ? $B.js_from_ast(this.step,scopes):'_b_.None'
 return `_b_.slice.$factory(${lower}, ${upper}, ${step})`}
-$B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$factory(${$B.js_from_ast(this.value, scopes)})`}
+$B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
 if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
 if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice})`}else{return `$B.$getitem(${value}, ${slice})`}}

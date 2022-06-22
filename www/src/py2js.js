@@ -454,6 +454,7 @@ function raise_indentation_error(context, msg, indented_node){
                 type = 'function definition'
                 break
             case 'case':
+            case 'except':
             case 'for':
             case 'match':
             case 'try':
@@ -644,10 +645,20 @@ function check_assignment(context, kwargs){
                 for(var item of ctx.tree){
                     check_assignment(item, {action, once: true})
                 }
+            }else if(assigned.type == 'dict_or_set'){
+                if(assigned.closed){
+                    report(assigned.real == 'set' ? 'set display' : 'dict literal',
+                        ctx.position,
+                        last_position(assigned))
+                }
             }else if(assigned.type == 'lambda'){
                 report('lambda')
             }else if(assigned.type == 'ternary'){
                 report(['conditional expression'])
+            }else if(assigned.type == 'JoinedStr'){
+                report('f-string expression',
+                    assigned.position,
+                    last_position(assigned))
             }
         }else if(ctx.type == 'list_or_tuple'){
             for(var item of ctx.tree){
@@ -1283,7 +1294,7 @@ var $AsyncCtx = $B.parser.$AsyncCtx = function(context){
     this.type = 'async'
     this.parent = context
     context.async = true
-    context.position = $token.value
+    this.position = context.position = $token.value
 }
 
 $AsyncCtx.prototype.transition = function(token, value){
@@ -1291,13 +1302,8 @@ $AsyncCtx.prototype.transition = function(token, value){
     if(token == "def"){
         return $transition(context.parent, token, value)
     }else if(token == "for" || token == "with"){
-        var ntype = $get_scope(context).ntype
-        if(ntype !== "def" && ntype != "generator"){
-            raise_syntax_error(context, "'async " + token +
-                "' outside async function")
-        }
         var ctx = $transition(context.parent, token, value)
-        ctx.parent.async = true // set attr "async" of for/with context
+        ctx.parent.async = context // set attr "async" of for/with context
         return ctx
     }
     raise_syntax_error(context)
@@ -1569,7 +1575,8 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
 }
 
 $CallCtx.prototype.ast = function(){
-    var res = new ast.Call(this.func.ast(), [], [])
+    var res = new ast.Call(this.func.ast(), [], []),
+        keywords = new Set()
     for(var call_arg of this.tree){
         if(call_arg.type == 'double_star_arg'){
             var value = call_arg.tree[0].tree[0].ast(),
@@ -1608,8 +1615,17 @@ $CallCtx.prototype.ast = function(){
                         item.equal_sign_position,
                         'expression cannot contain assignment, perhaps you meant "=="?')
                 }
-                res.keywords.push(new ast.keyword(item.tree[0].value,
-                    item.tree[1].ast()))
+                if(keywords.has(key)){
+                    raise_syntax_error_known_range(item,
+                        item.position,
+                        last_position(item),
+                        `keyword argument repeated: ${key}`)
+                }
+                keywords.add(key)
+                var keyword = new ast.keyword(item.tree[0].value,
+                    item.tree[1].ast())
+                set_position(keyword, item.position)
+                res.keywords.push(keyword)
             }else{
                 if(res.keywords.length > 0){
                     if(res.keywords[0].arg){
@@ -2372,8 +2388,19 @@ $DictOrSetCtx.prototype.transition = function(token, value){
         return $transition(context.parent,token,value)
     }else{
         if(context.expect == ','){
+            function check_last(){
+                var last = $B.last(context.tree)
+                if(last && last.wrong_assignment){
+                    raise_syntax_error_known_range(context,
+                        last.position,
+                        last_position(last),
+                        "invalid syntax. Maybe you meant '==' or ':=' instead of '='?")
+                }
+            }
             switch(token) {
                 case '}':
+                    check_last()
+                    context.end_position = $token.value
                     switch(context.real) {
                         case 'dict_or_set':
                              if(context.tree.length != 1){break}
@@ -2398,6 +2425,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                       }
                       raise_syntax_error(context)
                 case ',':
+                    check_last()
                     if(context.real == 'dict_or_set'){
                         context.real = 'set'
                     }
@@ -2999,10 +3027,15 @@ $ExprCtx.prototype.transition = function(token, value){
                       return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]), false)
                   }
               }
-              raise_syntax_error(context, "invalid target for annotation")
+              var type = context.tree[0].real
+              raise_syntax_error_known_range(context,
+                  context.position,
+                  last_position(context),
+                  `only single target (not ${type}) can be annotated`)
           }
           break
       case '=':
+
           var call_arg = $parent_match(context, {type: 'call_arg'})
           // Special case for '=' inside a call
           try{
@@ -3042,6 +3075,13 @@ $ExprCtx.prototype.transition = function(token, value){
                    raise_syntax_error(context, "cannot assign to operator")
               }else if(context.parent.type == "with"){
                    raise_syntax_error(context, "expected :")
+               }else if(context.parent.type == 'dict_or_set'){
+                   if(context.parent.expect == ','){
+                       // We could raise a SyntaxError here, but CPython waits
+                       // until the right part of the assignment is finished
+                       context.wrong_assignment = true
+                       return $transition(context, ':=')
+                   }
               }else if(context.parent.type == "list_or_tuple"){
                    // issue 973
                    for(var i = 0; i < context.parent.tree.length; i++){
@@ -3251,9 +3291,11 @@ $ForExpr.prototype.ast = function(){
         body = ast_body(this.parent)
     set_ctx_to_store(target)
     var klass = this.async ? ast.AsyncFor : ast.For
-    var res = new klass(target, iter, body, orelse, type_comment)
-    set_position(res, this.position)
-    return res
+    var ast_obj = new klass(target, iter, body, orelse, type_comment)
+    set_position(ast_obj,
+        this.async ? this.async.position : this.position,
+        last_position(this))
+    return ast_obj
 }
 
 $ForExpr.prototype.transition = function(token, value){
@@ -3643,6 +3685,9 @@ var $FuncArgIdCtx = $B.parser.$FuncArgIdCtx = function(context, name){
     if(["None", "True", "False"].indexOf(name) > -1){
         raise_syntax_error(context) // invalid argument name
     }
+    if(name == '__debug__'){
+        raise_syntax_error(context, 'cannot assign to __debug__')
+    }
 
     this.name = name
     this.parent = context
@@ -3757,6 +3802,12 @@ $FuncStarArgCtx.prototype.transition = function(token, value){
 }
 
 $FuncStarArgCtx.prototype.set_name = function(name){
+    if(name == '__debug__'){
+        raise_syntax_error_known_range(this,
+            this.position,
+            $token.value,
+            'cannot assign to debug')
+    }
     this.name = name
 
     var ctx = this.parent
@@ -4023,7 +4074,6 @@ $IdCtx.prototype.transition = function(token, value){
                 var msg = 'invalid syntax. Perhaps you forgot a comma?'
             }
             var call_arg = $parent_match(context, {type: 'call_arg'})
-            console.log(context, 'in call arg', call_arg)
             raise_syntax_error_known_range(context,
                 this.position, $token.value, msg)
 
@@ -4051,6 +4101,7 @@ $ImportCtx.prototype.ast = function(){
     //ast.Import(names)
     var names = []
     for(var item of this.tree){
+        // check if item.name is a valid identifier
         var alias = new ast.alias(item.name)
         if(item.alias != item.name){
             alias.asname = item.alias
@@ -4270,17 +4321,6 @@ var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
 
     // set attribute "has_kw" of $CallCtx instance to true
     context.parent.parent.has_kw = true
-
-    // put id in list of kwargs
-    // used to avoid passing the id as argument of a list comprehension
-    var value = this.tree[0].value
-    var ctx = context.parent.parent // type 'call'
-    if(ctx.kwargs === undefined){ctx.kwargs = [value]
-    }else if(ctx.kwargs.indexOf(value) == -1){
-        ctx.kwargs.push(value)
-    }else{
-        raise_syntax_error(context, 'keyword argument repeated')
-    }
 }
 
 $KwArgCtx.prototype.transition = function(token, value){
@@ -4463,7 +4503,6 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                 case 'list':
                     if(token == ']'){
                          context.close()
-                         context.end_position = $token.value
                          if(context.parent.type == "starred"){
                              if(context.parent.tree.length > 0){
                                  return context.parent.tree[0]
@@ -4504,8 +4543,8 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
             switch(context.real) {
                 case 'tuple':
                     if(token == ')'){
-                      context.close()
-                      return context.parent
+                        context.close()
+                        return context.parent
                     }
                     if(token == 'eol' &&
                             context.implicit === true){
@@ -4587,6 +4626,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
 
 $ListOrTupleCtx.prototype.close = function(){
     this.closed = true
+    this.end_position = $token.value
     this.src = $get_module(this).src
     for(var i = 0, len = this.tree.length; i < len; i++){
         // Replace parenthesized expressions inside list or tuple
@@ -4848,7 +4888,7 @@ $NodeCtx.prototype.transition = function(token, value){
         case 'pass':
             return new $PassCtx(context)
         case 'raise':
-            return new $AbstractExprCtx(new $RaiseCtx(context), true)
+            return new $AbstractExprCtx(new $RaiseCtx(context), false)
         case 'return':
             return new $AbstractExprCtx(new $ReturnCtx(context),true)
         case 'try':
@@ -5216,7 +5256,7 @@ function as_pattern(context, token, value){
     }else if(context.expect == 'alias'){
         if(token == 'id'){
             if(value == '_'){
-                raise_syntax_error(context, "alias cannot be _")
+                raise_syntax_error(context, "cannot use '_' as a target")
             }
             if(context.bindings().indexOf(value) > -1){
                 raise_syntax_error(context,
@@ -5225,7 +5265,7 @@ function as_pattern(context, token, value){
             context.alias = value
             return context.parent
         }else{
-            raise_syntax_error(context, '(bad alias)')
+            raise_syntax_error(context, 'invalid pattern target')
         }
     }
 }
@@ -5419,8 +5459,9 @@ $PatternClassCtx.prototype.transition = function(token, value){
         if(last instanceof $PatternCaptureCtx){
             if(! last.is_keyword &&
                     context.keywords.length > 0){
+                $token.value = last.position
                 raise_syntax_error(context,
-                        '(positional argument after keyword)')
+                        'positional patterns follow keyword patterns')
             }
             if(last.is_keyword){
                 if(context.keywords.indexOf(last.tree[0]) > -1){
@@ -6839,7 +6880,9 @@ $WithCtx.prototype.ast = function(){
     }
     var klass = this.async ? ast.AsyncWith : ast.With
     var ast_obj = new klass(withitems, ast_body(this.parent))
-    set_position(ast_obj, this.position)
+    set_position(ast_obj,
+        this.async ? this.async.position : this.position,
+        last_position(this))
     return ast_obj
 }
 
@@ -7833,8 +7876,7 @@ function handle_errortoken(context, token, token_reader){
     if(token.string == "'" || token.string == '"'){
         raise_syntax_error(context, 'unterminated string literal ' +
             `(detected at line ${token.start[0]})`)
-    }
-    if(token.string == '\\'){
+    }else if(token.string == '\\'){
         var nxt = token_reader.read()
         if((! nxt) || nxt.type == 'NEWLINE'){
             raise_syntax_error(context, 'unexpected EOF while parsing')
@@ -7843,6 +7885,11 @@ function handle_errortoken(context, token, token_reader){
                 nxt, nxt,
                 'unexpected character after line continuation character')
         }
+    }else if(' `$'.indexOf(token.string) == -1){
+        var u = token.string.codePointAt(0).toString(16).toUpperCase()
+        u = 'U+' + '0'.repeat(4 - u.length) + u
+        raise_syntax_error(context, 
+            `invalid character '${token.string}' (${u})`)
     }
     raise_syntax_error(context)
 }

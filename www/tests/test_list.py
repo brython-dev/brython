@@ -343,7 +343,7 @@ try:
     raise AssertionError("should have raised TypeError")
 except TypeError as exc:
     assert exc.args[0] == \
-        "can't set attributes of built-in/extension type 'tuple'"
+        "cannot set '__setitem__' attribute of immutable type 'tuple'"
 
 # issue 1701
 t = [1, 2, 3, 4, 5]
@@ -406,5 +406,11 @@ import copy
 L = copy.copy([1])
 assert L.sort() is None
 
+#
+try:
+    eval('[*12]')
+    raise Exception('should have raised TypeError')
+except TypeError as exc:
+    assert exc.args[0] == 'Value after * must be an iterable, not int'
 
 print("passed all tests..")
