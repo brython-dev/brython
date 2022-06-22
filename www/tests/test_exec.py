@@ -180,4 +180,19 @@ except:
     pass
 assert g['a'] == 0
 
+# issue 1972
+import sys
+try:
+    exec('''x1972 = 1
+print(y1972)
+''')
+    raise Exception('should have raised NameError')
+except NameError as exc:
+    tb = sys.exc_info()[2]
+    linenos = []
+    while tb is not None:
+        linenos.append(tb.tb_frame.f_lineno)
+        tb = tb.tb_next
+    linenos[-1] == 2
+
 print("passed all tests...")

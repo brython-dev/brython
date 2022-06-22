@@ -808,13 +808,12 @@ function $$eval(src, _globals, _locals){
     try{
         var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
     }catch(err){
-        if(err.$stack){
-            err.$stack = save_frames_stack.concat(err.$stack)
-        }else{
-            err.$stack = save_frames_stack.concat($B.frames_stack)
-        }
         if($B.debug > 2){
-            console.log('exec func', $B.format_indent(exec_func + '', 0),
+            console.log(
+                'Python code\n', src,
+                '\ninitial stack before exec', save_frames_stack.slice(),
+                '\nstack', $B.frames_stack.slice(),
+                '\nexec func', $B.format_indent(exec_func + '', 0),
                 '\n    filename', filename,
                 '\n    local_name', local_name,
                 '\n    exec_locals', exec_locals,
