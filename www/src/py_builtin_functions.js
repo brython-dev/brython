@@ -2324,7 +2324,7 @@ $B.$setattr = function(obj, attr, value){
         }
         if(obj.$infos && obj.$infos.__module__ == "builtins"){
             throw _b_.TypeError.$factory(
-                "can't set attributes of built-in/extension type '" +
+                `cannot set '${attr}' attribute of immutable type '` +
                     obj.$infos.__name__ + "'")
         }
         obj[attr] = value
