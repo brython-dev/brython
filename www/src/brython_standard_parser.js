@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-22 11:45:46.473504"
-__BRYTHON__.timestamp=1655891146473
+__BRYTHON__.compiled_date="2022-06-22 15:10:39.597555"
+__BRYTHON__.timestamp=1655903439597
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1531,8 +1531,12 @@ if(C.closed){switch(token){case '[':
 return new $AbstractExprCtx(new $SubCtx(C.parent),false)
 case '(':
 return new $CallArgCtx(new $CallCtx(C.parent))}
-return $transition(C.parent,token,value)}else{if(C.expect==','){function check_last(){var last=$B.last(C.tree)
-if(last && last.wrong_assignment){raise_syntax_error_known_range(C,last.position,last_position(last),"invalid syntax. Maybe you meant '==' or ':=' instead of '='?")}}
+return $transition(C.parent,token,value)}else{if(C.expect==','){function check_last(){var last=$B.last(C.tree),err_msg
+if(last && last.wrong_assignment){
+err_msg="invalid syntax. Maybe you meant '==' or ':=' instead of '='?"}else if(C.real=='dict' && last.type=='expr' &&
+last.tree[0].type=='starred'){
+err_msg='cannot use a starred expression in a dictionary value'}
+if(err_msg){raise_syntax_error_known_range(C,last.position,last_position(last),err_msg)}}
 switch(token){case '}':
 check_last()
 C.end_position=$token.value
@@ -2231,7 +2235,7 @@ if(C.name===undefined){raise_syntax_error(C,'(annotation on an unnamed parameter
 return new $AbstractExprCtx(
 new $AnnotationCtx(C),false)}
 raise_syntax_error(C)}
-$FuncStarArgCtx.prototype.set_name=function(name){if(name=='__debug__'){raise_syntax_error_known_range(this,this.position,$token.value,'cannot assign to debug')}
+$FuncStarArgCtx.prototype.set_name=function(name){if(name=='__debug__'){raise_syntax_error_known_range(this,this.position,$token.value,'cannot assign to __debug__')}
 this.name=name
 var ctx=this.parent
 while(ctx.parent !==undefined){if(ctx.type=='def'){break}

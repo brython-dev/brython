@@ -2389,12 +2389,21 @@ $DictOrSetCtx.prototype.transition = function(token, value){
     }else{
         if(context.expect == ','){
             function check_last(){
-                var last = $B.last(context.tree)
+                var last = $B.last(context.tree),
+                    err_msg
                 if(last && last.wrong_assignment){
+                    // {x=1}
+                    err_msg = "invalid syntax. Maybe you meant '==' or ':=' instead of '='?"
+                }else if(context.real == 'dict' && last.type == 'expr' &&
+                        last.tree[0].type == 'starred'){
+                    // {x: *12}
+                    err_msg = 'cannot use a starred expression in a dictionary value'
+                }
+                if(err_msg){
                     raise_syntax_error_known_range(context,
                         last.position,
                         last_position(last),
-                        "invalid syntax. Maybe you meant '==' or ':=' instead of '='?")
+                        err_msg)
                 }
             }
             switch(token) {
@@ -3075,7 +3084,7 @@ $ExprCtx.prototype.transition = function(token, value){
                    raise_syntax_error(context, "cannot assign to operator")
               }else if(context.parent.type == "with"){
                    raise_syntax_error(context, "expected :")
-               }else if(context.parent.type == 'dict_or_set'){
+              }else if(context.parent.type == 'dict_or_set'){
                    if(context.parent.expect == ','){
                        // We could raise a SyntaxError here, but CPython waits
                        // until the right part of the assignment is finished
@@ -3806,7 +3815,7 @@ $FuncStarArgCtx.prototype.set_name = function(name){
         raise_syntax_error_known_range(this,
             this.position,
             $token.value,
-            'cannot assign to debug')
+            'cannot assign to __debug__')
     }
     this.name = name
 
@@ -7888,7 +7897,7 @@ function handle_errortoken(context, token, token_reader){
     }else if(' `$'.indexOf(token.string) == -1){
         var u = token.string.codePointAt(0).toString(16).toUpperCase()
         u = 'U+' + '0'.repeat(4 - u.length) + u
-        raise_syntax_error(context, 
+        raise_syntax_error(context,
             `invalid character '${token.string}' (${u})`)
     }
     raise_syntax_error(context)
