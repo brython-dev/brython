@@ -867,6 +867,26 @@ list.$factory = function(){
     return res
 }
 
+list.$unpack = function(obj){
+    // Used for instances of ast.Starred, to generate a specific error message
+    // if obj is not iterable
+    try{
+        return _b_.list.$factory(obj)
+    }catch(err){
+        try{
+            var it = $B.$iter(obj),
+                next_func = $B.$call($B.$getattr(it, "__next__"))
+        }catch(err1){
+            if($B.is_exc(err1, [_b_.TypeError])){
+                throw _b_.TypeError.$factory(
+                    `Value after * must be an iterable, not ${$B.class_name(obj)}`)
+            }
+            throw err1
+        }
+        throw err
+    }
+}
+
 $B.set_func_names(list, "builtins")
 
 list.__class_getitem__ = _b_.classmethod.$factory(list.__class_getitem__)
