@@ -1124,21 +1124,6 @@ $B.trace_line = function(){
     return trace_func(frame_obj, 'line', _b_.None)
 }
 
-$B.set_line = function(line_info){
-    // Used in loops to run trace function
-    var top_frame = $B.last($B.frames_stack)
-    if($B.tracefunc && top_frame[0] == $B.tracefunc.$current_frame_id){
-        return _b_.None
-    }
-    top_frame[1].$line_info = line_info
-    var trace_func = top_frame[1].$f_trace
-    if(trace_func !== _b_.None){
-        var frame_obj = $B.last($B.frames_stack)
-        top_frame[1].$ftrace = trace_func(frame_obj, 'line', _b_.None)
-    }
-    return true
-}
-
 $B.trace_return = function(value){
     var top_frame = $B.last($B.frames_stack),
         trace_func = top_frame[1].$f_trace,
