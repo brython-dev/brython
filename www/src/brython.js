@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-22 17:11:58.133683"
-__BRYTHON__.timestamp=1655910718132
+__BRYTHON__.compiled_date="2022-06-23 14:19:44.991289"
+__BRYTHON__.timestamp=1655986784991
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1571,6 +1571,9 @@ case 'for':
 if(C.real=="set" && C.tree.length > 1){$token.value=C.tree[0].position
 raise_syntax_error(C,"did you forget "+
 "parentheses around the comprehension target?")}
+var expr=C.tree[0]
+if(expr.type=='expr' && expr.packed==2){$token.value=expr.position
+raise_syntax_error(C,'dict unpacking cannot be used in dict comprehension')}
 if(C.real=='dict_or_set'){return new $TargetListCtx(new $ForExpr(
 new SetCompCtx(this)))}else{return new $TargetListCtx(new $ForExpr(
 new DictCompCtx(this)))}}
@@ -1604,6 +1607,7 @@ case '**':
 C.expect=","
 var expr=new $AbstractExprCtx(C,false)
 expr.packed=value.length 
+expr.position=$token.value
 if(C.real=="dict_or_set"){C.real=value=="*" ? "set" :
 "dict"}else if(
 (C.real=="set" && value=="**")||
@@ -2079,7 +2083,7 @@ if(value=='*' && C.expect=='id'
 && C.names.length==0){if($get_scope(C).ntype !=='module'){raise_syntax_error(C,"import * only allowed at module level")}
 C.add_name('*')
 C.expect='eol'
-return C}
+return C}else{raise_syntax_error(C)}
 case ',':
 if(C.expect==','){C.expect='id'
 return C}
@@ -5655,14 +5659,6 @@ $B.trace_line=function(){var top_frame=$B.last($B.frames_stack)
 if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
 var trace_func=top_frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'line',_b_.None)}
-$B.set_line=function(line_info){
-var top_frame=$B.last($B.frames_stack)
-if($B.tracefunc && top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-top_frame[1].$line_info=line_info
-var trace_func=top_frame[1].$f_trace
-if(trace_func !==_b_.None){var frame_obj=$B.last($B.frames_stack)
-top_frame[1].$ftrace=trace_func(frame_obj,'line',_b_.None)}
-return true}
 $B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
 if(top_frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
@@ -9414,8 +9410,6 @@ locals[alias]=$B.$getattr(modobj,name)}catch($err1){if(! $B.is_exc($err1,[_b_.At
 try{$B.$getattr(__import__,'__call__')(mod_name+'.'+name,globals,undefined,[],0)
 locals[alias]=$B.$getattr(modobj,name)}catch($err3){
 if(mod_name==="__future__"){
-var frame=$B.last($B.frames_stack),line_info=frame[3].$line_info ||
-frame[1].$lineinfo+','+frame[2],line_elts=line_info.split(','),line_num=parseInt(line_elts[0])
 var exc=_b_.SyntaxError.$factory(
 "future feature "+name+" is not defined")
 throw exc}
@@ -13208,10 +13202,10 @@ break}
 if(DOMNode["set_"+attr]!==undefined){return DOMNode["set_"+attr](self,value)}
 function warn(msg){console.log(msg)
 var frame=$B.last($B.frames_stack)
-if($B.debug > 0){var info=frame[1].$line_info.split(",")
-console.log("module",info[1],"line",info[0])
-if($B.$py_src.hasOwnProperty(info[1])){var src=$B.$py_src[info[1]]
-console.log(src.split("\n")[parseInt(info[0])-1])}}else{console.log("module",frame[2])}}
+if($B.debug > 0){var file=frame[3].__file__,lineno=frame[1].$lineno
+console.log("module",frame[2],"line",lineno)
+if($B.file_cache.hasOwnProperty(file)){var src=$B.file_cache[file]
+console.log(src.split("\n")[lineno-1])}}else{console.log("module",frame[2])}}
 var proto=Object.getPrototypeOf(self),nb=0
 while(!!proto && proto !==Object.prototype && nb++< 10){var descriptors=Object.getOwnPropertyDescriptors(proto)
 if(!!descriptors &&

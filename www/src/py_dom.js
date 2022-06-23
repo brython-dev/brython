@@ -983,11 +983,12 @@ DOMNode.__setattr__ = function(self, attr, value){
             console.log(msg)
             var frame = $B.last($B.frames_stack)
             if($B.debug > 0){
-                var info = frame[1].$line_info.split(",")
-                console.log("module", info[1], "line", info[0])
-                if($B.$py_src.hasOwnProperty(info[1])){
-                    var src = $B.$py_src[info[1]]
-                    console.log(src.split("\n")[parseInt(info[0]) - 1])
+                var file = frame[3].__file__,
+                    lineno = frame[1].$lineno
+                console.log("module", frame[2], "line", lineno)
+                if($B.file_cache.hasOwnProperty(file)){
+                    var src = $B.file_cache[file]
+                    console.log(src.split("\n")[lineno - 1])
                 }
             }else{
                 console.log("module", frame[2])
