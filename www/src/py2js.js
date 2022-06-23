@@ -2463,6 +2463,12 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                         raise_syntax_error(context, "did you forget " +
                             "parentheses around the comprehension target?")
                     }
+                    var expr = context.tree[0]
+                    if(expr.type == 'expr' && expr.packed == 2){
+                        $token.value = expr.position
+                        raise_syntax_error(context,
+                            'dict unpacking cannot be used in dict comprehension')
+                    }
                     if(context.real == 'dict_or_set'){
                         return new $TargetListCtx(new $ForExpr(
                             new SetCompCtx(this)))
@@ -2507,6 +2513,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                             context.expect = ","
                             var expr = new $AbstractExprCtx(context, false)
                             expr.packed = value.length // 1 for x, 2 for **
+                            expr.position = $token.value
                             if(context.real == "dict_or_set"){
                                 context.real = value == "*" ? "set" :
                                     "dict"
@@ -3457,6 +3464,8 @@ $FromCtx.prototype.transition = function(token, value){
                context.add_name('*')
                context.expect = 'eol'
                return context
+            }else{
+                raise_syntax_error(context)
             }
         case ',':
             if(context.expect == ','){
