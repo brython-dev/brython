@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-23 14:19:44.991289"
-__BRYTHON__.timestamp=1655986784991
+__BRYTHON__.compiled_date="2022-06-24 18:46:07.678392"
+__BRYTHON__.timestamp=1656089167677
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -781,11 +781,13 @@ case 'not':
 case 'lambda':
 case 'yield':
 C.parent.tree.pop()
-var commas=C.with_commas
+var commas=C.with_commas,star_position
+if(C.packed){star_position=C.star_position}
 C=C.parent
 C.packed=packed
 C.is_await=is_await
-if(C.position===undefined){C.position=$token.value}}
+if(C.position===undefined){C.position=$token.value}
+if(star_position){C.star_position=star_position}}
 switch(token){case 'await':
 return new $AbstractExprCtx(new $AwaitCtx(
 new $ExprCtx(C,'await',false)),true)
@@ -810,8 +812,9 @@ case '[':
 return new $ListOrTupleCtx(
 new $ExprCtx(C,'list',commas),'list')
 case '{':
-return new $DictOrSetCtx(
-new $ExprCtx(C,'dict_or_set',commas))
+return new $AbstractExprCtx(
+new $DictOrSetCtx(
+new $ExprCtx(C,'dict_or_set',commas)),false)
 case 'ellipsis':
 return new $EllipsisCtx(
 new $ExprCtx(C,'ellipsis',commas))
@@ -831,6 +834,14 @@ C=C.parent
 C.position=$token.value
 return new $AbstractExprCtx(
 new $StarredCtx(
+new $ExprCtx(C,'expr',commas)),false)
+case '**':
+C.parent.tree.pop()
+var commas=C.with_commas
+C=C.parent
+C.position=$token.value
+return new $AbstractExprCtx(
+new KwdCtx(
 new $ExprCtx(C,'expr',commas)),false)
 case '-':
 case '~':
@@ -1505,7 +1516,7 @@ raise_syntax_error(C)}
 var $DictOrSetCtx=$B.parser.$DictOrSetCtx=function(C){
 this.type='dict_or_set'
 this.real='dict_or_set'
-this.expect='id'
+this.expect=','
 this.closed=false
 this.start=$pos
 this.position=$token.value
@@ -1515,8 +1526,11 @@ C.tree[C.tree.length]=this}
 $DictOrSetCtx.prototype.ast=function(){
 var ast_obj
 if(this.real=='dict'){var keys=[],values=[]
-for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].packed){keys.push(_b_.None)
-values.push(this.items[i].ast())}else{keys.push(this.items[i].ast())
+for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].type !=='expr'){console.log('not an expr',this,i)
+alert()}
+if(this.items[i].type=='expr' &&
+this.items[i].tree[0].type=='kwd'){keys.push(_b_.None)
+values.push(this.items[i].tree[0].tree[0].ast())}else{keys.push(this.items[i].ast())
 values.push(this.items[i+1].ast())
 i++}}
 ast_obj=new ast.Dict(keys,values)}else if(this.real=='set'){var items=[]
@@ -1535,14 +1549,16 @@ return $transition(C.parent,token,value)}else{if(C.expect==','){function check_l
 if(last && last.wrong_assignment){
 err_msg="invalid syntax. Maybe you meant '==' or ':=' instead of '='?"}else if(C.real=='dict' && last.type=='expr' &&
 last.tree[0].type=='starred'){
-err_msg='cannot use a starred expression in a dictionary value'}
+err_msg='cannot use a starred expression in a dictionary value'}else if(C.real=='set' && last.tree[0].type=='kwd'){$token.value=last.position
+raise_syntax_error(C)}
 if(err_msg){raise_syntax_error_known_range(C,last.position,last_position(last),err_msg)}}
 switch(token){case '}':
+remove_abstract_expr(C.tree)
 check_last()
 C.end_position=$token.value
 switch(C.real){case 'dict_or_set':
-if(C.tree.length !=1){break}
-C.real='set' 
+C.real=C.tree.length==0 ?
+'dict' :'set'
 case 'set':
 C.items=C.tree
 C.tree=[]
@@ -1557,11 +1573,12 @@ return C}
 raise_syntax_error(C)
 case ',':
 check_last()
-if(C.real=='dict_or_set'){C.real='set'}
+if(C.real=='dict_or_set'){var last=C.tree[0]
+C.real=(last.type=='expr' &&
+last.tree[0].type=='kwd')? 'dict' :'set'}
 if(C.real=='dict' &&
 C.nb_dict_items()% 2){raise_syntax_error(C,"':' expected after dictionary key")}
-C.expect='id'
-return C
+return new $AbstractExprCtx(C,false)
 case ':':
 if(C.real=='dict_or_set'){C.real='dict'}
 if(C.real=='dict'){C.expect='value'
@@ -1571,57 +1588,12 @@ case 'for':
 if(C.real=="set" && C.tree.length > 1){$token.value=C.tree[0].position
 raise_syntax_error(C,"did you forget "+
 "parentheses around the comprehension target?")}
-var expr=C.tree[0]
-if(expr.type=='expr' && expr.packed==2){$token.value=expr.position
-raise_syntax_error(C,'dict unpacking cannot be used in dict comprehension')}
+var expr=C.tree[0],err_msg
+if(expr.type=='expr'){if(expr.tree[0].type=='kwd'){err_msg='dict unpacking cannot be used in dict comprehension'}else if(expr.tree[0].type=='starred'){err_msg='iterable unpacking cannot be used in comprehension'}
+if(err_msg){raise_syntax_error_known_range(C,expr.position,last_position(expr),err_msg)}}
 if(C.real=='dict_or_set'){return new $TargetListCtx(new $ForExpr(
 new SetCompCtx(this)))}else{return new $TargetListCtx(new $ForExpr(
 new DictCompCtx(this)))}}
-raise_syntax_error(C)}else if(C.expect=='id'){switch(token){case '}':
-if(C.tree.length==0){
-C.items=[]
-C.real='dict'}else{
-C.items=C.tree}
-C.tree=[]
-C.closed=true
-return C
-case 'id':
-case 'imaginary':
-case 'int':
-case 'float':
-case 'str':
-case 'JoinedStr':
-case 'bytes':
-case '[':
-case '(':
-case '{':
-case '.':
-case 'not':
-case 'lambda':
-C.expect=','
-var expr=new $AbstractExprCtx(C,false)
-return $transition(expr,token,value)
-case 'op':
-switch(value){case '*':
-case '**':
-C.expect=","
-var expr=new $AbstractExprCtx(C,false)
-expr.packed=value.length 
-expr.position=$token.value
-if(C.real=="dict_or_set"){C.real=value=="*" ? "set" :
-"dict"}else if(
-(C.real=="set" && value=="**")||
-(C.real=="dict" && value=="*")){raise_syntax_error(C)}
-return expr
-case '+':
-return C
-case '-':
-case '~':
-C.expect=','
-var left=new $UnaryCtx(C,value)
-if(value=='-'){var op_expr=new $OpCtx(left,'unary_neg')}else if(value=='+'){var op_expr=new $OpCtx(left,'unary_pos')}else{var op_expr=new $OpCtx(left,'unary_inv')}
-return new $AbstractExprCtx(op_expr,false)}
-raise_syntax_error(C)}
 raise_syntax_error(C)}else if(C.expect=='value'){if(python_keywords.indexOf(token)>-1){var ae=new $AbstractExprCtx(C,false)
 try{$transition(ae,token,value)
 C.tree.pop()}catch(err){raise_syntax_error(C)}}
@@ -1631,7 +1603,7 @@ raise_syntax_error(C,"expression expected after "+
 "dictionary key and ':'")}}
 return $transition(C.parent,token,value)}}
 $DictOrSetCtx.prototype.nb_dict_items=function(){var nb=0
-for(var item of this.tree){if(item.packed){nb+=2}else{nb++}}
+for(var item of this.tree){if(item.type=='expr' && item.tree[0].type=='kwd'){nb+=2}else{nb++}}
 return nb}
 var $DoubleStarArgCtx=$B.parser.$DoubleStarArgCtx=function(C){
 this.type='double_star_arg'
@@ -1772,7 +1744,7 @@ break
 case '{':
 if(C.tree[0].type !="id" ||
 ["print","exec"].indexOf(C.tree[0].value)==-1){raise_syntax_error(C)}
-return new $DictOrSetCtx(C)
+return new $AbstractExprCtx(new $DictOrSetCtx(C),false)
 case '[':
 case '(':
 case '.':
@@ -2485,6 +2457,17 @@ return C}
 return $transition(C.parent,token,value)}
 var $JSCode=$B.parser.$JSCode=function(js){this.js=js}
 $JSCode.prototype.transition=function(token,value){var C=this}
+var KwdCtx=$B.parser.KwdCtx=function(C){
+this.type='kwd'
+this.position=C.position
+this.parent=C
+this.tree=[]
+C.tree.push(this)}
+KwdCtx.prototype.ast=function(){var ast_obj=new $B.ast.keyword(this.tree[0].ast(),new ast.Load())
+set_position(ast_obj,this.position)
+return ast_obj}
+KwdCtx.prototype.transition=function(token,value){var C=this
+return $transition(C.parent,token,value)}
 var $KwArgCtx=$B.parser.$KwArgCtx=function(C){
 this.type='kwarg'
 this.parent=C.parent

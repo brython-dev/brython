@@ -927,12 +927,19 @@ $AbstractExprCtx.prototype.transition = function(token, value){
         case 'lambda':
         case 'yield':
             context.parent.tree.pop() // remove abstract expression
-            var commas = context.with_commas
+            var commas = context.with_commas,
+                star_position
+            if(context.packed){
+                star_position = context.star_position
+            }
             context = context.parent
             context.packed = packed
             context.is_await = is_await
             if(context.position === undefined){
                 context.position = $token.value
+            }
+            if(star_position){
+                context.star_position = star_position
             }
     }
 
@@ -968,8 +975,9 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             return new $ListOrTupleCtx(
                 new $ExprCtx(context, 'list', commas), 'list')
         case '{':
-            return new $DictOrSetCtx(
-                new $ExprCtx(context, 'dict_or_set', commas))
+            return new $AbstractExprCtx(
+                new $DictOrSetCtx(
+                    new $ExprCtx(context, 'dict_or_set', commas)), false)
         case 'ellipsis':
             return new $EllipsisCtx(
                 new $ExprCtx(context, 'ellipsis', commas))
@@ -991,6 +999,15 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                     context.position = $token.value
                     return new $AbstractExprCtx(
                         new $StarredCtx(
+                            new $ExprCtx(context, 'expr', commas)),
+                        false)
+                case '**':
+                    context.parent.tree.pop() // remove abstract expression
+                    var commas = context.with_commas
+                    context = context.parent
+                    context.position = $token.value
+                    return new $AbstractExprCtx(
+                        new KwdCtx(
                             new $ExprCtx(context, 'expr', commas)),
                         false)
                 case '-':
@@ -2331,7 +2348,7 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     // as the attribute 'real'
     this.type = 'dict_or_set'
     this.real = 'dict_or_set'
-    this.expect = 'id'
+    this.expect = ','
     this.closed = false
     this.start = $pos
     this.position = $token.value
@@ -2348,9 +2365,14 @@ $DictOrSetCtx.prototype.ast = function(){
         var keys = [],
             values = []
         for(var i = 0, len = this.items.length; i < len; i++){
-            if(this.items[i].packed){
+            if(this.items[i].type !== 'expr'){
+                console.log('not an expr', this, i)
+                alert()
+            }
+            if(this.items[i].type == 'expr' &&
+                    this.items[i].tree[0].type == 'kwd'){
                 keys.push(_b_.None)
-                values.push(this.items[i].ast())
+                values.push(this.items[i].tree[0].tree[0].ast())
             }else{
                 keys.push(this.items[i].ast())
                 values.push(this.items[i + 1].ast())
@@ -2398,6 +2420,9 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                         last.tree[0].type == 'starred'){
                     // {x: *12}
                     err_msg = 'cannot use a starred expression in a dictionary value'
+                }else if(context.real == 'set' && last.tree[0].type == 'kwd'){
+                    $token.value = last.position
+                    raise_syntax_error(context)
                 }
                 if(err_msg){
                     raise_syntax_error_known_range(context,
@@ -2408,17 +2433,19 @@ $DictOrSetCtx.prototype.transition = function(token, value){
             }
             switch(token) {
                 case '}':
+                    remove_abstract_expr(context.tree)
                     check_last()
                     context.end_position = $token.value
                     switch(context.real) {
                         case 'dict_or_set':
-                             if(context.tree.length != 1){break}
-                             context.real = 'set'   // is this needed?
+                            // for "{}" or {1}
+                            context.real = context.tree.length == 0 ?
+                                'dict' : 'set'
                         case 'set':
-                             context.items = context.tree
-                             context.tree = []
-                             context.closed = true
-                             return context
+                            context.items = context.tree
+                            context.tree = []
+                            context.closed = true
+                            return context
                         case 'dict':
                             if($B.last(this.tree).type == 'abstract_expr'){
                                 raise_syntax_error(context,
@@ -2436,26 +2463,27 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                 case ',':
                     check_last()
                     if(context.real == 'dict_or_set'){
-                        context.real = 'set'
+                        var last = context.tree[0]
+                        context.real = (last.type == 'expr' &&
+                            last.tree[0].type == 'kwd') ? 'dict' : 'set'
                     }
                     if(context.real == 'dict' &&
                             context.nb_dict_items() % 2){
                         raise_syntax_error(context,
                             "':' expected after dictionary key")
                     }
-                    context.expect = 'id'
-                    return context
+                    return new $AbstractExprCtx(context, false)
                 case ':':
-                  if(context.real == 'dict_or_set'){
-                      context.real = 'dict'
-                  }
-                  if(context.real == 'dict'){
-                      context.expect = 'value'
-                      context.value_pos = $token.value
-                      return context
-                  }else{
-                      raise_syntax_error(context)
-                  }
+                    if(context.real == 'dict_or_set'){
+                        context.real = 'dict'
+                    }
+                    if(context.real == 'dict'){
+                        context.expect = 'value'
+                        context.value_pos = $token.value
+                        return context
+                    }else{
+                        raise_syntax_error(context)
+                    }
                 case 'for':
                     // comprehension
                     if(context.real == "set" && context.tree.length > 1){
@@ -2463,11 +2491,20 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                         raise_syntax_error(context, "did you forget " +
                             "parentheses around the comprehension target?")
                     }
-                    var expr = context.tree[0]
-                    if(expr.type == 'expr' && expr.packed == 2){
-                        $token.value = expr.position
-                        raise_syntax_error(context,
-                            'dict unpacking cannot be used in dict comprehension')
+                    var expr = context.tree[0],
+                        err_msg
+                    if(expr.type == 'expr'){
+                        if(expr.tree[0].type == 'kwd'){
+                            err_msg = 'dict unpacking cannot be used in dict comprehension'
+                        }else if(expr.tree[0].type == 'starred'){
+                            err_msg = 'iterable unpacking cannot be used in comprehension'
+                        }
+                        if(err_msg){
+                            raise_syntax_error_known_range(context,
+                                expr.position,
+                                last_position(expr),
+                                err_msg)
+                        }
                     }
                     if(context.real == 'dict_or_set'){
                         return new $TargetListCtx(new $ForExpr(
@@ -2476,72 +2513,6 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                         return new $TargetListCtx(new $ForExpr(
                             new DictCompCtx(this)))
                     }
-            }
-            raise_syntax_error(context)
-        }else if(context.expect == 'id'){
-            switch(token) {
-                case '}':
-                    if(context.tree.length == 0){ // empty dict
-                        context.items = []
-                        context.real = 'dict'
-                    }else{ // trailing comma, eg {'a':1,'b':2,}
-                        context.items = context.tree
-                    }
-                    context.tree = []
-                    context.closed = true
-                    return context
-                case 'id':
-                case 'imaginary':
-                case 'int':
-                case 'float':
-                case 'str':
-                case 'JoinedStr':
-                case 'bytes':
-                case '[':
-                case '(':
-                case '{':
-                case '.':
-                case 'not':
-                case 'lambda':
-                    context.expect = ','
-                    var expr = new $AbstractExprCtx(context, false)
-                    return $transition(expr, token, value)
-                case 'op':
-                    switch(value) {
-                        case '*':
-                        case '**':
-                            context.expect = ","
-                            var expr = new $AbstractExprCtx(context, false)
-                            expr.packed = value.length // 1 for x, 2 for **
-                            expr.position = $token.value
-                            if(context.real == "dict_or_set"){
-                                context.real = value == "*" ? "set" :
-                                    "dict"
-                            }else if(
-                                    (context.real == "set" && value == "**") ||
-                                    (context.real == "dict" && value == "*")){
-                                raise_syntax_error(context)
-                            }
-                            return expr
-                        case '+':
-                            // ignore unary +
-                            return context
-                        case '-':
-                        case '~':
-                            // create a left argument for operator "unary"
-                            context.expect = ','
-                            var left = new $UnaryCtx(context, value)
-                            // create the operator "unary"
-                            if(value == '-'){
-                                var op_expr = new $OpCtx(left, 'unary_neg')
-                            }else if(value == '+'){
-                                var op_expr = new $OpCtx(left, 'unary_pos')
-                            }else{
-                                var op_expr = new $OpCtx(left, 'unary_inv')
-                            }
-                            return new $AbstractExprCtx(op_expr,false)
-                    }
-                    raise_syntax_error(context)
             }
             raise_syntax_error(context)
         }else if(context.expect == 'value'){
@@ -2571,7 +2542,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
 $DictOrSetCtx.prototype.nb_dict_items = function(){
     var nb = 0
     for(var item of this.tree){
-        if(item.packed){
+        if(item.type == 'expr' && item.tree[0].type == 'kwd'){
             nb += 2
         }else{
             nb++
@@ -2808,7 +2779,7 @@ $ExprCtx.prototype.transition = function(token, value){
                     ["print", "exec"].indexOf(context.tree[0].value) == -1){
                 raise_syntax_error(context)
             }
-            return new $DictOrSetCtx(context)
+            return new $AbstractExprCtx(new $DictOrSetCtx(context), false)
         case '[':
         case '(':
         case '.':
@@ -4324,6 +4295,26 @@ var $JSCode = $B.parser.$JSCode = function(js){
 
 $JSCode.prototype.transition = function(token, value){
     var context = this
+}
+
+var KwdCtx = $B.parser.KwdCtx = function(context){
+    // used for **expr
+    this.type = 'kwd'
+    this.position = context.position
+    this.parent = context
+    this.tree = []
+    context.tree.push(this)
+}
+
+KwdCtx.prototype.ast = function(){
+    var ast_obj = new $B.ast.keyword(this.tree[0].ast(), new ast.Load())
+    set_position(ast_obj, this.position)
+    return ast_obj
+}
+
+KwdCtx.prototype.transition = function(token, value){
+    var context = this
+    return $transition(context.parent, token, value)
 }
 
 var $KwArgCtx = $B.parser.$KwArgCtx = function(context){
