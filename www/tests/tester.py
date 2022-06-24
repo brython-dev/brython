@@ -362,6 +362,18 @@ class Support:
 
 support = Support()
 
+def assert_raises(exc_type, func, *args, msg=None, **kw):
+    try:
+        func(*args, **kw)
+    except exc_type as exc:
+        if msg is not None:
+            if isinstance(msg, str):
+                assert exc.args[0] == msg
+            elif isinstance(msg, re.Pattern):
+                assert msg.match(exc.args[0])
+    else:
+        raise AssertionError(f'should have raised {exc_type.__name__}')
+        
 if __name__=='__main__':
     t = 1, 2
     assertRaises(TypeError, t, '__setitem__', 0, 1)

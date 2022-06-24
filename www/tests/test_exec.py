@@ -1,3 +1,4 @@
+from tester import assert_raises
 
 # issues 62, 63 and 64
 import test_sp
@@ -26,7 +27,7 @@ assert cd['x'] == 8
 y = 5
 yd = dict(globals())
 yd.update(locals())
-co=compile("y = y + 4", "", "exec")
+co = compile("y = y + 4", "", "exec")
 exec(co, yd)
 
 assert yd['y'] == 9
@@ -36,10 +37,7 @@ assert y == 5
 err = """def f():
     x = yaz
 f()"""
-try:
-    exec(err)
-except NameError:
-    pass
+assert_raises(NameError, exec, err)
 
 # issue 686
 s = "message = 5"
@@ -62,11 +60,7 @@ assert t['x'] == 3
 # issue 748
 y = 42
 g = {'x':0}
-try:
-    exec('print(y)', g)
-    raise Exception("should have raised NameError")
-except NameError:
-    pass
+assert_raises(NameError, exec, 'print(y)', g)
 
 # globals and locals
 glob = {"y": 9}
@@ -105,24 +99,14 @@ def test():
 test()
 
 # issue 970
-try:
-    exec("\\")
-    raise Exception('should have raised SyntaxError')
-except SyntaxError as exc:
-    assert exc.msg == 'unexpected EOF while parsing'
+assert_raises(SyntaxError, exec, "\\",
+              msg='unexpected EOF while parsing')
 
-try:
-    exec('\\\\')
-    raise Exception('should have raised SyntaxError')
-except SyntaxError as exc:
-    assert exc.msg == 'unexpected character after line continuation character'
+assert_raises(SyntaxError, exec, '\\\\',
+              msg='unexpected character after line continuation character')
 
 # issue 1188
-try:
-    exec("x.foo()\nx=3", {}, {})
-    raise Exception("should have raised NameError")
-except NameError:
-    pass
+assert_raises(NameError, exec, "x.foo()\nx=3", {}, {})
 
 # issue 1223
 eval("[x for x in range(3)]")
@@ -160,12 +144,9 @@ assert z == 2
 
 # issue 1808
 class A: pass
-try:
-  exec(A())
-  raise Exception('should have raised TypeError')
-except TypeError as exc:
-  assert exc.args[0] == 'exec() arg 1 must be a string, ' \
-      'bytes or code object'
+assert_raises(TypeError, exec, A(),
+              msg='exec() arg 1 must be a string, ' \
+                  'bytes or code object')
 
 # issue 1852
 code = '''
