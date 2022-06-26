@@ -39,30 +39,32 @@ $B.$raise = function(arg, cause){
             throw active_exc
         }
         throw _b_.RuntimeError.$factory("No active exception to reraise")
-    }else if(_b_.isinstance(arg, BaseException)){
-        if(arg.__class__ === _b_.StopIteration &&
-                $B.last($B.frames_stack)[1].$is_generator){
-            // PEP 479
-            arg = _b_.RuntimeError.$factory("generator raised StopIteration")
-        }
-        arg.__context__ = active_exc === undefined ? _b_.None : active_exc
-        arg.__cause__ = cause || _b_.None
-        arg.__suppress_context__ = cause !== undefined
-        throw arg
-    }else if(arg.$is_class && _b_.issubclass(arg, BaseException)){
-        if(arg === _b_.StopIteration){
-            if($B.last($B.frames_stack)[1].$is_generator){
-                // PEP 479
-                throw _b_.RuntimeError.$factory("generator raised StopIteration")
-            }
-        }
-        var exc = $B.$call(arg)()
-        exc.__context__ = active_exc === undefined ? _b_.None : active_exc
-        exc.__cause__ = cause || _b_.None
-        exc.__suppress_context__ = cause !== undefined
-        throw exc
     }else{
-        throw _b_.TypeError.$factory("exceptions must derive from BaseException")
+        if(_b_.isinstance(arg, BaseException)){
+            if(arg.__class__ === _b_.StopIteration &&
+                    $B.last($B.frames_stack)[1].$is_generator){
+                // PEP 479
+                arg = _b_.RuntimeError.$factory("generator raised StopIteration")
+            }
+            arg.__context__ = active_exc === undefined ? _b_.None : active_exc
+            arg.__cause__ = cause || _b_.None
+            arg.__suppress_context__ = cause !== undefined
+            throw arg
+        }else if(arg.$is_class && _b_.issubclass(arg, BaseException)){
+            if(arg === _b_.StopIteration){
+                if($B.last($B.frames_stack)[1].$is_generator){
+                    // PEP 479
+                    throw _b_.RuntimeError.$factory("generator raised StopIteration")
+                }
+            }
+            var exc = $B.$call(arg)()
+            exc.__context__ = active_exc === undefined ? _b_.None : active_exc
+            exc.__cause__ = cause || _b_.None
+            exc.__suppress_context__ = cause !== undefined
+            throw exc
+        }else{
+            throw _b_.TypeError.$factory("exceptions must derive from BaseException")
+        }
     }
 }
 
@@ -313,13 +315,9 @@ $B.restore_stack = function(stack, locals){
 }
 
 $B.freeze = function(err){
-
-    // Store line numbers in frames stack when the exception occured
-    function get_line_info(frame){
-        return `${frame[1].$lineno},${frame[2]}`
-    }
     if(err.$stack === undefined){
         err.$stack = $B.frames_stack.slice()
+        err.$linenos = $B.frames_stack.map(x => x[1].$lineno)
     }
 }
 
@@ -729,11 +727,11 @@ function offer_suggestions_for_name_error(exc){
 }
 
 
-function trace_from_stack(stack){
+function trace_from_stack(err){
     var trace = ''
-    for(var frame of stack){
-        console.log('frame', frame, 'lineno', frame[1].$lineno)
-        var lineno = frame[1].$lineno,
+    for(var i = 0, len = err.$stack.length; i < len; i++){
+        var frame = err.$stack[i],
+            lineno = err.$linenos[i],
             filename = frame[3].__file__,
             src = $B.file_cache[filename]
             trace += `  File ${filename}, line ${lineno}, in ` +
@@ -761,7 +759,7 @@ $B.show_error = function(err){
     }
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
-        trace += trace_from_stack(err.$stack)
+        trace += trace_from_stack(err)
         var filename = err.filename,
             line = err.text,
             indent = line.length - line.trimLeft().length
@@ -786,7 +784,7 @@ $B.show_error = function(err){
         trace += `${err.__class__.$infos.__name__}: ${err.args[0]}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
-        trace += trace_from_stack(err.$stack)
+        trace += trace_from_stack(err)
         trace += name + ': ' + _b_.str.$factory(err)
     }else{
         console.log(err)
