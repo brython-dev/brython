@@ -2,8 +2,7 @@
 
 var _b_ = $B.builtins
 
-function compiler_error(ast_obj, message){
-    //console.log('compiler check throws error', message, ast_obj, state.filename)
+function compiler_error(ast_obj, message, end){
     var exc = _b_.SyntaxError.$factory(message)
     exc.filename = state.filename
     if(exc.filename != '<string>'){
@@ -16,8 +15,9 @@ function compiler_error(ast_obj, message){
     }
     exc.lineno = ast_obj.lineno
     exc.offset = ast_obj.col_offset + 1
-    exc.end_lineno = ast_obj.end_lineno
-    exc.end_offset = ast_obj.end_col_offset + 1
+    end = end || ast_obj
+    exc.end_lineno = end.end_lineno
+    exc.end_offset = end.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     throw exc
@@ -204,6 +204,8 @@ function make_ref(name, scopes, scope){
         return `$B.resolve_global('${name}')`
     }else if(Array.isArray(scope.resolve)){
         return `$B.resolve_in_scopes('${name}', [${scope.resolve}])`
+    }else if(scope.resolve == 'own_class_name'){
+        return `$B.own_class_name('${name}')`
     }
 }
 
@@ -224,7 +226,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == '__annotations__'
+    var test = false // name == 'A'
     if(test){
         console.log('name scope', name, scopes)
         alert()
@@ -259,6 +261,9 @@ function name_scope(name, scopes){
         is_local = [LOCAL, CELL].indexOf(__scope) > -1
     if(test){
         console.log('block', block, 'is local', is_local)
+    }
+    if(up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name){
+        return {found: false, resolve: 'own_class_name'}
     }
     // special case
     if(name == '__annotations__'){
@@ -343,15 +348,10 @@ function name_scope(name, scopes){
         }
     }
     if(builtins_scope.locals.has(name)){
-        return {found: builtins_scope} // `_b_.${name}`
+        return {found: builtins_scope}
     }
 
     var scope_names = make_search_namespaces(scopes)
-    /* scopes.slice().
-                             reverse().
-                             map(scope => make_scope_name(scopes, scope))
-    scope_names.push('_b_')
-     */
     return {found: false, resolve: scope_names}
 }
 
@@ -481,6 +481,10 @@ $B.resolve_global = function(name){
     if(builtins_scope.locals.has(name)){
         return _b_[name]
     }
+    throw _b_.NameError.$factory(name)
+}
+
+$B.own_class_name = function(name){
     throw _b_.NameError.$factory(name)
 }
 
@@ -1979,7 +1983,13 @@ $B.ast.Import.prototype.to_js = function(scopes){
 }
 
 $B.ast.ImportFrom.prototype.to_js = function(scopes){
-    compiler_check(this)
+    if(this.module === '__future__'){
+        if(! ($B.last(scopes).ast instanceof $B.ast.Module)){
+            compiler_error(this,
+                'from __future__ imports must occur at the beginning of the file',
+                $B.last(this.names))
+        }
+    }
     if(this.level == 0){
         module = this.module
     }else{

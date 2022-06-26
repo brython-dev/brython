@@ -1,4 +1,4 @@
-from tester import assertRaises
+from tester import assertRaises, assert_raises
 
 parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
 
@@ -1044,12 +1044,6 @@ def nothing():
     return a()
 
 assert nothing() == 1
-
-# issue 584
-try:
-    from __future__ import non_existing_feature
-except SyntaxError:
-    pass
 
 # issue 501
 class Test:
@@ -2393,7 +2387,7 @@ try:
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
     assert exc.args[0] == "'expression' is an illegal expression for augmented assignment"
-    
+
 # issue 1278
 import textwrap
 assert textwrap.wrap('1234 123', width=5) == ['1234', '123']
@@ -3080,6 +3074,12 @@ Callable[[int], list[int]]
 Callable[[int], List[int]]
 Callable[[int], int | str]
 
+# __future__ not at module level
+assert_raises(SyntaxError,
+    exec,
+    """def f():\n from __future__ import WWW""",
+    msg='from __future__ imports must occur at the beginning of the file')
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

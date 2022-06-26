@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-24 18:46:07.678392"
-__BRYTHON__.timestamp=1656089167677
+__BRYTHON__.compiled_date="2022-06-26 18:54:13.701501"
+__BRYTHON__.timestamp=1656262453701
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -543,39 +543,20 @@ return res}
 var CO_FUTURE_ANNOTATIONS=0x1000000
 function get_line(filename,lineno){var src=$B.file_cache[filename],line=_b_.None
 if(src !==undefined){var lines=src.split('\n')
-line=lines[s.lineno-1]}
+line=lines[lineno-1]}
 return line}
-function future_check_features(ff,s,filename){var i;
-var names=s.names;
-for(var feature of names){var name=feature.name
-if(name=="braces"){raise_error_known_location(_b_.SyntaxError,filename,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset,get_line(filename,s.lineno),"not a chance")
-return 0;}else if(name=="annotations"){ff.features |=CO_FUTURE_ANNOTATIONS}else if(VALID_FUTURES.indexOf(name)==-1){var msg=`future feature ${feature.name} is not defined`
-raise_error_known_location(_b_.SyntaxError,filename,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset,get_line(filename,s.lineno),msg)
-return 0;}}
-return 1;}
-function future_parse(ff,mod,filename){var i,done=0,prev_line=0;
-if(!(mod instanceof $B.ast.Module)){return 1;}
-if(mod.body.length==0){return 1;}
-i=0;
+var VALID_FUTURES=["nested_scopes","generators","division","absolute_import","with_statement","print_function","unicode_literals","barry_as_FLUFL","generator_stop","annotations"]
+$B.future_features=function(mod,filename){var features=0
+var i=0;
 if(mod.body[0]instanceof $B.ast.Expr){if(mod.body[0].value instanceof $B.ast.Constant &&
 typeof mod.body[0].value.value=="string"){
 i++}}
-for(s of mod.body.slice(i)){if(done && s.lineno > prev_line){return 1;}
-prev_line=s.lineno;
-if(s instanceof $B.ast.ImportFrom){var modname=s.module
-if(modname=="__future__"){if(done){raise_syntax_error(
-"from __future__ imports must occur at the "+
-"beginning of the file")
-return 0;}
-if(! future_check_features(ff,s,filename)){return 0;}
-ff.lineno=s.lineno;}else{
-done=1;}}
-else{
-done=1;}}
-return 1;}
-$B._PyFuture_FromAST=function(mod,filename){var ff={features:0,lineno:-1}
-if(! future_parse(ff,mod,filename)){return NULL;}
-return ff;}
+while(i < mod.body.length){var child=mod.body[i]
+if(child instanceof $B.ast.ImportFrom && child.module=='__future__'){
+for(var alias of child.names){var name=alias.name
+if(name=="braces"){raise_error_known_location(_b_.SyntaxError,filename,alias.lineno,alias.col_offset,alias.end_lineno,alias.end_col_offset,get_line(filename,child.lineno),"not a chance")}else if(name=="annotations"){features |=CO_FUTURE_ANNOTATIONS}else if(VALID_FUTURES.indexOf(name)==-1){raise_error_known_location(_b_.SyntaxError,filename,alias.lineno,alias.col_offset,alias.end_lineno,alias.end_col_offset,get_line(filename,child.lineno),`future feature ${name} is not defined`)}}
+i++}else{break}}
+return{features}}
 function set_position(ast_obj,position,end_position){ast_obj.lineno=position.start[0]
 ast_obj.col_offset=position.start[1]
 position=end_position ||position
@@ -2010,20 +1991,25 @@ this.type='from'
 this.parent=C
 this.module=''
 this.names=[]
+this.names_position=[]
 this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='module'
 this.scope=$get_scope(this)}
 $FromCtx.prototype.ast=function(){
-var module=this.module,level=0
+var module=this.module,level=0,alias
 while(module.length > 0 && module.startsWith('.')){level++
 module=module.substr(1)}
 var res={module:module ||undefined,names:[],level}
-for(var name of this.names){if(Array.isArray(name)){res.names.push(new ast.alias(name[0],name[1]))}else{res.names.push(new ast.alias(name))}}
+for(var i=0,len=this.names.length;i < len;i++){var name=this.names[i],position=this.names_position[i]
+if(Array.isArray(name)){alias=new ast.alias(name[0],name[1])}else{alias=new ast.alias(name)}
+set_position(alias,position)
+res.names.push(alias)}
 var ast_obj=new ast.ImportFrom(res.module,res.names,res.level)
 set_position(ast_obj,this.position)
 return ast_obj}
-$FromCtx.prototype.add_name=function(name){this.names[this.names.length]=name
+$FromCtx.prototype.add_name=function(name){this.names.push(name)
+this.names_position.push($token.value)
 if(name=='*'){this.scope.blurred=true}
 this.end_position=$token.value}
 $FromCtx.prototype.transition=function(token,value){var C=this
@@ -2062,12 +2048,6 @@ return C}
 case 'eol':
 switch(C.expect){case ',':
 case 'eol':
-if(C.module=="__future__"){var node=$get_node(C),docstring=false
-for(var child of node.parent.children){if(child===node){break}else{if(child.C.tree && child.C.tree[0]&&
-child.C.tree[0].type=="expr" &&
-child.C.tree[0].tree[0].type=="str" &&
-! docstring){docstring=true}else{raise_syntax_error_known_range(C,C.position,C.end_position,"from __future__ imports must occur"+
-" at the beginning of the file")}}}}
 return $transition(C.parent,token)
 case 'id':
 raise_syntax_error(C,'trailing comma not allowed without '+
@@ -4351,7 +4331,8 @@ var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 if($B.parser_to_ast){if(filename=='<console>'){console.log('src in py2js',src,'\nlength',src.length)}
 var _ast=new $B.Parser(src,filename).parse('file')
-var symtable=$B._PySymtable_Build(_ast,filename)
+var future=$B.future_features(_ast,filename)
+var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root(_ast,symtable,filename)
 js_from_ast='// ast generated by parser\n'+js_obj.js
 return{
@@ -4360,7 +4341,7 @@ imports:js_obj.imports,to_js:function(){return js_from_ast}}}else{var root=$crea
 dispatch_tokens(root)
 var _ast=root.ast()
 if($B.produce_ast==2){console.log(ast_dump(_ast))}
-var future=$B._PyFuture_FromAST(_ast,filename)
+var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root(_ast,symtable,filename)
 js_from_ast='// ast generated by parser\n'+js_obj.js
@@ -6221,10 +6202,7 @@ $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
-if($B.parser_to_ast){var _ast=new $B.Parser($.source,filename).parse(
-'file')
-var symtable=$B._PySymtable_Build(_ast,filename)
-var js_obj=$B.js_from_root(_ast,symtable,$.filename)
+if($B.parser_to_ast){var _ast=new $B.Parser($.source,filename).parse('file'),future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,$.filename)
 if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
 return _ast}}else{var root=$B.parser.$create_root_node(
 {src:$.source,filename},module_name,module_name)
@@ -6241,8 +6219,7 @@ $.single_expression=true
 root.parent_block=$B.builtins_scope
 $B.parser.dispatch_tokens(root,$.source)
 _ast=root.ast()}
-var future=$B._PyFuture_FromAST(_ast,filename)
-var symtable=$B._PySymtable_Build(_ast,filename,future)
+var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future)
 delete $B.url2name[filename]
 var js_obj=$B.js_from_root(_ast,symtable,filename)
 if($.flags==$B.PyCF_ONLY_AST){$B.create_python_ast_classes()
@@ -6361,7 +6338,7 @@ root.mode=mode
 root.filename=filename
 $B.parser.dispatch_tokens(root)
 _ast=root.ast()}}
-var symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,filename,{local_name,exec_locals,global_name,exec_globals}),js=js_obj.js}catch(err){if(err.args){var lineno=err.args[1][1]
+var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root(_ast,symtable,filename,{local_name,exec_locals,global_name,exec_globals}),js=js_obj.js}catch(err){if(err.args){var lineno=err.args[1][1]
 exec_locals.$lineno=lineno}else{console.log('JS Error',err.message)}
 $B.frames_stack=save_frames_stack
 throw err}
@@ -7342,7 +7319,7 @@ return frame[1].$current_exception}
 $B.$raise=function(arg,cause){
 var active_exc=$B.get_exc()
 if(arg===undefined){if(active_exc !==undefined){throw active_exc}
-throw _b_.RuntimeError.$factory("No active exception to reraise")}else if(_b_.isinstance(arg,BaseException)){if(arg.__class__===_b_.StopIteration &&
+throw _b_.RuntimeError.$factory("No active exception to reraise")}else{if(_b_.isinstance(arg,BaseException)){if(arg.__class__===_b_.StopIteration &&
 $B.last($B.frames_stack)[1].$is_generator){
 arg=_b_.RuntimeError.$factory("generator raised StopIteration")}
 arg.__context__=active_exc===undefined ? _b_.None :active_exc
@@ -7354,7 +7331,7 @@ var exc=$B.$call(arg)()
 exc.__context__=active_exc===undefined ? _b_.None :active_exc
 exc.__cause__=cause ||_b_.None
 exc.__suppress_context__=cause !==undefined
-throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}
+throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseException")}}}
 $B.print_stack=function(stack){
 stack=stack ||$B.frames_stack
 var trace=[]
@@ -7434,9 +7411,8 @@ return res}
 $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
-$B.freeze=function(err){
-function get_line_info(frame){return `${frame[1].$lineno},${frame[2]}`}
-if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()}}
+$B.freeze=function(err){if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()
+err.$linenos=$B.frames_stack.map(x=> x[1].$lineno)}}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 var be_factory=`
@@ -7618,9 +7594,8 @@ if(suggestion){return suggestion}
 if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
-function trace_from_stack(stack){var trace=''
-for(var frame of stack){console.log('frame',frame,'lineno',frame[1].$lineno)
-var lineno=frame[1].$lineno,filename=frame[3].__file__,src=$B.file_cache[filename]
+function trace_from_stack(err){var trace=''
+for(var i=0,len=err.$stack.length;i < len;i++){var frame=err.$stack[i],lineno=err.$linenos[i],filename=frame[3].__file__,src=$B.file_cache[filename]
 trace+=`  File ${filename}, line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0])+'\n'
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
@@ -7632,7 +7607,7 @@ console.log(err.stack)}
 var trace=''
 if(err.$stack && err.$stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
-err.__class__===_b_.IndentationError){trace+=trace_from_stack(err.$stack)
+err.__class__===_b_.IndentationError){trace+=trace_from_stack(err)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
 trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
@@ -7643,7 +7618,7 @@ if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-in
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
-trace+=trace_from_stack(err.$stack)
+trace+=trace_from_stack(err)
 trace+=name+': '+_b_.str.$factory(err)}else{console.log(err)
 trace=err+""}
 try{$B.$getattr($B.stderr,'write')(trace)
@@ -13872,15 +13847,15 @@ if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
-function compiler_error(ast_obj,message){
-var exc=_b_.SyntaxError.$factory(message)
+function compiler_error(ast_obj,message,end){var exc=_b_.SyntaxError.$factory(message)
 exc.filename=state.filename
 if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
 exc.text=line}else{exc.text=_b_.none}
 exc.lineno=ast_obj.lineno
 exc.offset=ast_obj.col_offset+1
-exc.end_lineno=ast_obj.end_lineno
-exc.end_offset=ast_obj.end_col_offset+1
+end=end ||ast_obj
+exc.end_lineno=end.end_lineno
+exc.end_offset=end.end_col_offset+1
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 throw exc}
 $B.set_func_infos=function(func,name,qualname,docstring){func.$is_func=true}
@@ -13951,7 +13926,7 @@ DEF_COMP_ITER=2<<8
 function name_reference(name,scopes){var scope=name_scope(name,scopes)
 return make_ref(name,scopes,scope)}
 function make_ref(name,scopes,scope){if(scope.found){return reference(scopes,scope.found,name)}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
-return `$B.resolve_in_scopes('${name}', [${scope_names}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}')`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}')`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}])`}}
+return `$B.resolve_in_scopes('${name}', [${scope_names}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}')`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}')`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
 function local_scope(name,scope){
 var s=scope
 while(true){if(s.locals.has(name)){return{found:true,scope:s}}
@@ -13974,6 +13949,7 @@ try{flags=block.symbols.$string_dict[name][0]}catch(err){console.log('name',name
 return{found:false,resolve:'all'}}
 var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK,is_local=[LOCAL,CELL].indexOf(__scope)>-1
 if(test){console.log('block',block,'is local',is_local)}
+if(up_scope.ast instanceof $B.ast.ClassDef && name==up_scope.name){return{found:false,resolve:'own_class_name'}}
 if(name=='__annotations__'){if(block.type==TYPE_CLASS && up_scope.has_annotation){is_local=true}else if(block.type==TYPE_MODULE){is_local=true}}
 if(is_local){
 var l_scope=local_scope(name,scope)
@@ -14031,6 +14007,7 @@ if(v.found){return v.value}
 if(frame.is_exec_top){break}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
 throw _b_.NameError.$factory(name)}
+$B.own_class_name=function(name){throw _b_.NameError.$factory(name)}
 var $operators=$B.op2method.subset("all")
 var opname2opsign={}
 for(var key in $operators){opname2opsign[$operators[key]]=key}
@@ -14680,7 +14657,7 @@ var parts=alias.name.split('.')
 for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=true}
 js+=`locals, true)\n`}
 return js.trimRight()}
-$B.ast.ImportFrom.prototype.to_js=function(scopes){compiler_check(this)
+$B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
 if(this.level==0){module=this.module}else{var scope=last_scope(scopes),parts=scope.name.split('.')
 if(this.level > parts.length){return `throw _b_.ImportError.$factory(`+
 `"Parent module '' not loaded, cannot perform relative import")`}

@@ -1,3 +1,5 @@
+from tester import assert_raises
+
 class baz:
 
     A = 8
@@ -800,8 +802,20 @@ d = D()
 assert t == ['MetaB Call', 'I am A', 'I am B']
 
 # issue 1884
-from tester import assertRaises
+assert_raises(SyntaxError, exec, 'class(x):\n pass')
 
-assertRaises(SyntaxError, exec, 'class(x):\n pass')
+# reference to class inside class definition raises NameError
+assert_raises(NameError, exec, "class A:\n A")
+
+# also for annotations
+assert_raises(NameError, exec, "class A:\n x:A")
+
+# except with __future__ annotations
+exec("""from __future__ import annotations
+class A:
+    x: A
+
+assert A.__annotations__ == {'x': 'A'}
+""", {})
 
 print('passed all tests..')

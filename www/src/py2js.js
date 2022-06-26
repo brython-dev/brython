@@ -253,57 +253,26 @@ function get_line(filename, lineno){
         line = _b_.None
     if(src !== undefined){
         var lines = src.split('\n')
-        line = lines[s.lineno - 1]
+        line = lines[lineno - 1]
     }
     return line
 }
 
 // Adapted from Python/future.c
-function future_check_features(ff, s, filename){
-    var i;
-    var names = s.names;
-    for (var feature of names) {
-        var name = feature.name
-        if (name == "braces") {
-            raise_error_known_location(_b_.SyntaxError, filename,
-                s.lineno, s.col_offset,
-                s.end_lineno, s.end_col_offset,
-                get_line(filename, s.lineno), "not a chance")
-            return 0;
-        }else if(name == "annotations"){
-            ff.features |= CO_FUTURE_ANNOTATIONS
-        }else if(VALID_FUTURES.indexOf(name) == -1){
-            var msg = `future feature ${feature.name} is not defined`
-            raise_error_known_location(_b_.SyntaxError, filename,
-                s.lineno, s.col_offset,
-                s.end_lineno, s.end_col_offset,
-                get_line(filename, s.lineno), msg)
-            return 0;
-        }
-    }
-    return 1;
-}
+var VALID_FUTURES = ["nested_scopes",
+                    "generators",
+                    "division",
+                    "absolute_import",
+                    "with_statement",
+                    "print_function",
+                    "unicode_literals",
+                    "barry_as_FLUFL",
+                    "generator_stop",
+                    "annotations"]
 
-function future_parse(ff, mod, filename){
-    var i,
-        done = 0,
-        prev_line = 0;
-
-    if (!(mod instanceof $B.ast.Module)){
-        return 1;
-    }
-    if (mod.body.length == 0){
-        return 1;
-    }
-    /* A subsequent pass will detect future imports that don't
-       appear at the beginning of the file.  There's one case,
-       however, that is easier to handle here: A series of imports
-       joined by semi-colons, where the first import is a future
-       statement but some subsequent import has the future form
-       but is preceded by a regular import.
-    */
-
-    i = 0;
+$B.future_features = function(mod, filename){
+    var features = 0
+    var i = 0;
     if(mod.body[0] instanceof $B.ast.Expr){
         if(mod.body[0].value instanceof $B.ast.Constant &&
                 typeof mod.body[0].value.value == "string"){
@@ -311,54 +280,34 @@ function future_parse(ff, mod, filename){
             i++
         }
     }
-
-    for (s of mod.body.slice(i)) {
-        if (done && s.lineno > prev_line){
-            return 1;
-        }
-        prev_line = s.lineno;
-
-        /* The tests below will return from this function unless it is
-           still possible to find a future statement.  The only things
-           that can precede a future statement are another future
-           statement and a doc string.
-        */
-
-        if(s instanceof $B.ast.ImportFrom){
-            var modname = s.module
-            if(modname == "__future__"){
-                if (done) {
-                    raise_syntax_error(
-                        "from __future__ imports must occur at the " +
-                        "beginning of the file")
-                    return 0;
+    while(i < mod.body.length){
+        var child = mod.body[i]
+        if(child instanceof $B.ast.ImportFrom && child.module == '__future__'){
+            // check names, update features
+            for(var alias of child.names){
+                var name = alias.name
+                if(name == "braces"){
+                    raise_error_known_location(_b_.SyntaxError, filename,
+                        alias.lineno, alias.col_offset,
+                        alias.end_lineno, alias.end_col_offset,
+                        get_line(filename, child.lineno),
+                        "not a chance")
+                }else if(name == "annotations"){
+                    features |= CO_FUTURE_ANNOTATIONS
+                }else if(VALID_FUTURES.indexOf(name) == -1){
+                    raise_error_known_location(_b_.SyntaxError, filename,
+                        alias.lineno, alias.col_offset,
+                        alias.end_lineno, alias.end_col_offset,
+                        get_line(filename, child.lineno),
+                        `future feature ${name} is not defined`)
                 }
-                if (! future_check_features(ff, s, filename)){
-                    return 0;
-                }
-                ff.lineno = s.lineno;
-            } else {
-                done = 1;
             }
+            i++
+        }else{
+            break
         }
-        else {
-            done = 1;
-        }
     }
-    return 1;
-}
-
-
-$B._PyFuture_FromAST = function(mod, filename){
-    var ff = {
-        features: 0,
-        lineno: -1
-    }
-
-    if (! future_parse(ff, mod, filename)) {
-        return NULL;
-    }
-    return ff;
+    return {features}
 }
 
 // Functions used to set position attributes to AST nodes
@@ -3347,6 +3296,7 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
     this.parent = context
     this.module = ''
     this.names = []
+    this.names_position = []
     this.position = $token.value
 
     context.tree[context.tree.length] = this
@@ -3357,7 +3307,8 @@ var $FromCtx = $B.parser.$FromCtx = function(context){
 $FromCtx.prototype.ast = function(){
     // ast.ImportFrom(module, names, level)
     var module = this.module,
-        level = 0
+        level = 0,
+        alias
     while(module.length > 0 && module.startsWith('.')){
         level++
         module = module.substr(1)
@@ -3367,12 +3318,16 @@ $FromCtx.prototype.ast = function(){
         names: [],
         level
     }
-    for(var name of this.names){
+    for(var i=0, len=this.names.length; i < len; i++){
+        var name = this.names[i],
+            position = this.names_position[i]
         if(Array.isArray(name)){
-            res.names.push(new ast.alias(name[0], name[1]))
+            alias = new ast.alias(name[0], name[1])
         }else{
-            res.names.push(new ast.alias(name))
+            alias = new ast.alias(name)
         }
+        set_position(alias, position)
+        res.names.push(alias)
     }
     var ast_obj = new ast.ImportFrom(res.module, res.names, res.level)
     set_position(ast_obj, this.position)
@@ -3380,8 +3335,11 @@ $FromCtx.prototype.ast = function(){
 }
 
 $FromCtx.prototype.add_name = function(name){
-    this.names[this.names.length] = name
-    if(name == '*'){this.scope.blurred = true}
+    this.names.push(name)
+    this.names_position.push($token.value)
+    if(name == '*'){
+        this.scope.blurred = true
+    }
     this.end_position = $token.value
 }
 
@@ -3447,28 +3405,6 @@ $FromCtx.prototype.transition = function(token, value){
             switch(context.expect) {
                 case ',':
                 case 'eol':
-                    if(context.module == "__future__"){
-                        var node = $get_node(context),
-                            docstring = false
-                        for(var child of node.parent.children){
-                            if(child === node){
-                                break
-                            }else{
-                                if(child.context.tree && child.context.tree[0] &&
-                                        child.context.tree[0].type == "expr" &&
-                                        child.context.tree[0].tree[0].type == "str" &&
-                                        ! docstring){
-                                    docstring = true
-                                }else{
-                                    raise_syntax_error_known_range(context,
-                                        context.position, context.end_position,
-                                        "from __future__ imports must occur" +
-                                        " at the beginning of the file")
-                                }
-                            }
-                        }
-                    }
-
                     return $transition(context.parent, token)
                 case 'id':
                     raise_syntax_error(context,
@@ -8185,7 +8121,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     root.indent = -1
     root.comments = []
     root.imports = {}
-
+    
     if(typeof src == "object"){
         root.is_comp = src.is_comp
         root.filename = src.filename
@@ -8253,7 +8189,8 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             console.log('src in py2js', src, '\nlength', src.length)
         }
         var _ast = new $B.Parser(src, filename).parse('file')
-        var symtable = $B._PySymtable_Build(_ast, filename)
+        var future = $B.future_features(_ast, filename)
+        var symtable = $B._PySymtable_Build(_ast, filename, future)
         var js_obj = $B.js_from_root(_ast, symtable, filename)
         js_from_ast = '// ast generated by parser\n' + js_obj.js
         return {
@@ -8270,7 +8207,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         if($B.produce_ast == 2){
             console.log(ast_dump(_ast))
         }
-        var future = $B._PyFuture_FromAST(_ast, filename)
+        var future = $B.future_features(_ast, filename)
         var symtable = $B._PySymtable_Build(_ast, filename, future)
         var js_obj = $B.js_from_root(_ast, symtable, filename)
         js_from_ast = '// ast generated by parser\n' + js_obj.js
