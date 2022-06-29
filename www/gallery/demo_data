@@ -1,0 +1,11 @@
+[
+    {"oid": "0x11",
+     "attributes": {},
+     "data_src_type": {},
+     "__class_name__": "Experiment",
+     "oid0": "0x11",
+     "oid_devices": "0x13",
+     "oid1": "0x13",
+     "oid_storages": "0x14"
+     }
+]

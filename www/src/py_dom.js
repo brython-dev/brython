@@ -772,15 +772,9 @@ DOMNode.__getattribute__ = function(self, attr){
                                 }(arg)
                                 arg.$cache = f1
                             }
-                            args[pos++] = f1
-                        }else if(_b_.isinstance(arg, DOMNode)){
-                            args[pos++] = arg
-                        }else if(arg === _b_.None){
-                            args[pos++] = null
-                        }else if(arg.__class__ == _b_.dict){
-                            args[pos++] = _b_.dict.$to_obj(arg)
+                            args.push(f1)
                         }else{
-                            args[pos++] = arg
+                            args.push($B.pyobj2jsobj(arg))
                         }
                     }
                     var result = f.apply(elt, args)

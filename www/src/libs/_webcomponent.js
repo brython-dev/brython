@@ -106,7 +106,10 @@ function define(tag_name, cls){
         var pcls = mro[i]
         for(var key in pcls){
             if(webcomp.prototype[key] === undefined &&
-                    typeof pcls[key] == "function"){
+                    typeof pcls[key] == "function" &&
+                    // don't set $factory (would make it a class)
+                    key !== '$factory'
+                    ){
                 webcomp.prototype[key] = (function(attr, klass){
                     return function(){
                         try{

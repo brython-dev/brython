@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-26 18:54:13.701501"
-__BRYTHON__.timestamp=1656262453701
+__BRYTHON__.compiled_date="2022-06-29 11:09:11.094644"
+__BRYTHON__.timestamp=1656493751093
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1341,7 +1341,7 @@ raise_syntax_error(C)}
 return $BodyCtx(C)}else if(C.in_comp && C.token=='if'){
 if(token==']'){return $transition(C.parent,token,value)}else if(token=='if'){var if_exp=new $ConditionCtx(C.parent,'if')
 if_exp.in_comp=C.in_comp
-return new $AbstractExprCtx(if_exp,false)}else if(')]}'.indexOf(token)>-1){return $transition(this.parent,token,value)}
+return new $AbstractExprCtx(if_exp,false)}else if(')]}'.indexOf(token)>-1){return $transition(this.parent,token,value)}else if(C.in_comp && token=='for'){return new $TargetListCtx(new $ForExpr(C.parent))}
 if(token==',' && $parent_match(C,{type:'call'})){raise_syntax_error_known_range(C,C.in_comp.position,last_position(C),'Generator expression must be parenthesized')}}
 raise_syntax_error(C,"expected ':'")}
 var $ContinueCtx=$B.parser.$ContinueCtx=function(C){
@@ -2124,7 +2124,7 @@ var op=value
 C.expect=','
 if(op=='*'){if(C.has_star_arg){raise_syntax_error(C,"(only one '*' argument allowed)")}
 return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
-if(C.has_end_positional){raise_syntax_error(C,'duplicate / in function parameters')}else if(C.has_star_arg){raise_syntax_error(C,'/ after * in function parameters')}
+if(C.has_end_positional){raise_syntax_error(C,'/ may appear only once')}else if(C.has_star_arg){raise_syntax_error(C,'/ must be ahead of *')}
 return new $EndOfPositionalCtx(C)}
 raise_syntax_error(C)
 case ':':
@@ -2489,7 +2489,7 @@ return new $AbstractExprCtx(C,false)}
 if(C.args !==undefined){
 C.body_end=$pos
 return $transition(C.parent,token)}
-if(C.args===undefined && token !="("){return $transition(new $FuncArgs(C),token,value)}
+if(C.args===undefined){if(token=='('){raise_syntax_error(C,'Lambda expression parameters cannot be parenthesized')}else{return $transition(new $FuncArgs(C),token,value)}}
 raise_syntax_error(C)}
 var ListCompCtx=function(C){
 this.type='listcomp'
@@ -8752,7 +8752,7 @@ return function(){try{var args=[]
 for(var i=0;i < arguments.length;i++){if(arguments[i]===undefined){args.push(_b_.None)}
 else{args.push(jsobj2pyobj(arguments[i]))}}
 if(pyobj.prototype.constructor===pyobj && ! pyobj.$is_func){var res=new pyobj(...args)}else{var res=pyobj.apply(this,args)}
-return pyobj2jsobj(res)}catch(err){if($B.debug > 1){console.log($B.class_name(err)+':',err.args.length > 0 ? err.args[0]:'' )}
+return pyobj2jsobj(res)}catch(err){if($B.debug > 1){console.log($B.class_name(err)+':',err.args ? err.args[0]:'' )}
 throw err}}}else{
 return pyobj}}
 $B.JSConstructor=JSConstructor
@@ -13073,7 +13073,7 @@ for(var i=0;i < arguments.length;i++){var arg=arguments[i]
 if(typeof arg=="function"){
 if(arg.$cache){var f1=arg.$cache}else{var f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}catch(err){$B.handle_error(err)}}}(arg)
 arg.$cache=f1}
-args[pos++]=f1}else if(_b_.isinstance(arg,DOMNode)){args[pos++]=arg}else if(arg===_b_.None){args[pos++]=null}else if(arg.__class__==_b_.dict){args[pos++]=_b_.dict.$to_obj(arg)}else{args[pos++]=arg}}
+args.push(f1)}else{args.push($B.pyobj2jsobj(arg))}}
 var result=f.apply(elt,args)
 return $B.$JS2Py(result)}})(res,self)
 func.$infos={__name__ :attr,__qualname__:attr}

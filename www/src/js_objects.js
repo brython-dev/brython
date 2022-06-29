@@ -278,7 +278,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
             }catch(err){
                 if($B.debug > 1){
                     console.log($B.class_name(err) + ':',
-                        err.args.length > 0 ? err.args[0] : '' )
+                        err.args ? err.args[0] : '' )
                 }
                 throw err
             }

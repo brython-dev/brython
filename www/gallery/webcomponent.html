@@ -87,17 +87,27 @@ a.sort_link{
 
 <child-component data="initial" id="child"></child-component>
 
+
+<p>
+<issue-demo>Blue text</issue-demo>
+
+<p>
+<issue-demo2></issue-demo2>
+<issue-demo2></issue-demo2>
+<p><pre id="issue-demo2">Demo data</pre>
+
 <p style="margin-top: 5em;">Change attribute value <button id="change_data">change</button>
 
 <ui-page></ui-page>
 <div id="trace"></div>
+
 </td>
 </tr>
 </table>
 
 
 <script type="text/python">
-from browser import bind, document, window, html, webcomponent
+from browser import bind, console, document, window, aio, html, webcomponent
 import javascript
 
 style_str = """
@@ -281,7 +291,51 @@ class Page(BaseComponent):
         return x * 2
 
 BaseComponent.register()
+
+class IssueDemo:
+
+    def connectedCallback(self):
+        self.load_list_items()
+
+    def callback_test(self, callback):
+        callback()
+
+    def load_list_items(self):
+        def callback():
+            self.style.color = 'blue'
+        self.callback_test(callback)
+
+webcomponent.define("issue-demo", IssueDemo)
+
+class IssueDemo2:
+
+    def connectedCallback(self):
+        aio.run(self.load_list_items())
+
+    def _set_obj_data(self, element, data: dict):
+        if not isinstance(data, dict) and hasattr(data, "to_dict"):
+            data = data.to_dict()
+        document["issue-demo2"].text += "\n" + "{oid0}".format_map(data)
+        for attr_name, value in data.items():
+            document["issue-demo2"].text += '\n' + f'{attr_name}: {value}'
+
+    async def load_list_items(self):
+        url = f"demo_data"
+        req = await aio.ajax("GET", url)
+        if req.status == 200:
+            data = req.data
+            obj = javascript.JSON.parse(data)
+            for list_item in obj:
+                self._set_obj_data(None, list_item)
+        elif req.status == 404:
+            console.error(f"404: {url} not found!")
+        elif req.status == 500:
+            console.error(f"500: {url} internal server error!")
+        console.debug("="*20)
+
+webcomponent.define("issue-demo2", IssueDemo2)
 </script>
+
 
 </body>
 </html>
