@@ -1968,6 +1968,8 @@ $ConditionCtx.prototype.transition = function(token, value){
             return new $AbstractExprCtx(if_exp, false)
         }else if(')]}'.indexOf(token) > -1){
             return $transition(this.parent, token, value)
+        }else if(context.in_comp && token == 'for'){
+            return new $TargetListCtx(new $ForExpr(context.parent))
         }
         if(token == ',' && $parent_match(context, {type: 'call'})){
             raise_syntax_error_known_range(context,
@@ -3571,26 +3573,22 @@ $FuncArgs.prototype.transition = function(token, value){
             return $transition(context.parent, token, value)
         case 'op':
             if(context.has_kw_arg){
-                raise_syntax_error(context,
-                    "(unpacking after '**' argument)")
+                raise_syntax_error(context, "(unpacking after '**' argument)")
             }
             var op = value
             context.expect = ','
             if(op == '*'){
                 if(context.has_star_arg){
-                    raise_syntax_error(context,
-                        "(only one '*' argument allowed)")
+                    raise_syntax_error(context, "(only one '*' argument allowed)")
                 }
                 return new $FuncStarArgCtx(context, '*')
             }else if(op == '**'){
                 return new $FuncStarArgCtx(context, '**')
             }else if(op == '/'){ // PEP 570
                 if(context.has_end_positional){
-                    raise_syntax_error(context,
-                        'duplicate / in function parameters')
+                    raise_syntax_error(context, '/ may appear only once')
                 }else if(context.has_star_arg){
-                    raise_syntax_error(context,
-                        '/ after * in function parameters')
+                    raise_syntax_error(context, '/ must be ahead of *')
                 }
                 return new $EndOfPositionalCtx(context)
             }
@@ -4328,8 +4326,13 @@ $LambdaCtx.prototype.transition = function(token, value){
         context.body_end = $pos
         return $transition(context.parent, token)
     }
-    if(context.args === undefined && token != "("){
-        return $transition(new $FuncArgs(context), token, value)
+    if(context.args === undefined){
+        if(token == '('){
+            raise_syntax_error(context,
+                'Lambda expression parameters cannot be parenthesized')
+        }else{
+            return $transition(new $FuncArgs(context), token, value)
+        }
     }
     raise_syntax_error(context)
 }
@@ -8121,7 +8124,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     root.indent = -1
     root.comments = []
     root.imports = {}
-    
+
     if(typeof src == "object"){
         root.is_comp = src.is_comp
         root.filename = src.filename

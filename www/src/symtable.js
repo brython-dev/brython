@@ -280,7 +280,7 @@ function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset){
     }else{
         exc.text = ''
     }
-    exc.args[1] = [filename, exc.lineno, exc.offset, exc.text, 
+    exc.args[1] = [filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
 }
 
