@@ -758,7 +758,7 @@ class _Compressor:
 
         return b''
 
-    def flush(self):
+    def flush(self, mode=Z_FINISH):
         if self._flushed:
             raise Error('inconsistent flush state')
         self._flushed = True
