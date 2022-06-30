@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-06-29 11:09:11.094644"
-__BRYTHON__.timestamp=1656493751093
+__BRYTHON__.compiled_date="2022-06-30 12:22:20.908452"
+__BRYTHON__.timestamp=1656584540908
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13685,6 +13685,8 @@ factory.$infos=obj.$infos
 for(var key in obj){if(typeof obj[key]=="function"){factory.prototype[key]=(function(x){return function(){
 return obj[x].bind(this,this).apply(this,arguments)}})(key)}}
 return factory}}},import_js:function(url,name){
+var $=$B.args('import_js',2,{url:null,alias:null},['url','alias'],arguments,{alias:_b_.None},null,null),url=$.url
+alias=$.alias
 var xhr=new XMLHttpRequest(),result
 xhr.open('GET',url,false)
 xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){eval(this.responseText)
@@ -13693,7 +13695,13 @@ for(var key in $module){result[key]=$B.jsobj2pyobj($module[key])}
 result.__file__=url}else{result=_b_.ImportError.$factory('Javascript '+
 `module at ${url} doesn't define $module`)}}else{result=_b_.ModuleNotFoundError.$factory(name)}}}
 xhr.send()
-if(_b_.isinstance(result,_b_.BaseException)){$B.handle_error(result)}else{$B.imported[name]=result}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
+if(_b_.isinstance(result,_b_.BaseException)){$B.handle_error(result)}else{if(alias===_b_.None){
+alias=url.split('.')
+if(alias.length > 1){alias.pop()}
+alias=alias.join('.')}
+$B.imported[alias]=result
+var frame=$B.last($B.frames_stack)
+frame[1][alias]=result}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.JSObj.$factory(replacer),space)}},jsobj2pyobj:function(obj){return $B.jsobj2pyobj(obj)},load:function(script_url){console.log('"javascript.load" is deprecrated. '+
 'Use browser.load instead.')
 var file_obj=$B.builtins.open(script_url)

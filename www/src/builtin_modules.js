@@ -449,6 +449,10 @@
             // load JS script at specified url
             // If it exposes a variable $module, use it as the namespace of imported
             // module named "name"
+            var $ = $B.args('import_js', 2, {url: null, alias: null},
+                    ['url', 'alias'], arguments, {alias: _b_.None}, null, null),
+                url = $.url
+                alias = $.alias
             var xhr = new XMLHttpRequest(),
                 result
             xhr.open('GET', url, false)
@@ -475,7 +479,17 @@
             if(_b_.isinstance(result, _b_.BaseException)){
                 $B.handle_error(result)
             }else{
-                $B.imported[name] = result
+                if(alias === _b_.None){
+                    // set module name from url
+                    alias = url.split('.')
+                    if(alias.length > 1){
+                        alias.pop() // remove extension
+                    }
+                    alias = alias.join('.')
+                }
+                $B.imported[alias] = result
+                var frame = $B.last($B.frames_stack)
+                frame[1][alias] = result
             }
         },
         JSObject: $B.JSObj,
@@ -522,7 +536,7 @@
 
     modules.javascript.NullType.$infos.__module__ = 'javascript'
     modules.javascript.UndefinedType.$infos.__module__ = 'javascript'
-    
+
     var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
         "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
         "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
