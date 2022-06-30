@@ -4,10 +4,15 @@ module **javascript**
 Le module **javascript** permet d'interagir avec les objets définis dans les
 bibliothèques et programmes Javascript.
 
-**javascript**.`import_js(`_url, name_`)`
-> Rend le module Javascript à l'_url_ spécifiée importable par `import <name>`.
-> Le module doit exposer le nom `$module`, un objet dont les attributs constituent
-> l'espace de noms du script importé.
+**javascript**.`import_js(`_url[, alias]_`)`
+> Importe le module Javascript à l'_url_ spécifiée et ajoute _alias_ à
+> l'espace de noms local.
+>
+> Si _alias_ n'est pas fourni, le nom du module est calculé à partir de l'url;
+> par exemple pour `import_js('js_test.js')` l'alias est _js_test_.
+>
+> Le module doit exposer le nom `$module`, un objet dont les attributs
+> constituent l'espace de noms du script importé.
 
 > Exemple: si le script Javascript à l'adresse _js_test.js_ est
 
@@ -25,8 +30,7 @@ var $module = {
 ```python
 import javascript
 
-javascript.import_js("js_test.js", "js_module")
-import js_module
+javascript.import_js("js_test.js", alias="js_module")
 assert js_module.x == 1
 ```
 </blockquote>

@@ -5,8 +5,13 @@ The module **javascript** allows interaction with the objects defined in
 Javascript programs and libraries present in the same page as the Brython
 program.
 
-**javascript**.`import_js(`_url, name_`)`
-> Make the Javascript module at specified _url_ importable by `import <name>`.
+**javascript**.`import_js(`_url[, alias]_`)`
+> Imports the Javascript module at specified _url_ and adds _alias_ to the
+> local namespace.
+>
+> If _alias_ is missing, the module name is computed from the url;
+> for instance, for `import_js('js_test.js')` the alias is _js_test_.
+>
 > The module must define the name `$module`, an objet whose attributes make
 > the namespace of the imported module.
 
@@ -26,8 +31,7 @@ var $module = {
 ```python
 import javascript
 
-javascript.import_js("js_test.js", "js_module")
-import js_module
+javascript.import_js("js_test.js", alias="js_module")
 assert js_module.x == 1
 ```
 </blockquote>
