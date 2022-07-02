@@ -70,6 +70,7 @@ editor_ns = {
     '__annotations__': {},
     '__builtins__': builtins,
     '__doc__': None,
+    '__file__': __BRYTHON__.brython_path + 'Lib/interpreter.py',
     '__name__': '__main__'
 }
 
