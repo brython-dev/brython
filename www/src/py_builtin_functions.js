@@ -748,7 +748,7 @@ function $$eval(src, _globals, _locals){
     top_frame.is_exec_top = true
     exec_locals.$f_trace = $B.enter_frame(top_frame)
     exec_locals.$lineno = 1
-
+    
     var filename = '<string>',
         _ast
 

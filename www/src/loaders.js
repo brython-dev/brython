@@ -378,7 +378,6 @@ var loop = $B.loop = function(){
             var script = task[1],
                 script_id = script.__name__.replace(/\./g, "_"),
                 module = $B.module.$factory(script.__name__)
-            module.$src = script.$src
             module.__file__ = script.__file__
             module.__doc__ = script.__doc__
             $B.imported[script_id] = module
