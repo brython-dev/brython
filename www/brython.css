@@ -5,12 +5,12 @@
 */
 
 :root {
-  --clear-1: #f0edee;
-  --clear-2: #e0ddde;
-  --clear-3: #e9f1f7;
-  --dark-1: #2a4494;
-  --dark-2: #028090;
-  --dark-3: #0a090c;
+--dark-1: #000000;
+--dark-2: #141612;
+--dark-3: #171A15;
+--clear-1: #FCF9F3;
+--clear-2: #D9DCED;
+--clear-3: #C6C6B7;
 }
 
 @font-face{
@@ -40,6 +40,11 @@ body {
   font-family:Montserrat, Arial;
   padding: 0.5em 1em 0.5em 1em;
   margin-bottom: 1em;
+}
+
+.main-table{
+    margin-left: 10%;
+    margin-right: 10%;
 }
 
 /* Classes for brython.widgets.menu */
