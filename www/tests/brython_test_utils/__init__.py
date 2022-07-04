@@ -94,8 +94,9 @@ def populate_testmod_input(elem, selected=None):
                 o = html.OPTION(caption, value=filenm)
             g <= o
 
-def trace_exc():
+def trace_exc(run_frame):
     exc_type, exc_value, traceback = sys.exc_info()
+    
     this_frame = sys._getframe()
 
     def show_line(filename, lineno):
@@ -113,7 +114,7 @@ def trace_exc():
 
     while traceback:
         frame = traceback.tb_frame
-        if frame is this_frame:
+        if frame is run_frame:
             started = True
         elif started:
             lineno = traceback.tb_lineno
@@ -149,7 +150,8 @@ def run(src, file_path=None):
     except Exception as exc:
         #msg = traceback.format_exc()
         #print(msg, file=sys.stderr)
-        trace_exc()
+        console.log('exc in run', exc.args)
+        trace_exc(sys._getframe())
         state = 0
     t1 = time.perf_counter()
     return state, t0, t1, msg
