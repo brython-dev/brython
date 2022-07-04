@@ -327,12 +327,7 @@ type.__format__ = function(klass, fmt_spec){
 type.__getattribute__ = function(klass, attr){
     switch(attr) {
         case "__bases__":
-            var res = klass.__bases__ // || _b_.tuple.$factory()
-            res.__class__ = _b_.tuple
-            if(res.length == 0){
-                // res.push(_b_.object)
-            }
-            return res
+            return $B.fast_tuple(klass.__bases__ || [_b_.object])
         case "__class__":
             return klass.__class__
         case "__doc__":
