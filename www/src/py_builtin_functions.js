@@ -748,7 +748,7 @@ function $$eval(src, _globals, _locals){
     top_frame.is_exec_top = true
     exec_locals.$f_trace = $B.enter_frame(top_frame)
     exec_locals.$lineno = 1
-    
+
     var filename = '<string>',
         _ast
 
@@ -1087,15 +1087,6 @@ $B.$getattr = function(obj, attr, _default){
                   }
               )
           }
-      case '__doc__':
-          // for builtins objects, use $B.builtins_doc
-          for(var i = 0; i < builtin_names.length; i++){
-              if(obj === _b_[builtin_names[i]]){
-                  _get_builtins_doc()
-                  return $B.builtins_doc[builtin_names[i]]
-              }
-          }
-          break
       case '__mro__':
           if(obj.$is_class){
               // The attribute __mro__ of class objects doesn't include the
@@ -1390,6 +1381,12 @@ function _get_builtins_doc(){
         url += '/builtins_docstrings.js'
         var f = _b_.open(url)
         eval(f.$content)
+        // builtins_docstrings defines an objet "docs"
+        for(var key in docs){
+            if(_b_[key]){
+                _b_[key].__doc__ = docs[key]
+            }
+        }
         $B.builtins_doc = docs
     }
 }
@@ -1397,30 +1394,60 @@ function _get_builtins_doc(){
 function help(obj){
     if(obj === undefined){obj = 'help'}
 
-    // if obj is a builtin, lets take a shortcut, and output doc string
-    if(typeof obj == 'string' && _b_[obj] !== undefined) {
-        _get_builtins_doc()
-        var _doc = $B.builtins_doc[obj]
-        if(_doc !== undefined && _doc != ''){
-             _b_.print(_doc)
-             return
-        }
-    }
-    // If obj is a built-in object, also use builtins_doc
-    for(var i = 0; i < builtin_names.length; i++){
-        if(obj === _b_[builtin_names[i]]){
-            _get_builtins_doc()
-            _b_.print(_doc = $B.builtins_doc[builtin_names[i]])
-        }
-    }
     if(typeof obj == 'string'){
-        $B.$import("pydoc");
-        var pydoc = $B.imported["pydoc"]
-        $B.$getattr($B.$getattr(pydoc, "help"), "__call__")(obj)
-        return
+        var lib_url = 'https://docs.python.org/3/library',
+            ref_url = 'https://docs.python.org/3/reference'
+        // search in standard lib
+        var parts = obj.split('.'),
+            head = [],
+            url
+        while(parts.length > 0){
+            head.push(parts.shift())
+            if($B.stdlib[head.join('.')]){
+                url = head.join('.')
+            }else{
+                break
+            }
+        }
+        if(url){
+            var doc_url
+            if(['browser', 'javascript', 'interpreter'].
+                    indexOf(obj.split('.')[0]) > -1){
+                doc_url = '/static_doc/' + ($B.language == 'fr' ? 'fr' : 'en')
+            }else{
+                doc_url = lib_url
+            }
+            window.open(`${doc_url}/${url}.html#` + obj)
+            return
+        }
+        // built-in functions or classes
+        if(_b_[obj]){
+            if(obj == obj.toLowerCase()){
+                url = lib_url + `/functions.html#${obj}`
+            }else if(['False', 'True', 'None', 'NotImplemented', 'Ellipsis', '__debug__'].
+                    indexOf(obj) > -1){
+                url = lib_url + `/constants.html#${obj}`
+            }else if(_b_[obj].$is_class &&
+                    _b_[obj].__bases__.indexOf(_b_.Exception) > -1){
+                url = lib_url + `/exceptions.html#${obj}`
+            }
+            if(url){
+                window.open(url)
+                return
+            }
+        }
+        // use pydoc
+        $B.$import('pydoc')
+        return $B.$call($B.$getattr($B.imported.pydoc, 'help'))(obj)
     }
-    try{return $B.$getattr(obj, '__doc__')}
-    catch(err){return ''}
+    if(obj.__class__ === $B.module){
+        return help(obj.__name__)
+    }
+    try{
+        _b_.print($B.$getattr(obj, '__doc__'))
+    }catch(err){
+        return ''
+    }
 }
 
 help.__repr__ = help.__str__ = function(){
