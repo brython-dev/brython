@@ -22,6 +22,9 @@ from make_dist import run, pdir, vname, vname1, vname2, abs_path
 # make minified version with terser
 import make_minified
 
+# make builtins_docstrings.js (docstring for all builtins)
+import make_builtins_docstrings
+
 run()
 
 release_dir = os.path.join(pdir, "releases")
