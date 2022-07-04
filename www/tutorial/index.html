@@ -7,13 +7,17 @@
 <meta charset="utf-8">
 
 <style>
+#container{
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
 #content{
     float: right;
-    width: 75%;
+    width: 66%;
 }
 #menu{
     padding-left:1%;
-    margin-right: 80%;
     position: fixed;
 }
 </style>
@@ -91,12 +95,13 @@ for elt in document.select('.xml'):
 <span class="logo"><a href="/index.html">brython</a></span>
 </div>
 
-
+<div id="container">
 <div id="content">
 {{content}}
 </div>
 
 <div id="menu"></div>
 
+</div>
 </body>
 </html>
