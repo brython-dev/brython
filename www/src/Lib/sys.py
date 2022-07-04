@@ -94,6 +94,8 @@ maxunicode = 1114111
 
 platform = "brython"
 
+platlibdir = __BRYTHON__.brython_path + 'Lib'
+
 prefix = __BRYTHON__.brython_path
 
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
