@@ -833,8 +833,8 @@ $B.ast.Assign.prototype.to_js = function(scopes){
                 break
             }
         }
-        var id = $B.UUID()
-        js += `var it_${id} = $B.unpacker(${value}, ${nb_targets}, ` +
+        var iter_id = 'it_' + $B.UUID()
+        js += `var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, ` +
              `${has_starred}`
         if(nb_after_starred !== undefined){
             js += `, ${nb_after_starred}`
@@ -843,33 +843,33 @@ $B.ast.Assign.prototype.to_js = function(scopes){
         var assigns = []
         for(var elt of target.elts){
             if(elt instanceof $B.ast.Starred){
-                assigns.push(assign_one(elt, `it_${id}.read_rest()`))
+                assigns.push(assign_one(elt, `${iter_id}.read_rest()`))
             }else if(elt instanceof $B.ast.List ||
                     elt instanceof $B.ast.Tuple){
-                assigns.push(assign_many(elt, `it_${id}.read_one()`))
+                assigns.push(assign_many(elt, `${iter_id}.read_one()`))
             }else{
-                assigns.push(assign_one(elt, `it_${id}.read_one()`))
+                assigns.push(assign_one(elt, `${iter_id}.read_one()`))
             }
         }
         js += assigns.join('\n')
-
         return js
     }
 
-    if(this.targets.length == 1){
-        var target = this.targets[0]
+    // evaluate value once
+    var value_id = 'v' + $B.UUID()
+    js += `var ${value_id} = ${value}\n`
+
+    var assigns = []
+    for(var target of this.targets){
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
-            return js + assign_one(target, value)
+            assigns.push(assign_one(target, value_id))
         }else{
-            return js + assign_many(target, value)
+            assigns.push(assign_many(target, value_id))
         }
     }
-    var id = 'v' + $B.UUID()
-    js += `var ${id} = ${value}\n`
-    for(var target of this.targets){
-        js += assign_one(target, id) + '\n'
-    }
+
+    js += assigns.join('\n')
     return js
 }
 

@@ -915,4 +915,10 @@ class A:
 
 assert A.__doc__ == "Docstring of class A."
 
+# chained assignments and unpacking
+x, y = info = (1, 2)
+assert x == 1
+assert y == 2
+assert info == (1, 2)
+
 print('passed all tests...')
