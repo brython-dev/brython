@@ -769,7 +769,6 @@ $Node.prototype.ast = function(){
     if(this.mode == 'eval'){
         if(root_ast.body.length > 1 ||
                 ! (root_ast.body[0] instanceof $B.ast.Expr)){
-            console.log('root_ast', root_ast, 'this', this)
             raise_syntax_error(this.children[0].context,
                 'eval() argument must be an expression')
         }
@@ -4852,7 +4851,6 @@ $NodeCtx.prototype.transition = function(token, value){
             }
             return context
     }
-    console.log('token', token, value)
     raise_syntax_error(context)
 }
 
