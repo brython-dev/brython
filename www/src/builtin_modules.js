@@ -900,16 +900,6 @@
 
     $B.AST = {
         __class__: _b_.type,
-        __Xgetattr__: function(self, attr){
-            if(self.js_node === undefined){
-                console.log('AST __getattr__', attr, self)
-            }
-            var res = self.js_node[attr]
-            if(res === undefined){
-                throw $B.attr_error(attr, self)
-            }
-            return $B.AST.$convert(res)
-        },
         __mro__: [_b_.object],
         $infos:{
             __qualname__: 'AST',
