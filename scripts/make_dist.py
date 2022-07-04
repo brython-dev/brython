@@ -91,6 +91,7 @@ def run():
         'py_dom',
         'py_pattern_matching',
         'builtin_modules',
+        'builtins_docstrings',
         'async',
         'ast_to_js',
         'symtable'
