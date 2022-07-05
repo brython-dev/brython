@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-04 19:01:11.991953"
-__BRYTHON__.timestamp=1656954071991
+__BRYTHON__.compiled_date="2022-07-05 16:00:48.852530"
+__BRYTHON__.timestamp=1657029648852
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5120,7 +5120,8 @@ Object.keys(arguments[0].kw).length==0){}else{throw _b_.TypeError.$factory("obje
 var res=Object.create(null)
 $B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
 return res}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
-var factory=function(){return call_func.bind(null,klass).apply(null,arguments)}}
+var factory=function(){if(call_func.$is_class){return $B.$call(call_func)(...arguments)}
+return call_func.bind(null,klass).apply(null,arguments)}}
 factory.__class__=$B.Function
 if(klass.$infos===undefined){console.log('no klaas $infos',klass)
 console.log($B.frames_stack.slice())}

@@ -851,6 +851,9 @@ var $instance_creator = $B.$instance_creator = function(klass){
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
         var factory = function(){
+            if(call_func.$is_class){
+                return $B.$call(call_func)(...arguments)
+            }
             return call_func.bind(null, klass).apply(null, arguments)
         }
     }

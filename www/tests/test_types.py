@@ -100,5 +100,11 @@ class Movie(TypedDict, total=False):
     name: str
     year: int
 
+# issue 1976
+class A(TypedDict):
+   a: int
+
+assert A(a=1) == {'a': 1}
+
 
 print("Passed all tests...")
