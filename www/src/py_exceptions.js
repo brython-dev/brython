@@ -742,6 +742,11 @@ function trace_from_stack(err){
             if(line){
                 trace += '    ' + line.trim() + '\n'
             }
+            // preliminary for PEP 657
+            if(frame[1].$offset !== undefined){
+                var indent = line.length - line.trimLeft().length
+                trace += '    ' + ' '.repeat((frame[1].$offset[0] - indent)) + '^\n'
+            }
         }
     }
     return trace
