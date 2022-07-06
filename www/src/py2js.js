@@ -220,7 +220,7 @@ var ast_dump = $B.ast_dump = function(tree, indent){
     var attr_names = $B.ast_classes[proto.$name].split(','),
         attrs = []
     // remove trailing * in attribute names
-    attr_names = attr_names.map(x => x.endsWith('*') ?
+    attr_names = attr_names.map(x => (x.endsWith('*') || x.endsWith('?')) ?
                                      x.substr(0, x.length - 1) : x)
     if([ast.Name].indexOf(proto) > -1){
         for(var attr of attr_names){
@@ -6820,7 +6820,13 @@ $WithCtx.prototype.ast = function(){
         withitem = new ast.withitem(item.tree[0].ast())
         if(item.alias){
             withitem.optional_vars = item.alias.tree[0].ast()
-            withitem.optional_vars.ctx = new ast.Store()
+            if(withitem.optional_vars.elts){
+                for(var elt of withitem.optional_vars.elts){
+                    elt.ctx = new ast.Store()
+                }
+            }else{
+                withitem.optional_vars.ctx = new ast.Store()
+            }
         }
         withitems.push(withitem)
     }

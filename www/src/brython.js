@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-06 15:02:28.417079"
-__BRYTHON__.timestamp=1657112548417
+__BRYTHON__.compiled_date="2022-07-06 22:21:03.285585"
+__BRYTHON__.timestamp=1657138863285
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -529,7 +529,7 @@ return `Constant(value=${$B.AST.$convert(value)})`}
 var proto=Object.getPrototypeOf(tree).constructor
 var res='  ' .repeat(indent)+proto.$name+'('
 var attr_names=$B.ast_classes[proto.$name].split(','),attrs=[]
-attr_names=attr_names.map(x=> x.endsWith('*')?
+attr_names=attr_names.map(x=>(x.endsWith('*')||x.endsWith('?'))?
 x.substr(0,x.length-1):x)
 if([ast.Name].indexOf(proto)>-1){for(var attr of attr_names){if(tree[attr]!==undefined){attrs.push(`${attr}=${ast_dump(tree[attr])}`)}}
 return res+attrs.join(', ')+')'}
@@ -3798,7 +3798,7 @@ $WithCtx.prototype.ast=function(){
 var withitems=[],withitem
 for(var item of this.tree){withitem=new ast.withitem(item.tree[0].ast())
 if(item.alias){withitem.optional_vars=item.alias.tree[0].ast()
-withitem.optional_vars.ctx=new ast.Store()}
+if(withitem.optional_vars.elts){for(var elt of withitem.optional_vars.elts){elt.ctx=new ast.Store()}}else{withitem.optional_vars.ctx=new ast.Store()}}
 withitems.push(withitem)}
 var klass=this.async ? ast.AsyncWith :ast.With
 var ast_obj=new klass(withitems,ast_body(this.parent))
@@ -7585,7 +7585,9 @@ for(var i=0,len=err.$stack.length;i < len;i++){var frame=err.$stack[i],lineno=er
 trace+=`  File ${filename}, line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0])+'\n'
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
-if(line){trace+='    '+line.trim()+'\n'}}}
+if(line){trace+='    '+line.trim()+'\n'}
+if(frame[1].$offset !==undefined){var indent=line.length-line.trimLeft().length
+trace+='    '+' '.repeat((frame[1].$offset[0]-indent))+'^\n'}}}
 return trace}
 $B.show_error=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
