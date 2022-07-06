@@ -32,7 +32,7 @@ var $module = (function($B){
                 longmonths = []
 
             for(var month = 0; month < 12; month++){
-                var d = new Date(Date.UTC(2012, month, 1, 3, 0, 0))
+                var d = new Date(Date.UTC(2012, month, 11, 3, 0, 0))
                 shortmonths.push(conv_func(d, {month: 'short'}))
                 longmonths.push(conv_func(d, {month: 'long'}))
             }
