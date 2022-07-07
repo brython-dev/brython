@@ -2023,10 +2023,6 @@ var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
 
 $DecoratorCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == 'id' && context.tree.length == 0){
-        return $transition(new $AbstractExprCtx(context, false),
-            token, value)
-    }
     if(token == 'eol') {
         return $transition(context.parent, token)
     }
@@ -4829,7 +4825,7 @@ $NodeCtx.prototype.transition = function(token, value){
                     return new $AbstractExprCtx(
                         new $UnaryCtx(expr, value), false)
                 case '@':
-                    return new $DecoratorCtx(context)
+                    return new $AbstractExprCtx(new $DecoratorCtx(context), false)
             }
             break
         case 'pass':
