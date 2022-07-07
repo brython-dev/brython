@@ -91,6 +91,17 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                     }
                 }
                 kw_args = kwa
+                var nb_kw_args = Object.keys(kw_args).length
+                if(nb_kw_args == 0){
+                    has_kw_args = false
+                }else if(! extra_kw_args){
+                    for(var k in kwa){
+                        if(slots[k] === undefined){
+                            throw _b_.TypeError.$factory(
+                                `${fname}() got an unexpected keyword argument '${k}'`)
+                        }
+                    }
+                }
             }
         }
     }
@@ -99,6 +110,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
         slots[extra_pos_args] = []
         slots[extra_pos_args].__class__ = _b_.tuple
     }
+
     if(extra_kw_args){
         // Build a dict object faster than with _b_.dict()
         extra_kw = $B.empty_dict()
@@ -109,8 +121,25 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
         if(extra_pos_args === null || extra_pos_args == "*"){
             // No parameter to store extra positional arguments :
             // thow an exception
-            msg = fname + "() takes " + argcount + " positional argument" +
-                (argcount > 1 ? "s" : "") + " but more were given"
+            // count required positional arguments that take default values
+            var min_argcount = argcount
+            for(var i = 0; i < argcount; i++){
+                if($dobj[var_names[i]] !== undefined){
+                    min_argcount--
+                }
+            }
+            var kw_msg = ''
+            if(has_kw_args){
+                var kw_msg = `(and ${nb_kw_args} keyword-only argument` +
+                             (nb_kw_args != 1 ? 's' : '') + ')'
+            }
+            msg = fname + "() takes " +
+                  (min_argcount == argcount ? argcount :
+                      `from ${min_argcount} to ${argcount}`) + " positional argument" +
+                  (min_argcount != argcount || argcount != 1 ? "s" : "") +
+                  ` but ${nb_pos}` +
+                  (has_kw_args ? ` positional arguments` + kw_msg : "") +
+                  (nb_pos == 1 ? ' was' : ' were') + ' given'
             throw _b_.TypeError.$factory(msg)
         }else{
             // Store extra positional arguments

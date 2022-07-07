@@ -3520,7 +3520,7 @@ $FuncArgs.prototype.transition = function(token, value){
                     last.type == 'end_positional'){
                 return
             }
-            if(context.names.indexOf('*') > -1){
+            if(context.has_star_arg){
                 // non-default arg after default arg is allowed for
                 // keyword-only parameters, eg arg "z" in "f(x, *, y=1, z)"
                 return
