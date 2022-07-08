@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-07 18:23:05.611663"
-__BRYTHON__.timestamp=1657210985596
+__BRYTHON__.compiled_date="2022-07-08 18:15:27.484027"
+__BRYTHON__.timestamp=1657296927484
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -528,6 +528,7 @@ if(value.imaginary){return `Constant(value=${_b_.repr(value.value)}j)`}
 return `Constant(value=${$B.AST.$convert(value)})`}
 var proto=Object.getPrototypeOf(tree).constructor
 var res='  ' .repeat(indent)+proto.$name+'('
+if($B.ast_classes[proto.$name]===undefined){console.log('no ast class',proto)}
 var attr_names=$B.ast_classes[proto.$name].split(','),attrs=[]
 attr_names=attr_names.map(x=>(x.endsWith('*')||x.endsWith('?'))?
 x.substr(0,x.length-1):x)
@@ -970,7 +971,9 @@ this.parent=C
 C.async=true
 this.position=C.position=$token.value}
 $AsyncCtx.prototype.transition=function(token,value){var C=this
-if(token=="def"){return $transition(C.parent,token,value)}else if(token=="for" ||token=="with"){var ctx=$transition(C.parent,token,value)
+if(token=="def"){return $transition(C.parent,token,value)}else if(token=="with"){var ctx=$transition(C.parent,token,value)
+ctx.async=C 
+return ctx}else if(token=="for"){var ctx=$transition(C.parent,token,value)
 ctx.parent.async=C 
 return ctx}
 raise_syntax_error(C)}
@@ -1367,7 +1370,6 @@ C.tree[C.tree.length]=this
 this.tree=[]
 this.position=$token.value}
 $DecoratorCtx.prototype.transition=function(token,value){var C=this
-if(token=='id' && C.tree.length==0){return $transition(new $AbstractExprCtx(C,false),token,value)}
 if(token=='eol'){return $transition(C.parent,token)}
 raise_syntax_error(C)}
 function get_decorators(node){var decorators=[]
@@ -1709,6 +1711,8 @@ $ExprCtx.prototype.transition=function(token,value){var C=this
 if(python_keywords.indexOf(token)>-1 &&
 ['as','else','if','for','from','in'].indexOf(token)==-1){C.$pos=$pos
 raise_syntax_error(C)}
+if(C.parent.expect=='star_target'){if(['pass','in','not','op','augm_assign','=',':=','if','eol'].
+indexOf(token)>-1){return $transition(C.parent,token,value)}}
 switch(token){case 'bytes':
 case 'float':
 case 'id':
@@ -1767,6 +1771,7 @@ return new $AbstractExprCtx(new $SubCtx(C),true)
 case '(':
 return new $CallCtx(C)
 case 'op':
+if(C.parent.type=='withitem' && C.parent.tree.length==2){raise_syntax_error(C,"expected ':'")}
 var op_parent=C.parent,op=value
 if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
 return new $AbstractExprCtx(new_op,false)}
@@ -2792,7 +2797,7 @@ var expr=new $ExprCtx(C,'unary',true)
 return new $AbstractExprCtx(
 new $UnaryCtx(expr,value),false)
 case '@':
-return new $DecoratorCtx(C)}
+return new $AbstractExprCtx(new $DecoratorCtx(C),false)}
 break
 case 'pass':
 return new $PassCtx(C)
@@ -2803,7 +2808,7 @@ return new $AbstractExprCtx(new $ReturnCtx(C),true)
 case 'try':
 return new $TryCtx(C)
 case 'with':
-return new $AbstractExprCtx(new $WithCtx(C),false)
+return new $WithCtx(C)
 case 'yield':
 return new $AbstractExprCtx(new $YieldCtx(C),true)
 case 'eol':
@@ -3792,47 +3797,45 @@ this.parent=C
 this.position=$token.value
 C.tree[C.tree.length]=this
 this.tree=[]
-this.expect='as'
+this.expect='expr'
 this.scope=$get_scope(this)}
 $WithCtx.prototype.ast=function(){
 var withitems=[],withitem
-for(var item of this.tree){withitem=new ast.withitem(item.tree[0].ast())
-if(item.alias){withitem.optional_vars=item.alias.tree[0].ast()
-if(withitem.optional_vars.elts){for(var elt of withitem.optional_vars.elts){elt.ctx=new ast.Store()}}else{withitem.optional_vars.ctx=new ast.Store()}}
-withitems.push(withitem)}
+for(var withitem of this.tree){withitems.push(withitem.ast())}
 var klass=this.async ? ast.AsyncWith :ast.With
 var ast_obj=new klass(withitems,ast_body(this.parent))
 set_position(ast_obj,this.async ? this.async.position :this.position,last_position(this))
 return ast_obj}
 $WithCtx.prototype.transition=function(token,value){var C=this
-switch(token){case 'id':
-if(C.expect=='id'){C.expect='as'
+function check_last(){var last=$B.last(C.tree)
+if(last.tree.length > 1){var alias=last.tree[1]
+if(alias.tree.length==0){raise_syntax_error(C,"expected ':'")}
+check_assignment(alias)}}
+switch(token){case '(':
+case '[':
+if(this.expect=='expr' && this.tree.length==0){
+C.parenth=token
+return C}else{raise_syntax_error(C)}
+break
+case 'id':
+if(C.expect=='expr'){
+C.expect=','
 return $transition(
-new $AbstractExprCtx(C,false),token,value)}
+new $AbstractExprCtx(new withitem(C),false),token,value)}
 raise_syntax_error(C)
-case 'as':
-return new $AbstractExprCtx(new $AliasCtx(C))
 case ':':
-switch(C.expect){case 'id':
-case 'as':
-case ':':
-return $BodyCtx(C)}
-break
-case '(':
-if(C.expect=='id' && C.tree.length==0){C.parenth=true
-return C}else if(C.expect=='alias'){C.expect=':'
-return new $TargetListCtx(C,false)}
-break
+if((! C.parenth)||C.parenth=='implicit'){check_last()}
+return $BodyCtx(C)
 case ')':
-if(C.expect==',' ||C.expect=='as'){C.expect=':'
-return C}
+case ']':
+if(C.parenth==opening[token]){if(C.expect==',' ||C.expect=='expr'){check_last()
+C.expect=':'
+return C}}
 break
 case ',':
-if(C.parenth !==undefined &&
-C.has_alias===undefined &&
-(C.expect==',' ||C.expect=='as')){C.expect='id'
-return C}else if(C.expect=='as'){C.expect='id'
-return C}else if(C.expect==':'){C.expect='id'
+if(C.expect==','){if(! C.parenth){C.parenth='implicit'}
+check_last()
+C.expect='expr'
 return C}
 break
 case 'eol':
@@ -3841,6 +3844,21 @@ raise_syntax_error(C)}
 $WithCtx.prototype.set_alias=function(ctx){var ids=[]
 if(ctx.type=="id"){ids=[ctx]}else if(ctx.type=="list_or_tuple"){
 for(var expr of ctx.tree){if(expr.type=="expr" && expr.tree[0].type=="id"){ids.push(expr.tree[0])}}}}
+var withitem=function(C){this.type='withitem'
+this.parent=C
+C.tree.push(this)
+this.tree=[]
+this.expect='as'
+this.position=$token.value}
+withitem.prototype.ast=function(){var ast_obj=new ast.withitem(this.tree[0].ast())
+if(this.tree[1]){ast_obj.optional_vars=this.tree[1].tree[0].ast()
+if(ast_obj.optional_vars.elts){for(var elt of ast_obj.optional_vars.elts){elt.ctx=new ast.Store()}}else{ast_obj.optional_vars.ctx=new ast.Store()}}
+set_position(ast_obj,this.position)
+return ast_obj}
+withitem.prototype.transition=function(token,value){var C=this
+if(token=='as' && C.expect=='as'){C.expect='star_target'
+return new $AbstractExprCtx(C,false)}else{return $transition(C.parent,token,value)}
+raise_syntax_error(C,"expected ':'")}
 var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
 this.type='yield'
 this.parent=C
