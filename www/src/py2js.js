@@ -2008,17 +2008,6 @@ $ContinueCtx.prototype.transition = function(token, value){
     raise_syntax_error(context)
 }
 
-var $DebuggerCtx = $B.parser.$DebuggerCtx = function(context){
-    // Class for debugger
-    this.type = 'continue'
-    this.parent = context
-    context.tree[context.tree.length] = this
-}
-
-$DebuggerCtx.prototype.transition = function(token, value){
-    var context = this
-}
-
 var $DecoratorCtx = $B.parser.$DecoratorCtx = function(context){
     // Class for decorators
     this.type = 'decorator'
@@ -4770,8 +4759,6 @@ $NodeCtx.prototype.transition = function(token, value){
             return new $ClassCtx(context)
         case 'continue':
             return new $ContinueCtx(context)
-        case '__debugger__':
-            return new $DebuggerCtx(context)
         case 'def':
             return new $DefCtx(context)
         case 'del':
@@ -7885,11 +7872,10 @@ function handle_errortoken(context, token, token_reader){
 }
 
 var python_keywords = [
-    "class", "return", "break", "for", "lambda", "try", "finally",
-    "raise", "def", "from", "nonlocal", "while", "del", "global",
-    "with", "as", "elif", "else", "if", "yield", "assert", "import",
-    "except", "raise", "in", "pass", "with", "continue", "__debugger__",
-    "async", "await"
+    "class", "return", "break", "for", "lambda", "try", "finally", "raise",
+    "def", "from", "nonlocal", "while", "del", "global", "with", "as", "elif",
+    "else", "if", "yield", "assert", "import", "except", "raise", "in", 
+    "pass", "with", "continue", "async", "await"
 ]
 
 var $token = {}

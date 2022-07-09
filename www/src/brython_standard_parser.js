@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-08 18:15:27.484027"
-__BRYTHON__.timestamp=1657296927484
+__BRYTHON__.compiled_date="2022-07-09 09:15:08.004700"
+__BRYTHON__.timestamp=1657350908003
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1358,11 +1358,6 @@ return ast_obj}
 $ContinueCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
 raise_syntax_error(C)}
-var $DebuggerCtx=$B.parser.$DebuggerCtx=function(C){
-this.type='continue'
-this.parent=C
-C.tree[C.tree.length]=this}
-$DebuggerCtx.prototype.transition=function(token,value){var C=this}
 var $DecoratorCtx=$B.parser.$DecoratorCtx=function(C){
 this.type='decorator'
 this.parent=C
@@ -2739,8 +2734,6 @@ case 'class':
 return new $ClassCtx(C)
 case 'continue':
 return new $ContinueCtx(C)
-case '__debugger__':
-return new $DebuggerCtx(C)
 case 'def':
 return new $DefCtx(C)
 case 'del':
@@ -4193,7 +4186,7 @@ if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while pars
 u='U+'+'0'.repeat(4-u.length)+u
 raise_syntax_error(C,`invalid character '${token.string}' (${u})`)}
 raise_syntax_error(C)}
-var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","__debugger__","async","await"
+var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","async","await"
 ]
 var $token={}
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root){var src=root.src
