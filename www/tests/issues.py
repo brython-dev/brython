@@ -3082,9 +3082,15 @@ assert_raises(SyntaxError,
 
 # issue 1979
 try:
-  exec('x =')
+    exec('x =')
 except SyntaxError as e:
-  assert e.args == ('invalid syntax', ('<string>', 1, 4, 'x =\n', 1, 4))
+    assert e.args == ('invalid syntax', ('<string>', 1, 4, 'x =\n', 1, 4))
+
+# issue 1980
+try:
+    exec("x= ")
+except SyntaxError as exc:
+    assert exc.args == ('invalid syntax', ('<string>', 1, 4, 'x= \n', 1, 4))
   
 # ==========================================
 # Finally, report that all tests have passed
