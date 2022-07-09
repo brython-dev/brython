@@ -361,8 +361,9 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     exc.end_lineno = end_lineno
     exc.end_offset = end_col_offset + 1
     exc.text = line
-    exc.args[1] = [filename, exc.lineno, exc.offset, exc.text,
-                   exc.end_lineno, exc.end_offset]
+    exc.args[1] = $B.fast_tuple([filename, exc.lineno, exc.offset, exc.text,
+                   exc.end_lineno, exc.end_offset])
+    console.log('args', exc.args)
     throw exc
 }
 
@@ -380,6 +381,7 @@ function raise_error(errtype, context, msg, token){
         msg = 'invalid syntax ' + msg
     }
     msg = msg.trim()
+    console.log('raise error, token', token)
     raise_error_known_location(errtype, filename,
         token.start[0], token.start[1], token.end[0], token.end[1], token.line, msg)
 }
@@ -7874,7 +7876,7 @@ function handle_errortoken(context, token, token_reader){
 var python_keywords = [
     "class", "return", "break", "for", "lambda", "try", "finally", "raise",
     "def", "from", "nonlocal", "while", "del", "global", "with", "as", "elif",
-    "else", "if", "yield", "assert", "import", "except", "raise", "in", 
+    "else", "if", "yield", "assert", "import", "except", "raise", "in",
     "pass", "with", "continue", "async", "await"
 ]
 

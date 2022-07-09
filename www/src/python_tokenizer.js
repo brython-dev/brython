@@ -657,7 +657,7 @@ $B.tokenizer = function*(src){
 
     if(! src.endsWith('\n') && char != ' ' && state != line_start){
         yield Token('NEWLINE', '', [line_num, pos - line_start + 1],
-            [line_num, pos - line_start + 2], '')
+            [line_num, pos - line_start + 1], line +'\n')
         line_num++
     }
 

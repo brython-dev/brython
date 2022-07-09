@@ -3079,7 +3079,13 @@ assert_raises(SyntaxError,
     exec,
     """def f():\n from __future__ import WWW""",
     msg='from __future__ imports must occur at the beginning of the file')
-    
+
+# issue 1979
+try:
+  exec('x =')
+except SyntaxError as e:
+  assert e.args == ('invalid syntax', ('<string>', 1, 4, 'x =\n', 1, 4))
+  
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

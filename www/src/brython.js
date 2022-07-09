@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-09 09:15:08.004700"
-__BRYTHON__.timestamp=1657350908003
+__BRYTHON__.compiled_date="2022-07-09 09:38:35.103166"
+__BRYTHON__.timestamp=1657352315103
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -416,7 +416,7 @@ case 'STRING':
 var msg=`unterminated ${triple_quote ? 'triple-quoted ' : ''}`+
 `string literal (detected at line ${line_num})`
 throw SyntaxError(msg)}
-if(! src.endsWith('\n')&& char !=' ' && state !=line_start){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+2],'')
+if(! src.endsWith('\n')&& char !=' ' && state !=line_start){yield Token('NEWLINE','',[line_num,pos-line_start+1],[line_num,pos-line_start+1],line+'\n')
 line_num++}
 while(indents.length > 0){indents.pop()
 yield Token('DEDENT','',[line_num,0],[line_num,0],'')}
@@ -581,7 +581,8 @@ exc.offset=col_offset+1
 exc.end_lineno=end_lineno
 exc.end_offset=end_col_offset+1
 exc.text=line
-exc.args[1]=[filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
+exc.args[1]=$B.fast_tuple([filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset])
+console.log('args',exc.args)
 throw exc}
 function raise_syntax_error_known_range(C,a,b,msg){
 raise_error_known_location(_b_.SyntaxError,$get_module(C).filename,a.start[0],a.start[1],b.end[0],b.end[1],a.line,msg)}
@@ -590,6 +591,7 @@ token=token ||$token.value
 msg=msg ||'invalid syntax'
 if(msg.startsWith('(')){msg='invalid syntax '+msg}
 msg=msg.trim()
+console.log('raise error, token',token)
 raise_error_known_location(errtype,filename,token.start[0],token.start[1],token.end[0],token.end[1],token.line,msg)}
 function raise_syntax_error(C,msg,token){raise_error(_b_.SyntaxError,C,msg,token)}
 function raise_indentation_error(C,msg,indented_node){
