@@ -2411,6 +2411,11 @@ $B.ast.Name.prototype.to_js = function(scopes){
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
         var res = name_reference(this.id, scopes)
+        if(this.id == '__debugger__' && res.startsWith('$B.resolve_in_scopes')){
+            // Special case : name __debugger__ is translated to Javascript
+            // "debugger" if not bound in Brython code
+            return 'debugger'
+        }
         return res
     }
 }
