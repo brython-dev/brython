@@ -254,7 +254,7 @@ def main():
 
         case 'make_package':
             package_name = args.package_name
-            package_path = args.src_dir
+            package_path = os.getcwd()
             exclude_dirs = args.exclude_dirs
             output_path = args.output_path
             from . import make_package
