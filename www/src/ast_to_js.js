@@ -1032,10 +1032,11 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
             `(locals.$key = ${this.target.slice.to_js(scopes)}), ` +
             `$B.augm_assign($B.$getitem(locals.$tg, locals.$key), '${iop}', ${value}))`
     }else if(this.target instanceof $B.ast.Attribute){
-        var op = opclass2dunder[this.op.constructor.$name]
+        var op = opclass2dunder[this.op.constructor.$name],
+            mangled = mangle(scopes, last_scope(scopes), this.target.attr)
         js = `$B.$setattr((locals.$tg = ${this.target.value.to_js(scopes)}), ` +
-            `'${this.target.attr}', $B.augm_assign(` +
-            `$B.$getattr(locals.$tg, '${this.target.attr}'), '${iop}', ${value}))`
+            `'${mangled}', $B.augm_assign(` +
+            `$B.$getattr(locals.$tg, '${mangled}'), '${iop}', ${value}))`
     }else{
         var target = $B.js_from_ast(this.target, scopes),
             value = $B.js_from_ast(this.value, scopes)

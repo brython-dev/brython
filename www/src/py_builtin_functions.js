@@ -975,8 +975,11 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "f" // && obj === _b_.list // "Point"
-    if($test){console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)}
+    var $test = false // attr == "A" // && obj === _b_.list // "Point"
+    if($test){
+        console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
+        alert()
+    }
 
     // Shortcut for classes without parents
     if(klass !== undefined && (! klass.$native) && klass.__bases__ &&
@@ -1208,11 +1211,6 @@ $B.$getattr = function(obj, attr, _default){
             res = undefined
         }else if(res === null){
             return null
-        }else if(false && res === undefined && obj[attr] !== undefined){
-            if(_default === undefined){
-                throw $B.attr_error(attr, obj)
-            }
-            return _default
         }else if(res !== undefined){
             if($test){console.log(obj, attr, obj[attr],
                 res.__set__ || res.$is_class)}
@@ -1227,14 +1225,14 @@ $B.$getattr = function(obj, attr, _default){
             }
         }
     }
-    if($test){
-        console.log('no result with object.__getattribute__')
-    }
 
     try{
         res = attr_func(obj, attr)
         if($test){console.log("result of attr_func", res)}
     }catch(err){
+        if($test){
+            console.log('attr_func raised error', err.args)
+        }
         var getattr
         if(klass === $B.module){
             // try __getattr__ at module level (PEP 562)
@@ -1249,25 +1247,24 @@ $B.$getattr = function(obj, attr, _default){
                     throw err
                 }
             }
-        }else{
-            var getattr = in_mro(klass, '__getattr__')
-            if(getattr){
-                if(attr == 'strange'){
-                    console.log('essaie getattr', obj, klass, attr)
+        }
+        var getattr = in_mro(klass, '__getattr__')
+        if(getattr){
+            if($test){
+                console.log('try with getattr', getattr)
+            }
+            try{
+                if(false && klass === $B.module){
+                    res = getattr(attr)
+                }else{
+                    res = getattr(obj, attr)
                 }
-                try{
-                    if(klass === $B.module){
-                        res = getattr(attr)
-                    }else{
-                        res = getattr(obj, attr)
-                    }
-                    return res
-                }catch(err){
-                    if(_default !== undefined){
-                        return _default
-                    }
-                    throw err
+                return res
+            }catch(err){
+                if(_default !== undefined){
+                    return _default
                 }
+                throw err
             }
         }
         if(_default !== undefined){

@@ -818,4 +818,18 @@ class A:
 assert A.__annotations__ == {'x': 'A'}
 """, {})
 
+# mangle attributes for augmented assignments
+class A:
+
+  def __init__(self):
+      self.__scale = 1
+
+  def upscale(self):
+      assert self.__scale == 1
+      self.__scale += 1
+
+a = A()
+a.upscale()
+assert a._A__scale == 2
+
 print('passed all tests..')
