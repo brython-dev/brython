@@ -8171,7 +8171,7 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     return root
 }
 
-$B.py2js = function(src, module, locals_id, parent_scope, line_num){
+$B.py2js = function(src, module, locals_id, parent_scope){
     // src = Python source (string or object)
     // module = module name (string)
     // locals_id = the id of the block that will be created
@@ -8199,14 +8199,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
             line_info = src.line_info || `1,${locals_id}`
             ix = src.ix,
             filename = src.filename
-        if(line_info !== undefined){
-            line_num = parseInt(line_info.split(",")[0])
-        }
         src = src.src
-    }else if(line_num !== undefined){
-        line_info = `${line_num},${module}`
-    }else{
-        line_num = 1
     }
 
     var locals_is_module = Array.isArray(locals_id)
@@ -8220,7 +8213,7 @@ $B.py2js = function(src, module, locals_id, parent_scope, line_num){
         var root = $create_root_node(
                 {src: src, has_annotations: has_annotations,
                     filename: filename},
-                module, locals_id, parent_scope, line_num)
+                module, locals_id, parent_scope)
         dispatch_tokens(root)
         var _ast = root.ast()
     }
