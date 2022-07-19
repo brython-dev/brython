@@ -98,6 +98,17 @@ function qualified_scope_name(scopes, scope){
     return names.join('_').replace(/\./g, '_')
 }
 
+function module_name(scopes){
+    var _scopes = scopes.slice()
+    var names = []
+    for(var _scope of _scopes){
+        if(! _scope.parent){
+            names.push(_scope.name)
+        }
+    }
+    return names.join('.')
+}
+
 function make_scope_name(scopes, scope){
     // Return the name of the locals object for a scope in scopes
     // scope defaults to the last item in scopes
@@ -2367,7 +2378,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
     var js = `// Javascript code generated from ast\n` +
              `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `${global_name} = {},\nlocals = ${global_name},\n` +
+        js += `${global_name} = $B.imported["${module_name(scopes)}"],\nlocals = ${global_name},\n` +
               `$top_frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         js += `locals = ${namespaces.local_name},\n` +

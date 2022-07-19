@@ -65,4 +65,6 @@ if script_loc[0] == brython_loc[0]:
     from foobar import *
     assert str(Foo()) == "foo"
 
+import import_bug
+
 print('passed all tests')
