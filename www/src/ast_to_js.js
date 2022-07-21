@@ -2374,12 +2374,13 @@ $B.ast.Module.prototype.to_js = function(scopes){
         namespaces = scopes.namespaces
 
     var module_id = name,
-        global_name = make_scope_name(scopes)
-
+        global_name = make_scope_name(scopes),
+        mod_name = module_name(scopes)
+    
     var js = `// Javascript code generated from ast\n` +
              `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `${global_name} = $B.imported["${module_name(scopes)}"],\nlocals = ${global_name},\n` +
+        js += `${global_name} = $B.imported["${mod_name}"],\nlocals = ${global_name},\n` +
               `$top_frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         js += `locals = ${namespaces.local_name},\n` +

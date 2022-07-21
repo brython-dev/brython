@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-19 18:08:17.359683"
-__BRYTHON__.timestamp=1658246897359
+__BRYTHON__.compiled_date="2022-07-21 18:39:49.535792"
+__BRYTHON__.timestamp=1658421589535
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4327,11 +4327,9 @@ if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
 var t0=new Date().getTime(),has_annotations=true,
-line_info,
 ix,
-filename
-if(typeof src=='object'){var has_annotations=src.has_annotations,line_info=src.line_info ||`1,${locals_id}`
-ix=src.ix,filename=src.filename
+filename,webworker
+if(typeof src=='object'){var has_annotations=src.has_annotations,ix=src.ix,filename=src.filename,webworker=src.webworker
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
@@ -4341,7 +4339,7 @@ dispatch_tokens(root)
 var _ast=root.ast()}
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
-var js_obj=$B.js_from_root(_ast,symtable,filename)
+var js_obj=$B.js_from_root(_ast,symtable,filename,webworker)
 var js_from_ast=js_obj.js
 return{
 _ast,imports:js_obj.imports,to_js:function(){return js_from_ast}}}
@@ -8795,26 +8793,26 @@ for(var key in self){if(! $B.JSObj.__eq__(self[key],other[key])){return false}}
 default:
 return self===other}}
 $B.JSObj.__ne__=function(self,other){return ! $B.JSObj.__eq__(self,other)}
-$B.JSObj.__getattribute__=function(self,attr){var test=false 
-if(test){console.log("__ga__",self,attr)}
-if(attr=="new" && typeof self=="function"){
-if(self.$js_func){return function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new self.$js_func(...args))}}else{return function(){var args=pyargs2jsargs(arguments)
-return $B.JSObj.$factory(new self(...args))}}}
-var js_attr=self[attr]
-if(js_attr==undefined && typeof self=="function" && self.$js_func){js_attr=self.$js_func[attr]}
-if(js_attr===undefined){if(typeof self.getNamedItem=='function'){var res=self.getNamedItem(attr)
+$B.JSObj.__getattribute__=function(_self,attr){var test=false 
+if(test){console.log("__ga__",_self,attr)}
+if(attr=="new" && typeof _self=="function"){
+if(_self.$js_func){return function(){var args=pyargs2jsargs(arguments)
+return $B.JSObj.$factory(new _self.$js_func(...args))}}else{return function(){var args=pyargs2jsargs(arguments)
+return $B.JSObj.$factory(new _self(...args))}}}
+var js_attr=_self[attr]
+if(js_attr==undefined && typeof _self=="function" && _self.$js_func){js_attr=_self.$js_func[attr]}
+if(js_attr===undefined){if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
 if(res !==undefined){return $B.JSObj.$factory(res)}}
-var klass=$B.get_class(self)
+var klass=$B.get_class(_self)
 if(klass && klass[attr]){var class_attr=klass[attr]
-if(typeof class_attr=="function"){return function(){var args=[self]
+if(typeof class_attr=="function"){return function(){var args=[_self]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
-if(attr=="bind" && typeof self.addEventListener=="function"){return function(event,callback){return self.addEventListener(event,callback)}}
-throw $B.attr_error(attr,self)}
-if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=self.$js_func ||self
+if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
+throw $B.attr_error(attr,_self)}
+if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
-console.log("attribute",attr,"of self",self,js_attr,args,arguments)
+console.log("attribute",attr,"of _self",_self,js_attr,args,arguments)
 throw err}
 if(result===undefined){return $B.Undefined}else if(result===null){return _b_.None}
 return $B.JSObj.$factory(result)}
@@ -14829,10 +14827,10 @@ this.value instanceof $B.ast.BinOp ||
 this.value instanceof $B.ast.Attribute){return `value: ${$B.js_from_ast(this.value, scopes)}`}else{compiler_error(this,'patterns may only match literals and attribute lookups')}}
 $B.ast.Module.prototype.to_js=function(scopes){mark_parents(this)
 var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
-var module_id=name,global_name=make_scope_name(scopes)
+var module_id=name,global_name=make_scope_name(scopes),mod_name=module_name(scopes)
 var js=`// Javascript code generated from ast\n`+
 `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
-if(! namespaces){js+=`${global_name} = $B.imported["${module_name(scopes)}"],\nlocals = ${global_name},\n`+
+if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\nlocals = ${global_name},\n`+
 `$top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name},\n`+
 `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`}
