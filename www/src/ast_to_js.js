@@ -991,6 +991,12 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
+    if($B.pep657){
+        return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
+               `'${attr}', ` +
+               `[${this.value.col_offset}, ${this.value.col_offset}, ` +
+               `${this.end_col_offset}])`
+    }
     return `$B.$getattr(${$B.js_from_ast(this.value, scopes)}, ` +
         `'${attr}')`
 }
@@ -1011,7 +1017,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
         var scope = name_scope(this.target.id, scopes)
         if(! scope.found){
             // The left part of the assignment must be an attribute of a
-            // namesapce (global or local), not a call to $B.resolve
+            // namespace (global or local), not a call to $B.resolve
             var left_scope = scope.resolve == 'global' ?
                 make_scope_name(scopes, scopes[0]) : 'locals'
             return `${left_scope}.${this.target.id} = $B.augm_assign(` +
@@ -1058,8 +1064,14 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
     // temporarily support old (py2js.js) and new (python_parser.js) versions
     var name = this.op.$name ? this.op.$name : this.op.constructor.$name
     var op = opclass2dunder[name]
-    return `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
-        `${$B.js_from_ast(this.right, scopes)})`
+    var res = `$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, ` +
+        `${$B.js_from_ast(this.right, scopes)}`
+    if($B.pep657){
+        res += `, [${this.left.col_offset}, ${this.col_offset}, ` +
+               `${this.end_col_offset}, ${this.right.end_col_offset}]`
+       console.log('bin op', res)
+    }
+    return res + ')'
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){
@@ -2376,7 +2388,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
     var module_id = name,
         global_name = make_scope_name(scopes),
         mod_name = module_name(scopes)
-    
+
     var js = `// Javascript code generated from ast\n` +
              `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
@@ -2528,6 +2540,11 @@ $B.ast.Subscript.prototype.to_js = function(scopes){
     if(this.slice instanceof $B.ast.Slice){
         return `$B.getitem_slice(${value}, ${slice})`
     }else{
+        if($B.pep657){
+            return `$B.$getitem(${value}, ${slice}, ` +
+                `[${this.value.col_offset}, ${this.slice.col_offset}, ` +
+                `${this.slice.end_col_offset}])`
+        }
         return `$B.$getitem(${value}, ${slice})`
     }
 }

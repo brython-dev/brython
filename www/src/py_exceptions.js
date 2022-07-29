@@ -743,9 +743,15 @@ function trace_from_stack(err){
                 trace += '    ' + line.trim() + '\n'
             }
             // preliminary for PEP 657
-            if(frame[1].$offset !== undefined){
+            if(err.$position !== undefined){
                 var indent = line.length - line.trimLeft().length
-                trace += '    ' + ' '.repeat((frame[1].$offset[0] - indent)) + '^\n'
+                trace += '    ' + ' '.repeat((err.$position[0] - indent)) +
+                    '~'.repeat(err.$position[1] - err.$position[0]) +
+                    '^'.repeat(err.$position[2] - err.$position[1])
+                if(err.$position[3] !== undefined){
+                    trace += '~'.repeat(err.$position[3] - err.$position[2])
+                }
+                trace += '\n'
             }
         }
     }

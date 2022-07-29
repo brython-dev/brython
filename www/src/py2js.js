@@ -315,6 +315,16 @@ $B.future_features = function(mod, filename){
 
 // Functions used to set position attributes to AST nodes
 function set_position(ast_obj, position, end_position){
+    if(ast_obj instanceof $B.ast.Attribute){
+        if(ast_obj.lineno){
+            console.log('ast obj', ast_obj)
+            console.log('set Attribute position, lineno', ast_obj.lineno,
+                'col offsets', ast_obj.col_offset, ast_obj.end_col_offset)
+            console.log('new col offsets', position.start[1],
+                end_position ? end_position.end[1] : position.end[1])
+            console.debug('/!\ setting position a second time')
+        }
+    }
     ast_obj.lineno = position.start[0]
     ast_obj.col_offset = position.start[1]
     position = end_position || position
@@ -1304,7 +1314,7 @@ $AttrCtx.prototype.ast = function(){
         ctx = new ast.Delete()
     }
     var ast_obj = new ast.Attribute(value, attr, ctx)
-    set_position(ast_obj, this.position)
+    set_position(ast_obj, this.position, this.end_position)
     return ast_obj
 }
 
@@ -1315,10 +1325,11 @@ $AttrCtx.prototype.transition = function(token, value){
         if(name == '__debug__'){
             raise_syntax_error(context, 'cannot assign to __debug__')
         }else if(noassign[name] === true){
-            raise_syntax_error(context) // , `'${name}' cannot be an attribute`)
+            raise_syntax_error(context)
         }
         context.unmangled_name = name
         context.position = $token.value
+        context.end_position = $token.value
         name = $mangle(name, context)
         context.name = name
         return context.parent
@@ -1888,6 +1899,7 @@ var Comprehension = {
     },
     make_comp: function(comp, context){
         comp.comprehension = true
+        comp.position = $token.value
         comp.parent = context.parent
         comp.id = comp.type + $B.UUID()
         var scope = $get_scope(context)
@@ -2688,8 +2700,8 @@ $ExprCtx.prototype.ast = function(){
             this.annotation.tree[0].ast(),
             undefined,
             1)
+        set_position(res, this.position)
     }
-    set_position(res, this.position)
     return res
 }
 
@@ -6247,12 +6259,12 @@ SetCompCtx.prototype.ast = function(){
     // ast.SetComp(elt, generators)
     // elt is the part evaluated for each item
     // generators is a list of comprehensions
-    var res = new ast.SetComp(
+    var ast_obj = new ast.SetComp(
         this.tree[0].ast(),
         Comprehension.generators(this.tree.slice(1))
     )
-    res.lineno = $get_node(this).line_num
-    return res
+    set_position(ast_obj, this.position)
+    return ast_obj
 }
 
 SetCompCtx.prototype.transition = function(token, value){
@@ -6497,7 +6509,7 @@ var $SubCtx = $B.parser.$SubCtx = function(context){
     this.type = 'sub'
     this.func = 'getitem' // set to 'setitem' if assignment
     this.value = context.tree[0]
-    this.position = this.value.position
+    this.position = $token.value // this.value.position
     context.tree.pop()
     context.tree[context.tree.length] = this
     this.parent = context
@@ -6509,7 +6521,7 @@ $SubCtx.prototype.ast = function(){
     if(this.tree.length > 1){
         var slice_items = this.tree.map(x => x.ast())
         slice = new ast.Tuple(slice_items)
-        set_position(slice, this.position)
+        set_position(slice, this.position, this.end_position)
     }else{
         slice = this.tree[0].ast()
     }
@@ -6519,7 +6531,10 @@ $SubCtx.prototype.ast = function(){
         value.ctx = new ast.Load()
     }
     var ast_obj = new ast.Subscript(value, slice, new ast.Load())
-    set_position(ast_obj, this.position)
+    ast_obj.lineno = value.lineno
+    ast_obj.col_offset = value.col_offset
+    ast_obj.end_lineno = slice.end_lineno
+    ast_obj.end_col_offset = slice.end_col_offset
     return ast_obj
 }
 

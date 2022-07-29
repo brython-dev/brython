@@ -494,7 +494,7 @@ function index_error(obj){
     throw _b_.IndexError.$factory(type + " index out of range")
 }
 
-$B.$getitem = function(obj, item){
+$B.$getitem = function(obj, item, position){
     var is_list = Array.isArray(obj) && obj.__class__ === _b_.list,
         is_dict = obj.__class__ === _b_.dict && ! obj.$jsobj
     if(typeof item == "number"){
@@ -548,8 +548,12 @@ $B.$getitem = function(obj, item){
         return gi(obj, item)
     }
 
-    throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
+    var exc = _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
+    if(position){
+        exc.$position = position
+    }
+    throw exc
 }
 
 $B.getitem_slice = function(obj, slice){
@@ -580,6 +584,15 @@ $B.getitem_slice = function(obj, slice){
         }
     }
     return $B.$getattr(obj, "__getitem__")(slice)
+}
+
+$B.$getattr_pep657 = function(obj, attr, position){
+    try{
+        return $B.$getattr(obj, attr)
+    }catch(err){
+        err.$position = position
+        throw err
+    }
 }
 
 // Set list key or slice
@@ -1441,7 +1454,18 @@ $B.rich_comp = function(op, x, y){
 
 var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*"}
 
-$B.rich_op = function(op, x, y){
+$B.rich_op = function(op, x, y, position){
+    try{
+        return $B.rich_op1(op, x, y)
+    }catch(exc){
+        if(position){
+            exc.$position = position
+        }
+        throw exc
+    }
+}
+
+$B.rich_op1 = function(op, x, y){
     var x_class = x.__class__ || $B.get_class(x),
         y_class = y.__class__ || $B.get_class(y),
         rop = '__r' + op.substr(2),
@@ -1500,7 +1524,6 @@ $B.rich_op = function(op, x, y){
         throw _b_.TypeError.$factory(
             `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
             ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
-
     }
     res = method(x, y)
     if(res === _b_.NotImplemented){
