@@ -198,23 +198,23 @@ var DEF_GLOBAL = 1,           /* global stmt */
     DEF_ANNOT = 2<<7,         /* this name is annotated */
     DEF_COMP_ITER = 2<<8     /* this name is a comprehension iteration variable */
 
-function name_reference(name, scopes){
+function name_reference(name, scopes, position){
     var scope = name_scope(name, scopes)
-    return make_ref(name, scopes, scope)
+    return make_ref(name, scopes, scope, position)
 }
 
-function make_ref(name, scopes, scope){
+function make_ref(name, scopes, scope, position){
     if(scope.found){
         return reference(scopes, scope.found, name)
     }else if(scope.resolve == 'all'){
         var scope_names = make_search_namespaces(scopes)
-        return `$B.resolve_in_scopes('${name}', [${scope_names}])`
+        return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`
     }else if(scope.resolve == 'local'){
-        return `$B.resolve_local('${name}')`
+        return `$B.resolve_local('${name}', [${position}])`
     }else if(scope.resolve == 'global'){
         return `$B.resolve_global('${name}')`
     }else if(Array.isArray(scope.resolve)){
-        return `$B.resolve_in_scopes('${name}', [${scope.resolve}])`
+        return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`
     }else if(scope.resolve == 'own_class_name'){
         return `$B.own_class_name('${name}')`
     }
@@ -429,7 +429,7 @@ $B.resolve = function(name){
     throw $B.name_error(name)
 }
 
-$B.resolve_local = function(name){
+$B.resolve_local = function(name, position){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
     var frame = $B.last($B.frames_stack)
@@ -446,11 +446,15 @@ $B.resolve_local = function(name){
             return value
         }
     }
-    throw _b_.UnboundLocalError.$factory(`local variable '${name}' ` +
+    var exc = _b_.UnboundLocalError.$factory(`local variable '${name}' ` +
         'referenced before assignment')
+    if(position){
+        $B.set_exception_offsets(exc, position)
+    }
+    throw exc
 }
 
-$B.resolve_in_scopes = function(name, namespaces){
+$B.resolve_in_scopes = function(name, namespaces, position){
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top
@@ -475,7 +479,11 @@ $B.resolve_in_scopes = function(name, namespaces){
             }
         }
     }
-    throw $B.name_error(name)
+    var exc = $B.name_error(name)
+    if(position){
+        $B.set_exception_offsets(exc, position)
+    }
+    throw exc
 }
 
 $B.resolve_global = function(name){
@@ -1069,7 +1077,6 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
     if($B.pep657){
         res += `, [${this.left.col_offset}, ${this.col_offset}, ` +
                `${this.end_col_offset}, ${this.right.end_col_offset}]`
-       console.log('bin op', res)
     }
     return res + ')'
 }
@@ -1123,9 +1130,12 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
-    var js = '$B.$call(' + $B.js_from_ast(this.func, scopes) + ')'
+    var js = '$B.$call(' + $B.js_from_ast(this.func, scopes)
+    if($B.pep657){
+        js += `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
+    }
     var args = make_args.bind(this)(scopes)
-    return js + (args.has_starred ? `.apply(null, ${args.js})` :
+    return js + ')' + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
 }
 
@@ -2435,7 +2445,7 @@ $B.ast.Name.prototype.to_js = function(scopes){
         }
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
-        var res = name_reference(this.id, scopes)
+        var res = name_reference(this.id, scopes, [this.col_offset, this.col_offset, this.end_col_offset])
         if(this.id == '__debugger__' && res.startsWith('$B.resolve_in_scopes')){
             // Special case : name __debugger__ is translated to Javascript
             // "debugger" if not bound in Brython code

@@ -29,6 +29,13 @@ $B.get_exc = function(){
     return frame[1].$current_exception
 }
 
+$B.set_exception_offsets = function(exc, position){
+    // Used for PEP 657
+    exc.$positions = exc.$positions || {}
+    exc.$positions[$B.frames_stack.length - 1] = position
+    return exc
+}
+
 $B.$raise = function(arg, cause){
     // Used for "raise" without specifying an exception.
     // If there is an exception in the stack, use it, else throw a simple
@@ -729,9 +736,9 @@ function offer_suggestions_for_name_error(exc){
 
 function trace_from_stack(err){
     var trace = ''
-    for(var i = 0, len = err.$stack.length; i < len; i++){
-        var frame = err.$stack[i],
-            lineno = err.$linenos[i],
+    for(var frame_num = 0, len = err.$stack.length; frame_num < len; frame_num++){
+        var frame = err.$stack[frame_num],
+            lineno = err.$linenos[frame_num],
             filename = frame[3].__file__,
             src = $B.file_cache[filename]
             trace += `  File ${filename}, line ${lineno}, in ` +
@@ -743,15 +750,22 @@ function trace_from_stack(err){
                 trace += '    ' + line.trim() + '\n'
             }
             // preliminary for PEP 657
-            if(err.$position !== undefined){
-                var indent = line.length - line.trimLeft().length
-                trace += '    ' + ' '.repeat((err.$position[0] - indent)) +
-                    '~'.repeat(err.$position[1] - err.$position[0]) +
-                    '^'.repeat(err.$position[2] - err.$position[1])
-                if(err.$position[3] !== undefined){
-                    trace += '~'.repeat(err.$position[3] - err.$position[2])
+            if(err.$positions !== undefined){
+                var position = err.$positions[frame_num]
+                console.log(position, line.trim())
+                if(position && (
+                            (position[1] != position[0] ||
+                            (position[2] - position[1]) != line.trim().length ||
+                            position[3]))){
+                    var indent = line.length - line.trimLeft().length
+                    trace += '    ' + ' '.repeat((position[0] - indent)) +
+                        '~'.repeat(position[1] - position[0]) +
+                        '^'.repeat(position[2] - position[1])
+                    if(position[3] !== undefined){
+                        trace += '~'.repeat(position[3] - position[2])
+                    }
+                    trace += '\n'
                 }
-                trace += '\n'
             }
         }
     }

@@ -1542,6 +1542,7 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
     this.func = context.tree[0]
     if(this.func !== undefined){ // undefined for lambda
         this.func.parent = this
+        this.parenth_position = this.position
         this.position = this.func.position
     }
     this.parent = context
@@ -1623,7 +1624,7 @@ $CallCtx.prototype.ast = function(){
             }
         }
     }
-    set_position(res, this.position)
+    set_position(res, this.position, this.end_position)
     return res
 }
 
