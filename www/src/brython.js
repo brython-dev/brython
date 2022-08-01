@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-07-29 10:31:13.776318"
-__BRYTHON__.timestamp=1659083473775
+__BRYTHON__.compiled_date="2022-08-01 08:49:20.847491"
+__BRYTHON__.timestamp=1659336560846
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1132,6 +1132,7 @@ this.type='call'
 this.func=C.tree[0]
 if(this.func !==undefined){
 this.func.parent=this
+this.parenth_position=this.position
 this.position=this.func.position}
 this.parent=C
 if(C.type !='class'){C.tree.pop()
@@ -1158,7 +1159,7 @@ var keyword=new ast.keyword(item.tree[0].value,item.tree[1].ast())
 set_position(keyword,item.position)
 res.keywords.push(keyword)}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error(this,'positional argument follows keyword argument')}else{raise_syntax_error(this,'positional argument follows keyword argument unpacking')}}
 res.args.push(item.ast())}}}
-set_position(res,this.position)
+set_position(res,this.position,this.end_position)
 return res}
 $CallCtx.prototype.transition=function(token,value){var C=this
 switch(token){case ',':
@@ -5423,7 +5424,7 @@ var gi=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__getitem__",_b_.None)
 if(gi !==_b_.None){return gi(obj,item)}
 var exc=_b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")
-if(position){exc.$position=position}
+if(position){$B.set_exception_offsets(exc,position)}
 throw exc}
 $B.getitem_slice=function(obj,slice){var res
 if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
@@ -5436,7 +5437,7 @@ if(res){res.__class__=obj.__class__
 res.__brython__=true
 return res}else{return _b_.list.$getitem(obj,slice)}}
 return $B.$getattr(obj,"__getitem__")(slice)}
-$B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){err.$position=position
+$B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,position)
 throw err}}
 $B.set_list_slice=function(obj,start,stop,value){if(start===null){start=0}else{start=$B.$GetInt(start)
 if(start < 0){start=Math.max(0,start+obj.length)}}
@@ -5531,11 +5532,13 @@ while(1){i++
 try{var elt=f(i)
 if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
 throw err}}}}
-$B.$call=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
+$B.$call=function(callable,position){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
 return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_class){
 return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$in_js_module){
 return function(){var res=callable(...arguments)
-return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){return callable}
+return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
+throw exc}}}
+return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 var $io=$B.make_class("io",function(out){return{
@@ -5745,9 +5748,21 @@ throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}
 var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*"}
-$B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){exc.$position=position}
+$B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,position)}
 throw exc}}
-$B.rich_op1=function(op,x,y){var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),rop='__r'+op.substr(2),method
+$B.rich_op1=function(op,x,y){
+if(typeof x=="number" && typeof y=="number"){var z
+switch(op){case "__add__":
+z=x+y
+break
+case "__sub__":
+z=x-y
+break
+case "__mul__":
+z=x*y
+break}
+if(Number.isSafeInteger(z)){return z}}else if(typeof x=="string" && typeof y=="string" && op=="__add__"){return x+y}
+var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),rop='__r'+op.substr(2),method
 if(x_class===y_class){
 if(x_class===_b_.int){return _b_.int[op](x,y)}else if(x_class===_b_.bool){return(_b_.bool[op]||_b_.int[op])
 (x,y)}
@@ -7341,6 +7356,10 @@ console.log(exc.stack)}
 throw Error(msg)}else{frame[1].$current_exception=$B.exception(exc)}}
 $B.get_exc=function(){var frame=$B.last($B.frames_stack)
 return frame[1].$current_exception}
+$B.set_exception_offsets=function(exc,position){
+exc.$positions=exc.$positions ||{}
+exc.$positions[$B.frames_stack.length-1]=position
+return exc}
 $B.$raise=function(arg,cause){
 var active_exc=$B.get_exc()
 if(arg===undefined){if(active_exc !==undefined){throw active_exc}
@@ -7620,17 +7639,22 @@ if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWi
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
 function trace_from_stack(err){var trace=''
-for(var i=0,len=err.$stack.length;i < len;i++){var frame=err.$stack[i],lineno=err.$linenos[i],filename=frame[3].__file__,src=$B.file_cache[filename]
+for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame[3].__file__,src=$B.file_cache[filename]
 trace+=`  File ${filename}, line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0])+'\n'
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
 if(line){trace+='    '+line.trim()+'\n'}
-if(err.$position !==undefined){var indent=line.length-line.trimLeft().length
-trace+='    '+' '.repeat((err.$position[0]-indent))+
-'~'.repeat(err.$position[1]-err.$position[0])+
-'^'.repeat(err.$position[2]-err.$position[1])
-if(err.$position[3]!==undefined){trace+='~'.repeat(err.$position[3]-err.$position[2])}
-trace+='\n'}}}
+if(err.$positions !==undefined){var position=err.$positions[frame_num]
+console.log(position,line.trim())
+if(position &&(
+(position[1]!=position[0]||
+(position[2]-position[1])!=line.trim().length ||
+position[3]))){var indent=line.length-line.trimLeft().length
+trace+='    '+' '.repeat((position[0]-indent))+
+'~'.repeat(position[1]-position[0])+
+'^'.repeat(position[2]-position[1])
+if(position[3]!==undefined){trace+='~'.repeat(position[3]-position[2])}
+trace+='\n'}}}}
 return trace}
 $B.show_error=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
@@ -13966,10 +13990,10 @@ DEF_FREE_CLASS=2<<5,
 DEF_IMPORT=2<<6,
 DEF_ANNOT=2<<7,
 DEF_COMP_ITER=2<<8 
-function name_reference(name,scopes){var scope=name_scope(name,scopes)
-return make_ref(name,scopes,scope)}
-function make_ref(name,scopes,scope){if(scope.found){return reference(scopes,scope.found,name)}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
-return `$B.resolve_in_scopes('${name}', [${scope_names}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}')`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}')`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
+function name_reference(name,scopes,position){var scope=name_scope(name,scopes)
+return make_ref(name,scopes,scope,position)}
+function make_ref(name,scopes,scope,position){if(scope.found){return reference(scopes,scope.found,name)}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
+return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}')`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
 function local_scope(name,scope){
 var s=scope
 while(true){if(s.locals.has(name)){return{found:true,scope:s}}
@@ -14030,20 +14054,24 @@ if(! checked.has(frame[3])){var v=resolve_in_namespace(name,frame[3])
 if(v.found){return v.value}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
 throw $B.name_error(name)}
-$B.resolve_local=function(name){
+$B.resolve_local=function(name,position){
 var frame=$B.last($B.frames_stack)
 if(frame===undefined){console.log('pas de frame, name',name)}
 if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][name]}}else{var value=frame[1][name]
 if(value !==undefined){return value}}
-throw _b_.UnboundLocalError.$factory(`local variable '${name}' `+
-'referenced before assignment')}
-$B.resolve_in_scopes=function(name,namespaces){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top
+var exc=_b_.UnboundLocalError.$factory(`local variable '${name}' `+
+'referenced before assignment')
+if(position){$B.set_exception_offsets(exc,position)}
+throw exc}
+$B.resolve_in_scopes=function(name,namespaces,position){for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top
 for(var frame of $B.frames_stack.slice().reverse()){if(frame.is_exec_top){exec_top=frame
 break}}
 if(exec_top){for(var ns of[exec_top[1],exec_top[3]]){var v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}}else{var v=resolve_in_namespace(name,ns)
 if(v.found){return v.value}}}
-throw $B.name_error(name)}
+var exc=$B.name_error(name)
+if(position){$B.set_exception_offsets(exc,position)}
+throw exc}
 $B.resolve_global=function(name){
 for(var frame of $B.frames_stack.slice().reverse()){var v=resolve_in_namespace(name,frame[3])
 if(v.found){return v.value}
@@ -14294,8 +14322,7 @@ var op=opclass2dunder[name]
 var res=`$B.rich_op('${op}', ${$B.js_from_ast(this.left, scopes)}, `+
 `${$B.js_from_ast(this.right, scopes)}`
 if($B.pep657){res+=`, [${this.left.col_offset}, ${this.col_offset}, `+
-`${this.end_col_offset}, ${this.right.end_col_offset}]`
-console.log('bin op',res)}
+`${this.end_col_offset}, ${this.right.end_col_offset}]`}
 return res+')'}
 $B.ast.BoolOp.prototype.to_js=function(scopes){
 var op=this.op instanceof $B.ast.And ? '! ' :''
@@ -14313,9 +14340,10 @@ for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For){j
 break}}
 js+=`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){var js='$B.$call('+$B.js_from_ast(this.func,scopes)+')'
+$B.ast.Call.prototype.to_js=function(scopes){var js='$B.$call('+$B.js_from_ast(this.func,scopes)
+if($B.pep657){js+=`, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`}
 var args=make_args.bind(this)(scopes)
-return js+(args.has_starred ? `.apply(null, ${args.js})` :
+return js+')'+(args.has_starred ? `.apply(null, ${args.js})` :
 `(${args.js})`)}
 function make_args(scopes){var js='',named_args=[],named_kwargs=[],starred_kwargs=[],has_starred=false
 for(var arg of this.args){if(arg instanceof $B.ast.Starred){arg.$handled=true
@@ -14888,7 +14916,7 @@ $B.ast.Name.prototype.to_js=function(scopes){if(this.ctx instanceof $B.ast.Store
 var scope=bind(this.id,scopes)
 if(scope===$B.last(scopes)&& scope.freevars.has(this.id)){
 scope.freevars.delete(this.id)}
-return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var res=name_reference(this.id,scopes)
+return reference(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){var res=name_reference(this.id,scopes,[this.col_offset,this.col_offset,this.end_col_offset])
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 return res}}

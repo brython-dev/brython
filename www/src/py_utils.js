@@ -551,7 +551,7 @@ $B.$getitem = function(obj, item, position){
     var exc = _b_.TypeError.$factory("'" + $B.class_name(obj) +
         "' object is not subscriptable")
     if(position){
-        exc.$position = position
+        $B.set_exception_offsets(exc, position)
     }
     throw exc
 }
@@ -590,7 +590,7 @@ $B.$getattr_pep657 = function(obj, attr, position){
     try{
         return $B.$getattr(obj, attr)
     }catch(err){
-        err.$position = position
+        $B.set_exception_offsets(err, position)
         throw err
     }
 }
@@ -846,7 +846,7 @@ $B.$is_member = function(item, _set){
     }
 }
 
-$B.$call = function(callable){
+$B.$call = function(callable, position){
     if(callable.__class__ === $B.method){
         return callable
     }else if(callable.$factory){
@@ -867,6 +867,16 @@ $B.$call = function(callable){
             return res === undefined ? _b_.None : res
         }
     }else if(callable.$is_func || typeof callable == "function"){
+        if(position){
+            return function(){
+                try{
+                    return callable.apply(null, arguments)
+                }catch(exc){
+                    $B.set_exception_offsets(exc, position)
+                    throw exc
+                }
+            }
+        }
         return callable
     }
     try{
@@ -1459,13 +1469,34 @@ $B.rich_op = function(op, x, y, position){
         return $B.rich_op1(op, x, y)
     }catch(exc){
         if(position){
-            exc.$position = position
+            $B.set_exception_offsets(exc, position)
         }
         throw exc
     }
 }
 
 $B.rich_op1 = function(op, x, y){
+    // shortcuts
+    if(typeof x == "number" && typeof y == "number"){
+        var z
+        switch(op){
+            case "__add__":
+                z = x + y
+                break
+            case "__sub__":
+                z = x - y
+                break
+            case "__mul__":
+                z = x * y
+                break
+        }
+        if(Number.isSafeInteger(z)){
+            return z
+        }
+    }else if(typeof x == "string" && typeof y == "string" && op == "__add__"){
+        return x + y
+    }
+
     var x_class = x.__class__ || $B.get_class(x),
         y_class = y.__class__ || $B.get_class(y),
         rop = '__r' + op.substr(2),
