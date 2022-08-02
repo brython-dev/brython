@@ -1477,7 +1477,8 @@ $B.rich_op = function(op, x, y, position){
 
 $B.rich_op1 = function(op, x, y){
     // shortcuts
-    if(typeof x == "number" && typeof y == "number"){
+    if((typeof x == "number" || x instanceof Number) &&
+            (typeof y == "number" || y instanceof Number)){
         var z
         switch(op){
             case "__add__":
@@ -1490,8 +1491,12 @@ $B.rich_op1 = function(op, x, y){
                 z = x * y
                 break
         }
-        if(Number.isSafeInteger(z)){
-            return z
+        if(typeof x == "number" && typeof y == "number"){
+            if(Number.isSafeInteger(z)){
+                return z
+            }
+        }else if(z !== undefined){
+            return new Number(z)
         }
     }else if(typeof x == "string" && typeof y == "string" && op == "__add__"){
         return x + y

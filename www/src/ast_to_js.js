@@ -715,7 +715,10 @@ function init_scopes(type, scopes){
         name = name.replace(/-/g, '_') // issue 1958
     }else if(filename.startsWith('<') && filename.endsWith('>')){
         name = 'exec'
+    }else{
+        name = filename.replace(/\./g, '_')
     }
+
     var top_scope = new Scope(name, `${type}`, this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
     if(block && block.$has_import_star){

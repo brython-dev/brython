@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-01 08:49:20.847491"
-__BRYTHON__.timestamp=1659336560846
+__BRYTHON__.compiled_date="2022-08-02 11:01:57.830636"
+__BRYTHON__.timestamp=1659430917830
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5751,7 +5751,8 @@ var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*"}
 $B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,position)}
 throw exc}}
 $B.rich_op1=function(op,x,y){
-if(typeof x=="number" && typeof y=="number"){var z
+if((typeof x=="number" ||x instanceof Number)&&
+(typeof y=="number" ||y instanceof Number)){var z
 switch(op){case "__add__":
 z=x+y
 break
@@ -5761,7 +5762,7 @@ break
 case "__mul__":
 z=x*y
 break}
-if(Number.isSafeInteger(z)){return z}}else if(typeof x=="string" && typeof y=="string" && op=="__add__"){return x+y}
+if(typeof x=="number" && typeof y=="number"){if(Number.isSafeInteger(z)){return z}}else if(z !==undefined){return new Number(z)}}else if(typeof x=="string" && typeof y=="string" && op=="__add__"){return x+y}
 var x_class=x.__class__ ||$B.get_class(x),y_class=y.__class__ ||$B.get_class(y),rop='__r'+op.substr(2),method
 if(x_class===y_class){
 if(x_class===_b_.int){return _b_.int[op](x,y)}else if(x_class===_b_.bool){return(_b_.bool[op]||_b_.int[op])
@@ -14172,7 +14173,7 @@ return js}
 var exec_num={value:0}
 function init_scopes(type,scopes){
 var filename=scopes.symtable.table.filename,name=$B.url2name[filename]
-if(name){name=name.replace(/-/g,'_')}else if(filename.startsWith('<')&& filename.endsWith('>')){name='exec'}
+if(name){name=name.replace(/-/g,'_')}else if(filename.startsWith('<')&& filename.endsWith('>')){name='exec'}else{name=filename.replace(/\./g,'_')}
 var top_scope=new Scope(name,`${type}`,this),block=scopes.symtable.table.blocks.get(_b_.id(this))
 if(block && block.$has_import_star){top_scope.has_import_star=true}
 scopes.push(top_scope)

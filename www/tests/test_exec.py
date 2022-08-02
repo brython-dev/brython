@@ -176,4 +176,7 @@ except NameError as exc:
         tb = tb.tb_next
     linenos[-1] == 2
 
+# issue 1987
+compile('def aa():pass', 'aa.py', 'exec')
+
 print("passed all tests...")
