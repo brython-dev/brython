@@ -2308,6 +2308,8 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     this.start = $pos
     this.position = $token.value
 
+    this.nb_items = 0
+
     this.parent = context
     this.tree = []
     context.tree[context.tree.length] = this
@@ -2362,7 +2364,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
           case '(':
             return new $CallArgCtx(new $CallCtx(context.parent))
         }
-        return $transition(context.parent,token,value)
+        return $transition(context.parent, token, value)
     }else{
         if(context.expect == ','){
             function check_last(){
@@ -2388,7 +2390,14 @@ $DictOrSetCtx.prototype.transition = function(token, value){
             }
             switch(token) {
                 case '}':
-                    remove_abstract_expr(context.tree)
+                    var last = $B.last(context.tree)
+                    if(last.type == "expr" && last.tree[0].type == "kwd"){
+                        context.nb_items += 2
+                    }else if(last.type == "abstract_expr"){
+                        context.tree.pop()
+                    }else{
+                        context.nb_items++
+                    }
                     check_last()
                     context.end_position = $token.value
                     switch(context.real) {
@@ -2402,12 +2411,14 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                             context.closed = true
                             return context
                         case 'dict':
-                            if($B.last(this.tree).type == 'abstract_expr'){
+                            if($B.last(context.tree).type == 'abstract_expr'){
                                 raise_syntax_error(context,
                                     "expression expected after dictionary key and ':'")
-                            }else if(context.nb_dict_items() % 2 != 0){
-                                raise_syntax_error(context,
-                                    "':' expected after dictionary key")
+                            }else{
+                                if(context.nb_items % 2 != 0){
+                                    raise_syntax_error(context,
+                                        "':' expected after dictionary key")
+                                }
                             }
                             context.items = context.tree
                             context.tree = []
@@ -2417,13 +2428,19 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                       raise_syntax_error(context)
                 case ',':
                     check_last()
+                    var last = $B.last(context.tree)
+                    if(last.type == "expr" && last.tree[0].type == "kwd"){
+                        this.nb_items += 2
+                    }else{
+                        this.nb_items++
+                    }
                     if(context.real == 'dict_or_set'){
                         var last = context.tree[0]
                         context.real = (last.type == 'expr' &&
                             last.tree[0].type == 'kwd') ? 'dict' : 'set'
                     }
                     if(context.real == 'dict' &&
-                            context.nb_dict_items() % 2){
+                            context.nb_items % 2){
                         raise_syntax_error(context,
                             "':' expected after dictionary key")
                     }
@@ -2434,6 +2451,7 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                     }
                     if(context.real == 'dict'){
                         context.expect = 'value'
+                        this.nb_items++
                         context.value_pos = $token.value
                         return context
                     }else{
@@ -2492,18 +2510,6 @@ $DictOrSetCtx.prototype.transition = function(token, value){
         }
         return $transition(context.parent, token, value)
     }
-}
-
-$DictOrSetCtx.prototype.nb_dict_items = function(){
-    var nb = 0
-    for(var item of this.tree){
-        if(item.type == 'expr' && item.tree[0].type == 'kwd'){
-            nb += 2
-        }else{
-            nb++
-        }
-    }
-    return nb
 }
 
 var $DoubleStarArgCtx = $B.parser.$DoubleStarArgCtx = function(context){
@@ -8194,6 +8200,8 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     // parent_scope = the scope where the code is created
     //
     // Returns the Javascript code
+
+    var test = false //locals_id == "items_en"
     $pos = 0
 
     if(typeof module == "object"){
@@ -8205,7 +8213,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
 
     parent_scope = parent_scope || $B.builtins_scope
 
-    var t0 = new Date().getTime(),
+    var t0 = Date.now(),
         has_annotations = true, // determine if __annotations__ is created
         line_info, // set for generator expression
         ix, // used for generator expressions
@@ -8230,7 +8238,13 @@ $B.py2js = function(src, module, locals_id, parent_scope){
                 {src: src, has_annotations: has_annotations,
                     filename: filename},
                 module, locals_id, parent_scope)
+        if(test){
+            console.log('before dispatch tokens', Date.now() - t0)
+        }
         dispatch_tokens(root)
+        if(test){
+            console.log('after dispatch tokens', Date.now() - t0)
+        }
         var _ast = root.ast()
     }
     var future = $B.future_features(_ast, filename)

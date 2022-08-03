@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-02 11:01:57.830636"
-__BRYTHON__.timestamp=1659430917830
+__BRYTHON__.compiled_date="2022-08-03 08:25:34.317686"
+__BRYTHON__.timestamp=1659507934309
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1504,6 +1504,7 @@ this.expect=','
 this.closed=false
 this.start=$pos
 this.position=$token.value
+this.nb_items=0
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
@@ -1524,7 +1525,9 @@ items.push(starred)}else{items.push(item.ast())}}
 ast_obj=new ast.Set(items)}
 set_position(ast_obj,this.position)
 return ast_obj}
-$DictOrSetCtx.prototype.transition=function(token,value){var C=this
+$B.nb_dict_transitions=0
+$DictOrSetCtx.prototype.transition=function(token,value){$B.nb_dict_transitions++
+var C=this
 if(C.closed){switch(token){case '[':
 return new $AbstractExprCtx(new $SubCtx(C.parent),false)
 case '(':
@@ -1537,7 +1540,8 @@ err_msg='cannot use a starred expression in a dictionary value'}else if(C.real==
 raise_syntax_error(C)}
 if(err_msg){raise_syntax_error_known_range(C,last.position,last_position(last),err_msg)}}
 switch(token){case '}':
-remove_abstract_expr(C.tree)
+var last=$B.last(C.tree)
+if(last.type=="expr" && last.tree[0].type=="kwd"){C.nb_items+=2}else if(last.type=="abstract_expr"){C.tree.pop()}else{C.nb_items++}
 check_last()
 C.end_position=$token.value
 switch(C.real){case 'dict_or_set':
@@ -1549,7 +1553,7 @@ C.tree=[]
 C.closed=true
 return C
 case 'dict':
-if($B.last(this.tree).type=='abstract_expr'){raise_syntax_error(C,"expression expected after dictionary key and ':'")}else if(C.nb_dict_items()% 2 !=0){raise_syntax_error(C,"':' expected after dictionary key")}
+if($B.last(C.tree).type=='abstract_expr'){raise_syntax_error(C,"expression expected after dictionary key and ':'")}else{if(C.nb_items % 2 !=0){raise_syntax_error(C,"':' expected after dictionary key")}}
 C.items=C.tree
 C.tree=[]
 C.closed=true
@@ -1557,15 +1561,18 @@ return C}
 raise_syntax_error(C)
 case ',':
 check_last()
+var last=$B.last(C.tree)
+if(last.type=="expr" && last.tree[0].type=="kwd"){this.nb_items+=2}else{this.nb_items++}
 if(C.real=='dict_or_set'){var last=C.tree[0]
 C.real=(last.type=='expr' &&
 last.tree[0].type=='kwd')? 'dict' :'set'}
 if(C.real=='dict' &&
-C.nb_dict_items()% 2){raise_syntax_error(C,"':' expected after dictionary key")}
+C.nb_items % 2){raise_syntax_error(C,"':' expected after dictionary key")}
 return new $AbstractExprCtx(C,false)
 case ':':
 if(C.real=='dict_or_set'){C.real='dict'}
 if(C.real=='dict'){C.expect='value'
+this.nb_items++
 C.value_pos=$token.value
 return C}else{raise_syntax_error(C)}
 case 'for':
@@ -1586,9 +1593,6 @@ return $transition(new $AbstractExprCtx(C,false),token,value)}catch(err){$token.
 raise_syntax_error(C,"expression expected after "+
 "dictionary key and ':'")}}
 return $transition(C.parent,token,value)}}
-$DictOrSetCtx.prototype.nb_dict_items=function(){var nb=0
-for(var item of this.tree){if(item.type=='expr' && item.tree[0].type=='kwd'){nb+=2}else{nb++}}
-return nb}
 var $DoubleStarArgCtx=$B.parser.$DoubleStarArgCtx=function(C){
 this.type='double_star_arg'
 this.parent=C
@@ -4332,11 +4336,12 @@ if(src.endsWith("\\")&& ! src.endsWith("\\\\")){}
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope){
+var test=false 
 $pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
-var t0=new Date().getTime(),has_annotations=true,
+var t0=Date.now(),has_annotations=true,
 line_info,
 ix,
 filename
@@ -4347,7 +4352,9 @@ var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
 if($B.parser_to_ast){var _ast=new $B.Parser(src,filename).parse('file')}else{var root=$create_root_node(
 {src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope)
+if(test){console.log('before dispatch tokens',Date.now()-t0)}
 dispatch_tokens(root)
+if(test){console.log('after dispatch tokens',Date.now()-t0)}
 var _ast=root.ast()}
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
@@ -9019,6 +9026,7 @@ for(var i=0,len=kk.length;i < len;i++){console.log(kk[i])
 if(kk[i].charAt(0)=="$"){console.log(eval(kk[i]))}}
 console.log("---")}
 function run_py(module_contents,path,module,compiled){
+var t0=Date.now()
 $B.file_cache[path]=module_contents
 $B.url2name[path]=module.__name__
 var root,js,mod_name=module.__name__ 
