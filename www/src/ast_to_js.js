@@ -1417,21 +1417,12 @@ $B.ast.Constant.prototype.to_js = function(scopes){
             return `_b_.Ellipsis`
         case 'str':
             var lines = value.split('\n')
-            lines = lines.map(line => line.replace(/\\/g, '\\\\'))
+            // lines = lines.map(line => line.replace(/\\/g, '\\\\'))
             value = lines.join('\\n\\\n')
             value = value.replace(new RegExp('\r', 'g'), '\\r').
                           replace(new RegExp('\t', 'g'), '\\t').
                           replace(new RegExp('\x07', 'g'), '\\x07')
-
-
-            if(value.indexOf("'") == -1){
-                return `$B.String('${value}')`
-            }else if(value.indexOf('"') == -1){
-                return `$B.String("${value}")`
-            }else{
-                value = value.replace(new RegExp("'", "g"), "\\'")
-                return `$B.String('${value}')`
-            }
+            return `$B.String(${value})`
     }
     console.log('unknown constant', this, value, value === true)
     return '// unknown'

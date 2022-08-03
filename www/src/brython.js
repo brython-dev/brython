@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-03 08:25:34.317686"
-__BRYTHON__.timestamp=1659507934309
+__BRYTHON__.compiled_date="2022-08-03 15:38:57.521184"
+__BRYTHON__.timestamp=1659533937521
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1511,9 +1511,8 @@ C.tree[C.tree.length]=this}
 $DictOrSetCtx.prototype.ast=function(){
 var ast_obj
 if(this.real=='dict'){var keys=[],values=[]
-for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].type !=='expr'){console.log('not an expr',this,i)
-alert()}
-if(this.items[i].type=='expr' &&
+var t0=Date.now()
+for(var i=0,len=this.items.length;i < len;i++){if(this.items[i].type=='expr' &&
 this.items[i].tree[0].type=='kwd'){keys.push(_b_.None)
 values.push(this.items[i].tree[0].tree[0].ast())}else{keys.push(this.items[i].ast())
 values.push(this.items[i+1].ast())
@@ -1525,9 +1524,7 @@ items.push(starred)}else{items.push(item.ast())}}
 ast_obj=new ast.Set(items)}
 set_position(ast_obj,this.position)
 return ast_obj}
-$B.nb_dict_transitions=0
-$DictOrSetCtx.prototype.transition=function(token,value){$B.nb_dict_transitions++
-var C=this
+$DictOrSetCtx.prototype.transition=function(token,value){var C=this
 if(C.closed){switch(token){case '[':
 return new $AbstractExprCtx(new $SubCtx(C.parent),false)
 case '(':
@@ -1562,12 +1559,11 @@ raise_syntax_error(C)
 case ',':
 check_last()
 var last=$B.last(C.tree)
-if(last.type=="expr" && last.tree[0].type=="kwd"){this.nb_items+=2}else{this.nb_items++}
+if(last.type=="expr" && last.tree[0].type=="kwd"){C.nb_items+=2}else{C.nb_items++}
 if(C.real=='dict_or_set'){var last=C.tree[0]
 C.real=(last.type=='expr' &&
 last.tree[0].type=='kwd')? 'dict' :'set'}
-if(C.real=='dict' &&
-C.nb_items % 2){raise_syntax_error(C,"':' expected after dictionary key")}
+if(C.real=='dict' && C.nb_items % 2){raise_syntax_error(C,"':' expected after dictionary key")}
 return new $AbstractExprCtx(C,false)
 case ':':
 if(C.real=='dict_or_set'){C.real='dict'}
@@ -2409,7 +2405,7 @@ this.$pos=$pos}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
 var state
 for(var item of this.tree){if(item instanceof $StringCtx){if(state=='string'){
-$B.last(res.values).value+=eval(item.value)}else{var item_ast=new ast.Constant(eval(item.value))
+$B.last(res.values).value+=' + '+item.value}else{var item_ast=new ast.Constant(item.value)
 set_position(item_ast,item.position)
 res.values.push(item_ast)}
 state='string'}else{var conv_num={a:97,r:114,s:115},format=item.elt.format
@@ -2432,8 +2428,8 @@ C.parent.tree[0]=C
 return new $CallCtx(C.parent)
 case 'str':
 if(C.tree.length > 0 &&
-typeof $B.last(C.tree)=="string"){C.tree[C.tree.length-1]=
-$B.last(C.tree)+eval(value)}else{new $StringCtx(this,value)}
+$B.last(C.tree).type=="str"){C.tree[C.tree.length-1].value+=
+' + '+value}else{new $StringCtx(this,value)}
 return C
 case 'JoinedStr':
 var joined_expr=new JoinedStrCtx(C.parent,value)
@@ -3607,14 +3603,13 @@ function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
 return value}
 this.is_bytes=value.charAt(0)=='b'
-if(! this.is_bytes){this.value=prepare(value)}else{this.value=prepare(value.substr(1))}
+if(! this.is_bytes){this.value=value }else{this.value=prepare(value.substr(1))}
 C.tree.push(this)
 this.tree=[this.value]
 this.raw=false
 this.$pos=$pos}
-$StringCtx.prototype.ast=function(){var value
-if(! this.is_bytes){try{value=eval(this.value)}catch(err){console.log('error str ast',this.value)
-throw err}}else{value=_b_.bytes.$new(_b_.bytes,eval(this.value),'ISO-8859-1')}
+$StringCtx.prototype.ast=function(){var value=this.value
+if(! this.is_bytes){}else{value=_b_.bytes.$new(_b_.bytes,eval(this.value),'ISO-8859-1')}
 var ast_obj=new ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
@@ -3633,7 +3628,7 @@ return C
 case 'JoinedStr':
 C.parent.tree.pop()
 var joined_str=new JoinedStrCtx(C.parent,value)
-if(typeof joined_str.tree[0]=="string"){joined_str.tree[0]=eval(this.value)+joined_str.tree[0]}else{joined_str.tree.splice(0,0,this)}
+if(typeof joined_str.tree[0].value=="string"){joined_str.tree[0].value=this.value+' + '+joined_str.tree[0].value}else{joined_str.tree.splice(0,0,this)}
 return joined_str}
 return $transition(C.parent,token,value)}
 var $SubCtx=$B.parser.$SubCtx=function(C){
@@ -4355,7 +4350,8 @@ if($B.parser_to_ast){var _ast=new $B.Parser(src,filename).parse('file')}else{var
 if(test){console.log('before dispatch tokens',Date.now()-t0)}
 dispatch_tokens(root)
 if(test){console.log('after dispatch tokens',Date.now()-t0)}
-var _ast=root.ast()}
+var _ast=root.ast()
+if(test){console.log('afetr ast()',Date.now()-t0)}}
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root(_ast,symtable,filename)
@@ -9026,7 +9022,6 @@ for(var i=0,len=kk.length;i < len;i++){console.log(kk[i])
 if(kk[i].charAt(0)=="$"){console.log(eval(kk[i]))}}
 console.log("---")}
 function run_py(module_contents,path,module,compiled){
-var t0=Date.now()
 $B.file_cache[path]=module_contents
 $B.url2name[path]=module.__name__
 var root,js,mod_name=module.__name__ 
@@ -14468,13 +14463,11 @@ case 'ellipsis':
 return `_b_.Ellipsis`
 case 'str':
 var lines=value.split('\n')
-lines=lines.map(line=> line.replace(/\\/g,'\\\\'))
 value=lines.join('\\n\\\n')
 value=value.replace(new RegExp('\r','g'),'\\r').
 replace(new RegExp('\t','g'),'\\t').
 replace(new RegExp('\x07','g'),'\\x07')
-if(value.indexOf("'")==-1){return `$B.String('${value}')`}else if(value.indexOf('"')==-1){return `$B.String("${value}")`}else{value=value.replace(new RegExp("'","g"),"\\'")
-return `$B.String('${value}')`}}
+return `$B.String(${value})`}
 console.log('unknown constant',this,value,value===true)
 return '// unknown'}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}

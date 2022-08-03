@@ -2321,11 +2321,8 @@ $DictOrSetCtx.prototype.ast = function(){
     if(this.real == 'dict'){
         var keys = [],
             values = []
+        var t0 = Date.now()
         for(var i = 0, len = this.items.length; i < len; i++){
-            if(this.items[i].type !== 'expr'){
-                console.log('not an expr', this, i)
-                alert()
-            }
             if(this.items[i].type == 'expr' &&
                     this.items[i].tree[0].type == 'kwd'){
                 keys.push(_b_.None)
@@ -2430,17 +2427,16 @@ $DictOrSetCtx.prototype.transition = function(token, value){
                     check_last()
                     var last = $B.last(context.tree)
                     if(last.type == "expr" && last.tree[0].type == "kwd"){
-                        this.nb_items += 2
+                        context.nb_items += 2
                     }else{
-                        this.nb_items++
+                        context.nb_items++
                     }
                     if(context.real == 'dict_or_set'){
                         var last = context.tree[0]
                         context.real = (last.type == 'expr' &&
                             last.tree[0].type == 'kwd') ? 'dict' : 'set'
                     }
-                    if(context.real == 'dict' &&
-                            context.nb_items % 2){
+                    if(context.real == 'dict' && context.nb_items % 2){
                         raise_syntax_error(context,
                             "':' expected after dictionary key")
                     }
@@ -4176,9 +4172,9 @@ JoinedStrCtx.prototype.ast = function(){
         if(item instanceof $StringCtx){
             if(state == 'string'){
                 // eg in "'ab' f'c{x}'"
-                $B.last(res.values).value += eval(item.value)
+                $B.last(res.values).value += ' + ' + item.value
             }else{
-                var item_ast = new ast.Constant(eval(item.value))
+                var item_ast = new ast.Constant(item.value)
                 set_position(item_ast, item.position)
                 res.values.push(item_ast)
             }
@@ -4218,9 +4214,9 @@ JoinedStrCtx.prototype.transition = function(token, value){
             return new $CallCtx(context.parent)
         case 'str':
             if(context.tree.length > 0 &&
-                    typeof $B.last(context.tree) == "string"){
-                context.tree[context.tree.length - 1] =
-                    $B.last(context.tree) + eval(value)
+                    $B.last(context.tree).type == "str"){
+                context.tree[context.tree.length - 1].value +=
+                    ' + ' + value
             }else{
                 new $StringCtx(this, value)
             }
@@ -6450,7 +6446,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
 
     this.is_bytes = value.charAt(0) == 'b'
     if(! this.is_bytes){
-        this.value = prepare(value)
+        this.value = value // prepare(value)
     }else{
         this.value = prepare(value.substr(1))
     }
@@ -6461,15 +6457,8 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
 }
 
 $StringCtx.prototype.ast = function(){
-    var value
-    if(! this.is_bytes){
-        try{
-            value =  eval(this.value)
-        }catch(err){
-            console.log('error str ast', this.value)
-            throw err
-        }
-    }else{
+    var value = this.value
+    if(this.is_bytes){
         value = _b_.bytes.$new(_b_.bytes, eval(this.value), 'ISO-8859-1')
     }
     var ast_obj = new ast.Constant(value)
@@ -6501,8 +6490,8 @@ $StringCtx.prototype.transition = function(token, value){
             // replace by a new JoinedStr where the first value is this
             context.parent.tree.pop()
             var joined_str = new JoinedStrCtx(context.parent, value)
-            if(typeof joined_str.tree[0] == "string"){
-                joined_str.tree[0] = eval(this.value) + joined_str.tree[0]
+            if(typeof joined_str.tree[0].value == "string"){
+                joined_str.tree[0].value = this.value + ' + ' + joined_str.tree[0].value
             }else{
                 joined_str.tree.splice(0, 0, this)
             }
@@ -8201,7 +8190,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     //
     // Returns the Javascript code
 
-    var test = false //locals_id == "items_en"
+    var test = false // locals_id == "items_en"
     $pos = 0
 
     if(typeof module == "object"){
@@ -8246,6 +8235,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
             console.log('after dispatch tokens', Date.now() - t0)
         }
         var _ast = root.ast()
+        if(test){
+            console.log('afetr ast()', Date.now() - t0)
+        }
+
     }
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
