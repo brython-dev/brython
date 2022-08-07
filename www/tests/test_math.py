@@ -1,6 +1,6 @@
 import math
 
-from tester import assertRaises
+from tester import assertRaises, assert_raises
 
 def almost_equal(actual, expected):
     return abs(actual - expected) < 0.00001
@@ -286,5 +286,9 @@ expected = [-62.208243223652396,
 for x, r in zip(args, expected):
     assert math.isclose(math.lgamma(x), r)
 
+# issue 1989
+assert_raises(ValueError, math.log, 0, msg="math domain error")
+assert_raises(ValueError, math.log10, 0, msg="math domain error")
+assert_raises(ValueError, math.log2, 0, msg="math domain error")
 
 print("passed all tests..")

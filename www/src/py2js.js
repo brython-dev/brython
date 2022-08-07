@@ -6256,7 +6256,6 @@ $ReturnCtx.prototype.transition = function(token, value){
         // "return" must be transformed into "return None"
         this.tree.pop()
     }
-    console.log('return', token, value)
     return $transition(new $AbstractExprCtx(context.parent, false),
         token, value)
 }

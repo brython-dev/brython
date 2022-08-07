@@ -1008,6 +1008,9 @@ function log(x, base){
         var x1 = float_check(x),
             log = Math.log(x1)
     }
+    if(x1 == 0){
+        throw _b_.ValueError.$factory("math domain error")
+    }
     if(base === _b_.None){return log}
     return _b_.float.$factory(log / Math.log(float_check(base)))
 }
@@ -1032,6 +1035,9 @@ function log2(x){
     if(_b_.isinstance(x, $B.long_int)){
         return $B.long_int.$log2(x)
     }
+    if(x == 0){
+        throw _b_.ValueError.$factory("math domain error")
+    }
     if(isNaN(x)){return _b_.float.$factory('nan')}
     if(_b_.float.$funcs.isninf(x)) {throw _b_.ValueError.$factory('')}
     var x1 = float_check(x)
@@ -1042,6 +1048,9 @@ function log2(x){
 function log10(x){
     $B.check_nb_args('log10', 1, arguments)
     $B.check_no_kw('log10', x)
+    if(x == 0){
+        throw _b_.ValueError.$factory("math domain error")
+    }
     if(_b_.isinstance(x, $B.long_int)){
         return $B.long_int.$log10(x)
     }
