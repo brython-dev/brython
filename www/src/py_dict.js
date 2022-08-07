@@ -1123,8 +1123,8 @@ dict.values = function(self){
 dict.$factory = function(){
     var res = dict.__new__(dict)
     var args = [res]
-    for(var i = 0, len = arguments.length; i < len ; i++){
-        args.push(arguments[i])
+    for(var arg of arguments){
+        args.push(arg)
     }
     dict.__init__.apply(null, args)
     return res

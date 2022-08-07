@@ -327,7 +327,7 @@ function fnv(p){
     return x
 }
 
-str.__hash__ = function(_self) {
+str.__hash__ = function(_self){
     if(str_hash_cache[_self] !== undefined){
         return str_hash_cache[_self]
     }
