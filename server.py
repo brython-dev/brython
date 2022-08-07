@@ -109,8 +109,11 @@ class CompressedHandler(CGIHTTPRequestHandler):
         ctype = CGIHTTPRequestHandler.guess_type(self, path)
         # I had the case where the mimetype associated with .js in the Windows
         # registery was text/plain...
-        if os.path.splitext(path)[1] == ".js":
+        ext = os.path.splitext(path)[1]
+        if ext == ".js":
             ctype = "application/javascript"
+        elif ext == '.wasm':
+            ctype = "application/wasm"
         return ctype
 
     def translate_path(self, path):
