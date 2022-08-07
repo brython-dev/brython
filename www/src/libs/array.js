@@ -60,7 +60,7 @@ array.__getitem__ = function(self, key){
     if(self.obj && self.obj[key] !== undefined){
         return self.obj[key]
     }
-    throw _b_.IndexError("array index out of range")
+    throw _b_.IndexError.$factory("array index out of range")
 }
 
 var array_iterator = $B.make_iterator_class("array_iterator")
@@ -70,6 +70,30 @@ array.__iter__ = function(self){
 
 array.__len__ = function(self){
     return self.obj === null ? 0 : self.obj.length
+}
+
+array.__mul__ = function(self, nb){
+    if(typeof nb == "number" || _b_.isinstance(nb, _b_.int)){
+        var t = [],
+            copy = self.obj.slice()
+        for(var i = 0; i < nb; i++){
+            t = t.concat(copy)
+        }
+        return {
+            __class__: array,
+            typecode: self.typecode,
+            obj: t
+        }
+    }
+    throw _b_.ValueError.$factory("cannot multiply array by " +
+        $B.class_name(nb))
+}
+
+array.__setitem__ = function(_self, index, value){
+    if(_self.obj[index] === undefined){
+        throw _b_.IndexError.$factory("array index out of range")
+    }
+    _self.obj[index] = value
 }
 
 array.__str__ = function(self){
