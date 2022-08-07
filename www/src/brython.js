@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-03 15:38:57.521184"
-__BRYTHON__.timestamp=1659533937521
+__BRYTHON__.compiled_date="2022-08-07 15:09:26.664807"
+__BRYTHON__.timestamp=1659877766656
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -881,7 +881,17 @@ default:
 raise_syntax_error(C)}
 break
 case '.':
+case 'assert':
+case 'break':
+case 'class':
+case 'continue':
+case 'def':
+case 'except':
 case 'for':
+case 'while':
+case 'in':
+case 'return':
+case 'try':
 raise_syntax_error(C)}
 return $transition(C.parent,token,value)}
 var $AliasCtx=$B.parser.$AliasCtx=function(C){
@@ -3501,7 +3511,8 @@ $ReturnCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol' && this.tree.length==1 &&
 this.tree[0].type=='abstract_expr'){
 this.tree.pop()}
-return $transition(C.parent,token)}
+console.log('return',token,value)
+return $transition(new $AbstractExprCtx(C.parent,false),token,value)}
 var SetCompCtx=function(C){
 this.type='setcomp'
 this.tree=[C.tree[0]]
@@ -3609,7 +3620,7 @@ this.tree=[this.value]
 this.raw=false
 this.$pos=$pos}
 $StringCtx.prototype.ast=function(){var value=this.value
-if(! this.is_bytes){}else{value=_b_.bytes.$new(_b_.bytes,eval(this.value),'ISO-8859-1')}
+if(this.is_bytes){value=_b_.bytes.$new(_b_.bytes,eval(this.value),'ISO-8859-1')}
 var ast_obj=new ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
@@ -12240,7 +12251,7 @@ it.dict_version=self.$version
 return it}
 dict.$factory=function(){var res=dict.__new__(dict)
 var args=[res]
-for(var i=0,len=arguments.length;i < len ;i++){args.push(arguments[i])}
+for(var arg of arguments){args.push(arg)}
 dict.__init__.apply(null,args)
 return res}
 _b_.dict=dict

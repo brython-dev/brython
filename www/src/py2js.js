@@ -1042,7 +1042,17 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             }
             break
         case '.':
+        case 'assert':
+        case 'break':
+        case 'class':
+        case 'continue':
+        case 'def':
+        case 'except':
         case 'for':
+        case 'while':
+        case 'in':
+        case 'return':
+        case 'try':
             raise_syntax_error(context)
     }
     return $transition(context.parent, token, value)
@@ -6246,7 +6256,9 @@ $ReturnCtx.prototype.transition = function(token, value){
         // "return" must be transformed into "return None"
         this.tree.pop()
     }
-    return $transition(context.parent, token)
+    console.log('return', token, value)
+    return $transition(new $AbstractExprCtx(context.parent, false),
+        token, value)
 }
 
 var SetCompCtx = function(context){
