@@ -1390,6 +1390,14 @@ $B.ast.Constant.prototype.to_js = function(scopes){
             value = this.value
     }else if(this.value.__class__ === _b_.bytes){
         return `_b_.bytes.$factory([${this.value.source}])`
+    }else if(typeof this.value == "number"){
+        return this.value
+    }else if(this.value.__class__ === $B.long_int){
+        return `$B.fast_long_int('${this.value.value}', ${this.value.pos})`
+    }else if(this.value instanceof Number){
+        return `new Number(${this.value})`
+    }else if(this.value.__class__ === _b_.complex){
+        return `$B.make_complex(${this.value.$real}, ${this.value.$imag})`
     }else{
         var type = this.value.type,
             value = this.value.value

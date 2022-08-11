@@ -778,8 +778,10 @@ function $$eval(src, _globals, _locals){
             js = js_obj.js
     }catch(err){
         if(err.args){
-            var lineno = err.args[1][1]
-            exec_locals.$lineno = lineno
+            if(err.args[1]){
+                var lineno = err.args[1][1]
+                exec_locals.$lineno = lineno
+            }
         }else{
             console.log('JS Error', err.message)
         }

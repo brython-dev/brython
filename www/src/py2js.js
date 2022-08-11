@@ -315,16 +315,6 @@ $B.future_features = function(mod, filename){
 
 // Functions used to set position attributes to AST nodes
 function set_position(ast_obj, position, end_position){
-    if(ast_obj instanceof $B.ast.Attribute){
-        if(ast_obj.lineno){
-            console.log('ast obj', ast_obj)
-            console.log('set Attribute position, lineno', ast_obj.lineno,
-                'col offsets', ast_obj.col_offset, ast_obj.end_col_offset)
-            console.log('new col offsets', position.start[1],
-                end_position ? end_position.end[1] : position.end[1])
-            console.debug('/!\ setting position a second time')
-        }
-    }
     ast_obj.lineno = position.start[0]
     ast_obj.col_offset = position.start[1]
     position = end_position || position
@@ -4989,6 +4979,23 @@ var $NumberCtx = $B.parser.$NumberCtx = function(type, context, value){
 
 $NumberCtx.prototype.ast = function(){
     var ast_obj = new ast.Constant({type: this.type, value: this.value})
+    if(this.type == 'int'){
+        var value = parseInt(this.value[1], this.value[0])
+        if(! Number.isSafeInteger(value)){
+            value = $B.long_int.$factory(this.value[1], this.value[0])
+        }
+        ast_obj.value = value
+    }else if(this.type == 'float'){
+        ast_obj.value = new Number(this.value)
+    }else if(this.type == 'imaginary'){
+        var imag = {
+            type: this.value.type,
+            value: this.value.value,
+            position: this.position
+        }
+        var imag_value = $NumberCtx.prototype.ast.bind(imag)().value
+        ast_obj.value = $B.make_complex(0, imag_value)
+    }
     set_position(ast_obj, this.position)
     return ast_obj
 }

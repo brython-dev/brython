@@ -42,6 +42,7 @@ def discover_brython_test_modules():
           ("issues.py", "issues")
         ]),
         ("Modules", [
+          ("test_ast.py", "ast"),
           ("test_aio.py", "browser.aio"),
           ("test_ajax.py", "browser.ajax"),
           ("test_highlight.py", "browser.highlight"),
