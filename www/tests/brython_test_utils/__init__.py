@@ -151,7 +151,7 @@ def run(src, file_path=None):
     except Exception as exc:
         #msg = traceback.format_exc()
         #print(msg, file=sys.stderr)
-        console.log('exc in run', exc.args)
+        console.log('exc in run', getattr(exc, 'args', None))
         trace_exc(sys._getframe())
         state = 0
     t1 = time.perf_counter()
