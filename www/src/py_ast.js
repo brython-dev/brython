@@ -251,10 +251,10 @@ $B.create_python_ast_classes = function(){
                 }
             }
             cls.__mro__ = [$B.AST, _b_.object]
+            cls.__module__ = 'ast'
             return cls
         })(klass)
     }
-    console.log('Constant', $B.python_ast_classes.Constant + '')
 }
 
 // Map operators to ast type (BinOp, etc.) and name (Add, etc.)

@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-11 15:23:20.827019"
-__BRYTHON__.timestamp=1660224200827
+__BRYTHON__.compiled_date="2022-08-13 11:04:03.065110"
+__BRYTHON__.timestamp=1660381443065
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -466,8 +466,8 @@ __class__:cls,value :$B.AST.$convert(value)}}}
 if(_fields){cls._fields=_fields}
 if(raw_fields){for(var field of raw_fields){if(field.endsWith('?')){cls[field.substr(0,field.length-1)]=_b_.None}}}
 cls.__mro__=[$B.AST,_b_.object]
-return cls})(klass)}
-console.log('Constant',$B.python_ast_classes.Constant+'')}
+cls.__module__='ast'
+return cls})(klass)}}
 var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__)
 ;
@@ -6260,6 +6260,8 @@ $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
+if($.source.__class__ && $.source.__class__.__module__=='ast'){$._ast=_ast
+return $}
 if($B.parser_to_ast){var _ast=new $B.Parser($.source,filename).parse('file'),future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,$.filename)
 if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
 return _ast}}else{var root=$B.parser.$create_root_node(

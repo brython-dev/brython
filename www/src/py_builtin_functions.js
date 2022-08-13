@@ -403,6 +403,11 @@ function compile() {
         }
     }
 
+    if($.source.__class__ && $.source.__class__.__module__ == 'ast'){
+        $._ast = _ast
+        return $
+    }
+
     if($B.parser_to_ast){
         var _ast = new $B.Parser($.source, filename).parse('file'),
             future = $B.future_features(_ast, filename),
