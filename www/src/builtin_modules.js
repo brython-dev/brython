@@ -364,6 +364,7 @@
     $B.UndefinedType.__repr__ = function(self){
         return "<Javascript undefined>"
     }
+    $B.UndefinedType.__str__ = $B.UndefinedType.__repr__;
 
     $B.Undefined = {__class__: $B.UndefinedType}
 
