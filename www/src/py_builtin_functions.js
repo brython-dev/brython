@@ -404,7 +404,10 @@ function compile() {
     }
 
     if($.source.__class__ && $.source.__class__.__module__ == 'ast'){
-        $._ast = _ast
+        // compile an ast instance
+        $B.imported._ast._validate($.source)
+        $._ast = $.source
+        delete $.source
         return $
     }
 
@@ -415,7 +418,9 @@ function compile() {
             js_obj = $B.js_from_root(_ast, symtable, $.filename)
         if($.flags == $B.PyCF_ONLY_AST){
             delete $B.url2name[filename]
-            return _ast
+            var res = $B.ast_js_to_py(_ast)
+            res.$js_ast = _ast
+            return res
         }
     }else{
         var root = $B.parser.$create_root_node(
@@ -446,15 +451,19 @@ function compile() {
         var js_obj = $B.js_from_root(_ast, symtable, filename)
 
         if($.flags == $B.PyCF_ONLY_AST){
-            $B.create_python_ast_classes() // in py_ast
+            $B.create_python_ast_classes() // in py_ast.js
             var klass = _ast.constructor.$name
-            return $B.python_ast_classes[klass].$factory(_ast)
+            // Transform _ast (JS version) into a Python ast instance
+            var res = $B.ast_js_to_py(_ast) // in py_ast.js
+            res.$js_ast = _ast
+            return res
         }
     }
     delete $B.url2name[filename]
     // Set attribute ._ast to avoid compiling again if result is passed to
     // exec()
-    $._ast = _ast
+    $._ast = $B.ast_js_to_py(_ast)
+    $._ast.$js_ast = _ast
     return $
 }
 
@@ -759,6 +768,11 @@ function $$eval(src, _globals, _locals){
 
     if(src.__class__ === code){
         _ast = src._ast
+        if(_ast.$js_ast){
+            _ast = _ast.$js_ast
+        }else{
+            _ast = $B.ast_py_to_js(_ast)
+        }
     }
 
     try{

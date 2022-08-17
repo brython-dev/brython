@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-13 11:04:03.065110"
-__BRYTHON__.timestamp=1660381443065
+__BRYTHON__.compiled_date="2022-08-17 13:35:51.444553"
+__BRYTHON__.timestamp=1660736151444
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -446,25 +446,39 @@ try{eval(js)}catch(err){console.log('error',js)
 throw err}
 ast[kl].$name=kl
 if(typeof args=="string"){ast[kl]._fields=args.split(',')}}
-function ast_js_to_py(obj){if(obj===undefined){return _b_.None}else if(Array.isArray(obj)){return obj.map(ast_js_to_py)}else{var class_name=obj.constructor.$name,py_class=$B.python_ast_classes[class_name],py_ast_obj={__class__:py_class}
+$B.ast_js_to_py=function(obj){$B.create_python_ast_classes()
+if(obj===undefined){return _b_.None}else if(Array.isArray(obj)){return obj.map($B.ast_js_to_py)}else{var class_name=obj.constructor.$name,py_class=$B.python_ast_classes[class_name],py_ast_obj={__class__:py_class}
 if(py_class===undefined){return obj}
-for(var field of py_class._fields){py_ast_obj[field]=ast_js_to_py(obj[field])}
+for(var field of py_class._fields){py_ast_obj[field]=$B.ast_js_to_py(obj[field])}
 py_ast_obj._attributes=$B.fast_tuple([])
 for(var loc of['lineno','col_offset','end_lineno','end_col_offset']){if(obj[loc]!==undefined){py_ast_obj[loc]=obj[loc]
 py_ast_obj._attributes.push(loc)}}
 return py_ast_obj}}
+$B.ast_py_to_js=function(obj){if(obj===undefined ||obj===_b_.None){return undefined}else if(Array.isArray(obj)){return obj.map($B.ast_py_to_js)}else if(typeof obj=="string"){return obj}else{var class_name=obj.__class__.$infos.__name__,js_class=$B.ast[class_name]
+if(js_class===undefined){return obj}
+var js_ast_obj=new js_class()
+for(var field of js_class._fields){if(field.endsWith('?')||field.endsWith('*')){field=field.substr(0,field.length-1)}
+js_ast_obj[field]=$B.ast_py_to_js(obj[field])}
+for(var loc of['lineno','col_offset','end_lineno','end_col_offset']){if(obj[loc]!==undefined){js_ast_obj[loc]=obj[loc]}}
+return js_ast_obj}}
 $B.create_python_ast_classes=function(){if($B.python_ast_classes){return}
 $B.python_ast_classes={}
 for(var klass in $B.ast_classes){$B.python_ast_classes[klass]=(function(kl){var _fields,raw_fields
-if(typeof $B.ast_classes[kl]=="string"){if($B.ast_classes[kl]==''){_fields=[]}else{var raw_fields=$B.ast_classes[kl].split(',')
+if(typeof $B.ast_classes[kl]=="string"){if($B.ast_classes[kl]==''){raw_fields=_fields=[]}else{raw_fields=$B.ast_classes[kl].split(',')
 _fields=raw_fields.map(x=>
 (x.endsWith('*')||x.endsWith('?'))?
 x.substr(0,x.length-1):x)}}
-var cls=$B.make_class(kl,ast_js_to_py)
-if(klass==="Constant"){cls.$factory=function(value){return{
-__class__:cls,value :$B.AST.$convert(value)}}}
+var cls=$B.make_class(kl),$defaults={},slots={},nb_args=0
+if(raw_fields){for(var i=0,len=_fields.length;i < len;i++){var f=_fields[i],rf=raw_fields[i]
+nb_args++
+slots[f]=null
+if(rf.endsWith('*')){$defaults[f]=[]}else if(rf.endsWith('?')){$defaults[f]=_b_.None}}}
+cls.$factory=function(){var $=$B.args(klass,nb_args,$B.clone(slots),Object.keys(slots),arguments,$B.clone($defaults),null,'kw')
+var res={__class__:cls,_attributes:$B.fast_tuple([])}
+for(var key in $){if(key=='kw'){for(var key in $.kw.$string_dict){res[key]=$.kw.$string_dict[key][0]}}else{res[key]=$[key]}}
+if(klass=="Constant"){res.value=$B.AST.$convert($.value)}
+return res}
 if(_fields){cls._fields=_fields}
-if(raw_fields){for(var field of raw_fields){if(field.endsWith('?')){cls[field.substr(0,field.length-1)]=_b_.None}}}
 cls.__mro__=[$B.AST,_b_.object]
 cls.__module__='ast'
 return cls})(klass)}}
@@ -6260,11 +6274,16 @@ $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
-if($.source.__class__ && $.source.__class__.__module__=='ast'){$._ast=_ast
+if($.source.__class__ && $.source.__class__.__module__=='ast'){
+$B.imported._ast._validate($.source)
+$._ast=$.source
+delete $.source
 return $}
 if($B.parser_to_ast){var _ast=new $B.Parser($.source,filename).parse('file'),future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,$.filename)
 if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
-return _ast}}else{var root=$B.parser.$create_root_node(
+var res=$B.ast_js_to_py(_ast)
+res.$js_ast=_ast
+return res}}else{var root=$B.parser.$create_root_node(
 {src:$.source,filename},module_name,module_name)
 root.mode=$.mode
 root.parent_block=$B.builtins_scope
@@ -6284,9 +6303,12 @@ delete $B.url2name[filename]
 var js_obj=$B.js_from_root(_ast,symtable,filename)
 if($.flags==$B.PyCF_ONLY_AST){$B.create_python_ast_classes()
 var klass=_ast.constructor.$name
-return $B.python_ast_classes[klass].$factory(_ast)}}
+var res=$B.ast_js_to_py(_ast)
+res.$js_ast=_ast
+return res}}
 delete $B.url2name[filename]
-$._ast=_ast
+$._ast=$B.ast_js_to_py(_ast)
+$._ast.$js_ast=_ast
 return $}
 var __debug__=$B.debug > 0
 function delattr(obj,attr){
@@ -6392,7 +6414,8 @@ top_frame.is_exec_top=true
 exec_locals.$f_trace=$B.enter_frame(top_frame)
 exec_locals.$lineno=1
 var filename='<string>',_ast
-if(src.__class__===code){_ast=src._ast}
+if(src.__class__===code){_ast=src._ast
+if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
 try{if($B.parser_to_ast){if(! _ast){_ast=new $B.Parser(src,filename).parse(mode=='eval' ? 'eval' :'file')}}else{if(! _ast){var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
 root.mode=mode
 root.filename=filename
@@ -10376,8 +10399,7 @@ if(klass===undefined){return $B.JSObj.__str__($B.JSObj.$factory(arg))}
 var method=$B.$getattr(klass ,"__str__",null)
 if(method===null ||
 (arg.__class__ && arg.__class__ !==_b_.object &&
-method===_b_.object.__str__)){var method=$B.$getattr(klass,"__repr__")}}
-catch(err){console.log("no __str__ for",arg)
+method===_b_.object.__str__)){var method=$B.$getattr(klass,"__repr__")}}catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
@@ -13737,6 +13759,7 @@ $B.UndefinedType=$B.make_class("UndefinedType",function(){return $B.Undefined}
 $B.UndefinedType.__mro__=[_b_.object]
 $B.UndefinedType.__bool__=function(self){return false}
 $B.UndefinedType.__repr__=function(self){return "<Javascript undefined>"}
+$B.UndefinedType.__str__=$B.UndefinedType.__repr__;
 $B.Undefined={__class__:$B.UndefinedType}
 $B.set_func_names($B.UndefinedType,"javascript")
 var super_class=$B.make_class("JavascriptSuper",function(){

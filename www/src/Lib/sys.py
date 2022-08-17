@@ -2,6 +2,9 @@
 from _sys import *
 import javascript
 
+class Error(Exception):
+    pass
+
 _getframe = Getframe
 
 abiflags = 0 # required in sysconfig

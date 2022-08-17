@@ -10,3 +10,9 @@ assert ast.unparse(module) == """def f():
 
 assert module.__class__.__module__ == 'ast'
 compile(module, filename="<ast>", mode="exec")
+
+node = ast.UnaryOp(ast.USub(), ast.Constant(5, lineno=0, col_offset=0),
+                   lineno=0, col_offset=0)
+
+assert node.operand.value == 5
+assert node.operand.lineno == 0

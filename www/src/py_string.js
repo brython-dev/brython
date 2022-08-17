@@ -2582,8 +2582,7 @@ str.$factory = function(arg, encoding, errors){
                 method === _b_.object.__str__)){
             var method = $B.$getattr(klass, "__repr__")
         }
-    }
-    catch(err){
+    }catch(err){
         console.log("no __str__ for", arg)
         console.log("err ", err)
         if($B.debug > 1){console.log(err)}
