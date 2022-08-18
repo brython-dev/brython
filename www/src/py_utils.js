@@ -1227,17 +1227,14 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
-var min_int = Math.pow(-2, 53), max_int = Math.pow(2, 53) - 1
+var min_int = Math.pow(-2, 53), 
+    max_int = Math.pow(2, 53) - 1
 
-$B.is_safe_int = function(){
-    for(var i = 0; i < arguments.length; i++){
-        var arg = arguments[i]
-        if((typeof arg != "number") || isNaN(arg) ||
-                (arg < min_int || arg > max_int)){
-            return false
-        }
-    }
-    return true
+$B.is_safe_int = function(arg){
+    return typeof arg == "number" &&
+           Number.isInteger(arg) &&
+           arg > min_int &&
+           arg < max_int
 }
 
 $B.add = function(x, y){

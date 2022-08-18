@@ -700,4 +700,9 @@ assert int('-0b010', 0) == -2
 assert int('-0o010', 0) == -8
 assert int('-0x010', 0) == -16
 
+# issue 1994
+x = 0
+x += 0.5
+assert x == abs(x), (x, abs(x))
+
 print('passed all tests...')

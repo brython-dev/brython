@@ -98,7 +98,7 @@ function __build_class__(){
 function abs(obj){
     check_nb_args('abs', 1, arguments)
     check_no_kw('abs', obj)
-
+    
     if(isinstance(obj, _b_.int)){
         if(obj.__class__ === $B.long_int){
             return {
