@@ -1276,8 +1276,13 @@ function $UnicodeDecodeError(encoding, position){
         "' codec can't decode bytes in position " + position)
 }
 
-function _hex(_int){return _int.toString(16)}
-function _int(hex){return parseInt(hex, 16)}
+function _hex(_int){
+    var h = _int.toString(16)
+    return '0x' + '0'.repeat(2 - h.length) + h
+}
+function _int(hex){
+    return parseInt(hex, 16)
+}
 
 function normalise(encoding){
     var enc = encoding.toLowerCase()
@@ -1506,7 +1511,15 @@ var decode = $B.decode = function(obj, encoding, errors){
               console.log(b, encoding, "error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
-          return to_unicode[enc](obj)[0]
+          var decoded = to_unicode[enc](obj)[0]
+          for(var i = 0, len = decoded.length; i < len; i++){
+              if(decoded.codePointAt(i) == 0xfffe){
+                  throw _b_.UnicodeDecodeError.$factory("'charmap' codec " +
+                      `can't decode byte ${_hex(b[i])} in position ${i}: ` +
+                      "character maps to <undefined>")
+              }
+          }
+          return decoded
     }
     return s
 }
