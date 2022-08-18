@@ -2026,27 +2026,6 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes){
                 $B.last(this.names))
         }
     }
-    if(this.level == 0){
-        module = this.module
-    }else{
-        var scope = last_scope(scopes),
-            parts = scope.name.split('.')
-        if(this.level > parts.length){
-            return `throw _b_.ImportError.$factory(` +
-                `"Parent module '' not loaded, cannot perform relative import")`
-        }
-        for(var i = 0; i < this.level - 1; i++){
-            parts.pop()
-        }
-        var top_module = $B.imported[parts.join('.')]
-        if(top_module && ! top_module.$is_package){
-            parts.pop()
-        }
-        var module = parts.join('.')
-        if(this.module){
-            module += '.' + this.module
-        }
-    }
 
     var js = `$B.set_lineno(locals, ${this.lineno})\n` +
              `var module = $B.$import_from("${this.module || ''}", `

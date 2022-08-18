@@ -1191,7 +1191,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         if(prefix && p == ""){
             // Move up in package hierarchy
             elt = norm_parts.pop()
-            if (elt === undefined) {
+            if(elt === undefined){
                 throw _b_.ImportError.$factory("Parent module '' not loaded, "+
                     "cannot perform relative import")
             }
@@ -1342,10 +1342,7 @@ $B.$import_from = function(module, names, aliases, level, locals){
                 parts.pop()
                 current_module = $B.imported[parts.join('.')]
             }
-        }else{
-            parts.pop()
         }
-        level--
         while(level > 0){
             var current_module = $B.imported[parts.join('.')]
             if(! current_module.$is_package){

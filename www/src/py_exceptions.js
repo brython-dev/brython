@@ -752,7 +752,6 @@ function trace_from_stack(err){
             // preliminary for PEP 657
             if(err.$positions !== undefined){
                 var position = err.$positions[frame_num]
-                console.log(position, line.trim())
                 if(position && (
                             (position[1] != position[0] ||
                             (position[2] - position[1]) != line.trim().length ||

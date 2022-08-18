@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-17 13:35:51.444553"
-__BRYTHON__.timestamp=1660736151444
+__BRYTHON__.compiled_date="2022-08-18 11:08:43.610846"
+__BRYTHON__.timestamp=1660813723610
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7692,7 +7692,6 @@ trace+=`  File ${filename}, line ${lineno}, in `+
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
 if(line){trace+='    '+line.trim()+'\n'}
 if(err.$positions !==undefined){var position=err.$positions[frame_num]
-console.log(position,line.trim())
 if(position &&(
 (position[1]!=position[0]||
 (position[2]-position[1])!=line.trim().length ||
@@ -8302,7 +8301,8 @@ function $UnicodeEncodeError(encoding,code_point,position){throw _b_.UnicodeEnco
 " in position "+position)}
 function $UnicodeDecodeError(encoding,position){throw _b_.UnicodeDecodeError.$factory("'"+encoding+
 "' codec can't decode bytes in position "+position)}
-function _hex(_int){return _int.toString(16)}
+function _hex(_int){var h=_int.toString(16)
+return '0x'+'0'.repeat(2-h.length)+h}
 function _int(hex){return parseInt(hex,16)}
 function normalise(encoding){var enc=encoding.toLowerCase()
 if(enc.substr(0,7)=="windows"){enc="cp"+enc.substr(7)}
@@ -8404,7 +8404,11 @@ break
 default:
 try{load_decoder(enc)}catch(err){console.log(b,encoding,"error load_decoder",err)
 throw _b_.LookupError.$factory("unknown encoding: "+enc)}
-return to_unicode[enc](obj)[0]}
+var decoded=to_unicode[enc](obj)[0]
+for(var i=0,len=decoded.length;i < len;i++){if(decoded.codePointAt(i)==0xfffe){throw _b_.UnicodeDecodeError.$factory("'charmap' codec "+
+`can't decode byte ${_hex(b[i])} in position ${i}: `+
+"character maps to <undefined>")}}
+return decoded}
 return s}
 var encode=$B.encode=function(){var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
 var t=[],pos=0,enc=normalise(encoding)
@@ -9487,8 +9491,7 @@ if(current_module===undefined){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
 if(! current_module.$is_package){if(parts.length==1){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}else{parts.pop()
-current_module=$B.imported[parts.join('.')]}}else{parts.pop()}
-level--
+current_module=$B.imported[parts.join('.')]}}
 while(level > 0){var current_module=$B.imported[parts.join('.')]
 if(! current_module.$is_package){throw _b_.ImportError.$factory(
 'attempted relative import with no known parent package')}
@@ -14782,14 +14785,6 @@ for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=t
 js+=`locals, true)\n`}
 return js.trimRight()}
 $B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
-if(this.level==0){module=this.module}else{var scope=last_scope(scopes),parts=scope.name.split('.')
-if(this.level > parts.length){return `throw _b_.ImportError.$factory(`+
-`"Parent module '' not loaded, cannot perform relative import")`}
-for(var i=0;i < this.level-1;i++){parts.pop()}
-var top_module=$B.imported[parts.join('.')]
-if(top_module && ! top_module.$is_package){parts.pop()}
-var module=parts.join('.')
-if(this.module){module+='.'+this.module}}
 var js=`$B.set_lineno(locals, ${this.lineno})\n`+
 `var module = $B.$import_from("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
