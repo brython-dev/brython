@@ -123,8 +123,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-18 18:43:26.601202"
-__BRYTHON__.timestamp=1660841006601
+__BRYTHON__.compiled_date="2022-08-18 18:56:44.924527"
+__BRYTHON__.timestamp=1660841804924
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10146,7 +10146,7 @@ if(unicode_tables.Ll[cp]){has_cased=true
 continue}else if(unicode_tables.Lu[cp]||unicode_tables.Lt[cp]){return false}}
 return has_cased}
 str.isnumeric=function(){
-var $=$B.args("isnumeric",1,{self:null},["self"],arguments,{},null,null),_self=to_string(self)
+var $=$B.args("isnumeric",1,{self:null},["self"],arguments,{},null,null),_self=to_string($.self)
 for(var char of to_chars(_self)){if(! unicode_tables.numeric[_b_.ord(char)]){return false}}
 return _self.length > 0}
 var unprintable={},unprintable_gc=['Cc','Cf','Co','Cs','Zl','Zp','Zs']

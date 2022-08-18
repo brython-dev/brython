@@ -450,4 +450,7 @@ assert 'a' * -1 == ''
 # PR 1911
 assert 'abc'.startswith('b', 1)
 
+# issue 1995
+assert '5'.isnumeric()
+
 print("passed all tests...")

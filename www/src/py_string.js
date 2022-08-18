@@ -1795,7 +1795,7 @@ str.isnumeric = function(){
     Numeric_Type=Decimal or Numeric_Type=Numeric.*/
     var $ = $B.args("isnumeric", 1, {self: null}, ["self"],
             arguments, {}, null, null),
-        _self = to_string(self)
+        _self = to_string($.self)
     for(var char of to_chars(_self)){
         if(! unicode_tables.numeric[_b_.ord(char)]){
             return false
