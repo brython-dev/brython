@@ -2590,7 +2590,12 @@ str.$factory = function(arg, encoding, errors){
             "default to toString", arg)
         throw err
     }
-    return $B.$call(method)(arg)
+    var res = $B.$call(method)(arg)
+    if(typeof res == "string" || _b_.isinstance(res, str)){
+        return res
+    }
+    throw _b_.TypeError.$factory("__str__ returned non-string " +
+        `(type ${$B.class_name(res)})`)
 }
 
 

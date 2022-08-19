@@ -1001,7 +1001,7 @@ $B.make_iterator_class = function(name){
 }
 
 function $err(op, klass, other){
-    var msg = "unsupported operand type(s) for " + op + " : '" +
+    var msg = "unsupported operand type(s) for " + op + ": '" +
         klass.$infos.__name__ + "' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
@@ -1426,7 +1426,7 @@ $B.rich_op1 = function(op, x, y){
             if(err.__class__ === _b_.AttributeError){
                 var kl_name = $B.class_name(x)
                 throw _b_.TypeError.$factory("unsupported operand type(s) " +
-                    "for " + opname2opsign[op] + " : '" + kl_name + "' and '" +
+                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
                     kl_name + "'")
             }
             throw err
@@ -1464,7 +1464,7 @@ $B.rich_op1 = function(op, x, y){
             return res
         }
         throw _b_.TypeError.$factory(
-            `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
+            `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
             ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
     }
     res = method(x, y)
@@ -1477,13 +1477,13 @@ $B.rich_op1 = function(op, x, y){
                 throw err
             }
             throw _b_.TypeError.$factory(
-                `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
+                `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
                 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
         }
         res = method(y, x)
         if(res === _b_.NotImplemented){
             throw _b_.TypeError.$factory(
-                `unsupported operand type(s) for '${$B.method_to_op[op]}' :` +
+                `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
                 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)
         }
         return res

@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-19 09:36:27.058666"
-__BRYTHON__.timestamp=1660894587058
+__BRYTHON__.compiled_date="2022-08-19 09:50:24.926113"
+__BRYTHON__.timestamp=1660895424926
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5610,7 +5610,7 @@ return item}
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
-function $err(op,klass,other){var msg="unsupported operand type(s) for "+op+" : '"+
+function $err(op,klass,other){var msg="unsupported operand type(s) for "+op+": '"+
 klass.$infos.__name__+"' and '"+$B.class_name(other)+"'"
 throw _b_.TypeError.$factory(msg)}
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
@@ -5776,7 +5776,7 @@ if(x_class===_b_.int){return _b_.int[op](x,y)}else if(x_class===_b_.bool){return
 (x,y)}
 try{method=$B.$call($B.$getattr(x_class,op))}catch(err){if(err.__class__===_b_.AttributeError){var kl_name=$B.class_name(x)
 throw _b_.TypeError.$factory("unsupported operand type(s) "+
-"for "+opname2opsign[op]+" : '"+kl_name+"' and '"+
+"for "+opname2opsign[op]+": '"+kl_name+"' and '"+
 kl_name+"'")}
 throw err}
 return method(x,y)}
@@ -5791,16 +5791,16 @@ method=$B.$getattr(x_class,op)}catch(err){if(err.__class__ !==_b_.AttributeError
 res=$B.$call($B.$getattr(y,rop))(x)
 if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory(
-`unsupported operand type(s) for '${$B.method_to_op[op]}' :`+
+`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
 res=method(x,y)
 if(res===_b_.NotImplemented){try{var reflected=$B.$getattr(y,rop),method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
 throw _b_.TypeError.$factory(
-`unsupported operand type(s) for '${$B.method_to_op[op]}' :`+
+`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
 res=method(y,x)
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(
-`unsupported operand type(s) for '${$B.method_to_op[op]}' :`+
+`unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
 return res}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
@@ -10380,7 +10380,10 @@ if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
 "default to toString",arg)
 throw err}
-return $B.$call(method)(arg)}
+var res=$B.$call(method)(arg)
+if(typeof res=="string" ||_b_.isinstance(res,str)){return res}
+throw _b_.TypeError.$factory("__str__ returned non-string "+
+`(type ${$B.class_name(res)})`)}
 $B.set_func_names(str,"builtins")
 _b_.str=str
 $B.parse_format_spec=function(spec){if(spec==""){this.empty=true}else{var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))

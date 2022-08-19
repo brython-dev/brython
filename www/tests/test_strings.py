@@ -1,5 +1,5 @@
 # strings
-from tester import assertRaises
+from tester import assertRaises, assert_raises
 
 assert 'a'.__class__ == str
 assert isinstance('a', str)
@@ -237,7 +237,8 @@ assert 'xyz'.maketrans('abc', 'def', 'abd') == {97: None, 98: None, 99: 102,
 assert str() == ""
 
 # issue 1231
-assertRaises(TypeError, sum, ['a', 'b'], '')
+assert_raises(TypeError, sum, ['a', 'b'],
+    msg="unsupported operand type(s) for +: 'int' and 'str'")
 
 # issue 1256
 assert "\U00000065" == "e"
@@ -452,5 +453,13 @@ assert 'abc'.startswith('b', 1)
 
 # issue 1995
 assert '5'.isnumeric()
+
+# issue 1997
+class A:
+    def __repr__(self):
+        return 1
+
+assert_raises(TypeError, str, A(),
+    msg="__str__ returned non-string (type int)")
 
 print("passed all tests...")
