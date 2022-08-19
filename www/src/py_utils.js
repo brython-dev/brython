@@ -1227,133 +1227,42 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
-var min_int = Math.pow(-2, 53), 
+var min_int = Math.pow(-2, 53),
     max_int = Math.pow(2, 53) - 1
 
 $B.is_safe_int = function(arg){
     return typeof arg == "number" &&
-           Number.isInteger(arg) &&
-           arg > min_int &&
-           arg < max_int
+           Number.isSafeInteger(arg)
 }
 
 $B.add = function(x, y){
-    if(x.valueOf && typeof x.valueOf() == "number" &&
-            y.valueOf && typeof y.valueOf() == "number"){
-        if(typeof x == "number" && typeof y == "number"){
-            // ints
-            var z = x + y
-            if(z < $B.max_int && z > $B.min_int){
-                return z
-            }else if(z === Infinity){
-                return _b_.float.$factory("inf")
-            }else if(z === -Infinity){
-                return _b_.float.$factory("-inf")
-            }else if(isNaN(z)){
-                return _b_.float.$factory('nan')
-            }
-            return $B.long_int.__add__($B.long_int.$factory(x),
-                $B.long_int.$factory(y))
-        }else{
-            // floats
-            return new Number(x + y)
-        }
-    }else if (typeof x == "string" && typeof y == "string"){
-        // strings
-        return x + y
-    }
-    try{
-        var method = $B.$getattr(x.__class__ || $B.get_class(x), "__add__")
-    }catch(err){
-        if(err.__class__ === _b_.AttributeError){
-            throw _b_.TypeError.$factory("unsupported operand type(s) for " +
-                "+: '" + $B.class_name(x) +"' and '" + $B.class_name(y) + "'")
-        }
-        throw err
-    }
-    var res = $B.$call(method)(x, y)
-    if(res === _b_.NotImplemented){ // issue 1309
-        return $B.rich_op("__add__", x, y)
-    }
-    return res
+    return $B.rich_op('__add__', x, y)
+}
+
+$B.mul = function(x, y){
+    return $B.rich_op('__mul__', x, y)
+}
+
+$B.sub = function(x, y){
+    return $B.rich_op('__sub__', x, y)
 }
 
 $B.eq = function(x, y){
-    if(x > min_int && x < max_int && y > min_int && y < max_int){return x == y}
+    if(Number.isSafeInteger(x) && Number.isSafeInteger(y)){
+        return x == y
+    }
     return $B.long_int.__eq__($B.long_int.$factory(x), $B.long_int.$factory(y))
 }
 
 $B.floordiv = function(x, y){
     var z = x / y
-    if(x > min_int && x < max_int && y > min_int && y < max_int
-        && z > min_int && z < max_int){return Math.floor(z)}
-    else{
+    if(Number.isSafeInteger(x) &&
+            Number.isSafeInteger(y) &&
+            Number.isSafeInteger(z)){
+        return Math.floor(z)
+    }else{
         return $B.long_int.__floordiv__($B.long_int.$factory(x),
             $B.long_int.$factory(y))
-    }
-}
-
-$B.mul = function(x, y){
-    var z = (typeof x != "number" || typeof y != "number") ?
-            new Number(x * y) : x * y
-    if(x > min_int && x < max_int && y > min_int && y < max_int
-        && z > min_int && z < max_int){return z}
-    else if((typeof x == "number" || x.__class__ === $B.long_int)
-            && (typeof y == "number" || y.__class__ === $B.long_int)){
-        if((typeof x == "number" && isNaN(x)) ||
-                (typeof y == "number" && isNaN(y))){
-            return _b_.float.$factory("nan")
-        }
-        switch(x){
-            case Infinity:
-            case -Infinity:
-                if(y == 0){
-                    return _b_.float.$factory("nan")
-                }else{
-                    return y > 0 ? x : -x
-                }
-        }
-        return $B.long_int.__mul__($B.long_int.$factory(x),
-            $B.long_int.$factory(y))
-    }else{return z}
-}
-
-$B.sub = function(x, y){
-    if(x instanceof Number && y instanceof Number){
-        return x - y
-    }
-    var z = (typeof x != "number" || typeof y != "number") ?
-                new Number(x - y) : x - y
-    if(x > min_int && x < max_int && y > min_int && y < max_int
-            && z > min_int && z < max_int){
-        return z
-    }else if((typeof x == "number" || x.__class__  === $B.long_int)
-            && (typeof y == "number" || y.__class__ === $B.long_int)){
-        if(typeof x == "number" && typeof y == "number"){
-            if(isNaN(x) || isNaN(y)){
-                return _b_.float.$factory("nan")
-            }else if(x === Infinity || x === -Infinity){
-                if(y === x){
-                    return _b_.float.$factory("nan")
-                }else{
-                    return x
-                }
-            }else if(y === Infinity || y === -Infinity){
-                if(y === x){
-                    return _b_.float.$factory("nan")
-                }else{
-                    return -y
-                }
-            }
-        }
-        if((typeof x == "number" && isNaN(x)) ||
-                (typeof y == "number" && isNaN(y))){
-            return _b_.float.$factory("nan")
-        }
-        return $B.long_int.__sub__($B.long_int.$factory(x),
-            $B.long_int.$factory(y))
-    }else{
-        return z
     }
 }
 
