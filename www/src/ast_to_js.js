@@ -718,7 +718,7 @@ function init_scopes(type, scopes){
     }else{
         name = filename.replace(/\./g, '_')
     }
-
+    
     var top_scope = new Scope(name, `${type}`, this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
     if(block && block.$has_import_star){
@@ -2383,7 +2383,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
     var js = `// Javascript code generated from ast\n` +
              `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `${global_name} = $B.imported["${mod_name}"],\nlocals = ${global_name},\n` +
+        js += `${global_name} = $B.imported["${mod_name}"],\n` +
+              `locals = ${global_name},\n` +
               `$top_frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         js += `locals = ${namespaces.local_name},\n` +

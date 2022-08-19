@@ -304,16 +304,40 @@ $B.has_file = function(file){
 }
 
 // Can be used in Javascript programs to run Python code
+var py2js_magic = Math.random().toString(36).substr(2, 8)
 $B.python_to_js = function(src, script_id){
-    $B.parse_options()
-    $B.meta_path = $B.$meta_path.slice()
-    if(!$B.use_VFS){$B.meta_path.shift()}
-    if(script_id === undefined){script_id = "__main__"}
+    /*
 
-    var root = __BRYTHON__.py2js({src, filename: '<string>'}, script_id, script_id, __BRYTHON__.builtins_scope),
+    Meant to be used in a Javascript program to execute Python code
+
+    Returns JS source code that, when executed, returns the globals object for
+    the Python program
+
+    Example:
+
+        var ns = eval(__BRYTHON__.python_to_js("x = 1 + 2"))
+        console.log(ns.x) // 3
+
+    */
+    if(! $B.options_parsed){
+        // parse options so that imports succeed
+        $B.parse_options()
+        $B.meta_path = $B.$meta_path.slice()
+        if(!$B.use_VFS){$B.meta_path.shift()}
+    }
+
+    // fake names
+    var filename = '$python_to_js'
+    $B.url2name[filename] = '$python_to_js'
+    $B.imported.$python_to_js = {}
+
+    var root = __BRYTHON__.py2js({src, filename},
+                                 script_id, script_id, 
+                                 __BRYTHON__.builtins_scope),
         js = root.to_js()
 
-    js = "(function() {\n var $locals_" + script_id + " = {}\n" + js + "\n}())"
+    js = "(function() {\n" + js + "\nreturn locals}())"
+
     return js
 }
 

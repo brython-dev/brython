@@ -97,7 +97,7 @@ def populate_testmod_input(elem, selected=None):
 
 def trace_exc(run_frame):
     exc_type, exc_value, traceback = sys.exc_info()
-    
+
     this_frame = sys._getframe()
 
     def show_line(filename, lineno):
@@ -151,7 +151,10 @@ def run(src, file_path=None):
     except Exception as exc:
         #msg = traceback.format_exc()
         #print(msg, file=sys.stderr)
-        console.log('exc in run', getattr(exc, 'args', None))
+        console.log('exc in run',
+            getattr(exc, 'args', None),
+            getattr(exc, '__class__', None),
+            getattr(exc, 'message', None))
         trace_exc(sys._getframe())
         state = 0
     t1 = time.perf_counter()

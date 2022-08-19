@@ -108,12 +108,17 @@ $B.files=$B.files ||{}
 for(var file in files){$B.files[file]=files[file]}}
 $B.has_file=function(file){
 return($B.files && $B.files.hasOwnProperty(file))}
-$B.python_to_js=function(src,script_id){$B.parse_options()
+var py2js_magic=Math.random().toString(36).substr(2,8)
+$B.python_to_js=function(src,script_id){
+if(! $B.options_parsed){
+$B.parse_options()
 $B.meta_path=$B.$meta_path.slice()
-if(!$B.use_VFS){$B.meta_path.shift()}
-if(script_id===undefined){script_id="__main__"}
-var root=__BRYTHON__.py2js({src,filename:'<string>'},script_id,script_id,__BRYTHON__.builtins_scope),js=root.to_js()
-js="(function() {\n var $locals_"+script_id+" = {}\n"+js+"\n}())"
+if(!$B.use_VFS){$B.meta_path.shift()}}
+var filename='$python_to_js'
+$B.url2name[filename]='$python_to_js'
+$B.imported.$python_to_js={}
+var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope),js=root.to_js()
+js="(function() {\n"+js+"\nreturn locals}())"
 return js}
 _window.py=function(src){
 var root=$B.py2js(src[0],"script","script"),js=root.to_js()
@@ -123,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-18 18:56:44.924527"
-__BRYTHON__.timestamp=1660841804924
+__BRYTHON__.compiled_date="2022-08-19 09:36:27.058666"
+__BRYTHON__.timestamp=1660894587058
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4359,7 +4364,6 @@ if(typeof src=="object"){root.is_comp=src.is_comp
 root.filename=src.filename
 src=src.src}
 src=src.replace(/\r\n/gm,"\n")
-if(src.endsWith("\\")&& ! src.endsWith("\\\\")){}
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope){
@@ -4441,6 +4445,7 @@ var filetype=e.hreflang
 if(filetype){if(filetype.slice(0,2)=='x-'){filetype=filetype.slice(2)}
 _importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
+$B.options_parsed=true
 return options}
 if(!($B.isWebWorker ||$B.isNode)){var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
 observer.observe(document.documentElement,{childList:true,subtree:true});}
@@ -5698,49 +5703,16 @@ frame[1].$current_exception=undefined
 return _b_.None}
 var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
 $B.is_safe_int=function(arg){return typeof arg=="number" &&
-Number.isInteger(arg)&&
-arg > min_int &&
-arg < max_int}
-$B.add=function(x,y){if(x.valueOf && typeof x.valueOf()=="number" &&
-y.valueOf && typeof y.valueOf()=="number"){if(typeof x=="number" && typeof y=="number"){
-var z=x+y
-if(z < $B.max_int && z > $B.min_int){return z}else if(z===Infinity){return _b_.float.$factory("inf")}else if(z===-Infinity){return _b_.float.$factory("-inf")}else if(isNaN(z)){return _b_.float.$factory('nan')}
-return $B.long_int.__add__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{
-return new Number(x+y)}}else if(typeof x=="string" && typeof y=="string"){
-return x+y}
-try{var method=$B.$getattr(x.__class__ ||$B.get_class(x),"__add__")}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
-"+: '"+$B.class_name(x)+"' and '"+$B.class_name(y)+"'")}
-throw err}
-var res=$B.$call(method)(x,y)
-if(res===_b_.NotImplemented){
-return $B.rich_op("__add__",x,y)}
-return res}
-$B.eq=function(x,y){if(x > min_int && x < max_int && y > min_int && y < max_int){return x==y}
+Number.isSafeInteger(arg)}
+$B.add=function(x,y){return $B.rich_op('__add__',x,y)}
+$B.mul=function(x,y){return $B.rich_op('__mul__',x,y)}
+$B.sub=function(x,y){return $B.rich_op('__sub__',x,y)}
+$B.eq=function(x,y){if(Number.isSafeInteger(x)&& Number.isSafeInteger(y)){return x==y}
 return $B.long_int.__eq__($B.long_int.$factory(x),$B.long_int.$factory(y))}
 $B.floordiv=function(x,y){var z=x/y
-if(x > min_int && x < max_int && y > min_int && y < max_int
-&& z > min_int && z < max_int){return Math.floor(z)}
-else{return $B.long_int.__floordiv__($B.long_int.$factory(x),$B.long_int.$factory(y))}}
-$B.mul=function(x,y){var z=(typeof x !="number" ||typeof y !="number")?
-new Number(x*y):x*y
-if(x > min_int && x < max_int && y > min_int && y < max_int
-&& z > min_int && z < max_int){return z}
-else if((typeof x=="number" ||x.__class__===$B.long_int)
-&&(typeof y=="number" ||y.__class__===$B.long_int)){if((typeof x=="number" && isNaN(x))||
-(typeof y=="number" && isNaN(y))){return _b_.float.$factory("nan")}
-switch(x){case Infinity:
-case-Infinity:
-if(y==0){return _b_.float.$factory("nan")}else{return y > 0 ? x :-x}}
-return $B.long_int.__mul__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}
-$B.sub=function(x,y){if(x instanceof Number && y instanceof Number){return x-y}
-var z=(typeof x !="number" ||typeof y !="number")?
-new Number(x-y):x-y
-if(x > min_int && x < max_int && y > min_int && y < max_int
-&& z > min_int && z < max_int){return z}else if((typeof x=="number" ||x.__class__===$B.long_int)
-&&(typeof y=="number" ||y.__class__===$B.long_int)){if(typeof x=="number" && typeof y=="number"){if(isNaN(x)||isNaN(y)){return _b_.float.$factory("nan")}else if(x===Infinity ||x===-Infinity){if(y===x){return _b_.float.$factory("nan")}else{return x}}else if(y===Infinity ||y===-Infinity){if(y===x){return _b_.float.$factory("nan")}else{return-y}}}
-if((typeof x=="number" && isNaN(x))||
-(typeof y=="number" && isNaN(y))){return _b_.float.$factory("nan")}
-return $B.long_int.__sub__($B.long_int.$factory(x),$B.long_int.$factory(y))}else{return z}}
+if(Number.isSafeInteger(x)&&
+Number.isSafeInteger(y)&&
+Number.isSafeInteger(z)){return Math.floor(z)}else{return $B.long_int.__floordiv__($B.long_int.$factory(x),$B.long_int.$factory(y))}}
 $B.ge=function(x,y){if(typeof x=="number" && typeof y=="number"){return x >=y}
 else if(typeof x=="number" && typeof y !="number"){return ! y.pos}
 else if(typeof x !="number" && typeof y=="number"){return x.pos===true}else{return $B.long_int.__ge__(x,y)}}
@@ -14927,7 +14899,8 @@ var name=init_scopes.bind(this)('module',scopes),namespaces=scopes.namespaces
 var module_id=name,global_name=make_scope_name(scopes),mod_name=module_name(scopes)
 var js=`// Javascript code generated from ast\n`+
 `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
-if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\nlocals = ${global_name},\n`+
+if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
+`locals = ${global_name},\n`+
 `$top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name},\n`+
 `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`}

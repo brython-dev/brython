@@ -181,4 +181,9 @@ assert isinstance(window.test_jsobj, javascript.JSObject)
 javascript.import_js('js_test.js')
 assert js_test.x == 1
 
+# issue 1996
+js = __BRYTHON__.python_to_js("x = 1 + 2")
+ns = window.eval(js)
+assert ns.x == 3
+
 print("all tests ok...")

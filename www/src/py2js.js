@@ -8190,12 +8190,6 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
 
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
-    // Remove trailing \, cf issue 970
-    // but don't hide syntax error if ends with \\, cf issue 1210
-    if(src.endsWith("\\") && ! src.endsWith("\\\\")){
-        //
-    }
-
     root.src = src
     return root
 }
@@ -8256,7 +8250,6 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         if(test){
             console.log('afetr ast()', Date.now() - t0)
         }
-
     }
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
@@ -8435,6 +8428,7 @@ $B.parse_options = function(options){
         $B.__ARGV = _b_.list.$factory([])
     }
 
+    $B.options_parsed = true
     return options
 }
 
