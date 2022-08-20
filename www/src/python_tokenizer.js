@@ -69,7 +69,7 @@ function TokenError(message, position){
     return exc
 }
 
-function get_line_at(src, pos){
+function _get_line_at(src, pos){
     // Get the line in source code src starting at position pos
     var end = src.substr(pos).search(/[\r\n]/),
         line = end == -1 ? src.substr(pos) : src.substr(pos, end + 1)
@@ -160,6 +160,24 @@ $B.tokenizer = function*(src){
         allowed_after_identifier = ',.()[]:;',
         string_prefix = /^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,
         bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+
+    src = src.replace(/\r\n/g, '\n').
+              replace(/\r/g, '\n')
+    var lines = src.split('\n'),
+        linenum = 0,
+        line_at = {}
+
+    for(var i = 0, len = src.length; i < len; i++){
+        line_at[i] = linenum
+        if(src[i] == '\n'){
+            linenum++
+        }
+    }
+
+    function get_line_at(pos){
+        return lines[line_at[pos]]
+    }
+
     var state = "line_start",
         char,
         cp,
@@ -199,7 +217,7 @@ $B.tokenizer = function*(src){
         pos++
         switch(state){
             case "line_start":
-                line = get_line_at(src, pos - 1)
+                line = get_line_at(pos - 1)
                 line_start = pos
                 line_num++
                 if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos - 1))){
@@ -318,7 +336,7 @@ $B.tokenizer = function*(src){
                             state = null
                             line_num++
                             line_start = pos + 1
-                            line = get_line_at(src, pos)
+                            line = get_line_at(pos)
                         }
                         break
                     case '0':
@@ -370,7 +388,7 @@ $B.tokenizer = function*(src){
                             line_num++
                             pos += mo[0].length
                             line_start = pos + 1
-                            line = get_line_at(src, pos)
+                            line = get_line_at(pos)
                         }else{
                             yield Token('ERRORTOKEN', char,
                                 [line_num, pos - line_start],
@@ -390,7 +408,7 @@ $B.tokenizer = function*(src){
                         }else{
                             line_num++
                             line_start = pos + 1
-                            line = get_line_at(src, pos)
+                            line = get_line_at(pos)
                         }
                         break
                     default:
@@ -559,7 +577,7 @@ $B.tokenizer = function*(src){
                             line_start++
                             pos++
                         }
-                        line = get_line_at(src, pos)
+                        line = get_line_at(pos)
                         escaped = false
                         break
                     case '\\':

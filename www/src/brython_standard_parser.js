@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-19 09:50:24.926113"
-__BRYTHON__.timestamp=1660895424926
+__BRYTHON__.compiled_date="2022-08-20 11:14:36.526863"
+__BRYTHON__.timestamp=1660986876510
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -161,7 +161,7 @@ $B.set_func_names(error,"tokenize")}
 var exc=errors.TokenError.$factory(message,position)
 console.log('error',exc.__class__,exc.args)
 return exc}
-function get_line_at(src,pos){
+function _get_line_at(src,pos){
 var end=src.substr(pos).search(/[\r\n]/),line=end==-1 ? src.substr(pos):src.substr(pos,end+1)
 return line}
 function get_comment(src,pos,line_num,line_start,token_name,line){var start=pos,ix
@@ -197,6 +197,12 @@ this.position++
 return res}
 $B.TokenReader.prototype.seek=function(position){this.position=position}
 $B.tokenizer=function*(src){var unicode_tables=$B.unicode_tables,whitespace=' \t\n',operators='*+-/%&^~=<>',allowed_after_identifier=',.()[]:;',string_prefix=/^(r|u|R|U|f|F|fr|Fr|fR|FR|rf|rF|Rf|RF)$/,bytes_prefix=/^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/
+src=src.replace(/\r\n/g,'\n').
+replace(/\r/g,'\n')
+var lines=src.split('\n'),linenum=0,line_at={}
+for(var i=0,len=src.length;i < len;i++){line_at[i]=linenum
+if(src[i]=='\n'){linenum++}}
+function get_line_at(pos){return lines[line_at[pos]]}
 var state="line_start",char,cp,mo,pos=0,start,quote,triple_quote,escaped=false,string_start,string,prefix,name,operator,number,num_type,comment,indent,indents=[],braces=[],line_num=0,line_start=1,line
 yield Token('ENCODING','utf-8',[0,0],[0,0],'')
 while(pos < src.length){char=src[pos]
@@ -207,7 +213,7 @@ char=src.substr(pos,2)
 pos++}
 pos++
 switch(state){case "line_start":
-line=get_line_at(src,pos-1)
+line=get_line_at(pos-1)
 line_start=pos
 line_num++
 if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos-1))){
@@ -268,7 +274,7 @@ pos=comment.pos
 if(braces.length==0){state='line_start'}else{state=null
 line_num++
 line_start=pos+1
-line=get_line_at(src,pos)}
+line=get_line_at(pos)}
 break
 case '0':
 state='NUMBER'
@@ -297,7 +303,7 @@ if(mo=/^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){if(pos==src.length-1){throw Synt
 line_num++
 pos+=mo[0].length
 line_start=pos+1
-line=get_line_at(src,pos)}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}
+line=get_line_at(pos)}else{yield Token('ERRORTOKEN',char,[line_num,pos-line_start],[line_num,pos-line_start+1],line)}
 break
 case '\n':
 case '\r':
@@ -307,7 +313,7 @@ yield Token(token_name,mo[0],[line_num,pos-line_start],[line_num,pos-line_start+
 pos+=mo[0].length-1
 if(token_name=='NEWLINE'){state='line_start'}else{line_num++
 line_start=pos+1
-line=get_line_at(src,pos)}
+line=get_line_at(pos)}
 break
 default:
 if(unicode_tables.XID_Start[ord(char)]){
@@ -378,7 +384,7 @@ line_start=pos+1
 if(char=='\r' && src[pos]=='\n'){string+=src[pos]
 line_start++
 pos++}
-line=get_line_at(src,pos)
+line=get_line_at(pos)
 escaped=false
 break
 case '\\':

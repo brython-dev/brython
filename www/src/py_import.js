@@ -198,7 +198,7 @@ function run_py(module_contents, path, module, compiled) {
 
         try{
             root = $B.py2js(src, module,
-                module.__name__, $B.builtins_scope)
+                            module.__name__, $B.builtins_scope)
         }catch(err){
             if($B.debug > 1){
                 console.log('error in imported module', module)
