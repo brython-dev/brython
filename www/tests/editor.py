@@ -104,7 +104,7 @@ def show_console(ev):
 
 # load a Python script
 def load_script(evt):
-    _name = evt.target.value + '?foo=%s' % time.time()
+    _name = evt.target.value
     editor.setValue(open(_name).read())
 
 # run a script, in global namespace if in_globals is True
