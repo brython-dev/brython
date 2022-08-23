@@ -6,8 +6,10 @@ var _b_ = $B.builtins
 var float_check = function(x) {
     if(x.__class__ === $B.long_int){
         return parseInt(x.value)
+    }else if(x.__class__ === _b_.float){
+        return x.value
     }
-    return _b_.float.$factory(x)
+    return _b_.float.$factory(x).value
 }
 
 function check_int(x){
@@ -18,7 +20,7 @@ function check_int(x){
 }
 
 function check_int_or_round_float(x){
-    return (x instanceof Number && x == Math.floor(x)) ||
+    return (_b_.isinstance(x, _b_.float) && Number.isInteger(x.value)) ||
             _b_.isinstance(x, _b_.int)
 }
 
@@ -170,30 +172,31 @@ function lanczos_sum(x){
 }
 
 function m_sinpi(x){
+    // x is float
+    // returns a float
     var r,
-        y = fmod(fabs(x), 2.0),
-        n = _b_.round(2.0 * y)
-
+        y = fmod(fabs(x), 2.0), // float
+        n = _b_.round($B.fast_float(2.0 * y.value)) // int
     switch(n){
         case 0:
-            r = sin(pi*y);
+            r = sin(pi.value * y.value);
             break;
         case 1:
-            r = cos(pi*(y-0.5));
+            r = cos(pi.value * (y.value - 0.5));
             break;
         case 2:
             /* N.B. -sin(pi*(y-1.0)) is *not* equivalent: it would give
                -0.0 instead of 0.0 when y == 1.0. */
-            r = sin(pi*(1.0-y));
+            r = sin(pi.value * (1.0 - y.value));
             break;
         case 3:
-            r = -cos(pi*(y-1.5));
+            r = -cos(pi.value *(y.value - 1.5));
             break;
         case 4:
-            r = sin(pi*(y-2.0));
+            r = sin(pi.value * (y.value - 2.0));
             break;
         }
-    return copysign(1.0, x) * r;
+    return $B.fast_float(copysign(1.0, x).value * r.value);
 }
 
 /*
@@ -209,35 +212,39 @@ function m_lgamma(x){
         if(isnan(x)){
             return x;  /* lgamma(nan) = nan */
         }else{
-            return Number.POSITIVE_INFINITY; /* lgamma(+-inf) = +inf */
+            return $B.fast_float(Number.POSITIVE_INFINITY); /* lgamma(+-inf) = +inf */
         }
     }
 
     /* integer arguments */
-    if(x == floor(x) && x <= 2.0){
-        if(x <= 0.0){
+    var x1 = float_check(x)
+    if(Number.isInteger(x1) && x1 <= 2.0){
+        if(x1 <= 0.0){
             errno = EDOM;  /* lgamma(n) = inf, divide-by-zero for */
-            return Py_HUGE_VAL; /* integers n <= 0 */
+            return $B.fast_float(Py_HUGE_VAL); /* integers n <= 0 */
         }else{
-            return 0.0; /* lgamma(1) = lgamma(2) = 0.0 */
+            return  $B.fast_float(0.0); /* lgamma(1) = lgamma(2) = 0.0 */
         }
     }
 
-    absx = fabs(x);
+    absx = fabs(x)
     /* tiny arguments: lgamma(x) ~ -log(fabs(x)) for small x */
-    if (absx < 1e-20){
-        return -log(absx);
+    if (absx.value < 1e-20){
+        return  $B.fast_float(-log(absx).value);
     }
     /* Lanczos' formula.  We could save a fraction of a ulp in accuracy by
        having a second set of numerator coefficients for lanczos_sum that
        absorbed the exp(-lanczos_g) term, and throwing out the lanczos_g
        subtraction below; it's probably not worth it. */
-    r = log(lanczos_sum(absx)) - lanczos_g;
-    r += (absx - 0.5) * (log(absx + lanczos_g - 0.5) - 1);
-    if (x < 0.0){
+    var lsum = $B.fast_float(lanczos_sum(absx.value))
+    r = log(lsum).value - lanczos_g;
+    r += (absx.value - 0.5) *
+        (log($B.fast_float(absx.value + lanczos_g - 0.5)).value - 1);
+    if (x1 < 0.0){
         /* Use reflection formula to get value for negative x. */
-        r = logpi - log(fabs(m_sinpi(absx))) - log(absx) - r;
+        r = logpi - log(fabs(m_sinpi(absx))).value - log(absx).value - r;
     }
+    r = $B.fast_float(r)
     if (isinf(r)){
         throw _b_.ValueError.$factory("math domain error")
     }
@@ -289,7 +296,7 @@ function acosh(x){
         throw _b_.ValueError.$factory("math domain error")
     }
     if(y > Math.pow(2, 28)){ // issue 1590
-        return _b_.float.$factory(_mod.log(y) + _mod.log(2))
+        return _b_.float.$factory(_mod.log(y).value + _mod.log(2).value)
     }
     return _b_.float.$factory(Math.log(y + Math.sqrt(y * y - 1)))
 }
@@ -314,11 +321,14 @@ function asinh(x){
     $B.check_nb_args('asinh', 1, arguments)
     $B.check_no_kw('asinh', x)
 
-    if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory('-inf')}
-    if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
     var y = float_check(x)
+    if(_b_.float.$funcs.isninf(x)){
+        return _b_.float.$factory('-inf')
+    }else if(_b_.float.$funcs.isinf(x)){
+        return _b_.float.$factory('inf')
+    }
     if(y == 0 && 1 / y === -Infinity){
-        return new Number(-0.0)
+        return $B.fast_float(-0.0)
     }
     return _b_.float.$factory(Math.asinh(y))
 }
@@ -360,12 +370,14 @@ function ceil(x){
 
     var res
 
-    if(x instanceof Number){
-        x = _b_.float.numerator(x)
-        if(_b_.float.$funcs.isinf(x) || _mod.isnan(x)){
-            return x
+    if(_b_.isinstance(x, _b_.float)){
+        if(_b_.float.$funcs.isinf(x)){
+            throw _b_.OverflowError.$factory(
+                "cannot convert float infinity to integer")
+        }else if(_mod.isnan(x)){
+            throw _b_.OverflowError.$factory(
+                "cannot convert float NaN to integer")
         }
-        return _b_.int.$factory(Math.ceil(x))
     }
 
     var klass = x.__class__ || $B.get_class(x)
@@ -393,30 +405,325 @@ function ceil(x){
     return _mod.ceil(x)
 }
 
-function comb(n, k){
-    $B.check_nb_args('comb', 2, arguments)
-    $B.check_no_kw('comb', n, k)
+const ULLONG_MAX = 2n ** 64n - 1n,
+      LONG_MAX = 2147483647,
+      LONG_MIN = -2147483647,
+      LLONG_MAX = 9223372036854775807n,
+      LLONG_MIN = -9223372036854775807n,
+      p2_64 = 2n ** 64n
 
-    // raise TypeError if n or k is not an integer
-    check_int(n)
-    check_int(k)
+const reduced_factorial_odd_part = [
+    0x0000000000000001n, 0x0000000000000001n, 0x0000000000000001n, 0x0000000000000003n,
+    0x0000000000000003n, 0x000000000000000fn, 0x000000000000002dn, 0x000000000000013bn,
+    0x000000000000013bn, 0x0000000000000b13n, 0x000000000000375fn, 0x0000000000026115n,
+    0x000000000007233fn, 0x00000000005cca33n, 0x0000000002898765n, 0x00000000260eeeebn,
+    0x00000000260eeeebn, 0x0000000286fddd9bn, 0x00000016beecca73n, 0x000001b02b930689n,
+    0x00000870d9df20adn, 0x0000b141df4dae31n, 0x00079dd498567c1bn, 0x00af2e19afc5266dn,
+    0x020d8a4d0f4f7347n, 0x335281867ec241efn, 0x9b3093d46fdd5923n, 0x5e1f9767cc5866b1n,
+    0x92dd23d6966aced7n, 0xa30d0f4f0a196e5bn, 0x8dc3e5a1977d7755n, 0x2ab8ce915831734bn,
+    0x2ab8ce915831734bn, 0x81d2a0bc5e5fdcabn, 0x9efcac82445da75bn, 0xbc8b95cf58cde171n,
+    0xa0e8444a1f3cecf9n, 0x4191deb683ce3ffdn, 0xddd3878bc84ebfc7n, 0xcb39a64b83ff3751n,
+    0xf8203f7993fc1495n, 0xbd2a2a78b35f4bddn, 0x84757be6b6d13921n, 0x3fbbcfc0b524988bn,
+    0xbd11ed47c8928df9n, 0x3c26b59e41c2f4c5n, 0x677a5137e883fdb3n, 0xff74e943b03b93ddn,
+    0xfe5ebbcb10b2bb97n, 0xb021f1de3235e7e7n, 0x33509eb2e743a58fn, 0x390f9da41279fb7dn,
+    0xe5cb0154f031c559n, 0x93074695ba4ddb6dn, 0x81c471caa636247fn, 0xe1347289b5a1d749n,
+    0x286f21c3f76ce2ffn, 0x00be84a2173e8ac7n, 0x1595065ca215b88bn, 0xf95877595b018809n,
+    0x9c2efe3c5516f887n, 0x373294604679382bn, 0xaf1ff7a888adcd35n, 0x18ddf279a2c5800bn,
+    0x18ddf279a2c5800bn, 0x505a90e2542582cbn, 0x5bacad2cd8d5dc2bn, 0xfe3152bcbff89f41n,
+    0xe1467e88bf829351n, 0xb8001adb9e31b4d5n, 0x2803ac06a0cbb91fn, 0x1904b5d698805799n,
+    0xe12a648b5c831461n, 0x3516abbd6160cfa9n, 0xac46d25f12fe036dn, 0x78bfa1da906b00efn,
+    0xf6390338b7f111bdn, 0x0f25f80f538255d9n, 0x4ec8ca55b8db140fn, 0x4ff670740b9b30a1n,
+    0x8fd032443a07f325n, 0x80dfe7965c83eeb5n, 0xa3dc1714d1213afdn, 0x205b7bbfcdc62007n,
+    0xa78126bbe140a093n, 0x9de1dc61ca7550cfn, 0x84f0046d01b492c5n, 0x2d91810b945de0f3n,
+    0xf5408b7f6008aa71n, 0x43707f4863034149n, 0xdac65fb9679279d5n, 0xc48406e7d1114eb7n,
+    0xa7dc9ed3c88e1271n, 0xfb25b2efdb9cb30dn, 0x1bebda0951c4df63n, 0x5c85e975580ee5bdn,
+    0x1591bc60082cb137n, 0x2c38606318ef25d7n, 0x76ca72f7c5c63e27n, 0xf04a75d17baa0915n,
+    0x77458175139ae30dn, 0x0e6c1330bc1b9421n, 0xdf87d2b5797e8293n, 0xefa5c703e1e68925n,
+    0x2b6b1b3278b4f6e1n, 0xceee27b382394249n, 0xd74e3829f5dab91dn, 0xfdb17989c26b5f1fn,
+    0xc1b7d18781530845n, 0x7b4436b2105a8561n, 0x7ba7c0418372a7d7n, 0x9dbc5c67feb6c639n,
+    0x502686d7f6ff6b8fn, 0x6101855406be7a1fn, 0x9956afb5806930e7n, 0xe1f0ee88af40f7c5n,
+    0x984b057bda5c1151n, 0x9a49819acc13ea05n, 0x8ef0dead0896ef27n, 0x71f7826efe292b21n,
+    0xad80a480e46986efn, 0x01cdc0ebf5e0c6f7n, 0x6e06f839968f68dbn, 0xdd5943ab56e76139n,
+    0xcdcf31bf8604c5e7n, 0x7e2b4a847054a1cbn, 0x0ca75697a4d3d0f5n, 0x4703f53ac514a98bn,
+];
 
-    if(k < 0){
-        throw _b_.ValueError.$factory("k must be a non-negative integer")
-    }
-    if(n < 0){
-        throw _b_.ValueError.$factory("n must be a non-negative integer")
+const inverted_factorial_odd_part = [
+    0x0000000000000001n, 0x0000000000000001n, 0x0000000000000001n, 0xaaaaaaaaaaaaaaabn,
+    0xaaaaaaaaaaaaaaabn, 0xeeeeeeeeeeeeeeefn, 0x4fa4fa4fa4fa4fa5n, 0x2ff2ff2ff2ff2ff3n,
+    0x2ff2ff2ff2ff2ff3n, 0x938cc70553e3771bn, 0xb71c27cddd93e49fn, 0xb38e3229fcdee63dn,
+    0xe684bb63544a4cbfn, 0xc2f684917ca340fbn, 0xf747c9cba417526dn, 0xbb26eb51d7bd49c3n,
+    0xbb26eb51d7bd49c3n, 0xb0a7efb985294093n, 0xbe4b8c69f259eabbn, 0x6854d17ed6dc4fb9n,
+    0xe1aa904c915f4325n, 0x3b8206df131cead1n, 0x79c6009fea76fe13n, 0xd8c5d381633cd365n,
+    0x4841f12b21144677n, 0x4a91ff68200b0d0fn, 0x8f9513a58c4f9e8bn, 0x2b3e690621a42251n,
+    0x4f520f00e03c04e7n, 0x2edf84ee600211d3n, 0xadcaa2764aaacdfdn, 0x161f4f9033f4fe63n,
+    0x161f4f9033f4fe63n, 0xbada2932ea4d3e03n, 0xcec189f3efaa30d3n, 0xf7475bb68330bf91n,
+    0x37eb7bf7d5b01549n, 0x46b35660a4e91555n, 0xa567c12d81f151f7n, 0x4c724007bb2071b1n,
+    0x0f4a0cce58a016bdn, 0xfa21068e66106475n, 0x244ab72b5a318ae1n, 0x366ce67e080d0f23n,
+    0xd666fdae5dd2a449n, 0xd740ddd0acc06a0dn, 0xb050bbbb28e6f97bn, 0x70b003fe890a5c75n,
+    0xd03aabff83037427n, 0x13ec4ca72c783bd7n, 0x90282c06afdbd96fn, 0x4414ddb9db4a95d5n,
+    0xa2c68735ae6832e9n, 0xbf72d71455676665n, 0xa8469fab6b759b7fn, 0xc1e55b56e606caf9n,
+    0x40455630fc4a1cffn, 0x0120a7b0046d16f7n, 0xa7c3553b08faef23n, 0x9f0bfd1b08d48639n,
+    0xa433ffce9a304d37n, 0xa22ad1d53915c683n, 0xcb6cbc723ba5dd1dn, 0x547fb1b8ab9d0ba3n,
+    0x547fb1b8ab9d0ba3n, 0x8f15a826498852e3n, 0x32e1a03f38880283n, 0x3de4cce63283f0c1n,
+    0x5dfe6667e4da95b1n, 0xfda6eeeef479e47dn, 0xf14de991cc7882dfn, 0xe68db79247630ca9n,
+    0xa7d6db8207ee8fa1n, 0x255e1f0fcf034499n, 0xc9a8990e43dd7e65n, 0x3279b6f289702e0fn,
+    0xe7b5905d9b71b195n, 0x03025ba41ff0da69n, 0xb7df3d6d3be55aefn, 0xf89b212ebff2b361n,
+    0xfe856d095996f0adn, 0xd6e533e9fdf20f9dn, 0xf8c0e84a63da3255n, 0xa677876cd91b4db7n,
+    0x07ed4f97780d7d9bn, 0x90a8705f258db62fn, 0xa41bbb2be31b1c0dn, 0x6ec28690b038383bn,
+    0xdb860c3bb2edd691n, 0x0838286838a980f9n, 0x558417a74b36f77dn, 0x71779afc3646ef07n,
+    0x743cda377ccb6e91n, 0x7fdf9f3fe89153c5n, 0xdc97d25df49b9a4bn, 0x76321a778eb37d95n,
+    0x7cbb5e27da3bd487n, 0x9cff4ade1a009de7n, 0x70eb166d05c15197n, 0xdcf0460b71d5fe3dn,
+    0x5ac1ee5260b6a3c5n, 0xc922dedfdd78efe1n, 0xe5d381dc3b8eeb9bn, 0xd57e5347bafc6aadn,
+    0x86939040983acd21n, 0x395b9d69740a4ff9n, 0x1467299c8e43d135n, 0x5fe440fcad975cdfn,
+    0xcaa9a39794a6ca8dn, 0xf61dbd640868dea1n, 0xac09d98d74843be7n, 0x2b103b9e1a6b4809n,
+    0x2ab92d16960f536fn, 0x6653323d5e3681dfn, 0xefd48c1c0624e2d7n, 0xa496fefe04816f0dn,
+    0x1754a7b07bbdd7b1n, 0x23353c829a3852cdn, 0xbf831261abd59097n, 0x57a8e656df0618e1n,
+    0x16e9206c3100680fn, 0xadad4c6ee921dac7n, 0x635f2b3860265353n, 0xdd6d0059f44b3d09n,
+    0xac4dd6b894447dd7n, 0x42ea183eeaa87be3n, 0x15612d1550ee5b5dn, 0x226fa19d656cb623n,
+]
+
+const factorial_trailing_zeros = [
+     0,  0,  1,  1,  3,  3,  4,  4,  7,  7,  8,  8, 10, 10, 11, 11,  //  0-15
+    15, 15, 16, 16, 18, 18, 19, 19, 22, 22, 23, 23, 25, 25, 26, 26,  // 16-31
+    31, 31, 32, 32, 34, 34, 35, 35, 38, 38, 39, 39, 41, 41, 42, 42,  // 32-47
+    46, 46, 47, 47, 49, 49, 50, 50, 53, 53, 54, 54, 56, 56, 57, 57,  // 48-63
+    63, 63, 64, 64, 66, 66, 67, 67, 70, 70, 71, 71, 73, 73, 74, 74,  // 64-79
+    78, 78, 79, 79, 81, 81, 82, 82, 85, 85, 86, 86, 88, 88, 89, 89,  // 80-95
+    94, 94, 95, 95, 97, 97, 98, 98, 101, 101, 102, 102, 104, 104, 105, 105,  // 96-111
+    109, 109, 110, 110, 112, 112, 113, 113, 116, 116, 117, 117, 119, 119, 120, 120,  // 112-127
+].map(BigInt)
+
+const NULL = undefined
+
+/* Calculate C(n, k) for n in the 63-bit range. */
+
+function perm_comb_small(n, k, iscomb){
+    if(k == 0){
+        return 1n
     }
 
-    if(k > n){
-        return 0
+    /* For small enough n and k the result fits in the 64-bit range and can
+     * be calculated without allocating intermediate PyLong objects. */
+    if (iscomb) {
+        /* Maps k to the maximal n so that 2*k-1 <= n <= 127 and C(n, k)
+         * fits into a uint64_t.  Exclude k = 1, because the second fast
+         * path is faster for this case.*/
+        var fast_comb_limits1 = [
+            0, 0, 127, 127, 127, 127, 127, 127,  // 0-7
+            127, 127, 127, 127, 127, 127, 127, 127,  // 8-15
+            116, 105, 97, 91, 86, 82, 78, 76,  // 16-23
+            74, 72, 71, 70, 69, 68, 68, 67,  // 24-31
+            67, 67, 67  // 32-34
+        ];
+        if (k < fast_comb_limits1.length && n <= fast_comb_limits1[k]) {
+            /*
+                comb(n, k) fits into a uint64_t. We compute it as
+                    comb_odd_part << shift
+                where 2**shift is the largest power of two dividing comb(n, k)
+                and comb_odd_part is comb(n, k) >> shift. comb_odd_part can be
+                calculated efficiently via arithmetic modulo 2**64, using three
+                lookups and two uint64_t multiplications.
+            */
+            var comb_odd_part = reduced_factorial_odd_part[n]
+                                   * inverted_factorial_odd_part[k]
+                                   * inverted_factorial_odd_part[n - k];
+            comb_odd_part %= p2_64
+            var shift = factorial_trailing_zeros[n]
+                      - factorial_trailing_zeros[k]
+                      - factorial_trailing_zeros[n - k];
+            return comb_odd_part << shift;
+        }
+
+        /* Maps k to the maximal n so that 2*k-1 <= n <= 127 and C(n, k)*k
+         * fits into a long long (which is at least 64 bit).  Only contains
+         * items larger than in fast_comb_limits1. */
+        var fast_comb_limits2 = [
+            0, ULLONG_MAX, 4294967296, 3329022, 102570, 13467, 3612, 1449,  // 0-7
+            746, 453, 308, 227, 178, 147  // 8-13
+        ];
+        if (k < fast_comb_limits2.length && n <= fast_comb_limits2[k]) {
+            /* C(n, k) = C(n, k-1) * (n-k+1) / k */
+            var result = n;
+            for(var i = 1n; i < k; i++) {
+                result *= --n;
+                result /= ++i;
+            }
+            return result;
+        }
+    }else{
+        /* Maps k to the maximal n so that k <= n and P(n, k)
+         * fits into a long long (which is at least 64 bit). */
+        var fast_perm_limits = [
+            0, ULLONG_MAX, 4294967296, 2642246, 65537, 7133, 1627, 568,  // 0-7
+            259, 142, 88, 61, 45, 36, 30, 26,  // 8-15
+            24, 22, 21, 20, 20  // 16-20
+        ];
+        if (k < fast_perm_limits.length && n <= fast_perm_limits[k]) {
+            if (n <= 127) {
+                /* P(n, k) fits into a uint64_t. */
+                var perm_odd_part = reduced_factorial_odd_part[n]
+                                       * inverted_factorial_odd_part[n - k];
+                perm_odd_part %= p2_64
+                var shift = factorial_trailing_zeros[n]
+                          - factorial_trailing_zeros[n - k];
+                var res = perm_odd_part << shift
+
+                return res;
+            }
+
+            /* P(n, k) = P(n, k-1) * (n-k+1) */
+            var result = n;
+            for (var i = 1; i < k; i++) {
+                result *= --n;
+            }
+            return result
+        }
     }
-    // Evaluates to n! / (k! * (n - k)!)
-    var fn = _mod.factorial(n),
-        fk = _mod.factorial(k),
-        fn_k = _mod.factorial(n - k)
-    return $B.floordiv(fn, $B.mul(fk, fn_k))
+
+    /* For larger n use recursive formulas:
+     *
+     *   P(n, k) = P(n, j) * P(n-j, k-j)
+     *   C(n, k) = C(n, j) * C(n-j, k-j) // C(k, j)
+     */
+    var j = k / 2n;
+    var a = perm_comb_small(n, j, iscomb);
+    if (a == NULL) {
+        return NULL;
+    }
+    var b = perm_comb_small(n - j, k - j, iscomb);
+    if (b == NULL) {
+        error
+    }
+    a = a * b;
+    if (iscomb && a != NULL) {
+        b = perm_comb_small(k, j, 1);
+        if (b == NULL) {
+            error;
+        }
+        var a1 = a
+        a = a / b;
+    }
+    return a;
 }
+
+/* Calculate P(n, k) or C(n, k) using recursive formulas.
+ * It is more efficient than sequential multiplication thanks to
+ * Karatsuba multiplication.
+ */
+function perm_comb(n, k, iscomb){
+    if(k == 0){
+        return 1;
+    }
+    if(k == 1){
+        return n;
+    }
+
+    /* P(n, k) = P(n, j) * P(n-j, k-j) */
+    /* C(n, k) = C(n, j) * C(n-j, k-j) // C(k, j) */
+    var j = k / 2n
+    var a = perm_comb(n, j, iscomb);
+    //var t = j
+    //n = n - t;
+    var b = perm_comb(n - j, k - j, iscomb);
+    try{
+        a = a * b;
+    }catch(err){
+        console.log(err.message, 'mul')
+        console.log('a', (a + '').length)
+        console.log('b', (b + '').length)
+        throw err
+    }
+    if(iscomb && a != NULL){
+        b = perm_comb_small(k, j, 1);
+        if (b == NULL) {
+            error;
+        }
+        a = a / b;
+    }
+    return a;
+}
+
+function to_BigInt(x){
+    if(x.__class__ === $B.long_int){
+        var res = BigInt(x.value)
+        if(x.pos){
+            return res
+        }
+        return -res
+    }else if(_b_.isinstance(x, _b_.int)){
+        return BigInt(_b_.int.numerator(x))
+    }else{
+        var klass = $B.get_class(x)
+        try{
+            var index = $B.$call($B.$getattr(klass, '__index__'))(x)
+            return BigInt(index)
+        }catch(err){
+            throw _b_.TypeError.$factory("'" + $B.class_name(x) +
+                "' object cannot be interpreted as an integer")
+        }
+    }
+}
+
+function comb(n, k){
+    var $ = $B.args('comb', 2, {n: null, k: null}, ['n', 'k'],
+            arguments, {}, null, null),
+        n = $.n,
+        k = $.k
+
+    var result = NULL,
+        temp,
+        overflow, cmp;
+
+    n = to_BigInt(n);
+    k = to_BigInt(k);
+
+    if(n < 0){
+        throw _b_.ValueError.$factory(
+                        "n must be a non-negative integer");
+    }
+    if(k < 0){
+        throw _b_.ValueError.$factory(
+                        "k must be a non-negative integer");
+    }
+
+    overflow = n > LLONG_MAX || n < LLONG_MIN
+    if(! overflow){
+        overflow = k > LLONG_MAX || k < LLONG_MIN
+        if (overflow || k > n) {
+            result = 0n;
+        }else{
+            if(n - k < k){
+                k = n - k
+            }
+            if (k > 1) {
+                result = perm_comb_small(n, k, 1);
+            }
+        }
+        /* For k == 1 just return the original n in perm_comb(). */
+    }else{
+        /* k = min(k, n - k) */
+        temp = n - k
+        if(temp < 0) {
+            result = 0n;
+        }
+        if (temp < k) {
+            k = temp
+        }
+
+        overflow = k > LLONG_MAX || k < LLONG_MIN
+        if (overflow) {
+            throw _b_.OverflowError.$factory(
+                         "min(n - k, k) must not exceed " +
+                         LLONG_MAX);
+        }
+    }
+    if(result === undefined){
+        result = perm_comb(n, k, 1);
+    }
+
+    return $B.long_int.$from_BigInt(result)
+}
+
 
 function copysign(x, y){
     $B.check_nb_args('copysign', 2, arguments)
@@ -457,8 +764,10 @@ function dist(p, q){
     $B.check_no_kw('dist', p, q)
 
     function test(x){
-        if(typeof x === "number" || x instanceof Number){
+        if(typeof x === "number"){
             return x
+        }else if(x.__class__ === _b_.float){
+            return x.value
         }
         var y = $B.$getattr(x, '__float__', null)
         if(y === null){
@@ -634,14 +943,14 @@ function expm1(x){
 function fabs(x){
     $B.check_nb_args('fabs', 1, arguments)
     $B.check_no_kw('fabs', x)
-    return _b_.float.$funcs.fabs(x) // located in py_float.js
+    return _b_.float.$funcs.fabs(float_check(x)) // located in py_float.js
 }
 
 function factorial(x){
     $B.check_nb_args('factorial', 1, arguments)
     $B.check_no_kw('factorial', x)
 
-    if(x instanceof Number || _b_.isinstance(x, _b_.float)){
+    if(_b_.isinstance(x, _b_.float)){
         throw _b_.TypeError.$factory("'float' object cannot be " +
             "interpreted as an integer")
      }
@@ -664,11 +973,152 @@ function factorial(x){
     return r
 }
 
+const SmallFactorials = [
+    1n, 1n, 2n, 6n, 24n, 120n, 720n, 5040n, 40320n,
+    362880n, 3628800n, 39916800n, 479001600n,
+    6227020800n, 87178291200n, 1307674368000n,
+    20922789888000n, 355687428096000n, 6402373705728000n,
+    121645100408832000n, 2432902008176640000n
+    ]
+
+const SIZEOF_LONG = 4
+
+function _Py_bit_length(x){
+    const BIT_LENGTH_TABLE = [
+        0, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5
+    ]
+    var msb = 0;
+    while(x >= 32n){
+        msb += 6;
+        x >>= 6n;
+    }
+    msb += BIT_LENGTH_TABLE[parseInt(x)];
+    return msb
+}
+function count_set_bits(n){
+    var count = 0n;
+    while(n != 0){
+        ++count;
+        n &= n - 1n; /* clear least significant bit */
+    }
+    return count;
+}
+
+function factorial_partial_product(start, stop, max_bits){
+    var midpoint,
+        num_operands,
+        left,
+        right,
+        result
+
+    /* If the return value will fit an unsigned long, then we can
+     * multiply in a tight, fast loop where each multiply is O(1).
+     * Compute an upper bound on the number of bits required to store
+     * the answer.
+     *
+     * Storing some integer z requires floor(lg(z))+1 bits, which is
+     * conveniently the value returned by bit_length(z).  The
+     * product x*y will require at most
+     * bit_length(x) + bit_length(y) bits to store, based
+     * on the idea that lg product = lg x + lg y.
+     *
+     * We know that stop - 2 is the largest number to be multiplied.  From
+     * there, we have: bit_length(answer) <= num_operands *
+     * bit_length(stop - 2)
+     */
+
+    num_operands = (stop - start) / 2n;
+    max_bits = BigInt(max_bits)
+    /* The "num_operands <= 8 * SIZEOF_LONG" check guards against the
+     * unlikely case of an overflow in num_operands * max_bits. */
+    if(num_operands <= 8 * SIZEOF_LONG &&
+        num_operands * max_bits <= 8 * SIZEOF_LONG) {
+        var j,
+            total;
+        for (total = start, j = start + 2n; j < stop; j += 2n){
+            total *= j;
+        }
+        return total
+    }
+
+    /* find midpoint of range(start, stop), rounded up to next odd number. */
+    midpoint = (start + num_operands) | 1n;
+    left = factorial_partial_product(start, midpoint,
+                                     _Py_bit_length(midpoint - 2n));
+    right = factorial_partial_product(midpoint, stop, max_bits);
+    result = left * right
+    return result;
+}
+
+
+function factorial_odd_part(n){
+    var i,
+        v, lower, upper,
+        partial, tmp, inner, outer;
+
+    inner = 1n
+    outer = inner;
+    upper = 3n;
+    for (i = BigInt(_Py_bit_length(n)) - 2n; i >= 0; i--) {
+        v = n >> i;
+        if (v <= 2){
+            continue
+        }
+        lower = upper;
+        /* (v + 1) | 1 = least odd integer strictly larger than n / 2**i */
+        upper = (v + 1n) | 1n;
+        /* Here inner is the product of all odd integers j in the range (0,
+           n/2**(i+1)].  The factorial_partial_product call below gives the
+           product of all odd integers j in the range (n/2**(i+1), n/2**i]. */
+        partial = factorial_partial_product(lower, upper,
+                                            _Py_bit_length(upper-2n));
+        /* inner *= partial */
+        tmp = inner * partial
+        inner = tmp;
+        /* Now inner is the product of all odd integers j in the range (0,
+           n/2**i], giving the inner product in the formula above. */
+
+        /* outer *= inner; */
+        tmp = outer * inner
+        outer = tmp;
+    }
+    return outer;
+}
+
+function factorial(arg){
+    var x,
+        two_valuation,
+        overflow,
+        result,
+        odd_part;
+
+    x = to_BigInt(arg)
+    overflow = x > LONG_MAX || x < LONG_MIN
+    if(x > LONG_MAX) {
+        throw _b_.OverflowError.$factory(
+                     "factorial() argument should not exceed " +
+                     LONG_MAX)
+    }else if(x < 0) {
+        throw _b_.ValueError.$factory(
+                        "factorial() not defined for negative values");
+    }
+
+    /* use lookup table if x is small */
+    if (x < SmallFactorials.length){
+        return $B.long_int.$from_BigInt(SmallFactorials[x]);
+    }
+    /* else express in the form odd_part * 2**two_valuation, and compute as
+       odd_part << two_valuation. */
+    odd_part = factorial_odd_part(x);
+    two_valuation = x - count_set_bits(x);
+    return $B.long_int.$from_BigInt(odd_part << two_valuation);
+}
+
 function floor(x){
     $B.check_nb_args('floor', 1, arguments)
     $B.check_no_kw('floor', x)
-    if(typeof x == "number" ||
-            x instanceof Number){
+    if(typeof x == "number" || x.__class__ === _b_.float){
         return Math.floor(float_check(x))
     }
     try{
@@ -738,42 +1188,49 @@ function fsum(x){
             throw err
         }
     }
-    var res = new Number(0)
+    var res = 0
     for(var i = 0; i < partials.length; i++){
-        res += new Number(partials[i])
+        res += partials[i]
     }
-    return new Number(res)
+    return $B.fast_float(res)
 }
 
 function gamma(x){
     $B.check_nb_args('gamma', 1, arguments)
     $B.check_no_kw('gamma', x)
-    var r,
+    var x_as_number = x,
+        r,
         y,
         z,
         sqrtpow
 
     /* special cases */
-    if(x === Number.POSITIVE_INFINITY || isNaN(x)){
+    if(_b_.isinstance(x, _b_.float)){
+        x_as_number = x.value
+    }else if(! _b_.isinstance(x, _b_.int)){
+        throw _b_.TypeError.$factory("must be real number, not " +
+            $B.class_name(x))
+    }
+    if(x_as_number === Number.POSITIVE_INFINITY || isNaN(x_as_number)){
         return x
-    }else if(x === Number.NEGATIVE_INFINITY || x == 0){
+    }else if(x_as_number === Number.NEGATIVE_INFINITY || x_as_number == 0){
         throw _b_.ValueError.$factory("math domain error")
     }
 
     /* integer arguments */
-    if(x == floor(x)){
+    if(Number.isInteger(x_as_number)){
         if($B.rich_comp('__lt__', x, 0.0)){
             throw _b_.ValueError.$factory("math domain error")
         }
         if($B.rich_comp('__le__', x, NGAMMA_INTEGRAL)){
-            return new Number(gamma_integral[x - 1])
+            return $B.fast_float(gamma_integral[x - 1])
         }
     }
-    var absx = fabs(x);
+    var absx = _mod.fabs(x);
 
     /* tiny arguments:  tgamma(x) ~ 1/x for x near 0 */
-    if(absx < 1e-20){
-        r = 1.0 / x
+    if(absx.value < 1e-20){
+        r = 1.0 / x_as_number
         if(r === Number.POSITIVE_INFINITY){
             throw _b_.ValueError.$factory("math domain error")
         }
@@ -782,54 +1239,55 @@ function gamma(x){
     /* large arguments: assuming IEEE 754 doubles, tgamma(x) overflows for
        x > 200, and underflows to +-0.0 for x < -200, not a negative
        integer. */
-    if(absx > 200.0){
-        if(x < 0.0){
-            return 0.0 / m_sinpi(x);
+    if(absx.value > 200.0){
+        if(x_as_number < 0.0){
+            return $B.fast_float(0.0 / m_sinpi(x).value);
         }else{
             throw _b_.ValueError.$factory("math domain error")
         }
     }
 
-    y = absx + lanczos_g_minus_half;
+    y = absx.value + lanczos_g_minus_half;
     /* compute error in sum */
-    if (absx > lanczos_g_minus_half) {
+    if (absx.value > lanczos_g_minus_half) {
         /* note: the correction can be foiled by an optimizing
            compiler that (incorrectly) thinks that an expression like
            a + b - a - b can be optimized to 0.0.  This shouldn't
            happen in a standards-conforming compiler. */
-        var q = y - absx;
+        var q = y - absx.value;
         z = q - lanczos_g_minus_half;
     }else{
         var q = y - lanczos_g_minus_half;
-        z = q - absx;
+        z = q - absx.value;
     }
     z = z * lanczos_g / y;
-    if (x < 0.0) {
-        r = -pi / m_sinpi(absx) / absx * exp(y) / lanczos_sum(absx);
+    if (x_as_number < 0.0) {
+        r = -pi.value / m_sinpi(absx).value /
+                absx.value * _mod.exp(y).value /
+                lanczos_sum(absx.value);
         r -= z * r;
-        if(absx < 140.0){
-            r /= pow(y, absx - 0.5);
+        if(absx.value < 140.0){
+            r /= pow(y, absx.value - 0.5).value;
         }else{
-            sqrtpow = pow(y, absx / 2.0 - 0.25);
-            r /= sqrtpow;
-            r /= sqrtpow;
+            sqrtpow = pow(y, absx.value / 2.0 - 0.25);
+            r /= sqrtpow.value;
+            r /= sqrtpow.value;
         }
     }else{
-        r = lanczos_sum(absx) / exp(y);
+        r = lanczos_sum(absx.value) / exp(y).value;
         r += z * r;
-        if(absx < 140.0){
-            r *= pow(y, absx - 0.5);
+        if(absx.value < 140.0){
+            r *= pow(y, absx.value - 0.5).value;
         }else{
-            sqrtpow = pow(y, absx / 2.0 - 0.25);
-            r *= sqrtpow;
-            r *= sqrtpow;
+            sqrtpow = pow(y, absx.value / 2.0 - 0.25);
+            r *= sqrtpow.value;
+            r *= sqrtpow.value;
         }
     }
     if(r === Number.POSITIVE_INFINITY){
         throw _b_.ValueError.$factory("math domain error")
     }
-
-    return r;
+    return $B.fast_float(r);
 }
 
 
@@ -866,13 +1324,15 @@ function isclose(){
                       {a: null, b: null, rel_tol: null, abs_tol: null},
                       ['a', 'b', 'rel_tol', 'abs_tol'],
                       arguments,
-                      {rel_tol: 1e-09, abs_tol: 0.0},
+                      {rel_tol: $B.fast_float(1e-09),
+                       abs_tol: $B.fast_float(0.0)},
                       '*',
                       null)
-    var a = $.a,
-        b = $.b,
-        rel_tol = $.rel_tol,
-        abs_tol = $.abs_tol
+    var a = float_check($.a),
+        b = float_check($.b),
+        rel_tol = float_check($.rel_tol),
+        abs_tol = float_check($.abs_tol)
+
     if(rel_tol < 0.0 || abs_tol < 0.0){
         throw _b_.ValueError.$factory('tolerances must be non-negative')
     }
@@ -892,20 +1352,15 @@ function isclose(){
     // because this fails for Decimal instances, which do not support
     // multiplication by floats
 
-    var diff = $B.rich_op('__sub__', b, a),
-        abs_diff = _b_.abs(diff)
-    if($B.rich_comp("__le__", abs_diff, abs_tol)){
+    var diff = b - a,
+        abs_diff = Math.abs(diff)
+    if(abs_diff <= abs_tol){
         return true
     }
-    var abs_a = _b_.abs(a),
-        abs_b = _b_.abs(b),
-        max_ab = abs_a
-    if($B.rich_comp("__gt__", abs_b, abs_a)){
-        max_ab = abs_b
-    }
-    return $B.rich_comp("__le__",
-        $B.rich_op('__truediv__', abs_diff, max_ab),
-        rel_tol)
+    var abs_a = Math.abs(a),
+        abs_b = Math.abs(b),
+        max_ab = Math.max(abs_a, abs_b)
+    return abs_diff / max_ab <= rel_tol
 }
 
 function isfinite(x){
@@ -917,7 +1372,7 @@ function isfinite(x){
 function isinf(x){
     $B.check_nb_args('isinf', 1, arguments)
     $B.check_no_kw('isinf', x)
-    return _b_.float.$funcs.isinf(float_check(x))
+    return _b_.float.$funcs.isinf(x)
 }
 
 function isnan(x){
@@ -987,7 +1442,7 @@ function lcm(){
 function ldexp(x, i){
     $B.check_nb_args('ldexp', 2, arguments)
     $B.check_no_kw('ldexp', x, i)
-    return _b_.float.$funcs.ldexp(x, i)   //located in py_float.js
+    return _b_.float.$funcs.ldexp(x, i)   // in py_float.js
 }
 
 function lgamma(x){
@@ -1003,7 +1458,7 @@ function log(x, base){
         x = $.x,
         base = $.base
     if(_b_.isinstance(x, $B.long_int)){
-        var log = $B.long_int.$log2(x) * Math.LN2
+        var log = $B.long_int.$log2(x).value * Math.LN2
     }else{
         var x1 = float_check(x),
             log = Math.log(x1)
@@ -1011,8 +1466,10 @@ function log(x, base){
     if(x1 == 0){
         throw _b_.ValueError.$factory("math domain error")
     }
-    if(base === _b_.None){return log}
-    return _b_.float.$factory(log / Math.log(float_check(base)))
+    if(base === _b_.None){
+        return $B.fast_float(log)
+    }
+    return $B.fast_float(log / Math.log(float_check(base)))
 }
 
 function log1p(x){
@@ -1023,10 +1480,10 @@ function log1p(x){
             throw _b_.OverflowError.$factory(
                 "int too large to convert to float")
         }
-        return new Number($B.long_int.$log2($B.long_int.__add__(x, 1)) *
+        return $B.fast_float($B.long_int.$log2($B.long_int.__add__(x, 1)).value *
             Math.LN2)
     }
-    return _b_.float.$factory(Math.log1p(float_check(x)))
+    return $B.fast_float(Math.log1p(float_check(x)))
 }
 
 function log2(x){
@@ -1035,52 +1492,60 @@ function log2(x){
     if(_b_.isinstance(x, $B.long_int)){
         return $B.long_int.$log2(x)
     }
+    if(_b_.float.$funcs.isninf(x)){
+        throw _b_.ValueError.$factory('')
+    }
+    x = float_check(x)
     if(x == 0){
         throw _b_.ValueError.$factory("math domain error")
     }
-    if(isNaN(x)){return _b_.float.$factory('nan')}
-    if(_b_.float.$funcs.isninf(x)) {throw _b_.ValueError.$factory('')}
-    var x1 = float_check(x)
-    if(x1 < 0.0){throw _b_.ValueError.$factory('')}
-    return _b_.float.$factory(Math.log(x1) / Math.LN2)
+    if(isNaN(x)){
+        return _b_.float.$factory('nan')
+    }
+    if(x < 0.0){
+        throw _b_.ValueError.$factory('')
+    }
+    return $B.fast_float(Math.log(x) / Math.LN2)
 }
 
 function log10(x){
     $B.check_nb_args('log10', 1, arguments)
     $B.check_no_kw('log10', x)
+    if(_b_.isinstance(x, $B.long_int)){
+        return $B.fast_float($B.long_int.$log10(x).value)
+    }
+    x = float_check(x)
     if(x == 0){
         throw _b_.ValueError.$factory("math domain error")
     }
-    if(_b_.isinstance(x, $B.long_int)){
-        return $B.long_int.$log10(x)
-    }
-    return _b_.float.$factory(Math.log10(float_check(x)))
+    return $B.fast_float(Math.log10(x))
 }
 
 function modf(x){
     $B.check_nb_args('modf', 1, arguments)
     $B.check_no_kw('modf', x)
 
-   if(_b_.float.$funcs.isninf(x)){
-       return _b_.tuple.$factory([0.0, _b_.float.$factory('-inf')])
-   }
-   if(_b_.float.$funcs.isinf(x)){
-       return _b_.tuple.$factory([0.0, _b_.float.$factory('inf')])
-   }
-   if(isNaN(x)){
-       return _b_.tuple.$factory([_b_.float.$factory('nan'),
-           _b_.float.$factory('nan')])
-   }
+    if(_b_.float.$funcs.isninf(x)){
+        return _b_.tuple.$factory([0.0, _b_.float.$factory('-inf')])
+    }
+    if(_b_.float.$funcs.isinf(x)){
+        return _b_.tuple.$factory([0.0, _b_.float.$factory('inf')])
+    }
+    var x1 = float_check(x)
 
-   var x1 = float_check(x)
-   if(x1 > 0){
-      var i = _b_.float.$factory(x1 - Math.floor(x1))
-      return _b_.tuple.$factory([i, _b_.float.$factory(x1 - i)])
-   }
+    if(isNaN(x1)){
+        return _b_.tuple.$factory([_b_.float.$factory('nan'),
+            _b_.float.$factory('nan')])
+    }
 
-   var x2 = Math.ceil(x1)
-   var i = _b_.float.$factory(x1 - x2)
-   return _b_.tuple.$factory([i, _b_.float.$factory(x2)])
+    if(x1 > 0){
+       var i = _b_.float.$factory(x1 - Math.floor(x1))
+       return _b_.tuple.$factory([i, _b_.float.$factory(x1 - i.value)])
+    }
+
+    var x2 = Math.ceil(x1)
+    var i = _b_.float.$factory(x1 - x2)
+    return _b_.tuple.$factory([i, _b_.float.$factory(x2)])
 }
 
 var nan = _b_.float.$factory('nan')
@@ -1242,7 +1707,9 @@ function sinh(x) {
     $B.check_no_kw('sinh', x)
 
     var y = float_check(x)
-    if(Math.sinh !== undefined){return _b_.float.$factory(Math.sinh(y))}
+    if(Math.sinh !== undefined){
+        return _b_.float.$factory(Math.sinh(y))
+    }
     return _b_.float.$factory(
         (Math.pow(Math.E, y) - Math.pow(Math.E, -y)) / 2)
 }
@@ -1252,11 +1719,17 @@ function sqrt(x){
     $B.check_no_kw('sqrt ', x)
 
   var y = float_check(x)
-  if(y < 0){throw _b_.ValueError.$factory("math range error")}
-  if(_b_.float.$funcs.isinf(y)){return _b_.float.$factory('inf')}
-  var _r = Math.sqrt(y)
-  if(_b_.float.$funcs.isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
-  return _b_.float.$factory(_r)
+  if(y < 0){
+      throw _b_.ValueError.$factory("math range error")
+  }
+  if(_b_.float.$funcs.isinf(y)){
+      return _b_.float.$factory('inf')
+  }
+  var _r = $B.fast_float(Math.sqrt(y))
+  if(_b_.float.$funcs.isinf(_r)){
+      throw _b_.OverflowError.$factory("math range error")
+  }
+  return _r
 }
 
 function tan(x) {
