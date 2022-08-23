@@ -209,7 +209,7 @@ var $module = (function($B){
             if(_default){return _default}
             throw _b_.KeyError.$factory(chr)
         }
-        return new Number(eval(search.numeric))
+        return $B.fast_float(eval(search.numeric))
     }
 
     var module = {

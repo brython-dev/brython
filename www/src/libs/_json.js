@@ -141,8 +141,8 @@ function to_json(obj, level){
             res.push(to_json(obj[i], level, kwarg))
         }
         return first + res.join(sep) + last
-    }else if(obj instanceof Number){
-        return obj.valueOf()
+    }else if(_b_.isinstance(obj, _b_.float)){
+        return obj.value
     }else if(obj.__class__ === $B.long_int){
         return (obj.pos ? '' : '-') + obj.value
     }else if(obj === _b_.None){
@@ -235,7 +235,7 @@ function to_py(obj, kw){
             if(kw.parse_float !== _b_.None){
                 return $B.$call(kw.parse_float)(obj.value)
             }
-            return new Number(obj.value)
+            return $B.fast_float(obj.value)
         }else{
             // integer
             if(kw.parse_int !== _b_.None){
