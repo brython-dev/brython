@@ -332,7 +332,7 @@ $B.python_to_js = function(src, script_id){
     $B.imported.$python_to_js = {}
 
     var root = __BRYTHON__.py2js({src, filename},
-                                 script_id, script_id, 
+                                 script_id, script_id,
                                  __BRYTHON__.builtins_scope),
         js = root.to_js()
 
