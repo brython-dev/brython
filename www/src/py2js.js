@@ -4994,7 +4994,7 @@ $NumberCtx.prototype.ast = function(){
             position: this.position
         }
         var imag_value = $NumberCtx.prototype.ast.bind(imag)().value
-        ast_obj.value = $B.make_complex(0, imag_value)
+        ast_obj.value = $B.make_complex(0, +imag_value)
     }
     set_position(ast_obj, this.position)
     return ast_obj
