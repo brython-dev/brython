@@ -176,16 +176,16 @@ int.__divmod__ = function(self, other){
 }
 
 int.__eq__ = function(self, other){
-    // compare object "self" to class "int"
+    var self_as_int = int_value(self)
     if(_b_.isinstance(other, int)){
-        return self.valueOf() == int_value(other).valueOf()
+        return self_as_int == int_value(other).valueOf()
     }
     if(_b_.isinstance(other, _b_.float)){
-        return self.valueOf() == other.valueOf()
+        return self_as_int == other.value
     }
     if(_b_.isinstance(other, _b_.complex)){
         if(other.$imag != 0){return _b_.False}
-        return self.valueOf() == other.$real
+        return self_as_int == other.$real.value
     }
     return _b_.NotImplemented
 }
@@ -441,8 +441,10 @@ int.__pow__ = function(self, other, z){
             return result
         }
         var res = Math.pow(self.valueOf(), other.valueOf())
-        if(res > $B.min_int && res < $B.max_int){
-            return other > 0 ? res : new Number(res)
+        if(! Number.isInteger(res)){
+            return $B.fast_float(res)
+        }else if(Number.isSafeInteger(res)){
+            return res
         }else if(res !== Infinity && !isFinite(res)){
             return res
         }else{
@@ -460,7 +462,7 @@ int.__pow__ = function(self, other, z){
     if(_b_.isinstance(other, _b_.float)) {
         other = _b_.float.numerator(other)
         if(self >= 0){
-            return new Number(Math.pow(self, other))
+            return $B.fast_float(Math.pow(self, other))
         }else{
             // use complex power
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
@@ -533,7 +535,7 @@ int.__sub__ = function(self, other){
     if(_b_.isinstance(other, int)){
         if(other.__class__ == $B.long_int){
             return $B.long_int.__sub__($B.long_int.$factory(self),
-                $B.long_int.$factory(other))
+                other)
         }
         other = int_value(other)
         var res = self - other
@@ -554,9 +556,9 @@ int.__truediv__ = function(self, other){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
         if(other.__class__ === $B.long_int){
-            return new Number(self / parseInt(other.value))
+            return $B.fast_float(self / parseInt(other.value))
         }
-        return new Number(self / other)
+        return $B.fast_float(self / other)
     }
     return _b_.NotImplemented
 }
@@ -641,7 +643,7 @@ var $comp_func = function(self, other){
         other = int_value(other)
         return self.valueOf() > other.valueOf()
     }else if(_b_.isinstance(other, _b_.float)){
-        return self.valueOf() > _b_.float.numerator(other)
+        return self.valueOf() > other.value
     }else if(_b_.isinstance(other, _b_.bool)) {
       return self.valueOf() > _b_.bool.__hash__(other)
     }
@@ -711,7 +713,7 @@ int.$factory = function(value, base){
         base = $ns["base"]
 
     if(_b_.isinstance(value, _b_.float) && base == 10){
-        value = _b_.float.numerator(value) // for float subclasses
+        value = value.value // number
         if(value < $B.min_int || value > $B.max_int){
             return $B.long_int.$from_float(value)
         }
@@ -888,7 +890,7 @@ bool.__and__ = function(self, other){
 }
 
 bool.__float__ = function(self){
-    return self ? new Number(1) : new Number(0)
+    return self ? $B.fast_float(1) : $B.fast_float(0)
 }
 
 bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
