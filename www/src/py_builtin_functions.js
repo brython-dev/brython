@@ -98,7 +98,7 @@ function __build_class__(){
 function abs(obj){
     check_nb_args('abs', 1, arguments)
     check_no_kw('abs', obj)
-    
+
     if(isinstance(obj, _b_.int)){
         if(obj.__class__ === $B.long_int){
             return {
@@ -1036,39 +1036,30 @@ $B.$getattr = function(obj, attr, _default){
 
     if($test){console.log("attr", attr, "of", obj, "class", klass, "isclass", is_class)}
     if(klass === undefined){
-        // avoid calling $B.get_class in simple cases for performance
-        if(typeof obj == 'string'){
-            klass = _b_.str
-        }else if(typeof obj == 'number'){
-            klass = obj % 1 == 0 ? _b_.int : _b_.float
-        }else if(obj instanceof Number){
-            klass = _b_.float
-        }else{
-            klass = $B.get_class(obj)
-            if(klass === undefined){
-                // for native JS objects used in Python code
-                if($test){console.log("no class", attr, obj.hasOwnProperty(attr), obj[attr])}
-                res = obj[attr]
-                if(res !== undefined){
-                    if(typeof res == "function"){
-                        var f = function(){
-                            // In function, "this" is set to the object
-                            return res.apply(obj, arguments)
-                        }
-                        f.$infos = {
-                            __name__: attr,
-                            __qualname__: attr
-                        }
-                        return f
-                    }else{
-                        return $B.$JS2Py(res)
+        klass = $B.get_class(obj)
+        if(klass === undefined){
+            // for native JS objects used in Python code
+            if($test){console.log("no class", attr, obj.hasOwnProperty(attr), obj[attr])}
+            res = obj[attr]
+            if(res !== undefined){
+                if(typeof res == "function"){
+                    var f = function(){
+                        // In function, "this" is set to the object
+                        return res.apply(obj, arguments)
                     }
+                    f.$infos = {
+                        __name__: attr,
+                        __qualname__: attr
+                    }
+                    return f
+                }else{
+                    return $B.$JS2Py(res)
                 }
-                if(_default !== undefined){
-                    return _default
-                }
-                throw $B.attr_error(rawname, obj)
             }
+            if(_default !== undefined){
+                return _default
+            }
+            throw $B.attr_error(rawname, obj)
         }
     }
 
@@ -2268,13 +2259,20 @@ function round(){
         }
     }
 
-    if(isinstance(arg, _b_.float) &&
-            (arg.value === Infinity || arg.value === -Infinity)) {
-        throw _b_.OverflowError.$factory("cannot convert float infinity to integer")
+    var klass = $B.get_class(arg)
+
+    if(isinstance(arg, _b_.float)){
+        if(arg.value === Infinity || arg.value === -Infinity){
+            throw _b_.OverflowError.$factory(
+                "cannot convert float infinity to integer")
+        }
+        arg = arg.value // number
     }
 
-    if(!isinstance(n, _b_.int)){throw _b_.TypeError.$factory(
-        "'" + $B.class_name(n) + "' object cannot be interpreted as an integer")}
+    if(! isinstance(n, _b_.int)){
+        throw _b_.TypeError.$factory("'" + $B.class_name(n) +
+            "' object cannot be interpreted as an integer")
+    }
 
     var mult = Math.pow(10, n),
         x = arg * mult,
@@ -2282,18 +2280,19 @@ function round(){
         diff = Math.abs(x - floor),
         res
     if(diff == 0.5){
-        if(floor % 2){floor += 1}
+        if(floor % 2){
+            floor += 1
+        }
         res = _b_.int.__truediv__(floor, mult)
     }else{
         res = _b_.int.__truediv__(Math.round(x), mult)
     }
     if($.ndigits === None){
         // Always return an integer
-        return res.valueOf()
-    }else if(arg instanceof Number){
-        return new Number(res)
+        return Math.floor(res.value)
     }else{
-        return res.valueOf()
+        // Return the same type as argument
+        return $B.$call(klass)(res)
     }
 }
 
@@ -2528,7 +2527,7 @@ $B.$setattr = function(obj, attr, value){
     return None
 }
 
-function sorted () {
+function sorted(){
     var $ = $B.args('sorted', 1, {iterable: null}, ['iterable'],
         arguments, {}, null, 'kw')
     var _list = _b_.list.$factory(iter($.iterable)),
