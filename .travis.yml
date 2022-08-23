@@ -21,7 +21,7 @@ jobs:
         - ./node_modules/.bin/testem launchers
 
       script:
-        - ./node_modules/.bin/testem --launch "Firefox,Headless Chrome" -t www/tests/qunit/run_tests.html ci
+        - ./node_modules/.bin/testem --launch "Firefox,Headless Chrome" -t www/tests/run_tests.html ci
 
     - language: python
       python: 3.10
