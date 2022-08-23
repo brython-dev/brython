@@ -15,8 +15,8 @@ jobs:
         - xvfb
       before_install:
         - mkdir qunit
-        - wget -O qunit/qunit-1.18.0.css http://code.jquery.com/qunit/qunit-1.18.0.css
-        - wget -O qunit/qunit-1.18.0.js  http://code.jquery.com/qunit/qunit-1.18.0.js
+        - wget -O qunit/qunit-2.6.2.css http://code.jquery.com/qunit/qunit-2.6.2.css
+        - wget -O qunit/qunit-2.6.2.js  http://code.jquery.com/qunit/qunit-2.6.2.js
         - npm install testem
         - ./node_modules/.bin/testem launchers
 
