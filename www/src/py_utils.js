@@ -286,11 +286,7 @@ $B.get_class = function(obj){
     if(klass === undefined){
         switch(typeof obj) {
             case "number":
-                if(obj % 1 === 0){ // this is an int
-                   return _b_.int
-                }
-                // this is a float
-                return _b_.float
+                return Number.isInteger(obj) ? _b_.int : _b_.float
             case "string":
                 return _b_.str
             case "boolean":
@@ -777,11 +773,9 @@ $B.extend = function(fname, arg){
 
 $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
-    // but new Number(1) === new Number(1) is false, and so is
-    // new Number(1) == new Number(1) !!!
     // Cf. issue 669
-    if(a instanceof Number && b instanceof Number){
-        return a.valueOf() == b.valueOf()
+    if(a.__class__ === _b_.float && b.__class__ === _b_.float){
+        return a.value == b.value
     }
     if((a === _b_.int && b == $B.long_int) ||
             (a === $B.long_int && b === _b_.int)){
@@ -1383,26 +1377,55 @@ $B.rich_op = function(op, x, y, position){
 
 $B.rich_op1 = function(op, x, y){
     // shortcuts
-    if((typeof x == "number" || x instanceof Number) &&
-            (typeof y == "number" || y instanceof Number)){
+    var res_is_int,
+        res_is_float,
+        x_num,
+        y_num
+    if(typeof x == "number"){
+        x_num = x
+        if(typeof y == "number"){
+            res_is_int = true
+            y_num = y
+        }else if(y.__class__ === _b_.float){
+            res_is_float = true
+            y_num = y.value
+        }
+    }else if(x.__class__ === _b_.float){
+        x_num = x.value
+        if(typeof y == "number"){
+            y_num = y
+            res_is_float = true
+        }else if(y.__class__ === _b_.float){
+            res_is_float = true
+            y_num = y.value
+        }
+    }
+    if(res_is_int || res_is_float){
         var z
         switch(op){
             case "__add__":
-                z = x + y
+                z = x_num + y_num
                 break
             case "__sub__":
-                z = x - y
+                z = x_num - y_num
                 break
             case "__mul__":
-                z = x * y
+                z = x_num * y_num
                 break
+            case "__truediv__":
+                if(y_num == 0){
+                    throw _b_.ZeroDivisionError.$factory("division by zero")
+                }
+                // always returns a float
+                z = x_num / y_num
+                return {__class__: _b_.float, value: z}
         }
-        if(typeof x == "number" && typeof y == "number"){
-            if(Number.isSafeInteger(z)){
+        if(z){
+            if(res_is_int && Number.isSafeInteger(z)){
                 return z
+            }else if(res_is_float){
+                return {__class__: _b_.float, value: z}
             }
-        }else if(z !== undefined){
-            return new Number(z)
         }
     }else if(typeof x == "string" && typeof y == "string" && op == "__add__"){
         return x + y
