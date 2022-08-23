@@ -36,8 +36,8 @@ $B.pyobj2structuredclone = function(obj, strict){
     if(typeof obj == "boolean" || typeof obj == "number" ||
             typeof obj == "string" || obj instanceof String){
         return obj
-    }else if(obj instanceof Number){
-        return obj.valueOf()
+    }else if(obj.__class__ === _b_.float){
+        return obj.value
     }else if(obj === _b_.None){
         return null // _b_.None
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
@@ -71,9 +71,13 @@ $B.structuredclone2pyobj = function(obj){
         return _b_.None
     }else if(obj === undefined){
         return $B.Undefined
-    }else if(typeof obj == "boolean" || typeof obj == "number" ||
+    }else if(typeof obj == "boolean" ||
             typeof obj == "string"){
         return obj
+    }else if(typeof obj == "number"){
+        return Number.isInteger(obj) ?
+                   obj :
+                   {__class__: _b_.float, value: obj}
     }else if(obj instanceof Number || obj instanceof String){
         return obj.valueOf()
     }else if(Array.isArray(obj) || obj.__class__ === _b_.list ||
@@ -248,10 +252,14 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         })
         return jsobj
 
-    }else if(klass === _b_.float || klass === _b_.str){
+    }else if(klass === _b_.str){
 
-        // Python floats and strings are converted to the underlying value
+        // Python strings are converted to the underlying value
         return pyobj.valueOf()
+
+    }else if(klass === _b_.float){
+
+        return pyobj.value
 
     }else if(klass === $B.Function || klass === $B.method){
         // Transform arguments
@@ -323,7 +331,7 @@ $B.JSObj = $B.make_class("JSObject",
                 return new jsobj.$js_func(...arguments)
             }
         }else if(typeof jsobj == "number" && ! Number.isInteger(jsobj)){
-            return new Number(jsobj)
+            return {__class__: _b_.float, value: jsobj}
         }
         return jsobj
     }
@@ -377,7 +385,7 @@ $B.JSObj.__ne__ = function(_self, other){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "FileReader"
+    var test = false // attr == "get_float"
     if(test){
         console.log("__ga__", _self, attr)
     }
