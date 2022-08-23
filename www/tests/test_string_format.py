@@ -174,7 +174,7 @@ else:
     raise Exception("Did not raise error")
 
 assert '''%s %s %.2f %.3g %7.5E %1.1x %#o %s''' % ("hi", 5, 851.532, 14,
-          -3381, -851.532, 99, "to you") == 'hi 5 851.53 14 -3.38100E+03 -353 0o143 to you'
+          -3381, -851, 99, "to you") == 'hi 5 851.53 14 -3.38100E+03 -353 0o143 to you'
 assert ("%(hi)s" % {"hi": "bye"}) == "bye"
 
 try:
