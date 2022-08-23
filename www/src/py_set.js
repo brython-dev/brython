@@ -17,6 +17,7 @@ function create_type(obj){
 function clone(obj){
     var res = create_type(obj)
     res.$items = obj.$items.slice()
+    res.$numbers = obj.$numbers.slice()
     for(key in obj.$hashes){
         res.$hashes[key] = obj.$hashes[key]
     }
@@ -58,18 +59,18 @@ set.__class_getitem__ = function(cls, item){
 }
 
 set.__contains__ = function(self, item){
-    if(typeof item == "number" || item instanceof Number){
-        if(isNaN(item)){ // special case for NaN
+    if(typeof item == "number"){
+        return self.$numbers.indexOf(item) > -1
+    }else if(_b_.isinstance(item, _b_.float)){
+        if(isNaN(item.value)){ // special case for NaN
             for(var i = self.$items.length-1; i >= 0; i--){
-                if(isNaN(self.$items[i])){
+                if(isNaN(self.$items[i].value)){
                     return true
                 }
             }
             return false
-        }else if(item instanceof Number){
-            return self.$numbers.indexOf(item.valueOf()) > -1
         }else{
-            return self.$items.indexOf(item) > -1
+            return self.$numbers.indexOf(item.value) > -1
         }
     }else if(typeof item == "string"){
         return self.$items.indexOf(item) > -1
@@ -150,6 +151,7 @@ set.__init__ = function(self, iterable, second){
 
     if(_b_.isinstance(iterable, [set, frozenset])){
         self.$items = iterable.$items.slice()
+        self.$numbers = iterable.$numbers.slice()
         self.$hashes = {}
         for(var key in iterable.$hashes){
             self.$hashes[key] = iterable.$hashes[key]
@@ -214,7 +216,7 @@ set.__new__ = function(cls){
     return {
         __class__: cls,
         $items: [],
-        $numbers: [], // stores integers, and floats equal to integers
+        $numbers: [], // stores integers and floats
         $hashes: {}
     }
 }
@@ -352,30 +354,28 @@ $B.make_rmethods(set)
 function $add(self, item){
     var $simple = false
     if(typeof item === "string" || typeof item === "number" ||
-            item instanceof Number){
+            item.__class__ === _b_.float){
         $simple = true
     }
 
     if($simple){
-        var ix = self.$items.indexOf(item)
-        if(ix == -1){
-            if(item instanceof Number &&
-                    self.$numbers.indexOf(item.valueOf()) > -1){
-                // do nothing
-            }else if(typeof item == "number" &&
-                    self.$numbers.indexOf(item) > -1){
-                // do nothing
-            }else{
+        if(item.__class__ === _b_.float){
+            if(self.$numbers.indexOf(item.value) == -1){
+                self.$numbers.push(item.value)
                 self.$items.push(item)
-                var value = item.valueOf()
-                if(typeof value == "number"){
-                    self.$numbers.push(value)
-                }
+            }
+        }else if(typeof item == "number"){
+            if(self.$numbers.indexOf(item) == -1){
+                self.$numbers.push(item)
+                self.$items.push(item)
             }
         }else{
+            var ix = self.$items.indexOf(item)
             // issue 543 : for some Javascript implementations,
             // [''].indexOf(0) is 0, not -1, so {''}.add(0) is {''}
-            if(item !== self.$items[ix]){self.$items.push(item)}
+            if(item !== self.$items[ix]){
+                self.$items.push(item)
+            }
         }
     }else{
         // Compute hash of item : raises an exception if item is not hashable,
@@ -783,6 +783,8 @@ for(var attr in set){
           }
     }
 }
+
+console.log('frozenset.union', frozenset.union + '')
 
 // hash is allowed on frozensets
 frozenset.__hash__ = function(self) {
