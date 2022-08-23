@@ -34,29 +34,32 @@ var float = {
     }
 }
 
-float.numerator = function(self){return float_value(self)}
-float.denominator = function(self){return _b_.int.$factory(1)}
-float.imag = function(self){return _b_.int.$factory(0)}
-float.real = function(self){return float_value(self)}
-float.__float__ = function(self){return float_value(self)}
+float.numerator = function(self){return self.value}
+float.denominator = function(self){return 1}
+float.imag = function(self){return 0}
+float.real = function(self){return self.value}
+
+float.__float__ = function(self){
+    return self
+}
 
 // cache lshifts of 1
 $B.shift1_cache = {}
 
 float.as_integer_ratio = function(self){
-    self = float_value(self)
+    self = self.value
 
-    if(self.valueOf() == Number.POSITIVE_INFINITY ||
-            self.valueOf() == Number.NEGATIVE_INFINITY){
+    if(self == Number.POSITIVE_INFINITY ||
+            self == Number.NEGATIVE_INFINITY){
         throw _b_.OverflowError.$factory("Cannot pass infinity to " +
             "float.as_integer_ratio.")
     }
-    if(! Number.isFinite(self.valueOf())){
+    if(! Number.isFinite(self)){
         throw _b_.ValueError.$factory("Cannot pass NaN to " +
             "float.as_integer_ratio.")
     }
 
-    var tmp = frexp(self.valueOf()),
+    var tmp = frexp(self),
         fp = tmp[0],
         exponent = tmp[1]
 
@@ -91,12 +94,15 @@ float.as_integer_ratio = function(self){
 }
 
 float.__abs__ = function(self){
-    return new Number(Math.abs(float_value(self)))
+    return fast_float(Math.abs(self.value))
 }
 
 float.__bool__ = function(self){
-    self = float_value(self)
-    return _b_.bool.$factory(self.valueOf())
+    return _b_.bool.$factory(self.value)
+}
+
+float.__ceil__ = function(self){
+    return Math.ceil(self.value)
 }
 
 float.__divmod__ = function(self, other){
@@ -108,29 +114,36 @@ float.__divmod__ = function(self, other){
 }
 
 float.__eq__ = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
-    if(isNaN(self) && isNaN(other)){return false}
-    if(_b_.isinstance(other, _b_.int)){return self == other}
+    if(isNaN(self.value) && isNaN(other)){
+        return false
+    }
+    if(_b_.isinstance(other, _b_.int)){
+        return self.value == other
+    }
     if(_b_.isinstance(other, float)) {
-      // new Number(1.2) == new Number(1.2) returns false !!!
-      return self.valueOf() == other.valueOf()
+        return self.value == other.value
     }
     if(_b_.isinstance(other, _b_.complex)){
-      if (other.$imag != 0){return false}
-      return self == other.$real
+        if(other.$imag != 0){
+            return false
+        }
+        return self.value == other.$real
     }
     return _b_.NotImplemented
 }
 
 float.__floordiv__ = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
-    if(_b_.isinstance(other,[_b_.int, float])){
-      if(other.valueOf() == 0){
-          throw _b_.ZeroDivisionError.$factory('division by zero')
-      }
-      return float.$factory(Math.floor(self / other))
+    if(_b_.isinstance(other, float)){
+        if(other.value == 0){
+            throw _b_.ZeroDivisionError.$factory('division by zero')
+        }
+        return fast_float(Math.floor(self.value / other.value))
+    }
+    if(_b_.isinstance(other, _b_.int)){
+        if(other.valueOf() == 0){
+            throw _b_.ZeroDivisionError.$factory('division by zero')
+        }
+        return fast_float(Math.floor(self.value / other))
     }
     return _b_.NotImplemented
 }
@@ -148,15 +161,15 @@ float.fromhex = function(arg){
       case "inf":
       case "+infinity":
       case "infinity":
-          return $FloatClass(Infinity)
+          return fast_float(Infinity)
       case "-inf":
       case "-infinity":
-          return $FloatClass(-Infinity)
+          return fast_float(-Infinity)
       case "+nan":
       case "nan":
-          return $FloatClass(Number.NaN)
+          return fast_float(Number.NaN)
       case "-nan":
-          return $FloatClass(-Number.NaN)
+          return fast_float(-Number.NaN)
       case "":
           throw _b_.ValueError.$factory("could not convert string to float")
    }
@@ -172,7 +185,7 @@ float.fromhex = function(arg){
                coef *= 16
            }
        }
-       return $FloatClass(res)
+       return fast_float(res)
    }
 
    // lets see if this is a hex string.
@@ -187,24 +200,27 @@ float.fromhex = function(arg){
        _fraction = _m[4] || '.0',
        _exponent = _m[5] || 'p0'
 
-   if(_sign == "-"){_sign = -1}else{_sign = 1}
+   _sign = _sign == "-" ? -1 : 1
 
    var _sum = _int
 
    for(var i = 1, len = _fraction.length; i < len; i++){
        _sum += parseInt(_fraction.charAt(i), 16) / Math.pow(16, i)
    }
-   return new Number(_sign * _sum * Math.pow(2,
+   return fast_float(_sign * _sum * Math.pow(2,
        parseInt(_exponent.substring(1))))
 }
 
 float.__getformat__ = function(arg){
-    if(arg == "double" || arg == "float"){return "IEEE, little-endian"}
+    if(arg == "double" || arg == "float"){
+        return "IEEE, little-endian"
+    }
     throw _b_.ValueError.$factory("__getformat__() argument 1 must be " +
         "'double' or 'float'")
 }
 
 function preformat(self, fmt){
+    var value = self.value
     if(fmt.empty){
         return _b_.str.$factory(self)
     }
@@ -212,21 +228,21 @@ function preformat(self, fmt){
         throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
             "' for object of type 'float'")
     }
-    if(isNaN(self)){
-        if(fmt.type == "f" || fmt.type == "g"){return "nan"}
-        else{return "NAN"}
+    if(isNaN(value)){
+        return (fmt.type == "f" || fmt.type == "g") ? "nan" : "NAN"
     }
-    if(self == Number.POSITIVE_INFINITY){
-        if(fmt.type == "f" || fmt.type == "g"){return "inf"}
-        else{return "INF"}
+    if(value == Number.POSITIVE_INFINITY){
+        return (fmt.type == "f" || fmt.type == "g") ? "inf" : "INF"
     }
     if(fmt.precision === undefined && fmt.type !== undefined){
         fmt.precision = 6
     }
-    if(fmt.type == "%"){self *= 100}
+    if(fmt.type == "%"){
+        value *= 100
+    }
 
     if(fmt.type == "e"){
-        var res = self.toExponential(fmt.precision),
+        var res = value.toExponential(fmt.precision),
             exp = parseInt(res.substr(res.search("e") + 1))
             if(Math.abs(exp) < 10){
                 res = res.substr(0, res.length - 1) + "0" +
@@ -239,8 +255,10 @@ function preformat(self, fmt){
         // Use Javascript toFixed to get the correct result
         // The argument of toFixed is the number of digits after .
         var prec = fmt.precision
-        if(prec == 0){return Math.round(self) + ""}
-        var res = self.toFixed(prec),
+        if(prec == 0){
+            return Math.round(value) + ""
+        }
+        var res = value.toFixed(prec),
             pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
@@ -289,17 +307,20 @@ function preformat(self, fmt){
             res = preformat(self, fmt)
             fmt.type = undefined
         }else{
-            var res1 = self.toExponential(fmt.precision - 1),
+            var res1 = value.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))
             if(exp < -4 || exp >= fmt.precision - 1){
                 var elts = res1.split("e")
                 // Remove trailing 0 from mantissa
-                while(elts[0].endsWith("0")){elts[0] = elts[0].substr(0,
-                    elts[0].length - 1)}
+                while(elts[0].endsWith("0")){
+                    elts[0] = elts[0].substr(0, elts[0].length - 1)
+                }
                 res = elts.join("e")
             }
         }
-    }else{var res = _b_.str.$factory(self)}
+    }else{
+        var res = _b_.str.$factory(self)
+    }
 
     if(fmt.type === undefined || "gGn".indexOf(fmt.type) != -1){
         // remove trailing 0 for non-exponential formats
@@ -309,22 +330,25 @@ function preformat(self, fmt){
             }
         }
         if(res.charAt(res.length - 1) == "."){
-            if(fmt.type === undefined){res += "0"}
-            else{res = res.substr(0, res.length - 1)}
+            if(fmt.type === undefined){
+                res += "0"
+            }else{
+                res = res.substr(0, res.length - 1)
+            }
         }
     }
     if(fmt.sign !== undefined){
-        if((fmt.sign == " " || fmt.sign == "+" ) && self > 0){
+        if((fmt.sign == " " || fmt.sign == "+" ) && value > 0){
             res = fmt.sign + res
         }
     }
-    if(fmt.type == "%"){res += "%"}
-
+    if(fmt.type == "%"){
+        res += "%"
+    }
     return res
 }
 
 float.__format__ = function(self, format_spec){
-    self = float_value(self)
     var fmt = new $B.parse_format_spec(format_spec)
     fmt.align = fmt.align || ">"
     var raw = preformat(self, fmt).split('.'),
@@ -341,16 +365,18 @@ float.__format__ = function(self, format_spec){
 }
 
 float.__hash__ = function(self) {
-    if(self === undefined){
-       return float.__hashvalue__ || $B.$py_next_hash--  // for hash of float type (not instance of int)
+    var _v = self.value
+    if(_v === Infinity){
+        return 314159
+    }else if(_v === -Infinity){
+        return -271828
+    }else if(isNaN(_v)){
+        return 0
     }
-
-    var _v = self.valueOf()
-    if(_v === Infinity){return 314159}
-    if(_v === -Infinity){return -271828}
-    if(isNaN(_v)){return 0}
     // for integers, return the value
-    if(_v == Math.round(_v)){return Math.round(_v)}
+    if(_v == Math.round(_v)){
+        return Math.round(_v)
+    }
 
     var r = frexp(_v)
     r[0] *= Math.pow(2, 31)
@@ -362,13 +388,15 @@ float.__hash__ = function(self) {
 
 function isninf(x) {
     var x1 = x
-    if(_b_.isinstance(x, float)){x1 = float.numerator(x)}
+    if(_b_.isinstance(x, float)){
+        x1 = float.numerator(x)
+    }
     return x1 == -Infinity || x1 == Number.NEGATIVE_INFINITY
 }
 
 function isinf(x) {
     var x1 = x
-    if((! x instanceof Number) && _b_.isinstance(x, float)){
+    if(_b_.isinstance(x, float)){
         x1 = float.numerator(x)
     }
     return x1 == Infinity || x1 == -Infinity ||
@@ -377,13 +405,15 @@ function isinf(x) {
 
 function isnan(x) {
     var x1 = x
-    if(_b_.isinstance(x, float)){x1 = float.numerator(x)}
+    if(_b_.isinstance(x, float)){
+        x1 = float.numerator(x)
+    }
     return isNaN(x1)
 }
 
 function fabs(x){
     if(x == 0){
-        return new Number(0)
+        return fast_float(0)
     }
     return x > 0 ? float.$factory(x) : float.$factory(-x)
 }
@@ -391,7 +421,7 @@ function fabs(x){
 function frexp(x){
     var x1 = x
     if(_b_.isinstance(x, float)){
-        x1 = x.valueOf()
+        x1 = x.value
     }
 
     if(isNaN(x1) || isinf(x1)){
@@ -425,16 +455,25 @@ function frexp(x){
 }
 
 function ldexp(x, i) {
-    if(isninf(x)){return float.$factory('-inf')}
-    if(isinf(x)){return float.$factory('inf')}
+    if(isninf(x)){
+        return float.$factory('-inf')
+    }else if(isinf(x)){
+        return float.$factory('inf')
+    }
 
     var y = x
-    if(_b_.isinstance(x, float)){y = x.valueOf()}
-    if(y == 0){return y}
+    if(_b_.isinstance(x, float)){
+        y = x.value
+    }
+    if(y == 0){
+        return y
+    }
 
     var j = i
-    if(_b_.isinstance(i, float)){j = i.valueOf()}
-    return y * Math.pow(2, j)
+    if(_b_.isinstance(i, float)){
+        j = i.value
+    }
+    return $B.fast_float(y * Math.pow(2, j))
 }
 
 float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
@@ -490,28 +529,30 @@ float.__init__ = function(self, value){
     return _b_.None
 }
 
-float.__int__ = function(self){return parseInt(self)}
+float.__int__ = function(self){
+    return parseInt(self.value)
+}
 
-float.is_integer = function(self) {return _b_.int.$factory(self) == self}
+float.is_integer = function(self){
+    return Number.isInteger(self.value)
+}
 
 float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
-    self = float_value(self)
-    other = float_value(other)
     if(other == 0){
         throw _b_.ZeroDivisionError.$factory("float modulo")
     }
     if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
-        return new Number((self % other + other) % other)
+        return fast_float((self.value % other + other) % other)
     }
 
     if(_b_.isinstance(other, float)){
         // use truncated division
         // cf https://en.wikipedia.org/wiki/Modulo_operation
-        var q = Math.floor(self / other),
-            r = self - other * q
-        return new Number(r)
+        var q = Math.floor(self.value / other.value),
+            r = self.value - other.value * q
+        return fast_float(r)
     }
     return _b_.NotImplemented
 }
@@ -519,17 +560,15 @@ float.__mod__ = function(self, other) {
 float.__mro__ = [object]
 
 float.__mul__ = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
     if(_b_.isinstance(other, _b_.int)){
         if(other.__class__ == $B.long_int){
-            return new Number(self * parseFloat(other.value))
+            return fast_float(self.value * parseFloat(other.value))
         }
         other = _b_.int.numerator(other)
-        return new Number(self * other)
+        return fast_float(self.value * other)
     }
     if(_b_.isinstance(other, float)){
-        return new Number(self * float_value(other))
+        return fast_float(self.value * other.value)
     }
     return _b_.NotImplemented
 }
@@ -540,7 +579,7 @@ float.__ne__ = function(self, other){
 }
 
 float.__neg__ = function(self){
-    return new Number(-float_value(self))
+    return fast_float(-self.value)
 }
 
 float.__new__ = function(cls, value){
@@ -549,56 +588,64 @@ float.__new__ = function(cls, value){
     }else if(! _b_.isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")
     }
-    if(cls === float){return float.$factory(value)}
     return {
         __class__: cls,
-        __dict__: $B.empty_dict(),
-        $brython_value: value || 0
+        value: float.$factory(value).value
     }
 }
 
-float.__pos__ = function(self){return float_value(self)}
+float.__pos__ = function(self){
+    return fast_float(+self.value)
+}
 
 float.__pow__ = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
-
     var other_int = _b_.isinstance(other, _b_.int)
     if(other_int || _b_.isinstance(other, float)){
-        if(self == 1){return new Number(1)} // even for Infinity or NaN
-        if(other == 0){return new Number(1)}
+        if(! other_int){
+            other = other.value
+        }
+        if(self.value == 1){
+            return fast_float(1) // even for Infinity or NaN
+        }else if(other == 0){
+            return fast_float(1)
+        }
 
-        if(self == -1 &&
+        if(self.value == -1 &&
                 (! isFinite(other) || other.__class__ === $B.long_int ||
-                     ! $B.is_safe_int(other)) &&
+                     ! Number.isSafeInteger(other)) &&
                 ! isNaN(other)){
-            return new Number(1)
-        }else if(self == 0 && isFinite(other) && other < 0){
+            return fast_float(1)
+        }else if(self.value == 0 && isFinite(other) && other < 0){
             throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised " +
-              "to a negative power")
-        }else if(self == Number.NEGATIVE_INFINITY && ! isNaN(other)){
+                "to a negative power")
+        }else if(self.value == Number.NEGATIVE_INFINITY && ! isNaN(other)){
             if(other < 0 && other % 2 == 1){
-                return new Number(-0.0)
-            }else if(other < 0){return new Number(0)}
-            else if(other > 0 && other % 2 == 1){
-                return Number.NEGATIVE_INFINITY
-            }else{return Number.POSITIVE_INFINITY}
-        }else if(self == Number.POSITIVE_INFINITY && ! isNaN(other)){
-            return other > 0 ? self : new Number(0)
+                return fast_float(-0.0)
+            }else if(other < 0){
+                return fast_float(0)
+            }else if(other > 0 && other % 2 == 1){
+                return fast_float(Number.NEGATIVE_INFINITY)
+            }else{
+                return fast_float(Number.POSITIVE_INFINITY)
+            }
+        }else if(self.value == Number.POSITIVE_INFINITY && ! isNaN(other)){
+            return other > 0 ? fast_float(self) : fast_float(0)
         }
         if(other == Number.NEGATIVE_INFINITY && ! isNaN(self)){
-            return Math.abs(self) < 1 ? Number.POSITIVE_INFINITY :
-                new Number(0)
+            return Math.abs(self.value) < 1 ?
+                       fast_float(Number.POSITIVE_INFINITY) :
+                       fast_float(0)
         }else if(other == Number.POSITIVE_INFINITY  && ! isNaN(self)){
-            return Math.abs(self) < 1 ? new Number(0) :
-                Number.POSITIVE_INFINITY
+            return Math.abs(self.value) < 1 ?
+                       fast_float(0) :
+                       fast_float(Number.POSITIVE_INFINITY)
         }
-        if(self < 0 &&
+        if(self.value < 0 &&
                 ! $B.$getattr(other, "__eq__")(_b_.int.$factory(other))){
             // use complex power
-            return _b_.complex.__pow__($B.make_complex(self, 0), other)
+            return _b_.complex.__pow__($B.make_complex(self.value, 0), other)
         }
-        return float.$factory(Math.pow(self, other))
+        return fast_float(Math.pow(self.value, other))
     }
     return _b_.NotImplemented
 }
@@ -607,15 +654,16 @@ function __newobj__(){
     // __newobj__ is called with a generator as only argument
     var $ = $B.args('__newobj__', 0, {}, [], arguments, {}, 'args', null),
         args = $.args
-    var res = args.slice(1)
-    res.__class__ = args[0]
-    return res
+    return {
+        __class__: args[0],
+        value: args[1]
+    }
 }
 
 float.__reduce_ex__ = function(self){
     return $B.fast_tuple([
         __newobj__,
-        $B.fast_tuple([self.__class__ || _b_.int, float_value(self)]),
+        $B.fast_tuple([self.__class__ || _b_.int, self.value]),
         _b_.None,
         _b_.None,
         _b_.None])
@@ -623,7 +671,7 @@ float.__reduce_ex__ = function(self){
 
 float.__repr__ = function(self){
     $B.builtins_repr_check(float, arguments) // in brython_builtins.js
-    self = float_value(self).valueOf()
+    self = self.value
     if(self == Infinity){
         return 'inf'
     }else if(self == -Infinity){
@@ -699,7 +747,7 @@ float.__repr__ = function(self){
 }
 
 float.__setattr__ = function(self, attr, value){
-    if(self.constructor === Number){
+    if(self.__class__ === float){
         if(float[attr] === undefined){
             throw _b_.AttributeError.$factory("'float' object has no attribute '" +
                 attr + "'")
@@ -714,30 +762,33 @@ float.__setattr__ = function(self, attr, value){
 }
 
 float.__truediv__ = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
-    if(_b_.isinstance(other, [_b_.int, float])){
+    if(_b_.isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
-        return float.$factory(self/other)
+        return float.$factory(self.value / other)
+    }else if(_b_.isinstance(other, float)){
+        if(other.value == 0){
+            throw _b_.ZeroDivisionError.$factory("division by zero")
+        }
+        return float.$factory(self.value / other.value)
     }
     return _b_.NotImplemented
 }
 
 // operations
 var $op_func = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
     if(_b_.isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
-            return other ? self - 1 : self
+            return other ? $B.fast_float(self.value - 1) : self
         }else if(other.__class__ === $B.long_int){
-            return float.$factory(self - parseInt(other.value))
-        }else{return float.$factory(self - other)}
+            return float.$factory(self.value - parseInt(other.value))
+        }else{
+            return fast_float(self.value - other)
+        }
     }
     if(_b_.isinstance(other, float)){
-        return float.$factory(self - other)
+        return fast_float(self.value - other.value)
     }
     return _b_.NotImplemented
 }
@@ -751,27 +802,29 @@ for(var $op in $ops){
 
 // comparison methods
 var $comp_func = function(self, other){
-    self = float_value(self)
-    other = float_value(other)
 
     if(_b_.isinstance(other, _b_.int)){
         if(other.__class__ === $B.long_int){
-            return self > parseInt(other.value)
+            return self.value > parseInt(other.value)
         }
-        return self > other.valueOf()
+        return self.value > other.valueOf()
     }
-    if(_b_.isinstance(other,float)){return self > other}
+    if(_b_.isinstance(other, float)){
+        return self.value > other.value
+    }
 
     if(_b_.isinstance(other, _b_.bool)) {
-      return self.valueOf() > _b_.bool.__hash__(other)
+        return self.value > _b_.bool.__hash__(other)
     }
     if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
-       return _b_.int.__gt__(self, $B.$GetInt(other))
+       return _b_.int.__gt__(self.value, $B.$GetInt(other))
     }
 
     // See if other has the opposite operator, eg <= for >
     var inv_op = $B.$getattr(other, "__le__", _b_.None)
-    if(inv_op !== _b_.None){return inv_op(self)}
+    if(inv_op !== _b_.None){
+        return inv_op(self)
+    }
 
     throw _b_.TypeError.$factory(
         "unorderable types: float() > " + $B.class_name(other) + "()")
@@ -795,10 +848,10 @@ for(var r_opname of r_opnames){
         float["__r" + r_opname + "__"] = (function(name){
             return function(self, other){
                 if(_b_.isinstance(other, _b_.int)){
-                    other = float_value(_b_.int.numerator(other))
+                    other = fast_float(_b_.int.numerator(other))
                     return float["__" + name + "__"](other, self)
                 }else if(_b_.isinstance(other, float)){
-                    other = float_value(other)
+                    other = other.value
                     return float["__" + name + "__"](other, self)
                 }
                 return _b_.NotImplemented
@@ -824,31 +877,36 @@ function to_digits(s){
     return res
 }
 
+$B.fast_float = fast_float = function(value){
+    return {__class__: _b_.float, value}
+}
+
 // constructor for built-in class 'float'
-float.$factory = function (value){
+float.$factory = function(value){
     switch(value) {
         case undefined:
-            return $FloatClass(0.0)
-        case Number.MAX_VALUE:
-            //take care of 'inf not identical to 1.797...e+308' error
-            return $FloatClass(Infinity)
-        case -Number.MAX_VALUE:
-            return $FloatClass(-Infinity)
+            return fast_float(0.0)
         case true:
-            return new Number(1)
+            return fast_float(1)
         case false:
-            return new Number(0)
+            return fast_float(0)
     }
 
     if(typeof value == "number"){
-        return new Number(value)
+        return fast_float(value)
     }
     if(_b_.isinstance(value, float)){
-        return float_value(value)
+        if(value.value == Number.MAX_VALUE){
+            //take care of 'inf not identical to 1.797...e+308' error
+            return fast_float(Infinity)
+        }else if(value.value == -Number.MAX_VALUE){
+            return fast_float(-Infinity)
+        }
+        return value
     }
     if(_b_.isinstance(value, _b_.bytes)){
-      var s = $B.$getattr(value, "decode")("latin-1")
-      return float.$factory($B.$getattr(value, "decode")("latin-1"))
+        var s = $B.$getattr(value, "decode")("latin-1")
+        return float.$factory($B.$getattr(value, "decode")("latin-1"))
     }
 
     if(typeof value == "string"){
@@ -858,22 +916,23 @@ float.$factory = function (value){
            case "inf":
            case "+infinity":
            case "infinity":
-               return Number.POSITIVE_INFINITY
+               return fast_float(Number.POSITIVE_INFINITY)
            case "-inf":
            case "-infinity":
-               return Number.NEGATIVE_INFINITY
+               return fast_float(Number.NEGATIVE_INFINITY)
            case "+nan":
            case "nan":
-               return Number.NaN
+               return fast_float(Number.NaN)
            case "-nan":
-               return -Number.NaN
+               return fast_float(-Number.NaN)
            case "":
                throw _b_.ValueError.$factory("count not convert string to float")
            default:
                value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
                value = to_digits(value) // convert arabic-indic digits to latin
-               if (isFinite(value)) return $FloatClass(eval(value))
-               else {
+               if(isFinite(value)){
+                   return fast_float(eval(value))
+               }else{
                    _b_.str.encode(value, "latin-1") // raises UnicodeEncodeError if not valid
                    throw _b_.ValueError.$factory(
                        "Could not convert to float(): '" +
@@ -881,13 +940,12 @@ float.$factory = function (value){
                }
          }
     }
-    var klass = value.__class__ || $B.get_class(value),
-        num_value = $B.to_num(value, ["__float__", "__index__"])
+    var num_value = $B.to_num(value, ["__float__", "__index__"])
 
-    if(value !== Number.POSITIVE_INFINITY && ! isFinite(num_value)){
-        throw _b_.OverflowError.$factory('int too large to convert to float')
-    }
     if(num_value !== null){
+        if(! isFinite(num_value.value)){
+            throw _b_.OverflowError.$factory('int too large to convert to float')
+        }
         return num_value
     }
 
