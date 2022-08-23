@@ -24,10 +24,9 @@ jobs:
         - ./node_modules/.bin/testem --launch "Firefox,Headless Chrome" -t www/tests/qunit/run_tests.html ci
 
     - language: python
-      python: 3.8
+      python: 3.10
       before_install: pip install --upgrade pip
       before_script: pip install flake8
       script:
-        - EXCLUDE=./.*,www/src/Lib/test/badsyntax_3131.py
         # stop the build if there are Python syntax errors
-        - flake8 . --exclude=$EXCLUDE --exit-zero --select=E999 --show-source --statistics
+        - flake8 . '--exclude=./.*,www/src/Lib/test/badsyntax_3131.py' --select=E999 --show-source --statistics
