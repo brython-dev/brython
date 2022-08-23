@@ -718,7 +718,7 @@ function init_scopes(type, scopes){
     }else{
         name = filename.replace(/\./g, '_')
     }
-    
+
     var top_scope = new Scope(name, `${type}`, this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
     if(block && block.$has_import_star){
@@ -1395,9 +1395,9 @@ $B.ast.Constant.prototype.to_js = function(scopes){
     }else if(this.value.__class__ === $B.long_int){
         return `$B.fast_long_int('${this.value.value}', ${this.value.pos})`
     }else if(this.value instanceof Number){
-        return `new Number(${this.value})`
+        return `{__class__: _b_.float, value: ${+this.value}}`
     }else if(this.value.__class__ === _b_.complex){
-        return `$B.make_complex(${this.value.$real}, ${this.value.$imag})`
+        return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`
     }else{
         var type = this.value.type,
             value = this.value.value
@@ -2674,7 +2674,7 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
         }
     }
     var method = opclass2dunder[this.op.constructor.$name]
-    return `$B.$getattr(${operand}, '${method}')()`
+    return `$B.$getattr($B.get_class(locals.$result = ${operand}), '${method}')(locals.$result)`
 }
 
 $B.ast.While.prototype.to_js = function(scopes){
