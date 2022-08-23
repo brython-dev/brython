@@ -2,13 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <!-- Online install -->
     <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-2.6.2.css" />
-    <!-- Local install for Travis-CI -->
-    <link rel="stylesheet" type="text/css" href="../../qunit/qunit-2.6.2.css" />
-
-    <!-- Add www/tests (i.e. parent) folder to PYTHONPATH -->
-    <link rel="pythonpath" href=".." hreflang="py" />
 
     <!-- Needed in sys.path init tests , see test_import.py -->
     <link id="link_none1" rel="pythonpath" href="/nowhere1" hreflang="none" />
@@ -19,10 +13,7 @@
     <!-- QUnit init -->
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
-    <!-- Online install -->
     <script src="//code.jquery.com/qunit/qunit-2.6.2.js"></script>
-    <!-- Local install for Travis-CI -->
-    <script src="../../qunit/qunit-2.6.2.js"></script>
 
     <!-- Testem integration -->
     <script src="/testem.js"></script>

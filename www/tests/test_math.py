@@ -218,8 +218,9 @@ x = Angle(36.9, (1,2))
 y = Angle(53.1, (3,4))
 
 assert (x, x + y, x < y, x ** 0.5) == (36.9, 90.0, True, 6.074537019394976)
-assert (abs(x), int(x), math.sin(x), math.log(x)) == \
-       (36.9, 36, -0.7167370231606575, 3.6082115510464816)
+assert abs(math.sin(x) + 0.7167370231606575) < 0.000000000000001, math.sin(x)
+assert (abs(x), int(x), math.log(x)) == \
+       (36.9, 36, 3.6082115510464816)
 
 # issue 1590
 assert math.acosh(1e155) == 357.593836594637
