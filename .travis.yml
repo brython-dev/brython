@@ -39,4 +39,4 @@ jobs:
       before_script: pip install flake8
       script:
         - EXCLUDE=./.*,www/src/Lib/test/badsyntax_3131.py
-        - flake8 . --exclude=$EXCLUDE --select=E999 --show-source --statistics
+        - flake8 . --exclude=$EXCLUDE --select=E9,F63,F7,F82 --show-source --statistics
