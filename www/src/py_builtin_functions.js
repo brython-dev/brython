@@ -697,9 +697,32 @@ function $$eval(src, _globals, _locals){
     }
 
     if(_globals === _b_.None){
-        // create a copy of locals
-        exec_locals = new Proxy(frame[1], handler)
-        exec_globals = new Proxy(frame[3], handler)
+        // if the optional parts are omitted, the code is executed in the
+        // current scope
+        if(frame[1] === frame[3]){
+            // module level
+            global_name += '_globals'
+            exec_locals = exec_globals = new Proxy(frame[3], handler)
+        }else{
+            if(mode == "exec"){
+                // for exec() : if the optional parts are omitted, the code is
+                // executed in the current scope
+                // modifications to the default locals dictionary should not
+                // be attempted: this is why exec_locals is a clone of current
+                // locals
+                exec_locals = $B.clone(frames[1])
+                for(var attr in frame[3]){
+                    exec_locals[attr] = frame[3][attr]
+                }
+                exec_globals = exec_locals
+            }else{
+                // for eval() : If both dictionaries are omitted, the
+                // expression is executed with the globals and locals in the
+                // environment where eval() is called
+                exec_locals = new Proxy(frame[1], handler)
+                exec_globals = new Proxy(frame[3], handler)
+            }
+        }
     }else{
         if(_globals.__class__ !== _b_.dict){
             throw _b_.TypeError.$factory(`${mode}() globals must be ` +

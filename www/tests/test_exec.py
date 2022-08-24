@@ -179,4 +179,19 @@ except NameError as exc:
 # issue 1987
 compile('def aa():pass', 'aa.py', 'exec')
 
+# issue 1998
+def click():
+    exec(("""
+try:
+    from a import A as B
+except:
+    pass
+assert B == 6
+    """))
+    # exec() does not modify function locals
+    assert_raises(NameError, eval, 'B')
+
+click()
+
+
 print("passed all tests...")

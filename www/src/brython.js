@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-24 21:54:31.184341"
-__BRYTHON__.timestamp=1661370871184
+__BRYTHON__.compiled_date="2022-08-24 22:31:58.115845"
+__BRYTHON__.timestamp=1661373118113
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6378,8 +6378,14 @@ var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_glob
 var handler={get:function(obj,prop){if(prop=='$lineno'){return obj.$exec_lineno}else if(prop=='__file__'){return '<string>'}
 return obj[prop]},set:function(obj,prop,value){if(prop=='$lineno'){obj.$exec_lineno=value}else if(['__file__'].indexOf(prop)==-1){obj[prop]=value}}}
 if(_globals===_b_.None){
+if(frame[1]===frame[3]){
+global_name+='_globals'
+exec_locals=exec_globals=new Proxy(frame[3],handler)}else{if(mode=="exec"){
+exec_locals=$B.clone(frames[1])
+for(var attr in frame[3]){exec_locals[attr]=frame[3][attr]}
+exec_globals=exec_locals}else{
 exec_locals=new Proxy(frame[1],handler)
-exec_globals=new Proxy(frame[3],handler)}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
+exec_globals=new Proxy(frame[3],handler)}}}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
 "a dict, not "+$B.class_name(_globals))}
 exec_globals={}
 if(_globals.$jsobj){
