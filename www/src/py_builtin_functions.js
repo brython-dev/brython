@@ -730,11 +730,11 @@ function $$eval(src, _globals, _locals){
         if(_locals === _b_.None){
             exec_locals = exec_globals
         }else{
-            if(global_name == local_name){
+            if(_locals === _globals){
                 // running exec at module level
                 global_name += '_globals'
-            }
-            if(_locals.$jsobj){
+                exec_locals = exec_globals
+            }else if(_locals.$jsobj){
                 for(var key in _locals.$jsobj){
                     exec_globals[key] = _locals.$jsobj[key]
                 }

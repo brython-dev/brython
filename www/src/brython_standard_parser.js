@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-24 09:38:40.939423"
-__BRYTHON__.timestamp=1661326720938
+__BRYTHON__.compiled_date="2022-08-24 21:54:31.184341"
+__BRYTHON__.timestamp=1661370871184
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6388,9 +6388,9 @@ if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jso
 for(var key in _globals.$string_dict){_globals.$jsobj[key]=_globals.$string_dict[key][0]
 if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
-if(_locals===_b_.None){exec_locals=exec_globals}else{if(global_name==local_name){
-global_name+='_globals'}
-if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
+if(_locals===_b_.None){exec_locals=exec_globals}else{if(_locals===_globals){
+global_name+='_globals'
+exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
 for(var key in _locals.$string_dict){_locals.$jsobj[key]=_locals.$string_dict[key][0]}
 exec_locals.$getitem=$B.$call($B.$getattr(_locals.__class__,'__getitem__'))
 var missing=$B.$getattr(_locals.__class__,'__missing__',null)
@@ -14071,8 +14071,7 @@ return{found:false,resolve:scope_names}}
 function resolve_in_namespace(name,ns){if(! ns.hasOwnProperty){if(ns[name]!==undefined){return{found:true,value:ns[name]}}}else if(ns.hasOwnProperty(name)){return{found:true,value:ns[name]}}else if(ns.$dict){try{return{found:true,value:ns.$getitem(ns.$dict,name)}}catch(err){if(ns.$missing){try{return{
 found:true,value:$B.$call(ns.$missing)(ns.$dict,name)}}catch(err){if(! $B.$is_exc(err,[_b_.KeyError])){throw err}}}}}
 return{found:false}}
-$B.resolve=function(name){if(name=='tzinfo'){console.log('resolve tzinfo',name,$B.frames_stack.slice())}
-var checked=new Set(),current_globals
+$B.resolve=function(name){var checked=new Set(),current_globals
 for(var frame of $B.frames_stack.slice().reverse()){if(current_globals===undefined){current_globals=frame[3]}else if(frame[3]!==current_globals){var v=resolve_in_namespace(name,current_globals)
 if(v.found){return v.value}
 checked.add(current_globals)
@@ -14085,7 +14084,6 @@ if(builtins_scope.locals.has(name)){return _b_[name]}
 throw $B.name_error(name)}
 $B.resolve_local=function(name,position){
 var frame=$B.last($B.frames_stack)
-if(frame===undefined){console.log('pas de frame, name',name)}
 if(frame[1].hasOwnProperty){if(frame[1].hasOwnProperty(name)){return frame[1][name]}}else{var value=frame[1][name]
 if(value !==undefined){return value}}
 var exc=_b_.UnboundLocalError.$factory(`local variable '${name}' `+
