@@ -16,10 +16,9 @@ class BrythonModuleTestCase(unittest.TestCase):
 
     def runTest(self):
         status, tstart, tend, msg = utils.run_test_module(self.modname, self.base_path)
-        # TODO: Record and output generated traceback
         if not status == 1:
-            raise self.failureException("Failure detected for module '%s'\n\n"
-                          "%s" % (self.modname, msg))
+            raise self.failureException("Failure detected for module '%s'\n\n%s"
+                           % (self.modname, msg))
 
 
 def qunit_test(testName, test, result):
