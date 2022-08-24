@@ -37,6 +37,6 @@ jobs:
       before_install: pip install --upgrade pip
       before_script: pip install flake8
       script:
-        - EXCLUDE=./.*,scripts/make_ast_classes.py,www/gallery/kanban.py,www/gallery/sheet.py,www/src/Lib,www/tests
+        - EXCLUDE=./.*,scripts/make_ast_classes.py,setup,www/gallery/kanban.py,www/gallery/sheet.py,www/src/Lib,www/tests
         # stop the build if there are Python syntax errors or undefined names
         - flake8 --builtins=__BRYTHON__ --exclude=$EXCLUDE --select=E9,F63,F7,F82 --show-source --statistics
