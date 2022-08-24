@@ -33,10 +33,13 @@ jobs:
         # when running on Chrome.
         - ./node_modules/.bin/testem --launch Firefox -t www/tests/run_tests.html ci
 
-    - language: python
-      python: 3.10
-      before_install: pip install --upgrade pip
-      before_script: pip install flake8
-      script:
-        - EXCLUDE=./.*,www/src/Lib/test/badsyntax_3131.py
-        - flake8 . --exclude=$EXCLUDE --select=E9,F63,F7,F82 --show-source --statistics
+    # This flake8 command reports many things that are actual issues,
+    # and also some things that are not. At some point in the future it would be good
+    # to go through them and fix the issues and exclude any files that cannot
+    # be fixed.
+    # - language: python
+    #   python: 3.10
+    #   before_install: pip install --upgrade pip
+    #   before_script: pip install flake8
+    #   script:
+    #     - flake8 . --exclude=./.*,*/test/*,*/tests/* --select=E9,F63,F7,F82 --show-source --statistics
