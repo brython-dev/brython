@@ -86,8 +86,8 @@ class Rows:
                 cells = []
                 for cell in row.cells:
                     cells.append(cell.firstChild)
-                rows.append(cells)
-        return rows
+                self._rows.append(cells)
+        return self._rows
 
 
 class Widget:
