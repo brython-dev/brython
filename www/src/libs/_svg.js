@@ -35,7 +35,7 @@ function makeTagDict(tagName){
         for(var i = 0, len = items.length; i < len; i++){
             // keyword arguments
             var arg = items[i][0],
-                value = items[i][1]
+                value = $B.pyobj2jsobj(items[i][1])
             if(arg.toLowerCase().substr(0,2) == "on"){
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
