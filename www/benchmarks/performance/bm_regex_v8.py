@@ -1678,7 +1678,7 @@ def test_regex_v8(count):
     return times
 
 def run(geo_mean, num_runs):
-    return util.run_benchmark(options, options.num_runs, test_regex_v8)
+    return util.run_benchmark(geo_mean, num_runs, test_regex_v8)
 
 
 #if __name__ == '__main__':
