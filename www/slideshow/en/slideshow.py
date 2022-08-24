@@ -77,7 +77,7 @@ def show(path, zone, page_num=0):
     if page_num<0:
         page_num = 0
     elif page_num >= len(slideshow.pages):
-        page_num = len(pages)-1
+        page_num = len(slideshow.pages)-1
     slideshow.page_num = page_num
     document.unbind('keydown')
     document.bind('keydown',lambda ev:keydown(ev, slideshow, zone))
