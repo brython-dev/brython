@@ -1,5 +1,5 @@
 os: linux
-dist: focal
+dist: jammy
 language: node_js
 node_js: node
 
@@ -17,7 +17,6 @@ jobs:
         - sudo add-apt-repository -y ppa:deadsnakes/ppa
         - sudo apt-get -q update
         - sudo apt-get -y install python3.10
-        - python --version
         - npm install testem
         - ./node_modules/.bin/testem launchers
 
@@ -33,13 +32,11 @@ jobs:
         # when running on Chrome.
         - ./node_modules/.bin/testem --launch Firefox -t www/tests/run_tests.html ci
 
-    # This flake8 command reports many things that are actual issues,
-    # and also some things that are not. At some point in the future it would be good
-    # to go through them and fix the issues and exclude any files that cannot
-    # be fixed.
-    # - language: python
-    #   python: 3.10
-    #   before_install: pip install --upgrade pip
-    #   before_script: pip install flake8
-    #   script:
-    #     - flake8 . --exclude=./.*,*/test/*,*/tests/* --select=E9,F63,F7,F82 --show-source --statistics
+    - language: python
+      python: '3.10'
+      before_install: pip install --upgrade pip
+      before_script: pip install flake8
+      script:
+        - EXCLUDE=./.*,scripts/make_ast_classes.py,www/gallery/kanban.py,www/gallery/sheet.py,www/src/Lib,www/tests
+        # stop the build if there are Python syntax errors or undefined names
+        - flake8 --builtins=__BRYTHON__ --exclude=$EXCLUDE --select=E9,F63,F7,F82 --show-source --statistics
