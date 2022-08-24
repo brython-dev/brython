@@ -504,7 +504,7 @@ class Box(html.DIV, Widget):
         document.unbind("touchmove")
 
     def title(self, text):
-        self.title_bar.text = title
+        self.title_bar.text = text
 
     def _remove_menus(self):
         menu = self._options['menu']
