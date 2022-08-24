@@ -784,8 +784,6 @@ for(var attr in set){
     }
 }
 
-console.log('frozenset.union', frozenset.union + '')
-
 // hash is allowed on frozensets
 frozenset.__hash__ = function(self) {
    if(self === undefined){

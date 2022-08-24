@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-23 21:58:12.993484"
-__BRYTHON__.timestamp=1661284692993
+__BRYTHON__.compiled_date="2022-08-24 08:20:37.976100"
+__BRYTHON__.timestamp=1661322037975
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4802,7 +4802,6 @@ console.log($B.last($B.frames_stack))}
 method.$infos={__self__:self,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr}
 if($test){console.log("return method",method)}
 if(is_own_class_instance_method){obj.$method_cache=obj.$method_cache ||{}
-if(obj.$method_cache===undefined){console.log('obj',obj)}
 obj.$method_cache[attr]=[method,res]}
 return method}}else{
 return res1}}
@@ -8724,7 +8723,6 @@ case "update":
 break
 default:
 if(frozenset[attr]==undefined){if(typeof set[attr]=="function"){frozenset[attr]=(function(x){return function(){return set[x].apply(null,arguments)}})(attr)}else{frozenset[attr]=set[attr]}}}}
-console.log('frozenset.union',frozenset.union+'')
 frozenset.__hash__=function(self){if(self===undefined){return frozenset.__hashvalue__ ||$B.$py_next_hash--}
 if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 var _hash=1927868237

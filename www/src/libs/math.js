@@ -504,7 +504,7 @@ function perm_comb_small(n, k, iscomb){
 
     /* For small enough n and k the result fits in the 64-bit range and can
      * be calculated without allocating intermediate PyLong objects. */
-    if (iscomb) {
+    if(iscomb){
         /* Maps k to the maximal n so that 2*k-1 <= n <= 127 and C(n, k)
          * fits into a uint64_t.  Exclude k = 1, because the second fast
          * path is faster for this case.*/
@@ -515,7 +515,7 @@ function perm_comb_small(n, k, iscomb){
             74, 72, 71, 70, 69, 68, 68, 67,  // 24-31
             67, 67, 67  // 32-34
         ];
-        if (k < fast_comb_limits1.length && n <= fast_comb_limits1[k]) {
+        if(k < fast_comb_limits1.length && n <= fast_comb_limits1[k]){
             /*
                 comb(n, k) fits into a uint64_t. We compute it as
                     comb_odd_part << shift
@@ -543,8 +543,9 @@ function perm_comb_small(n, k, iscomb){
         ];
         if (k < fast_comb_limits2.length && n <= fast_comb_limits2[k]) {
             /* C(n, k) = C(n, k-1) * (n-k+1) / k */
-            var result = n;
-            for(var i = 1n; i < k; i++) {
+            var result = n,
+                i = 1n;
+            while(i < k){
                 result *= --n;
                 result /= ++i;
             }
@@ -559,7 +560,7 @@ function perm_comb_small(n, k, iscomb){
             24, 22, 21, 20, 20  // 16-20
         ];
         if (k < fast_perm_limits.length && n <= fast_perm_limits[k]) {
-            if (n <= 127) {
+            if(n <= 127){
                 /* P(n, k) fits into a uint64_t. */
                 var perm_odd_part = reduced_factorial_odd_part[n]
                                        * inverted_factorial_odd_part[n - k];
@@ -587,20 +588,10 @@ function perm_comb_small(n, k, iscomb){
      */
     var j = k / 2n;
     var a = perm_comb_small(n, j, iscomb);
-    if (a == NULL) {
-        return NULL;
-    }
     var b = perm_comb_small(n - j, k - j, iscomb);
-    if (b == NULL) {
-        error
-    }
     a = a * b;
-    if (iscomb && a != NULL) {
+    if(iscomb){
         b = perm_comb_small(k, j, 1);
-        if (b == NULL) {
-            error;
-        }
-        var a1 = a
         a = a / b;
     }
     return a;
@@ -625,19 +616,9 @@ function perm_comb(n, k, iscomb){
     //var t = j
     //n = n - t;
     var b = perm_comb(n - j, k - j, iscomb);
-    try{
-        a = a * b;
-    }catch(err){
-        console.log(err.message, 'mul')
-        console.log('a', (a + '').length)
-        console.log('b', (b + '').length)
-        throw err
-    }
-    if(iscomb && a != NULL){
+    a = a * b;
+    if(iscomb){
         b = perm_comb_small(k, j, 1);
-        if (b == NULL) {
-            error;
-        }
         a = a / b;
     }
     return a;
