@@ -14,9 +14,6 @@ jobs:
       services:
         - xvfb
       before_install:
-        - sudo add-apt-repository -y ppa:deadsnakes/ppa
-        - sudo apt-get -q update
-        - sudo apt-get -y install python3.10
         - npm install testem
         - ./node_modules/.bin/testem launchers
 
