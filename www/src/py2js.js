@@ -1613,10 +1613,14 @@ $CallCtx.prototype.ast = function(){
             }else{
                 if(res.keywords.length > 0){
                     if(res.keywords[0].arg){
-                        raise_syntax_error(this,
+                        raise_syntax_error_known_range(this,
+                            item.position,
+                            last_position(item),
                             'positional argument follows keyword argument')
                     }else{
-                        raise_syntax_error(this,
+                        raise_syntax_error_known_range(this,
+                            item.position,
+                            last_position(item),
                             'positional argument follows keyword argument unpacking')
                     }
                 }
