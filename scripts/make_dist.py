@@ -59,6 +59,7 @@ def run():
         vinfo_file_out.write(']\n')
 
     import make_stdlib_static
+
     # build brython.js from base Javascript files
     sources = [
         'brython_builtins',
@@ -135,8 +136,9 @@ def run():
 
     # add scripts that use Python grammar to parse source code and produce
     # the Abstract Syntax Tree
-    import transform_full_grammar # creates full_grammar.js from Python.gram
-
+    import transform_full_grammar
+    transform_full_grammar.generate_javascript()
+    
     src = ''
     for fname in ['string_parser', 'number_parser', 'action_helpers',
             'python_parser', 'full_grammar']:
