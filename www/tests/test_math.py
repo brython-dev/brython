@@ -292,4 +292,7 @@ assert_raises(ValueError, math.log, 0, msg="math domain error")
 assert_raises(ValueError, math.log10, 0, msg="math domain error")
 assert_raises(ValueError, math.log2, 0, msg="math domain error")
 
+# rewriting of math.comb
+math.comb(1200, 575)
+
 print("passed all tests..")

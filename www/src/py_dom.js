@@ -946,7 +946,7 @@ DOMNode.__str__ = DOMNode.__repr__ = function(self){
 DOMNode.__setattr__ = function(self, attr, value){
     // Sets the *property* attr of the underlying element (not its
     // *attribute*)
-
+    
     if(attr.substr(0,2) == "on" && attr.length > 2){ // event
         if(!$B.$bool(value)){ // remove all callbacks attached to event
             DOMNode.unbind(self, attr.substr(2))
@@ -1018,6 +1018,9 @@ DOMNode.__setattr__ = function(self, attr, value){
         }
 
         // Set the property
+        if(_b_.isinstance(value, _b_.float)){ // issue 2007
+            value = value.value
+        }
         self[attr] = value
 
         return _b_.None

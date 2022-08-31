@@ -207,7 +207,7 @@ function to_int(long_int){
     return long_int.pos ? parseInt(long_int.value) : -parseInt(long_int.value)
 }
 
-function from_BigInt(y){
+var from_BigInt = long_int.$from_BigInt = function(y){
     var pos = y >= 0
     y = y.toString()
     y = y.endsWith("n") ? y.substr(0, y.length - 1) : y
@@ -309,7 +309,7 @@ long_int.__abs__ = function(self){
 
 long_int.__add__ = function(self, other){
     if(_b_.isinstance(other, _b_.float)){
-        return _b_.float.$factory(to_int(self) + other)
+        return _b_.float.$factory(to_int(self) + other.value)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
@@ -361,12 +361,12 @@ long_int.__float__ = function(self){
     if(! isFinite(parseFloat(self.value))){
         throw _b_.OverflowError.$factory("int too big to convert to float")
     }
-    return new Number((self.pos ? 1 : - 1) * parseFloat(self.value))
+    return $B.fast_float((self.pos ? 1 : - 1) * parseFloat(self.value))
 }
 
 long_int.__floordiv__ = function(self, other){
     if(_b_.isinstance(other, _b_.float)){
-        return _b_.float.$factory(to_int(self) / other)
+        return _b_.float.$factory(to_int(self) / other.value)
     }
     if(typeof other == "number" && Math.abs(other) < $B.max_safe_divider){
         var t = self.value,
@@ -486,7 +486,7 @@ long_int.__mul__ = function(self, other){
             else{return -self}
     }
     if(_b_.isinstance(other, _b_.float)){
-        return _b_.float.$factory(to_int(self) * other)
+        return _b_.float.$factory(to_int(self) * other.value)
     }
     if(typeof other == "number"){
         other = long_int.$factory(other)
@@ -605,8 +605,7 @@ long_int.__str__ = long_int.__repr__ = function(self){
 
 long_int.__sub__ = function(self, other){
     if(_b_.isinstance(other, _b_.float)){
-        other = other instanceof Number ? other : other.$brython_value
-        return _b_.float.$factory(to_int(self) - other)
+        return _b_.float.$factory(to_int(self) - other.value)
     }
     if(typeof other == "number"){
         other = long_int.$factory(_b_.str.$factory(other))
@@ -658,7 +657,7 @@ long_int.__truediv__ = function(self, other){
     }else if(_b_.isinstance(other,_b_.int)){
         return _b_.float.$factory(to_int(self) / other)
     }else if(_b_.isinstance(other,_b_.float)){
-        return _b_.float.$factory(to_int(self) / other)
+        return _b_.float.$factory(to_int(self) / other.value)
     }else{throw _b_.TypeError.$factory(
         "unsupported operand type(s) for /: 'int' and '" +
         $B.class_name(other) + "'")}
@@ -875,12 +874,16 @@ long_int.$factory = function(value, base){
         res.pos = pos
         return res
     }else if(_b_.isinstance(value, _b_.float)){
-        if(value === Number.POSITIVE_INFINITY ||
-                value === Number.NEGATIVE_INFINITY){
+        if(value.value === Number.POSITIVE_INFINITY ||
+                value.value === Number.NEGATIVE_INFINITY){
             return value
         }
-        if(value >= 0){value = new Number(Math.round(value.value))}
-        else{value = new Number(Math.ceil(value.value))}
+        if(value >= 0){
+            value = Math.round(value.value)
+        }else{
+            value = Math.ceil(value.value)
+        }
+        value += ''
     }else if(_b_.isinstance(value, _b_.bool)){
         if(value.valueOf()){return _b_.int.$factory(1)}
         return _b_.int.$factory(0)

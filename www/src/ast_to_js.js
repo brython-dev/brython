@@ -237,7 +237,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'A'
+    var test = false // name == 'd'
     if(test){
         console.log('name scope', name, scopes)
         alert()
@@ -396,9 +396,6 @@ function resolve_in_namespace(name, ns){
 }
 
 $B.resolve = function(name){
-    if(name == 'tzinfo'){
-        console.log('resolve tzinfo', name, $B.frames_stack.slice())
-    }
     var checked = new Set(),
         current_globals
     for(var frame of $B.frames_stack.slice().reverse()){
@@ -433,9 +430,6 @@ $B.resolve_local = function(name, position){
     // Translation of a reference to "name" when symtable reports that "name"
     // is local, but it has not been bound in scope locals
     var frame = $B.last($B.frames_stack)
-    if(frame === undefined){
-        console.log('pas de frame, name', name)
-    }
     if(frame[1].hasOwnProperty){
         if(frame[1].hasOwnProperty(name)){
             return frame[1][name]
@@ -718,7 +712,7 @@ function init_scopes(type, scopes){
     }else{
         name = filename.replace(/\./g, '_')
     }
-    
+
     var top_scope = new Scope(name, `${type}`, this),
         block = scopes.symtable.table.blocks.get(_b_.id(this))
     if(block && block.$has_import_star){
@@ -1395,9 +1389,9 @@ $B.ast.Constant.prototype.to_js = function(scopes){
     }else if(this.value.__class__ === $B.long_int){
         return `$B.fast_long_int('${this.value.value}', ${this.value.pos})`
     }else if(this.value instanceof Number){
-        return `new Number(${this.value})`
+        return `{__class__: _b_.float, value: ${+this.value}}`
     }else if(this.value.__class__ === _b_.complex){
-        return `$B.make_complex(${this.value.$real}, ${this.value.$imag})`
+        return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`
     }else{
         var type = this.value.type,
             value = this.value.value
@@ -2427,7 +2421,8 @@ $B.ast.Name.prototype.to_js = function(scopes){
         }
         return reference(scopes, scope, this.id)
     }else if(this.ctx instanceof $B.ast.Load){
-        var res = name_reference(this.id, scopes, [this.col_offset, this.col_offset, this.end_col_offset])
+        var res = name_reference(this.id, scopes,
+             [this.col_offset, this.col_offset, this.end_col_offset])
         if(this.id == '__debugger__' && res.startsWith('$B.resolve_in_scopes')){
             // Special case : name __debugger__ is translated to Javascript
             // "debugger" if not bound in Brython code
@@ -2674,7 +2669,7 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes){
         }
     }
     var method = opclass2dunder[this.op.constructor.$name]
-    return `$B.$getattr(${operand}, '${method}')()`
+    return `$B.$getattr($B.get_class(locals.$result = ${operand}), '${method}')(locals.$result)`
 }
 
 $B.ast.While.prototype.to_js = function(scopes){

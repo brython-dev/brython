@@ -241,6 +241,7 @@ function preformat(_self, fmt){
 str.__format__ = function(_self, format_spec) {
     [_self, format_spec] = to_string([_self, format_spec])
     var fmt = new $B.parse_format_spec(format_spec)
+
     if(fmt.sign !== undefined){
         throw _b_.ValueError.$factory(
             "Sign not allowed in string format specifier")
@@ -409,7 +410,7 @@ var format_padding = function(s, flags, minus_one){
 
 var format_int_precision = function(val, flags){
     var precision = flags.precision
-    if(!precision){
+    if(! precision){
         return val.toString()
     }
     precision = parseInt(precision, 10)
@@ -468,6 +469,8 @@ var num_format = function(val, flags) {
     number_check(val)
     if(val.__class__ === $B.long_int){
         val = $B.long_int.to_base(val, 10)
+    }else if(_b_.isinstance(val, _b_.float)){
+        val = parseInt(val.value)
     }else{
         val = parseInt(val)
     }
@@ -510,7 +513,7 @@ var _float_helper = function(val, flags){
         flags.precision = parseInt(flags.precision, 10)
         validate_precision(flags.precision)
     }
-    return parseFloat(val)
+    return _b_.isinstance(val, _b_.int) ? val : val.value
 }
 
 // used to capture and remove trailing zeroes
@@ -611,7 +614,7 @@ var _floating_g_exp_helper = function(val, precision, flags, upper){
 }
 
 // fF
-var floating_point_decimal_format = function(val, upper, flags) {
+var floating_point_decimal_format = function(val, upper, flags){
     val = _float_helper(val, flags)
     return format_padding(format_sign(val, flags) +
         format_float_precision(val, upper, flags,
@@ -647,7 +650,10 @@ var floating_point_exponential_format = function(val, upper, flags){
 
 var signed_hex_format = function(val, upper, flags){
     var ret
-    number_check(val)
+    if(! _b_.isinstance(val, _b_.int)){
+        throw _b_.TypeError.$factory(
+            `%X format: an integer is required, not ${$B.class_name(val)}`)
+    }
 
     if(val.__class__ === $B.long_int){
        ret = $B.long_int.to_base(val, 16)
@@ -854,7 +860,7 @@ str.__mod__ = function(_self, args){
         getitem = $B.$getattr(args, "__getitem__", _b_.None)
     }
     var ret = ''
-    var $get_kwarg_string = function(s) {
+    var $get_kwarg_string = function(s){
         // returns [self, newpos]
         ++pos
         var rslt = kwarg_key.exec(s.substring(newpos))

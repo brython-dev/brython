@@ -1613,10 +1613,14 @@ $CallCtx.prototype.ast = function(){
             }else{
                 if(res.keywords.length > 0){
                     if(res.keywords[0].arg){
-                        raise_syntax_error(this,
+                        raise_syntax_error_known_range(this,
+                            item.position,
+                            last_position(item),
                             'positional argument follows keyword argument')
                     }else{
-                        raise_syntax_error(this,
+                        raise_syntax_error_known_range(this,
+                            item.position,
+                            last_position(item),
                             'positional argument follows keyword argument unpacking')
                     }
                 }
@@ -4994,7 +4998,7 @@ $NumberCtx.prototype.ast = function(){
             position: this.position
         }
         var imag_value = $NumberCtx.prototype.ast.bind(imag)().value
-        ast_obj.value = $B.make_complex(0, imag_value)
+        ast_obj.value = $B.make_complex(0, +imag_value)
     }
     set_position(ast_obj, this.position)
     return ast_obj

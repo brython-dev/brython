@@ -695,7 +695,7 @@ Random.paretovariate = function(){
 function is_integer(x){
     return _b_.isinstance(x, _b_.int) || (
         _b_.isinstance(x, _b_.float) &&
-            x.valueOf() == Math.floor(x.valueOf()))
+            Number.isInteger(x.value))
 }
 
 Random.randint = function(self, a, b){

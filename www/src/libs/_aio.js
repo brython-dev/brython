@@ -45,7 +45,7 @@ function handle_kwargs(kw, method){
                 var items = []
                 for(var key in params){
                     items.push(encodeURIComponent(key) + "=" +
-                               encodeURIComponent(params[key][0]))
+                               encodeURIComponent($B.pyobj2jsobj(params[key][0])))
                 }
                 data = items.join("&")
             }
@@ -242,6 +242,12 @@ function run(coro){
 }
 
 function sleep(seconds){
+    if(seconds.__class__ === _b_.float){
+        seconds = seconds.value
+    }else if(typeof seconds != "number"){
+        throw _b_.TypeError.$factory("'sleep' argument must be " +
+            "int or float, not " + $B.class_name(seconds))
+    }
     var func = function(){
         return new Promise(resolve => setTimeout(
             function(){resolve(_b_.None)}, 1000 * seconds))
