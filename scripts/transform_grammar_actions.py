@@ -1,11 +1,17 @@
-"""Transforms python.gram into python.gram.js_actions where grammar actions
-syntax is adapted to Javascript
+"""Transforms CPython's python.gram into python.gram.js_actions 
+where grammar actions syntax is adapted to Javascript
 """
 
 import re
+import urllib.request
 
-with open('python.gram', encoding='utf-8') as f:
-    src = f.read()
+import version
+vnum = '.'.join(str(num) for num in version.version[:2])
+
+# read python.gram from CPython Github site
+ast_url = f"https://raw.githubusercontent.com/python/cpython/{vnum}/Grammar/python.gram"
+f = urllib.request.urlopen(ast_url)
+src = f.read().decode('utf-8')
 
 operators = [
     # binary operators
