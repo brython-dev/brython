@@ -138,7 +138,7 @@ def run():
     # the Abstract Syntax Tree
     import transform_full_grammar
     transform_full_grammar.generate_javascript()
-    
+
     src = ''
     for fname in ['string_parser', 'number_parser', 'action_helpers',
             'python_parser', 'full_grammar']:
