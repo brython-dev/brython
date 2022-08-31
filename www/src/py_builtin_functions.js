@@ -551,7 +551,8 @@ function dir(obj){
         console.log('error in dir', err.message)
     }
 
-    var res = [], pos = 0
+    var res = [],
+        pos = 0
     for(var attr in obj){
         if(attr.charAt(0) !== '$' && attr !== '__class__' &&
                 obj[attr] !== undefined){
@@ -3333,7 +3334,9 @@ $B.Function.__dir__ = function(self){
     var infos = self.$infos || {},
         attrs = self.$attrs || {}
 
-    return Object.keys(infos).concat(Object.keys(attrs))
+    return Object.keys(infos).
+               concat(Object.keys(attrs)).
+               filter(x => !x.startsWith('$'))
 }
 
 $B.Function.__eq__ = function(self, other){
