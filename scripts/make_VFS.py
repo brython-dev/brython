@@ -118,7 +118,6 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 print("adding", mod_name)
 
             for _file in files:
-                print(_file)
                 ext = os.path.splitext(_file)[1]
                 if ext not in ('.js', '.py'):
                     continue
@@ -129,7 +128,6 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 if not git.in_index(_file):
                     print(_file, "not in git index")
                     continue
-                nb += 1
 
                 file_name = os.path.join(root, _file)
 
@@ -141,6 +139,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
                                 'sha224.js', 'sha256.js', 'sha384.js',
                                 'sha512.js'):
                       continue
+
+                nb += 1
 
                 mod_name = vfs_path[len(stdlib_dir) + 2:].replace('/', '.')
                 mod_name, ext = os.path.splitext(mod_name)
