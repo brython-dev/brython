@@ -286,7 +286,7 @@ class KanbanView:
 
     def dump(self, *args):
         code = "storage['kanban'] = " + instance_repr(self.kanban)
-        popup_dump(code)
+        alert(code)
 
 # ----------------------------------------------------------
 def clear_node(node):
