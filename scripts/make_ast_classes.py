@@ -19,6 +19,7 @@ with open('Python.asdl', 'wb') as out:
 
 f = open('Python.asdl', encoding='utf-8')
 type_def = False
+ast_options = []
 ast_types = {}
 ast_type = None
 
