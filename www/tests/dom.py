@@ -45,6 +45,7 @@ assert f_called
 class A(html.DIV):
     def __init__(self):
         self.uV = 5
+        self.f = 0.5
         self.Xyz = "mystring"
         self.zd = {"a": 3}
 
@@ -52,6 +53,7 @@ p = A()
 assert not hasattr(p, "XYZ")
 assert p.Xyz == "mystring"
 assert p.uV == 5
+assert p.f == 0.5
 assert not hasattr(p, "uv")
 assert p.zd == {"a": 3}
 
