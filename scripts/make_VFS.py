@@ -46,6 +46,28 @@ class Visitor(ast.NodeVisitor):
                 if os.path.exists(path):
                     self.imports.add(module + "." + alias.name)
 
+last_modifs_path = os.path.join(os.path.dirname(__file__), 'last_modifs.json')
+last_modifs = {}
+if not os.path.exists(last_modifs_path):
+    with open(last_modifs_path, 'w', encoding='utf-8') as out:
+        json.dump(last_modifs, out)
+else:
+    with open(last_modifs_path, encoding='utf-8') as f:
+        last_modifs = json.load(f)
+
+def check_changed(root, file_name):
+    """Check if the last modification date changed since last build."""
+    mtime = os.stat(os.path.join(root, file_name)).st_mtime
+    if file_name not in last_modifs:
+        last_modifs[file_name] = mtime
+        return True
+    elif mtime == last_modifs[file_name]:
+        return False # file did not change
+    else:
+        last_modifs[file_name] = mtime
+        print(file_name, 'changed')
+        return True
+
 def process(filename, exclude_dirs=['test','site-packages']):
     """Process a VFS filename for Brython."""
     print("Generating {}".format(filename))
@@ -55,6 +77,14 @@ def process(filename, exclude_dirs=['test','site-packages']):
     main_root = os.path.dirname(filename)
     VFS = {"$timestamp": timestamp}
     print("generated VFS timestamp", timestamp)
+    if os.path.exists(filename):
+        with open(filename, encoding='utf-8') as f:
+            vfs = f.readlines()[1:-1]
+            vfs[0] = vfs[0][vfs[0].find('{'):]
+            json_payload = ''.join(vfs)
+            old_vfs = json.loads(json_payload)
+
+    nb_unchanged = 0
     for stdlib_dir in ("libs", "Lib"):
         lib_path = os.path.join(main_root, stdlib_dir)
         for root, _dir, files in os.walk(lib_path):
@@ -68,7 +98,6 @@ def process(filename, exclude_dirs=['test','site-packages']):
                continue  # skip these modules
             if '__pycache__' in _dir:
                 _dir.remove("__pycache__")
-            nb += 1
 
             if stdlib_dir == "Lib":
                 if root == lib_path:
@@ -89,6 +118,7 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 print("adding", mod_name)
 
             for _file in files:
+                print(_file)
                 ext = os.path.splitext(_file)[1]
                 if ext not in ('.js', '.py'):
                     continue
@@ -102,6 +132,30 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 nb += 1
 
                 file_name = os.path.join(root, _file)
+
+                vfs_path = os.path.join(root, _file).replace(main_root, '')
+                vfs_path = vfs_path.replace("\\", "/")
+
+                if vfs_path.startswith('/libs/crypto_js/rollups/'):
+                   if _file not in ('md5.js', 'sha1.js', 'sha3.js',
+                                'sha224.js', 'sha256.js', 'sha384.js',
+                                'sha512.js'):
+                      continue
+
+                mod_name = vfs_path[len(stdlib_dir) + 2:].replace('/', '.')
+                mod_name, ext = os.path.splitext(mod_name)
+                is_package = mod_name.endswith('__init__')
+                if ext == ".py" and is_package:
+                   mod_name = mod_name[:-9]
+
+                tail = file_name[len(main_root) + 1:]
+                if not check_changed(main_root, tail):
+                    # if last modif time did not change, use the previous
+                    # version stored in brython_stdlib.js
+                    nb_unchanged += 1
+                    VFS[mod_name] = old_vfs[mod_name]
+                    continue
+
                 try:
                     with open(file_name, encoding='utf-8') as f:
                         data = f.read()
@@ -120,21 +174,8 @@ def process(filename, exclude_dirs=['test','site-packages']):
                         visitor.visit(tree)
                         imports = sorted(list(visitor.imports))
 
-                vfs_path = os.path.join(root, _file).replace(main_root, '')
-                vfs_path = vfs_path.replace("\\", "/")
-
-                if vfs_path.startswith('/libs/crypto_js/rollups/'):
-                   if _file not in ('md5.js', 'sha1.js', 'sha3.js',
-                                'sha224.js', 'sha256.js', 'sha384.js',
-                                'sha512.js'):
-                      continue
-
-                mod_name = vfs_path[len(stdlib_dir) + 2:].replace('/', '.')
-                mod_name, ext = os.path.splitext(mod_name)
-                is_package = mod_name.endswith('__init__')
                 if ext == ".py":
                     if is_package:
-                       mod_name = mod_name[:-9]
                        VFS[mod_name] = [ext, data, imports, 1]
                     else:
                         VFS[mod_name] = [ext, data, imports]
@@ -143,11 +184,15 @@ def process(filename, exclude_dirs=['test','site-packages']):
                 print("adding {}".format(mod_name))
 
     print('{} files, {} errors'.format(nb, nb_err))
+    print(nb_unchanged, 'unchanged')
     with open(filename, "w") as out:
       out.write('__BRYTHON__.use_VFS = true;\n')
       out.write('var scripts = {}\n'.format(json.dumps(VFS)))
       out.write('__BRYTHON__.update_VFS(scripts)\n')
 
+    # save changes
+    with open(last_modifs_path, 'w', encoding='utf-8') as out:
+        json.dump(last_modifs, out)
 
 if __name__ == '__main__':
     main_root = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
