@@ -1,6 +1,5 @@
 import sys
 import time
-import tb as traceback
 
 from browser import console
 
@@ -96,6 +95,7 @@ def populate_testmod_input(elem, selected=None):
             g <= o
 
 def trace_exc(run_frame):
+    result_lines = []
     exc_type, exc_value, traceback = sys.exc_info()
 
     this_frame = sys._getframe()
@@ -106,10 +106,10 @@ def trace_exc(run_frame):
         src = open(filename, encoding='utf-8').read()
         lines = src.split('\n')
         line = lines[lineno - 1]
-        print('    ' + line.strip())
+        result_lines.append('    ' + line.strip())
         return line
 
-    print('Traceback (most recent call last):')
+    result_lines.append('Traceback (most recent call last):')
     show = False
     started = False
 
@@ -123,7 +123,7 @@ def trace_exc(run_frame):
             if filename == '<string>':
                 show = True
             if show:
-                print(f'  File {filename}, line {lineno}')
+                result_lines.append(f'  File {filename}, line {lineno}')
                 show_line(filename, lineno)
         traceback = traceback.tb_next
 
@@ -131,13 +131,14 @@ def trace_exc(run_frame):
         filename = exc_value.args[1][0]
         lineno = exc_value.args[1][1]
         if filename != '<string>' or not show:
-            print(f'  File {filename}, line {lineno}')
+            result_lines.append(f'  File {filename}, line {lineno}')
         line = show_line(filename, lineno)
         if line:
             indent = len(line) - len(line.lstrip())
             col_offset = exc_value.args[1][2]
-            print('    ' +  (col_offset - indent - 1) * ' ' + '^')
-    print(f'{exc_type.__name__}: {exc_value}')
+            result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
+    result_lines.append(f'{exc_type.__name__}: {exc_value}')
+    return '\n'.join(result_lines)
 
 def run(src, file_path=None):
     t0 = time.perf_counter()
@@ -155,7 +156,8 @@ def run(src, file_path=None):
             getattr(exc, 'args', None),
             getattr(exc, '__class__', None),
             getattr(exc, 'message', None))
-        trace_exc(sys._getframe())
+        msg = trace_exc(sys._getframe())
+        print(msg)
         state = 0
     t1 = time.perf_counter()
     return state, t0, t1, msg

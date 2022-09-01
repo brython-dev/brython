@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="//code.jquery.com/qunit/qunit-2.6.2.css" />
+
+    <!-- Needed in sys.path init tests , see test_import.py -->
+    <link id="link_none1" rel="pythonpath" href="/nowhere1" hreflang="none" />
+    <link id="link_none2" rel="pythonpath" href="/nowhere2" hreflang="x-none" />
+    <link id="link_empty_vfs" rel="pythonpath prefetch" href="../test.empty.vfs.js" />
+  </head>
+  <body onload="brython({debug:1, indexedDB: false, static_stdlib_import:true})">
+    <!-- QUnit init -->
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="//code.jquery.com/qunit/qunit-2.6.2.js"></script>
+
+    <!-- Testem integration -->
+    <script src="/testem.js"></script>
+
+    <!-- Brython init -->
+    <script type="text/javascript" src="../src/brython.js"></script>
+    <!-- Javascript code needed to run tests included in dom.py -->
+    <script type="text/javascript" src="dom_js_tests.js"></script>
+    <!-- HTML needed to run tests included in dom.py -->
+    <div id="dom-test-element-id"></div>
+    <div id="banner_row"></div>
+
+    <!-- Javascript code needed to run JSObject tests -->
+    <script type="text/javascript" src="jsobj_tests.js"></script>
+    <script type="text/javascript" src="../src/brython_stdlib.js"></script>
+
+    <script type="text/python3">
+from browser import window
+import brython_test_utils as utils
+from   brython_test_utils import unittest as test_utils
+import unittest
+import traceback
+
+def testTraceback(qunit):
+    try:
+        """ Traceback tests for source code printing """
+        # issue 859
+        def f():
+            return 1 / 0
+
+        try:
+            f()
+        except Exception:
+            exception_info = traceback.format_exc()
+            assert '1 / 0' in exception_info
+            assert ', in f' in exception_info
+
+        # issue 885
+        try:
+            1/0
+        except:
+            assert '1/0' in traceback.format_exc()
+
+        # issue 887
+        try:
+            exec('def f(): return 1/0\nf()')
+        except ZeroDivisionError:
+            trace = traceback.format_exc()
+            assert 'exec(\'def f(): return 1/0\\nf()\')' in trace
+            assert 'f()' in trace
+            assert 'def f(): return 1/0\\n' in trace
+
+        # issue 961
+        from z import f
+
+        try:
+            f()
+        except ZeroDivisionError:
+            trace = traceback.format_exc()
+            assert "line 9, in f" in trace
+            assert "line 6, in h" in trace
+            assert "line 5, in lambda" in trace
+            assert "line 2, in g" in trace
+
+        # issue 976
+        try:
+            exec("""t = (
+                         1, 2, 3,
+                         4, 5 6
+                    )""")
+            raise Exception("should have raised SyntaxError")
+        except SyntaxError as exc:
+            assert exc.lineno == 3
+
+        qunit.ok(True)
+    except:
+        print('Failure in testTraceback')
+        qunit.ok(False, traceback.format_exc())
+
+
+_QUnit = window.QUnit
+_QUnit.test('testTraceback', testTraceback)
+
+# TODO: Arg values e.g. verbosity level ?
+result = test_utils.OneTimeTestResult()
+
+def qunit_add_tests(suite):
+    module_name = getattr(suite, 'caption', None) or 'All tests'
+    _QUnit.module(module_name)
+    pend = []
+    for test in suite:
+        if isinstance(test, unittest.BaseTestSuite):
+            pend.append(test)
+        else:
+            testName = test.shortDescription() or test.id()
+            _QUnit.test(testName, test_utils.qunit_test(testName, test, result))
+    for suite in pend:
+        qunit_add_tests(suite)
+
+qunit_add_tests(test_utils.load_brython_test_cases('.'))
+
+
+# def fail_qunit(name, message):
+#     def the_test(qunit):
+#         qunit.ok(False, message)
+#     _QUnit.test(name, the_test)
+
+# try:
+#     from unittest.loader import TestLoader
+# except:
+#     fail_qunit('Loading unittest.loader.TestLoader', traceback.format_exc())
+
+    </script>
+
+  </body>
+</html>
+
