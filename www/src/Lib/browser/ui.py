@@ -86,8 +86,8 @@ class Rows:
                 cells = []
                 for cell in row.cells:
                     cells.append(cell.firstChild)
-                rows.append(cells)
-        return rows
+                self._rows.append(cells)
+        return self._rows
 
 
 class Widget:
@@ -504,7 +504,7 @@ class Box(html.DIV, Widget):
         document.unbind("touchmove")
 
     def title(self, text):
-        self.title_bar.text = title
+        self.title_bar.text = text
 
     def _remove_menus(self):
         menu = self._options['menu']
