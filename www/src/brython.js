@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-08-31 10:37:53.434803"
-__BRYTHON__.timestamp=1661935073434
+__BRYTHON__.compiled_date="2022-09-01 07:38:35.880397"
+__BRYTHON__.timestamp=1662010715879
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1196,7 +1196,7 @@ if(keywords.has(key)){raise_syntax_error_known_range(item,item.position,last_pos
 keywords.add(key)
 var keyword=new ast.keyword(item.tree[0].value,item.tree[1].ast())
 set_position(keyword,item.position)
-res.keywords.push(keyword)}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error(this,'positional argument follows keyword argument')}else{raise_syntax_error(this,'positional argument follows keyword argument unpacking')}}
+res.keywords.push(keyword)}else{if(res.keywords.length > 0){if(res.keywords[0].arg){raise_syntax_error_known_range(this,item.position,last_position(item),'positional argument follows keyword argument')}else{raise_syntax_error_known_range(this,item.position,last_position(item),'positional argument follows keyword argument unpacking')}}
 res.args.push(item.ast())}}}
 set_position(res,this.position,this.end_position)
 return res}
