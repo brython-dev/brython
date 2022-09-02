@@ -403,9 +403,9 @@ $B.rest_iter = function(next_func){
     }
 }
 
-$B.set_lineno = function(locals, lineno){
-    locals.$lineno = lineno
-    if(locals.$f_trace !== _b_.None){
+$B.set_lineno = function(frame, lineno){
+    frame.$lineno = lineno
+    if(frame[1].$f_trace !== _b_.None){
         $B.trace_line()
     }
     return true

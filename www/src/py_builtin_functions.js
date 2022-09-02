@@ -605,28 +605,6 @@ enumerate.__next__ = function(self){
 
 $B.set_func_names(enumerate, "builtins")
 
-function make_proxy(dict, lineno){
-    // return a proxy to a Python dict
-    const handler = {
-      get: function(target, prop) {
-          console.log('get proxy attr', prop, target)
-          if(prop == '__class__'){
-              return _b_.dict
-          }else if(prop == '$lineno'){
-              return lineno
-          }
-          if(target.$string_dict.hasOwnProperty(prop)){
-              return target.$string_dict[prop][0]
-          }
-          return undefined
-      },
-      set: function(target, prop, value){
-        _b_.dict.$setitem(target, prop, value)
-      }
-    }
-    return new Proxy(dict, handler)
-}
-
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
     var $ = $B.args("eval", 4,
@@ -656,7 +634,7 @@ function $$eval(src, _globals, _locals){
     }
 
     var frame = $B.last($B.frames_stack)
-    var lineno = frame[1].$lineno
+    var lineno = frame.$lineno
 
     $B.exec_scope = $B.exec_scope || {}
 
@@ -678,24 +656,6 @@ function $$eval(src, _globals, _locals){
         __name__ = '<module>',
         filename = '<string>'
 
-    // proxy around globals.$jsobj, to avoid modifying __file__ and
-    // $lineno
-    var handler = {
-        get: function(obj, prop){
-            if(prop == '$lineno'){
-                return obj.$exec_lineno
-            }
-            return obj[prop]
-        },
-        set: function(obj, prop, value){
-            if(prop == '$lineno'){
-                obj.$exec_lineno = value
-            }else{
-                obj[prop] = value
-            }
-        }
-    }
-
     if(_globals === _b_.None){
         // if the optional parts are omitted, the code is executed in the
         // current scope
@@ -703,7 +663,7 @@ function $$eval(src, _globals, _locals){
         if(frame[1] === frame[3]){
             // module level
             global_name += '_globals'
-            exec_locals = exec_globals = new Proxy(frame[3], handler)
+            exec_locals = exec_globals = frame[3]
         }else{
             if(mode == "exec"){
                 // for exec() : if the optional parts are omitted, the code is
@@ -720,8 +680,8 @@ function $$eval(src, _globals, _locals){
                 // for eval() : If both dictionaries are omitted, the
                 // expression is executed with the globals and locals in the
                 // environment where eval() is called
-                exec_locals = new Proxy(frame[1], handler)
-                exec_globals = new Proxy(frame[3], handler)
+                exec_locals = frame[1]
+                exec_globals = frame[3]
             }
         }
     }else{
@@ -732,7 +692,7 @@ function $$eval(src, _globals, _locals){
         // _globals is used for both globals and locals
         exec_globals = {}
         if(_globals.$jsobj){ // eg globals()
-            exec_globals = new Proxy(_globals.$jsobj, handler)
+            exec_globals = _globals.$jsobj
         }else{
             // The globals object must be the same across calls to exec()
             // with the same dictionary (cf. issue 690)
@@ -789,7 +749,7 @@ function $$eval(src, _globals, _locals){
     frame.is_exec_top = true
     frame.__file__ = filename
     exec_locals.$f_trace = $B.enter_frame(frame)
-    exec_locals.$lineno = 1
+    frame.$lineno = 1
 
     if(src.__class__ === code){
         _ast = src._ast
@@ -843,17 +803,19 @@ function $$eval(src, _globals, _locals){
     }
 
     try{
-        var exec_func = new Function('$B', '_b_', 'locals', local_name, global_name, js)
+        var exec_func = new Function('$B', '_b_', 'locals',
+                                     local_name, global_name, 'frame', js)
     }catch(err){
         if($B.debug > 1){
-            console.log('eval() error\n', js)
+            console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
         throw err
     }
 
     try{
-        var res = exec_func($B, _b_, exec_locals, exec_locals, exec_globals)
+        var res = exec_func($B, _b_, exec_locals, 
+                            exec_locals, exec_globals, frame)
     }catch(err){
         if($B.debug > 2){
             console.log(

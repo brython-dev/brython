@@ -17,7 +17,6 @@ function py_immutable_to_js(pyobj){
 
 function js_immutable_to_py(jsobj){
     if(typeof jsobj == "number"){
-        console.log('js number', jsobj, Number.isInteger(jsobj), Number.isSafeInteger(jsobj))
         if(Number.isSafeInteger(jsobj)){
             return jsobj
         }else if(Number.isInteger(jsobj)){
@@ -724,7 +723,7 @@ DOMNode.__getattribute__ = function(self, attr){
             var from_class = $B.$getattr(self.__class__, attr, _b_.None)
             if(from_class !== _b_.None){
                 var frame = $B.last($B.frames_stack),
-                    line = frame[1].$lineno
+                    line = frame.$lineno
                 console.info("Warning: line " + line + ", " + self.tagName +
                     " element has instance attribute '" + attr + "' set." +
                     " Attribute of class " + $B.class_name(self) +
@@ -1006,8 +1005,8 @@ DOMNode.__setattr__ = function(self, attr, value){
             console.log(msg)
             var frame = $B.last($B.frames_stack)
             if($B.debug > 0){
-                var file = frame[3].__file__,
-                    lineno = frame[1].$lineno
+                var file = frame.__file__,
+                    lineno = frame.$lineno
                 console.log("module", frame[2], "line", lineno)
                 if($B.file_cache.hasOwnProperty(file)){
                     var src = $B.file_cache[file]

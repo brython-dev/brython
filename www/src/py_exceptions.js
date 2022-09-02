@@ -80,7 +80,7 @@ $B.print_stack = function(stack){
     stack = stack || $B.frames_stack
     var trace = []
     for(var frame of stack){
-        var lineno = frame[1].$lineno,
+        var lineno = frame.$lineno,
             filename = frame.__file__
         if(lineno !== undefined){
             var local = frame[0] == frame[2] ? "<module>" : frame[0]
@@ -107,7 +107,7 @@ var traceback = $B.traceback = $B.make_class("traceback",
             __class__ : traceback,
             $stack: stack,
              // save line numbers when exception happened
-            linenos: stack.map(x => x[1].$lineno),
+            linenos: stack.map(x => x.$lineno),
             pos: 0
         }
     }
@@ -188,7 +188,7 @@ frame.__setattr__ = function(_self, attr, value){
 
 frame.__str__ = frame.__repr__ = function(_self){
     return '<frame object, file ' + _self.__file__ +
-        ', line ' + _self[1].$lineno + ', code ' +
+        ', line ' + _self.$lineno + ', code ' +
         frame.f_code.__get__(_self).co_name + '>'
 }
 
@@ -217,7 +217,7 @@ frame.f_globals = {
 
 frame.f_lineno = {
     __get__: function(_self){
-        return _self[1].$lineno
+        return _self.$lineno
     }
 }
 
@@ -329,7 +329,7 @@ $B.restore_stack = function(stack, locals){
 $B.freeze = function(err){
     if(err.$stack === undefined){
         err.$stack = $B.frames_stack.slice()
-        err.$linenos = $B.frames_stack.map(x => x[1].$lineno)
+        err.$linenos = $B.frames_stack.map(x => x.$lineno)
     }
 }
 
@@ -410,10 +410,10 @@ $B.exception = function(js_exc, in_ctx_manager){
             if(file && $B.file_cache[file]){
                 src = $B.file_cache[file]
             }
-            console.log('line', frame[1].$lineno, 'file', file, 'in', frame[0])
+            console.log('line', frame.$lineno, 'file', file, 'in', frame[0])
             if(src !== undefined){
                 var lines = src.split('\n'),
-                    line = lines[frame[1].$lineno - 1]
+                    line = lines[frame.$lineno - 1]
                 console.log('    ' + line)
             }
         }
