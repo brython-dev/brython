@@ -3091,7 +3091,10 @@ try:
     exec("x= ")
 except SyntaxError as exc:
     assert exc.args == ('invalid syntax', ('<string>', 1, 4, 'x= \n', 1, 4))
-  
+
+# issue 2015
+assert_raises(SyntaxError, exec, "f(x=not)")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

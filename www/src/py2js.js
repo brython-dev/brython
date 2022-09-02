@@ -937,7 +937,8 @@ $AbstractExprCtx.prototype.transition = function(token, value){
                 context.op = 'is_not'
                 return context
             }
-            return new $NotCtx(new $ExprCtx(context, 'not', commas))
+            return new $AbstractExprCtx(
+                new $NotCtx(new $ExprCtx(context, 'not', commas)), false)
         case 'lambda':
             return new $LambdaCtx(new $ExprCtx(context, 'lambda', commas))
         case 'op':
