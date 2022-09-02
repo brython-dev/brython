@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-02 12:10:50.607493"
-__BRYTHON__.timestamp=1662113450607
+__BRYTHON__.compiled_date="2022-09-02 12:14:56.762682"
+__BRYTHON__.timestamp=1662113696762
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14437,11 +14437,13 @@ if(args.length > 0){if(has_starred){kw=`.concat([${kw}])`}else{kw=', '+kw}}
 return{has_starred,js:js+`${args}${kw}`}}}
 $B.ast.ClassDef.prototype.to_js=function(scopes){var enclosing_scope=bind(this.name,scopes)
 var class_scope=new Scope(this.name,'class',this)
-var js=`$B.set_lineno(locals, ${this.lineno})\n`,locals_name=make_scope_name(scopes,class_scope),ref=this.name+$B.UUID(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
+var js='',locals_name=make_scope_name(scopes,class_scope),ref=this.name+$B.UUID(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
 for(var dec of this.decorator_list){decorated=true
 var dec_id='decorator'+$B.UUID()
 decorators.push(dec_id)
-js+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
+js+=`$B.set_lineno(locals, ${dec.lineno})\n`+
+`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
+js+=`$B.set_lineno(locals, ${this.lineno})\n`
 var qualname=this.name
 var ix=scopes.length-1
 while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.ast.ClassDef){qualname=scopes[ix].name+'.'+qualname

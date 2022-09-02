@@ -1224,7 +1224,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var enclosing_scope = bind(this.name, scopes)
     var class_scope = new Scope(this.name, 'class', this)
 
-    var js = `$B.set_lineno(locals, ${this.lineno})\n`,
+    var js = '',
         locals_name = make_scope_name(scopes, class_scope),
         ref = this.name + $B.UUID(),
         glob = scopes[0].name,
@@ -1235,9 +1235,11 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         decorated = true
         var dec_id = 'decorator' + $B.UUID()
         decorators.push(dec_id)
-        js += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
+        js += `$B.set_lineno(locals, ${dec.lineno})\n` +
+              `var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`
     }
 
+    js += `$B.set_lineno(locals, ${this.lineno})\n`
     var qualname = this.name
     var ix = scopes.length - 1
     while(ix >= 0){
@@ -1645,6 +1647,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         decorated = true
         var dec_id = 'decorator' + $B.UUID()
         decorators.push(dec_id)
+        decs += `$B.set_lineno(locals, ${dec.lineno})\n`
         decs += `var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`
     }
 
@@ -1705,8 +1708,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         name1 = this.name + '$' + id,
         name2 = this.name + id
 
-    var js = decs
-    js += `var ${name1} = function(defaults){\n`
+    var js = decs +
+             `$B.set_lineno(locals, ${this.lineno})\n` +
+             `var ${name1} = function(defaults){\n`
 
     if(is_async && ! is_generator){
         js += 'async '
@@ -1728,6 +1732,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
     js += `var top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    top_frame.__file__ = '${scopes.filename}'
     locals.$lineno = ${this.lineno}
     locals.$f_trace = $B.enter_frame(top_frame)
     var stack_length = $B.frames_stack.length\n`
@@ -1876,7 +1881,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += decorate
     }
 
-    return `$B.set_lineno(locals, ${this.lineno})\n` + js
+    return js
 }
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
