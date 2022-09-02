@@ -23,7 +23,7 @@ $B.make_async = func => {
     }
     var f = function(){
         var args = arguments,
-            stack = $B.deep_copy($B.frames_stack)
+            stack = $B.frames_stack.slice()
         return {
             __class__: coroutine,
             $args: args,
