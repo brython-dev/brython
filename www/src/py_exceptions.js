@@ -81,7 +81,7 @@ $B.print_stack = function(stack){
     var trace = []
     for(var frame of stack){
         var lineno = frame[1].$lineno,
-            filename = frame[3].__file__
+            filename = frame.__file__
         if(lineno !== undefined){
             var local = frame[0] == frame[2] ? "<module>" : frame[0]
             trace.push(`  File "${filename}" line ${lineno}, in ${local}`)
@@ -100,8 +100,8 @@ $B.print_stack = function(stack){
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){
         var stack = exc.$stack || $B.frames_stack.slice()
-        if(typeof stack.map !== "function"){
-            console.log('pas dde map', stack)
+        if(_b_.isinstance(exc, _b_.SyntaxError)){
+            stack.pop()
         }
         return {
             __class__ : traceback,
@@ -136,7 +136,13 @@ traceback.__getattribute__ = function(_self, attr){
 $B.set_func_names(traceback, "builtins")
 
 // class of frame objects
-var frame = $B.frame = $B.make_class("frame")
+var frame = $B.frame = $B.make_class("frame",
+    function(frame_list, pos){
+        frame_list.__class__ = frame
+        frame_list.$pos = pos
+        return frame_list
+    }
+)
 
 frame.__delattr__ = function(_self, attr){
     if(attr == "f_trace"){
@@ -145,7 +151,6 @@ frame.__delattr__ = function(_self, attr){
 }
 
 frame.__dir__ = function(_self){
-    console.log('frame dict')
     return _b_.object.__dir__(frame).concat(['clear',
         'f_back', 'f_builtins', 'f_code', 'f_globals', 'f_lasti', 'f_lineno',
         'f_locals', 'f_trace', 'f_trace_lines', 'f_trace_opcodes'])
@@ -156,8 +161,8 @@ frame.__getattr__ = function(_self, attr){
     // is initialised
     if(attr == "f_back"){
         if(_self.$pos > 0){
-            return frame.$factory(self.$stack.slice(0, self.$stack.length - 1),
-                self.$pos - 1)
+            return frame.$factory($B.frames_stack[_self.$pos - 1],
+                _self.$pos - 1)
         }else{
             return _b_.None
         }
@@ -182,7 +187,7 @@ frame.__setattr__ = function(_self, attr, value){
 }
 
 frame.__str__ = frame.__repr__ = function(_self){
-    return '<frame object, file ' + _self[3].__file__ +
+    return '<frame object, file ' + _self.__file__ +
         ', line ' + _self[1].$lineno + ', code ' +
         frame.f_code.__get__(_self).co_name + '>'
 }
@@ -195,7 +200,7 @@ frame.f_code = {
         }else{
             res = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
-                co_filename: _self[3].__file__,
+                co_filename: _self.__file__,
                 co_varnames: $B.fast_tuple([])
             }
         }
@@ -348,7 +353,7 @@ function (){
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
-    err.__traceback__ = traceback.$factory($B.frames_stack.slice())
+    err.__traceback__ = traceback.$factory(err)
     err.$py_error = true
     $B.freeze(err)
     // placeholder
@@ -401,7 +406,7 @@ $B.exception = function(js_exc, in_ctx_manager){
         console.log('frames_stack', $B.frames_stack.slice())
         for(var frame of $B.frames_stack){
             var src = undefined
-            var file = frame[1].__file__ || frame[3].__file__
+            var file = frame.__file__
             if(file && $B.file_cache[file]){
                 src = $B.file_cache[file]
             }
@@ -739,7 +744,7 @@ function trace_from_stack(err){
     for(var frame_num = 0, len = err.$stack.length; frame_num < len; frame_num++){
         var frame = err.$stack[frame_num],
             lineno = err.$linenos[frame_num],
-            filename = frame[3].__file__,
+            filename = frame.__file__,
             src = $B.file_cache[filename]
             trace += `  File ${filename}, line ${lineno}, in ` +
                 (frame[0] == frame[2] ? '<module>' : frame[0]) + '\n'
@@ -783,6 +788,7 @@ $B.show_error = function(err){
     }
     if(err.__class__ === _b_.SyntaxError ||
             err.__class__ === _b_.IndentationError){
+        err.$stack.pop()
         trace += trace_from_stack(err)
         var filename = err.filename,
             line = err.text,
