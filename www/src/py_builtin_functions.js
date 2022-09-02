@@ -675,7 +675,8 @@ function $$eval(src, _globals, _locals){
         global_name = 'globals_exec',
         exec_locals = {},
         exec_globals = {},
-        __name__ = '<module>'
+        __name__ = '<module>',
+        filename = '<string>'
 
     // proxy around globals.$jsobj, to avoid modifying __file__ and
     // $lineno
@@ -683,15 +684,13 @@ function $$eval(src, _globals, _locals){
         get: function(obj, prop){
             if(prop == '$lineno'){
                 return obj.$exec_lineno
-            }else if(prop == '__file__'){
-                return '<string>'
             }
             return obj[prop]
         },
         set: function(obj, prop, value){
             if(prop == '$lineno'){
                 obj.$exec_lineno = value
-            }else if(['__file__'].indexOf(prop) == -1){
+            }else{
                 obj[prop] = value
             }
         }
@@ -700,6 +699,7 @@ function $$eval(src, _globals, _locals){
     if(_globals === _b_.None){
         // if the optional parts are omitted, the code is executed in the
         // current scope
+        filename = '<string>'
         if(frame[1] === frame[3]){
             // module level
             global_name += '_globals'
@@ -751,6 +751,7 @@ function $$eval(src, _globals, _locals){
         if(exec_globals.__builtins__ === undefined){
             exec_globals.__builtins__ = _b_.__builtins__
         }
+        filename = exec_globals.__file__ || '<string>'
         if(_locals === _b_.None){
             exec_locals = exec_globals
         }else{
@@ -782,13 +783,13 @@ function $$eval(src, _globals, _locals){
 
     var save_frames_stack = $B.frames_stack.slice()
 
+    var _ast
+
     var top_frame = [__name__, exec_locals, __name__, exec_globals]
     top_frame.is_exec_top = true
+    top_frame.__file__ = filename
     exec_locals.$f_trace = $B.enter_frame(top_frame)
     exec_locals.$lineno = 1
-
-    var filename = '<string>',
-        _ast
 
     if(src.__class__ === code){
         _ast = src._ast
@@ -866,7 +867,8 @@ function $$eval(src, _globals, _locals){
                 '\n    global_name', global_name,
                 '\n    exec_globals', exec_globals,
                 '\n    frame', frame,
-                '\n    _ast', _ast)
+                '\n    _ast', _ast,
+                '\n    js', js)
         }
         $B.frames_stack = save_frames_stack
         throw err
@@ -2836,7 +2838,7 @@ $Reader.read = function(){
     if(size < 0){
         size = self.$length - self.$counter
     }
-
+    var content = self.$content
     if(self.$binary){
         res = _b_.bytes.$factory(self.$content.source.slice(self.$counter,
             self.$counter + size))
@@ -2979,6 +2981,33 @@ $Reader.tell = function(self){
     return self.$counter
 }
 
+$Reader.write = function(_self, data){
+    if(_self.mode.indexOf('w') == -1){
+        if($B.$io.UnsupportedOperation === undefined){
+            $B.$io.UnsupportedOperation = $B.$class_constructor(
+                "UnsupportedOperation", {}, [_b_.Exception],
+                ["Exception"])
+        }
+        throw $B.$call($B.$io.UnsupportedOperation)('not writable')
+    }
+    // write to file cache
+    if(_self.mode.indexOf('b') == -1){
+        // text mode
+        if(typeof data != "string"){
+            throw _b_.TypeError.$factory('write() argument must be str,' +
+                ` not ${class_name(data)}`)
+        }
+        _self.$content += data
+    }else{
+        if(! _b_.isinstance(data, [_b_.bytes, _b_.bytearray])){
+            throw _b_.TypeError.$factory('write() argument must be bytes,' +
+                ` not ${class_name(data)}`)
+        }
+        _self.$content.source = _self.$content.source.concat(data.source)
+    }
+    $B.file_cache[_self.name] = _self.$content
+}
+
 $Reader.writable = function(self){
     return false
 }
@@ -3047,18 +3076,34 @@ function $url_open(){
         // cf. PEP 597
         encoding = 'utf-8'
     }
+    var is_binary = mode.search('b') > -1
+
     if(mode.search('w') > -1){
-        throw _b_.IOError.$factory("Browsers cannot write on disk")
+        // return the file-like object
+        var res = {
+            $binary: is_binary,
+            $content: is_binary ? _b_.bytes.$factory() : '',
+            $encoding: encoding,
+            closed: False,
+            mode,
+            name: file
+        }
+        res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
+        $B.file_cache[file] = res.$content
+        return res
+        // throw _b_.IOError.$factory("Browsers cannot write on disk")
     }else if(['r', 'rb'].indexOf(mode) == -1){
         throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
     }
     if(isinstance(file, _b_.str)){
         // read the file content and return an object with file object methods
-        var is_binary = mode.search('b') > -1
         if($B.file_cache.hasOwnProperty($.file)){
-            result.content = $B.file_cache[$.file] // string
-            if(is_binary){
-                result.content = _b_.str.encode(result.content, 'utf-8')
+            var f = $B.file_cache[$.file] // string
+            result.content = f
+            if(is_binary && typeof f == 'string'){
+                result.content = _b_.str.encode(f, 'utf-8')
+            }else if(f.__class__ === _b_.bytes && ! is_binary){
+                result.content = _b_.bytes.decode(f, encoding)
             }
         }else if($B.files && $B.files.hasOwnProperty($.file)){
             // Virtual file system created by
