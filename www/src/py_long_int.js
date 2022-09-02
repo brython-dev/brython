@@ -203,7 +203,7 @@ function to_BigInt(x){
     return -res
 }
 
-function to_int(long_int){
+var to_int = long_int.$to_js_number = function (long_int){
     return long_int.pos ? parseInt(long_int.value) : -parseInt(long_int.value)
 }
 

@@ -48,6 +48,7 @@ class A(html.DIV):
         self.f = 0.5
         self.Xyz = "mystring"
         self.zd = {"a": 3}
+        self.long_int = 18446744073709552000
 
 p = A()
 assert not hasattr(p, "XYZ")
@@ -56,6 +57,7 @@ assert p.uV == 5
 assert p.f == 0.5
 assert not hasattr(p, "uv")
 assert p.zd == {"a": 3}
+assert p.long_int == 18446744073709552000, p.long_int
 
 # SVG attributes are case-sensitive
 class B(svg.circle):
@@ -130,6 +132,10 @@ assert set(d.attrs.values()) == {
     'mydiv'
 }
 assert "id" in d.attrs
+
+# issue 2014
+d.attrs["height"] = 4.5
+assert d.attrs["height"] == "4.5", d.attrs["height"]
 
 # set function as attribute
 def func():
