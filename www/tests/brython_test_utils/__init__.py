@@ -148,9 +148,9 @@ def run(src, filename='editor'):
     ns = {'__name__':'__main__', '__file__': filename}
     with open(filename, 'w') as out:
         out.write(src)
+    state = 1
     try:
         exec(src, ns)
-        state = 1
     except Exception as exc:
         #msg = traceback.format_exc()
         #print(msg, file=sys.stderr)
