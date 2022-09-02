@@ -90,7 +90,7 @@ if traces != expected:
       print('same line', i, 'traces', line1, 'expected', line2)
     else:
       print('diff line', i, 'traces', line1, 'expected', line2)
-      break
+      raise AssertionError('result is not the same as expected')
   else:
       print('remaining in traces\n', traces[i:],
           '\nremaining in expected', expected[i:])
