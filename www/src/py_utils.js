@@ -883,7 +883,7 @@ $B.$call = function(callable, position){
 
 // Default standard output and error
 // Can be reset by sys.stdout or sys.stderr
-var $io = $B.make_class("io",
+var $io = $B.$io = $B.make_class("io",
     function(out){
         return {
             __class__: $io,
