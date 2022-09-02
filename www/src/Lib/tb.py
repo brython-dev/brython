@@ -19,22 +19,26 @@ def format_exc():
     exc_class = exc_info[0].__name__
     exc_msg = str(exc_info[1])
     tb = exc_info[2]
-    if exc_info[0] is SyntaxError:
-        return syntax_error(exc_info[1].args)
-    trace.write("Traceback (most recent call last):\n")
+    show = True
     while tb is not None:
+        if show:
+            trace.write("Traceback (most recent call last):\n")
+            show = False
         frame = tb.tb_frame
         code = frame.f_code
         name = code.co_name
         filename = code.co_filename
-        trace.write(f"  File {filename}, line {tb.tb_lineno}, in {name}\n")
+        trace.write(f"  File {filename}, line {frame.f_lineno}, in {name}\n")
         if not filename.startswith("<"):
             src = open(filename, encoding='utf-8').read()
             lines = src.split('\n')
             line = lines[tb.tb_lineno - 1]
             trace.write(f"    {line.strip()}\n")
         tb = tb.tb_next
-    trace.write(f"{exc_class}: {exc_msg}\n")
+    if isinstance(exc_info[1], SyntaxError):
+        trace.write(syntax_error(exc_info[1].args))
+    else:
+        trace.write(f"{exc_class}: {exc_msg}\n")
     return trace.format()
 
 def print_exc(file=None):

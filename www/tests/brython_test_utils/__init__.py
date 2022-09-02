@@ -94,59 +94,61 @@ def populate_testmod_input(elem, selected=None):
                 o = html.OPTION(caption, value=filenm)
             g <= o
 
-def trace_exc(run_frame):
+def trace_exc(run_frame, src, ns):
     result_lines = []
     exc_type, exc_value, traceback = sys.exc_info()
 
-    this_frame = sys._getframe()
-
-    def show_line(filename, lineno):
-        if filename.startswith('<'):
-            return
-        src = open(filename, encoding='utf-8').read()
+    def show_line(filename, lineno, src):
+        if filename == ns['__file__']:
+            source = src
+        elif filename.startswith('<'):
+            return '-- from ' + filename
+        else:
+            src = open(filename, encoding='utf-8').read()
         lines = src.split('\n')
         line = lines[lineno - 1]
         result_lines.append('    ' + line.strip())
         return line
 
-    result_lines.append('Traceback (most recent call last):')
     show = False
     started = False
 
     while traceback:
         frame = traceback.tb_frame
+        # don't show the frames above that of the "run" function
         if frame is run_frame:
             started = True
+            result_lines.append('Traceback (most recent call last):')
         elif started:
             lineno = traceback.tb_lineno
             filename = frame.f_code.co_filename
-            if filename == '<string>':
+            if filename == ns['__file__']:
                 show = True
             if show:
                 result_lines.append(f'  File {filename}, line {lineno}')
-                show_line(filename, lineno)
+                show_line(filename, lineno, src)
         traceback = traceback.tb_next
 
-    if isinstance(exc_value, [SyntaxError, IndentationError]):
+    if isinstance(exc_value, SyntaxError):
         filename = exc_value.args[1][0]
         lineno = exc_value.args[1][1]
-        if filename != '<string>' or not show:
-            result_lines.append(f'  File {filename}, line {lineno}')
-        line = show_line(filename, lineno)
+        result_lines.append(f'  File {filename}, line {lineno}')
+        line = exc_value.text
         if line:
+            result_lines.append('    ' + line.strip())
             indent = len(line) - len(line.lstrip())
             col_offset = exc_value.args[1][2]
             result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
     result_lines.append(f'{exc_type.__name__}: {exc_value}')
     return '\n'.join(result_lines)
 
-def run(src, file_path=None):
+def run(src, filename='editor'):
     t0 = time.perf_counter()
     msg = ''
+    ns = {'__name__':'__main__', '__file__': filename}
+    with open(filename, 'w') as out:
+        out.write(src)
     try:
-        ns = {'__name__':'__main__'}
-        if file_path is not None:
-            ns['__file__'] = file_path
         exec(src, ns)
         state = 1
     except Exception as exc:
@@ -156,7 +158,7 @@ def run(src, file_path=None):
             getattr(exc, 'args', None),
             getattr(exc, '__class__', None),
             getattr(exc, 'message', None))
-        msg = trace_exc(sys._getframe())
+        msg = trace_exc(sys._getframe(), src, ns)
         print(msg)
         state = 0
     t1 = time.perf_counter()
