@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-01 07:38:35.880397"
-__BRYTHON__.timestamp=1662010715879
+__BRYTHON__.compiled_date="2022-09-02 08:07:48.523247"
+__BRYTHON__.timestamp=1662098868522
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5586,7 +5586,7 @@ throw exc}}}
 return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
-var $io=$B.make_class("io",function(out){return{
+var $io=$B.$io=$B.make_class("io",function(out){return{
 __class__:$io,out,encoding:'utf-8'}}
 )
 $io.flush=function(self){console[self.out](self.buf.join(''))
@@ -6375,10 +6375,11 @@ exc.args=['unexpected EOF while parsing',['<string>',lines.length-1,1,line]]
 exc.filename='<string>'
 exc.text=line
 throw exc}
-var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>'
-var handler={get:function(obj,prop){if(prop=='$lineno'){return obj.$exec_lineno}else if(prop=='__file__'){return '<string>'}
-return obj[prop]},set:function(obj,prop,value){if(prop=='$lineno'){obj.$exec_lineno=value}else if(['__file__'].indexOf(prop)==-1){obj[prop]=value}}}
+var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>',filename='<string>'
+var handler={get:function(obj,prop){if(prop=='$lineno'){return obj.$exec_lineno}
+return obj[prop]},set:function(obj,prop,value){if(prop=='$lineno'){obj.$exec_lineno=value}else{obj[prop]=value}}}
 if(_globals===_b_.None){
+filename='<string>'
 if(frame[1]===frame[3]){
 global_name+='_globals'
 exec_locals=exec_globals=new Proxy(frame[3],handler)}else{if(mode=="exec"){
@@ -6395,6 +6396,7 @@ if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jso
 for(var key in _globals.$string_dict){_globals.$jsobj[key]=_globals.$string_dict[key][0]
 if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
+filename=exec_globals.__file__ ||'<string>'
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(_locals===_globals){
 global_name+='_globals'
 exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
@@ -6403,11 +6405,12 @@ exec_locals.$getitem=$B.$call($B.$getattr(_locals.__class__,'__getitem__'))
 var missing=$B.$getattr(_locals.__class__,'__missing__',null)
 if(missing){exec_locals.$missing=$B.$call(missing)}}}}
 var save_frames_stack=$B.frames_stack.slice()
+var _ast
 var top_frame=[__name__,exec_locals,__name__,exec_globals]
 top_frame.is_exec_top=true
+top_frame.__file__=filename
 exec_locals.$f_trace=$B.enter_frame(top_frame)
 exec_locals.$lineno=1
-var filename='<string>',_ast
 if(src.__class__===code){_ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
 try{if($B.parser_to_ast){if(! _ast){_ast=new $B.Parser(src,filename).parse(mode=='eval' ? 'eval' :'file')}}else{if(! _ast){var root=$B.parser.$create_root_node(src,'<module>',frame[0],frame[2],1)
@@ -6427,7 +6430,7 @@ try{var exec_func=new Function('$B','_b_','locals',local_name,global_name,js)}ca
 console.log('-- python source\n',src)}
 throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals)}catch(err){if($B.debug > 2){console.log(
-'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast)}
+'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
 if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}
@@ -7136,6 +7139,7 @@ $Reader.flush=function(self){return None}
 $Reader.read=function(){var $=$B.args("read",2,{self:null,size:null},["self","size"],arguments,{size:-1},null,null),self=$.self,size=$B.$GetInt($.size)
 if(self.closed===true){throw _b_.ValueError.$factory('I/O operation on closed file')}
 if(size < 0){size=self.$length-self.$counter}
+var content=self.$content
 if(self.$binary){res=_b_.bytes.$factory(self.$content.source.slice(self.$counter,self.$counter+size))}else{res=self.$content.substr(self.$counter,size)}
 self.$counter+=size
 return res}
@@ -7181,6 +7185,16 @@ if(whence===0){self.$counter=offset}else if(whence===1){self.$counter+=offset}el
 return None}
 $Reader.seekable=function(self){return true}
 $Reader.tell=function(self){return self.$counter}
+$Reader.write=function(_self,data){if(_self.mode.indexOf('w')==-1){if($B.$io.UnsupportedOperation===undefined){$B.$io.UnsupportedOperation=$B.$class_constructor(
+"UnsupportedOperation",{},[_b_.Exception],["Exception"])}
+throw $B.$call($B.$io.UnsupportedOperation)('not writable')}
+if(_self.mode.indexOf('b')==-1){
+if(typeof data !="string"){throw _b_.TypeError.$factory('write() argument must be str,'+
+` not ${class_name(data)}`)}
+_self.$content+=data}else{if(! _b_.isinstance(data,[_b_.bytes,_b_.bytearray])){throw _b_.TypeError.$factory('write() argument must be bytes,'+
+` not ${class_name(data)}`)}
+_self.$content.source=_self.$content.source.concat(data.source)}
+$B.file_cache[_self.name]=_self.$content}
 $Reader.writable=function(self){return false}
 $B.set_func_names($Reader,"builtins")
 var $BufferedReader=$B.make_class('_io.BufferedReader',function(content){return{
@@ -7202,11 +7216,16 @@ function $url_open(){
 var $=$B.args('open',3,{file:null,mode:null,encoding:null},['file','mode','encoding'],arguments,{mode:'r',encoding:'utf-8'},'args','kw'),file=$.file,mode=$.mode,encoding=$.encoding,result={}
 if(encoding=='locale'){
 encoding='utf-8'}
-if(mode.search('w')>-1){throw _b_.IOError.$factory("Browsers cannot write on disk")}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
-if(isinstance(file,_b_.str)){
 var is_binary=mode.search('b')>-1
-if($B.file_cache.hasOwnProperty($.file)){result.content=$B.file_cache[$.file]
-if(is_binary){result.content=_b_.str.encode(result.content,'utf-8')}}else if($B.files && $B.files.hasOwnProperty($.file)){
+if(mode.search('w')>-1){
+var res={$binary:is_binary,$content:is_binary ? _b_.bytes.$factory():'',$encoding:encoding,closed:False,mode,name:file}
+res.__class__=is_binary ? $BufferedReader :$TextIOWrapper
+$B.file_cache[file]=res.$content
+return res}else if(['r','rb'].indexOf(mode)==-1){throw _b_.ValueError.$factory("Invalid mode '"+mode+"'")}
+if(isinstance(file,_b_.str)){
+if($B.file_cache.hasOwnProperty($.file)){var f=$B.file_cache[$.file]
+result.content=f
+if(is_binary && typeof f=='string'){result.content=_b_.str.encode(f,'utf-8')}else if(f.__class__===_b_.bytes && ! is_binary){result.content=_b_.bytes.decode(f,encoding)}}else if($B.files && $B.files.hasOwnProperty($.file)){
 var $res=atob($B.files[$.file].content)
 var source=[]
 for(const char of $res){source.push(char.charCodeAt(0))}
@@ -7424,7 +7443,7 @@ throw exc}else{throw _b_.TypeError.$factory("exceptions must derive from BaseExc
 $B.print_stack=function(stack){
 stack=stack ||$B.frames_stack
 var trace=[]
-for(var frame of stack){var lineno=frame[1].$lineno,filename=frame[3].__file__
+for(var frame of stack){var lineno=frame[1].$lineno,filename=frame.__file__
 if(lineno !==undefined){var local=frame[0]==frame[2]? "<module>" :frame[0]
 trace.push(`  File "${filename}" line ${lineno}, in ${local}`)
 var src=$B.file_cache[filename]
@@ -7432,7 +7451,7 @@ if(src){var lines=src.split("\n"),line=lines[lineno-1]
 trace.push("    "+line.trim())}}}
 return trace.join("\n")}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc){var stack=exc.$stack ||$B.frames_stack.slice()
-if(typeof stack.map !=="function"){console.log('pas dde map',stack)}
+if(_b_.isinstance(exc,_b_.SyntaxError)){stack.pop()}
 return{
 __class__ :traceback,$stack:stack,
 linenos:stack.map(x=> x[1].$lineno),pos:0}}
@@ -7449,21 +7468,23 @@ return _self}else{return _b_.None}
 default:
 return _b_.object.__getattribute__(_self,attr)}}
 $B.set_func_names(traceback,"builtins")
-var frame=$B.frame=$B.make_class("frame")
+var frame=$B.frame=$B.make_class("frame",function(frame_list,pos){frame_list.__class__=frame
+frame_list.$pos=pos
+return frame_list}
+)
 frame.__delattr__=function(_self,attr){if(attr=="f_trace"){_self[1].$f_trace=_b_.None}}
-frame.__dir__=function(_self){console.log('frame dict')
-return _b_.object.__dir__(frame).concat(['clear','f_back','f_builtins','f_code','f_globals','f_lasti','f_lineno','f_locals','f_trace','f_trace_lines','f_trace_opcodes'])}
+frame.__dir__=function(_self){return _b_.object.__dir__(frame).concat(['clear','f_back','f_builtins','f_code','f_globals','f_lasti','f_lineno','f_locals','f_trace','f_trace_lines','f_trace_opcodes'])}
 frame.__getattr__=function(_self,attr){
-if(attr=="f_back"){if(_self.$pos > 0){return frame.$factory(self.$stack.slice(0,self.$stack.length-1),self.$pos-1)}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
+if(attr=="f_back"){if(_self.$pos > 0){return frame.$factory($B.frames_stack[_self.$pos-1],_self.$pos-1)}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
 if(locals.$f_trace===undefined){return _b_.None}
 return locals.$f_trace}}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
 _self[1].$f_trace=value}}
-frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self[3].__file__+
+frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self.__file__+
 ', line '+_self[1].$lineno+', code '+
 frame.f_code.__get__(_self).co_name+'>'}
 frame.f_code={__get__:function(_self){var res
-if(_self[4]){res=_self[4].$infos.__code__}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self[3].__file__,co_varnames:$B.fast_tuple([])}}
+if(_self[4]){res=_self[4].$infos.__code__}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}}
 res.__class__=$B.code
 return res}}
 frame.f_globals={__get__:function(_self){return $B.obj_dict(_self[3])}}
@@ -7509,7 +7530,7 @@ function (){
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
-    err.__traceback__ = traceback.$factory($B.frames_stack.slice())
+    err.__traceback__ = traceback.$factory(err)
     err.$py_error = true
     $B.freeze(err)
     // placeholder
@@ -7541,7 +7562,7 @@ console.log('js error',exc.args)
 console.log(js_exc.stack)
 console.log('frames_stack',$B.frames_stack.slice())
 for(var frame of $B.frames_stack){var src=undefined
-var file=frame[1].__file__ ||frame[3].__file__
+var file=frame.__file__
 if(file && $B.file_cache[file]){src=$B.file_cache[file]}
 console.log('line',frame[1].$lineno,'file',file,'in',frame[0])
 if(src !==undefined){var lines=src.split('\n'),line=lines[frame[1].$lineno-1]
@@ -7684,7 +7705,7 @@ if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWi
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
 function trace_from_stack(err){var trace=''
-for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame[3].__file__,src=$B.file_cache[filename]
+for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__,src=$B.file_cache[filename]
 trace+=`  File ${filename}, line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0])+'\n'
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
@@ -7706,7 +7727,8 @@ console.log(err.stack)}
 var trace=''
 if(err.$stack && err.$stack.length > 0){trace='Traceback (most recent call last):\n'}
 if(err.__class__===_b_.SyntaxError ||
-err.__class__===_b_.IndentationError){trace+=trace_from_stack(err)
+err.__class__===_b_.IndentationError){err.$stack.pop()
+trace+=trace_from_stack(err)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
 trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
@@ -13811,7 +13833,9 @@ arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript']
 var _b_=$B.builtins
 modules['_sys']={
 Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
-return $B.frames_stack[$B.frames_stack.length-depth-1]},breakpointhook:function(){var hookname=$B.$options.breakpoint,modname,dot,funcname,hook
+var res=$B.frames_stack[$B.frames_stack.length-depth-1]
+res.$pos=$B.frames_stack.indexOf(res)
+return res},breakpointhook:function(){var hookname=$B.$options.breakpoint,modname,dot,funcname,hook
 if(hookname===undefined){hookname="pdb.set_trace"}
 [modname,dot,funcname]=_b_.str.rpartition(hookname,'.')
 if(dot==""){modname="builtins"}
@@ -13927,7 +13951,9 @@ case 'id':
 if(['False','None','True'].indexOf(js_node.value)>-1){return _b_[js_node.value]}
 break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
-return js_node}}}})(__BRYTHON__)
+return js_node}}}
+$B.$io.UnsupportedOperation=$B.$make_exc(["UnsupportedOperation"],_b_.BaseException)
+console.log($B.$io.UnsupportedOperation)})(__BRYTHON__)
 ;
 var docs={ArithmeticError:"Base class for arithmetic errors.",AssertionError:"Assertion failed.",AttributeError:"Attribute not found.",BaseException:"Common base class for all exceptions",BlockingIOError:"I/O operation would block.",BrokenPipeError:"Broken pipe.",BufferError:"Buffer error.",BytesWarning:"Base class for warnings about bytes and buffer related problems, mostly\nrelated to conversion from str or comparing to str.",ChildProcessError:"Child process error.",ConnectionAbortedError:"Connection aborted.",ConnectionError:"Connection error.",ConnectionRefusedError:"Connection refused.",ConnectionResetError:"Connection reset.",DeprecationWarning:"Base class for warnings about deprecated features.",EOFError:"Read beyond end of file.",Ellipsis:"",EncodingWarning:"Base class for warnings about encodings.",EnvironmentError:"Base class for I/O related errors.",Exception:"Common base class for all non-exit exceptions.",False:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",FileExistsError:"File already exists.",FileNotFoundError:"File not found.",FloatingPointError:"Floating point operation failed.",FutureWarning:"Base class for warnings about constructs that will change semantically\nin the future.",GeneratorExit:"Request that a generator exit.",IOError:"Base class for I/O related errors.",ImportError:"Import can't find module, or can't find name in module.",ImportWarning:"Base class for warnings about probable mistakes in module imports",IndentationError:"Improper indentation.",IndexError:"Sequence index out of range.",InterruptedError:"Interrupted by signal.",IsADirectoryError:"Operation doesn't work on directories.",KeyError:"Mapping key not found.",KeyboardInterrupt:"Program interrupted by user.",LookupError:"Base class for lookup errors.",MemoryError:"Out of memory.",ModuleNotFoundError:"Module not found.",NameError:"Name not found globally.",None:"",NotADirectoryError:"Operation only works on directories.",NotImplemented:"",NotImplementedError:"Method or function hasn't been implemented yet.",OSError:"Base class for I/O related errors.",OverflowError:"Result too large to be represented.",PendingDeprecationWarning:"Base class for warnings about features which will be deprecated\nin the future.",PermissionError:"Not enough permissions.",ProcessLookupError:"Process not found.",RecursionError:"Recursion limit exceeded.",ReferenceError:"Weak ref proxy used after referent went away.",ResourceWarning:"Base class for warnings about resource usage.",RuntimeError:"Unspecified run-time error.",RuntimeWarning:"Base class for warnings about dubious runtime behavior.",StopAsyncIteration:"Signal the end from iterator.__anext__().",StopIteration:"Signal the end from iterator.__next__().",SyntaxError:"Invalid syntax.",SyntaxWarning:"Base class for warnings about dubious syntax.",SystemError:"Internal error in the Python interpreter.\n\nPlease report this to the Python maintainer, along with the traceback,\nthe Python version, and the hardware/OS platform and version.",SystemExit:"Request to exit from the interpreter.",TabError:"Improper mixture of spaces and tabs.",TimeoutError:"Timeout expired.",True:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",TypeError:"Inappropriate argument type.",UnboundLocalError:"Local name referenced but not bound to a value.",UnicodeDecodeError:"Unicode decoding error.",UnicodeEncodeError:"Unicode encoding error.",UnicodeError:"Unicode related error.",UnicodeTranslateError:"Unicode translation error.",UnicodeWarning:"Base class for warnings about Unicode related problems, mostly\nrelated to conversion problems.",UserWarning:"Base class for warnings generated by user code.",ValueError:"Inappropriate argument value (of correct type).",Warning:"Base class for warning categories.",WindowsError:"Base class for I/O related errors.",ZeroDivisionError:"Second argument to a division or modulo operation was zero.",__debug__:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",abs:"Return the absolute value of the argument.",aiter:"Return an AsyncIterator for an AsyncIterable object.",all:"Return True if bool(x) is True for all values x in the iterable.\n\nIf the iterable is empty, return True.",anext:"Return the next item from the async iterator.",any:"Return True if bool(x) is True for any x in the iterable.\n\nIf the iterable is empty, return False.",ascii:"Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2.",bin:"Return the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'",bool:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",breakpoint:"breakpoint(*args, **kws)\n\nCall sys.breakpointhook(*args, **kws).  sys.breakpointhook() must accept\nwhatever arguments are passed.\n\nBy default, this drops you into the pdb debugger.",bytearray:"bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer",bytes:"bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",callable:"Return whether the object is callable (i.e., some kind of function).\n\nNote that classes are callable, as are instances of classes with a\n__call__() method.",chr:"Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.",classmethod:"classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      @classmethod\n      def f(cls, arg1, arg2, ...):\n          ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.",compile:"Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified.",complex:"Create a complex number from a real part and an optional imaginary part.\n\nThis is equivalent to (real + imag*1j) where imag defaults to 0.",copyright:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",credits:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",delattr:"Deletes the named attribute from the given object.\n\ndelattr(x, 'y') is equivalent to ``del x.y''",dict:"dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",dir:"dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes.",divmod:"Return the tuple (x//y, x%y).  Invariant: div*y + mod == x.",enumerate:"Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",eval:"Evaluate the given source in the C of globals and locals.\n\nThe source may be a string representing a Python expression\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",exec:"Execute the given source in the C of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",exit:"",filter:"filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",float:"Convert a string or number to a floating point number, if possible.",format:"Return value.__format__(format_spec)\n\nformat_spec defaults to the empty string.\nSee the Format Specification Mini-Language section of help('FORMATTING') for\ndetails.",frozenset:"frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.",getattr:"getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case.",globals:"Return the dictionary containing the current scope's global variables.\n\nNOTE: Updates to this dictionary *will* affect name lookups in the current\nglobal scope and vice-versa.",hasattr:"Return whether the object has an attribute with the given name.\n\nThis is done by calling getattr(obj, name) and catching AttributeError.",hash:"Return the hash value for the given object.\n\nTwo objects that compare equal must also have the same hash value, but the\nreverse is not necessarily true.",help:"Define the builtin 'help'.\n\n    This is a wrapper around pydoc.help that provides a helpful message\n    when 'help' is typed at the Python interactive prompt.\n\n    Calling help() at the Python prompt starts an interactive help session.\n    Calling help(thing) prints help for the python object 'thing'.\n    ",hex:"Return the hexadecimal representation of an integer.\n\n   >>> hex(12648430)\n   '0xc0ffee'",id:"Return the identity of an object.\n\nThis is guaranteed to be unique among simultaneously existing objects.\n(CPython uses the object's memory address.)",input:"Read a string from standard input.  The trailing newline is stripped.\n\nThe prompt string, if given, is printed to standard output without a\ntrailing newline before reading input.\n\nIf the user hits EOF (*nix: Ctrl-D, Windows: Ctrl-Z+Return), raise EOFError.\nOn *nix systems, readline is used if available.",int:"int([x]) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",isinstance:"Return whether an object is an instance of a class or of a subclass thereof.\n\nA tuple, as in ``isinstance(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``isinstance(x, A) or isinstance(x, B)\nor ...`` etc.",issubclass:"Return whether 'cls' is derived from another class or is the same class.\n\nA tuple, as in ``issubclass(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``issubclass(x, A) or issubclass(x, B)\nor ...``.",iter:"iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.",len:"Return the number of items in a container.",license:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",list:"Built-in mutable sequence.\n\nIf no argument is given, the constructor creates a new empty list.\nThe argument must be an iterable if specified.",locals:"Return a dictionary containing the current scope's local variables.\n\nNOTE: Whether or not updates to this dictionary will affect name lookups in\nthe local scope and vice-versa is *implementation dependent* and not\ncovered by any backwards compatibility guarantees.",map:"map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",max:"max(iterable, *[, default=obj, key=func]) -> value\nmax(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its biggest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the largest argument.",memoryview:"Create a new memoryview object which references the given object.",min:"min(iterable, *[, default=obj, key=func]) -> value\nmin(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the smallest argument.",next:"next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.",object:"The base class of the class hierarchy.\n\nWhen called, it accepts no arguments and returns a new featureless\ninstance that has no instance attributes and cannot be given any.\n",oct:"Return the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'",open:"Open file and return a stream.  Raise OSError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory) of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped. (If a file descriptor is given, it is closed when the\nreturned I/O object is closed, unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode.  Other common values are 'w' for writing (truncating the file if\nit already exists), 'x' for creating and writing to a new file, and\n'a' for appending (which on some Unix systems, means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode, if encoding is not specified the encoding used is platform\ndependent: locale.getpreferredencoding(False) is called to get the\ncurrent locale encoding. (For reading and writing raw bytes use binary\nmode and leave encoding unspecified.) The available modes are:\n\n========= ===============================================================\nCharacter Meaning\n--------- ---------------------------------------------------------------\n'r'       open for reading (default)\n'w'       open for writing, truncating the file first\n'x'       create a new file and open it for writing\n'a'       open for writing, appending to the end of the file if it exists\n'b'       binary mode\n't'       text mode (default)\n'+'       open a disk file for updating (reading and writing)\n'U'       universal newline mode (deprecated)\n========= ===============================================================\n\nThe default mode is 'rt' (open for reading text). For binary random\naccess, the mode 'w+b' opens and truncates the file to 0 bytes, while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\n'U' mode is deprecated and will raise an exception in future versions\nof Python.  It has no effect in Python 3.  Use newline to control\nuniversal newlines mode.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n  \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.",ord:"Return the Unicode code point for a one-character string.",pow:"Equivalent to base**exp with 2 arguments or base**exp % mod with 3 arguments\n\nSome types, such as ints, are able to use a more efficient algorithm when\ninvoked using the three argument form.",print:"print(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)\n\nPrints the values to a stream, or to sys.stdout by default.\nOptional keyword arguments:\nfile:  a file-like object (stream); defaults to the current sys.stdout.\nsep:   string inserted between values, default a space.\nend:   string appended after the last value, default a newline.\nflush: whether to forcibly flush the stream.",property:"Property attribute.\n\n  fget\n    function to be used for getting an attribute value\n  fset\n    function to be used for setting an attribute value\n  fdel\n    function to be used for del'ing an attribute\n  doc\n    docstring\n\nTypical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",repr:"Return the canonical string representation of the object.\n\nFor many object types, including most builtins, eval(repr(obj)) == obj.",reversed:"Return a reverse iterator over the values of the given sequence.",round:"Round a number to a given precision in decimal digits.\n\nThe return value is an integer if ndigits is omitted or None.  Otherwise\nthe return value has the same type as the number.  ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"Sets the named attribute on the given object to the specified value.\n\nsetattr(x, 'y', v) is equivalent to ``x.y = v''",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"Return a new list containing all items from the iterable in ascending order.\n\nA custom key function can be supplied to customize the sort order, and the\nreverse flag can be set to request the result in descending order.",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n         @staticmethod\n         def f(arg1, arg2, ...):\n             ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()). Both the class and the instance are ignored, and\nneither is passed implicitly as the first argument to the method.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"Return the sum of a 'start' value (default: 0) plus an iterable of numbers\n\nWhen the iterable is empty, return the start value.\nThis function is intended specifically for use with numeric values and may\nreject non-numeric types.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object_or_name, bases, dict)\ntype(object) -> the object's type\ntype(name, bases, dict) -> a new type",vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]\n\nThe zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.",}
 for(var key in docs){if(__BRYTHON__.builtins[key]){__BRYTHON__.builtins[key].__doc__=docs[key]}}
@@ -14630,9 +14656,9 @@ parse_args.push('{'+slots.join(', ')+'} , '+
 (this.args.kwonlyargs.length > 0 ? "'*', " :'null, '))+
 (this.args.kwarg ? `'${this.args.kwarg.arg}'` :'null'))
 js+=`${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
-js+=`var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+js+=`var top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     locals.$lineno = ${this.lineno}
-    locals.$f_trace = $B.enter_frame($top_frame)
+    locals.$f_trace = $B.enter_frame(top_frame)
     var stack_length = $B.frames_stack.length\n`
 if(last_scope(scopes).has_annotation){js+=`locals.__annotations__ = $B.empty_dict()\n`}
 if(is_generator){js+=`locals.$is_generator = true\n`
@@ -14660,7 +14686,7 @@ js+=`}catch(err){
     }\n`
 if(is_generator){js+=`, '${this.name}')\n`+
 `var _gen_${id} = gen_${id}()\n`+
-`_gen_${id}.$frame = $top_frame\n`+
+`_gen_${id}.$frame = top_frame\n`+
 `$B.leave_frame()\n`+
 `return _gen_${id}}\n` }
 scopes.pop()
@@ -14687,7 +14713,7 @@ js+=`${name2}.$infos = {\n`+
 `__doc__: ${docstring},\n`+
 `__code__:{\n`+
 `co_argcount: ${positional.length},\n `+
-`co_filename: ${make_local(scopes[0].name)}.__file__,\n`+
+`co_filename: '${scopes.filename}',\n`+
 `co_firstlineno: ${this.lineno},\n`+
 `co_flags: ${flags},\n`+
 `co_freevars: $B.fast_tuple([${free_vars}]),\n`+
@@ -14917,15 +14943,17 @@ var js=`// Javascript code generated from ast\n`+
 `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
 if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
-`$top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
+`top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name},\n`+
-`$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`}
+`top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+if(name){js+=`,\nlocals_${name} = locals`}}
 js+=`\nlocals.__file__ = '${scopes.filename || "<string>"}'\n`+
+`top_frame.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__annotations__ = $B.empty_dict()\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! namespaces){
-js+=`locals.$f_trace = $B.enter_frame($top_frame)\n`}
+js+=`locals.$f_trace = $B.enter_frame(top_frame)\n`}
 js+=`$B.set_lineno(locals, ${this.lineno})\n`+
 `var stack_length = $B.frames_stack.length\n`+
 `try{\n`+
@@ -15029,7 +15057,7 @@ js+='finally{\n'
 var finalbody=`var exit = false\n`+
 `if($B.frames_stack.length < stack_length_${id}){\n`+
 `exit = true\n`+
-`$B.frames_stack.push($top_frame)\n`+
+`$B.frames_stack.push(top_frame)\n`+
 `}\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
@@ -15102,7 +15130,7 @@ s+=`}\nfinally{\n`+
 `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n`+
 `}catch(err){\n`+
 `if($B.frames_stack.length < stack_length){\n`+
-`$B.frames_stack.push($top_frame)\n`+
+`$B.frames_stack.push(top_frame)\n`+
 `}\n`+
 `throw err\n`+
 `}\n`+
@@ -15145,7 +15173,7 @@ return `yield* (function* f(){
                     try{
                         $B.leave_frame({locals})
                         var _s${n} = yield _y${n}
-                        $B.frames_stack.push($top_frame)
+                        $B.frames_stack.push(top_frame)
                     }catch(_e){
                         if(_e.__class__ === _b_.GeneratorExit){
                             var failed2${n} = false

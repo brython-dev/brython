@@ -1727,9 +1727,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             (this.args.kwonlyargs.length > 0 ? "'*', " : 'null, ')) +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
-    js += `var $top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    js += `var top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     locals.$lineno = ${this.lineno}
-    locals.$f_trace = $B.enter_frame($top_frame)
+    locals.$f_trace = $B.enter_frame(top_frame)
     var stack_length = $B.frames_stack.length\n`
 
     if(last_scope(scopes).has_annotation){
@@ -1779,7 +1779,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_generator){
         js += `, '${this.name}')\n` +
               `var _gen_${id} = gen_${id}()\n` +
-              `_gen_${id}.$frame = $top_frame\n` +
+              `_gen_${id}.$frame = top_frame\n` +
               `$B.leave_frame()\n` +
               `return _gen_${id}}\n` // close gen
     }
@@ -1833,7 +1833,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__doc__: ${docstring},\n` +
         `__code__:{\n` +
         `co_argcount: ${positional.length},\n ` +
-        `co_filename: ${make_local(scopes[0].name)}.__file__,\n` +
+        `co_filename: '${scopes.filename}',\n` +
         `co_firstlineno: ${this.lineno},\n` +
         `co_flags: ${flags},\n` +
         `co_freevars: $B.fast_tuple([${free_vars}]),\n` +
@@ -2379,20 +2379,24 @@ $B.ast.Module.prototype.to_js = function(scopes){
     if(! namespaces){
         js += `${global_name} = $B.imported["${mod_name}"],\n` +
               `locals = ${global_name},\n` +
-              `$top_frame = ["${module_id}", locals, "${module_id}", locals]`
+              `top_frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         js += `locals = ${namespaces.local_name},\n` +
               `globals = ${namespaces.global_name},\n` +
-              `$top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+              `top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+        if(name){
+            js += `,\nlocals_${name} = locals`
+        }
     }
     js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
+          `top_frame.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__annotations__ = $B.empty_dict()\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
-        js += `locals.$f_trace = $B.enter_frame($top_frame)\n`
+        js += `locals.$f_trace = $B.enter_frame(top_frame)\n`
     }
     js += `$B.set_lineno(locals, ${this.lineno})\n` +
           `var stack_length = $B.frames_stack.length\n` +
@@ -2618,7 +2622,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         var finalbody = `var exit = false\n` +
                         `if($B.frames_stack.length < stack_length_${id}){\n` +
                             `exit = true\n` +
-                            `$B.frames_stack.push($top_frame)\n` +
+                            `$B.frames_stack.push(top_frame)\n` +
                         `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
@@ -2777,7 +2781,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                           // stack frame is preserved (it may have been
                           // modified by a "return" in the "with" block)
                           `if($B.frames_stack.length < stack_length){\n` +
-                              `$B.frames_stack.push($top_frame)\n` +
+                              `$B.frames_stack.push(top_frame)\n` +
                           `}\n` +
                           `throw err\n` +
                       `}\n` +
@@ -2878,7 +2882,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                     try{
                         $B.leave_frame({locals})
                         var _s${n} = yield _y${n}
-                        $B.frames_stack.push($top_frame)
+                        $B.frames_stack.push(top_frame)
                     }catch(_e){
                         if(_e.__class__ === _b_.GeneratorExit){
                             var failed2${n} = false
