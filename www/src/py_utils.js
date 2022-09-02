@@ -1149,32 +1149,32 @@ $B.enter_frame = function(frame){
 }
 
 $B.trace_exception = function(){
-    var top_frame = $B.last($B.frames_stack)
-    if(top_frame[0] == $B.tracefunc.$current_frame_id){
+    var frame = $B.last($B.frames_stack)
+    if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
-    var trace_func = top_frame[1].$f_trace,
-        exc = top_frame[1].$current_exception,
+    var trace_func = frame[1].$f_trace,
+        exc = frame[1].$current_exception,
         frame_obj = $B.last($B.frames_stack)
     return trace_func(frame_obj, 'exception', $B.fast_tuple([
         exc.__class__, exc, $B.traceback.$factory(exc)]))
 }
 
 $B.trace_line = function(){
-    var top_frame = $B.last($B.frames_stack)
-    if(top_frame[0] == $B.tracefunc.$current_frame_id){
+    var frame = $B.last($B.frames_stack)
+    if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
-    var trace_func = top_frame[1].$f_trace,
+    var trace_func = frame[1].$f_trace,
         frame_obj = $B.last($B.frames_stack)
     return trace_func(frame_obj, 'line', _b_.None)
 }
 
 $B.trace_return = function(value){
-    var top_frame = $B.last($B.frames_stack),
-        trace_func = top_frame[1].$f_trace,
+    var frame = $B.last($B.frames_stack),
+        trace_func = frame[1].$f_trace,
         frame_obj = $B.last($B.frames_stack)
-    if(top_frame[0] == $B.tracefunc.$current_frame_id){
+    if(frame[0] == $B.tracefunc.$current_frame_id){
         // don't call trace func when returning from the frame where
         // sys.settrace was called
         return _b_.None

@@ -592,9 +592,9 @@ function init_comprehension(comp){
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
            `locals['.0'] = expr\n` +
-           `var top_frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
+           `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
-           `locals.$f_trace = $B.enter_frame(top_frame)\n`
+           `locals.$f_trace = $B.enter_frame(frame)\n`
 }
 
 function make_comp(scopes){
@@ -1264,10 +1264,10 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `locals.$name = "${this.name}"\n` +
           `locals.$qualname = "${qualname}"\n` +
           `locals.$is_class = true\n` +
-          `var top_frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n` +
-          `top_frame.__file__ = '${scopes.filename}'\n` +
+          `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n` +
+          `frame.__file__ = '${scopes.filename}'\n` +
           `locals.$lineno = ${this.lineno}\n` +
-          `locals.$f_trace = $B.enter_frame(top_frame)\n` +
+          `locals.$f_trace = $B.enter_frame(frame)\n` +
           `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
 
     js += add_body(this.body, scopes)
@@ -1731,10 +1731,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             (this.args.kwonlyargs.length > 0 ? "'*', " : 'null, ')) +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
     js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
-    js += `var top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
-    top_frame.__file__ = '${scopes.filename}'
+    js += `var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    frame.__file__ = '${scopes.filename}'
     locals.$lineno = ${this.lineno}
-    locals.$f_trace = $B.enter_frame(top_frame)
+    locals.$f_trace = $B.enter_frame(frame)
     var stack_length = $B.frames_stack.length\n`
 
     if(last_scope(scopes).has_annotation){
@@ -1784,7 +1784,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(is_generator){
         js += `, '${this.name}')\n` +
               `var _gen_${id} = gen_${id}()\n` +
-              `_gen_${id}.$frame = top_frame\n` +
+              `_gen_${id}.$frame = frame\n` +
               `$B.leave_frame()\n` +
               `return _gen_${id}}\n` // close gen
     }
@@ -2384,24 +2384,24 @@ $B.ast.Module.prototype.to_js = function(scopes){
     if(! namespaces){
         js += `${global_name} = $B.imported["${mod_name}"],\n` +
               `locals = ${global_name},\n` +
-              `top_frame = ["${module_id}", locals, "${module_id}", locals]`
+              `frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         js += `locals = ${namespaces.local_name},\n` +
               `globals = ${namespaces.global_name},\n` +
-              `top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+              `frame = ["${module_id}", locals, "${module_id}_globals", globals]`
         if(name){
             js += `,\nlocals_${name} = locals`
         }
     }
     js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
-          `top_frame.__file__ = '${scopes.filename || "<string>"}'\n` +
+          `frame.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__annotations__ = $B.empty_dict()\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
-        js += `locals.$f_trace = $B.enter_frame(top_frame)\n`
+        js += `locals.$f_trace = $B.enter_frame(frame)\n`
     }
     js += `$B.set_lineno(locals, ${this.lineno})\n` +
           `var stack_length = $B.frames_stack.length\n` +
@@ -2627,7 +2627,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         var finalbody = `var exit = false\n` +
                         `if($B.frames_stack.length < stack_length_${id}){\n` +
                             `exit = true\n` +
-                            `$B.frames_stack.push(top_frame)\n` +
+                            `$B.frames_stack.push(frame)\n` +
                         `}\n` +
                         add_body(this.finalbody, scopes)
         if(this.finalbody.length > 0 &&
@@ -2786,7 +2786,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                           // stack frame is preserved (it may have been
                           // modified by a "return" in the "with" block)
                           `if($B.frames_stack.length < stack_length){\n` +
-                              `$B.frames_stack.push(top_frame)\n` +
+                              `$B.frames_stack.push(frame)\n` +
                           `}\n` +
                           `throw err\n` +
                       `}\n` +
@@ -2887,7 +2887,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                     try{
                         $B.leave_frame({locals})
                         var _s${n} = yield _y${n}
-                        $B.frames_stack.push(top_frame)
+                        $B.frames_stack.push(frame)
                     }catch(_e){
                         if(_e.__class__ === _b_.GeneratorExit){
                             var failed2${n} = false

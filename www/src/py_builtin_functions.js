@@ -785,10 +785,10 @@ function $$eval(src, _globals, _locals){
 
     var _ast
 
-    var top_frame = [__name__, exec_locals, __name__, exec_globals]
-    top_frame.is_exec_top = true
-    top_frame.__file__ = filename
-    exec_locals.$f_trace = $B.enter_frame(top_frame)
+    var frame = [__name__, exec_locals, __name__, exec_globals]
+    frame.is_exec_top = true
+    frame.__file__ = filename
+    exec_locals.$f_trace = $B.enter_frame(frame)
     exec_locals.$lineno = 1
 
     if(src.__class__ === code){

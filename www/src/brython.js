@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-02 12:20:58.605114"
-__BRYTHON__.timestamp=1662114058603
+__BRYTHON__.compiled_date="2022-09-02 13:50:29.657456"
+__BRYTHON__.timestamp=1662119429657
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5683,16 +5683,16 @@ for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.trace
 try{return $B.tracefunc($B.last($B.frames_stack),'call',_b_.None)}catch(err){err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
-$B.trace_exception=function(){var top_frame=$B.last($B.frames_stack)
-if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=top_frame[1].$f_trace,exc=top_frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
+$B.trace_exception=function(){var frame=$B.last($B.frames_stack)
+if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
+var trace_func=frame[1].$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
-$B.trace_line=function(){var top_frame=$B.last($B.frames_stack)
-if(top_frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=top_frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
+$B.trace_line=function(){var frame=$B.last($B.frames_stack)
+if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
+var trace_func=frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'line',_b_.None)}
-$B.trace_return=function(value){var top_frame=$B.last($B.frames_stack),trace_func=top_frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
-if(top_frame[0]==$B.tracefunc.$current_frame_id){
+$B.trace_return=function(value){var frame=$B.last($B.frames_stack),trace_func=frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
+if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame_obj,'return',value)}
 $B.leave_frame=function(arg){
@@ -6407,10 +6407,10 @@ var missing=$B.$getattr(_locals.__class__,'__missing__',null)
 if(missing){exec_locals.$missing=$B.$call(missing)}}}}
 var save_frames_stack=$B.frames_stack.slice()
 var _ast
-var top_frame=[__name__,exec_locals,__name__,exec_globals]
-top_frame.is_exec_top=true
-top_frame.__file__=filename
-exec_locals.$f_trace=$B.enter_frame(top_frame)
+var frame=[__name__,exec_locals,__name__,exec_globals]
+frame.is_exec_top=true
+frame.__file__=filename
+exec_locals.$f_trace=$B.enter_frame(frame)
 exec_locals.$lineno=1
 if(src.__class__===code){_ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
@@ -14191,9 +14191,9 @@ return `var ${comp.locals_name} = {},\n`+
 `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
 `}\n`+
 `locals['.0'] = expr\n`+
-`var top_frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
+`var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
 `"${comp.module_name}", ${comp.globals_name}]\n`+
-`locals.$f_trace = $B.enter_frame(top_frame)\n`}
+`locals.$f_trace = $B.enter_frame(frame)\n`}
 function make_comp(scopes){
 var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var first_for=this.generators[0],
@@ -14457,10 +14457,10 @@ js+=`var ${ref} = (function(){\n`+
 `locals.$name = "${this.name}"\n`+
 `locals.$qualname = "${qualname}"\n`+
 `locals.$is_class = true\n`+
-`var top_frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n`+
-`top_frame.__file__ = '${scopes.filename}'\n`+
+`var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n`+
+`frame.__file__ = '${scopes.filename}'\n`+
 `locals.$lineno = ${this.lineno}\n`+
-`locals.$f_trace = $B.enter_frame(top_frame)\n`+
+`locals.$f_trace = $B.enter_frame(frame)\n`+
 `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
 js+=add_body(this.body,scopes)
 scopes.pop()
@@ -14663,10 +14663,10 @@ parse_args.push('{'+slots.join(', ')+'} , '+
 (this.args.kwonlyargs.length > 0 ? "'*', " :'null, '))+
 (this.args.kwarg ? `'${this.args.kwarg.arg}'` :'null'))
 js+=`${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
-js+=`var top_frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
-    top_frame.__file__ = '${scopes.filename}'
+js+=`var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    frame.__file__ = '${scopes.filename}'
     locals.$lineno = ${this.lineno}
-    locals.$f_trace = $B.enter_frame(top_frame)
+    locals.$f_trace = $B.enter_frame(frame)
     var stack_length = $B.frames_stack.length\n`
 if(last_scope(scopes).has_annotation){js+=`locals.__annotations__ = $B.empty_dict()\n`}
 if(is_generator){js+=`locals.$is_generator = true\n`
@@ -14694,7 +14694,7 @@ js+=`}catch(err){
     }\n`
 if(is_generator){js+=`, '${this.name}')\n`+
 `var _gen_${id} = gen_${id}()\n`+
-`_gen_${id}.$frame = top_frame\n`+
+`_gen_${id}.$frame = frame\n`+
 `$B.leave_frame()\n`+
 `return _gen_${id}}\n` }
 scopes.pop()
@@ -14951,17 +14951,17 @@ var js=`// Javascript code generated from ast\n`+
 `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
 if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
-`top_frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
+`frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name},\n`+
-`top_frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+`frame = ["${module_id}", locals, "${module_id}_globals", globals]`
 if(name){js+=`,\nlocals_${name} = locals`}}
 js+=`\nlocals.__file__ = '${scopes.filename || "<string>"}'\n`+
-`top_frame.__file__ = '${scopes.filename || "<string>"}'\n`+
+`frame.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__annotations__ = $B.empty_dict()\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! namespaces){
-js+=`locals.$f_trace = $B.enter_frame(top_frame)\n`}
+js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
 js+=`$B.set_lineno(locals, ${this.lineno})\n`+
 `var stack_length = $B.frames_stack.length\n`+
 `try{\n`+
@@ -15065,7 +15065,7 @@ js+='finally{\n'
 var finalbody=`var exit = false\n`+
 `if($B.frames_stack.length < stack_length_${id}){\n`+
 `exit = true\n`+
-`$B.frames_stack.push(top_frame)\n`+
+`$B.frames_stack.push(frame)\n`+
 `}\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
@@ -15138,7 +15138,7 @@ s+=`}\nfinally{\n`+
 `exit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None)\n`+
 `}catch(err){\n`+
 `if($B.frames_stack.length < stack_length){\n`+
-`$B.frames_stack.push(top_frame)\n`+
+`$B.frames_stack.push(frame)\n`+
 `}\n`+
 `throw err\n`+
 `}\n`+
@@ -15181,7 +15181,7 @@ return `yield* (function* f(){
                     try{
                         $B.leave_frame({locals})
                         var _s${n} = yield _y${n}
-                        $B.frames_stack.push(top_frame)
+                        $B.frames_stack.push(frame)
                     }catch(_e){
                         if(_e.__class__ === _b_.GeneratorExit){
                             var failed2${n} = false
