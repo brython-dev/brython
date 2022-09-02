@@ -559,7 +559,9 @@
             var $ = $B.args("_getframe", 1, {depth: null}, ['depth'],
                     arguments, {depth: 0}, null, null),
                 depth = $.depth
-            return $B.frames_stack[$B.frames_stack.length - depth - 1]
+            var res = $B.frames_stack[$B.frames_stack.length - depth - 1]
+            res.$pos = $B.frames_stack.indexOf(res)
+            return res
         },
         breakpointhook: function(){
             var hookname = $B.$options.breakpoint,
@@ -964,5 +966,6 @@
             }
         }
     }
+
 
 })(__BRYTHON__)
