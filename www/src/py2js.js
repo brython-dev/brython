@@ -8207,7 +8207,6 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     //
     // Returns the Javascript code
 
-    var test = false // locals_id == "items_en"
     $pos = 0
 
     if(typeof module == "object"){
@@ -8220,14 +8219,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     parent_scope = parent_scope || $B.builtins_scope
 
     var t0 = Date.now(),
-        has_annotations = true, // determine if __annotations__ is created
-        line_info, // set for generator expression
         ix, // used for generator expressions
         filename
     if(typeof src == 'object'){
-        var has_annotations = src.has_annotations,
-            line_info = src.line_info || `1,${locals_id}`
-            ix = src.ix,
+        var ix = src.ix,
             filename = src.filename
         src = src.src
     }
@@ -8240,21 +8235,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     if($B.parser_to_ast){
         var _ast = new $B.Parser(src, filename).parse('file')
     }else{
-        var root = $create_root_node(
-                {src: src, has_annotations: has_annotations,
-                    filename: filename},
-                module, locals_id, parent_scope)
-        if(test){
-            console.log('before dispatch tokens', Date.now() - t0)
-        }
+        var root = $create_root_node({src, filename},
+                                     module, locals_id, parent_scope)
         dispatch_tokens(root)
-        if(test){
-            console.log('after dispatch tokens', Date.now() - t0)
-        }
         var _ast = root.ast()
-        if(test){
-            console.log('afetr ast()', Date.now() - t0)
-        }
     }
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)

@@ -192,7 +192,6 @@ function run_py(module_contents, path, module, compiled) {
 
         var src = {
             src: module_contents,
-            has_annotations: false,
             filename: path
         }
 
