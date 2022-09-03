@@ -698,6 +698,24 @@ function is_integer(x){
             Number.isInteger(x.value))
 }
 
+Random.randbytes = function(self, n){
+    var $ = $B.args('randint', 2,
+        {self: null, n:null}, ['self', 'n'],
+        arguments, {}, null, null)
+    var n = $B.PyNumber_Index($.n)
+    if(n < 0){
+        throw _b_.ValueError.$factory('number of bits must be non-negative')
+    }
+    var t = []
+    for(var i = 0; i < n; i++){
+        t.push(Math.round(256 * Math.random()))
+    }
+    return {
+        __class__: _b_.bytes,
+        source: t
+    }
+}
+
 Random.randint = function(self, a, b){
     var $ = $B.args('randint', 3,
         {self: null, a:null, b:null},
