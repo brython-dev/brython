@@ -114,11 +114,12 @@ if(! $B.options_parsed){
 $B.parse_options()
 $B.meta_path=$B.$meta_path.slice()
 if(!$B.use_VFS){$B.meta_path.shift()}}
-var filename='$python_to_js'
-$B.url2name[filename]='$python_to_js'
-$B.imported.$python_to_js={}
+var filename='$python_to_js'+$B.UUID()
+$B.url2name[filename]=filename
+$B.imported[filename]={}
 var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope),js=root.to_js()
 js="(function() {\n"+js+"\nreturn locals}())"
+console.log(js)
 return js}
 _window.py=function(src){
 var root=$B.py2js(src[0],"script","script"),js=root.to_js()
@@ -128,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-02 18:47:14.598728"
-__BRYTHON__.timestamp=1662137234598
+__BRYTHON__.compiled_date="2022-09-03 17:34:11.288162"
+__BRYTHON__.timestamp=1662219251287
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4375,27 +4376,19 @@ src=src.replace(/\r\n/gm,"\n")
 root.src=src
 return root}
 $B.py2js=function(src,module,locals_id,parent_scope){
-var test=false 
 $pos=0
 if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
-var t0=Date.now(),has_annotations=true,
-line_info,
-ix,
+var t0=Date.now(),ix,
 filename
-if(typeof src=='object'){var has_annotations=src.has_annotations,line_info=src.line_info ||`1,${locals_id}`
-ix=src.ix,filename=src.filename
+if(typeof src=='object'){var ix=src.ix,filename=src.filename
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
-if($B.parser_to_ast){var _ast=new $B.Parser(src,filename).parse('file')}else{var root=$create_root_node(
-{src:src,has_annotations:has_annotations,filename:filename},module,locals_id,parent_scope)
-if(test){console.log('before dispatch tokens',Date.now()-t0)}
+if($B.parser_to_ast){var _ast=new $B.Parser(src,filename).parse('file')}else{var root=$create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
-if(test){console.log('after dispatch tokens',Date.now()-t0)}
-var _ast=root.ast()
-if(test){console.log('afetr ast()',Date.now()-t0)}}
+var _ast=root.ast()}
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root(_ast,symtable,filename)
@@ -9087,7 +9080,7 @@ $B.file_cache[path]=module_contents
 $B.url2name[path]=module.__name__
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-var src={src:module_contents,has_annotations:false,filename:path}
+var src={src:module_contents,filename:path}
 try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){if($B.debug > 1){console.log('error in imported module',module)
 console.log('stack',$B.frames_stack.slice())}
 err.$stack=$B.frames_stack.slice()

@@ -327,9 +327,9 @@ $B.python_to_js = function(src, script_id){
     }
 
     // fake names
-    var filename = '$python_to_js'
-    $B.url2name[filename] = '$python_to_js'
-    $B.imported.$python_to_js = {}
+    var filename = '$python_to_js' + $B.UUID()
+    $B.url2name[filename] = filename
+    $B.imported[filename] = {}
 
     var root = __BRYTHON__.py2js({src, filename},
                                  script_id, script_id,
@@ -337,6 +337,7 @@ $B.python_to_js = function(src, script_id){
         js = root.to_js()
 
     js = "(function() {\n" + js + "\nreturn locals}())"
+    console.log(js)
 
     return js
 }
