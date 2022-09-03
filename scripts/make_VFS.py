@@ -185,14 +185,15 @@ def process(filename, exclude_dirs=['test','site-packages']):
 
     print('{} files, {} errors'.format(nb, nb_err))
     print(nb_unchanged, 'unchanged')
-    with open(filename, "w") as out:
-      out.write('__BRYTHON__.use_VFS = true;\n')
-      out.write('var scripts = {}\n'.format(json.dumps(VFS)))
-      out.write('__BRYTHON__.update_VFS(scripts)\n')
+    if nb_unchanged != nb:
+        with open(filename, "w") as out:
+          out.write('__BRYTHON__.use_VFS = true;\n')
+          out.write('var scripts = {}\n'.format(json.dumps(VFS)))
+          out.write('__BRYTHON__.update_VFS(scripts)\n')
 
-    # save changes
-    with open(last_modifs_path, 'w', encoding='utf-8') as out:
-        json.dump(last_modifs, out)
+        # save changes
+        with open(last_modifs_path, 'w', encoding='utf-8') as out:
+            json.dump(last_modifs, out)
 
 if __name__ == '__main__':
     main_root = os.path.join(os.path.dirname(os.getcwd()), 'www', 'src')
