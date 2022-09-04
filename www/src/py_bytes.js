@@ -1760,8 +1760,6 @@ for(var attr in bytes){
     }
 }
 
-console.log('bytearray index', bytearray.index + '')
-
 $B.set_func_names(bytes, "builtins")
 
 // classmethod needs function attribute $info, which is set by set_func_names
