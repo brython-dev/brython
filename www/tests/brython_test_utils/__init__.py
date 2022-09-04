@@ -122,11 +122,8 @@ def trace_exc(run_frame, src, ns):
         elif started:
             lineno = traceback.tb_lineno
             filename = frame.f_code.co_filename
-            if filename == ns['__file__']:
-                show = True
-            if show:
-                result_lines.append(f'  File {filename}, line {lineno}')
-                show_line(filename, lineno, src)
+            result_lines.append(f'  File {filename}, line {lineno}')
+            show_line(filename, lineno, src)
         traceback = traceback.tb_next
 
     if isinstance(exc_value, SyntaxError):
@@ -139,6 +136,7 @@ def trace_exc(run_frame, src, ns):
             indent = len(line) - len(line.lstrip())
             col_offset = exc_value.args[1][2]
             result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
+
     result_lines.append(f'{exc_type.__name__}: {exc_value}')
     return '\n'.join(result_lines)
 
@@ -154,12 +152,7 @@ def run(src, filename='editor'):
     except Exception as exc:
         #msg = traceback.format_exc()
         #print(msg, file=sys.stderr)
-        console.log('exc in run',
-            getattr(exc, 'args', None),
-            getattr(exc, '__class__', None),
-            getattr(exc, 'message', None))
-        msg = trace_exc(sys._getframe(), src, ns)
-        print(msg)
+        print(trace_exc(sys._getframe(), src, ns))
         state = 0
     t1 = time.perf_counter()
     return state, t0, t1, msg
