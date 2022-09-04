@@ -93,19 +93,31 @@ float.as_integer_ratio = function(self){
         _b_.int.$factory(denominator)])
 }
 
+function check_self_is_float(x, method){
+    if(x.__class__ === _b_.float || _b_.isinstance(x, _b_.float)){
+        return true
+    }
+    throw _b_.TypeError.$factory(`descriptor '${method}' requires a ` +
+        `'float' object but received a '${$B.class_name(x)}'`)
+}
+
 float.__abs__ = function(self){
+    check_self_is_float(self, '__abs__')
     return fast_float(Math.abs(self.value))
 }
 
 float.__bool__ = function(self){
+    check_self_is_float(self, '__bool__')
     return _b_.bool.$factory(self.value)
 }
 
 float.__ceil__ = function(self){
+    check_self_is_float(self, '__ceil__')
     return Math.ceil(self.value)
 }
 
 float.__divmod__ = function(self, other){
+    check_self_is_float(self, '__divmod__')
     if(! _b_.isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
@@ -114,6 +126,7 @@ float.__divmod__ = function(self, other){
 }
 
 float.__eq__ = function(self, other){
+    check_self_is_float(self, '__eq__')
     if(isNaN(self.value) && isNaN(other)){
         return false
     }
@@ -133,6 +146,7 @@ float.__eq__ = function(self, other){
 }
 
 float.__floordiv__ = function(self, other){
+    check_self_is_float(self, '__floordiv__')
     if(_b_.isinstance(other, float)){
         if(other.value == 0){
             throw _b_.ZeroDivisionError.$factory('division by zero')
@@ -349,6 +363,7 @@ function preformat(self, fmt){
 }
 
 float.__format__ = function(self, format_spec){
+    check_self_is_float(self, '__format__')
     var fmt = new $B.parse_format_spec(format_spec)
     fmt.align = fmt.align || ">"
     var raw = preformat(self, fmt).split('.'),
@@ -365,6 +380,7 @@ float.__format__ = function(self, format_spec){
 }
 
 float.__hash__ = function(self) {
+    check_self_is_float(self, '__hash__')
     var _v = self.value
     if(_v === Infinity){
         return 314159
@@ -530,6 +546,7 @@ float.__init__ = function(self, value){
 }
 
 float.__int__ = function(self){
+    check_self_is_float(self, '__int__')
     return parseInt(self.value)
 }
 
@@ -539,6 +556,7 @@ float.is_integer = function(self){
 
 float.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
+    check_self_is_float(self, '__mod__')
     if(other == 0){
         throw _b_.ZeroDivisionError.$factory("float modulo")
     }
