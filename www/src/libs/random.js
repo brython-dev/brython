@@ -699,12 +699,12 @@ function is_integer(x){
 }
 
 Random.randbytes = function(self, n){
-    var $ = $B.args('randint', 2,
+    var $ = $B.args('randbytes', 2,
         {self: null, n:null}, ['self', 'n'],
         arguments, {}, null, null)
     var n = $B.PyNumber_Index($.n)
     if(n < 0){
-        throw _b_.ValueError.$factory('number of bits must be non-negative')
+        throw _b_.ValueError.$factory('number of bytes must be non-negative')
     }
     var t = []
     for(var i = 0; i < n; i++){

@@ -135,4 +135,7 @@ assert M is None
 # issue 1627
 random.randint(2 ** 63, 2 ** 64 - 1)
 
+# issue 2016
+assert len(random.randbytes(5)) == 5
+
 print("passed all tests...")
