@@ -39,7 +39,7 @@ var int = {
 int.as_integer_ratio = function(){
   var $ = $B.args("as_integer_ratio", 1, {self:null}, ["self"],
           arguments, {}, null, null)
-  return $B.$list([$.self, 1])
+  return $B.fast_tuple([$.self, 1])
 }
 
 int.from_bytes = function() {
@@ -696,31 +696,46 @@ var $valid_digits = function(base) {
 }
 
 int.$factory = function(value, base){
+    var missing = {},
+        $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"], arguments,
+              {x: missing, base: missing}, null, null),
+            value = $.x,
+            base = $.base
+
     // int() with no argument returns 0
-    if(value === undefined){return 0}
-
-    // int() of an integer returns the integer if base is undefined
-    if(typeof value == "number" &&
-        (base === undefined || base == 10)){return parseInt(value)}
-
-    if(_b_.isinstance(value, _b_.complex)){
-        throw _b_.TypeError.$factory("can't convert complex to int")
+    if(value === missing){
+        return 0
     }
 
-    var $ns = $B.args("int", 2, {x:null, base:null}, ["x", "base"], arguments,
-        {"base": 10}, null, null),
-        value = $ns["x"],
-        base = $ns["base"]
+    if(_b_.isinstance(value, [_b_.bytes, _b_.bytearray])){
+        // transform to string
+        value = $B.$getattr(value, "decode")("latin-1")
+    }
 
-    if(_b_.isinstance(value, _b_.float) && base == 10){
-        value = value.value // number
-        if(value < $B.min_int || value > $B.max_int){
-            return $B.long_int.$from_float(value)
-        }
-        else{
-            return value > 0 ? Math.floor(value) : Math.ceil(value)
+    if(! _b_.isinstance(value, _b_.str)){
+        if(base !== missing){
+            throw _b_.TypeError.$factory(
+                "int() can't convert non-string with explicit base")
+        }else{
+            // booleans, bigints, objects with method __index__
+            try{
+                return $B.PyNumber_Index(value)
+            }catch(err){
+                for(var special_method of ["__int__", "__trunc__"]){
+                    var num_value = $B.$getattr($B.get_class(value),
+                        special_method, _b_.None)
+                    if(num_value !== _b_.None){
+                        return $B.$call(num_value)(value)
+                    }
+                }
+                throw _b_.TypeError.$factory(
+                    "int() argument must be a string, a bytes-like object " +
+                    `or a real number, not '${$B.class_name(value)}'`)
+            }
         }
     }
+
+    base = base === missing ? 10: $B.PyNumber_Index(base)
 
     if(! (base >=2 && base <= 36)){
         // throw error (base must be 0, or 2-36)
@@ -729,104 +744,86 @@ int.$factory = function(value, base){
         }
     }
 
-    if(typeof value == "number"){
-
-        if(base == 10){
-           if(value < $B.min_int || value > $B.max_int){
-               return $B.long_int.$factory(value)
-           }
-           return value
-        }else if(value.toString().search("e") > -1){
-            // can't convert to another base if value is too big
-            throw _b_.OverflowError.$factory("can't convert to base " + base)
-        }else{
-            var res = parseInt(value, base)
-            if(value < $B.min_int || value > $B.max_int){
-                return $B.long_int.$factory(value, base)
-            }
-            return res
-        }
-    }
-
-    if(value === true){return Number(1)}
-    if(value === false){return Number(0)}
-    if(value.__class__ === $B.long_int){
-        var z = parseInt(value.value)
-        if(z > $B.min_int && z < $B.max_int){return z}
-        else{return value}
-    }
-
-    base = $B.$GetInt(base)
     function invalid(value, base){
         throw _b_.ValueError.$factory("invalid literal for int() with base " +
             base + ": '" + _b_.str.$factory(value) + "'")
     }
 
-    if(_b_.isinstance(value, _b_.str)){
+    if(typeof value != "string"){ // string subclass
         value = value.valueOf()
     }
-    if(typeof value == "string") {
-        var _value = value.trim(),    // remove leading/trailing whitespace
-            sign = ''
-        if(_value.startsWith('+') || value.startsWith('-')){
-            var sign = _value[0]
-            _value = _value.substr(1)
-        }
-        if(_value.length == 2 && base == 0 &&
-                (_value == "0b" || _value == "0o" || _value == "0x")){
-           throw _b_.ValueError.$factory("invalid value")
-        }
-        if(_value.length > 2) {
-            var _pre = _value.substr(0, 2).toUpperCase()
-            if(base == 0){
-                if(_pre == "0B"){base = 2}
-                if(_pre == "0O"){base = 8}
-                if(_pre == "0X"){base = 16}
-            }else if(_pre == "0X" && base != 16){invalid(_value, base)}
-            else if(_pre == "0O" && base != 8){invalid(_value, base)}
-            if((_pre == "0B" && base == 2) || _pre == "0O" || _pre == "0X"){
-                _value = _value.substr(2)
-                while(_value.startsWith("_")){
-                    _value = _value.substr(1)
-                }
+    var _value = value.trim(),    // remove leading/trailing whitespace
+        sign = ''
+
+    if(_value.startsWith('+') || _value.startsWith('-')){
+        var sign = _value[0]
+        _value = _value.substr(1)
+    }
+
+    if(_value.length == 2 && base == 0 &&
+            (_value == "0b" || _value == "0o" || _value == "0x")){
+       throw _b_.ValueError.$factory("invalid value")
+    }
+
+    if(_value.length > 2){
+        var _pre = _value.substr(0, 2).toUpperCase()
+        if(base == 0){
+            if(_pre == "0B"){
+                base = 2
+            }else if(_pre == "0O"){
+                base = 8
+            }else if(_pre == "0X"){
+                base = 16
             }
-        }else if(base == 0){
-            // eg int("1\n", 0)
-            base = 10
-        }
-        var _digits = $valid_digits(base),
-            _re = new RegExp("^[+-]?[" + _digits + "]" +
-            "[" + _digits + "_]*$", "i"),
-            match = _re.exec(_value)
-        if(match === null){
-            invalid(value, base)
-        }else{
-            value = _value.replace(/_/g, "")
-        }
-        if(base <= 10 && ! isFinite(value)){
+        }else if(_pre == "0X" && base != 16){
+            invalid(_value, base)
+        }else if(_pre == "0O" && base != 8){
             invalid(_value, base)
         }
-        var res = parseInt(sign + value, base)
-        if(res < $B.min_int || res > $B.max_int){
-            return $B.long_int.$factory(value, base)
-        }
-        return res
-    }
-
-    if(_b_.isinstance(value, [_b_.bytes, _b_.bytearray])){
-        return int.$factory($B.$getattr(value, "decode")("latin-1"), base)
-    }
-
-    for(var special_method of ["__int__", "__index__", "__trunc__"]){
-        var num_value = $B.$getattr(value.__class__ || $B.get_class(value),
-            special_method, _b_.None)
-        if(num_value !== _b_.None){
-            return $B.$call(num_value)(value)
+        if((_pre == "0B" && base == 2) || _pre == "0O" || _pre == "0X"){
+            _value = _value.substr(2)
+            while(_value.startsWith("_")){
+                _value = _value.substr(1)
+            }
         }
     }
-    throw _b_.TypeError.$factory(
-        "int() argument must be a string, a bytes-like " +
-        "object or a number, not '" + $B.class_name(value) + "'")
+    if(base == 0){
+        // _value doesn't start with 0b, 0o, 0x
+        base = 10
+    }
+    var _digits = $valid_digits(base),
+        _re = new RegExp("^[+-]?[" + _digits + "]" +
+        "[" + _digits + "_]*$", "i"),
+        match = _re.exec(_value)
+    if(match === null){
+        console.log('valid digits', _digits, 'base', base, '_value', _value)
+        invalid(value, base)
+    }else{
+        _value = _value.replace(/_/g, "")
+    }
+
+    if(base == 10){
+        res = BigInt(_value)
+    }else{
+        base = BigInt(base)
+        var res = 0n,
+            coef = 1n,
+            char
+        for(var i = _value.length - 1; i >= 0; i--){
+            char = _value[i].toUpperCase()
+            res += coef * BigInt(_digits.indexOf(char))
+            coef *= base
+        }
+    }
+    var num = Number(res)
+    if(! Number.isSafeInteger(num)){
+        return $B.fast_long_int(res + '', sign != '-')
+    }else{
+        if(sign == '-'){
+            res = -res
+        }
+        return Number(res)
+    }
 }
 
 $B.set_func_names(int, "builtins")

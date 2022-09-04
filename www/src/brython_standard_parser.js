@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-04 12:28:11.065613"
-__BRYTHON__.timestamp=1662287291064
+__BRYTHON__.compiled_date="2022-09-04 16:47:29.635561"
+__BRYTHON__.timestamp=1662302849635
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5720,7 +5720,7 @@ else if(typeof x=="number" && typeof y !="number"){return ! y.pos}
 else if(typeof x !="number" && typeof y=="number"){return x.pos===true}else{return $B.long_int.__gt__(x,y)}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
-$B.rich_comp=function(op,x,y){if(x===undefined){throw Error("err in r c")}
+$B.rich_comp=function(op,x,y){if(x===undefined){throw _b_.RuntimeError.$factory('error in rich comp')}
 var x1=x.valueOf ? x.valueOf():x,y1=y.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
 x.__class__===undefined && y.__class__===undefined){switch(op){case "__eq__":
@@ -8502,7 +8502,6 @@ bytes.$factory=function(source,encoding,errors){return bytes.__new__.bind(null,b
 bytes.__class__=_b_.type
 bytes.$is_class=true
 for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
-console.log('bytearray index',bytearray.index+'')
 $B.set_func_names(bytes,"builtins")
 bytes.fromhex=_b_.classmethod.$factory(bytes.fromhex)
 $B.set_func_names(bytearray,"builtins")
@@ -10647,7 +10646,7 @@ if(typeof obj=="boolean"){return obj ? 1 :0}
 return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
-return $B.$list([$.self,1])}
+return $B.fast_tuple([$.self,1])}
 int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed:false},null,null)
 var x=$.bytes,byteorder=$.byteorder,signed=$.signed,_bytes,_len
 if(_b_.isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
@@ -10895,58 +10894,48 @@ return digits}
 var digits="0123456789"
 for(var i=10;i < base;i++){digits+=String.fromCharCode(i+55)}
 return digits}
-int.$factory=function(value,base){
-if(value===undefined){return 0}
-if(typeof value=="number" &&
-(base===undefined ||base==10)){return parseInt(value)}
-if(_b_.isinstance(value,_b_.complex)){throw _b_.TypeError.$factory("can't convert complex to int")}
-var $ns=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{"base":10},null,null),value=$ns["x"],base=$ns["base"]
-if(_b_.isinstance(value,_b_.float)&& base==10){value=value.value 
-if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$from_float(value)}
-else{return value > 0 ? Math.floor(value):Math.ceil(value)}}
+int.$factory=function(value,base){var missing={},$=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{x:missing,base:missing},null,null),value=$.x,base=$.base
+if(value===missing){return 0}
+if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){
+value=$B.$getattr(value,"decode")("latin-1")}
+if(! _b_.isinstance(value,_b_.str)){if(base !==missing){throw _b_.TypeError.$factory(
+"int() can't convert non-string with explicit base")}else{
+try{return $B.PyNumber_Index(value)}catch(err){for(var special_method of["__int__","__trunc__"]){var num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
+if(num_value !==_b_.None){return $B.$call(num_value)(value)}}
+throw _b_.TypeError.$factory(
+"int() argument must be a string, a bytes-like object "+
+`or a real number, not '${$B.class_name(value)}'`)}}}
+base=base===missing ? 10:$B.PyNumber_Index(base)
 if(!(base >=2 && base <=36)){
 if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
-if(typeof value=="number"){if(base==10){if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value)}
-return value}else if(value.toString().search("e")>-1){
-throw _b_.OverflowError.$factory("can't convert to base "+base)}else{var res=parseInt(value,base)
-if(value < $B.min_int ||value > $B.max_int){return $B.long_int.$factory(value,base)}
-return res}}
-if(value===true){return Number(1)}
-if(value===false){return Number(0)}
-if(value.__class__===$B.long_int){var z=parseInt(value.value)
-if(z > $B.min_int && z < $B.max_int){return z}
-else{return value}}
-base=$B.$GetInt(base)
 function invalid(value,base){throw _b_.ValueError.$factory("invalid literal for int() with base "+
 base+": '"+_b_.str.$factory(value)+"'")}
-if(_b_.isinstance(value,_b_.str)){value=value.valueOf()}
-if(typeof value=="string"){var _value=value.trim(),
+if(typeof value !="string"){
+value=value.valueOf()}
+var _value=value.trim(),
 sign=''
-if(_value.startsWith('+')||value.startsWith('-')){var sign=_value[0]
+if(_value.startsWith('+')||_value.startsWith('-')){var sign=_value[0]
 _value=_value.substr(1)}
 if(_value.length==2 && base==0 &&
 (_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
 if(_value.length > 2){var _pre=_value.substr(0,2).toUpperCase()
-if(base==0){if(_pre=="0B"){base=2}
-if(_pre=="0O"){base=8}
-if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}
-else if(_pre=="0O" && base !=8){invalid(_value,base)}
+if(base==0){if(_pre=="0B"){base=2}else if(_pre=="0O"){base=8}else if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}else if(_pre=="0O" && base !=8){invalid(_value,base)}
 if((_pre=="0B" && base==2)||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
-while(_value.startsWith("_")){_value=_value.substr(1)}}}else if(base==0){
+while(_value.startsWith("_")){_value=_value.substr(1)}}}
+if(base==0){
 base=10}
 var _digits=$valid_digits(base),_re=new RegExp("^[+-]?["+_digits+"]"+
 "["+_digits+"_]*$","i"),match=_re.exec(_value)
-if(match===null){invalid(value,base)}else{value=_value.replace(/_/g,"")}
-if(base <=10 && ! isFinite(value)){invalid(_value,base)}
-var res=parseInt(sign+value,base)
-if(res < $B.min_int ||res > $B.max_int){return $B.long_int.$factory(value,base)}
-return res}
-if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){return int.$factory($B.$getattr(value,"decode")("latin-1"),base)}
-for(var special_method of["__int__","__index__","__trunc__"]){var num_value=$B.$getattr(value.__class__ ||$B.get_class(value),special_method,_b_.None)
-if(num_value !==_b_.None){return $B.$call(num_value)(value)}}
-throw _b_.TypeError.$factory(
-"int() argument must be a string, a bytes-like "+
-"object or a number, not '"+$B.class_name(value)+"'")}
+if(match===null){console.log('valid digits',_digits,'base',base,'_value',_value)
+invalid(value,base)}else{_value=_value.replace(/_/g,"")}
+if(base==10){res=BigInt(_value)}else{base=BigInt(base)
+var res=0n,coef=1n,char
+for(var i=_value.length-1;i >=0;i--){char=_value[i].toUpperCase()
+res+=coef*BigInt(_digits.indexOf(char))
+coef*=base}}
+var num=Number(res)
+if(! Number.isSafeInteger(num)){return $B.fast_long_int(res+'',sign !='-')}else{if(sign=='-'){res=-res}
+return Number(res)}}
 $B.set_func_names(int,"builtins")
 _b_.int=int
 $B.$bool=function(obj){
@@ -11411,18 +11400,27 @@ $B.shift1_cache[py_exponent]=x}
 py_exponent=x
 if(exponent > 0){numerator=$B.rich_op("__mul__",numerator,py_exponent)}else{denominator=py_exponent}
 return $B.fast_tuple([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
-float.__abs__=function(self){return fast_float(Math.abs(self.value))}
-float.__bool__=function(self){return _b_.bool.$factory(self.value)}
-float.__ceil__=function(self){return Math.ceil(self.value)}
-float.__divmod__=function(self,other){if(! _b_.isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
+function check_self_is_float(x,method){if(x.__class__===_b_.float ||_b_.isinstance(x,_b_.float)){return true}
+throw _b_.TypeError.$factory(`descriptor '${method}' requires a `+
+`'float' object but received a '${$B.class_name(x)}'`)}
+float.__abs__=function(self){check_self_is_float(self,'__abs__')
+return fast_float(Math.abs(self.value))}
+float.__bool__=function(self){check_self_is_float(self,'__bool__')
+return _b_.bool.$factory(self.value)}
+float.__ceil__=function(self){check_self_is_float(self,'__ceil__')
+return Math.ceil(self.value)}
+float.__divmod__=function(self,other){check_self_is_float(self,'__divmod__')
+if(! _b_.isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
 return $B.fast_tuple([float.__floordiv__(self,other),float.__mod__(self,other)])}
-float.__eq__=function(self,other){if(isNaN(self.value)&& isNaN(other)){return false}
+float.__eq__=function(self,other){check_self_is_float(self,'__eq__')
+if(isNaN(self.value)&& isNaN(other)){return false}
 if(_b_.isinstance(other,_b_.int)){return self.value==other}
 if(_b_.isinstance(other,float)){return self.value==other.value}
 if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
 return self.value==other.$real}
 return _b_.NotImplemented}
-float.__floordiv__=function(self,other){if(_b_.isinstance(other,float)){if(other.value==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
+float.__floordiv__=function(self,other){check_self_is_float(self,'__floordiv__')
+if(_b_.isinstance(other,float)){if(other.value==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
 return fast_float(Math.floor(self.value/other.value))}
 if(_b_.isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
 return fast_float(Math.floor(self.value/other))}
@@ -11499,7 +11497,8 @@ if(res.charAt(res.length-1)=="."){if(fmt.type===undefined){res+="0"}else{res=res
 if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& value > 0){res=fmt.sign+res}}
 if(fmt.type=="%"){res+="%"}
 return res}
-float.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+float.__format__=function(self,format_spec){check_self_is_float(self,'__format__')
+var fmt=new $B.parse_format_spec(format_spec)
 fmt.align=fmt.align ||">"
 var raw=preformat(self,fmt).split('.'),_int=raw[0]
 if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
@@ -11507,7 +11506,8 @@ for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
 raw[0]=chunks.join(",")}
 return $B.format_width(raw.join("."),fmt)}
-float.__hash__=function(self){var _v=self.value
+float.__hash__=function(self){check_self_is_float(self,'__hash__')
+var _v=self.value
 if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return 0}
 if(_v==Math.round(_v)){return Math.round(_v)}
 var r=frexp(_v)
@@ -11576,9 +11576,11 @@ _e=-_e}
 if(self.value < 0){return "-0x"+_s+"p"+_esign+_e}
 return "0x"+_s+"p"+_esign+_e}
 float.__init__=function(self,value){return _b_.None}
-float.__int__=function(self){return parseInt(self.value)}
+float.__int__=function(self){check_self_is_float(self,'__int__')
+return parseInt(self.value)}
 float.is_integer=function(self){return Number.isInteger(self.value)}
 float.__mod__=function(self,other){
+check_self_is_float(self,'__mod__')
 if(other==0){throw _b_.ZeroDivisionError.$factory("float modulo")}
 if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
 return fast_float((self.value % other+other)% other)}

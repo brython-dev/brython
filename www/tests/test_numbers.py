@@ -1,4 +1,7 @@
 # numbers
+
+from tester import assert_raises
+
 x = 1
 assert x.__class__ == int
 assert isinstance(x, int)
@@ -198,7 +201,7 @@ assert isinstance(3.0 - x, float)
 # issue 749
 assert float.__eq__(1.5, 1.5)
 assert float.__eq__(1.0, 1)
-assert not float.__eq__(1, 0)
+assert_raises(TypeError, float.__eq__, 1, 0)
 assert int.__eq__(1, 1)
 assert not int.__eq__(1, 0)
 
@@ -382,7 +385,7 @@ assert eval("0j") == 0j
 
 # as_integer_ratio() on integers
 x = 19
-assert x.as_integer_ratio() == [19, 1]
+assert x.as_integer_ratio() == (19, 1)
 
 # & for long integers
 for v1, v2 in [
