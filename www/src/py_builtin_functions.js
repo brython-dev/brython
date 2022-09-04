@@ -806,7 +806,7 @@ function $$eval(src, _globals, _locals){
         var exec_func = new Function('$B', '_b_', 'locals',
                                      local_name, global_name, 'frame', js)
     }catch(err){
-        if($B.debug > 1){
+        if(true){ //$B.debug > 1){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
