@@ -2386,8 +2386,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
               `frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
         js += `locals = ${namespaces.local_name},\n` +
-              `globals = ${namespaces.global_name},\n` +
-              `frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+              `globals = ${namespaces.global_name}\n`
         if(name){
             js += `,\nlocals_${name} = locals`
         }

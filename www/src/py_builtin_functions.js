@@ -814,7 +814,7 @@ function $$eval(src, _globals, _locals){
     }
 
     try{
-        var res = exec_func($B, _b_, exec_locals, 
+        var res = exec_func($B, _b_, exec_locals,
                             exec_locals, exec_globals, frame)
     }catch(err){
         if($B.debug > 2){
