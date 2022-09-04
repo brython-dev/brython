@@ -1947,7 +1947,10 @@ memoryview.hex = function(self){
     return res
 }
 memoryview.tobytes = function(self){
-    return _b_.bytes.$factory(self.obj)
+    return {
+        __class__: _b_.bytes,
+        source: self.obj.source
+    }
 }
 memoryview.tolist = function(self){
     if(self.itemsize == 1){

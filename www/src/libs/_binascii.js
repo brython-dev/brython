@@ -59,7 +59,7 @@ function decode(bytes, altchars, validate){
 
     }
     // return Python bytes
-    return _b_.bytes.$factory(output, 'utf-8', 'strict')
+    return _b_.bytes.$factory(output)
 }
 
 
@@ -85,7 +85,15 @@ var module = {
     a2b_base64: function(){
         var $ = $B.args("a2b_base64", 1, {s: null}, ['s'],
                 arguments, {}, null, null)
-        return decode(_b_.str.encode($.s, 'ascii'))
+        var bytes
+        if(_b_.isinstance($.s, _b_.str)){
+            bytes = _b_.str.encode($.s, 'ascii')
+        }else if(_b_.isinstance($.s, [_b_.bytes, _b_.bytearray])){
+            bytes = $.s
+        }else{
+            throw _b_.TypeError.$factory('wrong type: ' + $B.class_name($.s))
+        }
+        return decode(bytes)
     },
     a2b_hex: function(){
         var $ = $B.args("a2b_hex", 1, {s: null}, ['s'],
@@ -98,12 +106,12 @@ var module = {
             throw _b_.TypeError.$factory("argument should be bytes, " +
                 "buffer or ASCII string, not '" + $B.class_name(s) + "'")
         }
-    
+
         var len = s.length
         if(len % 2 == 1){
             throw _b_.TypeError.$factory('Odd-length string')
         }
-    
+
         var res = []
         for(var i = 0; i < len; i += 2){
             res.push((hex2int[s.charAt(i)] << 4) + hex2int[s.charAt(i + 1)])
@@ -138,10 +146,10 @@ var module = {
             res.push(conv((char >> 4) & 0xf))
             res.push(conv(char & 0xf))
         })
-        return _b_.bytes.$factory(res, "ascii")
+        return _b_.bytes.$factory(res)
     },
     b2a_uu: function(obj){
-        var string = $B.to_bytes(obj)
+        var string = _b_.bytes.decode(obj, 'ascii')
         var len = string.length,
             res = String.fromCharCode((0x20 + len) & 0x3F)
         while(string.length > 0){

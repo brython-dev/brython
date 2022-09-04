@@ -567,21 +567,30 @@ list.index = function(){
         self = $.self,
         start = $.start,
         stop = $.stop
-    var _eq = function(other){return $B.rich_comp("__eq__", $.x, other)}
+    var _eq = function(other){
+        return $B.rich_comp("__eq__", $.x, other)
+    }
     if(start.__class__ === $B.long_int){
         start = parseInt(start.value) * (start.pos ? 1 : -1)
     }
-    if(start < 0){start = Math.max(0, start + self.length)}
-    if(stop === missing){stop = self.length}
-    else{
+    if(start < 0){
+        start = Math.max(0, start + self.length)
+    }
+    if(stop === missing){
+        stop = self.length
+    }else{
         if(stop.__class__ === $B.long_int){
             stop = parseInt(stop.value) * (stop.pos ? 1 : -1)
         }
-        if(stop < 0){stop = Math.min(self.length, stop + self.length)}
+        if(stop < 0){
+            stop = Math.min(self.length, stop + self.length)
+        }
         stop = Math.min(stop, self.length)
     }
     for(var i = start; i < stop; i++){
-        if(_eq(self[i])){return i}
+        if($B.rich_comp('__eq__', $.x, self[i])){
+            return i
+        }
     }
     throw _b_.ValueError.$factory(_b_.repr($.x) + " is not in " +
         $B.class_name(self))
@@ -601,9 +610,13 @@ list.pop = function(){
         self = $.self,
         pos = $.pos
     check_not_tuple(self, "pop")
-    if(pos === missing){pos = self.length - 1}
+    if(pos === missing){
+        pos = self.length - 1
+    }
     pos = $B.$GetInt(pos)
-    if(pos < 0){pos += self.length}
+    if(pos < 0){
+        pos += self.length
+    }
     var res = self[pos]
     if(res === undefined){
         throw _b_.IndexError.$factory("pop index out of range")

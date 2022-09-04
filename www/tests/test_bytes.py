@@ -1,4 +1,11 @@
-from tester import assertRaises
+from tester import assert_raises
+
+assert b''.join([memoryview(b'foo'), b'bar']) == b'foobar'
+assert b''.join([b'bar', memoryview(b'foo')]) == b'barfoo'
+assert b''.join([bytearray(b'foo'), b'bar']) == b'foobar'
+assert b''.join([b'bar', bytearray(b'foo')]) == b'barfoo'
+
+assert_raises(TypeError, bytes, [memoryview(b'foo'), b'bar'])
 
 assert str(bytes("㋰",'utf-8')) == r"b'\xe3\x8b\xb0'"
 
@@ -18,17 +25,16 @@ assert str(b) == "bytearray(b'ajcd')"
 
 b = bytearray([0, 1, 2, 3])
 del b[1:2]
-assert b == bytearray([0, 2, 3])
+assert b == bytearray([0, 2, 3]), b
 b.reverse()
 assert b == bytearray([3, 2, 0])
-b.sort()
-assert b == bytearray([0, 2, 3])
+assert_raises(AttributeError, getattr, b, "sort")
 b.pop()
-assert b == bytearray([0, 2])
+assert b == bytearray([3, 2]), b
 b.append(5)
-assert b == bytearray([0, 2, 5])
+assert b == bytearray([3, 2, 5])
 b.insert(1, 4)
-assert b == bytearray([0, 4, 2, 5])
+assert b == bytearray([3, 4, 2, 5])
 
 assert b'-'.join([b'a', b'b']) == b'a-b'
 
@@ -41,7 +47,7 @@ for word in ['donnée', 'ήλιος', 'машина', '太陽']:
 assert int.from_bytes(map(ord, 'abcd'), 'big') == 1633837924
 
 t = [66, 'a']
-assertRaises(TypeError, bytes, t, "big")
+assert_raises(TypeError, bytes, t, "big")
 
 # mentioned in issue 623
 assert b''.join([memoryview(b'foo'), b'bar']) == b'foobar'
@@ -56,10 +62,10 @@ assert charmap.find(0, 0) == 0
 assert charmap.rfind(1, 0) == -1
 assert charmap.rfind(0, 0) == 255
 
-assertRaises(ValueError, charmap.index, 1)
+assert_raises(ValueError, charmap.index, 1)
 assert charmap.index(0) == 0
 
-assertRaises(ValueError, charmap.rindex, 1)
+assert_raises(ValueError, charmap.rindex, 1)
 assert charmap.rindex(0) == 255
 
 assert b'www.example.com'.partition(b'.') == (b'www', b'.', b'example.com')
@@ -81,9 +87,9 @@ assert not b'0123456789'.endswith(b'123', 1, 5)
 assert not b'0123456789'.endswith(b'123', 1, 3)
 assert     b'0123456789'.endswith((b'123', b'456'), 1, 4)
 assert     b'0123456789'.endswith((b'123', b'456'), 4, 7)
-assert     b'0123456789'.endswith((b'123', b'456'), 1)
+assert not b'0123456789'.endswith((b'123', b'456'), 1)
 
-assert b'test\x09test'.expandtabs() == b'test        test'
+assert b'test\x09test'.expandtabs() == b'test    test', b'test\x09test'.expandtabs()
 assert b'test\x09test'.expandtabs(4) == b'test    test'
 assert b'test\x09test'.expandtabs(2) == b'test  test'
 assert b'test\x09\x09test'.expandtabs(2) == b'test    test'
@@ -92,13 +98,13 @@ assert b'Hello World'.swapcase() == b'hELLO wORLD'
 
 assert b'threewordsalluppercase'.islower()
 assert not b'ONE WORD ALL LOWERCASE'.islower()
-assert not b''.islower(b'')
-assert not b''.islower(b'aA')
+assert not b''.islower()
+assert not b'aA'.islower()
 
 assert not b'threewordsalluppercase'.isupper()
 assert b'ONE WORD ALL LOWERCASE'.isupper()
-assert not b''.isupper(b'')
-assert not b''.isupper(b'aA')
+assert not b''.isupper()
+assert not b'aA'.isupper()
 
 assert b'   '.isspace()
 assert not b'  -  '.isspace()
@@ -274,5 +280,18 @@ assert b'UUDDLRLRAB'.hex(' ', 4) == '5555 44444c52 4c524142'
 assert b'UUDDLRLRAB'.hex(' ', -4) == '55554444 4c524c52 4142'
 assert b'UUDDLRLRAB'.hex('-', 4) == '5555-44444c52-4c524142'
 assert b'UUDDLRLRAB'.hex(':', -4) == '55554444:4c524c52:4142'
+
+# issue 2017
+class Foo:
+    def __bytes__(self) -> bytes:
+        return b"Bar"
+
+assert bytes(Foo()) == b"Bar"
+
+class WrongBytes:
+    def __bytes__(self) -> bytes:
+        return "Bar"
+
+assert_raises(TypeError, bytes, WrongBytes())
 
 print('passed all tests...')

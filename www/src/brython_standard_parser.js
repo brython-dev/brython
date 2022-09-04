@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-03 17:43:58.723187"
-__BRYTHON__.timestamp=1662219838723
+__BRYTHON__.compiled_date="2022-09-04 12:28:11.065613"
+__BRYTHON__.timestamp=1662287291064
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5720,7 +5720,7 @@ else if(typeof x=="number" && typeof y !="number"){return ! y.pos}
 else if(typeof x !="number" && typeof y=="number"){return x.pos===true}else{return $B.long_int.__gt__(x,y)}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
-$B.rich_comp=function(op,x,y){if(x===undefined){throw _b_.RuntimeError.$factory('error in rich comp')}
+$B.rich_comp=function(op,x,y){if(x===undefined){throw Error("err in r c")}
 var x1=x.valueOf ? x.valueOf():x,y1=y.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
 x.__class__===undefined && y.__class__===undefined){switch(op){case "__eq__":
@@ -6830,7 +6830,8 @@ return res}}
 memoryview.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
 bytes.source.forEach(function(item){res+=item.toString(16)})
 return res}
-memoryview.tobytes=function(self){return _b_.bytes.$factory(self.obj)}
+memoryview.tobytes=function(self){return{
+__class__:_b_.bytes,source:self.obj.source}}
 memoryview.tolist=function(self){if(self.itemsize==1){return _b_.list.$factory(_b_.bytes.$factory(self.obj))}else if(self.itemsize==4){if(self.format=="I"){var res=[]
 for(var i=0;i < self.obj.source.length;i+=4){var item=self.obj.source[i],coef=256
 for(var j=1;j < 4;j++){item+=coef*self.obj.source[i+j]
@@ -7906,7 +7907,7 @@ for(var i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){b
 return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! _b_.isinstance(other,[bytes,bytearray])}
 var bytearray={__class__:_b_.type,__mro__:[_b_.object],$buffer_protocol:true,$infos:{__module__:"builtins",__name__:"bytearray"},$is_class:true}
-var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse","sort"]
+var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse"]
 mutable_methods.forEach(function(method){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
 return _b_.list[m].apply(null,args)}})(method)})
@@ -7953,7 +7954,10 @@ bytearray.$factory=function(){var args=[bytearray]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return bytearray.__new__.apply(null,args)}
 var bytes={__class__ :_b_.type,__mro__:[_b_.object],$buffer_protocol:true,$infos:{__module__:"builtins",__name__:"bytes"},$is_class:true}
-bytes.__add__=function(self,other){if(_b_.isinstance(other,bytes)){return self.__class__.$factory(self.source.concat(other.source))}else if(_b_.isinstance(other,bytearray)){return self.__class__.$factory(bytes.__add__(self,bytes.$factory(other)))}else if(_b_.isinstance(other,_b_.memoryview)){return self.__class__.$factory(bytes.__add__(self,_b_.memoryview.tobytes(other)))}
+bytes.__add__=function(self,other){var other_bytes
+if(_b_.isinstance(other,[bytes,bytearray])){other_bytes=other.source}else if(_b_.isinstance(other,_b_.memoryview)){other_bytes=_b_.memoryview.tobytes(other).source}
+if(other_bytes !==undefined){return{
+__class__:self.__class__,source:self.source.concat(other_bytes)}}
 throw _b_.TypeError.$factory("can't concat bytes to "+
 _b_.str.$factory(other))}
 bytes.__contains__=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)>-1}
@@ -8004,19 +8008,47 @@ var res=bytes.$factory()
 res.source=t
 return res}
 bytes.__ne__=function(self,other){return ! bytes.__eq__(self,other)}
-bytes.__new__=function(cls,source,encoding,errors){var $=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{source:[],encoding:"utf-8",errors:"strict"},null,null)
-return bytes.$new($.cls,$.source,$.encoding,$.errors)}
+bytes.__new__=function(cls,source,encoding,errors){var missing={},$=$B.args("__new__",4,{cls:null,source:null,encoding:null,errors:null},["cls","source","encoding","errors"],arguments,{source:missing,encoding:missing,errors:missing},null,null)
+var source
+if($.source===missing){return{
+__class__:$.cls,source:[]}}else if(typeof $.source=="string" ||_b_.isinstance($.source,_b_.str)){if($.encoding===missing){throw _b_.TypeError.$factory('string argument without an encoding')}
+$.errors=$.errors===missing ? 'strict' :$.errors
+return{
+__class__:$.cls,source:encode($.source,$.encoding,$.errors)}}
+if($.encoding !==missing){throw _b_.TypeError.$factory("encoding without a string argument")}
+if(typeof $.source=="number" ||_b_.isinstance($.source,_b_.int)){var size=$B.PyNumber_Index($.source)
+source=[]
+for(var i=0;i < size;i++){source[i]=0}}else if(_b_.isinstance($.source,[_b_.bytes,_b_.bytearray])){source=$.source.source}else if(_b_.isinstance($.source,_b_.memoryview)){source=$.source.obj.source}else{if(Array.isArray($.source)){var int_list=$.source}else{try{var int_list=_b_.list.$factory($.source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
+if(bytes_method===_b_.None){throw _b_.TypeError.$factory("cannot convert "+
+`'${$B.class_name(source)}' object to bytes`)}
+var res=$B.$call(bytes_method)()
+if(! _b_.isinstance(res,_b_.bytes)){throw _b_.TypeError.$factory(`__bytes__ returned `+
+`non-bytes (type ${$B.class_name(res)})`)}
+return res}}
+source=[]
+for(var item of int_list){item=$B.PyNumber_Index(item)
+if(item >=0 && item < 256){source.push(item)}else{throw _b_.ValueError.$factory(
+"bytes must be in range (0, 256)")}}}
+return{
+__class__:$.cls,source}}
 bytes.$new=function(cls,source,encoding,errors){
 var self={__class__:cls},int_list=[],pos=0
 if(source===undefined){}else if(typeof source=="number" ||_b_.isinstance(source,_b_.int)){var i=source
 while(i--){int_list[pos++]=0}}else{if(typeof source=="string" ||_b_.isinstance(source,_b_.str)){if(encoding===undefined){throw _b_.TypeError.$factory("string argument without an encoding")}
-int_list=encode(source,encoding ||"utf-8",errors ||"strict")}else{
-int_list=_b_.list.$factory(source)
+int_list=encode(source,encoding ||"utf-8",errors ||"strict")}else{if(encoding !==undefined){console.log('encoding',encoding)
+throw _b_.TypeError.$factory("encoding without a string argument")}
+if(Array.isArray(source)){int_list=source}else{try{int_list=_b_.list.$factory(source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
+if(bytes_method===_b_.None){throw _b_.TypeError.$factory("cannot convert "+
+`'${$B.class_name(source)}' object to bytes`)}
+var res=$B.$call(bytes_method)()
+if(! _b_.isinstance(res,_b_.bytes)){throw _b_.TypeError.$factory(`__bytes__ returned `+
+`non-bytes (type ${$B.class_name(res)})`)}
+return res}
 for(var i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){throw _b_.TypeError.$factory("'"+
 $B.class_name(int_list[i])+"' object "+
 "cannot be interpreted as an integer")}
 if(item < 0 ||item > 255){throw _b_.ValueError.$factory("bytes must be in range"+
-"(0, 256)")}}}}
+"(0, 256)")}}}}}
 self.source=int_list
 self.encoding=encoding
 self.errors=errors
@@ -8062,9 +8094,7 @@ bytes.endswith=function(){var $=$B.args('endswith',4,{self:null,suffix:null,star
 if(_b_.isinstance($.suffix,bytes)){var start=$.start==-1 ?
 $.self.source.length-$.suffix.source.length :
 Math.min($.self.source.length-$.suffix.source.length,$.start)
-var end=$.end==-1 ?
-($.start==-1 ? $.self.source.length :start+$.suffix.source.length):
-Math.min($.self.source.length-1,$.end)
+var end=$.end==-1 ? $.self.source.length :$.end
 var res=true
 for(var i=$.suffix.source.length-1,len=$.suffix.source.length;
 i >=0 && res;--i){res=$.self.source[end-len+i]==$.suffix.source[i]}
@@ -8077,7 +8107,10 @@ bytes.expandtabs=function(){var $=$B.args('expandtabs',2,{self:null,tabsize:null
 var tab_spaces=[]
 for(let i=0;i < $.tabsize;++i){tab_spaces.push(32)}
 var buffer=$.self.source.slice()
-for(let i=0;i < buffer.length;++i){if(buffer[i]===9){buffer.splice.apply(buffer,[i,1].concat(tab_spaces))}}
+for(let i=0;i < buffer.length;++i){if(buffer[i]===9){var nb_spaces=$.tabsize-i % $.tabsize
+var tabs=new Array(nb_spaces)
+tabs.fill(32)
+buffer.splice.apply(buffer,[i,1].concat(tabs))}}
 return _b_.bytes.$factory(buffer)}
 bytes.find=function(self,sub){if(arguments.length !=2){var $=$B.args('find',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null),sub=$.sub,start=$.start,end=$.end}else{var start=0,end=-1}
 if(typeof sub=="number"){if(sub < 0 ||sub > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
@@ -8108,27 +8141,33 @@ j--
 res+=digits[c >> 4]
 res+=digits[c & 0x0f]}
 return res}
-bytes.index=function(){var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
+bytes.index=function(){var $=$B.args('index',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
 var index=bytes.find($.self,$.sub,$.start,$.end)
+console.log('index',index)
 if(index==-1){throw _b_.ValueError.$factory("subsection not found")}
 return index}
-bytes.isalnum=function(self){var src=self.source,len=src.length,res=len > 0
+bytes.isalnum=function(){var $=$B.args('isalnum',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length,res=len > 0
 for(var i=0;i < len && res;++i){res=(src[i]> 96 && src[i]< 123)||
 (src[i]> 64 && src[i]< 91)||
 (src[i]> 47 && src[i]< 58)}
 return res}
-bytes.isalpha=function(self){var src=self.source,len=src.length,res=len > 0
+bytes.isalpha=function(){var $=$B.args('isalpha',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length,res=len > 0
 for(var i=0;i < len && res;++i){res=(src[i]> 96 && src[i]< 123)||(src[i]> 64 && src[i]< 91)}
 return res}
-bytes.isdigit=function(self){var src=self.source,len=src.length,res=len > 0
+bytes.isdigit=function(){var $=$B.args('isdigit',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length,res=len > 0
 for(let i=0;i < len && res;++i){res=src[i]> 47 && src[i]< 58}
 return res}
-bytes.islower=function(self){var src=self.source,len=src.length,res=false
+bytes.islower=function(){var $=$B.args('islower',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length,res=false
 for(let i=0;i < len;++i){
 res=res ||(src[i]> 96 && src[i]< 123)
 if(src[i]> 64 && src[i]< 91){return false}}
 return res}
-bytes.isspace=function(self){var src=self.source,len=src.length
+bytes.isspace=function(){var $=$B.args('isspace',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length
 for(let i=0;i < len;++i){switch(src[i]){case 9:
 case 10:
 case 11:
@@ -8139,12 +8178,14 @@ break
 default:
 return false}}
 return true}
-bytes.isupper=function(self){var src=self.source,len=src.length,res=false
+bytes.isupper=function(){var $=$B.args('isupper',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length,res=false
 for(let i=0;i < len;++i){
 res=res ||(src[i]> 64 && src[i]< 91)
 if(src[i]> 96 && src[i]< 123){return false}}
 return res}
-bytes.istitle=function(self){var src=self.source,len=src.length,current_char_is_letter=false,prev_char_was_letter=false,is_uppercase=false,is_lowercase=false
+bytes.istitle=function(){var $=$B.args('istitle',1,{self:null},['self'],arguments,{},null,null),self=$.self
+var src=self.source,len=src.length,current_char_is_letter=false,prev_char_was_letter=false,is_uppercase=false,is_lowercase=false
 for(var i=0;i < len;++i){is_lowercase=src[i]> 96 && src[i]< 123
 is_uppercase=src[i]> 64 && src[i]< 91
 current_char_is_letter=is_lowercase ||is_uppercase
@@ -8156,8 +8197,7 @@ return true}
 bytes.join=function(){var $ns=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
 var next_func=$B.$getattr(_b_.iter(iterable),'__next__'),res=self.__class__.$factory(),empty=true
 while(true){try{var item=next_func()
-if(empty){empty=false}
-else{res=bytes.__add__(res,self)}
+if(empty){empty=false}else{res=bytes.__add__(res,self)}
 res=bytes.__add__(res,item)}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
 throw err}}
 return res}
@@ -8416,7 +8456,8 @@ for(var i=0,len=decoded.length;i < len;i++){if(decoded.codePointAt(i)==0xfffe){t
 "character maps to <undefined>")}}
 return decoded}
 return s}
-var encode=$B.encode=function(){var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
+var encode=$B.encode=function(){
+var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
 var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
@@ -8457,11 +8498,11 @@ default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
 t=from_unicode[enc](s)[0].source}
 return t}
-bytes.$factory=function(source,encoding,errors){var $=$B.args("bytes",3,{source:null,encoding:null,errors:null},["source","encoding","errors"],arguments,{source:[],encoding:"utf-8",errors:"strict"},null,null)
-return bytes.$new(bytes,$.source,$.encoding,$.errors)}
+bytes.$factory=function(source,encoding,errors){return bytes.__new__.bind(null,bytes).apply(null,arguments)}
 bytes.__class__=_b_.type
 bytes.$is_class=true
 for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
+console.log('bytearray index',bytearray.index+'')
 $B.set_func_names(bytes,"builtins")
 bytes.fromhex=_b_.classmethod.$factory(bytes.fromhex)
 $B.set_func_names(bytearray,"builtins")
@@ -12586,11 +12627,10 @@ list.index=function(){var missing={},$=$B.args("index",4,{self:null,x:null,start
 var _eq=function(other){return $B.rich_comp("__eq__",$.x,other)}
 if(start.__class__===$B.long_int){start=parseInt(start.value)*(start.pos ? 1 :-1)}
 if(start < 0){start=Math.max(0,start+self.length)}
-if(stop===missing){stop=self.length}
-else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 :-1)}
+if(stop===missing){stop=self.length}else{if(stop.__class__===$B.long_int){stop=parseInt(stop.value)*(stop.pos ? 1 :-1)}
 if(stop < 0){stop=Math.min(self.length,stop+self.length)}
 stop=Math.min(stop,self.length)}
-for(var i=start;i < stop;i++){if(_eq(self[i])){return i}}
+for(var i=start;i < stop;i++){if($B.rich_comp('__eq__',$.x,self[i])){return i}}
 throw _b_.ValueError.$factory(_b_.repr($.x)+" is not in "+
 $B.class_name(self))}
 list.insert=function(){var $=$B.args("insert",3,{self:null,i:null,item:null},["self","i","item"],arguments,{},null,null)
@@ -14936,8 +14976,7 @@ var js=`// Javascript code generated from ast\n`+
 if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
-`globals = ${namespaces.global_name},\n`+
-`frame = ["${module_id}", locals, "${module_id}_globals", globals]`
+`globals = ${namespaces.global_name}\n`
 if(name){js+=`,\nlocals_${name} = locals`}}
 js+=`\nlocals.__file__ = '${scopes.filename || "<string>"}'\n`+
 `frame.__file__ = '${scopes.filename || "<string>"}'\n`+
