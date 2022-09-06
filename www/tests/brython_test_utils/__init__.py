@@ -144,8 +144,6 @@ def run(src, filename='editor'):
     t0 = time.perf_counter()
     msg = ''
     ns = {'__name__':'__main__', '__file__': filename}
-    with open(filename, 'w') as out:
-        out.write(src)
     state = 1
     try:
         exec(src, ns)
@@ -162,5 +160,5 @@ def run_test_module(filename, base_path=''):
         base_path += '/'
     file_path = base_path + filename
     src = open(file_path).read()
-    return run(src, file_path)
+    return run(src, file_path.replace('/', '__'))
 
