@@ -98,6 +98,9 @@ def trace_exc(run_frame, src, ns):
     result_lines = []
     exc_type, exc_value, traceback = sys.exc_info()
 
+    if __BRYTHON__.debug > 1:
+        console.log(exc_value)
+
     def show_line(filename, lineno, src):
         if filename == ns['__file__']:
             source = src

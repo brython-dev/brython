@@ -781,15 +781,14 @@ list.sort = function(self){
                 }
             }else{
                 cmp = function(a, b){
-                    res = $B.$getattr(a, "__lt__")(b)
+                    res = $B.rich_comp("__lt__", a, b)
                     if(res === _b_.NotImplemented){
                         throw _b_.TypeError.$factory("unorderable types: " +
                             $B.class_name(a) + "() < " +
                             $B.class_name(b) + "()")
                     }
                     if(res){
-                        if(a == b){return 0}
-                        return -1
+                        return a == b ? 0 : -1
                     }
                     return 1
                 }
