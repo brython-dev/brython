@@ -562,12 +562,20 @@ $B.getitem_slice = function(obj, slice){
                 res = obj.slice().reverse()
             }
         }else if(slice.step === _b_.None){
-            if(slice.start === _b_.None){slice.start = 0}
-            if(slice.stop === _b_.None){slice.stop = obj.length}
+            if(slice.start === _b_.None){
+                slice.start = 0
+            }
+            if(slice.stop === _b_.None){
+                slice.stop = obj.length
+            }
             if(typeof slice.start == "number" &&
                     typeof slice.stop == "number"){
-                if(slice.start < 0){slice.start += obj.length}
-                if(slice.stop < 0){slice.stop += obj.length}
+                if(slice.start < 0){
+                    slice.start += obj.length
+                }
+                if(slice.stop < 0){
+                    slice.stop += obj.length
+                }
                 res = obj.slice(slice.start, slice.stop)
             }
         }
@@ -577,6 +585,36 @@ $B.getitem_slice = function(obj, slice){
             return res
         }else{
             return _b_.list.$getitem(obj, slice)
+        }
+    }else if(typeof obj == "string"){
+        if(slice.start === _b_.None && slice.stop === _b_.None){
+            if(slice.step === _b_.None || slice.step == 1){
+                res = obj
+            }else if(slice.step == -1){
+                res = obj.split("").reverse().join("");
+            }
+        }else if(slice.step === _b_.None){
+            if(slice.start === _b_.None){
+                slice.start = 0
+            }
+            if(slice.stop === _b_.None){
+                slice.stop = obj.length
+            }
+            if(typeof slice.start == "number" &&
+                    typeof slice.stop == "number"){
+                if(slice.start < 0){
+                    slice.start += obj.length
+                }
+                if(slice.stop < 0){
+                    slice.stop += obj.length
+                }
+                res = obj.substring(slice.start, slice.stop)
+            }
+        }
+        if(res !== undefined){
+            return res
+        }else{
+            return _b_.str.__getitem__(obj, slice)
         }
     }
     return $B.$getattr(obj, "__getitem__")(slice)
@@ -1393,6 +1431,11 @@ $B.rich_op1 = function(op, x, y){
                 break
             case "__mul__":
                 z = x_num * y_num
+                break
+            case '__pow__':
+                if(res_is_int && y_num >= 0){
+                    return _b_.int.$int_or_long(BigInt(x_num) ** BigInt(y_num))
+                }
                 break
             case "__truediv__":
                 if(y_num == 0){
