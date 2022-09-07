@@ -20,6 +20,9 @@ $B.$class_constructor = function(class_name, class_obj, bases,
             // restore the line of class definition
             $B.line_info = class_obj.$def_line
             throw $B.name_error(parents_names[i])
+        }else if(bases[i] === _b_.bool){
+            throw _b_.TypeError.$factory(
+                "type 'bool' is not an acceptable base type")
         }
     }
 
