@@ -99,21 +99,6 @@ function abs(obj){
     check_nb_args('abs', 1, arguments)
     check_no_kw('abs', obj)
 
-    if(isinstance(obj, _b_.int)){
-        if(obj.__class__ === $B.long_int){
-            return {
-                __class__: $B.long_int,
-                value: obj.value,
-                pos: true
-            }
-        }else{
-            return _b_.int.$factory(Math.abs(obj))
-        }
-    }
-    if(isinstance(obj, _b_.float)){
-        // use numerator in case it's a subclass of float
-        return _b_.float.$factory(Math.abs(_b_.float.numerator(obj)))
-    }
     var klass = obj.__class__ || $B.get_class(obj)
     try{
         var method = $B.$getattr(klass, "__abs__")
@@ -196,10 +181,7 @@ function $builtin_base_convert_helper(obj, base) {
   }
 
   if(obj.__class__ === $B.long_int){
-      var res = prefix + $B.long_int.to_base(obj, base)
-      if(! obj.pos){
-          res = "-" + res
-      }
+      var res = prefix + obj.value.toString(base)
       return res
   }
 
