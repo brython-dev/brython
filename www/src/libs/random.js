@@ -277,31 +277,30 @@ function RandomStream(seed) {
         if(seed === undefined){
             seed = Date.now()
         }
-        /*
-        if(Array.isArray(seed)){ // Brython-specific, for debugging
-            init_by_array(seed, seed.length)
-            return
-        }
-        */
         var keys = []
-        if(typeof seed == "number" || _b_.isinstance(seed, _b_.int)){
-            var int32 = Math.pow(2, 32),
-                int32_1 = int32 - 1
+        if(_b_.isinstance(seed, _b_.int)){
+            var int32_1 = 2n ** 32n - 1n
             // Transform to long integer
-            seed = $B.long_int.$factory(seed)
+            if(typeof seed == "number"){
+                seed = BigInt(seed)
+            }else if(seed.__class__ === $B.long_int){
+                seed = seed.value
+            }else{
+                return random.seed(seed.$brython_value)
+            }
             // Take abs(seed)
-            seed = $B.long_int.__abs__(seed)
+            seed = seed > 0 ? seed : -seed
             // decomposition in factors of 2 ** 32
-            while($B.long_int.__ge__(seed, int32_1)){
-                var dm = _b_.divmod(seed, int32)
+            while(seed >= int32_1){
+                var quot = seed / int32_1,
+                    rest = seed - quot * int32_1
                 // Rest is a JS number (< 2 ** 32)
-                keys.push(dm[1])
+                keys.push(Number(rest))
                 // Quotient is either a JS number or a instance of long_int
                 // but seed must be long_int
-                seed = dm[0].value === undefined ?
-                    $B.long_int.$factory(dm[0]) : dm[0]
+                seed = quot
             }
-            keys.push(parseInt(seed.value))
+            keys.push(Number(seed))
         }else if(typeof seed != "number"){
             seed = parseInt(seed, 10)
             if((seed !== 0 && ! seed) || isNaN(seed)){
@@ -698,6 +697,31 @@ function is_integer(x){
             Number.isInteger(x.value))
 }
 
+function bigint_value(x){
+    // return a Javascript BigInt
+    if(_b_.isinstance(x, _b_.float) &&
+            Number.isInteger(x.value)){
+        return BigInt(x.value)
+    }else if(typeof x == "number"){
+        return BigInt(x)
+    }else if(x.__class__ === $B.long_int){
+        return x.value
+    }else if(_b_.isinstance(x, _b_.int)){
+        return bigint_value(x.$brython_value)
+    }
+    throw _b_.TypeError.$factory('not an integer')
+}
+
+function int_value(x){
+    if(_b_.isinstance(x, _b_.float) &&
+            Number.isInteger(x.value)){
+        return x.value
+    }else if(_b_.isinstance(x, _b_.int)){
+        return x
+    }
+    throw _b_.TypeError.$factory('not an integer')
+}
+
 Random.randbytes = function(self, n){
     var $ = $B.args('randbytes', 2,
         {self: null, n:null}, ['self', 'n'],
@@ -721,13 +745,17 @@ Random.randint = function(self, a, b){
         {self: null, a:null, b:null},
         ['self', 'a', 'b'],
         arguments, {}, null, null)
-    if(! is_integer($.a)){
+    try{
+        var a = int_value($.a)
+    }catch(err){
         throw _b_.ValueError.$factory("non-integer value for start")
     }
-    if(! is_integer($.b)){
+    try{
+        var b = int_value($.b)
+    }catch(err){
         throw _b_.ValueError.$factory("non-integer value for stop")
     }
-    return Random.randrange($.self, $.a, $B.add($.b, 1))
+    return Random.randrange($.self, a, $B.rich_op('__add__', b, 1))
 }
 
 Random.random = function(self){
@@ -743,70 +771,46 @@ Random.randrange = function(){
         arguments, {stop:null, step:null}, null, null),
         self = $.self,
         _random = self._random
-
-    if(! is_integer($.x)){
+    
+    try{
+        var x = bigint_value($.x)
+    }catch(err){
         throw _b_.ValueError.$factory("non-integer arg 1 for randrange()")
-    }
-    if($.stop !== null && ! is_integer($.stop)){
-        throw _b_.ValueError.$factory("non-integer arg 2 for randrange()")
-    }
-    if($.step !== null && ! is_integer($.step)){
-        throw _b_.ValueError.$factory("non-integer arg 3 for randrange()")
     }
 
     if($.stop === null){
-        var start = 0, stop = $.x.valueOf(), step = 1
+        var start = 0n,
+            stop = x,
+            step = 1n
     }else{
-        var start = $.x.valueOf(),
-            stop = $.stop.valueOf(),
-            step = $.step === null ? 1 : $.step.valueOf()
-        if(step == 0){throw _b_.ValueError.$factory('step cannot be 0')}
+        var start = x
+        try{
+            var stop = bigint_value($.stop)
+        }catch(err){
+            throw _b_.ValueError.$factory("non-integer arg 2 for randrange()")
+        }
+        if($.step === null){
+            var step = 1n
+        }else{
+            try{
+                var step = bigint_value($.step)
+            }catch(err){
+                throw _b_.ValueError.$factory("non-integer arg 3 for randrange()")
+            }
+        }
+        if(step == 0){
+            throw _b_.ValueError.$factory('step cannot be 0')
+        }
     }
-
-    if(($B.rich_comp("__gt__", step, 0) &&
-            $B.rich_comp("__ge__", start, stop)) ||
-            ($B.rich_comp("__lt__", step, 0) &&
-             $B.rich_comp("__le__", start, stop))){
+    
+    if((step > 0 && start >= stop) ||
+            (step < 0 && start <= stop)){
         throw _b_.ValueError.$factory("empty range for randrange() (" +
             start + ", " + stop + ", " + step + ")")
     }
-    if(typeof start == 'number' && typeof stop == 'number' &&
-            typeof step == 'number'){
-        return start + step * Math.floor(_random() *
-            Math.ceil((stop - start) / step))
-    }else{
-        var d = _b_.getattr(stop, '__sub__')(start)
-        d = _b_.getattr(d, '__floordiv__')(step)
-        // Force d to be a LongInt
-        d = $B.long_int.$factory(d)
-        // d is a long integer with n digits ; to choose a random number
-        // between 0 and d the most simple is to take a random digit
-        // at each position, except the first one
-        var s = d.value,
-            _len = s.length,
-            res = Math.floor(_random() * (parseInt(s.charAt(0)) +
-                (_len == 1 ? 0 : 1))) + ''
-        var same_start = res.charAt(0) == s.charAt(0)
-        for(var i = 1; i < _len; i++){
-            if(same_start){
-                // If it's the last digit, don't allow stop as valid
-                if(i == _len - 1){
-                    res += Math.floor(_random() * parseInt(s.charAt(i))) + ''
-                }else{
-                    res += Math.floor(_random() *
-                        (parseInt(s.charAt(i)) + 1)) + ''
-                    same_start = res.charAt(i) == s.charAt(i)
-                }
-            }else{
-                res += Math.floor(_random() * 10) + ''
-            }
-        }
-        var offset = {__class__: $B.long_int, value: res,
-            pos: true}
-        d = _b_.getattr(step, '__mul__')(offset)
-        d = _b_.getattr(start, '__add__')(d)
-        return _b_.int.$factory(d)
-    }
+    var nb_steps = Number(stop - start) / Number(step),
+        offset = BigInt(parseInt(_random() * nb_steps))
+    return _b_.int.$int_or_long(start + step * offset)
 }
 
 Random.sample = function(){
