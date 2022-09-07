@@ -21,23 +21,34 @@ var _b_ = $B.builtins,
     }
 
 range.__contains__ = function(self,other){
-    if(range.__len__(self) == 0){return false}
-    try{other = $B.int_or_bool(other)}
-    catch(err){
+    if(range.__len__(self) == 0){
+        return false
+    }
+    try{
+        other = $B.int_or_bool(other)
+    }catch(err){
         // If other is not an integer, test if it is equal to
         // one of the items in range
-        try{range.index(self, other); return true}
-        catch(err){return false}
+        try{
+            range.index(self, other)
+            return true
+        }catch(err){
+            return false
+        }
     }
+    var start = _b_.int.$to_bigint(self.start),
+        stop = _b_.int.$to_bigint(self.stop),
+        step = _b_.int.$to_bigint(self.step),
+        other = _b_.int.$to_bigint(other)
 
-    var sub = $B.sub(other, self.start),
-        fl = $B.floordiv(sub, self.step),
-        res = $B.mul(self.step, fl)
-    if($B.eq(res, sub)){
-        if($B.gt(self.stop, self.start)){
-            return $B.ge(other, self.start) && $B.gt(self.stop, other)
+    var sub = other - start,
+        fl = sub / step,
+        res = step * fl
+    if(res == sub){
+        if(stop > start){
+            return other >= start && stop > other
         }else{
-            return $B.ge(self.start, other) && $B.gt(other, self.stop)
+            return start >= other && other > stop
         }
     }else{
         return false
@@ -130,24 +141,23 @@ range.__iter__ = function(self){
 }
 
 range.__len__ = function(self){
-    var len
-    if($B.gt(self.step, 0)){
-        if($B.ge(self.start, self.stop)){return 0}
+    var len,
+        start = _b_.int.$to_bigint(self.start),
+        stop = _b_.int.$to_bigint(self.stop),
+        step = _b_.int.$to_bigint(self.step)
+    if(self.step > 0){
+        if(self.start >= self.stop){
+            return 0
+        }
         // len is 1+(self.stop-self.start-1)/self.step
-        var n = $B.sub(self.stop, $B.add(1, self.start)),
-            q = $B.floordiv(n, self.step)
-        len = $B.add(1, q)
+        len = 1n + (stop - start - 1n) / step
     }else{
-        if($B.ge(self.stop, self.start)){return 0}
-        var n = $B.sub(self.start, $B.add(1, self.stop)),
-            q = $B.floordiv(n, $B.mul(-1, self.step))
-        len = $B.add(1, q)
+        if(self.stop >= self.start){
+            return 0
+        }
+        len = 1n + (start - stop - 1n) / - step
     }
-    if($B.maxsize === undefined){
-        $B.maxsize = $B.long_int.__pow__($B.long_int.$factory(2), 63)
-        $B.maxsize = $B.long_int.__sub__($B.maxsize, 1)
-    }
-    return len
+    return _b_.int.$int_or_long(len)
 }
 
 range.__next__ = function(self){
