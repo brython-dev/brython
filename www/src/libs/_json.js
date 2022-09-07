@@ -144,7 +144,7 @@ function to_json(obj, level){
     }else if(_b_.isinstance(obj, _b_.float)){
         return obj.value
     }else if(obj.__class__ === $B.long_int){
-        return (obj.pos ? '' : '-') + obj.value
+        return obj.value.toString()
     }else if(obj === _b_.None){
         return "null"
     }else if(_b_.isinstance(obj, _b_.dict)){
@@ -245,11 +245,7 @@ function to_py(obj, kw){
             if(Math.abs(int) < $B.max_int){
                 return int
             }else{
-                if(obj.value.startsWith('-')){
-                    return $B.fast_long_int(obj.value.substr(1), false)
-                }else{
-                    return $B.fast_long_int(obj.value, true)
-                }
+                return $B.fast_long_int(BigInt(obj.value))
             }
         }
     }else{
