@@ -705,37 +705,17 @@ $B.$delitem = function(obj, item){
 
 $B.augm_assign = function(left, op, right){
     // augmented assignment
-    var op1 = op.substr(0, op.length - 1)
-    if(typeof left == 'number' && typeof right == 'number'
-            && op != '//='  // operator "//" not supported by Javascript
-            && op != '%='   // % doesn't work the same in JS and Python for ints < 0
-            ){
-        var res = eval(left + ' ' + op1 + ' ' + right)
-        if(res <= $B.max_int && res >= $B.min_int &&
-                res.toString().search(/e/i) == -1){
-            return res
-        }else{
-            res = eval(`${BigInt(left)}n ${op1} ${BigInt(right)}n`)
-            var pos = res > 0n,
-                res = res + ''
-            return pos ? $B.fast_long_int(res, true) :
-                         $B.fast_long_int(res.substr(1), false) // remove "-"
-        }
-    }else if(typeof left == 'string' && typeof right == 'string' &&
-            op == '+='){
-        return left + right
+    var op1 = op.substr(0, op.length - 1),
+        method = $B.op2method.augmented_assigns[op],
+        augm_func = $B.$getattr(left, '__' + method + '__', null)
+    if(augm_func !== null){
+        return $B.$call(augm_func)(right)
     }else{
-        var method = $B.op2method.augmented_assigns[op],
-            augm_func = $B.$getattr(left, '__' + method + '__', null)
-        if(augm_func !== null){
-            return $B.$call(augm_func)(right)
-        }else{
-            var method1 = $B.op2method.operations[op1]
-            if(method1 === undefined){
-                method1 = $B.op2method.binary[op1]
-            }
-            return $B.rich_op(`__${method1}__`, left, right)
+        var method1 = $B.op2method.operations[op1]
+        if(method1 === undefined){
+            method1 = $B.op2method.binary[op1]
         }
+        return $B.rich_op(`__${method1}__`, left, right)
     }
 }
 
@@ -894,8 +874,10 @@ var $io = $B.$io = $B.make_class("io",
 )
 
 $io.flush = function(self){
-    console[self.out](self.buf.join(''))
-    self.buf = []
+    if(self.buf){
+        console[self.out](self.buf.join(''))
+        self.buf = []
+    }
 }
 
 $io.write = function(self, msg){
