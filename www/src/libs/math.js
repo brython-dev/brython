@@ -624,27 +624,6 @@ function perm_comb(n, k, iscomb){
     return a;
 }
 
-function to_BigInt(x){
-    if(x.__class__ === $B.long_int){
-        var res = BigInt(x.value)
-        if(x.pos){
-            return res
-        }
-        return -res
-    }else if(_b_.isinstance(x, _b_.int)){
-        return BigInt(_b_.int.numerator(x))
-    }else{
-        var klass = $B.get_class(x)
-        try{
-            var index = $B.$call($B.$getattr(klass, '__index__'))(x)
-            return BigInt(index)
-        }catch(err){
-            throw _b_.TypeError.$factory("'" + $B.class_name(x) +
-                "' object cannot be interpreted as an integer")
-        }
-    }
-}
-
 function comb(n, k){
     var $ = $B.args('comb', 2, {n: null, k: null}, ['n', 'k'],
             arguments, {}, null, null),
@@ -655,8 +634,8 @@ function comb(n, k){
         temp,
         overflow, cmp;
 
-    n = to_BigInt(n);
-    k = to_BigInt(k);
+    n = _b_.int.$to_bigint(n);
+    k = _b_.int.$to_bigint(k);
 
     if(n < 0){
         throw _b_.ValueError.$factory(
@@ -702,7 +681,7 @@ function comb(n, k){
         result = perm_comb(n, k, 1);
     }
 
-    return $B.long_int.$from_BigInt(result)
+    return _b_.int.$int_or_long(result)
 }
 
 
@@ -927,32 +906,7 @@ function fabs(x){
     return _b_.float.$funcs.fabs(float_check(x)) // located in py_float.js
 }
 
-function factorial(x){
-    $B.check_nb_args('factorial', 1, arguments)
-    $B.check_no_kw('factorial', x)
-
-    if(_b_.isinstance(x, _b_.float)){
-        throw _b_.TypeError.$factory("'float' object cannot be " +
-            "interpreted as an integer")
-     }
-
-    if(! _b_.isinstance(x, [_b_.float, _b_.int])){
-        throw _b_.TypeError.$factory(`'${$B.class_name(x)}' object ` +
-            "cannot be interpreted as an integer")
-    }
-
-    //using code from http://stackoverflow.com/questions/3959211/fast-factorial-function-in-javascript
-    if(! check_int_or_round_float(x)){
-        throw _b_.ValueError.$factory("factorial() only accepts integral values")
-    }else if($B.rich_comp("__lt__", x, 0)){
-        throw _b_.ValueError.$factory("factorial() not defined for negative values")
-    }
-    var r = 1
-    for(var i = 2; i <= x; i++){
-        r = $B.mul(r, i)
-    }
-    return r
-}
+// factorial implementation, adapted from CPython's mathmodule.c
 
 const SmallFactorials = [
     1n, 1n, 2n, 6n, 24n, 120n, 720n, 5040n, 40320n,
@@ -1073,8 +1027,9 @@ function factorial(arg){
         overflow,
         result,
         odd_part;
-
-    x = to_BigInt(arg)
+    // Check that arg can be converted to an integer, and transform it to
+    // a bigint
+    x = _b_.int.$to_bigint($B.PyNumber_Index(arg))
     overflow = x > LONG_MAX || x < LONG_MIN
     if(x > LONG_MAX) {
         throw _b_.OverflowError.$factory(
@@ -1087,13 +1042,13 @@ function factorial(arg){
 
     /* use lookup table if x is small */
     if (x < SmallFactorials.length){
-        return $B.long_int.$from_BigInt(SmallFactorials[x]);
+        return _b_.int.$int_or_long(SmallFactorials[x]);
     }
     /* else express in the form odd_part * 2**two_valuation, and compute as
        odd_part << two_valuation. */
     odd_part = factorial_odd_part(x);
     two_valuation = x - count_set_bits(x);
-    return $B.long_int.$from_BigInt(odd_part << two_valuation);
+    return _b_.int.$int_or_long(odd_part << two_valuation);
 }
 
 function floor(x){
@@ -1272,23 +1227,154 @@ function gamma(x){
 }
 
 
-function gcd(){
+// GCD algorithm. Javascript adaptation of Python script at
+// https://gist.github.com/cmpute/baa545f0c2b6be8b628e9ded3c19f6c1
+// by Jacob Zhong
+function bit_length(x){
+    return x.toString(2).length
+}
+
+$B.nb_simple_gcd = 0
+
+function simple_gcd(a, b){
+    /* a fits into a long, so b must too */
+    $B.nb_simple_gcd++
+    var x = a >= 0 ? a : -a,
+        y = b >= 0 ? b : -b
+
+    /* usual Euclidean algorithm for longs */
+    while (y != 0) {
+        t = y;
+        y = x % y;
+        x = t;
+    }
+    return x
+}
+
+$B.nb_
+function lgcd(x, y){
+    var a, b, c, d
+    if(x < y){
+        return lgcd(y, x)
+    }
+    var shift = BigInt(Math.max(Math.floor(bit_length(x) / 64),
+                    Math.floor(bit_length(y) / 64))),
+        xbar = x >> (shift * 64n),
+        ybar = y >> (shift * 64n)
+    while(y > p2_64){
+        [a, b, c, d] = [1n, 0n, 0n, 1n]
+        while(ybar + c != 0 && ybar + d != 0){
+            q = (xbar + a) / (ybar + c)
+            p = (xbar + b) / (ybar + d)
+            if(q != p){
+                break
+            }
+            [a, c] = [c, a - q * c]
+            [b, d] = [d, b - q * d]
+            [xbar, ybar] = [ybar, xbar - q * ybar]
+        }
+        if(b == 0){
+            [x, y] = [y, x % y]
+        }else{
+            [x, y] = [a * x + b * y, c * x + d * y]
+        }
+    }
+    return simple_gcd(x, y)
+}
+
+function xgcd(x, y){
+    var xneg = x < 0 ? -1n : 1n,
+        yneg = y < 0 ? -1n : 1n,
+        last_r,
+        last_s,
+        last_t,
+        q;
+
+    [x, y] = [x >= 0 ? x : -x, y >= 0 ? y : -y];
+
+    // it's maintained that r = s * x + t * y, last_r = last_s * x + last_t * y
+    [last_r, r] = [x, y];
+    [last_s, s] = [1n, 0n];
+    [last_t, t] = [0n, 1n];
+
+    while(r > 0){
+        q = last_r / r;
+        [last_r, r] = [r, last_r - q * r];
+        [last_s, s] = [s, last_s - q * s];
+        [last_t, t] = [t, last_t - q * t];
+    }
+    return [last_r, last_s * xneg, last_t * yneg]
+}
+
+function lxgcd(x, y){
+    var g, cy, cx,
+        s, last_s,
+        t, last_t,
+        a, b, c, d
+    x = x >= 0 ? x : -x
+    y = y >= 0 ? y : -y
+
+    if(x < y){
+        [g, cy, cx] = xgcd(y, x)
+        return [g, cx, cy]
+    }
+
+    var shift = BigInt(Math.max(Math.floor(bit_length(x) / 64),
+                Math.floor(bit_length(y) / 64))),
+        xbar = x >> (shift * 64n),
+        ybar = y >> (shift * 64n);
+
+    [last_s, s] = [1n, 0n];
+    [last_t, t] = [0n, 1n];
+
+    while(y > p2_64){
+        [a, b, c, d] = [1n, 0n, 0n, 1n]
+        while(ybar + c != 0 && ybar + d != 0){
+            q = (xbar + a) / (ybar + c)
+            p = (xbar + b) / (ybar + d)
+            if(q != p){
+                break
+            };
+            [a, c = c], [a - q * c];
+            [b, d = d], [b - q * d];
+            [xbar, ybar] = [ybar, xbar - q * ybar];
+        }
+        if(b == 0){
+            q = x / y;
+            [x, y] = [y, x % y];
+            [last_s, s] = [s, last_s - q * s];
+            [last_t, t] = [t, last_t - q * t];
+        }else{
+            [x, y] = [a * x + b * y, c * x + d * y];
+            [last_s, s] = [a * last_s + b * s, c * last_s + d * s];
+            [last_t, t] = [a * last_t + b * t, c * last_t + d * t];
+        }
+    }
+    // notice that here x, y could be negative
+    [g, cx, cy] = xgcd(x, y)
+
+    return [g, cx * last_s + cy * s, cx * last_t + cy * t]
+}
+
+function gcd(x, y){
     var $ = $B.args("gcd", 0, {}, [], arguments, {}, 'args', null)
     var args = $.args.map($B.PyNumber_Index)
-
     if(args.length == 0){
         return 0
     }else if(args.length == 1){
         return _b_.abs(args[0])
     }
-    // https://stackoverflow.com/questions/17445231/js-how-to-find-the-greatest-common-divisor
-    var a = _b_.abs(args[0]),
-        b
-    for(var i = 1, len = args.length; i < len; i++){
-        a = gcd2(a, _b_.abs(args[i]))
+    x = _b_.int.$to_bigint(args[0])
+    y = _b_.int.$to_bigint(args[1])
+    var res = lxgcd(x, y)[0],
+        i = 2
+    while(i < args.length){
+        res = lxgcd(res, _b_.int.$to_bigint(args[i]))[0]
+        i++
     }
-    return a
+    return _b_.int.$int_or_long(res)
 }
+
 
 function hypot(x, y){
     var $ = $B.args("hypot", 0, {}, [],
@@ -1374,24 +1460,23 @@ function isqrt(x){
     if(typeof x == "number"){
         return Math.floor(Math.sqrt(x))
     }else{ // big integer
-        var v = parseInt(x.value),
-            candidate = Math.floor(Math.sqrt(v)),
+        var v = x.value,
+            candidate = BigInt(Math.floor(Math.sqrt(Number(v)))),
             c1
         // Use successive approximations : sqr = (sqr + (x / sqr)) / 2
         // Limit to 100 iterations
         for(var i = 0; i < 100; i++){
-            c1 = $B.floordiv($B.add(candidate,
-                $B.floordiv(x, candidate)), 2)
-            if(c1 === candidate || c1.value === candidate.value){
+            c1 = (candidate + (x.value / candidate)) / 2n
+            if(c1 == candidate){
                 break
             }
             candidate = c1
         }
-        if($B.rich_comp("__gt__", $B.mul(candidate, candidate), x)){
+        if(candidate * candidate > x){
             // Result might be greater by 1
-            candidate = $B.sub(candidate, 1)
+            candidate = candidate - 1n
         }
-        return candidate
+        return _b_.int.$int_or_long(candidate)
     }
 }
 
@@ -1457,12 +1542,12 @@ function log1p(x){
     $B.check_nb_args('log1p', 1, arguments)
     $B.check_no_kw('log1p', x)
     if(_b_.isinstance(x, $B.long_int)){
-        if(x.pos && $B.long_int.bit_length(x) > 1024){
+        if($B.long_int.bit_length(x) > 1024){
             throw _b_.OverflowError.$factory(
                 "int too large to convert to float")
         }
-        return $B.fast_float($B.long_int.$log2($B.long_int.__add__(x, 1)).value *
-            Math.LN2)
+        x = $B.long_int.$log2($B.fast_long_int(x.value + 1n))
+        return $B.fast_float(Number(x.value) * Math.LN2)
     }
     return $B.fast_float(Math.log1p(float_check(x)))
 }
@@ -1550,23 +1635,24 @@ function perm(n, k){
         return _mod.factorial(n)
     }
     // raise TypeError if n or k is not an integer
-    check_int(n)
-    check_int(k)
+    n = $B.fast_long_int(BigInt($B.PyNumber_Index(n)))
+    k = $B.fast_long_int(BigInt($B.PyNumber_Index(k)))
 
-    if(k < 0){
+    if(k.value < 0){
         throw _b_.ValueError.$factory("k must be a non-negative integer")
     }
-    if(n < 0){
+    if(n.value < 0){
         throw _b_.ValueError.$factory("n must be a non-negative integer")
     }
 
-    if(k > n){
+    if(k.value > n.value){
         return 0
     }
     // Evaluates to n! / (n - k)!
     var fn = _mod.factorial(n),
-        fn_k = _mod.factorial(n - k)
-    return $B.floordiv(fn, fn_k)
+        fn_k = _mod.factorial($B.long_int.__sub__(n, k))
+
+    return $B.rich_op('__floordiv__', fn, fn_k)
 }
 
 var pi = _b_.float.$factory(Math.PI)
