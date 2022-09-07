@@ -156,8 +156,7 @@ list.__getitem__ = function(self, key){
     //     ["self", "key"], arguments, {}, null, null),
     //     self = $.self,
     //     key = $.key
-    $B.check_no_kw("__getitem__", self, key)
-    $B.check_nb_args("__getitem__", 2, arguments)
+    $B.check_nb_args_no_kw("__getitem__", 2, arguments)
     return list.$getitem(self, key)
 }
 
@@ -204,14 +203,18 @@ list.$getitem = function(self, key){
             stop = s.stop,
             step = s.step
         if(step > 0){
-            if(stop <= start){return factory(res)}
-            for(var i = start; i < stop; i += step) {
+            if(stop <= start){
+                return factory(res)
+            }
+            for(var i = start; i < stop; i += step){
                res[pos++] = items[i]
             }
             return factory(res)
         }else{
-            if(stop > start){return factory(res)}
-            for(var i = start; i > stop; i += step) {
+            if(stop > start){
+                return factory(res)
+            }
+            for(var i = start; i > stop; i += step){
                res[pos++] = items[i]
             }
             return factory(res)
@@ -519,8 +522,7 @@ list.$setitem = function(self, arg, value){
 }
 
 list.append = function(self, x){
-    $B.check_no_kw("append", self, x)
-    $B.check_nb_args("append", 2, arguments)
+    $B.check_nb_args_no_kw("append", 2, arguments)
     self.push(x)
     return $N
 }

@@ -2557,7 +2557,7 @@ str.$factory = function(arg, encoding, errors){
             return arg.toString()
         }
     }
-    
+
     try{
         if(arg.$is_class || arg.$factory){
             // arg is a class

@@ -42,6 +42,30 @@ var check_no_kw = $B.check_no_kw = function(name, x, y){
         throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
 }
 
+var check_nb_args_no_kw = $B.check_nb_args_no_kw = function(name, expected, args){
+    // Check the number of arguments and absence of keyword args
+    var len = args.length,
+        last = args[len - 1]
+    if(last && last.$nat == "kw"){
+        if(last.kw.length == 2 && Object.keys(last.kw[0]).length == 0){
+            len--
+        }else{
+            throw _b_.TypeError.$factory(name + "() takes no keyword arguments")
+        }
+    }
+    if(len != expected){
+        if(expected == 0){
+            throw _b_.TypeError.$factory(name + "() takes no argument" +
+                " (" + len + " given)")
+        }else{
+            console.log('args', args)
+            throw _b_.TypeError.$factory(name + "() takes exactly " +
+                expected + " argument" + (expected < 2 ? '' : 's') +
+                " (" + len + " given)")
+        }
+    }
+}
+
 var NoneType = {
     $factory: function(){
         return None
@@ -96,8 +120,7 @@ function __build_class__(){
 }
 
 function abs(obj){
-    check_nb_args('abs', 1, arguments)
-    check_no_kw('abs', obj)
+    check_nb_args_no_kw('abs', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
     try{
@@ -117,8 +140,7 @@ function aiter(async_iterable){
 }
 
 function all(obj){
-    check_nb_args('all', 1, arguments)
-    check_no_kw('all', obj)
+    check_nb_args_no_kw('all', 1, arguments)
     var iterable = iter(obj)
     while(1){
         try{
@@ -138,8 +160,7 @@ function anext(async_iterator, _default){
 }
 
 function any(obj){
-    check_nb_args('any', 1, arguments)
-    check_no_kw('any', obj)
+    check_nb_args_no_kw('any', 1, arguments)
     var iterable = iter(obj)
     while(1){
         try{
@@ -150,8 +171,7 @@ function any(obj){
 }
 
 function ascii(obj) {
-    check_nb_args('ascii', 1, arguments)
-    check_no_kw('ascii', obj)
+    check_nb_args_no_kw('ascii', 1, arguments)
     var res = repr(obj), res1 = '', cp
     for(var i = 0; i < res.length; i++){
         cp = res.charCodeAt(i)
@@ -220,8 +240,7 @@ function bin_hex_oct(base, obj){
 
 // bin() (built in function)
 function bin(obj) {
-    check_nb_args('bin', 1, arguments)
-    check_no_kw('bin', obj)
+    check_nb_args_no_kw('bin', 1, arguments)
     return bin_hex_oct(2, obj)
 }
 
@@ -237,15 +256,13 @@ function breakpoint(){
 }
 
 function callable(obj) {
-    check_nb_args('callable', 1, arguments)
-    check_no_kw('callable', obj)
+    check_nb_args_no_kw('callable', 1, arguments)
 
     return hasattr(obj, '__call__')
 }
 
 function chr(i){
-    check_nb_args('chr', 1, arguments)
-    check_no_kw('chr', i)
+    check_nb_args_no_kw('chr', 1, arguments)
 
     i = $B.PyNumber_Index(i)
 
@@ -263,8 +280,7 @@ function chr(i){
 //classmethod() (built in class)
 var classmethod = $B.make_class("classmethod",
     function(func) {
-        check_nb_args('classmethod', 1, arguments)
-        check_no_kw('classmethod', func)
+        check_nb_args_no_kw('classmethod', 1, arguments)
         var f = function(){
                     return func.apply(null, arguments)
                 }
@@ -458,8 +474,7 @@ var __debug__ = $B.debug > 0
 function delattr(obj, attr) {
     // descriptor protocol : if obj has attribute attr and this attribute has
     // a method __delete__(), use it
-    check_no_kw('delattr', obj, attr)
-    check_nb_args('delattr', 2, arguments)
+    check_nb_args_no_kw('delattr', 2, arguments)
     if(typeof attr != 'string'){
         throw _b_.TypeError.$factory("attribute name must be string, not '" +
             $B.class_name(attr) + "'")
@@ -513,8 +528,7 @@ function dir(obj){
         return res
     }
 
-    check_nb_args('dir', 1, arguments)
-    check_no_kw('dir', obj)
+    check_nb_args_no_kw('dir', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
 
@@ -546,9 +560,8 @@ function dir(obj){
 }
 
 //divmod() (built in function)
-function divmod(x,y) {
-   check_no_kw('divmod', x, y)
-   check_nb_args('divmod', 2, arguments)
+function divmod(x,y){
+   check_nb_args_no_kw('divmod', 2, arguments)
 
    var klass = x.__class__ || $B.get_class(x)
    var dm = $B.$getattr(klass, "__divmod__", _b_.None)
@@ -860,8 +873,7 @@ exit.__repr__ = exit.__str__ = function(){
 
 var filter = $B.make_class("filter",
     function(func, iterable){
-        check_no_kw('filter', func, iterable)
-        check_nb_args('filter', 2, arguments)
+        check_nb_args_no_kw('filter', 2, arguments)
 
         iterable = iter(iterable)
         if(func === _b_.None){func = $B.$bool}
@@ -1269,7 +1281,7 @@ $B.$getattr = function(obj, attr, _default){
 function globals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
-    check_nb_args('globals', 0, arguments)
+    check_nb_args_no_kw('globals', 0, arguments)
     var res = $B.obj_dict($B.last($B.frames_stack)[3])
     res.$jsobj.__BRYTHON__ = $B.JSObj.$factory($B) // issue 1181
     res.$is_namespace = true
@@ -1277,8 +1289,7 @@ function globals(){
 }
 
 function hasattr(obj,attr){
-    check_no_kw('hasattr', obj, attr)
-    check_nb_args('hasattr', 2, arguments)
+    check_nb_args_no_kw('hasattr', 2, arguments)
     try{
         $B.$getattr(obj,attr)
         return true
@@ -1289,8 +1300,7 @@ function hasattr(obj,attr){
 
 var hash_cache = {} // for strings
 function hash(obj){
-    check_no_kw('hash', obj)
-    check_nb_args('hash', 1, arguments)
+    check_nb_args_no_kw('hash', 1, arguments)
 
     if(obj.__hashvalue__ !== undefined){
         return obj.__hashvalue__
@@ -1435,14 +1445,12 @@ help.__repr__ = help.__str__ = function(){
 }
 
 function hex(obj){
-    check_no_kw('hex', obj)
-    check_nb_args('hex', 1, arguments)
+    check_nb_args_no_kw('hex', 1, arguments)
     return bin_hex_oct(16, obj)
 }
 
 function id(obj){
-   check_no_kw('id', obj)
-   check_nb_args('id', 1, arguments)
+   check_nb_args_no_kw('id', 1, arguments)
    if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
            !isinstance(obj, $B.long_int)){
        return $B.$getattr(_b_.str.$factory(obj), '__hash__')()
@@ -1478,8 +1486,7 @@ function input(msg) {
 }
 
 function isinstance(obj, cls){
-    check_no_kw('isinstance', obj, cls)
-    check_nb_args('isinstance', 2, arguments)
+    check_nb_args_no_kw('isinstance', 2, arguments)
 
     if(obj === null){
         return cls === None
@@ -1564,8 +1571,7 @@ function isinstance(obj, cls){
 }
 
 function issubclass(klass, classinfo){
-    check_no_kw('issubclass', klass, classinfo)
-    check_nb_args('issubclass', 2, arguments)
+    check_nb_args_no_kw('issubclass', 2, arguments)
 
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
@@ -1695,8 +1701,7 @@ function iter(){
 }
 
 function len(obj){
-    check_no_kw('len', obj)
-    check_nb_args('len', 1, arguments)
+    check_nb_args_no_kw('len', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
     try{
@@ -1834,9 +1839,10 @@ function max(){
 
 var memoryview = $B.make_class('memoryview',
     function(obj){
-        check_no_kw('memoryview', obj)
-        check_nb_args('memoryview', 1, arguments)
-        if(obj.__class__ === memoryview){return obj}
+        check_nb_args_no_kw('memoryview', 1, arguments)
+        if(obj.__class__ === memoryview){
+            return obj
+        }
         if($B.get_class(obj).$buffer_protocol){
             return {
                 __class__: memoryview,
@@ -1997,14 +2003,12 @@ var NotImplemented = {
 function $not(obj){return !$B.$bool(obj)}
 
 function oct(obj){
-    check_no_kw('oct', obj)
-    check_nb_args('oct', 1, arguments)
+    check_nb_args_no_kw('oct', 1, arguments)
     return bin_hex_oct(8, obj)
 }
 
-function ord(c) {
-    check_no_kw('ord', c)
-    check_nb_args('ord', 1, arguments)
+function ord(c){
+    check_nb_args_no_kw('ord', 1, arguments)
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
     if(typeof c.valueOf() == 'string'){
@@ -2164,8 +2168,7 @@ quit.__repr__ = quit.__str__ = function(){
 }
 
 function repr(obj){
-    check_no_kw('repr', obj)
-    check_nb_args('repr', 1, arguments)
+    check_nb_args_no_kw('repr', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
     return $B.$call($B.$getattr(klass, "__repr__"))(obj)
@@ -2178,8 +2181,7 @@ var reversed = $B.make_class("reversed",
         // __len__() method and the __getitem__() method with integer
         // arguments starting at 0).
 
-        check_no_kw('reversed', seq)
-        check_nb_args('reversed', 1, arguments)
+        check_nb_args_no_kw('reversed', 1, arguments)
 
         var klass = seq.__class__ || $B.get_class(seq),
             rev_method = $B.$getattr(klass, '__reversed__', null)
