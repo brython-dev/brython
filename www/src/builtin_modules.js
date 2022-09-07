@@ -925,11 +925,7 @@
                     case 'int':
                         var res = parseInt(js_node.value[1], js_node.value[0])
                         if(res < $B.min_int || res > $B.max_int){
-                            var res = $B.long_int.$factory(js_node.value[1],
-                                js_node.value[0])
-                            if(js_node.sign == '-'){
-                                res.pos = false
-                            }
+                            var res = $B.fast_long_int(BigInt(res))
                             return res
                         }
                         return js_node.sign == '-' ? -res : res
