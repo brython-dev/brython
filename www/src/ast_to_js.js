@@ -2513,7 +2513,7 @@ $B.ast.Slice.prototype.to_js = function(scopes){
     var lower = this.lower ? $B.js_from_ast(this.lower, scopes) : '_b_.None',
         upper = this.upper ? $B.js_from_ast(this.upper, scopes) : '_b_.None',
         step = this.step ? $B.js_from_ast(this.step, scopes) : '_b_.None'
-    return `_b_.slice.$factory(${lower}, ${upper}, ${step})`
+    return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`
 }
 
 $B.ast.Starred.prototype.to_js = function(scopes){

@@ -423,20 +423,24 @@ slice.indices = function(self, length){
     return _b_.tuple.$factory([_start, _stop, _step])
 }
 
+slice.$fast_slice = function(start, stop, step){
+    return {__class__: _b_.slice, start, stop, step}
+}
+
 slice.$factory = function(){
     var $ = $B.args("slice", 3, {start: null, stop: null, step: null},
         ["start", "stop", "step"], arguments,{stop: null, step: null},
-        null, null),
-        start, stop, step
+        null, null)
+    return slice.$fast_slice($.start, $.stop, $.step)
+}
 
-    if($.stop === null && $.step === null){
+slice.$fast_slice = function(start, stop, step){
+    if(stop === null && step === null){
+        stop = start
         start = _b_.None
-        stop = $.start
         step = _b_.None
     }else{
-        start = $.start
-        stop = $.stop
-        step = $.step === null ? _b_.None : $.step
+        step = step === null ? _b_.None : step
     }
 
     var res = {
