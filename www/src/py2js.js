@@ -4987,7 +4987,7 @@ $NumberCtx.prototype.ast = function(){
     if(this.type == 'int'){
         var value = parseInt(this.value[1], this.value[0])
         if(! Number.isSafeInteger(value)){
-            value = $B.long_int.$factory(this.value[1], this.value[0])
+            value = _b_.int.$factory(this.value[1], this.value[0])
         }
         ast_obj.value = value
     }else if(this.type == 'float'){
@@ -7969,7 +7969,14 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 if(err_msg == 'EOF in multi-line statement'){
                     err_msg = 'unexpected EOF while parsing'
                 }
-                raise_syntax_error(context, err_msg)
+                if(err.lineno){
+                    raise_error_known_location(_b_.SyntaxError,
+                        root.filename, err.lineno, err.col_offset,
+                        err.end_lineno, err.end_col_offset, err.line,
+                        err.message)
+                }else{
+                    raise_syntax_error(context, err_msg)
+                }
             }
             throw err
         }
