@@ -865,12 +865,10 @@ for(var r_opname of r_opnames){
             float['__' + r_opname + '__']){
         float["__r" + r_opname + "__"] = (function(name){
             return function(self, other){
-                if(_b_.isinstance(other, _b_.int)){
-                    other = fast_float(_b_.int.numerator(other))
-                    return float["__" + name + "__"](other, self)
-                }else if(_b_.isinstance(other, float)){
-                    other = other.value
-                    return float["__" + name + "__"](other, self)
+                var other_as_num = _b_.int.$to_js_number(other)
+                if(other_as_num !== null){
+                    var other_as_float = $B.fast_float(other_as_num)
+                    return float["__" + name + "__"](other_as_float, self)
                 }
                 return _b_.NotImplemented
             }
