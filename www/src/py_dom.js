@@ -5,8 +5,7 @@ var _b_ = $B.builtins,
     _window = self
 
 // Conversion of immutable types between Javascript and Python
-
-function py_immutable_to_js(pyobj){
+var py_immutable_to_js = $B.py_immutable_to_js = function (pyobj){
     if(_b_.isinstance(pyobj, _b_.float)){
         return pyobj.value
     }else if(_b_.isinstance(pyobj, $B.long_int)){
@@ -20,7 +19,7 @@ function js_immutable_to_py(jsobj){
         if(Number.isSafeInteger(jsobj)){
             return jsobj
         }else if(Number.isInteger(jsobj)){
-            return $B.long_int.$factory(jsobj)
+            return $B.fast_long_int(BigInt(jsobj + ''))
         }else{
             return $B.fast_float(jsobj)
         }
@@ -758,7 +757,9 @@ DOMNode.__getattribute__ = function(self, attr){
     var res = property
 
     if(res !== undefined){
-        if(res === null){return _b_.None}
+        if(res === null){
+            return _b_.None
+        }
         if(typeof res === "function"){
             if(res.$is_func){
                 // If the attribute was set in __setattr__ (elt.foo = func),
@@ -815,7 +816,7 @@ DOMNode.__getattribute__ = function(self, attr){
         }
         if(Array.isArray(res)){ // issue #619
             return res
-        } 
+        }
         return js_immutable_to_py(res)
     }
     return object.__getattribute__(self, attr)

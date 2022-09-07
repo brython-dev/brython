@@ -35,7 +35,7 @@ function makeTagDict(tagName){
         for(var i = 0, len = items.length; i < len; i++){
             // keyword arguments
             var arg = items[i][0],
-                value = $B.pyobj2jsobj(items[i][1])
+                value = $B.py_immutable_to_js(items[i][1])
             if(arg.toLowerCase().substr(0,2) == "on"){
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
@@ -43,7 +43,7 @@ function makeTagDict(tagName){
                     arg.toLowerCase().substr(2)
                 eval(js+'",function(){'+value+'})')
             }else if(arg.toLowerCase() == "style"){
-                $B.DOMNode.set_style(self,value)
+                $B.DOMNode.set_style(self, value)
             }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
                 self.setAttributeNS( "http://www.w3.org/1999/xlink",
                     "href",value)
