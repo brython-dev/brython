@@ -50,7 +50,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.13/mode-python.min.js"></script>
 
 <script type="text/python3" id="tests_editor">
-from browser import document as doc, window
+from browser import document, window
 from browser import html
 import header
 
@@ -58,7 +58,7 @@ import editor
 
 qs_lang,language = header.show()
 
-doc["test_suite"].href = f"index.html?lang={language}"
+document["test_suite"].href = f"index.html?lang={language}"
 # other translations
 
 trans = {
@@ -71,15 +71,20 @@ trans = {
 }
 
 for key in trans:
-    if key in doc:
-        doc[key].html = trans[key].get(language,trans[key]['en'])
+    if key in document:
+        document[key].html = trans[key].get(language,trans[key]['en'])
 
 # next functions are defined in editor.py
-doc['show_js'].bind('click', editor.show_js)
-doc['share_code'].bind('click', editor.share_code)
+document['show_js'].bind('click', editor.show_js)
+document['share_code'].bind('click', editor.share_code)
 # Create a lambda around editor.run() so that the event object is not passed to it
-doc['run'].bind('click',lambda *args: editor.run())
-doc['show_console'].bind('click', editor.show_console)
+
+def run(ev):
+    document['console'].value = ''
+    editor.run(document['editor'].text)
+    
+document['run'].bind('click', run)
+document['show_console'].bind('click', editor.show_console)
 
 editor.reset()
 

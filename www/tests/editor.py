@@ -98,6 +98,9 @@ document['version'].text = version
 
 output = ''
 
+def clear_console():
+    document["console"].value = ''
+
 def show_console(ev):
     document["console"].value = output
     document["console"].cols = 60
@@ -107,27 +110,87 @@ def load_script(evt):
     _name = evt.target.value
     editor.setValue(open(_name).read())
 
-# run a script, in global namespace if in_globals is True
-def run(*args):
-    global output
-    document["console"].value = ''
-    src = editor.getValue()
-    if storage is not None:
-       storage["py_src"] = src
+def trace_exc(run_frame, src, ns):
+    result_lines = []
+    exc_type, exc_value, traceback = sys.exc_info()
 
+    if __BRYTHON__.debug > 1:
+        console.log(exc_value)
+
+    def show_line(filename, lineno, src):
+        if filename == ns['__file__']:
+            source = src
+        elif filename.startswith('<'):
+            return '-- from ' + filename
+        else:
+            src = open(filename, encoding='utf-8').read()
+        lines = src.split('\n')
+        line = lines[lineno - 1]
+        result_lines.append('    ' + line.strip())
+        return line
+
+    show = False
+    started = False
+    save_filename = None
+    save_lineno = None
+    same_line = False
+    count_repeats = 0
+
+    while traceback:
+        frame = traceback.tb_frame
+        # don't show the frames above that of the "run" function
+        if frame is run_frame:
+            started = True
+            result_lines.append('Traceback (most recent call last):')
+        elif started:
+            lineno = traceback.tb_lineno
+            filename = frame.f_code.co_filename
+            if filename == save_filename and lineno == save_lineno:
+                count_repeats += 1
+                traceback = traceback.tb_next
+                continue
+            count_repeats = 0
+            save_filename = filename
+            save_lineno = lineno
+            result_lines.append(f'  File {filename}, line {lineno}')
+            show_line(filename, lineno, src)
+        traceback = traceback.tb_next
+
+    if count_repeats > 0:
+        for _ in range(2):
+            result_lines.append(f'  File {filename}, line {lineno}')
+            show_line(filename, lineno, src)
+        result_lines.append(f'[Previous line repeated {count_repeats}' +
+            ' more times]')
+
+    if isinstance(exc_value, SyntaxError):
+        filename = exc_value.args[1][0]
+        lineno = exc_value.args[1][1]
+        result_lines.append(f'  File {filename}, line {lineno}')
+        line = exc_value.text
+        if line:
+            result_lines.append('    ' + line.strip())
+            indent = len(line) - len(line.lstrip())
+            col_offset = exc_value.args[1][2]
+            result_lines.append('    ' +  (col_offset - indent - 1) * ' ' + '^')
+
+    result_lines.append(f'{exc_type.__name__}: {exc_value}')
+    return '\n'.join(result_lines)
+
+def run(src, filename='editor'):
     t0 = time.perf_counter()
+    msg = ''
+    ns = {'__name__':'__main__', '__file__': filename}
+    state = 1
     try:
-        ns = {'__name__':'__main__'}
         exec(src, ns)
-        state = 1
     except Exception as exc:
-        traceback.print_exc(file=sys.stderr)
+        #msg = traceback.format_exc()
+        #print(msg, file=sys.stderr)
+        print(trace_exc(sys._getframe(), src, ns))
         state = 0
-    sys.stdout.flush()
-    output = document["console"].value
-
-    print('<completed in %6.2f ms>' % ((time.perf_counter() - t0) * 1000.0))
-    return state
+    t1 = time.perf_counter()
+    return state, t0, t1, msg
 
 def show_js(ev):
     src = editor.getValue()

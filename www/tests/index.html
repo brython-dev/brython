@@ -79,7 +79,7 @@ async def run(reset=False):
     if storage is not None:
        storage["py_src"] = src
        storage["py_test"] = str(doc['files'].selectedIndex)
-    state, t0, t1, _ = utils.run(src)
+    state, t0, t1, _ = editor.run(src)
     dt = (t1 - t0) * 1000.0
     if state == 0:
         print(f'<completed in {dt:6.2f} ms (FAILED)>')
