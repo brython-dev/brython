@@ -115,6 +115,10 @@ def trace_exc(run_frame, src, ns):
 
     show = False
     started = False
+    save_filename = None
+    save_lineno = None
+    same_line = False
+    count_repeats = 0
 
     while traceback:
         frame = traceback.tb_frame
@@ -125,9 +129,23 @@ def trace_exc(run_frame, src, ns):
         elif started:
             lineno = traceback.tb_lineno
             filename = frame.f_code.co_filename
+            if filename == save_filename and lineno == save_lineno:
+                count_repeats += 1
+                traceback = traceback.tb_next
+                continue
+            count_repeats = 0
+            save_filename = filename
+            save_lineno = lineno
             result_lines.append(f'  File {filename}, line {lineno}')
             show_line(filename, lineno, src)
         traceback = traceback.tb_next
+
+    if count_repeats > 0:
+        for _ in range(2):
+            result_lines.append(f'  File {filename}, line {lineno}')
+            show_line(filename, lineno, src)
+        result_lines.append(f'[Previous line repeated {count_repeats}' +
+            ' more times]')
 
     if isinstance(exc_value, SyntaxError):
         filename = exc_value.args[1][0]

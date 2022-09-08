@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-07 18:56:50.670126"
-__BRYTHON__.timestamp=1662569810669
+__BRYTHON__.compiled_date="2022-09-08 19:07:41.795949"
+__BRYTHON__.timestamp=1662656861794
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5488,10 +5488,8 @@ var exc=_b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object is not subscriptable")
 if(position){$B.set_exception_offsets(exc,position)}
 throw exc}
-$B.nb_fast_slice=0
 $B.getitem_slice=function(obj,slice){var res
-if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){$B.nb_fast_slice++
-res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
+if(Array.isArray(obj)&& obj.__class__===_b_.list){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj.slice()}else if(slice.step==-1){res=obj.slice().reverse()}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
 if(slice.stop===_b_.None){slice.stop=obj.length}
 if(typeof slice.start=="number" &&
 typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
@@ -5688,6 +5686,10 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 $B.enter_frame=function(frame){
 frame.__class__=$B.frame
 $B.frames_stack.push(frame)
+if($B.frames_stack.length > 1001){$B.frames_stack.pop()
+var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
+$B.set_exc(exc)
+throw exc}
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
@@ -5777,7 +5779,6 @@ throw _b_.TypeError.$factory("'"+method2comp[op]+
 var opname2opsign={__sub__:"-",__xor__:"^",__mul__:"*"}
 $B.rich_op=function(op,x,y,position){try{return $B.rich_op1(op,x,y)}catch(exc){if(position){$B.set_exception_offsets(exc,position)}
 throw exc}}
-$B.nb_pow=0
 $B.rich_op1=function(op,x,y){
 var res_is_int,res_is_float,x_num,y_num
 if(typeof x=="number"){x_num=x
@@ -7689,23 +7690,33 @@ if(suggestion){return suggestion}
 if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
-function trace_from_stack(err){var trace=''
-for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__,src=$B.file_cache[filename]
-trace+=`  File ${filename}, line ${lineno}, in `+
-(frame[0]==frame[2]? '<module>' :frame[0])+'\n'
+function trace_from_stack(err){var trace=[],save_filename,save_lineno,count_repeats=0
+for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__
+if(filename==save_filename && lineno==save_lineno){count_repeats++
+continue}
+save_filename=filename
+save_lineno=lineno
+count_repeats=0
+var src=$B.file_cache[filename]
+trace.push(`  File ${filename}, line ${lineno}, in `+
+(frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
-if(line){trace+='    '+line.trim()+'\n'}
-if(err.$positions !==undefined){var position=err.$positions[frame_num]
+if(line){trace.push('    '+line.trim())}
+if(err.$positions !==undefined){var position=err.$positions[frame_num],trace_line=''
 if(position &&(
 (position[1]!=position[0]||
 (position[2]-position[1])!=line.trim().length ||
 position[3]))){var indent=line.length-line.trimLeft().length
-trace+='    '+' '.repeat((position[0]-indent))+
+trace_line+='    '+' '.repeat((position[0]-indent))+
 '~'.repeat(position[1]-position[0])+
 '^'.repeat(position[2]-position[1])
-if(position[3]!==undefined){trace+='~'.repeat(position[3]-position[2])}
-trace+='\n'}}}}
-return trace}
+if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
+trace.push(trace_line)}}}}
+if(count_repeats > 0){var len=trace.length
+for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
+trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
+trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
+return trace.join('\n')+'\n'}
 $B.show_error=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
 console.log(err.stack)}

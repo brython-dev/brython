@@ -726,40 +726,64 @@ function offer_suggestions_for_name_error(exc){
 
 
 function trace_from_stack(err){
-    var trace = ''
+    var trace = [],
+        save_filename,
+        save_lineno,
+        count_repeats = 0
+
     for(var frame_num = 0, len = err.$stack.length; frame_num < len; frame_num++){
         var frame = err.$stack[frame_num],
             lineno = err.$linenos[frame_num],
-            filename = frame.__file__,
-            src = $B.file_cache[filename]
-            trace += `  File ${filename}, line ${lineno}, in ` +
-                (frame[0] == frame[2] ? '<module>' : frame[0]) + '\n'
+            filename = frame.__file__
+        if(filename == save_filename && lineno == save_lineno){
+            count_repeats++
+            continue
+        }
+        save_filename = filename
+        save_lineno = lineno
+        count_repeats = 0
+        var src = $B.file_cache[filename]
+        trace.push(`  File ${filename}, line ${lineno}, in ` +
+            (frame[0] == frame[2] ? '<module>' : frame[0]))
         if(src){
             var lines = src.split('\n'),
                 line = lines[lineno - 1]
             if(line){
-                trace += '    ' + line.trim() + '\n'
+                trace.push('    ' + line.trim())
             }
             // preliminary for PEP 657
             if(err.$positions !== undefined){
-                var position = err.$positions[frame_num]
+                var position = err.$positions[frame_num],
+                    trace_line = ''
                 if(position && (
                             (position[1] != position[0] ||
                             (position[2] - position[1]) != line.trim().length ||
                             position[3]))){
                     var indent = line.length - line.trimLeft().length
-                    trace += '    ' + ' '.repeat((position[0] - indent)) +
+                    trace_line += '    ' + ' '.repeat((position[0] - indent)) +
                         '~'.repeat(position[1] - position[0]) +
                         '^'.repeat(position[2] - position[1])
                     if(position[3] !== undefined){
-                        trace += '~'.repeat(position[3] - position[2])
+                        trace_line += '~'.repeat(position[3] - position[2])
                     }
-                    trace += '\n'
+                    trace.push(trace_line)
                 }
             }
         }
     }
-    return trace
+    if(count_repeats > 0){
+        var len = trace.length
+        for(var i =0; i < 2; i++){
+            if(src){
+                trace.push(trace[len - 2])
+                trace.push(trace[len - 1])
+            }else{
+                trace.push(trace[len - 1])
+            }
+        }
+        trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)
+    }
+    return trace.join('\n') + '\n'
 }
 
 $B.show_error = function(err){
