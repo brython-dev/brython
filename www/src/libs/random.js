@@ -760,8 +760,7 @@ Random.randint = function(self, a, b){
 
 Random.random = function(self){
     var res = self._random()
-    if(! Number.isInteger(res)){return new Number(res)}
-    return res
+    return $B.fast_float(res)
 }
 
 Random.randrange = function(){
@@ -771,7 +770,7 @@ Random.randrange = function(){
         arguments, {stop:null, step:null}, null, null),
         self = $.self,
         _random = self._random
-    
+
     try{
         var x = bigint_value($.x)
     }catch(err){
@@ -802,7 +801,7 @@ Random.randrange = function(){
             throw _b_.ValueError.$factory('step cannot be 0')
         }
     }
-    
+
     if((step > 0 && start >= stop) ||
             (step < 0 && start <= stop)){
         throw _b_.ValueError.$factory("empty range for randrange() (" +
