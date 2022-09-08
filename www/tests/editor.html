@@ -40,7 +40,7 @@
 <script type="text/javascript" src="/src/ast_to_js.js"></script>
 <script type="text/javascript" src="/src/symtable.js"></script>
 
-<script type="text/javascript" src="../src/brython_stdlib.js"></script>
+<!-- script type="text/javascript" src="../src/brython_stdlib.js"></script -->
 
 <script src="/assets/header.brython.js"></script>
 
@@ -81,7 +81,7 @@ document['share_code'].bind('click', editor.share_code)
 
 def run(ev):
     document['console'].value = ''
-    editor.run(document['editor'].text)
+    editor.run(editor.editor.getValue())
     
 document['run'].bind('click', run)
 document['show_console'].bind('click', editor.show_console)

@@ -19,6 +19,25 @@ def format_exc():
     exc_msg = str(exc_info[1])
     tb = exc_info[2]
 
+    def handle_repeats(filename, lineno, count_repeats):
+        if count_repeats > 0:
+            trace_lines = trace.lines[:]
+            for _ in range(2):
+                if not filename.startswith('<'):
+                    trace.write(trace_lines[-2])
+                    trace.write(trace_lines[-1])
+                else:
+                    trace.write(trace_lines[-1])
+            trace.write(f'[Previous line repeated {count_repeats} more times]')
+
+    def show_line():
+        trace.write(f"  File {filename}, line {lineno}, in {name}")
+        if not filename.startswith("<"):
+            src = open(filename, encoding='utf-8').read()
+            lines = src.split('\n')
+            line = lines[tb.tb_lineno - 1]
+            trace.write(f"    {line.strip()}")
+
     show = True
     started = False
     save_filename = None
@@ -39,27 +58,14 @@ def format_exc():
             count_repeats += 1
             tb = tb.tb_next
             continue
+        handle_repeats(save_filename, save_lineno, count_repeats)
         save_filename = filename
         save_lineno = lineno
         count_repeats = 0
-
-        trace.write(f"  File {filename}, line {lineno}, in {name}")
-        if not filename.startswith("<"):
-            src = open(filename, encoding='utf-8').read()
-            lines = src.split('\n')
-            line = lines[tb.tb_lineno - 1]
-            trace.write(f"    {line.strip()}")
+        show_line()
         tb = tb.tb_next
 
-    if count_repeats > 0:
-        trace_lines = trace.lines[:]
-        for _ in range(2):
-            if not filename.startswith('<'):
-                trace.write(trace_lines[-2])
-                trace.write(trace_lines[-1])
-            else:
-                trace.write(trace_lines[-1])
-        trace.write(f'[Previous line repeated {count_repeats} more times]')
+    handle_repeats(filename, lineno, count_repeats)
 
     if isinstance(exc_info[1], SyntaxError):
         trace.write(syntax_error(exc_info[1].args))

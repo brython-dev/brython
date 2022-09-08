@@ -726,6 +726,21 @@ function offer_suggestions_for_name_error(exc){
 
 
 function trace_from_stack(err){
+
+    function handle_repeats(src, count_repeats){
+        if(count_repeats > 0){
+            var len = trace.length
+            for(var i = 0; i < 2; i++){
+                if(src){
+                    trace.push(trace[len - 2])
+                    trace.push(trace[len - 1])
+                }else{
+                    trace.push(trace[len - 1])
+                }
+            }
+            trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)
+        }
+    }
     var trace = [],
         save_filename,
         save_lineno,
@@ -739,6 +754,7 @@ function trace_from_stack(err){
             count_repeats++
             continue
         }
+        handle_repeats(src, count_repeats)
         save_filename = filename
         save_lineno = lineno
         count_repeats = 0
@@ -773,7 +789,7 @@ function trace_from_stack(err){
     }
     if(count_repeats > 0){
         var len = trace.length
-        for(var i =0; i < 2; i++){
+        for(var i = 0; i < 2; i++){
             if(src){
                 trace.push(trace[len - 2])
                 trace.push(trace[len - 1])

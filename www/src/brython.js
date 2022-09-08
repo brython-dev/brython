@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-08 22:06:18.543029"
-__BRYTHON__.timestamp=1662667578543
+__BRYTHON__.compiled_date="2022-09-08 22:48:18.653053"
+__BRYTHON__.timestamp=1662670098653
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7690,10 +7690,15 @@ if(suggestion){return suggestion}
 if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
-function trace_from_stack(err){var trace=[],save_filename,save_lineno,count_repeats=0
+function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
+for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
+trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
+trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}}
+var trace=[],save_filename,save_lineno,count_repeats=0
 for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__
 if(filename==save_filename && lineno==save_lineno){count_repeats++
 continue}
+handle_repeats(src,count_repeats)
 save_filename=filename
 save_lineno=lineno
 count_repeats=0

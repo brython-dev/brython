@@ -117,6 +117,14 @@ def trace_exc(run_frame, src, ns):
     if __BRYTHON__.debug > 1:
         console.log(exc_value)
 
+    def handle_repeats(filename, lineno, count_repeats):
+        if count_repeats > 0:
+            for _ in range(2):
+                result_lines.append(f'  File {filename}, line {lineno}')
+                show_line(filename, lineno, src)
+            result_lines.append(f'[Previous line repeated {count_repeats - 2}' +
+                ' more times]')
+
     def show_line(filename, lineno, src):
         if filename == ns['__file__']:
             source = src
@@ -142,12 +150,13 @@ def trace_exc(run_frame, src, ns):
             started = True
             result_lines.append('Traceback (most recent call last):')
         elif started:
-            lineno = traceback.tb_lineno
+            lineno = frame.f_lineno
             filename = frame.f_code.co_filename
             if filename == save_filename and lineno == save_lineno:
                 count_repeats += 1
                 traceback = traceback.tb_next
                 continue
+            handle_repeats(save_filename, save_lineno, count_repeats)
             count_repeats = 0
             save_filename = filename
             save_lineno = lineno
@@ -155,12 +164,7 @@ def trace_exc(run_frame, src, ns):
             show_line(filename, lineno, src)
         traceback = traceback.tb_next
 
-    if count_repeats > 0:
-        for _ in range(2):
-            result_lines.append(f'  File {filename}, line {lineno}')
-            show_line(filename, lineno, src)
-        result_lines.append(f'[Previous line repeated {count_repeats}' +
-            ' more times]')
+    handle_repeats(save_filename, save_lineno, count_repeats)
 
     if isinstance(exc_value, SyntaxError):
         filename = exc_value.args[1][0]
@@ -184,8 +188,6 @@ def run(src, filename='editor'):
     try:
         exec(src, ns)
     except Exception as exc:
-        #msg = traceback.format_exc()
-        #print(msg, file=sys.stderr)
         print(trace_exc(sys._getframe(), src, ns))
         state = 0
     t1 = time.perf_counter()
