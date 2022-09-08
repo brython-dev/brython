@@ -129,7 +129,6 @@ def trace_exc(run_frame, src, ns):
         result_lines.append('    ' + line.strip())
         return line
 
-    show = False
     started = False
     save_filename = None
     save_lineno = None
