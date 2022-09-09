@@ -14,6 +14,7 @@ def discover_brython_test_modules():
           ("test_decorators.py", "decorators"),
           ("test_descriptors.py", "descriptors"),
           ("test_dict.py", "dicts"),
+          ("test_exceptions.py", "exceptions"),
           ("test_exec.py", "exec / eval"),
           ("test_file.py", "file open / read"),
           ("test_generators.py", "generators"),
