@@ -95,6 +95,21 @@ def populate_testmod_input(elem, selected=None):
                 o = html.OPTION(caption, value=filenm)
             g <= o
 
+def run(src, filename='editor'):
+    t0 = time.perf_counter()
+    msg = ''
+    ns = {'__name__':'__main__', '__file__': filename}
+    state = 1
+    try:
+        exec(src, ns)
+    except Exception as exc:
+        import traceback
+        msg = traceback.format_exc()
+        print(msg, file=sys.stderr)
+        state = 0
+    t1 = time.perf_counter()
+    return state, t0, t1, msg
+
 def run_test_module(filename, base_path=''):
     if base_path and not base_path.endswith('/'):
         base_path += '/'
