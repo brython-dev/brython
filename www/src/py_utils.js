@@ -1137,14 +1137,13 @@ $B.int_or_bool = function(v){
 
 $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
-    frame.__class__ = $B.frame
-    $B.frames_stack.push(frame)
-    if($B.frames_stack.length > 1001){
-        $B.frames_stack.pop()
+    if($B.frames_stack.length > 1000){
         var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
         $B.set_exc(exc)
         throw exc
     }
+    frame.__class__ = $B.frame
+    $B.frames_stack.push(frame)
     if($B.tracefunc && $B.tracefunc !== _b_.None){
         if(frame[4] === $B.tracefunc ||
                 ($B.tracefunc.$infos && frame[4] &&

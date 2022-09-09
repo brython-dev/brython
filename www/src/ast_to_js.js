@@ -2391,8 +2391,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
             js += `,\nlocals_${name} = locals`
         }
     }
-    js += `\nlocals.__file__ = '${scopes.filename || "<string>"}'\n` +
-          `frame.__file__ = '${scopes.filename || "<string>"}'\n` +
+    js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__annotations__ = $B.empty_dict()\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
@@ -2401,8 +2400,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         // py_builtin_functions.js / $$eval()
         js += `locals.$f_trace = $B.enter_frame(frame)\n`
     }
-    js += `$B.set_lineno(frame, ${this.lineno})\n` +
-          `var stack_length = $B.frames_stack.length\n` +
+    js += `var stack_length = $B.frames_stack.length\n` +
           `try{\n` +
               add_body(this.body, scopes) + '\n' +
               (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +

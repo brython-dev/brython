@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-09 11:42:07.718096"
-__BRYTHON__.timestamp=1662716527718
+__BRYTHON__.compiled_date="2022-09-09 11:50:36.758518"
+__BRYTHON__.timestamp=1662717036758
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5684,12 +5684,11 @@ default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
-frame.__class__=$B.frame
-$B.frames_stack.push(frame)
-if($B.frames_stack.length > 1001){$B.frames_stack.pop()
-var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
+if($B.frames_stack.length > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc)
 throw exc}
+frame.__class__=$B.frame
+$B.frames_stack.push(frame)
 if($B.tracefunc && $B.tracefunc !==_b_.None){if(frame[4]===$B.tracefunc ||
 ($B.tracefunc.$infos && frame[4]&&
 frame[4]===$B.tracefunc.$infos.__func__)){
@@ -14764,15 +14763,13 @@ if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
 `globals = ${namespaces.global_name}\n`
 if(name){js+=`,\nlocals_${name} = locals`}}
-js+=`\nlocals.__file__ = '${scopes.filename || "<string>"}'\n`+
-`frame.__file__ = '${scopes.filename || "<string>"}'\n`+
+js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
 `locals.__annotations__ = $B.empty_dict()\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! namespaces){
 js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
-js+=`$B.set_lineno(frame, ${this.lineno})\n`+
-`var stack_length = $B.frames_stack.length\n`+
+js+=`var stack_length = $B.frames_stack.length\n`+
 `try{\n`+
 add_body(this.body,scopes)+'\n'+
 (namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
