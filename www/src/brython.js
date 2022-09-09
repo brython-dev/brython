@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-09 12:04:03.027342"
-__BRYTHON__.timestamp=1662717843027
+__BRYTHON__.compiled_date="2022-09-09 19:07:27.219396"
+__BRYTHON__.timestamp=1662743247219
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3095,10 +3095,11 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 this.tree=[value]
 this.position=$token.value
+this.positions=[this.position]
 this.expect='.'
 this.$pos=$pos}
 $PatternCaptureCtx.prototype.ast=function(){var ast_obj
-try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0].value,new ast.Load())
+try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0],new ast.Load())
 set_position(pattern,this.position)
 for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
 copy_position(pattern,pattern.value)}
@@ -3124,8 +3125,6 @@ $PatternCaptureCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case '.':
 if(token=='.'){C.type="value_pattern"
 C.expect='id'
-if(C.tree.length==1){
-new $IdCtx(C,C.tree.pop())}else{C.tree.push('.')}
 return C}else if(token=='('){
 return new $PatternCtx(new $PatternClassCtx(C))}else if(C.parent instanceof $PatternMappingCtx){return C.parent.transition(token,value)}else{C.expect='as'
 return C.transition(token,value)}
@@ -3135,6 +3134,7 @@ var res=as_pattern(C,token,value)
 return res
 case 'id':
 if(token=='id'){C.tree.push(value)
+C.positions.push($token.value)
 C.expect='.'
 return C}}
 return $transition(C.parent,token,value)}
@@ -3142,7 +3142,8 @@ $PatternClassCtx=function(C){this.type="class_pattern"
 this.tree=[]
 this.parent=C.parent
 this.position=$token.value
-this.class_id=new $IdCtx(C,C.tree[0])
+this.class_id=C.tree.slice()
+this.positions=C.positions
 C.tree.pop()
 this.attrs=C.tree.slice(2)
 C.parent.tree.pop()
@@ -3152,7 +3153,12 @@ this.keywords=[]
 this.positionals=[]
 this.bound_names=[]}
 $PatternClassCtx.prototype.ast=function(){
-var cls=new ast.Name(this.class_id.value)
+if(this.class_id.length==1){var cls=new ast.Name(this.class_id[0])}else{
+var cls
+for(var i=0,len=this.class_id.length;i < len-1;i++){var value=new ast.Name(this.class_id[i],new ast.Load())
+set_position(value,this.positions[i])
+if(i==0){cls=new ast.Attribute(value,this.class_id[i+1])}else{cls=new ast.Attribute(cls,this.class_id[i+1])}
+set_position(cls,this.positions[i])}}
 set_position(cls,this.position)
 cls.ctx=new ast.Load()
 var patterns=[],kwd_attrs=[],kwd_patterns=[]
@@ -7452,7 +7458,7 @@ return _self.$stack[_self.pos]
 case "tb_lineno":
 return _self.linenos[_self.pos]
 case "tb_lasti":
-throw _b_.NotImplementedError.$factory(attr)
+return-1 
 case "tb_next":
 if(_self.pos < _self.$stack.length-1){_self.pos++
 return _self}else{return _b_.None}
@@ -7573,9 +7579,8 @@ return(err_type=='InternalError' && err_msg=='too much recursion')||
 (err_type=='Error' && err_msg=='Out of stack space')||
 (err_type=='RangeError' && err_msg=='Maximum call stack size exceeded')}
 var $make_exc=$B.$make_exc=function(names,parent){
-if(parent===undefined){console.log('pas de parent',names)}
 var _str=[],pos=0
-for(var i=0;i < names.length;i++){var name=names[i],code=""
+for(var name of names){var code=""
 if(Array.isArray(name)){
 var code=name[1],name=name[0]}
 $B.builtins_scope[name]=true
@@ -7591,6 +7596,7 @@ _str[pos++]="_b_."+name+'.$factory.$infos = {__name__: "'+
 name+'", __qualname__: "'+name+'"}'
 _str[pos++]="$B.set_func_names(_b_."+name+", 'builtins')"}
 try{eval(_str.join(";"))}catch(err){console.log("--err"+err)
+console.log(_str.join(''))
 throw err}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","BufferError","EOFError",["ImportError","err.name = arguments[0]"],"LookupError","MemoryError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
@@ -7634,7 +7640,6 @@ $make_exc(["UnboundLocalError"],_b_.NameError)
 _b_.UnboundLocalError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
 $B.name_error=function(name,obj){return _b_.NameError.$factory({$nat:"kw",kw:{name}})}
-$B.$TypeError=function(msg){throw _b_.TypeError.$factory(msg)}
 var MAX_CANDIDATE_ITEMS=750,MAX_STRING_SIZE=40,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
 function levenshtein_distance(a,b,max_cost){
@@ -7689,10 +7694,37 @@ if(suggestion){return suggestion}
 if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
+var exc_group_code='\n$B.check_nb_args_no_kw("[[name]]", 2, err.args);\n'+
+'err.message = err.args[0]\n'+
+'err.exceptions = err.args[1]\n'
+var js=exc_group_code.replace('[[name]]','BaseExceptionGroup')
+js+=`var exc_list = _b_.list.$factory(err.exceptions)
+var all_exceptions = true
+for(var exc of exc_list){
+    if(! _b_.isinstance(exc, _b_.Exception)){
+        all_exceptions = false
+        break
+    }}
+if(all_exceptions){
+    err.__class__ = _b_.ExceptionGroup}
+`
+$make_exc([['BaseExceptionGroup',js]],_b_.BaseException)
+var js=exc_group_code.replace('[[name]]','ExceptionGroup')
+js+=`var exc_list = _b_.list.$factory(err.exceptions)
+for(var exc of exc_list){
+    if(! _b_.isinstance(exc, _b_.Exception)){
+        throw _b_.TypeError.$factory(
+            'Cannot nest BaseExceptions in an ExceptionGroup')
+    }}
+`
+$make_exc([['ExceptionGroup',js]],_b_.Exception)
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
-trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
-trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}}
+trace.push(trace[len-1])}else{trace.push(trace[len-1])}
+count_repeats--
+if(count_repeats==0){break}}
+if(count_repeats > 0){trace.push(`[Previous line repeated ${count_repeats} more`+
+` time${count_repeats > 1 ? 's' : ''}]`)}}}
 var trace=[],save_filename,save_lineno,count_repeats=0
 for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__
 if(filename==save_filename && lineno==save_lineno){count_repeats++
@@ -14683,8 +14715,7 @@ if(_bindings.length !=bindings.length){compiler_error(pattern,err_msg)}else{for(
 break}
 return bindings.sort()}
 $B.ast.Match.prototype.to_js=function(scopes){var scope=$B.last(scopes),irrefutable
-var js=`var subject = ${$B.js_from_ast(this.subject, scopes)}\n`
-first=true
+var js=`var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,first=true
 for(var _case of this.cases){if(! _case.guard){if(irrefutable){irrefutable_error(irrefutable)}
 irrefutable=is_irrefutable(_case.pattern)}
 var case_js=$B.js_from_ast(_case,scopes)

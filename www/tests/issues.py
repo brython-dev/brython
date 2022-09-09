@@ -3095,6 +3095,22 @@ except SyntaxError as exc:
 # issue 2015
 assert_raises(SyntaxError, exec, "f(x=not)")
 
+# not covered in test_patma
+class A:
+
+  class B:
+    def __init__(self, x):
+      pass
+
+x = A.B(1)
+
+ok = False
+match x:
+    case A.B():
+        ok = True
+
+assert ok
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

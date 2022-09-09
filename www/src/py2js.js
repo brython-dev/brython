@@ -5262,6 +5262,7 @@ var $PatternCaptureCtx = function(context, value){
     context.parent.tree.push(this)
     this.tree = [value]
     this.position = $token.value
+    this.positions = [this.position]
     this.expect = '.'
     this.$pos = $pos
 }
@@ -5270,7 +5271,7 @@ $PatternCaptureCtx.prototype.ast = function(){
     var ast_obj
     try{
         if(this.tree.length > 1){
-            var pattern = new ast.Name(this.tree[0].value, new ast.Load())
+            var pattern = new ast.Name(this.tree[0], new ast.Load())
             set_position(pattern, this.position)
             for(var i = 1; i < this.tree.length; i += 2){
                 pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
@@ -5338,12 +5339,6 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
             if(token == '.'){
                 context.type = "value_pattern"
                 context.expect = 'id'
-                if(context.tree.length == 1){
-                    // create an $IdCtx to resolve the name correctly
-                    new $IdCtx(context, context.tree.pop())
-                }else{
-                    context.tree.push('.')
-                }
                 return context
             }else if(token == '('){
                 // open class pattern
@@ -5361,6 +5356,7 @@ $PatternCaptureCtx.prototype.transition = function(token, value){
         case 'id':
             if(token == 'id'){
                 context.tree.push(value)
+                context.positions.push($token.value)
                 context.expect = '.'
                 return context
             }
@@ -5375,7 +5371,8 @@ $PatternClassCtx = function(context){
     this.parent = context.parent
     this.position = $token.value
     // create an id for class name
-    this.class_id = new $IdCtx(context, context.tree[0])
+    this.class_id = context.tree.slice()
+    this.positions = context.positions
     // remove this instance of $dCtx from tree
     context.tree.pop()
     // get possible attributes of id
@@ -5395,7 +5392,23 @@ $PatternClassCtx.prototype.ast = function(){
     //   class defined sequence of pattern matching attributes
     // `kwd_attrs` is a sequence of additional attributes to be matched
     // `kwd_patterns` are the corresponding patterns
-    var cls = new ast.Name(this.class_id.value)
+    if(this.class_id.length == 1){
+        var cls = new ast.Name(this.class_id[0])
+    }else{
+        // attribute, eg "case ast.Expr(expr)": class_id is
+        // ['ast', '.', 'Expr']
+        var cls
+        for(var i = 0, len = this.class_id.length; i < len - 1; i++){
+            var value = new ast.Name(this.class_id[i], new ast.Load())
+            set_position(value, this.positions[i])
+            if(i == 0){
+                cls = new ast.Attribute(value, this.class_id[i + 1])
+            }else{
+                cls = new ast.Attribute(cls, this.class_id[i + 1])
+            }
+            set_position(cls, this.positions[i])
+        }
+    }
     set_position(cls, this.position)
     cls.ctx = new ast.Load()
     var patterns = [],

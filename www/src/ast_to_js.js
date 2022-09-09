@@ -2189,7 +2189,7 @@ function pattern_bindings(pattern){
 $B.ast.Match.prototype.to_js = function(scopes){
     var scope = $B.last(scopes),
         irrefutable
-    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`
+    var js = `var subject = ${$B.js_from_ast(this.subject, scopes)}\n`,
         first = true
     for(var _case of this.cases){
         if(! _case.guard){
