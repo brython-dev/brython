@@ -2,6 +2,8 @@ import io
 import traceback
 import re
 
+from tester import assert_raises
+
 src = """def f():
   f()
 
@@ -47,3 +49,15 @@ except ZeroDivisionError as exc:
     traceback.print_exc(file=out)
     trace = out.getvalue()
     assert expected in trace
+
+# PEP 654 (Exception Groups and except*)
+
+assert_raises(TypeError,
+    ExceptionGroup,
+    'issues',
+    [ValueError('bad value'), BaseException('base')],
+    msg = 'Cannot nest BaseExceptions in an ExceptionGroup')
+
+e = BaseExceptionGroup('issues',
+        [ValueError('bad value'), TypeError('bad type')])
+assert type(e) is ExceptionGroup
