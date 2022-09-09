@@ -120,7 +120,7 @@ traceback.__getattribute__ = function(_self, attr){
         case "tb_lineno":
             return _self.linenos[_self.pos]
         case "tb_lasti":
-            throw _b_.NotImplementedError.$factory(attr)
+            return -1 // not implemented (yet...)
         case "tb_next":
             if(_self.pos < _self.$stack.length - 1){
                 _self.pos++
@@ -454,13 +454,10 @@ $B.is_recursion_error = function(js_exc){
 var $make_exc = $B.$make_exc = function(names, parent){
     // Creates the exception classes that inherit from parent
     // names is the list of exception names
-    if(parent === undefined){
-        console.log('pas de parent', names)
-    }
-    var _str = [], pos = 0
-    for(var i = 0; i < names.length; i++){
-        var name = names[i],
-            code = ""
+    var _str = [],
+        pos = 0
+    for(var name of names){
+        var code = ""
         if(Array.isArray(name)){
             // If name is an array, its first item is the exception name
             // and the second is a piece of code to replace the placeholder
@@ -487,6 +484,7 @@ var $make_exc = $B.$make_exc = function(names, parent){
         eval(_str.join(";"))
     }catch(err){
         console.log("--err" + err)
+        console.log(_str.join(''))
         throw err
     }
 }
@@ -587,10 +585,6 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 // Shortcut to create a NameError
 $B.name_error = function(name, obj){
     return _b_.NameError.$factory({$nat:"kw", kw:{name}})
-}
-
-$B.$TypeError = function(msg){
-    throw _b_.TypeError.$factory(msg)
 }
 
 // Suggestions in case of NameError or AttributeError
@@ -724,6 +718,48 @@ function offer_suggestions_for_name_error(exc){
     }
 }
 
+// PEP 654
+var exc_group_code = '\n$B.check_nb_args_no_kw("[[name]]", 2, err.args);\n' +
+    'err.message = err.args[0]\n' +
+    'err.exceptions = err.args[1]\n'
+
+/*
+The BaseExceptionGroup constructor inspects the nested exceptions and if they
+are all Exception subclasses, it returns an ExceptionGroup rather than a
+BaseExceptionGroup
+*/
+var js = exc_group_code.replace('[[name]]', 'BaseExceptionGroup')
+js += `var exc_list = _b_.list.$factory(err.exceptions)
+var all_exceptions = true
+for(var exc of exc_list){
+    if(! _b_.isinstance(exc, _b_.Exception)){
+        all_exceptions = false
+        break
+    }
+}
+if(all_exceptions){
+    err.__class__ = _b_.ExceptionGroup
+}
+`
+
+$make_exc([['BaseExceptionGroup', js]], _b_.BaseException)
+
+var js = exc_group_code.replace('[[name]]', 'ExceptionGroup')
+
+/*
+The ExceptionGroup constructor raises a TypeError if any of the nested
+exceptions is not an Exception instance
+*/
+js += `var exc_list = _b_.list.$factory(err.exceptions)
+for(var exc of exc_list){
+    if(! _b_.isinstance(exc, _b_.Exception)){
+        throw _b_.TypeError.$factory(
+            'Cannot nest BaseExceptions in an ExceptionGroup')
+    }
+}
+`
+
+$make_exc([['ExceptionGroup', js]], _b_.Exception)
 
 function trace_from_stack(err){
 
