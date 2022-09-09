@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-09 19:07:27.219396"
-__BRYTHON__.timestamp=1662743247219
+__BRYTHON__.compiled_date="2022-09-09 21:47:32.813344"
+__BRYTHON__.timestamp=1662752852813
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7503,9 +7503,7 @@ BaseException.__new__=function(cls){var err=_b_.BaseException.$factory()
 err.__class__=cls
 err.__dict__=$B.empty_dict()
 return err}
-BaseException.__getattr__=function(self,attr){if(attr=="__traceback__"){
-if(self.$traceback !==undefined){return self.$traceback}
-return self.$traceback=traceback.$factory(self)}else if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
+BaseException.__getattr__=function(self,attr){if(attr=='__context__'){var frame=$B.last($B.frames_stack),ctx=frame[1].$current_exception
 return ctx ||_b_.None}else{throw $B.attr_error(attr,self)}}
 BaseException.with_traceback=function(_self,tb){_self.__traceback__=tb
 return _self}
@@ -7519,7 +7517,8 @@ $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
 $B.freeze=function(err){if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()
-err.$linenos=$B.frames_stack.map(x=> x.$lineno)}}
+err.$linenos=$B.frames_stack.map(x=> x.$lineno)}
+err.__traceback__=traceback.$factory(err)}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 var be_factory=`
@@ -7527,9 +7526,8 @@ function (){
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
-    err.__traceback__ = traceback.$factory(err)
+    err.__traceback__ = _b_.None
     err.$py_error = true
-    $B.freeze(err)
     // placeholder
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
@@ -7718,6 +7716,11 @@ for(var exc of exc_list){
     }}
 `
 $make_exc([['ExceptionGroup',js]],_b_.Exception)
+_b_.ExceptionGroup.__bases__.splice(0,0,_b_.BaseExceptionGroup)
+_b_.ExceptionGroup.__mro__.splice(0,0,_b_.BaseExceptionGroup)
+_b_.ExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
+`${self.exceptions.length > 1 ? 's' : ''})`}
+$B.set_func_names(_b_.ExceptionGroup,"builtins")
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}

@@ -282,13 +282,7 @@ BaseException.__new__ = function(cls){
 }
 
 BaseException.__getattr__ = function(self, attr){
-    if(attr == "__traceback__"){
-        // Return traceback object
-        if(self.$traceback !== undefined){
-            return self.$traceback
-        }
-        return self.$traceback = traceback.$factory(self)
-    }else if(attr == '__context__'){
+    if(attr == '__context__'){
         var frame = $B.last($B.frames_stack),
             ctx = frame[1].$current_exception
         return ctx || _b_.None
@@ -331,6 +325,7 @@ $B.freeze = function(err){
         err.$stack = $B.frames_stack.slice()
         err.$linenos = $B.frames_stack.map(x => x.$lineno)
     }
+    err.__traceback__ = traceback.$factory(err)
 }
 
 var show_stack = $B.show_stack = function(stack){
@@ -353,9 +348,8 @@ function (){
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
-    err.__traceback__ = traceback.$factory(err)
+    err.__traceback__ = _b_.None
     err.$py_error = true
-    $B.freeze(err)
     // placeholder
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
@@ -760,6 +754,16 @@ for(var exc of exc_list){
 `
 
 $make_exc([['ExceptionGroup', js]], _b_.Exception)
+_b_.ExceptionGroup.__bases__.splice(0, 0, _b_.BaseExceptionGroup)
+_b_.ExceptionGroup.__mro__.splice(0, 0, _b_.BaseExceptionGroup)
+
+
+_b_.ExceptionGroup.__str__ = function(self){
+    return `${self.message} (${self.exceptions.length} sub-exception` +
+        `${self.exceptions.length > 1 ? 's' : ''})`
+}
+
+$B.set_func_names(_b_.ExceptionGroup, "builtins")
 
 function trace_from_stack(err){
 
