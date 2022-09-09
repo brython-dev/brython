@@ -160,7 +160,8 @@ def trace_exc(run_frame, src, ns):
             count_repeats = 0
             save_filename = filename
             save_lineno = lineno
-            result_lines.append(f'  File {filename}, line {lineno}')
+            name = frame.f_code.co_name
+            result_lines.append(f'  File {filename}, line {lineno}, in {name}')
             show_line(filename, lineno, src)
         traceback = traceback.tb_next
 
