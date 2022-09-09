@@ -737,8 +737,15 @@ function trace_from_stack(err){
                 }else{
                     trace.push(trace[len - 1])
                 }
+                count_repeats--
+                if(count_repeats == 0){
+                    break
+                }
             }
-            trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)
+            if(count_repeats > 0){
+                trace.push(`[Previous line repeated ${count_repeats} more` +
+                    ` time${count_repeats > 1 ? 's' : ''}]`)
+            }
         }
     }
     var trace = [],

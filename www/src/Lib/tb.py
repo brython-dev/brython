@@ -28,7 +28,12 @@ def format_exc():
                     trace.write(trace_lines[-1])
                 else:
                     trace.write(trace_lines[-1])
-            trace.write(f'[Previous line repeated {count_repeats} more times]')
+                count_repeats -= 1
+                if count_repeats == 0:
+                    break
+            if count_repeats:
+                trace.write(f'[Previous line repeated {count_repeats} ' +
+                    f' more time{"s" if count_repeats > 1 else ""}]')
 
     def show_line():
         trace.write(f"  File {filename}, line {lineno}, in {name}")
