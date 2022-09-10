@@ -2657,6 +2657,127 @@ $B.ast.Try.prototype.to_js = function(scopes){
     return js
 }
 
+$B.ast.TryStar.prototype.to_js = function(scopes){
+    // PEP 654 try...except*...
+    var id = $B.UUID(),
+        has_except_handlers = this.handlers.length > 0,
+        has_else = this.orelse.length > 0,
+        has_finally = this.finalbody.length > 0
+
+    var js = `$B.set_lineno(frame, ${this.lineno})\ntry{\n`
+
+    // Save stack length. Used if there is an 'else' clause and no 'finally':
+    // if the 'try' body ran without an exception and ended with a 'return',
+    // don't execute the 'else' clause
+    js += `var stack_length_${id} = $B.frames_stack.length\n`
+
+    // Save execution stack in case there are return statements and a finally
+    // block
+    if(has_finally){
+        js += `var save_stack_${id} = $B.frames_stack.slice()\n`
+    }
+    if(has_else){
+        js += `var failed${id} = false\n`
+    }
+
+    var try_scope = copy_scope($B.last(scopes))
+    scopes.push(try_scope)
+    js += add_body(this.body, scopes) + '\n'
+    if(has_except_handlers){
+        var err = 'err' + id
+        js += '}\n' // close try
+        js += `catch(${err}){\n` +
+              `$B.set_exc(${err})\n` +
+              `if(locals.$f_trace !== _b_.None){\n` +
+                  `locals.$f_trace = $B.trace_exception()\n`+
+              `}\n` +
+              `if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n` +
+                  `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n` +
+              '}\n' +
+              `function fake_split(exc, condition){\n` +
+              `return condition(exc) ? ` +
+              `$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n` +
+              '}\n'
+        if(has_else){
+            js += `failed${id} = true\n`
+        }
+        var first = true,
+            has_untyped_except = false
+        for(var handler of this.handlers){
+            js += `$B.set_lineno(frame, ${handler.lineno})\n`
+            if(handler.type){
+                js += "var condition = function(exc){\n" +
+                      "    return _b_.isinstance(exc, " +
+                      `${$B.js_from_ast(handler.type, scopes)})\n` +
+                      "}\n" +
+                      `var klass = $B.get_class(${err}),\n` +
+                          `split_method = $B.$getattr(klass, 'split'),\n` +
+                          `split = $B.$call(split_method)(${err}, condition),\n` +
+                      '    matching = split[0],\n' +
+                      '    rest = split[1]\n' +
+                      'if(matching.exceptions !== _b_.None){\n' +
+                      '    for(var err of matching.exceptions){\n'
+
+                if(handler.name){
+                    bind(handler.name, scopes)
+                    var mangled = mangle(scopes, try_scope, handler.name)
+                    js += `locals.${mangled} = ${err}\n`
+                }
+                js += add_body(handler.body, scopes) + '\n'
+                if(! ($B.last(handler.body) instanceof $B.ast.Return)){
+                    // delete current exception
+                    js += '$B.del_exc()\n'
+                }
+                js += '}\n'
+                js += '}\n'
+                js += `${err} = rest\n`
+            }
+        }
+        js += `if(${err}.exceptions !== _b_.None){\n` +
+                  `throw ${err}\n` +
+              '}\n'
+
+    }
+    if(has_else || has_finally){
+        js += '}\n' // close try
+        js += 'finally{\n'
+        var finalbody = `var exit = false\n` +
+                        `if($B.frames_stack.length < stack_length_${id}){\n` +
+                            `exit = true\n` +
+                            `$B.frames_stack.push(frame)\n` +
+                        `}\n` +
+                        add_body(this.finalbody, scopes)
+        if(this.finalbody.length > 0 &&
+                ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
+            finalbody += `\nif(exit){\n` +
+                           `$B.leave_frame(locals)\n` +
+                        `}`
+        }
+        // The 'else' clause is executed if no exception was raised, and if
+        // there was no 'return' in the 'try' block (in which case the stack
+        // was popped from)
+        var elsebody = `if($B.frames_stack.length == stack_length_${id} ` +
+                       `&& ! failed${id}){\n` +
+                       add_body(this.orelse, scopes) +
+                       '\n}' // close "if"
+        if(has_else && has_finally){
+            js += `try{\n` +
+                  elsebody +
+                  '\n}\n' + // close "try"
+                  `finally{\n` + finalbody + '}\n'
+        }else if(has_else && ! has_finally){
+            js += elsebody
+        }else{
+            js += finalbody
+        }
+        js += '\n}\n' // close "finally"
+    }else{
+        js += '}\n' // close catch
+    }
+    scopes.pop()
+    return js
+}
+
 $B.ast.Tuple.prototype.to_js = function(scopes){
     return list_or_tuple_to_js.bind(this)('$B.fast_tuple', scopes)
 }

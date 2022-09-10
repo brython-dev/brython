@@ -743,6 +743,11 @@ js += `if(err.exceptions !== _b_.None){
 
 $make_exc([['BaseExceptionGroup', js]], _b_.BaseException)
 
+_b_.BaseExceptionGroup.__str__ = function(self){
+    return `${self.message} (${self.exceptions.length} sub-exception` +
+        `${self.exceptions.length > 1 ? 's' : ''})`
+}
+
 _b_.BaseExceptionGroup.split = function(self, condition){
     // condition is a function applied to exceptions
     // returns (matching_be, non_matching_be)
@@ -792,6 +797,8 @@ _b_.BaseExceptionGroup.subgroup = function(self, condition){
     return _b_.BaseExceptionGroup.split(self, condition)[0]
 }
 
+$B.set_func_names(_b_.BaseExceptionGroup, "builtins")
+
 var js = exc_group_code.replace('[[name]]', 'ExceptionGroup')
 
 /*
@@ -813,11 +820,6 @@ $make_exc([['ExceptionGroup', js]], _b_.Exception)
 _b_.ExceptionGroup.__bases__.splice(0, 0, _b_.BaseExceptionGroup)
 _b_.ExceptionGroup.__mro__.splice(0, 0, _b_.BaseExceptionGroup)
 
-
-_b_.ExceptionGroup.__str__ = function(self){
-    return `${self.message} (${self.exceptions.length} sub-exception` +
-        `${self.exceptions.length > 1 ? 's' : ''})`
-}
 
 $B.set_func_names(_b_.ExceptionGroup, "builtins")
 

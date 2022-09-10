@@ -1,6 +1,6 @@
 // brython.js brython.info
-// version [3, 10, 0, 'final', 0]
-// implementation [3, 10, 6, 'final', 0]
+// version [3, 11, 0, 'final', 0]
+// implementation [3, 11, 0, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -126,11 +126,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,10,6,'final',0]
-__BRYTHON__.__MAGIC__="3.10.6"
-__BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-10 11:43:42.861034"
-__BRYTHON__.timestamp=1662803022861
+__BRYTHON__.implementation=[3,11,0,'dev',0]
+__BRYTHON__.__MAGIC__="3.11.0"
+__BRYTHON__.version_info=[3,11,0,'final',0]
+__BRYTHON__.compiled_date="2022-09-10 17:32:42.783049"
+__BRYTHON__.timestamp=1662823962783
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -458,7 +458,7 @@ yield Token('ENDMARKER','',[line_num,0],[line_num,0],'')}})(__BRYTHON__)
 ;
 
 (function($B){
-$B.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
+$B.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
 var boolean_ops={'and':'And','or':'Or'}
 var comparison_ops={'==':'Eq','!=':'NotEq','<':'Lt','<=':'LtE','>':'Gt','>=':'GtE','is':'Is','is_not':'IsNot','in':'In','not_in':'NotIn'}
@@ -1704,8 +1704,12 @@ this.position=$token.value
 this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
-this.expect='id'
-this.scope=$get_scope(this)}
+this.scope=$get_scope(this)
+var node=C.node,rank=node.parent.children.indexOf(node),ix=rank-1
+while(node.parent.children[ix].C.tree[0].type !='try'){ix--}
+this.try_node=node.parent.children[ix]
+this.is_first_child=rank==ix+1
+if(this.try_node.C.is_trystar){this.expect='*'}else{this.expect='id'}}
 $ExceptCtx.prototype.ast=function(){
 var ast_obj=new ast.ExceptHandler(
 this.tree.length==1 ? this.tree[0].ast():undefined,this.has_alias ? this.tree[0].alias :undefined,ast_body(this.parent)
@@ -1713,6 +1717,16 @@ this.tree.length==1 ? this.tree[0].ast():undefined,this.has_alias ? this.tree[0]
 set_position(ast_obj,this.position)
 return ast_obj}
 $ExceptCtx.prototype.transition=function(token,value){var C=this
+if(token=='op' && value=='*'){
+if(C.is_first_child){
+C.try_node.C.is_trystar=true
+C.expect='id'
+return C}else if(! C.expect=='*'){
+raise_syntax_error(C,"cannot have both 'except' and 'except*' "+
+"on the same 'try'")}else{C.expect='id'
+return C}}else if(C.expect=='*'){
+raise_syntax_error(C,"cannot have both 'except' and 'except*' "+
+"on the same 'try'")}
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3838,7 +3852,8 @@ if(type=='single_kw'){type=t.token}
 if(type=='except'){res.handlers.push(t.ast())}else if(type=='else'){res.orelse=ast_body(child.C)}else if(type=='finally'){res.finalbody=ast_body(child.C)}else{break}}
 if(res.handlers.length==0 &&
 res.finalbody.length==0){raise_syntax_error(this,"expected 'except' or 'finally' block")}
-var res=new ast.Try(res.body,res.handlers,res.orelse,res.finalbody)
+var klass=this.parent.is_trystar ? ast.TryStar :ast.Try
+var res=new klass(res.body,res.handlers,res.orelse,res.finalbody)
 set_position(res,this.position)
 return res}
 $TryCtx.prototype.transition=function(token,value){var C=this
@@ -7557,7 +7572,6 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=$B.frames_stack.slice()
 js_exc.$py_exc=exc
 $B.freeze(exc)}else{var exc=js_exc
 $B.freeze(exc)
@@ -7703,40 +7717,51 @@ var exc_group_code=
 'err.message = $.message\n'+
 'err.exceptions = $.exceptions === missing ? [] : $.exceptions\n'
 var js=exc_group_code.replace('[[name]]','BaseExceptionGroup')
-js+=`var exc_list = _b_.list.$factory(err.exceptions)
-var all_exceptions = true
-for(var exc of exc_list){
-    if(! _b_.isinstance(exc, _b_.Exception)){
-        all_exceptions = false
-        break
+js+=`if(err.exceptions !== _b_.None){
+    var exc_list = _b_.list.$factory(err.exceptions)
+    var all_exceptions = true
+    for(var exc of exc_list){
+        if(! _b_.isinstance(exc, _b_.Exception)){
+            all_exceptions = false
+            break
+        }
+    }
+    if(all_exceptions){
+        err.__class__ = _b_.ExceptionGroup
     }}
-if(all_exceptions){
-    err.__class__ = _b_.ExceptionGroup}
 `
 $make_exc([['BaseExceptionGroup',js]],_b_.BaseException)
-_b_.BaseExceptionGroup.subgroup=function(self,condition){
-var filtered_excs=[]
-for(var exc of self.exceptions){if(_b_.isinstance(exc,_b_.BaseExceptionGroup)){var filtered=_b_.BaseExceptionGroup.subgroup(exc,condition)
-if(filtered===_b_.None){}else if(filtered.exceptions.length==exc.exceptions.length){filtered_excs.push(exc)}else if(filtered.exceptions.length > 0){filtered_excs=filtered_excs.concat(filtered)}}else if(condition(exc)){filtered_excs.push(exc)}}
-if(filtered_excs.length==0){return _b_.None}
-var res=_b_.BaseExceptionGroup.$factory(self.message,filtered_excs)
-res.__cause__=self.__cause__
-res.__context__=self.__context__
-res.__traceback__=self.__traceback__
-return res}
+_b_.BaseExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
+`${self.exceptions.length > 1 ? 's' : ''})`}
+_b_.BaseExceptionGroup.split=function(self,condition){
+var matching_excs=[],non_matching_excs=[]
+for(var exc of self.exceptions){if(_b_.isinstance(exc,_b_.BaseExceptionGroup)){var subsplit=_b_.BaseExceptionGroup.split(exc,condition),matching=subsplit[0],non_matching=subsplit[1]
+if(matching===_b_.None){non_matching_excs.push(exc)}else if(matching.exceptions.length==exc.exceptions.length){matching_excs.push(exc)}else{if(matching.exceptions.length > 0){matching_excs=matching_excs.concat(matching)}
+if(non_matching.exceptions.length > 0){non_matching_excs=non_matching_excs.concat(non_matching)}}}else if(condition(exc)){matching_excs.push(exc)}else{non_matching_excs.push(exc)}}
+if(matching_excs.length==0){matching_excs=_b_.None}
+if(non_matching_excs.length==0){non_matching_excs=_b_.None}
+var res=[]
+for(var item of[matching_excs,non_matching_excs]){var eg=_b_.BaseExceptionGroup.$factory(self.message,item)
+eg.__cause__=self.__cause__
+eg.__context__=self.__context__
+eg.__traceback__=self.__traceback__
+res.push(eg)}
+return $B.fast_tuple(res)}
+_b_.BaseExceptionGroup.subgroup=function(self,condition){return _b_.BaseExceptionGroup.split(self,condition)[0]}
+$B.set_func_names(_b_.BaseExceptionGroup,"builtins")
 var js=exc_group_code.replace('[[name]]','ExceptionGroup')
-js+=`var exc_list = _b_.list.$factory(err.exceptions)
-for(var exc of exc_list){
-    if(! _b_.isinstance(exc, _b_.Exception)){
-        throw _b_.TypeError.$factory(
-            'Cannot nest BaseExceptions in an ExceptionGroup')
+js+=`if(err.exceptions !== _b_.None){
+    var exc_list = _b_.list.$factory(err.exceptions)
+    for(var exc of exc_list){
+        if(! _b_.isinstance(exc, _b_.Exception)){
+            throw _b_.TypeError.$factory(
+                'Cannot nest BaseExceptions in an ExceptionGroup')
+        }
     }}
 `
 $make_exc([['ExceptionGroup',js]],_b_.Exception)
 _b_.ExceptionGroup.__bases__.splice(0,0,_b_.BaseExceptionGroup)
 _b_.ExceptionGroup.__mro__.splice(0,0,_b_.BaseExceptionGroup)
-_b_.ExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
-`${self.exceptions.length > 1 ? 's' : ''})`}
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
@@ -14940,6 +14965,78 @@ elsebody+
 js+='\n}\n' }else{js+='}\n' }
 scopes.pop()
 return js}
+$B.ast.TryStar.prototype.to_js=function(scopes){
+var id=$B.UUID(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
+var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`
+js+=`var stack_length_${id} = $B.frames_stack.length\n`
+if(has_finally){js+=`var save_stack_${id} = $B.frames_stack.slice()\n`}
+if(has_else){js+=`var failed${id} = false\n`}
+var try_scope=copy_scope($B.last(scopes))
+scopes.push(try_scope)
+js+=add_body(this.body,scopes)+'\n'
+if(has_except_handlers){var err='err'+id
+js+='}\n' 
+js+=`catch(${err}){\n`+
+`$B.set_exc(${err})\n`+
+`if(locals.$f_trace !== _b_.None){\n`+
+`locals.$f_trace = $B.trace_exception()\n`+
+`}\n`+
+`if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
+`${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
+'}\n'+
+`function fake_split(exc, condition){\n`+
+`return condition(exc) ? `+
+`$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n`+
+'}\n'
+if(has_else){js+=`failed${id} = true\n`}
+var first=true,has_untyped_except=false
+for(var handler of this.handlers){js+=`$B.set_lineno(frame, ${handler.lineno})\n`
+if(handler.type){js+="var condition = function(exc){\n"+
+"    return _b_.isinstance(exc, "+
+`${$B.js_from_ast(handler.type, scopes)})\n`+
+"}\n"+
+`var klass = $B.get_class(${err}),\n`+
+`split_method = $B.$getattr(klass, 'split'),\n`+
+`split = $B.$call(split_method)(${err}, condition),\n`+
+'    matching = split[0],\n'+
+'    rest = split[1]\n'+
+'if(matching.exceptions !== _b_.None){\n'+
+'    for(var err of matching.exceptions){\n'
+if(handler.name){bind(handler.name,scopes)
+var mangled=mangle(scopes,try_scope,handler.name)
+js+=`locals.${mangled} = ${err}\n`}
+js+=add_body(handler.body,scopes)+'\n'
+if(!($B.last(handler.body)instanceof $B.ast.Return)){
+js+='$B.del_exc()\n'}
+js+='}\n'
+js+='}\n'
+js+=`${err} = rest\n`}}
+js+=`if(${err}.exceptions !== _b_.None){\n`+
+`throw ${err}\n`+
+'}\n'}
+if(has_else ||has_finally){js+='}\n' 
+js+='finally{\n'
+var finalbody=`var exit = false\n`+
+`if($B.frames_stack.length < stack_length_${id}){\n`+
+`exit = true\n`+
+`$B.frames_stack.push(frame)\n`+
+`}\n`+
+add_body(this.finalbody,scopes)
+if(this.finalbody.length > 0 &&
+!($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+=`\nif(exit){\n`+
+`$B.leave_frame(locals)\n`+
+`}`}
+var elsebody=`if($B.frames_stack.length == stack_length_${id} `+
+`&& ! failed${id}){\n`+
+add_body(this.orelse,scopes)+
+'\n}' 
+if(has_else && has_finally){js+=`try{\n`+
+elsebody+
+'\n}\n'+
+`finally{\n`+finalbody+'}\n'}else if(has_else && ! has_finally){js+=elsebody}else{js+=finalbody}
+js+='\n}\n' }else{js+='}\n' }
+scopes.pop()
+return js}
 $B.ast.Tuple.prototype.to_js=function(scopes){return list_or_tuple_to_js.bind(this)('$B.fast_tuple',scopes)}
 $B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
 if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
@@ -16844,15 +16941,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],repeat:'?',alias:'a'},{type:'string',value:')'},{type:'string',value:'->'},{type:'rule',name:'expression',alias:'b'},{type:'NEWLINE',repeat:'*'},{type:'ENDMARKER'}
 ],action:'$B._PyAST.FunctionType(a, b, p.arena)'},fstring:
 {items:[{type:'rule',name:'star_expressions'}
-]},type_expressions:
-{choices:[{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'string',value:'*'},{type:'rule',name:'expression',alias:'b'},{type:'string',value:','},{type:'string',value:'**'},{type:'rule',name:'expression',alias:'c'}
-],action:'$B._PyPegen.seq_append_to_end( p, CHECK(asdl_seq, $B._PyPegen.seq_append_to_end(p, a, b)), c)'},{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'string',value:'*'},{type:'rule',name:'expression',alias:'b'}
-],action:'$B._PyPegen.seq_append_to_end(p, a, b)'},{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'string',value:'**'},{type:'rule',name:'expression',alias:'b'}
-],action:'$B._PyPegen.seq_append_to_end(p, a, b)'},{items:[{type:'string',value:'*'},{type:'rule',name:'expression',alias:'a'},{type:'string',value:','},{type:'string',value:'**'},{type:'rule',name:'expression',alias:'b'}
-],action:'$B._PyPegen.seq_append_to_end( p, CHECK(asdl_seq, $B._PyPegen.singleton_seq(p, a)), b)'},{items:[{type:'string',value:'*'},{type:'rule',name:'expression',alias:'a'}
-],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'string',value:'**'},{type:'rule',name:'expression',alias:'a'}
-],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'}
-],action:'a'}]},statements:
+]},statements:
 {items:[{type:'rule',name:'statement',repeat:'+',alias:'a'}
 ],action:'$B._PyPegen.seq_flatten(p, a)'},statement:
 {choices:[{items:[{type:'rule',name:'compound_stmt',alias:'a'}
@@ -16916,6 +17005,9 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ]},{items:[{type:'rule',name:'star_expressions'}
 ]}],alias:'c'}
 ],action:'$B._PyAST.AugAssign(a, b.kind, c, EXTRA)'},{items:[{type:'rule',name:'invalid_assignment'}
+]}]},annotated_rhs:
+{choices:[{items:[{type:'rule',name:'yield_expr'}
+]},{items:[{type:'rule',name:'star_expressions'}
 ]}]},augassign:
 {choices:[{items:[{type:'string',value:'+='}
 ],action:'$B._PyPegen.augoperator(p, Add)'},{items:[{type:'string',value:'-='}
@@ -16930,21 +17022,28 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'$B._PyPegen.augoperator(p, LShift)'},{items:[{type:'string',value:'>>='}
 ],action:'$B._PyPegen.augoperator(p, RShift)'},{items:[{type:'string',value:'**='}
 ],action:'$B._PyPegen.augoperator(p, Pow)'},{items:[{type:'string',value:'//='}
-],action:'$B._PyPegen.augoperator(p, FloorDiv)'}]},global_stmt:
+],action:'$B._PyPegen.augoperator(p, FloorDiv)'}]},return_stmt:
+{items:[{type:'string',value:'return'},{items:[{type:'rule',name:'star_expressions'}
+],repeat:'?',alias:'a'}
+],action:'$B._PyAST.Return(a, EXTRA)'},raise_stmt:
+{choices:[{items:[{type:'string',value:'raise'},{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:'from'},{type:'rule',name:'expression',alias:'z'}
+],repeat:'?',alias:'b',action:'z'}
+],action:'$B._PyAST.Raise(a, b, EXTRA)'},{items:[{type:'string',value:'raise'}
+],action:'$B._PyAST.Raise(NULL, NULL, EXTRA)'}]},global_stmt:
 {items:[{type:'string',value:'global'},{type:'NAME',join:',',alias:'a',repeat:'+'}
 ],action:'$B._PyAST.Global(CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, a)), EXTRA)'},nonlocal_stmt:
 {items:[{type:'string',value:'nonlocal'},{type:'NAME',join:',',alias:'a',repeat:'+'}
-],action:'$B._PyAST.Nonlocal(CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, a)), EXTRA)'},yield_stmt:
-{items:[{type:'rule',name:'yield_expr',alias:'y'}
-],action:'$B._PyAST.Expr(y, EXTRA)'},assert_stmt:
-{items:[{type:'string',value:'assert'},{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'expression',alias:'z'}
-],repeat:'?',alias:'b',action:'z'}
-],action:'$B._PyAST.Assert(a, b, EXTRA)'},del_stmt:
+],action:'$B._PyAST.Nonlocal(CHECK(asdl_identifier_seq, $B._PyPegen.map_names_to_ids(p, a)), EXTRA)'},del_stmt:
 {choices:[{items:[{type:'string',value:'del'},{type:'rule',name:'del_targets',alias:'a'},{choices:[{items:[{type:'string',value:';'}
 ]},{items:[{type:'NEWLINE'}
 ]}],lookahead:'positive'}
 ],action:'$B._PyAST.Delete(a, EXTRA)'},{items:[{type:'rule',name:'invalid_del_stmt'}
-]}]},import_stmt:
+]}]},yield_stmt:
+{items:[{type:'rule',name:'yield_expr',alias:'y'}
+],action:'$B._PyAST.Expr(y, EXTRA)'},assert_stmt:
+{items:[{type:'string',value:'assert'},{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'expression',alias:'z'}
+],repeat:'?',alias:'b',action:'z'}
+],action:'$B._PyAST.Assert(a, b, EXTRA)'},import_stmt:
 {choices:[{items:[{type:'rule',name:'import_name'}
 ]},{items:[{type:'rule',name:'import_from'}
 ]}]},import_name:
@@ -16975,6 +17074,88 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'$B._PyAST.alias(a.id, (b) ? b.id : NULL, EXTRA)'},dotted_name:
 {choices:[{items:[{type:'rule',name:'dotted_name',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'}
 ],action:'$B._PyPegen.join_names_with_dot(p, a, b)'},{items:[{type:'NAME'}
+]}]},block:
+{choices:[{items:[{type:'NEWLINE'},{type:'INDENT'},{type:'rule',name:'statements',alias:'a'},{type:'DEDENT'}
+],action:'a'},{items:[{type:'rule',name:'simple_stmts'}
+]},{items:[{type:'rule',name:'invalid_block'}
+]}]},decorators:
+{items:[{items:[{type:'string',value:'@'},{type:'rule',name:'named_expression',alias:'f'},{type:'NEWLINE'}
+],repeat:'+',alias:'a',action:'f'}
+],action:'a'},class_def:
+{choices:[{items:[{type:'rule',name:'decorators',alias:'a'},{type:'rule',name:'class_def_raw',alias:'b'}
+],action:'$B._PyPegen.class_def_decorators(p, a, b)'},{items:[{type:'rule',name:'class_def_raw'}
+]}]},class_def_raw:
+{choices:[{items:[{type:'rule',name:'invalid_class_def_raw'}
+]},{items:[{type:'string',value:'class'},{type:'NAME',alias:'a'},{items:[{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
+],repeat:'?',alias:'z'},{type:'string',value:')'}
+],repeat:'?',alias:'b',action:'z'},{type:'string',value:':'},{type:'rule',name:'block',alias:'c'}
+],action:'$B._PyAST.ClassDef(a.id, (b) ? b.args : NULL, (b) ? b.keywords : NULL, c, NULL, EXTRA)'}]},function_def:
+{choices:[{items:[{type:'rule',name:'decorators',alias:'d'},{type:'rule',name:'function_def_raw',alias:'f'}
+],action:'$B._PyPegen.function_def_decorators(p, d, f)'},{items:[{type:'rule',name:'function_def_raw'}
+]}]},function_def_raw:
+{choices:[{items:[{type:'rule',name:'invalid_def_raw'}
+]},{items:[{type:'string',value:'def'},{type:'NAME',alias:'n'},{type:'string',value:'('},{items:[{type:'rule',name:'params'}
+],repeat:'?',alias:'params'},{type:'string',value:')'},{items:[{type:'string',value:'->'},{type:'rule',name:'expression',alias:'z'}
+],repeat:'?',alias:'a',action:'z'},{type:'string',value:':'},{items:[{type:'rule',name:'func_type_comment'}
+],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
+],action:'$B._PyAST.FunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA)'},{items:[{type:'ASYNC'},{type:'string',value:'def'},{type:'NAME',alias:'n'},{type:'string',value:'('},{items:[{type:'rule',name:'params'}
+],repeat:'?',alias:'params'},{type:'string',value:')'},{items:[{type:'string',value:'->'},{type:'rule',name:'expression',alias:'z'}
+],repeat:'?',alias:'a',action:'z'},{type:'string',value:':'},{items:[{type:'rule',name:'func_type_comment'}
+],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
+],action:'CHECK_VERSION( $B.ast.stmt, 5, "Async functions are", $B._PyAST.AsyncFunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA) )'}]},params:
+{choices:[{items:[{type:'rule',name:'invalid_parameters'}
+]},{items:[{type:'rule',name:'parameters'}
+]}]},parameters:
+{choices:[{items:[{type:'rule',name:'slash_no_default',alias:'a'},{type:'rule',name:'param_no_default',repeat:'*',alias:'b'},{type:'rule',name:'param_with_default',repeat:'*',alias:'c'},{items:[{type:'rule',name:'star_etc'}
+],repeat:'?',alias:'d'}
+],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, a, NULL, b, c, d))'},{items:[{type:'rule',name:'slash_with_default',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
+],repeat:'?',alias:'c'}
+],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, NULL, a, NULL, b, c))'},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.make_arguments(p, NULL, NULL, a, b, c)'},{items:[{type:'rule',name:'param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'star_etc'}
+],repeat:'?',alias:'b'}
+],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, a, b)'},{items:[{type:'rule',name:'star_etc',alias:'a'}
+],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, NULL, a)'}]},slash_no_default:
+{choices:[{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:','}
+],action:'a'},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:')',lookahead:'positive'}
+],action:'a'}]},slash_with_default:
+{choices:[{items:[{type:'rule',name:'param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:','}
+],action:'$B._PyPegen.slash_with_default(p, a, b)'},{items:[{type:'rule',name:'param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:')',lookahead:'positive'}
+],action:'$B._PyPegen.slash_with_default(p, a, b)'}]},star_etc:
+{choices:[{items:[{type:'rule',name:'invalid_star_etc'}
+]},{items:[{type:'string',value:'*'},{type:'rule',name:'param_no_default',alias:'a'},{type:'rule',name:'param_maybe_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'kwds'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.star_etc(p, a, b, c)'},{items:[{type:'string',value:'*'},{type:'rule',name:'param_no_default_star_annotation',alias:'a'},{type:'rule',name:'param_maybe_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'kwds'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.star_etc(p, a, b, c)'},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'rule',name:'param_maybe_default',repeat:'+',alias:'b'},{items:[{type:'rule',name:'kwds'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.star_etc(p, NULL, b, c)'},{items:[{type:'rule',name:'kwds',alias:'a'}
+],action:'$B._PyPegen.star_etc(p, NULL, NULL, a)'}]},kwds:
+{choices:[{items:[{type:'rule',name:'invalid_kwds'}
+]},{items:[{type:'string',value:'**'},{type:'rule',name:'param_no_default',alias:'a'}
+],action:'a'}]},param_no_default:
+{choices:[{items:[{type:'rule',name:'param',alias:'a'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
+],action:'$B._PyPegen.add_type_comment_to_arg(p, a, tc)'},{items:[{type:'rule',name:'param',alias:'a'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
+],action:'$B._PyPegen.add_type_comment_to_arg(p, a, tc)'}]},param_no_default_star_annotation:
+{choices:[{items:[{type:'rule',name:'param_star_annotation',alias:'a'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
+],action:'$B._PyPegen.add_type_comment_to_arg(p, a, tc)'},{items:[{type:'rule',name:'param_star_annotation',alias:'a'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
+],action:'$B._PyPegen.add_type_comment_to_arg(p, a, tc)'}]},param_with_default:
+{choices:[{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
+],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'},{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
+],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'}]},param_maybe_default:
+{choices:[{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
+],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'},{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
+],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'}]},param:
+{items:[{type:'NAME',alias:'a'},{type:'rule',name:'annotation',repeat:'?',alias:'b'}
+],action:'$B._PyAST.arg(a.id, b, NULL, EXTRA)'},param_star_annotation:
+{items:[{type:'NAME',alias:'a'},{type:'rule',name:'star_annotation',alias:'b'}
+],action:'$B._PyAST.arg(a.id, b, NULL, EXTRA)'},annotation:
+{items:[{type:'string',value:':'},{type:'rule',name:'expression',alias:'a'}
+],action:'a'},star_annotation:
+{items:[{type:'string',value:':'},{type:'rule',name:'star_expression',alias:'a'}
+],action:'a'},default:
+{choices:[{items:[{type:'string',value:'='},{type:'rule',name:'expression',alias:'a'}
+],action:'a'},{items:[{type:'rule',name:'invalid_default'}
 ]}]},if_stmt:
 {choices:[{items:[{type:'rule',name:'invalid_if_stmt'}
 ]},{items:[{type:'string',value:'if'},{type:'rule',name:'named_expression',alias:'a'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'elif_stmt',alias:'c'}
@@ -17023,12 +17204,20 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'$B._PyAST.Try(b, NULL, NULL, f, EXTRA)'},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'except_block',repeat:'+',alias:'ex'},{items:[{type:'rule',name:'else_block'}
 ],repeat:'?',alias:'el'},{items:[{type:'rule',name:'finally_block'}
 ],repeat:'?',alias:'f'}
-],action:'$B._PyAST.Try(b, ex, el, f, EXTRA)'}]},except_block:
+],action:'$B._PyAST.Try(b, ex, el, f, EXTRA)'},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'},{type:'rule',name:'except_star_block',repeat:'+',alias:'ex'},{items:[{type:'rule',name:'else_block'}
+],repeat:'?',alias:'el'},{items:[{type:'rule',name:'finally_block'}
+],repeat:'?',alias:'f'}
+],action:'$B._PyAST.TryStar(b, ex, el, f, EXTRA)'}]},except_block:
 {choices:[{items:[{type:'rule',name:'invalid_except_stmt_indent'}
 ]},{items:[{type:'string',value:'except'},{type:'rule',name:'expression',alias:'e'},{items:[{type:'string',value:'as'},{type:'NAME',alias:'z'}
 ],repeat:'?',alias:'t',action:'z'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
 ],action:'$B._PyAST.ExceptHandler(e, (t) ? t.id : NULL, b, EXTRA)'},{items:[{type:'string',value:'except'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
 ],action:'$B._PyAST.ExceptHandler(NULL, NULL, b, EXTRA)'},{items:[{type:'rule',name:'invalid_except_stmt'}
+]}]},except_star_block:
+{choices:[{items:[{type:'rule',name:'invalid_except_star_stmt_indent'}
+]},{items:[{type:'string',value:'except'},{type:'string',value:'*'},{type:'rule',name:'expression',alias:'e'},{items:[{type:'string',value:'as'},{type:'NAME',alias:'z'}
+],repeat:'?',alias:'t',action:'z'},{type:'string',value:':'},{type:'rule',name:'block',alias:'b'}
+],action:'$B._PyAST.ExceptHandler(e, (t) ? t.id : NULL, b, EXTRA)'},{items:[{type:'rule',name:'invalid_except_stmt'}
 ]}]},finally_block:
 {choices:[{items:[{type:'rule',name:'invalid_finally_stmt'}
 ]},{items:[{type:'string',value:'finally'},{type:'string',value:':'},{type:'rule',name:'block',alias:'a'}
@@ -17153,90 +17342,23 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 {items:[{type:'rule',name:'keyword_pattern',join:',',repeat:'+'}
 ]},keyword_pattern:
 {items:[{type:'NAME',alias:'arg'},{type:'string',value:'='},{type:'rule',name:'pattern',alias:'value'}
-],action:'$B._PyPegen.key_pattern_pair(p, arg, value)'},return_stmt:
-{items:[{type:'string',value:'return'},{items:[{type:'rule',name:'star_expressions'}
+],action:'$B._PyPegen.key_pattern_pair(p, arg, value)'},expressions:
+{choices:[{items:[{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'expression',alias:'c'}
+],repeat:'+',alias:'b',action:'c'},{items:[{type:'string',value:','}
+],repeat:'?'}
+],action:'$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), Load, EXTRA)'},{items:[{type:'rule',name:'expression',alias:'a'},{type:'string',value:','}
+],action:'$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, a)), Load, EXTRA)'},{items:[{type:'rule',name:'expression'}
+]}]},expression:
+{choices:[{items:[{type:'rule',name:'invalid_expression'}
+]},{items:[{type:'rule',name:'invalid_legacy_expression'}
+]},{items:[{type:'rule',name:'disjunction',alias:'a'},{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'b'},{type:'string',value:'else'},{type:'rule',name:'expression',alias:'c'}
+],action:'$B._PyAST.IfExp(b, a, c, EXTRA)'},{items:[{type:'rule',name:'disjunction'}
+]},{items:[{type:'rule',name:'lambdef'}
+]}]},yield_expr:
+{choices:[{items:[{type:'string',value:'yield'},{type:'string',value:'from'},{type:'rule',name:'expression',alias:'a'}
+],action:'$B._PyAST.YieldFrom(a, EXTRA)'},{items:[{type:'string',value:'yield'},{items:[{type:'rule',name:'star_expressions'}
 ],repeat:'?',alias:'a'}
-],action:'$B._PyAST.Return(a, EXTRA)'},raise_stmt:
-{choices:[{items:[{type:'string',value:'raise'},{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:'from'},{type:'rule',name:'expression',alias:'z'}
-],repeat:'?',alias:'b',action:'z'}
-],action:'$B._PyAST.Raise(a, b, EXTRA)'},{items:[{type:'string',value:'raise'}
-],action:'$B._PyAST.Raise(NULL, NULL, EXTRA)'}]},function_def:
-{choices:[{items:[{type:'rule',name:'decorators',alias:'d'},{type:'rule',name:'function_def_raw',alias:'f'}
-],action:'$B._PyPegen.function_def_decorators(p, d, f)'},{items:[{type:'rule',name:'function_def_raw'}
-]}]},function_def_raw:
-{choices:[{items:[{type:'rule',name:'invalid_def_raw'}
-]},{items:[{type:'string',value:'def'},{type:'NAME',alias:'n'},{type:'string',value:'('},{items:[{type:'rule',name:'params'}
-],repeat:'?',alias:'params'},{type:'string',value:')'},{items:[{type:'string',value:'->'},{type:'rule',name:'expression',alias:'z'}
-],repeat:'?',alias:'a',action:'z'},{type:'string',value:':'},{items:[{type:'rule',name:'func_type_comment'}
-],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
-],action:'$B._PyAST.FunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA)'},{items:[{type:'ASYNC'},{type:'string',value:'def'},{type:'NAME',alias:'n'},{type:'string',value:'('},{items:[{type:'rule',name:'params'}
-],repeat:'?',alias:'params'},{type:'string',value:')'},{items:[{type:'string',value:'->'},{type:'rule',name:'expression',alias:'z'}
-],repeat:'?',alias:'a',action:'z'},{type:'string',value:':'},{items:[{type:'rule',name:'func_type_comment'}
-],repeat:'?',alias:'tc'},{type:'rule',name:'block',alias:'b'}
-],action:'CHECK_VERSION( $B.ast.stmt, 5, "Async functions are", $B._PyAST.AsyncFunctionDef(n.id, (params) ? params : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, NULL, a, NEW_TYPE_COMMENT(p, tc), EXTRA) )'}]},func_type_comment:
-{choices:[{items:[{type:'NEWLINE'},{type:'TYPE_COMMENT',alias:'t'},{items:[{type:'NEWLINE'},{type:'INDENT'}
-],lookahead:'positive'}
-],action:'t'},{items:[{type:'rule',name:'invalid_double_type_comments'}
-]},{items:[{type:'TYPE_COMMENT'}
-]}]},params:
-{choices:[{items:[{type:'rule',name:'invalid_parameters'}
-]},{items:[{type:'rule',name:'parameters'}
-]}]},parameters:
-{choices:[{items:[{type:'rule',name:'slash_no_default',alias:'a'},{type:'rule',name:'param_no_default',repeat:'*',alias:'b'},{type:'rule',name:'param_with_default',repeat:'*',alias:'c'},{items:[{type:'rule',name:'star_etc'}
-],repeat:'?',alias:'d'}
-],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, a, NULL, b, c, d))'},{items:[{type:'rule',name:'slash_with_default',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
-],repeat:'?',alias:'c'}
-],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, NULL, a, NULL, b, c))'},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'star_etc'}
-],repeat:'?',alias:'c'}
-],action:'$B._PyPegen.make_arguments(p, NULL, NULL, a, b, c)'},{items:[{type:'rule',name:'param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'star_etc'}
-],repeat:'?',alias:'b'}
-],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, a, b)'},{items:[{type:'rule',name:'star_etc',alias:'a'}
-],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, NULL, a)'}]},slash_no_default:
-{choices:[{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:','}
-],action:'a'},{items:[{type:'rule',name:'param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:')',lookahead:'positive'}
-],action:'a'}]},slash_with_default:
-{choices:[{items:[{type:'rule',name:'param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:','}
-],action:'$B._PyPegen.slash_with_default(p, a, b)'},{items:[{type:'rule',name:'param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:')',lookahead:'positive'}
-],action:'$B._PyPegen.slash_with_default(p, a, b)'}]},star_etc:
-{choices:[{items:[{type:'string',value:'*'},{type:'rule',name:'param_no_default',alias:'a'},{type:'rule',name:'param_maybe_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'kwds'}
-],repeat:'?',alias:'c'}
-],action:'$B._PyPegen.star_etc(p, a, b, c)'},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'rule',name:'param_maybe_default',repeat:'+',alias:'b'},{items:[{type:'rule',name:'kwds'}
-],repeat:'?',alias:'c'}
-],action:'$B._PyPegen.star_etc(p, NULL, b, c)'},{items:[{type:'rule',name:'kwds',alias:'a'}
-],action:'$B._PyPegen.star_etc(p, NULL, NULL, a)'},{items:[{type:'rule',name:'invalid_star_etc'}
-]}]},kwds:
-{items:[{type:'string',value:'**'},{type:'rule',name:'param_no_default',alias:'a'}
-],action:'a'},param_no_default:
-{choices:[{items:[{type:'rule',name:'param',alias:'a'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
-],action:'$B._PyPegen.add_type_comment_to_arg(p, a, tc)'},{items:[{type:'rule',name:'param',alias:'a'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
-],action:'$B._PyPegen.add_type_comment_to_arg(p, a, tc)'}]},param_with_default:
-{choices:[{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
-],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'},{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
-],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'}]},param_maybe_default:
-{choices:[{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:','},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'}
-],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'},{items:[{type:'rule',name:'param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'TYPE_COMMENT',repeat:'?',alias:'tc'},{type:'string',value:')',lookahead:'positive'}
-],action:'$B._PyPegen.name_default_pair(p, a, c, tc)'}]},param:
-{items:[{type:'NAME',alias:'a'},{type:'rule',name:'annotation',repeat:'?',alias:'b'}
-],action:'$B._PyAST.arg(a.id, b, NULL, EXTRA)'},annotation:
-{items:[{type:'string',value:':'},{type:'rule',name:'expression',alias:'a'}
-],action:'a'},default:
-{items:[{type:'string',value:'='},{type:'rule',name:'expression',alias:'a'}
-],action:'a'},decorators:
-{items:[{items:[{type:'string',value:'@'},{type:'rule',name:'named_expression',alias:'f'},{type:'NEWLINE'}
-],repeat:'+',alias:'a',action:'f'}
-],action:'a'},class_def:
-{choices:[{items:[{type:'rule',name:'decorators',alias:'a'},{type:'rule',name:'class_def_raw',alias:'b'}
-],action:'$B._PyPegen.class_def_decorators(p, a, b)'},{items:[{type:'rule',name:'class_def_raw'}
-]}]},class_def_raw:
-{choices:[{items:[{type:'rule',name:'invalid_class_def_raw'}
-]},{items:[{type:'string',value:'class'},{type:'NAME',alias:'a'},{items:[{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
-],repeat:'?',alias:'z'},{type:'string',value:')'}
-],repeat:'?',alias:'b',action:'z'},{type:'string',value:':'},{type:'rule',name:'block',alias:'c'}
-],action:'$B._PyAST.ClassDef(a.id, (b) ? b.args : NULL, (b) ? b.keywords : NULL, c, NULL, EXTRA)'}]},block:
-{choices:[{items:[{type:'NEWLINE'},{type:'INDENT'},{type:'rule',name:'statements',alias:'a'},{type:'DEDENT'}
-],action:'a'},{items:[{type:'rule',name:'simple_stmts'}
-]},{items:[{type:'rule',name:'invalid_block'}
-]}]},star_expressions:
+],action:'$B._PyAST.Yield(a, EXTRA)'}]},star_expressions:
 {choices:[{items:[{type:'rule',name:'star_expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'star_expression',alias:'c'}
 ],repeat:'+',alias:'b',action:'c'},{items:[{type:'string',value:','}
 ],repeat:'?'}
@@ -17257,64 +17379,7 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 {choices:[{items:[{type:'rule',name:'assignment_expression'}
 ]},{items:[{type:'rule',name:'invalid_named_expression'}
 ]},{items:[{type:'rule',name:'expression'},{type:'string',value:':=',lookahead:'negative'}
-]}]},annotated_rhs:
-{choices:[{items:[{type:'rule',name:'yield_expr'}
-]},{items:[{type:'rule',name:'star_expressions'}
-]}]},expressions:
-{choices:[{items:[{type:'rule',name:'expression',alias:'a'},{items:[{type:'string',value:','},{type:'rule',name:'expression',alias:'c'}
-],repeat:'+',alias:'b',action:'c'},{items:[{type:'string',value:','}
-],repeat:'?'}
-],action:'$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), Load, EXTRA)'},{items:[{type:'rule',name:'expression',alias:'a'},{type:'string',value:','}
-],action:'$B._PyAST.Tuple(CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, a)), Load, EXTRA)'},{items:[{type:'rule',name:'expression'}
-]}]},expression:
-{choices:[{items:[{type:'rule',name:'invalid_expression'}
-]},{items:[{type:'rule',name:'invalid_legacy_expression'}
-]},{items:[{type:'rule',name:'disjunction',alias:'a'},{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'b'},{type:'string',value:'else'},{type:'rule',name:'expression',alias:'c'}
-],action:'$B._PyAST.IfExp(b, a, c, EXTRA)'},{items:[{type:'rule',name:'disjunction'}
-]},{items:[{type:'rule',name:'lambdef'}
-]}]},lambdef:
-{items:[{type:'string',value:'lambda'},{items:[{type:'rule',name:'lambda_params'}
-],repeat:'?',alias:'a'},{type:'string',value:':'},{type:'rule',name:'expression',alias:'b'}
-],action:'$B._PyAST.Lambda((a) ? a : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, EXTRA)'},lambda_params:
-{choices:[{items:[{type:'rule',name:'invalid_lambda_parameters'}
-]},{items:[{type:'rule',name:'lambda_parameters'}
-]}]},lambda_parameters:
-{choices:[{items:[{type:'rule',name:'lambda_slash_no_default',alias:'a'},{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'b'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'c'},{items:[{type:'rule',name:'lambda_star_etc'}
-],repeat:'?',alias:'d'}
-],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, a, NULL, b, c, d))'},{items:[{type:'rule',name:'lambda_slash_with_default',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
-],repeat:'?',alias:'c'}
-],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, NULL, a, NULL, b, c))'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
-],repeat:'?',alias:'c'}
-],action:'$B._PyPegen.make_arguments(p, NULL, NULL, a, b, c)'},{items:[{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'lambda_star_etc'}
-],repeat:'?',alias:'b'}
-],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, a, b)'},{items:[{type:'rule',name:'lambda_star_etc',alias:'a'}
-],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, NULL, a)'}]},lambda_slash_no_default:
-{choices:[{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:','}
-],action:'a'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:':',lookahead:'positive'}
-],action:'a'}]},lambda_slash_with_default:
-{choices:[{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:','}
-],action:'$B._PyPegen.slash_with_default(p, a, b)'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:':',lookahead:'positive'}
-],action:'$B._PyPegen.slash_with_default(p, a, b)'}]},lambda_star_etc:
-{choices:[{items:[{type:'string',value:'*'},{type:'rule',name:'lambda_param_no_default',alias:'a'},{type:'rule',name:'lambda_param_maybe_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_kwds'}
-],repeat:'?',alias:'c'}
-],action:'$B._PyPegen.star_etc(p, a, b, c)'},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'rule',name:'lambda_param_maybe_default',repeat:'+',alias:'b'},{items:[{type:'rule',name:'lambda_kwds'}
-],repeat:'?',alias:'c'}
-],action:'$B._PyPegen.star_etc(p, NULL, b, c)'},{items:[{type:'rule',name:'lambda_kwds',alias:'a'}
-],action:'$B._PyPegen.star_etc(p, NULL, NULL, a)'},{items:[{type:'rule',name:'invalid_lambda_star_etc'}
-]}]},lambda_kwds:
-{items:[{type:'string',value:'**'},{type:'rule',name:'lambda_param_no_default',alias:'a'}
-],action:'a'},lambda_param_no_default:
-{choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'string',value:','}
-],action:'a'},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'string',value:':',lookahead:'positive'}
-],action:'a'}]},lambda_param_with_default:
-{choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:','}
-],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:':',lookahead:'positive'}
-],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'}]},lambda_param_maybe_default:
-{choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:','}
-],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:':',lookahead:'positive'}
-],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'}]},lambda_param:
-{items:[{type:'NAME',alias:'a'}
-],action:'$B._PyAST.arg(a.id, NULL, NULL, EXTRA)'},disjunction:
+]}]},disjunction:
 {choices:[{items:[{type:'rule',name:'conjunction',alias:'a'},{items:[{type:'string',value:'or'},{type:'rule',name:'conjunction',alias:'c'}
 ],repeat:'+',alias:'b',action:'c'}
 ],action:'$B._PyAST.BoolOp( Or, CHECK(asdl_expr_seq, $B._PyPegen.seq_insert_in_front(p, a, b)), EXTRA)'},{items:[{type:'rule',name:'conjunction'}
@@ -17404,7 +17469,9 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'$B._PyAST.Subscript(a, b, Load, EXTRA)'},{items:[{type:'rule',name:'atom'}
 ]}]},slices:
 {choices:[{items:[{type:'rule',name:'slice',alias:'a'},{type:'string',value:',',lookahead:'negative'}
-],action:'a'},{items:[{type:'rule',name:'slice',join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
+],action:'a'},{items:[{choices:[{items:[{type:'rule',name:'slice'}
+]},{items:[{type:'rule',name:'starred_expression'}
+]}],join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
 ],repeat:'?'}
 ],action:'$B._PyAST.Tuple(a, Load, EXTRA)'}]},slice:
 {choices:[{items:[{items:[{type:'rule',name:'expression'}
@@ -17433,40 +17500,69 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ]},{items:[{type:'rule',name:'setcomp'}
 ]}]}
 ]},{items:[{type:'string',value:'...'}
-],action:'$B._PyAST.Constant(Py_Ellipsis, NULL, EXTRA)'}]},strings:
-{items:[{type:'STRING',repeat:'+',alias:'a'}
-],action:'$B._PyPegen.concatenate_strings(p, a)'},list:
-{items:[{type:'string',value:'['},{items:[{type:'rule',name:'star_named_expressions'}
-],repeat:'?',alias:'a'},{type:'string',value:']'}
-],action:'$B._PyAST.List(a, Load, EXTRA)'},listcomp:
-{choices:[{items:[{type:'string',value:'['},{type:'rule',name:'named_expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:']'}
-],action:'$B._PyAST.ListComp(a, b, EXTRA)'},{items:[{type:'rule',name:'invalid_comprehension'}
-]}]},tuple:
-{items:[{type:'string',value:'('},{items:[{type:'rule',name:'star_named_expression',alias:'y'},{type:'string',value:','},{items:[{type:'rule',name:'star_named_expressions'}
-],repeat:'?',alias:'z'}
-],repeat:'?',alias:'a',action:'$B._PyPegen.seq_insert_in_front(p, y, z)'},{type:'string',value:')'}
-],action:'$B._PyAST.Tuple(a, Load, EXTRA)'},group:
+],action:'$B._PyAST.Constant(Py_Ellipsis, NULL, EXTRA)'}]},group:
 {choices:[{items:[{type:'string',value:'('},{choices:[{items:[{type:'rule',name:'yield_expr'}
 ]},{items:[{type:'rule',name:'named_expression'}
 ]}],alias:'a'},{type:'string',value:')'}
 ],action:'a'},{items:[{type:'rule',name:'invalid_group'}
-]}]},genexp:
-{choices:[{items:[{type:'string',value:'('},{choices:[{items:[{type:'rule',name:'assignment_expression'}
-]},{items:[{type:'rule',name:'expression'},{type:'string',value:':=',lookahead:'negative'}
-]}],alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:')'}
-],action:'$B._PyAST.GeneratorExp(a, b, EXTRA)'},{items:[{type:'rule',name:'invalid_comprehension'}
-]}]},set:
+]}]},lambdef:
+{items:[{type:'string',value:'lambda'},{items:[{type:'rule',name:'lambda_params'}
+],repeat:'?',alias:'a'},{type:'string',value:':'},{type:'rule',name:'expression',alias:'b'}
+],action:'$B._PyAST.Lambda((a) ? a : CHECK($B.ast.arguments, $B._PyPegen.empty_arguments(p)), b, EXTRA)'},lambda_params:
+{choices:[{items:[{type:'rule',name:'invalid_lambda_parameters'}
+]},{items:[{type:'rule',name:'lambda_parameters'}
+]}]},lambda_parameters:
+{choices:[{items:[{type:'rule',name:'lambda_slash_no_default',alias:'a'},{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'b'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'c'},{items:[{type:'rule',name:'lambda_star_etc'}
+],repeat:'?',alias:'d'}
+],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, a, NULL, b, c, d))'},{items:[{type:'rule',name:'lambda_slash_with_default',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
+],repeat:'?',alias:'c'}
+],action:'CHECK_VERSION($B.ast.arguments, 8, "Positional-only parameters are", $B._PyPegen.make_arguments(p, NULL, a, NULL, b, c))'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_star_etc'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.make_arguments(p, NULL, NULL, a, b, c)'},{items:[{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'a'},{items:[{type:'rule',name:'lambda_star_etc'}
+],repeat:'?',alias:'b'}
+],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, a, b)'},{items:[{type:'rule',name:'lambda_star_etc',alias:'a'}
+],action:'$B._PyPegen.make_arguments(p, NULL, NULL, NULL, NULL, a)'}]},lambda_slash_no_default:
+{choices:[{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:','}
+],action:'a'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'+',alias:'a'},{type:'string',value:'/'},{type:'string',value:':',lookahead:'positive'}
+],action:'a'}]},lambda_slash_with_default:
+{choices:[{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:','}
+],action:'$B._PyPegen.slash_with_default(p, a, b)'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*',alias:'a'},{type:'rule',name:'lambda_param_with_default',repeat:'+',alias:'b'},{type:'string',value:'/'},{type:'string',value:':',lookahead:'positive'}
+],action:'$B._PyPegen.slash_with_default(p, a, b)'}]},lambda_star_etc:
+{choices:[{items:[{type:'rule',name:'invalid_lambda_star_etc'}
+]},{items:[{type:'string',value:'*'},{type:'rule',name:'lambda_param_no_default',alias:'a'},{type:'rule',name:'lambda_param_maybe_default',repeat:'*',alias:'b'},{items:[{type:'rule',name:'lambda_kwds'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.star_etc(p, a, b, c)'},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'rule',name:'lambda_param_maybe_default',repeat:'+',alias:'b'},{items:[{type:'rule',name:'lambda_kwds'}
+],repeat:'?',alias:'c'}
+],action:'$B._PyPegen.star_etc(p, NULL, b, c)'},{items:[{type:'rule',name:'lambda_kwds',alias:'a'}
+],action:'$B._PyPegen.star_etc(p, NULL, NULL, a)'}]},lambda_kwds:
+{choices:[{items:[{type:'rule',name:'invalid_lambda_kwds'}
+]},{items:[{type:'string',value:'**'},{type:'rule',name:'lambda_param_no_default',alias:'a'}
+],action:'a'}]},lambda_param_no_default:
+{choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'string',value:','}
+],action:'a'},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'string',value:':',lookahead:'positive'}
+],action:'a'}]},lambda_param_with_default:
+{choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:','}
+],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',alias:'c'},{type:'string',value:':',lookahead:'positive'}
+],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'}]},lambda_param_maybe_default:
+{choices:[{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:','}
+],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'},{items:[{type:'rule',name:'lambda_param',alias:'a'},{type:'rule',name:'default',repeat:'?',alias:'c'},{type:'string',value:':',lookahead:'positive'}
+],action:'$B._PyPegen.name_default_pair(p, a, c, NULL)'}]},lambda_param:
+{items:[{type:'NAME',alias:'a'}
+],action:'$B._PyAST.arg(a.id, NULL, NULL, EXTRA)'},strings:
+{items:[{type:'STRING',repeat:'+',alias:'a'}
+],action:'$B._PyPegen.concatenate_strings(p, a)'},list:
+{items:[{type:'string',value:'['},{items:[{type:'rule',name:'star_named_expressions'}
+],repeat:'?',alias:'a'},{type:'string',value:']'}
+],action:'$B._PyAST.List(a, Load, EXTRA)'},tuple:
+{items:[{type:'string',value:'('},{items:[{type:'rule',name:'star_named_expression',alias:'y'},{type:'string',value:','},{items:[{type:'rule',name:'star_named_expressions'}
+],repeat:'?',alias:'z'}
+],repeat:'?',alias:'a',action:'$B._PyPegen.seq_insert_in_front(p, y, z)'},{type:'string',value:')'}
+],action:'$B._PyAST.Tuple(a, Load, EXTRA)'},set:
 {items:[{type:'string',value:'{'},{type:'rule',name:'star_named_expressions',alias:'a'},{type:'string',value:'}'}
-],action:'$B._PyAST.Set(a, EXTRA)'},setcomp:
-{choices:[{items:[{type:'string',value:'{'},{type:'rule',name:'named_expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:'}'}
-],action:'$B._PyAST.SetComp(a, b, EXTRA)'},{items:[{type:'rule',name:'invalid_comprehension'}
-]}]},dict:
+],action:'$B._PyAST.Set(a, EXTRA)'},dict:
 {choices:[{items:[{type:'string',value:'{'},{items:[{type:'rule',name:'double_starred_kvpairs'}
 ],repeat:'?',alias:'a'},{type:'string',value:'}'}
 ],action:'$B._PyAST.Dict( CHECK(asdl_expr_seq, $B._PyPegen.get_keys(p, a)), CHECK(asdl_expr_seq, $B._PyPegen.get_values(p, a)), EXTRA)'},{items:[{type:'string',value:'{'},{type:'rule',name:'invalid_double_starred_kvpairs'},{type:'string',value:'}'}
-]}]},dictcomp:
-{choices:[{items:[{type:'string',value:'{'},{type:'rule',name:'kvpair',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:'}'}
-],action:'$B._PyAST.DictComp(a.key, a.value, b, EXTRA)'},{items:[{type:'rule',name:'invalid_dict_comprehension'}
 ]}]},double_starred_kvpairs:
 {items:[{type:'rule',name:'double_starred_kvpair',join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
 ],repeat:'?'}
@@ -17483,11 +17579,21 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'CHECK_VERSION($B.ast.comprehension, 6, "Async comprehensions are", $B._PyAST.comprehension(a, b, c, 1, p.arena))'},{items:[{type:'string',value:'for'},{type:'rule',name:'star_targets',alias:'a'},{type:'string',value:'in'},{type:'COMMIT_CHOICE'},{type:'rule',name:'disjunction',alias:'b'},{items:[{type:'string',value:'if'},{type:'rule',name:'disjunction',alias:'z'}
 ],repeat:'*',alias:'c',action:'z'}
 ],action:'$B._PyAST.comprehension(a, b, c, 0, p.arena)'},{items:[{type:'rule',name:'invalid_for_target'}
-]}]},yield_expr:
-{choices:[{items:[{type:'string',value:'yield'},{type:'string',value:'from'},{type:'rule',name:'expression',alias:'a'}
-],action:'$B._PyAST.YieldFrom(a, EXTRA)'},{items:[{type:'string',value:'yield'},{items:[{type:'rule',name:'star_expressions'}
-],repeat:'?',alias:'a'}
-],action:'$B._PyAST.Yield(a, EXTRA)'}]},arguments:
+]}]},listcomp:
+{choices:[{items:[{type:'string',value:'['},{type:'rule',name:'named_expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:']'}
+],action:'$B._PyAST.ListComp(a, b, EXTRA)'},{items:[{type:'rule',name:'invalid_comprehension'}
+]}]},setcomp:
+{choices:[{items:[{type:'string',value:'{'},{type:'rule',name:'named_expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:'}'}
+],action:'$B._PyAST.SetComp(a, b, EXTRA)'},{items:[{type:'rule',name:'invalid_comprehension'}
+]}]},genexp:
+{choices:[{items:[{type:'string',value:'('},{choices:[{items:[{type:'rule',name:'assignment_expression'}
+]},{items:[{type:'rule',name:'expression'},{type:'string',value:':=',lookahead:'negative'}
+]}],alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:')'}
+],action:'$B._PyAST.GeneratorExp(a, b, EXTRA)'},{items:[{type:'rule',name:'invalid_comprehension'}
+]}]},dictcomp:
+{choices:[{items:[{type:'string',value:'{'},{type:'rule',name:'kvpair',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:'}'}
+],action:'$B._PyAST.DictComp(a.key, a.value, b, EXTRA)'},{items:[{type:'rule',name:'invalid_dict_comprehension'}
+]}]},arguments:
 {choices:[{items:[{type:'rule',name:'args',alias:'a'},{items:[{type:'string',value:','}
 ],repeat:'?'},{type:'string',value:')',lookahead:'positive'}
 ],action:'a'},{items:[{type:'rule',name:'invalid_arguments'}
@@ -17548,7 +17654,18 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'a'}]},single_subscript_attribute_target:
 {choices:[{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'negative'}
 ],action:'$B._PyAST.Attribute(a, b.id, Store, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'},{type:'rule',name:'t_lookahead',lookahead:'negative'}
-],action:'$B._PyAST.Subscript(a, b, Store, EXTRA)'}]},del_targets:
+],action:'$B._PyAST.Subscript(a, b, Store, EXTRA)'}]},t_primary:
+{choices:[{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
+],action:'$B._PyAST.Attribute(a, b.id, Load, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
+],action:'$B._PyAST.Subscript(a, b, Load, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'rule',name:'genexp',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
+],action:'$B._PyAST.Call(a, CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, b)), NULL, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
+],repeat:'?',alias:'b'},{type:'string',value:')'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
+],action:'$B._PyAST.Call(a, (b) ? b.args : NULL, (b) ? b.keywords : NULL, EXTRA)'},{items:[{type:'rule',name:'atom',alias:'a'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
+],action:'a'}]},t_lookahead:
+{choices:[{items:[{type:'string',value:'('}
+]},{items:[{type:'string',value:'['}
+]},{items:[{type:'string',value:'.'}
+]}]},del_targets:
 {items:[{type:'rule',name:'del_target',join:',',alias:'a',repeat:'+'},{items:[{type:'string',value:','}
 ],repeat:'?'}
 ],action:'a'},del_target:
@@ -17562,17 +17679,19 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],repeat:'?',alias:'a'},{type:'string',value:')'}
 ],action:'$B._PyAST.Tuple(a, Del, EXTRA)'},{items:[{type:'string',value:'['},{items:[{type:'rule',name:'del_targets'}
 ],repeat:'?',alias:'a'},{type:'string',value:']'}
-],action:'$B._PyAST.List(a, Del, EXTRA)'}]},t_primary:
-{choices:[{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'.'},{type:'NAME',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:'$B._PyAST.Attribute(a, b.id, Load, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'['},{type:'rule',name:'slices',alias:'b'},{type:'string',value:']'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:'$B._PyAST.Subscript(a, b, Load, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'rule',name:'genexp',alias:'b'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:'$B._PyAST.Call(a, CHECK(asdl_expr_seq, $B._PyPegen.singleton_seq(p, b)), NULL, EXTRA)'},{items:[{type:'rule',name:'t_primary',alias:'a'},{type:'string',value:'('},{items:[{type:'rule',name:'arguments'}
-],repeat:'?',alias:'b'},{type:'string',value:')'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:'$B._PyAST.Call(a, (b) ? b.args : NULL, (b) ? b.keywords : NULL, EXTRA)'},{items:[{type:'rule',name:'atom',alias:'a'},{type:'rule',name:'t_lookahead',lookahead:'positive'}
-],action:'a'}]},t_lookahead:
-{choices:[{items:[{type:'string',value:'('}
-]},{items:[{type:'string',value:'['}
-]},{items:[{type:'string',value:'.'}
+],action:'$B._PyAST.List(a, Del, EXTRA)'}]},type_expressions:
+{choices:[{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'string',value:'*'},{type:'rule',name:'expression',alias:'b'},{type:'string',value:','},{type:'string',value:'**'},{type:'rule',name:'expression',alias:'c'}
+],action:'$B._PyPegen.seq_append_to_end( p, CHECK(asdl_seq, $B._PyPegen.seq_append_to_end(p, a, b)), c)'},{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'string',value:'*'},{type:'rule',name:'expression',alias:'b'}
+],action:'$B._PyPegen.seq_append_to_end(p, a, b)'},{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'},{type:'string',value:','},{type:'string',value:'**'},{type:'rule',name:'expression',alias:'b'}
+],action:'$B._PyPegen.seq_append_to_end(p, a, b)'},{items:[{type:'string',value:'*'},{type:'rule',name:'expression',alias:'a'},{type:'string',value:','},{type:'string',value:'**'},{type:'rule',name:'expression',alias:'b'}
+],action:'$B._PyPegen.seq_append_to_end( p, CHECK(asdl_seq, $B._PyPegen.singleton_seq(p, a)), b)'},{items:[{type:'string',value:'*'},{type:'rule',name:'expression',alias:'a'}
+],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'string',value:'**'},{type:'rule',name:'expression',alias:'a'}
+],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'rule',name:'expression',join:',',alias:'a',repeat:'+'}
+],action:'a'}]},func_type_comment:
+{choices:[{items:[{type:'NEWLINE'},{type:'TYPE_COMMENT',alias:'t'},{items:[{type:'NEWLINE'},{type:'INDENT'}
+],lookahead:'positive'}
+],action:'t'},{items:[{type:'rule',name:'invalid_double_type_comments'}
+]},{items:[{type:'TYPE_COMMENT'}
 ]}]},invalid_arguments:
 {choices:[{items:[{type:'rule',name:'args',alias:'a'},{type:'string',value:','},{type:'string',value:'*'}
 ],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "iterable argument unpacking follows keyword argument unpacking")'},{items:[{type:'rule',name:'expression',alias:'a'},{type:'rule',name:'for_if_clauses',alias:'b'},{type:'string',value:','},{choices:[{items:[{type:'rule',name:'args'}
@@ -17649,29 +17768,81 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "did you forget parentheses around the comprehension target?")'}]},invalid_dict_comprehension:
 {items:[{type:'string',value:'{'},{type:'string',value:'**',alias:'a'},{type:'rule',name:'bitwise_or'},{type:'rule',name:'for_if_clauses'},{type:'string',value:'}'}
 ],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "dict unpacking cannot be used in dict comprehension")'},invalid_parameters:
-{items:[{type:'rule',name:'param_no_default',repeat:'*'},{type:'rule',name:'invalid_parameters_helper'},{type:'rule',name:'param_no_default',alias:'a'}
-],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'},invalid_parameters_helper:
-{choices:[{items:[{type:'rule',name:'slash_with_default',alias:'a'}
-],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'rule',name:'param_with_default',repeat:'+'}
-]}]},invalid_lambda_parameters:
-{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*'},{type:'rule',name:'invalid_lambda_parameters_helper'},{type:'rule',name:'lambda_param_no_default',alias:'a'}
-],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'},invalid_lambda_parameters_helper:
-{choices:[{items:[{type:'rule',name:'lambda_slash_with_default',alias:'a'}
-],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'rule',name:'lambda_param_with_default',repeat:'+'}
-]}]},invalid_star_etc:
+{choices:[{items:[{type:'rule',name:'param_no_default',repeat:'*'},{type:'rule',name:'invalid_parameters_helper'},{type:'rule',name:'param_no_default',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'},{items:[{type:'rule',name:'param_no_default',repeat:'*'},{type:'string',value:'(',alias:'a'},{type:'rule',name:'param_no_default',repeat:'+'},{type:'string',value:',',repeat:'?'},{type:'string',value:')',alias:'b'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Function parameters cannot be parenthesized")'},{items:[{type:'string',value:'/',alias:'a'},{type:'string',value:','}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "at least one argument must precede /")'},{items:[{choices:[{items:[{type:'rule',name:'slash_no_default'}
+]},{items:[{type:'rule',name:'slash_with_default'}
+]}]},{type:'rule',name:'param_maybe_default',repeat:'*'},{type:'string',value:'/',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ may appear only once")'},{items:[{choices:[{items:[{type:'rule',name:'slash_no_default'}
+]},{items:[{type:'rule',name:'slash_with_default'}
+]}],repeat:'?'},{type:'rule',name:'param_maybe_default',repeat:'*'},{type:'string',value:'*'},{choices:[{items:[{type:'string',value:','}
+]},{items:[{type:'rule',name:'param_no_default'}
+]}]},{type:'rule',name:'param_maybe_default',repeat:'*'},{type:'string',value:'/',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ must be ahead of *")'},{items:[{type:'rule',name:'param_maybe_default',repeat:'+'},{type:'string',value:'/'},{type:'string',value:'*',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expected comma between / and *")'}]},invalid_default:
+{items:[{type:'string',value:'=',alias:'a'},{choices:[{items:[{type:'string',value:')'}
+]},{items:[{type:'string',value:','}
+]}],lookahead:'positive'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expected default value expression")'},invalid_star_etc:
 {choices:[{items:[{type:'string',value:'*',alias:'a'},{choices:[{items:[{type:'string',value:')'}
 ]},{items:[{type:'string',value:','},{choices:[{items:[{type:'string',value:')'}
 ]},{items:[{type:'string',value:'**'}
 ]}]}
 ]}]}
 ],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "named arguments must follow bare *")'},{items:[{type:'string',value:'*'},{type:'string',value:','},{type:'TYPE_COMMENT'}
-],action:'RAISE_SYNTAX_ERROR("bare * has associated type comment")'}]},invalid_lambda_star_etc:
-{items:[{type:'string',value:'*'},{choices:[{items:[{type:'string',value:':'}
+],action:'RAISE_SYNTAX_ERROR("bare * has associated type comment")'},{items:[{type:'string',value:'*'},{type:'rule',name:'param'},{type:'string',value:'=',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-positional argument cannot have default value")'},{items:[{type:'string',value:'*'},{choices:[{items:[{type:'rule',name:'param_no_default'}
+]},{items:[{type:'string',value:','}
+]}]},{type:'rule',name:'param_maybe_default',repeat:'*'},{type:'string',value:'*',alias:'a'},{choices:[{items:[{type:'rule',name:'param_no_default'}
+]},{items:[{type:'string',value:','}
+]}]}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "* argument may appear only once")'}]},invalid_kwds:
+{choices:[{items:[{type:'string',value:'**'},{type:'rule',name:'param'},{type:'string',value:'=',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-keyword argument cannot have default value")'},{items:[{type:'string',value:'**'},{type:'rule',name:'param'},{type:'string',value:','},{type:'rule',name:'param',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'},{items:[{type:'string',value:'**'},{type:'rule',name:'param'},{type:'string',value:','},{choices:[{items:[{type:'string',value:'*'}
+]},{items:[{type:'string',value:'**'}
+]},{items:[{type:'string',value:'/'}
+]}],alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'}]},invalid_parameters_helper:
+{choices:[{items:[{type:'rule',name:'slash_with_default',alias:'a'}
+],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'rule',name:'param_with_default',repeat:'+'}
+]}]},invalid_lambda_parameters:
+{choices:[{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*'},{type:'rule',name:'invalid_lambda_parameters_helper'},{type:'rule',name:'lambda_param_no_default',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "non-default argument follows default argument")'},{items:[{type:'rule',name:'lambda_param_no_default',repeat:'*'},{type:'string',value:'(',alias:'a'},{type:'rule',name:'lambda_param',join:',',repeat:'+'},{type:'string',value:',',repeat:'?'},{type:'string',value:')',alias:'b'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_RANGE(a, b, "Lambda expression parameters cannot be parenthesized")'},{items:[{type:'string',value:'/',alias:'a'},{type:'string',value:','}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "at least one argument must precede /")'},{items:[{choices:[{items:[{type:'rule',name:'lambda_slash_no_default'}
+]},{items:[{type:'rule',name:'lambda_slash_with_default'}
+]}]},{type:'rule',name:'lambda_param_maybe_default',repeat:'*'},{type:'string',value:'/',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ may appear only once")'},{items:[{choices:[{items:[{type:'rule',name:'lambda_slash_no_default'}
+]},{items:[{type:'rule',name:'lambda_slash_with_default'}
+]}],repeat:'?'},{type:'rule',name:'lambda_param_maybe_default',repeat:'*'},{type:'string',value:'*'},{choices:[{items:[{type:'string',value:','}
+]},{items:[{type:'rule',name:'lambda_param_no_default'}
+]}]},{type:'rule',name:'lambda_param_maybe_default',repeat:'*'},{type:'string',value:'/',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "/ must be ahead of *")'},{items:[{type:'rule',name:'lambda_param_maybe_default',repeat:'+'},{type:'string',value:'/'},{type:'string',value:'*',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "expected comma between / and *")'}]},invalid_lambda_parameters_helper:
+{choices:[{items:[{type:'rule',name:'lambda_slash_with_default',alias:'a'}
+],action:'$B._PyPegen.singleton_seq(p, a)'},{items:[{type:'rule',name:'lambda_param_with_default',repeat:'+'}
+]}]},invalid_lambda_star_etc:
+{choices:[{items:[{type:'string',value:'*'},{choices:[{items:[{type:'string',value:':'}
 ]},{items:[{type:'string',value:','},{choices:[{items:[{type:'string',value:':'}
 ]},{items:[{type:'string',value:'**'}
 ]}]}
 ]}]}
-],action:'RAISE_SYNTAX_ERROR("named arguments must follow bare *")'},invalid_double_type_comments:
+],action:'RAISE_SYNTAX_ERROR("named arguments must follow bare *")'},{items:[{type:'string',value:'*'},{type:'rule',name:'lambda_param'},{type:'string',value:'=',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-positional argument cannot have default value")'},{items:[{type:'string',value:'*'},{choices:[{items:[{type:'rule',name:'lambda_param_no_default'}
+]},{items:[{type:'string',value:','}
+]}]},{type:'rule',name:'lambda_param_maybe_default',repeat:'*'},{type:'string',value:'*',alias:'a'},{choices:[{items:[{type:'rule',name:'lambda_param_no_default'}
+]},{items:[{type:'string',value:','}
+]}]}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "* argument may appear only once")'}]},invalid_lambda_kwds:
+{choices:[{items:[{type:'string',value:'**'},{type:'rule',name:'lambda_param'},{type:'string',value:'=',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "var-keyword argument cannot have default value")'},{items:[{type:'string',value:'**'},{type:'rule',name:'lambda_param'},{type:'string',value:','},{type:'rule',name:'lambda_param',alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'},{items:[{type:'string',value:'**'},{type:'rule',name:'lambda_param'},{type:'string',value:','},{choices:[{items:[{type:'string',value:'*'}
+]},{items:[{type:'string',value:'**'}
+]},{items:[{type:'string',value:'/'}
+]}],alias:'a'}
+],action:'RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, "arguments cannot follow var-keyword argument")'}]},invalid_double_type_comments:
 {items:[{type:'TYPE_COMMENT'},{type:'NEWLINE'},{type:'TYPE_COMMENT'},{type:'NEWLINE'},{type:'INDENT'}
 ],action:'RAISE_SYNTAX_ERROR("Cannot have two type comments on def")'},invalid_with_item:
 {items:[{type:'rule',name:'expression'},{type:'string',value:'as'},{type:'rule',name:'expression',alias:'a'},{choices:[{items:[{type:'string',value:','}
@@ -17708,19 +17879,30 @@ $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_RANGE=RAISE_SYNTAX_ERROR_KNOWN_RANGE})(__BRYT
 ],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'try\' statement on line %d", a.lineno)'},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block'},{choices:[{items:[{type:'string',value:'except'}
 ]},{items:[{type:'string',value:'finally'}
 ]}],lookahead:'negative'}
-],action:'RAISE_SYNTAX_ERROR("expected \'except\' or \'finally\' block")'}]},invalid_except_stmt:
-{choices:[{items:[{type:'string',value:'except'},{type:'rule',name:'expression',alias:'a'},{type:'string',value:','},{type:'rule',name:'expressions'},{items:[{type:'string',value:'as'},{type:'NAME'}
+],action:'RAISE_SYNTAX_ERROR("expected \'except\' or \'finally\' block")'},{items:[{type:'string',value:'try'},{type:'string',value:':'},{type:'rule',name:'block',repeat:'*'},{choices:[{items:[{items:[{type:'rule',name:'except_block',repeat:'+'},{type:'rule',name:'except_star_block'}
+]}
+]},{items:[{items:[{type:'rule',name:'except_star_block',repeat:'+'},{type:'rule',name:'except_block'}
+]}
+]}]},{type:'rule',name:'block',repeat:'*'}
+],action:'RAISE_SYNTAX_ERROR("cannot have both \'except\' and \'except\' on the same \'try\'")'}]},invalid_except_stmt:
+{choices:[{items:[{type:'string',value:'except'},{type:'string',value:'*',repeat:'?'},{type:'rule',name:'expression',alias:'a'},{type:'string',value:','},{type:'rule',name:'expressions'},{items:[{type:'string',value:'as'},{type:'NAME'}
 ],repeat:'?'},{type:'string',value:':'}
-],action:'RAISE_SYNTAX_ERROR_STARTING_FROM(a, "multiple exception types must be parenthesized")'},{items:[{type:'string',value:'except',alias:'a'},{type:'rule',name:'expression'},{items:[{type:'string',value:'as'},{type:'NAME'}
+],action:'RAISE_SYNTAX_ERROR_STARTING_FROM(a, "multiple exception types must be parenthesized")'},{items:[{type:'string',value:'except',alias:'a'},{type:'string',value:'*',repeat:'?'},{type:'rule',name:'expression'},{items:[{type:'string',value:'as'},{type:'NAME'}
 ],repeat:'?'},{type:'NEWLINE'}
 ],action:'RAISE_SYNTAX_ERROR("expected \':\'")'},{items:[{type:'string',value:'except',alias:'a'},{type:'NEWLINE'}
-],action:'RAISE_SYNTAX_ERROR("expected \':\'")'}]},invalid_finally_stmt:
+],action:'RAISE_SYNTAX_ERROR("expected \':\'")'},{items:[{type:'string',value:'except',alias:'a'},{type:'string',value:'*'},{choices:[{items:[{type:'NEWLINE'}
+]},{items:[{type:'string',value:':'}
+]}]}
+],action:'RAISE_SYNTAX_ERROR("expected one or more exception types")'}]},invalid_finally_stmt:
 {items:[{type:'string',value:'finally',alias:'a'},{type:'string',value:':'},{type:'NEWLINE'},{type:'INDENT',lookahead:'negative'}
 ],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'finally\' statement on line %d", a.lineno)'},invalid_except_stmt_indent:
 {choices:[{items:[{type:'string',value:'except',alias:'a'},{type:'rule',name:'expression'},{items:[{type:'string',value:'as'},{type:'NAME'}
 ],repeat:'?'},{type:'string',value:':'},{type:'NEWLINE'},{type:'INDENT',lookahead:'negative'}
 ],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'},{items:[{type:'string',value:'except',alias:'a'},{type:'string',value:':'},{type:'NEWLINE'},{type:'INDENT',lookahead:'negative'}
-],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'}]},invalid_match_stmt:
+],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'}]},invalid_except_star_stmt_indent:
+{items:[{type:'string',value:'except',alias:'a'},{type:'string',value:'*'},{type:'rule',name:'expression'},{items:[{type:'string',value:'as'},{type:'NAME'}
+],repeat:'?'},{type:'string',value:':'},{type:'NEWLINE'},{type:'INDENT',lookahead:'negative'}
+],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'except\' statement on line %d", a.lineno)'},invalid_match_stmt:
 {choices:[{items:[{type:'string',value:'match'},{type:'rule',name:'subject_expr'},{type:'NEWLINE'}
 ],action:'CHECK_VERSION(void, 10, "Pattern matching is", RAISE_SYNTAX_ERROR("expected \':\'") )'},{items:[{type:'string',value:'match',alias:'a'},{type:'rule',name:'subject_expr',alias:'subject'},{type:'string',value:':'},{type:'NEWLINE'},{type:'INDENT',lookahead:'negative'}
 ],action:'RAISE_INDENTATION_ERROR("expected an indented block after \'match\' statement on line %d", a.lineno)'}]},invalid_case_block:

@@ -1,6 +1,6 @@
 // brython.js brython.info
-// version [3, 10, 0, 'final', 0]
-// implementation [3, 10, 6, 'final', 0]
+// version [3, 11, 0, 'final', 0]
+// implementation [3, 11, 0, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -126,11 +126,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,10,6,'final',0]
-__BRYTHON__.__MAGIC__="3.10.6"
-__BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-10 11:43:42.861034"
-__BRYTHON__.timestamp=1662803022861
+__BRYTHON__.implementation=[3,11,0,'dev',0]
+__BRYTHON__.__MAGIC__="3.11.0"
+__BRYTHON__.version_info=[3,11,0,'final',0]
+__BRYTHON__.compiled_date="2022-09-10 17:32:42.783049"
+__BRYTHON__.timestamp=1662823962783
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -458,7 +458,7 @@ yield Token('ENDMARKER','',[line_num,0],[line_num,0],'')}})(__BRYTHON__)
 ;
 
 (function($B){
-$B.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
+$B.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeIgnore:'lineno,tag',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','JoinedStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
 var boolean_ops={'and':'And','or':'Or'}
 var comparison_ops={'==':'Eq','!=':'NotEq','<':'Lt','<=':'LtE','>':'Gt','>=':'GtE','is':'Is','is_not':'IsNot','in':'In','not_in':'NotIn'}
@@ -1704,8 +1704,12 @@ this.position=$token.value
 this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
-this.expect='id'
-this.scope=$get_scope(this)}
+this.scope=$get_scope(this)
+var node=C.node,rank=node.parent.children.indexOf(node),ix=rank-1
+while(node.parent.children[ix].C.tree[0].type !='try'){ix--}
+this.try_node=node.parent.children[ix]
+this.is_first_child=rank==ix+1
+if(this.try_node.C.is_trystar){this.expect='*'}else{this.expect='id'}}
 $ExceptCtx.prototype.ast=function(){
 var ast_obj=new ast.ExceptHandler(
 this.tree.length==1 ? this.tree[0].ast():undefined,this.has_alias ? this.tree[0].alias :undefined,ast_body(this.parent)
@@ -1713,6 +1717,16 @@ this.tree.length==1 ? this.tree[0].ast():undefined,this.has_alias ? this.tree[0]
 set_position(ast_obj,this.position)
 return ast_obj}
 $ExceptCtx.prototype.transition=function(token,value){var C=this
+if(token=='op' && value=='*'){
+if(C.is_first_child){
+C.try_node.C.is_trystar=true
+C.expect='id'
+return C}else if(! C.expect=='*'){
+raise_syntax_error(C,"cannot have both 'except' and 'except*' "+
+"on the same 'try'")}else{C.expect='id'
+return C}}else if(C.expect=='*'){
+raise_syntax_error(C,"cannot have both 'except' and 'except*' "+
+"on the same 'try'")}
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3838,7 +3852,8 @@ if(type=='single_kw'){type=t.token}
 if(type=='except'){res.handlers.push(t.ast())}else if(type=='else'){res.orelse=ast_body(child.C)}else if(type=='finally'){res.finalbody=ast_body(child.C)}else{break}}
 if(res.handlers.length==0 &&
 res.finalbody.length==0){raise_syntax_error(this,"expected 'except' or 'finally' block")}
-var res=new ast.Try(res.body,res.handlers,res.orelse,res.finalbody)
+var klass=this.parent.is_trystar ? ast.TryStar :ast.Try
+var res=new klass(res.body,res.handlers,res.orelse,res.finalbody)
 set_position(res,this.position)
 return res}
 $TryCtx.prototype.transition=function(token,value){var C=this
@@ -7557,7 +7572,6 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=$B.frames_stack.slice()
 js_exc.$py_exc=exc
 $B.freeze(exc)}else{var exc=js_exc
 $B.freeze(exc)
@@ -7703,40 +7717,51 @@ var exc_group_code=
 'err.message = $.message\n'+
 'err.exceptions = $.exceptions === missing ? [] : $.exceptions\n'
 var js=exc_group_code.replace('[[name]]','BaseExceptionGroup')
-js+=`var exc_list = _b_.list.$factory(err.exceptions)
-var all_exceptions = true
-for(var exc of exc_list){
-    if(! _b_.isinstance(exc, _b_.Exception)){
-        all_exceptions = false
-        break
+js+=`if(err.exceptions !== _b_.None){
+    var exc_list = _b_.list.$factory(err.exceptions)
+    var all_exceptions = true
+    for(var exc of exc_list){
+        if(! _b_.isinstance(exc, _b_.Exception)){
+            all_exceptions = false
+            break
+        }
+    }
+    if(all_exceptions){
+        err.__class__ = _b_.ExceptionGroup
     }}
-if(all_exceptions){
-    err.__class__ = _b_.ExceptionGroup}
 `
 $make_exc([['BaseExceptionGroup',js]],_b_.BaseException)
-_b_.BaseExceptionGroup.subgroup=function(self,condition){
-var filtered_excs=[]
-for(var exc of self.exceptions){if(_b_.isinstance(exc,_b_.BaseExceptionGroup)){var filtered=_b_.BaseExceptionGroup.subgroup(exc,condition)
-if(filtered===_b_.None){}else if(filtered.exceptions.length==exc.exceptions.length){filtered_excs.push(exc)}else if(filtered.exceptions.length > 0){filtered_excs=filtered_excs.concat(filtered)}}else if(condition(exc)){filtered_excs.push(exc)}}
-if(filtered_excs.length==0){return _b_.None}
-var res=_b_.BaseExceptionGroup.$factory(self.message,filtered_excs)
-res.__cause__=self.__cause__
-res.__context__=self.__context__
-res.__traceback__=self.__traceback__
-return res}
+_b_.BaseExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
+`${self.exceptions.length > 1 ? 's' : ''})`}
+_b_.BaseExceptionGroup.split=function(self,condition){
+var matching_excs=[],non_matching_excs=[]
+for(var exc of self.exceptions){if(_b_.isinstance(exc,_b_.BaseExceptionGroup)){var subsplit=_b_.BaseExceptionGroup.split(exc,condition),matching=subsplit[0],non_matching=subsplit[1]
+if(matching===_b_.None){non_matching_excs.push(exc)}else if(matching.exceptions.length==exc.exceptions.length){matching_excs.push(exc)}else{if(matching.exceptions.length > 0){matching_excs=matching_excs.concat(matching)}
+if(non_matching.exceptions.length > 0){non_matching_excs=non_matching_excs.concat(non_matching)}}}else if(condition(exc)){matching_excs.push(exc)}else{non_matching_excs.push(exc)}}
+if(matching_excs.length==0){matching_excs=_b_.None}
+if(non_matching_excs.length==0){non_matching_excs=_b_.None}
+var res=[]
+for(var item of[matching_excs,non_matching_excs]){var eg=_b_.BaseExceptionGroup.$factory(self.message,item)
+eg.__cause__=self.__cause__
+eg.__context__=self.__context__
+eg.__traceback__=self.__traceback__
+res.push(eg)}
+return $B.fast_tuple(res)}
+_b_.BaseExceptionGroup.subgroup=function(self,condition){return _b_.BaseExceptionGroup.split(self,condition)[0]}
+$B.set_func_names(_b_.BaseExceptionGroup,"builtins")
 var js=exc_group_code.replace('[[name]]','ExceptionGroup')
-js+=`var exc_list = _b_.list.$factory(err.exceptions)
-for(var exc of exc_list){
-    if(! _b_.isinstance(exc, _b_.Exception)){
-        throw _b_.TypeError.$factory(
-            'Cannot nest BaseExceptions in an ExceptionGroup')
+js+=`if(err.exceptions !== _b_.None){
+    var exc_list = _b_.list.$factory(err.exceptions)
+    for(var exc of exc_list){
+        if(! _b_.isinstance(exc, _b_.Exception)){
+            throw _b_.TypeError.$factory(
+                'Cannot nest BaseExceptions in an ExceptionGroup')
+        }
     }}
 `
 $make_exc([['ExceptionGroup',js]],_b_.Exception)
 _b_.ExceptionGroup.__bases__.splice(0,0,_b_.BaseExceptionGroup)
 _b_.ExceptionGroup.__mro__.splice(0,0,_b_.BaseExceptionGroup)
-_b_.ExceptionGroup.__str__=function(self){return `${self.message} (${self.exceptions.length} sub-exception`+
-`${self.exceptions.length > 1 ? 's' : ''})`}
 $B.set_func_names(_b_.ExceptionGroup,"builtins")
 function trace_from_stack(err){function handle_repeats(src,count_repeats){if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
@@ -14917,6 +14942,78 @@ js+='$B.del_exc()\n'}}
 if(! has_untyped_except){
 js+=`}else{\nthrow ${err}\n`}
 js+='}\n'}
+if(has_else ||has_finally){js+='}\n' 
+js+='finally{\n'
+var finalbody=`var exit = false\n`+
+`if($B.frames_stack.length < stack_length_${id}){\n`+
+`exit = true\n`+
+`$B.frames_stack.push(frame)\n`+
+`}\n`+
+add_body(this.finalbody,scopes)
+if(this.finalbody.length > 0 &&
+!($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+=`\nif(exit){\n`+
+`$B.leave_frame(locals)\n`+
+`}`}
+var elsebody=`if($B.frames_stack.length == stack_length_${id} `+
+`&& ! failed${id}){\n`+
+add_body(this.orelse,scopes)+
+'\n}' 
+if(has_else && has_finally){js+=`try{\n`+
+elsebody+
+'\n}\n'+
+`finally{\n`+finalbody+'}\n'}else if(has_else && ! has_finally){js+=elsebody}else{js+=finalbody}
+js+='\n}\n' }else{js+='}\n' }
+scopes.pop()
+return js}
+$B.ast.TryStar.prototype.to_js=function(scopes){
+var id=$B.UUID(),has_except_handlers=this.handlers.length > 0,has_else=this.orelse.length > 0,has_finally=this.finalbody.length > 0
+var js=`$B.set_lineno(frame, ${this.lineno})\ntry{\n`
+js+=`var stack_length_${id} = $B.frames_stack.length\n`
+if(has_finally){js+=`var save_stack_${id} = $B.frames_stack.slice()\n`}
+if(has_else){js+=`var failed${id} = false\n`}
+var try_scope=copy_scope($B.last(scopes))
+scopes.push(try_scope)
+js+=add_body(this.body,scopes)+'\n'
+if(has_except_handlers){var err='err'+id
+js+='}\n' 
+js+=`catch(${err}){\n`+
+`$B.set_exc(${err})\n`+
+`if(locals.$f_trace !== _b_.None){\n`+
+`locals.$f_trace = $B.trace_exception()\n`+
+`}\n`+
+`if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
+`${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+
+'}\n'+
+`function fake_split(exc, condition){\n`+
+`return condition(exc) ? `+
+`$B.fast_tuple([exc, _b_.None]) : $B.fast_tuple([_b_.None, exc])\n`+
+'}\n'
+if(has_else){js+=`failed${id} = true\n`}
+var first=true,has_untyped_except=false
+for(var handler of this.handlers){js+=`$B.set_lineno(frame, ${handler.lineno})\n`
+if(handler.type){js+="var condition = function(exc){\n"+
+"    return _b_.isinstance(exc, "+
+`${$B.js_from_ast(handler.type, scopes)})\n`+
+"}\n"+
+`var klass = $B.get_class(${err}),\n`+
+`split_method = $B.$getattr(klass, 'split'),\n`+
+`split = $B.$call(split_method)(${err}, condition),\n`+
+'    matching = split[0],\n'+
+'    rest = split[1]\n'+
+'if(matching.exceptions !== _b_.None){\n'+
+'    for(var err of matching.exceptions){\n'
+if(handler.name){bind(handler.name,scopes)
+var mangled=mangle(scopes,try_scope,handler.name)
+js+=`locals.${mangled} = ${err}\n`}
+js+=add_body(handler.body,scopes)+'\n'
+if(!($B.last(handler.body)instanceof $B.ast.Return)){
+js+='$B.del_exc()\n'}
+js+='}\n'
+js+='}\n'
+js+=`${err} = rest\n`}}
+js+=`if(${err}.exceptions !== _b_.None){\n`+
+`throw ${err}\n`+
+'}\n'}
 if(has_else ||has_finally){js+='}\n' 
 js+='finally{\n'
 var finalbody=`var exit = false\n`+
