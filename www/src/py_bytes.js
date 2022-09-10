@@ -216,6 +216,10 @@ bytes.__add__ = function(self, other){
         _b_.str.$factory(other))
 }
 
+bytes.__bytes__ = function(self){
+    return self
+}
+
 bytes.__contains__ = function(self, other){
     if(typeof other == "number"){
         return self.source.indexOf(other) > -1

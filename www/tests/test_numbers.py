@@ -708,4 +708,8 @@ x = 0
 x += 0.5
 assert x == abs(x), (x, abs(x))
 
+# method __complex__
+x = 2j
+assert x.__complex__() is x
+
 print('passed all tests...')

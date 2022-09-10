@@ -294,4 +294,8 @@ class WrongBytes:
 
 assert_raises(TypeError, bytes, WrongBytes())
 
+# method __bytes__
+b = b'abc'
+assert b.__bytes__() is b
+
 print('passed all tests...')
