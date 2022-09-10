@@ -5026,10 +5026,10 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "metaclass of a derived class must be a (non-"+
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}
 return metaclass}
-var type=$B.make_class("type",function(obj,bases,cl_dict){var len=arguments.length
-if(len==1){if(obj===undefined ||obj===null){return $B.get_class(obj)}
-return obj.__class__ ||$B.get_class(obj)}else if(len==3){var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases)
-return type.__new__(meta,obj,bases,cl_dict)}else{throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}}
+var type=$B.make_class("type",function(obj,bases,cl_dict){var missing={},$=$B.args('type',3,{obj:null,bases:null,cl_dict:null},['obj','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,null),obj=$.obj,bases=$.bases,cl_dict=$.cl_dict
+if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
+return obj.__class__ ||$B.get_class(obj)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases)
+return type.__new__(meta,obj,bases,cl_dict)}}
 )
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
@@ -15071,7 +15071,8 @@ $B.js_from_ast(item.context_expr,scopes)+',\n'+
 `}catch(err){\n`+
 `var klass_name = $B.get_class(mgr_${id})\n`+
 `throw _b_.TypeError.$factory("'" + klass_name + `+
-`"' object does not support the C manager protocol")\n`+
+`"' object does not support the con`+
+`text manager protocol")\n`+
 `}\n`+
 `var value_${id} = $B.$call($B.$getattr(klass, `+
 `'__enter__'))(mgr_${id}),\n`+
