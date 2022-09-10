@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-10 18:38:02.443283"
-__BRYTHON__.timestamp=1662827882442
+__BRYTHON__.compiled_date="2022-09-10 18:46:29.643552"
+__BRYTHON__.timestamp=1662828389642
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14969,7 +14969,8 @@ $B.js_from_ast(item.context_expr,scopes)+',\n'+
 `}catch(err){\n`+
 `var klass_name = $B.get_class(mgr_${id})\n`+
 `throw _b_.TypeError.$factory("'" + klass_name + `+
-`"' object does not support the C manager protocol")\n`+
+`"' object does not support the con`+
+`text manager protocol")\n`+
 `}\n`+
 `var value_${id} = $B.$call($B.$getattr(klass, `+
 `'__enter__'))(mgr_${id}),\n`+

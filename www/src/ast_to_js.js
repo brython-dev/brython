@@ -2747,7 +2747,9 @@ $B.ast.With.prototype.to_js = function(scopes){
               `}catch(err){\n` +
                   `var klass_name = $B.get_class(mgr_${id})\n` +
                   `throw _b_.TypeError.$factory("'" + klass_name + ` +
-                      `"' object does not support the context manager protocol")\n` +
+                      `"' object does not support the con` +
+                      // split word 'context', replaced by "C" in brython.js...
+                      `text manager protocol")\n` +
               `}\n` +
               `var value_${id} = $B.$call($B.$getattr(klass, ` +
                   `'__enter__'))(mgr_${id}),\n` +
