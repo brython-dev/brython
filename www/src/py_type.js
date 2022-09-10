@@ -280,18 +280,23 @@ function meta_from_bases(class_name, module, bases){
 
 var type = $B.make_class("type",
     function(obj, bases, cl_dict){
-        var len = arguments.length
-        if(len == 1){
-            if(obj === undefined || obj === null){
-                return $B.get_class(obj)
+        var missing = {},
+            $ = $B.args('type', 3, {obj: null, bases: null, cl_dict: null},
+                ['obj', 'bases', 'cl_dict'], arguments,
+                {bases: missing, cl_dict: missing}, null, null),
+            obj = $.obj,
+            bases = $.bases,
+            cl_dict = $.cl_dict
+
+        if(cl_dict === missing){
+            if(bases !== missing){
+                throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
             }
             return obj.__class__ || $B.get_class(obj)
-        }else if(len == 3){
+        }else{
             var module = $B.last($B.frames_stack)[2],
                 meta = meta_from_bases(obj, module, bases)
             return type.__new__(meta, obj, bases, cl_dict)
-        }else{
-            throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
         }
     }
 )
