@@ -2595,8 +2595,20 @@ var $ExceptCtx = $B.parser.$ExceptCtx = function(context){
     this.parent = context
     context.tree[context.tree.length] = this
     this.tree = []
-    this.expect = 'id'
     this.scope = $get_scope(this)
+    var node = context.node,
+        rank = node.parent.children.indexOf(node),
+        ix = rank - 1
+    while(node.parent.children[ix].context.tree[0].type != 'try'){
+        ix--
+    }
+    this.try_node = node.parent.children[ix]
+    this.is_first_child = rank == ix + 1
+    if(this.try_node.context.is_trystar){
+        this.expect = '*'
+    }else{
+        this.expect = 'id'
+    }
 }
 
 $ExceptCtx.prototype.ast = function(){
@@ -2612,6 +2624,30 @@ $ExceptCtx.prototype.ast = function(){
 
 $ExceptCtx.prototype.transition = function(token, value){
     var context = this
+    if(token == 'op' && value == '*'){
+        // syntax "except*" in PEP 654
+
+        if(context.is_first_child){
+            // first "except" of the "try"
+            context.try_node.context.is_trystar = true
+            context.expect = 'id'
+            return context
+        }else if(! context.expect == '*'){
+            // if "try" already has non-starred excepts, raise SyntaxError
+            raise_syntax_error(context,
+                "cannot have both 'except' and 'except*' " +
+                "on the same 'try'")
+        }else{
+            context.expect = 'id'
+            return context
+        }
+    }else if(context.expect == '*'){
+        // if "try" already has starred excepts, raise SyntaxError
+        raise_syntax_error(context,
+            "cannot have both 'except' and 'except*' " +
+            "on the same 'try'")
+    }
+
     switch(token) {
         case 'id':
         case 'imaginary':
@@ -6783,7 +6819,8 @@ $TryCtx.prototype.ast = function(){
             res.finalbody.length == 0){
         raise_syntax_error(this, "expected 'except' or 'finally' block")
     }
-    var res = new ast.Try(res.body, res.handlers, res.orelse, res.finalbody)
+    var klass = this.parent.is_trystar ? ast.TryStar : ast.Try
+    var res = new klass(res.body, res.handlers, res.orelse, res.finalbody)
     set_position(res, this.position)
     return res
 }
