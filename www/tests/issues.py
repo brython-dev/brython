@@ -3111,6 +3111,14 @@ match x:
 
 assert ok
 
+# invalid context manager
+test = """x = 'abc'
+with x as y:
+  pass"""
+
+assert_raises(TypeError, exec, test,
+  msg="'str' object does not support the context manager protocol")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

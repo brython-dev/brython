@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-10 11:43:42.861034"
-__BRYTHON__.timestamp=1662803022861
+__BRYTHON__.compiled_date="2022-09-10 18:12:16.878648"
+__BRYTHON__.timestamp=1662826336878
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10030,7 +10030,7 @@ if(chars.length==_self.length){return _self.replace(combining_re,"\u200B$1")}
 for(var i=0;i < chars.length;i++){var cp=_b_.ord(chars[i])
 if(cp >=0x300 && cp <=0x36F){repl+="\u200B"+chars[i]}else{repl+=chars[i]}}
 return repl}
-str.toString=function(){return "string!"}
+str.toString=function(){return "str"}
 var $comp_func=function(_self,other){if(typeof other !==typeof _self){return _b_.NotImplemented}else if(typeof _self=="string"){return _self > other}else{return _self.$brython_value > other.$brython_value}}
 $comp_func+="" 
 var $comps={">":"gt",">=":"ge","<":"lt","<=":"le"}
@@ -14962,9 +14962,16 @@ $B.ast.With.prototype.to_js=function(scopes){
 function add_item(item,js){var id=$B.UUID()
 var s=`var mgr_${id} = `+
 $B.js_from_ast(item.context_expr,scopes)+',\n'+
-`exit_${id} = $B.$getattr(mgr_${id}.__class__, `+
-`"__exit__"),\n`+
-`value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, `+
+`klass = $B.get_class(mgr_${id})\n`+
+`try{\n`+
+`var exit_${id} = $B.$getattr(klass, '__exit__'),\n`+
+`enter_${id} = $B.$getattr(klass, '__enter__')\n`+
+`}catch(err){\n`+
+`var klass_name = $B.get_class(mgr_${id})\n`+
+`throw _b_.TypeError.$factory("'" + klass_name + `+
+`"' object does not support the C manager protocol")\n`+
+`}\n`+
+`var value_${id} = $B.$call($B.$getattr(klass, `+
 `'__enter__'))(mgr_${id}),\n`+
 `exc_${id} = true\n`
 if(in_generator){

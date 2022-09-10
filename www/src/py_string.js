@@ -1142,7 +1142,7 @@ str.__str__ = function(_self){
     return repl
 }
 
-str.toString = function(){return "string!"}
+str.toString = function(){return "str"}
 
 // generate comparison methods
 var $comp_func = function(_self, other){
