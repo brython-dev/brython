@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-10 07:57:14.035593"
-__BRYTHON__.timestamp=1662789434035
+__BRYTHON__.compiled_date="2022-09-10 08:25:34.450616"
+__BRYTHON__.timestamp=1662791134450
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -638,6 +638,7 @@ exc.end_lineno=end_lineno
 exc.end_offset=end_col_offset+1
 exc.text=line
 exc.args[1]=$B.fast_tuple([filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset])
+exc.$stack=$B.frames_stack.slice()
 throw exc}
 function raise_syntax_error_known_range(C,a,b,msg){
 raise_error_known_location(_b_.SyntaxError,$get_module(C).filename,a.start[0],a.start[1],b.end[0],b.end[1],a.line,msg)}

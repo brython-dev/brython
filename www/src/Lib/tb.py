@@ -86,9 +86,9 @@ def print_exc(file=None):
 def syntax_error(args):
     trace = Trace()
     info, [filename, lineno, offset, line, *extra] = args
-    trace.write(f"  File {filename}, line {lineno}\n")
+    trace.write(f"  File {filename}, line {lineno}")
     indent = len(line) - len(line.lstrip())
-    trace.write("    " + line.strip() + "\n")
+    trace.write("    " + line.strip())
     nb_marks = 1
     if extra:
         end_lineno, end_offset = extra
@@ -97,6 +97,6 @@ def syntax_error(args):
         else:
             nb_marks = end_offset - offset
     nb_marks = max(nb_marks, 1)
-    trace.write("    " + (offset - 1) * " " + "^" * nb_marks + "\n")
-    trace.write("SyntaxError:", info, "\n")
-    return trace.buf
+    trace.write("    " + (offset - 1) * " " + "^" * nb_marks)
+    trace.write("SyntaxError:", info)
+    return trace.format()
