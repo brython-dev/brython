@@ -291,6 +291,19 @@ BaseException.__getattr__ = function(self, attr){
     }
 }
 
+BaseException.add_note = function(self, note){
+    // PEP 678
+    if(! _b_.isinstance(note, _b_.str)){
+        throw _b_.TypeError.$factory('note must be a str, not ' +
+            `'${$B.class_name(note)}'`)
+    }
+    if(self.__notes__ !== undefined){
+        self.__notes__.push(note)
+    }else{
+        self.__notes__ = [note]
+    }
+}
+
 BaseException.with_traceback = function(_self, tb){
     _self.__traceback__ = tb
     return _self

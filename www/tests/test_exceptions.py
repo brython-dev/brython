@@ -169,3 +169,12 @@ def f(src):
 
 assert f("1 / 0") == ['zero', 'end']
 assert f("x = 0") == ['no exception', 'end']
+
+# PEP 678 – Enriching Exceptions with Notes
+try:
+    1 / 0
+except ZeroDivisionError as exc:
+    assert_raises(AttributeError, getattr, exc, '__notes__')
+    exc.add_note('zero')
+    assert exc.__notes__ == ['zero']
+  
