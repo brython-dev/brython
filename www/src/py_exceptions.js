@@ -395,7 +395,6 @@ $B.exception = function(js_exc, in_ctx_manager){
             (js_exc.message || "<" + js_exc + ">")
         exc.args = _b_.tuple.$factory([$message])
         exc.$py_error = true
-        exc.$stack = $B.frames_stack.slice()
         js_exc.$py_exc = exc
         $B.freeze(exc)
     }else{
@@ -727,46 +726,70 @@ are all Exception subclasses, it returns an ExceptionGroup rather than a
 BaseExceptionGroup
 */
 var js = exc_group_code.replace('[[name]]', 'BaseExceptionGroup')
-js += `var exc_list = _b_.list.$factory(err.exceptions)
-var all_exceptions = true
-for(var exc of exc_list){
-    if(! _b_.isinstance(exc, _b_.Exception)){
-        all_exceptions = false
-        break
+js += `if(err.exceptions !== _b_.None){
+    var exc_list = _b_.list.$factory(err.exceptions)
+    var all_exceptions = true
+    for(var exc of exc_list){
+        if(! _b_.isinstance(exc, _b_.Exception)){
+            all_exceptions = false
+            break
+        }
     }
-}
-if(all_exceptions){
-    err.__class__ = _b_.ExceptionGroup
+    if(all_exceptions){
+        err.__class__ = _b_.ExceptionGroup
+    }
 }
 `
 
 $make_exc([['BaseExceptionGroup', js]], _b_.BaseException)
 
-_b_.BaseExceptionGroup.subgroup = function(self, condition){
+_b_.BaseExceptionGroup.split = function(self, condition){
     // condition is a function applied to exceptions
-    var filtered_excs = []
+    // returns (matching_be, non_matching_be)
+    var matching_excs = [],
+        non_matching_excs = []
     for(var exc of self.exceptions){
         if(_b_.isinstance(exc, _b_.BaseExceptionGroup)){
-            var filtered = _b_.BaseExceptionGroup.subgroup(exc, condition)
-            if(filtered === _b_.None){
-                // do nothing
-            }else if(filtered.exceptions.length == exc.exceptions.length){
-                filtered_excs.push(exc)
-            }else if(filtered.exceptions.length > 0){
-                filtered_excs = filtered_excs.concat(filtered)
+            var subsplit = _b_.BaseExceptionGroup.split(exc, condition),
+                matching = subsplit[0],
+                non_matching = subsplit[1]
+            if(matching === _b_.None){
+                non_matching_excs.push(exc)
+            }else if(matching.exceptions.length == exc.exceptions.length){
+                matching_excs.push(exc)
+            }else{
+                if(matching.exceptions.length > 0){
+                    matching_excs = matching_excs.concat(matching)
+                }
+                if(non_matching.exceptions.length > 0){
+                    non_matching_excs = non_matching_excs.concat(non_matching)
+                }
             }
         }else if(condition(exc)){
-            filtered_excs.push(exc)
+            matching_excs.push(exc)
+        }else{
+            non_matching_excs.push(exc)
         }
     }
-    if(filtered_excs.length == 0){
-        return _b_.None
+    if(matching_excs.length == 0){
+        matching_excs = _b_.None
     }
-    var res = _b_.BaseExceptionGroup.$factory(self.message, filtered_excs)
-    res.__cause__ = self.__cause__
-    res.__context__ = self.__context__
-    res.__traceback__ = self.__traceback__
-    return res
+    if(non_matching_excs.length == 0){
+        non_matching_excs = _b_.None
+    }
+    var res = []
+    for(var item of [matching_excs, non_matching_excs]){
+        var eg = _b_.BaseExceptionGroup.$factory(self.message, item)
+        eg.__cause__ = self.__cause__
+        eg.__context__ = self.__context__
+        eg.__traceback__ = self.__traceback__
+        res.push(eg)
+    }
+    return $B.fast_tuple(res)
+}
+
+_b_.BaseExceptionGroup.subgroup = function(self, condition){
+    return _b_.BaseExceptionGroup.split(self, condition)[0]
 }
 
 var js = exc_group_code.replace('[[name]]', 'ExceptionGroup')
@@ -775,11 +798,13 @@ var js = exc_group_code.replace('[[name]]', 'ExceptionGroup')
 The ExceptionGroup constructor raises a TypeError if any of the nested
 exceptions is not an Exception instance
 */
-js += `var exc_list = _b_.list.$factory(err.exceptions)
-for(var exc of exc_list){
-    if(! _b_.isinstance(exc, _b_.Exception)){
-        throw _b_.TypeError.$factory(
-            'Cannot nest BaseExceptions in an ExceptionGroup')
+js += `if(err.exceptions !== _b_.None){
+    var exc_list = _b_.list.$factory(err.exceptions)
+    for(var exc of exc_list){
+        if(! _b_.isinstance(exc, _b_.Exception)){
+            throw _b_.TypeError.$factory(
+                'Cannot nest BaseExceptions in an ExceptionGroup')
+        }
     }
 }
 `
