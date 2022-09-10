@@ -713,9 +713,13 @@ function offer_suggestions_for_name_error(exc){
 }
 
 // PEP 654
-var exc_group_code = '\n$B.check_nb_args_no_kw("[[name]]", 2, err.args);\n' +
-    'err.message = err.args[0]\n' +
-    'err.exceptions = err.args[1]\n'
+var exc_group_code =
+    '\nvar missing = {},\n' +
+    '    $ = $B.args("[[name]]", 2, {message: null, exceptions: null}, ' +
+        "['message', 'exceptions'], arguments, {exceptions: missing}, " +
+        'null, null)\n' +
+    'err.message = $.message\n' +
+    'err.exceptions = $.exceptions === missing ? [] : $.exceptions\n'
 
 /*
 The BaseExceptionGroup constructor inspects the nested exceptions and if they
@@ -737,6 +741,33 @@ if(all_exceptions){
 `
 
 $make_exc([['BaseExceptionGroup', js]], _b_.BaseException)
+
+_b_.BaseExceptionGroup.subgroup = function(self, condition){
+    // condition is a function applied to exceptions
+    var filtered_excs = []
+    for(var exc of self.exceptions){
+        if(_b_.isinstance(exc, _b_.BaseExceptionGroup)){
+            var filtered = _b_.BaseExceptionGroup.subgroup(exc, condition)
+            if(filtered === _b_.None){
+                // do nothing
+            }else if(filtered.exceptions.length == exc.exceptions.length){
+                filtered_excs.push(exc)
+            }else if(filtered.exceptions.length > 0){
+                filtered_excs = filtered_excs.concat(filtered)
+            }
+        }else if(condition(exc)){
+            filtered_excs.push(exc)
+        }
+    }
+    if(filtered_excs.length == 0){
+        return _b_.None
+    }
+    var res = _b_.BaseExceptionGroup.$factory(self.message, filtered_excs)
+    res.__cause__ = self.__cause__
+    res.__context__ = self.__context__
+    res.__traceback__ = self.__traceback__
+    return res
+}
 
 var js = exc_group_code.replace('[[name]]', 'ExceptionGroup')
 

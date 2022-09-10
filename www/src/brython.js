@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-09 21:47:32.813344"
-__BRYTHON__.timestamp=1662752852813
+__BRYTHON__.compiled_date="2022-09-10 07:57:14.035593"
+__BRYTHON__.timestamp=1662789434035
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7692,9 +7692,13 @@ if(suggestion){return suggestion}
 if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWith('$')))
 var suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}}
-var exc_group_code='\n$B.check_nb_args_no_kw("[[name]]", 2, err.args);\n'+
-'err.message = err.args[0]\n'+
-'err.exceptions = err.args[1]\n'
+var exc_group_code=
+'\nvar missing = {},\n'+
+'    $ = $B.args("[[name]]", 2, {message: null, exceptions: null}, '+
+"['message', 'exceptions'], arguments, {exceptions: missing}, "+
+'null, null)\n'+
+'err.message = $.message\n'+
+'err.exceptions = $.exceptions === missing ? [] : $.exceptions\n'
 var js=exc_group_code.replace('[[name]]','BaseExceptionGroup')
 js+=`var exc_list = _b_.list.$factory(err.exceptions)
 var all_exceptions = true
@@ -7707,6 +7711,16 @@ if(all_exceptions){
     err.__class__ = _b_.ExceptionGroup}
 `
 $make_exc([['BaseExceptionGroup',js]],_b_.BaseException)
+_b_.BaseExceptionGroup.subgroup=function(self,condition){
+var filtered_excs=[]
+for(var exc of self.exceptions){if(_b_.isinstance(exc,_b_.BaseExceptionGroup)){var filtered=_b_.BaseExceptionGroup.subgroup(exc,condition)
+if(filtered===_b_.None){}else if(filtered.exceptions.length==exc.exceptions.length){filtered_excs.push(exc)}else if(filtered.exceptions.length > 0){filtered_excs=filtered_excs.concat(filtered)}}else if(condition(exc)){filtered_excs.push(exc)}}
+if(filtered_excs.length==0){return _b_.None}
+var res=_b_.BaseExceptionGroup.$factory(self.message,filtered_excs)
+res.__cause__=self.__cause__
+res.__context__=self.__context__
+res.__traceback__=self.__traceback__
+return res}
 var js=exc_group_code.replace('[[name]]','ExceptionGroup')
 js+=`var exc_list = _b_.list.$factory(err.exceptions)
 for(var exc of exc_list){
