@@ -10059,7 +10059,7 @@ if(chars.length==_self.length){return _self.replace(combining_re,"\u200B$1")}
 for(var i=0;i < chars.length;i++){var cp=_b_.ord(chars[i])
 if(cp >=0x300 && cp <=0x36F){repl+="\u200B"+chars[i]}else{repl+=chars[i]}}
 return repl}
-str.toString=function(){return "string!"}
+str.toString=function(){return "str"}
 var $comp_func=function(_self,other){if(typeof other !==typeof _self){return _b_.NotImplemented}else if(typeof _self=="string"){return _self > other}else{return _self.$brython_value > other.$brython_value}}
 $comp_func+="" 
 var $comps={">":"gt",">=":"ge","<":"lt","<=":"le"}
@@ -15063,9 +15063,16 @@ $B.ast.With.prototype.to_js=function(scopes){
 function add_item(item,js){var id=$B.UUID()
 var s=`var mgr_${id} = `+
 $B.js_from_ast(item.context_expr,scopes)+',\n'+
-`exit_${id} = $B.$getattr(mgr_${id}.__class__, `+
-`"__exit__"),\n`+
-`value_${id} = $B.$call($B.$getattr(mgr_${id}.__class__, `+
+`klass = $B.get_class(mgr_${id})\n`+
+`try{\n`+
+`var exit_${id} = $B.$getattr(klass, '__exit__'),\n`+
+`enter_${id} = $B.$getattr(klass, '__enter__')\n`+
+`}catch(err){\n`+
+`var klass_name = $B.get_class(mgr_${id})\n`+
+`throw _b_.TypeError.$factory("'" + klass_name + `+
+`"' object does not support the C manager protocol")\n`+
+`}\n`+
+`var value_${id} = $B.$call($B.$getattr(klass, `+
 `'__enter__'))(mgr_${id}),\n`+
 `exc_${id} = true\n`
 if(in_generator){
