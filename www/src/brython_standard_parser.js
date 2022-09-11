@@ -3116,7 +3116,7 @@ this.$pos=$pos}
 $PatternCaptureCtx.prototype.ast=function(){var ast_obj
 try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0],new ast.Load())
 set_position(pattern,this.position)
-for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
+for(var i=1;i < this.tree.length;i++){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
 copy_position(pattern,pattern.value)}
 pattern=new ast.MatchValue(pattern)
 copy_position(pattern,pattern.value)}else if(this.starred){var v=this.tree[0]
@@ -11682,7 +11682,7 @@ if(_b_.isinstance(other,_b_.float)){if(self.$imag.value !=0){return false}
 return self.$real.value==other.value}
 return _b_.NotImplemented}
 complex.__hash__=function(self){
-return self.$imag*1000003+self.$real}
+return self.$imag.value*1000003+self.$real.value}
 complex.__init__=function(){return _b_.None}
 complex.__invert__=function(self){return ~self}
 complex.__mro__=[_b_.object]

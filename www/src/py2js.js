@@ -5310,7 +5310,7 @@ $PatternCaptureCtx.prototype.ast = function(){
         if(this.tree.length > 1){
             var pattern = new ast.Name(this.tree[0], new ast.Load())
             set_position(pattern, this.position)
-            for(var i = 1; i < this.tree.length; i += 2){
+            for(var i = 1; i < this.tree.length; i++){
                 pattern = new ast.Attribute(pattern, this.tree[i], new ast.Load())
                 copy_position(pattern, pattern.value)
             }

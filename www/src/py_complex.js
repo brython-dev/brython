@@ -85,7 +85,7 @@ complex.__eq__ = function(self, other){
 complex.__hash__ = function(self){
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
-    return self.$imag * 1000003 + self.$real
+    return self.$imag.value * 1000003 + self.$real.value
 }
 
 complex.__init__ = function() {
