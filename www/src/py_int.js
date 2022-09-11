@@ -371,20 +371,20 @@ int.__ne__ = function(self, other){
 
 int.__neg__ = function(self){return -self}
 
-int.__new__ = function(cls, value){
+int.__new__ = function(cls, value, base){
     if(cls === undefined){
         throw _b_.TypeError.$factory("int.__new__(): not enough arguments")
     }else if(! _b_.isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")
     }
     if(cls === int){
-        return int.$factory(value)
+        return int.$factory(value, base)
     }
     // set method .toString so that BigInt(instance) returns a bingint
     return {
         __class__: cls,
         __dict__: $B.empty_dict(),
-        $brython_value: value || 0,
+        $brython_value: int.$factory(value, base),
         toString: function(){
             return value
         }
@@ -527,7 +527,7 @@ int.__setattr__ = function(self, attr, value){
 
 eval('int.__sub__ = ' +
      op_model.replace(/\+/g, '-').replace(/__add__/g, '__sub__'))
-     
+
 int.__truediv__ = function(self, other){
     if(_b_.isinstance(other, int)){
         other = int_value(other)
@@ -682,19 +682,25 @@ var $valid_digits = function(base) {
 
 int.$factory = function(value, base){
     var missing = {},
-        $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"], arguments,
-              {x: missing, base: missing}, null, null),
+        $ = $B.args("int", 2, {x: null, base: null}, ["x", "/", "base"],
+            arguments, {x: missing, base: missing}, null, null),
             value = $.x,
-            base = $.base
+            base = $.base === undefined ? missing : $.base,
+            initial_value = value
 
     // int() with no argument returns 0
-    if(value === missing){
+    if(value === missing || value === undefined){
+        if(base !== missing){
+            throw _b_.TypeError.$factory("int() missing string argument")
+        }
         return 0
     }
 
     if(_b_.isinstance(value, [_b_.bytes, _b_.bytearray])){
         // transform to string
-        value = $B.$getattr(value, "decode")("latin-1")
+        value = $B.$getattr(value, 'decode')('latin-1')
+    }else if(_b_.isinstance(value, _b_.memoryview)){
+        value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
     }
 
     if(! _b_.isinstance(value, _b_.str)){
@@ -703,20 +709,45 @@ int.$factory = function(value, base){
                 "int() can't convert non-string with explicit base")
         }else{
             // booleans, bigints, objects with method __index__
-            try{
-                return $B.PyNumber_Index(value)
-            }catch(err){
-                for(var special_method of ["__int__", "__trunc__"]){
-                    var num_value = $B.$getattr($B.get_class(value),
-                        special_method, _b_.None)
-                    if(num_value !== _b_.None){
-                        return $B.$call(num_value)(value)
+            for(var special_method of ['__int__', '__index__', '__trunc__']){
+                var num_value = $B.$getattr($B.get_class(value),
+                    special_method, _b_.None)
+                if(num_value !== _b_.None){
+                    var res = $B.$call(num_value)(value)
+                    if(special_method == '__trunc__'){
+                        $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+                        'The delegation of int() to __trunc__ is deprecated.'))
+                        var index_method = $B.$getattr(res, '__index__', null)
+                        if(index_method === null){
+                            throw _b_.TypeError.$factory('__trunc__ returned' +
+                                ` non-Integral (type ${$B.class_name(res)})`)
+                        }
+                        res = $B.$call(index_method)()
+                    }
+                    if(_b_.isinstance(res, _b_.int)){
+                        if(typeof res !== "number" &&
+                                res.__class__ !== $B.long_int){
+                            $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+                            '__index__ returned non-int (type ' + $B.class_name(res) +
+                            ').  The ability to return an instance of a ' +
+                            'strict subclass of int is deprecated, and may ' +
+                            'be removed in a future version of Python.'))
+                        }
+                        return int_value(res)
+                    }else{
+                        var klass = $B.get_class(res),
+                            index_method = $B.$getattr(klass, '__index__', null)
+                        if(index_method === null){
+                            throw _b_.TypeError.$factory(special_method +
+                                `returned non-int (type ${$B.class_name(res)})`)
+                        }
+                        return int_value(res)
                     }
                 }
-                throw _b_.TypeError.$factory(
-                    "int() argument must be a string, a bytes-like object " +
-                    `or a real number, not '${$B.class_name(value)}'`)
             }
+            throw _b_.TypeError.$factory(
+                "int() argument must be a string, a bytes-like object " +
+                `or a real number, not '${$B.class_name(value)}'`)
         }
     }
 
@@ -729,9 +760,9 @@ int.$factory = function(value, base){
         }
     }
 
-    function invalid(value, base){
+    function invalid(base){
         throw _b_.ValueError.$factory("invalid literal for int() with base " +
-            base + ": '" + _b_.str.$factory(value) + "'")
+            base + ": " + _b_.repr(initial_value))
     }
 
     if(typeof value != "string"){ // string subclass
@@ -750,6 +781,14 @@ int.$factory = function(value, base){
        throw _b_.ValueError.$factory("invalid value")
     }
 
+    if(_value.endsWith('_')){
+        invalid(base)
+    }
+    if(value.indexOf('__') > -1){ // consecutive underscores
+        invalid(base)
+    }
+
+
     if(_value.length > 2){
         var _pre = _value.substr(0, 2).toUpperCase()
         if(base == 0){
@@ -759,11 +798,17 @@ int.$factory = function(value, base){
                 base = 8
             }else if(_pre == "0X"){
                 base = 16
+            }else if(_value.startsWith('0')){
+                _value = _value.replace(/_/g, '')
+                if(_value.match(/^0+$/)){
+                    return 0
+                }
+                invalid(base)
             }
         }else if(_pre == "0X" && base != 16){
-            invalid(_value, base)
+            invalid(base)
         }else if(_pre == "0O" && base != 8){
-            invalid(_value, base)
+            invalid(base)
         }
         if((_pre == "0B" && base == 2) || _pre == "0O" || _pre == "0X"){
             _value = _value.substr(2)
@@ -772,16 +817,18 @@ int.$factory = function(value, base){
             }
         }
     }
+
     if(base == 0){
         // _value doesn't start with 0b, 0o, 0x
         base = 10
     }
+
     var _digits = $valid_digits(base),
         _re = new RegExp("^[+-]?[" + _digits + "]" +
         "[" + _digits + "_]*$", "i"),
         match = _re.exec(_value)
     if(match === null){
-        invalid(value, base)
+        invalid(base)
     }else{
         _value = _value.replace(/_/g, "")
     }
