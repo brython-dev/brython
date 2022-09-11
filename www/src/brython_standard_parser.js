@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-11 15:31:41.912115"
-__BRYTHON__.timestamp=1662903101911
+__BRYTHON__.compiled_date="2022-09-11 18:36:01.961349"
+__BRYTHON__.timestamp=1662914161960
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9810,7 +9810,9 @@ if(val===Infinity){val="inf"}else if(val===-Infinity){val="-inf"}else{val="nan"}
 if(upper){return val.toUpperCase()}
 return val}
 var format_sign=function(val,flags){if(flags.sign){if(val >=0){return "+"}}else if(flags.space){if(val >=0){return " "}}
-return ""}
+if(val==0 && ! Object.is(val,0)){
+return '-'}
+return ''}
 var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
@@ -9861,17 +9863,27 @@ var e_idx=val.lastIndexOf("e")
 if(e_idx > val.length-4){val=val.substring(0,e_idx+2)+"0"+val.substring(e_idx+2)}
 if(upper){return val.toUpperCase()}
 return val}
+function roundDownToFixed(v,d){if(d==0 && v.toString().indexOf('e')>-1){
+return BigInt(v).toString()}
+const mul=Math.pow(10,d);
+var is_neg=v < 0
+if(is_neg){v=-v}
+var res_floor=(Math.floor(v*mul)/mul).toFixed(d),res_ceil=(Math.ceil(v*mul)/mul).toFixed(d),res
+if(v-res_floor==res_ceil-v){
+var last=res_floor[res_floor.length-1]
+res=last.match(/[02468]/)? res_floor :res_ceil}else{res=v-res_floor < res_ceil-v ? res_floor :res_ceil}
+return is_neg ? '-'+res :res}
 var floating_point_decimal_format=function(val,upper,flags){val=_float_helper(val,flags)
 return format_padding(format_sign(val,flags)+
-format_float_precision(val,upper,flags,function(val,precision,flags){val=val.toFixed(precision)
+format_float_precision(val,upper,flags,function(val,precision,flags){
+val=roundDownToFixed(val,precision)
 if(precision===0 && flags.alternate){val+='.'}
 return val}),flags
 )}
 var _floating_exp_helper=function(val,precision,flags,upper){val=val.toExponential(precision)
 var e_idx=val.lastIndexOf("e")
 if(e_idx > val.length-4){val=val.substring(0,e_idx+2)+"0"+val.substring(e_idx+2)}
-if(upper){return val.toUpperCase()}
-return val}
+return upper ? val.toUpperCase():val}
 var floating_point_exponential_format=function(val,upper,flags){val=_float_helper(val,flags)
 return format_padding(format_sign(val,flags)+
 format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
@@ -11341,10 +11353,10 @@ if(fmt.type !==undefined &&
 if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
 if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{res=preformat(self,{type:"e",precision:fmt.precision-1})}
 var parts=res.split("e")
-if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{if(parts[1]){var signif=parts[0]
-while(signif.endsWith("0")){signif=signif.substr(0,signif.length-1)}
+if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{var signif=parts[0]
+if(signif.indexOf('.')> 0){while(signif.endsWith("0")){signif=signif.substr(0,signif.length-1)}}
 if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
-parts[0]=signif}}
+parts[0]=signif}
 res=parts.join("e")
 if(fmt.type=="G"){res=res.toUpperCase()}
 return res}else if(fmt.type===undefined){fmt.type="g"
@@ -11362,7 +11374,8 @@ return res}
 float.__format__=function(self,format_spec){check_self_is_float(self,'__format__')
 var fmt=new $B.parse_format_spec(format_spec)
 fmt.align=fmt.align ||">"
-var raw=preformat(self,fmt).split('.'),_int=raw[0]
+var pf=preformat(self,fmt)
+var raw=pf.split('.'),_int=raw[0]
 if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
 for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
@@ -11372,7 +11385,7 @@ float.__hash__=function(self){check_self_is_float(self,'__hash__')
 var _v=self.value
 if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return 0}
 if(_v==Math.round(_v)){return Math.round(_v)}
-var r=frexp(_v)
+var r=frexp(self)
 r[0]*=Math.pow(2,31)
 var hipart=_b_.int.$factory(r[0])
 r[0]=(r[0]-hipart)*Math.pow(2,31)
