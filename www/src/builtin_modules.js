@@ -752,13 +752,15 @@
                 throw syntax_error
             }
             var frame = $B.imported._sys.Getframe(),
-                category = message.__class__ || $B.get_class(message),
+                f_code = $B._frame.f_code.__get__(frame),
+                lineno = frame.$lineno
+            var category = message.__class__ || $B.get_class(message),
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
                     category,
-                    filename: message.filename || frame.f_code.co_filename,
-                    lineno: message.lineno || frame.f_lineno,
+                    filename: message.filename || f_code.co_filename,
+                    lineno: message.lineno || lineno,
                     file: _b_.None,
                     line: _b_.None,
                     source: _b_.None,
