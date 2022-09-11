@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-11 18:36:01.961349"
-__BRYTHON__.timestamp=1662914161960
+__BRYTHON__.compiled_date="2022-09-11 19:02:56.698469"
+__BRYTHON__.timestamp=1662915776698
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3102,7 +3102,7 @@ this.$pos=$pos}
 $PatternCaptureCtx.prototype.ast=function(){var ast_obj
 try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0],new ast.Load())
 set_position(pattern,this.position)
-for(var i=1;i < this.tree.length;i+=2){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
+for(var i=1;i < this.tree.length;i++){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
 copy_position(pattern,pattern.value)}
 pattern=new ast.MatchValue(pattern)
 copy_position(pattern,pattern.value)}else if(this.starred){var v=this.tree[0]
@@ -11652,7 +11652,7 @@ if(_b_.isinstance(other,_b_.float)){if(self.$imag.value !=0){return false}
 return self.$real.value==other.value}
 return _b_.NotImplemented}
 complex.__hash__=function(self){
-return self.$imag*1000003+self.$real}
+return self.$imag.value*1000003+self.$real.value}
 complex.__init__=function(){return _b_.None}
 complex.__invert__=function(self){return ~self}
 complex.__mro__=[_b_.object]
