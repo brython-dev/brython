@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-10 18:46:29.643552"
-__BRYTHON__.timestamp=1662828389642
+__BRYTHON__.compiled_date="2022-09-11 15:31:41.912115"
+__BRYTHON__.timestamp=1662903101911
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5720,7 +5720,8 @@ if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame_obj,'return',value)}
 $B.leave_frame=function(arg){
-if($B.frames_stack.length==0){console.log("empty stack");return}
+if($B.frames_stack.length==0){
+return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
@@ -10831,10 +10832,10 @@ eval('int.__mul__ = '+op_model.replace(/\+/g,'*').replace(/add/g,"mul"))
 int.__ne__=function(self,other){var res=int.__eq__(self,other)
 return(res===_b_.NotImplemented)? res :!res}
 int.__neg__=function(self){return-self}
-int.__new__=function(cls,value){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
-if(cls===int){return int.$factory(value)}
+int.__new__=function(cls,value,base){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
+if(cls===int){return int.$factory(value,base)}
 return{
-__class__:cls,__dict__:$B.empty_dict(),$brython_value:value ||0,toString:function(){return value}}}
+__class__:cls,__dict__:$B.empty_dict(),$brython_value:int.$factory(value,base),toString:function(){return value}}}
 int.__pos__=function(self){return self}
 function extended_euclidean(a,b){
 var d,u,v
@@ -10934,22 +10935,39 @@ return digits}
 var digits="0123456789"
 for(var i=10;i < base;i++){digits+=String.fromCharCode(i+55)}
 return digits}
-int.$factory=function(value,base){var missing={},$=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{x:missing,base:missing},null,null),value=$.x,base=$.base
-if(value===missing){return 0}
+int.$factory=function(value,base){var missing={},$=$B.args("int",2,{x:null,base:null},["x","/","base"],arguments,{x:missing,base:missing},null,null),value=$.x,base=$.base===undefined ? missing :$.base,initial_value=value
+if(value===missing ||value===undefined){if(base !==missing){throw _b_.TypeError.$factory("int() missing string argument")}
+return 0}
 if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){
-value=$B.$getattr(value,"decode")("latin-1")}
+value=$B.$getattr(value,'decode')('latin-1')}else if(_b_.isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tobytes(value),'decode')('latin-1')}
 if(! _b_.isinstance(value,_b_.str)){if(base !==missing){throw _b_.TypeError.$factory(
 "int() can't convert non-string with explicit base")}else{
-try{return $B.PyNumber_Index(value)}catch(err){for(var special_method of["__int__","__trunc__"]){var num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
-if(num_value !==_b_.None){return $B.$call(num_value)(value)}}
+for(var special_method of['__int__','__index__','__trunc__']){var num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
+if(num_value !==_b_.None){var res=$B.$call(num_value)(value)
+if(special_method=='__trunc__'){$B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+'The delegation of int() to __trunc__ is deprecated.'))
+var index_method=$B.$getattr(res,'__index__',null)
+if(index_method===null){throw _b_.TypeError.$factory('__trunc__ returned'+
+` non-Integral (type ${$B.class_name(res)})`)}
+res=$B.$call(index_method)()}
+if(_b_.isinstance(res,_b_.int)){if(typeof res !=="number" &&
+res.__class__ !==$B.long_int){$B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+'__index__ returned non-int (type '+$B.class_name(res)+
+').  The ability to return an instance of a '+
+'strict subclass of int is deprecated, and may '+
+'be removed in a future version of Python.'))}
+return int_value(res)}else{var klass=$B.get_class(res),index_method=$B.$getattr(klass,'__index__',null)
+if(index_method===null){throw _b_.TypeError.$factory(special_method+
+`returned non-int (type ${$B.class_name(res)})`)}
+return int_value(res)}}}
 throw _b_.TypeError.$factory(
 "int() argument must be a string, a bytes-like object "+
-`or a real number, not '${$B.class_name(value)}'`)}}}
+`or a real number, not '${$B.class_name(value)}'`)}}
 base=base===missing ? 10:$B.PyNumber_Index(base)
 if(!(base >=2 && base <=36)){
 if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
-function invalid(value,base){throw _b_.ValueError.$factory("invalid literal for int() with base "+
-base+": '"+_b_.str.$factory(value)+"'")}
+function invalid(base){throw _b_.ValueError.$factory("invalid literal for int() with base "+
+base+": "+_b_.repr(initial_value))}
 if(typeof value !="string"){
 value=value.valueOf()}
 var _value=value.trim(),
@@ -10958,15 +10976,20 @@ if(_value.startsWith('+')||_value.startsWith('-')){var sign=_value[0]
 _value=_value.substr(1)}
 if(_value.length==2 && base==0 &&
 (_value=="0b" ||_value=="0o" ||_value=="0x")){throw _b_.ValueError.$factory("invalid value")}
+if(_value.endsWith('_')){invalid(base)}
+if(value.indexOf('__')>-1){
+invalid(base)}
 if(_value.length > 2){var _pre=_value.substr(0,2).toUpperCase()
-if(base==0){if(_pre=="0B"){base=2}else if(_pre=="0O"){base=8}else if(_pre=="0X"){base=16}}else if(_pre=="0X" && base !=16){invalid(_value,base)}else if(_pre=="0O" && base !=8){invalid(_value,base)}
+if(base==0){if(_pre=="0B"){base=2}else if(_pre=="0O"){base=8}else if(_pre=="0X"){base=16}else if(_value.startsWith('0')){_value=_value.replace(/_/g,'')
+if(_value.match(/^0+$/)){return 0}
+invalid(base)}}else if(_pre=="0X" && base !=16){invalid(base)}else if(_pre=="0O" && base !=8){invalid(base)}
 if((_pre=="0B" && base==2)||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
 while(_value.startsWith("_")){_value=_value.substr(1)}}}
 if(base==0){
 base=10}
 var _digits=$valid_digits(base),_re=new RegExp("^[+-]?["+_digits+"]"+
 "["+_digits+"_]*$","i"),match=_re.exec(_value)
-if(match===null){invalid(value,base)}else{_value=_value.replace(/_/g,"")}
+if(match===null){invalid(base)}else{_value=_value.replace(/_/g,"")}
 if(base==10){res=BigInt(_value)}else{base=BigInt(base)
 var res=0n,coef=1n,char
 for(var i=_value.length-1;i >=0;i--){char=_value[i].toUpperCase()
@@ -13753,7 +13776,8 @@ syntax_error.lineno=message.lineno
 syntax_error.offset=message.offset
 syntax_error.line=message.line
 throw syntax_error}
-var frame=$B.imported._sys.Getframe(),category=message.__class__ ||$B.get_class(message),warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||frame.f_code.co_filename,lineno:message.lineno ||frame.f_lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}
+var frame=$B.imported._sys.Getframe(),f_code=$B._frame.f_code.__get__(frame),lineno=frame.$lineno
+var category=message.__class__ ||$B.get_class(message),warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||f_code.co_filename,lineno:message.lineno ||lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}
 if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var trace=$B.class_name(message)+': '+message.args[0]
 $B.$getattr($B.stderr,'write')(trace+'\n')
 var flush=$B.$getattr($B.stderr,'flush',_b_.None)
