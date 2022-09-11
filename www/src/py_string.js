@@ -451,12 +451,16 @@ var format_sign = function(val, flags){
         if(val >= 0){
             return "+"
         }
-    }else if (flags.space){
+    }else if(flags.space){
         if(val >= 0){
             return " "
         }
     }
-    return ""
+    if(val == 0 && ! Object.is(val, 0)){
+        // -0
+        return '-'
+    }
+    return ''
 }
 
 var str_format = function(val, flags) {
@@ -613,13 +617,39 @@ var _floating_g_exp_helper = function(val, precision, flags, upper){
     return val
 }
 
+function roundDownToFixed(v, d){
+    if(d == 0 && v.toString().indexOf('e') > -1){
+        // with precision 0, never include "e"
+        return BigInt(v).toString()
+    }
+    const mul = Math.pow(10, d);
+    var is_neg = v < 0
+    if(is_neg){
+        v = -v
+    }
+    var res_floor = (Math.floor(v * mul) / mul).toFixed(d),
+        res_ceil = (Math.ceil(v * mul) / mul).toFixed(d),
+        res
+    if(v - res_floor == res_ceil - v){
+        // if two multiples are equally close, rounding is done toward
+        // the even choice
+        var last = res_floor[res_floor.length - 1]
+        res = last.match(/[02468]/) ? res_floor : res_ceil
+    }else{
+        res = v - res_floor < res_ceil - v ? res_floor : res_ceil
+    }
+    return is_neg ? '-' + res : res
+}
+
 // fF
 var floating_point_decimal_format = function(val, upper, flags){
     val = _float_helper(val, flags)
     return format_padding(format_sign(val, flags) +
         format_float_precision(val, upper, flags,
             function(val, precision, flags) {
-                val = val.toFixed(precision)
+                // can't use val.toFixed(precision) because
+                // (2.5).toFixed(0) returns "3", not "2"...
+                val = roundDownToFixed(val, precision)
                 if(precision === 0 && flags.alternate){
                     val += '.'
                 }
@@ -629,15 +659,14 @@ var floating_point_decimal_format = function(val, upper, flags){
     )
 }
 
-var _floating_exp_helper = function(val, precision, flags, upper) {
+var _floating_exp_helper = function(val, precision, flags, upper){
     val = val.toExponential(precision)
     // pad exponent to two digits
     var e_idx = val.lastIndexOf("e")
     if(e_idx > val.length - 4){
         val = val.substring(0, e_idx + 2) + "0" + val.substring(e_idx + 2)
     }
-    if(upper){return val.toUpperCase()}
-    return val
+    return upper ? val.toUpperCase() : val
 }
 
 // eE

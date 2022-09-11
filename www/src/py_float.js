@@ -254,7 +254,6 @@ function preformat(self, fmt){
     if(fmt.type == "%"){
         value *= 100
     }
-
     if(fmt.type == "e"){
         var res = value.toExponential(fmt.precision),
             exp = parseInt(res.substr(res.search("e") + 1))
@@ -267,13 +266,14 @@ function preformat(self, fmt){
 
     if(fmt.precision !== undefined){
         // Use Javascript toFixed to get the correct result
-        // The argument of toFixed is the number of digits after .
+        // The argument of toFixed is the number of digits after "."
         var prec = fmt.precision
         if(prec == 0){
             return Math.round(value) + ""
         }
         var res = value.toFixed(prec),
             pt_pos = res.indexOf(".")
+
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
             if(pt_pos == -1){
@@ -300,16 +300,16 @@ function preformat(self, fmt){
                     parts[0] += '.'
                 }
             }else{
-                if(parts[1]){
-                    var signif = parts[0]
+                var signif = parts[0]
+                if(signif.indexOf('.') > 0){
                     while(signif.endsWith("0")){
                         signif = signif.substr(0, signif.length - 1)
                     }
-                    if(signif.endsWith(".")){
-                        signif = signif.substr(0, signif.length - 1)
-                    }
-                    parts[0] = signif
                 }
+                if(signif.endsWith(".")){
+                    signif = signif.substr(0, signif.length - 1)
+                }
+                parts[0] = signif
             }
             res = parts.join("e")
             if(fmt.type == "G"){
@@ -366,7 +366,8 @@ float.__format__ = function(self, format_spec){
     check_self_is_float(self, '__format__')
     var fmt = new $B.parse_format_spec(format_spec)
     fmt.align = fmt.align || ">"
-    var raw = preformat(self, fmt).split('.'),
+    var pf = preformat(self, fmt)
+    var raw = pf.split('.'),
         _int = raw[0]
     if(fmt.comma){
         var len = _int.length, nb = Math.ceil(_int.length / 3), chunks = []
@@ -376,7 +377,7 @@ float.__format__ = function(self, format_spec){
         chunks.reverse()
         raw[0] = chunks.join(",")
     }
-    return $B.format_width(raw.join("."), fmt)
+    return $B.format_width(raw.join("."), fmt) // in py_string.js
 }
 
 float.__hash__ = function(self) {
@@ -394,7 +395,7 @@ float.__hash__ = function(self) {
         return Math.round(_v)
     }
 
-    var r = frexp(_v)
+    var r = frexp(self)
     r[0] *= Math.pow(2, 31)
     var hipart = _b_.int.$factory(r[0])
     r[0] = (r[0] - hipart) * Math.pow(2, 31)
