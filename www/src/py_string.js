@@ -379,6 +379,7 @@ var NotANumber = function() {
 
 var number_check = function(s){
     if(! _b_.isinstance(s, [_b_.int, _b_.float])){
+        console.log('not a number', s)
         throw new NotANumber()
     }
 }
@@ -456,10 +457,6 @@ var format_sign = function(val, flags){
             return " "
         }
     }
-    if(val == 0 && ! Object.is(val, 0)){
-        // -0
-        return '-'
-    }
     return ''
 }
 
@@ -532,89 +529,52 @@ var validate_precision = function(precision) {
 
 // gG
 var floating_point_format = function(val, upper, flags){
-    val = _float_helper(val, flags),
-        v = val.toString(),
-        v_len = v.length,
-        dot_idx = v.indexOf('.')
-    if(dot_idx < 0){dot_idx = v_len}
-    if(val < 1 && val > -1){
-        var zeros = leading_zeros.exec(v),
-            numzeros
-        if(zeros){
-            numzeros = zeros[1].length
-        }else{
-            numzeros = 0
-        }
-        if(numzeros >= 4){
-            val = format_sign(val, flags) + format_float_precision(val, upper,
-                flags, _floating_g_exp_helper)
-            if(!flags.alternate){
-                var trl = trailing_zeros.exec(val)
-                if(trl){
-                    val = trl[1].replace(trailing_dot, "") + trl[3]  // remove trailing
-                }
-            }else{
-                if(flags.precision <= 1){
-                    val = val[0] + "." + val.substring(1)
-                }
-            }
-            return format_padding(val, flags)
-        }
-        flags.precision = (flags.precision || 0) + numzeros
-        return format_padding(format_sign(val, flags) +
-            format_float_precision(val, upper, flags,
-                function(val, precision) {
-                    return val.toFixed(_b_.min(precision, v_len - dot_idx) +
-                        numzeros)
-                }),
-            flags
-        )
+    val = _float_helper(val, flags)
+    var p = flags.precision
+    if(p == 0){
+        p = 1
     }
+    var exp_format = val.toExponential(p - 1),
+        e_index = exp_format.indexOf('e'),
+        exp = parseInt(exp_format.substr(e_index + 1)),
+        res
 
-    if(dot_idx > flags.precision){
-        val = format_sign(val, flags) + format_float_precision(val, upper,
-            flags, _floating_g_exp_helper)
-        if(! flags.alternate){
-            var trl = trailing_zeros.exec(val)
-            if(trl){
-                val = trl[1].replace(trailing_dot, "") + trl[3]  // remove trailing
+    function remove_zeros(v){
+        if(flags.alternate){
+            return v
+        }
+        if(v.indexOf('.') > -1){
+            while(v.endsWith('0')){
+                v = v.substr(0, v.length - 1)
             }
-        }else{
-            if(flags.precision <= 1){
-                val = val[0] + "." + val.substring(1)
+            if(v.endsWith('.')){
+                v = v.substr(0, v.length - 1)
             }
         }
-        return format_padding(val, flags)
+        return v
     }
-    return format_padding(format_sign(val, flags) +
-        format_float_precision(val, upper, flags,
-            function(val, precision) {
-                if(!flags.decimal_point){
-                    precision = _b_.min(v_len - 1, 6)
-                }else if (precision > v_len){
-                    if(! flags.alternate){
-                        precision = v_len
-                    }
-                }
-                if(precision < dot_idx){
-                    precision = dot_idx
-                }
-                return val.toFixed(precision - dot_idx)
-            }),
-        flags
-    )
-}
-
-var _floating_g_exp_helper = function(val, precision, flags, upper){
-    if(precision){--precision}
-    val = val.toExponential(precision)
-    // pad exponent to two digits
-    var e_idx = val.lastIndexOf("e")
-    if(e_idx > val.length - 4){
-        val = val.substring(0, e_idx + 2) + "0" + val.substring(e_idx + 2)
+    
+    if(-4 <= exp && exp < p){
+        /*
+        If m <= exp < p, where m is -4 for floats and -6 for Decimals, the
+        number is formatted with presentation type 'f' and precision p-1-exp
+        */
+        flags.precision = Math.max(0, p - 1 - exp)
+        res = floating_point_decimal_format(val, upper, flags)
+        res = remove_zeros(res)
+    }else{
+        /*
+        Otherwise, the number is formatted with presentation type 'e' and
+        precision p-1
+        */
+        flags.precision = Math.max(0, p - 1)
+        var delim = upper ? 'E' : 'e',
+            exp_fmt = floating_point_exponential_format(val, upper, flags);
+            parts = exp_fmt.split(delim)
+        parts[0] = remove_zeros(parts[0])
+        res = parts.join(delim)
     }
-    if(upper){return val.toUpperCase()}
-    return val
+    return format_padding(format_sign(val, flags) + res, flags)
 }
 
 function roundDownToFixed(v, d){
@@ -649,24 +609,77 @@ var floating_point_decimal_format = function(val, upper, flags){
             function(val, precision, flags) {
                 // can't use val.toFixed(precision) because
                 // (2.5).toFixed(0) returns "3", not "2"...
-                val = roundDownToFixed(val, precision)
+                var res = roundDownToFixed(val, precision)
                 if(precision === 0 && flags.alternate){
-                    val += '.'
+                    res += '.'
                 }
-                return val
+                if(Object.is(val, -0)){
+                    res = '-' + res
+                }
+                return res
             }),
         flags
     )
 }
 
 var _floating_exp_helper = function(val, precision, flags, upper){
-    val = val.toExponential(precision)
-    // pad exponent to two digits
-    var e_idx = val.lastIndexOf("e")
-    if(e_idx > val.length - 4){
-        val = val.substring(0, e_idx + 2) + "0" + val.substring(e_idx + 2)
+    var is_neg = false,
+        val_pos = val.toString()
+    if(val < 0){
+        is_neg = true
+        val_pos = val_pos.substr(1)
+    }else if(Object.is(val, -0)){
+        is_neg = true
     }
-    return upper ? val.toUpperCase() : val
+
+    var parts = val_pos.split('.'),
+        exp = 0,
+        exp_sign = '+',
+        mant
+    if(parts[0] == '0'){
+        if(parts[1]){
+            exp_sign = '-'
+            exp++
+            var i = 0
+            while(parts[1][i] == '0'){
+                i++
+            }
+            exp += i
+            mant = parts[1][i]
+            if(parts[1][i + 1]){
+                mant += '.' + parts[1].substr(i + 1)
+            }
+        }else{
+            mant = '0'
+        }
+    }else{
+        exp = parts[0].length - 1
+        mant = parts[0][0]
+        if(parts[0].length > 1){
+            mant += '.' + parts[0].substr(1) + (parts[1] || '')
+        }else if(parts[1]){
+            mant += '.' + parts[1]
+        }
+    }
+    mant = parseFloat(mant)
+    // round mantissa to precision
+    mant = roundDownToFixed(parseFloat(mant), precision)
+    if(parseFloat(mant) == 10){
+        // 9.5 is rounded to 10 !
+        parts = mant.split('.')
+        parts[0] = '1'
+        mant = parts.join('.')
+        exp = parseInt(exp) + 1
+    }
+    if(flags.alternate && mant.indexOf('.') == -1){
+        mant += '.'
+    }
+
+    if(exp.toString().length == 1){
+        // exponent has at least 2 digits
+        exp = '0' + exp
+    }
+    return `${is_neg ? '-' : ''}${mant}${upper ? 'E' : 'e'}${exp_sign}${exp}`
 }
 
 // eE
@@ -953,6 +966,7 @@ str.__mod__ = function(_self, args){
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) +
                         ") at index " + newpos)
                 }else if(err.name === "NotANumber"){
+                    console.log('func', func + '', 'threw NotANumber')
                     var try_char = s[newpos],
                         cls = _self.__class__
                     if(!cls){
