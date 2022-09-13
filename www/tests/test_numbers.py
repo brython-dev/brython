@@ -708,4 +708,8 @@ x = 0
 x += 0.5
 assert x == abs(x), (x, abs(x))
 
+# issue 2023
+assert_raises(TypeError, eval, "1 % 'a'",
+    msg="unsupported operand type(s) for %: 'int' and 'str'")
+    
 print('passed all tests...')

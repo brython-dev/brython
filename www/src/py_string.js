@@ -553,7 +553,7 @@ var floating_point_format = function(val, upper, flags){
         }
         return v
     }
-    
+
     if(-4 <= exp && exp < p){
         /*
         If m <= exp < p, where m is -4 for floats and -6 for Decimals, the
@@ -1124,6 +1124,9 @@ str.__repr__ = function(_self){
 str.__rmod__ = function(){
     var $ = $B.args('__rmod__', 2, {self: null, other: null},
                     ['self', 'other'], arguments, {}, null, null)
+    if(! _b_.isinstance($.other, str)){
+        return _b_.NotImplemented
+    }
     return str.__mod__($.other, $.self)
 }
 
