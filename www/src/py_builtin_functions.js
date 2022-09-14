@@ -955,6 +955,9 @@ function in_mro(klass, attr){
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var res
+    if(obj === undefined){
+        console.log('attr', attr, 'of obj undef')
+    }
     if(obj.$method_cache &&
             obj.$method_cache[attr] &&
             obj.__class__ &&
@@ -978,7 +981,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "A" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__annotations__" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -995,7 +998,13 @@ $B.$getattr = function(obj, attr, _default){
             console.log('\nobj[attr]', obj[attr])
         }
         if(obj[attr] !== undefined){
-            return obj[attr]
+            if(attr == "__class__" && obj.__class__.__dict__ &&
+                    obj.__class__.__dict__.$string_dict.__class__){
+                // special case : the objects' class has an explicit attribute
+                // __class__ (eg NonCallableMock in unittest.mock...)
+            }else{
+                return obj[attr]
+            }
         }else if(obj.__dict__ &&
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
                 ! (klass.hasOwnProperty(attr) &&
@@ -1056,18 +1065,33 @@ $B.$getattr = function(obj, attr, _default){
           break
       case '__class__':
           // attribute __class__ is set for all Python objects
+          if(klass.__dict__ && klass.__dict__.$string_dict.__class__){
+              var klass_class = klass.__dict__.$string_dict.__class__[0]
+              if(klass_class.$is_property){
+                  return klass_class.fget(obj)
+              }
+              return klass_class
+          }
           return klass
       case '__dict__':
           if(is_class){
-              var proxy = {}
-              for(var key in obj){
-                  if(! key.startsWith("$")){
-                      proxy[key] = obj[key]
+              var dict = {}
+              if(obj.__dict__){
+                  for(var key in obj.__dict__.$string_dict){
+                      dict[key] = obj.__dict__.$string_dict[key][0]
+                  }
+              }else{
+                  for(var key in obj){
+                      if(! key.startsWith("$")){
+                          dict[key] = obj[key]
+                      }
                   }
               }
-              proxy.__dict__ = $B.getset_descriptor.$factory(obj,
-                  "__dict__") // in py_dict.js
-              return $B.mappingproxy.$factory(proxy) // in py_dict.js
+              dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__')
+              return {
+                  __class__: $B.mappingproxy, // in py_dict.js
+                  $jsobj: dict
+                  }
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
@@ -1572,10 +1596,18 @@ function isinstance(obj, cls){
 
 function issubclass(klass, classinfo){
     check_nb_args_no_kw('issubclass', 2, arguments)
-
+    var mro
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
-        throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
+        var meta = $B.$getattr(klass, '__class__', null) // found in unittest.mock
+        if(meta === null){
+            throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
+        }else{
+            console.log(klass, 'has an attribute __class__', meta)
+            mro = [_b_.object]
+        }
+    }else{
+        mro = klass.__mro__
     }
     if(isinstance(classinfo, _b_.tuple)){
         for(var i = 0; i < classinfo.length; i++){
@@ -1590,7 +1622,7 @@ function issubclass(klass, classinfo){
 
     if(classinfo.$factory || classinfo.$is_class){
         if(klass === classinfo ||
-                klass.__mro__.indexOf(classinfo) > -1){
+                mro.indexOf(classinfo) > -1){
             return true
         }
     }
@@ -2144,11 +2176,6 @@ property.__get__ = function(self, obj) {
         throw _b_.AttributeError.$factory("unreadable attribute")
     }
     return $B.$call(self.fget)(obj)
-}
-
-property.__repr__ = function(self){
-    $B.builtins_repr_check(property, arguments) // in brython_builtins.js
-    return _b_.repr(self.fget(self))
 }
 
 property.__set__ = function(self, obj, value){

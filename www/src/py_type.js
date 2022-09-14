@@ -92,6 +92,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // Transform class object into a dictionary
     for(var attr in class_obj){
         if(attr == "__annotations__"){
+
             if(cl_dict.$string_dict[attr] === undefined){
                 cl_dict.$string_dict[attr] = [$B.empty_dict(), cl_dict.$order++]
             }
@@ -99,6 +100,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 $B.$setitem(cl_dict.$string_dict[attr][0], key,
                     class_obj[attr].$string_dict[key][0])
             }
+
         }else{
             if(attr.charAt(0) != "$"){
                 set_class_item(attr, class_obj[attr])
@@ -116,6 +118,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         __class__: metaclass,
         __dict__: cl_dict
     }
+
     if(cl_dict.__class__ === _b_.dict){
         for(var key in cl_dict.$string_dict){
             class_dict[key] = cl_dict.$string_dict[key][0]
@@ -133,7 +136,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
     class_dict.__mro__ = _b_.type.mro(class_dict).slice(1)
-
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
@@ -234,8 +236,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 Object.keys(abstract_methods).join(", "))}
         kls.$factory = nofactory
     }
-
-    kls.__qualname__ = class_name
 
     return kls
 }
@@ -606,6 +606,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         var key = items[i][0],
             v = items[i][1]
         if(key === "__module__"){continue} // already set
+        if(key === "__class__"){continue} // already set
+
         if(v === undefined){continue}
         class_dict[key] = v
         if(v.__class__){
@@ -851,8 +853,8 @@ var $instance_creator = $B.$instance_creator = function(klass){
                     }
                 }
                 var res = Object.create(null)
-                $B.update_obj(res,
-                    {__class__: klass, __dict__: $B.empty_dict()})
+                $B.update_obj(res, {__class__: klass,
+                                    __dict__: $B.empty_dict()})
                 return res
             }
         }

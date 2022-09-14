@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-13 09:21:03.797765"
-__BRYTHON__.timestamp=1663053663797
+__BRYTHON__.compiled_date="2022-09-14 21:46:25.838920"
+__BRYTHON__.timestamp=1663184785837
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4774,6 +4774,7 @@ var res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
 if(res===undefined && obj.__dict__){var dict=obj.__dict__
+if(dict.__class__===$B.getset_descriptor){return dict.cls[attr]}
 if(dict.$string_dict.hasOwnProperty(attr)){if($test){console.log("__dict__ hasOwnProperty",attr,dict.$string_dict[attr])}
 return dict.$string_dict[attr][0]}}
 if(res===undefined){
@@ -4994,7 +4995,6 @@ if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't in
 "interface with abstract methods "+
 Object.keys(abstract_methods).join(", "))}
 kls.$factory=nofactory}
-kls.__qualname__=class_name
 return kls}
 function meta_from_bases(class_name,module,bases){var metaclass
 if(bases && bases.length > 0){metaclass=bases[0].__class__
@@ -5121,6 +5121,7 @@ class_dict.__mro__=type.mro(class_dict).slice(1)
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
 if(key==="__module__"){continue}
+if(key==="__class__"){continue}
 if(v===undefined){continue}
 class_dict[key]=v
 if(v.__class__){
@@ -6496,6 +6497,7 @@ for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return m
 return false}
 $B.$getattr=function(obj,attr,_default){
 var res
+if(obj===undefined){console.log('attr',attr,'of obj undef')}
 if(obj.$method_cache &&
 obj.$method_cache[attr]&&
 obj.__class__ &&
@@ -6514,7 +6516,8 @@ klass.__getattribute__===undefined &&
 (klass.__bases__.length==1 &&
 klass.__bases__[0]===_b_.object))){if($test){console.log("class without parent",klass)
 console.log('\nobj[attr]',obj[attr])}
-if(obj[attr]!==undefined){return obj[attr]}else if(obj.__dict__ &&
+if(obj[attr]!==undefined){if(attr=="__class__" && obj.__class__.__dict__ &&
+obj.__class__.__dict__.$string_dict.__class__){}else{return obj[attr]}}else if(obj.__dict__ &&
 obj.__dict__.$string_dict.hasOwnProperty(attr)&&
 !(klass.hasOwnProperty(attr)&&
 klass[attr].__get__)){return obj.__dict__.$string_dict[attr][0]}else if(klass.hasOwnProperty(attr)){if($test){console.log('class has attr',attr,klass[attr])}
@@ -6540,12 +6543,17 @@ res.$infos={__name__:"__call__"}
 return res}
 break
 case '__class__':
+if(klass.__dict__ && klass.__dict__.$string_dict.__class__){var klass_class=klass.__dict__.$string_dict.__class__[0]
+if(klass_class.$is_property){return klass_class.fget(obj)}
+return klass_class}
 return klass
 case '__dict__':
-if(is_class){var proxy={}
-for(var key in obj){if(! key.startsWith("$")){proxy[key]=obj[key]}}
-proxy.__dict__=$B.getset_descriptor.$factory(obj,"__dict__")
-return $B.mappingproxy.$factory(proxy)}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
+if(is_class){var dict={}
+if(obj.__dict__){for(var key in obj.__dict__.$string_dict){dict[key]=obj.__dict__.$string_dict[key][0]}}else{for(var key in obj){if(! key.startsWith("$")){dict[key]=obj[key]}}}
+dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__')
+return{
+__class__:$B.mappingproxy,
+$jsobj:dict}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
 return $B.obj_dict(obj,function(attr){return['__class__'].indexOf(attr)>-1}
 )}
 case '__mro__':
@@ -6720,14 +6728,17 @@ var instancecheck=$B.$getattr(cls.__class__ ||$B.get_class(cls),'__instancecheck
 if(instancecheck !==_b_.None){return instancecheck(cls,obj)}
 return false}
 function issubclass(klass,classinfo){check_nb_args_no_kw('issubclass',2,arguments)
+var mro
 if(!klass.__class__ ||
-!(klass.$factory !==undefined ||klass.$is_class !==undefined)){throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")}
+!(klass.$factory !==undefined ||klass.$is_class !==undefined)){var meta=$B.$getattr(klass,'__class__',null)
+if(meta===null){throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")}else{console.log(klass,'has an attribute __class__',meta)
+mro=[_b_.object]}}else{mro=klass.__mro__}
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
 return false}
 if(classinfo.__class__===$B.GenericAlias){throw _b_.TypeError.$factory(
 'issubclass() arg 2 cannot be a parameterized generic')}
 if(classinfo.$factory ||classinfo.$is_class){if(klass===classinfo ||
-klass.__mro__.indexOf(classinfo)>-1){return true}}
+mro.indexOf(classinfo)>-1){return true}}
 var sch=$B.$getattr(classinfo.__class__ ||$B.get_class(classinfo),'__subclasscheck__',_b_.None)
 if(sch==_b_.None){return false}
 return sch(classinfo,klass)}
@@ -6931,8 +6942,6 @@ self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,sel
 self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
 property.__get__=function(self,obj){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
 return $B.$call(self.fget)(obj)}
-property.__repr__=function(self){$B.builtins_repr_check(property,arguments)
-return _b_.repr(self.fget(self))}
 property.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
 $B.$getattr(self.fset,'__call__')(obj,value)}
 $B.set_func_names(property,"builtins")
@@ -9101,7 +9110,7 @@ return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){$B.stdlib={}
-var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','re1','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
+var pylist=['VFS_import','__future__','_codecs','_codecs_jp','_collections','_collections_abc','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_operator','_py_abc','_pydecimal','_queue','_random','_signal','_socket','_sre','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_weakref','_weakrefset','abc','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.aio','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','nntplib','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pydoc','queue','quopri','re','re1','reprlib','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uu','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_sre','_sre_utils','_string','_strptime','_svg','_symtable','_webcomponent','_webworker','_zlib_utils','aes','array','bry_re','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','long_int','marshal','math','md5','modulefinder','pbkdf2','posix','python_re','rabbit','rabbit-legacy','random','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
@@ -15293,7 +15302,8 @@ for(var data of ste.directives){if(data[0]==name){set_exc_info(exc,ste.table.fil
 return 0}}
 PyErr_SetString(PyExc_RuntimeError,"BUG: internal directive bookkeeping broken")
 return 0}
-function SET_SCOPE(DICT,NAME,I){$B.$setitem(DICT,NAME,I)}
+function SET_SCOPE(DICT,NAME,I){
+DICT[NAME]=I}
 function analyze_name(ste,scopes,name,flags,bound,local,free,global){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){var exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
 error_at_directive(exc,ste,name)
 throw exc}

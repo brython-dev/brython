@@ -1200,8 +1200,8 @@ mappingproxy.__setitem__ = function(){
 for(var attr in dict){
     if(mappingproxy[attr] !== undefined ||
             ["__class__", "__mro__", "__new__", "__init__", "__delitem__",
-                "clear", "fromkeys", "pop", "popitem", "setdefault",
-                "update"].indexOf(attr) > -1){
+             "clear", "fromkeys", "pop", "popitem", "setdefault",
+             "update"].indexOf(attr) > -1){
         continue
     }
     if(typeof dict[attr] == "function"){

@@ -832,4 +832,16 @@ a = A()
 a.upscale()
 assert a._A__scale == 2
 
+# setting attribute __class__ inside a class definition
+class A:
+
+  @property
+  def __class__(self):
+    return 99
+
+assert A.__class__ is type
+assert type(A.__dict__['__class__']) is property
+assert A().__class__ == 99
+
+
 print('passed all tests..')

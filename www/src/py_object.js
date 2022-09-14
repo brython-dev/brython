@@ -125,6 +125,9 @@ object.__getattribute__ = function(obj, attr){
 
     if(res === undefined && obj.__dict__){
         var dict = obj.__dict__
+        if(dict.__class__ === $B.getset_descriptor){
+            return dict.cls[attr]
+        }
         if(dict.$string_dict.hasOwnProperty(attr)){
             if($test){
                 console.log("__dict__ hasOwnProperty", attr, dict.$string_dict[attr])

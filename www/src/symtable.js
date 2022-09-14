@@ -346,7 +346,7 @@ function error_at_directive(exc, ste, name){
 */
 
 function SET_SCOPE(DICT, NAME, I) {
-    $B.$setitem(DICT, NAME, I)
+    DICT[NAME] = I
 }
 
 /* Decide on scope of name, given flags.
