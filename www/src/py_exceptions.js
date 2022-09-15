@@ -137,9 +137,8 @@ $B.set_func_names(traceback, "builtins")
 
 // class of frame objects
 var frame = $B.frame = $B.make_class("frame",
-    function(frame_list, pos){
+    function(frame_list){
         frame_list.__class__ = frame
-        frame_list.$pos = pos
         return frame_list
     }
 )
@@ -160,9 +159,9 @@ frame.__getattr__ = function(_self, attr){
     // Used for f_back to avoid computing it when the frame object
     // is initialised
     if(attr == "f_back"){
-        if(_self.$pos > 0){
-            return frame.$factory($B.frames_stack[_self.$pos - 1],
-                _self.$pos - 1)
+        var pos = $B.frames_stack.indexOf(_self)
+        if(pos > 0){
+            return frame.$factory($B.frames_stack[pos - 1])
         }else{
             return _b_.None
         }

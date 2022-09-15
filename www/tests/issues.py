@@ -3119,6 +3119,20 @@ with x as y:
 assert_raises(TypeError, exec, test,
   msg="'str' object does not support the context manager protocol")
 
+# issue 2030
+def f():
+  return 5
+
+def tracefn(frame, event, arg):
+  assert frame.f_back is not None
+
+def main():
+  sys.settrace(tracefn)
+  f()
+  sys.settrace(None)
+
+main()
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
