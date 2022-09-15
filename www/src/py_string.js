@@ -703,7 +703,7 @@ var signed_hex_format = function(val, upper, flags){
     }
 
     if(val.__class__ === $B.long_int){
-       ret = $B.long_int.to_base(val, 16)
+       ret = val.value.toString(16)
     }else{
        ret = parseInt(val)
        ret = ret.toString(16)

@@ -711,5 +711,10 @@ assert x == abs(x), (x, abs(x))
 # issue 2023
 assert_raises(TypeError, eval, "1 % 'a'",
     msg="unsupported operand type(s) for %: 'int' and 'str'")
-    
+
+# issue 2026
+x = 65152
+x <<= 112
+assert x == 338288524927261089654018896841347694592
+
 print('passed all tests...')
