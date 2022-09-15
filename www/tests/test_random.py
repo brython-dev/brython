@@ -2,6 +2,8 @@ import random
 
 from tester import assertRaises
 
+random._test()
+
 random.seed(b'azerty')
 x1 = random.random()
 assert 0 <= x1 <=1
