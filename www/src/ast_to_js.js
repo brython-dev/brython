@@ -1523,8 +1523,10 @@ $B.ast.For.prototype.to_js = function(scopes){
         new_scope = copy_scope(scope, this, id)
     scopes.push(new_scope)
 
+    js = `$B.set_lineno(frame, ${this.lineno})\n`
+
     if(this instanceof $B.ast.AsyncFor){
-        js = `var iter_${id} = ${iter},\n` +
+        js += `var iter_${id} = ${iter},\n` +
                  `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
             `var next_func_${id} = $B.$call(` +
@@ -1537,7 +1539,7 @@ $B.ast.For.prototype.to_js = function(scopes){
             `    else{\nthrow err}\n`+
             `  }\n`
     }else{
-        js = `var no_break_${id} = true\n` +
+        js += `var no_break_${id} = true\n` +
              `var next_func_${id} = $B.next_of(${iter})\n` +
              `while(true){\n` +
                  `try{\n` +
