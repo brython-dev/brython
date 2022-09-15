@@ -844,7 +844,6 @@ function trace_from_stack(err){
             if(line){
                 trace.push('    ' + line.trim())
             }
-            console.log('src', src, '\lineno', lineno, 'line', line)
             // preliminary for PEP 657
             if(err.$positions !== undefined){
                 var position = err.$positions[frame_num],
