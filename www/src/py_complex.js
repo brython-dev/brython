@@ -255,9 +255,9 @@ function hypot(){
 // functions copied from CPython Objects/complexobject.c
 function c_powi(x, n){
     if (n > 0){
-        return c_powu(x,n)
+        return c_powu(x, n)
     }else{
-        return c_quot(c_1, c_powu(x,-n))
+        return c_quot(c_1, c_powu(x, -n))
     }
 }
 
@@ -323,11 +323,11 @@ complex.__pow__ = function(self, other){
 
     // Check whether the exponent has a small integer value, and if so use
     // a faster and more accurate algorithm.
-    if ((_b_.isinstance(other, _b_.int) && _b_.abs(other) < 100) ||
-            (other.$imag.value == 0.0 &&
-                other.$real.value == _b_.floor(other.$real.value) &&
-                _b_.abs(other.$real.value) <= 100.0)) {
+    if (_b_.isinstance(other, _b_.int) && _b_.abs(other) < 100){
         return c_powi(self, other)
+    }
+    if(_b_.isinstance(other, _b_.float)){
+        other = _b_.float.$to_js_number(other)
     }
     var exp = complex2expo(self),
         angle = exp.angle,

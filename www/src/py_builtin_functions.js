@@ -1559,8 +1559,6 @@ function isinstance(obj, cls){
             else if($B.builtin_classes.indexOf(cls) > -1){
                 return false
             }
-        }else if(obj.contructor === Number && Number.isFinite(obj)){
-            if(cls == _b_.float){return true}
         }else if(typeof obj == 'number' && Number.isFinite(obj)){
             if(Number.isFinite(obj) && cls == _b_.int){return true}
         }

@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-14 21:46:25.838920"
-__BRYTHON__.timestamp=1663184785837
+__BRYTHON__.compiled_date="2022-09-15 17:59:21.520955"
+__BRYTHON__.timestamp=1663257561519
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5408,7 +5408,7 @@ obj.__class__=$B.Function
 return $B.Function
 case "object":
 if(Array.isArray(obj)){if(Object.getPrototypeOf(obj)===Array.prototype){obj.__class__=_b_.list
-return _b_.list}}else if(obj.constructor===Number){return _b_.float}else if(typeof Node !=="undefined" 
+return _b_.list}}else if(typeof Node !=="undefined" 
 && obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
 $B.DOMNode}
 return $B.DOMNode}
@@ -6715,7 +6715,7 @@ case "boolean":
 return true}}
 var klass=obj.__class__
 if(klass==undefined){if(typeof obj=='string'){if(cls==_b_.str){return true}
-else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(obj.contructor===Number && Number.isFinite(obj)){if(cls==_b_.float){return true}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}}
+else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}}
 klass=$B.get_class(obj)}
 if(klass===undefined){return false}
 function check(kl,cls){if(kl===cls){return true}
@@ -7478,14 +7478,14 @@ return _self}else{return _b_.None}
 default:
 return _b_.object.__getattribute__(_self,attr)}}
 $B.set_func_names(traceback,"builtins")
-var frame=$B.frame=$B.make_class("frame",function(frame_list,pos){frame_list.__class__=frame
-frame_list.$pos=pos
+var frame=$B.frame=$B.make_class("frame",function(frame_list){frame_list.__class__=frame
 return frame_list}
 )
 frame.__delattr__=function(_self,attr){if(attr=="f_trace"){_self[1].$f_trace=_b_.None}}
 frame.__dir__=function(_self){return _b_.object.__dir__(frame).concat(['clear','f_back','f_builtins','f_code','f_globals','f_lasti','f_lineno','f_locals','f_trace','f_trace_lines','f_trace_opcodes'])}
 frame.__getattr__=function(_self,attr){
-if(attr=="f_back"){if(_self.$pos > 0){return frame.$factory($B.frames_stack[_self.$pos-1],_self.$pos-1)}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
+if(attr=="f_back"){var pos=$B.frames_stack.indexOf(_self)
+if(pos > 0){return frame.$factory($B.frames_stack[pos-1])}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
 if(locals.$f_trace===undefined){return _b_.None}
 return locals.$f_trace}}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
@@ -9861,7 +9861,7 @@ parts=exp_fmt.split(delim)
 parts[0]=remove_zeros(parts[0])
 res=parts.join(delim)}
 return format_padding(format_sign(val,flags)+res,flags)}
-function roundDownToFixed(v,d){if(d==0 && v.toString().indexOf('e')>-1){
+var roundDownToFixed=$B.roundDownToFixed=function(v,d){if(d==0 && v.toString().indexOf('e')>-1){
 return BigInt(v).toString()}
 const mul=Math.pow(10,d);
 var is_neg=v < 0
@@ -9906,6 +9906,7 @@ return `${is_neg ? '-' : ''}${mant}${upper ? 'E' : 'e'}${exp_sign}${exp}`}
 var floating_point_exponential_format=function(val,upper,flags){val=_float_helper(val,flags)
 return format_padding(format_sign(val,flags)+
 format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
+$B.formatters={floating_point_format,floating_point_decimal_format,floating_point_exponential_format}
 var signed_hex_format=function(val,upper,flags){var ret
 if(! _b_.isinstance(val,_b_.int)){throw _b_.TypeError.$factory(
 `%X format: an integer is required, not ${$B.class_name(val)}`)}
@@ -11271,6 +11272,7 @@ throw _b_.TypeError.$factory(msg)}
 function float_value(obj){
 return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
 float.numerator=function(self){return self.value}
 float.denominator=function(self){return 1}
 float.imag=function(self){return 0}
@@ -11303,6 +11305,7 @@ return fast_float(Math.abs(self.value))}
 float.__bool__=function(self){check_self_is_float(self,'__bool__')
 return _b_.bool.$factory(self.value)}
 float.__ceil__=function(self){check_self_is_float(self,'__ceil__')
+if(isnan(self)){throw _b_.ValueError.$factory('cannot convert float NaN to integer')}else if(isinf(self)){throw _b_.OverflowError.$factory('cannot convert float infinity to integer')}
 return Math.ceil(self.value)}
 float.__divmod__=function(self,other){check_self_is_float(self,'__divmod__')
 if(! _b_.isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
@@ -11314,6 +11317,9 @@ if(_b_.isinstance(other,float)){return self.value==other.value}
 if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return false}
 return self.value==other.$real}
 return _b_.NotImplemented}
+float.__floor__=function(self){check_self_is_float(self,'__floor__')
+if(isnan(self)){throw _b_.ValueError.$factory('cannot convert float NaN to integer')}else if(isinf(self)){throw _b_.OverflowError.$factory('cannot convert float infinity to integer')}
+return Math.floor(self.value)}
 float.__floordiv__=function(self,other){check_self_is_float(self,'__floordiv__')
 if(_b_.isinstance(other,float)){if(other.value==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
 return fast_float(Math.floor(self.value/other.value))}
@@ -11368,7 +11374,8 @@ return res}
 if(fmt.precision !==undefined){
 var prec=fmt.precision
 if(prec==0){return Math.round(value)+""}
-var res=value.toFixed(prec),pt_pos=res.indexOf(".")
+var res=$B.roundDownToFixed(value,prec),
+pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){var exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
@@ -11380,8 +11387,12 @@ if(signif.endsWith(".")){signif=signif.substr(0,signif.length-1)}
 parts[0]=signif}
 res=parts.join("e")
 if(fmt.type=="G"){res=res.toUpperCase()}
-return res}else if(fmt.type===undefined){fmt.type="g"
+return res}else if(fmt.type===undefined){
+fmt.type="g"
 res=preformat(self,fmt)
+if(res.indexOf('.')==-1){var exp=res.length-1,exp=exp < 10 ? '0'+exp :exp,is_neg=res.startsWith('-'),point_pos=is_neg ? 2 :1,mant=res.substr(0,point_pos)+'.'+
+res.substr(point_pos)
+return `${mant}e+${exp}`}
 fmt.type=undefined}else{var res1=value.toExponential(fmt.precision-1),exp=parseInt(res1.substr(res1.search("e")+1))
 if(exp <-4 ||exp >=fmt.precision-1){var elts=res1.split("e")
 while(elts[0].endsWith("0")){elts[0]=elts[0].substr(0,elts[0].length-1)}
@@ -11402,9 +11413,11 @@ for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
 raw[0]=chunks.join(",")}
 return $B.format_width(raw.join("."),fmt)}
+var nan_hash=$B.$py_next_hash--
 float.__hash__=function(self){check_self_is_float(self,'__hash__')
+if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 var _v=self.value
-if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return 0}
+if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return self.__hashvalue__=nan_hash}else if(_v===Number.MAX_VALUE){return self.__hashvalue__=2234066890152476671}
 if(_v==Math.round(_v)){return Math.round(_v)}
 var r=frexp(self)
 r[0]*=Math.pow(2,31)
@@ -11500,19 +11513,22 @@ float.__pos__=function(self){return fast_float(+self.value)}
 float.__pow__=function(self,other){var other_int=_b_.isinstance(other,_b_.int)
 if(other_int ||_b_.isinstance(other,float)){if(! other_int){other=other.value}
 if(self.value==1){return fast_float(1)}else if(other==0){return fast_float(1)}
-if(self.value==-1 &&
-(! isFinite(other)||other.__class__===$B.long_int ||
-! Number.isSafeInteger(other))&&
-! isNaN(other)){return fast_float(1)}else if(self.value==0 && isFinite(other)&& other < 0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised "+
-"to a negative power")}else if(self.value==Number.NEGATIVE_INFINITY && ! isNaN(other)){if(other < 0 && other % 2==1){return fast_float(-0.0)}else if(other < 0){return fast_float(0)}else if(other > 0 && other % 2==1){return fast_float(Number.NEGATIVE_INFINITY)}else{return fast_float(Number.POSITIVE_INFINITY)}}else if(self.value==Number.POSITIVE_INFINITY && ! isNaN(other)){return other > 0 ? fast_float(self):fast_float(0)}
-if(other==Number.NEGATIVE_INFINITY && ! isNaN(self)){return Math.abs(self.value)< 1 ?
+if(isNaN(other)){return fast_float(Number.NaN)}
+if(isNaN(self.value)){return fast_float(Number.NaN)}
+if(self.value==-1 && ! isFinite(other)){
+return fast_float(1)}else if(self.value==0 && isFinite(other)&& other < 0){throw _b_.ZeroDivisionError.$factory("0.0 cannot be raised "+
+"to a negative power")}else if(self.value==0 && isFinite(other)&& other >=0){
+if(Number.isInteger(other)&& other % 2==1){return self}
+return fast_float(0)}else if(self.value==Number.NEGATIVE_INFINITY && ! isNaN(other)){
+if(other % 2==-1){return fast_float(-0.0)}else if(other < 0){return fast_float(0)}else if(other % 2==1){return fast_float(Number.NEGATIVE_INFINITY)}else{return fast_float(Number.POSITIVE_INFINITY)}}else if(self.value==Number.POSITIVE_INFINITY && ! isNaN(other)){return other > 0 ? self :fast_float(0)}
+if(other==Number.NEGATIVE_INFINITY && ! isNaN(self.value)){
+return Math.abs(self.value)< 1 ?
 fast_float(Number.POSITIVE_INFINITY):
-fast_float(0)}else if(other==Number.POSITIVE_INFINITY && ! isNaN(self)){return Math.abs(self.value)< 1 ?
+fast_float(0)}else if(other==Number.POSITIVE_INFINITY && ! isNaN(self.value)){
+return Math.abs(self.value)< 1 ?
 fast_float(0):
 fast_float(Number.POSITIVE_INFINITY)}
-if(self.value < 0 &&
-! $B.$getattr(other,"__eq__")(_b_.int.$factory(other))){
-return _b_.complex.__pow__($B.make_complex(self.value,0),other)}
+if(self.value < 0 && ! Number.isInteger(other)){return _b_.complex.__pow__($B.make_complex(self.value,0),fast_float(other))}
 return fast_float(Math.pow(self.value,other))}
 return _b_.NotImplemented}
 function __newobj__(){
@@ -11595,18 +11611,25 @@ if(x >-1){res+=x}
 else{res+=s[i]}}
 return res}
 $B.fast_float=fast_float=function(value){return{__class__:_b_.float,value}}
-float.$factory=function(value){switch(value){case undefined:
-return fast_float(0.0)
-case true:
+float.$factory=function(value){if(value===undefined){return fast_float(0)}
+$B.check_nb_args_no_kw('float',1,arguments)
+switch(value){case true:
 return fast_float(1)
 case false:
 return fast_float(0)}
+var original_value=value
 if(typeof value=="number"){return fast_float(value)}
 if(_b_.isinstance(value,float)){if(value.value==Number.MAX_VALUE){
-return fast_float(Infinity)}else if(value.value==-Number.MAX_VALUE){return fast_float(-Infinity)}
-return value}
-if(_b_.isinstance(value,_b_.bytes)){var s=$B.$getattr(value,"decode")("latin-1")
-return float.$factory($B.$getattr(value,"decode")("latin-1"))}
+var res=fast_float(Infinity)
+res.__hashvalue__=2234066890152476671
+return res}else if(value.value==-Number.MAX_VALUE){return fast_float(-Infinity)}
+if(value.__class__===_b_.float){return value}else{
+console.log('subclass',value)
+var klass=value.__class__,float_method=$B.$call($B.$getattr(klass,'__float__'))
+return float_method(value)}}
+if(_b_.isinstance(value,_b_.bytes)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){throw _b_.ValueError.$factory(
+"could not convert string to float: "+
+_b_.repr(original_value))}}
 if(typeof value=="string"){value=value.trim()
 switch(value.toLowerCase()){case "+inf":
 case "inf":
@@ -11626,10 +11649,9 @@ throw _b_.ValueError.$factory("count not convert string to float")
 default:
 value=value.charAt(0)+value.substr(1).replace(/_/g,"")
 value=to_digits(value)
-if(isFinite(value)){return fast_float(eval(value))}else{_b_.str.encode(value,"latin-1")
-throw _b_.ValueError.$factory(
-"Could not convert to float(): '"+
-_b_.str.$factory(value)+"'")}}}
+if(isFinite(value)){return fast_float(eval(value))}else{throw _b_.ValueError.$factory(
+"could not convert string to float: "+
+_b_.repr(original_value))}}}
 var num_value=$B.to_num(value,["__float__","__index__"])
 if(num_value !==null){if(! isFinite(num_value.value)){throw _b_.OverflowError.$factory('int too large to convert to float')}
 return num_value}
@@ -11643,7 +11665,9 @@ if(arguments.length > 0){var args=[arguments[0].valueOf()],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}}
 return float[attr].apply(null,args)}})($attr)}}
 $B.set_func_names(FloatSubclass,"builtins")
-_b_.float=float})(__BRYTHON__)
+_b_.float=float
+$B.MAX_VALUE=fast_float(Number.MAX_VALUE)
+$B.MIN_VALUE=fast_float(Number.MIN_VALUE)})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
@@ -11753,10 +11777,8 @@ return make_complex(
 return _b_.float('nan')}}
 complex.__pow__=function(self,other){
 if(other==1){return self}
-if((_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100)||
-(other.$imag.value==0.0 &&
-other.$real.value==_b_.floor(other.$real.value)&&
-_b_.abs(other.$real.value)<=100.0)){return c_powi(self,other)}
+if(_b_.isinstance(other,_b_.int)&& _b_.abs(other)< 100){return c_powi(self,other)}
+if(_b_.isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
 var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
 if(_b_.isinstance(other,_b_.int)){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if(_b_.isinstance(other,_b_.float)){return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if(_b_.isinstance(other,complex)){
 var x=other.$real.value,y=other.$imag.value
@@ -15302,8 +15324,7 @@ for(var data of ste.directives){if(data[0]==name){set_exc_info(exc,ste.table.fil
 return 0}}
 PyErr_SetString(PyExc_RuntimeError,"BUG: internal directive bookkeeping broken")
 return 0}
-function SET_SCOPE(DICT,NAME,I){
-DICT[NAME]=I}
+function SET_SCOPE(DICT,NAME,I){DICT[NAME]=I}
 function analyze_name(ste,scopes,name,flags,bound,local,free,global){if(flags & DEF_GLOBAL){if(flags & DEF_NONLOCAL){var exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
 error_at_directive(exc,ste,name)
 throw exc}

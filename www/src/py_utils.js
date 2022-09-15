@@ -305,8 +305,6 @@ $B.get_class = function(obj){
                         obj.__class__ = _b_.list
                         return _b_.list
                     }
-                }else if(obj.constructor === Number){
-                    return _b_.float
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
                         && obj instanceof Node){
                     if(obj.tagName){

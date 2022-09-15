@@ -577,7 +577,7 @@ var floating_point_format = function(val, upper, flags){
     return format_padding(format_sign(val, flags) + res, flags)
 }
 
-function roundDownToFixed(v, d){
+var roundDownToFixed = $B.roundDownToFixed = function(v, d){
     if(d == 0 && v.toString().indexOf('e') > -1){
         // with precision 0, never include "e"
         return BigInt(v).toString()
@@ -690,6 +690,11 @@ var floating_point_exponential_format = function(val, upper, flags){
         format_float_precision(val, upper, flags, _floating_exp_helper), flags)
 }
 
+$B.formatters = {
+    floating_point_format,
+    floating_point_decimal_format,
+    floating_point_exponential_format
+    }
 var signed_hex_format = function(val, upper, flags){
     var ret
     if(! _b_.isinstance(val, _b_.int)){
