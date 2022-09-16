@@ -379,7 +379,6 @@ var NotANumber = function() {
 
 var number_check = function(s){
     if(! _b_.isinstance(s, [_b_.int, _b_.float])){
-        console.log('not a number', s)
         throw new NotANumber()
     }
 }
@@ -971,7 +970,6 @@ str.__mod__ = function(_self, args){
                         "' (0x" + invalid_char.charCodeAt(0).toString(16) +
                         ") at index " + newpos)
                 }else if(err.name === "NotANumber"){
-                    console.log('func', func + '', 'threw NotANumber')
                     var try_char = s[newpos],
                         cls = _self.__class__
                     if(!cls){

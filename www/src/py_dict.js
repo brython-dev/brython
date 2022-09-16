@@ -253,7 +253,7 @@ function rank(self, hash, key){
     var pairs = self.$object_dict[hash]
     if(pairs !== undefined){
         for(var i = 0, len = pairs.length; i < len; i++){
-            if($B.rich_comp("__eq__", key, pairs[i][0])){
+            if($B.is_or_equals(key, pairs[i][0])){
                 return i
             }
         }
@@ -414,8 +414,8 @@ dict.__eq__ = function(){
             var key = pairs[i][0],
                 value = pairs[i][1][0]
             for(var j = 0, len_j = other_pairs.length; j < len_j; j++){
-                if($B.rich_comp("__eq__", key, other_pairs[j][0]) &&
-                        $B.rich_comp("__eq__", value, other_pairs[j][1][0])){
+                if($B.is_or_equals(key, other_pairs[j][0]) &&
+                        $B.is_or_equals(value, other_pairs[j][1][0])){
                     flag = true
                     break
                 }
@@ -796,9 +796,6 @@ dict.$setitem = function(self, key, value, $hash){
 
     switch(typeof key){
         case "string":
-            if(self.$string_dict === undefined){
-                console.log("pas de string dict", self, key, value)
-            }
             if(self.$string_dict.hasOwnProperty(key)){
                 self.$string_dict[key][0] = value
             }else{

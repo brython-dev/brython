@@ -482,6 +482,11 @@ $B.$JS2Py = function(src){
     return src
 }
 
+// warning
+$B.warn = function(klass, message){
+    $B.imported._warnings.warn(klass.$factory(message))
+}
+
 // get item
 function index_error(obj){
     var type = typeof obj == "string" ? "string" : "list"
@@ -791,6 +796,9 @@ $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
     if(a.__class__ === _b_.float && b.__class__ === _b_.float){
+        if(isNaN(a.value) && isNaN(b.value)){
+            return true
+        }
         return a.value == b.value
     }
     if((a === _b_.int && b == $B.long_int) ||
@@ -802,6 +810,11 @@ $B.$is = function(a, b){
         return true
     }
     return a === b
+}
+
+$B.is_or_equals = function(x, y){
+    // used to test membership in lists, sets, dicts
+    return $B.$is(x, y) || $B.rich_comp('__eq__', x, y)
 }
 
 $B.$is_member = function(item, _set){

@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-16 09:06:12.309603"
-__BRYTHON__.timestamp=1663311972309
+__BRYTHON__.compiled_date="2022-09-16 16:26:16.893910"
+__BRYTHON__.timestamp=1663338376893
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5478,6 +5478,7 @@ if(src===null ||src===undefined){return _b_.None}
 if(Array.isArray(src)&&
 Object.getPrototypeOf(src)===Array.prototype){src.$brython_class="js" }
 return src}
+$B.warn=function(klass,message){$B.imported._warnings.warn(klass.$factory(message))}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 throw _b_.IndexError.$factory(type+" index out of range")}
 $B.$getitem=function(obj,item,position){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
@@ -5577,12 +5578,15 @@ arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){brea
 throw err}}}
 return arg}
 $B.$is=function(a,b){
-if(a.__class__===_b_.float && b.__class__===_b_.float){return a.value==b.value}
+if(a.__class__===_b_.float && b.__class__===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
+return a.value==b.value}
 if((a===_b_.int && b==$B.long_int)||
 (a===$B.long_int && b===_b_.int)){return true}
 if((a===undefined ||a===$B.Undefined)&&
 (b===undefined ||b===$B.Undefined)){return true}
 return a===b}
+$B.is_or_equals=function(x,y){
+return $B.$is(x,y)||$B.rich_comp('__eq__',x,y)}
 $B.$is_member=function(item,_set){
 var f,_iter,method
 try{method=$B.$getattr(_set.__class__ ||$B.get_class(_set),"__contains__")}
@@ -6281,9 +6285,8 @@ var mo=second_line.match(encoding_re)
 if(mo){encoding=mo[1]}}
 $.source=_b_.bytes.decode($.source,encoding)}
 if(!_b_.isinstance(filename,[_b_.bytes,_b_.str])){
-$B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
-`path should be string, bytes, or os.PathLike, `+
-`not ${$B.class_name(filename)}`))}
+$B.warn(_b_.DeprecationWarning,`path should be string, bytes, or os.PathLike, `+
+`not ${$B.class_name(filename)}`)}
 if(interactive && ! $.source.endsWith("\n")){
 var lines=$.source.split("\n")
 if($B.last(lines).startsWith(" ")){throw _b_.SyntaxError.$factory("unexpected EOF while parsing")}}
@@ -9794,8 +9797,7 @@ var len=_self.len=_self.length-_self.surrogates.length
 return len}
 var kwarg_key=new RegExp("([^\\)]*)\\)")
 var NotANumber=function(){this.name="NotANumber"}
-var number_check=function(s){if(! _b_.isinstance(s,[_b_.int,_b_.float])){console.log('not a number',s)
-throw new NotANumber()}}
+var number_check=function(s){if(! _b_.isinstance(s,[_b_.int,_b_.float])){throw new NotANumber()}}
 var get_char_array=function(size,char){if(size <=0){return ""}
 return new Array(size+1).join(char)}
 var format_padding=function(s,flags,minus_one){var padding=flags.padding
@@ -9986,8 +9988,7 @@ if(invalid_char===undefined){throw _b_.ValueError.$factory("incomplete format")}
 throw _b_.ValueError.$factory(
 "unsupported format character '"+invalid_char+
 "' (0x"+invalid_char.charCodeAt(0).toString(16)+
-") at index "+newpos)}else if(err.name==="NotANumber"){console.log('func',func+'','threw NotANumber')
-var try_char=s[newpos],cls=_self.__class__
+") at index "+newpos)}else if(err.name==="NotANumber"){var try_char=s[newpos],cls=_self.__class__
 if(!cls){if(typeof(_self)==="string"){cls="str"}else{cls=typeof(_self)}}else{cls=cls.$infos.__name__}
 throw _b_.TypeError.$factory("%"+try_char+
 " format: a number is required, not "+cls)}else{throw err}}}while(true)}
@@ -10978,18 +10979,16 @@ if(! _b_.isinstance(value,_b_.str)){if(base !==missing){throw _b_.TypeError.$fac
 "int() can't convert non-string with explicit base")}else{
 for(var special_method of['__int__','__index__','__trunc__']){var num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
 if(num_value !==_b_.None){var res=$B.$call(num_value)(value)
-if(special_method=='__trunc__'){$B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
-'The delegation of int() to __trunc__ is deprecated.'))
+if(special_method=='__trunc__'){$B.warn(_b_.DeprecationWarning,'The delegation of int() to __trunc__ is deprecated.')
 var index_method=$B.$getattr(res,'__index__',null)
 if(index_method===null){throw _b_.TypeError.$factory('__trunc__ returned'+
 ` non-Integral (type ${$B.class_name(res)})`)}
 res=$B.$call(index_method)()}
 if(_b_.isinstance(res,_b_.int)){if(typeof res !=="number" &&
-res.__class__ !==$B.long_int){$B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
-'__index__ returned non-int (type '+$B.class_name(res)+
+res.__class__ !==$B.long_int){$B.warn(_b_.DeprecationWarning,'__index__ returned non-int (type '+$B.class_name(res)+
 ').  The ability to return an instance of a '+
 'strict subclass of int is deprecated, and may '+
-'be removed in a future version of Python.'))}
+'be removed in a future version of Python.')}
 return int_value(res)}else{var klass=$B.get_class(res),index_method=$B.$getattr(klass,'__index__',null)
 if(index_method===null){throw _b_.TypeError.$factory(special_method+
 `returned non-int (type ${$B.class_name(res)})`)}
@@ -11128,7 +11127,7 @@ var rest=a-quotient*b
 return $B.fast_tuple([int_or_long(quotient),int_or_long(rest)])}
 long_int.__eq__=function(self,other){if(other.__class__===$B.long_int){return self.value==other.value}else if(typeof other=="number" ||typeof other=="boolean"){return false}else if(_b_.isinstance(other,_b_.int)){return long_int.__eq__(self,other.$brython_value)}
 return _b_.NotImplemented}
-long_int.__float__=function(self){if(! isFinite(Number(self.value))){throw _b_.OverflowError.$factory("int too big to convert to float")}
+long_int.__float__=function(self){if(! isFinite(Number(self.value))){throw _b_.OverflowError.$factory("int too large to convert to float")}
 return $B.fast_float(Number(self.value))}
 long_int.__floordiv__=function(self,other){if(typeof other=="number"){return int_or_long(self.value/BigInt(other))}else if(other.__class__===$B.long_int){return int_or_long(self.value/other.value)}else if(typeof other=="boolean"){return int_or_long(self.value/(other ? 1n :0n))}else if(_b_.isinstance(other,_b_.int)){return int_or_long(self.value/other.$brython_value)}
 return _b_.NotImplemented}
@@ -11279,11 +11278,10 @@ float.imag=function(self){return 0}
 float.real=function(self){return self.value}
 float.__float__=function(self){return self}
 $B.shift1_cache={}
-float.as_integer_ratio=function(self){self=self.value
-if(self==Number.POSITIVE_INFINITY ||
-self==Number.NEGATIVE_INFINITY){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
+float.as_integer_ratio=function(self){
+if(isinf(self)){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
 "float.as_integer_ratio.")}
-if(! Number.isFinite(self)){throw _b_.ValueError.$factory("Cannot pass NaN to "+
+if(isnan(self)){throw _b_.ValueError.$factory("Cannot pass NaN to "+
 "float.as_integer_ratio.")}
 var tmp=frexp(self),fp=tmp[0],exponent=tmp[1]
 for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp*=2
@@ -11495,6 +11493,7 @@ if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
 return fast_float((self.value % other+other)% other)}
 if(_b_.isinstance(other,float)){
 var q=Math.floor(self.value/other.value),r=self.value-other.value*q
+if(r==0 && other.value < 0){return fast_float(-0)}
 return fast_float(r)}
 return _b_.NotImplemented}
 float.__mro__=[object]
@@ -11571,7 +11570,7 @@ attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
 attr+"' is read-only")}}
 self[attr]=value
 return _b_.None}
-float.__truediv__=function(self,other){if(_b_.isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
+float.__truediv__=function(self,other){if(_b_.isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionError.$factory("division by zero")}else if(_b_.isinstance(other,$B.long_int)){return float.$factory(self.value/Number(other.value))}
 return float.$factory(self.value/other)}else if(_b_.isinstance(other,float)){if(other.value==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return float.$factory(self.value/other.value)}
 return _b_.NotImplemented}
@@ -11619,14 +11618,12 @@ case false:
 return fast_float(0)}
 var original_value=value
 if(typeof value=="number"){return fast_float(value)}
-if(_b_.isinstance(value,float)){if(value.value==Number.MAX_VALUE){
+if(value.__class__===float){if(value.value==Number.MAX_VALUE){
 var res=fast_float(Infinity)
 res.__hashvalue__=2234066890152476671
 return res}else if(value.value==-Number.MAX_VALUE){return fast_float(-Infinity)}
-if(value.__class__===_b_.float){return value}else{
-console.log('subclass',value)
-var klass=value.__class__,float_method=$B.$call($B.$getattr(klass,'__float__'))
-return float_method(value)}}
+return value}
+if(_b_.isinstance(value,_b_.memoryview)){value=_b_.memoryview.tobytes(value)}
 if(_b_.isinstance(value,_b_.bytes)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){throw _b_.ValueError.$factory(
 "could not convert string to float: "+
 _b_.repr(original_value))}}
@@ -11652,11 +11649,31 @@ value=to_digits(value)
 if(isFinite(value)){return fast_float(eval(value))}else{throw _b_.ValueError.$factory(
 "could not convert string to float: "+
 _b_.repr(original_value))}}}
-var num_value=$B.to_num(value,["__float__","__index__"])
-if(num_value !==null){if(! isFinite(num_value.value)){throw _b_.OverflowError.$factory('int too large to convert to float')}
-return num_value}
-throw _b_.TypeError.$factory("float() argument must be a string or a "+
+var klass=value.__class__,float_method=$B.$getattr(klass,'__float__',null)
+if(float_method===null){var index_method=$B.$getattr(klass,'__index__',null)
+if(index_method===null){throw _b_.TypeError.$factory("float() argument must be a string or a "+
 "number, not '"+$B.class_name(value)+"'")}
+var res=$B.$call(index_method)(value),klass=$B.get_class(res)
+if(klass===_b_.int){return fast_float(res)}else if(klass===$B.long_int){return $B.long_int.__float__(res)}else if(klass.__mro__.indexOf(_b_.int)>-1){var msg=`${$B.class_name(value)}.__index__ returned `+
+`non-int (type ${$B.class_name(res)}).  The `+
+'ability to return an instance of a strict subclass'+
+' of int is deprecated, and may be removed in a '+
+'future version of Python.'
+$B.warn(_b_.DeprecationWarning,msg)
+return fast_float(res)}
+throw _b_.TypeError.$factory('__index__ returned non-int'+
+` (type ${$B.class_name(res)})`)}
+var res=$B.$call(float_method)(value),klass=$B.get_class(res)
+if(klass !==_b_.float){if(klass.__mro__.indexOf(_b_.float)>-1){var msg=`${$B.class_name(value)}.__float__ returned `+
+`non-float (type ${$B.class_name(res)}).  The `+
+'ability to return an instance of a strict subclass'+
+' of float is deprecated, and may be removed in a '+
+'future version of Python.'
+$B.warn(_b_.DeprecationWarning,msg)
+return float.$factory(res.value)}
+throw _b_.TypeError.$factory('__float__ returned non-float'+
+` (type ${$B.class_name(res)})`)}
+return res}
 $B.$FloatClass=$FloatClass
 $B.set_func_names(float,"builtins")
 var FloatSubclass=$B.FloatSubclass={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"float"},$is_class:true}
@@ -11924,7 +11941,7 @@ for(var i=0,len=_l.length;i < len;i++){si(left,_l[i][0],_l[i][1])
 if(right.$version !=right_version){throw _b_.RuntimeError.$factory("dict mutated during update")}}}
 function rank(self,hash,key){
 var pairs=self.$object_dict[hash]
-if(pairs !==undefined){for(var i=0,len=pairs.length;i < len;i++){if($B.rich_comp("__eq__",key,pairs[i][0])){return i}}}
+if(pairs !==undefined){for(var i=0,len=pairs.length;i < len;i++){if($B.is_or_equals(key,pairs[i][0])){return i}}}
 return-1}
 dict.__bool__=function(){var $=$B.args("__bool__",1,{self:null},["self"],arguments,{},null,null)
 return dict.__len__($.self)> 0}
@@ -11982,8 +11999,8 @@ if(other.$object_dict[hash]!==undefined){other_pairs=other_pairs.concat(other.$o
 if(other_pairs.length==0){return false}
 for(var i=0,len_i=pairs.length;i < len_i;i++){var flag=false
 var key=pairs[i][0],value=pairs[i][1][0]
-for(var j=0,len_j=other_pairs.length;j < len_j;j++){if($B.rich_comp("__eq__",key,other_pairs[j][0])&&
-$B.rich_comp("__eq__",value,other_pairs[j][1][0])){flag=true
+for(var j=0,len_j=other_pairs.length;j < len_j;j++){if($B.is_or_equals(key,other_pairs[j][0])&&
+$B.is_or_equals(value,other_pairs[j][1][0])){flag=true
 break}}
 if(! flag){return false}}}
 return true}
@@ -12116,7 +12133,6 @@ self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=va
 return $N}
 if(key instanceof String){key=key.valueOf()}
 switch(typeof key){case "string":
-if(self.$string_dict===undefined){console.log("pas de string dict",self,key,value)}
 if(self.$string_dict.hasOwnProperty(key)){self.$string_dict[key][0]=value}else{self.$string_dict[key]=[value,self.$order++]
 self.$str_hash[str_hash(key)]=key
 self.$version++}
@@ -12354,10 +12370,7 @@ list.__class_getitem__=function(cls,item){
 if(! Array.isArray(item)){item=[item]}
 return $B.GenericAlias.$factory(cls,item)}
 list.__contains__=function(self,item){var $=$B.args("__contains__",2,{self:null,item:null},["self","item"],arguments,{},null,null),self=$.self,item=$.item
-var _eq=function(other){return $B.rich_comp("__eq__",item,other)}
-var i=0
-while(i < self.length){if(_eq(self[i])){return true}
-i++}
+for(var _item of self){if($B.is_or_equals(_item,item)){return true}}
 return false}
 list.__delitem__=function(self,arg){if(isinstance(arg,_b_.int)){var pos=arg
 if(arg < 0){pos=self.length+pos}
@@ -12385,7 +12398,7 @@ throw _b_.TypeError.$factory($B.class_name(self)+
 " indices must be integer, not "+$B.class_name(arg))}
 list.__eq__=function(self,other){var klass=isinstance(self,list)? list :tuple
 if(isinstance(other,klass)){if(other.length==self.length){var i=self.length
-while(i--){if(! $B.rich_comp("__eq__",self[i],other[i])){return false}}
+while(i--){if(! $B.is_or_equals(self[i],other[i])){return false}}
 return true}
 return false}
 return _b_.NotImplemented}
@@ -12534,8 +12547,8 @@ res.__class__=self.__class__
 res.__brython__=true
 return res}
 list.count=function(){var $=$B.args("count",2,{self:null,x:null},["self","x"],arguments,{},null,null)
-var res=0,_eq=function(other){return $B.rich_comp("__eq__",$.x,other)},i=$.self.length
-while(i--){if(_eq($.self[i])){res++}}
+var res=0
+for(var _item of $.self){if($B.is_or_equals(_item,$.x)){res++}}
 return res}
 list.extend=function(){var $=$B.args("extend",2,{self:null,t:null},["self","t"],arguments,{},null,null)
 var other=list.$factory($B.$iter($.t))
@@ -13834,7 +13847,11 @@ syntax_error.line=message.line
 throw syntax_error}
 var frame=$B.imported._sys.Getframe(),f_code=$B._frame.f_code.__get__(frame),lineno=frame.$lineno
 var category=message.__class__ ||$B.get_class(message),warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||f_code.co_filename,lineno:message.lineno ||lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}
-if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var trace=$B.class_name(message)+': '+message.args[0]
+if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var frame=$B.last($B.frames_stack),file=frame.__file__,lineno=frame.$lineno,src=$B.file_cache[file],trace=''
+if(file && lineno){trace+=`${file}:${lineno}: `}
+trace+=$B.class_name(message)+': '+message.args[0]
+if(src && frame.$lineno){var line=src.split('\n')[frame.$lineno-1]
+trace+='\n    '+line.trim()}
 $B.$getattr($B.stderr,'write')(trace+'\n')
 var flush=$B.$getattr($B.stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}},warn_explicit:function(){
@@ -14276,7 +14293,7 @@ s+=js
 s+=`}catch(err_${id}){\n`+
 `frame.$lineno = ${lineno}\n`+
 `exc_${id} = false\n`+
-`err_${id} = $B.exception(err_${id}, true)\n`+
+`err_${id} = $B.exception(err_${id}, frame)\n`+
 `var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, `+
 `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n`+
 `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
@@ -15069,7 +15086,7 @@ s+=js
 s+=`}catch(err_${id}){\n`+
 `frame.$lineno = ${lineno}\n`+
 `exc_${id} = false\n`+
-`err_${id} = $B.exception(err_${id}, true)\n`+
+`err_${id} = $B.exception(err_${id}, frame)\n`+
 `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, `+
 `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n`+
 `if(! $B.$bool($b)){\n`+

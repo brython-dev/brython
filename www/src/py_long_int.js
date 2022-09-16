@@ -143,7 +143,7 @@ long_int.__eq__ = function(self, other){
 
 long_int.__float__ = function(self){
     if(! isFinite(Number(self.value))){
-        throw _b_.OverflowError.$factory("int too big to convert to float")
+        throw _b_.OverflowError.$factory("int too large to convert to float")
     }
     return $B.fast_float(Number(self.value))
 }

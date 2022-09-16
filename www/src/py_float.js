@@ -55,14 +55,13 @@ float.__float__ = function(self){
 $B.shift1_cache = {}
 
 float.as_integer_ratio = function(self){
-    self = self.value
+    //self = self.value
 
-    if(self == Number.POSITIVE_INFINITY ||
-            self == Number.NEGATIVE_INFINITY){
+    if(isinf(self)){
         throw _b_.OverflowError.$factory("Cannot pass infinity to " +
             "float.as_integer_ratio.")
     }
-    if(! Number.isFinite(self)){
+    if(isnan(self)){
         throw _b_.ValueError.$factory("Cannot pass NaN to " +
             "float.as_integer_ratio.")
     }
@@ -79,7 +78,6 @@ float.as_integer_ratio = function(self){
             exponent--
         }
     }
-
     numerator = _b_.int.$factory(fp)
     py_exponent = _b_.abs(exponent)
     denominator = 1
@@ -614,6 +612,9 @@ float.__mod__ = function(self, other) {
         // cf https://en.wikipedia.org/wiki/Modulo_operation
         var q = Math.floor(self.value / other.value),
             r = self.value - other.value * q
+        if(r == 0 && other.value < 0){
+            return fast_float(-0)
+        }
         return fast_float(r)
     }
     return _b_.NotImplemented
@@ -851,6 +852,8 @@ float.__truediv__ = function(self, other){
     if(_b_.isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
             throw _b_.ZeroDivisionError.$factory("division by zero")
+        }else if(_b_.isinstance(other, $B.long_int)){
+            return float.$factory(self.value / Number(other.value))
         }
         return float.$factory(self.value / other)
     }else if(_b_.isinstance(other, float)){
@@ -983,7 +986,7 @@ float.$factory = function(value){
     if(typeof value == "number"){
         return fast_float(value)
     }
-    if(_b_.isinstance(value, float)){
+    if(value.__class__ === float){
         if(value.value == Number.MAX_VALUE){
             //take care of 'inf not identical to 1.797...e+308' error
             var res = fast_float(Infinity)
@@ -992,14 +995,11 @@ float.$factory = function(value){
         }else if(value.value == -Number.MAX_VALUE){
             return fast_float(-Infinity)
         }
-        if(value.__class__ === _b_.float){
-            return value
-        }else{ // subclass
-            console.log('subclass', value)
-            var klass = value.__class__,
-                float_method = $B.$call($B.$getattr(klass, '__float__'))
-            return float_method(value)
-        }
+        return value
+    }
+
+    if(_b_.isinstance(value, _b_.memoryview)){
+        value = _b_.memoryview.tobytes(value)
     }
 
     if(_b_.isinstance(value, _b_.bytes)){
@@ -1042,6 +1042,55 @@ float.$factory = function(value){
                }
          }
     }
+
+    var klass = value.__class__,
+        float_method = $B.$getattr(klass, '__float__', null)
+
+    if(float_method === null){
+        var index_method = $B.$getattr(klass, '__index__', null)
+
+        if(index_method === null){
+            throw _b_.TypeError.$factory("float() argument must be a string or a " +
+                "number, not '" + $B.class_name(value) + "'")
+        }
+        var res = $B.$call(index_method)(value),
+            klass = $B.get_class(res)
+
+        if(klass === _b_.int){
+            return fast_float(res)
+        }else if(klass === $B.long_int){
+            return $B.long_int.__float__(res)
+        }else if(klass.__mro__.indexOf(_b_.int) > -1){
+            var msg =  `${$B.class_name(value)}.__index__ returned ` +
+                `non-int (type ${$B.class_name(res)}).  The ` +
+                'ability to return an instance of a strict subclass' +
+                ' of int is deprecated, and may be removed in a ' +
+                'future version of Python.'
+            $B.warn(_b_.DeprecationWarning, msg)
+            return fast_float(res)
+        }
+        throw _b_.TypeError.$factory('__index__ returned non-int' +
+            ` (type ${$B.class_name(res)})`)
+    }
+    var res = $B.$call(float_method)(value),
+        klass = $B.get_class(res)
+
+    if(klass !== _b_.float){
+        if(klass.__mro__.indexOf(_b_.float) > -1){
+            var msg =  `${$B.class_name(value)}.__float__ returned ` +
+                `non-float (type ${$B.class_name(res)}).  The ` +
+                'ability to return an instance of a strict subclass' +
+                ' of float is deprecated, and may be removed in a ' +
+                'future version of Python.'
+            $B.warn(_b_.DeprecationWarning, msg)
+            return float.$factory(res.value)
+        }
+        throw _b_.TypeError.$factory('__float__ returned non-float' +
+            ` (type ${$B.class_name(res)})`)
+    }
+
+    return res
+    /*
     var num_value = $B.to_num(value, ["__float__", "__index__"])
 
     if(num_value !== null){
@@ -1050,9 +1099,7 @@ float.$factory = function(value){
         }
         return num_value
     }
-
-    throw _b_.TypeError.$factory("float() argument must be a string or a " +
-        "number, not '" + $B.class_name(value) + "'")
+    */
 }
 
 $B.$FloatClass = $FloatClass

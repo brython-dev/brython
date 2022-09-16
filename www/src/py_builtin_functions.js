@@ -387,9 +387,9 @@ function compile() {
 
     if(!_b_.isinstance(filename, [_b_.bytes, _b_.str])){
         // module _warning is in builtin_modules.js
-        $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+        $B.warn(_b_.DeprecationWarning,
             `path should be string, bytes, or os.PathLike, ` +
-                `not ${$B.class_name(filename)}`))
+            `not ${$B.class_name(filename)}`)
     }
     if(interactive && ! $.source.endsWith("\n")){
         // This is used in codeop.py to raise SyntaxError until a block in the

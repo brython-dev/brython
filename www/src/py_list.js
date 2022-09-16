@@ -64,16 +64,15 @@ list.__class_getitem__ = function(cls, item){
     return $B.GenericAlias.$factory(cls, item)
 }
 
-list.__contains__ = function(self,item){
+list.__contains__ = function(self, item){
     var $ = $B.args("__contains__", 2, {self: null, item: null},
         ["self", "item"], arguments, {}, null, null),
         self = $.self,
         item = $.item
-    var _eq = function(other){return $B.rich_comp("__eq__", item, other)}
-    var i = 0
-    while(i < self.length) {
-        if(_eq(self[i])){return true}
-        i++
+    for(var _item of self) {
+        if($B.is_or_equals(_item, item)){
+            return true
+        }
     }
     return false
 }
@@ -139,7 +138,7 @@ list.__eq__ = function(self, other){
        if(other.length == self.length){
             var i = self.length
             while(i--){
-                if(! $B.rich_comp("__eq__", self[i], other[i])){
+                if(! $B.is_or_equals(self[i], other[i])){
                     return false
                 }
             }
@@ -546,10 +545,12 @@ list.copy = function(){
 list.count = function(){
     var $ = $B.args("count", 2, {self: null, x: null}, ["self", "x"],
         arguments, {}, null, null)
-    var res = 0,
-        _eq = function(other){return $B.rich_comp("__eq__", $.x, other)},
-        i = $.self.length
-    while(i--){if(_eq($.self[i])){res++}}
+    var res = 0
+    for(var _item of $.self){
+        if($B.is_or_equals(_item, $.x)){
+            res++
+        }
+    }
     return res
 }
 

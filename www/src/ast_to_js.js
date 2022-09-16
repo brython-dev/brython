@@ -966,7 +966,7 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
         s += `}catch(err_${id}){\n` +
               `frame.$lineno = ${lineno}\n` +
               `exc_${id} = false\n` +
-              `err_${id} = $B.exception(err_${id}, true)\n` +
+              `err_${id} = $B.exception(err_${id}, frame)\n` +
               `var $b = await $B.promise(aexit_${id}(mgr_${id}, err_${id}.__class__, ` +
               `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n` +
               `if(! $B.$bool($b)){\nthrow err_${id}\n}\n}\n`
@@ -2776,7 +2776,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         s += `}catch(err_${id}){\n` +
                   `frame.$lineno = ${lineno}\n` +
                   `exc_${id} = false\n` +
-                  `err_${id} = $B.exception(err_${id}, true)\n` +
+                  `err_${id} = $B.exception(err_${id}, frame)\n` +
                   `var $b = exit_${id}(mgr_${id}, err_${id}.__class__, ` +
                   `err_${id}, $B.$getattr(err_${id}, '__traceback__'))\n` +
                   `if(! $B.$bool($b)){\n` +
