@@ -180,10 +180,11 @@ class _TestResult(TestResult):
         infos = []
         while tb:
             fname = tb.tb_frame.f_code.co_filename
+            lineno = tb.tb_frame.f_lineno
             if fname == sys.modules[test.__class__.__module__].__file__:
-                infos.append(tb.tb_lineno)
+                infos.append(lineno)
             tb = tb.tb_next
-        infos = infos or ['<nc>']
+        infos = infos or ['unknown']
         try:
             str(err[1]).splitlines()
         except:
