@@ -846,7 +846,6 @@ assert A().__class__ == 99
 # issue 2033
 class Meta(type):
     def __new__(cls, name, bases, namespace):
-        print('namespace', namespace)
         assert namespace.get("__qualname__", None) == "Foo"
         return super().__new__(cls, name, bases, namespace)
 
