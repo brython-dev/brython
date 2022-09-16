@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-15 22:07:09.830380"
-__BRYTHON__.timestamp=1663272429830
+__BRYTHON__.compiled_date="2022-09-16 09:03:57.617835"
+__BRYTHON__.timestamp=1663311837617
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14507,8 +14507,7 @@ $B.ast.For.prototype.to_js=function(scopes){
 var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
-js=`$B.set_lineno(frame, ${this.lineno})\n`
-if(this instanceof $B.ast.AsyncFor){js+=`var iter_${id} = ${iter},\n`+
+if(this instanceof $B.ast.AsyncFor){js=`var iter_${id} = ${iter},\n`+
 `type_${id} = _b_.type.$factory(iter_${id})\n`+
 `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
 `var next_func_${id} = $B.$call(`+
@@ -14519,7 +14518,7 @@ if(this instanceof $B.ast.AsyncFor){js+=`var iter_${id} = ${iter},\n`+
 `  }catch(err){\n`+
 `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n`+
 `    else{\nthrow err}\n`+
-`  }\n`}else{js+=`var no_break_${id} = true\n`+
+`  }\n`}else{js=`var no_break_${id} = true\n`+
 `var next_func_${id} = $B.next_of(${iter})\n`+
 `while(true){\n`+
 `try{\n`+
@@ -14901,7 +14900,8 @@ js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! namespaces){
 js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
-js+=`var stack_length = $B.frames_stack.length\n`+
+js+=`$B.set_lineno(frame, 1)\n`+
+`var stack_length = $B.frames_stack.length\n`+
 `try{\n`+
 add_body(this.body,scopes)+'\n'+
 (namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
