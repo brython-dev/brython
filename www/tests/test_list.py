@@ -413,4 +413,8 @@ try:
 except TypeError as exc:
     assert exc.args[0] == 'Value after * must be an iterable, not int'
 
+# issue 2034
+t = [1] * 2
+assert t.sort() is None
+
 print("passed all tests..")
