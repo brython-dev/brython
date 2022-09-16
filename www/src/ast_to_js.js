@@ -794,8 +794,11 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         if(this.target instanceof $B.ast.Name){
             // update __annotations__
             var scope = bind(this.target.id, scopes)
-            js += `$B.$setitem(locals.__annotations__, ` +
-                  `'${this.target.id}', ${ann_value})\n`
+            // Annotations for local variables will not be evaluated
+            if(scope.type != "def"){
+                js += `$B.$setitem(locals.__annotations__, ` +
+                      `'${this.target.id}', ${ann_value})\n`
+            }
             var target_ref = name_reference(this.target.id, scopes)
             js += `${target_ref} = ann`
         }else if(this.target instanceof $B.ast.Attribute){

@@ -3133,6 +3133,20 @@ def main():
 
 main()
 
+# issue 2031
+def foo():
+    bar: Bar = 42
+    assert __annotations__ == {}
+    assert bar == 42
+
+foo()
+
+src = """class Foo:
+    bar: Bar = 42"""
+assert_raises(NameError, exec, src)
+
+assert_raises(NameError, exec, 'bar: Bar = 42')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
