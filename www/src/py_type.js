@@ -89,10 +89,11 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
 
+    set_class_item('__qualname__', class_name)
+
     // Transform class object into a dictionary
     for(var attr in class_obj){
         if(attr == "__annotations__"){
-
             if(cl_dict.$string_dict[attr] === undefined){
                 cl_dict.$string_dict[attr] = [$B.empty_dict(), cl_dict.$order++]
             }
@@ -100,7 +101,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 $B.$setitem(cl_dict.$string_dict[attr][0], key,
                     class_obj[attr].$string_dict[key][0])
             }
-
         }else{
             if(attr.charAt(0) != "$"){
                 set_class_item(attr, class_obj[attr])
