@@ -4189,7 +4189,7 @@ JoinedStrCtx.prototype.ast = function(){
             var conv_num = {a: 97, r: 114, s: 115},
                 format = item.elt.format
             format = format === undefined ? format : format.ast()
-                value = new ast.FormattedValue(
+            var value = new ast.FormattedValue(
                     item.ast(),
                     conv_num[item.elt.conversion] || -1,
                     format)
