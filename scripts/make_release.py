@@ -83,10 +83,20 @@ import make_doc
 
 # update implementation in brython/__init__.py
 print("Update CPython brython package...")
-br_script = os.path.join(pdir, 'setup', 'brython', '__init__.py')
-with open(br_script, "w", encoding="utf-8") as out:
-    out.write('__version__ = implementation = "{}"'.format(vname))
 
+br_script = os.path.join(pdir, 'setup', 'brython', '__main__.py')
+with open(br_script, encoding="utf-8") as f:
+    content = f.read()
+
+import re
+content = re.sub('^implementation = "(.*)?"$',
+                 f'implementation = "{vname}"',
+                 content,
+                 flags=re.M)
+
+with open(br_script, 'w', encoding="utf-8") as out:
+    out.write(content)
+    
 # copy files in folder /npm
 print("Udpate npm folder...")
 npmdir = os.path.join(pdir, 'npm')
