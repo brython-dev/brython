@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 10, 0, 'final', 0]
-// implementation [3, 10, 6, 'final', 0]
+// implementation [3, 10, 7, 'final', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 var __BRYTHON__=__BRYTHON__ ||{}
@@ -126,11 +126,11 @@ var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
 new Function("$locals_script",js)({})}})(__BRYTHON__)
 ;
-__BRYTHON__.implementation=[3,10,6,'final',0]
-__BRYTHON__.__MAGIC__="3.10.6"
+__BRYTHON__.implementation=[3,10,7,'final',0]
+__BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-17 15:08:33.509850"
-__BRYTHON__.timestamp=1663420113509
+__BRYTHON__.compiled_date="2022-09-17 20:26:02.559995"
+__BRYTHON__.timestamp=1663439162559
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
