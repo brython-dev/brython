@@ -1325,7 +1325,7 @@ function hasattr(obj,attr){
 var hash_cache = {} // for strings
 function hash(obj){
     check_nb_args_no_kw('hash', 1, arguments)
-
+    
     if(obj.__hashvalue__ !== undefined){
         return obj.__hashvalue__
     }
@@ -1359,7 +1359,6 @@ function hash(obj){
         throw _b_.TypeError.$factory("unhashable type: '" +
                 $B.class_name(obj) + "'")
     }
-
 
     // If no specific __hash__ method is supplied for the instance but
     // a __eq__ method is defined, the object is not hashable

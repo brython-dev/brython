@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,6,'final',0]
 __BRYTHON__.__MAGIC__="3.10.6"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-16 17:04:47.083510"
-__BRYTHON__.timestamp=1663340687083
+__BRYTHON__.compiled_date="2022-09-17 15:05:25.556858"
+__BRYTHON__.timestamp=1663419925554
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -2474,7 +2474,7 @@ set_position(item_ast,item.position)
 res.values.push(item_ast)}
 state='string'}else{var conv_num={a:97,r:114,s:115},format=item.elt.format
 format=format===undefined ? format :format.ast()
-value=new ast.FormattedValue(
+var value=new ast.FormattedValue(
 item.ast(),conv_num[item.elt.conversion]||-1,format)
 set_position(value,this.position)
 var format=item.format
@@ -10986,7 +10986,8 @@ if(index_method===null){throw _b_.TypeError.$factory('__trunc__ returned'+
 ` non-Integral (type ${$B.class_name(res)})`)}
 res=$B.$call(index_method)()}
 if(_b_.isinstance(res,_b_.int)){if(typeof res !=="number" &&
-res.__class__ !==$B.long_int){$B.warn(_b_.DeprecationWarning,'__index__ returned non-int (type '+$B.class_name(res)+
+res.__class__ !==$B.long_int){$B.warn(_b_.DeprecationWarning,special_method+
+' returned non-int (type '+$B.class_name(res)+
 ').  The ability to return an instance of a '+
 'strict subclass of int is deprecated, and may '+
 'be removed in a future version of Python.')}
@@ -11416,8 +11417,8 @@ var nan_hash=$B.$py_next_hash--
 float.__hash__=function(self){check_self_is_float(self,'__hash__')
 if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 var _v=self.value
-if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return self.__hashvalue__=nan_hash}else if(_v===Number.MAX_VALUE){return self.__hashvalue__=2234066890152476671}
-if(_v==Math.round(_v)){return Math.round(_v)}
+if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return self.__hashvalue__=nan_hash}else if(_v===Number.MAX_VALUE){return self.__hashvalue__=$B.fast_long_int(2234066890152476671n)}
+if(Number.isInteger(_v)){return _b_.int.__hash__(_v)}
 var r=frexp(self)
 r[0]*=Math.pow(2,31)
 var hipart=_b_.int.$factory(r[0])
@@ -11485,6 +11486,10 @@ if(self.value < 0){return "-0x"+_s+"p"+_esign+_e}
 return "0x"+_s+"p"+_esign+_e}
 float.__init__=function(self,value){return _b_.None}
 float.__int__=function(self){check_self_is_float(self,'__int__')
+if(Number.isInteger(self.value)){var res=BigInt(self.value),res_num=Number(res)
+return Number.isSafeInteger(res_num)?
+res_num :
+$B.fast_long_int(res)}
 return parseInt(self.value)}
 float.is_integer=function(self){return Number.isInteger(self.value)}
 float.__mod__=function(self,other){
@@ -11619,11 +11624,7 @@ case false:
 return fast_float(0)}
 var original_value=value
 if(typeof value=="number"){return fast_float(value)}
-if(value.__class__===float){if(value.value==Number.MAX_VALUE){
-var res=fast_float(Infinity)
-res.__hashvalue__=2234066890152476671
-return res}else if(value.value==-Number.MAX_VALUE){return fast_float(-Infinity)}
-return value}
+if(value.__class__===float){return value}
 if(_b_.isinstance(value,_b_.memoryview)){value=_b_.memoryview.tobytes(value)}
 if(_b_.isinstance(value,_b_.bytes)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){throw _b_.ValueError.$factory(
 "could not convert string to float: "+

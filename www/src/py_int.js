@@ -711,7 +711,7 @@ int.$factory = function(value, base){
             // booleans, bigints, objects with method __index__
             for(var special_method of ['__int__', '__index__', '__trunc__']){
                 var num_value = $B.$getattr($B.get_class(value),
-                    special_method, _b_.None)
+                                            special_method, _b_.None)
                 if(num_value !== _b_.None){
                     var res = $B.$call(num_value)(value)
                     if(special_method == '__trunc__'){
@@ -727,8 +727,8 @@ int.$factory = function(value, base){
                     if(_b_.isinstance(res, _b_.int)){
                         if(typeof res !== "number" &&
                                 res.__class__ !== $B.long_int){
-                            $B.warn(_b_.DeprecationWarning,
-                            '__index__ returned non-int (type ' + $B.class_name(res) +
+                            $B.warn(_b_.DeprecationWarning, special_method +
+                            ' returned non-int (type ' + $B.class_name(res) +
                             ').  The ability to return an instance of a ' +
                             'strict subclass of int is deprecated, and may ' +
                             'be removed in a future version of Python.')
