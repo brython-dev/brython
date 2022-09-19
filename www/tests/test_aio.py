@@ -274,3 +274,16 @@ async def main(secs, urls):
 print("Start...")
 aio.run(main(1, ["test_suite.py", "index.html", "unknown.txt"]),
         onerror=handle)
+
+
+src = """
+from browser import aio
+async def main():
+    print("before sleep")
+    await aio.sleep(1)
+    await aio.sleep(1)
+    print("after sleep")"""
+
+
+exec(src, globals())
+aio.run(main())

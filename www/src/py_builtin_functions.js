@@ -733,6 +733,7 @@ function $$eval(src, _globals, _locals){
     frame.is_exec_top = true
     frame.__file__ = filename
     exec_locals.$f_trace = $B.enter_frame(frame)
+    var _frames = $B.frames_stack.slice()
     frame.$lineno = 1
 
     if(src.__class__ === code){
@@ -788,9 +789,10 @@ function $$eval(src, _globals, _locals){
 
     try{
         var exec_func = new Function('$B', '_b_', 'locals',
-                                     local_name, global_name, 'frame', js)
+                                     local_name, global_name, 
+                                     'frame', '_frames', js)
     }catch(err){
-        if($B.debug > 1){
+        if(true){ //$B.debug > 1){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
@@ -799,7 +801,7 @@ function $$eval(src, _globals, _locals){
 
     try{
         var res = exec_func($B, _b_, exec_locals,
-                            exec_locals, exec_globals, frame)
+                            exec_locals, exec_globals, frame, _frames)
     }catch(err){
         if($B.debug > 2){
             console.log(

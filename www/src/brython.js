@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-19 11:03:38.691737"
-__BRYTHON__.timestamp=1663578218691
+__BRYTHON__.compiled_date="2022-09-19 21:15:39.478363"
+__BRYTHON__.timestamp=1663614939478
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6427,6 +6427,7 @@ var frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
 frame.__file__=filename
 exec_locals.$f_trace=$B.enter_frame(frame)
+var _frames=$B.frames_stack.slice()
 frame.$lineno=1
 if(src.__class__===code){_ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}}
@@ -6443,10 +6444,11 @@ if(mode=='eval'){js='return '+js}else if(src.single_expression){js=`var result =
 `if(result !== _b_.None){\n`+
 `_b_.print(result)\n`+
 `}`}
-try{var exec_func=new Function('$B','_b_','locals',local_name,global_name,'frame',js)}catch(err){if($B.debug > 1){console.log('eval() error\n',$B.format_indent(js,0))
+try{var exec_func=new Function('$B','_b_','locals',local_name,global_name,'frame','_frames',js)}catch(err){if(true){
+console.log('eval() error\n',$B.format_indent(js,0))
 console.log('-- python source\n',src)}
 throw err}
-try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals,frame)}catch(err){if($B.debug > 2){console.log(
+try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals,frame,_frames)}catch(err){if($B.debug > 2){console.log(
 'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
@@ -7553,6 +7555,7 @@ $B.exception=function(js_exc,in_ctx_manager){
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
 console.log('Javascript error\n',js_exc)
+console.log('frames',$B.frames_stack.slice())
 var exc=_b_.Exception.$factory("Internal Javascript error: "+
 (js_exc.__name__ ||js_exc.name))
 exc.__name__="Internal Javascript error: "+
@@ -14020,7 +14023,7 @@ DEF_COMP_ITER=2<<8
 function name_reference(name,scopes,position){var scope=name_scope(name,scopes)
 return make_ref(name,scopes,scope,position)}
 function make_ref(name,scopes,scope,position){if(scope.found){return reference(scopes,scope.found,name)}else if(scope.resolve=='all'){var scope_names=make_search_namespaces(scopes)
-return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}')`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
+return `$B.resolve_in_scopes('${name}', [${scope_names}], [${position}])`}else if(scope.resolve=='local'){return `$B.resolve_local('${name}', [${position}])`}else if(scope.resolve=='global'){return `$B.resolve_global('${name}', _frames)`}else if(Array.isArray(scope.resolve)){return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`}else if(scope.resolve=='own_class_name'){return `$B.own_class_name('${name}')`}}
 function local_scope(name,scope){
 var s=scope
 while(true){if(s.locals.has(name)){return{found:true,scope:s}}
@@ -14097,8 +14100,8 @@ if(v.found){return v.value}}}
 var exc=$B.name_error(name)
 if(position){$B.set_exception_offsets(exc,position)}
 throw exc}
-$B.resolve_global=function(name){
-for(var frame of $B.frames_stack.slice().reverse()){var v=resolve_in_namespace(name,frame[3])
+$B.resolve_global=function(name,_frames){
+for(var frame of _frames.slice().reverse()){var v=resolve_in_namespace(name,frame[3])
 if(v.found){return v.value}
 if(frame.is_exec_top){break}}
 if(builtins_scope.locals.has(name)){return _b_[name]}
@@ -14151,7 +14154,8 @@ return `var ${comp.locals_name} = {},\n`+
 `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
 `"${comp.module_name}", ${comp.globals_name}]\n`+
 `frame.$lineno = ${comp.ast.lineno}\n`+
-`locals.$f_trace = $B.enter_frame(frame)\n`}
+`locals.$f_trace = $B.enter_frame(frame)\n`+
+`var _frames = $B.frames_stack.slice()\n`}
 function make_comp(scopes){
 var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var first_for=this.generators[0],
@@ -14419,6 +14423,7 @@ js+=`var ${ref} = (function(){\n`+
 `frame.__file__ = '${scopes.filename}'\n`+
 `frame.$lineno = ${this.lineno}\n`+
 `locals.$f_trace = $B.enter_frame(frame)\n`+
+`var _frames = $B.frames_stack.slice()\n`+
 `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
 js+=add_body(this.body,scopes)
 scopes.pop()
@@ -14625,7 +14630,9 @@ js+=`var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
     locals.$f_trace = $B.enter_frame(frame)
+    var _frames = $B.frames_stack.slice()
     var stack_length = $B.frames_stack.length\n`
+if(is_async){js+='frame.$async = true\n'}
 if(last_scope(scopes).has_annotation){js+=`locals.__annotations__ = $B.empty_dict()\n`}
 if(is_generator){js+=`locals.$is_generator = true\n`
 if(is_async){js+=`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=`var gen_${id} = $B.generator.$factory(function*(){\n`}}
@@ -14908,8 +14915,9 @@ var js=`// Javascript code generated from ast\n`+
 `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
 if(! namespaces){js+=`${global_name} = $B.imported["${mod_name}"],\n`+
 `locals = ${global_name},\n`+
-`frame = ["${module_id}", locals, "${module_id}", locals]`}else{js+=`locals = ${namespaces.local_name},\n`+
-`globals = ${namespaces.global_name}\n`
+`frame = ["${module_id}", locals, "${module_id}", locals]`}else{
+js+=`locals = ${namespaces.local_name},\n`+
+`globals = ${namespaces.global_name}`
 if(name){js+=`,\nlocals_${name} = locals`}}
 js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
@@ -14918,6 +14926,7 @@ js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 if(! namespaces){
 js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
 js+=`$B.set_lineno(frame, 1)\n`+
+'\nvar _frames = $B.frames_stack.slice()\n'+
 `var stack_length = $B.frames_stack.length\n`+
 `try{\n`+
 add_body(this.body,scopes)+'\n'+

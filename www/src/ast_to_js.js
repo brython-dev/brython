@@ -212,7 +212,7 @@ function make_ref(name, scopes, scope, position){
     }else if(scope.resolve == 'local'){
         return `$B.resolve_local('${name}', [${position}])`
     }else if(scope.resolve == 'global'){
-        return `$B.resolve_global('${name}')`
+        return `$B.resolve_global('${name}', _frames)`
     }else if(Array.isArray(scope.resolve)){
         return `$B.resolve_in_scopes('${name}', [${scope.resolve}], [${position}])`
     }else if(scope.resolve == 'own_class_name'){
@@ -480,9 +480,9 @@ $B.resolve_in_scopes = function(name, namespaces, position){
     throw exc
 }
 
-$B.resolve_global = function(name){
+$B.resolve_global = function(name, _frames){
     // Resolve in globals or builtins
-    for(var frame of $B.frames_stack.slice().reverse()){
+    for(var frame of _frames.slice().reverse()){
         var v = resolve_in_namespace(name, frame[3])
         if(v.found){
             return v.value
@@ -594,7 +594,8 @@ function init_comprehension(comp){
            `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
            `frame.$lineno = ${comp.ast.lineno}\n` +
-           `locals.$f_trace = $B.enter_frame(frame)\n`
+           `locals.$f_trace = $B.enter_frame(frame)\n` +
+           `var _frames = $B.frames_stack.slice()\n`
 }
 
 function make_comp(scopes){
@@ -1271,6 +1272,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `locals.$f_trace = $B.enter_frame(frame)\n` +
+          `var _frames = $B.frames_stack.slice()\n` +
           `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
 
     js += add_body(this.body, scopes)
@@ -1738,7 +1740,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
     locals.$f_trace = $B.enter_frame(frame)
+    var _frames = $B.frames_stack.slice()
     var stack_length = $B.frames_stack.length\n`
+
+    if(is_async){
+        js += 'frame.$async = true\n'
+    }
 
     if(last_scope(scopes).has_annotation){
         js += `locals.__annotations__ = $B.empty_dict()\n`
@@ -2388,8 +2395,9 @@ $B.ast.Module.prototype.to_js = function(scopes){
               `locals = ${global_name},\n` +
               `frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
+        // If module is run in an exec(), name "frame" is defined
         js += `locals = ${namespaces.local_name},\n` +
-              `globals = ${namespaces.global_name}\n`
+              `globals = ${namespaces.global_name}`
         if(name){
             js += `,\nlocals_${name} = locals`
         }
@@ -2404,6 +2412,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         js += `locals.$f_trace = $B.enter_frame(frame)\n`
     }
     js += `$B.set_lineno(frame, 1)\n` +
+          '\nvar _frames = $B.frames_stack.slice()\n' +
           `var stack_length = $B.frames_stack.length\n` +
           `try{\n` +
               add_body(this.body, scopes) + '\n' +
