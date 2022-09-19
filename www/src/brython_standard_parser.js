@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-17 20:26:02.559995"
-__BRYTHON__.timestamp=1663439162559
+__BRYTHON__.compiled_date="2022-09-19 09:32:53.298007"
+__BRYTHON__.timestamp=1663572773298
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4700,16 +4700,16 @@ module.__doc__=script.__doc__
 $B.imported[script_id]=module
 var module=new Function(script.js+`\nreturn locals`)()
 for(var key in module){if(! key.startsWith('$')){$B.imported[script_id][key]=module[key]}}}catch(err){
-if(err.__class__===undefined){console.log('Javascript error',err,err.$stack)
-var stack=$B.frames_stack.slice()
+if(err.__class__===undefined){if(err.$py_exc){err=err.$py_exc}else{$B.freeze(err)
+var stack=err.$stack,linenos=err.$linenos
 var lineNumber=err.lineNumber
 if(lineNumber !==undefined){console.log('around line',lineNumber)
 console.log(script.js.split('\n').
-slice(lineNumber-4,lineNumber).join('\n'))
-console.log('script\n',script.js)}
+slice(lineNumber-4,lineNumber).join('\n'))}
 $B.print_stack()
 err=_b_.RuntimeError.$factory(err+'')
-err.$stack=stack}
+err.$stack=stack
+err.$linenos=linenos}}
 $B.handle_error(err)}
 loop()}else{
 try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
@@ -4788,7 +4788,7 @@ if(res !==undefined){if($test){console.log("found in",mro[i])}
 break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
 return res}}
 if(res !==undefined){if($test){console.log(res)}
-if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}
+if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,obj,klass)}
 if(res.__class__===$B.method){if(res.$infos.__self__){
 return res}
 return res.__get__(obj,klass)}
@@ -5030,6 +5030,8 @@ return instance}
 type.__class__=type
 type.__format__=function(klass,fmt_spec){
 return _b_.str.$factory(klass)}
+function descriptor(obj){var klass=$B.get_class(obj),candidates=[obj,klass].concat(klass.__mro__)
+for(var candidate of candidates){if(candidate.__get__){return candidate}}}
 type.__getattribute__=function(klass,attr){switch(attr){case "__bases__":
 return $B.fast_tuple(klass.__bases__ ||[_b_.object])
 case "__class__":
@@ -5080,7 +5082,7 @@ if(getattr===undefined){for(var i=0;i < meta_mro.length;i++){if(meta_mro[i].__ge
 break}}}
 if(getattr !==undefined){return getattr(klass,attr)}}}}
 if(res !==undefined){if($test){console.log("res",res)}
-if(res.__class__===_b_.property){return res}
+if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
 if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
 if(res.$infos.__self__){
 return res}
@@ -5093,8 +5095,9 @@ if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $i
 if($test){console.log("res is function",res)}
 if(attr=="__new__" ||
 res.__class__===$B.builtin_function){res.$type="staticmethod"}
-if(attr=="__class_getitem__" && res.__class__ !==$B.method){res=_b_.classmethod.$factory(res)}
-if(attr=="__init_subclass__"){res=_b_.classmethod.$factory(res)}
+if((attr=="__class_getitem__" ||attr=="__init_subclass__")
+&& res.__class__ !==_b_.classmethod){res=_b_.classmethod.$factory(res)
+return _b_.classmethod.__get__(res,_b_.None,klass)}
 if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
 return res}}else{return res}}}
 type.__hash__=function(cls){return _b_.hash(cls)}
@@ -5235,6 +5238,8 @@ $B.set_func_names(member_descriptor,"builtins")
 var method=$B.method=$B.make_class("method",function(func,cls){var f=function(){return $B.$call(func).bind(null,cls).apply(null,arguments)}
 f.__class__=method
 f.$infos=func.$infos
+f.$infos.__func__=func
+f.$infos.__self__=cls
 return f}
 )
 method.__eq__=function(self,other){return self.$infos !==undefined &&
@@ -5251,6 +5256,7 @@ var infos=self.$infos
 if(infos && infos[attr]){if(attr=="__code__"){var res={__class__:$B.Code}
 for(var attr in infos.__code__){res[attr]=infos.__code__[attr]}
 return res}else{return infos[attr]}}else if(method.hasOwnProperty(attr)){return _b_.object.__getattribute__(self,attr)}else{
+console.log('method attribute',self,attr)
 return $B.Function.__getattribute__(self.$infos.__func__,attr)}}
 method.__repr__=method.__str__=function(self){return "<bound method "+self.$infos.__qualname__+
 " of "+_b_.str.$factory(self.$infos.__self__)+">"}
@@ -5488,7 +5494,9 @@ if(obj[item]!==undefined){return obj[item]}else{index_error(obj)}}else if(is_dic
 if(res !==undefined){return res[0]}
 throw _b_.KeyError.$factory(item)}
 if(obj.$is_class){var class_gi=$B.$getattr(obj,"__class_getitem__",_b_.None)
-if(class_gi !==_b_.None){return class_gi(item)}else if(obj.__class__){class_gi=$B.$getattr(obj.__class__,"__getitem__",_b_.None)
+if(class_gi !==_b_.None){try{return $B.$call(class_gi)(item)}catch(err){console.log('obj',obj)
+console.log('not callable',class_gi)
+throw err}}else if(obj.__class__){class_gi=$B.$getattr(obj.__class__,"__getitem__",_b_.None)
 if(class_gi !==_b_.None){return class_gi(obj,item)}else{throw _b_.TypeError.$factory("'"+
 $B.class_name(obj.__class__)+
 "' object is not subscriptable")}}}
@@ -6245,18 +6253,14 @@ if(i < 0 ||i > 1114111){throw _b_.ValueError.$factory('Outside valid range')}els
 return String.fromCodePoint(0xD800 |(code >> 10))+
 String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
 var classmethod=$B.make_class("classmethod",function(func){check_nb_args_no_kw('classmethod',1,arguments)
-var f=function(){return func.apply(null,arguments)}
-f.__class__=$B.method
-if(func.$attrs){for(var key in func.$attrs){f[key]=func.$attrs[key]}}
-f.$infos={__func__:func,__name__:func.$infos.__name__}
-f.__get__=function(obj,cls){var method=function(){return f(cls,...arguments)}
-method.__class__=$B.method
-method.$infos={__self__:cls,__func__:f,__name__:func.$infos.__name__,__qualname__:cls.$infos.__name__+"."+func.$infos.__name__}
-return method}
-f.__get__.__class__=$B.method_wrapper
-f.__get__.$infos=func.$infos
-return f}
+return{
+__class__:classmethod,__func__:func}}
 )
+classmethod.__get__=function(self,obj,cls){
+if(cls===_b_.None){cls=$B.get_class(obj)}
+var func_class=$B.get_class(self.__func__),candidates=[func_class].concat(func_class.__mro__)
+for(var candidate of candidates){if(candidate.__get__){return candidate.__get__(self.__func__,cls,cls)}}
+return $B.method.$factory(self.__func__,cls)}
 $B.set_func_names(classmethod,"builtins")
 var code=$B.code=$B.make_class("code")
 code.__repr__=code.__str__=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
@@ -7334,13 +7338,9 @@ return Object.keys(infos).
 concat(Object.keys(attrs)).
 filter(x=> !x.startsWith('$'))}
 $B.Function.__eq__=function(self,other){return self===other}
-$B.Function.__get__=function(self,obj){if(obj===_b_.None){return self}
-var method=function(){return self(obj,...arguments)}
-method.__class__=$B.method
-if(self.$infos===undefined){console.log("no $infos",self)
-console.log($B.last($B.frames_stack))}
-method.$infos={__name__:self.$infos.__name__,__qualname__:$B.class_name(obj)+"."+self.$infos.__name__,__self__:obj,__func__:self}
-return method}
+$B.Function.__get__=function(self,obj){
+if(obj===_b_.None){return self}
+return $B.method.$factory(self,obj)}
 $B.Function.__getattribute__=function(self,attr){
 if(self.$infos && self.$infos[attr]!==undefined){if(attr=='__code__'){var res={__class__:code}
 for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
@@ -7557,7 +7557,7 @@ _b_.BaseException=BaseException
 $B.exception=function(js_exc,in_ctx_manager){
 if(! js_exc.__class__){if(js_exc.$py_exc){
 return js_exc.$py_exc}
-console.log('js exc',js_exc)
+console.log('Javascript error\n',js_exc)
 var exc=_b_.Exception.$factory("Internal Javascript error: "+
 (js_exc.__name__ ||js_exc.name))
 exc.__name__="Internal Javascript error: "+
@@ -7571,7 +7571,6 @@ var $message="<Javascript "+js_exc.name+">: "+
 (js_exc.message ||"<"+js_exc+">")
 exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
-exc.$stack=$B.frames_stack.slice()
 js_exc.$py_exc=exc
 $B.freeze(exc)}else{var exc=js_exc
 $B.freeze(exc)
@@ -8576,11 +8575,11 @@ return t}
 bytes.$factory=function(source,encoding,errors){return bytes.__new__.bind(null,bytes).apply(null,arguments)}
 bytes.__class__=_b_.type
 bytes.$is_class=true
-for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
 $B.set_func_names(bytes,"builtins")
 bytes.fromhex=_b_.classmethod.$factory(bytes.fromhex)
+for(var attr in bytes){if(bytearray[attr]===undefined && typeof bytes[attr]=="function"){bytearray[attr]=(function(_attr){return function(){return bytes[_attr].apply(null,arguments)}})(attr)}}
 $B.set_func_names(bytearray,"builtins")
-bytearray.fromhex=_b_.classmethod.$factory(bytearray.fromhex)
+bytearray.fromhex=bytes.fromhex
 _b_.bytes=bytes
 _b_.bytearray=bytearray})(__BRYTHON__)
 ;
@@ -12678,7 +12677,6 @@ try{return _b_.list.$factory(obj)}catch(err){try{var it=$B.$iter(obj),next_func=
 throw err1}
 throw err}}
 $B.set_func_names(list,"builtins")
-list.__class_getitem__=_b_.classmethod.$factory(list.__class_getitem__)
 var JSArray=$B.JSArray=$B.make_class("JSArray",function(array){return{
 __class__:JSArray,js:array}}
 )
@@ -12712,6 +12710,9 @@ case "reverse":
 break
 default:
 if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}}}}
+tuple.__class_getitem__=function(cls,item){
+if(! Array.isArray(item)){item=[item]}
+return $B.GenericAlias.$factory(cls,item)}
 tuple.__eq__=function(self,other){
 if(other===undefined){return self===tuple}
 return list.__eq__(self,other)}
