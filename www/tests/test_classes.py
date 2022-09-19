@@ -852,4 +852,9 @@ class Meta(type):
 class Foo(metaclass=Meta):
     pass
 
+# issue 2039
+assert isinstance(classmethod(print), classmethod)
+assert isinstance(staticmethod(print), staticmethod)
+assert isinstance(property(print), property)
+
 print('passed all tests..')

@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-19 09:36:27.649876"
-__BRYTHON__.timestamp=1663572987649
+__BRYTHON__.compiled_date="2022-09-19 11:03:38.691737"
+__BRYTHON__.timestamp=1663578218691
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7068,11 +7068,11 @@ var _list=_b_.list.$factory(iter($.iterable)),args=[_list]
 for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
 _b_.list.sort.apply(null,args)
 return _list}
-var staticmethod=$B.make_class("staticmethod",function(func){var f={$infos:func.$infos,__get__:function(){return func}}
-f.__get__.__class__=$B.method_wrapper
-f.__get__.$infos=func.$infos
-return f}
+var staticmethod=$B.make_class("staticmethod",function(func){return{
+__class__:staticmethod,__func__:func}}
 )
+staticmethod.__call__=function(self){return $B.$call(self.__func__)}
+staticmethod.__get__=function(self){return self.__func__}
 $B.set_func_names(staticmethod,"builtins")
 function sum(iterable,start){var $=$B.args('sum',2,{iterable:null,start:null},['iterable','start'],arguments,{start:0},null,null),iterable=$.iterable,start=$.start
 if(_b_.isinstance(start,[_b_.str,_b_.bytes])){throw _b_.TypeError.$factory("sum() can't sum bytes"+

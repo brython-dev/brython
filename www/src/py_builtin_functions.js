@@ -2527,18 +2527,21 @@ function sorted(){
 
 // staticmethod() built in function
 var staticmethod = $B.make_class("staticmethod",
-    function(func) {
-        var f = {
-            $infos: func.$infos,
-            __get__: function(){
-                return func
-            }
+    function(func){
+        return {
+            __class__: staticmethod,
+            __func__: func
         }
-        f.__get__.__class__ = $B.method_wrapper
-        f.__get__.$infos = func.$infos
-        return f
     }
 )
+
+staticmethod.__call__ = function(self){
+    return $B.$call(self.__func__)
+}
+
+staticmethod.__get__ = function(self){
+    return self.__func__
+}
 
 
 $B.set_func_names(staticmethod, "builtins")
@@ -3351,7 +3354,7 @@ $B.Function.__eq__ = function(self, other){
 }
 
 $B.Function.__get__ = function(self, obj){
-    // adapated from 
+    // adapated from
     // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
     if(obj === _b_.None){
         return self
