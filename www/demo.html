@@ -666,6 +666,7 @@ the end.
           <option value="two">two
           <option value="three">three
       </select>
+      <br>Checkbox <input type="checkbox" id="check16">
       <br>
       <textarea id="textarea16" rows=3 cols=30 autocomplete="off">your content here !...</textarea>
     </div>
@@ -677,10 +678,12 @@ the end.
         input = document["input16"].value
         select = document["select16"]
         option = select.options[select.selectedIndex].value
+        checked = document["check16"].checked
         text = document["textarea16"].value
         document["zone16"].clear()
         document["zone16"] <= (f"Value in INPUT field: {input}",
             html.BR(), f"Selected option: {option}",
+            html.BR(), f"Checkbox checked ? {checked}",
             html.BR(), f"Value in TEXTAREA field: {text}"
             )
 

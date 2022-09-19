@@ -281,39 +281,28 @@ function chr(i){
 var classmethod = $B.make_class("classmethod",
     function(func) {
         check_nb_args_no_kw('classmethod', 1, arguments)
-        var f = function(){
-                    return func.apply(null, arguments)
-                }
-        f.__class__ = $B.method
-        // Set same attributes as those set to func by setattr
-        // Used for instance by @abc.abstractclassmethod
-        if(func.$attrs){
-            for(var key in func.$attrs){
-                f[key] = func.$attrs[key]
-            }
+        return {
+            __class__: classmethod,
+            __func__: func
         }
-        f.$infos = {
-            __func__: func,
-            __name__: func.$infos.__name__
-        }
-        f.__get__ = function(obj, cls){
-            var method = function(){
-                return f(cls, ...arguments)
-            }
-            method.__class__ = $B.method
-            method.$infos = {
-                __self__: cls,
-                __func__: f,
-                __name__: func.$infos.__name__,
-                __qualname__: cls.$infos.__name__ + "." + func.$infos.__name__
-            }
-            return method
-        }
-        f.__get__.__class__ = $B.method_wrapper
-        f.__get__.$infos = func.$infos
-        return f
     }
 )
+
+classmethod.__get__ = function(self, obj, cls){
+    // adapted from
+    // https://docs.python.org/3/howto/descriptor.html#class-methods
+    if(cls === _b_.None){
+        cls = $B.get_class(obj)
+    }
+    var func_class = $B.get_class(self.__func__),
+        candidates = [func_class].concat(func_class.__mro__)
+    for(var candidate of candidates){
+        if(candidate.__get__){
+            return candidate.__get__(self.__func__, cls, cls)
+        }
+    }
+    return $B.method.$factory(self.__func__, cls)
+}
 
 $B.set_func_names(classmethod, "builtins")
 
@@ -981,7 +970,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__annotations__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "f" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -1359,7 +1348,6 @@ function hash(obj){
         throw _b_.TypeError.$factory("unhashable type: '" +
                 $B.class_name(obj) + "'")
     }
-
 
     // If no specific __hash__ method is supplied for the instance but
     // a __eq__ method is defined, the object is not hashable
@@ -2539,18 +2527,21 @@ function sorted(){
 
 // staticmethod() built in function
 var staticmethod = $B.make_class("staticmethod",
-    function(func) {
-        var f = {
-            $infos: func.$infos,
-            __get__: function(){
-                return func
-            }
+    function(func){
+        return {
+            __class__: staticmethod,
+            __func__: func
         }
-        f.__get__.__class__ = $B.method_wrapper
-        f.__get__.$infos = func.$infos
-        return f
     }
 )
+
+staticmethod.__call__ = function(self){
+    return $B.$call(self.__func__)
+}
+
+staticmethod.__get__ = function(self){
+    return self.__func__
+}
 
 
 $B.set_func_names(staticmethod, "builtins")
@@ -3363,22 +3354,12 @@ $B.Function.__eq__ = function(self, other){
 }
 
 $B.Function.__get__ = function(self, obj){
+    // adapated from
+    // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
     if(obj === _b_.None){
         return self
     }
-    var method = function(){return self(obj, ...arguments)}
-    method.__class__ = $B.method
-    if(self.$infos === undefined){
-        console.log("no $infos", self)
-        console.log($B.last($B.frames_stack))
-    }
-    method.$infos = {
-        __name__: self.$infos.__name__,
-        __qualname__: $B.class_name(obj) + "." + self.$infos.__name__,
-        __self__: obj,
-        __func__: self
-    }
-    return method
+    return $B.method.$factory(self, obj)
 }
 
 $B.Function.__getattribute__ = function(self, attr){

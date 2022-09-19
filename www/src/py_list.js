@@ -56,12 +56,12 @@ list.__add__ = function(self, other){
 
 list.__class_getitem__ = function(cls, item){
     // PEP 585
-    // Set as a classmethod at the end of this script, after $B.set_func_names()
     if(! Array.isArray(item)){
         item = [item]
     }
     return $B.GenericAlias.$factory(cls, item)
 }
+
 
 list.__contains__ = function(self, item){
     var $ = $B.args("__contains__", 2, {self: null, item: null},
@@ -913,8 +913,6 @@ list.$unpack = function(obj){
 
 $B.set_func_names(list, "builtins")
 
-list.__class_getitem__ = _b_.classmethod.$factory(list.__class_getitem__)
-
 // Wrapper around Javascript arrays
 var JSArray = $B.JSArray = $B.make_class("JSArray",
     function(array){
@@ -1014,6 +1012,16 @@ for(var attr in list){
             }
     }
 }
+
+tuple.__class_getitem__ = function(cls, item){
+    // PEP 585
+    // Set as a classmethod at the end of this script, after $B.set_func_names()
+    if(! Array.isArray(item)){
+        item = [item]
+    }
+    return $B.GenericAlias.$factory(cls, item)
+}
+
 
 tuple.__eq__ = function(self, other){
     // compare object "self" to class "list"

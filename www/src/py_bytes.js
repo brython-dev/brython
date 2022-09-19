@@ -1749,6 +1749,12 @@ bytes.$factory = function(source, encoding, errors){
 bytes.__class__ = _b_.type
 bytes.$is_class = true
 
+
+$B.set_func_names(bytes, "builtins")
+
+// classmethod needs function attribute $info, which is set by set_func_names
+bytes.fromhex = _b_.classmethod.$factory(bytes.fromhex)
+
 // add methods of bytes to bytearray
 for(var attr in bytes){
     if(bytearray[attr] === undefined && typeof bytes[attr] == "function"){
@@ -1760,14 +1766,9 @@ for(var attr in bytes){
     }
 }
 
-$B.set_func_names(bytes, "builtins")
-
-// classmethod needs function attribute $info, which is set by set_func_names
-bytes.fromhex = _b_.classmethod.$factory(bytes.fromhex)
-
 $B.set_func_names(bytearray, "builtins")
 
-bytearray.fromhex = _b_.classmethod.$factory(bytearray.fromhex)
+bytearray.fromhex = bytes.fromhex
 
 _b_.bytes = bytes
 _b_.bytearray = bytearray

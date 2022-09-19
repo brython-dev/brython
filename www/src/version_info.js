@@ -1,8 +1,8 @@
-__BRYTHON__.implementation = [3, 10, 6, 'final', 0]
-__BRYTHON__.__MAGIC__ = "3.10.6"
+__BRYTHON__.implementation = [3, 10, 7, 'final', 0]
+__BRYTHON__.__MAGIC__ = "3.10.7"
 __BRYTHON__.version_info = [3, 10, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2022-09-16 22:30:31.084405"
-__BRYTHON__.timestamp = 1663360231084
+__BRYTHON__.compiled_date = "2022-09-19 11:03:38.691737"
+__BRYTHON__.timestamp = 1663578218691
 __BRYTHON__.builtin_module_names = ["_aio",
     "_ajax",
     "_ast",
@@ -15,7 +15,6 @@ __BRYTHON__.builtin_module_names = ["_aio",
     "_multiprocessing",
     "_posixsubprocess",
     "_profile",
-    "_random",
     "_sre",
     "_sre_utils",
     "_string",
@@ -38,4 +37,6 @@ __BRYTHON__.builtin_module_names = ["_aio",
     "modulefinder",
     "posix",
     "python_re",
+    "random",
     "unicodedata"]
+

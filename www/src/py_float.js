@@ -429,11 +429,11 @@ float.__hash__ = function(self) {
     }else if(isNaN(_v)){
         return self.__hashvalue__ = nan_hash
     }else if(_v === Number.MAX_VALUE){
-        return self.__hashvalue__ = 2234066890152476671
+        return self.__hashvalue__ = $B.fast_long_int(2234066890152476671n)
     }
     // for integers, return the value
-    if(_v == Math.round(_v)){
-        return Math.round(_v)
+    if(Number.isInteger(_v)){
+        return _b_.int.__hash__(_v)
     }
 
     var r = frexp(self)
@@ -589,6 +589,13 @@ float.__init__ = function(self, value){
 
 float.__int__ = function(self){
     check_self_is_float(self, '__int__')
+    if(Number.isInteger(self.value)){
+        var res = BigInt(self.value),
+            res_num = Number(res)
+        return Number.isSafeInteger(res_num) ?
+                   res_num :
+                   $B.fast_long_int(res)
+    }
     return parseInt(self.value)
 }
 
@@ -987,14 +994,6 @@ float.$factory = function(value){
         return fast_float(value)
     }
     if(value.__class__ === float){
-        if(value.value == Number.MAX_VALUE){
-            //take care of 'inf not identical to 1.797...e+308' error
-            var res = fast_float(Infinity)
-            res.__hashvalue__ = 2234066890152476671
-            return res
-        }else if(value.value == -Number.MAX_VALUE){
-            return fast_float(-Infinity)
-        }
         return value
     }
 

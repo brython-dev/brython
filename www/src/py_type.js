@@ -357,7 +357,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "f" // && klass === _b_.list
+    var $test = false // attr == "__class_getitem__" // && klass === _b_.list
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }
@@ -453,6 +453,8 @@ type.__getattribute__ = function(klass, attr){
         // If the attribute is a property, return it
         if(res.__class__ === _b_.property){
             return res
+        }else if(res.__class__ === _b_.classmethod){
+            return _b_.classmethod.__get__(res, _b_.None, klass)
         }
         if(res.__get__){
             if(res.__class__ === method){
@@ -492,11 +494,10 @@ type.__getattribute__ = function(klass, attr){
                     res.__class__ === $B.builtin_function){
                 res.$type = "staticmethod"
             }
-            if(attr == "__class_getitem__" && res.__class__ !== $B.method){
+            if((attr == "__class_getitem__"  || attr == "__init_subclass__")
+                    && res.__class__ !== _b_.classmethod){
                 res = _b_.classmethod.$factory(res)
-            }
-            if(attr == "__init_subclass__"){
-                res = _b_.classmethod.$factory(res)
+                return _b_.classmethod.__get__(res, _b_.None, klass)
             }
             if(res.__class__ === $B.method){
                 return res.__get__(null, klass)
@@ -922,6 +923,8 @@ var method = $B.method = $B.make_class("method",
         }
         f.__class__ = method
         f.$infos = func.$infos
+        f.$infos.__func__ = func
+        f.$infos.__self__ = cls
         return f
     }
 )
