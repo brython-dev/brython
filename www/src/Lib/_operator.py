@@ -19,14 +19,3 @@ def _compare_digest(a, b):
         return a == b
     raise TypeError("unsupported operand types")
 
-def index(a):
-    # See https://stackoverflow.com/questions/65551469/operator-index-with-custom-class-instance
-    # for the reason this implementation is necessary.
-
-    try:
-        index_method = a.__index__
-    except AttributeError as e:
-        # For compatibility with CPython (and also PyPy), raise a TypeError here instead of an AttributeError.
-        raise TypeError(f"'{type(a)}' object cannot be interpreted as an integer") from e
-    else:
-        return index_method()
