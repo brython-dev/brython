@@ -84,6 +84,12 @@ node_modules/
 # Files created by make_dist
 npm/*.js
 setup/data/*.js
+scripts/last_modifs.json
+scripts/python.gram.js_actions
+scripts/python*.gram
+www/src/brython_no_static.js
+www/src/full_grammar.js
+www/static_tutorial/
 
 # Files created by make_doc
 www/static_doc
