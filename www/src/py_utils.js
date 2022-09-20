@@ -214,6 +214,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
 
     if(missing.length > 0){
         if(missing.length == 1){
+            console.log('slots', slots, 'defaults', $dobj)
             var arg_type = 'positional'
             if(var_names.indexOf(missing[0]) >= argcount){
                 arg_type = 'required keyword-only'

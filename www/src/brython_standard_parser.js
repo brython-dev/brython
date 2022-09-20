@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-20 08:24:36.912602"
-__BRYTHON__.timestamp=1663655076911
+__BRYTHON__.compiled_date="2022-09-20 08:49:25.281819"
+__BRYTHON__.timestamp=1663656565281
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5380,7 +5380,8 @@ throw _b_.TypeError.$factory(fname+
 slots[key]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push(attr)}}}
-if(missing.length > 0){if(missing.length==1){var arg_type='positional'
+if(missing.length > 0){if(missing.length==1){console.log('slots',slots,'defaults',$dobj)
+var arg_type='positional'
 if(var_names.indexOf(missing[0])>=argcount){arg_type='required keyword-only'}
 throw _b_.TypeError.$factory(fname+
 ` missing 1 ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
@@ -14584,11 +14585,11 @@ var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=th
 for(var i=ix;i < positional.length;i++){default_names.push(`defaults.${positional[i].arg}`)
 _defaults.push(`${positional[i].arg}: `+
 `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)}
-var ix=0
-for(var arg of this.args.kwonlyargs){if(this.args.kw_defaults[ix]===_b_.None){break}
+var ix=-1
+for(var arg of this.args.kwonlyargs){ix++
+if(this.args.kw_defaults[ix]===_b_.None){continue}
 if(this.args.kw_defaults[ix]===undefined){_defaults.push(`${arg.arg}: _b_.None`)}else{_defaults.push(`${arg.arg}: `+
-$B.js_from_ast(this.args.kw_defaults[ix],scopes))}
-ix++}
+$B.js_from_ast(this.args.kw_defaults[ix],scopes))}}
 var kw_default_names=[]
 for(var kw of this.args.kwonlyargs){kw_default_names.push(`defaults.${kw.arg}`)}
 var default_str=`{${_defaults.join(', ')}}`

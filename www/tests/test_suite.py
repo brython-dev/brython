@@ -957,6 +957,14 @@ assert_raises(TypeError, f, 1, 2,
 assert_raises(TypeError, f, 1, h=2, k=4,
   msg="f() got an unexpected keyword argument 'k'")
 
-def f(f=5, *g: 6, h): 
-    pass    
+def f(f=5, *g: 6, h):
+    pass
+
+# issue 2041
+def optional_keyword_only_arg(*, a, b=None):
+    assert b is None
+
+optional_keyword_only_arg(a=42)
+
+
 print('passed all tests...')

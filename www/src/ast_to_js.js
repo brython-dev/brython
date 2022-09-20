@@ -1611,10 +1611,11 @@ function transform_args(scopes){
         _defaults.push(`${positional[i].arg}: ` +
             `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)
     }
-    var ix = 0
+    var ix = -1
     for(var arg of this.args.kwonlyargs){
+        ix++
         if(this.args.kw_defaults[ix] === _b_.None){
-            break
+            continue
         }
         if(this.args.kw_defaults[ix] === undefined){
             _defaults.push(`${arg.arg}: _b_.None`)
@@ -1622,7 +1623,6 @@ function transform_args(scopes){
             _defaults.push(`${arg.arg}: ` +
                 $B.js_from_ast(this.args.kw_defaults[ix], scopes))
         }
-        ix++
     }
     var kw_default_names = []
     for(var kw of this.args.kwonlyargs){
