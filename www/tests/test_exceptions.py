@@ -61,3 +61,18 @@ assert_raises(TypeError,
 e = BaseExceptionGroup('issues',
         [ValueError('bad value'), TypeError('bad type')])
 assert type(e) is ExceptionGroup
+
+source = "def myfunc():\n error"
+code = compile(source, 'foo.py', 'exec')
+exec(code)
+expected = """File "foo.py", line 2, in myfunc"""
+
+try:
+    myfunc()
+except NameError as exc:
+    import traceback
+    import io
+    out = io.StringIO()
+    traceback.print_exc(file=out)
+    assert expected in out.getvalue()
+    

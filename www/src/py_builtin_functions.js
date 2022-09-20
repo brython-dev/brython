@@ -606,7 +606,10 @@ function $$eval(src, _globals, _locals){
         _b_.print(">", $.src.source.trim())
     }
 
+    var filename = '<string>'
+
     if(src.__class__ === code){
+        filename = src.filename
         // result of compile()
     }else if((! src.valueOf) || typeof src.valueOf() !== 'string'){
         throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,` +
@@ -616,6 +619,8 @@ function $$eval(src, _globals, _locals){
         // cf. issue #1772
         src = src.valueOf()
     }
+
+    $B.url2name[filename] = 'exec'
 
     var frame = $B.last($B.frames_stack)
     var lineno = frame.$lineno
@@ -627,8 +632,8 @@ function $$eval(src, _globals, _locals){
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
         exc.args = ['unexpected EOF while parsing',
-            ['<string>', lines.length - 1, 1, line]]
-        exc.filename = '<string>'
+            [filename, lines.length - 1, 1, line]]
+        exc.filename = filename
         exc.text = line
         throw exc
     }
@@ -637,13 +642,12 @@ function $$eval(src, _globals, _locals){
         global_name = 'globals_exec',
         exec_locals = {},
         exec_globals = {},
-        __name__ = '<module>',
-        filename = '<string>'
+        __name__ = '<module>'
 
     if(_globals === _b_.None){
         // if the optional parts are omitted, the code is executed in the
         // current scope
-        filename = '<string>'
+        // filename = '<string>'
         if(frame[1] === frame[3]){
             // module level
             global_name += '_globals'
@@ -695,7 +699,7 @@ function $$eval(src, _globals, _locals){
         if(exec_globals.__builtins__ === undefined){
             exec_globals.__builtins__ = _b_.__builtins__
         }
-        filename = exec_globals.__file__ || '<string>'
+        // filename = exec_globals.__file__ || '<string>'
         if(_locals === _b_.None){
             exec_locals = exec_globals
         }else{
@@ -810,6 +814,7 @@ function $$eval(src, _globals, _locals){
                 '\nstack', $B.frames_stack.slice(),
                 '\nexec func', $B.format_indent(exec_func + '', 0),
                 '\n    filename', filename,
+                '\n    name from filename', $B.url2name[filename],
                 '\n    local_name', local_name,
                 '\n    exec_locals', exec_locals,
                 '\n    global_name', global_name,

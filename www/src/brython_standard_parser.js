@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-20 09:46:49.075435"
-__BRYTHON__.timestamp=1663660009075
+__BRYTHON__.compiled_date="2022-09-20 17:29:07.992560"
+__BRYTHON__.timestamp=1663687747991
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6393,21 +6393,22 @@ function $$eval(src,_globals,_locals){var $=$B.args("eval",4,{src:null,globals:n
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
 _b_.print(">",$.src.source.trim())}
-if(src.__class__===code){}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
+var filename='<string>'
+if(src.__class__===code){filename=src.filename}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
 " bytes or code object")}else{
 src=src.valueOf()}
+$B.url2name[filename]='exec'
 var frame=$B.last($B.frames_stack)
 var lineno=frame.$lineno
 $B.exec_scope=$B.exec_scope ||{}
 if(typeof src=='string' && src.endsWith('\\\n')){var exc=_b_.SyntaxError.$factory('unexpected EOF while parsing')
 var lines=src.split('\n'),line=lines[lines.length-2]
-exc.args=['unexpected EOF while parsing',['<string>',lines.length-1,1,line]]
-exc.filename='<string>'
+exc.args=['unexpected EOF while parsing',[filename,lines.length-1,1,line]]
+exc.filename=filename
 exc.text=line
 throw exc}
-var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>',filename='<string>'
+var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>'
 if(_globals===_b_.None){
-filename='<string>'
 if(frame[1]===frame[3]){
 global_name+='_globals'
 exec_locals=exec_globals=frame[3]}else{if(mode=="exec"){
@@ -6424,7 +6425,6 @@ if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jso
 for(var key in _globals.$string_dict){_globals.$jsobj[key]=_globals.$string_dict[key][0]
 if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
-filename=exec_globals.__file__ ||'<string>'
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(_locals===_globals){
 global_name+='_globals'
 exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
@@ -6460,7 +6460,7 @@ console.log('eval() error\n',$B.format_indent(js,0))
 console.log('-- python source\n',src)}
 throw err}
 try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals,frame,_frames)}catch(err){if($B.debug > 2){console.log(
-'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
+'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
 if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}
@@ -7776,7 +7776,7 @@ save_filename=filename
 save_lineno=lineno
 count_repeats=0
 var src=$B.file_cache[filename]
-trace.push(`  File ${filename}, line ${lineno}, in `+
+trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
 if(line){trace.push('    '+line.trim())}
@@ -7804,7 +7804,7 @@ if(err.__class__===_b_.SyntaxError ||
 err.__class__===_b_.IndentationError){err.$stack.pop()
 trace+=trace_from_stack(err)
 var filename=err.filename,line=err.text,indent=line.length-line.trimLeft().length
-trace+=`  File ${filename}, line ${err.args[1][1]}\n`+
+trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
 if(err.__class__ !==_b_.IndentationError &&
 err.text){
