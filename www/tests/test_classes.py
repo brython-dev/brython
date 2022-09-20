@@ -852,6 +852,20 @@ class Meta(type):
 class Foo(metaclass=Meta):
     pass
 
+# issue 2038
+class Slotted:
+    __slots__ = { "slot" }
+
+assert Slotted.__slots__ == {"slot"}
+assert str(Slotted.slot) == "<member 'slot' of 'Slotted' objects>"
+
+s = Slotted()
+s.slot = 42
+assert Slotted.slot.__get__(s) == 42
+assert s.slot == 42
+
+assert_raises(AttributeError, setattr, s, 'x', 9)
+
 # issue 2039
 assert isinstance(classmethod(print), classmethod)
 assert isinstance(staticmethod(print), staticmethod)
