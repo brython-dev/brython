@@ -789,7 +789,7 @@ function $$eval(src, _globals, _locals){
 
     try{
         var exec_func = new Function('$B', '_b_', 'locals',
-                                     local_name, global_name, 
+                                     local_name, global_name,
                                      'frame', '_frames', js)
     }catch(err){
         if(true){ //$B.debug > 1){
@@ -2481,7 +2481,7 @@ $B.$setattr = function(obj, attr, value){
                 return []
             }
             var has_slot = false
-            if(mangled_slots(klass).indexOf(attr) > -1){
+            if($B.$is_member(attr, mangled_slots(klass))){
                 has_slot = true
             }else{
                 for(var i = 0; i < klass.__mro__.length; i++){

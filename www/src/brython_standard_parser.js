@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-19 21:15:39.478363"
-__BRYTHON__.timestamp=1663614939478
+__BRYTHON__.compiled_date="2022-09-20 08:24:36.912602"
+__BRYTHON__.timestamp=1663655076911
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5045,8 +5045,6 @@ return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
 var $test=false 
 if($test){console.log("attr",attr,"of",klass,res,res+"")}
-if(res===undefined && klass.__slots__ &&
-klass.__slots__.indexOf(attr)>-1){return member_descriptor.$factory(attr,klass)}
 if(klass.__class__ &&
 klass.__class__[attr]&&
 klass.__class__[attr].__get__ &&
@@ -5119,6 +5117,8 @@ extra_kwargs
 var module=cl_dict.$string_dict.__module__
 if(module){module=module[0]}else{module=$B.last($B.frames_stack)[2]}
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module,__qualname__:name},$is_class:true,$has_setattr:cl_dict.$has_setattr}
+if(cl_dict.__slots__){var _slots=class_dict.__slots__=cl_dict.__slots__
+for(var name of _slots){class_dict[name]=member_descriptor.$factory(name,class_dict)}}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
@@ -5230,6 +5230,15 @@ return f}
 method_wrapper.__str__=method_wrapper.__repr__=function(self){return "<method '"+self.$infos.__name__+"' of function object>"}
 var member_descriptor=$B.make_class("member_descriptor",function(attr,cls){return{__class__:member_descriptor,cls:cls,attr:attr}}
 )
+member_descriptor.__delete__=function(self,obj){if(obj.$slot_values===undefined ||
+! obj.$slot_values.hasOwnProperty(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+obj.$slot_values.delete(self.attr)}
+member_descriptor.__get__=function(self,obj,obj_type){if(obj===_b_.None){return self}
+if(obj.$slot_values===undefined ||
+! obj.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+return obj.$slot_values.get(self.attr)}
+member_descriptor.__set__=function(self,obj,value){if(obj.$slot_values===undefined){obj.$slot_values=new Map()}
+obj.$slot_values.set(self.attr,value)}
 member_descriptor.__str__=member_descriptor.__repr__=function(self){return "<member '"+self.attr+"' of '"+self.cls.$infos.__name__+
 "' objects>"}
 $B.set_func_names(member_descriptor,"builtins")
@@ -7056,7 +7065,7 @@ break}}
 if(_slots){function mangled_slots(klass){if(klass.__slots__){if(Array.isArray(klass.__slots__)){return klass.__slots__.map(function(item){if(item.startsWith("__")&& ! item.endsWith("_")){return "_"+klass.$infos.__name__+item}else{return item}})}else{return klass.__slots__}}
 return[]}
 var has_slot=false
-if(mangled_slots(klass).indexOf(attr)>-1){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
+if($B.$is_member(attr,mangled_slots(klass))){has_slot=true}else{for(var i=0;i < klass.__mro__.length;i++){var kl=klass.__mro__[i]
 if(mangled_slots(kl).indexOf(attr)>-1){has_slot=true
 break}}}
 if(! has_slot){throw $B.attr_error(attr,klass)}}}
