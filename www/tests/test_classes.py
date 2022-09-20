@@ -871,4 +871,11 @@ assert isinstance(classmethod(print), classmethod)
 assert isinstance(staticmethod(print), staticmethod)
 assert isinstance(property(print), property)
 
+# issue 2043
+class HasClassMethod:
+    @classmethod
+    def class_method(cls): pass
+
+assert isinstance(HasClassMethod.class_method.__dict__, dict)
+
 print('passed all tests..')

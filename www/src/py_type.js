@@ -955,6 +955,7 @@ var method = $B.method = $B.make_class("method",
         f.$infos = func.$infos
         f.$infos.__func__ = func
         f.$infos.__self__ = cls
+        f.$infos.__dict__ = $B.empty_dict()
         return f
     }
 )
