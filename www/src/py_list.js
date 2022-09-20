@@ -736,7 +736,7 @@ function $elts_class(self){
 list.sort = function(self){
     var $ = $B.args("sort", 1, {self: null}, ["self"],
         arguments, {}, null, "kw")
-
+    
     check_not_tuple(self, "sort")
     var func = _b_.None,
         reverse = false,
@@ -857,17 +857,19 @@ $B.$list = function(t){
 
 // constructor for built-in type 'list'
 list.$factory = function(){
-    if(arguments.length == 0){return []}
+    if(arguments.length == 0){
+        return $B.$list([])
+    }
     var $ = $B.args("list", 1, {obj: null}, ["obj"],
         arguments, {}, null, null),
         obj = $.obj
-
     if(Array.isArray(obj)){ // most simple case
         obj = obj.slice() // list(t) is not t
         obj.__brython__ = true;
         if(obj.__class__ == tuple){
             var res = obj.slice()
             res.__class__ = list
+            res.__brython__ = true
             return res
         }
         return obj

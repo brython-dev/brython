@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-20 09:05:18.899401"
-__BRYTHON__.timestamp=1663657518899
+__BRYTHON__.compiled_date="2022-09-20 09:20:37.422366"
+__BRYTHON__.timestamp=1663658437421
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12666,13 +12666,14 @@ return self.__brython__ ? _b_.None :self}
 $B.$list=function(t){t.__brython__=true
 t.__class__=_b_.list
 return t}
-list.$factory=function(){if(arguments.length==0){return[]}
+list.$factory=function(){if(arguments.length==0){return $B.$list([])}
 var $=$B.args("list",1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
 if(Array.isArray(obj)){
 obj=obj.slice()
 obj.__brython__=true;
 if(obj.__class__==tuple){var res=obj.slice()
 res.__class__=list
+res.__brython__=true
 return res}
 return obj}
 var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call($B.$getattr(arg,"__next__"))

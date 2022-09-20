@@ -186,4 +186,7 @@ js = __BRYTHON__.python_to_js("x = 1 + 2")
 ns = window.eval(js)
 assert ns.x == 3
 
+# method .sort of JS lists return the sorted list
+assert window.js_list.sort() == ['a', 'b', 'c']
+
 print("all tests ok...")

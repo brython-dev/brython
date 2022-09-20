@@ -417,4 +417,9 @@ except TypeError as exc:
 t = [1] * 2
 assert t.sort() is None
 
+# issue 2044
+M = list()
+M.append(1)
+assert(M.sort() is None)
+
 print("passed all tests..")
