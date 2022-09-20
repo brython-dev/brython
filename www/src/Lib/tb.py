@@ -36,7 +36,7 @@ def format_exc():
                     f' more time{"s" if count_repeats > 1 else ""}]')
 
     def show_line():
-        trace.write(f"  File {filename}, line {lineno}, in {name}")
+        trace.write(f'  File "{filename}", line {lineno}, in {name}')
         if not filename.startswith("<"):
             src = open(filename, encoding='utf-8').read()
             lines = src.split('\n')
@@ -86,7 +86,7 @@ def print_exc(file=None):
 def syntax_error(args):
     trace = Trace()
     info, [filename, lineno, offset, line, *extra] = args
-    trace.write(f"  File {filename}, line {lineno}")
+    trace.write(f'  File "{filename}", line {lineno}')
     indent = len(line) - len(line.lstrip())
     trace.write("    " + line.strip())
     nb_marks = 1

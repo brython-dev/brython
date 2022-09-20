@@ -836,7 +836,7 @@ function trace_from_stack(err){
         save_lineno = lineno
         count_repeats = 0
         var src = $B.file_cache[filename]
-        trace.push(`  File ${filename}, line ${lineno}, in ` +
+        trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
         if(src){
             var lines = src.split('\n'),
@@ -896,7 +896,7 @@ $B.show_error = function(err){
         var filename = err.filename,
             line = err.text,
             indent = line.length - line.trimLeft().length
-        trace += `  File ${filename}, line ${err.args[1][1]}\n` +
+        trace += `  File "${filename}", line ${err.args[1][1]}\n` +
                      `    ${line.trim()}\n`
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){
