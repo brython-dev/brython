@@ -1,4 +1,5 @@
 # list examples
+from tester import assert_raises
 
 z = [1, 2, 3]
 assert z.__class__ == list
@@ -191,25 +192,13 @@ assert ls == ['a2', 'b3', 'c1']
 
 # issue 1027
 t = (4, 5, 6)
-try:
-    t.pop()
-    raise Exception("should have raised AttributeError")
-except AttributeError:
-    pass
+assert_raises(AttributeError, getattr, t, 'pop')
+assert_raises(AttributeError, getattr, t, 'sort')
 
-try:
-    t.sort()
-    raise Exception("should have raised AttributeError")
-except AttributeError:
-    pass
 
 # issue 1044
 a = []
-try:
-    a.push(1)
-    raise Exception("should have raised AttributeError")
-except AttributeError:
-    pass
+assert_raises(AttributeError, getattr, a, 'push')
 
 # issue 1045
 a = ["a"]
@@ -314,19 +303,11 @@ assert L == [P(1), P(3), P(3), P(5), P(7)]
 
 # issue 1593
 t = [1, 2, 3]
-try:
-    t[1.1]
-    raise Exception("should have raised TypeError")
-except TypeError:
-    pass
+assert_raises(TypeError, t.__getitem__, 1.1)
 
 # issue 1630
 t = (1, 2)
-try:
-    t.first = 1
-    raise AssertionError("should have raised AttributeError")
-except AttributeError:
-    pass
+assert_raises(AttributeError, setattr, t, 'first', 1)
 
 # issue 1641
 tup = (1, 2, 3)
@@ -421,5 +402,10 @@ assert t.sort() is None
 M = list()
 M.append(1)
 assert(M.sort() is None)
+
+# issue 2045
+import re
+assert_raises(TypeError, tuple, 1, 2, msg=re.compile("^tuple"))
+
 
 print("passed all tests..")

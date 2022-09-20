@@ -736,7 +736,7 @@ function $elts_class(self){
 list.sort = function(self){
     var $ = $B.args("sort", 1, {self: null}, ["self"],
         arguments, {}, null, "kw")
-    
+
     check_not_tuple(self, "sort")
     var func = _b_.None,
         reverse = false,
@@ -855,12 +855,13 @@ $B.$list = function(t){
     return t
 }
 
-// constructor for built-in type 'list'
-list.$factory = function(){
+// constructor common to list and tuple (class is passed as "this")
+var factory = function(){
+    var klass = this // list or tuple
     if(arguments.length == 0){
         return $B.$list([])
     }
-    var $ = $B.args("list", 1, {obj: null}, ["obj"],
+    var $ = $B.args(klass.$infos.__name__, 1, {obj: null}, ["obj"],
         arguments, {}, null, null),
         obj = $.obj
     if(Array.isArray(obj)){ // most simple case
@@ -891,6 +892,10 @@ list.$factory = function(){
     }
     res.__brython__ = true // false for Javascript arrays - used in sort()
     return res
+}
+
+list.$factory = function(){
+    return factory.apply(list, arguments)
 }
 
 list.$unpack = function(obj){
@@ -972,13 +977,8 @@ tuple.__iter__ = function(self){
     return tuple_iterator.$factory(self)
 }
 
-// other attributes are defined in py_list.js, once list is defined
-
-
-// type() is implemented in py_utils
-
 tuple.$factory = function(){
-    var obj = list.$factory(...arguments)
+    var obj = factory.apply(tuple, arguments)
     obj.__class__ = tuple
     return obj
 }
@@ -989,6 +989,7 @@ $B.fast_tuple = function(array){
     array.__dict__ = $B.empty_dict()
     return array
 }
+
 // add tuple methods
 for(var attr in list){
     switch(attr) {
@@ -999,8 +1000,10 @@ for(var attr in list){
         case "append":
         case "extend":
         case "insert":
+        case "pop":
         case "remove":
         case "reverse":
+        case "sort":
             break
         default:
             if(tuple[attr] === undefined){

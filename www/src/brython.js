@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-20 09:20:37.422366"
-__BRYTHON__.timestamp=1663658437421
+__BRYTHON__.compiled_date="2022-09-20 09:46:49.075435"
+__BRYTHON__.timestamp=1663660009075
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12666,8 +12666,9 @@ return self.__brython__ ? _b_.None :self}
 $B.$list=function(t){t.__brython__=true
 t.__class__=_b_.list
 return t}
-list.$factory=function(){if(arguments.length==0){return $B.$list([])}
-var $=$B.args("list",1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
+var factory=function(){var klass=this 
+if(arguments.length==0){return $B.$list([])}
+var $=$B.args(klass.$infos.__name__,1,{obj:null},["obj"],arguments,{},null,null),obj=$.obj
 if(Array.isArray(obj)){
 obj=obj.slice()
 obj.__brython__=true;
@@ -12681,6 +12682,7 @@ while(1){try{res[pos++]=next_func()}catch(err){if(!isinstance(err,_b_.StopIterat
 break}}
 res.__brython__=true 
 return res}
+list.$factory=function(){return factory.apply(list,arguments)}
 list.$unpack=function(obj){
 try{return _b_.list.$factory(obj)}catch(err){try{var it=$B.$iter(obj),next_func=$B.$call($B.$getattr(it,"__next__"))}catch(err1){if($B.is_exc(err1,[_b_.TypeError])){throw _b_.TypeError.$factory(
 `Value after * must be an iterable, not ${$B.class_name(obj)}`)}
@@ -12701,7 +12703,7 @@ function $tuple(arg){return arg}
 var tuple={__class__:_b_.type,__mro__:[object],$infos:{__module__:"builtins",__name__:"tuple"},$is_class:true,$native:true,$match_sequence_pattern:true,}
 var tuple_iterator=$B.make_iterator_class("tuple_iterator")
 tuple.__iter__=function(self){return tuple_iterator.$factory(self)}
-tuple.$factory=function(){var obj=list.$factory(...arguments)
+tuple.$factory=function(){var obj=factory.apply(tuple,arguments)
 obj.__class__=tuple
 return obj}
 $B.fast_tuple=function(array){array.__class__=tuple
@@ -12715,8 +12717,10 @@ case "__setitem__":
 case "append":
 case "extend":
 case "insert":
+case "pop":
 case "remove":
 case "reverse":
+case "sort":
 break
 default:
 if(tuple[attr]===undefined){if(typeof list[attr]=="function"){tuple[attr]=(function(x){return function(){return list[x].apply(null,arguments)}})(attr)}}}}
