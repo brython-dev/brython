@@ -31,7 +31,7 @@ var str_hash = _b_.str.__hash__,
     $N = _b_.None
 
 var set_ops = ["eq", "le", "lt", "ge", "gt",
-    "sub", "rsub", "and", "or", "xor"]
+    "sub", "rsub", "and", "rand", "or", "ror", "xor", "rxor"]
 
 // methods to compare non set-like views
 function is_sublist(t1, t2){

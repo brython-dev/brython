@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-20 17:29:07.992560"
-__BRYTHON__.timestamp=1663687747991
+__BRYTHON__.compiled_date="2022-09-21 14:46:17.555568"
+__BRYTHON__.timestamp=1663764377554
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5578,7 +5578,11 @@ if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 return di(obj,item)}
 $B.augm_assign=function(left,op,right){
 var op1=op.substr(0,op.length-1),method=$B.op2method.augmented_assigns[op],augm_func=$B.$getattr(left,'__'+method+'__',null)
-if(augm_func !==null){return $B.$call(augm_func)(right)}else{var method1=$B.op2method.operations[op1]
+if(augm_func !==null){var res=$B.$call(augm_func)(right)
+if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(`unsupported operand type(s)`+
+` for ${op}: '${$B.class_name(left)}' `+
+`and '${$B.class_name(right)}'`)}
+return res}else{var method1=$B.op2method.operations[op1]
 if(method1===undefined){method1=$B.op2method.binary[op1]}
 return $B.rich_op(`__${method1}__`,left,right)}}
 $B.extend=function(fname,arg){
@@ -8600,7 +8604,7 @@ res.$numbers=obj.$numbers.slice()
 for(key in obj.$hashes){res.$hashes[key]=obj.$hashes[key]}
 return res}
 var set={__class__:_b_.type,$infos:{__module__:"builtins",__name__:"set"},$is_class:true,$native:true}
-set.__and__=function(self,other,accept_iter){try{$test(accept_iter,other)}catch(err){return _b_.NotImplemented}
+set.__and__=function(self,other,accept_iter){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 var res=create_type(self)
 for(var i=0,len=self.$items.length;i < len;i++){if(_b_.getattr(other,"__contains__")(self.$items[i])){set.add(res,self.$items[i])}}
 return res}
@@ -8659,7 +8663,7 @@ set.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("set.
 return{
 __class__:cls,$items:[],$numbers:[],
 $hashes:{}}}
-set.__or__=function(self,other,accept_iter){
+set.__or__=function(self,other,accept_iter){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 var res=clone(self),func=_b_.getattr($B.$iter(other),"__next__")
 while(1){try{set.add(res,func())}
 catch(err){if(_b_.isinstance(err,_b_.StopIteration)){break}
@@ -8691,27 +8695,24 @@ else{res.push(r)}}
 res=res.join(", ")
 $B.repr.leave(self)
 return head+res+tail}
+set.__ror__=function(self,other){
+return set.__or__(self,other)}
 set.__rsub__=function(self,other){
-return set.__sub__(other,self)}
+return set.__sub__(self,other)}
 set.__rxor__=function(self,other){
 return set.__xor__(self,other)}
 set.__sub__=function(self,other,accept_iter){
-try{$test(accept_iter,other,"-")}
-catch(err){return _b_.NotImplemented}
+if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 var res=create_type(self),cfunc=_b_.getattr(other,"__contains__"),items=[]
 for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){items.push(self.$items[i])}}
 set.__init__.call(null,res,items)
 return res}
 set.__xor__=function(self,other,accept_iter){
-try{$test(accept_iter,other,"^")}
-catch(err){return _b_.NotImplemented}
+if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
 for(var i=0,len=self.$items.length;i < len;i++){if(! cfunc(self.$items[i])){set.add(res,self.$items[i])}}
 for(var i=0,len=other.$items.length;i < len;i++){if(! set.__contains__(self,other.$items[i])){set.add(res,other.$items[i])}}
 return res}
-function $test(accept_iter,other,op){if(accept_iter===undefined &&
-! _b_.isinstance(other,[set,frozenset])){throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+
-": 'set' and '"+$B.class_name(other)+"'")}}
 $B.make_rmethods(set)
 function $add(self,item){var $simple=false
 if(typeof item==="string" ||typeof item==="number" ||
@@ -8821,7 +8822,7 @@ return $N}
 set.difference=function(){var $=$B.args("difference",1,{self:null},["self"],arguments,{},"args",null)
 if($.args.length==0){return set.copy($.self)}
 var res=clone($.self)
-for(var i=0;i < $.args.length;i++){res=set.__sub__(res,set.$factory($.args[i]),true)}
+for(var i=0;i < $.args.length;i++){res=set.__sub__(res,set.$factory($.args[i]))}
 return res}
 var fc=set.difference+"" 
 eval("set.intersection = "+
@@ -8839,13 +8840,26 @@ while(true){try{var item=_b_.next(it)
 if(! func(item)){return false}}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){return true}
 throw err}}
 return true}
+function $test(accept_iter,other,op){if(accept_iter===undefined &&
+! _b_.isinstance(other,[set,frozenset])){throw _b_.TypeError.$factory("unsupported operand type(s) for "+op+
+": 'set' and '"+$B.class_name(other)+"'")}}
 function $accept_only_set(f,op){return function(self,other,accept_iter){$test(accept_iter,other,op)
 f(self,other)
 return self}}
-set.__iand__=$accept_only_set(set.intersection_update,"&=")
-set.__isub__=$accept_only_set(set.difference_update,"-=")
-set.__ixor__=$accept_only_set(set.symmetric_difference_update,"^=")
-set.__ior__=$accept_only_set(set.update,"|=")
+set.__iand__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
+set.intersection_update(self,other)
+return self}
+set.__isub__=function(self,other){console.log('set isub',self,other)
+if(! _b_.isinstance(other,[set,frozenset])){console.log('isub retruns NotImplemneted')
+return _b_.NotImplemented}
+set.difference_update(self,other)
+return self}
+set.__ixor__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
+set.symmetric_difference_update(self,other)
+return self}
+set.__ior__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
+set.update(self,other)
+return self}
 set.$factory=function(){
 var res={__class__:set,$simple:true,$items:[],$numbers:[],$hashes:{}}
 var args=[res].concat(Array.prototype.slice.call(arguments))
@@ -11887,7 +11901,7 @@ _b_.complex=complex})(__BRYTHON__)
 ;(function($B){
 var _b_=$B.builtins
 var str_hash=_b_.str.__hash__,$N=_b_.None
-var set_ops=["eq","le","lt","ge","gt","sub","rsub","and","or","xor"]
+var set_ops=["eq","le","lt","ge","gt","sub","rsub","and","rand","or","ror","xor","rxor"]
 function is_sublist(t1,t2){
 for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i],flag=false
 for(var j=0,jlen=t2.length;j < jlen;j++){if($B.rich_comp("__eq__",x,t2[j])){t2.splice(j,1)

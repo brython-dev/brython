@@ -751,7 +751,13 @@ $B.augm_assign = function(left, op, right){
         method = $B.op2method.augmented_assigns[op],
         augm_func = $B.$getattr(left, '__' + method + '__', null)
     if(augm_func !== null){
-        return $B.$call(augm_func)(right)
+        var res = $B.$call(augm_func)(right)
+        if(res === _b_.NotImplemented){
+            throw _b_.TypeError.$factory(`unsupported operand type(s)` +
+                ` for ${op}: '${$B.class_name(left)}' ` +
+                `and '${$B.class_name(right)}'`)
+        }
+        return res
     }else{
         var method1 = $B.op2method.operations[op1]
         if(method1 === undefined){
