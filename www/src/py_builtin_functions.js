@@ -2240,7 +2240,7 @@ function round(){
         arg = $.number,
         n = $.ndigits === None ? 0 : $.ndigits
 
-    if(!isinstance(arg,[_b_.int, _b_.float])){
+    if(! isinstance(arg,[_b_.int, _b_.float])){
         var klass = arg.__class__ || $B.get_class(arg)
         try{
             return $B.$call($B.$getattr(klass, "__round__")).apply(null, arguments)
@@ -2254,19 +2254,24 @@ function round(){
         }
     }
 
-    var klass = $B.get_class(arg)
-
-    if(isinstance(arg, _b_.float)){
-        if(arg.value === Infinity || arg.value === -Infinity){
-            throw _b_.OverflowError.$factory(
-                "cannot convert float infinity to integer")
-        }
-        arg = arg.value // number
-    }
-
     if(! isinstance(n, _b_.int)){
         throw _b_.TypeError.$factory("'" + $B.class_name(n) +
             "' object cannot be interpreted as an integer")
+    }
+
+    var klass = $B.get_class(arg)
+
+    if(isinstance(arg, _b_.float)){
+        arg = _b_.float.$float_value(arg)
+        if(arg.value === Infinity || arg.value === -Infinity){
+            throw _b_.OverflowError.$factory(
+                "cannot convert float infinity to integer")
+        }else if(isNaN(arg.value)){
+            throw _b_.ValueError.$factory(
+                "cannot convert float NaN to integer")
+        }
+        var res = _b_.float.$round(arg, n)
+        return $.ndigits === None ? res : klass.$factory(res)
     }
 
     var mult = Math.pow(10, n),
@@ -2274,6 +2279,7 @@ function round(){
         floor = Math.floor(x),
         diff = Math.abs(x - floor),
         res
+    console.log('x', x, 'floor', floor, 'diff', diff)
     if(diff == 0.5){
         if(floor % 2){
             floor += 1
@@ -2282,11 +2288,16 @@ function round(){
     }else{
         res = _b_.int.__truediv__(Math.round(x), mult)
     }
+    if(res.value === Infinity || res.value === -Infinity){
+        throw _b_.OverflowError.$factory(
+            "rounded value too large to represent")
+    }
     if($.ndigits === None){
         // Always return an integer
         return Math.floor(res.value)
     }else{
         // Return the same type as argument
+        console.log('round', arg, 'n', n, 'klass', klass, 'res', res)
         return $B.$call(klass)(res)
     }
 }

@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-24 08:50:08.837510"
-__BRYTHON__.timestamp=1664002208836
+__BRYTHON__.compiled_date="2022-09-24 19:05:36.060877"
+__BRYTHON__.timestamp=1664039136060
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5381,8 +5381,7 @@ throw _b_.TypeError.$factory(fname+
 slots[key]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push(attr)}}}
-if(missing.length > 0){if(missing.length==1){console.log('slots',slots,'defaults',$dobj)
-var arg_type='positional'
+if(missing.length > 0){if(missing.length==1){var arg_type='positional'
 if(var_names.indexOf(missing[0])>=argcount){arg_type='required keyword-only'}
 throw _b_.TypeError.$factory(fname+
 ` missing 1 ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
@@ -6984,20 +6983,27 @@ if(self.$counter < 0){throw _b_.StopIteration.$factory('')}
 return self.getter(self.$counter)}
 $B.set_func_names(reversed,"builtins")
 function round(){var $=$B.args('round',2,{number:null,ndigits:null},['number','ndigits'],arguments,{ndigits:None},null,null),arg=$.number,n=$.ndigits===None ? 0 :$.ndigits
-if(!isinstance(arg,[_b_.int,_b_.float])){var klass=arg.__class__ ||$B.get_class(arg)
+if(! isinstance(arg,[_b_.int,_b_.float])){var klass=arg.__class__ ||$B.get_class(arg)
 try{return $B.$call($B.$getattr(klass,"__round__")).apply(null,arguments)}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("type "+$B.class_name(arg)+
 " doesn't define __round__ method")}else{throw err}}}
-var klass=$B.get_class(arg)
-if(isinstance(arg,_b_.float)){if(arg.value===Infinity ||arg.value===-Infinity){throw _b_.OverflowError.$factory(
-"cannot convert float infinity to integer")}
-arg=arg.value }
 if(! isinstance(n,_b_.int)){throw _b_.TypeError.$factory("'"+$B.class_name(n)+
 "' object cannot be interpreted as an integer")}
+var klass=$B.get_class(arg)
+if(isinstance(arg,_b_.float)){arg=_b_.float.$float_value(arg)
+if(arg.value===Infinity ||arg.value===-Infinity){throw _b_.OverflowError.$factory(
+"cannot convert float infinity to integer")}else if(isNaN(arg.value)){throw _b_.ValueError.$factory(
+"cannot convert float NaN to integer")}
+var res=_b_.float.$round(arg,n)
+return $.ndigits===None ? res :klass.$factory(res)}
 var mult=Math.pow(10,n),x=arg*mult,floor=Math.floor(x),diff=Math.abs(x-floor),res
+console.log('x',x,'floor',floor,'diff',diff)
 if(diff==0.5){if(floor % 2){floor+=1}
 res=_b_.int.__truediv__(floor,mult)}else{res=_b_.int.__truediv__(Math.round(x),mult)}
+if(res.value===Infinity ||res.value===-Infinity){throw _b_.OverflowError.$factory(
+"rounded value too large to represent")}
 if($.ndigits===None){
 return Math.floor(res.value)}else{
+console.log('round',arg,'n',n,'klass',klass,'res',res)
 return $B.$call(klass)(res)}}
 function setattr(){var $=$B.args('setattr',3,{obj:null,attr:null,value:null},['obj','attr','value'],arguments,{},null,null),obj=$.obj,attr=$.attr,value=$.value
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
@@ -9843,7 +9849,7 @@ if(isFinite(val)){return modifier(val,precision,flags,upper)}
 if(val===Infinity){val="inf"}else if(val===-Infinity){val="-inf"}else{val="nan"}
 if(upper){return val.toUpperCase()}
 return val}
-var format_sign=function(val,flags){if(flags.sign){if(val >=0){return "+"}}else if(flags.space){if(val >=0){return " "}}
+var format_sign=function(val,flags){if(flags.sign){if(val >=0 ||isNaN(val)||val===Number.POSITIVE_INFINITY){return "+"}}else if(flags.space){if(val >=0 ||isNaN(val)){return " "}}
 return ''}
 var str_format=function(val,flags){
 flags.pad_char=" " 
@@ -9867,7 +9873,12 @@ return _b_.isinstance(val,_b_.int)? val :val.value}
 var trailing_zeros=/(.*?)(0+)([eE].*)/,leading_zeros=/\.(0*)/,trailing_dot=/\.$/
 var validate_precision=function(precision){
 if(precision > 20){precision=20}}
+function handle_special_values(value,upper){var special
+if(isNaN(value)){special=upper ? "NAN" :"nan"}else if(value==Number.POSITIVE_INFINITY){special=upper ? "INF" :"inf"}else if(value==Number.NEGATIVE_INFINITY){special=upper ? "-INF" :"-inf"}
+return special}
 var floating_point_format=function(val,upper,flags){val=_float_helper(val,flags)
+var special=handle_special_values(val,upper)
+if(special){return format_padding(format_sign(val,flags)+special,flags)}
 var p=flags.precision
 if(p==0){p=1}
 var exp_format=val.toExponential(p-1),e_index=exp_format.indexOf('e'),exp=parseInt(exp_format.substr(e_index+1)),res
@@ -11294,6 +11305,7 @@ throw _b_.TypeError.$factory(msg)}
 function float_value(obj){
 return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+float.$float_value=float_value
 float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
 float.numerator=function(self){return self.value}
 float.denominator=function(self){return 1}
@@ -11348,19 +11360,18 @@ if(_b_.isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionE
 return fast_float(Math.floor(self.value/other))}
 return _b_.NotImplemented}
 const DBL_MANT_DIG=53,LONG_MAX=__BRYTHON__.MAX_VALUE,DBL_MAX_EXP=2**10,LONG_MIN=__BRYTHON__.MIN_VALUE,DBL_MIN_EXP=-1021
-float.fromhex=function(s){function hex_from_char(char){return parseInt(char,16)}
+float.fromhex=function(klass,s){function hex_from_char(char){return parseInt(char,16)}
 function finished(){
 while(s[pos]&& s[pos].match(/\s/)){pos++;}
 if(pos !=s.length){throw parse_error()}
 if(negate){x=float.__neg__(x)}
-return x}
+return klass===_b_.float ? x :$B.$call(klass)(x)}
 function overflow_error(){throw _b_.OverflowError.$factory(
 "hexadecimal value too large to represent as a float");}
 function parse_error(){throw _b_.ValueError.$factory(
 "invalid hexadecimal floating-point string");}
 function insane_length_error(){throw _b_.ValueError.$factory(
 "hexadecimal string too long to convert");}
-console.log('fromhex',s)
 s=s.trim()
 var re_parts=[/^(?<sign>[+-])?(0x)?/,/(?<integer>[0-9a-fA-F]+)?/,/(?<fraction>\.(?<fvalue>[0-9a-fA-F]+))?/,/(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
 var re=new RegExp(re_parts.map(r=> r.source).join(''))
@@ -11384,7 +11395,7 @@ var exp
 if(s[pos]=='p' ||s[pos]=='P'){pos++;
 var exp_start=pos;
 if(s[pos]=='-' ||s[pos ]=='+'){pos++;}
-if(!('0' <=s[pos]&& s[pos]<='9')){parse_error;}
+if(!('0' <=s[pos]&& s[pos]<='9')){throw parse_error()}
 pos++;
 while('0' <=s[pos]&& s[pos]<='9'){pos++;}
 exp=parseInt(s.substr(exp_start));}else{exp=0;}
@@ -11423,34 +11434,24 @@ x==ldexp(2*half_eps,DBL_MANT_DIG).value)
 throw overflow_error()}}
 x=ldexp(x,(exp+4*key_digit));
 return finished()}
-float.fromhex2=function(value){
-if(value.match(/^\+?inf(inity)?$/i)){return INF}else if(value.match(/^-inf(inity)?$/i)){return NINF}else if(value.match(/^[+-]?nan$/i)){return NAN}
-var re_parts=[/^(?<sign>[+-])?(0x)?/,/(?<integer>[0-9a-fA-F]+)?/,/(\.(?<fvalue>[0-9a-fA-F]+)?)?/,/(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
-var re=new RegExp(re_parts.map(r=> r.source).join(''))
-var mo=re.exec(value)
-if(mo){var integer=mo.groups.integer ? parseInt(mo.groups.integer,16):0
-if(mo.groups.fvalue){var fdigits=mo.groups.fvalue.length
-integer=integer+mo.groups.fvalue}
-if(integer.length > Math.min(DBL_MIN_EXP-DBL_MANT_DIG-LONG_MIN/2,LONG_MAX/2+1-DBL_MAX_EXP)/4){throw _b_.ValueError.$factory(
-"hexadecimal string too long to convert");}
-var exponent=mo.groups.exponent ? parseInt(mo.groups.evalue):0
-if(exponent && mo.groups.esign=='-'){exponent=-exponent}
-if(mo.groups.fraction){exponent-=4*fdigits}
-console.log('fromhex, exponent',exponent)
-var res=parseInt(integer,16)*2**exponent
-if(! isFinite(res)){throw _b_.OverflowError.$factory(
-"hexadecimal value too large to represent as a float")}
-return $B.fast_float(res)}else{throw _b_.ValueError.$factory(
-"invalid hexadecimal floating-point string");}}
 float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
 throw _b_.ValueError.$factory("__getformat__() argument 1 must be "+
 "'double' or 'float'")}
+var format_sign=function(val,flags){switch(flags.sign){case '+':
+return(val >=0 ||isNaN(val))? '+' :''
+case '-':
+return ''
+case ' ':
+return(val >=0 ||isNaN(val))? ' ' :''}
+if(flags.space){if(val >=0){return " "}}
+return ''}
 function preformat(self,fmt){var value=self.value
 if(fmt.empty){return _b_.str.$factory(self)}
 if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){throw _b_.ValueError.$factory("Unknown format code '"+fmt.type+
 "' for object of type 'float'")}
-if(isNaN(value)){return(fmt.type=="f" ||fmt.type=="g")? "nan" :"NAN"}
-if(value==Number.POSITIVE_INFINITY){return(fmt.type=="f" ||fmt.type=="g")? "inf" :"INF"}
+var special
+if(isNaN(value)){special="efg".indexOf(fmt.type)>-1 ? "nan" :"NAN"}else if(value==Number.POSITIVE_INFINITY){special="efg".indexOf(fmt.type)>-1 ? "inf" :"INF"}else if(value==Number.NEGATIVE_INFINITY){special="efg".indexOf(fmt.type)>-1 ? "-inf" :"-INF"}
+if(special){return format_sign(value,fmt)+special}
 if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
 if(fmt.type=="%"){value*=100}
 if(fmt.type=="e"){var res=value.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
@@ -11546,17 +11547,10 @@ float.$funcs={isinf,isninf,isnan,fabs,frexp,ldexp}
 float.hex=function(self){
 self=float_value(self)
 var TOHEX_NBITS=DBL_MANT_DIG+3-(DBL_MANT_DIG+2)% 4
-switch(self.valueOf()){case Infinity:
-case-Infinity:
-case Number.NaN:
-case-Number.NaN:
-return self
-case-0:
-return "-0x0.0p0"
-case 0:
-return "0x0.0p0"}
-var _a=frexp(fabs(self.valueOf())),_m=_a[0],_e=_a[1],_shift=1-Math.max(-1021-_e,0)
-_m=ldexp(_m,_shift)
+if(isNaN(self.value)||! isFinite(self.value)){return _b_.repr(self)}
+if(self.value==0){return Object.is(self.value,0)? "0x0.0p0" :"-0x0.0p0"}
+var _a=frexp(fabs(self.value)),_m=_a[0],_e=_a[1],_shift=1-Math.max(-1021-_e,0)
+_m=ldexp(fast_float(_m),_shift).value
 _e-=_shift
 var _int2hex="0123456789ABCDEF".split(""),_s=_int2hex[Math.floor(_m)]
 _s+='.'
@@ -11656,6 +11650,30 @@ if(rest.length > 1){mant+='.'+rest.substr(1)}
 if(exp.length==1){exp='0'+exp}
 return sign+mant+'e-'+exp}}
 return _b_.str.$factory(res)}
+float.__round__=function(){var $=$B.args('__round__',2,{self:null,ndigits:null},['self','ndigits'],arguments,{ndigits:_b_.None},null,null),x=$.self,ndigits=$.ndigits===_b_.None ? 0 :$.ndigits
+return float.$round(x,ndigits)}
+float.$round=function(x,ndigits){x=float_value(x)
+if(ndigits==0){var res=Math.round(x.value)
+if(Math.abs(x.value-res)==0.5){
+if(res % 2){return res-1}}
+return res}
+if(ndigits.__class__===$B.long_int){ndigits=Number(ndigits.value)}
+var pow1,pow2,y,z;
+if(ndigits >=0){if(ndigits > 22){
+pow1=10**(ndigits-22)
+pow2=1e22;}else{pow1=10**ndigits
+pow2=1.0;}
+y=(x.value*pow1)*pow2;
+if(!isFinite(y)){return x}}else{pow1=10**-ndigits;
+pow2=1.0;
+if(isFinite(pow1)){y=x.value/pow1}else{return ZERO}}
+z=Math.round(y);
+if(fabs(y-z).value==0.5){
+z=2.0*Math.round(y/2);}
+if(ndigits >=0){z=(z/pow2)/pow1;}else{z*=pow1;}
+if(! isFinite(z)){throw _b_.OverflowError.$factory(
+"overflow occurred during round");}
+return fast_float(z);}
 float.__setattr__=function(self,attr,value){if(self.__class__===float){if(float[attr]===undefined){throw _b_.AttributeError.$factory("'float' object has no attribute '"+
 attr+"'")}else{throw _b_.AttributeError.$factory("'float' object attribute '"+
 attr+"' is read-only")}}
@@ -11778,6 +11796,7 @@ if(arguments.length > 0){var args=[arguments[0].valueOf()],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}}
 return float[attr].apply(null,args)}})($attr)}}
 $B.set_func_names(FloatSubclass,"builtins")
+float.fromhex=_b_.classmethod.$factory(float.fromhex)
 _b_.float=float
 $B.MAX_VALUE=fast_float(Number.MAX_VALUE)
 $B.MIN_VALUE=fast_float(Number.MIN_VALUE)

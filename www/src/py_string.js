@@ -448,11 +448,11 @@ var format_float_precision = function(val, upper, flags, modifier){
 
 var format_sign = function(val, flags){
     if(flags.sign){
-        if(val >= 0){
+        if(val >= 0 || isNaN(val) || val === Number.POSITIVE_INFINITY){
             return "+"
         }
     }else if(flags.space){
-        if(val >= 0){
+        if(val >= 0 || isNaN(val)){
             return " "
         }
     }
@@ -526,9 +526,26 @@ var validate_precision = function(precision) {
     if(precision > 20){precision = 20}
 }
 
+function handle_special_values(value, upper){
+    var special
+    if(isNaN(value)){
+        special = upper ? "NAN" : "nan"
+    }else if(value == Number.POSITIVE_INFINITY){
+        special = upper ? "INF" : "inf"
+    }else if(value == Number.NEGATIVE_INFINITY){
+        special = upper ? "-INF" : "-inf"
+    }
+    return special
+}
+
 // gG
 var floating_point_format = function(val, upper, flags){
     val = _float_helper(val, flags)
+
+    var special = handle_special_values(val, upper)
+    if(special){
+        return format_padding(format_sign(val, flags) + special, flags)
+    }
     var p = flags.precision
     if(p == 0){
         p = 1
@@ -684,7 +701,6 @@ var _floating_exp_helper = function(val, precision, flags, upper){
 // eE
 var floating_point_exponential_format = function(val, upper, flags){
     val = _float_helper(val, flags)
-
     return format_padding(format_sign(val, flags) +
         format_float_precision(val, upper, flags, _floating_exp_helper), flags)
 }

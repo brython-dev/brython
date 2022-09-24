@@ -358,7 +358,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "__class_getitem__" // && klass === _b_.list
+    var $test = false // attr == "fromhex" // && klass === _b_.list
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
     }

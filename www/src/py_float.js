@@ -34,6 +34,8 @@ var float = {
     }
 }
 
+float.$float_value = float_value
+
 float.$to_js_number = function(self){
     if(self.__class__ === float){
         return self.value
@@ -189,7 +191,7 @@ const DBL_MANT_DIG = 53,
       LONG_MIN = __BRYTHON__.MIN_VALUE,
       DBL_MIN_EXP = -1021
 
-float.fromhex = function(s){
+float.fromhex = function(klass, s){
     function hex_from_char(char){
         return parseInt(char, 16)
     }
@@ -204,7 +206,7 @@ float.fromhex = function(s){
       if(negate){
           x = float.__neg__(x)
       }
-      return x
+      return klass === _b_.float ? x : $B.$call(klass)(x)
     }
     function overflow_error(){
         throw _b_.OverflowError.$factory(
@@ -221,7 +223,6 @@ float.fromhex = function(s){
     }
 
     // remove leading and trailing spaces
-    console.log('fromhex', s)
     s = s.trim()
 
     var re_parts = [/^(?<sign>[+-])?(0x)?/,
@@ -291,7 +292,7 @@ float.fromhex = function(s){
             pos++;
         }
         if (!('0' <= s[pos] && s[pos] <= '9')){
-            parse_error;
+            throw parse_error()
         }
         pos++;
         while ('0' <= s[pos] && s[pos] <= '9'){
@@ -301,7 +302,7 @@ float.fromhex = function(s){
     }else{
         exp = 0;
     }
-    
+
     /* for 0 <= j < ndigits, HEX_DIGIT(j) gives the jth most significant digit */
     function HEX_DIGIT(j){
         if(! Number.isInteger(j)){
@@ -347,7 +348,7 @@ float.fromhex = function(s){
     /* lsb = exponent of least significant bit of the *rounded* value.
        This is top_exp - DBL_MANT_DIG unless result is subnormal. */
     var lsb = Math.max(top_exp, DBL_MIN_EXP) - DBL_MANT_DIG;
-    
+
     var x = 0.0;
     if (exp >= lsb) {
         /* no rounding required */
@@ -396,55 +397,6 @@ float.fromhex = function(s){
 
 }
 
-float.fromhex2 = function(value){
-
-    /* inf and nan */
-    if(value.match(/^\+?inf(inity)?$/i)){
-        return INF
-    }else if(value.match(/^-inf(inity)?$/i)){
-        return NINF
-    }else if(value.match(/^[+-]?nan$/i)){
-        return NAN
-    }
-
-    var re_parts = [/^(?<sign>[+-])?(0x)?/,
-                    /(?<integer>[0-9a-fA-F]+)?/,
-                    /(\.(?<fvalue>[0-9a-fA-F]+)?)?/,
-                    /(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
-    var re = new RegExp(re_parts.map(r => r.source).join(''))
-    var mo = re.exec(value)
-    if(mo){
-        var integer = mo.groups.integer ? parseInt(mo.groups.integer, 16) : 0
-        if(mo.groups.fvalue){
-            var fdigits = mo.groups.fvalue.length
-            integer = integer + mo.groups.fvalue
-        }
-        if(integer.length > Math.min(DBL_MIN_EXP - DBL_MANT_DIG - LONG_MIN/2,
-                         LONG_MAX/2 + 1 - DBL_MAX_EXP)/4){
-            throw _b_.ValueError.$factory(
-                "hexadecimal string too long to convert");
-        }
-        var exponent = mo.groups.exponent ? parseInt(mo.groups.evalue) : 0
-        if(exponent && mo.groups.esign == '-'){
-            exponent = -exponent
-        }
-        if(mo.groups.fraction){
-            exponent -= 4 * fdigits
-        }
-        console.log('fromhex, exponent', exponent)
-
-        var res = parseInt(integer, 16) * 2 ** exponent
-        if(! isFinite(res)){
-            throw _b_.OverflowError.$factory(
-                "hexadecimal value too large to represent as a float")
-        }
-        return $B.fast_float(res)
-    }else{
-        throw _b_.ValueError.$factory(
-            "invalid hexadecimal floating-point string");
-    }
-}
-
 float.__getformat__ = function(arg){
     if(arg == "double" || arg == "float"){
         return "IEEE, little-endian"
@@ -452,6 +404,30 @@ float.__getformat__ = function(arg){
     throw _b_.ValueError.$factory("__getformat__() argument 1 must be " +
         "'double' or 'float'")
 }
+
+var format_sign = function(val, flags){
+    switch(flags.sign){
+        case '+':
+            // indicates that a sign should be used for both positive as well
+            // as negative numbers
+            return (val >= 0 || isNaN(val)) ? '+' : ''
+        case '-':
+            // indicates that a sign should be used only for negative numbers
+            // (this is the default behavior)
+            return ''
+        case ' ':
+            // indicates that a leading space should be used on positive
+            // numbers, and a minus sign on negative numbers
+            return (val >= 0 || isNaN(val)) ? ' ' : ''
+    }
+    if(flags.space){
+        if(val >= 0){
+            return " "
+        }
+    }
+    return ''
+}
+
 
 function preformat(self, fmt){
     var value = self.value
@@ -462,11 +438,16 @@ function preformat(self, fmt){
         throw _b_.ValueError.$factory("Unknown format code '" + fmt.type +
             "' for object of type 'float'")
     }
+    var special
     if(isNaN(value)){
-        return (fmt.type == "f" || fmt.type == "g") ? "nan" : "NAN"
+        special = "efg".indexOf(fmt.type) > -1 ? "nan" : "NAN"
+    }else if(value == Number.POSITIVE_INFINITY){
+        special = "efg".indexOf(fmt.type) > -1 ? "inf" : "INF"
+    }else if(value == Number.NEGATIVE_INFINITY){
+        special = "efg".indexOf(fmt.type) > -1 ? "-inf" : "-INF"
     }
-    if(value == Number.POSITIVE_INFINITY){
-        return (fmt.type == "f" || fmt.type == "g") ? "inf" : "INF"
+    if(special){
+        return format_sign(value, fmt) + special
     }
     if(fmt.precision === undefined && fmt.type !== undefined){
         fmt.precision = 6
@@ -739,25 +720,19 @@ float.hex = function(self) {
     // http://hg.python.org/cpython/file/d422062d7d36/Objects/floatobject.c
     self = float_value(self)
     var TOHEX_NBITS = DBL_MANT_DIG + 3 - (DBL_MANT_DIG + 2) % 4
-
-    switch(self.valueOf()) {
-        case Infinity:
-        case -Infinity:
-        case Number.NaN:
-        case -Number.NaN:
-            return self
-        case -0:
-            return "-0x0.0p0"
-        case 0:
-            return "0x0.0p0"
+    if(isNaN(self.value) || ! isFinite(self.value)){
+        return _b_.repr(self)
+    }
+    if(self.value == 0){
+        return Object.is(self.value, 0) ? "0x0.0p0" : "-0x0.0p0"
     }
 
-    var _a = frexp(fabs(self.valueOf())),
+    var _a = frexp(fabs(self.value)),
         _m = _a[0],
         _e = _a[1],
         _shift = 1 - Math.max(-1021 - _e, 0)
 
-    _m = ldexp(_m, _shift)
+    _m = ldexp(fast_float(_m), _shift).value
     _e -= _shift
 
     var _int2hex = "0123456789ABCDEF".split(""),
@@ -777,7 +752,9 @@ float.hex = function(self) {
        _e = -_e
     }
 
-    if(self.value < 0){return "-0x" + _s + "p" + _esign + _e}
+    if(self.value < 0){
+        return "-0x" + _s + "p" + _esign + _e
+    }
     return "0x" + _s + "p" + _esign + _e
 }
 
@@ -1036,6 +1013,78 @@ float.__repr__ = function(self){
         }
     }
     return _b_.str.$factory(res)
+}
+
+float.__round__ = function(){
+    var $ = $B.args('__round__', 2, {self: null, ndigits: null},
+            ['self', 'ndigits'], arguments, {ndigits: _b_.None}, null, null),
+        x = $.self,
+        ndigits = $.ndigits === _b_.None ? 0 : $.ndigits
+    return float.$round(x, ndigits)
+}
+
+float.$round = function(x, ndigits){
+    x = float_value(x)
+    if(ndigits == 0){
+        var res = Math.round(x.value)
+        if(Math.abs(x.value - res) == 0.5){
+           // rounding is done towards the even choice
+           if(res % 2){
+               return res - 1
+           }
+       }
+       return res
+    }
+    if(ndigits.__class__ === $B.long_int){
+        ndigits = Number(ndigits.value)
+    }
+    // avoids parsing arguments
+    var pow1,
+        pow2,
+        y,
+        z;
+    if(ndigits >= 0){
+        if(ndigits > 22){
+            /* pow1 and pow2 are each safe from overflow, but
+               pow1*pow2 ~= pow(10.0, ndigits) might overflow */
+            pow1 = 10 ** (ndigits - 22)
+            pow2 = 1e22;
+        }else{
+            pow1 = 10 ** ndigits
+            pow2 = 1.0;
+        }
+        y = (x.value * pow1) * pow2;
+        /* if y overflows, then rounded value is exactly x */
+        if(!isFinite(y)){
+            return x
+        }
+    }else{
+        pow1 = 10 ** -ndigits;
+        pow2 = 1.0; /* unused; silences a gcc compiler warning */
+        if(isFinite(pow1)){
+            y = x.value / pow1
+        }else{
+            return ZERO
+        }
+    }
+
+    z = Math.round(y);
+    if (fabs(y - z).value == 0.5){
+        /* halfway between two integers; use round-half-even */
+        z = 2.0 * Math.round(y / 2);
+    }
+    if(ndigits >= 0){
+        z = (z / pow2) / pow1;
+    }else{
+        z *= pow1;
+    }
+    /* if computation resulted in overflow, raise OverflowError */
+    if (! isFinite(z)) {
+        throw _b_.OverflowError.$factory(
+                        "overflow occurred during round");
+    }
+
+    return fast_float(z);
 }
 
 float.__setattr__ = function(self, attr, value){
@@ -1346,6 +1395,8 @@ for(var $attr in float){
 }
 
 $B.set_func_names(FloatSubclass, "builtins")
+
+float.fromhex = _b_.classmethod.$factory(float.fromhex)
 
 _b_.float = float
 
