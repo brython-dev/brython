@@ -740,7 +740,6 @@ set.__iand__ = function(self, other){
 }
 
 set.__isub__ = function(self, other){
-    console.log('set isub', self, other)
     if(! _b_.isinstance(other, [set, frozenset])){
         console.log('isub retruns NotImplemneted')
         return _b_.NotImplemented
