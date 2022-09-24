@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-21 14:46:17.555568"
-__BRYTHON__.timestamp=1663764377554
+__BRYTHON__.compiled_date="2022-09-24 08:50:08.837510"
+__BRYTHON__.timestamp=1664002208836
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8849,8 +8849,7 @@ return self}}
 set.__iand__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.intersection_update(self,other)
 return self}
-set.__isub__=function(self,other){console.log('set isub',self,other)
-if(! _b_.isinstance(other,[set,frozenset])){console.log('isub retruns NotImplemneted')
+set.__isub__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){console.log('isub retruns NotImplemneted')
 return _b_.NotImplemented}
 set.difference_update(self,other)
 return self}
@@ -11348,36 +11347,101 @@ return fast_float(Math.floor(self.value/other.value))}
 if(_b_.isinstance(other,_b_.int)){if(other.valueOf()==0){throw _b_.ZeroDivisionError.$factory('division by zero')}
 return fast_float(Math.floor(self.value/other))}
 return _b_.NotImplemented}
-float.fromhex=function(arg){
-if(! _b_.isinstance(arg,_b_.str)){throw _b_.ValueError.$factory("argument must be a string")}
-var value=arg.trim()
-switch(value.toLowerCase()){case "+inf":
-case "inf":
-case "+infinity":
-case "infinity":
-return fast_float(Infinity)
-case "-inf":
-case "-infinity":
-return fast_float(-Infinity)
-case "+nan":
-case "nan":
-return fast_float(Number.NaN)
-case "-nan":
-return fast_float(-Number.NaN)
-case "":
-throw _b_.ValueError.$factory("could not convert string to float")}
-var mo=/^(\d*)(\.?)(\d*)$/.exec(value)
-if(mo !==null){var res=parseFloat(mo[1]),coef=16
-if(mo[2]){for(var digit of mo[3]){res+=parseInt(digit,16)/coef
-coef*=16}}
-return fast_float(res)}
-var _m=/^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
-if(_m==null){throw _b_.ValueError.$factory("invalid hexadecimal floating-point string")}
-var _sign=_m[1],_int=parseInt(_m[3]||'0',16),_fraction=_m[4]||'.0',_exponent=_m[5]||'p0'
-_sign=_sign=="-" ?-1 :1
-var _sum=_int
-for(var i=1,len=_fraction.length;i < len;i++){_sum+=parseInt(_fraction.charAt(i),16)/Math.pow(16,i)}
-return fast_float(_sign*_sum*Math.pow(2,parseInt(_exponent.substring(1))))}
+const DBL_MANT_DIG=53,LONG_MAX=__BRYTHON__.MAX_VALUE,DBL_MAX_EXP=2**10,LONG_MIN=__BRYTHON__.MIN_VALUE,DBL_MIN_EXP=-1021
+float.fromhex=function(s){function hex_from_char(char){return parseInt(char,16)}
+function finished(){
+while(s[pos]&& s[pos].match(/\s/)){pos++;}
+if(pos !=s.length){throw parse_error()}
+if(negate){x=float.__neg__(x)}
+return x}
+function overflow_error(){throw _b_.OverflowError.$factory(
+"hexadecimal value too large to represent as a float");}
+function parse_error(){throw _b_.ValueError.$factory(
+"invalid hexadecimal floating-point string");}
+function insane_length_error(){throw _b_.ValueError.$factory(
+"hexadecimal string too long to convert");}
+console.log('fromhex',s)
+s=s.trim()
+var re_parts=[/^(?<sign>[+-])?(0x)?/,/(?<integer>[0-9a-fA-F]+)?/,/(?<fraction>\.(?<fvalue>[0-9a-fA-F]+))?/,/(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
+var re=new RegExp(re_parts.map(r=> r.source).join(''))
+var mo=re.exec(s)
+if(s.match(/^\+?inf(inity)?$/i)){return INF}else if(s.match(/^-inf(inity)?$/i)){return NINF}else if(s.match(/^[+-]?nan$/i)){return NAN}
+var pos=0,negate,ldexp=_b_.float.$funcs.ldexp
+if(s[pos]=='-'){pos++;
+negate=1;}else if(s[pos]=='+'){pos++}
+if(s.substr(pos,2).toLowerCase()=='0x'){pos+=2}
+var coeff_start=pos,coeff_end
+while(hex_from_char(s[pos])>=0){pos++;}
+save_pos=pos;
+if(s[pos]=='.'){pos++;
+while(hex_from_char(s[pos])>=0){pos++;}
+coeff_end=pos-1;}else{coeff_end=pos;}
+ndigits=coeff_end-coeff_start;
+fdigits=coeff_end-save_pos;
+if(ndigits==0){throw parse_error()}
+if(ndigits > Math.min(DBL_MIN_EXP-DBL_MANT_DIG-LONG_MIN/2,LONG_MAX/2+1-DBL_MAX_EXP)/4){throw insane_length_error()}
+var exp
+if(s[pos]=='p' ||s[pos]=='P'){pos++;
+var exp_start=pos;
+if(s[pos]=='-' ||s[pos ]=='+'){pos++;}
+if(!('0' <=s[pos]&& s[pos]<='9')){parse_error;}
+pos++;
+while('0' <=s[pos]&& s[pos]<='9'){pos++;}
+exp=parseInt(s.substr(exp_start));}else{exp=0;}
+function HEX_DIGIT(j){if(! Number.isInteger(j)){throw Error('j pas entier')}
+var pos=j < fdigits ? coeff_end-j :coeff_end-1-j
+return hex_from_char(s[j < fdigits ?
+coeff_end-j :
+coeff_end-1-j])}
+while(ndigits > 0 && HEX_DIGIT(ndigits-1)==0){ndigits--;}
+if(ndigits==0 ||exp < LONG_MIN/2){x=ZERO;
+return finished()}
+if(exp > LONG_MAX/2){throw overflow_error;}
+exp=exp-4*fdigits;
+var top_exp=exp+4*(ndigits-1);
+for(var digit=BigInt(HEX_DIGIT(ndigits-1));digit !=0;digit/=2n){top_exp++;}
+if(top_exp < DBL_MIN_EXP-DBL_MANT_DIG){x=ZERO;
+return finished()}
+if(top_exp > DBL_MAX_EXP){throw overflow_error()}
+var lsb=Math.max(top_exp,DBL_MIN_EXP)-DBL_MANT_DIG;
+var x=0.0;
+if(exp >=lsb){
+for(var i=ndigits-1;i >=0;i--){x=16.0*x+HEX_DIGIT(i);}
+x=ldexp($B.fast_float(x),exp);
+return finished()}
+var half_eps=1 <<((lsb-exp-1)% 4),key_digit=parseInt((lsb-exp-1)/4);
+for(var i=ndigits-1;i > key_digit;i--){x=16.0*x+HEX_DIGIT(i);}
+var digit=HEX_DIGIT(key_digit);
+x=16.0*x+(digit &(16-2*half_eps));
+if((digit & half_eps)!=0){var round_up=0;
+if((digit &(3*half_eps-1))!=0 ||(half_eps==8 &&
+key_digit+1 < ndigits &&(HEX_DIGIT(key_digit+1)& 1)!=0)){round_up=1;}else{for(var i=key_digit-1;i >=0;i--){if(HEX_DIGIT(i)!=0){round_up=1;
+break;}}}
+if(round_up){x+=2*half_eps;
+if(top_exp==DBL_MAX_EXP &&
+x==ldexp(2*half_eps,DBL_MANT_DIG).value)
+throw overflow_error()}}
+x=ldexp(x,(exp+4*key_digit));
+return finished()}
+float.fromhex2=function(value){
+if(value.match(/^\+?inf(inity)?$/i)){return INF}else if(value.match(/^-inf(inity)?$/i)){return NINF}else if(value.match(/^[+-]?nan$/i)){return NAN}
+var re_parts=[/^(?<sign>[+-])?(0x)?/,/(?<integer>[0-9a-fA-F]+)?/,/(\.(?<fvalue>[0-9a-fA-F]+)?)?/,/(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
+var re=new RegExp(re_parts.map(r=> r.source).join(''))
+var mo=re.exec(value)
+if(mo){var integer=mo.groups.integer ? parseInt(mo.groups.integer,16):0
+if(mo.groups.fvalue){var fdigits=mo.groups.fvalue.length
+integer=integer+mo.groups.fvalue}
+if(integer.length > Math.min(DBL_MIN_EXP-DBL_MANT_DIG-LONG_MIN/2,LONG_MAX/2+1-DBL_MAX_EXP)/4){throw _b_.ValueError.$factory(
+"hexadecimal string too long to convert");}
+var exponent=mo.groups.exponent ? parseInt(mo.groups.evalue):0
+if(exponent && mo.groups.esign=='-'){exponent=-exponent}
+if(mo.groups.fraction){exponent-=4*fdigits}
+console.log('fromhex, exponent',exponent)
+var res=parseInt(integer,16)*2**exponent
+if(! isFinite(res)){throw _b_.OverflowError.$factory(
+"hexadecimal value too large to represent as a float")}
+return $B.fast_float(res)}else{throw _b_.ValueError.$factory(
+"invalid hexadecimal floating-point string");}}
 float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
 throw _b_.ValueError.$factory("__getformat__() argument 1 must be "+
 "'double' or 'float'")}
@@ -11439,7 +11503,7 @@ var nan_hash=$B.$py_next_hash--
 float.__hash__=function(self){check_self_is_float(self,'__hash__')
 if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 var _v=self.value
-if(_v===Infinity){return 314159}else if(_v===-Infinity){return-271828}else if(isNaN(_v)){return self.__hashvalue__=nan_hash}else if(_v===Number.MAX_VALUE){return self.__hashvalue__=$B.fast_long_int(2234066890152476671n)}
+if(_v===Infinity){return 314159}else if(_v===-Infinity){return-314159}else if(isNaN(_v)){return self.__hashvalue__=nan_hash}else if(_v===Number.MAX_VALUE){return self.__hashvalue__=$B.fast_long_int(2234066890152476671n)}
 if(Number.isInteger(_v)){return _b_.int.__hash__(_v)}
 var r=frexp(self)
 r[0]*=Math.pow(2,31)
@@ -11471,18 +11535,17 @@ while(man >=1.0){man*=0.5
 ex++}
 man*=sign
 return[man,ex]}
-function ldexp(x,i){if(isninf(x)){return float.$factory('-inf')}else if(isinf(x)){return float.$factory('inf')}
-var y=x
-if(_b_.isinstance(x,float)){y=x.value}
-if(y==0){return y}
-var j=i
-if(_b_.isinstance(i,float)){j=i.value}
-return $B.fast_float(y*Math.pow(2,j))}
+function ldexp(mantissa,exponent){if(isninf(mantissa)){return NINF}else if(isinf(mantissa)){return INF}
+if(_b_.isinstance(mantissa,_b_.float)){mantissa=mantissa.value}
+if(mantissa==0){return ZERO}
+var steps=Math.min(3,Math.ceil(Math.abs(exponent)/1023));
+var result=mantissa;
+for(var i=0;i < steps;i++){result*=Math.pow(2,Math.floor((exponent+i)/steps));}
+return fast_float(result);}
 float.$funcs={isinf,isninf,isnan,fabs,frexp,ldexp}
 float.hex=function(self){
 self=float_value(self)
-var DBL_MANT_DIG=53,
-TOHEX_NBITS=DBL_MANT_DIG+3-(DBL_MANT_DIG+2)% 4
+var TOHEX_NBITS=DBL_MANT_DIG+3-(DBL_MANT_DIG+2)% 4
 switch(self.valueOf()){case Infinity:
 case-Infinity:
 case Number.NaN:
@@ -11638,6 +11701,8 @@ if(x >-1){res+=x}
 else{res+=s[i]}}
 return res}
 $B.fast_float=fast_float=function(value){return{__class__:_b_.float,value}}
+var fast_float_with_hash=function(value,hash_value){return{
+__class__:_b_.float,__hashvalue__:hash_value,value}}
 float.$factory=function(value){if(value===undefined){return fast_float(0)}
 $B.check_nb_args_no_kw('float',1,arguments)
 switch(value){case true:
@@ -11668,6 +11733,13 @@ return fast_float(-Number.NaN)
 case "":
 throw _b_.ValueError.$factory("count not convert string to float")
 default:
+var parts=value.split('e')
+if(parts[1]){if(parts[1].startsWith('+')||parts[1].startsWith('-')){parts[1]=parts[1].substr(1)}}
+parts=parts[0].split('.').concat(parts.splice(1))
+for(var part of parts){if(part.startsWith('_')||part.endsWith('_')){throw _b_.ValueError.$factory('invalid float literal '+
+value)}}
+if(value.indexOf('__')>-1){throw _b_.ValueError.$factory('invalid float literal '+
+value)}
 value=value.charAt(0)+value.substr(1).replace(/_/g,"")
 value=to_digits(value)
 if(isFinite(value)){return fast_float(eval(value))}else{throw _b_.ValueError.$factory(
@@ -11708,7 +11780,8 @@ return float[attr].apply(null,args)}})($attr)}}
 $B.set_func_names(FloatSubclass,"builtins")
 _b_.float=float
 $B.MAX_VALUE=fast_float(Number.MAX_VALUE)
-$B.MIN_VALUE=fast_float(Number.MIN_VALUE)})(__BRYTHON__)
+$B.MIN_VALUE=fast_float(Number.MIN_VALUE)
+const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0),NZERO=fast_float(-0)})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+

@@ -183,67 +183,266 @@ float.__floordiv__ = function(self, other){
     return _b_.NotImplemented
 }
 
-float.fromhex = function(arg){
-   // [sign] ['0x'] integer ['.' fraction] ['p' exponent]
+const DBL_MANT_DIG = 53,
+      LONG_MAX = __BRYTHON__.MAX_VALUE,
+      DBL_MAX_EXP = 2 ** 10,
+      LONG_MIN = __BRYTHON__.MIN_VALUE,
+      DBL_MIN_EXP = -1021
 
-   if(! _b_.isinstance(arg, _b_.str)){
-      throw _b_.ValueError.$factory("argument must be a string")
-   }
+float.fromhex = function(s){
+    function hex_from_char(char){
+        return parseInt(char, 16)
+    }
+    function finished(){
+      /* optional trailing whitespace leading to the end of the string */
+      while (s[pos] && s[pos].match(/\s/)){
+          pos++;
+      }
+      if (pos != s.length){
+          throw parse_error()
+      }
+      if(negate){
+          x = float.__neg__(x)
+      }
+      return x
+    }
+    function overflow_error(){
+        throw _b_.OverflowError.$factory(
+                      "hexadecimal value too large to represent as a float");
+    }
+    function parse_error(){
+        throw _b_.ValueError.$factory(
+                      "invalid hexadecimal floating-point string");
+    }
 
-   var value = arg.trim()   // remove leading and trailing whitespace
-   switch(value.toLowerCase()) {
-      case "+inf":
-      case "inf":
-      case "+infinity":
-      case "infinity":
-          return fast_float(Infinity)
-      case "-inf":
-      case "-infinity":
-          return fast_float(-Infinity)
-      case "+nan":
-      case "nan":
-          return fast_float(Number.NaN)
-      case "-nan":
-          return fast_float(-Number.NaN)
-      case "":
-          throw _b_.ValueError.$factory("could not convert string to float")
-   }
+    function insane_length_error(){
+        throw _b_.ValueError.$factory(
+                      "hexadecimal string too long to convert");
+    }
 
-   var mo = /^(\d*)(\.?)(\d*)$/.exec(value)
+    // remove leading and trailing spaces
+    console.log('fromhex', s)
+    s = s.trim()
 
-   if(mo !== null){
-       var res = parseFloat(mo[1]),
-           coef = 16
-       if(mo[2]){
-           for(var digit of mo[3]){
-               res += parseInt(digit, 16) / coef
-               coef *= 16
-           }
-       }
-       return fast_float(res)
-   }
+    var re_parts = [/^(?<sign>[+-])?(0x)?/,
+                    /(?<integer>[0-9a-fA-F]+)?/,
+                    /(?<fraction>\.(?<fvalue>[0-9a-fA-F]+))?/,
+                    /(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
+    var re = new RegExp(re_parts.map(r => r.source).join(''))
+    var mo = re.exec(s)
+    /* inf and nan */
+    if(s.match(/^\+?inf(inity)?$/i)){
+        return INF
+    }else if(s.match(/^-inf(inity)?$/i)){
+        return NINF
+    }else if(s.match(/^[+-]?nan$/i)){
+        return NAN
+    }
+    /* optional sign */
+    var pos = 0,
+        negate,
+        ldexp = _b_.float.$funcs.ldexp
 
-   // lets see if this is a hex string.
-   var _m = /^(\+|-)?(0x)?([0-9A-F]+\.?)?(\.[0-9A-F]+)?(p(\+|-)?\d+)?$/i.exec(value)
+    if(s[pos] == '-'){
+        pos++;
+        negate = 1;
+    }else if(s[pos] == '+'){
+        pos++
+    }
 
-   if(_m == null){
-       throw _b_.ValueError.$factory("invalid hexadecimal floating-point string")
-   }
+    /* [0x] */
+    if(s.substr(pos, 2).toLowerCase() == '0x'){
+        pos += 2
+    }
 
-   var _sign = _m[1],
-       _int = parseInt(_m[3] || '0', 16),
-       _fraction = _m[4] || '.0',
-       _exponent = _m[5] || 'p0'
+    /* coefficient: <integer> [. <fraction>] */
+    var coeff_start = pos,
+        coeff_end
+    while (hex_from_char(s[pos]) >= 0){
+        pos++;
+    }
+    save_pos = pos;
+    if (s[pos] == '.') {
+        pos++;
+        while (hex_from_char(s[pos]) >= 0){
+            pos++;
+        }
+        coeff_end = pos - 1;
+    }else{
+        coeff_end = pos;
+    }
 
-   _sign = _sign == "-" ? -1 : 1
+    /* ndigits = total # of hex digits; fdigits = # after point */
+    ndigits = coeff_end - coeff_start;
+    fdigits = coeff_end - save_pos;
+    if (ndigits == 0){
+        throw parse_error()
+    }
+    if (ndigits > Math.min(DBL_MIN_EXP - DBL_MANT_DIG - LONG_MIN/2,
+                         LONG_MAX/2 + 1 - DBL_MAX_EXP)/4){
+        throw insane_length_error()
+    }
+    /* [p <exponent>] */
+    var exp
+    if (s[pos] == 'p' || s[pos] == 'P') {
+        pos++;
+        var exp_start = pos;
+        if (s[pos] == '-' || s[pos ]== '+'){
+            pos++;
+        }
+        if (!('0' <= s[pos] && s[pos] <= '9')){
+            parse_error;
+        }
+        pos++;
+        while ('0' <= s[pos] && s[pos] <= '9'){
+            pos++;
+        }
+        exp = parseInt(s.substr(exp_start));
+    }else{
+        exp = 0;
+    }
+    
+    /* for 0 <= j < ndigits, HEX_DIGIT(j) gives the jth most significant digit */
+    function HEX_DIGIT(j){
+        if(! Number.isInteger(j)){
+            throw Error('j pas entier')
+        }
+        var pos = j < fdigits ? coeff_end - j : coeff_end - 1 - j
 
-   var _sum = _int
+        return  hex_from_char(s[j < fdigits ?
+                         coeff_end - j :
+                         coeff_end - 1 - j])
+    }
+    /*******************************************
+     * Compute rounded value of the hex string *
+     *******************************************/
 
-   for(var i = 1, len = _fraction.length; i < len; i++){
-       _sum += parseInt(_fraction.charAt(i), 16) / Math.pow(16, i)
-   }
-   return fast_float(_sign * _sum * Math.pow(2,
-       parseInt(_exponent.substring(1))))
+    /* Discard leading zeros, and catch extreme overflow and underflow */
+    while (ndigits > 0 && HEX_DIGIT(ndigits-1) == 0){
+        ndigits--;
+    }
+    if (ndigits == 0 || exp < LONG_MIN/2) {
+        x = ZERO;
+        return finished()
+    }
+    if (exp > LONG_MAX/2){
+        throw overflow_error;
+    }
+    /* Adjust exponent for fractional part. */
+    exp = exp - 4 * fdigits;
+
+    /* top_exp = 1 more than exponent of most sig. bit of coefficient */
+    var top_exp = exp + 4 * (ndigits - 1);
+    for (var digit = BigInt(HEX_DIGIT(ndigits - 1)); digit != 0; digit /= 2n){
+        top_exp++;
+    }
+    /* catch almost all nonextreme cases of overflow and underflow here */
+    if (top_exp < DBL_MIN_EXP - DBL_MANT_DIG) {
+        x = ZERO;
+        return finished()
+    }
+    if (top_exp > DBL_MAX_EXP){
+        throw overflow_error()
+    }
+    /* lsb = exponent of least significant bit of the *rounded* value.
+       This is top_exp - DBL_MANT_DIG unless result is subnormal. */
+    var lsb = Math.max(top_exp, DBL_MIN_EXP) - DBL_MANT_DIG;
+    
+    var x = 0.0;
+    if (exp >= lsb) {
+        /* no rounding required */
+        for (var i = ndigits - 1; i >= 0; i--){
+            x = 16.0 * x + HEX_DIGIT(i);
+        }
+        x = ldexp($B.fast_float(x), exp);
+        return finished()
+    }
+    /* rounding required.  key_digit is the index of the hex digit
+       containing the first bit to be rounded away. */
+    var half_eps = 1 << ((lsb - exp - 1) % 4),
+        key_digit = parseInt((lsb - exp - 1) / 4);
+    for (var i = ndigits - 1; i > key_digit; i--){
+        x = 16.0 * x + HEX_DIGIT(i);
+    }
+    var digit = HEX_DIGIT(key_digit);
+    x = 16.0 * x + (digit & (16 - 2 * half_eps));
+
+    /* round-half-even: round up if bit lsb-1 is 1 and at least one of
+       bits lsb, lsb-2, lsb-3, lsb-4, ... is 1. */
+    if ((digit & half_eps) != 0) {
+        var round_up = 0;
+        if ((digit & (3 * half_eps - 1)) != 0 || (half_eps == 8 &&
+                key_digit + 1 < ndigits && (HEX_DIGIT(key_digit+1) & 1) != 0)){
+            round_up = 1;
+        }else{
+            for (var i = key_digit-1; i >= 0; i--){
+                if (HEX_DIGIT(i) != 0) {
+                    round_up = 1;
+                    break;
+                }
+            }
+        }
+        if (round_up) {
+            x += 2 * half_eps;
+            if (top_exp == DBL_MAX_EXP &&
+                x == ldexp(2 * half_eps, DBL_MANT_DIG).value)
+                /* overflow corner case: pre-rounded value <
+                   2**DBL_MAX_EXP; rounded=2**DBL_MAX_EXP. */
+                throw overflow_error()
+        }
+    }
+    x = ldexp(x, (exp + 4 * key_digit));
+    return finished()
+
+}
+
+float.fromhex2 = function(value){
+
+    /* inf and nan */
+    if(value.match(/^\+?inf(inity)?$/i)){
+        return INF
+    }else if(value.match(/^-inf(inity)?$/i)){
+        return NINF
+    }else if(value.match(/^[+-]?nan$/i)){
+        return NAN
+    }
+
+    var re_parts = [/^(?<sign>[+-])?(0x)?/,
+                    /(?<integer>[0-9a-fA-F]+)?/,
+                    /(\.(?<fvalue>[0-9a-fA-F]+)?)?/,
+                    /(?<exponent>p(?<esign>[+-])?(?<evalue>\d+))?$/]
+    var re = new RegExp(re_parts.map(r => r.source).join(''))
+    var mo = re.exec(value)
+    if(mo){
+        var integer = mo.groups.integer ? parseInt(mo.groups.integer, 16) : 0
+        if(mo.groups.fvalue){
+            var fdigits = mo.groups.fvalue.length
+            integer = integer + mo.groups.fvalue
+        }
+        if(integer.length > Math.min(DBL_MIN_EXP - DBL_MANT_DIG - LONG_MIN/2,
+                         LONG_MAX/2 + 1 - DBL_MAX_EXP)/4){
+            throw _b_.ValueError.$factory(
+                "hexadecimal string too long to convert");
+        }
+        var exponent = mo.groups.exponent ? parseInt(mo.groups.evalue) : 0
+        if(exponent && mo.groups.esign == '-'){
+            exponent = -exponent
+        }
+        if(mo.groups.fraction){
+            exponent -= 4 * fdigits
+        }
+        console.log('fromhex, exponent', exponent)
+
+        var res = parseInt(integer, 16) * 2 ** exponent
+        if(! isFinite(res)){
+            throw _b_.OverflowError.$factory(
+                "hexadecimal value too large to represent as a float")
+        }
+        return $B.fast_float(res)
+    }else{
+        throw _b_.ValueError.$factory(
+            "invalid hexadecimal floating-point string");
+    }
 }
 
 float.__getformat__ = function(arg){
@@ -425,7 +624,7 @@ float.__hash__ = function(self) {
     if(_v === Infinity){
         return 314159
     }else if(_v === -Infinity){
-        return -271828
+        return -314159
     }else if(isNaN(_v)){
         return self.__hashvalue__ = nan_hash
     }else if(_v === Number.MAX_VALUE){
@@ -512,26 +711,26 @@ function frexp(x){
     return [man, ex]
 }
 
-function ldexp(x, i) {
-    if(isninf(x)){
-        return float.$factory('-inf')
-    }else if(isinf(x)){
-        return float.$factory('inf')
+// copied from
+// https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
+function ldexp(mantissa, exponent) {
+    if(isninf(mantissa)){
+        return NINF
+    }else if(isinf(mantissa)){
+        return INF
     }
-
-    var y = x
-    if(_b_.isinstance(x, float)){
-        y = x.value
+    if(_b_.isinstance(mantissa, _b_.float)){
+        mantissa = mantissa.value
     }
-    if(y == 0){
-        return y
+    if(mantissa == 0){
+        return ZERO
     }
-
-    var j = i
-    if(_b_.isinstance(i, float)){
-        j = i.value
+    var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
+    var result = mantissa;
+    for (var i = 0; i < steps; i++){
+        result *= Math.pow(2, Math.floor((exponent + i) / steps));
     }
-    return $B.fast_float(y * Math.pow(2, j))
+    return fast_float(result);
 }
 
 float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
@@ -539,8 +738,7 @@ float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
 float.hex = function(self) {
     // http://hg.python.org/cpython/file/d422062d7d36/Objects/floatobject.c
     self = float_value(self)
-    var DBL_MANT_DIG = 53,   // 53 bits?
-        TOHEX_NBITS = DBL_MANT_DIG + 3 - (DBL_MANT_DIG + 2) % 4
+    var TOHEX_NBITS = DBL_MANT_DIG + 3 - (DBL_MANT_DIG + 2) % 4
 
     switch(self.valueOf()) {
         case Infinity:
@@ -975,6 +1173,13 @@ $B.fast_float = fast_float = function(value){
     return {__class__: _b_.float, value}
 }
 
+var fast_float_with_hash = function(value, hash_value){
+    return {
+               __class__: _b_.float,
+               __hashvalue__: hash_value,
+               value}
+}
+
 // constructor for built-in class 'float'
 float.$factory = function(value){
     if(value === undefined){
@@ -1030,6 +1235,23 @@ float.$factory = function(value){
            case "":
                throw _b_.ValueError.$factory("count not convert string to float")
            default:
+               var parts = value.split('e')
+               if(parts[1]){
+                   if(parts[1].startsWith('+') || parts[1].startsWith('-')){
+                       parts[1] = parts[1].substr(1)
+                   }
+               }
+               parts = parts[0].split('.').concat(parts.splice(1))
+               for(var part of parts){
+                   if(part.startsWith('_') || part.endsWith('_')){
+                       throw _b_.ValueError.$factory('invalid float literal ' +
+                           value)
+                   }
+               }
+               if(value.indexOf('__') > -1){
+                       throw _b_.ValueError.$factory('invalid float literal ' +
+                           value)
+               }
                value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
                value = to_digits(value) // convert arabic-indic digits to latin
                if(isFinite(value)){
@@ -1089,16 +1311,6 @@ float.$factory = function(value){
     }
 
     return res
-    /*
-    var num_value = $B.to_num(value, ["__float__", "__index__"])
-
-    if(num_value !== null){
-        if(! isFinite(num_value.value)){
-            throw _b_.OverflowError.$factory('int too large to convert to float')
-        }
-        return num_value
-    }
-    */
 }
 
 $B.$FloatClass = $FloatClass
@@ -1139,6 +1351,10 @@ _b_.float = float
 
 $B.MAX_VALUE = fast_float(Number.MAX_VALUE)
 $B.MIN_VALUE = fast_float(Number.MIN_VALUE)
-
+const NINF = fast_float(Number.NEGATIVE_INFINITY),
+      INF = fast_float(Number.POSITIVE_INFINITY),
+      NAN = fast_float(Number.NaN),
+      ZERO = fast_float(0),
+      NZERO = fast_float(-0)
 
 })(__BRYTHON__)
