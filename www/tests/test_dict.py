@@ -219,4 +219,27 @@ assert_raises(SyntaxError,
               "{*t for x in y}",
               msg='iterable unpacking cannot be used in comprehension')
 
+# issue 2037
+assert {} | {} == {}
+assert {} | {}.keys() == set()
+try:
+    {} | set()
+except TypeError:
+    pass
+else:
+    assert False, "'{} | set()' should have raised a TypeError"
+
+assert {}.keys() | {} == set()
+assert {}.keys() | {}.keys() == set()
+assert {}.keys() | set() == set()
+
+try:
+    set() | {}
+except TypeError:
+    pass
+else:
+    assert False, "'set() | {}' should have raised a TypeError"
+assert set() | {}.keys() == set()
+assert set() | set() == set()
+
 print("passed all tests..")

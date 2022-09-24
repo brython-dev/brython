@@ -3119,6 +3119,34 @@ with x as y:
 assert_raises(TypeError, exec, test,
   msg="'str' object does not support the context manager protocol")
 
+# issue 2030
+def f():
+  return 5
+
+def tracefn(frame, event, arg):
+  assert frame.f_back is not None
+
+def main():
+  sys.settrace(tracefn)
+  f()
+  sys.settrace(None)
+
+main()
+
+# issue 2031
+def foo():
+    bar: Bar = 42
+    assert __annotations__ == {}
+    assert bar == 42
+
+foo()
+
+src = """class Foo:
+    bar: Bar = 42"""
+assert_raises(NameError, exec, src)
+
+assert_raises(NameError, exec, 'bar: Bar = 42')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

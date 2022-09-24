@@ -232,6 +232,8 @@ def sleep(secs):
     """Javascript can't block execution for a given time, expect by an
     infinite loop that freezes the browser. It's better to raise an
     exception"""
+    # try conversion to float, raises TypeError if incorrect argument
+    float(secs)
     raise NotImplementedError("Blocking functions like time.sleep() are not "
         "supported in the browser. Use functions in module browser.timer "
         "instead.")

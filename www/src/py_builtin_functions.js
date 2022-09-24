@@ -281,39 +281,28 @@ function chr(i){
 var classmethod = $B.make_class("classmethod",
     function(func) {
         check_nb_args_no_kw('classmethod', 1, arguments)
-        var f = function(){
-                    return func.apply(null, arguments)
-                }
-        f.__class__ = $B.method
-        // Set same attributes as those set to func by setattr
-        // Used for instance by @abc.abstractclassmethod
-        if(func.$attrs){
-            for(var key in func.$attrs){
-                f[key] = func.$attrs[key]
-            }
+        return {
+            __class__: classmethod,
+            __func__: func
         }
-        f.$infos = {
-            __func__: func,
-            __name__: func.$infos.__name__
-        }
-        f.__get__ = function(obj, cls){
-            var method = function(){
-                return f(cls, ...arguments)
-            }
-            method.__class__ = $B.method
-            method.$infos = {
-                __self__: cls,
-                __func__: f,
-                __name__: func.$infos.__name__,
-                __qualname__: cls.$infos.__name__ + "." + func.$infos.__name__
-            }
-            return method
-        }
-        f.__get__.__class__ = $B.method_wrapper
-        f.__get__.$infos = func.$infos
-        return f
     }
 )
+
+classmethod.__get__ = function(self, obj, cls){
+    // adapted from
+    // https://docs.python.org/3/howto/descriptor.html#class-methods
+    if(cls === _b_.None){
+        cls = $B.get_class(obj)
+    }
+    var func_class = $B.get_class(self.__func__),
+        candidates = [func_class].concat(func_class.__mro__)
+    for(var candidate of candidates){
+        if(candidate.__get__){
+            return candidate.__get__(self.__func__, cls, cls)
+        }
+    }
+    return $B.method.$factory(self.__func__, cls)
+}
 
 $B.set_func_names(classmethod, "builtins")
 
@@ -387,9 +376,9 @@ function compile() {
 
     if(!_b_.isinstance(filename, [_b_.bytes, _b_.str])){
         // module _warning is in builtin_modules.js
-        $B.imported._warnings.warn(_b_.DeprecationWarning.$factory(
+        $B.warn(_b_.DeprecationWarning,
             `path should be string, bytes, or os.PathLike, ` +
-                `not ${$B.class_name(filename)}`))
+            `not ${$B.class_name(filename)}`)
     }
     if(interactive && ! $.source.endsWith("\n")){
         // This is used in codeop.py to raise SyntaxError until a block in the
@@ -617,7 +606,10 @@ function $$eval(src, _globals, _locals){
         _b_.print(">", $.src.source.trim())
     }
 
+    var filename = '<string>'
+
     if(src.__class__ === code){
+        filename = src.filename
         // result of compile()
     }else if((! src.valueOf) || typeof src.valueOf() !== 'string'){
         throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,` +
@@ -627,6 +619,8 @@ function $$eval(src, _globals, _locals){
         // cf. issue #1772
         src = src.valueOf()
     }
+
+    $B.url2name[filename] = 'exec'
 
     var frame = $B.last($B.frames_stack)
     var lineno = frame.$lineno
@@ -638,8 +632,8 @@ function $$eval(src, _globals, _locals){
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
         exc.args = ['unexpected EOF while parsing',
-            ['<string>', lines.length - 1, 1, line]]
-        exc.filename = '<string>'
+            [filename, lines.length - 1, 1, line]]
+        exc.filename = filename
         exc.text = line
         throw exc
     }
@@ -648,13 +642,12 @@ function $$eval(src, _globals, _locals){
         global_name = 'globals_exec',
         exec_locals = {},
         exec_globals = {},
-        __name__ = '<module>',
-        filename = '<string>'
+        __name__ = '<module>'
 
     if(_globals === _b_.None){
         // if the optional parts are omitted, the code is executed in the
         // current scope
-        filename = '<string>'
+        // filename = '<string>'
         if(frame[1] === frame[3]){
             // module level
             global_name += '_globals'
@@ -706,7 +699,7 @@ function $$eval(src, _globals, _locals){
         if(exec_globals.__builtins__ === undefined){
             exec_globals.__builtins__ = _b_.__builtins__
         }
-        filename = exec_globals.__file__ || '<string>'
+        // filename = exec_globals.__file__ || '<string>'
         if(_locals === _b_.None){
             exec_locals = exec_globals
         }else{
@@ -744,6 +737,7 @@ function $$eval(src, _globals, _locals){
     frame.is_exec_top = true
     frame.__file__ = filename
     exec_locals.$f_trace = $B.enter_frame(frame)
+    var _frames = $B.frames_stack.slice()
     frame.$lineno = 1
 
     if(src.__class__ === code){
@@ -799,9 +793,10 @@ function $$eval(src, _globals, _locals){
 
     try{
         var exec_func = new Function('$B', '_b_', 'locals',
-                                     local_name, global_name, 'frame', js)
+                                     local_name, global_name,
+                                     'frame', '_frames', js)
     }catch(err){
-        if($B.debug > 1){
+        if(true){ //$B.debug > 1){
             console.log('eval() error\n', $B.format_indent(js, 0))
             console.log('-- python source\n', src)
         }
@@ -810,7 +805,7 @@ function $$eval(src, _globals, _locals){
 
     try{
         var res = exec_func($B, _b_, exec_locals,
-                            exec_locals, exec_globals, frame)
+                            exec_locals, exec_globals, frame, _frames)
     }catch(err){
         if($B.debug > 2){
             console.log(
@@ -819,6 +814,7 @@ function $$eval(src, _globals, _locals){
                 '\nstack', $B.frames_stack.slice(),
                 '\nexec func', $B.format_indent(exec_func + '', 0),
                 '\n    filename', filename,
+                '\n    name from filename', $B.url2name[filename],
                 '\n    local_name', local_name,
                 '\n    exec_locals', exec_locals,
                 '\n    global_name', global_name,
@@ -955,6 +951,9 @@ function in_mro(klass, attr){
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var res
+    if(obj === undefined){
+        console.log('attr', attr, 'of obj undef')
+    }
     if(obj.$method_cache &&
             obj.$method_cache[attr] &&
             obj.__class__ &&
@@ -978,7 +977,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "A" // && obj === _b_.list // "Point"
+    var $test = false // attr == "f" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -995,7 +994,13 @@ $B.$getattr = function(obj, attr, _default){
             console.log('\nobj[attr]', obj[attr])
         }
         if(obj[attr] !== undefined){
-            return obj[attr]
+            if(attr == "__class__" && obj.__class__.__dict__ &&
+                    obj.__class__.__dict__.$string_dict.__class__){
+                // special case : the objects' class has an explicit attribute
+                // __class__ (eg NonCallableMock in unittest.mock...)
+            }else{
+                return obj[attr]
+            }
         }else if(obj.__dict__ &&
                 obj.__dict__.$string_dict.hasOwnProperty(attr) &&
                 ! (klass.hasOwnProperty(attr) &&
@@ -1056,18 +1061,33 @@ $B.$getattr = function(obj, attr, _default){
           break
       case '__class__':
           // attribute __class__ is set for all Python objects
+          if(klass.__dict__ && klass.__dict__.$string_dict.__class__){
+              var klass_class = klass.__dict__.$string_dict.__class__[0]
+              if(klass_class.$is_property){
+                  return klass_class.fget(obj)
+              }
+              return klass_class
+          }
           return klass
       case '__dict__':
           if(is_class){
-              var proxy = {}
-              for(var key in obj){
-                  if(! key.startsWith("$")){
-                      proxy[key] = obj[key]
+              var dict = {}
+              if(obj.__dict__){
+                  for(var key in obj.__dict__.$string_dict){
+                      dict[key] = obj.__dict__.$string_dict[key][0]
+                  }
+              }else{
+                  for(var key in obj){
+                      if(! key.startsWith("$")){
+                          dict[key] = obj[key]
+                      }
                   }
               }
-              proxy.__dict__ = $B.getset_descriptor.$factory(obj,
-                  "__dict__") // in py_dict.js
-              return $B.mappingproxy.$factory(proxy) // in py_dict.js
+              dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__')
+              return {
+                  __class__: $B.mappingproxy, // in py_dict.js
+                  $jsobj: dict
+                  }
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
                   return obj[attr]
@@ -1336,7 +1356,6 @@ function hash(obj){
                 $B.class_name(obj) + "'")
     }
 
-
     // If no specific __hash__ method is supplied for the instance but
     // a __eq__ method is defined, the object is not hashable
     //
@@ -1535,8 +1554,6 @@ function isinstance(obj, cls){
             else if($B.builtin_classes.indexOf(cls) > -1){
                 return false
             }
-        }else if(obj.contructor === Number && Number.isFinite(obj)){
-            if(cls == _b_.float){return true}
         }else if(typeof obj == 'number' && Number.isFinite(obj)){
             if(Number.isFinite(obj) && cls == _b_.int){return true}
         }
@@ -1572,10 +1589,18 @@ function isinstance(obj, cls){
 
 function issubclass(klass, classinfo){
     check_nb_args_no_kw('issubclass', 2, arguments)
-
+    var mro
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
-        throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
+        var meta = $B.$getattr(klass, '__class__', null) // found in unittest.mock
+        if(meta === null){
+            throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
+        }else{
+            console.log(klass, 'has an attribute __class__', meta)
+            mro = [_b_.object]
+        }
+    }else{
+        mro = klass.__mro__
     }
     if(isinstance(classinfo, _b_.tuple)){
         for(var i = 0; i < classinfo.length; i++){
@@ -1590,7 +1615,7 @@ function issubclass(klass, classinfo){
 
     if(classinfo.$factory || classinfo.$is_class){
         if(klass === classinfo ||
-                klass.__mro__.indexOf(classinfo) > -1){
+                mro.indexOf(classinfo) > -1){
             return true
         }
     }
@@ -2146,11 +2171,6 @@ property.__get__ = function(self, obj) {
     return $B.$call(self.fget)(obj)
 }
 
-property.__repr__ = function(self){
-    $B.builtins_repr_check(property, arguments) // in brython_builtins.js
-    return _b_.repr(self.fget(self))
-}
-
 property.__set__ = function(self, obj, value){
     if(self.fset === undefined){
         throw _b_.AttributeError.$factory("can't set attribute")
@@ -2220,7 +2240,7 @@ function round(){
         arg = $.number,
         n = $.ndigits === None ? 0 : $.ndigits
 
-    if(!isinstance(arg,[_b_.int, _b_.float])){
+    if(! isinstance(arg,[_b_.int, _b_.float])){
         var klass = arg.__class__ || $B.get_class(arg)
         try{
             return $B.$call($B.$getattr(klass, "__round__")).apply(null, arguments)
@@ -2234,19 +2254,24 @@ function round(){
         }
     }
 
-    var klass = $B.get_class(arg)
-
-    if(isinstance(arg, _b_.float)){
-        if(arg.value === Infinity || arg.value === -Infinity){
-            throw _b_.OverflowError.$factory(
-                "cannot convert float infinity to integer")
-        }
-        arg = arg.value // number
-    }
-
     if(! isinstance(n, _b_.int)){
         throw _b_.TypeError.$factory("'" + $B.class_name(n) +
             "' object cannot be interpreted as an integer")
+    }
+
+    var klass = $B.get_class(arg)
+
+    if(isinstance(arg, _b_.float)){
+        arg = _b_.float.$float_value(arg)
+        if(arg.value === Infinity || arg.value === -Infinity){
+            throw _b_.OverflowError.$factory(
+                "cannot convert float infinity to integer")
+        }else if(isNaN(arg.value)){
+            throw _b_.ValueError.$factory(
+                "cannot convert float NaN to integer")
+        }
+        var res = _b_.float.$round(arg, n)
+        return $.ndigits === None ? res : klass.$factory(res)
     }
 
     var mult = Math.pow(10, n),
@@ -2254,6 +2279,7 @@ function round(){
         floor = Math.floor(x),
         diff = Math.abs(x - floor),
         res
+    console.log('x', x, 'floor', floor, 'diff', diff)
     if(diff == 0.5){
         if(floor % 2){
             floor += 1
@@ -2262,11 +2288,16 @@ function round(){
     }else{
         res = _b_.int.__truediv__(Math.round(x), mult)
     }
+    if(res.value === Infinity || res.value === -Infinity){
+        throw _b_.OverflowError.$factory(
+            "rounded value too large to represent")
+    }
     if($.ndigits === None){
         // Always return an integer
         return Math.floor(res.value)
     }else{
         // Return the same type as argument
+        console.log('round', arg, 'n', n, 'klass', klass, 'res', res)
         return $B.$call(klass)(res)
     }
 }
@@ -2466,7 +2497,7 @@ $B.$setattr = function(obj, attr, value){
                 return []
             }
             var has_slot = false
-            if(mangled_slots(klass).indexOf(attr) > -1){
+            if($B.$is_member(attr, mangled_slots(klass))){
                 has_slot = true
             }else{
                 for(var i = 0; i < klass.__mro__.length; i++){
@@ -2514,18 +2545,21 @@ function sorted(){
 
 // staticmethod() built in function
 var staticmethod = $B.make_class("staticmethod",
-    function(func) {
-        var f = {
-            $infos: func.$infos,
-            __get__: function(){
-                return func
-            }
+    function(func){
+        return {
+            __class__: staticmethod,
+            __func__: func
         }
-        f.__get__.__class__ = $B.method_wrapper
-        f.__get__.$infos = func.$infos
-        return f
     }
 )
+
+staticmethod.__call__ = function(self){
+    return $B.$call(self.__func__)
+}
+
+staticmethod.__get__ = function(self){
+    return self.__func__
+}
 
 
 $B.set_func_names(staticmethod, "builtins")
@@ -3338,22 +3372,12 @@ $B.Function.__eq__ = function(self, other){
 }
 
 $B.Function.__get__ = function(self, obj){
+    // adapated from
+    // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
     if(obj === _b_.None){
         return self
     }
-    var method = function(){return self(obj, ...arguments)}
-    method.__class__ = $B.method
-    if(self.$infos === undefined){
-        console.log("no $infos", self)
-        console.log($B.last($B.frames_stack))
-    }
-    method.$infos = {
-        __name__: self.$infos.__name__,
-        __qualname__: $B.class_name(obj) + "." + self.$infos.__name__,
-        __self__: obj,
-        __func__: self
-    }
-    return method
+    return $B.method.$factory(self, obj)
 }
 
 $B.Function.__getattribute__ = function(self, attr){

@@ -235,7 +235,7 @@ function run(coro){
     }else{
         error_func = handle_error
     }
-    
+
     var save_stack = $B.frames_stack.slice()
     $B.coroutine.send(coro).then(onsuccess).catch(error_func)
     $B.frames_stack = save_stack

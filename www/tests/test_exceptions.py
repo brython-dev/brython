@@ -62,6 +62,21 @@ e = BaseExceptionGroup('issues',
         [ValueError('bad value'), TypeError('bad type')])
 assert type(e) is ExceptionGroup
 
+source = "def myfunc():\n error"
+code = compile(source, 'foo.py', 'exec')
+exec(code)
+expected = """File "foo.py", line 2, in myfunc"""
+
+try:
+    myfunc()
+except NameError as exc:
+    import traceback
+    import io
+    out = io.StringIO()
+    traceback.print_exc(file=out)
+    assert expected in out.getvalue()
+    
+
 import io
 
 eg = BaseExceptionGroup(
@@ -170,7 +185,7 @@ def f(src):
 assert f("1 / 0") == ['zero', 'end']
 assert f("x = 0") == ['no exception', 'end']
 
-# PEP 678 â€“ Enriching Exceptions with Notes
+# PEP 678 – Enriching Exceptions with Notes
 try:
     1 / 0
 except ZeroDivisionError as exc:

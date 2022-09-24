@@ -89,6 +89,8 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
 
+    set_class_item('__qualname__', class_name)
+
     // Transform class object into a dictionary
     for(var attr in class_obj){
         if(attr == "__annotations__"){
@@ -116,6 +118,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         __class__: metaclass,
         __dict__: cl_dict
     }
+
     if(cl_dict.__class__ === _b_.dict){
         for(var key in cl_dict.$string_dict){
             class_dict[key] = cl_dict.$string_dict[key][0]
@@ -133,7 +136,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         }
     }
     class_dict.__mro__ = _b_.type.mro(class_dict).slice(1)
-
 
     // Check if at least one method is abstract (cf PEP 3119)
     // If this is the case, the class cannot be instanciated
@@ -172,6 +174,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
         cl_dict.__slots__ = _slots
     }
 
+
     // Check if class has __setattr__ or descriptors
     for(var i = 0; i < mro.length - 1; i++){
         for(var attr in mro[i]){
@@ -191,7 +194,7 @@ $B.$class_constructor = function(class_name, class_obj, bases,
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, bases, cl_dict,
-        {$nat: 'kw', kw: extra_kwargs})
+                       {$nat: 'kw', kw: extra_kwargs})
     kls.__module__ = module
     kls.$infos = {
         __module__: module,
@@ -234,8 +237,6 @@ $B.$class_constructor = function(class_name, class_obj, bases,
                 Object.keys(abstract_methods).join(", "))}
         kls.$factory = nofactory
     }
-
-    kls.__qualname__ = class_name
 
     return kls
 }
@@ -357,13 +358,9 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "f" // && klass === _b_.list
+    var $test = false // attr == "fromhex" // && klass === _b_.list
     if($test){
         console.log("attr", attr, "of", klass, res, res + "")
-    }
-    if(res === undefined && klass.__slots__ &&
-            klass.__slots__.indexOf(attr) > -1){
-        return member_descriptor.$factory(attr, klass)
     }
     if(klass.__class__ &&
             klass.__class__[attr] &&
@@ -453,6 +450,8 @@ type.__getattribute__ = function(klass, attr){
         // If the attribute is a property, return it
         if(res.__class__ === _b_.property){
             return res
+        }else if(res.__class__ === _b_.classmethod){
+            return _b_.classmethod.__get__(res, _b_.None, klass)
         }
         if(res.__get__){
             if(res.__class__ === method){
@@ -492,11 +491,10 @@ type.__getattribute__ = function(klass, attr){
                     res.__class__ === $B.builtin_function){
                 res.$type = "staticmethod"
             }
-            if(attr == "__class_getitem__" && res.__class__ !== $B.method){
+            if((attr == "__class_getitem__"  || attr == "__init_subclass__")
+                    && res.__class__ !== _b_.classmethod){
                 res = _b_.classmethod.$factory(res)
-            }
-            if(attr == "__init_subclass__"){
-                res = _b_.classmethod.$factory(res)
+                return _b_.classmethod.__get__(res, _b_.None, klass)
             }
             if(res.__class__ === $B.method){
                 return res.__get__(null, klass)
@@ -598,6 +596,13 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         $has_setattr: cl_dict.$has_setattr
     }
 
+    if(cl_dict.__slots__){
+        var _slots = class_dict.__slots__ = cl_dict.__slots__
+        for(var name of _slots){
+            class_dict[name] = member_descriptor.$factory(name, class_dict)
+        }
+    }
+
     class_dict.__mro__ = type.mro(class_dict).slice(1)
 
     // set class attributes for faster lookups
@@ -606,6 +611,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         var key = items[i][0],
             v = items[i][1]
         if(key === "__module__"){continue} // already set
+        if(key === "__class__"){continue} // already set
+
         if(v === undefined){continue}
         class_dict[key] = v
         if(v.__class__){
@@ -851,8 +858,8 @@ var $instance_creator = $B.$instance_creator = function(klass){
                     }
                 }
                 var res = Object.create(null)
-                $B.update_obj(res,
-                    {__class__: klass, __dict__: $B.empty_dict()})
+                $B.update_obj(res, {__class__: klass,
+                                    __dict__: $B.empty_dict()})
                 return res
             }
         }
@@ -904,6 +911,32 @@ var member_descriptor = $B.make_class("member_descriptor",
     }
 )
 
+member_descriptor.__delete__ = function(self, obj){
+    if(obj.$slot_values === undefined ||
+            ! obj.$slot_values.hasOwnProperty(self.attr)){
+        throw _b_.AttributeError.$factory(self.attr)
+    }
+    obj.$slot_values.delete(self.attr)
+}
+
+member_descriptor.__get__ = function(self, obj, obj_type){
+    if(obj === _b_.None){
+        return self
+    }
+    if(obj.$slot_values === undefined ||
+            ! obj.$slot_values.has(self.attr)){
+        throw _b_.AttributeError.$factory(self.attr)
+    }
+    return obj.$slot_values.get(self.attr)
+}
+
+member_descriptor.__set__ = function(self, obj, value){
+    if(obj.$slot_values === undefined){
+        obj.$slot_values = new Map()
+    }
+    obj.$slot_values.set(self.attr, value)
+}
+
 member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
     return "<member '" + self.attr + "' of '" + self.cls.$infos.__name__ +
         "' objects>"
@@ -920,6 +953,9 @@ var method = $B.method = $B.make_class("method",
         }
         f.__class__ = method
         f.$infos = func.$infos
+        f.$infos.__func__ = func
+        f.$infos.__self__ = cls
+        f.$infos.__dict__ = $B.empty_dict()
         return f
     }
 )

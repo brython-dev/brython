@@ -137,9 +137,8 @@ $B.set_func_names(traceback, "builtins")
 
 // class of frame objects
 var frame = $B.frame = $B.make_class("frame",
-    function(frame_list, pos){
+    function(frame_list){
         frame_list.__class__ = frame
-        frame_list.$pos = pos
         return frame_list
     }
 )
@@ -160,9 +159,9 @@ frame.__getattr__ = function(_self, attr){
     // Used for f_back to avoid computing it when the frame object
     // is initialised
     if(attr == "f_back"){
-        if(_self.$pos > 0){
-            return frame.$factory($B.frames_stack[_self.$pos - 1],
-                _self.$pos - 1)
+        var pos = $B.frames_stack.indexOf(_self)
+        if(pos > 0){
+            return frame.$factory($B.frames_stack[pos - 1])
         }else{
             return _b_.None
         }
@@ -392,7 +391,8 @@ $B.exception = function(js_exc, in_ctx_manager){
             // same Python exception
             return js_exc.$py_exc
         }
-        console.log('js exc', js_exc)
+        console.log('Javascript error\n', js_exc)
+        console.log('frames', $B.frames_stack.slice())
         var exc = _b_.Exception.$factory("Internal Javascript error: " +
             (js_exc.__name__ || js_exc.name))
         exc.__name__ = "Internal Javascript error: " +
@@ -877,7 +877,7 @@ function trace_from_stack(err){
         save_lineno = lineno
         count_repeats = 0
         var src = $B.file_cache[filename]
-        trace.push(`  File ${filename}, line ${lineno}, in ` +
+        trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
         if(src){
             var lines = src.split('\n'),
@@ -937,7 +937,7 @@ $B.show_error = function(err){
         var filename = err.filename,
             line = err.text,
             indent = line.length - line.trimLeft().length
-        trace += `  File ${filename}, line ${err.args[1][1]}\n` +
+        trace += `  File "${filename}", line ${err.args[1][1]}\n` +
                      `    ${line.trim()}\n`
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){

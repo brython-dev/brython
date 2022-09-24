@@ -769,7 +769,20 @@
             if($B.imported.warnings){
                 $B.imported.warnings._showwarnmsg_impl(warning_message)
             }else{
-                var trace = $B.class_name(message) + ': ' + message.args[0]
+                var frame = $B.last($B.frames_stack),
+                    file = frame.__file__,
+                    lineno = frame.$lineno,
+                    src = $B.file_cache[file],
+                    trace = ''
+                if(file && lineno){
+                    trace += `${file}:${lineno}: `
+                }
+                trace += $B.class_name(message) + ': ' + message.args[0]
+
+                if(src && frame.$lineno){
+                    var line = src.split('\n')[frame.$lineno - 1]
+                    trace += '\n    ' + line.trim()
+                }
                 $B.$getattr($B.stderr, 'write')(trace + '\n')
                 var flush = $B.$getattr($B.stderr, 'flush', _b_.None)
                 if(flush !== _b_.None){

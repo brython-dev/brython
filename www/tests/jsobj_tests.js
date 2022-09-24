@@ -74,3 +74,5 @@ function get_float() {
 // issue 1696
 function jsFunction1696() {
 }
+
+var js_list = ['b', 'a', 'c']

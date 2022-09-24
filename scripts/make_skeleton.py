@@ -12,7 +12,11 @@ import inspect
 import types
 
 
-stdlib_name = '_weakref'
+stdlib_name = 'asyncio'
+
+include_doc = False
+include_base_classes = False
+
 ns = {}
 exec('import %s;print(dir(%s))' % (stdlib_name, stdlib_name), ns)
 
@@ -30,7 +34,7 @@ else:
 def skeleton(infos):
     res = ''
 
-    if infos.__doc__:
+    if infos.__doc__ and include_doc:
         res += '"""%s"""\n\n' % infos.__doc__
     for key in dir(infos):
         if key.startswith('__') and key.endswith('__') and \
@@ -50,7 +54,7 @@ def skeleton(infos):
         elif type(val) in [types.BuiltinFunctionType,
                           types.BuiltinMethodType, types.FunctionType]:
             res += '\ndef %s(*args,**kw):\n' % key
-            if val.__doc__:
+            if val.__doc__ and include_doc:
                 lines = val.__doc__.split('\n')
                 res += '    """'
                 if len(lines) == 1:
@@ -63,7 +67,7 @@ def skeleton(infos):
             res += '    pass\n'
         elif inspect.isclass(val):
             res += '\n\nclass %s' % key
-            if val.__bases__:
+            if val.__bases__ and include_base_classes:
                 res += '('+','.join(x.__name__ for x in val.__bases__)+')'
             res += ':\n'
             res += '\n'.join('    %s' % line

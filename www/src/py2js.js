@@ -4225,7 +4225,7 @@ JoinedStrCtx.prototype.ast = function(){
             var conv_num = {a: 97, r: 114, s: 115},
                 format = item.elt.format
             format = format === undefined ? format : format.ast()
-                value = new ast.FormattedValue(
+            var value = new ast.FormattedValue(
                     item.ast(),
                     conv_num[item.elt.conversion] || -1,
                     format)
@@ -8404,7 +8404,8 @@ $B.parse_options = function(options){
     $B.set_import_paths()
 
     // URL of the script where function brython() is called
-    var $href = $B.script_path = _window.location.href,
+    // Remove part after # (cf. issue #2035)
+    var $href = $B.script_path = _window.location.href.split('#')[0],
         $href_elts = $href.split('/')
     $href_elts.pop()
     if($B.isWebWorker || $B.isNode){$href_elts.pop()} // WebWorker script is in the web_workers subdirectory

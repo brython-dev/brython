@@ -305,8 +305,6 @@ $B.get_class = function(obj){
                         obj.__class__ = _b_.list
                         return _b_.list
                     }
-                }else if(obj.constructor === Number){
-                    return _b_.float
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
                         && obj instanceof Node){
                     if(obj.tagName){
@@ -484,6 +482,11 @@ $B.$JS2Py = function(src){
     return src
 }
 
+// warning
+$B.warn = function(klass, message){
+    $B.imported._warnings.warn(klass.$factory(message))
+}
+
 // get item
 function index_error(obj){
     var type = typeof obj == "string" ? "string" : "list"
@@ -518,7 +521,7 @@ $B.$getitem = function(obj, item, position){
     if(obj.$is_class){
         var class_gi = $B.$getattr(obj, "__class_getitem__", _b_.None)
         if(class_gi !== _b_.None){
-            return class_gi(item)
+            return $B.$call(class_gi)(item)
         }else if(obj.__class__){
             class_gi = $B.$getattr(obj.__class__, "__getitem__", _b_.None)
             if(class_gi !== _b_.None){
@@ -747,7 +750,13 @@ $B.augm_assign = function(left, op, right){
         method = $B.op2method.augmented_assigns[op],
         augm_func = $B.$getattr(left, '__' + method + '__', null)
     if(augm_func !== null){
-        return $B.$call(augm_func)(right)
+        var res = $B.$call(augm_func)(right)
+        if(res === _b_.NotImplemented){
+            throw _b_.TypeError.$factory(`unsupported operand type(s)` +
+                ` for ${op}: '${$B.class_name(left)}' ` +
+                `and '${$B.class_name(right)}'`)
+        }
+        return res
     }else{
         var method1 = $B.op2method.operations[op1]
         if(method1 === undefined){
@@ -793,6 +802,9 @@ $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
     if(a.__class__ === _b_.float && b.__class__ === _b_.float){
+        if(isNaN(a.value) && isNaN(b.value)){
+            return true
+        }
         return a.value == b.value
     }
     if((a === _b_.int && b == $B.long_int) ||
@@ -804,6 +816,11 @@ $B.$is = function(a, b){
         return true
     }
     return a === b
+}
+
+$B.is_or_equals = function(x, y){
+    // used to test membership in lists, sets, dicts
+    return $B.$is(x, y) || $B.rich_comp('__eq__', x, y)
 }
 
 $B.$is_member = function(item, _set){

@@ -125,6 +125,9 @@ object.__getattribute__ = function(obj, attr){
 
     if(res === undefined && obj.__dict__){
         var dict = obj.__dict__
+        if(dict.__class__ === $B.getset_descriptor){
+            return dict.cls[attr]
+        }
         if(dict.$string_dict.hasOwnProperty(attr)){
             if($test){
                 console.log("__dict__ hasOwnProperty", attr, dict.$string_dict[attr])
@@ -173,6 +176,8 @@ object.__getattribute__ = function(obj, attr){
         if($test){console.log(res)}
         if(res.__class__ && _b_.issubclass(res.__class__, _b_.property)){
             return $B.$getattr(res, '__get__')(obj, klass)
+        }else if(res.__class__ === _b_.classmethod){
+            return _b_.classmethod.__get__(res, obj, klass)
         }
         if(res.__class__ === $B.method){
             if(res.$infos.__self__){
