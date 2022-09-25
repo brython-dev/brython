@@ -1022,7 +1022,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
    // If so, it's no use trying to import with PathFinder (in the importer's
    // directory)
    if(globals.$jsobj && globals.$jsobj.__file__){
-       var file = globals.$jsobj.__file__
+       var file = globals.$jsobj.__file__.toString()
        if((file.startsWith($B.brython_path + "Lib/") &&
                ! file.startsWith($B.brython_path + "Lib/site-packages/")) ||
                file.startsWith($B.brython_path + "libs/") ||
