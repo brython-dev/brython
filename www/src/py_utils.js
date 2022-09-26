@@ -1581,6 +1581,10 @@ $B.repr = {
             return true
         }else{
             repr_stack.add(obj)
+            if(repr_stack.size > $B.recursion_limit){
+                throw _b_.RecursionError.$factory("maximum recursion depth " +
+                    "exceeded while getting the repr of an object")
+            }
         }
     },
     leave: function(obj){

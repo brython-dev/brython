@@ -88,7 +88,7 @@ Version in 0.7.1
 """
 
 # TODO: color stderr
-# TODO: simplify javascript using ,ore than 1 class in the class attribute?
+# TODO: simplify javascript using more than 1 class in the class attribute?
 
 import datetime
 #import StringIO

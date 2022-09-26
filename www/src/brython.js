@@ -69,6 +69,7 @@ $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.max_float=new Number(Number.MAX_VALUE)
 $B.min_float=new Number(Number.MIN_VALUE)
+$B.recursion_limit=200
 $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r",92:"\\\\",160:"\\xa0"}
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=0
@@ -129,8 +130,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-26 17:58:06.105189"
-__BRYTHON__.timestamp=1664207886105
+__BRYTHON__.compiled_date="2022-09-26 22:41:04.130233"
+__BRYTHON__.timestamp=1664224864129
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5872,7 +5873,9 @@ if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(
 return res}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
 var repr_stack=new Set()
-$B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
+$B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)
+if(repr_stack.size > $B.recursion_limit){throw _b_.RecursionError.$factory("maximum recursion depth "+
+"exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
 ;
 ;(function($B){
 var DEFAULT_MIN_MERGE=32
@@ -6178,8 +6181,7 @@ var check_nb_args_no_kw=$B.check_nb_args_no_kw=function(name,expected,args){
 var len=args.length,last=args[len-1]
 if(last && last.$nat=="kw"){if(last.kw.length==2 && Object.keys(last.kw[0]).length==0){len--}else{throw _b_.TypeError.$factory(name+"() takes no keyword arguments")}}
 if(len !=expected){if(expected==0){throw _b_.TypeError.$factory(name+"() takes no argument"+
-" ("+len+" given)")}else{console.log('args',args)
-throw _b_.TypeError.$factory(name+"() takes exactly "+
+" ("+len+" given)")}else{throw _b_.TypeError.$factory(name+"() takes exactly "+
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 var NoneType={$factory:function(){return None},$infos:{__name__:"NoneType",__module__:"builtins"},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__mro__:[_b_.object],__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
@@ -6507,7 +6509,9 @@ default:
 throw $B.attr_error(attr,obj)}}
 function getattr(){var missing={}
 var $=$B.args("getattr",3,{obj:null,attr:null,_default:null},["obj","attr","_default"],arguments,{_default:missing},null,null)
-return $B.$getattr($.obj,$.attr,$._default===missing ? undefined :$._default)}
+if(! isinstance($.attr,_b_.str)){throw _b_.TypeError.$factory("attribute name must be string, "+
+`not '${$B.class_name($.attr)}'`)}
+return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
 function in_mro(klass,attr){if(klass===undefined){return false}
 if(klass.hasOwnProperty(attr)){return klass[attr]}
 var mro=klass.__mro__
@@ -6608,7 +6612,7 @@ if(typeof obj=="object"){
 obj.__class__=klass
 obj.$method_cache=obj.$method_cache ||{}
 obj.$method_cache[attr]=method}
-return method}else if(klass[attr]!==undefined){return klass[attr]}
+return method}else if(klass[attr].__class__===_b_.classmethod){return _b_.classmethod.__get__(klass[attr],obj,klass)}else if(klass[attr]!==undefined){return klass[attr]}
 attr_error(rawname,klass)}
 var mro,attr_func
 if(is_class){attr_func=_b_.type.__getattribute__ }else{attr_func=klass.__getattribute__
@@ -9719,6 +9723,7 @@ return jspos-nb}
 function to_string(args){if(Array.isArray(args)){for(var i=0,len=args.length;i < len;i++){args[i]=to_string(args[i])}
 return args}else{if(args.__class__ && !(args instanceof String)){return args.$brython_value}else{return args}}}
 var str={__class__:_b_.type,__dir__:_b_.object.__dir__,$infos:{__module__:"builtins",__name__:"str"},$is_class:true,$native:true}
+str.$to_string=to_string
 function normalize_start_end($){var len
 if(typeof $.self=="string"){len=$.self.length}else{len=str.__len__($.self)}
 if($.start===null ||$.start===_b_.None){$.start=0}else if($.start < 0){$.start+=len
@@ -9806,7 +9811,8 @@ x=(x ^ p.length)& mask
 x=(x ^ suffix)& mask
 if(x==-1){x=-2}
 return x}
-str.__hash__=function(_self){if(str_hash_cache[_self]!==undefined){return str_hash_cache[_self]}
+str.__hash__=function(_self){_self=to_string(_self)
+if(str_hash_cache[_self]!==undefined){return str_hash_cache[_self]}
 str.$nb_str_hash_cache++
 if(str.$nb_str_hash_cache > 100000){
 str.$nb_str_hash_cache=0
@@ -12026,8 +12032,15 @@ it.test_change=function(){return self.dict.$version !=self.dict_version}
 return it}
 klass.__len__=function(self){return self.len}
 klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
+klass.__reversed__=function(self){var it=klass.$iterator.$factory(self.items.reverse())
+it.test_change=function(){return self.dict.$version !=self.dict_version}
+return it}
+klass.mapping={__get__:function(self){return new Proxy(self.dict,mappingproxy_handler)}}
 $B.set_func_names(klass,"builtins")
 return klass}
+var mappingproxy=$B.make_class("mappingproxy")
+var mappingproxy_handler={get(target,prop){if(prop=='__class__'){return mappingproxy}
+return target[prop]}}
 var dict={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"dict"},$is_class:true,$native:true,$match_mapping_pattern:true }
 dict.$to_obj=function(d){
 var res={}
@@ -12049,11 +12062,13 @@ return res}else{items.__class__=_b_.tuple
 return items.map(function(item){item.__class__=_b_.tuple;return item}
 )}}
 $B.dict_to_list=to_list 
-var $copy_dict=function(left,right){var _l=to_list(right),si=dict.$setitem
+var $copy_dict=function(left,right){var it=_b_.iter($B.$call($B.$getattr(right,'items'))()),next_func=$B.$call($B.$getattr(it,'__next__')),si=dict.$setitem
 right.$version=right.$version ||0
-var right_version=right.$version ||0
-for(var i=0,len=_l.length;i < len;i++){si(left,_l[i][0],_l[i][1])
-if(right.$version !=right_version){throw _b_.RuntimeError.$factory("dict mutated during update")}}}
+var right_version=right.$version ||0,item
+while(true){try{item=next_func()
+si(left,item[0],item[1])
+if(right.$version !=right_version){throw _b_.RuntimeError.$factory("dict mutated during update")}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
+throw err}}}
 function rank(self,hash,key){
 var pairs=self.$object_dict[hash]
 if(pairs !==undefined){for(var i=0,len=pairs.length;i < len;i++){if($B.is_or_equals(key,pairs[i][0])){return i}}}
@@ -12232,6 +12247,18 @@ var res=[],items=to_list(self)
 items.forEach(function(item){try{res.push(_b_.repr(item[0])+": "+_b_.repr(item[1]))}catch(err){throw err}})
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
+var dict_reversekeyiterator=$B.make_class("dict_reversekeyiterator",function(keys){return{
+__class__:dict_reversekeyiterator,keys,counter:-1,length:keys.length}}
+)
+dict_reversekeyiterator.__iter__=function(self){return self}
+dict_reversekeyiterator.__next__=function(self){self.counter++
+if(self.counter >=self.length){throw _b_.StopIteration.$factory('StopIteration')}
+return self.keys[self.counter]}
+dict_reversekeyiterator.__reduce_ex__=function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.keys])])}
+$B.set_func_names(dict_reversekeyiterator,"builtins")
+dict.__reversed__=function(self){var keys=_b_.list.$factory(dict.keys(self))
+keys.reverse()
+return dict_reversekeyiterator.$factory(keys)}
 dict.__ror__=function(self,other){
 if(! _b_.isinstance(other,dict)){return _b_.NotImplemented}
 var res=dict.copy(other)
@@ -12335,9 +12362,12 @@ dict.__delitem__(self,key)
 return res}catch(err){if(err.__class__===_b_.KeyError){if(_default !==missing){return _default}
 throw err}
 throw err}}
-dict.popitem=function(self){try{var itm=_b_.next(_b_.iter(dict.items(self)))
+dict.popitem=function(self){$B.check_nb_args_no_kw('popitem',1,arguments)
+if(! self.$ordered_items){self.$ordered_items=to_list(self)}
+if(self.$ordered_items.length > 0){var itm=self.$ordered_items.pop()
 dict.__delitem__(self,itm[0])
-return _b_.tuple.$factory(itm)}catch(err){if(err.__class__==_b_.StopIteration){throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")}}}
+return _b_.tuple.$factory(itm)}
+throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")}
 dict.setdefault=function(){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:$N},null,null),self=$.self,key=$.key,_default=$._default
 try{
 return dict.$getitem(self,key,true)}catch(err){if(err.__class__ !==_b_.KeyError){throw err}
@@ -13927,7 +13957,7 @@ hook=$B.$getattr($B.imported[modname],funcname)}catch(err){console.warn("cannot 
 return _b_.None}
 return $B.$call(hook).apply(null,arguments)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},gettrace:function(){return $B.tracefunc ||_b_.None},max_string_length:$B.max_string_length,
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},max_string_length:$B.max_string_length,
 modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
@@ -13939,7 +13969,7 @@ function(){return $B.path_hooks},function(self,value){$B.path_hooks=value}
 ),path_importer_cache:_b_.property.$factory(
 function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},function(self,value){throw _b_.TypeError.$factory("Read only property"+
 " 'sys.path_importer_cache'")}
-),settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
+),setrecursionlimit:function(value){$B.recursion_limit=value},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
 $B.tracefunc=$.tracefunc
 $B.last($B.frames_stack)[1].$f_trace=$B.tracefunc
 $B.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]

@@ -58,7 +58,6 @@ var check_nb_args_no_kw = $B.check_nb_args_no_kw = function(name, expected, args
             throw _b_.TypeError.$factory(name + "() takes no argument" +
                 " (" + len + " given)")
         }else{
-            console.log('args', args)
             throw _b_.TypeError.$factory(name + "() takes exactly " +
                 expected + " argument" + (expected < 2 ? '' : 's') +
                 " (" + len + " given)")
@@ -932,7 +931,12 @@ function getattr(){
     var $ = $B.args("getattr", 3, {obj: null, attr: null, _default: null},
         ["obj", "attr", "_default"], arguments, {_default: missing},
         null, null)
-    return $B.$getattr($.obj, $.attr,
+    if(! isinstance($.attr, _b_.str)){
+        throw _b_.TypeError.$factory("attribute name must be string, " +
+            `not '${$B.class_name($.attr)}'`)
+    }
+    
+    return $B.$getattr($.obj, _b_.str.$to_string($.attr),
         $._default === missing ? undefined : $._default)
 }
 
@@ -977,7 +981,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "f" // && obj === _b_.list // "Point"
+    var $test = false // attr == "fromkeys" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -1189,6 +1193,8 @@ $B.$getattr = function(obj, attr, _default){
                 obj.$method_cache[attr] = method
             }
             return method
+        }else if(klass[attr].__class__ === _b_.classmethod){
+            return _b_.classmethod.__get__(klass[attr], obj, klass)
         }else if(klass[attr] !== undefined){
             return klass[attr]
         }
@@ -2183,6 +2189,7 @@ $B.set_func_names(property, "builtins")
 function quit(){
     throw _b_.SystemExit
 }
+
 quit.__repr__ = quit.__str__ = function(){
     return "Use quit() or Ctrl-Z plus Return to exit"
 }
@@ -2225,10 +2232,15 @@ var reversed = $B.make_class("reversed",
     }
 )
 
-reversed.__iter__ = function(self){return self}
+reversed.__iter__ = function(self){
+    return self
+}
+
 reversed.__next__ = function(self){
     self.$counter--
-    if(self.$counter < 0){throw _b_.StopIteration.$factory('')}
+    if(self.$counter < 0){
+        throw _b_.StopIteration.$factory('')
+    }
     return self.getter(self.$counter)
 }
 

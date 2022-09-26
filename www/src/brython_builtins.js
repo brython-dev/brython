@@ -175,6 +175,8 @@ $B.min_int = -$B.max_int
 $B.max_float = new Number(Number.MAX_VALUE)
 $B.min_float = new Number(Number.MIN_VALUE)
 
+$B.recursion_limit = 200
+
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {
     8: "\\x08",

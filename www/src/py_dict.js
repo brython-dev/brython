@@ -158,8 +158,33 @@ $B.make_view = function(name){
         return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
     }
 
+    klass.__reversed__ = function(self){
+        var it = klass.$iterator.$factory(self.items.reverse())
+        it.test_change = function(){
+            return self.dict.$version != self.dict_version
+        }
+        return it
+    }
+
+    klass.mapping = {
+        __get__: function(self){
+            return new Proxy(self.dict, mappingproxy_handler)
+        }
+    }
+
     $B.set_func_names(klass, "builtins")
     return klass
+}
+
+var mappingproxy = $B.make_class("mappingproxy")
+
+var mappingproxy_handler = {
+    get(target, prop){
+        if(prop == '__class__'){
+            return mappingproxy
+        }
+        return target[prop]
+    }
 }
 
 var dict = {
@@ -235,14 +260,24 @@ function to_list(d, ix){
 $B.dict_to_list = to_list // used in py_types.js
 
 var $copy_dict = function(left, right){
-    var _l = to_list(right),
+    var it = _b_.iter($B.$call($B.$getattr(right, 'items'))()),
+        next_func = $B.$call($B.$getattr(it, '__next__')),
         si = dict.$setitem
     right.$version = right.$version || 0
-    var right_version = right.$version || 0
-    for(var i = 0, len = _l.length; i < len; i++){
-        si(left, _l[i][0], _l[i][1])
-        if(right.$version != right_version){
-            throw _b_.RuntimeError.$factory("dict mutated during update")
+    var right_version = right.$version || 0,
+        item
+    while(true){
+        try{
+            item = next_func()
+            si(left, item[0], item[1])
+            if(right.$version != right_version){
+                throw _b_.RuntimeError.$factory("dict mutated during update")
+            }
+        }catch(err){
+            if($B.is_exc(err, [_b_.StopIteration])){
+                break
+            }
+            throw err
         }
     }
 }
@@ -730,6 +765,40 @@ dict.__repr__ = function(self){
     return "{" + res.join(", ") + "}"
 }
 
+var dict_reversekeyiterator = $B.make_class("dict_reversekeyiterator",
+    function(keys){
+        return {
+            __class__: dict_reversekeyiterator,
+            keys,
+            counter: -1,
+            length: keys.length
+        }
+    }
+)
+
+dict_reversekeyiterator.__iter__ = function(self){
+    return self
+}
+
+dict_reversekeyiterator.__next__ = function(self){
+    self.counter++
+    if(self.counter >= self.length){
+        throw _b_.StopIteration.$factory('StopIteration')
+    }
+    return self.keys[self.counter]
+}
+
+dict_reversekeyiterator.__reduce_ex__ = function(self, protocol){
+    return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.keys])])
+}
+$B.set_func_names(dict_reversekeyiterator, "builtins")
+
+dict.__reversed__ = function(self){
+    var keys = _b_.list.$factory(dict.keys(self))
+    keys.reverse()
+    return dict_reversekeyiterator.$factory(keys)
+}
+
 dict.__ror__ = function(self, other){
     // PEP 584
     if(! _b_.isinstance(other, dict)){
@@ -1020,15 +1089,16 @@ dict.pop = function(){
 }
 
 dict.popitem = function(self){
-    try{
-        var itm = _b_.next(_b_.iter(dict.items(self)))
+    $B.check_nb_args_no_kw('popitem', 1, arguments)
+    if(! self.$ordered_items){
+        self.$ordered_items = to_list(self)
+    }
+    if(self.$ordered_items.length > 0){
+        var itm = self.$ordered_items.pop()
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
-    }catch(err) {
-        if (err.__class__ == _b_.StopIteration) {
-            throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
-        }
     }
+    throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
 }
 
 dict.setdefault = function(){
