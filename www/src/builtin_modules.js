@@ -599,6 +599,9 @@
         excepthook: function(exc_class, exc_value, traceback){
             $B.handle_error(exc_value)
         },
+        getrecursionlimit: function(){
+            return $B.recursion_limit
+        },
         gettrace: function(){
             return $B.tracefunc || _b_.None
         },
@@ -644,6 +647,9 @@
                     " 'sys.path_importer_cache'")
             }
         ),
+        setrecursionlimit: function(value){
+            $B.recursion_limit = value
+        },
         settrace: function(){
             var $ = $B.args("settrace", 1, {tracefunc: null}, ['tracefunc'],
                     arguments, {}, null, null)
