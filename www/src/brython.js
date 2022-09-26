@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-24 19:05:36.060877"
-__BRYTHON__.timestamp=1664039136060
+__BRYTHON__.compiled_date="2022-09-26 17:58:06.105189"
+__BRYTHON__.timestamp=1664207886105
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5442,15 +5442,14 @@ obj.ix+=iterator.step
 return res}}}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
 $B.unpacker=function(obj,nb_targets,has_starred,nb_after_starred){
-var t=_b_.list.$factory(obj),len=t.length,min_len=has_starred ? len-1 :len
-if(len < min_len){throw _b_.ValueError.$factory(
-`not enough values to unpack (expected ${min_length}, got ${len})`)}
-if((! has_starred)&& len > nb_targets){throw _b_.ValueError.$factory(
-`too many values to unpack (expected ${nb_targets})`)}
+var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
+if(right_length < left_length){throw _b_.ValueError.$factory(`not enough values to unpack `+
+`(expected ${left_length}, got ${right_length})`)}
 t.index=-1
 t.read_one=function(){t.index++
 return t[t.index]}
-t.read_rest=function(){t.index++
+t.read_rest=function(){
+t.index++
 var res=t.slice(t.index,t.length-nb_after_starred)
 t.index=t.length-nb_after_starred-1
 return res}

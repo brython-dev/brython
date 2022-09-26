@@ -3147,6 +3147,7 @@ assert_raises(NameError, exec, src)
 
 assert_raises(NameError, exec, 'bar: Bar = 42')
 
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

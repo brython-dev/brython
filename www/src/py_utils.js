@@ -360,23 +360,26 @@ $B.next_of = function(iterator){
 
 $B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
     // Used in unpacking target of a "for" loop if it is a tuple or list
+    // For "[a, b] = t", nb_targets is 2, has_starred is false
+    // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
+    // nb_after_starred is 1 (c)
     var t = _b_.list.$factory(obj),
-        len = t.length,
-        min_len = has_starred ? len - 1 : len
-    if(len < min_len){
-        throw _b_.ValueError.$factory(
-            `not enough values to unpack (expected ${min_length}, got ${len})`)
+        right_length = t.length,
+        left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
+
+    if(right_length < left_length){
+        throw _b_.ValueError.$factory(`not enough values to unpack ` +
+            `(expected ${left_length}, got ${right_length})`)
     }
-    if((! has_starred) && len > nb_targets){
-        throw _b_.ValueError.$factory(
-            `too many values to unpack (expected ${nb_targets})`)
-    }
+
     t.index = -1
     t.read_one = function(){
         t.index++
         return t[t.index]
     }
     t.read_rest = function(){
+        // For the starred item: read the correct number of items in the
+        // right-hand side iterator
         t.index++
         var res = t.slice(t.index, t.length - nb_after_starred)
         t.index = t.length - nb_after_starred - 1
