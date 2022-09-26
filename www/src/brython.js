@@ -130,8 +130,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-26 22:41:04.130233"
-__BRYTHON__.timestamp=1664224864129
+__BRYTHON__.compiled_date="2022-09-26 23:07:46.755177"
+__BRYTHON__.timestamp=1664226466754
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5446,6 +5446,8 @@ $B.unpacker=function(obj,nb_targets,has_starred,nb_after_starred){
 var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
 if(right_length < left_length){throw _b_.ValueError.$factory(`not enough values to unpack `+
 `(expected ${left_length}, got ${right_length})`)}
+if((! has_starred)&& right_length > left_length){throw _b_.ValueError.$factory("too many values to unpack "+
+`(expected ${left_length})`)}
 t.index=-1
 t.read_one=function(){t.index++
 return t[t.index]}

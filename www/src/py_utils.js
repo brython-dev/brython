@@ -371,7 +371,10 @@ $B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
         throw _b_.ValueError.$factory(`not enough values to unpack ` +
             `(expected ${left_length}, got ${right_length})`)
     }
-
+    if((! has_starred) && right_length > left_length){
+        throw _b_.ValueError.$factory("too many values to unpack " +
+            `(expected ${left_length})`)
+    }
     t.index = -1
     t.read_one = function(){
         t.index++

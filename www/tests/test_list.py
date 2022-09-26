@@ -436,4 +436,10 @@ try:
 except ValueError:
     pass
 
+try:
+    [a, b] = [1, 2, 3]
+    raise Exception('should have raised TypeError')
+except ValueError:
+    pass
+
 print("passed all tests..")
