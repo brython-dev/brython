@@ -358,22 +358,39 @@ $B.next_of = function(iterator){
     return $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
 }
 
-$B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
+$B.unpacker = function(obj, nb_targets, has_starred){
     // Used in unpacking target of a "for" loop if it is a tuple or list
     // For "[a, b] = t", nb_targets is 2, has_starred is false
     // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
     // nb_after_starred is 1 (c)
+    var position,
+        position_rank = 3
+    if(has_starred){
+        var nb_after_starred = arguments[3]
+        position_rank++
+    }
+    if($B.pep657){
+        position = arguments[position_rank]
+    }
     var t = _b_.list.$factory(obj),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
 
     if(right_length < left_length){
-        throw _b_.ValueError.$factory(`not enough values to unpack ` +
+        var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
             `(expected ${left_length}, got ${right_length})`)
+        if(position){
+            $B.set_exception_offsets(exc, position)
+        }
+        throw exc
     }
     if((! has_starred) && right_length > left_length){
-        throw _b_.ValueError.$factory("too many values to unpack " +
+        var exc = _b_.ValueError.$factory("too many values to unpack " +
             `(expected ${left_length})`)
+        if(position){
+            $B.set_exception_offsets(exc, position)
+        }
+        throw exc
     }
     t.index = -1
     t.read_one = function(){
@@ -489,8 +506,22 @@ $B.$JS2Py = function(src){
 }
 
 // warning
-$B.warn = function(klass, message){
-    $B.imported._warnings.warn(klass.$factory(message))
+$B.warn = function(klass, message, filename, token){
+    var warning = klass.$factory(message)
+    if(klass === _b_.SyntaxWarning){
+        warning.filename = filename
+        warning.lineno = token.start[0]
+        warning.offset = token.start[1]
+        warning.end_lineno = token.end[0]
+        warning.end_offset = token.end[1]
+        warning.text = token.line
+        warning.args[1] = $B.fast_tuple([filename,
+                                         warning.lineno, warning.offset,
+                                         warning.text,
+                                         warning.end_lineno, 
+                                         warning.end_offset])
+    }
+    $B.imported._warnings.warn(warning)
 }
 
 // get item
