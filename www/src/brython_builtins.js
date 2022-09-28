@@ -338,10 +338,7 @@ $B.python_to_js = function(src, script_id){
                                  __BRYTHON__.builtins_scope),
         js = root.to_js()
 
-    js = "(function() {\n" + js + "\nreturn locals}())"
-    console.log(js)
-
-    return js
+    return "(function() {\n" + js + "\nreturn locals}())"
 }
 
 _window.py = function(src){

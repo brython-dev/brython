@@ -935,7 +935,7 @@ function getattr(){
         throw _b_.TypeError.$factory("attribute name must be string, " +
             `not '${$B.class_name($.attr)}'`)
     }
-    
+
     return $B.$getattr($.obj, _b_.str.$to_string($.attr),
         $._default === missing ? undefined : $._default)
 }
@@ -1090,7 +1090,8 @@ $B.$getattr = function(obj, attr, _default){
               dict.__dict__ = $B.getset_descriptor.$factory(obj, '__dict__')
               return {
                   __class__: $B.mappingproxy, // in py_dict.js
-                  $jsobj: dict
+                  $jsobj: dict,
+                  $version: 0
                   }
           }else if(! klass.$native){
               if(obj[attr] !== undefined){
@@ -2291,7 +2292,6 @@ function round(){
         floor = Math.floor(x),
         diff = Math.abs(x - floor),
         res
-    console.log('x', x, 'floor', floor, 'diff', diff)
     if(diff == 0.5){
         if(floor % 2){
             floor += 1
@@ -2309,7 +2309,6 @@ function round(){
         return Math.floor(res.value)
     }else{
         // Return the same type as argument
-        console.log('round', arg, 'n', n, 'klass', klass, 'res', res)
         return $B.$call(klass)(res)
     }
 }

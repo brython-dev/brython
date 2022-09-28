@@ -145,6 +145,11 @@ $B.make_view = function(name){
     klass.__iter__ = function(self){
         var it = klass.$iterator.$factory(self.items)
         it.test_change = function(){
+            if(self.dict_version === undefined){
+                console.log('no dict_version', self)
+                console.log($B.frames_stack.slice())
+                alert()
+            }
             return self.dict.$version != self.dict_version
         }
         return it
@@ -1051,6 +1056,11 @@ dict.items = function(self){
     var values = to_list(self)
     var it = dict_items.$factory(self, values, set_like)
     it.dict_version = self.$version
+    if(self.$version === undefined){
+        console.log('dict has no $version', self)
+        console.log($B.frames_stack.slice())
+        throw Error('no version')
+    }
     return it
 }
 
@@ -1249,6 +1259,7 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
             var res = $B.obj_dict(obj)
         }
         res.__class__ = mappingproxy
+        res.$version = 0
         return res
     }
 )
@@ -1325,7 +1336,8 @@ var jsobj_as_pydict = $B.jsobj_as_pydict = $B.make_class('jsobj_as_pydict',
             __class__: jsobj_as_pydict,
             obj: jsobj,
             exclude: exclude ? exclude : function(){return false},
-            new_keys: []
+            new_keys: [],
+            $version: 0
         }
     }
 )

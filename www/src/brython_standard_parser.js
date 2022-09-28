@@ -119,9 +119,7 @@ var filename='$python_to_js'+$B.UUID()
 $B.url2name[filename]=filename
 $B.imported[filename]={}
 var root=__BRYTHON__.py2js({src,filename},script_id,script_id,__BRYTHON__.builtins_scope),js=root.to_js()
-js="(function() {\n"+js+"\nreturn locals}())"
-console.log(js)
-return js}
+return "(function() {\n"+js+"\nreturn locals}())"}
 _window.py=function(src){
 var root=$B.py2js(src[0],"script","script"),js=root.to_js()
 $B.set_import_paths()
@@ -130,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-26 23:07:46.755177"
-__BRYTHON__.timestamp=1664226466754
+__BRYTHON__.compiled_date="2022-09-28 23:00:21.526877"
+__BRYTHON__.timestamp=1664398821526
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -997,7 +995,10 @@ return ast_obj}
 $AssertCtx.prototype.transition=function(token,value){var C=this
 if(token==","){if(this.tree.length > 1){raise_syntax_error(C,'(too many commas after assert)')}
 return new $AbstractExprCtx(this,false)}
-if(token=='eol'){return $transition(C.parent,token)}
+if(token=='eol'){if(this.tree.length==1 &&
+this.tree[0].type=='expr' &&
+this.tree[0].tree[0].type=='list_or_tuple'){$B.warn(_b_.SyntaxWarning,"assertion is always true, perhaps remove parentheses?",$get_module(C).filename,$token.value)}
+return $transition(C.parent,token)}
 raise_syntax_error(C)}
 var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
 check_assignment(C)
@@ -1373,7 +1374,12 @@ new ast.comprehension(
 item.tree[0].ast(),item.tree[1].ast(),[],item.is_async ? 1 :0
 )
 )}else{$B.last(comprehensions).ifs.push(item.tree[0].ast())}}
-return comprehensions},make_comp:function(comp,C){comp.comprehension=true
+return comprehensions},make_comp:function(comp,C){if(C.tree[0].type=='yield'){var comp_type=comp.type=='listcomp' ? 'list comprehension' :
+comp.type=='dictcomp' ? 'dict comprehension' :
+comp.type=='setcomp' ? 'set comprehension' :
+comp.type=='genexpr' ? 'generator expression' :''
+var a=C.tree[0]}
+comp.comprehension=true
 comp.position=$token.value
 comp.parent=C.parent
 comp.id=comp.type+$B.UUID()
@@ -1771,7 +1777,7 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 $ExprCtx.prototype.ast=function(){var res=this.tree[0].ast()
 if(this.packed){}else if(this.annotation){res=new ast.AnnAssign(
-res,this.annotation.tree[0].ast(),undefined,1)
+res,this.annotation.tree[0].ast(),undefined,this.$was_parenthized ? 0 :1)
 set_position(res,this.position)}
 return res}
 $ExprCtx.prototype.transition=function(token,value){var C=this
@@ -2149,9 +2155,9 @@ $FuncArgs.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[
 for(var arg of this.tree){if(arg.type=='end_positional'){args.posonlyargs=args.args
 args.args=[]}else if(arg.type=='func_star_arg'){state='kwonly'
 if(arg.op=='*' && arg.name !='*'){args.vararg=new ast.arg(arg.name)
-if(arg.position===undefined){console.log('pas de position',arg)
-alert()}
+if(arg.annotation){args.vararg.annotation=arg.annotation.tree[0].ast()}
 set_position(args.vararg,arg.position)}else if(arg.op=='**'){args.kwarg=new ast.arg(arg.name)
+if(arg.annotation){args.kwarg.annotation=arg.annotation.tree[0].ast()}
 set_position(args.kwarg,arg.position)}}else{default_value=false
 if(arg.has_default){default_value=arg.tree[0].ast()}
 var argument=new ast.arg(arg.name)
@@ -2588,7 +2594,7 @@ this.position=$token.value
 C.tree[C.tree.length]=this}
 $ListOrTupleCtx.prototype.ast=function(){var elts=this.tree.map(x=> x.ast()),ast_obj
 if(this.real=='list'){ast_obj=new ast.List(elts,new ast.Load())}else if(this.real=='tuple'){ast_obj=new ast.Tuple(elts,new ast.Load())}
-set_position(ast_obj,this.position)
+set_position(ast_obj,this.position,this.end_position)
 return ast_obj}
 $ListOrTupleCtx.prototype.transition=function(token,value){var C=this
 if(C.closed){if(token=='['){return new $AbstractExprCtx(
@@ -2604,6 +2610,7 @@ C.tree[0].tree[0].type=='starred'){raise_syntax_error_known_range(C,C.tree[0].tr
 var grandparent=C.parent.parent
 grandparent.tree.pop()
 grandparent.tree.push(C.tree[0])
+C.tree[0].$was_parenthized=true
 C.tree[0].parent=grandparent
 return C.tree[0]}
 if(C.packed ||
@@ -2985,9 +2992,15 @@ ast_obj=new op_type(new ast_class(),values.map(x=> x.ast()))}else{ast_obj=new op
 this.tree[0].ast(),new ast_class(),this.tree[1].ast())}
 set_position(ast_obj,this.position)
 return ast_obj}
+function is_literal(expr){return expr.type=='expr' &&
+['int','str','float','imaginary'].indexOf(expr.tree[0].type)>-1}
 $OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){console.log('C has no op',C)
 raise_syntax_error(C)}
+if((C.op=='is' ||C.op=='is_not')
+&& C.tree.length > 1){for(var operand of C.tree){if(is_literal(operand)){var head=C.op=='is' ? 'is' :'is not'
+$B.warn(_b_.SyntaxWarning,`"${head}" with a literal. Did you mean "=="?"`,$get_module(C).filename,$token.value)
+break}}}
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3979,7 +3992,6 @@ parent.C.tree[0].type=="with"){scope.C.tree[0].$has_yield_in_cm=true
 break}
 parent=parent.parent}
 if(! in_lambda){switch(C.type){case 'node':
-break;
 case 'assign':
 case 'list_or_tuple':
 break
@@ -4004,7 +4016,7 @@ if(! in_func && scope.comprehension){var parent=scope.parent_block
 while(parent.comprehension){parent=parent_block}
 in_func=parent.is_function
 func_scope=parent}
-if(! in_func){raise_syntax_error(this.parent,"'yield' outside function")}else{var def=func_scope.C.tree[0]
+if(in_func){var def=func_scope.C.tree[0]
 if(! this.is_await){def.type='generator'}}}
 function $parent_match(ctx,obj){
 var flag
@@ -5442,12 +5454,20 @@ var res=obj.ix
 obj.ix+=iterator.step
 return res}}}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
-$B.unpacker=function(obj,nb_targets,has_starred,nb_after_starred){
+$B.unpacker=function(obj,nb_targets,has_starred){
+var position,position_rank=3
+if(has_starred){var nb_after_starred=arguments[3]
+position_rank++}
+if($B.pep657){position=arguments[position_rank]}
 var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
-if(right_length < left_length){throw _b_.ValueError.$factory(`not enough values to unpack `+
-`(expected ${left_length}, got ${right_length})`)}
-if((! has_starred)&& right_length > left_length){throw _b_.ValueError.$factory("too many values to unpack "+
-`(expected ${left_length})`)}
+if(right_length < left_length){var exc=_b_.ValueError.$factory(`not enough values to unpack `+
+`(expected ${left_length}, got ${right_length})`)
+if(position){$B.set_exception_offsets(exc,position)}
+throw exc}
+if((! has_starred)&& right_length > left_length){var exc=_b_.ValueError.$factory("too many values to unpack "+
+`(expected ${left_length})`)
+if(position){$B.set_exception_offsets(exc,position)}
+throw exc}
 t.index=-1
 t.read_one=function(){t.index++
 return t[t.index]}
@@ -5494,7 +5514,15 @@ if(src===null ||src===undefined){return _b_.None}
 if(Array.isArray(src)&&
 Object.getPrototypeOf(src)===Array.prototype){src.$brython_class="js" }
 return src}
-$B.warn=function(klass,message){$B.imported._warnings.warn(klass.$factory(message))}
+$B.warn=function(klass,message,filename,token){var warning=klass.$factory(message)
+if(klass===_b_.SyntaxWarning){warning.filename=filename
+warning.lineno=token.start[0]
+warning.offset=token.start[1]
+warning.end_lineno=token.end[0]
+warning.end_offset=token.end[1]
+warning.text=token.line
+warning.args[1]=$B.fast_tuple([filename,warning.lineno,warning.offset,warning.text,warning.end_lineno,warning.end_offset])}
+$B.imported._warnings.warn(warning)}
 function index_error(obj){var type=typeof obj=="string" ? "string" :"list"
 throw _b_.IndexError.$factory(type+" index out of range")}
 $B.$getitem=function(obj,item,position){var is_list=Array.isArray(obj)&& obj.__class__===_b_.list,is_dict=obj.__class__===_b_.dict && ! obj.$jsobj
@@ -6577,7 +6605,7 @@ if(obj.__dict__){for(var key in obj.__dict__.$string_dict){dict[key]=obj.__dict_
 dict.__dict__=$B.getset_descriptor.$factory(obj,'__dict__')
 return{
 __class__:$B.mappingproxy,
-$jsobj:dict}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
+$jsobj:dict,$version:0}}else if(! klass.$native){if(obj[attr]!==undefined){return obj[attr]}else if(obj.$infos){if(obj.$infos.hasOwnProperty("__dict__")){return obj.$infos.__dict__}else if(obj.$infos.hasOwnProperty("__func__")){return obj.$infos.__func__.$infos.__dict__}}
 return $B.obj_dict(obj,function(attr){return['__class__'].indexOf(attr)>-1}
 )}
 case '__mro__':
@@ -7001,14 +7029,12 @@ if(arg.value===Infinity ||arg.value===-Infinity){throw _b_.OverflowError.$factor
 var res=_b_.float.$round(arg,n)
 return $.ndigits===None ? res :klass.$factory(res)}
 var mult=Math.pow(10,n),x=arg*mult,floor=Math.floor(x),diff=Math.abs(x-floor),res
-console.log('x',x,'floor',floor,'diff',diff)
 if(diff==0.5){if(floor % 2){floor+=1}
 res=_b_.int.__truediv__(floor,mult)}else{res=_b_.int.__truediv__(Math.round(x),mult)}
 if(res.value===Infinity ||res.value===-Infinity){throw _b_.OverflowError.$factory(
 "rounded value too large to represent")}
 if($.ndigits===None){
 return Math.floor(res.value)}else{
-console.log('round',arg,'n',n,'klass',klass,'res',res)
 return $B.$call(klass)(res)}}
 function setattr(){var $=$B.args('setattr',3,{obj:null,attr:null,value:null},['obj','attr','value'],arguments,{},null,null),obj=$.obj,attr=$.attr,value=$.value
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
@@ -8860,8 +8886,7 @@ return self}}
 set.__iand__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.intersection_update(self,other)
 return self}
-set.__isub__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){console.log('isub retruns NotImplemneted')
-return _b_.NotImplemented}
+set.__isub__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.difference_update(self,other)
 return self}
 set.__ixor__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
@@ -12030,7 +12055,10 @@ if(other.__class__ !==klass){return false}
 var other_items=_b_.list.$factory(other)
 return dict_view_op[op](self.items,other_items)}}})(op)}
 klass.__iter__=function(self){var it=klass.$iterator.$factory(self.items)
-it.test_change=function(){return self.dict.$version !=self.dict_version}
+it.test_change=function(){if(self.dict_version===undefined){console.log('no dict_version',self)
+console.log($B.frames_stack.slice())
+alert()}
+return self.dict.$version !=self.dict_version}
 return it}
 klass.__len__=function(self){return self.len}
 klass.__repr__=function(self){return klass.$infos.__name__+'('+_b_.repr(self.items)+')'}
@@ -12351,6 +12379,9 @@ break}}
 var values=to_list(self)
 var it=dict_items.$factory(self,values,set_like)
 it.dict_version=self.$version
+if(self.$version===undefined){console.log('dict has no $version',self)
+console.log($B.frames_stack.slice())
+throw Error('no version')}
 return it}
 var dict_keys=$B.make_view("dict_keys")
 dict_keys.$iterator=$B.make_iterator_class("dict_keyiterator")
@@ -12422,6 +12453,7 @@ $B.set_func_names($B.getset_descriptor,"builtins")
 var mappingproxy=$B.mappingproxy=$B.make_class("mappingproxy",function(obj){if(_b_.isinstance(obj,dict)){
 var res=$B.obj_dict(dict.$to_obj(obj))}else{var res=$B.obj_dict(obj)}
 res.__class__=mappingproxy
+res.$version=0
 return res}
 )
 mappingproxy.$match_mapping_pattern=true 
@@ -12443,7 +12475,7 @@ res.$jsobj=obj
 res.$exclude=exclude ||function(){return false}
 return res}
 var jsobj_as_pydict=$B.jsobj_as_pydict=$B.make_class('jsobj_as_pydict',function(jsobj,exclude){return{
-__class__:jsobj_as_pydict,obj:jsobj,exclude:exclude ? exclude :function(){return false},new_keys:[]}}
+__class__:jsobj_as_pydict,obj:jsobj,exclude:exclude ? exclude :function(){return false},new_keys:[],$version:0}}
 )
 jsobj_as_pydict.__contains__=function(self,key){if(self.new_keys.indexOf(key)>-1){return true}
 return !(self.exclude(key)||self.obj[key]===undefined)}
@@ -13959,8 +13991,7 @@ hook=$B.$getattr($B.imported[modname],funcname)}catch(err){console.warn("cannot 
 return _b_.None}
 return $B.$call(hook).apply(null,arguments)},exc_info:function(){for(var i=$B.frames_stack.length-1;i >=0;i--){var frame=$B.frames_stack[i],exc=frame[1].$current_exception
 if(exc){return _b_.tuple.$factory([exc.__class__,exc,$B.$getattr(exc,"__traceback__")])}}
-return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},max_string_length:$B.max_string_length,
-modules:_b_.property.$factory(
+return _b_.tuple.$factory([_b_.None,_b_.None,_b_.None])},excepthook:function(exc_class,exc_value,traceback){$B.handle_error(exc_value)},getrecursionlimit:function(){return $B.recursion_limit},gettrace:function(){return $B.tracefunc ||_b_.None},modules:_b_.property.$factory(
 function(){return $B.obj_dict($B.imported)},function(self,value){throw _b_.TypeError.$factory("Read only property 'sys.modules'")}
 ),path:_b_.property.$factory(
 function(){return $B.path},function(self,value){$B.path=value;}
@@ -14001,13 +14032,14 @@ syntax_error.lineno=message.lineno
 syntax_error.offset=message.offset
 syntax_error.line=message.line
 throw syntax_error}
-var frame=$B.imported._sys.Getframe(),f_code=$B._frame.f_code.__get__(frame),lineno=frame.$lineno
-var category=message.__class__ ||$B.get_class(message),warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||f_code.co_filename,lineno:message.lineno ||lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}
-if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var frame=$B.last($B.frames_stack),file=frame.__file__,lineno=frame.$lineno,src=$B.file_cache[file],trace=''
+var category=message.__class__ ||$B.get_class(message),warning_message
+if(category===_b_.SyntaxWarning){var file=message.filename,lineno=message.lineno,line=message.text
+warning_message={__class__:WarningMessage,message:message,category,filename:message.filename,lineno:message.lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}}else{var frame=$B.imported._sys.Getframe(),file=frame.__file__,f_code=$B._frame.f_code.__get__(frame),lineno=frame.$lineno,src=$B.file_cache[file],line=src ? src.split('\n')[lineno-1]:null
+warning_message={__class__:WarningMessage,message:message,category,filename:message.filename ||f_code.co_filename,lineno:message.lineno ||lineno,file:_b_.None,line:_b_.None,source:_b_.None,_category_name:category.__name__}}
+if($B.imported.warnings){$B.imported.warnings._showwarnmsg_impl(warning_message)}else{var trace=''
 if(file && lineno){trace+=`${file}:${lineno}: `}
 trace+=$B.class_name(message)+': '+message.args[0]
-if(src && frame.$lineno){var line=src.split('\n')[frame.$lineno-1]
-trace+='\n    '+line.trim()}
+if(line){trace+='\n    '+line.trim()}
 $B.$getattr($B.stderr,'write')(trace+'\n')
 var flush=$B.$getattr($B.stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}},warn_explicit:function(){
@@ -14103,6 +14135,7 @@ end=end ||ast_obj
 exc.end_lineno=end.end_lineno
 exc.end_offset=end.end_col_offset+1
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
+exc.$stack=$B.frames_stack.slice()
 throw exc}
 $B.set_func_infos=function(func,name,qualname,docstring){func.$is_func=true}
 function copy_position(target,origin){target.lineno=origin.lineno
@@ -14384,15 +14417,16 @@ if(this.target instanceof $B.ast.Name){var ann_value=postpone_annotation ?
 $B.js_from_ast(this.annotation,scopes)}
 if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
 if(this.target instanceof $B.ast.Name){
-var scope=bind(this.target.id,scopes)
+var scope=bind(this.target.id,scopes),mangled=mangle(scopes,scope,this.target.id)
 if(scope.type !="def"){js+=`$B.$setitem(locals.__annotations__, `+
-`'${this.target.id}', ${ann_value})\n`}
+`'${mangled}', ${ann_value})\n`}
 var target_ref=name_reference(this.target.id,scopes)
 js+=`${target_ref} = ann`}else if(this.target instanceof $B.ast.Attribute){js+=`$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}`+
 `, "${this.target.attr}", ann)`}else if(this.target instanceof $B.ast.Subscript){js+=`$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}`+
-`, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.target instanceof $B.ast.Name){var ann=`'${this.annotation.id}'`
+`, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.target instanceof $B.ast.Name){if(scope.type !='def'){var mangled=mangle(scopes,scope,this.target.id)
+var ann=`'${this.annotation.id}'`
 js+=`$B.$setitem(locals.__annotations__, `+
-`'${this.target.id}', ${ann_value})`}else{var ann=$B.js_from_ast(this.annotation,scopes)}}
+`'${mangled}', ${ann_value})`}}else{var ann=$B.js_from_ast(this.annotation,scopes)}}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
 var js=this.lineno ? `$B.set_lineno(frame, ${this.lineno})\n` :'',value=$B.js_from_ast(this.value,scopes)
@@ -14409,6 +14443,7 @@ var iter_id='it_'+$B.UUID()
 js+=`var ${iter_id} = $B.unpacker(${value}, ${nb_targets}, `+
 `${has_starred}`
 if(nb_after_starred !==undefined){js+=`, ${nb_after_starred}`}
+if($B.pep657){js+=`, [${target.col_offset}, ${target.col_offset}, ${target.end_col_offset}]`}
 js+=`)\n`
 var assigns=[]
 for(var elt of target.elts){if(elt instanceof $B.ast.Starred){assigns.push(assign_one(elt,`${iter_id}.read_rest()`))}else if(elt instanceof $B.ast.List ||
@@ -14724,7 +14759,10 @@ $B.js_from_ast(this.format_spec,scopes)+
 ` + '}', ${value})`}else if(this.conversion==-1){value=`_b_.str.$factory(${value})`}
 return value}
 function transform_args(scopes){
-var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[]
+var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[],annotations
+for(var arg of positional.concat(this.args.kwonlyargs).concat(
+[this.args.vararg,this.args.kwarg])){if(arg && arg.annotation){annotations=annotations ||{}
+annotations[arg.arg]=arg.annotation}}
 for(var i=ix;i < positional.length;i++){default_names.push(`defaults.${positional[i].arg}`)
 _defaults.push(`${positional[i].arg}: `+
 `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)}
@@ -14736,7 +14774,7 @@ $B.js_from_ast(this.args.kw_defaults[ix],scopes))}}
 var kw_default_names=[]
 for(var kw of this.args.kwonlyargs){kw_default_names.push(`defaults.${kw.arg}`)}
 var default_str=`{${_defaults.join(', ')}}`
-return{default_names,_defaults,positional,has_posonlyargs,kw_default_names,default_str}}
+return{default_names,_defaults,positional,has_posonlyargs,kw_default_names,default_str,annotations}}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(_b_.id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
 if(in_class){var class_scope=last_scope(scopes)}
@@ -14857,6 +14895,12 @@ js+='var '}
 js+=`${func_ref} = ${name1}(${default_str})\n`+
 `${func_ref}.$set_defaults = function(value){\n`+
 `return ${func_ref} = ${name1}(value)\n}\n`
+if(this.returns ||parsed_args.annotations){var ann_items=[]
+if(this.returns){ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}
+if(parsed_args.annotations){for(var arg_ann in parsed_args.annotations){var value=parsed_args.annotations[arg_ann].to_js(scopes)
+if(in_class){arg_ann=mangle(scopes,class_scope,arg_ann)}
+ann_items.push(`['${arg_ann}', ${value}]`)}}
+js+=`${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`}else{js+=`${func_ref}.__annotations__ = $B.empty_dict()\n`}
 if(decorated){js+=`${make_scope_name(scopes, func_name_scope)}.${mangled} = `
 var decorate=func_ref
 for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
@@ -15276,6 +15320,8 @@ var in_generator=scopes.symtable.table.blocks.get(_b_.id(scope.ast)).generator
 for(var item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Yield.prototype.to_js=function(scopes){
+var scope=last_scope(scopes)
+if(scope.type !='def'){compiler_error(this,"'yield' outside function")}
 last_scope(scopes).is_generator=true
 var value=this.value ? $B.js_from_ast(this.value,scopes):'_b_.None'
 return `yield ${value}`}
@@ -16180,12 +16226,13 @@ var exc=PyErr_Format(PyExc_SyntaxError,ANNOTATION_NOT_ALLOWED,name);
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
 throw exc}
 function symtable_raise_if_comprehension_block(st,e){var type=st.cur.comprehension;
-PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' inside list comprehension" :
+var exc=PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' inside list comprehension" :
 (type==SetComprehension)? "'yield' inside set comprehension" :
 (type==DictComprehension)? "'yield' inside dict comprehension" :
 "'yield' inside generator expression");
-PyErr_RangedSyntaxLocationObject(st.filename,e.lineno,e.col_offset+1,e.end_lineno,e.end_col_offset+1);
-VISIT_QUIT(st,0);}
+exc.$stack=$B.frames_stack.slice()
+set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
+throw exc}
 function _Py_SymtableStringObjectFlags(str,filename,start,flags){var st,mod,arena;
 arena=_PyArena_New();
 if(arena==NULL)
