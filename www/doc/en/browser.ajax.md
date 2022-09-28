@@ -1,7 +1,7 @@
 module **browser.ajax**
 -----------------------
 
-This module allows running Ajax requests.
+This module manages Ajax requests.
 
 The standard Web API syntax can be used (see <a href='#legacy'>below</a>) but
 Brython proposes a more concise syntax: for each request method (GET, POST,
@@ -25,8 +25,9 @@ and the same interface for methods `connect, delete, head, options` and
 
 > if _mode_ is "text", _encoding_ is the text file encoding
 
-> _data_ is either a string, or a dictionary. In the second case, the
-> dictionary is converted into a string of the form `x=1&y=2`.
+> _data_ is either a string, a dictionary, or an object created by
+> `form_data()`(see below). In the second case, the dictionary is converted
+> into a string of the form `x=1&y=2`.
 
 > _cache_ is a boolean to specify if the GET request should use the browser
 > cache. It is set to `False` by default, which means that a random
@@ -51,6 +52,8 @@ Parameters _mode, encoding_ and _cache_ are not relevant for these methods.
 The request body is provided in the argument _data_. If is is a dictionary,
 it is transformed transparently, and the body length (header "Content-Length")
 is automatically computed and sent.
+
+
 
 <a name="callback"></a>
 ## Callback functions
@@ -211,18 +214,30 @@ Once the request is opened, attributes can be specified:
 All the properties of [XMLHTTPRequest objects](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest)
 can be used on the Ajax object.
 
+<a name="form_data"></a>
+### Form data
+
+The data sent in a request is a set of key-value pairs. Besides a string or a
+dictionary, a key-value pair structure can be created by
+
+`form_data([form])`
+
+If `form` is passed, it must be an HTML FORM element; in this case the
+keys and values are built from the form content.
+
+The interface is decribed in the
+[Web API specification](https://developer.mozilla.org/en-US/docs/Web/API/FormData).
+The most common method is
+
+`form_data.append(`_name, value[, filename]_`)`
+
 ### Sending the request
 
 `send(`_[data]_`)`
 > sends (starts) the request. The optional argument _data_ is ignored if the
-> method is not POST, PUT or PATCH ; it must be a dictionary, or a string
-> representing the url encoding of key-value pairs.
+> method is not POST, PUT or PATCH ; it must be a dictionary, a string or an
+> object created by `form_data()`
 
-> If you want to send files, you need to pass
-> a dictionary with one of the keys a File object, e.g. provided you have
-> an input element of type `file` and id `upload_file` you could send the
-> user selected file under the key `upload` by calling
-> `send({'upload':doc["upload_file"].elt.files[0]})`
 
 ### Example
 
@@ -253,9 +268,35 @@ To send files entered in a form by a tag such as
 ```xml
 <input type="file" name="choosefiles" multiple="multiple">
 ```
-the module provides the function
 
-`file_upload(`_url, file, method="POST", field_name="filetosave",  [**callbacks]_`)`
+you can use the general methods described above
+
+```xml
+<input type="file" id="file_upload">
+<button id="btn">send</button>
+
+<script type="text/python">
+from browser import document, bind, ajax
+
+def complete(ev):
+  print('req complete', ev.text)
+
+@bind('#btn', 'click')
+def send(ev):
+  print(document['file_upload'].files[0])
+  req = ajax.Ajax()
+  form_data = ajax.form_data()
+  form_data.append("upload", document['file_upload'].files[0])
+  req.open('POST', '/cgi-bin/file_upload.py')
+  req.bind('complete', complete)
+  req.send(form_data)
+
+</script>
+```
+
+For a more straightforward version, the module provides the function
+
+`file_upload(`_url, file, method="POST", field_name="filetosave",  [headers, timeout, data, **callbacks]_`)`
 
 > _file_ is the file object to upload to the _url_, usually the result of an
 > expression
@@ -271,6 +312,11 @@ for file in document["choosefiles"].files:
 
 > _field_name_ is the name of the field associated with the file to send. It
 > will be used on the server side to get the data
+
+> _headers_ and _timeout_ have the same meaning as above
+
+> additional _data_ can be added to the request; it must be a dictionary or an
+> object created by `form_data()`
 
 Example:
 ```xml

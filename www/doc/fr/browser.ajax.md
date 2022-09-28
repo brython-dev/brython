@@ -30,9 +30,9 @@ et même interface pour `connect, delete, head, options` et `trace`.
 > navigateur. Par défaut il n'est pas utilisé et un paramètre numérique est
 > automatiquement ajouté à la requête
 
-> _data_ est soit une chaine de caractères, soit un dictionnaire. Si c'est un
-> dictionnaire, il est converti en une chaine de la forme `x=1&y=2` ajoutée à
-> l'_url_
+> _data_ est soit une chaine de caractères, soit un dictionnaire, soit un
+> objet créé avec `form_data()` (cf ci-dessous). Si c'est un dictionnaire,
+> il est converti en une chaine de la forme `x=1&y=2` ajoutée à l'_url_
 
 > _**callbacks_ est un dictionnaire avec comme clés des noms de la forme
 > `on` + nom d'événement (`onloaded`, `oncomplete`...) et comme valeur la
@@ -245,13 +245,39 @@ req.send({'x': 0, 'y': 1})
 
 ### Envoi de fichiers
 
-Pour envoyer des fichiers saisis dans un formulaire par une balise du type
+Pour envoyer des fichiers saisis dans un formulaire avec une balise telle que
 ```xml
 <input type="file" name="choosefiles" multiple="multiple">
 ```
-on peut utiliser la fonction
 
-`file_upload(`_url, file, method="POST", field_name="filetosave", [**callbacks]_`)`
+on peut utiliser les méthodes générales décrites ci-dessus
+
+```xml
+<input type="file" id="file_upload">
+<button id="btn">envoi</button>
+
+<script type="text/python">
+from browser import document, bind, ajax
+
+def complete(ev):
+  print('requête terminée', ev.text)
+
+@bind('#btn', 'click')
+def send(ev):
+  print(document['file_upload'].files[0])
+  req = ajax.Ajax()
+  form_data = ajax.form_data()
+  form_data.append("upload", document['file_upload'].files[0])
+  req.open('POST', '/cgi-bin/file_upload.py')
+  req.bind('complete', complete)
+  req.send(form_data)
+
+</script>
+```
+
+Le module fournit une méthode plus simple d'emploi:
+
+`file_upload(`_url, file, method="POST", field_name="filetosave", [headers, timeout, data, **callbacks]_`)`
 
 > _file_ est l'objet fichier à envoyer vers l'_url_, typiquement le résultat
 > d'une expression
