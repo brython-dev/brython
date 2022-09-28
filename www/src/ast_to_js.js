@@ -794,11 +794,12 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
         if(this.target instanceof $B.ast.Name){
             // update __annotations__
-            var scope = bind(this.target.id, scopes)
+            var scope = bind(this.target.id, scopes),
+                mangled = mangle(scopes, scope, this.target.id)
             // Annotations for local variables will not be evaluated
             if(scope.type != "def"){
                 js += `$B.$setitem(locals.__annotations__, ` +
-                      `'${this.target.id}', ${ann_value})\n`
+                      `'${mangled}', ${ann_value})\n`
             }
             var target_ref = name_reference(this.target.id, scopes)
             js += `${target_ref} = ann`
@@ -811,9 +812,12 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         }
     }else{
         if(this.target instanceof $B.ast.Name){
-            var ann = `'${this.annotation.id}'`
-            js += `$B.$setitem(locals.__annotations__, ` +
-                `'${this.target.id}', ${ann_value})`
+            if(scope.type != 'def'){
+                var mangled = mangle(scopes, scope, this.target.id)
+                var ann = `'${this.annotation.id}'`
+                js += `$B.$setitem(locals.__annotations__, ` +
+                    `'${mangled}', ${ann_value})`
+            }
         }else{
             var ann = $B.js_from_ast(this.annotation, scopes)
         }
@@ -858,6 +862,9 @@ $B.ast.Assign.prototype.to_js = function(scopes){
              `${has_starred}`
         if(nb_after_starred !== undefined){
             js += `, ${nb_after_starred}`
+        }
+        if($B.pep657){
+            js += `, [${target.col_offset}, ${target.col_offset}, ${target.end_col_offset}]`
         }
         js += `)\n`
         var assigns = []
@@ -1605,7 +1612,15 @@ function transform_args(scopes){
         nb_defaults = this.args.defaults.length,
         positional = this.args.posonlyargs.concat(this.args.args),
         ix = positional.length - nb_defaults,
-        default_names = []
+        default_names = [],
+        annotations
+    for(var arg of positional.concat(this.args.kwonlyargs).concat(
+            [this.args.vararg, this.args.kwarg])){
+        if(arg && arg.annotation){
+            annotations = annotations || {}
+            annotations[arg.arg] = arg.annotation
+        }
+    }
     for(var i = ix; i < positional.length; i++){
         default_names.push(`defaults.${positional[i].arg}`)
         _defaults.push(`${positional[i].arg}: ` +
@@ -1632,7 +1647,7 @@ function transform_args(scopes){
     var default_str = `{${_defaults.join(', ')}}`
 
     return {default_names, _defaults, positional, has_posonlyargs,
-            kw_default_names, default_str}
+            kw_default_names, default_str, annotations}
 }
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
@@ -1882,6 +1897,24 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
           `${func_ref}.$set_defaults = function(value){\n`+
           `return ${func_ref} = ${name1}(value)\n}\n`
 
+    if(this.returns || parsed_args.annotations){
+        var ann_items = []
+        if(this.returns){
+            ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)
+        }
+        if(parsed_args.annotations){
+            for(var arg_ann in parsed_args.annotations){
+                var value = parsed_args.annotations[arg_ann].to_js(scopes)
+                if(in_class){
+                    arg_ann = mangle(scopes, class_scope, arg_ann)
+                }
+                ann_items.push(`['${arg_ann}', ${value}]`)
+            }
+        }
+        js += `${func_ref}.__annotations__ = _b_.dict.$factory([${ann_items.join(', ')}])\n`
+    }else{
+        js += `${func_ref}.__annotations__ = $B.empty_dict()\n`
+    }
     if(decorated){
         js += `${make_scope_name(scopes, func_name_scope)}.${mangled} = `
         var decorate = func_ref
