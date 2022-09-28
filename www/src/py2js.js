@@ -1919,8 +1919,8 @@ var Comprehension = {
                             comp.type == 'setcomp' ? 'set comprehension' :
                             comp.type == 'genexpr' ? 'generator expression' : ''
             var a = context.tree[0]
-            raise_syntax_error_known_range(context, a.position, last_position(a),
-                                            `'yield' inside ${comp_type}`)
+            //raise_syntax_error_known_range(context, a.position, last_position(a),
+            //                                `'yield' inside ${comp_type}`)
         }
         comp.comprehension = true
         comp.position = $token.value
@@ -7210,9 +7210,7 @@ $YieldCtx.prototype.check_in_function = function(){
         in_func = parent.is_function
         func_scope = parent
     }
-    if(! in_func){
-        raise_syntax_error(this.parent, "'yield' outside function")
-    }else{
+    if(in_func){
         var def = func_scope.context.tree[0]
         if(! this.is_await){
             def.type = 'generator'

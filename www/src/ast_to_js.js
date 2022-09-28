@@ -20,6 +20,7 @@ function compiler_error(ast_obj, message, end){
     exc.end_offset = end.end_col_offset + 1
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
+    exc.$stack = $B.frames_stack.slice()
     throw exc
 }
 
@@ -2860,6 +2861,10 @@ $B.ast.With.prototype.to_js = function(scopes){
 
 $B.ast.Yield.prototype.to_js = function(scopes){
     // Mark current scope as generator
+    var scope = last_scope(scopes)
+    if(scope.type != 'def'){
+        compiler_error(this, "'yield' outside function")
+    }
     last_scope(scopes).is_generator = true
     var value = this.value ? $B.js_from_ast(this.value, scopes) : '_b_.None'
     return `yield ${value}`
