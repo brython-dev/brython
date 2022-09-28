@@ -1145,6 +1145,14 @@ $AssertCtx.prototype.transition = function(token, value){
         return new $AbstractExprCtx(this, false)
     }
     if(token == 'eol'){
+        if(this.tree.length == 1 &&
+                this.tree[0].type == 'expr' &&
+                this.tree[0].tree[0].type == 'list_or_tuple'){
+            $B.warn(_b_.SyntaxWarning,
+                    "assertion is always true, perhaps remove parentheses?",
+                    $get_module(context).filename,
+                    $token.value)
+        }
         return $transition(context.parent, token)
     }
     raise_syntax_error(context)
@@ -1905,6 +1913,15 @@ var Comprehension = {
         return comprehensions
     },
     make_comp: function(comp, context){
+        if(context.tree[0].type == 'yield'){
+            var comp_type = comp.type == 'listcomp' ? 'list comprehension' :
+                            comp.type == 'dictcomp' ? 'dict comprehension' :
+                            comp.type == 'setcomp' ? 'set comprehension' :
+                            comp.type == 'genexpr' ? 'generator expression' : ''
+            var a = context.tree[0]
+            raise_syntax_error_known_range(context, a.position, last_position(a),
+                                            `'yield' inside ${comp_type}`)
+        }
         comp.comprehension = true
         comp.position = $token.value
         comp.parent = context.parent
@@ -2708,7 +2725,7 @@ $ExprCtx.prototype.ast = function(){
             res,
             this.annotation.tree[0].ast(),
             undefined,
-            1)
+            this.$was_parenthized ? 0 : 1)
         set_position(res, this.position)
     }
     return res
@@ -3489,13 +3506,15 @@ $FuncArgs.prototype.ast = function(){
             state = 'kwonly'
             if(arg.op == '*' && arg.name != '*'){
                 args.vararg = new ast.arg(arg.name)
-                if(arg.position === undefined){
-                    console.log('pas de position', arg)
-                    alert()
+                if(arg.annotation){
+                    args.vararg.annotation = arg.annotation.tree[0].ast()
                 }
                 set_position(args.vararg, arg.position)
             }else if(arg.op == '**'){
                 args.kwarg = new ast.arg(arg.name)
+                if(arg.annotation){
+                    args.kwarg.annotation = arg.annotation.tree[0].ast()
+                }
                 set_position(args.kwarg, arg.position)
             }
         }else{
@@ -4410,7 +4429,7 @@ $ListOrTupleCtx.prototype.ast = function(){
     }else if(this.real == 'tuple'){
         ast_obj = new ast.Tuple(elts, new ast.Load())
     }
-    set_position(ast_obj, this.position)
+    set_position(ast_obj, this.position, this.end_position)
     return ast_obj
 }
 
@@ -4448,6 +4467,10 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                             // remove expr tuple
                             grandparent.tree.pop()
                             grandparent.tree.push(context.tree[0])
+                            // note that the expression was inside ()
+                            // used in annotation, to sort "(a): int" from
+                            // "a: int"
+                            context.tree[0].$was_parenthized = true
                             context.tree[0].parent = grandparent
                             return context.tree[0]
                         }
@@ -5077,11 +5100,29 @@ $OpCtx.prototype.ast = function(){
     return ast_obj
 }
 
+function is_literal(expr){
+    return expr.type == 'expr' &&
+        ['int', 'str', 'float', 'imaginary'].indexOf(expr.tree[0].type) > -1
+}
+
 $OpCtx.prototype.transition = function(token, value){
     var context = this
     if(context.op === undefined){
         console.log('context has no op', context)
         raise_syntax_error(context)
+    }
+    if((context.op == 'is' || context.op == 'is_not')
+            && context.tree.length > 1){
+        for(var operand of context.tree){
+            if(is_literal(operand)){
+                var head = context.op == 'is' ? 'is' : 'is not'
+                $B.warn(_b_.SyntaxWarning,
+                        `"${head}" with a literal. Did you mean "=="?"`,
+                        $get_module(context).filename,
+                        $token.value)
+                break
+            }
+        }
     }
 
     switch(token) {
@@ -7111,18 +7152,10 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     if(! in_lambda){
         switch(context.type) {
             case 'node':
-                break;
-
-            // or start a 'yield atom'
-            // a 'yield atom' without enclosing "(" and ")" is only allowed as the
-            // right-hand side of an assignment
-
             case 'assign':
             case 'list_or_tuple':
-                // mark the node as containing a yield atom
-                //$get_node(context).yield_atoms.push(this)
                 break
-           default:
+            default:
                 // else it is a SyntaxError
                 raise_syntax_error(context, '(non-parenthesized yield)')
         }
