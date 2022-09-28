@@ -605,7 +605,6 @@
         gettrace: function(){
             return $B.tracefunc || _b_.None
         },
-        max_string_length: $B.max_string_length, // in brython_builtins.js
         modules: _b_.property.$factory(
             function(){
                 return $B.obj_dict($B.imported)
@@ -757,10 +756,30 @@
                 syntax_error.line = message.line
                 throw syntax_error
             }
-            var frame = $B.imported._sys.Getframe(),
-                f_code = $B._frame.f_code.__get__(frame),
-                lineno = frame.$lineno
             var category = message.__class__ || $B.get_class(message),
+                warning_message
+            if(category === _b_.SyntaxWarning){
+                var file = message.filename,
+                    lineno = message.lineno,
+                    line = message.text
+                warning_message = {
+                    __class__: WarningMessage,
+                    message: message,
+                    category,
+                    filename: message.filename,
+                    lineno: message.lineno,
+                    file: _b_.None,
+                    line: _b_.None,
+                    source: _b_.None,
+                    _category_name: category.__name__
+                }
+            }else{
+                var frame = $B.imported._sys.Getframe(),
+                    file = frame.__file__,
+                    f_code = $B._frame.f_code.__get__(frame),
+                    lineno = frame.$lineno,
+                    src = $B.file_cache[file],
+                    line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
                     __class__: WarningMessage,
                     message: message,
@@ -772,21 +791,16 @@
                     source: _b_.None,
                     _category_name: category.__name__
                 }
+            }
             if($B.imported.warnings){
                 $B.imported.warnings._showwarnmsg_impl(warning_message)
             }else{
-                var frame = $B.last($B.frames_stack),
-                    file = frame.__file__,
-                    lineno = frame.$lineno,
-                    src = $B.file_cache[file],
-                    trace = ''
+                var trace = ''
                 if(file && lineno){
                     trace += `${file}:${lineno}: `
                 }
                 trace += $B.class_name(message) + ': ' + message.args[0]
-
-                if(src && frame.$lineno){
-                    var line = src.split('\n')[frame.$lineno - 1]
+                if(line){
                     trace += '\n    ' + line.trim()
                 }
                 $B.$getattr($B.stderr, 'write')(trace + '\n')
