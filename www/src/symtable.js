@@ -1751,15 +1751,15 @@ function symtable_raise_if_annotation_block(st, name, e){
 
 function symtable_raise_if_comprehension_block(st, e) {
     var type = st.cur.comprehension;
-    PyErr_SetString(PyExc_SyntaxError,
+    var exc = PyErr_SetString(PyExc_SyntaxError,
             (type == ListComprehension) ? "'yield' inside list comprehension" :
             (type == SetComprehension) ? "'yield' inside set comprehension" :
             (type == DictComprehension) ? "'yield' inside dict comprehension" :
             "'yield' inside generator expression");
-    PyErr_RangedSyntaxLocationObject(st.filename,
-                                     e.lineno, e.col_offset + 1,
-                                     e.end_lineno, e.end_col_offset + 1);
-    VISIT_QUIT(st, 0);
+    exc.$stack = $B.frames_stack.slice()
+    set_exc_info(exc, st.filename, e.lineno, e.col_offset,
+                                      e.end_lineno, e.end_col_offset);
+    throw exc
 }
 
 function _Py_SymtableStringObjectFlags(str, filename,
