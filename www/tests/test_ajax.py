@@ -1,10 +1,10 @@
-from browser import ajax
+from browser import ajax, window
 
-def show(req, expect):
+def show(req, *expects):
     text = req.text
-    if expect not in text:
-      print(req.responseURL, expect, 'not in', text)
-      print(text.encode('latin-1'))
+    for expected in expects:
+      if expected not in text:
+        raise AssertionError(f'{expected} not in {text}')
 
 # ajax.get to read text files
 ajax.get("files/text-utf8.txt", encoding='utf-8',
@@ -118,6 +118,7 @@ ajax.get("test.html", mode="text",
 
 # XXX todo : test xml, json, file upload, error 404...
 def read_xml(req):
+    print(req.text)
     print([node.text for node in req.xml.select('ARTIST')])
 
 ajax.get("catalog.xml", mode="document",
@@ -129,5 +130,25 @@ def read_json(req):
 
 ajax.get("files/glossary.json", mode="json",
     oncomplete=read_json)
+
+# issue 2051
+content = 'test file'
+file = window.File.new([content], 'test_file.txt')
+form_data = ajax.form_data()
+form_data.append("upload", file)
+req = ajax.Ajax()
+req.open('POST', '/cgi-bin/file_upload.py')
+req.bind('complete', lambda req: show(req, f'upload:{len(content)}'))
+req.send(form_data)
+
+data = ajax.form_data()
+name = 'coucou'
+data.append('name', name)
+expected = [f'filetosave:{len(content)}',
+            f'name:{len(name)}']
+ajax.file_upload('/cgi-bin/file_upload.py',
+                 file,
+                 data={'name': 'coucou'},
+                 oncomplete=lambda req: show(req, *expected))
 
 print('passed all tests...')
