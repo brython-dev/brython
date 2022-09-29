@@ -7950,6 +7950,30 @@ function handle_errortoken(context, token, token_reader){
     raise_syntax_error(context)
 }
 
+const braces_opener = {")": "(", "]": "[", "}": "{"},
+      braces_open = "([{",
+      braces_closer = {'(': ')', '{': '}', '[': ']'}
+
+function check_brace_is_closed(brace, reader){
+    // check if the brace is closed
+    var save_reader_pos = reader.position,
+        closer = braces_closer[brace],
+        nb_braces = 1
+    while(true){
+        var tk = reader.read()
+        if(tk.type == 'OP' && tk.string == brace){
+            nb_braces += 1
+        }else if(tk.type == 'OP' && tk.string == closer){
+            nb_braces -= 1
+            if(nb_braces == 0){
+                // reset reader to the position after the brace
+                reader.seek(save_reader_pos)
+                break
+            }
+        }
+    }
+}
+
 var python_keywords = [
     "class", "return", "break", "for", "lambda", "try", "finally", "raise",
     "def", "from", "nonlocal", "while", "del", "global", "with", "as", "elif",
@@ -7962,9 +7986,7 @@ var $token = {}
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     var src = root.src
     root.token_reader = new $B.TokenReader(src)
-    var braces_close = {")": "(", "]": "[", "}": "{"},
-        braces_open = "([{",
-        braces_stack = []
+    var braces_stack = []
 
     var unsupported = []
     var $indented = [
@@ -8118,12 +8140,24 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                         [':='].indexOf(op) > -1){
                     if(braces_open.indexOf(op) > -1){
                         braces_stack.push(token)
-                    }else if(braces_close[op]){
+                        // check that opening brace is closed later, this
+                        // takes precedence over syntax errors that might
+                        // occur before the closing brace
+                        try{
+                            check_brace_is_closed(op, root.token_reader)
+                        }catch(err){
+                            if(err.message == 'EOF in multi-line statement'){
+                                raise_syntax_error(context,
+                                    `'${op}' was never closed`)
+                            }
+                            throw err
+                        }
+                    }else if(braces_opener[op]){
                         if(braces_stack.length == 0){
                             raise_syntax_error(context, "(unmatched '" + op + "')")
                         }else{
                             var last_brace = $B.last(braces_stack)
-                            if(last_brace.string == braces_close[op]){
+                            if(last_brace.string == braces_opener[op]){
                                 braces_stack.pop()
                             }else{
                                 raise_syntax_error(context,

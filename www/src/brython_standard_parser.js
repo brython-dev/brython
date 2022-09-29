@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-28 23:00:21.526877"
-__BRYTHON__.timestamp=1664398821526
+__BRYTHON__.compiled_date="2022-09-29 12:55:59.976207"
+__BRYTHON__.timestamp=1664448959976
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4283,12 +4283,20 @@ if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while pars
 u='U+'+'0'.repeat(4-u.length)+u
 raise_syntax_error(C,`invalid character '${token.string}' (${u})`)}
 raise_syntax_error(C)}
+const braces_opener={")":"(","]":"[","}":"{"},braces_open="([{",braces_closer={'(':')','{':'}','[':']'}
+function check_brace_is_closed(brace,reader){
+var save_reader_pos=reader.position,closer=braces_closer[brace],nb_braces=1
+while(true){var tk=reader.read()
+if(tk.type=='OP' && tk.string==brace){nb_braces+=1}else if(tk.type=='OP' && tk.string==closer){nb_braces-=1
+if(nb_braces==0){
+reader.seek(save_reader_pos)
+break}}}}
 var python_keywords=["class","return","break","for","lambda","try","finally","raise","def","from","nonlocal","while","del","global","with","as","elif","else","if","yield","assert","import","except","raise","in","pass","with","continue","async","await"
 ]
 var $token={}
 var dispatch_tokens=$B.parser.dispatch_tokens=function(root){var src=root.src
 root.token_reader=new $B.TokenReader(src)
-var braces_close={")":"(","]":"[","}":"{"},braces_open="([{",braces_stack=[]
+var braces_stack=[]
 var unsupported=[]
 var $indented=["class","def","for","condition","single_kw","try","except","with","match","case" 
 ]
@@ -4357,8 +4365,10 @@ continue
 case 'OP':
 var op=token[1]
 if((op.length==1 && '()[]{}.,='.indexOf(op)>-1)||
-[':='].indexOf(op)>-1){if(braces_open.indexOf(op)>-1){braces_stack.push(token)}else if(braces_close[op]){if(braces_stack.length==0){raise_syntax_error(C,"(unmatched '"+op+"')")}else{var last_brace=$B.last(braces_stack)
-if(last_brace.string==braces_close[op]){braces_stack.pop()}else{raise_syntax_error(C,`closing parenthesis '${op}' does not `+
+[':='].indexOf(op)>-1){if(braces_open.indexOf(op)>-1){braces_stack.push(token)
+try{check_brace_is_closed(op,root.token_reader)}catch(err){if(err.message=='EOF in multi-line statement'){raise_syntax_error(C,`'${op}' was never closed`)}
+throw err}}else if(braces_opener[op]){if(braces_stack.length==0){raise_syntax_error(C,"(unmatched '"+op+"')")}else{var last_brace=$B.last(braces_stack)
+if(last_brace.string==braces_opener[op]){braces_stack.pop()}else{raise_syntax_error(C,`closing parenthesis '${op}' does not `+
 `match opening parenthesis '`+
 `${last_brace.string}'`)}}}
 C=$transition(C,token[1])}else if(op==':'){C=$transition(C,':')
