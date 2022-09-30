@@ -369,6 +369,11 @@ function name_scope(name, scopes){
 
 
 function resolve_in_namespace(name, ns){
+    if(ns.$proxy){
+        // namespace is a proxy around the locals argument of exec()
+        return ns[name] === undefined ? {found: false} :
+                            {found: true, value: ns[name]}
+    }
     if(! ns.hasOwnProperty){
         if(ns[name] !== undefined){
             return {found: true, value: ns[name]}
@@ -793,7 +798,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     }
     if(this.value){
         js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
-        if(this.target instanceof $B.ast.Name){
+        if(this.target instanceof $B.ast.Name && this.simple){
             // update __annotations__
             var scope = bind(this.target.id, scopes),
                 mangled = mangle(scopes, scope, this.target.id)
@@ -813,7 +818,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
         }
     }else{
         if(this.target instanceof $B.ast.Name){
-            if(scope.type != 'def'){
+            if(this.simple && scope.type != 'def'){
                 var mangled = mangle(scopes, scope, this.target.id)
                 var ann = `'${this.annotation.id}'`
                 js += `$B.$setitem(locals.__annotations__, ` +
@@ -2438,8 +2443,10 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
-          `locals.__annotations__ = $B.empty_dict()\n` +
+          `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
+
+    last_scope(scopes).has_annotation = true
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
@@ -2917,7 +2924,11 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         break
         RESULT = _r
     */
-    last_scope(scopes).is_generator = true
+    var scope = last_scope(scopes)
+    if(scope.type != 'def'){
+        compiler_error(this, "'yield' outside function")
+    }
+    scope.is_generator = true
     var value = $B.js_from_ast(this.value, scopes)
     var n = $B.UUID()
     return `yield* (function* f(){

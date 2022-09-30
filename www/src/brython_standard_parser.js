@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-29 12:55:59.976207"
-__BRYTHON__.timestamp=1664448959976
+__BRYTHON__.compiled_date="2022-09-30 09:31:23.392675"
+__BRYTHON__.timestamp=1664523083391
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -945,7 +945,8 @@ case 'while':
 case 'in':
 case 'return':
 case 'try':
-raise_syntax_error(C)}
+raise_syntax_error(C)
+break}
 return $transition(C.parent,token,value)}
 var $AliasCtx=$B.parser.$AliasCtx=function(C){
 this.type='ctx_manager_alias'
@@ -1025,7 +1026,7 @@ targets.splice(0,0,target.ast())}
 value.ctx=new ast.Load()
 var lineno=$get_node(this).line_num
 if(target.annotation){var ast_obj=new ast.AnnAssign(
-target.tree[0].ast(),target.annotation.tree[0].ast(),value,1)
+target.tree[0].ast(),target.annotation.tree[0].ast(),value,target.$was_parenthesized ? 0 :1)
 set_position(ast_obj.annotation,target.annotation.position,last_position(target.annotation))
 ast_obj.target.ctx=new ast.Store()}else{var ast_obj=new ast.Assign(targets,value)}
 set_position(ast_obj,this.position)
@@ -1777,7 +1778,7 @@ this.tree=[]
 C.tree[C.tree.length]=this}
 $ExprCtx.prototype.ast=function(){var res=this.tree[0].ast()
 if(this.packed){}else if(this.annotation){res=new ast.AnnAssign(
-res,this.annotation.tree[0].ast(),undefined,this.$was_parenthized ? 0 :1)
+res,this.annotation.tree[0].ast(),undefined,this.$was_parenthesized ? 0 :1)
 set_position(res,this.position)}
 return res}
 $ExprCtx.prototype.transition=function(token,value){var C=this
@@ -2610,7 +2611,7 @@ C.tree[0].tree[0].type=='starred'){raise_syntax_error_known_range(C,C.tree[0].tr
 var grandparent=C.parent.parent
 grandparent.tree.pop()
 grandparent.tree.push(C.tree[0])
-C.tree[0].$was_parenthized=true
+C.tree[0].$was_parenthesized=true
 C.tree[0].parent=grandparent
 return C.tree[0]}
 if(C.packed ||
@@ -4008,7 +4009,8 @@ if(C.tree[0].type !='abstract_expr'){
 raise_syntax_error(C,"('from' must follow 'yield')")}
 C.from=true
 C.from_num=$B.UUID()
-return C.tree[0]}else{remove_abstract_expr(C.tree)}
+return C.tree[0]}else{remove_abstract_expr(C.tree)
+if(C.from && C.tree.length==0){raise_syntax_error(C)}}
 return $transition(C.parent,token)}
 $YieldCtx.prototype.check_in_function=function(){if(this.in_lambda){return}
 var scope=$get_scope(this),in_func=scope.is_function,func_scope=scope
@@ -6471,11 +6473,9 @@ if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(_locals===_globals){
 global_name+='_globals'
-exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{exec_locals=_locals.$jsobj={$dict:_locals}}
-for(var key in _locals.$string_dict){_locals.$jsobj[key]=_locals.$string_dict[key][0]}
-exec_locals.$getitem=$B.$call($B.$getattr(_locals.__class__,'__getitem__'))
-var missing=$B.$getattr(_locals.__class__,'__missing__',null)
-if(missing){exec_locals.$missing=$B.$call(missing)}}}}
+exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{var klass=$B.get_class(_locals),getitem=$B.$call($B.$getattr(klass,'__getitem__')),setitem=$B.$call($B.$getattr(klass,'__setitem__'))
+exec_locals=new Proxy(_locals,{get(target,prop){if(prop=='$proxy'){return true}
+try{return getitem(target,prop)}catch(err){return undefined}},set(target,prop,value){return setitem(target,prop,value)}})}}}}
 var save_frames_stack=$B.frames_stack.slice()
 var _ast
 var frame=[__name__,exec_locals,__name__,exec_globals]
@@ -6507,8 +6507,7 @@ try{var res=exec_func($B,_b_,exec_locals,exec_locals,exec_globals,frame,_frames)
 'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
-if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}
-if(_locals !==_b_.None){for(var key in exec_locals){if(! key.startsWith('$')){_b_.dict.$setitem(_locals,key,exec_locals[key])}}}}
+if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
 $B.frames_stack=save_frames_stack
 return res}
 $$eval.$is_func=true
@@ -7860,7 +7859,9 @@ trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
 if(err.__class__ !==_b_.IndentationError &&
 err.text){
 var start=err.offset-indent-1,marks='    '+' '.repeat(start),nb_marks=1
-if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent-1}}
+if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent-1}
+if(nb_marks==0 && 
+err.end_offset==line.substr(indent).length){nb_marks=1}}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
@@ -14265,7 +14266,10 @@ if(scopes[i].has_import_star){return{found:false,resolve:'all'}}}
 if(builtins_scope.locals.has(name)){return{found:builtins_scope}}
 var scope_names=make_search_namespaces(scopes)
 return{found:false,resolve:scope_names}}
-function resolve_in_namespace(name,ns){if(! ns.hasOwnProperty){if(ns[name]!==undefined){return{found:true,value:ns[name]}}}else if(ns.hasOwnProperty(name)){return{found:true,value:ns[name]}}else if(ns.$dict){try{return{found:true,value:ns.$getitem(ns.$dict,name)}}catch(err){if(ns.$missing){try{return{
+function resolve_in_namespace(name,ns){if(ns.$proxy){
+return ns[name]===undefined ?{found:false}:
+{found:true,value:ns[name]}}
+if(! ns.hasOwnProperty){if(ns[name]!==undefined){return{found:true,value:ns[name]}}}else if(ns.hasOwnProperty(name)){return{found:true,value:ns[name]}}else if(ns.$dict){try{return{found:true,value:ns.$getitem(ns.$dict,name)}}catch(err){if(ns.$missing){try{return{
 found:true,value:$B.$call(ns.$missing)(ns.$dict,name)}}catch(err){if(! $B.$is_exc(err,[_b_.KeyError])){throw err}}}}}
 return{found:false}}
 $B.resolve=function(name){var checked=new Set(),current_globals
@@ -14426,14 +14430,14 @@ if(this.target instanceof $B.ast.Name){var ann_value=postpone_annotation ?
 `'${annotation_to_str(this.annotation)}'` :
 $B.js_from_ast(this.annotation,scopes)}
 if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
-if(this.target instanceof $B.ast.Name){
+if(this.target instanceof $B.ast.Name && this.simple){
 var scope=bind(this.target.id,scopes),mangled=mangle(scopes,scope,this.target.id)
 if(scope.type !="def"){js+=`$B.$setitem(locals.__annotations__, `+
 `'${mangled}', ${ann_value})\n`}
 var target_ref=name_reference(this.target.id,scopes)
 js+=`${target_ref} = ann`}else if(this.target instanceof $B.ast.Attribute){js+=`$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}`+
 `, "${this.target.attr}", ann)`}else if(this.target instanceof $B.ast.Subscript){js+=`$B.$setitem(${$B.js_from_ast(this.target.value, scopes)}`+
-`, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.target instanceof $B.ast.Name){if(scope.type !='def'){var mangled=mangle(scopes,scope,this.target.id)
+`, ${$B.js_from_ast(this.target.slice, scopes)}, ann)`}}else{if(this.target instanceof $B.ast.Name){if(this.simple && scope.type !='def'){var mangled=mangle(scopes,scope,this.target.id)
 var ann=`'${this.annotation.id}'`
 js+=`$B.$setitem(locals.__annotations__, `+
 `'${mangled}', ${ann_value})`}}else{var ann=$B.js_from_ast(this.annotation,scopes)}}
@@ -15128,8 +15132,9 @@ js+=`locals = ${namespaces.local_name},\n`+
 if(name){js+=`,\nlocals_${name} = locals`}}
 js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
-`locals.__annotations__ = $B.empty_dict()\n`+
+`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
+last_scope(scopes).has_annotation=true
 if(! namespaces){
 js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
 js+=`$B.set_lineno(frame, 1)\n`+
@@ -15336,7 +15341,9 @@ last_scope(scopes).is_generator=true
 var value=this.value ? $B.js_from_ast(this.value,scopes):'_b_.None'
 return `yield ${value}`}
 $B.ast.YieldFrom.prototype.to_js=function(scopes){
-last_scope(scopes).is_generator=true
+var scope=last_scope(scopes)
+if(scope.type !='def'){compiler_error(this,"'yield' outside function")}
+scope.is_generator=true
 var value=$B.js_from_ast(this.value,scopes)
 var n=$B.UUID()
 return `yield* (function* f(){

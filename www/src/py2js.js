@@ -1046,6 +1046,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
         case 'return':
         case 'try':
             raise_syntax_error(context)
+            break
     }
     return $transition(context.parent, token, value)
 }
@@ -1252,7 +1253,7 @@ $AssignCtx.prototype.ast = function(){
             target.tree[0].ast(),
             target.annotation.tree[0].ast(),
             value,
-            1)
+            target.$was_parenthesized ? 0 : 1)
         // set position of annotation to get annotation string
         // in ast_to_js.js
         set_position(ast_obj.annotation, target.annotation.position,
@@ -2725,7 +2726,7 @@ $ExprCtx.prototype.ast = function(){
             res,
             this.annotation.tree[0].ast(),
             undefined,
-            this.$was_parenthized ? 0 : 1)
+            this.$was_parenthesized ? 0 : 1)
         set_position(res, this.position)
     }
     return res
@@ -4470,7 +4471,7 @@ $ListOrTupleCtx.prototype.transition = function(token, value){
                             // note that the expression was inside ()
                             // used in annotation, to sort "(a): int" from
                             // "a: int"
-                            context.tree[0].$was_parenthized = true
+                            context.tree[0].$was_parenthesized = true
                             context.tree[0].parent = grandparent
                             return context.tree[0]
                         }
@@ -7191,6 +7192,9 @@ $YieldCtx.prototype.transition = function(token, value){
         return context.tree[0]
     }else{
         remove_abstract_expr(context.tree)
+        if(context.from && context.tree.length == 0){
+            raise_syntax_error(context)
+        }
     }
     return $transition(context.parent, token)
 }

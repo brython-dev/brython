@@ -714,15 +714,24 @@ function $$eval(src, _globals, _locals){
                 if(_locals.$jsobj){
                     exec_locals = _locals.$jsobj
                 }else{
-                    exec_locals = _locals.$jsobj = {$dict: _locals}
-                }
-                for(var key in _locals.$string_dict){
-                    _locals.$jsobj[key] = _locals.$string_dict[key][0]
-                }
-                exec_locals.$getitem = $B.$call($B.$getattr(_locals.__class__, '__getitem__'))
-                var missing = $B.$getattr(_locals.__class__, '__missing__', null)
-                if(missing){
-                    exec_locals.$missing = $B.$call(missing)
+                    var klass = $B.get_class(_locals),
+                        getitem = $B.$call($B.$getattr(klass, '__getitem__')),
+                        setitem = $B.$call($B.$getattr(klass, '__setitem__'))
+                    exec_locals = new Proxy(_locals, {
+                        get(target, prop){
+                            if(prop == '$proxy'){
+                                return true
+                            }
+                            try{
+                                return getitem(target, prop)
+                            }catch(err){
+                                return undefined
+                            }
+                        },
+                        set(target, prop, value){
+                            return setitem(target, prop, value)
+                        }
+                    })
                 }
             }
         }
@@ -829,13 +838,6 @@ function $$eval(src, _globals, _locals){
         for(var key in exec_globals){
             if(! key.startsWith('$')){
                 _b_.dict.$setitem(_globals, key, exec_globals[key])
-            }
-        }
-        if(_locals !== _b_.None){
-            for(var key in exec_locals){
-                if(! key.startsWith('$')){
-                    _b_.dict.$setitem(_locals, key, exec_locals[key])
-                }
             }
         }
     }
@@ -981,7 +983,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "fromkeys" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__annotations__" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
