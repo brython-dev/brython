@@ -910,6 +910,10 @@ $B.show_error = function(err){
                 }else{
                     nb_marks = err.end_offset - start - indent - 1
                 }
+                if(nb_marks == 0 && 
+                        err.end_offset == line.substr(indent).length){
+                    nb_marks = 1
+                }
             }
             marks += '^'.repeat(nb_marks) + '\n'
             trace += marks
