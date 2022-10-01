@@ -1110,6 +1110,13 @@ $B.UnionType.__args__ = {
     }
 }
 
+$B.UnionType.__eq__ = function(self, other){
+    if(! _b_.isinstance(other, $B.UnionType)){
+        return _b_.NotImplemented
+    }
+    return _b_.list.__eq__(self.items, other.items)
+}
+
 $B.UnionType.__parameters__ = {
     __get__: function(){
         return $B.fast_tuple([])
