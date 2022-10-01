@@ -8310,13 +8310,14 @@ $B.py2js = function(src, module, locals_id, parent_scope){
 
     var t0 = Date.now(),
         ix, // used for generator expressions
-        filename
+        filename,
+        imported
     if(typeof src == 'object'){
         var ix = src.ix,
-            filename = src.filename
+            filename = src.filename,
+            imported = src.imported
         src = src.src
     }
-
     var locals_is_module = Array.isArray(locals_id)
     if(locals_is_module){
         locals_id = locals_id[0]
@@ -8332,7 +8333,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     }
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
-    var js_obj = $B.js_from_root(_ast, symtable, filename)
+    var js_obj = $B.js_from_root({ast: _ast,
+                                  symtable,
+                                  filename,
+                                  imported})
     var js_from_ast = js_obj.js
     return {
         _ast,

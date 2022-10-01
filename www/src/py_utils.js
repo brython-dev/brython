@@ -518,7 +518,7 @@ $B.warn = function(klass, message, filename, token){
         warning.args[1] = $B.fast_tuple([filename,
                                          warning.lineno, warning.offset,
                                          warning.text,
-                                         warning.end_lineno, 
+                                         warning.end_lineno,
                                          warning.end_offset])
     }
     $B.imported._warnings.warn(warning)

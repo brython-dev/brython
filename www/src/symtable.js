@@ -1491,8 +1491,10 @@ function symtable_visit_annotation(st, annotation){
     var future_annotations = st.future.features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
-                              annotation, annotation.lineno,
-                              annotation.col_offset, annotation.end_lineno,
+                              annotation,
+                              annotation.lineno,
+                              annotation.col_offset,
+                              annotation.end_lineno, 
                               annotation.end_col_offset)) {
         VISIT_QUIT(st, 0);
     }

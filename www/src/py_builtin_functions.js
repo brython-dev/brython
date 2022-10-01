@@ -401,7 +401,7 @@ function compile() {
         var _ast = new $B.Parser($.source, filename).parse('file'),
             future = $B.future_features(_ast, filename),
             symtable = $B._PySymtable_Build(_ast, filename),
-            js_obj = $B.js_from_root(_ast, symtable, $.filename)
+            js_obj = $B.js_from_root({ast:_ast, symtable, filename: $.filename})
         if($.flags == $B.PyCF_ONLY_AST){
             delete $B.url2name[filename]
             var res = $B.ast_js_to_py(_ast)
@@ -434,7 +434,7 @@ function compile() {
         var future = $B.future_features(_ast, filename),
             symtable = $B._PySymtable_Build(_ast, filename, future)
         delete $B.url2name[filename]
-        var js_obj = $B.js_from_root(_ast, symtable, filename)
+        var js_obj = $B.js_from_root({ast:_ast, symtable, filename})
 
         if($.flags == $B.PyCF_ONLY_AST){
             $B.create_python_ast_classes() // in py_ast.js
@@ -774,8 +774,14 @@ function $$eval(src, _globals, _locals){
         }
         var future = $B.future_features(_ast, filename),
             symtable = $B._PySymtable_Build(_ast, filename, future),
-            js_obj = $B.js_from_root(_ast, symtable, filename,
-                    {local_name, exec_locals, global_name, exec_globals}),
+            js_obj = $B.js_from_root({ast: _ast,
+                                      symtable,
+                                      filename,
+                                      namespaces: {local_name,
+                                                   exec_locals,
+                                                   global_name,
+                                                   exec_globals}
+                                      }),
             js = js_obj.js
     }catch(err){
         if(err.args){

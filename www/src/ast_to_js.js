@@ -787,10 +787,15 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
             CO_FUTURE_ANNOTATIONS
     var scope = last_scope(scopes)
     var js = ''
+    // scope of an annotation is either a class or the module
+    if(scope.type == "def"){
+        return js
+    }
     if(! scope.has_annotation){
         js += 'locals.__annotations__ = $B.empty_dict()\n'
+        scope.has_annotation = true
+        scope.locals.add('__annotations__')
     }
-    scope.has_annotation = true
     if(this.target instanceof $B.ast.Name){
         var ann_value = postpone_annotation ?
                 `'${annotation_to_str(this.annotation)}'` :
@@ -1276,7 +1281,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     var docstring = extract_docstring(this, scopes)
 
     js += `var ${ref} = (function(){\n` +
-          `var ${locals_name} = {__annotations__: $B.empty_dict()},\n` +
+          `var ${locals_name} = {},\n` +
           `locals = ${locals_name}\n` +
           `locals.$name = "${this.name}"\n` +
           `locals.$qualname = "${qualname}"\n` +
@@ -1766,10 +1771,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(is_async){
         js += 'frame.$async = true\n'
-    }
-
-    if(last_scope(scopes).has_annotation){
-        js += `locals.__annotations__ = $B.empty_dict()\n`
     }
 
     if(is_generator){
@@ -2443,10 +2444,12 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
-          `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
-    last_scope(scopes).has_annotation = true
+    if(! scopes.imported){
+          `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
+    }
+
     if(! namespaces){
         // for exec(), frame is put on top of the stack inside
         // py_builtin_functions.js / $$eval()
@@ -3018,7 +3021,13 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
 }
 var state = {}
 
-$B.js_from_root = function(ast_root, symtable, filename, namespaces){
+$B.js_from_root = function(arg){
+    var ast_root = arg.ast,
+        symtable = arg.symtable,
+        filename = arg.filename
+        namespaces = arg.namespaces,
+        imported = arg.imported
+
     if($B.show_ast_dump){
         console.log($B.ast_dump(ast_root))
     }
@@ -3030,6 +3039,7 @@ $B.js_from_root = function(ast_root, symtable, filename, namespaces){
     scopes.symtable = symtable
     scopes.filename = filename
     scopes.namespaces = namespaces
+    scopes.imported = imported
     scopes.imports = {}
     var js = ast_root.to_js(scopes)
     return {js, imports: scopes.imports}
