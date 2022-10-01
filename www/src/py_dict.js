@@ -395,10 +395,16 @@ dict.__eq__ = function(){
         self = $.self,
         other = $.other
 
-    if(! _b_.isinstance(other, dict)){return false}
+    if(! _b_.isinstance(other, dict)){
+        return _b_.NotImplemented
+    }
 
-    if(self.$jsobj){self = jsobj2dict(self.$jsobj)}
-    if(other.$jsobj){other = jsobj2dict(other.$jsobj)}
+    if(self.$jsobj){
+        self = jsobj2dict(self.$jsobj)
+    }
+    if(other.$jsobj){
+        other = jsobj2dict(other.$jsobj)
+    }
     if(dict.__len__(self) != dict.__len__(other)){
         return false
     }
@@ -429,6 +435,7 @@ dict.__eq__ = function(){
             return false
         }
     }
+
     for(var k in self.$string_dict){
         if(!other.$string_dict.hasOwnProperty(k) ||
                 !$B.rich_comp("__eq__", other.$string_dict[k][0],
@@ -699,7 +706,8 @@ dict.__len__ = function(self) {
 }
 
 dict.__ne__ = function(self, other){
-    return ! dict.__eq__(self, other)
+    var res = dict.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
 }
 
 dict.__new__ = function(cls){
