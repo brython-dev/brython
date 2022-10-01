@@ -3134,9 +3134,12 @@ def main():
 main()
 
 # issue 2031
+
+save_annotations = __annotations__
+
 def foo():
     bar: Bar = 42
-    assert __annotations__ == {}
+    assert __annotations__ == save_annotations
     assert bar == 42
 
 foo()
@@ -3147,7 +3150,7 @@ assert_raises(NameError, exec, src)
 
 assert_raises(NameError, exec, 'bar: Bar = 42')
 
-    
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-30 09:31:23.392675"
-__BRYTHON__.timestamp=1664523083391
+__BRYTHON__.compiled_date="2022-10-01 22:45:06.577432"
+__BRYTHON__.timestamp=1664657106576
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4435,8 +4435,8 @@ if(typeof module=="object"){var __package__=module.__package__
 module=module.__name__}else{var __package__=""}
 parent_scope=parent_scope ||$B.builtins_scope
 var t0=Date.now(),ix,
-filename
-if(typeof src=='object'){var ix=src.ix,filename=src.filename
+filename,imported
+if(typeof src=='object'){var ix=src.ix,filename=src.filename,imported=src.imported
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
@@ -4445,7 +4445,7 @@ dispatch_tokens(root)
 var _ast=root.ast()}
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
-var js_obj=$B.js_from_root(_ast,symtable,filename)
+var js_obj=$B.js_from_root({ast:_ast,symtable,filename,imported})
 var js_from_ast=js_obj.js
 return{
 _ast,imports:js_obj.imports,to_js:function(){return js_from_ast}}}
@@ -5324,6 +5324,8 @@ $B.UnionType=$B.make_class("UnionType",function(items){return{
 __class__:$B.UnionType,items}}
 )
 $B.UnionType.__args__={__get__:function(self){return $B.fast_tuple(self.items)}}
+$B.UnionType.__eq__=function(self,other){if(! _b_.isinstance(other,$B.UnionType)){return _b_.NotImplemented}
+return _b_.list.__eq__(self.items,other.items)}
 $B.UnionType.__parameters__={__get__:function(){return $B.fast_tuple([])}}
 $B.UnionType.__repr__=function(self){var t=[]
 for(var item of self.items){if(item.$is_class){t.push(item.$infos.__name__)}else{t.push(_b_.repr(item))}}
@@ -6352,7 +6354,7 @@ $B.imported._ast._validate($.source)
 $._ast=$.source
 delete $.source
 return $}
-if($B.parser_to_ast){var _ast=new $B.Parser($.source,filename).parse('file'),future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root(_ast,symtable,$.filename)
+if($B.parser_to_ast){var _ast=new $B.Parser($.source,filename).parse('file'),future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename),js_obj=$B.js_from_root({ast:_ast,symtable,filename:$.filename})
 if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
 var res=$B.ast_js_to_py(_ast)
 res.$js_ast=_ast
@@ -6373,7 +6375,7 @@ $B.parser.dispatch_tokens(root,$.source)
 _ast=root.ast()}
 var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future)
 delete $B.url2name[filename]
-var js_obj=$B.js_from_root(_ast,symtable,filename)
+var js_obj=$B.js_from_root({ast:_ast,symtable,filename})
 if($.flags==$B.PyCF_ONLY_AST){$B.create_python_ast_classes()
 var klass=_ast.constructor.$name
 var res=$B.ast_js_to_py(_ast)
@@ -6491,7 +6493,7 @@ root.mode=mode
 root.filename=filename
 $B.parser.dispatch_tokens(root)
 _ast=root.ast()}}
-var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root(_ast,symtable,filename,{local_name,exec_locals,global_name,exec_globals}),js=js_obj.js}catch(err){if(err.args){if(err.args[1]){var lineno=err.args[1][1]
+var future=$B.future_features(_ast,filename),symtable=$B._PySymtable_Build(_ast,filename,future),js_obj=$B.js_from_root({ast:_ast,symtable,filename,namespaces:{local_name,exec_locals,global_name,exec_globals}}),js=js_obj.js}catch(err){if(err.args){if(err.args[1]){var lineno=err.args[1][1]
 exec_locals.$lineno=lineno}}else{console.log('JS Error',err.message)}
 $B.frames_stack=save_frames_stack
 throw err}
@@ -9263,7 +9265,7 @@ $B.file_cache[path]=module_contents
 $B.url2name[path]=module.__name__
 var root,js,mod_name=module.__name__ 
 if(! compiled){var $Node=$B.$Node,$NodeJSCtx=$B.$NodeJSCtx
-var src={src:module_contents,filename:path}
+var src={src:module_contents,filename:path,imported:true}
 try{root=$B.py2js(src,module,module.__name__,$B.builtins_scope)}catch(err){if($B.debug > 1){console.log('error in imported module',module)
 console.log('stack',$B.frames_stack.slice())}
 err.$stack=$B.frames_stack.slice()
@@ -12151,7 +12153,7 @@ if((ix=rank(self,hash,arg))>-1){self.$object_dict[hash].splice(ix,1)}else{throw 
 self.$version++
 return $N}
 dict.__eq__=function(){var $=$B.args("__eq__",2,{self:null,other:null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
-if(! _b_.isinstance(other,dict)){return false}
+if(! _b_.isinstance(other,dict)){return _b_.NotImplemented}
 if(self.$jsobj){self=jsobj2dict(self.$jsobj)}
 if(other.$jsobj){other=jsobj2dict(other.$jsobj)}
 if(dict.__len__(self)!=dict.__len__(other)){return false}
@@ -12264,7 +12266,8 @@ for(var k in self.$numeric_dict){_count++}
 for(var k in self.$string_dict){_count++}
 for(var hash in self.$object_dict){_count+=self.$object_dict[hash].length}
 return _count}
-dict.__ne__=function(self,other){return ! dict.__eq__(self,other)}
+dict.__ne__=function(self,other){var res=dict.__eq__(self,other)
+return res===_b_.NotImplemented ? res :! res}
 dict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}
 var instance={__class__:cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0,$order:0}
 if(cls !==dict){instance.__dict__=$B.empty_dict()}
@@ -14424,15 +14427,16 @@ $B.ast.AnnAssign.prototype.to_js=function(scopes){var postpone_annotation=scopes
 CO_FUTURE_ANNOTATIONS
 var scope=last_scope(scopes)
 var js=''
-if(! scope.has_annotation){js+='locals.__annotations__ = $B.empty_dict()\n'}
+if(! scope.has_annotation){js+='locals.__annotations__ = $B.empty_dict()\n'
 scope.has_annotation=true
+scope.locals.add('__annotations__')}
 if(this.target instanceof $B.ast.Name){var ann_value=postpone_annotation ?
 `'${annotation_to_str(this.annotation)}'` :
 $B.js_from_ast(this.annotation,scopes)}
 if(this.value){js+=`var ann = ${$B.js_from_ast(this.value, scopes)}\n`
-if(this.target instanceof $B.ast.Name && this.simple){
-var scope=bind(this.target.id,scopes),mangled=mangle(scopes,scope,this.target.id)
-if(scope.type !="def"){js+=`$B.$setitem(locals.__annotations__, `+
+if(this.target instanceof $B.ast.Name && this.simple){var scope=bind(this.target.id,scopes),mangled=mangle(scopes,scope,this.target.id)
+if(scope.type !="def"){
+js+=`$B.$setitem(locals.__annotations__, `+
 `'${mangled}', ${ann_value})\n`}
 var target_ref=name_reference(this.target.id,scopes)
 js+=`${target_ref} = ann`}else if(this.target instanceof $B.ast.Attribute){js+=`$B.$setattr(${$B.js_from_ast(this.target.value, scopes)}`+
@@ -14616,7 +14620,7 @@ ix--}else{break}}
 scopes.push(class_scope)
 var docstring=extract_docstring(this,scopes)
 js+=`var ${ref} = (function(){\n`+
-`var ${locals_name} = {__annotations__: $B.empty_dict()},\n`+
+`var ${locals_name} = {},\n`+
 `locals = ${locals_name}\n`+
 `locals.$name = "${this.name}"\n`+
 `locals.$qualname = "${qualname}"\n`+
@@ -14627,6 +14631,9 @@ js+=`var ${ref} = (function(){\n`+
 `locals.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`+
 `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
+js+=`locals.__annotations__ = $B.empty_dict()\n`
+class_scope.has_annotation=true
+class_scope.locals.add('__annotations__')
 js+=add_body(this.body,scopes)
 scopes.pop()
 js+='\nif(locals.$f_trace !== _b_.None){\n'+
@@ -14838,7 +14845,6 @@ js+=`var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     var _frames = $B.frames_stack.slice()
     var stack_length = $B.frames_stack.length\n`
 if(is_async){js+='frame.$async = true\n'}
-if(last_scope(scopes).has_annotation){js+=`locals.__annotations__ = $B.empty_dict()\n`}
 if(is_generator){js+=`locals.$is_generator = true\n`
 if(is_async){js+=`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=`var gen_${id} = $B.generator.$factory(function*(){\n`}}
 js+=`try{\n$B.js_this = this\n`
@@ -15132,9 +15138,8 @@ js+=`locals = ${namespaces.local_name},\n`+
 if(name){js+=`,\nlocals_${name} = locals`}}
 js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__name__ = '${name}'\n`+
-`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
-last_scope(scopes).has_annotation=true
+if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
 if(! namespaces){
 js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
 js+=`$B.set_lineno(frame, 1)\n`+
@@ -15431,13 +15436,16 @@ return `yield* (function* f(){
             return _r${n}
         })()`}
 var state={}
-$B.js_from_root=function(ast_root,symtable,filename,namespaces){if($B.show_ast_dump){console.log($B.ast_dump(ast_root))}
+$B.js_from_root=function(arg){var ast_root=arg.ast,symtable=arg.symtable,filename=arg.filename
+namespaces=arg.namespaces,imported=arg.imported
+if($B.show_ast_dump){console.log($B.ast_dump(ast_root))}
 if($B.compiler_check){$B.compiler_check(ast_root,symtable)}
 var scopes=[]
 state.filename=filename
 scopes.symtable=symtable
 scopes.filename=filename
 scopes.namespaces=namespaces
+scopes.imported=imported
 scopes.imports={}
 var js=ast_root.to_js(scopes)
 return{js,imports:scopes.imports}}

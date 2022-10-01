@@ -787,10 +787,6 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
             CO_FUTURE_ANNOTATIONS
     var scope = last_scope(scopes)
     var js = ''
-    // scope of an annotation is either a class or the module
-    if(scope.type == "def"){
-        return js
-    }
     if(! scope.has_annotation){
         js += 'locals.__annotations__ = $B.empty_dict()\n'
         scope.has_annotation = true
@@ -804,11 +800,10 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     if(this.value){
         js += `var ann = ${$B.js_from_ast(this.value, scopes)}\n`
         if(this.target instanceof $B.ast.Name && this.simple){
-            // update __annotations__
             var scope = bind(this.target.id, scopes),
                 mangled = mangle(scopes, scope, this.target.id)
-            // Annotations for local variables will not be evaluated
             if(scope.type != "def"){
+                // Update __annotations__ only for classes and modules
                 js += `$B.$setitem(locals.__annotations__, ` +
                       `'${mangled}', ${ann_value})\n`
             }
@@ -1292,6 +1287,10 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
           `locals.$f_trace = $B.enter_frame(frame)\n` +
           `var _frames = $B.frames_stack.slice()\n` +
           `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
+
+    js += `locals.__annotations__ = $B.empty_dict()\n`
+    class_scope.has_annotation = true
+    class_scope.locals.add('__annotations__')
 
     js += add_body(this.body, scopes)
 
@@ -2447,7 +2446,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
     if(! scopes.imported){
-          `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
+          js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
     }
 
     if(! namespaces){
