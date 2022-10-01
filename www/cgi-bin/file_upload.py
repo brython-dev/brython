@@ -10,5 +10,15 @@ print()
 print('file upload<p>')
 fs = cgi.FieldStorage()
 for key in tuple(fs.keys()):
-    print(('%s:%s' % (key, len(fs[key].value)) + '<br>'))
+    if fs[key].file:
+        length = 0
+        while True:
+            nb = len(fs[key].file.read(2048))
+            if nb == 0:
+                break
+            length += nb
+            if length > 10_000:
+                # ignore big files
+                continue
+    print(('%s:%s' % (key, length) + '<br>'))
 print('ok')
