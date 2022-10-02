@@ -5,7 +5,11 @@ var _b_ = $B.builtins
 
 var float_check = function(x) {
     if(x.__class__ === $B.long_int){
-        return parseInt(x.value)
+        var res = parseInt(x.value)
+        if(! isFinite(res)){
+            throw _b_.OverflowError.$factory('int too big for float')
+        }
+        return res
     }else if(x.__class__ === _b_.float){
         return x.value
     }
@@ -1379,8 +1383,19 @@ function gcd(x, y){
 function hypot(x, y){
     var $ = $B.args("hypot", 0, {}, [],
                 arguments, {}, "args", null)
-    $.args.map(float_check)
-    return _b_.float.$factory(Math.hypot(...$.args))
+    var args = []
+    for(var arg of $.args){
+        try{
+            args.push(float_check(arg))
+        }catch(err){
+            if($B.is_exc(err, [_b_.ValueError])){
+                throw _b_.TypeError.$factory('must be real number, not ' +
+                    $B.class_name(arg))
+            }
+            throw err
+        }
+    }
+    return $B.fast_float(Math.hypot(...args))
 }
 
 var inf = _b_.float.$factory('inf')

@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-01 22:45:06.577432"
-__BRYTHON__.timestamp=1664657106576
+__BRYTHON__.compiled_date="2022-10-02 17:16:01.468204"
+__BRYTHON__.timestamp=1664723761468
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5437,7 +5437,7 @@ if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
 var klass=obj.__class__
 if(klass===undefined){switch(typeof obj){case "number":
-return Number.isInteger(obj)? _b_.int :_b_.float
+return Number.isInteger(obj)? _b_.int :undefined
 case "string":
 return _b_.str
 case "boolean":
@@ -11352,14 +11352,13 @@ return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 var float={__class__:_b_.type,__dir__:object.__dir__,$infos:{__module__:"builtins",__name__:"float"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 float.$float_value=float_value
 float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
-float.numerator=function(self){return self.value}
+float.numerator=function(self){return self}
 float.denominator=function(self){return 1}
 float.imag=function(self){return 0}
-float.real=function(self){return self.value}
+float.real=function(self){return self}
 float.__float__=function(self){return self}
 $B.shift1_cache={}
-float.as_integer_ratio=function(self){
-if(isinf(self)){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
+float.as_integer_ratio=function(self){if(isinf(self)){throw _b_.OverflowError.$factory("Cannot pass infinity to "+
 "float.as_integer_ratio.")}
 if(isnan(self)){throw _b_.ValueError.$factory("Cannot pass NaN to "+
 "float.as_integer_ratio.")}
@@ -11560,18 +11559,19 @@ return x & 0xFFFFFFFF}
 function isninf(x){var x1=x
 if(_b_.isinstance(x,float)){x1=float.numerator(x)}
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
-function isinf(x){var x1=x
-if(_b_.isinstance(x,float)){x1=float.numerator(x)}
+function isinf(x){var x1=float_value(x).value
 return x1==Infinity ||x1==-Infinity ||
 x1==Number.POSITIVE_INFINITY ||x1==Number.NEGATIVE_INFINITY}
-function isnan(x){var x1=x
-if(_b_.isinstance(x,float)){x1=float.numerator(x)}
+function isnan(x){var x1=float_value(x).value
 return isNaN(x1)}
 function fabs(x){if(x==0){return fast_float(0)}
 return x > 0 ? float.$factory(x):float.$factory(-x)}
-function frexp(x){var x1=x
-if(_b_.isinstance(x,float)){x1=x.value}
-if(isNaN(x1)||isinf(x1)){return[x1,-1]}else if(x1==0){return[0,0]}
+function frexp(x){
+var x1=x
+if(_b_.isinstance(x,float)){
+if(isnan(x)||isinf(x)){return[x,0]}
+x1=float_value(x).value}
+if(x1==0){return[0,0]}
 var sign=1,ex=0,man=x1
 if(man < 0.){sign=-sign
 man=-man}
@@ -11664,7 +11664,7 @@ function __newobj__(){
 var $=$B.args('__newobj__',0,{},[],arguments,{},'args',null),args=$.args
 return{
 __class__:args[0],value:args[1]}}
-float.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||_b_.int,self.value]),_b_.None,_b_.None,_b_.None])}
+float.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||_b_.float,_b_.repr(self)]),_b_.None,_b_.None,_b_.None])}
 float.__repr__=function(self){$B.builtins_repr_check(float,arguments)
 self=self.value
 if(self==Infinity){return 'inf'}else if(self==-Infinity){return '-inf'}else if(isNaN(self)){return 'nan'}else if(self===0){if(1/self===-Infinity){return '-0.0'}

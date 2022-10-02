@@ -104,7 +104,7 @@ class _TestResult(TestResult):
     # note: _TestResult is a pure representation of results.
     # It lacks the output and reporting ability compares to unittest._TextTestResult.
 
-    def __init__(self, verbosity=1):
+    def __init__(self, verbosity=1, report_success=False):
         TestResult.__init__(self)
         self.stdout0 = None
         self.stderr0 = None
@@ -121,6 +121,7 @@ class _TestResult(TestResult):
         #   stack trace,
         # )
         self.result = []
+        self.report_success = report_success
 
     def startTest(self, test):
         TestResult.startTest(self, test)
@@ -138,8 +139,10 @@ class _TestResult(TestResult):
     def addSubTest(self, test, subtest, err):
         TestResult.addSubTest(self, test, subtest, err)
         # special case, don't use ident()
+        if not self.report_success:
+            return
         cell2 = (test._testMethodName + html.BR() +
-            str(subtest._subDescription()))
+            str(subtest._subDescription())[:50])
 
         row = html.TR([html.TD(test.__class__.__name__),
             html.TD(cell2),
@@ -154,6 +157,8 @@ class _TestResult(TestResult):
 
     def addSuccess(self, test):
         self.success_count += 1
+        if not self.report_success:
+            return
         TestResult.addSuccess(self, test)
         row = html.TR(self.ident(test), Class="method")
         row <= html.TD('ok', colspan=2, Class="report_cell")
@@ -206,7 +211,7 @@ class HTMLTestRunner:
 
     def run(self, test):
         "Run the given test case or test suite."
-        t = html.TABLE(Id="report")
+        t = html.TABLE(Id="report", border=1)
         t <= html.TR(html.TH(x, Class="header")
             for x in ('Test class', 'Method', 'Line', 'Duration (ms)', 'Result',
             'Error message'))

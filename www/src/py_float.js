@@ -44,10 +44,10 @@ float.$to_js_number = function(self){
     }
 }
 
-float.numerator = function(self){return self.value}
+float.numerator = function(self){return self}
 float.denominator = function(self){return 1}
 float.imag = function(self){return 0}
-float.real = function(self){return self.value}
+float.real = function(self){return self}
 
 float.__float__ = function(self){
     return self
@@ -57,8 +57,6 @@ float.__float__ = function(self){
 $B.shift1_cache = {}
 
 float.as_integer_ratio = function(self){
-    //self = self.value
-
     if(isinf(self)){
         throw _b_.OverflowError.$factory("Cannot pass infinity to " +
             "float.as_integer_ratio.")
@@ -633,19 +631,13 @@ function isninf(x) {
 }
 
 function isinf(x) {
-    var x1 = x
-    if(_b_.isinstance(x, float)){
-        x1 = float.numerator(x)
-    }
+    var x1 = float_value(x).value
     return x1 == Infinity || x1 == -Infinity ||
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
 
 function isnan(x) {
-    var x1 = x
-    if(_b_.isinstance(x, float)){
-        x1 = float.numerator(x)
-    }
+    var x1 = float_value(x).value
     return isNaN(x1)
 }
 
@@ -657,14 +649,16 @@ function fabs(x){
 }
 
 function frexp(x){
+    // x is Python int or float
     var x1 = x
     if(_b_.isinstance(x, float)){
-        x1 = x.value
+        // special case
+        if(isnan(x) || isinf(x)){
+            return [x, 0]
+        }
+        x1 = float_value(x).value
     }
-
-    if(isNaN(x1) || isinf(x1)){
-        return [x1, -1]
-    }else if (x1 == 0){
+    if(x1 == 0){
         return [0, 0]
     }
 
@@ -932,7 +926,7 @@ function __newobj__(){
 float.__reduce_ex__ = function(self){
     return $B.fast_tuple([
         __newobj__,
-        $B.fast_tuple([self.__class__ || _b_.int, self.value]),
+        $B.fast_tuple([self.__class__ || _b_.float, _b_.repr(self)]),
         _b_.None,
         _b_.None,
         _b_.None])

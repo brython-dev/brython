@@ -295,4 +295,9 @@ assert_raises(ValueError, math.log2, 0, msg="math domain error")
 # rewriting of math.comb
 math.comb(1200, 575)
 
+# issue2053
+assert math.hypot(1, 1) == 1.4142135623730951
+assert math.hypot(1.0, 1) == 1.4142135623730951
+assert math.hypot(1, 1.0) == 1.4142135623730951
+
 print("passed all tests..")

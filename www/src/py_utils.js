@@ -286,7 +286,7 @@ $B.get_class = function(obj){
     if(klass === undefined){
         switch(typeof obj) {
             case "number":
-                return Number.isInteger(obj) ? _b_.int : _b_.float
+                return Number.isInteger(obj) ? _b_.int : undefined
             case "string":
                 return _b_.str
             case "boolean":

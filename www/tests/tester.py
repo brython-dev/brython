@@ -327,6 +327,16 @@ TestCase = Tester # unittest interface
 tester = Tester()
 assertRaises = tester.assertRaises
 
+def assertAlmostEqual(x, y):
+    assert round(x - y, 7) == 0, f'{x} not almost equal to {y}'
+    
+def assertEqual(x, y):
+    assert x == y, f'{x} not equal to {y}'
+
+def assertTrue(x):
+    assert x, f'{x} is not True'
+
+
 class SkipTest(Exception):
     pass
 
