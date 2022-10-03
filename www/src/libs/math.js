@@ -638,6 +638,10 @@ function comb(n, k){
         temp,
         overflow, cmp;
 
+    // accept integers or objects with __index__
+    n = $B.PyNumber_Index(n)
+    k = $B.PyNumber_Index(k)
+
     n = _b_.int.$to_bigint(n);
     k = _b_.int.$to_bigint(k);
 
@@ -724,8 +728,7 @@ function degrees(x){
 }
 
 function dist(p, q){
-    $B.check_nb_args('dist', 2, arguments)
-    $B.check_no_kw('dist', p, q)
+    $B.check_nb_args_no_kw('dist', 2, arguments)
 
     function test(x){
         if(typeof x === "number"){
@@ -737,7 +740,7 @@ function dist(p, q){
         if(y === null){
             throw _b_.TypeError.$factory('not a float')
         }
-        return $B.$call(y)()
+        return $B.$call(y)().value
     }
 
     // build list of differences (as floats) between coordinates of p and q
@@ -817,7 +820,7 @@ function dist(p, q){
             diff = diff / scale
             res += diff * diff
         }
-        return scale * _mod.sqrt(res)
+        return $B.fast_float(scale * _mod.sqrt(res))
     }else if(min_diff !== 0 && min_diff < min_value){
         while(min_diff < min_value){
             scale *= 2
@@ -827,12 +830,12 @@ function dist(p, q){
             diff = diff * scale
             res += diff * diff
         }
-        return _mod.sqrt(res) / scale
+        return $B.fast_float(Math.sqrt(res) / scale)
     }else{
         for(var diff of diffs){
             res += Math.pow(diff, 2)
         }
-        return _mod.sqrt(res)
+        return $B.fast_float(Math.sqrt(res))
     }
 }
 
@@ -1650,27 +1653,38 @@ function perm(n, k){
         return _mod.factorial(n)
     }
     // raise TypeError if n or k is not an integer
-    n = $B.fast_long_int(BigInt($B.PyNumber_Index(n)))
-    k = $B.fast_long_int(BigInt($B.PyNumber_Index(k)))
+    n = $B.PyNumber_Index(n)
+    k = $B.PyNumber_Index(k)
 
-    if(k.value < 0){
+    // transform to Javascript BigInt
+    var n1 = _b_.int.$to_bigint(n),
+        k1 = _b_.int.$to_bigint(k);
+
+    if(k1 < 0){
         throw _b_.ValueError.$factory("k must be a non-negative integer")
     }
-    if(n.value < 0){
+    if(n1 < 0){
         throw _b_.ValueError.$factory("n must be a non-negative integer")
     }
-
-    if(k.value > n.value){
+    if(k1 == 0){
+        return 1
+    }
+    if(k1 == 1){
+        return n
+    }
+    if(k1 == 2){
+        return _b_.int.$int_or_long(n1 * (n1 - 1n))
+    }
+    if(k1 > n1){
         return 0
     }
     // Evaluates to n! / (n - k)!
     var fn = _mod.factorial(n),
-        fn_k = _mod.factorial($B.long_int.__sub__(n, k))
-
+        fn_k = _mod.factorial(n - k)
     return $B.rich_op('__floordiv__', fn, fn_k)
 }
 
-var pi = _b_.float.$factory(Math.PI)
+const pi = $B.fast_float(Math.PI)
 
 function pow(){
     var $ = $B.args("pow", 2, {base: null, exp: null}, ['base', 'exp'],
@@ -1754,28 +1768,59 @@ function radians(x){
     return _b_.float.$factory(float_check(x) * Math.PI / 180)
 }
 
+function is_finite(x){
+    return typeof x == "number" ||
+               (x.__class__ === _b_.floar && isFinite(x.value)) ||
+               _b_.isinstance(x, _b_.int) ||
+               (_b_.isinstance(x, _b_.float) && isFinite(x.value))
+}
+
 function remainder(x, y){
-    $B.check_nb_args('remainder', 2, arguments)
-    $B.check_no_kw('remainder', x, y)
-    if(_mod.isnan(x) || _mod.isnan(y)){
-        return _mod.nan
+    $B.check_nb_args_no_kw('remainder', 2, arguments)
+    /* Deal with most common case first. */
+    if(is_finite(x) && is_finite(y)){
+        var absx,
+            absy,
+            c,
+            m,
+            r;
+
+        if(float_check(y) == 0.0){
+            throw _b_.ValueError.$factory("math domain error")
+        }
+
+        absx = fabs(x);
+        absy = fabs(y);
+        m = fmod(absx, absy);
+
+        c = absy.value - m.value
+        if(m.value < c){
+            r = m.value
+        }else if(m.value > c){
+            r = -c
+        }else{
+            r = m.value -
+                    2.0 * fmod($B.fast_float(0.5 * (absx.value - m.value)), absy).value;
+        }
+        return $B.fast_float(copysign(1.0, x).value * r);
     }
-    if(_b_.float.$funcs.isinf(x) || y == 0){
+
+    /* Special values. */
+    if(float_check(y) == 0){
+        if(isnan(x)){
+            return x
+        }
+    }
+    if(isinf(x)){
+        if(isnan(y)){
+            return y
+        }
         throw _b_.ValueError.$factory("math domain error")
     }
-    x = float_check(x)
-    y = float_check(y)
-    var quotient = x / y,
-        rounded = _b_.round(quotient)
-    if(rounded == 0){
-        return _b_.float.$factory(x)
+    if(isnan(y)){
+        return y;
     }
-    var res = _b_.float.$factory(x - rounded * y)
-    if(_b_.float.$funcs.isinf(res)){
-        // happens if rounded * y is infinite
-        res = _b_.float.$factory(rounded * (x / rounded - y))
-    }
-    return res
+    return x;
 }
 
 function sin(x){
@@ -1832,7 +1877,7 @@ function tanh(x) {
          (Math.pow(Math.E, y) + Math.pow(Math.E, -y)))
 }
 
-var tau = 6.283185307179586
+const tau = $B.fast_float(2 * Math.PI)
 
 function trunc(x) {
     $B.check_nb_args('trunc', 1, arguments)

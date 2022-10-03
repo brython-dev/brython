@@ -623,10 +623,7 @@ float.__hash__ = function(self) {
 }
 
 function isninf(x) {
-    var x1 = x
-    if(_b_.isinstance(x, float)){
-        x1 = float.numerator(x)
-    }
+    var x1 = float_value(x).value
     return x1 == -Infinity || x1 == Number.NEGATIVE_INFINITY
 }
 
