@@ -1033,7 +1033,7 @@ Random.uniform = function(){
         a = $B.$GetInt($.a),
         b = $B.$GetInt($.b)
 
-    return a + (b - a) * $.self._random()
+    return $B.fast_float(a + (b - a) * $.self._random())
 }
 
 Random.vonmisesvariate = function(){
