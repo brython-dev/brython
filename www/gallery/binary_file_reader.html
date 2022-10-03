@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+</style>
+
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
+
+</script>
+</head>
+<body onLoad="brython(1);">
+
+<br><input type="file" id="select_file">
+
+<br><pre id="viewer"></pre>
+
+<script type="text/python">
+from browser import bind, window, document
+
+load_btn = document['select_file']
+zone = document['viewer']
+
+@bind(load_btn, "input")
+def file_read(ev):
+
+    def onload(event):
+        """Triggered when file is read. The FileReader instance is
+        event.target.
+        """
+        buffer = event.target.result # ArrayBuffer
+        view = window.Uint8Array.new(buffer) # view, iterable
+
+        zone.text = ''
+
+        i = 0
+        text = ''
+
+        row = []
+        for byte in view:
+            if i % 8 == 0:
+                text += f'{i:04x}  '
+            text += f'{byte:02x} '
+            i += 1
+            if i % 8 == 0:
+                text += '  ' + ''.join(row)
+                text += '\n'
+                row = []
+            else:
+                b = bytes([byte])
+                row.append(b.decode('latin-1') if b.isalnum() else '.')
+
+        text += ' ' * 3 * (8 - len(row)) + '  '
+        text += ''.join(row)
+
+        zone.text = text
+
+    # Get the selected file as a DOM File object
+    file = load_btn.files[0]
+    # Create a new DOM FileReader instance
+    reader = window.FileReader.new()
+    # Read file as ArrayBuffer
+    reader.readAsArrayBuffer(file)
+    reader.bind("load", onload)
+
+</script>
+
+</body>
+</html>
