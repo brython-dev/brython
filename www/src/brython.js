@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-02 17:16:01.468204"
-__BRYTHON__.timestamp=1664723761468
+__BRYTHON__.compiled_date="2022-10-03 10:40:48.063992"
+__BRYTHON__.timestamp=1664786448063
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9128,11 +9128,7 @@ $B.JSObj.__setitem__=$B.JSObj.__setattr__
 var JSObj_iterator=$B.make_iterator_class('JS object iterator')
 $B.JSObj.__iter__=function(_self){var items=[]
 if(_window.Symbol && _self[Symbol.iterator]!==undefined){
-var items=[]
-if(_self.next !==undefined){while(true){var nxt=_self.next()
-if(nxt.done){break}
-items.push($B.JSObj.$factory(nxt.value))}}else if(_self.length !==undefined && _self.item !==undefined){for(var i=0;i < _self.length;i++){items.push($B.JSObj.$factory(_self.item(i)))}}
-return JSObj_iterator.$factory(items)}else if(_self.length !==undefined && _self.item !==undefined){
+return JSObj_iterator.$factory(Array.from(_self))}else if(_self.length !==undefined && _self.item !==undefined){
 for(var i=0;i < _self.length;i++){items.push($B.JSObj.$factory(_self.js.item(i)))}
 return JSObj_iterator.$factory(items)}
 return JSObj_iterator.$factory(Object.keys(_self))}
@@ -11556,8 +11552,7 @@ var hipart=_b_.int.$factory(r[0])
 r[0]=(r[0]-hipart)*Math.pow(2,31)
 var x=hipart+_b_.int.$factory(r[0])+(r[1]<< 15)
 return x & 0xFFFFFFFF}
-function isninf(x){var x1=x
-if(_b_.isinstance(x,float)){x1=float.numerator(x)}
+function isninf(x){var x1=float_value(x).value
 return x1==-Infinity ||x1==Number.NEGATIVE_INFINITY}
 function isinf(x){var x1=float_value(x).value
 return x1==Infinity ||x1==-Infinity ||
@@ -14256,7 +14251,10 @@ return{found:false,resolve:'local'}}else{return{found:l_scope.scope}}}else if(sc
 if(global_scope.locals.has(name)){return{found:global_scope}}
 return{found:false,resolve:'global'}}else if(scope.nonlocals.has(name)){
 for(var i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
-if(block && block.symbols.$string_dict[name]){return{found:scopes[i]}}}}
+if(block && block.symbols.$string_dict[name]){var fl=block.symbols.$string_dict[name],local_to_block=
+[LOCAL,CELL].indexOf((fl >> SCOPE_OFF)& SCOPE_MASK)>-1
+if(! local_to_block){continue}
+return{found:scopes[i]}}}}
 if(scope.has_import_star){return{found:false,resolve:is_local ? 'all' :'global'}}
 for(var i=scopes.length-2;i >=0;i--){block=undefined
 if(scopes[i].ast){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))}
@@ -15633,16 +15631,17 @@ v_free=FREE << SCOPE_OFFSET
 itr=_b_.iter(free)
 var next_func=$B.$getattr(itr,'__next__')
 while(true){try{name=next_func()}catch(err){break}
-v=symbols.$string_dict[name][0]
+v=symbols.$string_dict[name]
 if(v){
+v=v[0]
 if(classflag &&
 v &(DEF_BOUND |DEF_GLOBAL)){var flags=v |DEF_FREE_CLASS;
 v_new=flags;
-if(!v_new){return 0;}
+if(! v_new){return 0;}
 symbols.$string_dict[name][0]=v_new}
 continue;}
 if(bound && !bound.has(name)){continue;}
-symbols.$string_dict[name][0]=v_free}
+_b_.dict.$setitem(symbols,name,v_free)}
 return 1}
 function analyze_block(ste,bound,free,global){var name,v,local=NULL,scopes=NULL,newbound=NULL,newglobal=NULL,newfree=NULL,allfree=NULL,temp,i,success=0,pos=0;
 local=new Set()
@@ -15686,6 +15685,7 @@ if(size){st.stack.pop()
 if(--size){st.cur=st.stack[size-1]}}
 return 1}
 function symtable_enter_block(st,name,block,ast,lineno,col_offset,end_lineno,end_col_offset){var prev
+if(ast===undefined){console.log('call ste new, key undef',st,name)}
 var ste=ste_new(st,name,block,ast,lineno,col_offset,end_lineno,end_col_offset)
 st.stack.push(ste)
 prev=st.cur

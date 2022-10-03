@@ -299,12 +299,12 @@ function name_scope(name, scopes){
             }
             return {found: false, resolve: 'local'}
         }else{
-            return {found: l_scope.scope} // reference(scopes, scope, name)
+            return {found: l_scope.scope}
         }
     }else if(scope.globals.has(name)){
         var global_scope = scopes[0]
         if(global_scope.locals.has(name)){
-            return {found: global_scope} // reference(scopes, scopes[0], name)
+            return {found: global_scope}
         }
         return {found: false, resolve: 'global'}
     }else if(scope.nonlocals.has(name)){
@@ -312,7 +312,13 @@ function name_scope(name, scopes){
         for(var i = scopes.length - 2; i >= 0; i--){
             block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
             if(block && block.symbols.$string_dict[name]){
-                return {found: scopes[i]} // reference(scopes, scopes[i], name)
+                var fl = block.symbols.$string_dict[name],
+                    local_to_block =
+                        [LOCAL, CELL].indexOf((fl >> SCOPE_OFF) & SCOPE_MASK) > -1
+                if(! local_to_block){
+                    continue
+                }
+                return {found: scopes[i]}
             }
         }
     }

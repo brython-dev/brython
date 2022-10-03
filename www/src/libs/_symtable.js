@@ -32,7 +32,7 @@ return {
             $B.PyCF_ONLY_AST)
         // ast is an instance of Python class
         // _Py_Symtable_Build in symtable.js uses the underlying JS object
-        return $B._PySymtable_Build(ast.js_node, $.filename)
+        return $B._PySymtable_Build(ast.$js_ast, $.filename)
     }
 }
 
