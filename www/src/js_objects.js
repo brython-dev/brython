@@ -513,26 +513,9 @@ var JSObj_iterator = $B.make_iterator_class('JS object iterator')
 $B.JSObj.__iter__ = function(_self){
     var items = []
     if(_window.Symbol && _self[Symbol.iterator] !== undefined){
-        // Javascript objects that support the iterable protocol, such as Map
-        // For the moment don't use "for(var item of _self.js)" for
-        // compatibility with uglifyjs
-        // If object has length and item(), it's a collection : iterate on
-        // its items
-        var items = []
-        if(_self.next !== undefined){
-            while(true){
-                var nxt = _self.next()
-                if(nxt.done){
-                    break
-                }
-                items.push($B.JSObj.$factory(nxt.value))
-            }
-        }else if(_self.length !== undefined && _self.item !== undefined){
-            for(var i = 0; i < _self.length; i++){
-                items.push($B.JSObj.$factory(_self.item(i)))
-            }
-        }
-        return JSObj_iterator.$factory(items)
+        // Javascript objects that support the iterable protocol, such as Map,
+        // views on ArrayBuffer, etc.
+        return JSObj_iterator.$factory(Array.from(_self))
     }else if(_self.length !== undefined && _self.item !== undefined){
         // collection
         for(var i = 0; i < _self.length; i++){
