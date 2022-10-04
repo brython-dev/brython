@@ -41,7 +41,7 @@ var EPSILON = Math.pow(2, -52),
     logpi = 1.144729885849400174143427351353058711647
 
 function nextUp(x){
-    if(x !== x){
+    if(x !== x){ // NaN
         return x
     }
     if(_b_.float.$funcs.isinf(x)){
@@ -50,11 +50,14 @@ function nextUp(x){
         }
         return _mod.inf
     }
+    if(_b_.isinstance(x, $B.long_int)){
+        x = Number(x.value)
+    }
 
     if(x == +MAX_VALUE){
         return +1 / 0
     }
-    if(typeof x == "number" || x instanceof Number){
+    if(typeof x == "number"){
         var y = x * (x < 0 ? 1 - EPSILON / 2 : 1 + EPSILON)
         if(y == x){
             y = MIN_VALUE * EPSILON > 0 ? x + MIN_VALUE * EPSILON : x + MIN_VALUE
@@ -694,8 +697,7 @@ function comb(n, k){
 
 
 function copysign(x, y){
-    $B.check_nb_args('copysign', 2, arguments)
-    $B.check_no_kw('copysign', x,y)
+    $B.check_nb_args_no_kw('copysign', 2, arguments)
 
     var x1 = Math.abs(float_check(x))
     var y1 = float_check(y)
@@ -753,13 +755,12 @@ function dist(p, q){
             throw _b_.ValueError.$factory("both points must have " +
                 "the same number of dimensions")
         }
+        p = p.map(test)
+        q = q.map(test)
         for(var i = 0, len = p.length; i < len; i++){
-            var next_p = test(p[i]),
-                next_q = test(q[i]),
-                diff = Math.abs(next_p - next_q)
-            if(_b_.float.$funcs.isinf(diff)){
-                return _mod.inf
-            }
+            var next_p = p[i],
+                next_q = q[i]
+            var diff = Math.abs(next_p - next_q)
             diffs.push(diff)
         }
     }else{
@@ -798,10 +799,17 @@ function dist(p, q){
             }
             next_q = test(next_q)
             diff = Math.abs(next_p - next_q)
-            if(_b_.float.$funcs.isinf(diff)){
-                return _mod.inf
-            }
             diffs.push(diff)
+        }
+    }
+    for(var diff of diffs){
+        if(! isFinite(diff) && ! isNaN(diff)){
+            return _mod.inf
+        }
+    }
+    for(var diff of diffs){
+        if(isNaN(diff)){
+            return _mod.nan
         }
     }
 
@@ -812,15 +820,17 @@ function dist(p, q){
         max_value = Math.sqrt(Number.MAX_VALUE) / p.length,
         min_value = Math.sqrt(Number.MIN_VALUE) * p.length
     if(max_diff > max_value){
+        var nb = 0
         while(max_diff > max_value){
             scale *= 2
             max_diff /= 2
+            nb++
         }
         for(var diff of diffs){
             diff = diff / scale
             res += diff * diff
         }
-        return $B.fast_float(scale * _mod.sqrt(res))
+        return $B.fast_float(scale * Math.sqrt(res))
     }else if(min_diff !== 0 && min_diff < min_value){
         while(min_diff < min_value){
             scale *= 2
@@ -889,10 +899,16 @@ function exp(x){
     $B.check_nb_args('exp', 1, arguments)
     $B.check_no_kw('exp', x)
 
-     if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory(0)}
-     if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
+     if(_b_.float.$funcs.isninf(x)){
+         return _b_.float.$factory(0)
+     }
+     if(_b_.float.$funcs.isinf(x)){
+         return _b_.float.$factory('inf')
+     }
      var _r = Math.exp(float_check(x))
-     if(_b_.float.$funcs.isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
+     if(! isNaN(_r) && ! isFinite(_r)){
+         throw _b_.OverflowError.$factory("math range error")
+     }
      return _b_.float.$factory(_r)
 }
 
@@ -908,8 +924,7 @@ function expm1(x){
 }
 
 function fabs(x){
-    $B.check_nb_args('fabs', 1, arguments)
-    $B.check_no_kw('fabs', x)
+    $B.check_nb_args_no_kw('fabs', 1, arguments)
     return _b_.float.$funcs.fabs(float_check(x)) // located in py_float.js
 }
 
@@ -1059,18 +1074,19 @@ function factorial(arg){
 }
 
 function floor(x){
-    $B.check_nb_args('floor', 1, arguments)
-    $B.check_no_kw('floor', x)
+    $B.check_nb_args_no_kw('floor', 1, arguments)
+
     if(typeof x == "number" || x.__class__ === _b_.float){
         return Math.floor(float_check(x))
     }
+    var klass = $B.get_class(x)
     try{
-        return $B.$call($B.$getattr(x, "__floor__"))()
+        return $B.$call($B.$getattr(klass, "__floor__"))(x)
     }catch(err){
         if($B.is_exc(err, [_b_.AttributeError])){
             try{
-                var f = $B.$call($B.$getattr(x, "__float__"))()
-                return _mod.floor(f)
+                var float = $B.$call($B.$getattr(klass, "__float__"))(x)
+                return floor(float)
             }catch(err){
                 if($B.is_exc(err, [_b_.AttributeError])){
                     throw _b_.TypeError.$factory("no __float__")
@@ -1081,15 +1097,13 @@ function floor(x){
     }
 }
 
-function fmod(x,y){
-    $B.check_nb_args('fmod', 2, arguments)
-    $B.check_no_kw('fmod', x,y)
+function fmod(x, y){
+    $B.check_nb_args_no_kw('fmod', 2, arguments)
     return _b_.float.$factory(float_check(x) % float_check(y))
 }
 
 function frexp(x){
-    $B.check_nb_args('frexp', 1, arguments)
-    $B.check_no_kw('frexp', x)
+    $B.check_nb_args_no_kw('frexp', 1, arguments)
 
     var _l = _b_.float.$funcs.frexp(x)
     return _b_.tuple.$factory([_b_.float.$factory(_l[0]), _l[1]])
@@ -1258,7 +1272,6 @@ function simple_gcd(a, b){
     return x
 }
 
-$B.nb_
 function lgcd(x, y){
     var a, b, c, d
     if(x < y){
@@ -1467,8 +1480,7 @@ function isnan(x){
 }
 
 function isqrt(x){
-    $B.check_nb_args('isqrt', 1, arguments)
-    $B.check_no_kw('isqrt', x)
+    $B.check_nb_args_no_kw('isqrt', 1, arguments)
 
     x = $B.PyNumber_Index(x)
     if($B.rich_comp("__lt__", x, 0)){
@@ -1478,23 +1490,22 @@ function isqrt(x){
     if(typeof x == "number"){
         return Math.floor(Math.sqrt(x))
     }else{ // big integer
-        var v = x.value,
-            candidate = BigInt(Math.floor(Math.sqrt(Number(v)))),
-            c1
-        // Use successive approximations : sqr = (sqr + (x / sqr)) / 2
-        // Limit to 100 iterations
-        for(var i = 0; i < 100; i++){
-            c1 = (candidate + (x.value / candidate)) / 2n
-            if(c1 == candidate){
-                break
-            }
-            candidate = c1
+        // adapted from code in mathmodule.c
+        var n = x.value,
+            bit_length = n.toString(2).length,
+            c = BigInt(Math.floor((bit_length - 1) / 2)),
+            c_bit_length = c.toString(2).length,
+            a = 1n,
+            d = 0n,
+            e
+
+        for(var s = BigInt(c_bit_length - 1); s >= 0; s--){
+            // Loop invariant: (a-1)**2 < (n >> 2*(c - d)) < (a+1)**2
+            e = d
+            d = c >> s
+            a = (a << d - e - 1n) + (n >> 2n*c - e - d + 1n) / a
         }
-        if(candidate * candidate > x){
-            // Result might be greater by 1
-            candidate = candidate - 1n
-        }
-        return _b_.int.$int_or_long(candidate)
+        return _b_.int.$int_or_long(a - (a * a > n ? 1n : 0n))
     }
 }
 
@@ -1897,20 +1908,27 @@ function trunc(x) {
 function ulp(){
     var $ = $B.args("ulp", 1, {x: null}, ['x'], arguments, {}, null, null),
         x = $.x
-    if(x == MAX_VALUE){
-        return MAX_VALUE - _mod.nextafter(MAX_VALUE, 0)
-    }else if(_b_.float.$funcs.isinf(x)){
-        return _mod.inf
+    if(_b_.isinstance(x, _b_.float)){
+        if(_b_.float.$funcs.isinf(x)){
+            return _mod.inf
+        }else if(_b_.float.$funcs.isnan(x)){
+            return _mod.nan
+        }
     }
-    if(typeof x == "number" || x instanceof Number){
-        return x > 0 ? nextUp(x) - x : x - (-nextUp(-x))
+    if(typeof x == "number"){
+        return x >= 0 ? $B.fast_float(nextUp(x) - x) :
+                       $B.fast_float(x - (-nextUp(-x)))
+    }else if(_b_.isinstance(x, $B.long_int)){
+        x = Number(_b_.int.$to_bigint(x))
+        return x > 0 ? $B.fast_float(nextUp(x) - x) :
+                       $B.fast_float(x - (-nextUp(-x)))
     }else{
-        if($B.rich_comp('__gt__', x, 0)){
-            return $B.rich_op('__sub__', nextUp(x), x)
+        if($B.rich_comp('__ge__', x, 0)){
+            return $B.rich_op('__sub__', $B.fast_float(nextUp(x.value)), x)
         }else{
             var neg_x = $B.$call($B.$getattr(x, "__neg__"))()
             return $B.rich_op('__sub__', x,
-                $B.$call($B.$getattr(nextUp(neg_x), '__neg__'))())
+                $B.$call($B.$getattr($B.fast_float(nextUp(neg_x.value)), '__neg__'))())
         }
     }
 }

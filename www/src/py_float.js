@@ -633,7 +633,7 @@ function isinf(x) {
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
 
-function isnan(x) {
+function isnan(x){
     var x1 = float_value(x).value
     return isNaN(x1)
 }
@@ -1392,7 +1392,7 @@ float.fromhex = _b_.classmethod.$factory(float.fromhex)
 _b_.float = float
 
 $B.MAX_VALUE = fast_float(Number.MAX_VALUE)
-$B.MIN_VALUE = fast_float(Number.MIN_VALUE)
+$B.MIN_VALUE = fast_float(2.2250738585072014e-308) // != Number.MIN_VALUE
 const NINF = fast_float(Number.NEGATIVE_INFINITY),
       INF = fast_float(Number.POSITIVE_INFINITY),
       NAN = fast_float(Number.NaN),

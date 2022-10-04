@@ -161,9 +161,10 @@ class Tester:
         import math
         assert math.isnan(obj), f'{obj} is not NaN' if msg is None else msg
 
-    def assertLessEqual(self, a, b):
+    def assertLessEqual(self, a, b, msg=None):
         if not a <= b:
-            raise AssertionError('%s should be <=n %s' %(a, b))
+            raise AssertionError('%s should be <= %s' %(a, b) if msg is None
+                                 else msg)
 
     def assertNotIn(self, item, container):
         if item in container:
