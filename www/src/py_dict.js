@@ -606,6 +606,9 @@ dict.__init__ = function(self, first, second){
         }else if(Array.isArray(first)){
             init_from_list(self, first)
             return $N
+        }else if(first[Symbol.iterator]){
+            init_from_list(self, Array.from(first))
+            return $N
         }
     }
 

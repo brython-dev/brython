@@ -642,11 +642,9 @@ function make_comp(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    js += `var next_func_${id} = $B.next_of(expr)\n` +
-          `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-          `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-          `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
-          `throw err\n}\n}\n`
+    js += `var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n` +
+          `try{\n` +
+              `for(var next_${id} of next_func_${id}){\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -683,7 +681,6 @@ function make_comp(scopes){
     js = `(${has_await ? 'async ' : ''}function(expr){\n` + js
 
     js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
-    js += `try{\n`
     if(this instanceof $B.ast.ListComp){
         js += `result_${id}.push(${elt})\n`
     }else if(this instanceof $B.ast.SetComp){
@@ -692,14 +689,14 @@ function make_comp(scopes){
         js += `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
     }
 
-    js += `}catch(err){\n` +
-          (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
-          `$B.leave_frame(locals)\nthrow err\n}` +
-          (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
-
     for(var i = 0; i < nb_paren; i++){
         js += '}\n'
     }
+    js += `}catch(err){\n` +
+          (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
+          `$B.leave_frame(locals)\nthrow err\n}\n` +
+          (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
+
 
     js += `\n$B.leave_frame({locals, value: _b_.None})`
     js += `\nreturn result_${id}`
@@ -1380,21 +1377,14 @@ $B.ast.comprehension.prototype.to_js = function(scopes){
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes)
 
-    var js = `var next_func_${id} = $B.next_of(${iter})\n` +
-             `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-             `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-             `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
-             `throw err\n}\n}\n`
+    var js = `var next_func_${id} = $B.next_of1(${iter}, frame, ${this.lineno})\n` +
+             `for(var next_${id} of next_func_${id}){\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, this.target)
     name.to_js = function(){return `next_${id}`}
     var assign = new $B.ast.Assign([this.target], name)
     copy_position(assign, this.target)
-    if(assign.col_offset === undefined){
-        console.log('pas de col offset', assign, 'target', this.target)
-        alert()
-    }
     js += assign.to_js(scopes) + ' // assign to target\n'
 
     for(var _if of this.ifs){
@@ -1566,18 +1556,7 @@ $B.ast.For.prototype.to_js = function(scopes){
             `  }\n`
     }else{
         js = `var no_break_${id} = true\n` +
-             `var next_func_${id} = $B.next_of(${iter})\n` +
-             `while(true){\n` +
-                 `try{\n` +
-                     `$B.set_lineno(frame, ${this.lineno})\n` +
-                     `var next_${id} = next_func_${id}()\n` +
-                 `}catch(err){\n` +
-                     `if($B.is_exc(err, [_b_.StopIteration])){\n` +
-                         `break\n` +
-                     `}else{\n ` +
-                         `throw err\n` +
-                     `}\n` +
-                 `}\n`
+             `for(var next_${id} of $B.next_of1(${iter}, frame, ${this.lineno})){\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
@@ -1962,11 +1941,8 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    js += `var next_func_${id} = $B.next_of(expr)\n` +
-          `while(true){\ntry{\nvar next_${id} = next_func_${id}()\n` +
-          `}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n` +
-          `break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n ` +
-          `throw err\n}\n}\n`
+    js += `var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n` +
+          `for(var next_${id} of next_func_${id}){\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)

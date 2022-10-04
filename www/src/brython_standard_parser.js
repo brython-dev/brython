@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-03 10:40:48.063992"
-__BRYTHON__.timestamp=1664786448063
+__BRYTHON__.compiled_date="2022-10-04 15:04:47.744227"
+__BRYTHON__.timestamp=1664888687744
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5467,7 +5467,37 @@ return res}}else{return function(){if(obj.ix <=iterator.stop){throw _b_.StopIter
 var res=obj.ix
 obj.ix+=iterator.step
 return res}}}
+if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator](),obj={ix:0},items=Array.from(it),len=items.length
+return function(){if(obj.ix==len){throw _b_.StopIteration.$factory('')}
+var res=items[obj.ix]
+obj.ix++
+return res}}
+if(iterator.$builtin_iterator){if(iterator.$next_func===undefined){iterator.$next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
+return iterator.$next_func}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
+$B.next_of1=function(iterator,frame,lineno){
+if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
+if(iterator.step > 0){return{
+[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+if(obj.ix >=iterator.stop){return{done:true,value:null}}
+var value=obj.ix
+obj.ix+=iterator.step
+return{done:false,value}}}}else{return{
+[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+if(obj.ix <=iterator.stop){return{done:true,value:null}}
+var value=obj.ix
+obj.ix+=iterator.step
+return{done:false,value}}}}}
+if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator]()
+return{
+[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+return it.next()}}}
+var next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))
+return{
+[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+try{var value=next_func()
+return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
+throw err}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
 var position,position_rank=3
 if(has_starred){var nb_after_starred=arguments[3]
@@ -5691,7 +5721,7 @@ $B.stdout=$io.$factory("log")
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
 $B.make_iterator_class=function(name){
 var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
-__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length}},$infos:{__name__:name},$is_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
+__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length,$builtin_iterator:true}},$infos:{__name__:name},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
 self.len=self.items.length
 return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.test_change=="function" && self.test_change()){
 throw _b_.RuntimeError.$factory(
@@ -5701,6 +5731,7 @@ if(self.counter < self.items.length){var item=self.items[self.counter]
 if(self.items.$brython_class=="js"){
 item=$B.$JS2Py(item)}
 return item}
+delete self.items.$next_func 
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
@@ -6257,8 +6288,8 @@ function anext(async_iterator,_default){var missing={},$=$B.args('anext',2,{asyn
 var awaitable=$B.$call($B.$getattr(async_iterator,'__anext__'))()
 return awaitable}
 function any(obj){check_nb_args_no_kw('any',1,arguments)
-var iterable=iter(obj)
-while(1){try{var elt=next(iterable)
+var next_of=$B.next_of(obj)
+while(1){try{var elt=next_of()
 if($B.$bool(elt)){return true}}catch(err){return false}}}
 function ascii(obj){check_nb_args_no_kw('ascii',1,arguments)
 var res=repr(obj),res1='',cp
@@ -6849,14 +6880,13 @@ res.$is_namespace=true
 delete res.$jsobj.__annotations__
 return res}
 var map=$B.make_class("map",function(){var $=$B.args('map',2,{func:null,it1:null},['func','it1'],arguments,{},'args',null),func=$B.$call($.func)
-var iter_args=[$B.$iter($.it1)]
-$.args.forEach(function(item){iter_args.push($B.$iter(item))})
+var iter_args=[$.it1].concat($.args).map($B.next_of)
 var obj={__class__:map,args:iter_args,func:func}
 return obj}
 )
 map.__iter__=function(self){return self}
 map.__next__=function(self){var args=[]
-for(var i=0;i < self.args.length;i++){args.push(next(self.args[i]))}
+for(var next_of of self.args){args.push(next_of())}
 return self.func.apply(null,args)}
 $B.set_func_names(map,"builtins")
 function $extreme(args,op){
@@ -6934,6 +6964,10 @@ $B.set_func_names(memoryview,"builtins")
 function min(){return $extreme(arguments,'__lt__')}
 function next(obj){check_no_kw('next',obj)
 var missing={},$=$B.args("next",2,{obj:null,def:null},['obj','def'],arguments,{def:missing},null,null)
+if(obj[Symbol.iterator]){
+var next=obj.next()
+if(next.done){throw _b_.StopIteration.$factory('')}
+return next.value}
 var klass=obj.__class__ ||$B.get_class(obj),ga=$B.$call($B.$getattr(klass,"__next__"))
 if(ga !==undefined){try{return $B.$call(ga)(obj)}catch(err){if(err.__class__===_b_.StopIteration &&
 $.def !==missing){return $.def}
@@ -7338,21 +7372,22 @@ if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
 var _args=$ns['args'],strict=$ns.kw.$string_dict.strict &&
 $ns.kw.$string_dict.strict[0]
-var args=[],nexts=[],only_lists=true,min_len
+var nexts=[],only_lists=true,min_len
 for(var i=0;i < _args.length;i++){if(only_lists && Array.isArray(_args[i])){if(strict){if(i==0){var len=_args[i].length}else if(_args[i]!=len){throw _b_.ValueError.$factory(`zip() argument ${i} `+
 `is ${_args[i] > len ? 'longer' : 'shorter'} `+
 `than argument ${i - 1}`)}}
-if(min_len===undefined ||_args[i].length < min_len){min_len=_args[i].length}}else{only_lists=false}
-var _next=$B.$call($B.$getattr(iter(_args[i]),"__next__"))
-args.push(_next)}
+if(min_len===undefined ||_args[i].length < min_len){min_len=_args[i].length}}else{only_lists=false}}
 var rank=0,items=[]
-if(only_lists){$B.nb_zip_list=$B.nb_zip_list===undefined ?
-1 :$B.nb_zip_list+1
-for(var i=0;i < min_len;i++){var line=[]
-for(var j=0;j < _args.length;j++){line.push(_args[j][i])}
+if(only_lists){for(var i=0;i < min_len;i++){var line=[]
+for(var _arg of _args){line.push(_arg[i])}
 items.push($B.fast_tuple(line))}
 res.items=items
-return zip_iterator.$factory(items)}
+var zip_it={__class__:zip,counter:-1,items,last:items.length,[Symbol.iterator](){return this},next(){this.counter++
+if(this.counter==this.last){return{done:true,value:null}}
+var line=$B.fast_tuple(this.items[this.counter])
+return{done:false,value:line}}}
+return zip_it}
+var args=_args.map($B.next_of)
 function*iterator(args){while(true){var line=[],flag=true
 for(var i=0;i < args.length;i++){try{line.push(args[i]())}catch(err){if(err.__class__==_b_.StopIteration){if(strict){if(i > 0){throw _b_.ValueError.$factory(
 `zip() argument ${i + 1} is shorter `+
@@ -11839,7 +11874,7 @@ $B.set_func_names(FloatSubclass,"builtins")
 float.fromhex=_b_.classmethod.$factory(float.fromhex)
 _b_.float=float
 $B.MAX_VALUE=fast_float(Number.MAX_VALUE)
-$B.MIN_VALUE=fast_float(Number.MIN_VALUE)
+$B.MIN_VALUE=fast_float(2.2250738585072014e-308)
 const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0),NZERO=fast_float(-0)})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12220,6 +12255,7 @@ if(second===undefined){if(first.$nat !='kw' && $B.get_class(first)===$B.JSObj){f
 return _b_.None}else if(first.$jsobj){self.$jsobj={}
 for(var attr in first.$jsobj){self.$jsobj[attr]=first.$jsobj[attr]}
 return $N}else if(Array.isArray(first)){init_from_list(self,first)
+return $N}else if(first[Symbol.iterator]){init_from_list(self,Array.from(first))
 return $N}}
 var $=$B.args("dict",1,{self:null},["self"],arguments,{},"first","second")
 var args=$.first
@@ -12855,6 +12891,7 @@ res.__class__=list
 res.__brython__=true
 return res}
 return obj}
+if(obj[Symbol.iterator]){return Array.from(obj)}
 var res=[],pos=0,arg=$B.$iter(obj),next_func=$B.$call($B.$getattr(arg,"__next__"))
 while(1){try{res[pos++]=next_func()}catch(err){if(!isinstance(err,_b_.StopIteration)){throw err}
 break}}
@@ -14367,11 +14404,9 @@ var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_
 var js=init_comprehension(comp)
 if(this instanceof $B.ast.ListComp){js+=`var result_${id} = []\n`}else if(this instanceof $B.ast.SetComp){js+=`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=`var result_${id} = $B.empty_dict()\n`}
 var first=this.generators[0]
-js+=`var next_func_${id} = $B.next_of(expr)\n`+
-`while(true){\ntry{\nvar next_${id} = next_func_${id}()\n`+
-`}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n`+
-`break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n `+
-`throw err\n}\n}\n`
+js+=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
+`try{\n`+
+`for(var next_${id} of next_func_${id}){\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -14387,13 +14422,12 @@ if(this instanceof $B.ast.DictComp){var key=$B.js_from_ast(this.key,scopes),valu
 var has_await=comp_scope.has_await
 js=`(${has_await ? 'async ' : ''}function(expr){\n`+js
 js+=has_await ? 'var save_stack = $B.save_stack();\n' :''
-js+=`try{\n`
 if(this instanceof $B.ast.ListComp){js+=`result_${id}.push(${elt})\n`}else if(this instanceof $B.ast.SetComp){js+=`_b_.set.add(result_${id}, ${elt})\n`}else if(this instanceof $B.ast.DictComp){js+=`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}
+for(var i=0;i < nb_paren;i++){js+='}\n'}
 js+=`}catch(err){\n`+
 (has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
-`$B.leave_frame(locals)\nthrow err\n}`+
+`$B.leave_frame(locals)\nthrow err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
-for(var i=0;i < nb_paren;i++){js+='}\n'}
 js+=`\n$B.leave_frame({locals, value: _b_.None})`
 js+=`\nreturn result_${id}`
 js+=`\n}\n)(${outmost_expr})\n`
@@ -14668,18 +14702,13 @@ if(this.ops[i]instanceof $B.ast.In){comps.push(`$B.$is_member(${left}, `+
 if(len > 1){left='locals.$op'}}
 return comps.join(' && ')}
 $B.ast.comprehension.prototype.to_js=function(scopes){var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes)
-var js=`var next_func_${id} = $B.next_of(${iter})\n`+
-`while(true){\ntry{\nvar next_${id} = next_func_${id}()\n`+
-`}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n`+
-`break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n `+
-`throw err\n}\n}\n`
+var js=`var next_func_${id} = $B.next_of1(${iter}, frame, ${this.lineno})\n`+
+`for(var next_${id} of next_func_${id}){\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.target)
 name.to_js=function(){return `next_${id}`}
 var assign=new $B.ast.Assign([this.target],name)
 copy_position(assign,this.target)
-if(assign.col_offset===undefined){console.log('pas de col offset',assign,'target',this.target)
-alert()}
 js+=assign.to_js(scopes)+' // assign to target\n'
 for(var _if of this.ifs){js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
 return js}
@@ -14748,18 +14777,7 @@ if(this instanceof $B.ast.AsyncFor){js=`var iter_${id} = ${iter},\n`+
 `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n`+
 `    else{\nthrow err}\n`+
 `  }\n`}else{js=`var no_break_${id} = true\n`+
-`var next_func_${id} = $B.next_of(${iter})\n`+
-`while(true){\n`+
-`try{\n`+
-`$B.set_lineno(frame, ${this.lineno})\n`+
-`var next_${id} = next_func_${id}()\n`+
-`}catch(err){\n`+
-`if($B.is_exc(err, [_b_.StopIteration])){\n`+
-`break\n`+
-`}else{\n `+
-`throw err\n`+
-`}\n`+
-`}\n`}
+`for(var next_${id} of $B.next_of1(${iter}, frame, ${this.lineno})){\n`}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
 name.to_js=function(){return `next_${id}`}
@@ -14932,11 +14950,8 @@ scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
 var js=init_comprehension(comp)
 var first=this.generators[0]
-js+=`var next_func_${id} = $B.next_of(expr)\n`+
-`while(true){\ntry{\nvar next_${id} = next_func_${id}()\n`+
-`}catch(err){\nif($B.is_exc(err, [_b_.StopIteration])){\n`+
-`break\n}else{\n$B.leave_frame({locals, value: _b_.None})\n `+
-`throw err\n}\n}\n`
+js+=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
+`for(var next_${id} of next_func_${id}){\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}

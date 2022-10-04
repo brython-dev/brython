@@ -160,12 +160,16 @@ function anext(async_iterator, _default){
 
 function any(obj){
     check_nb_args_no_kw('any', 1, arguments)
-    var iterable = iter(obj)
+    var next_of = $B.next_of(obj)
     while(1){
         try{
-            var elt = next(iterable)
-            if($B.$bool(elt)){return true}
-        }catch(err){return false}
+            var elt = next_of()
+            if($B.$bool(elt)){
+                return true
+            }
+        }catch(err){
+            return false
+        }
     }
 }
 
@@ -1767,12 +1771,9 @@ function locals(){
 var map = $B.make_class("map",
     function(){
         var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
-            arguments, {}, 'args', null),
+                arguments, {}, 'args', null),
             func = $B.$call($.func)
-        var iter_args = [$B.$iter($.it1)]
-        $.args.forEach(function(item){
-            iter_args.push($B.$iter(item))
-        })
+        var iter_args = [$.it1].concat($.args).map($B.next_of)
         var obj = {
             __class__: map,
             args: iter_args,
@@ -1782,11 +1783,14 @@ var map = $B.make_class("map",
     }
 )
 
-map.__iter__ = function (self){return self}
+map.__iter__ = function (self){
+    return self
+}
+
 map.__next__ = function(self){
     var args = []
-    for(var i = 0; i < self.args.length; i++){
-        args.push(next(self.args[i]))
+    for(var next_of of self.args){
+        args.push(next_of())
     }
     return self.func.apply(null, args)
 }
@@ -2011,6 +2015,14 @@ function next(obj){
     var missing = {},
         $ = $B.args("next", 2, {obj: null, def: null}, ['obj', 'def'],
             arguments, {def: missing}, null, null)
+    if(obj[Symbol.iterator]){
+        // JS iterator, used internally for speed
+        var next = obj.next()
+        if(next.done){
+            throw _b_.StopIteration.$factory('')
+        }
+        return next.value
+    }
     var klass = obj.__class__ || $B.get_class(obj),
         ga = $B.$call($B.$getattr(klass, "__next__"))
     if(ga !== undefined){
@@ -3197,8 +3209,8 @@ function $url_open(){
 var zip = $B.make_class("zip",
     function(){
         var res = {
-            __class__:zip,
-            items:[]
+            __class__: zip,
+            items: []
         }
         if(arguments.length == 0){
             return res
@@ -3207,8 +3219,7 @@ var zip = $B.make_class("zip",
         var _args = $ns['args'],
             strict = $ns.kw.$string_dict.strict &&
                 $ns.kw.$string_dict.strict[0]
-        var args = [],
-            nexts = [],
+        var nexts = [],
             only_lists = true,
             min_len
 
@@ -3229,25 +3240,41 @@ var zip = $B.make_class("zip",
             }else{
                 only_lists = false
             }
-            var _next = $B.$call($B.$getattr(iter(_args[i]), "__next__"))
-            args.push(_next)
         }
 
         var rank = 0,
             items = []
         if(only_lists){
-            $B.nb_zip_list = $B.nb_zip_list === undefined ?
-                1 : $B.nb_zip_list + 1
             for(var i = 0; i < min_len; i++){
                 var line = []
-                for(var j = 0; j < _args.length; j++){
-                    line.push(_args[j][i])
+                for(var _arg of _args){
+                    line.push(_arg[i])
                 }
                 items.push($B.fast_tuple(line))
             }
             res.items = items
-            return zip_iterator.$factory(items)
+            var zip_it = {
+                __class__: zip,
+                counter: -1,
+                items,
+                last: items.length,
+                [Symbol.iterator](){
+                    return this
+                },
+                next(){
+                    this.counter++
+                    if(this.counter == this.last){
+                        return {done: true, value: null}
+                    }
+                    var line = $B.fast_tuple(this.items[this.counter])
+                    return {done: false, value: line}
+                }
+            }
+            return zip_it
+
+            //return zip_iterator.$factory(items)
         }
+        var args = _args.map($B.next_of)
         function* iterator(args){
             while(true){
                 var line = [],

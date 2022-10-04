@@ -355,7 +355,104 @@ $B.next_of = function(iterator){
             }
         }
     }
+    if(iterator[Symbol.iterator]){
+        var it = iterator[Symbol.iterator](),
+            obj = {ix: 0},
+            items = Array.from(it),
+            len = items.length
+        return function(){
+            if(obj.ix == len){
+                throw _b_.StopIteration.$factory('')
+            }
+            var res = items[obj.ix]
+            obj.ix++
+            return res
+        }
+    }
+    if(iterator.$builtin_iterator){
+        if(iterator.$next_func === undefined){
+            iterator.$next_func = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+        }
+        return iterator.$next_func
+    }
     return $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+}
+
+$B.next_of1 = function(iterator, frame, lineno){
+    // return a Javascript iterator usable in a loop
+    // "for(item of $B.next_of1(...)){"
+    if(iterator.__class__ === _b_.range){
+        var obj = {ix: iterator.start}
+        if(iterator.step > 0){
+            return {
+                [Symbol.iterator](){
+                    return this
+                },
+                next(){
+                    $B.set_lineno(frame, lineno)
+                    if(obj.ix >= iterator.stop){
+                        return {done: true, value: null}
+                    }
+                    var value = obj.ix
+                    obj.ix += iterator.step
+                    return {done: false, value}
+                }
+            }
+        }else{
+            return {
+                [Symbol.iterator](){
+                    return this
+                },
+                next(){
+                    $B.set_lineno(frame, lineno)
+                    if(obj.ix <= iterator.stop){
+                        return {done: true, value: null}
+                    }
+                    var value = obj.ix
+                    obj.ix += iterator.step
+                    return {done: false, value}
+                }
+            }
+        }
+    }
+    if(iterator[Symbol.iterator]){
+        var it = iterator[Symbol.iterator]()
+        return {
+            [Symbol.iterator](){
+                return this
+            },
+            next(){
+                $B.set_lineno(frame, lineno)
+                return it.next()
+            }
+        }
+    }
+    /*
+    if(iterator.$builtin_iterator){
+        if(iterator.$next_func === undefined){
+            iterator.$next_func = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+        }
+        return iterator.$next_func
+    }
+    */
+    var next_func = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+    return {
+        [Symbol.iterator](){
+            return this
+        },
+        next(){
+            $B.set_lineno(frame, lineno)
+            try{
+                var value = next_func()
+                return {done: false, value}
+            }catch(err){
+                if($B.is_exc(err, [_b_.StopIteration])){
+                    return {done: true, value: null}
+                }
+                throw err
+            }
+        }
+    }
 }
 
 $B.unpacker = function(obj, nb_targets, has_starred){
@@ -1018,13 +1115,15 @@ $B.make_iterator_class = function(name){
                 __dict__: $B.empty_dict(),
                 counter: -1,
                 items: items,
-                len: items.length
+                len: items.length,
+                $builtin_iterator: true
             }
         },
         $infos:{
             __name__: name
         },
         $is_class: true,
+        $iterator_class: true,
 
         __iter__: function(self){
             self.counter = self.counter === undefined ? -1 : self.counter
@@ -1056,6 +1155,7 @@ $B.make_iterator_class = function(name){
                 }
                 return item
             }
+            delete self.items.$next_func // set by $B.next_of()
             throw _b_.StopIteration.$factory("StopIteration")
         },
 
