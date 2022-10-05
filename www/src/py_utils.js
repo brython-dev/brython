@@ -1317,6 +1317,8 @@ $B.enter_frame = function(frame){
             try{
                 return $B.tracefunc($B.last($B.frames_stack), 'call', _b_.None)
             }catch(err){
+                $B.set_exc(err)
+                $B.frames_stack.pop()
                 err.$in_trace_func = true
                 throw err
             }

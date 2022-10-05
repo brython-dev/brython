@@ -605,6 +605,7 @@ function init_comprehension(comp){
            `locals['.0'] = expr\n` +
            `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
+           `frame.__file__ = '<string>'\n` +
            `frame.$lineno = ${comp.ast.lineno}\n` +
            `locals.$f_trace = $B.enter_frame(frame)\n` +
            `var _frames = $B.frames_stack.slice()\n`
