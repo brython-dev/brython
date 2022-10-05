@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-05 19:08:34.979730"
-__BRYTHON__.timestamp=1664989714978
+__BRYTHON__.compiled_date="2022-10-05 22:21:38.491725"
+__BRYTHON__.timestamp=1665001298491
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7595,7 +7595,8 @@ frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self
 ', line '+_self.$lineno+', code '+
 frame.f_code.__get__(_self).co_name+'>'}
 frame.f_code={__get__:function(_self){var res
-if(_self[4]){res=_self[4].$infos.__code__}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}}
+if(_self[4]){res=_self[4].$infos.__code__}else if(_self.f_code){
+res=_self.f_code}else{res={co_name:(_self[0]==_self[2]? '<module>' :_self[0]),co_filename:_self.__file__,co_varnames:$B.fast_tuple([])}}
 res.__class__=$B.code
 return res}}
 frame.f_globals={__get__:function(_self){return $B.obj_dict(_self[3])}}
@@ -14380,7 +14381,12 @@ function init_comprehension(comp){
 var comp_id=comp.type+'_'+comp.id,varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
 return `var ${comp.locals_name} = {},\n`+
 `locals = ${comp.locals_name}\n`+
-`locals.$comp_code = {\n`+
+`locals['.0'] = expr\n`+
+`var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
+`"${comp.module_name}", ${comp.globals_name}]\n`+
+`frame.__file__ = '<string>'\n`+
+`frame.$lineno = ${comp.ast.lineno}\n`+
+`frame.f_code = {\n`+
 `co_argcount: 1,\n`+
 `co_firstlineno:${comp.ast.lineno},\n`+
 `co_name: "<${comp.type}>",\n`+
@@ -14390,11 +14396,6 @@ return `var ${comp.locals_name} = {},\n`+
 `co_posonlyargount: 0,\n`+
 `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
 `}\n`+
-`locals['.0'] = expr\n`+
-`var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
-`"${comp.module_name}", ${comp.globals_name}]\n`+
-`frame.__file__ = '<string>'\n`+
-`frame.$lineno = ${comp.ast.lineno}\n`+
 `locals.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`}
 function make_comp(scopes){
@@ -14951,10 +14952,11 @@ outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
 scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
-var js=init_comprehension(comp)
+var head=init_comprehension(comp)
 var first=this.generators[0]
-js+=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
-`for(var next_${id} of next_func_${id}){\n`
+var js=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
+`for(var next_${id} of next_func_${id}){\n`+
+`locals.$f_trace = $B.enter_frame(frame)\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -14967,7 +14969,7 @@ for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scope
 nb_paren++
 for(var _if of comprehension.ifs){nb_paren++}}
 var elt=$B.js_from_ast(this.elt,scopes),has_await=comp_scope.has_await
-js=`$B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`+js
+js=`var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`+js
 js+=has_await ? 'var save_stack = $B.save_stack();\n' :''
 js+=`try{\n`+
 ` yield ${elt}\n`+
@@ -14975,11 +14977,13 @@ js+=`try{\n`+
 (has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
 `$B.leave_frame(locals)\nthrow err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
-for(var i=0;i < nb_paren;i++){js+='}\n'}
+for(var i=0;i < nb_paren-1;i++){js+='}\n'}
+js+='$B.leave_frame(locals)\n}\n'
 js+=`\n$B.leave_frame({locals, value: _b_.None})`+
-`}, "<genexpr>")(${outmost_expr})\n`
+`}, "<genexpr>")(expr)\n`
 scopes.pop()
-return js}
+var func=`${head}\n${js}\n$B.leave_frame(locals)\nreturn gen${id}`
+return `(function(expr){\n${func}\n})(${outmost_expr})\n`}
 $B.ast.Global.prototype.to_js=function(scopes){var scope=$B.last(scopes)
 for(var name of this.names){scope.globals.add(name)}
 return ''}

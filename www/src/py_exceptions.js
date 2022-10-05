@@ -196,6 +196,9 @@ frame.f_code = {
         var res
         if(_self[4]){
             res = _self[4].$infos.__code__
+        }else if(_self.f_code){
+            // set in comprehensions
+            res = _self.f_code
         }else{
             res = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),

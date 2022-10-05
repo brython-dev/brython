@@ -592,7 +592,12 @@ function init_comprehension(comp){
         varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
     return `var ${comp.locals_name} = {},\n` +
                `locals = ${comp.locals_name}\n` +
-           `locals.$comp_code = {\n` +
+           `locals['.0'] = expr\n` +
+           `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
+           `"${comp.module_name}", ${comp.globals_name}]\n` +
+           `frame.__file__ = '<string>'\n` +
+           `frame.$lineno = ${comp.ast.lineno}\n` +
+           `frame.f_code = {\n` +
                `co_argcount: 1,\n` +
                `co_firstlineno:${comp.ast.lineno},\n` +
                `co_name: "<${comp.type}>",\n` +
@@ -602,11 +607,6 @@ function init_comprehension(comp){
                `co_posonlyargount: 0,\n` +
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
-           `locals['.0'] = expr\n` +
-           `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
-           `"${comp.module_name}", ${comp.globals_name}]\n` +
-           `frame.__file__ = '<string>'\n` +
-           `frame.$lineno = ${comp.ast.lineno}\n` +
            `locals.$f_trace = $B.enter_frame(frame)\n` +
            `var _frames = $B.frames_stack.slice()\n`
 }
@@ -1938,12 +1938,13 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
 
-    var js = init_comprehension(comp)
+    var head = init_comprehension(comp)
 
     // special case for first generator
     var first = this.generators[0]
-    js += `var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n` +
-          `for(var next_${id} of next_func_${id}){\n`
+    var js = `var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n` +
+          `for(var next_${id} of next_func_${id}){\n` +
+              `locals.$f_trace = $B.enter_frame(frame)\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -1972,7 +1973,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
-    js = `$B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n` + js
+    js = `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n` + js
 
     js += has_await ? 'var save_stack = $B.save_stack();\n' : ''
     js += `try{\n` +
@@ -1982,15 +1983,17 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
           `$B.leave_frame(locals)\nthrow err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
-    for(var i = 0; i < nb_paren; i++){
+    for(var i = 0; i < nb_paren - 1; i++){
         js += '}\n'
     }
+    js += '$B.leave_frame(locals)\n}\n'
 
     js += `\n$B.leave_frame({locals, value: _b_.None})` +
-          `}, "<genexpr>")(${outmost_expr})\n`
+          `}, "<genexpr>")(expr)\n`
 
     scopes.pop()
-    return js
+    var func = `${head}\n${js}\n$B.leave_frame(locals)\nreturn gen${id}`
+    return `(function(expr){\n${func}\n})(${outmost_expr})\n`
 }
 
 $B.ast.Global.prototype.to_js = function(scopes){
