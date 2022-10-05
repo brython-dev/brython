@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-05 22:21:38.491725"
-__BRYTHON__.timestamp=1665001298491
+__BRYTHON__.compiled_date="2022-10-05 22:41:16.864882"
+__BRYTHON__.timestamp=1665002476864
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14430,9 +14430,9 @@ if(this instanceof $B.ast.ListComp){js+=`result_${id}.push(${elt})\n`}else if(th
 for(var i=0;i < nb_paren;i++){js+='}\n'}
 js+=`}catch(err){\n`+
 (has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
-`$B.leave_frame(locals)\nthrow err\n}\n`+
+`$B.leave_frame()\nthrow err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
-js+=`\n$B.leave_frame({locals, value: _b_.None})`
+js+=`\n$B.leave_frame()`
 js+=`\nreturn result_${id}`
 js+=`\n}\n)(${outmost_expr})\n`
 scopes.pop()
@@ -14675,7 +14675,7 @@ scopes.pop()
 js+='\nif(locals.$f_trace !== _b_.None){\n'+
 '$B.trace_return(_b_.None)\n'+
 '}\n'+
-'$B.leave_frame({locals})\n'+
+'$B.leave_frame()\n'+
 'return locals\n})()\n'
 var class_ref=reference(scopes,enclosing_scope,this.name)
 if(decorated){class_ref=`decorated${$B.UUID()}`
@@ -14879,13 +14879,13 @@ if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
 js+='var result = _b_.None\n'+
 'if(locals.$f_trace !== _b_.None){\n'+
 '$B.trace_return(_b_.None)\n}\n'+
-'$B.leave_frame(locals);return result\n'}
+'$B.leave_frame();return result\n'}
 js+=`}catch(err){
     $B.set_exc(err)
     if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){
     ${locals_name}.$f_trace = $B.trace_exception()
     }
-    $B.leave_frame(locals);throw err
+    $B.leave_frame();throw err
     }
     }\n`
 if(is_generator){js+=`, '${this.name}')\n`+
@@ -14975,14 +14975,14 @@ js+=`try{\n`+
 ` yield ${elt}\n`+
 `}catch(err){\n`+
 (has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
-`$B.leave_frame(locals)\nthrow err\n}\n`+
+`$B.leave_frame()\nthrow err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
 for(var i=0;i < nb_paren-1;i++){js+='}\n'}
-js+='$B.leave_frame(locals)\n}\n'
-js+=`\n$B.leave_frame({locals, value: _b_.None})`+
+js+='$B.leave_frame()\n}\n'
+js+=`\n$B.leave_frame()`+
 `}, "<genexpr>")(expr)\n`
 scopes.pop()
-var func=`${head}\n${js}\n$B.leave_frame(locals)\nreturn gen${id}`
+var func=`${head}\n${js}\n$B.leave_frame()\nreturn gen${id}`
 return `(function(expr){\n${func}\n})(${outmost_expr})\n`}
 $B.ast.Global.prototype.to_js=function(scopes){var scope=$B.last(scopes)
 for(var name of this.names){scope.globals.add(name)}
@@ -15211,7 +15211,7 @@ var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 (this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')
 js+=`\nif(locals.$f_trace !== _b_.None){\n`+
 `$B.trace_return(result)\n}\n`+
-`$B.leave_frame(locals)\nreturn result\n`
+`$B.leave_frame()\nreturn result\n`
 return js}
 $B.ast.Set.prototype.to_js=function(scopes){for(var elt of this.elts){if(elt instanceof $B.ast.Starred){elt.$handled=true}}
 var call_obj={args:this.elts,keywords:[]}
@@ -15271,7 +15271,7 @@ var finalbody=`var exit = false\n`+
 add_body(this.finalbody,scopes)
 if(this.finalbody.length > 0 &&
 !($B.last(this.finalbody)instanceof $B.ast.Return)){finalbody+=`\nif(exit){\n`+
-`$B.leave_frame(locals)\n`+
+`$B.leave_frame()\n`+
 `}`}
 var elsebody=`if($B.frames_stack.length == stack_length_${id} `+
 `&& ! failed${id}){\n`+
@@ -15392,7 +15392,7 @@ return `yield* (function* f(){
                 while(true){
                     var failed1${n} = false
                     try{
-                        $B.leave_frame({locals})
+                        $B.leave_frame()
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push(frame)
                     }catch(_e){

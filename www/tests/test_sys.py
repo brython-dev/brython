@@ -128,5 +128,19 @@ argcounts = []
 f2()
 assert argcounts == [0, 1] + [1] * 10
 
+# issue 2056
+def f3():
+    for value in (0,):
+        pass
+
+def traceFn(frame, event, arg):
+    traces.append(event)
+    return traceFn
+
+sys.settrace(traceFn)
+traces = []
+f3()
+assert traces == ['call', 'line', 'line', 'line', 'return']
+
 # remove trace for next tests
 sys.settrace(None)

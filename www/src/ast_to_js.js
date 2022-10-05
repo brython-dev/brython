@@ -695,11 +695,11 @@ function make_comp(scopes){
     }
     js += `}catch(err){\n` +
           (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
-          `$B.leave_frame(locals)\nthrow err\n}\n` +
+          `$B.leave_frame()\nthrow err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
 
-    js += `\n$B.leave_frame({locals, value: _b_.None})`
+    js += `\n$B.leave_frame()`
     js += `\nreturn result_${id}`
     js += `\n}\n)(${outmost_expr})\n`
 
@@ -1303,7 +1303,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     js += '\nif(locals.$f_trace !== _b_.None){\n' +
               '$B.trace_return(_b_.None)\n' +
           '}\n' +
-          '$B.leave_frame({locals})\n' +
+          '$B.leave_frame()\n' +
           'return locals\n})()\n'
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
@@ -1786,7 +1786,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var result = _b_.None\n' +
               'if(locals.$f_trace !== _b_.None){\n' +
               '$B.trace_return(_b_.None)\n}\n' +
-              '$B.leave_frame(locals);return result\n'
+              '$B.leave_frame();return result\n'
     }
 
     js += `}catch(err){
@@ -1794,7 +1794,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){
     ${locals_name}.$f_trace = $B.trace_exception()
     }
-    $B.leave_frame(locals);throw err
+    $B.leave_frame();throw err
     }
     }\n`
 
@@ -1980,19 +1980,19 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
           ` yield ${elt}\n` +
           `}catch(err){\n` +
           (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
-          `$B.leave_frame(locals)\nthrow err\n}\n` +
+          `$B.leave_frame()\nthrow err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
     for(var i = 0; i < nb_paren - 1; i++){
         js += '}\n'
     }
-    js += '$B.leave_frame(locals)\n}\n'
+    js += '$B.leave_frame()\n}\n'
 
-    js += `\n$B.leave_frame({locals, value: _b_.None})` +
+    js += `\n$B.leave_frame()` +
           `}, "<genexpr>")(expr)\n`
 
     scopes.pop()
-    var func = `${head}\n${js}\n$B.leave_frame(locals)\nreturn gen${id}`
+    var func = `${head}\n${js}\n$B.leave_frame()\nreturn gen${id}`
     return `(function(expr){\n${func}\n})(${outmost_expr})\n`
 }
 
@@ -2525,7 +2525,7 @@ $B.ast.Return.prototype.to_js = function(scopes){
              (this.value ? $B.js_from_ast(this.value, scopes) : ' _b_.None')
     js += `\nif(locals.$f_trace !== _b_.None){\n` +
           `$B.trace_return(result)\n}\n` +
-          `$B.leave_frame(locals)\nreturn result\n`
+          `$B.leave_frame()\nreturn result\n`
     return js
 }
 
@@ -2671,7 +2671,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         if(this.finalbody.length > 0 &&
                 ! ($B.last(this.finalbody) instanceof $B.ast.Return)){
             finalbody += `\nif(exit){\n` +
-                           `$B.leave_frame(locals)\n` +
+                           `$B.leave_frame()\n` +
                         `}`
         }
         // The 'else' clause is executed if no exception was raised, and if
@@ -2940,7 +2940,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                 while(true){
                     var failed1${n} = false
                     try{
-                        $B.leave_frame({locals})
+                        $B.leave_frame()
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push(frame)
                     }catch(_e){
