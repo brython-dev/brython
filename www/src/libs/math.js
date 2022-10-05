@@ -1099,6 +1099,15 @@ function floor(x){
 
 function fmod(x, y){
     $B.check_nb_args_no_kw('fmod', 2, arguments)
+    if(_b_.isinstance(x, _b_.float)){
+        if(_b_.float.$funcs.isinf(x)){
+            throw _b_.ValueError.$factory('math domain error')
+        }
+    }
+    y = float_check(y)
+    if(y == 0){
+        throw _b_.ValueError.$factory('math domain error')
+    }
     return _b_.float.$factory(float_check(x) % float_check(y))
 }
 
@@ -1110,8 +1119,7 @@ function frexp(x){
 }
 
 function fsum(x){
-    $B.check_nb_args('fsum', 1, arguments)
-    $B.check_no_kw('fsum', x)
+    $B.check_nb_args_no_kw('fsum', 1, arguments)
 
     /* Translation into Javascript of the function msum in an Active
        State Cookbook recipe : https://code.activestate.com/recipes/393090/
@@ -1124,8 +1132,11 @@ function fsum(x){
         try{
             var x = _b_.next(_it),
                 i = 0
+            console.log('x', x)
+            x = float_check(x)
             for(var j = 0, len = partials.length; j < len; j++){
-                var y = partials[j]
+                var y = float_check(partials[j])
+                console.log('x', x, 'y', y)
                 if(Math.abs(x) < Math.abs(y)){
                     var z = x
                     x = y
