@@ -1077,12 +1077,19 @@ $B.$getattr = function(obj, attr, _default){
           break
       case '__class__':
           // attribute __class__ is set for all Python objects
-          if(klass.__dict__ && klass.__dict__.$string_dict.__class__){
-              var klass_class = klass.__dict__.$string_dict.__class__[0]
-              if(klass_class.$is_property){
-                  return klass_class.fget(obj)
+          if(klass.__dict__){
+              var klass_from_dict
+              if(klass.__dict__.$string_dict){
+                  if(klass.__dict__.$string_dict.__class__){
+                      klass_from_dict = klass.__dict__.$string_dict.__class__[0]
+                  }
               }
-              return klass_class
+              if(klass_from_dict !== undefined){
+                  if(klass_from_dict.$is_property){
+                      return klass_from_dict.fget(obj)
+                  }
+                  return klass_from_dict
+              }
           }
           return klass
       case '__dict__':
@@ -1546,7 +1553,7 @@ function isinstance(obj, cls){
         throw _b_.TypeError.$factory(
             'isinstance() arg 2 cannot be a parameterized generic')
     }
-    if((!cls.__class__) || (! cls.$is_class)){
+    if((!cls.__class__) && (! cls.$is_class)){
         if(! $B.$getattr(cls, '__instancecheck__', false)){
             throw _b_.TypeError.$factory("isinstance() arg 2 must be a type " +
                 "or tuple of types")
@@ -1611,11 +1618,12 @@ function issubclass(klass, classinfo){
     var mro
     if(!klass.__class__ ||
             !(klass.$factory !== undefined || klass.$is_class !== undefined)){
+
         var meta = $B.$getattr(klass, '__class__', null) // found in unittest.mock
         if(meta === null){
+            console.log('no class for', klass)
             throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")
         }else{
-            console.log(klass, 'has an attribute __class__', meta)
             mro = [_b_.object]
         }
     }else{
@@ -2649,14 +2657,29 @@ var $$super = $B.make_class("super",
                 throw _b_.RuntimeError.$factory("super(): no arguments")
             }
         }
-        if(! no_object_or_type && Array.isArray(object_or_type)){
+        if((! no_object_or_type) && Array.isArray(object_or_type)){
             object_or_type = object_or_type[0]
         }
+        var $arg2
 
+        if(object_or_type !== undefined){
+            if(object_or_type === _type ||
+                    (object_or_type.$is_class &&
+                    _b_.issubclass(object_or_type, _type))){
+                $arg2 = 'type'
+            }else if(_b_.isinstance(object_or_type, _type)){
+                $arg2 = 'object'
+            }else{
+                throw _b_.TypeError.$factory(
+                    'super(type, obj): obj must be an instance ' +
+                    'or subtype of type')
+            }
+        }
         return {
             __class__: $$super,
             __thisclass__: _type,
-            __self_class__: object_or_type
+            __self_class__: object_or_type,
+            $arg2
         }
     }
 )
@@ -2667,9 +2690,6 @@ $$super.__get__ = function(self, instance, klass){
 }
 
 $$super.__getattribute__ = function(self, attr){
-    var mro = self.__thisclass__.__mro__,
-        res
-
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -2678,32 +2698,25 @@ $$super.__getattribute__ = function(self, attr){
             }
         }
     }
-    var sc = self.__self_class__
-    if(sc !== undefined){
-        if(!sc.$is_class){
-            sc = sc.__class__ || $B.get_class(sc)
-        }
-        // Go up its parent classes until self.__thisclass__ and use
-        // the classes of its __mro__ above self.__thisclass__.
-        // Is this documented anywhere ?
-        var sc_mro = [sc].concat(sc.__mro__)
-        for(var i = 0; i < sc_mro.length; i++){
-            if(sc_mro[i] === self.__thisclass__){
-                mro = sc_mro.slice(i + 1)
-                break
-            }
-        }
-    }
+    // Determine method resolution order from object_or_type
+    var object_or_type = self.__self_class__,
+        mro = self.$arg2 == 'type' ? object_or_type.__mro__ :
+                                     $B.get_class(object_or_type).__mro__
+
+    // Search of method attr starts in mro after self.__thisclass__
+    var search_start = mro.indexOf(self.__thisclass__) + 1,
+        search_classes = mro.slice(search_start)
+
     var $test = false // attr == "a"
 
-    // search attr in parent classes; same as getattr() but skips __thisclass__
     var f
-    for(var i = 0, len = mro.length; i < len; i++){
-        if(mro[i][attr] !== undefined){
-            f = mro[i][attr]
+    for(var klass of search_classes){
+        if(klass[attr] !== undefined){
+            f = klass[attr]
             break
         }
     }
+
     if(f === undefined){
         if($$super[attr] !== undefined){
             return (function(x){
@@ -2727,6 +2740,8 @@ $$super.__getattribute__ = function(self, attr){
         f, f + '')}
     if(f.$type == "staticmethod" || attr == "__new__"){
         return f
+    }else if(f.__class__ === _b_.classmethod){
+        return f.__func__.bind(null, object_or_type)
     }else if(typeof f != "function"){
         return f
     }else{
@@ -2741,7 +2756,8 @@ $$super.__getattribute__ = function(self, attr){
             return res
         }
         method.__class__ = $B.method
-        var module
+        var module,
+            qualname
         if(f.$infos !== undefined){
             module = f.$infos.__module__
         }else if(f.__class__ === property){
@@ -2754,7 +2770,7 @@ $$super.__getattribute__ = function(self, attr){
             __func__: f,
             __name__: attr,
             __module__: module,
-            __qualname__: self.__thisclass__.$infos.__name__ + "." + attr
+            __qualname__: klass.$infos.__name__ + "." + attr
         }
         return method
     }

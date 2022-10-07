@@ -373,12 +373,11 @@ type.__getattribute__ = function(klass, attr){
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
-
         var v = klass[attr]
         if(v === undefined){
             var mro = klass.__mro__
             if(mro === undefined){
-                console.log("pas de mro pour", klass)
+                console.log("no mro for", klass)
             }
             for(var i = 0; i < mro.length; i++){
                 var v = mro[i][attr]

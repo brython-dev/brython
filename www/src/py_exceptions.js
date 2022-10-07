@@ -96,6 +96,11 @@ $B.print_stack = function(stack){
     return trace.join("\n")
 }
 
+$B.last_frame = function(){
+    var frame = $B.last($B.frames_stack)
+    return `file ${frame.__file__} line ${frame.$lineno}`
+}
+
 // class of traceback objects
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){

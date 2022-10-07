@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-05 22:41:16.864882"
-__BRYTHON__.timestamp=1665002476864
+__BRYTHON__.compiled_date="2022-10-07 21:38:05.273737"
+__BRYTHON__.timestamp=1665171485272
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5079,7 +5079,7 @@ return klass.__class__[attr].__get__(klass)}
 if(res===undefined){
 var v=klass[attr]
 if(v===undefined){var mro=klass.__mro__
-if(mro===undefined){console.log("pas de mro pour",klass)}
+if(mro===undefined){console.log("no mro for",klass)}
 for(var i=0;i < mro.length;i++){var v=mro[i][attr]
 if(v !==undefined){res=v
 break}}}else{res=v}
@@ -6639,9 +6639,10 @@ res.$infos={__name__:"__call__"}
 return res}
 break
 case '__class__':
-if(klass.__dict__ && klass.__dict__.$string_dict.__class__){var klass_class=klass.__dict__.$string_dict.__class__[0]
-if(klass_class.$is_property){return klass_class.fget(obj)}
-return klass_class}
+if(klass.__dict__){var klass_from_dict
+if(klass.__dict__.$string_dict){if(klass.__dict__.$string_dict.__class__){klass_from_dict=klass.__dict__.$string_dict.__class__[0]}}
+if(klass_from_dict !==undefined){if(klass_from_dict.$is_property){return klass_from_dict.fget(obj)}
+return klass_from_dict}}
 return klass
 case '__dict__':
 if(is_class){var dict={}
@@ -6800,7 +6801,7 @@ return false}
 if(cls.__class__===$B.GenericAlias){
 throw _b_.TypeError.$factory(
 'isinstance() arg 2 cannot be a parameterized generic')}
-if((!cls.__class__)||(! cls.$is_class)){if(! $B.$getattr(cls,'__instancecheck__',false)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
+if((!cls.__class__)&&(! cls.$is_class)){if(! $B.$getattr(cls,'__instancecheck__',false)){throw _b_.TypeError.$factory("isinstance() arg 2 must be a type "+
 "or tuple of types")}}
 if(cls===_b_.int &&(obj===True ||obj===False)){return True}
 if(cls===_b_.bool){switch(typeof obj){case "string":
@@ -6827,8 +6828,8 @@ function issubclass(klass,classinfo){check_nb_args_no_kw('issubclass',2,argument
 var mro
 if(!klass.__class__ ||
 !(klass.$factory !==undefined ||klass.$is_class !==undefined)){var meta=$B.$getattr(klass,'__class__',null)
-if(meta===null){throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")}else{console.log(klass,'has an attribute __class__',meta)
-mro=[_b_.object]}}else{mro=klass.__mro__}
+if(meta===null){console.log('no class for',klass)
+throw _b_.TypeError.$factory("issubclass() arg 1 must be a class")}else{mro=[_b_.object]}}else{mro=klass.__mro__}
 if(isinstance(classinfo,_b_.tuple)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
 return false}
 if(classinfo.__class__===$B.GenericAlias){throw _b_.TypeError.$factory(
@@ -7189,23 +7190,26 @@ if(_type===undefined && object_or_type===undefined){var frame=$B.last($B.frames_
 if(co_varnames.length > 0){_type=frame[1].__class__
 if(_type===undefined){throw _b_.RuntimeError.$factory("super(): no arguments")}
 object_or_type=frame[1][code.co_varnames[0]]}else{throw _b_.RuntimeError.$factory("super(): no arguments")}}
-if(! no_object_or_type && Array.isArray(object_or_type)){object_or_type=object_or_type[0]}
+if((! no_object_or_type)&& Array.isArray(object_or_type)){object_or_type=object_or_type[0]}
+var $arg2
+if(object_or_type !==undefined){if(object_or_type===_type ||
+(object_or_type.$is_class &&
+_b_.issubclass(object_or_type,_type))){$arg2='type'}else if(_b_.isinstance(object_or_type,_type)){$arg2='object'}else{throw _b_.TypeError.$factory(
+'super(type, obj): obj must be an instance '+
+'or subtype of type')}}
 return{
-__class__:$$super,__thisclass__:_type,__self_class__:object_or_type}}
+__class__:$$super,__thisclass__:_type,__self_class__:object_or_type,$arg2}}
 )
 $$super.__get__=function(self,instance,klass){
 return $$super.$factory(self.__thisclass__,instance)}
-$$super.__getattribute__=function(self,attr){var mro=self.__thisclass__.__mro__,res
-if(self.__thisclass__.$is_js_class){if(attr=="__init__"){
+$$super.__getattribute__=function(self,attr){if(self.__thisclass__.$is_js_class){if(attr=="__init__"){
 return function(){mro[0].$js_func.call(self.__self_class__,...arguments)}}}
-var sc=self.__self_class__
-if(sc !==undefined){if(!sc.$is_class){sc=sc.__class__ ||$B.get_class(sc)}
-var sc_mro=[sc].concat(sc.__mro__)
-for(var i=0;i < sc_mro.length;i++){if(sc_mro[i]===self.__thisclass__){mro=sc_mro.slice(i+1)
-break}}}
+var object_or_type=self.__self_class__,mro=self.$arg2=='type' ? object_or_type.__mro__ :
+$B.get_class(object_or_type).__mro__
+var search_start=mro.indexOf(self.__thisclass__)+1,search_classes=mro.slice(search_start)
 var $test=false 
 var f
-for(var i=0,len=mro.length;i < len;i++){if(mro[i][attr]!==undefined){f=mro[i][attr]
+for(var klass of search_classes){if(klass[attr]!==undefined){f=klass[attr]
 break}}
 if(f===undefined){if($$super[attr]!==undefined){return(function(x){return function(){var args=[x]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
@@ -7213,16 +7217,16 @@ return $$super[attr].apply(null,args)}})(self)}
 if($test){console.log("no attr",attr,self,"mro",mro)}
 throw $B.attr_error(attr,self)}
 if($test){console.log("super",attr,self,"mro",mro,"found in mro[0]",mro[0],f,f+'')}
-if(f.$type=="staticmethod" ||attr=="__new__"){return f}else if(typeof f !="function"){return f}else{if(f.__class__===$B.method){
+if(f.$type=="staticmethod" ||attr=="__new__"){return f}else if(f.__class__===_b_.classmethod){return f.__func__.bind(null,object_or_type)}else if(typeof f !="function"){return f}else{if(f.__class__===$B.method){
 f=f.$infos.__func__}
 var callable=$B.$call(f)
 var method=function(){var res=callable(self.__self_class__,...arguments)
 if($test){console.log("calling super",self.__self_class__,attr,f,"res",res)}
 return res}
 method.__class__=$B.method
-var module
+var module,qualname
 if(f.$infos !==undefined){module=f.$infos.__module__}else if(f.__class__===property){module=f.fget.$infos.__module}else if(f.$is_class){module=f.__module__}
-method.$infos={__self__:self.__self_class__,__func__:f,__name__:attr,__module__:module,__qualname__:self.__thisclass__.$infos.__name__+"."+attr}
+method.$infos={__self__:self.__self_class__,__func__:f,__name__:attr,__module__:module,__qualname__:klass.$infos.__name__+"."+attr}
 return method}
 throw $B.attr_error(attr,self)}
 $$super.__init__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("descriptor '__init__' of 'super' "+
@@ -7561,6 +7565,8 @@ var src=$B.file_cache[filename]
 if(src){var lines=src.split("\n"),line=lines[lineno-1]
 trace.push("    "+line.trim())}}}
 return trace.join("\n")}
+$B.last_frame=function(){var frame=$B.last($B.frames_stack)
+return `file ${frame.__file__} line ${frame.$lineno}`}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc){var stack=exc.$stack ||$B.frames_stack.slice()
 if(_b_.isinstance(exc,_b_.SyntaxError)){stack.pop()}
 return{
