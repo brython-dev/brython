@@ -1319,7 +1319,7 @@ function xgcd(x, y){
         last_r,
         last_s,
         last_t,
-        q;
+        q, r, s, t;
 
     [x, y] = [x >= 0 ? x : -x, y >= 0 ? y : -y];
 
