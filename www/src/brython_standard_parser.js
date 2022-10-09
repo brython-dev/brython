@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-09 18:25:19.603361"
-__BRYTHON__.timestamp=1665332719603
+__BRYTHON__.compiled_date="2022-10-09 21:15:25.753469"
+__BRYTHON__.timestamp=1665342925753
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7649,6 +7649,8 @@ function (){
     err.__class__ = _b_.BaseException
     err.__traceback__ = _b_.None
     err.$py_error = true
+    err.$stack = $B.frames_stack.slice()
+    err.$linenos = $B.frames_stack.map(x => x.$lineno)
     // placeholder
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
@@ -7737,28 +7739,25 @@ var js='\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj":
 'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;'+
 'err.name = $.name\nerr.obj = $.obj\n'
 $make_exc([["AttributeError",js]],_b_.Exception)
-_b_.AttributeError.__str__=function(self){var msg=self.args[0]
-var suggestion=offer_suggestions_for_attribute_error(self)
-if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
-return msg}
+_b_.AttributeError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){if(obj.$is_class){var msg=`type object '${obj.$infos.__name__}'`}else{var msg=`'${$B.class_name(obj)}' object`}
 msg+=` has no attribute '${name}'`
 return _b_.AttributeError.$factory({$nat:"kw",kw:{name,obj,msg}})}
-var js='\nvar $ = $B.args("NameError", 1, {"name":null}, '+
-'["name"], arguments, '+
-'{name: _b_.None}, "*", null);\n'+
-'err.args = $B.fast_tuple($.name === _b_.None ? [] : [$.name])\n;'+
-'err.name = $.name\n'
+var js='\nvar $ = $B.args("NameError", 1, {"message":null, "name": null}, '+
+'["message", "/", "name"], arguments, '+
+'{message: _b_.None, name: _b_.None}, "*", null);\n'+
+'err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])\n'+
+'err.name = $.name;\n'
 $make_exc([["NameError",js]],_b_.Exception)
-_b_.NameError.__str__=function(self){var msg=`name '${self.name}' is not defined`,suggestion=offer_suggestions_for_name_error(self)
-if(suggestion){msg+=`. Did you mean: '${suggestion}'?`}
-return msg}
+_b_.NameError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.NameError,'builtins')
 $make_exc(["UnboundLocalError"],_b_.NameError)
 _b_.UnboundLocalError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
-$B.name_error=function(name,obj){return _b_.NameError.$factory({$nat:"kw",kw:{name}})}
+$B.name_error=function(name,obj){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
+exc.name=name
+return exc}
 var MAX_CANDIDATE_ITEMS=750,MAX_STRING_SIZE=40,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
 function levenshtein_distance(a,b,max_cost){
@@ -7912,7 +7911,10 @@ marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.$infos.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
 trace+=trace_from_stack(err)
-trace+=name+': '+_b_.str.$factory(err)}else{console.log(err)
+trace+=name+': '+_b_.str.$factory(err)
+if(err.__class__===_b_.NameError){var suggestion=offer_suggestions_for_name_error(err)
+if(suggestion){trace+=`. Did you mean '${suggestion}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=offer_suggestions_for_attribute_error(err)
+if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}}else{console.log(err)
 trace=err+""}
 try{$B.$getattr($B.stderr,'write')(trace)
 var flush=$B.$getattr($B.stderr,'flush',_b_.None)

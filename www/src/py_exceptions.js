@@ -357,6 +357,8 @@ function (){
     err.__class__ = _b_.BaseException
     err.__traceback__ = _b_.None
     err.$py_error = true
+    err.$stack = $B.frames_stack.slice()
+    err.$linenos = $B.frames_stack.map(x => x.$lineno)
     // placeholder
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
@@ -534,12 +536,7 @@ var js = '\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj
 $make_exc([["AttributeError", js]], _b_.Exception)
 
 _b_.AttributeError.__str__ = function(self){
-    var msg =  self.args[0]
-    var suggestion = offer_suggestions_for_attribute_error(self)
-    if(suggestion){
-        msg += `. Did you mean: '${suggestion}'?`
-    }
-    return msg
+    return self.args[0]
 }
 
 $B.set_func_names(_b_.AttributeError, 'builtins')
@@ -556,21 +553,16 @@ $B.attr_error = function(name, obj){
 }
 
 // NameError supports keyword-only "name" parameter
-var js = '\nvar $ = $B.args("NameError", 1, {"name":null}, ' +
-    '["name"], arguments, ' +
-    '{name: _b_.None}, "*", null);\n' +
-    'err.args = $B.fast_tuple($.name === _b_.None ? [] : [$.name])\n;' +
-    'err.name = $.name\n'
+var js = '\nvar $ = $B.args("NameError", 1, {"message":null, "name": null}, ' +
+    '["message", "/", "name"], arguments, ' +
+    '{message: _b_.None, name: _b_.None}, "*", null);\n' +
+    'err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])\n' +
+    'err.name = $.name;\n'
 
 $make_exc([["NameError", js]], _b_.Exception)
 
 _b_.NameError.__str__ = function(self){
-    var msg = `name '${self.name}' is not defined`,
-        suggestion = offer_suggestions_for_name_error(self)
-    if(suggestion){
-        msg += `. Did you mean: '${suggestion}'?`
-    }
-    return msg
+    return self.args[0]
 }
 
 $B.set_func_names(_b_.NameError, 'builtins')
@@ -585,7 +577,9 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 // Shortcut to create a NameError
 $B.name_error = function(name, obj){
-    return _b_.NameError.$factory({$nat:"kw", kw:{name}})
+    var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
+    exc.name = name
+    return exc
 }
 
 // Suggestions in case of NameError or AttributeError
@@ -931,6 +925,17 @@ $B.show_error = function(err){
         var name = $B.class_name(err)
         trace += trace_from_stack(err)
         trace += name + ': ' + _b_.str.$factory(err)
+        if(err.__class__ === _b_.NameError){
+            var suggestion = offer_suggestions_for_name_error(err)
+            if(suggestion){
+                trace += `. Did you mean '${suggestion}'?`
+            }
+        }else if(err.__class__ === _b_.AttributeError){
+            var suggestion = offer_suggestions_for_attribute_error(err)
+            if(suggestion){
+                trace += `. Did you mean: '${suggestion}'?`
+            }
+        }
     }else{
         console.log(err)
         trace = err + ""

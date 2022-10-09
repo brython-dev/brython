@@ -75,4 +75,26 @@ except NameError as exc:
     out = io.StringIO()
     traceback.print_exc(file=out)
     assert expected in out.getvalue()
-    
+
+# issue
+ne = NameError('dero')
+assert str(ne) == 'dero'
+
+try:
+  dero
+except NameError as exc:
+  assert exc.name == 'dero'
+  assert exc.args[0] == "name 'dero' is not defined"
+  assert str(exc) == exc.args[0]
+
+class A:
+  def __init__(self):
+    self.attribute = 0
+
+a = A()
+try:
+  a.atribute
+except AttributeError as exc:
+  assert exc.args[0] == str(exc) == "'A' object has no attribute 'atribute'"
+  assert exc.obj == a
+
