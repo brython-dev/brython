@@ -427,23 +427,20 @@ $B.next_of1 = function(iterator, frame, lineno){
             }
         }
     }
-    /*
-    if(iterator.$builtin_iterator){
-        if(iterator.$next_func === undefined){
-            iterator.$next_func = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
-        }
-        return iterator.$next_func
-    }
-    */
-    var next_func = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+    // next_func is initialized as undefined; set_lineno() must be called
+    // before it is initialized from the iterator
+    var next_func = {value: undefined}
     return {
         [Symbol.iterator](){
             return this
         },
         next(){
             $B.set_lineno(frame, lineno)
+            if(next_func.value === undefined){
+                next_func.value = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+            }
             try{
-                var value = next_func()
+                var value = next_func.value()
                 return {done: false, value}
             }catch(err){
                 if($B.is_exc(err, [_b_.StopIteration])){
