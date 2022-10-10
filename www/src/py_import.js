@@ -1133,7 +1133,19 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         return $B.imported[mod_name]
     }else{
         // Return module object for top-level package
-        return $B.imported[parsed_name[0]]
+        var package = mod_name
+        while(parsed_name.length > 1){
+            var module = parsed_name.pop(),
+                package = parsed_name.join('.')
+            if($B.imported[package] === undefined){
+                // may happen if the modules defines __name__ = "X.Y" and package
+                // X has not been imported
+                $B.$import(package, globals, locals, [])
+                $B.imported[package][module] = $B.imported[mod_name]
+                mod_name = module
+            }
+        }
+        return $B.imported[package]
     }
 }
 
