@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-10 22:39:05.928612"
-__BRYTHON__.timestamp=1665434345928
+__BRYTHON__.compiled_date="2022-10-10 22:50:36.774081"
+__BRYTHON__.timestamp=1665435036774
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14282,7 +14282,7 @@ if(! s.parent){return{found:false}}
 s=s.parent}}
 function name_scope(name,scopes){
 var test=false 
-if(test){console.log('name scope',name,scopes)
+if(test){console.log('name scope',name,scopes.slice())
 alert()}
 var flags,block
 if(scopes.length==0){
@@ -15000,7 +15000,7 @@ js+=`\n$B.leave_frame()`+
 scopes.pop()
 var func=`${head}\n${js}\n$B.leave_frame()\nreturn gen${id}`
 return `(function(expr){\n${func}\n})(${outmost_expr})\n`}
-$B.ast.Global.prototype.to_js=function(scopes){var scope=$B.last(scopes)
+$B.ast.Global.prototype.to_js=function(scopes){var scope=last_scope(scopes)
 for(var name of this.names){scope.globals.add(name)}
 return ''}
 $B.ast.If.prototype.to_js=function(scopes){var scope=$B.last(scopes),new_scope=copy_scope(scope,this)

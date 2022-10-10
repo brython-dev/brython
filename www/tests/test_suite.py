@@ -966,5 +966,14 @@ def optional_keyword_only_arg(*, a, b=None):
 
 optional_keyword_only_arg(a=42)
 
+# issue 2069
+x = 5
+def f():
+    if True:
+        global x
+        x = 4
+        assert x == 4, x
+f()
+
 
 print('passed all tests...')

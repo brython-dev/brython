@@ -238,9 +238,9 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'd'
+    var test = false // name == 'x'
     if(test){
-        console.log('name scope', name, scopes)
+        console.log('name scope', name, scopes.slice())
         alert()
     }
     var flags,
@@ -1997,7 +1997,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 }
 
 $B.ast.Global.prototype.to_js = function(scopes){
-    var scope = $B.last(scopes)
+    var scope = last_scope(scopes)
     for(var name of this.names){
         scope.globals.add(name)
     }
