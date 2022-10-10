@@ -699,6 +699,9 @@ function offer_suggestions_for_attribute_error(exc){
 function offer_suggestions_for_name_error(exc){
     var name = exc.name,
         frame = $B.last(exc.$stack)
+    if(typeof name != 'string'){
+        return
+    }
     var locals = Object.keys(frame[1]).filter(x => ! (x.startsWith('$')))
     var suggestion = calculate_suggestions(locals, name)
     if(suggestion){
