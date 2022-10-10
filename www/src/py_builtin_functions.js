@@ -595,13 +595,14 @@ $B.set_func_names(enumerate, "builtins")
 //eval() (built in function)
 function $$eval(src, _globals, _locals){
     var $ = $B.args("eval", 4,
-            {src: null, globals: null, locals: null, mode: null},
-            ["src", "globals", "locals", "mode"], arguments,
-            {globals: _b_.None, locals: _b_.None, mode: "eval"}, null, null),
-            src = $.src,
-            _globals = $.globals,
-            _locals = $.locals,
-            mode = $.mode
+            {src: null, globals: null, locals: null, mode: null} ,
+            ['src', 'globals', 'locals', 'mode', '/'],
+            arguments, {globals: _b_.None, locals: _b_.None, mode: 'eval'}, 
+            null, null),
+        src = $.src,
+        _globals = $.globals,
+        _locals = $.locals,
+        mode = $.mode
 
     if($.src.mode && $.src.mode == "single" &&
             ["<console>", "<stdin>"].indexOf($.src.filename) > -1){
@@ -860,7 +861,7 @@ $$eval.$is_func = true
 function exec(src, globals, locals){
     var missing = {}
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
-        ["src", "globals", "locals"], arguments,
+        ["src", "globals", "locals", "/"], arguments,
         {globals: _b_.None, locals: _b_.None}, null, null),
         src = $.src,
         globals = $.globals,
