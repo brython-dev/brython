@@ -1027,12 +1027,22 @@ Random.triangular = function(){
     return low + (high - low) * Math.pow(u * c, 0.5)
 }
 
+function to_js_number(x){
+    if(_b_.isinstance(x, _b_.float)){
+        return _b_.float.$to_js_number(x)
+    }else if(_b_.isinstance(x, _b_.int)){
+        return _b_.int.$to_js_number(x)
+    }
+    throw _b_.ValueError.$factory('should be int or float, not ' +
+        `'${$B.class_name(x)}'`)
+}
+
 Random.uniform = function(){
     var $ = $B.args('uniform', 3, {self: null, a: null, b: null},
-        ['self', 'a', 'b'], arguments, {}, null, null),
-        a = $B.$GetInt($.a),
-        b = $B.$GetInt($.b)
+        ['self', 'a', 'b'], arguments, {}, null, null)
 
+    var a = to_js_number($.a),
+        b = to_js_number($.b)
     return $B.fast_float(a + (b - a) * $.self._random())
 }
 
