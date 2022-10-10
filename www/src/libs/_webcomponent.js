@@ -84,22 +84,7 @@ function define(tag_name, cls){
 
     // Override __getattribute__ to handle DOMNode attributes such as
     // attachShadow
-    cls.__getattribute__ = function(self, attr){
-        if($B.DOMNode[attr]){
-            if(typeof $B.DOMNode[attr] == 'function'){
-                return function(){
-                    var args = [self]
-                    for(var i = 0, len = arguments.length; i < len; i++){
-                        args.push(arguments[i])
-                    }
-                    return $B.DOMNode[attr].apply(null, args)
-                }
-            }else{
-                return $B.DOMNode[attr]
-            }
-        }
-        return $B.DOMNode.__getattribute__(self, attr)
-    }
+    cls.__getattribute__ = $B.DOMNode.__getattribute__
 
     var mro = [cls].concat(cls.__mro__)
     for(var i = 0, len = mro.length - 1; i < len; i++){

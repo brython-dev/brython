@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-10 15:38:50.098088"
-__BRYTHON__.timestamp=1665409130097
+__BRYTHON__.compiled_date="2022-10-10 22:39:05.928612"
+__BRYTHON__.timestamp=1665434345928
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5492,10 +5492,11 @@ if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator]()
 return{
 [Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
 return it.next()}}}
-var next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))
+var next_func={value:undefined}
 return{
 [Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
-try{var value=next_func()
+if(next_func.value===undefined){next_func.value=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
+try{var value=next_func.value()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
 throw err}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
@@ -6697,7 +6698,7 @@ for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
 var odga=_b_.object.__getattribute__
-if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\nobj[attr]',obj[attr])}
+if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\n',attr_func+'','\nobj[attr]',obj[attr])}
 if(attr_func===odga){res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}else if(res===null){return null}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}

@@ -1138,7 +1138,9 @@ DOMNode.bind = function(self, event){
 
 DOMNode.children = function(self){
     var res = []
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == 9){
+        self = self.body
+    }
     for(var child of self.children){
         res.push(DOMNode.$factory(child))
     }

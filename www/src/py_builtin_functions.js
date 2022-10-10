@@ -597,7 +597,7 @@ function $$eval(src, _globals, _locals){
     var $ = $B.args("eval", 4,
             {src: null, globals: null, locals: null, mode: null} ,
             ['src', 'globals', 'locals', 'mode', '/'],
-            arguments, {globals: _b_.None, locals: _b_.None, mode: 'eval'}, 
+            arguments, {globals: _b_.None, locals: _b_.None, mode: 'eval'},
             null, null),
         src = $.src,
         _globals = $.globals,
@@ -994,7 +994,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__annotations__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "children" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -1243,8 +1243,11 @@ $B.$getattr = function(obj, attr, _default){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
     var odga = _b_.object.__getattribute__
-    if($test){console.log("attr_func is odga ?", attr_func,
-        attr_func === odga, '\nobj[attr]', obj[attr])}
+    if($test){
+        console.log("attr_func is odga ?", attr_func,
+            attr_func === odga, '\n', attr_func + '', 
+            '\nobj[attr]', obj[attr])
+    }
     if(attr_func === odga){
         res = obj[attr]
         if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
