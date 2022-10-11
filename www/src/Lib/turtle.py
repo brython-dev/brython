@@ -1196,8 +1196,8 @@ class Turtle(TPen, TNavigator):
             self.svg <= svg.animateTransform(attributeName="transform",
                                              Id = new_frame_id,
                                              type="rotate",
-                                             From=(self._old_heading, 0, 0),
-                                             to=(new_heading, 0, 0),
+                                             From="%s,%s,%s" % (self._old_heading, 0, 0),
+                                             to="%s,%s,%s" % (new_heading, 0, 0),
                                              begin=previous_end,
                                     dur=duration, fill="freeze")
         self._old_heading = new_heading
@@ -1311,8 +1311,8 @@ class Turtle(TPen, TNavigator):
                                      fill="freeze")
         _turtle <= svg.animateTransform(attributeName="transform",
                                         type="rotate",
-                                        From=(self._old_heading, 0, 0),
-                                        to=(self._old_heading, 0, 0),
+                                        From="%s,%s,%s" % (self._old_heading, 0, 0),
+                                        to="%s,%s,%s" % (self._old_heading, 0, 0),
                                         begin=previous_end,
                                         dur=_CFG["min_duration"], fill="freeze")
         _turtle <= svg.animate(begin=previous_end,
