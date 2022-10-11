@@ -1310,7 +1310,7 @@ class Turtle(TPen, TNavigator):
                                      dur=_CFG["min_duration"], begin=previous_end,
                                      fill="freeze")
         _turtle <= svg.animateTransform(attributeName="transform",
-                                        type="rotate",,
+                                        type="rotate",
                                         From="%s,%s,%s" % (self._old_heading, 0, 0),
                                         to="%s,%s,%s" % (self._old_heading, 0, 0),
                                         begin=previous_end,
