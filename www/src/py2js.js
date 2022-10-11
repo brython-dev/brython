@@ -898,7 +898,7 @@ $AbstractExprCtx.prototype.transition = function(token, value){
     switch(token) {
         case 'await':
             return new $AbstractExprCtx(new $AwaitCtx(
-                new $ExprCtx(context, 'await', false)), true)
+                new $ExprCtx(context, 'await', false)), false)
         case 'id':
             return new $IdCtx(new $ExprCtx(context, 'id', commas),
                 value)
@@ -4797,7 +4797,7 @@ $NodeCtx.prototype.transition = function(token, value){
         case 'async':
             return new $AsyncCtx(context)
         case 'await':
-            return new $AbstractExprCtx(new $AwaitCtx(context), true)
+            return new $AbstractExprCtx(new $AwaitCtx(context), false)
         case 'break':
             return new $BreakCtx(context)
         case 'class':
