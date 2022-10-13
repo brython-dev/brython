@@ -975,5 +975,9 @@ def f():
         assert x == 4, x
 f()
 
+# issue 2071
+assert_raises(SyntaxError, exec, "f(x, 2a)",
+    msg='invalid decimal literal')
+    
 
 print('passed all tests...')

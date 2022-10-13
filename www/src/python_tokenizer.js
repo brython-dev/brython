@@ -658,7 +658,10 @@ $B.tokenizer = function*(src){
                         err_msg = `invalid `
                     }
                     if(err_msg){
-                        var base_name = {b: 'binary', o: 'octal', x: 'hexadecimal'}
+                        var base_name = {'': 'decimal',
+                                         b: 'binary',
+                                         o: 'octal',
+                                         x: 'hexadecimal'}
                         err_msg += base_name[num_type] + ' literal'
                         var exc = SyntaxError(err_msg)
                         exc.lineno = line_num
