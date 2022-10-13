@@ -8153,8 +8153,12 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                             if(err.message == 'EOF in multi-line statement'){
                                 raise_syntax_error(context,
                                     `'${op}' was never closed`)
+                            }else{
+                                raise_error_known_location(_b_.SyntaxError,
+                                    root.filename, err.lineno, err.col_offset,
+                                    err.end_lineno, err.end_col_offset, err.line,
+                                    err.message)
                             }
-                            throw err
                         }
                     }else if(braces_opener[op]){
                         if(braces_stack.length == 0){
