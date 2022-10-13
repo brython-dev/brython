@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-11 21:31:50.219856"
-__BRYTHON__.timestamp=1665516710219
+__BRYTHON__.compiled_date="2022-10-13 22:13:49.300180"
+__BRYTHON__.timestamp=1665692029300
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -422,7 +422,7 @@ exc.line=line
 throw exc}else{var err_msg
 if('0123456789'.indexOf(char)>-1){err_msg=`invalid digit '${char}' in `}else if((char >='a' && char <='z')||
 (char >='A' && char <='Z')){err_msg=`invalid `}
-if(err_msg){var base_name={b:'binary',o:'octal',x:'hexadecimal'}
+if(err_msg){var base_name={'':'decimal',b:'binary',o:'octal',x:'hexadecimal'}
 err_msg+=base_name[num_type]+' literal'
 var exc=SyntaxError(err_msg)
 exc.lineno=line_num
@@ -4368,8 +4368,7 @@ case 'OP':
 var op=token[1]
 if((op.length==1 && '()[]{}.,='.indexOf(op)>-1)||
 [':='].indexOf(op)>-1){if(braces_open.indexOf(op)>-1){braces_stack.push(token)
-try{check_brace_is_closed(op,root.token_reader)}catch(err){if(err.message=='EOF in multi-line statement'){raise_syntax_error(C,`'${op}' was never closed`)}
-throw err}}else if(braces_opener[op]){if(braces_stack.length==0){raise_syntax_error(C,"(unmatched '"+op+"')")}else{var last_brace=$B.last(braces_stack)
+try{check_brace_is_closed(op,root.token_reader)}catch(err){if(err.message=='EOF in multi-line statement'){raise_syntax_error(C,`'${op}' was never closed`)}else{raise_error_known_location(_b_.SyntaxError,root.filename,err.lineno,err.col_offset,err.end_lineno,err.end_col_offset,err.line,err.message)}}}else if(braces_opener[op]){if(braces_stack.length==0){raise_syntax_error(C,"(unmatched '"+op+"')")}else{var last_brace=$B.last(braces_stack)
 if(last_brace.string==braces_opener[op]){braces_stack.pop()}else{raise_syntax_error(C,`closing parenthesis '${op}' does not `+
 `match opening parenthesis '`+
 `${last_brace.string}'`)}}}
@@ -5492,11 +5491,10 @@ if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator]()
 return{
 [Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
 return it.next()}}}
-var next_func={value:undefined}
+var next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))
 return{
 [Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
-if(next_func.value===undefined){next_func.value=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
-try{var value=next_func.value()
+try{var value=next_func()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
 throw err}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
@@ -7864,13 +7862,14 @@ count_repeats--
 if(count_repeats==0){break}}
 if(count_repeats > 0){trace.push(`[Previous line repeated ${count_repeats} more`+
 ` time${count_repeats > 1 ? 's' : ''}]`)}}}
-var trace=[],save_filename,save_lineno,count_repeats=0
-for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__
-if(filename==save_filename && lineno==save_lineno){count_repeats++
+var trace=[],save_filename,save_lineno,save_scope,count_repeats=0
+for(var frame_num=0,len=err.$stack.length;frame_num < len;frame_num++){var frame=err.$stack[frame_num],lineno=err.$linenos[frame_num],filename=frame.__file__,scope=frame[0]==frame[2]? '<module>' :frame[0]
+if(filename==save_filename && scope==save_scope && lineno==save_lineno){count_repeats++
 continue}
 handle_repeats(src,count_repeats)
 save_filename=filename
 save_lineno=lineno
+save_scope=scope
 count_repeats=0
 var src=$B.file_cache[filename]
 trace.push(`  File "${filename}", line ${lineno}, in `+
@@ -14393,25 +14392,27 @@ var value=ast_obj.body[0].value.value
 if(typeof value=='string'){js=ast_obj.body[0].value.to_js(scopes)
 ast_obj.body.shift()}}
 return js}
-function init_comprehension(comp){
+function init_comprehension(comp,scopes){
 var comp_id=comp.type+'_'+comp.id,varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
 return `var ${comp.locals_name} = {},\n`+
 `locals = ${comp.locals_name}\n`+
 `locals['.0'] = expr\n`+
 `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
 `"${comp.module_name}", ${comp.globals_name}]\n`+
-`frame.__file__ = '<string>'\n`+
+`frame.__file__ = '${scopes.filename}'\n`+
 `frame.$lineno = ${comp.ast.lineno}\n`+
 `frame.f_code = {\n`+
 `co_argcount: 1,\n`+
 `co_firstlineno:${comp.ast.lineno},\n`+
-`co_name: "<${comp.type}>",\n`+
+`co_name: "<${comp.type.toLowerCase()}>",\n`+
+`co_filename: "${scopes.filename}",\n`+
 `co_flags: ${comp.type == 'genexpr' ? 115 : 83},\n`+
 `co_freevars: $B.fast_tuple([]),\n`+
 `co_kwonlyargcount: 0,\n`+
 `co_posonlyargount: 0,\n`+
 `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
 `}\n`+
+`var next_func_${comp.id} = $B.next_of1(expr, frame, ${comp.ast.lineno})\n`+
 `locals.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`}
 function make_comp(scopes){
@@ -14421,11 +14422,10 @@ outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`${type}_${id}`,'comprehension',this)
 scopes.push(comp_scope)
 var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
-var js=init_comprehension(comp)
+var js=init_comprehension(comp,scopes)
 if(this instanceof $B.ast.ListComp){js+=`var result_${id} = []\n`}else if(this instanceof $B.ast.SetComp){js+=`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=`var result_${id} = $B.empty_dict()\n`}
 var first=this.generators[0]
-js+=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
-`try{\n`+
+js+=`try{\n`+
 `for(var next_${id} of next_func_${id}){\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
@@ -14446,7 +14446,9 @@ if(this instanceof $B.ast.ListComp){js+=`result_${id}.push(${elt})\n`}else if(th
 for(var i=0;i < nb_paren;i++){js+='}\n'}
 js+=`}catch(err){\n`+
 (has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
-`$B.leave_frame()\nthrow err\n}\n`+
+`$B.leave_frame()\n`+
+`$B.set_exc(err)\n`+
+`throw err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
 js+=`\n$B.leave_frame()`
 js+=`\nreturn result_${id}`
@@ -14968,7 +14970,7 @@ outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
 scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
-var head=init_comprehension(comp)
+var head=init_comprehension(comp,scopes)
 var first=this.generators[0]
 var js=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`+
@@ -14995,8 +14997,7 @@ js+=`try{\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
 for(var i=0;i < nb_paren-1;i++){js+='}\n'}
 js+='$B.leave_frame()\n}\n'
-js+=`\n$B.leave_frame()`+
-`}, "<genexpr>")(expr)\n`
+js+=`\n}, "<genexpr>")(expr)\n`
 scopes.pop()
 var func=`${head}\n${js}\n$B.leave_frame()\nreturn gen${id}`
 return `(function(expr){\n${func}\n})(${outmost_expr})\n`}

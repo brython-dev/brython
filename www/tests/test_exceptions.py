@@ -1,6 +1,7 @@
 import io
 import traceback
 import re
+import sys
 
 from tester import assert_raises
 
@@ -98,3 +99,58 @@ except AttributeError as exc:
   assert exc.args[0] == str(exc) == "'A' object has no attribute 'atribute'"
   assert exc.obj == a
 
+# issue 2073
+# exception in evaluation of iterable: error trace does not include <listcomp>
+try:
+    [i for i in 1 / 0]
+except ZeroDivisionError as exc:
+    exc_type, exc_value, tb = sys.exc_info()
+    this_frame = sys._getframe()
+    frames = []
+    append = False
+    while tb:
+        frame = tb.tb_frame
+        if frame is this_frame:
+            append = True
+        if append:
+            frames.append(frame.f_code.co_name)
+        tb = tb.tb_next
+    assert frames == ['<module>'], frames
+
+# exception in evaluation of iter(iterable): error trace does not include <listcomp>
+try:
+    [i for i in 3]
+except TypeError as exc:
+    exc_type, exc_value, tb = sys.exc_info()
+    this_frame = sys._getframe()
+    frames = []
+    append = False
+    while tb:
+        frame = tb.tb_frame
+        if frame is this_frame:
+            append = True
+        if append:
+            frames.append(frame.f_code.co_name)
+        tb = tb.tb_next
+    assert frames == ['<module>'], frames
+
+
+# exception happens in iteration: error trace includes <listcomp>
+def gen():
+    yield 1/0
+
+try:
+    [i for i in gen()]
+except ZeroDivisionError as exc:
+    exc_type, exc_value, tb = sys.exc_info()
+    this_frame = sys._getframe()
+    frames = []
+    append = False
+    while tb:
+        frame = tb.tb_frame
+        if frame is this_frame:
+            append = True
+        if append:
+            frames.append(frame.f_code.co_name)
+        tb = tb.tb_next
+    assert frames == ['<module>', '<listcomp>', 'gen'], frames

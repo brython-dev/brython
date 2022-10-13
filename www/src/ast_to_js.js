@@ -586,7 +586,7 @@ function extract_docstring(ast_obj, scopes){
     return js
 }
 
-function init_comprehension(comp){
+function init_comprehension(comp, scopes){
     // Code common to comprehensions and generator expressions
     var comp_id = comp.type + '_' + comp.id,
         varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
@@ -595,18 +595,20 @@ function init_comprehension(comp){
            `locals['.0'] = expr\n` +
            `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
-           `frame.__file__ = '<string>'\n` +
+           `frame.__file__ = '${scopes.filename}'\n` +
            `frame.$lineno = ${comp.ast.lineno}\n` +
            `frame.f_code = {\n` +
                `co_argcount: 1,\n` +
                `co_firstlineno:${comp.ast.lineno},\n` +
-               `co_name: "<${comp.type}>",\n` +
+               `co_name: "<${comp.type.toLowerCase()}>",\n` +
+               `co_filename: "${scopes.filename}",\n` +
                `co_flags: ${comp.type == 'genexpr' ? 115 : 83},\n` +
                `co_freevars: $B.fast_tuple([]),\n` +
                `co_kwonlyargcount: 0,\n` +
                `co_posonlyargount: 0,\n` +
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
+           `var next_func_${comp.id} = $B.next_of1(expr, frame, ${comp.ast.lineno})\n` +
            `locals.$f_trace = $B.enter_frame(frame)\n` +
            `var _frames = $B.frames_stack.slice()\n`
 }
@@ -631,7 +633,7 @@ function make_comp(scopes){
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
 
-    var js = init_comprehension(comp)
+    var js = init_comprehension(comp, scopes)
 
     if(this instanceof $B.ast.ListComp){
         js += `var result_${id} = []\n`
@@ -643,8 +645,7 @@ function make_comp(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    js += `var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n` +
-          `try{\n` +
+    js += `try{\n` +
               `for(var next_${id} of next_func_${id}){\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
@@ -695,7 +696,9 @@ function make_comp(scopes){
     }
     js += `}catch(err){\n` +
           (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
-          `$B.leave_frame()\nthrow err\n}\n` +
+          `$B.leave_frame()\n` +
+          `$B.set_exc(err)\n` +
+          `throw err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
 
@@ -1938,7 +1941,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
                 locals_name: make_scope_name(scopes),
                 globals_name: make_scope_name(scopes, scopes[0])}
 
-    var head = init_comprehension(comp)
+    var head = init_comprehension(comp, scopes)
 
     // special case for first generator
     var first = this.generators[0]
@@ -1988,8 +1991,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     }
     js += '$B.leave_frame()\n}\n'
 
-    js += `\n$B.leave_frame()` +
-          `}, "<genexpr>")(expr)\n`
+    js += `\n}, "<genexpr>")(expr)\n`
 
     scopes.pop()
     var func = `${head}\n${js}\n$B.leave_frame()\nreturn gen${id}`
