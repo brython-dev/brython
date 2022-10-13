@@ -549,7 +549,7 @@ $B.attr_error = function(name, obj){
         var msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return _b_.AttributeError.$factory({$nat:"kw",kw:{name, obj, msg}})
+    return _b_.AttributeError.$factory({$nat:"kw", kw:{name, obj, msg}})
 }
 
 // NameError supports keyword-only "name" parameter
@@ -826,19 +826,22 @@ function trace_from_stack(err){
     var trace = [],
         save_filename,
         save_lineno,
+        save_scope,
         count_repeats = 0
 
     for(var frame_num = 0, len = err.$stack.length; frame_num < len; frame_num++){
         var frame = err.$stack[frame_num],
             lineno = err.$linenos[frame_num],
-            filename = frame.__file__
-        if(filename == save_filename && lineno == save_lineno){
+            filename = frame.__file__,
+            scope = frame[0] == frame[2] ? '<module>' : frame[0]
+        if(filename == save_filename && scope == save_scope && lineno == save_lineno){
             count_repeats++
             continue
         }
         handle_repeats(src, count_repeats)
         save_filename = filename
         save_lineno = lineno
+        save_scope = scope
         count_repeats = 0
         var src = $B.file_cache[filename]
         trace.push(`  File "${filename}", line ${lineno}, in ` +

@@ -47,6 +47,7 @@ def format_exc():
     started = False
     save_filename = None
     save_lineno = None
+    save_scope = None
     same_line = False
     count_repeats = 0
 
@@ -59,13 +60,15 @@ def format_exc():
         lineno = frame.f_lineno
         name = code.co_name
         filename = code.co_filename
-        if filename == save_filename and lineno == save_lineno:
+        if filename == save_filename and lineno == save_lineno \
+                and name == save_name:
             count_repeats += 1
             tb = tb.tb_next
             continue
         handle_repeats(save_filename, save_lineno, count_repeats)
         save_filename = filename
         save_lineno = lineno
+        save_name = name
         count_repeats = 0
         show_line()
         tb = tb.tb_next
