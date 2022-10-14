@@ -85,7 +85,6 @@ try:
     f()
 except RecursionError:
     the_traceback = traceback.format_exc()
-    assert 'def f(): f()' in the_traceback
     assert ', in f' in the_traceback
     assert '[Previous line repeated' in the_traceback
 except:
