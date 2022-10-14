@@ -232,7 +232,20 @@ for key in trans:
 <div id="legend">
     Python code editor uses <a href="https://ace.c9.io/" target="_blank">Ace</a>.
 </div>
+        <ui-group child-config='{"fill": true}'>
+            <ui-config selector="ui-button:nth-child(4n + 7)">
+                {
+                    "fill": true,
+                    "color": "gray"
+                }
+            </ui-config>
+        </ui-group>
 
+       <ui-app>
+            <button>Button</button>
+       </ui-app>
+       <ui-test target-id="test">Test Component</ui-test>
+       <ui-test1893 target-id="test">Test Component</ui-test1893>
 </body>
 </html>
 
