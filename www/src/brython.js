@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-14 14:15:14.886851"
-__BRYTHON__.timestamp=1665749714886
+__BRYTHON__.compiled_date="2022-10-14 16:46:27.014444"
+__BRYTHON__.timestamp=1665758787013
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13388,8 +13388,7 @@ self.__class__=ce.$cls
 try{var res=_b_.object.__getattribute__(self,attr)
 self.__class__=save_class
 return res}catch(err){self.__class__=save_class
-if(! $B.is_exc(err,[_b_.AttributeError])){throw err}}}}
-return object.__getattribute__(self,attr)}
+if(! $B.is_exc(err,[_b_.AttributeError])){throw err}}}}else{return object.__getattribute__(self,attr)}}
 var res=property
 if(res !==undefined){if(res===null){return _b_.None}
 if(typeof res==="function"){if(res.$is_func){

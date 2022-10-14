@@ -994,7 +994,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "children" // && obj === _b_.list // "Point"
+    var $test = false // attr == "select" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -1235,17 +1235,20 @@ $B.$getattr = function(obj, attr, _default){
             }
             for(var i = 0, len = mro.length; i < len; i++){
                 attr_func = mro[i]['__getattribute__']
-                if(attr_func !== undefined){break}
+                if(attr_func !== undefined){
+                    break
+                }
             }
         }
     }
     if(typeof attr_func !== 'function'){
         console.log(attr + ' is not a function ' + attr_func, klass)
     }
+
     var odga = _b_.object.__getattribute__
     if($test){
         console.log("attr_func is odga ?", attr_func,
-            attr_func === odga, '\n', attr_func + '', 
+            attr_func === odga, '\n', attr_func + '',
             '\nobj[attr]', obj[attr])
     }
     if(attr_func === odga){

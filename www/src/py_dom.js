@@ -750,8 +750,9 @@ DOMNode.__getattribute__ = function(self, attr){
                     }
                 }
             }
+        }else{
+            return object.__getattribute__(self, attr)
         }
-        return object.__getattribute__(self, attr)
     }
 
     var res = property
