@@ -77,7 +77,21 @@ except NameError as exc:
     traceback.print_exc(file=out)
     assert expected in out.getvalue()
 
-# issue
+# issue 2021
+def f():
+    f()
+
+try:
+    f()
+except RecursionError:
+    the_traceback = traceback.format_exc()
+    assert 'def f(): f()' in the_traceback
+    assert ', in f' in the_traceback
+    assert '[Previous line repeated' in the_traceback
+except:
+    print('Failure in testTraceback')
+
+# issue 2060
 ne = NameError('dero')
 assert str(ne) == 'dero'
 
