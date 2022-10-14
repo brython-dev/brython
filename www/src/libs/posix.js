@@ -93,11 +93,9 @@ var $module = {
     stat: function(filename){return stat_result.$factory(filename)},
     stat_result: function(filename){return stat_result.$factory(filename)},
     urandom: function(n){
-        var randbytes = []
-        for(var i = 0; i < n; i++){
-            randbytes.push(_randint(0, 255))
-        }
-        return _b_.bytes.$factory(randbytes)
+        const randbytes = new Uint8Array(n);
+        crypto.getRandomValues(randbytes);
+        return _b_.bytes.$factory(Array.from(randbytes));
     },
     WTERMSIG: function(){return 0},
     WNOHANG: function(){return _b_.tuple.$factory([0, 0])}
