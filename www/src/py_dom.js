@@ -1425,6 +1425,7 @@ DOMNode.set_html = function(self, value){
 DOMNode.set_style = function(self, style){ // style is a dict
     if(typeof style === 'string'){
         self.style = style
+        return
     }else if(!_b_.isinstance(style, _b_.dict)){
         throw _b_.TypeError.$factory("style must be str or dict, not " +
             $B.class_name(style))

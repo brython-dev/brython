@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-14 16:49:31.140221"
-__BRYTHON__.timestamp=1665758971140
+__BRYTHON__.compiled_date="2022-10-15 15:50:13.653386"
+__BRYTHON__.timestamp=1665841813653
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -13634,7 +13634,8 @@ DOMNode.set_class_name=function(self,arg){self.setAttribute("class",arg)}
 DOMNode.set_html=function(self,value){if(self.nodeType==9){self=self.body}
 self.innerHTML=_b_.str.$factory(value)}
 DOMNode.set_style=function(self,style){
-if(typeof style==='string'){self.style=style}else if(!_b_.isinstance(style,_b_.dict)){throw _b_.TypeError.$factory("style must be str or dict, not "+
+if(typeof style==='string'){self.style=style
+return}else if(!_b_.isinstance(style,_b_.dict)){throw _b_.TypeError.$factory("style must be str or dict, not "+
 $B.class_name(style))}
 var items=_b_.list.$factory(_b_.dict.items(style))
 for(var i=0;i < items.length;i++){var key=items[i][0],value=items[i][1]
