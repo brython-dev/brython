@@ -1174,6 +1174,16 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()
     }
+    // special case
+    if(mod_name == '_frozen_importlib_external'){
+        // "import _frozen_importlib_external [as A]" is translated to
+        // "from importlib import _bootstrap_external [as A]"
+        var alias = aliases[mod_name] || mod_name
+        return $B.$import_from("importlib",
+                               ["_bootstrap_external"],
+                               {_bootstrap_external: alias},
+                               0, locals);
+    }
     var level = 0,
         frame = $B.last($B.frames_stack),
         current_module = frame[2],
