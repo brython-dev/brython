@@ -128,8 +128,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-15 15:50:13.653386"
-__BRYTHON__.timestamp=1665841813653
+__BRYTHON__.compiled_date="2022-10-15 16:06:23.497649"
+__BRYTHON__.timestamp=1665842783497
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4281,8 +4281,8 @@ line.match(/\s*/).length+'\n    '+line)}}else{unindented_lines.push('')}}
 return unindented_lines.join('\n')}
 function handle_errortoken(C,token,token_reader){if(token.string=="'" ||token.string=='"'){raise_syntax_error(C,'unterminated string literal '+
 `(detected at line ${token.start[0]})`)}else if(token.string=='\\'){var nxt=token_reader.read()
-if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while parsing')}else{raise_syntax_error_known_range(C,nxt,nxt,'unexpected character after line continuation character')}}else if(' `$'.indexOf(token.string)==-1){var u=token.string.codePointAt(0).toString(16).toUpperCase()
-u='U+'+'0'.repeat(4-u.length)+u
+if((! nxt)||nxt.type=='NEWLINE'){raise_syntax_error(C,'unexpected EOF while parsing')}else{raise_syntax_error_known_range(C,nxt,nxt,'unexpected character after line continuation character')}}else if(' `$'.indexOf(token.string)==-1){var u=_b_.ord(token.string).toString(16).toUpperCase()
+u='U+'+'0'.repeat(Math.max(0,4-u.length))+u
 raise_syntax_error(C,`invalid character '${token.string}' (${u})`)}
 raise_syntax_error(C)}
 const braces_opener={")":"(","]":"[","}":"{"},braces_open="([{",braces_closer={'(':')','{':'}','[':']'}
