@@ -134,5 +134,35 @@ def read_json(req):
 ajax.get("files/glossary.json", mode="json",
     oncomplete=read_json)
 
+# issue 2051
+# use httpbin.org for testing
+def check(num, req, expected):
+    data = req.json
+    for key in expected:
+        assert data[key] == expected[key], (key, data[key], expected[key])
+
+content = 'test file'
+file = window.File.new([content], 'test_file.txt')
+
+form_data = ajax.form_data()
+form_data.append("upload", file)
+req = ajax.Ajax()
+req.open('POST', 'https://httpbin.org/anything')
+expected1 = {'files': {'upload': content}}
+req.bind('complete', lambda req: check(1, req, expected1))
+req.send(form_data)
+
+data = ajax.form_data()
+name = 'coucou'
+data.append('name', name)
+expected2 = {
+                'files': {'filetosave': content},
+                'form': {'name': 'coucou'}
+            }
+ajax.file_upload('https://httpbin.org/anything',
+                 file,
+                 data=data,
+                 oncomplete=lambda req: check(2, req, expected2))
+
 
 print('passed all tests...')
