@@ -2,6 +2,10 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
+const INF = $B.fast_float(Number.POSITIVE_INFINITY),
+      NINF = $B.fast_float(Number.NEGATIVE_INFINITY),
+      ZERO = $B.fast_float(0),
+      NAN = $B.fast_float(Number.NaN)
 
 var float_check = function(x) {
     if(x.__class__ === $B.long_int){
@@ -1132,11 +1136,9 @@ function fsum(x){
         try{
             var x = _b_.next(_it),
                 i = 0
-            console.log('x', x)
             x = float_check(x)
             for(var j = 0, len = partials.length; j < len; j++){
                 var y = float_check(partials[j])
-                console.log('x', x, 'y', y)
                 if(Math.abs(x) < Math.abs(y)){
                     var z = x
                     x = y
@@ -1558,18 +1560,55 @@ function lgamma(x){
     return m_lgamma(x)
 }
 
+function longint_mant_exp(long_int){
+    // Returns mantissa and exponent of a long integer
+    var value = long_int.value,
+        exp = value.toString(2).length,
+        exp1 = exp,
+        nb = 0n
+    // 2 ** exp is infinite if n > 1023
+    var nb = Math.floor(exp / 1023),
+        exp1 = BigInt(exp - 1023 * nb)
+    nb = BigInt(nb)
+    var reduced_value = long_int.value / 2n ** (nb * 1023n)
+    var mant = Number(reduced_value) / Number(2n ** exp1)
+    return [mant, exp]
+}
+
+var log10_func = Math.log10 || (x => Math.log(x) / Math.log(10)),
+    log2_func = Math.log2 || (x => Math.log(x) / Math.log(2))
+
 function log(x, base){
     var $ = $B.args("log", 2, {x: null, base: null}, ['x', 'base'],
         arguments, {base: _b_.None}, null, null),
         x = $.x,
         base = $.base
-    if(_b_.isinstance(x, $B.long_int)){
-        var log = $B.long_int.$log2(x).value * Math.LN2
-    }else{
-        var x1 = float_check(x),
-            log = Math.log(x1)
+    if(base == 10){
+        return log10(x)
+    }else if(base == 2){
+        return log2(x)
     }
-    if(x1 == 0){
+    var log
+    if(_b_.isinstance(x, $B.long_int)){
+        if(x.value <= 0){
+            throw _b_.ValueError.$factory('math domain error')
+        }
+        var mant_exp = longint_mant_exp(x)
+        log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
+    }else if(_b_.isinstance(x, _b_.int)){
+        x = _b_.int.$int_value(x)
+        if(x <= 0){
+            throw _b_.ValueError.$factory('math domain error')
+        }
+        log = Math.log(x)
+    }else{
+        var x1 = float_check(x)
+        if(x1 <= 0){
+            throw _b_.ValueError.$factory('math domain error')
+        }
+        log = Math.log(x1)
+    }
+    if(x1 <= 0){
         throw _b_.ValueError.$factory("math domain error")
     }
     if(base === _b_.None){
@@ -1589,14 +1628,23 @@ function log1p(x){
         x = $B.long_int.$log2($B.fast_long_int(x.value + 1n))
         return $B.fast_float(Number(x.value) * Math.LN2)
     }
-    return $B.fast_float(Math.log1p(float_check(x)))
+    x = float_check(x)
+    if(x + 1 <= 0){
+        throw _b_.ValueError.$factory("math domain error")
+    }
+    return $B.fast_float(Math.log1p(x))
 }
 
 function log2(x){
     $B.check_nb_args('log2', 1, arguments)
     $B.check_no_kw('log2', x)
+    var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
     if(_b_.isinstance(x, $B.long_int)){
-        return $B.long_int.$log2(x)
+        if(x.value <= 0){
+            throw _b_.ValueError.$factory('math domain error')
+        }
+        var mant_exp = longint_mant_exp(x)
+        return $B.fast_float(log2_func(mant_exp[0]) + mant_exp[1])
     }
     if(_b_.float.$funcs.isninf(x)){
         throw _b_.ValueError.$factory('')
@@ -1611,7 +1659,7 @@ function log2(x){
     if(x < 0.0){
         throw _b_.ValueError.$factory('')
     }
-    return $B.fast_float(Math.log(x) / Math.LN2)
+    return $B.fast_float(log2_func(x))
 }
 
 function log10(x){
@@ -1621,7 +1669,7 @@ function log10(x){
         return $B.fast_float($B.long_int.$log10(x).value)
     }
     x = float_check(x)
-    if(x == 0){
+    if(x <= 0){
         throw _b_.ValueError.$factory("math domain error")
     }
     return $B.fast_float(Math.log10(x))
@@ -1718,42 +1766,59 @@ function pow(){
     var y1 = float_check(y)
     if(y1 == 0){return _b_.float.$factory(1)}
     if(x1 == 0 && y1 < 0){throw _b_.ValueError.$factory('')}
+    if(isFinite(x1) && x1 < 0 && isFinite(y1) && ! Number.isInteger(y1)){
+        throw _b_.ValueError.$factory('math domain error')
+    }
 
     if(isNaN(y1)){
         if(x1 == 1){return _b_.float.$factory(1)}
-        return _b_.float.$factory('nan')
+        return NAN
     }
-    if(x1 == 0){return _b_.float.$factory(0)}
+    if(x1 == 0){
+        return ZERO
+    }
 
     if(_b_.float.$funcs.isninf(y)){
+        if(_b_.float.$funcs.isinf(x)){ // pow(INF, NINF) = 0.0
+            return ZERO
+        }else if(_b_.float.$funcs.isninf(x)){ // pow(NINF, NINF) = 0.0
+            return ZERO
+        }
         if(x1 == 1 || x1 == -1){return _b_.float.$factory(1)}
-        if(x1 < 1 && x1 > -1){return _b_.float.$factory('inf')}
-        return _b_.float.$factory(0)
+        if(x1 < 1 && x1 > -1){return INF}
+        return ZERO
     }
     if(_b_.float.$funcs.isinf(y)){
+        if(_b_.float.$funcs.isinf(x)){ // pow(INF, INF)
+            return INF
+        }
+        if(_b_.float.$funcs.isninf(x)){
+            return INF
+        }
         if(x1 == 1 || x1 == -1){return _b_.float.$factory(1)}
-        if(x1 < 1 && x1 > -1){return _b_.float.$factory(0)}
-        return _b_.float.$factory('inf')
+        if(x1 < 1 && x1 > -1){return ZERO}
+        return INF
     }
 
     if(isNaN(x1)){return _b_.float.$factory('nan')}
     if(_b_.float.$funcs.isninf(x)){
-        if(y1 > 0 && isOdd(y1)){return _b_.float.$factory('-inf')}
-        if(y1 > 0){return _b_.float.$factory('inf')}  // this is even or a float
-        if(y1 < 0){return _b_.float.$factory(0)}
+        if(y1 > 0 && isOdd(y1)){return NINF}
+        if(y1 > 0){return INF}  // this is even or a float
+        if(y1 < 0){return ZERO}
+        if(_b_.float.$float.isinf(y)){return INF}
         return _b_.float.$factory(1)
     }
 
     if(_b_.float.$funcs.isinf(x)){
-        if(y1 > 0){return _b_.float.$factory('inf')}
-        if(y1 < 0){return _b_.float.$factory(0)}
+        if(y1 > 0){return INF}
+        if(y1 < 0){return ZERO}
         return _b_.float.$factory(1)
     }
 
     var r = Math.pow(x1, y1)
-    if(isNaN(r)){return _b_.float.$factory('nan')}
-    if(_b_.float.$funcs.isninf(r)){return _b_.float.$factory('-inf')}
-    if(_b_.float.$funcs.isinf(r)){return _b_.float.$factory('inf')}
+    if(isNaN(r)){return NAN}
+    if(_b_.float.$funcs.isninf(r)){return NINF}
+    if(_b_.float.$funcs.isinf(r)){return INF}
 
     return _b_.float.$factory(r)
 }

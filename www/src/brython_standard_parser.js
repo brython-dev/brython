@@ -129,8 +129,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,10,7,'final',0]
 __BRYTHON__.__MAGIC__="3.10.7"
 __BRYTHON__.version_info=[3,10,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-16 09:23:59.935621"
-__BRYTHON__.timestamp=1665905039935
+__BRYTHON__.compiled_date="2022-10-18 23:02:01.182372"
+__BRYTHON__.timestamp=1666126921182
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9663,7 +9663,13 @@ if(test){console.log('mod name',mod_name,'fromlist',fromlist)
 alert()}
 if(mod_name=='_frozen_importlib_external'){
 var alias=aliases[mod_name]||mod_name
-return $B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals);}
+var imp=$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:alias},0,locals);
+var _bootstrap=$B.imported.importlib._bootstrap,_bootstrap_external=$B.imported.importlib[alias]
+_bootstrap_external._set_bootstrap_module(_bootstrap)
+_bootstrap._bootstap_external=_bootstrap_external
+var _frozen_importlib=$B.imported._frozen_importlib
+if(_frozen_importlib){_frozen_importlib._bootstrap_external=_bootstrap_external}
+return}
 var level=0,frame=$B.last($B.frames_stack),current_module=frame[2],parts=current_module.split('.')
 while(mod_name.length > 0 && mod_name.startsWith('.')){level++
 mod_name=mod_name.substr(1)
@@ -10881,6 +10887,7 @@ int.$to_js_number=function(obj){
 if(typeof obj=="number"){return obj}else if(obj.__class__===$B.long_int){return Number(obj.value)}else if(_b_.isinstance(obj,_b_.int)){return int.$to_js_value(obj.$brython_value)}
 return null}
 int.$to_bigint=bigint_value
+int.$int_value=int_value
 int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
 return $B.fast_tuple([$.self,1])}
 int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed:false},null,null)
@@ -11306,7 +11313,7 @@ for(var x of s){if(x=='1'){nb++}}
 return nb}
 long_int.bit_length=function(self){return self.value.toString(2).length}
 function _infos(self){
-var nbits=$B.long_int.bit_length(self),pow2=2n**BigInt(nbits-1),rest=BigInt(self.value)-pow2,relative_rest=new Number(rest)/new Number(pow2)
+var nbits=$B.long_int.bit_length(self),pow2=2n**BigInt(nbits-1),rest=BigInt(self.value)-pow2,relative_rest=new Number(rest/pow2)
 return{nbits,pow2,rest,relative_rest}}
 long_int.$log2=function(x){if(x.value < 0){throw _b_.ValueError.$factory('math domain error')}
 var infos=_infos(x)
@@ -11504,7 +11511,8 @@ coeff_end-1-j])}
 while(ndigits > 0 && HEX_DIGIT(ndigits-1)==0){ndigits--;}
 if(ndigits==0 ||exp < LONG_MIN/2){x=ZERO;
 return finished()}
-if(exp > LONG_MAX/2){throw overflow_error;}
+if(exp > LONG_MAX/2){console.log('overflow, exp',exp)
+throw overflow_error();}
 exp=exp-4*fdigits;
 var top_exp=exp+4*(ndigits-1);
 for(var digit=BigInt(HEX_DIGIT(ndigits-1));digit !=0;digit/=2n){top_exp++;}
@@ -11528,6 +11536,7 @@ break;}}}
 if(round_up){x+=2*half_eps;
 if(top_exp==DBL_MAX_EXP &&
 x==ldexp(2*half_eps,DBL_MANT_DIG).value)
+console.log('cas 3')
 throw overflow_error()}}
 x=ldexp(x,(exp+4*key_digit));
 return finished()}
@@ -11622,7 +11631,8 @@ function frexp(x){
 var x1=x
 if(_b_.isinstance(x,float)){
 if(isnan(x)||isinf(x)){return[x,0]}
-x1=float_value(x).value}
+x1=float_value(x).value}else if(_b_.isinstance(x,$B.long_int)){var exp=x.value.toString(2).length,power=2n**BigInt(exp)
+return[$B.fast_float(Number(x.value)/Number(power)),exp]}
 if(x1==0){return[0,0]}
 var sign=1,ex=0,man=x1
 if(man < 0.){sign=-sign
@@ -11633,9 +11643,12 @@ while(man >=1.0){man*=0.5
 ex++}
 man*=sign
 return[man,ex]}
-function ldexp(mantissa,exponent){if(isninf(mantissa)){return NINF}else if(isinf(mantissa)){return INF}
+$B.nb_ldexp=0
+function ldexp(mantissa,exponent){$B.nb_ldexp++
+if(isninf(mantissa)){return NINF}else if(isinf(mantissa)){return INF}
 if(_b_.isinstance(mantissa,_b_.float)){mantissa=mantissa.value}
-if(mantissa==0){return ZERO}
+if(mantissa==0){return ZERO}else if(isNaN(mantissa)){return NAN}
+if(_b_.isinstance(exponent,$B.long_int)){if(exponent.value < 0){return ZERO}else{throw _b_.OverflowError.$factory('overflow')}}else if(! isFinite(mantissa*Math.pow(2,exponent))){throw _b_.OverflowError.$factory('overflow')}
 var steps=Math.min(3,Math.ceil(Math.abs(exponent)/1023));
 var result=mantissa;
 for(var i=0;i < steps;i++){result*=Math.pow(2,Math.floor((exponent+i)/steps));}

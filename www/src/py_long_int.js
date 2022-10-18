@@ -346,7 +346,7 @@ function _infos(self){
     var nbits = $B.long_int.bit_length(self),
         pow2 = 2n ** BigInt(nbits - 1),
         rest = BigInt(self.value) - pow2,
-        relative_rest = new Number(rest) / new Number(pow2)
+        relative_rest = new Number(rest / pow2)
     return {nbits, pow2, rest, relative_rest}
 }
 

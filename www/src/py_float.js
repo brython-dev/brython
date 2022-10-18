@@ -325,7 +325,8 @@ float.fromhex = function(klass, s){
         return finished()
     }
     if (exp > LONG_MAX/2){
-        throw overflow_error;
+        console.log('overflow, exp', exp)
+        throw overflow_error();
     }
     /* Adjust exponent for fractional part. */
     exp = exp - 4 * fdigits;
@@ -387,6 +388,7 @@ float.fromhex = function(klass, s){
                 x == ldexp(2 * half_eps, DBL_MANT_DIG).value)
                 /* overflow corner case: pre-rounded value <
                    2**DBL_MAX_EXP; rounded=2**DBL_MAX_EXP. */
+                   console.log('cas 3')
                 throw overflow_error()
         }
     }
@@ -654,6 +656,32 @@ function frexp(x){
             return [x, 0]
         }
         x1 = float_value(x).value
+    }else if(_b_.isinstance(x, $B.long_int)){
+        var exp = x.value.toString(2).length,
+            power = 2n ** BigInt(exp)
+        return[$B.fast_float(Number(x.value) / Number(power)), exp]
+        /*
+        const absArg = Math.abs(arg)
+        // Math.log2 was introduced in ES2015, use it when available
+        const log2 = Math.log2 || function log2 (n) { return Math.log(n) * Math.LOG2E }
+        //let exp = Math.max(-1023, Math.floor(log2(absArg)) + 1)
+        x1 = absArg * Math.pow(2, -exp)
+        // These while loops compensate for rounding errors that sometimes occur because of ECMAScript's Math.log2's undefined precision
+        // and also works around the issue of Math.pow(2, -exp) === Infinity when exp <= -1024
+        while (x1 < 0.5) {
+          x1 *= 2
+          exp--
+        }
+        while (x1 >= 1) {
+          x1 *= 0.5
+          exp++
+        }
+        if (arg < 0) {
+          x1 = -x1
+        }
+        console.log(x, 'absarg', absArg, 'returned', [x1, exp])
+        return [x1, exp]
+        */
     }
     if(x1 == 0){
         return [0, 0]
@@ -672,7 +700,6 @@ function frexp(x){
        man *= 2.0
        ex--
     }
-
     while(man >= 1.0){
        man *= 0.5
        ex++
@@ -685,7 +712,9 @@ function frexp(x){
 
 // copied from
 // https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
+$B.nb_ldexp = 0
 function ldexp(mantissa, exponent) {
+    $B.nb_ldexp++
     if(isninf(mantissa)){
         return NINF
     }else if(isinf(mantissa)){
@@ -696,6 +725,17 @@ function ldexp(mantissa, exponent) {
     }
     if(mantissa == 0){
         return ZERO
+    }else if(isNaN(mantissa)){
+        return NAN
+    }
+    if(_b_.isinstance(exponent, $B.long_int)){
+        if(exponent.value < 0){
+            return ZERO
+        }else{
+            throw _b_.OverflowError.$factory('overflow')
+        }
+    }else if(! isFinite(mantissa * Math.pow(2, exponent))){
+        throw _b_.OverflowError.$factory('overflow')
     }
     var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
     var result = mantissa;
