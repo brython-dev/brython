@@ -1179,10 +1179,22 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         // "import _frozen_importlib_external [as A]" is translated to
         // "from importlib import _bootstrap_external [as A]"
         var alias = aliases[mod_name] || mod_name
-        return $B.$import_from("importlib",
+        var imp = $B.$import_from("importlib",
                                ["_bootstrap_external"],
                                {_bootstrap_external: alias},
                                0, locals);
+        // set attribute _bootstrap_external of importlib._bootstrap
+        // and _frozen_importlib
+        var _bootstrap = $B.imported.importlib._bootstrap,
+            _bootstrap_external = $B.imported.importlib[alias]
+        _bootstrap_external._set_bootstrap_module(_bootstrap)
+        _bootstrap._bootstap_external = _bootstrap_external
+
+        var _frozen_importlib = $B.imported._frozen_importlib
+        if(_frozen_importlib){
+            _frozen_importlib._bootstrap_external = _bootstrap_external
+        }
+        return
     }
     var level = 0,
         frame = $B.last($B.frames_stack),
