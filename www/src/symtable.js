@@ -507,7 +507,8 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         }catch(err){
             break
         }
-        v = symbols.$string_dict[name][0]
+
+        v = symbols.$string_dict[name]
 
         /* Handle symbol that already exists in this scope */
         if (v) {
@@ -515,11 +516,12 @@ function update_symbols(symbols, scopes, bound, free, classflag){
                the class that has the same name as a local
                or global in the class scope.
             */
+            v = v[0]
             if  (classflag &&
                  v & (DEF_BOUND | DEF_GLOBAL)) {
                 var flags = v | DEF_FREE_CLASS;
                 v_new = flags;
-                if (!v_new) {
+                if (! v_new) {
                     return 0;
                 }
                 symbols.$string_dict[name][0] = v_new
@@ -532,7 +534,8 @@ function update_symbols(symbols, scopes, bound, free, classflag){
             continue;       /* it's a global */
         }
         /* Propagate new free symbol up the lexical stack */
-        symbols.$string_dict[name][0] = v_free
+        _b_.dict.$setitem(symbols, name, v_free)
+        //symbols.$string_dict[name] = [v_free, symbols.$order++]
     }
 
     return 1
@@ -726,6 +729,9 @@ function symtable_enter_block(st, name, block,
                      ast, lineno, col_offset,
                      end_lineno, end_col_offset){
     var prev
+    if(ast === undefined){
+        console.log('call ste new, key undef', st, name)
+    }
     var ste = ste_new(st, name, block, ast,
                       lineno, col_offset, end_lineno, end_col_offset)
 
@@ -1491,8 +1497,10 @@ function symtable_visit_annotation(st, annotation){
     var future_annotations = st.future.features & CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
-                              annotation, annotation.lineno,
-                              annotation.col_offset, annotation.end_lineno,
+                              annotation,
+                              annotation.lineno,
+                              annotation.col_offset,
+                              annotation.end_lineno,
                               annotation.end_col_offset)) {
         VISIT_QUIT(st, 0);
     }
@@ -1751,15 +1759,15 @@ function symtable_raise_if_annotation_block(st, name, e){
 
 function symtable_raise_if_comprehension_block(st, e) {
     var type = st.cur.comprehension;
-    PyErr_SetString(PyExc_SyntaxError,
+    var exc = PyErr_SetString(PyExc_SyntaxError,
             (type == ListComprehension) ? "'yield' inside list comprehension" :
             (type == SetComprehension) ? "'yield' inside set comprehension" :
             (type == DictComprehension) ? "'yield' inside dict comprehension" :
             "'yield' inside generator expression");
-    PyErr_RangedSyntaxLocationObject(st.filename,
-                                     e.lineno, e.col_offset + 1,
-                                     e.end_lineno, e.end_col_offset + 1);
-    VISIT_QUIT(st, 0);
+    exc.$stack = $B.frames_stack.slice()
+    set_exc_info(exc, st.filename, e.lineno, e.col_offset,
+                                      e.end_lineno, e.end_col_offset);
+    throw exc
 }
 
 function _Py_SymtableStringObjectFlags(str, filename,

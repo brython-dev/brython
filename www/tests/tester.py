@@ -91,6 +91,13 @@ class Tester:
             self.cleanups = []
         self.cleanups.append([function, args, kw])
 
+    def assertAlmostEqual(self, result, expected, msg=None):
+        if round(result - expected, 7) != 0:
+            if msg is not None:
+                raise AssertionError(msg)
+            raise AssertionError('assertEqual, expected %s, got %s'
+                %(expected, result))
+
     def assertEqual(self, result, expected, msg=None):
         if result != expected:
             if msg is not None:
@@ -149,6 +156,15 @@ class Tester:
     def assertIn(self, item, container):
         if not item in container:
             raise AssertionError('%s should be in %s' %(item, container))
+
+    def assertIsNaN(self, obj, msg=None):
+        import math
+        assert math.isnan(obj), f'{obj} is not NaN' if msg is None else msg
+
+    def assertLessEqual(self, a, b, msg=None):
+        if not a <= b:
+            raise AssertionError('%s should be <= %s' %(a, b) if msg is None
+                                 else msg)
 
     def assertNotIn(self, item, container):
         if item in container:
@@ -324,7 +340,7 @@ class TestReport:
 
 TestCase = Tester # unittest interface
 
-tester = Tester()
+tester = self = Tester()
 assertRaises = tester.assertRaises
 
 class SkipTest(Exception):

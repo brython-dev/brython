@@ -69,6 +69,7 @@ int.$to_js_number = function(obj){
 }
 
 int.$to_bigint = bigint_value
+int.$int_value = int_value
 
 int.as_integer_ratio = function(){
   var $ = $B.args("as_integer_ratio", 1, {self:null}, ["self"],

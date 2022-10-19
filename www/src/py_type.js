@@ -373,12 +373,11 @@ type.__getattribute__ = function(klass, attr){
 
     if(res === undefined){
         // search in classes hierarchy, following method resolution order
-
         var v = klass[attr]
         if(v === undefined){
             var mro = klass.__mro__
             if(mro === undefined){
-                console.log("pas de mro pour", klass)
+                console.log("no mro for", klass)
             }
             for(var i = 0; i < mro.length; i++){
                 var v = mro[i][attr]
@@ -1108,6 +1107,13 @@ $B.UnionType.__args__ = {
     __get__: function(self){
         return $B.fast_tuple(self.items)
     }
+}
+
+$B.UnionType.__eq__ = function(self, other){
+    if(! _b_.isinstance(other, $B.UnionType)){
+        return _b_.NotImplemented
+    }
+    return _b_.list.__eq__(self.items, other.items)
 }
 
 $B.UnionType.__parameters__ = {

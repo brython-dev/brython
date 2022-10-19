@@ -88,6 +88,8 @@ var str = {
     $native: true
 }
 
+str.$to_string = to_string
+
 function normalize_start_end($){
     var len
     if(typeof $.self == "string"){
@@ -329,6 +331,7 @@ function fnv(p){
 }
 
 str.__hash__ = function(_self){
+    _self = to_string(_self)
     if(str_hash_cache[_self] !== undefined){
         return str_hash_cache[_self]
     }

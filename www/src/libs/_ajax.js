@@ -65,6 +65,16 @@ function _read(req){
     }
 }
 
+function stringify(d){
+    var params = d.$string_dict,
+        items = []
+    for(var key in params){
+        items.push(encodeURIComponent(key) + "=" +
+                   encodeURIComponent(params[key][0]))
+    }
+    return items.join("&")
+}
+
 function handle_kwargs(self, kw, method){
     var data,
         encoding,
@@ -75,20 +85,14 @@ function handle_kwargs(self, kw, method){
     for(var key in kw.$string_dict){
         if(key == "data"){
             var params = kw.$string_dict[key][0]
-            if(typeof params == "string"){
+            if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
                 for(var key in params.$numeric_dict){
                     throw _b_.ValueError.$factory(
                         'data only supports string keys, got ' + key)
                 }
-                params = params.$string_dict
-                var items = []
-                for(var key in params){
-                    items.push(encodeURIComponent(key) + "=" +
-                               encodeURIComponent(params[key][0]))
-                }
-                data = items.join("&")
+                data = params
             }else{
                 throw _b_.TypeError.$factory("wrong type for data: " +
                     $B.class_name(params))
@@ -280,6 +284,8 @@ var ajax = {
                 }
                 res = res.substr(0, res.length - 1)
             }
+        }else if(params instanceof FormData){
+            res = params
         }else{
             throw _b_.TypeError.$factory(
                 "send() argument must be string or dictionary, not '" +
@@ -401,6 +407,11 @@ function _request_with_body(method){
     var items = handle_kwargs(self, kw, method),
         data = items.data,
         timeout = items.timeout
+
+    if(_b_.isinstance(data, _b_.dict)){
+        data = stringify(data)
+    }
+    
     set_timeout(self, timeout)
     for(var key in items.headers){
         var header = items.headers[key]
@@ -420,6 +431,17 @@ function _request_with_body(method){
         return _read(self)
     }
     self.js.send(data)
+}
+
+function form_data(form){
+    var missing = {},
+        $ = $B.args('form_data', 1, {form: null}, ['form'], arguments,
+            {form: missing}, null, null)
+    if($.form === missing){
+        return new FormData()
+    }else{
+        return new FormData($.form)
+    }
 }
 
 function connect(){
@@ -470,6 +492,20 @@ function file_upload(){
         method = 'POST',
         field_name = 'filetosave'
 
+    var items = handle_kwargs(self, kw, method),
+        data = items.data,
+        headers = items.headers,
+        timeout = items.timeout
+
+    for(var key in items.headers){
+        var header = items.headers[key]
+        self.js.setRequestHeader(header[0], header[1])
+        if(key == 'content-type'){
+            content_type = header[1]
+        }
+    }
+    set_timeout(self, timeout)
+
     if(kw.$string_dict.method !== undefined){
         method = kw.$string_dict.method[0]
     }
@@ -480,6 +516,22 @@ function file_upload(){
 
     var formdata = new FormData()
     formdata.append(field_name, file, file.name)
+
+    if(items.data){
+        if(items.data instanceof FormData){
+            // append additional data
+            for(var d of items.data){
+                formdata.append(d[0], d[1])
+            }
+        }else if(_b_.isinstance(items.data, _b_.dict)){
+            for(var d of _b_.list.$factory(_b_.dict.items(items.data))){
+                formdata.append(d[0], d[1])
+            }
+        }else{
+            throw _b_.ValueError.$factory(
+                'data value must be a dict of form_data')
+        }
+    }
 
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
@@ -499,6 +551,7 @@ return {
     delete: _delete,
     file_upload: file_upload,
     connect,
+    form_data,
     get,
     head,
     options,

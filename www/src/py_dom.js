@@ -750,8 +750,9 @@ DOMNode.__getattribute__ = function(self, attr){
                     }
                 }
             }
+        }else{
+            return object.__getattribute__(self, attr)
         }
-        return object.__getattribute__(self, attr)
     }
 
     var res = property
@@ -1138,7 +1139,9 @@ DOMNode.bind = function(self, event){
 
 DOMNode.children = function(self){
     var res = []
-    if(self.nodeType == 9){self = self.body}
+    if(self.nodeType == 9){
+        self = self.body
+    }
     for(var child of self.children){
         res.push(DOMNode.$factory(child))
     }
@@ -1422,6 +1425,7 @@ DOMNode.set_html = function(self, value){
 DOMNode.set_style = function(self, style){ // style is a dict
     if(typeof style === 'string'){
         self.style = style
+        return
     }else if(!_b_.isinstance(style, _b_.dict)){
         throw _b_.TypeError.$factory("style must be str or dict, not " +
             $B.class_name(style))

@@ -407,5 +407,39 @@ assert(M.sort() is None)
 import re
 assert_raises(TypeError, tuple, 1, 2, msg=re.compile("^tuple"))
 
+# issue 2048
+try:
+    [a, b] = [1]
+    raise Exception('should have raised TypeError')
+except ValueError:
+    pass
+
+[a, *b] = [1]
+assert a == 1
+assert b == []
+
+try:
+    [a, b, *c] = [1]
+    raise Exception('should have raised TypeError')
+except ValueError:
+    pass
+
+try:
+    [a, *b, c] = [1]
+    raise Exception('should have raised TypeError')
+except ValueError:
+    pass
+
+try:
+    (a, b) = (1,)
+    raise Exception('should have raised TypeError')
+except ValueError:
+    pass
+
+try:
+    [a, b] = [1, 2, 3]
+    raise Exception('should have raised TypeError')
+except ValueError:
+    pass
 
 print("passed all tests..")

@@ -19,7 +19,6 @@ function define(tag_name, cls){
         throw _b_.TypeError.$factory("second argument of define() " +
             "must be a class, not '" + $B.class_name(tag_name) + "'")
     }
-
     cls.$webcomponent = true
 
     // Create the Javascript class used for the component. It must have
@@ -84,28 +83,34 @@ function define(tag_name, cls){
 
     // Override __getattribute__ to handle DOMNode attributes such as
     // attachShadow
+    // Override __getattribute__ to handle DOMNode attributes such as
+    // attachShadow
     cls.__getattribute__ = function(self, attr){
-        if($B.DOMNode[attr]){
-            if(typeof $B.DOMNode[attr] == 'function'){
-                return function(){
-                    var args = [self]
-                    for(var i = 0, len = arguments.length; i < len; i++){
-                        args.push(arguments[i])
+        try{
+            return $B.DOMNode.__getattribute__(self, attr)
+        }catch(err){
+            if($B.DOMNode[attr]){
+                if(typeof $B.DOMNode[attr] == 'function'){
+                    return function(){
+                        var args = [self]
+                        for(var i = 0, len = arguments.length; i < len; i++){
+                            args.push(arguments[i])
+                        }
+                        return $B.DOMNode[attr].apply(null, args)
                     }
-                    return $B.DOMNode[attr].apply(null, args)
+                }else{
+                    return $B.DOMNode[attr]
                 }
-            }else{
-                return $B.DOMNode[attr]
             }
+            throw err
         }
-        return $B.DOMNode.__getattribute__(self, attr)
     }
 
-    var mro = [cls].concat(cls.__mro__)
-    for(var i = 0, len = mro.length - 1; i < len; i++){
+    var mro = [cls].concat(cls.__mro__).reverse()
+    for(var i = 0, len = mro.length; i < len; i++){
         var pcls = mro[i]
         for(var key in pcls){
-            if(webcomp.prototype[key] === undefined &&
+            if((! webcomp.hasOwnProperty(key)) &&
                     typeof pcls[key] == "function" &&
                     // don't set $factory (would make it a class)
                     key !== '$factory'

@@ -44,10 +44,10 @@ float.$to_js_number = function(self){
     }
 }
 
-float.numerator = function(self){return self.value}
+float.numerator = function(self){return self}
 float.denominator = function(self){return 1}
 float.imag = function(self){return 0}
-float.real = function(self){return self.value}
+float.real = function(self){return self}
 
 float.__float__ = function(self){
     return self
@@ -57,8 +57,6 @@ float.__float__ = function(self){
 $B.shift1_cache = {}
 
 float.as_integer_ratio = function(self){
-    //self = self.value
-
     if(isinf(self)){
         throw _b_.OverflowError.$factory("Cannot pass infinity to " +
             "float.as_integer_ratio.")
@@ -327,7 +325,8 @@ float.fromhex = function(klass, s){
         return finished()
     }
     if (exp > LONG_MAX/2){
-        throw overflow_error;
+        console.log('overflow, exp', exp)
+        throw overflow_error();
     }
     /* Adjust exponent for fractional part. */
     exp = exp - 4 * fdigits;
@@ -389,6 +388,7 @@ float.fromhex = function(klass, s){
                 x == ldexp(2 * half_eps, DBL_MANT_DIG).value)
                 /* overflow corner case: pre-rounded value <
                    2**DBL_MAX_EXP; rounded=2**DBL_MAX_EXP. */
+                   console.log('cas 3')
                 throw overflow_error()
         }
     }
@@ -618,34 +618,25 @@ float.__hash__ = function(self) {
 
     var r = frexp(self)
     r[0] *= Math.pow(2, 31)
-    var hipart = _b_.int.$factory(r[0])
+    var hipart = parseInt(r[0])
     r[0] = (r[0] - hipart) * Math.pow(2, 31)
     var x = hipart + _b_.int.$factory(r[0]) + (r[1] << 15)
     return x & 0xFFFFFFFF
 }
 
 function isninf(x) {
-    var x1 = x
-    if(_b_.isinstance(x, float)){
-        x1 = float.numerator(x)
-    }
+    var x1 = float_value(x).value
     return x1 == -Infinity || x1 == Number.NEGATIVE_INFINITY
 }
 
 function isinf(x) {
-    var x1 = x
-    if(_b_.isinstance(x, float)){
-        x1 = float.numerator(x)
-    }
+    var x1 = float_value(x).value
     return x1 == Infinity || x1 == -Infinity ||
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
 
-function isnan(x) {
-    var x1 = x
-    if(_b_.isinstance(x, float)){
-        x1 = float.numerator(x)
-    }
+function isnan(x){
+    var x1 = float_value(x).value
     return isNaN(x1)
 }
 
@@ -657,14 +648,42 @@ function fabs(x){
 }
 
 function frexp(x){
+    // x is Python int or float
     var x1 = x
     if(_b_.isinstance(x, float)){
-        x1 = x.value
+        // special case
+        if(isnan(x) || isinf(x)){
+            return [x, 0]
+        }
+        x1 = float_value(x).value
+    }else if(_b_.isinstance(x, $B.long_int)){
+        var exp = x.value.toString(2).length,
+            power = 2n ** BigInt(exp)
+        return[$B.fast_float(Number(x.value) / Number(power)), exp]
+        /*
+        const absArg = Math.abs(arg)
+        // Math.log2 was introduced in ES2015, use it when available
+        const log2 = Math.log2 || function log2 (n) { return Math.log(n) * Math.LOG2E }
+        //let exp = Math.max(-1023, Math.floor(log2(absArg)) + 1)
+        x1 = absArg * Math.pow(2, -exp)
+        // These while loops compensate for rounding errors that sometimes occur because of ECMAScript's Math.log2's undefined precision
+        // and also works around the issue of Math.pow(2, -exp) === Infinity when exp <= -1024
+        while (x1 < 0.5) {
+          x1 *= 2
+          exp--
+        }
+        while (x1 >= 1) {
+          x1 *= 0.5
+          exp++
+        }
+        if (arg < 0) {
+          x1 = -x1
+        }
+        console.log(x, 'absarg', absArg, 'returned', [x1, exp])
+        return [x1, exp]
+        */
     }
-
-    if(isNaN(x1) || isinf(x1)){
-        return [x1, -1]
-    }else if (x1 == 0){
+    if(x1 == 0){
         return [0, 0]
     }
 
@@ -681,7 +700,6 @@ function frexp(x){
        man *= 2.0
        ex--
     }
-
     while(man >= 1.0){
        man *= 0.5
        ex++
@@ -694,7 +712,9 @@ function frexp(x){
 
 // copied from
 // https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
+$B.nb_ldexp = 0
 function ldexp(mantissa, exponent) {
+    $B.nb_ldexp++
     if(isninf(mantissa)){
         return NINF
     }else if(isinf(mantissa)){
@@ -705,6 +725,17 @@ function ldexp(mantissa, exponent) {
     }
     if(mantissa == 0){
         return ZERO
+    }else if(isNaN(mantissa)){
+        return NAN
+    }
+    if(_b_.isinstance(exponent, $B.long_int)){
+        if(exponent.value < 0){
+            return ZERO
+        }else{
+            throw _b_.OverflowError.$factory('overflow')
+        }
+    }else if(! isFinite(mantissa * Math.pow(2, exponent))){
+        throw _b_.OverflowError.$factory('overflow')
     }
     var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
     var result = mantissa;
@@ -932,7 +963,7 @@ function __newobj__(){
 float.__reduce_ex__ = function(self){
     return $B.fast_tuple([
         __newobj__,
-        $B.fast_tuple([self.__class__ || _b_.int, self.value]),
+        $B.fast_tuple([self.__class__ || _b_.float, _b_.repr(self)]),
         _b_.None,
         _b_.None,
         _b_.None])
@@ -1401,7 +1432,7 @@ float.fromhex = _b_.classmethod.$factory(float.fromhex)
 _b_.float = float
 
 $B.MAX_VALUE = fast_float(Number.MAX_VALUE)
-$B.MIN_VALUE = fast_float(Number.MIN_VALUE)
+$B.MIN_VALUE = fast_float(2.2250738585072014e-308) // != Number.MIN_VALUE
 const NINF = fast_float(Number.NEGATIVE_INFINITY),
       INF = fast_float(Number.POSITIVE_INFINITY),
       NAN = fast_float(Number.NaN),

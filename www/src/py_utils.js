@@ -286,7 +286,7 @@ $B.get_class = function(obj){
     if(klass === undefined){
         switch(typeof obj) {
             case "number":
-                return Number.isInteger(obj) ? _b_.int : _b_.float
+                return Number.isInteger(obj) ? _b_.int : undefined
             case "string":
                 return _b_.str
             case "boolean":
@@ -355,21 +355,134 @@ $B.next_of = function(iterator){
             }
         }
     }
+    if(iterator[Symbol.iterator]){
+        var it = iterator[Symbol.iterator](),
+            obj = {ix: 0},
+            items = Array.from(it),
+            len = items.length
+        return function(){
+            if(obj.ix == len){
+                throw _b_.StopIteration.$factory('')
+            }
+            var res = items[obj.ix]
+            obj.ix++
+            return res
+        }
+    }
+    if(iterator.$builtin_iterator){
+        if(iterator.$next_func === undefined){
+            iterator.$next_func = $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
+        }
+        return iterator.$next_func
+    }
     return $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
 }
 
-$B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
-    // Used in unpacking target of a "for" loop if it is a tuple or list
-    var t = _b_.list.$factory(obj),
-        len = t.length,
-        min_len = has_starred ? len - 1 : len
-    if(len < min_len){
-        throw _b_.ValueError.$factory(
-            `not enough values to unpack (expected ${min_length}, got ${len})`)
+$B.next_of1 = function(iterator, frame, lineno){
+    // return a Javascript iterator usable in a loop
+    // "for(item of $B.next_of1(...)){"
+    if(iterator.__class__ === _b_.range){
+        var obj = {ix: iterator.start}
+        if(iterator.step > 0){
+            return {
+                [Symbol.iterator](){
+                    return this
+                },
+                next(){
+                    $B.set_lineno(frame, lineno)
+                    if(obj.ix >= iterator.stop){
+                        return {done: true, value: null}
+                    }
+                    var value = obj.ix
+                    obj.ix += iterator.step
+                    return {done: false, value}
+                }
+            }
+        }else{
+            return {
+                [Symbol.iterator](){
+                    return this
+                },
+                next(){
+                    $B.set_lineno(frame, lineno)
+                    if(obj.ix <= iterator.stop){
+                        return {done: true, value: null}
+                    }
+                    var value = obj.ix
+                    obj.ix += iterator.step
+                    return {done: false, value}
+                }
+            }
+        }
     }
-    if((! has_starred) && len > nb_targets){
-        throw _b_.ValueError.$factory(
-            `too many values to unpack (expected ${nb_targets})`)
+    if(iterator[Symbol.iterator]){
+        var it = iterator[Symbol.iterator]()
+        return {
+            [Symbol.iterator](){
+                return this
+            },
+            next(){
+                $B.set_lineno(frame, lineno)
+                return it.next()
+            }
+        }
+    }
+    // next_func is initialized as undefined; set_lineno() must be called
+    // before it is initialized from the iterator
+    var next_func = $B.$call($B.$getattr(_b_.iter(iterator),
+                    '__next__'))
+    return {
+        [Symbol.iterator](){
+            return this
+        },
+        next(){
+            $B.set_lineno(frame, lineno)
+            try{
+                var value = next_func()
+                return {done: false, value}
+            }catch(err){
+                if($B.is_exc(err, [_b_.StopIteration])){
+                    return {done: true, value: null}
+                }
+                throw err
+            }
+        }
+    }
+}
+
+$B.unpacker = function(obj, nb_targets, has_starred){
+    // Used in unpacking target of a "for" loop if it is a tuple or list
+    // For "[a, b] = t", nb_targets is 2, has_starred is false
+    // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
+    // nb_after_starred is 1 (c)
+    var position,
+        position_rank = 3
+    if(has_starred){
+        var nb_after_starred = arguments[3]
+        position_rank++
+    }
+    if($B.pep657){
+        position = arguments[position_rank]
+    }
+    var t = _b_.list.$factory(obj),
+        right_length = t.length,
+        left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
+
+    if(right_length < left_length){
+        var exc = _b_.ValueError.$factory(`not enough values to unpack ` +
+            `(expected ${left_length}, got ${right_length})`)
+        if(position){
+            $B.set_exception_offsets(exc, position)
+        }
+        throw exc
+    }
+    if((! has_starred) && right_length > left_length){
+        var exc = _b_.ValueError.$factory("too many values to unpack " +
+            `(expected ${left_length})`)
+        if(position){
+            $B.set_exception_offsets(exc, position)
+        }
+        throw exc
     }
     t.index = -1
     t.read_one = function(){
@@ -377,6 +490,8 @@ $B.unpacker = function(obj, nb_targets, has_starred, nb_after_starred){
         return t[t.index]
     }
     t.read_rest = function(){
+        // For the starred item: read the correct number of items in the
+        // right-hand side iterator
         t.index++
         var res = t.slice(t.index, t.length - nb_after_starred)
         t.index = t.length - nb_after_starred - 1
@@ -483,8 +598,22 @@ $B.$JS2Py = function(src){
 }
 
 // warning
-$B.warn = function(klass, message){
-    $B.imported._warnings.warn(klass.$factory(message))
+$B.warn = function(klass, message, filename, token){
+    var warning = klass.$factory(message)
+    if(klass === _b_.SyntaxWarning){
+        warning.filename = filename
+        warning.lineno = token.start[0]
+        warning.offset = token.start[1]
+        warning.end_lineno = token.end[0]
+        warning.end_offset = token.end[1]
+        warning.text = token.line
+        warning.args[1] = $B.fast_tuple([filename,
+                                         warning.lineno, warning.offset,
+                                         warning.text,
+                                         warning.end_lineno,
+                                         warning.end_offset])
+    }
+    $B.imported._warnings.warn(warning)
 }
 
 // get item
@@ -981,13 +1110,15 @@ $B.make_iterator_class = function(name){
                 __dict__: $B.empty_dict(),
                 counter: -1,
                 items: items,
-                len: items.length
+                len: items.length,
+                $builtin_iterator: true
             }
         },
         $infos:{
             __name__: name
         },
         $is_class: true,
+        $iterator_class: true,
 
         __iter__: function(self){
             self.counter = self.counter === undefined ? -1 : self.counter
@@ -1019,6 +1150,7 @@ $B.make_iterator_class = function(name){
                 }
                 return item
             }
+            delete self.items.$next_func // set by $B.next_of()
             throw _b_.StopIteration.$factory("StopIteration")
         },
 
@@ -1180,6 +1312,8 @@ $B.enter_frame = function(frame){
             try{
                 return $B.tracefunc($B.last($B.frames_stack), 'call', _b_.None)
             }catch(err){
+                $B.set_exc(err)
+                $B.frames_stack.pop()
                 err.$in_trace_func = true
                 throw err
             }
@@ -1578,6 +1712,10 @@ $B.repr = {
             return true
         }else{
             repr_stack.add(obj)
+            if(repr_stack.size > $B.recursion_limit){
+                throw _b_.RecursionError.$factory("maximum recursion depth " +
+                    "exceeded while getting the repr of an object")
+            }
         }
     },
     leave: function(obj){

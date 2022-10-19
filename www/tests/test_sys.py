@@ -95,5 +95,52 @@ if traces != expected:
       print('remaining in traces\n', traces[i:],
           '\nremaining in expected', expected[i:])
 
+# issue 2055
+def f():
+    a = [i for i in range(10)]
+
+argcounts = []
+
+def traceFn(frame, event, arg):
+    if (event != 'call'): return
+    argcounts.append(frame.f_code.co_argcount)
+    return traceFn
+
+sys.settrace(traceFn)
+f()
+assert argcounts == [0, 1]
+
+# same for gen expr
+def f1():
+    assert argcounts == [0] # for f()
+    a = (i for i in range(10))
+
+argcounts = []
+f1()
+assert argcounts == [0, 1], argcounts
+
+def f2():
+    assert argcounts == [0] # for f()
+    a = (i for i in range(10))
+    list(a)
+
+argcounts = []
+f2()
+assert argcounts == [0, 1] + [1] * 10
+
+# issue 2056
+def f3():
+    for value in (0,):
+        pass
+
+def traceFn(frame, event, arg):
+    traces.append(event)
+    return traceFn
+
+sys.settrace(traceFn)
+traces = []
+f3()
+assert traces == ['call', 'line', 'line', 'line', 'return']
+
 # remove trace for next tests
 sys.settrace(None)

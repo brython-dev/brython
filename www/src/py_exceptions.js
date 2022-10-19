@@ -96,6 +96,11 @@ $B.print_stack = function(stack){
     return trace.join("\n")
 }
 
+$B.last_frame = function(){
+    var frame = $B.last($B.frames_stack)
+    return `file ${frame.__file__} line ${frame.$lineno}`
+}
+
 // class of traceback objects
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){
@@ -196,6 +201,9 @@ frame.f_code = {
         var res
         if(_self[4]){
             res = _self[4].$infos.__code__
+        }else if(_self.f_code){
+            // set in comprehensions
+            res = _self.f_code
         }else{
             res = {
                 co_name: (_self[0] == _self[2] ? '<module>' : _self[0]),
@@ -362,6 +370,8 @@ function (){
     err.__class__ = _b_.BaseException
     err.__traceback__ = _b_.None
     err.$py_error = true
+    err.$stack = $B.frames_stack.slice()
+    err.$linenos = $B.frames_stack.map(x => x.$lineno)
     // placeholder
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
@@ -539,12 +549,7 @@ var js = '\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj
 $make_exc([["AttributeError", js]], _b_.Exception)
 
 _b_.AttributeError.__str__ = function(self){
-    var msg =  self.args[0]
-    var suggestion = offer_suggestions_for_attribute_error(self)
-    if(suggestion){
-        msg += `. Did you mean: '${suggestion}'?`
-    }
-    return msg
+    return self.args[0]
 }
 
 $B.set_func_names(_b_.AttributeError, 'builtins')
@@ -557,25 +562,20 @@ $B.attr_error = function(name, obj){
         var msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return _b_.AttributeError.$factory({$nat:"kw",kw:{name, obj, msg}})
+    return _b_.AttributeError.$factory({$nat:"kw", kw:{name, obj, msg}})
 }
 
 // NameError supports keyword-only "name" parameter
-var js = '\nvar $ = $B.args("NameError", 1, {"name":null}, ' +
-    '["name"], arguments, ' +
-    '{name: _b_.None}, "*", null);\n' +
-    'err.args = $B.fast_tuple($.name === _b_.None ? [] : [$.name])\n;' +
-    'err.name = $.name\n'
+var js = '\nvar $ = $B.args("NameError", 1, {"message":null, "name": null}, ' +
+    '["message", "/", "name"], arguments, ' +
+    '{message: _b_.None, name: _b_.None}, "*", null);\n' +
+    'err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])\n' +
+    'err.name = $.name;\n'
 
 $make_exc([["NameError", js]], _b_.Exception)
 
 _b_.NameError.__str__ = function(self){
-    var msg = `name '${self.name}' is not defined`,
-        suggestion = offer_suggestions_for_name_error(self)
-    if(suggestion){
-        msg += `. Did you mean: '${suggestion}'?`
-    }
-    return msg
+    return self.args[0]
 }
 
 $B.set_func_names(_b_.NameError, 'builtins')
@@ -590,7 +590,9 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 // Shortcut to create a NameError
 $B.name_error = function(name, obj){
-    return _b_.NameError.$factory({$nat:"kw", kw:{name}})
+    var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
+    exc.name = name
+    return exc
 }
 
 // Suggestions in case of NameError or AttributeError
@@ -710,6 +712,9 @@ function offer_suggestions_for_attribute_error(exc){
 function offer_suggestions_for_name_error(exc){
     var name = exc.name,
         frame = $B.last(exc.$stack)
+    if(typeof name != 'string'){
+        return
+    }
     var locals = Object.keys(frame[1]).filter(x => ! (x.startsWith('$')))
     var suggestion = calculate_suggestions(locals, name)
     if(suggestion){
@@ -862,19 +867,22 @@ function trace_from_stack(err){
     var trace = [],
         save_filename,
         save_lineno,
+        save_scope,
         count_repeats = 0
 
     for(var frame_num = 0, len = err.$stack.length; frame_num < len; frame_num++){
         var frame = err.$stack[frame_num],
             lineno = err.$linenos[frame_num],
-            filename = frame.__file__
-        if(filename == save_filename && lineno == save_lineno){
+            filename = frame.__file__,
+            scope = frame[0] == frame[2] ? '<module>' : frame[0]
+        if(filename == save_filename && scope == save_scope && lineno == save_lineno){
             count_repeats++
             continue
         }
         handle_repeats(src, count_repeats)
         save_filename = filename
         save_lineno = lineno
+        save_scope = scope
         count_repeats = 0
         var src = $B.file_cache[filename]
         trace.push(`  File "${filename}", line ${lineno}, in ` +
@@ -951,6 +959,10 @@ $B.show_error = function(err){
                 }else{
                     nb_marks = err.end_offset - start - indent - 1
                 }
+                if(nb_marks == 0 &&
+                        err.end_offset == line.substr(indent).length){
+                    nb_marks = 1
+                }
             }
             marks += '^'.repeat(nb_marks) + '\n'
             trace += marks
@@ -960,6 +972,17 @@ $B.show_error = function(err){
         var name = $B.class_name(err)
         trace += trace_from_stack(err)
         trace += name + ': ' + _b_.str.$factory(err)
+        if(err.__class__ === _b_.NameError){
+            var suggestion = offer_suggestions_for_name_error(err)
+            if(suggestion){
+                trace += `. Did you mean '${suggestion}'?`
+            }
+        }else if(err.__class__ === _b_.AttributeError){
+            var suggestion = offer_suggestions_for_attribute_error(err)
+            if(suggestion){
+                trace += `. Did you mean: '${suggestion}'?`
+            }
+        }
     }else{
         console.log(err)
         trace = err + ""

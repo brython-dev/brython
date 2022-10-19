@@ -875,6 +875,9 @@ var factory = function(){
         }
         return obj
     }
+    if(obj[Symbol.iterator]){
+        return Array.from(obj)
+    }
     var res = [],
         pos = 0,
         arg = $B.$iter(obj),

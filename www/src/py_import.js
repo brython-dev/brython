@@ -192,7 +192,8 @@ function run_py(module_contents, path, module, compiled) {
 
         var src = {
             src: module_contents,
-            filename: path
+            filename: path,
+            imported: true
         }
 
         try{
@@ -1132,7 +1133,19 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         return $B.imported[mod_name]
     }else{
         // Return module object for top-level package
-        return $B.imported[parsed_name[0]]
+        var package = mod_name
+        while(parsed_name.length > 1){
+            var module = parsed_name.pop(),
+                package = parsed_name.join('.')
+            if($B.imported[package] === undefined){
+                // may happen if the modules defines __name__ = "X.Y" and package
+                // X has not been imported
+                $B.$import(package, globals, locals, [])
+                $B.imported[package][module] = $B.imported[mod_name]
+                mod_name = module
+            }
+        }
+        return $B.imported[package]
     }
 }
 
@@ -1160,6 +1173,28 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     if(test){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()
+    }
+    // special case
+    if(mod_name == '_frozen_importlib_external'){
+        // "import _frozen_importlib_external [as A]" is translated to
+        // "from importlib import _bootstrap_external [as A]"
+        var alias = aliases[mod_name] || mod_name
+        var imp = $B.$import_from("importlib",
+                               ["_bootstrap_external"],
+                               {_bootstrap_external: alias},
+                               0, locals);
+        // set attribute _bootstrap_external of importlib._bootstrap
+        // and _frozen_importlib
+        var _bootstrap = $B.imported.importlib._bootstrap,
+            _bootstrap_external = $B.imported.importlib[alias]
+        _bootstrap_external._set_bootstrap_module(_bootstrap)
+        _bootstrap._bootstap_external = _bootstrap_external
+
+        var _frozen_importlib = $B.imported._frozen_importlib
+        if(_frozen_importlib){
+            _frozen_importlib._bootstrap_external = _bootstrap_external
+        }
+        return
     }
     var level = 0,
         frame = $B.last($B.frames_stack),

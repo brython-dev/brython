@@ -138,4 +138,9 @@ random.randint(2 ** 63, 2 ** 64 - 1)
 # issue 2016
 assert len(random.randbytes(5)) == 5
 
+# issue 2063
+random.uniform(1.5, 2.5)
+a = random.uniform(0, 1)
+print(a, type(a), a + 0)
+
 print("passed all tests...")

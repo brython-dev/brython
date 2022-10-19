@@ -34,7 +34,8 @@ def discover_brython_test_modules():
           ("test_string_methods.py", "string methods")
         ]),
         ("DOM interface", [
-            ("dom.py", "DOM")
+            ("dom.py", "DOM"),
+            ("test_webcomponent.py", "Web component")
         ]),
         ("Issues", [
           ("issues_gc.py", "issues (GC)"),
@@ -66,6 +67,7 @@ def discover_brython_test_modules():
           ("test_pickle.py", "pickle"),
           ("test_random.py", "random"),
           ("test_re.py", "re"),
+          ("test_secrets.py", "secrets"),
           ("test_storage.py", "storage"),
           ("test_struct.py", "struct"),
           ("test_sys.py", "sys"),

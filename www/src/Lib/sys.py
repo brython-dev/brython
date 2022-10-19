@@ -75,9 +75,6 @@ def getfilesystemencoding(*args, **kw):
 def getfilesystemencodeerrors():
     return "utf-8"
 
-def getrecursionlimit():
-    return 200
-
 def intern(string):
     return string
 

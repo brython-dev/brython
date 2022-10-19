@@ -878,4 +878,36 @@ class HasClassMethod:
 
 assert isinstance(HasClassMethod.class_method.__dict__, dict)
 
+# issue 2057
+trace = []
+
+class PluginBase:
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        trace.append((cls, PluginBase))
+        super().__init_subclass__(**kwargs)
+
+
+class Client:
+    # this is implicitly a @classmethod
+    def __init_subclass__(cls, **kwargs):
+        trace.append((cls, Client))
+        super().__init_subclass__(**kwargs)
+
+
+class Plugin(Client, PluginBase):
+    def __init_subclass__(cls, **kwargs):
+        trace.append((cls, Plugin))
+        super().__init_subclass__(**kwargs)
+
+
+class Plugin1(Plugin):
+    pass
+
+assert trace == [(Plugin, Client),
+                 (Plugin, PluginBase),
+                 (Plugin1, Plugin),
+                 (Plugin1, Client),
+                 (Plugin1, PluginBase)]
+                 
 print('passed all tests..')

@@ -88,7 +88,7 @@ Version in 0.7.1
 """
 
 # TODO: color stderr
-# TODO: simplify javascript using ,ore than 1 class in the class attribute?
+# TODO: simplify javascript using more than 1 class in the class attribute?
 
 import datetime
 #import StringIO
@@ -104,7 +104,8 @@ class _TestResult(TestResult):
     # note: _TestResult is a pure representation of results.
     # It lacks the output and reporting ability compares to unittest._TextTestResult.
 
-    def __init__(self, verbosity=1):
+    def __init__(self, verbosity=1, report_success=False,
+                 report_too_long=True):
         TestResult.__init__(self)
         self.stdout0 = None
         self.stderr0 = None
@@ -121,6 +122,8 @@ class _TestResult(TestResult):
         #   stack trace,
         # )
         self.result = []
+        self.report_success = report_success
+        self.report_too_long = report_too_long
 
     def startTest(self, test):
         TestResult.startTest(self, test)
@@ -138,8 +141,10 @@ class _TestResult(TestResult):
     def addSubTest(self, test, subtest, err):
         TestResult.addSubTest(self, test, subtest, err)
         # special case, don't use ident()
+        if not self.report_success:
+            return
         cell2 = (test._testMethodName + html.BR() +
-            str(subtest._subDescription()))
+            str(subtest._subDescription())[:50])
 
         row = html.TR([html.TD(test.__class__.__name__),
             html.TD(cell2),
@@ -155,9 +160,13 @@ class _TestResult(TestResult):
     def addSuccess(self, test):
         self.success_count += 1
         TestResult.addSuccess(self, test)
-        row = html.TR(self.ident(test), Class="method")
+        ident = self.ident(test)
+        row = html.TR(ident, Class="method")
         row <= html.TD('ok', colspan=2, Class="report_cell")
-        document['report'] <= row
+        if self.report_success:
+            document['report'] <= row
+        elif self.report_too_long and int(ident[3].text) > 3000:
+            document['report'] <= row
 
     def addError(self, test, err):
         self.error_count += 1
@@ -200,18 +209,18 @@ class HTMLTestRunner:
     """
     """
     def __init__(self, stream=sys.stdout, verbosity=1, title=None,
-            description=None):
+                 description=None):
         self.verbosity = 1
         self.startTime = datetime.datetime.now()
 
-    def run(self, test):
+    def run(self, test, report_success=False):
         "Run the given test case or test suite."
-        t = html.TABLE(Id="report")
+        t = html.TABLE(Id="report", border=1)
         t <= html.TR(html.TH(x, Class="header")
             for x in ('Test class', 'Method', 'Line', 'Duration (ms)', 'Result',
             'Error message'))
         document["container"] <= t
-        result = _TestResult(self.verbosity)
+        result = _TestResult(self.verbosity, report_success=report_success)
         test(result)
         self.stopTime = datetime.datetime.now()
 

@@ -13,7 +13,8 @@ try{
 $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
-$B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
+$B.isNode = (typeof process !=='undefined') && (process.release.name==='node') 
+    && (process.__nwjs!==1)
 
 
 var _window
@@ -174,6 +175,8 @@ $B.min_int = -$B.max_int
 
 $B.max_float = new Number(Number.MAX_VALUE)
 $B.min_float = new Number(Number.MIN_VALUE)
+
+$B.recursion_limit = 200
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {
@@ -336,10 +339,7 @@ $B.python_to_js = function(src, script_id){
                                  __BRYTHON__.builtins_scope),
         js = root.to_js()
 
-    js = "(function() {\n" + js + "\nreturn locals}())"
-    console.log(js)
-
-    return js
+    return "(function() {\n" + js + "\nreturn locals}())"
 }
 
 _window.py = function(src){

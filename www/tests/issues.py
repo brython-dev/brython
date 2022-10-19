@@ -3134,9 +3134,12 @@ def main():
 main()
 
 # issue 2031
+
+save_annotations = __annotations__
+
 def foo():
     bar: Bar = 42
-    assert __annotations__ == {}
+    assert __annotations__ == save_annotations
     assert bar == 42
 
 foo()
@@ -3146,6 +3149,10 @@ src = """class Foo:
 assert_raises(NameError, exec, src)
 
 assert_raises(NameError, exec, 'bar: Bar = 42')
+
+# issue 2077
+assert_raises(SyntaxError, exec, "f(🠞)",
+    msg="invalid character '🠞' (U+1F81E)")
 
 # ==========================================
 # Finally, report that all tests have passed

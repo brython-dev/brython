@@ -1,6 +1,7 @@
 import io
 import traceback
 import re
+import sys
 
 from tester import assert_raises
 

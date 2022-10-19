@@ -145,6 +145,11 @@ $B.make_view = function(name){
     klass.__iter__ = function(self){
         var it = klass.$iterator.$factory(self.items)
         it.test_change = function(){
+            if(self.dict_version === undefined){
+                console.log('no dict_version', self)
+                console.log($B.frames_stack.slice())
+                alert()
+            }
             return self.dict.$version != self.dict_version
         }
         return it
@@ -158,8 +163,33 @@ $B.make_view = function(name){
         return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
     }
 
+    klass.__reversed__ = function(self){
+        var it = klass.$iterator.$factory(self.items.reverse())
+        it.test_change = function(){
+            return self.dict.$version != self.dict_version
+        }
+        return it
+    }
+
+    klass.mapping = {
+        __get__: function(self){
+            return new Proxy(self.dict, mappingproxy_handler)
+        }
+    }
+
     $B.set_func_names(klass, "builtins")
     return klass
+}
+
+var mappingproxy = $B.make_class("mappingproxy")
+
+var mappingproxy_handler = {
+    get(target, prop){
+        if(prop == '__class__'){
+            return mappingproxy
+        }
+        return target[prop]
+    }
 }
 
 var dict = {
@@ -235,14 +265,24 @@ function to_list(d, ix){
 $B.dict_to_list = to_list // used in py_types.js
 
 var $copy_dict = function(left, right){
-    var _l = to_list(right),
+    var it = _b_.iter($B.$call($B.$getattr(right, 'items'))()),
+        next_func = $B.$call($B.$getattr(it, '__next__')),
         si = dict.$setitem
     right.$version = right.$version || 0
-    var right_version = right.$version || 0
-    for(var i = 0, len = _l.length; i < len; i++){
-        si(left, _l[i][0], _l[i][1])
-        if(right.$version != right_version){
-            throw _b_.RuntimeError.$factory("dict mutated during update")
+    var right_version = right.$version || 0,
+        item
+    while(true){
+        try{
+            item = next_func()
+            si(left, item[0], item[1])
+            if(right.$version != right_version){
+                throw _b_.RuntimeError.$factory("dict mutated during update")
+            }
+        }catch(err){
+            if($B.is_exc(err, [_b_.StopIteration])){
+                break
+            }
+            throw err
         }
     }
 }
@@ -355,10 +395,16 @@ dict.__eq__ = function(){
         self = $.self,
         other = $.other
 
-    if(! _b_.isinstance(other, dict)){return false}
+    if(! _b_.isinstance(other, dict)){
+        return _b_.NotImplemented
+    }
 
-    if(self.$jsobj){self = jsobj2dict(self.$jsobj)}
-    if(other.$jsobj){other = jsobj2dict(other.$jsobj)}
+    if(self.$jsobj){
+        self = jsobj2dict(self.$jsobj)
+    }
+    if(other.$jsobj){
+        other = jsobj2dict(other.$jsobj)
+    }
     if(dict.__len__(self) != dict.__len__(other)){
         return false
     }
@@ -389,6 +435,7 @@ dict.__eq__ = function(){
             return false
         }
     }
+
     for(var k in self.$string_dict){
         if(!other.$string_dict.hasOwnProperty(k) ||
                 !$B.rich_comp("__eq__", other.$string_dict[k][0],
@@ -559,6 +606,9 @@ dict.__init__ = function(self, first, second){
         }else if(Array.isArray(first)){
             init_from_list(self, first)
             return $N
+        }else if(first[Symbol.iterator]){
+            init_from_list(self, Array.from(first))
+            return $N
         }
     }
 
@@ -659,7 +709,8 @@ dict.__len__ = function(self) {
 }
 
 dict.__ne__ = function(self, other){
-    return ! dict.__eq__(self, other)
+    var res = dict.__eq__(self, other)
+    return res === _b_.NotImplemented ? res : ! res
 }
 
 dict.__new__ = function(cls){
@@ -728,6 +779,40 @@ dict.__repr__ = function(self){
     })
     $B.repr.leave(self)
     return "{" + res.join(", ") + "}"
+}
+
+var dict_reversekeyiterator = $B.make_class("dict_reversekeyiterator",
+    function(keys){
+        return {
+            __class__: dict_reversekeyiterator,
+            keys,
+            counter: -1,
+            length: keys.length
+        }
+    }
+)
+
+dict_reversekeyiterator.__iter__ = function(self){
+    return self
+}
+
+dict_reversekeyiterator.__next__ = function(self){
+    self.counter++
+    if(self.counter >= self.length){
+        throw _b_.StopIteration.$factory('StopIteration')
+    }
+    return self.keys[self.counter]
+}
+
+dict_reversekeyiterator.__reduce_ex__ = function(self, protocol){
+    return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.keys])])
+}
+$B.set_func_names(dict_reversekeyiterator, "builtins")
+
+dict.__reversed__ = function(self){
+    var keys = _b_.list.$factory(dict.keys(self))
+    keys.reverse()
+    return dict_reversekeyiterator.$factory(keys)
 }
 
 dict.__ror__ = function(self, other){
@@ -982,6 +1067,11 @@ dict.items = function(self){
     var values = to_list(self)
     var it = dict_items.$factory(self, values, set_like)
     it.dict_version = self.$version
+    if(self.$version === undefined){
+        console.log('dict has no $version', self)
+        console.log($B.frames_stack.slice())
+        throw Error('no version')
+    }
     return it
 }
 
@@ -1020,15 +1110,16 @@ dict.pop = function(){
 }
 
 dict.popitem = function(self){
-    try{
-        var itm = _b_.next(_b_.iter(dict.items(self)))
+    $B.check_nb_args_no_kw('popitem', 1, arguments)
+    if(! self.$ordered_items){
+        self.$ordered_items = to_list(self)
+    }
+    if(self.$ordered_items.length > 0){
+        var itm = self.$ordered_items.pop()
         dict.__delitem__(self, itm[0])
         return _b_.tuple.$factory(itm)
-    }catch(err) {
-        if (err.__class__ == _b_.StopIteration) {
-            throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
-        }
     }
+    throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
 }
 
 dict.setdefault = function(){
@@ -1179,6 +1270,7 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
             var res = $B.obj_dict(obj)
         }
         res.__class__ = mappingproxy
+        res.$version = 0
         return res
     }
 )
@@ -1255,7 +1347,8 @@ var jsobj_as_pydict = $B.jsobj_as_pydict = $B.make_class('jsobj_as_pydict',
             __class__: jsobj_as_pydict,
             obj: jsobj,
             exclude: exclude ? exclude : function(){return false},
-            new_keys: []
+            new_keys: [],
+            $version: 0
         }
     }
 )

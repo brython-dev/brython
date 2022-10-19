@@ -75,7 +75,8 @@ def run_test(event):
 
     mod = __import__(module)
     _suite = unittest.TestLoader().loadTestsFromModule(mod)
-    HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2).run(_suite)
+    runner = HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2)
+    runner.run(_suite)
 
     sys.stderr.write('completed in %s seconds' % (time.time() - _start))
 
