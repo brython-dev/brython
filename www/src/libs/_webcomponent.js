@@ -106,8 +106,8 @@ function define(tag_name, cls){
         }
     }
 
-    var mro = [cls].concat(cls.__mro__)
-    for(var i = 0, len = mro.length - 1; i < len; i++){
+    var mro = [cls].concat(cls.__mro__).reverse()
+    for(var i = 0, len = mro.length; i < len; i++){
         var pcls = mro[i]
         for(var key in pcls){
             if((! webcomp.hasOwnProperty(key)) &&

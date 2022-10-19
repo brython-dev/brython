@@ -114,3 +114,21 @@ class Group(BaseComponent):
 
 webcomponent.define("ui-group", Group)
 webcomponent.define("ui-config", Config)
+
+# issue 2082
+class2082 = []
+class BaseComponent:
+    def _test1(self):
+        class2082.append("BaseComponent")
+
+
+class DemoComponent(BaseComponent):
+    def _test1(self):
+        class2082.append("DemoComponent")
+
+    def connectedCallback(self):
+        self._test1()
+
+
+webcomponent.define("demo-component2082", DemoComponent)
+assert class2082 == ['DemoComponent']
