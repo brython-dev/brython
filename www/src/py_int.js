@@ -863,7 +863,9 @@ $B.set_func_names(int, "builtins")
 _b_.int = int
 
 // Boolean type
-$B.$bool = function(obj){ // return true or false
+$B.$bool = function(obj, bool_class){ // return true or false
+    // bool_class is set if called by built-in bool()
+    // In this case, if __bool__ is called, it is on obj.__class__
     if(obj === null || obj === undefined ){ return false}
     switch(typeof obj){
         case "boolean":
@@ -876,15 +878,36 @@ $B.$bool = function(obj){ // return true or false
             if(obj.$is_class){return true}
             var klass = obj.__class__ || $B.get_class(obj),
                 missing = {},
-                bool_method = $B.$getattr(klass, "__bool__", missing)
+                bool_method = bool_class ?
+                              $B.$getattr(klass, "__bool__", missing):
+                              $B.$getattr(obj, "__bool__", missing)
+
+            var test = false // klass.$infos.__name__ == 'FlagBoundary'
+            if(test){
+                console.log('bool(obj)', obj, 'apply bool method', bool_method)
+                console.log('$B.$call(bool_method)', bool_method + '')
+            }
             if(bool_method === missing){
                 try{return _b_.len(obj) > 0}
                 catch(err){return true}
             }else{
-                var res = $B.$call(bool_method)(obj)
+                try{
+                    var res = bool_class ?
+                              $B.$call(bool_method)(obj) :
+                              $B.$call(bool_method)()
+
+                }catch(err){
+                    console.log('obj', obj, 'bool method', bool_method)
+                    throw err
+                }
                 if(res !== true && res !== false){
+                    console.log('rames', $B.frames_stack.slice())
+                    console.log(obj, 'bool method', bool_method)
                     throw _b_.TypeError.$factory("__bool__ should return " +
                         "bool, returned " + $B.class_name(res))
+                }
+                if(test){
+                    console.log('bool method returns', res)
                 }
                 return res
             }
@@ -958,8 +981,8 @@ bool.$factory = function(){
     // Calls $B.$bool, which is used inside the generated JS code and skips
     // arguments control.
     var $ = $B.args("bool", 1, {x: null}, ["x"],
-        arguments,{x: false}, null, null)
-    return $B.$bool($.x)
+        arguments, {x: false}, null, null)
+    return $B.$bool($.x, true)
 }
 
 bool.numerator = int.numerator
