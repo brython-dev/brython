@@ -284,11 +284,16 @@ var type = $B.make_class("type",
         var missing = {},
             $ = $B.args('type', 3, {obj: null, bases: null, cl_dict: null},
                 ['obj', 'bases', 'cl_dict'], arguments,
-                {bases: missing, cl_dict: missing}, null, null),
+                {bases: missing, cl_dict: missing}, null, 'kw'),
             obj = $.obj,
             bases = $.bases,
-            cl_dict = $.cl_dict
+            cl_dict = $.cl_dict,
+            kw = $.kw
 
+        var kwargs = {'$nat': 'kw', kw: {}}
+        for(var key in kw.$string_dict){
+            kwargs.kw[key] = kw.$string_dict[key][0]
+        }
         if(cl_dict === missing){
             if(bases !== missing){
                 throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
@@ -296,8 +301,9 @@ var type = $B.make_class("type",
             return obj.__class__ || $B.get_class(obj)
         }else{
             var module = $B.last($B.frames_stack)[2],
-                meta = meta_from_bases(obj, module, bases)
-            return type.__new__(meta, obj, bases, cl_dict)
+                meta = meta_from_bases(obj, module, bases),
+                meta_new = $B.$call($B.$getattr(meta, '__new__'))
+            return meta_new(meta, obj, bases, cl_dict, kwargs)
         }
     }
 )
@@ -358,10 +364,13 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "fromhex" // && klass === _b_.list
+    var $test = false // attr == "register" // && klass.$infos.__name__ == 'StrEnum'
+
     if($test){
-        console.log("attr", attr, "of", klass, res, res + "")
+        console.log("attr", attr, "of", klass, '\n  ', res, res + "")
     }
+
+
     if(klass.__class__ &&
             klass.__class__[attr] &&
             klass.__class__[attr].__get__ &&
@@ -375,23 +384,47 @@ type.__getattribute__ = function(klass, attr){
         // search in classes hierarchy, following method resolution order
         var v = klass[attr]
         if(v === undefined){
-            var mro = klass.__mro__
-            if(mro === undefined){
-                console.log("no mro for", klass)
+            if($test){
+                console.log(attr, 'not in klass[attr], search in __dict__',
+                    klass.__dict__.$string_dict)
             }
-            for(var i = 0; i < mro.length; i++){
-                var v = mro[i][attr]
-                if(v !== undefined){
-                    res = v
-                    break
+            if(klass.__dict__ && klass.__dict__.$string_dict
+                    && klass.__dict__.$string_dict[attr]){
+                res = klass[attr] = klass.__dict__.$string_dict[attr][0]
+                if($test){
+                    console.log('found in __dict__', v)
+                }
+            }else{
+                var mro = klass.__mro__
+                if(mro === undefined){
+                    console.log("no mro for", klass)
+                }
+                for(var i = 0; i < mro.length; i++){
+                    var v = mro[i][attr]
+                    if(v !== undefined){
+                        res = v
+                        break
+                    }
                 }
             }
         }else{
             res = v
         }
+        if($test){
+            console.log('search in class mro', res)
+            if(res !== undefined){
+                if(klass[attr]){
+                    console.log('found in klass', klass)
+                }else{
+                    console.log('found in', mro[i])
+                }
+            }
+        }
+    }
 
+    if(res === undefined){
+        // search in metaclass
         if(res === undefined){
-            // search in metaclass
             var meta = klass.__class__ || $B.get_class(klass),
                 res = meta[attr]
             if($test){console.log("search in meta", meta, res)}
@@ -402,6 +435,7 @@ type.__getattribute__ = function(klass, attr){
                     if(res !== undefined){break}
                 }
             }
+
             if(res !== undefined){
                 if($test){console.log("found in meta", res, typeof res)}
                 if(res.__class__ === _b_.property){
@@ -409,13 +443,17 @@ type.__getattribute__ = function(klass, attr){
                 }
                 if(typeof res == "function"){
                     // insert klass as first argument
+                    if(attr == '__new__'){ // static
+                        return res
+                    }
+
                     var meta_method = res.bind(null, klass)
                     meta_method.__class__ = $B.method
                     meta_method.$infos = {
                         __self__: klass,
                         __func__: res,
                         __name__: attr,
-                        __qualname__: klass.$infos.__name__ + "." + attr,
+                        __qualname__: meta.$infos.__name__ + "." + attr,
                         __module__: res.$infos ? res.$infos.__module__ : ""
                     }
                     if($test){
@@ -423,23 +461,25 @@ type.__getattribute__ = function(klass, attr){
                             meta_method + '')
                     }
                     return meta_method
+
                 }
             }
-            if(res === undefined){
-                // search a method __getattr__ in metaclass
-                // (issues #126 and #949)
-                var getattr = meta.__getattr__
-                if(getattr === undefined){
-                    for(var i = 0; i < meta_mro.length; i++){
-                        if(meta_mro[i].__getattr__ !== undefined){
-                            getattr = meta_mro[i].__getattr__
-                            break
-                        }
+        }
+
+        if(res === undefined){
+            // search a method __getattr__ in metaclass
+            // (issues #126 and #949)
+            var getattr = meta.__getattr__
+            if(getattr === undefined){
+                for(var i = 0; i < meta_mro.length; i++){
+                    if(meta_mro[i].__getattr__ !== undefined){
+                        getattr = meta_mro[i].__getattr__
+                        break
                     }
                 }
-                if(getattr !== undefined){
-                    return getattr(klass, attr)
-                }
+            }
+            if(getattr !== undefined){
+                return getattr(klass, attr)
             }
         }
     }
@@ -570,12 +610,17 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // becomes the __bases__ attribute; and the dict dictionary is the
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
+    var test = false // name == 'EnumCheck'
 
     // arguments passed as keywords in class defintion
     extra_kwargs = extra_kwargs === undefined ? {$nat: 'kw', kw: {}} :
         extra_kwargs
 
     // Create the class dictionary
+    if(cl_dict.$string_dict === undefined){
+        console.log('bizarre', meta, name, bases, cl_dict)
+        alert()
+    }
     var module = cl_dict.$string_dict.__module__
     if(module){
         module = module[0]
@@ -643,7 +688,6 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     var sup = _b_.super.$factory(class_dict, class_dict)
     var init_subclass = _b_.super.__getattribute__(sup, "__init_subclass__")
     init_subclass(extra_kwargs)
-
     return class_dict
 }
 
@@ -797,14 +841,18 @@ $B.set_func_names(type, "builtins")
 
 _b_.type = type
 
-var wrapper_descriptor = $B.make_class("wrapper_descriptor")
+var wrapper_descriptor = $B.wrapper_descriptor = 
+    $B.make_class("wrapper_descriptor")
 
 $B.set_func_names(wrapper_descriptor, "builtins")
 
 type.__call__.__class__ = wrapper_descriptor
 
-
 var $instance_creator = $B.$instance_creator = function(klass){
+    var test = false // klass.$infos && klass.$infos.__name__ == 'auto'
+    if(test){
+        console.log('instance creator of', klass)
+    }
     // return the function to initalise a class instance
     if(klass.prototype && klass.prototype.constructor == klass){
         // JS constructor
@@ -873,7 +921,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     }
     factory.__class__ = $B.Function
     if(klass.$infos === undefined){
-        console.log('no klaas $infos', klass)
+        console.log('no klass $infos', klass)
         console.log($B.frames_stack.slice())
     }
     factory.$infos = {
