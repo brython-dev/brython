@@ -897,12 +897,9 @@ $B.$bool = function(obj, bool_class){ // return true or false
                               $B.$call(bool_method)()
 
                 }catch(err){
-                    console.log('obj', obj, 'bool method', bool_method)
                     throw err
                 }
                 if(res !== true && res !== false){
-                    console.log('rames', $B.frames_stack.slice())
-                    console.log(obj, 'bool method', bool_method)
                     throw _b_.TypeError.$factory("__bool__ should return " +
                         "bool, returned " + $B.class_name(res))
                 }
