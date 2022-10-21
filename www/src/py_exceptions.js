@@ -592,6 +592,7 @@ $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 $B.name_error = function(name, obj){
     var exc = _b_.NameError.$factory(`name '${name}' is not defined`)
     exc.name = name
+    exc.$stack = $B.frames_stack.slice()
     return exc
 }
 
