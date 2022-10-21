@@ -494,35 +494,14 @@ object.__setattr__.__get__ = function(obj){
 object.__setattr__.__str__ = function(){return "method object.setattr"}
 
 object.__str__ = function(self){
-    // If a class doesn't specify __str__, use its __repr__
-    var len = arguments.length
-    if(len == 0){
+    if(self === undefined || self.$nat == 'kw'){
         throw _b_.TypeError.$factory("descriptor '__str__' of 'object' " +
             "object needs an argument")
-    }else if(len > 1){
-        throw _b_.TypeError.$factory("descriptor '__str__' of 'object' " +
-            "expects 1 argument, got " + len)
-    }else if(self.$nat == 'kw'){
-        throw _b_.TypeError.$factory("descriptor '__str__' of 'object' " +
-            "doesn't accept keyword arguments")
     }
-    // Search in the object metaclass
-    if(self.$is_class || self.$factory){
-        var class_str = $B.$getattr(self.__class__ || $B.get_class(self),
-            '__str__', null)
-        if(class_str !== null && class_str !== object.__str__){
-            return class_str(self)
-        }
-        var class_repr = $B.$getattr(self.__class__ || $B.get_class(self),
-            '__repr__', null)
-        if(class_repr !== null && class_repr !== object.__repr__){
-            return class_repr(self)
-        }
-    }else{
-        // Default to __repr__
-        var repr_func = $B.$getattr(self, "__repr__")
-        return $B.$call(repr_func)()
-    }
+    // Default to __repr__
+    var klass = self.__class__ || $B.get_class(self)
+    var repr_func = $B.$getattr(klass, "__repr__")
+    return $B.$call(repr_func).apply(null, arguments)
 }
 
 object.__subclasshook__ = function(){return _b_.NotImplemented}
