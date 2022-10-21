@@ -6,8 +6,8 @@ import shutil
 bdir = os.path.join(os.path.dirname(os.getcwd()),
     "www", "src", "Lib")
 
-p_old_dir = r'c:\Python39\Lib'
-p_new_dir = r'c:\Python310\Lib'
+p_old_dir = r'c:\Python310\Lib'
+p_new_dir = r'c:\Python311\Lib'
 
 for dirpath, dirnames, filenames in os.walk(bdir):
     if "site-packages" in dirnames:
@@ -29,12 +29,12 @@ for dirpath, dirnames, filenames in os.walk(bdir):
                         #    "not changed in Python 3.10")
                         pass
                     else:
-                        print(brython_short, "same as CPython 3.9",
-                            "replace by 3.10 version")
+                        print(brython_short, "same as CPython 3.10",
+                            "replace by 3.11 version")
                         shutil.copyfile(p_new_path, brython_path)
                 else:
-                    print('***', brython_short, "same as CPython 3.9",
-                        "not in Python 3.10")
+                    print('***', brython_short, "same as CPython 3.10",
+                        "not in Python 3.11")
             else:
                 p_new_path = p_new_dir + "\\" + prefix + "\\" + filename
                 if os.path.exists(p_new_path):
@@ -42,12 +42,12 @@ for dirpath, dirnames, filenames in os.walk(bdir):
                         #print(brython_short, "already changed to Python 3.10")
                         pass
                     else:
-                        print('***', brython_short, 'not the same as CPython 3.9')
+                        print('***', brython_short, 'not the same as CPython 3.10')
                 else:
-                    print('***', brython_short, "not in Python 3.10")
+                    print('***', brython_short, "not in Python 3.11")
         else:
             p_new_path = p_new_dir + "\\" + prefix + "\\" + filename
             if os.path.exists(p_new_path):
-                print(ppath, "not in CPython 3.9, but present in 3.10")
+                print(ppath, "not in CPython 3.10, but present in 3.11")
             else:
-                print(ppath, "not in CPython 3.9 and 3.10")
+                print(ppath, "not in CPython 3.10 and 3.11")
