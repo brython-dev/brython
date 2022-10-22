@@ -81,7 +81,7 @@ int.from_bytes = function() {
     var $ = $B.args("from_bytes", 3,
         {bytes:null, byteorder:null, signed:null},
         ["bytes", "byteorder", "signed"],
-        arguments, {signed: false}, null, null)
+        arguments, {byteorder: 'big', signed: false}, null, null)
 
     var x = $.bytes,
         byteorder = $.byteorder,
@@ -126,7 +126,7 @@ int.to_bytes = function(){
     var $ = $B.args("to_bytes", 3,
         {self: null, len: null, byteorder: null, signed: null},
         ["self", "len", "byteorder", "*", "signed"],
-        arguments, {signed: false}, null, null),
+        arguments, {len: 1, byteorder: 'big', signed: false}, null, null),
         self = $.self,
         len = $.len,
         byteorder = $.byteorder,
