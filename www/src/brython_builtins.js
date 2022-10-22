@@ -13,7 +13,7 @@ try{
 $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
                   ("function" === typeof importScripts) &&
                   (navigator instanceof WorkerNavigator)
-$B.isNode = (typeof process !=='undefined') && (process.release.name==='node') 
+$B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
     && (process.__nwjs!==1)
 
 
@@ -160,7 +160,7 @@ while(ix < minlen && short[ix] == long[ix]){
 $B.tz_name = long.substr(ix).trim()
 
 
-$B.PyCF_ONLY_AST = 1024 // compiler flag, used in libs/_ast.js
+$B.PyCF_ONLY_AST = 1024 // compiler flags, used in libs/_ast.js and compile()
 
 if($B.isWebWorker){
     $B.charset = "utf-8"
