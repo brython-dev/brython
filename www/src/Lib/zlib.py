@@ -651,7 +651,7 @@ def compress_fixed(out, source, items):
             value, nb = int(code, 2), len(code)
             out.write_int(value, nb, order="msf")
 
-def compress(data, /, level=-1):
+def compress(data, /, level=-1, wbits=MAX_WBITS):
 
     window_size = 32 * 1024
 
