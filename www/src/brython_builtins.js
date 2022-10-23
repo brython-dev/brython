@@ -182,7 +182,7 @@ $B.max_array_size = 2 ** 32 - 1
 $B.recursion_limit = 200
 
 // PEP 657 – Include Fine Grained Error Locations in Traceback (Python 3.11)
-$B.pep567 = true
+$B.pep657 = true
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {
