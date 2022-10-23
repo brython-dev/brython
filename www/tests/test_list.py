@@ -442,4 +442,11 @@ try:
 except ValueError:
     pass
 
+# issue 2083
+try:
+    [*(1,) * 1.5]
+    raise Exception('should have raised TypeError')
+except TypeError:
+    pass
+
 print("passed all tests..")

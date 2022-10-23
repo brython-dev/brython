@@ -374,8 +374,23 @@ list.__lt__ = function(self, other){
 }
 
 list.__mul__ = function(self, other){
-    if(isinstance(other, _b_.int)) {
-        other = _b_.int.numerator(other)
+    try{
+        other = $B.PyNumber_Index(other)
+    }catch(err){
+        throw _b_.TypeError.$factory("can't multiply sequence by non-int " +
+            `of type '${$B.class_name(other)}'`)
+    }
+    if(self.length == 0){
+        return list.__new__(list)
+    }
+    if(typeof other == 'number'){
+        if(other < 0){
+            return list.__new__(list)
+        }
+        if(self.length > $B.max_array_size / other){
+            throw _b_.OverflowError.$factory(`cannot fit ` +
+                `'${$B.class_name(other)}' into an index-sized integer`)
+        }
         var res = [],
             $temp = self.slice(),
             len = $temp.length
@@ -389,18 +404,10 @@ list.__mul__ = function(self, other){
             res.__brython__ = self.__brython__
         }
         return res
+    }else if(_b_.isinstance(other, $B.long_int)){
+        throw _b_.OverflowError.$factory(`cannot fit ` +
+        `'${$B.class_name(other)}' into an index-sized integer`)
     }
-
-    if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")){
-       return list.__mul__(self, _b_.int.$factory(other))
-    }
-
-    var rmul = $B.$getattr(other, '__rmul__', null)
-    if(rmul === null){
-        throw _b_.TypeError.$factory(`can't multiply sequence by non-int ` +
-            `of type '${$B.class_name(other)}'`)
-    }
-    return _b_.NotImplemented
 }
 
 list.__new__ = function(cls, ...args){

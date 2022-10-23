@@ -82,7 +82,8 @@ class int_info:
     bits_per_digit = 30
     sizeof_digit = 4
 
-maxsize = 2 ** 63 - 1
+# maximum array size
+maxsize = __BRYTHON__.max_array_size
 
 maxunicode = 1114111
 

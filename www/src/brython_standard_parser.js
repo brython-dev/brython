@@ -70,7 +70,9 @@ $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.max_float=new Number(Number.MAX_VALUE)
 $B.min_float=new Number(Number.MIN_VALUE)
+$B.max_array_size=2**32-1
 $B.recursion_limit=200
+$B.pep567=true
 $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r",92:"\\\\",160:"\\xa0"}
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=0
@@ -129,9 +131,9 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-09-11 19:05:18.774693"
-__BRYTHON__.timestamp=1662915918773
-__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","random","unicodedata"]
+__BRYTHON__.compiled_date="2022-10-23 08:27:11.447032"
+__BRYTHON__.timestamp=1666506431446
+__BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
 function ord(char){if(char.length==1){return char.charCodeAt(0)}
@@ -4943,18 +4945,11 @@ self[attr]=val}
 return _b_.None}
 object.__setattr__.__get__=function(obj){return function(attr,val){object.__setattr__(obj,attr,val)}}
 object.__setattr__.__str__=function(){return "method object.setattr"}
-object.__str__=function(self){
-var len=arguments.length
-if(len==0){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
-"object needs an argument")}else if(len > 1){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
-"expects 1 argument, got "+len)}else if(self.$nat=='kw'){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
-"doesn't accept keyword arguments")}
-if(self.$is_class ||self.$factory){var class_str=$B.$getattr(self.__class__ ||$B.get_class(self),'__str__',null)
-if(class_str !==null && class_str !==object.__str__){return class_str(self)}
-var class_repr=$B.$getattr(self.__class__ ||$B.get_class(self),'__repr__',null)
-if(class_repr !==null && class_repr !==object.__repr__){return class_repr(self)}}else{
-var repr_func=$B.$getattr(self,"__repr__")
-return $B.$call(repr_func)()}}
+object.__str__=function(self){if(self===undefined ||self.$nat=='kw'){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
+"object needs an argument")}
+var klass=self.__class__ ||$B.get_class(self)
+var repr_func=$B.$getattr(klass,"__repr__")
+return $B.$call(repr_func).apply(null,arguments)}
 object.__subclasshook__=function(){return _b_.NotImplemented}
 object.$factory=function(){var res={__class__:object},args=[res].concat(Array.prototype.slice.call(arguments))
 object.__init__.apply(null,args)
@@ -5052,10 +5047,12 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "metaclass of a derived class must be a (non-"+
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}
 return metaclass}
-var type=$B.make_class("type",function(obj,bases,cl_dict){var missing={},$=$B.args('type',3,{obj:null,bases:null,cl_dict:null},['obj','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,null),obj=$.obj,bases=$.bases,cl_dict=$.cl_dict
+var type=$B.make_class("type",function(obj,bases,cl_dict){var missing={},$=$B.args('type',3,{obj:null,bases:null,cl_dict:null},['obj','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),obj=$.obj,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
+var kwargs={'$nat':'kw',kw:{}}
+for(var key in kw.$string_dict){kwargs.kw[key]=kw.$string_dict[key][0]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
-return obj.__class__ ||$B.get_class(obj)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases)
-return type.__new__(meta,obj,bases,cl_dict)}}
+return obj.__class__ ||$B.get_class(obj)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases),meta_new=$B.$call($B.$getattr(meta,'__new__'))
+return meta_new(meta,obj,bases,cl_dict,kwargs)}}
 )
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
@@ -5084,7 +5081,7 @@ if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
 var $test=false 
-if($test){console.log("attr",attr,"of",klass,res,res+"")}
+if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
 if(klass.__class__ &&
 klass.__class__[attr]&&
 klass.__class__[attr].__get__ &&
@@ -5093,13 +5090,18 @@ if($test){console.log("data descriptor")}
 return klass.__class__[attr].__get__(klass)}
 if(res===undefined){
 var v=klass[attr]
-if(v===undefined){var mro=klass.__mro__
+if(v===undefined){if($test){console.log(attr,'not in klass[attr], search in __dict__',klass.__dict__.$string_dict)}
+if(klass.__dict__ && klass.__dict__.$string_dict
+&& klass.__dict__.$string_dict[attr]){res=klass[attr]=klass.__dict__.$string_dict[attr][0]
+if($test){console.log('found in __dict__',v)}}else{var mro=klass.__mro__
 if(mro===undefined){console.log("no mro for",klass)}
 for(var i=0;i < mro.length;i++){var v=mro[i][attr]
 if(v !==undefined){res=v
-break}}}else{res=v}
+break}}}}else{res=v}
+if($test){console.log('search in class mro',res)
+if(res !==undefined){if(klass[attr]){console.log('found in klass',klass)}else{console.log('found in',mro[i])}}}}
 if(res===undefined){
-var meta=klass.__class__ ||$B.get_class(klass),res=meta[attr]
+if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass),res=meta[attr]
 if($test){console.log("search in meta",meta,res)}
 if(res===undefined){var meta_mro=meta.__mro__
 for(var i=0;i < meta_mro.length;i++){var res=meta_mro[i][attr]
@@ -5107,16 +5109,18 @@ if(res !==undefined){break}}}
 if(res !==undefined){if($test){console.log("found in meta",res,typeof res)}
 if(res.__class__===_b_.property){return res.fget(klass)}
 if(typeof res=="function"){
+if(attr=='__new__'){
+return res}
 var meta_method=res.bind(null,klass)
 meta_method.__class__=$B.method
-meta_method.$infos={__self__:klass,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr,__module__:res.$infos ? res.$infos.__module__ :""}
+meta_method.$infos={__self__:klass,__func__:res,__name__:attr,__qualname__:meta.$infos.__name__+"."+attr,__module__:res.$infos ? res.$infos.__module__ :""}
 if($test){console.log('return method from meta',meta_method,meta_method+'')}
-return meta_method}}
+return meta_method}}}
 if(res===undefined){
 var getattr=meta.__getattr__
 if(getattr===undefined){for(var i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
 break}}}
-if(getattr !==undefined){return getattr(klass,attr)}}}}
+if(getattr !==undefined){return getattr(klass,attr)}}}
 if(res !==undefined){if($test){console.log("res",res)}
 if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
 if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
@@ -5152,8 +5156,11 @@ return false}
 type.__instancecheck__.$type="staticmethod"
 type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value},__str__:function(self){return "type"},__eq__:function(self,other){return self.$infos.__name__==other}}
 type.__new__=function(meta,name,bases,cl_dict,extra_kwargs){
+var test=false 
 extra_kwargs=extra_kwargs===undefined ?{$nat:'kw',kw:{}}:
 extra_kwargs
+if(cl_dict.$string_dict===undefined){console.log('bizarre',meta,name,bases,cl_dict)
+alert()}
 var module=cl_dict.$string_dict.__module__
 if(module){module=module[0]}else{module=$B.last($B.frames_stack)[2]}
 var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module,__qualname__:name},$is_class:true,$has_setattr:cl_dict.$has_setattr}
@@ -5234,10 +5241,12 @@ if(subclass.__bases__===undefined){return self===_b_.object}
 return subclass.__bases__.indexOf(klass)>-1}
 $B.set_func_names(type,"builtins")
 _b_.type=type
-var wrapper_descriptor=$B.make_class("wrapper_descriptor")
+var wrapper_descriptor=$B.wrapper_descriptor=
+$B.make_class("wrapper_descriptor")
 $B.set_func_names(wrapper_descriptor,"builtins")
 type.__call__.__class__=wrapper_descriptor
-var $instance_creator=$B.$instance_creator=function(klass){
+var $instance_creator=$B.$instance_creator=function(klass){var test=false 
+if(test){console.log('instance creator of',klass)}
 if(klass.prototype && klass.prototype.constructor==klass){
 return function(){return new klass(...arguments)}}
 if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
@@ -5259,7 +5268,7 @@ return res}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
 var factory=function(){if(call_func.$is_class){return $B.$call(call_func)(...arguments)}
 return call_func.bind(null,klass).apply(null,arguments)}}
 factory.__class__=$B.Function
-if(klass.$infos===undefined){console.log('no klaas $infos',klass)
+if(klass.$infos===undefined){console.log('no klass $infos',klass)
 console.log($B.frames_stack.slice())}
 factory.$infos={__name__:klass.$infos.__name__,__module__:klass.$infos.__module__}
 return factory}
@@ -5953,7 +5962,10 @@ if(res !==_b_.NotImplemented){return res}
 throw _b_.TypeError.$factory(
 `unsupported operand type(s) for ${$B.method_to_op[op]}:`+
 ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)}
-res=method(x,y)
+if((op=='__add__' ||op=='__mul__')&&
+(Array.isArray(x)||typeof x=='string' ||
+_b_.isinstance(x,[_b_.str,_b_.bytes,_b_.bytearray,_b_.memoryview]))){
+try{res=method(x,y)}catch(err){res=_b_.NotImplemented}}else{res=method(x,y)}
 if(res===_b_.NotImplemented){try{var reflected=$B.$getattr(y,rop),method=$B.$getattr(y_class,rop)}catch(err){if(err.__class__ !==_b_.AttributeError){throw err}
 throw _b_.TypeError.$factory(
 `unsupported operand type(s) for ${$B.method_to_op[op]}:`+
@@ -6278,7 +6290,9 @@ expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 var NoneType={$factory:function(){return None},$infos:{__name__:"NoneType",__module__:"builtins"},__bool__:function(self){return False},__class__:_b_.type,__hash__:function(self){return 0},__mro__:[_b_.object],__repr__:function(self){return 'None'},__str__:function(self){return 'None'},$is_class:true}
 NoneType.__setattr__=function(self,attr){return no_set_attr(NoneType,attr)}
-var None={__class__:NoneType,}
+var None={__class__:NoneType}
+None.__doc__=None
+NoneType.__doc__=None
 for(var $op in $B.$comps){
 var key=$B.$comps[$op]
 switch(key){case 'ge':
@@ -6410,8 +6424,13 @@ return res}}else{var root=$B.parser.$create_root_node(
 {src:$.source,filename},module_name,module_name)
 root.mode=$.mode
 root.parent_block=$B.builtins_scope
-$B.parser.dispatch_tokens(root,$.source)
-var _ast=root.ast()
+try{$B.parser.dispatch_tokens(root,$.source)
+var _ast=root.ast()}catch(err){if($.mode=='single' && root.token_reader.read()===undefined){
+var tokens=root.token_reader.tokens,tester=tokens[tokens.length-2]
+if((tester.type=="NEWLINE" &&($.flags & 0x4000))||
+tester.type=="DEDENT" &&($.flags & 0x200)){err.__class__=_b_.SyntaxError
+err.args[0]='incomplete input'}}
+throw err}
 if($.mode=='single' && _ast.body.length==1 &&
 _ast.body[0]instanceof $B.ast.Expr){
 root=$B.parser.$create_root_node(
@@ -7057,6 +7076,8 @@ self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,sel
 self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
 property.__get__=function(self,obj){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
 return $B.$call(self.fget)(obj)}
+property.__new__=function(cls){return{
+__class__:cls}}
 property.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
 $B.$getattr(self.fset,'__call__')(obj,value)}
 $B.set_func_names(property,"builtins")
@@ -7103,7 +7124,7 @@ function setattr(){var $=$B.args('setattr',3,{obj:null,attr:null,value:null},['o
 if(!(typeof attr=='string')){throw _b_.TypeError.$factory("setattr(): attribute name must be string")}
 return $B.$setattr(obj,attr,value)}
 $B.$setattr=function(obj,attr,value){if(obj===undefined){console.log('obj undef',attr,value)}
-var $test=false 
+var $test=attr==="_member_names_" 
 if(attr=='__dict__'){
 if(! isinstance(value,_b_.dict)){throw _b_.TypeError.$factory("__dict__ must be set to a dictionary, "+
 "not a '"+$B.class_name(value)+"'")}
@@ -7223,6 +7244,7 @@ var object_or_type=self.__self_class__,mro=self.$arg2=='type' ? object_or_type._
 $B.get_class(object_or_type).__mro__
 var search_start=mro.indexOf(self.__thisclass__)+1,search_classes=mro.slice(search_start)
 var $test=false 
+if($test){console.log('super.__ga__, self',self,'search classes',search_classes)}
 var f
 for(var klass of search_classes){if(klass[attr]!==undefined){f=klass[attr]
 break}}
@@ -7511,12 +7533,6 @@ $B.set_func_names(builtin_function,"builtins")
 var method_wrapper=$B.make_class("method_wrapper")
 method_wrapper.__repr__=method_wrapper.__str__=function(self){return "<method wrapper '"+self.$infos.__name__+"' of function object>"}
 $B.set_func_names(method_wrapper,"builtins")
-var wrapper_descriptor=$B.wrapper_descriptor=
-$B.make_class("wrapper_descriptor")
-wrapper_descriptor.__getattribute__=$B.Function.__getattribute__
-wrapper_descriptor.__repr__=wrapper_descriptor.__str__=function(self){return "<slot wrapper '"+self.$infos.__name__+"' of '"+
-self.__objclass__.$infos.__name__+"' object>"}
-$B.set_func_names(wrapper_descriptor,"builtins")
 $B.builtin_classes=["bool","bytearray","bytes","classmethod","complex","dict","enumerate","filter","float","frozenset","int","list","map","memoryview","object","property","range","reversed","set","slice","staticmethod","str","super","tuple","type","zip"
 ]
 var other_builtins=['Ellipsis','False','None','True','__debug__','__import__','copyright','credits','license','NotImplemented'
@@ -7536,7 +7552,7 @@ catch(err){}}
 _b_['open']=$url_open
 _b_['print']=$print
 _b_['super']=$$super
-_b_.object.__init__.__class__=wrapper_descriptor
+_b_.object.__init__.__class__=$B.wrapper_descriptor 
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7776,6 +7792,7 @@ _b_.UnboundLocalError.__str__=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
 $B.name_error=function(name,obj){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
 exc.name=name
+exc.$stack=$B.frames_stack.slice()
 return exc}
 var MAX_CANDIDATE_ITEMS=750,MAX_STRING_SIZE=40,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
@@ -10712,10 +10729,7 @@ encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
 var klass=arg.__class__ ||$B.get_class(arg)
 if(klass===undefined){return $B.JSObj.__str__($B.JSObj.$factory(arg))}
-var method=$B.$getattr(klass ,"__str__",null)
-if(method===null ||
-(arg.__class__ && arg.__class__ !==_b_.object &&
-method===_b_.object.__str__)){var method=$B.$getattr(klass,"__repr__")}}catch(err){console.log("no __str__ for",arg)
+var method=$B.$getattr(klass,"__str__",null)}catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+
@@ -10921,7 +10935,7 @@ int.$to_bigint=bigint_value
 int.$int_value=int_value
 int.as_integer_ratio=function(){var $=$B.args("as_integer_ratio",1,{self:null},["self"],arguments,{},null,null)
 return $B.fast_tuple([$.self,1])}
-int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{signed:false},null,null)
+int.from_bytes=function(){var $=$B.args("from_bytes",3,{bytes:null,byteorder:null,signed:null},["bytes","byteorder","signed"],arguments,{byteorder:'big',signed:false},null,null)
 var x=$.bytes,byteorder=$.byteorder,signed=$.signed,_bytes,_len
 if(_b_.isinstance(x,[_b_.bytes,_b_.bytearray])){_bytes=x.source
 _len=x.source.length}else{_bytes=_b_.list.$factory(x)
@@ -10938,7 +10952,7 @@ _mult*=256n}
 if(! signed){return int_or_long(num)}
 if(_bytes[_len-1]< 128){return int_or_long(num)}
 return int_or_long(num-_mult)}
-int.to_bytes=function(){var $=$B.args("to_bytes",3,{self:null,len:null,byteorder:null,signed:null},["self","len","byteorder","*","signed"],arguments,{signed:false},null,null),self=$.self,len=$.len,byteorder=$.byteorder,signed=$.signed
+int.to_bytes=function(){var $=$B.args("to_bytes",3,{self:null,len:null,byteorder:null,signed:null},["self","len","byteorder","*","signed"],arguments,{len:1,byteorder:'big',signed:false},null,null),self=$.self,len=$.len,byteorder=$.byteorder,signed=$.signed
 if(! _b_.isinstance(len,_b_.int)){throw _b_.TypeError.$factory("integer argument expected, got "+
 $B.class_name(len))}
 if(["little","big"].indexOf(byteorder)==-1){throw _b_.ValueError.$factory(
@@ -11203,7 +11217,7 @@ var num=Number(res)
 if(! Number.isSafeInteger(num)){return $B.fast_long_int(res)}else{return Number(res)}}
 $B.set_func_names(int,"builtins")
 _b_.int=int
-$B.$bool=function(obj){
+$B.$bool=function(obj,bool_class){
 if(obj===null ||obj===undefined ){return false}
 switch(typeof obj){case "boolean":
 return obj
@@ -11213,11 +11227,19 @@ if(obj){return true}
 return false
 default:
 if(obj.$is_class){return true}
-var klass=obj.__class__ ||$B.get_class(obj),missing={},bool_method=$B.$getattr(klass,"__bool__",missing)
+var klass=obj.__class__ ||$B.get_class(obj),missing={},bool_method=bool_class ?
+$B.$getattr(klass,"__bool__",missing):
+$B.$getattr(obj,"__bool__",missing)
+var test=false 
+if(test){console.log('bool(obj)',obj,'apply bool method',bool_method)
+console.log('$B.$call(bool_method)',bool_method+'')}
 if(bool_method===missing){try{return _b_.len(obj)> 0}
-catch(err){return true}}else{var res=$B.$call(bool_method)(obj)
+catch(err){return true}}else{try{var res=bool_class ?
+$B.$call(bool_method)(obj):
+$B.$call(bool_method)()}catch(err){throw err}
 if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should return "+
 "bool, returned "+$B.class_name(res))}
+if(test){console.log('bool method returns',res)}
 return res}}}
 var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],$infos:{__name__:"bool",__module__:"builtins"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 bool.__and__=function(self,other){if(_b_.isinstance(other,bool)){return self && other}else if(_b_.isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
@@ -11235,7 +11257,7 @@ bool.__xor__=function(self,other){if(_b_.isinstance(other,bool)){return self ^ o
 return _b_.NotImplemented}
 bool.$factory=function(){
 var $=$B.args("bool",1,{x:null},["x"],arguments,{x:false},null,null)
-return $B.$bool($.x)}
+return $B.$bool($.x,true)}
 bool.numerator=int.numerator
 bool.denominator=int.denominator
 bool.real=int.real
@@ -12773,17 +12795,18 @@ if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
 $B.class_name(self[i])+"() >= "+
 $B.class_name(other[i])+"()")}else{return res}}}
 return other.length > self.length}
-list.__mul__=function(self,other){if(isinstance(other,_b_.int)){other=_b_.int.numerator(other)
+list.__mul__=function(self,other){try{other=$B.PyNumber_Index(other)}catch(err){throw _b_.TypeError.$factory("can't multiply sequence by non-int "+
+`of type '${$B.class_name(other)}'`)}
+if(self.length==0){return list.__new__(list)}
+if(typeof other=='number'){if(other < 0){return list.__new__(list)}
+if(self.length > $B.max_array_size/other){throw _b_.OverflowError.$factory(`cannot fit `+
+`'${$B.class_name(other)}' into an index-sized integer`)}
 var res=[],$temp=self.slice(),len=$temp.length
 for(var i=0;i < other;i++){for(var j=0;j < len;j++){res.push($temp[j])}}
 res.__class__=self.__class__
 if(self.__brython__){res.__brython__=self.__brython__}
-return res}
-if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return list.__mul__(self,_b_.int.$factory(other))}
-var rmul=$B.$getattr(other,'__rmul__',null)
-if(rmul===null){throw _b_.TypeError.$factory(`can't multiply sequence by non-int `+
-`of type '${$B.class_name(other)}'`)}
-return _b_.NotImplemented}
+return res}else if(_b_.isinstance(other,$B.long_int)){throw _b_.OverflowError.$factory(`cannot fit `+
+`'${$B.class_name(other)}' into an index-sized integer`)}}
 list.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("list.__new__(): not enough arguments")}
 var res=[]
 res.__class__=cls

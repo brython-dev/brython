@@ -723,4 +723,5 @@ assert x == 338288524927261089654018896841347694592
 
 # issue 2058
 hash(0.1)
+
 print('passed all tests...')
