@@ -31,6 +31,9 @@ def set_timeout(func, interval, *args):
     return int(window.setTimeout(wrap(func, *args), interval))
 
 def request_animation_frame(func):
+    if func.__code__.co_argcount == 0:
+        raise TypeError(f'function {func.__code__.co_name}() ' +
+            'should take a single argument')
     return int(window.requestAnimationFrame(func))
 
 def cancel_animation_frame(int_id):

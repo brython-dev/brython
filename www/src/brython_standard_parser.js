@@ -131,8 +131,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-24 14:05:33.878847"
-__BRYTHON__.timestamp=1666613133877
+__BRYTHON__.compiled_date="2022-10-24 17:53:41.530661"
+__BRYTHON__.timestamp=1666626821530
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -11153,11 +11153,12 @@ return digits}
 var digits="0123456789"
 for(var i=10;i < base;i++){digits+=String.fromCharCode(i+55)}
 return digits}
-int.$factory=function(value,base){var missing={},$=$B.args("int",2,{x:null,base:null},["x","/","base"],arguments,{x:missing,base:missing},null,null),value=$.x,base=$.base===undefined ? missing :$.base,initial_value=value
+int.$factory=function(value,base){var missing={},$=$B.args("int",2,{x:null,base:null},["x","/","base"],arguments,{x:missing,base:missing},null,null),value=$.x,base=$.base===undefined ? missing :$.base,initial_value=value,explicit_base=base !==missing
 if(value===missing ||value===undefined){if(base !==missing){throw _b_.TypeError.$factory("int() missing string argument")}
 return 0}
 if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){
-value=$B.$getattr(value,'decode')('latin-1')}else if(_b_.isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tobytes(value),'decode')('latin-1')}
+value=$B.$getattr(value,'decode')('latin-1')}else if(explicit_base && ! _b_.isinstance(value,_b_.str)){throw _b_.TypeError.$factory(
+"int() can't convert non-string with explicit base")}else if(_b_.isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tobytes(value),'decode')('latin-1')}
 if(! _b_.isinstance(value,_b_.str)){if(base !==missing){throw _b_.TypeError.$factory(
 "int() can't convert non-string with explicit base")}else{
 for(var special_method of['__int__','__index__','__trunc__']){var num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
@@ -11186,7 +11187,7 @@ if(base !=0){throw _b_.ValueError.$factory("invalid base")}}
 function invalid(base){throw _b_.ValueError.$factory("invalid literal for int() with base "+
 base+": "+_b_.repr(initial_value))}
 if(typeof value !="string"){
-value=value.valueOf()}
+value=_b_.str.$to_string(value)}
 var _value=value.trim(),
 sign=''
 if(_value.startsWith('+')||_value.startsWith('-')){var sign=_value[0]
