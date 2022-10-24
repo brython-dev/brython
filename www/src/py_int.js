@@ -687,7 +687,8 @@ int.$factory = function(value, base){
             arguments, {x: missing, base: missing}, null, null),
             value = $.x,
             base = $.base === undefined ? missing : $.base,
-            initial_value = value
+            initial_value = value,
+            explicit_base = base !== missing
 
     // int() with no argument returns 0
     if(value === missing || value === undefined){
@@ -700,6 +701,9 @@ int.$factory = function(value, base){
     if(_b_.isinstance(value, [_b_.bytes, _b_.bytearray])){
         // transform to string
         value = $B.$getattr(value, 'decode')('latin-1')
+    }else if(explicit_base && ! _b_.isinstance(value, _b_.str)){
+        throw _b_.TypeError.$factory(
+            "int() can't convert non-string with explicit base")
     }else if(_b_.isinstance(value, _b_.memoryview)){
         value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
     }
@@ -765,10 +769,11 @@ int.$factory = function(value, base){
         throw _b_.ValueError.$factory("invalid literal for int() with base " +
             base + ": " + _b_.repr(initial_value))
     }
-
+    
     if(typeof value != "string"){ // string subclass
-        value = value.valueOf()
+        value = _b_.str.$to_string(value)
     }
+
     var _value = value.trim(),    // remove leading/trailing whitespace
         sign = ''
 
