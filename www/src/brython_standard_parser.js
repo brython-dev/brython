@@ -131,8 +131,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-24 17:53:41.530661"
-__BRYTHON__.timestamp=1666626821530
+__BRYTHON__.compiled_date="2022-10-25 22:50:41.092068"
+__BRYTHON__.timestamp=1666731041092
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6512,7 +6512,10 @@ var filename='<string>'
 if(src.__class__===code){filename=src.filename}else if((! src.valueOf)||typeof src.valueOf()!=='string'){throw _b_.TypeError.$factory(`${mode}() arg 1 must be a string,`+
 " bytes or code object")}else{
 src=src.valueOf()}
-$B.url2name[filename]='exec'
+var __name__='exec'
+if(_globals !==_b_.None && _globals.__class__==_b_.dict &&
+_globals.$string_dict.__name__){__name__=_globals.$string_dict.__name__[0]}
+$B.url2name[filename]=__name__
 var frame=$B.last($B.frames_stack)
 var lineno=frame.$lineno
 $B.exec_scope=$B.exec_scope ||{}
@@ -6522,7 +6525,7 @@ exc.args=['unexpected EOF while parsing',[filename,lines.length-1,1,line]]
 exc.filename=filename
 exc.text=line
 throw exc}
-var local_name='locals_exec',global_name='globals_exec',exec_locals={},exec_globals={},__name__='<module>'
+var local_name='locals_'+__name__,global_name='globals_'+__name__,exec_locals={},exec_globals={}
 if(_globals===_b_.None){
 if(frame[1]===frame[3]){
 global_name+='_globals'

@@ -641,7 +641,12 @@ function $$eval(src, _globals, _locals){
         src = src.valueOf()
     }
 
-    $B.url2name[filename] = 'exec'
+    var __name__ = 'exec'
+    if(_globals !== _b_.None && _globals.__class__ == _b_.dict &&
+            _globals.$string_dict.__name__){
+        __name__ = _globals.$string_dict.__name__[0]
+    }
+    $B.url2name[filename] = __name__
 
     var frame = $B.last($B.frames_stack)
     var lineno = frame.$lineno
@@ -659,11 +664,10 @@ function $$eval(src, _globals, _locals){
         throw exc
     }
 
-    var local_name = 'locals_exec',
-        global_name = 'globals_exec',
+    var local_name = 'locals_' + __name__,
+        global_name = 'globals_' + __name__,
         exec_locals = {},
-        exec_globals = {},
-        __name__ = '<module>'
+        exec_globals = {}
 
     if(_globals === _b_.None){
         // if the optional parts are omitted, the code is executed in the
