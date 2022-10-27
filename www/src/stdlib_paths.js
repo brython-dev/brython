@@ -8,5 +8,6 @@ var js = ['_aio','_ajax','_ast','_base64','_binascii','_io_classes','_json','_js
 for(var i = 0; i < js.length; i++){$B.stdlib[js[i]] = ['js']}
 
 var pkglist = ['browser','browser.widgets','collections','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','json','logging','multiprocessing','multiprocessing.dummy','pydoc_data','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
-for(var i  =0; i < pkglist.length; i++){$B.stdlib[pkglist[i]] = ['py', true]}
+for(var i = 0; i < pkglist.length; i++){$B.stdlib[pkglist[i]] = ['py', true]}
+$B.stdlib_module_names = Object.keys($B.stdlib)
 })(__BRYTHON__)

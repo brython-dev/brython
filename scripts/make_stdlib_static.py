@@ -73,8 +73,9 @@ with open(os.path.join(libfolder, 'stdlib_paths.js'), 'w') as out:
         "{$B.stdlib[js[i]] = ['js']}\n\n""")
 
     out.write("var pkglist = ['%s']\n" % "','".join(pkglist))
-    out.write("for(var i  =0; i < pkglist.length; i++)" +
+    out.write("for(var i = 0; i < pkglist.length; i++)" +
         "{$B.stdlib[pkglist[i]] = ['py', true]}\n")
+    out.write('$B.stdlib_module_names = Object.keys($B.stdlib)\n')
     out.write('})(__BRYTHON__)')
 
 

@@ -34,7 +34,6 @@ else:
 
 argv = orig_argv = [__BRYTHON__.script_path]
 
-
 def displayhook(value):
     if value is not None:
         stdout.write(repr(value))
@@ -107,6 +106,8 @@ platform = "brython"
 platlibdir = __BRYTHON__.brython_path + 'Lib'
 
 prefix = __BRYTHON__.brython_path
+
+stdlib_module_names = frozenset(__BRYTHON__.stdlib_module_names)
 
 version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" \
