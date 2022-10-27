@@ -128,6 +128,23 @@ qunit_add_tests(test_utils.load_brython_test_cases('.'))
 
     </script>
 
+<!-- for Web Components tests -->
+<ui-group child-config='{"fill": true}'>
+    <ui-config selector="ui-button:nth-child(4n + 7)">
+        {
+            "fill": true,
+            "color": "gray"
+        }
+    </ui-config>
+</ui-group>
+
+ <ui-app>
+      <button>Button</button>
+ </ui-app>
+ <ui-test target-id="test">Test Component</ui-test>
+ <ui-test1893 target-id="test">Test Component</ui-test1893>
+ <demo-component2082></demo-component2082>
+
   </body>
 </html>
 
