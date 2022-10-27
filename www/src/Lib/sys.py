@@ -32,7 +32,7 @@ if hasattr(__BRYTHON__, 'full_url'):
 else:
     executable = __BRYTHON__.brython_path + 'brython.js'
 
-argv = [__BRYTHON__.script_path]
+argv = orig_argv = [__BRYTHON__.script_path]
 
 
 def displayhook(value):
