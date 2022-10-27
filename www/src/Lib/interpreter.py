@@ -13,7 +13,7 @@ _credits = """    Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast o
 _copyright = """Copyright (c) 2012, Pierre Quentel pierre.quentel@gmail.com
 All Rights Reserved.
 
-Copyright (c) 2001-2013 Python Software Foundation.
+Copyright (c) 2001-2022 Python Software Foundation.
 All Rights Reserved.
 
 Copyright (c) 2000 BeOpen.com.
@@ -24,6 +24,8 @@ All Rights Reserved.
 
 Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
 All Rights Reserved."""
+
+_help = "Type help() for interactive help, or help(object) for help about object."
 
 _license = """Copyright (c) 2012, Pierre Quentel pierre.quentel@gmail.com
 All rights reserved.
@@ -177,6 +179,8 @@ class Interpreter:
                 f"{window.navigator.appName} {window.navigator.appVersion}"
                 "\n"
             )
+            self.zone.value += ('Type "help", "copyright", "credits" '
+                                'or "license" for more information.\n')
         self.zone.value += ">>> "
         self.cursor_to_end()
         self._status = "main"
@@ -276,6 +280,14 @@ class Interpreter:
         self.history.append(currentLine)
         self.current = len(self.history)
         if self._status in ["main", "3string"]:
+            # special case
+            if currentLine == "help":
+                self.write(_help)
+                self.flush()
+                self.zone.value += '\n>>> '
+                if event is not None:
+                    event.preventDefault()
+                return
             try:
                 _ = self.globals['_'] = eval(currentLine,
                                           self.globals,
