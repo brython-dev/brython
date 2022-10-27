@@ -841,7 +841,7 @@ $B.set_func_names(type, "builtins")
 
 _b_.type = type
 
-var wrapper_descriptor = $B.wrapper_descriptor = 
+var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
 
 $B.set_func_names(wrapper_descriptor, "builtins")
@@ -1174,7 +1174,11 @@ $B.UnionType.__repr__ = function(self){
     var t = []
     for(var item of self.items){
         if(item.$is_class){
-            t.push(item.$infos.__name__)
+            var s = item.$infos.__name__
+            if(item.$infos.__module__ !== "builtins"){
+                s = item.$infos.__module__ + '.' + s
+            }
+            t.push(s)
         }else{
             t.push(_b_.repr(item))
         }
