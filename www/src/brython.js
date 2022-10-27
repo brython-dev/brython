@@ -70,6 +70,8 @@ $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.max_float=new Number(Number.MAX_VALUE)
 $B.min_float=new Number(Number.MIN_VALUE)
+$B.int_max_str_digits=4300
+$B.str_digits_check_threshold=640
 $B.max_array_size=2**32-1
 $B.recursion_limit=200
 $B.pep657=true
@@ -131,8 +133,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-27 13:15:03.126164"
-__BRYTHON__.timestamp=1666869303125
+__BRYTHON__.compiled_date="2022-10-27 13:56:03.624579"
+__BRYTHON__.timestamp=1666871763623
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -11193,6 +11195,10 @@ function invalid(base){throw _b_.ValueError.$factory("invalid literal for int() 
 base+": "+_b_.repr(initial_value))}
 if(typeof value !="string"){
 value=_b_.str.$to_string(value)}
+if(value.length > $B.int_max_str_digits){throw _b_.ValueError.$factory("Exceeds the limit "+
+`(${$B.int_max_str_digits}) for integer string conversion: `+
+`value has ${value.length} digits; use `+
+"sys.set_int_max_str_digits() to increase the limit.")}
 var _value=value.trim(),
 sign=''
 if(_value.startsWith('+')||_value.startsWith('-')){var sign=_value[0]

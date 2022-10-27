@@ -81,6 +81,21 @@ def intern(string):
 class int_info:
     bits_per_digit = 30
     sizeof_digit = 4
+    default_max_str_digits = __BRYTHON__.int_max_str_digits
+    str_digits_check_threshold = __BRYTHON__.str_digits_check_threshold
+
+def get_int_max_str_digits():
+    return __BRYTHON__.int_max_str_digits
+
+def set_int_max_str_digits(value):
+    try:
+        value = int(value)
+    except:
+        raise ValueError(f"'{value.__class__.__name__}' object "
+            "cannot be interpreted as an integer")
+    if value != 0 and value < int_info.str_digits_check_threshold:
+        raise ValueError('maxdigits must be 0 or larger than 640')
+    __BRYTHON__.int_max_str_digits = value
 
 # maximum array size
 maxsize = __BRYTHON__.max_array_size

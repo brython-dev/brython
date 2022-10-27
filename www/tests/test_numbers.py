@@ -724,4 +724,16 @@ assert x == 338288524927261089654018896841347694592
 # issue 2058
 hash(0.1)
 
+# issue 2087
+import sys
+assert sys.int_info.default_max_str_digits == 4300
+assert sys.int_info.str_digits_check_threshold == 640
+
+assert sys.get_int_max_str_digits() == 4300
+s = '2' * 5000
+assert_raises(ValueError, int, s)
+
+sys.set_int_max_str_digits(5100)
+int(s)
+
 print('passed all tests...')

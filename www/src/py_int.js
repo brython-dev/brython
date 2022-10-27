@@ -769,9 +769,16 @@ int.$factory = function(value, base){
         throw _b_.ValueError.$factory("invalid literal for int() with base " +
             base + ": " + _b_.repr(initial_value))
     }
-    
+
     if(typeof value != "string"){ // string subclass
         value = _b_.str.$to_string(value)
+    }
+
+    if(value.length > $B.int_max_str_digits){
+        throw _b_.ValueError.$factory("Exceeds the limit " +
+            `(${$B.int_max_str_digits}) for integer string conversion: ` +
+            `value has ${value.length} digits; use ` +
+            "sys.set_int_max_str_digits() to increase the limit.")
     }
 
     var _value = value.trim(),    // remove leading/trailing whitespace

@@ -176,6 +176,9 @@ $B.min_int = -$B.max_int
 $B.max_float = new Number(Number.MAX_VALUE)
 $B.min_float = new Number(Number.MIN_VALUE)
 
+$B.int_max_str_digits = 4300
+$B.str_digits_check_threshold = 640
+
 // maximum array size (Javascript constraint)
 $B.max_array_size = 2 ** 32 - 1
 
