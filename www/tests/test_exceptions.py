@@ -76,7 +76,7 @@ except NameError as exc:
     out = io.StringIO()
     traceback.print_exc(file=out)
     assert expected in out.getvalue()
-    
+
 
 import io
 
@@ -186,11 +186,25 @@ def f(src):
 assert f("1 / 0") == ['zero', 'end']
 assert f("x = 0") == ['no exception', 'end']
 
-# PEP 678  Enriching Exceptions with Notes
+# PEP 678 : Enriching Exceptions with Notes
 try:
     1 / 0
 except ZeroDivisionError as exc:
     assert_raises(AttributeError, getattr, exc, '__notes__')
     exc.add_note('zero')
     assert exc.__notes__ == ['zero']
-  
+
+# issue 2092
+out = io.StringIO()
+
+x = 4
+lineno = sys._getframe().f_lineno
+try:
+    for i in range(3.5):
+        pass
+except TypeError as exc:
+    traceback.print_exc(file=out)
+    message = out.getvalue()
+    assert f'line {lineno + 2}' in message
+
+print('all tests passed...')

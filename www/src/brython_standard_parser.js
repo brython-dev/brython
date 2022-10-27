@@ -133,8 +133,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-27 14:12:50.849164"
-__BRYTHON__.timestamp=1666872770849
+__BRYTHON__.compiled_date="2022-10-27 21:31:01.151399"
+__BRYTHON__.timestamp=1666899061151
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5724,13 +5724,15 @@ while(1){i++
 try{var elt=f(i)
 if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
 throw err}}}}
-$B.$call=function(callable,position){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
+$B.$call=function(callable,position){callable=$B.$call1(callable)
+if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
+throw exc}}}
+return callable}
+$B.$call1=function(callable){if(callable.__class__===$B.method){return callable}else if(callable.$factory){return callable.$factory}else if(callable.$is_class){
 return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_class){
 return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$in_js_module){
 return function(){var res=callable(...arguments)
-return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
-throw exc}}}
-return callable}
+return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 var $io=$B.$io=$B.make_class("io",function(out){return{
@@ -14868,10 +14870,10 @@ $B.js_from_ast(this.value,scopes)}
 $B.ast.Expression.prototype.to_js=function(scopes){init_scopes.bind(this)('expression',scopes)
 return $B.js_from_ast(this.body,scopes)}
 $B.ast.For.prototype.to_js=function(scopes){
-var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js
+var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js=`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
-if(this instanceof $B.ast.AsyncFor){js=`var iter_${id} = ${iter},\n`+
+if(this instanceof $B.ast.AsyncFor){js+=`var iter_${id} = ${iter},\n`+
 `type_${id} = _b_.type.$factory(iter_${id})\n`+
 `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
 `var next_func_${id} = $B.$call(`+
@@ -14882,8 +14884,9 @@ if(this instanceof $B.ast.AsyncFor){js=`var iter_${id} = ${iter},\n`+
 `  }catch(err){\n`+
 `    if($B.is_exc(err, [_b_.StopAsyncIteration])){\nbreak}\n`+
 `    else{\nthrow err}\n`+
-`  }\n`}else{js=`var no_break_${id} = true\n`+
-`for(var next_${id} of $B.next_of1(${iter}, frame, ${this.lineno})){\n`}
+`  }\n`}else{js+=`var no_break_${id} = true,\n`+
+`iterator_${id} = ${iter}\n`+
+`for(var next_${id} of $B.next_of1(iterator_${id}, frame, ${this.lineno})){\n`}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
 name.to_js=function(){return `next_${id}`}

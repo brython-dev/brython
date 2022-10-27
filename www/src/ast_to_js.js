@@ -1538,7 +1538,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     // scope.
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes),
-        js
+        js = `frame.$lineno = ${this.lineno}\n`
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     var scope = $B.last(scopes),
@@ -1546,7 +1546,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     if(this instanceof $B.ast.AsyncFor){
-        js = `var iter_${id} = ${iter},\n` +
+        js += `var iter_${id} = ${iter},\n` +
                  `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
             `var next_func_${id} = $B.$call(` +
@@ -1559,8 +1559,9 @@ $B.ast.For.prototype.to_js = function(scopes){
             `    else{\nthrow err}\n`+
             `  }\n`
     }else{
-        js = `var no_break_${id} = true\n` +
-             `for(var next_${id} of $B.next_of1(${iter}, frame, ${this.lineno})){\n`
+        js += `var no_break_${id} = true,\n` +
+                 `iterator_${id} = ${iter}\n` +
+             `for(var next_${id} of $B.next_of1(iterator_${id}, frame, ${this.lineno})){\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())

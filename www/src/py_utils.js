@@ -1005,6 +1005,21 @@ $B.$is_member = function(item, _set){
 }
 
 $B.$call = function(callable, position){
+    callable = $B.$call1(callable)
+    if(position){
+        return function(){
+            try{
+                return callable.apply(null, arguments)
+            }catch(exc){
+                $B.set_exception_offsets(exc, position)
+                throw exc
+            }
+        }
+    }
+    return callable
+}
+
+$B.$call1 = function(callable){
     if(callable.__class__ === $B.method){
         return callable
     }else if(callable.$factory){
@@ -1025,16 +1040,6 @@ $B.$call = function(callable, position){
             return res === undefined ? _b_.None : res
         }
     }else if(callable.$is_func || typeof callable == "function"){
-        if(position){
-            return function(){
-                try{
-                    return callable.apply(null, arguments)
-                }catch(exc){
-                    $B.set_exception_offsets(exc, position)
-                    throw exc
-                }
-            }
-        }
         return callable
     }
     try{
@@ -1679,7 +1684,7 @@ $B.rich_op1 = function(op, x, y){
             _b_.isinstance(x, [_b_.str, _b_.bytes,
                           _b_.bytearray, _b_.memoryview]))){
         // Special case for addition and repetition of sequences:
-        // if type(x).__add__(y) raises an exception, use type(y).__radd__(x), 
+        // if type(x).__add__(y) raises an exception, use type(y).__radd__(x),
         // as if it had returned NotImplemented
         try{
             res = method(x, y)
