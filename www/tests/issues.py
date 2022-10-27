@@ -3154,6 +3154,9 @@ assert_raises(NameError, exec, 'bar: Bar = 42')
 assert_raises(SyntaxError, exec, "f(🠞)",
     msg="invalid character '🠞' (U+1F81E)")
 
+# issue 2093
+assert_raises(SyntaxError, exec, "x ~= 1")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

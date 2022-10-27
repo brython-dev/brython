@@ -18,7 +18,7 @@ function $last(array){
 
 var ops = '.,:;+-*/%~^|&=<>[](){}@',
     op2 = ['**', '//', '>>', '<<'],
-    augm_op = '+-*/%~^|&=<>@',
+    augm_op = '+-*/%^|&=<>@',
     closing = {'}': '{', ']': '[', ')': '('}
 
 function Token(type, string, start, end, line){

@@ -133,8 +133,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-27 21:31:01.151399"
-__BRYTHON__.timestamp=1666899061151
+__BRYTHON__.compiled_date="2022-10-27 22:19:54.184919"
+__BRYTHON__.timestamp=1666901994184
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -144,7 +144,7 @@ code+=(char.charCodeAt(0)& 0x03FF)<< 10
 code+=(char.charCodeAt(1)& 0x03FF)
 return code}
 function $last(array){return array[array.length-1]}
-var ops='.,:;+-*/%~^|&=<>[](){}@',op2=['**','//','>>','<<'],augm_op='+-*/%~^|&=<>@',closing={'}':'{',']':'[',')':'('}
+var ops='.,:;+-*/%~^|&=<>[](){}@',op2=['**','//','>>','<<'],augm_op='+-*/%^|&=<>@',closing={'}':'{',']':'[',')':'('}
 function Token(type,string,start,end,line){start=start.slice(0,2)
 var res={type,string,start,end,line}
 res[0]=type
