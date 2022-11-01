@@ -19,7 +19,6 @@ jobs:
 
       before_script:
         - (cd scripts && python3.10 make_doc.py)
-        - (cd scripts && python3.10 transform_full_grammar.py)
         - (cd scripts && python3.10 make_dist.py)
 
       script:
