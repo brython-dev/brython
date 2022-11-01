@@ -15,6 +15,13 @@ if cpython_version[0] < version[0] or \
     print("This script requires Python >= {}.{}".format(*version[:2]))
     sys.exit()
 
+# version name
+vname = '.'.join(str(x) for x in implementation[:3])
+if implementation[3] == 'rc':
+    vname += 'rc%s' % implementation[4]
+vname2 = '.'.join(str(x) for x in implementation[:2])
+vname1 = str(implementation[0])
+
 # path of parent directory
 pdir = os.path.dirname(os.getcwd())
 
