@@ -20,12 +20,14 @@ pdir = os.path.dirname(os.getcwd())
 
 script_dir = os.path.dirname(os.getcwd())
 
-def abs_path(path): 
+def abs_path(path):
     return os.path.join(script_dir, 'www', 'src', path)
 
 def run():
-    import make_version_info
-    import make_stdlib_static
+    import make_ast_classes       # generates /src/py_ast_classes.js
+    import make_unicode_tables    # generates /src/unicode_data.js
+    import make_stdlib_static     # generates /src/stdlib_paths.js
+    import make_version_info      # generates /src/version_info.js
 
     # build brython.js from base Javascript files
     sources = [
