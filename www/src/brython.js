@@ -133,8 +133,8 @@ new Function("$locals_script",js)({})}})(__BRYTHON__)
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.__MAGIC__="3.11.0"
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-10-27 22:19:54.184919"
-__BRYTHON__.timestamp=1666901994184
+__BRYTHON__.compiled_date="2022-11-01 15:58:07.451809"
+__BRYTHON__.timestamp=1667314687451
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4773,594 +4773,6 @@ nb_added++}}})}}
 if(nb_added){required_stdlib_imports(imports,imports.length-nb_added)}
 return imports}})(__BRYTHON__)
 ;
-__BRYTHON__.builtins.object=(function($B){var _b_=$B.builtins
-var object={
-$infos:{__name__:"object"},$is_class:true,$native:true}
-var opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
-var opsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
-object.__delattr__=function(self,attr){if(self.__dict__ && self.__dict__.$string_dict &&
-self.__dict__.$string_dict[attr]!==undefined){delete self.__dict__.$string_dict[attr]
-return _b_.None}else if(self.__dict__===undefined && self[attr]!==undefined){delete self[attr]
-return _b_.None}else{
-var klass=self.__class__
-if(klass){var prop=$B.$getattr(klass,attr)
-if(prop.__class__===_b_.property){if(prop.__delete__ !==undefined){prop.__delete__(self)
-return _b_.None}}}}
-throw $B.attr_error(attr,self)}
-object.__dir__=function(self){var objects
-if(self.$is_class){objects=[self].concat(self.__mro__)}else{var klass=self.__class__ ||$B.get_class(self)
-objects=[self,klass].concat(klass.__mro__)}
-var res=[]
-for(var i=0,len=objects.length;i < len;i++){for(var attr in objects[i]){if(attr.charAt(0)=="$"){if(attr.charAt(1)=="$"){
-res.push(attr.substr(2))}
-continue}
-if(! isNaN(parseInt(attr.charAt(0)))){
-continue}
-if(attr=="__mro__"){continue}
-res.push(attr)}}
-if(self.__dict__){for(var attr in self.__dict__.$string_dict){if(attr.charAt(0)!="$"){res.push(attr)}}}
-res=_b_.list.$factory(_b_.set.$factory(res))
-_b_.list.sort(res)
-return res}
-object.__eq__=function(self,other){
-if(self===other){return true}
-return _b_.NotImplemented}
-object.__format__=function(){var $=$B.args("__format__",2,{self:null,spec:null},["self","spec"],arguments,{},null,null)
-if($.spec !==""){throw _b_.TypeError.$factory(
-"non-empty format string passed to object.__format__")}
-return _b_.getattr($.self,"__str__")()}
-object.__ge__=function(){return _b_.NotImplemented}
-object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
-var $test=false 
-if($test){console.log("object.__getattribute__, attr",attr,"de",obj,"klass",klass)}
-if(attr==="__class__"){return klass}
-var res=obj[attr]
-if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
-res=undefined}
-if(res===undefined && obj.__dict__){var dict=obj.__dict__
-if(dict.__class__===$B.getset_descriptor){return dict.cls[attr]}
-if(dict.$string_dict.hasOwnProperty(attr)){if($test){console.log("__dict__ hasOwnProperty",attr,dict.$string_dict[attr])}
-return dict.$string_dict[attr][0]}}
-if(res===undefined){
-function check(obj,kl,attr){var v=kl[attr]
-if(v !==undefined){return v}}
-res=check(obj,klass,attr)
-if(res===undefined){var mro=klass.__mro__
-for(var i=0,len=mro.length;i < len;i++){res=check(obj,mro[i],attr)
-if($test){console.log('in class',mro[i],'res',res)}
-if(res !==undefined){if($test){console.log("found in",mro[i])}
-break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
-return res}}
-if(res !==undefined){if($test){console.log(res)}
-if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,obj,klass)}
-if(res.__class__===$B.method){if(res.$infos.__self__){
-return res}
-return res.__get__(obj,klass)}
-var get=res.__get__
-if(get===undefined && res.__class__){var get=res.__class__.__get__
-for(var i=0;i < res.__class__.__mro__.length &&
-get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
-if($test){console.log("get",get)}
-var __get__=get===undefined ? null :
-$B.$getattr(res,"__get__",null)
-if($test){console.log("__get__",__get__)}
-if(__get__ !==null){try{return __get__.apply(null,[obj,klass])}
-catch(err){
-throw err}}
-if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
-if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
-if(__get__ !==null){
-res.__name__=attr
-if(attr=="__new__" ||
-res.__class__===$B.builtin_function){res.$type="staticmethod"}
-var res1=__get__.apply(null,[res,obj,klass])
-if($test){console.log("res",res,"res1",res1)}
-if(typeof res1=="function"){
-if(res1.__class__===$B.method){return res}
-if(res.$type=="staticmethod"){return res}else{var self=res.__class__===$B.method ? klass :obj,method=function(){var args=[self]
-for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
-return res.apply(this,args)}
-method.__class__=$B.method
-method.__get__=function(obj,cls){var clmethod=res.bind(null,cls)
-clmethod.__class__=$B.method
-clmethod.$infos={__self__:cls,__func__:res,__name__:res.$infos.__name__,__qualname__:cls.$infos.__name__+"."+
-res.$infos.__name__}
-return clmethod}
-method.__get__.__class__=$B.method_wrapper
-method.__get__.$infos=res.$infos
-if(klass.$infos===undefined){console.log("no $infos",klass)
-console.log($B.last($B.frames_stack))}
-method.$infos={__self__:self,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr}
-if($test){console.log("return method",method)}
-if(is_own_class_instance_method){obj.$method_cache=obj.$method_cache ||{}
-obj.$method_cache[attr]=[method,res]}
-return method}}else{
-return res1}}
-return res}else{throw $B.attr_error(attr,obj)}}
-object.__gt__=function(){return _b_.NotImplemented}
-object.__hash__=function(self){var hash=self.__hashvalue__
-if(hash !==undefined){return hash}
-return self.__hashvalue__=$B.$py_next_hash--}
-object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
-"object needs an argument")}
-return _b_.None}
-object.__init_subclass__=function(){
-var $=$B.args("__init_subclass__",0,{},[],arguments,{},null,null)
-return _b_.None}
-object.__init_subclass__.$type="staticmethod"
-object.__le__=function(){return _b_.NotImplemented}
-object.__lt__=function(){return _b_.NotImplemented}
-object.__mro__=[]
-object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
-var init_func=$B.$getattr(cls,"__init__")
-if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
-var res=Object.create(null)
-$B.update_obj(res,{__class__ :cls,__dict__:$B.empty_dict()})
-return res}
-object.__ne__=function(self,other){
-if(self===other){return false}
-var eq=$B.$getattr(self.__class__ ||$B.get_class(self),"__eq__",null)
-if(eq !==null){var res=$B.$call(eq)(self,other)
-if(res===_b_.NotImplemented){return res}
-return ! $B.$bool(res)}
-return _b_.NotImplemented}
-object.__reduce__=function(self){function _reconstructor(cls){return $B.$call(cls)()}
-_reconstructor.$infos={__qualname__:"_reconstructor"}
-var res=[_reconstructor]
-res.push(_b_.tuple.$factory([self.__class__].
-concat(self.__class__.__mro__)))
-var d=$B.empty_dict()
-for(var attr in self.__dict__.$string_dict){_b_.dict.$setitem(d.$string_dict,attr,self.__dict__.$string_dict[attr][0])}
-console.log("object.__reduce__, d",d)
-res.push(d)
-return _b_.tuple.$factory(res)}
-function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
-__newobj__.$infos={__name__:"__newobj__",__qualname__:"__newobj__"}
-_b_.__newobj__=__newobj__
-object.__reduce_ex__=function(self){var res=[__newobj__]
-var arg2=_b_.tuple.$factory([self.__class__])
-if(Array.isArray(self)){self.forEach(function(item){arg2.push(item)})}
-res.push(arg2)
-var d=$B.empty_dict(),nb=0
-if(self.__dict__===undefined){throw _b_.TypeError.$factory("cannot pickle '"+
-$B.class_name(self)+"' object")}
-for(var attr in self.__dict__.$string_dict){if(attr=="__class__" ||attr.startsWith("$")){continue}
-_b_.dict.$setitem(d,attr,self.__dict__.$string_dict[attr][0])
-nb++}
-if(nb==0){d=_b_.None}
-res.push(d)
-res.push(_b_.None)
-return _b_.tuple.$factory(res)}
-object.__repr__=function(self){if(self===object){return "<class 'object'>"}
-if(self.__class__===_b_.type){return "<class '"+self.__name__+"'>"}
-var module=self.__class__.$infos.__module__
-if(module !==undefined && !module.startsWith("$")&&
-module !=="builtins"){return "<"+self.__class__.$infos.__module__+"."+
-$B.class_name(self)+" object>"}else{return "<"+$B.class_name(self)+" object>"}}
-object.__setattr__=function(self,attr,val){if(val===undefined){
-throw _b_.TypeError.$factory(
-"can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
-if(object[attr]===undefined){throw $B.attr_error(attr,self)}else{throw _b_.AttributeError.$factory(
-"'object' object attribute '"+attr+"' is read-only")}}
-if(self.__dict__){_b_.dict.$setitem(self.__dict__,attr,val)}else{
-self[attr]=val}
-return _b_.None}
-object.__setattr__.__get__=function(obj){return function(attr,val){object.__setattr__(obj,attr,val)}}
-object.__setattr__.__str__=function(){return "method object.setattr"}
-object.__str__=function(self){if(self===undefined ||self.$nat=='kw'){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
-"object needs an argument")}
-var klass=self.__class__ ||$B.get_class(self)
-var repr_func=$B.$getattr(klass,"__repr__")
-return $B.$call(repr_func).apply(null,arguments)}
-object.__subclasshook__=function(){return _b_.NotImplemented}
-object.$factory=function(){var res={__class__:object},args=[res].concat(Array.prototype.slice.call(arguments))
-object.__init__.apply(null,args)
-return res}
-$B.set_func_names(object,"builtins")
-$B.make_class=function(qualname,factory){
-var A={__class__:_b_.type,__mro__:[object],$infos:{__qualname__:qualname,__name__:$B.last(qualname.split('.'))},$is_class:true}
-A.$factory=factory
-return A}
-return object})(__BRYTHON__)
-;
-;(function($B){var _b_=$B.builtins
-$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){bases=bases ||[]
-var metaclass
-var module=class_obj.__module__
-if(module===undefined){
-module=class_obj.__module__=$B.last($B.frames_stack)[2]}
-for(var i=0;i < bases.length;i++){if(bases[i]===undefined){
-$B.line_info=class_obj.$def_line
-throw $B.name_error(parents_names[i])}else if(bases[i]===_b_.bool){throw _b_.TypeError.$factory(
-"type 'bool' is not an acceptable base type")}}
-var extra_kwargs={},prepare_kwargs={}
-if(kwargs){for(var i=0;i < kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
-if(key=="metaclass"){
-metaclass=val}else{
-extra_kwargs[key]=val}
-prepare_kwargs[key]=val}}
-var mro0=class_obj
-if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){class_obj.__hash__=_b_.None}
-var orig_bases=bases.slice(),use_mro_entries=false
-for(var i=0;i < bases.length;i++){if(bases[i]===undefined ||
-(bases[i].__mro__===undefined)){var mro_entries=$B.$getattr(bases[i],"__mro_entries__",_b_.None)
-if(mro_entries !==_b_.None){var entries=_b_.list.$factory(mro_entries(bases))
-bases.splice(i,1,...entries)
-use_mro_entries=true
-i--
-continue}}}
-if(metaclass===undefined){metaclass=meta_from_bases(class_name,module,bases)}
-var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=$B.$call(prepare)(class_name,bases)
-if(cl_dict.__class__ !==_b_.dict){var set_class_item=$B.$getattr(cl_dict,"__setitem__")}else{var set_class_item=function(attr,value){cl_dict.$string_dict[attr]=[value,cl_dict.$order++]}}
-set_class_item('__qualname__',class_name)
-for(var attr in class_obj){if(attr=="__annotations__"){if(cl_dict.$string_dict[attr]===undefined){cl_dict.$string_dict[attr]=[$B.empty_dict(),cl_dict.$order++]}
-for(var key in class_obj[attr].$string_dict){$B.$setitem(cl_dict.$string_dict[attr][0],key,class_obj[attr].$string_dict[key][0])}}else{if(attr.charAt(0)!="$"){set_class_item(attr,class_obj[attr])}}}
-if(use_mro_entries){set_class_item("__orig_bases__",_b_.tuple.$factory(orig_bases))}
-var class_dict={__bases__:bases,__class__:metaclass,__dict__:cl_dict}
-if(cl_dict.__class__===_b_.dict){for(var key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key][0]}}else{var get_class_item=$B.$getattr(cl_dict,"__getitem__")
-var it=_b_.iter(cl_dict)
-while(true){try{var key=_b_.next(it)
-class_dict[key]=get_class_item(key)}catch(err){break}}}
-class_dict.__mro__=_b_.type.mro(class_dict).slice(1)
-var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
-for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 :mro[i]
-for(var attr in kdict){if(non_abstract_methods[attr]){continue}
-var v=kdict[attr]
-if(typeof v=="function"){if(v.__isabstractmethod__===true ||
-(v.$attrs && v.$attrs.__isabstractmethod__)){is_instanciable=false
-abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}else{non_abstract_methods[attr]=true}}}
-var _slots=class_obj.__slots__
-if(_slots !==undefined){if(typeof _slots=="string"){_slots=[_slots]}else{_slots=_b_.list.$factory(_slots)}
-cl_dict.__slots__=_slots}
-for(var i=0;i < mro.length-1;i++){for(var attr in mro[i]){if(attr=="__setattr__"){cl_dict.$has_setattr=true
-break}else if(mro[i][attr]){if(mro[i][attr].__get__ ||(mro[i][attr].__class__ &&
-mro[i][attr].__class__.__get__)){
-cl_dict.$has_setattr=true
-break}}}}
-var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
-var kls=meta_new(metaclass,class_name,bases,cl_dict,{$nat:'kw',kw:extra_kwargs})
-kls.__module__=module
-kls.$infos={__module__:module,__name__:class_name,__qualname__:class_obj.$qualname}
-kls.$subclasses=[]
-if(kls.__bases__===undefined ||kls.__bases__.length==0){kls.__bases__=$B.fast_tuple([_b_.object])}
-for(var attr in class_obj){if(attr.charAt(0)!="$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
-if(kls.__class__===metaclass){
-var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
-meta_init(kls,class_name,bases,cl_dict)}
-for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
-bases[i].$subclasses.push(kls)}
-if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class "+
-"interface with abstract methods "+
-Object.keys(abstract_methods).join(", "))}
-kls.$factory=nofactory}
-return kls}
-function meta_from_bases(class_name,module,bases){var metaclass
-if(bases && bases.length > 0){metaclass=bases[0].__class__
-if(metaclass===undefined){
-if(typeof bases[0]=="function"){if(bases.length !=1){throw _b_.TypeError.$factory("A Brython class "+
-"can inherit at most 1 Javascript constructor")}
-metaclass=bases[0].__class__=$B.JSMeta
-$B.set_func_names(bases[0],module)}else{throw _b_.TypeError.$factory("Argument of "+class_name+
-"is not a class (type '"+$B.class_name(bases[0])+
-"')")}}
-for(var i=1;i < bases.length;i++){var mc=bases[i].__class__
-if(mc===metaclass ||_b_.issubclass(metaclass,mc)){}else if(_b_.issubclass(mc,metaclass)){metaclass=mc}else if(metaclass.__bases__ &&
-metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass conflict: the "+
-"metaclass of a derived class must be a (non-"+
-"strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}
-return metaclass}
-var type=$B.make_class("type",function(obj,bases,cl_dict){var missing={},$=$B.args('type',3,{obj:null,bases:null,cl_dict:null},['obj','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),obj=$.obj,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
-var kwargs={'$nat':'kw',kw:{}}
-for(var key in kw.$string_dict){kwargs.kw[key]=kw.$string_dict[key][0]}
-if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
-return obj.__class__ ||$B.get_class(obj)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases),meta_new=$B.$call($B.$getattr(meta,'__new__'))
-return meta_new(meta,obj,bases,cl_dict,kwargs)}}
-)
-type.__call__=function(){var extra_args=[],klass=arguments[0]
-for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
-var new_func=_b_.type.__getattribute__(klass,"__new__")
-var instance=new_func.apply(null,arguments),instance_class=instance.__class__ ||$B.get_class(instance)
-if(instance_class===klass){
-var init_func=_b_.type.__getattribute__(klass,"__init__")
-if(init_func !==_b_.object.__init__){
-var args=[instance].concat(extra_args)
-init_func.apply(null,args)}}
-return instance}
-type.__class__=type
-type.__format__=function(klass,fmt_spec){
-return _b_.str.$factory(klass)}
-type.__getattribute__=function(klass,attr){switch(attr){case "__bases__":
-return $B.fast_tuple(klass.__bases__ ||[_b_.object])
-case "__class__":
-return klass.__class__
-case "__doc__":
-return klass.__doc__ ||_b_.None
-case "__setattr__":
-if(klass["__setattr__"]!==undefined){var func=klass["__setattr__"]}else{var func=function(obj,key,value){obj[key]=value}}
-return method_wrapper.$factory(attr,klass,func)
-case "__delattr__":
-if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
-return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
-var res=klass[attr]
-var $test=false 
-if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
-if(klass.__class__ &&
-klass.__class__[attr]&&
-klass.__class__[attr].__get__ &&
-klass.__class__[attr].__set__){
-if($test){console.log("data descriptor")}
-return klass.__class__[attr].__get__(klass)}
-if(res===undefined){
-var v=klass[attr]
-if(v===undefined){if($test){console.log(attr,'not in klass[attr], search in __dict__',klass.__dict__.$string_dict)}
-if(klass.__dict__ && klass.__dict__.$string_dict
-&& klass.__dict__.$string_dict[attr]){res=klass[attr]=klass.__dict__.$string_dict[attr][0]
-if($test){console.log('found in __dict__',v)}}else{var mro=klass.__mro__
-if(mro===undefined){console.log("no mro for",klass)}
-for(var i=0;i < mro.length;i++){var v=mro[i][attr]
-if(v !==undefined){res=v
-break}}}}else{res=v}
-if($test){console.log('search in class mro',res)
-if(res !==undefined){if(klass[attr]){console.log('found in klass',klass)}else{console.log('found in',mro[i])}}}}
-if(res===undefined){
-if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass),res=meta[attr]
-if($test){console.log("search in meta",meta,res)}
-if(res===undefined){var meta_mro=meta.__mro__
-for(var i=0;i < meta_mro.length;i++){var res=meta_mro[i][attr]
-if(res !==undefined){break}}}
-if(res !==undefined){if($test){console.log("found in meta",res,typeof res)}
-if(res.__class__===_b_.property){return res.fget(klass)}
-if(typeof res=="function"){
-if(attr=='__new__'){
-return res}
-var meta_method=res.bind(null,klass)
-meta_method.__class__=$B.method
-meta_method.$infos={__self__:klass,__func__:res,__name__:attr,__qualname__:meta.$infos.__name__+"."+attr,__module__:res.$infos ? res.$infos.__module__ :""}
-if($test){console.log('return method from meta',meta_method,meta_method+'')}
-return meta_method}}}
-if(res===undefined){
-var getattr=meta.__getattr__
-if(getattr===undefined){for(var i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
-break}}}
-if(getattr !==undefined){return getattr(klass,attr)}}}
-if(res !==undefined){if($test){console.log("res",res)}
-if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
-if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
-if(res.$infos.__self__){
-return res}
-var result=res.__get__(res.__func__,klass)
-result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
-return result}else if(res.__class__ && res.__class__.__get__){
-if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
-if(typeof res=="function"){
-if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
-if($test){console.log("res is function",res)}
-if(attr=="__new__" ||
-res.__class__===$B.builtin_function){res.$type="staticmethod"}
-if((attr=="__class_getitem__" ||attr=="__init_subclass__")
-&& res.__class__ !==_b_.classmethod){res=_b_.classmethod.$factory(res)
-return _b_.classmethod.__get__(res,_b_.None,klass)}
-if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
-return res}}else{return res}}}
-type.__hash__=function(cls){return _b_.hash(cls)}
-type.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'type' "+
-"object needs an argument")}}
-type.__init_subclass__=function(){
-var $=$B.args("__init_subclass__",1,{},[],arguments,{},"args","kwargs")
-if($.kwargs !==undefined){if($.kwargs.__class__ !==_b_.dict ||
-Object.keys($.kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
-"__init_subclass__() takes no keyword arguments")}}
-return _b_.None}
-type.__instancecheck__=function(cls,instance){var kl=instance.__class__ ||$B.get_class(instance)
-if(kl===cls){return true}
-else{for(var i=0;i < kl.__mro__.length;i++){if(kl.__mro__[i]===cls){return true}}}
-return false}
-type.__instancecheck__.$type="staticmethod"
-type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value},__str__:function(self){return "type"},__eq__:function(self,other){return self.$infos.__name__==other}}
-type.__new__=function(meta,name,bases,cl_dict,extra_kwargs){
-var test=false 
-extra_kwargs=extra_kwargs===undefined ?{$nat:'kw',kw:{}}:
-extra_kwargs
-if(cl_dict.$string_dict===undefined){console.log('bizarre',meta,name,bases,cl_dict)
-alert()}
-var module=cl_dict.$string_dict.__module__
-if(module){module=module[0]}else{module=$B.last($B.frames_stack)[2]}
-var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module,__qualname__:name},$is_class:true,$has_setattr:cl_dict.$has_setattr}
-if(cl_dict.__slots__){var _slots=class_dict.__slots__=cl_dict.__slots__
-for(var name of _slots){class_dict[name]=member_descriptor.$factory(name,class_dict)}}
-class_dict.__mro__=type.mro(class_dict).slice(1)
-var items=$B.dict_to_list(cl_dict)
-for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
-if(key==="__module__"){continue}
-if(key==="__class__"){continue}
-if(v===undefined){continue}
-class_dict[key]=v
-if(v.__class__){
-var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
-if(set_name !==_b_.None){set_name(v,class_dict,key)}}
-if(typeof v=="function"){if(v.$infos===undefined){console.log("type new",v,v+"")
-console.log($B.frames_stack.slice())}else{v.$infos.$class=class_dict
-v.$infos.__qualname__=name+'.'+v.$infos.__name__
-if(v.$infos.$defaults){
-var $defaults=v.$infos.$defaults
-$B.Function.__setattr__(v,"__defaults__",$defaults)}}}}
-var sup=_b_.super.$factory(class_dict,class_dict)
-var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
-init_subclass(extra_kwargs)
-return class_dict}
-type.__or__=function(){var $=$B.args('__or__',2,{cls:null,other:null},['cls','other'],arguments,{},null,null),cls=$.cls,other=$.other
-if(other !==_b_.None && ! _b_.isinstance(other,type)){return _b_.NotImplemented}
-return $B.UnionType.$factory([cls,other])}
-type.__prepare__=function(){return $B.empty_dict()}
-type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value},__str__:function(self){console.log("type.__qualname__")},__eq__:function(self,other){return self.$infos.__qualname__==other}}
-type.__repr__=function(kls){$B.builtins_repr_check(type,arguments)
-if(kls.$infos===undefined){console.log("no $infos",kls)}
-var qualname=kls.$infos.__qualname__
-if(kls.$infos.__module__ &&
-kls.$infos.__module__ !="builtins" &&
-!kls.$infos.__module__.startsWith("$")){qualname=kls.$infos.__module__+"."+qualname}
-return "<class '"+qualname+"'>"}
-type.__ror__=function(){var len=arguments.length
-if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
-return _b_.NotImplemented}
-type.mro=function(cls){
-if(cls===undefined){throw _b_.TypeError.$factory(
-'unbound method type.mro() needs an argument')}
-var bases=cls.__bases__,seqs=[],pos1=0
-for(var i=0;i < bases.length;i++){
-var bmro=[],pos=0
-if(bases[i]===undefined ||
-bases[i].__mro__===undefined){if(bases[i].__class__===undefined){
-return[_b_.object]}else{throw _b_.TypeError.$factory(
-"Object passed as base class is not a class")}}
-bmro[pos++]=bases[i]
-var _tmp=bases[i].__mro__
-if(_tmp[0]===bases[i]){_tmp.splice(0,1)}
-for(var k=0;k < _tmp.length;k++){bmro[pos++]=_tmp[k]}
-seqs[pos1++]=bmro}
-seqs[pos1++]=bases.slice()
-var mro=[cls],mpos=1
-while(1){var non_empty=[],pos=0
-for(var i=0;i < seqs.length;i++){if(seqs[i].length > 0){non_empty[pos++]=seqs[i]}}
-if(non_empty.length==0){break}
-for(var i=0;i < non_empty.length;i++){var seq=non_empty[i],candidate=seq[0],not_head=[],pos=0
-for(var j=0;j < non_empty.length;j++){var s=non_empty[j]
-if(s.slice(1).indexOf(candidate)>-1){not_head[pos++]=s}}
-if(not_head.length > 0){candidate=null}
-else{break}}
-if(candidate===null){throw _b_.TypeError.$factory(
-"inconsistent hierarchy, no C3 MRO is possible")}
-mro[mpos++]=candidate
-for(var i=0;i < seqs.length;i++){var seq=seqs[i]
-if(seq[0]===candidate){
-seqs[i].shift()}}}
-if(mro[mro.length-1]!==_b_.object){mro[mpos++]=_b_.object}
-return mro}
-type.__subclasscheck__=function(self,subclass){
-var klass=self
-if(klass===_b_.str){klass=$B.StringSubclass}else if(klass===_b_.float){klass=$B.FloatSubclass}
-if(subclass.__bases__===undefined){return self===_b_.object}
-return subclass.__bases__.indexOf(klass)>-1}
-$B.set_func_names(type,"builtins")
-_b_.type=type
-var wrapper_descriptor=$B.wrapper_descriptor=
-$B.make_class("wrapper_descriptor")
-$B.set_func_names(wrapper_descriptor,"builtins")
-type.__call__.__class__=wrapper_descriptor
-var $instance_creator=$B.$instance_creator=function(klass){var test=false 
-if(test){console.log('instance creator of',klass)}
-if(klass.prototype && klass.prototype.constructor==klass){
-return function(){return new klass(...arguments)}}
-if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
-"Can't instantiate abstract class interface "+
-"with abstract methods")}}
-var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
-if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){
-var obj=klass.__new__.bind(null,klass).
-apply(null,arguments)
-klass.__init__.bind(null,obj).apply(null,arguments)
-return obj}}else{factory=function(){return klass.__new__.bind(null,klass).
-apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var obj={__class__:klass,__dict__:$B.empty_dict()}
-klass.__init__.bind(null,obj).apply(null,arguments)
-return obj}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$nat &&
-Object.keys(arguments[0].kw).length==0){}else{throw _b_.TypeError.$factory("object() takes no parameters")}}
-var res=Object.create(null)
-$B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
-return res}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
-var factory=function(){if(call_func.$is_class){return $B.$call(call_func)(...arguments)}
-return call_func.bind(null,klass).apply(null,arguments)}}
-factory.__class__=$B.Function
-if(klass.$infos===undefined){console.log('no klass $infos',klass)
-console.log($B.frames_stack.slice())}
-factory.$infos={__name__:klass.$infos.__name__,__module__:klass.$infos.__module__}
-return factory}
-var method_wrapper=$B.method_wrapper=$B.make_class("method_wrapper",function(attr,klass,method){var f=function(){return method.apply(null,arguments)}
-f.$infos={__name__:attr,__module__:klass.__module__}
-return f}
-)
-method_wrapper.__str__=method_wrapper.__repr__=function(self){return "<method '"+self.$infos.__name__+"' of function object>"}
-var member_descriptor=$B.make_class("member_descriptor",function(attr,cls){return{__class__:member_descriptor,cls:cls,attr:attr}}
-)
-member_descriptor.__delete__=function(self,obj){if(obj.$slot_values===undefined ||
-! obj.$slot_values.hasOwnProperty(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
-obj.$slot_values.delete(self.attr)}
-member_descriptor.__get__=function(self,obj,obj_type){if(obj===_b_.None){return self}
-if(obj.$slot_values===undefined ||
-! obj.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
-return obj.$slot_values.get(self.attr)}
-member_descriptor.__set__=function(self,obj,value){if(obj.$slot_values===undefined){obj.$slot_values=new Map()}
-obj.$slot_values.set(self.attr,value)}
-member_descriptor.__str__=member_descriptor.__repr__=function(self){return "<member '"+self.attr+"' of '"+self.cls.$infos.__name__+
-"' objects>"}
-$B.set_func_names(member_descriptor,"builtins")
-var method=$B.method=$B.make_class("method",function(func,cls){var f=function(){return $B.$call(func).bind(null,cls).apply(null,arguments)}
-f.__class__=method
-f.$infos=func.$infos
-f.$infos.__func__=func
-f.$infos.__self__=cls
-f.$infos.__dict__=$B.empty_dict()
-return f}
-)
-method.__eq__=function(self,other){return self.$infos !==undefined &&
-other.$infos !==undefined &&
-self.$infos.__func__===other.$infos.__func__ &&
-self.$infos.__self__===other.$infos.__self__}
-method.__ne__=function(self,other){return ! $B.method.__eq__(self,other)}
-method.__get__=function(self){var f=function(){return self(arguments)}
-f.__class__=$B.method_wrapper
-f.$infos=method.$infos
-return f}
-method.__getattribute__=function(self,attr){
-var infos=self.$infos
-if(infos && infos[attr]){if(attr=="__code__"){var res={__class__:$B.Code}
-for(var attr in infos.__code__){res[attr]=infos.__code__[attr]}
-return res}else{return infos[attr]}}else if(method.hasOwnProperty(attr)){return _b_.object.__getattribute__(self,attr)}else{
-return $B.Function.__getattribute__(self.$infos.__func__,attr)}}
-method.__repr__=method.__str__=function(self){return "<bound method "+self.$infos.__qualname__+
-" of "+_b_.str.$factory(self.$infos.__self__)+">"}
-method.__setattr__=function(self,key,value){
-if(key=="__class__"){throw _b_.TypeError.$factory("__class__ assignment only supported "+
-"for heap types or ModuleType subclasses")}
-throw $B.attr_error(attr,self)}
-$B.set_func_names(method,"builtins")
-$B.method_descriptor=$B.make_class("method_descriptor")
-$B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
-$B.GenericAlias=$B.make_class("GenericAlias",function(origin_class,items){return{
-__class__:$B.GenericAlias,origin_class,items}}
-)
-$B.GenericAlias.__args__={__get__:function(self){return $B.fast_tuple(self.items)}}
-$B.GenericAlias.__call__=function(self,...args){return self.origin_class.$factory.apply(null,args)}
-$B.GenericAlias.__eq__=function(self,other){if(! _b_.isinstance(other,$B.GenericAlias)){return false}
-return $B.rich_comp("__eq__",self.origin_class,other.origin_class)&&
-$B.rich_comp("__eq__",self.items,other.items)}
-$B.GenericAlias.__getitem__=function(self,item){throw _b_.TypeError.$factory("descriptor '__getitem__' for '"+
-self.origin_class.$infos.__name__+"' objects doesn't apply to a '"+
-$B.class_name(item)+"' object")}
-$B.GenericAlias.__or__=function(self,other){var $=$B.args('__or__',2,{self:null,other:null},['self','other'],arguments,{},null,null)
-return $B.UnionType.$factory([self,other])}
-$B.GenericAlias.__origin__={__get__:function(self){return self.origin_class}}
-$B.GenericAlias.__parameters__={__get__:function(self){
-return $B.fast_tuple([])}}
-$B.GenericAlias.__repr__=function(self){var items=[]
-for(var i=0,len=self.items.length;i < len;i++){if(self.items[i]===_b_.Ellipsis){items.push('...')}else{if(self.items[i].$is_class){items.push(self.items[i].$infos.__name__)}else{items.push(_b_.repr(self.items[i]))}}}
-return self.origin_class.$infos.__qualname__+'['+
-items.join(", ")+']'}
-$B.set_func_names($B.GenericAlias,"types")
-$B.UnionType=$B.make_class("UnionType",function(items){return{
-__class__:$B.UnionType,items}}
-)
-$B.UnionType.__args__={__get__:function(self){return $B.fast_tuple(self.items)}}
-$B.UnionType.__eq__=function(self,other){if(! _b_.isinstance(other,$B.UnionType)){return _b_.NotImplemented}
-return _b_.list.__eq__(self.items,other.items)}
-$B.UnionType.__parameters__={__get__:function(){return $B.fast_tuple([])}}
-$B.UnionType.__repr__=function(self){var t=[]
-for(var item of self.items){if(item.$is_class){var s=item.$infos.__name__
-if(item.$infos.__module__ !=="builtins"){s=item.$infos.__module__+'.'+s}
-t.push(s)}else{t.push(_b_.repr(item))}}
-return t.join(' | ')}
-$B.set_func_names($B.UnionType,"types")
-_b_.object.__class__=type})(__BRYTHON__)
-;
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
@@ -5735,36 +5147,6 @@ return function(){var res=callable(...arguments)
 return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
-var $io=$B.$io=$B.make_class("io",function(out){return{
-__class__:$io,out,encoding:'utf-8'}}
-)
-$io.flush=function(self){if(self.buf){console[self.out](self.buf.join(''))
-self.buf=[]}}
-$io.write=function(self,msg){
-if(self.buf===undefined){self.buf=[]}
-if(typeof msg !="string"){throw _b_.TypeError.$factory("write() argument must be str, not "+
-$B.class_name(msg))}
-self.buf.push(msg)
-return _b_.None}
-if(console.error !==undefined){$B.stderr=$io.$factory("error")}else{$B.stderr=$io.$factory("log")}
-$B.stdout=$io.$factory("log")
-$B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}
-$B.make_iterator_class=function(name){
-var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
-__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length,$builtin_iterator:true}},$infos:{__name__:name},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
-self.len=self.items.length
-return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.test_change=="function" && self.test_change()){
-throw _b_.RuntimeError.$factory(
-"dictionary changed size during iteration")}
-self.counter++
-if(self.counter < self.items.length){var item=self.items[self.counter]
-if(self.items.$brython_class=="js"){
-item=$B.$JS2Py(item)}
-return item}
-delete self.items.$next_func 
-throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
-$B.set_func_names(klass,"builtins")
-return klass}
 function $err(op,klass,other){var msg="unsupported operand type(s) for "+op+": '"+
 klass.$infos.__name__+"' and '"+$B.class_name(other)+"'"
 throw _b_.TypeError.$factory(msg)}
@@ -5987,288 +5369,648 @@ $B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack
 if(repr_stack.size > $B.recursion_limit){throw _b_.RecursionError.$factory("maximum recursion depth "+
 "exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
 ;
-;(function($B){
-var DEFAULT_MIN_MERGE=32
-var DEFAULT_MIN_GALLOPING=7
-var DEFAULT_TMP_STORAGE_LENGTH=256
-var POWERS_OF_TEN=[1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
-function log10(x){if(x < 1e5){if(x < 1e2){return x < 1e1 ? 0 :1}
-if(x < 1e4){return x < 1e3 ? 2 :3}
-return 4}
-if(x < 1e7){return x < 1e6 ? 5 :6}
-if(x < 1e9){return x < 1e8 ? 7 :8}
-return 9}
-function alphabeticalCompare(a,b){if(a===b){return 0}
-if(~~a===a && ~~b===b){if(a===0 ||b===0){return a < b ?-1 :1}
-if(a < 0 ||b < 0){if(b >=0){return-1}
-if(a >=0){return 1}
-a=-a
-b=-b}
-al=log10(a)
-bl=log10(b)
-var t=0
-if(al < bl){a*=POWERS_OF_TEN[bl-al-1]
-b/=10
-t=-1}else if(al > bl){b*=POWERS_OF_TEN[al-bl-1]
-a/=10;
-t=1;}
-if(a===b){return t}
-return a < b ?-1 :1}
-var aStr=String(a)
-var bStr=String(b)
-if(aStr===bStr){return 0}
-return aStr < bStr ?-1 :1}
-function minRunLength(n){var r=0
-while(n >=DEFAULT_MIN_MERGE){r |=(n & 1)
-n >>=1}
-return n+r}
-function makeAscendingRun(array,lo,hi,compare){var runHi=lo+1
-if(runHi===hi){return 1;}
-if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi-1])< 0){runHi++}
-reverseRun(array,lo,runHi)}else{while(runHi < hi && compare(array[runHi],array[runHi-1])>=0){runHi++}}
-return runHi-lo}
-function reverseRun(array,lo,hi){hi--
-while(lo < hi){var t=array[lo]
-array[lo++]=array[hi]
-array[hi--]=t}}
-function binaryInsertionSort(array,lo,hi,start,compare){if(start===lo){start++}
-for(;start < hi;start++){var pivot=array[start]
-var left=lo
-var right=start
-while(left < right){var mid=(left+right)>>> 1
-if(compare(pivot,array[mid])< 0){right=mid}else{left=mid+1}}
-var n=start-left
-switch(n){case 3:
-array[left+3]=array[left+2]
-case 2:
-array[left+2]=array[left+1]
-case 1:
-array[left+1]=array[left]
-break;
-default:
-while(n > 0){array[left+n]=array[left+n-1]
-n--;}}
-array[left]=pivot}}
-function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
-if(compare(value,array[start+hint])> 0){maxOffset=length-hint
-while(offset < maxOffset && compare(value,array[start+hint+offset])> 0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-lastOffset+=hint
-offset+=hint}else{maxOffset=hint+1
-while(offset < maxOffset && compare(value,array[start+hint-offset])<=0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-var tmp=lastOffset
-lastOffset=hint-offset
-offset=hint-tmp}
-lastOffset++
-while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
-if(compare(value,array[start+m])> 0){lastOffset=m+1}else{offset=m}}
-return offset}
-function gallopRight(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
-if(compare(value,array[start+hint])< 0){maxOffset=hint+1
-while(offset < maxOffset && compare(value,array[start+hint-offset])< 0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-var tmp=lastOffset
-lastOffset=hint-offset
-offset=hint-tmp}else{maxOffset=length-hint
-while(offset < maxOffset && compare(value,array[start+hint+offset])>=0){lastOffset=offset
-offset=(offset << 1)+1
-if(offset <=0){offset=maxOffset}}
-if(offset > maxOffset){offset=maxOffset}
-lastOffset+=hint
-offset+=hint}
-lastOffset++
-while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
-if(compare(value,array[start+m])< 0){offset=m}else{lastOffset=m+1}}
-return offset}
-var TIM_SORT_ASSERTION="TimSortAssertion"
-var TimSortAssertion=function(message){this.name=TIM_SORT_ASSERTION
-this.message=message}
-var TimSort=function(array,compare){var self={array:array,compare:compare,minGallop:DEFAULT_MIN_GALLOPING,length :array.length,tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,stackLength:0,runStart:null,runLength:null,stackSize:0,
-pushRun:function(runStart,runLength){this.runStart[this.stackSize]=runStart
-this.runLength[this.stackSize]=runLength
-this.stackSize+=1},
-mergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
-if((n >=1 && this.runLength[n-1]<=
-this.runLength[n]+this.runLength[n+1])||
-(n >=2 && this.runLength[n-2]<=
-this.runLength[n]+this.runLength[n-1])){if(this.runLength[n-1]< this.runLength[n+1]){n--}}else if(this.runLength[n]> this.runLength[n+1]){break}
-this.mergeAt(n)}},
-forceMergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
-if(n > 0 && this.runLength[n-1]< this.runLength[n+1]){n--}
-this.mergeAt(n)}},
-mergeAt:function(i){var compare=this.compare,array=this.array,start1=this.runStart[i],length1=this.runLength[i],start2=this.runStart[i+1],length2=this.runLength[i+1]
-this.runLength[i]=length1+length2
-if(i===this.stackSize-3){this.runStart[i+1]=this.runStart[i+2]
-this.runLength[i+1]=this.runLength[i+2]}
-this.stackSize--;
-var k=gallopRight(array[start2],array,start1,length1,0,compare)
-start1+=k
-length1-=k
-if(length1===0){return}
-length2=gallopLeft(array[start1+length1-1],array,start2,length2,length2-1,compare)
-if(length2===0){return}
-if(length1 <=length2){this.mergeLow(start1,length1,start2,length2)}else{this.mergeHigh(start1,length1,start2,length2)}},
-mergeLow:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
-for(var i=0;i < length1;i++){tmp[i]=array[start1+i]}
-var cursor1=0,cursor2=start2,dest=start1
-array[dest++]=array[cursor2++]
-if(--length2===0){for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}
-return}
-if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
-array[dest+length2]=tmp[cursor1]
-return}
-var minGallop=this.minGallop
-while(true){var count1=0,count2=0,exit=false
-do{if(compare(array[cursor2],tmp[cursor1])< 0){array[dest++]=array[cursor2++]
-count2++
-count1=0
-if(--length2===0){exit=true
-break}}else{array[dest++]=tmp[cursor1++]
-count1++
-count2=0
-if(--length1===1){exit=true
-break}}}while((count1 |count2)< minGallop)
-if(exit){break}
-do{
-count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare)
-if(count1 !==0){for(var i=0;i < count1;i++){array[dest+i]=tmp[cursor1+i]}
-dest+=count1
-cursor1+=count1
-length1-=count1
-if(length1 <=1){exit=true
-break}}
-array[dest++]=array[cursor2++]
-if(--length2===0){exit=true
-break}
-count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare)
-if(count2 !==0){for(var i=0;i < count2;i++){array[dest+i]=array[cursor2+i]}
-dest+=count2
-cursor2+=count2
-length2-=count2
-if(length2===0){exit=true
-break}}
-array[dest++]=tmp[cursor1++]
-if(--length1===1){exit=true
-break}
-minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||
-count2 >=DEFAULT_MIN_GALLOPING);
-if(exit){break}
-if(minGallop < 0){minGallop=0}
-minGallop+=2}
-this.minGallop=minGallop
-if(minGallop < 1){this.minGallop=1}
-if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
-array[dest+length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}}},
-mergeHigh:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
-for(var i=0;i < length2;i++){tmp[i]=array[start2+i]}
-var cursor1=start1+length1-1,cursor2=length2-1,dest=start2+length2-1,customCursor=0,customDest=0
-array[dest--]=array[cursor1--]
-if(--length1===0){customCursor=dest-(length2-1)
-for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}
-return}
-if(length2===1){dest-=length1
-cursor1-=length1
-customDest=dest+1
-customCursor=cursor1+1
-for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
-array[dest]=tmp[cursor2]
-return}
-var minGallop=this.minGallop
-while(true){var count1=0,count2=0,exit=false
-do{if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--]
-count1++
-count2=0
-if(--length1===0){exit=true
-break}}else{array[dest--]=tmp[cursor2--]
-count2++
-count1=0
-if(--length2===1){exit=true
-break}}}while((count1 |count2)< minGallop)
-if(exit){break}
-do{count1=length1-gallopRight(tmp[cursor2],array,start1,length1,length1-1,compare)
-if(count1 !==0){dest-=count1
-cursor1-=count1
-length1-=count1
-customDest=dest+1
-customCursor=cursor1+1
-for(var i=count1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
-if(length1===0){exit=true
-break}}
-array[dest--]=tmp[cursor2--]
-if(--length2===1){exit=true
-break}
-count2=length2-gallopLeft(array[cursor1],tmp,0,length2,length2-1,compare)
-if(count2 !==0){dest-=count2
-cursor2-=count2
-length2-=count2
-customDest=dest+1
-customCursor=cursor2+1
-for(var i=0;i < count2;i++){array[customDest+i]=tmp[customCursor+i]}
-if(length2 <=1){exit=true
-break}}
-array[dest--]=array[cursor1--]
-if(--length1===0){exit=true
-break}
-minGallop--}while(count1 >=DEFAULT_MIN_GALLOPING ||
-count2 >=DEFAULT_MIN_GALLOPING)
-if(exit){break}
-if(minGallop < 0){minGallop=0}
-minGallop+=2}
-this.minGallop=minGallop
-if(minGallop < 1){this.minGallop=1}
-if(length2===1){dest-=length1
-cursor1-=length1
-customDest=dest+1
-customCursor=cursor1+1
-for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
-array[dest]=tmp[cursor2]}else if(length2==0){throw new TimSortAssertion("mergeHigh preconditions were not respected")}else{customCursor=dest-(length2-1)
-for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}}}}
-if(self.length < 2*DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1}
-self.tmp=new Array(self.tmpStorageLength)
-self.stackLength=
-(self.length < 120 ? 5 :
-self.length < 1542 ? 10 :
-self.length < 119151 ? 19 :40)
-self.runStart=new Array(self.stackLength)
-self.runLength=new Array(self.stackLength)
-return self}
-function tim_sort(array,compare,lo,hi){if(!Array.isArray(array)){throw _b_.TypeError.$factory("Can only sort arrays")}
-if(!compare){compare=alphabeticalCompare}else if(typeof compare !=="function"){hi=lo
-lo=compare
-compare=alphabeticalCompare}
-if(!lo){lo=0}
-if(!hi){hi=array.length}
-var remaining=hi-lo
-if(remaining < 2){return}
-var runLength=0
-if(remaining < DEFAULT_MIN_MERGE){runLength=makeAscendingRun(array,lo,hi,compare)
-binaryInsertionSort(array,lo,hi,lo+runLength,compare)
-return}
-var ts=new TimSort(array,compare)
-var minRun=minRunLength(remaining)
-do{runLength=makeAscendingRun(array,lo,hi,compare)
-if(runLength < minRun){var force=remaining
-if(force > minRun){force=minRun}
-binaryInsertionSort(array,lo,lo+force,lo+runLength,compare)
-runLength=force}
-ts.pushRun(lo,runLength)
-ts.mergeRuns()
-remaining-=runLength
-lo+=runLength}while(remaining !==0)
-ts.forceMergeRuns()}
-function tim_sort_safe(array,compare){
-try{
-tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
-throw e;}}}
-$B.$TimSort=tim_sort_safe
-$B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
+__BRYTHON__.builtins.object=(function($B){var _b_=$B.builtins
+var object={
+$infos:{__name__:"object"},$is_class:true,$native:true}
+var opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
+var opsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
+object.__delattr__=function(self,attr){if(self.__dict__ && self.__dict__.$string_dict &&
+self.__dict__.$string_dict[attr]!==undefined){delete self.__dict__.$string_dict[attr]
+return _b_.None}else if(self.__dict__===undefined && self[attr]!==undefined){delete self[attr]
+return _b_.None}else{
+var klass=self.__class__
+if(klass){var prop=$B.$getattr(klass,attr)
+if(prop.__class__===_b_.property){if(prop.__delete__ !==undefined){prop.__delete__(self)
+return _b_.None}}}}
+throw $B.attr_error(attr,self)}
+object.__dir__=function(self){var objects
+if(self.$is_class){objects=[self].concat(self.__mro__)}else{var klass=self.__class__ ||$B.get_class(self)
+objects=[self,klass].concat(klass.__mro__)}
+var res=[]
+for(var i=0,len=objects.length;i < len;i++){for(var attr in objects[i]){if(attr.charAt(0)=="$"){if(attr.charAt(1)=="$"){
+res.push(attr.substr(2))}
+continue}
+if(! isNaN(parseInt(attr.charAt(0)))){
+continue}
+if(attr=="__mro__"){continue}
+res.push(attr)}}
+if(self.__dict__){for(var attr in self.__dict__.$string_dict){if(attr.charAt(0)!="$"){res.push(attr)}}}
+res=_b_.list.$factory(_b_.set.$factory(res))
+_b_.list.sort(res)
+return res}
+object.__eq__=function(self,other){
+if(self===other){return true}
+return _b_.NotImplemented}
+object.__format__=function(){var $=$B.args("__format__",2,{self:null,spec:null},["self","spec"],arguments,{},null,null)
+if($.spec !==""){throw _b_.TypeError.$factory(
+"non-empty format string passed to object.__format__")}
+return _b_.getattr($.self,"__str__")()}
+object.__ge__=function(){return _b_.NotImplemented}
+object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
+var $test=false 
+if($test){console.log("object.__getattribute__, attr",attr,"de",obj,"klass",klass)}
+if(attr==="__class__"){return klass}
+var res=obj[attr]
+if($test){console.log('obj[attr]',obj[attr])}
+if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
+res=undefined}
+if(res===undefined && obj.__dict__){var dict=obj.__dict__
+if(dict.__class__===$B.getset_descriptor){return dict.cls[attr]}
+if(dict.$string_dict.hasOwnProperty(attr)){if($test){console.log("__dict__ hasOwnProperty",attr,dict.$string_dict[attr])}
+return dict.$string_dict[attr][0]}}
+if(res===undefined){
+function check(obj,kl,attr){var v=kl[attr]
+if(v !==undefined){return v}}
+res=check(obj,klass,attr)
+if(res===undefined){var mro=klass.__mro__
+for(var i=0,len=mro.length;i < len;i++){res=check(obj,mro[i],attr)
+if($test){console.log('in class',mro[i],'res',res)}
+if(res !==undefined){if($test){console.log("found in",mro[i])}
+break}}}else{if(res.__class__ !==$B.method && res.__get__===undefined){is_own_class_instance_method=true}}}else{if(res.__set__===undefined){
+return res}}
+if($test){console.log('after search classes',res)}
+if(res !==undefined){if($test){console.log(res)}
+if(res.__class__ && _b_.issubclass(res.__class__,_b_.property)){return $B.$getattr(res,'__get__')(obj,klass)}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,obj,klass)}
+if(res.__class__===$B.method){if(res.$infos.__self__){
+return res}
+return res.__get__(obj,klass)}
+var get=res.__get__
+if(get===undefined && res.__class__){var get=res.__class__.__get__
+for(var i=0;i < res.__class__.__mro__.length &&
+get===undefined;i++){get=res.__class__.__mro__[i].__get__}}
+if($test){console.log("get",get)}
+var __get__=get===undefined ? null :
+$B.$getattr(res,"__get__",null)
+if($test){console.log("__get__",__get__)}
+if(__get__ !==null){if($test){console.log('apply __get__',[obj,klass])}
+try{return __get__.apply(null,[obj,klass])}catch(err){console.log('error in get.apply',err)
+console.log("get attr",attr,"of",obj)
+console.log('res',res)
+console.log('__get__',__get__)
+console.log(__get__+'')
+throw err}}
+if(typeof res=="object"){if(__get__ &&(typeof __get__=="function")){get_func=function(x,y){return __get__.apply(x,[y,klass.$factory])}}}
+if(__get__===null &&(typeof res=="function")){__get__=function(x){return x}}
+if(__get__ !==null){
+res.__name__=attr
+if(attr=="__new__" ||
+res.__class__===$B.builtin_function){res.$type="staticmethod"}
+var res1=__get__.apply(null,[res,obj,klass])
+if($test){console.log("res",res,"res1",res1)}
+if(typeof res1=="function"){
+if(res1.__class__===$B.method){return res}
+if(res.$type=="staticmethod"){return res}else{var self=res.__class__===$B.method ? klass :obj,method=function(){var args=[self]
+for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
+return res.apply(this,args)}
+method.__class__=$B.method
+method.__get__=function(obj,cls){var clmethod=res.bind(null,cls)
+clmethod.__class__=$B.method
+clmethod.$infos={__self__:cls,__func__:res,__name__:res.$infos.__name__,__qualname__:cls.$infos.__name__+"."+
+res.$infos.__name__}
+return clmethod}
+method.__get__.__class__=$B.method_wrapper
+method.__get__.$infos=res.$infos
+if(klass.$infos===undefined){console.log("no $infos",klass)
+console.log($B.last($B.frames_stack))}
+method.$infos={__self__:self,__func__:res,__name__:attr,__qualname__:klass.$infos.__name__+"."+attr}
+if($test){console.log("return method",method)}
+if(is_own_class_instance_method){obj.$method_cache=obj.$method_cache ||{}
+obj.$method_cache[attr]=[method,res]}
+return method}}else{
+return res1}}
+return res}else{throw $B.attr_error(attr,obj)}}
+object.__gt__=function(){return _b_.NotImplemented}
+object.__hash__=function(self){var hash=self.__hashvalue__
+if(hash !==undefined){return hash}
+return self.__hashvalue__=$B.$py_next_hash--}
+object.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'object' "+
+"object needs an argument")}
+return _b_.None}
+object.__init_subclass__=function(){
+var $=$B.args("__init_subclass__",0,{},[],arguments,{},null,null)
+return _b_.None}
+object.__init_subclass__.$type="staticmethod"
+object.__le__=function(){return _b_.NotImplemented}
+object.__lt__=function(){return _b_.NotImplemented}
+object.__mro__=[]
+object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$factory("object.__new__(): not enough arguments")}
+var init_func=$B.$getattr(cls,"__init__")
+if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
+var res=Object.create(null)
+$B.update_obj(res,{__class__ :cls,__dict__:$B.empty_dict()})
+return res}
+object.__ne__=function(self,other){
+if(self===other){return false}
+var eq=$B.$getattr(self.__class__ ||$B.get_class(self),"__eq__",null)
+if(eq !==null){var res=$B.$call(eq)(self,other)
+if(res===_b_.NotImplemented){return res}
+return ! $B.$bool(res)}
+return _b_.NotImplemented}
+object.__reduce__=function(self){function _reconstructor(cls){return $B.$call(cls)()}
+_reconstructor.$infos={__qualname__:"_reconstructor"}
+var res=[_reconstructor]
+res.push(_b_.tuple.$factory([self.__class__].
+concat(self.__class__.__mro__)))
+var d=$B.empty_dict()
+for(var attr in self.__dict__.$string_dict){_b_.dict.$setitem(d.$string_dict,attr,self.__dict__.$string_dict[attr][0])}
+console.log("object.__reduce__, d",d)
+res.push(d)
+return _b_.tuple.$factory(res)}
+function __newobj__(cls){return $B.$getattr(cls,"__new__").apply(null,arguments)}
+__newobj__.$infos={__name__:"__newobj__",__qualname__:"__newobj__"}
+_b_.__newobj__=__newobj__
+object.__reduce_ex__=function(self){var res=[__newobj__]
+var arg2=_b_.tuple.$factory([self.__class__])
+if(Array.isArray(self)){self.forEach(function(item){arg2.push(item)})}
+res.push(arg2)
+var d=$B.empty_dict(),nb=0
+if(self.__dict__===undefined){throw _b_.TypeError.$factory("cannot pickle '"+
+$B.class_name(self)+"' object")}
+for(var attr in self.__dict__.$string_dict){if(attr=="__class__" ||attr.startsWith("$")){continue}
+_b_.dict.$setitem(d,attr,self.__dict__.$string_dict[attr][0])
+nb++}
+if(nb==0){d=_b_.None}
+res.push(d)
+res.push(_b_.None)
+return _b_.tuple.$factory(res)}
+object.__repr__=function(self){if(self===object){return "<class 'object'>"}
+if(self.__class__===_b_.type){return "<class '"+self.__name__+"'>"}
+var module=self.__class__.$infos.__module__
+if(module !==undefined && !module.startsWith("$")&&
+module !=="builtins"){return "<"+self.__class__.$infos.__module__+"."+
+$B.class_name(self)+" object>"}else{return "<"+$B.class_name(self)+" object>"}}
+object.__setattr__=function(self,attr,val){if(val===undefined){
+throw _b_.TypeError.$factory(
+"can't set attributes of built-in/extension type 'object'")}else if(self.__class__===object){
+if(object[attr]===undefined){throw $B.attr_error(attr,self)}else{throw _b_.AttributeError.$factory(
+"'object' object attribute '"+attr+"' is read-only")}}
+if(self.__dict__){_b_.dict.$setitem(self.__dict__,attr,val)}else{
+self[attr]=val}
+return _b_.None}
+object.__setattr__.__get__=function(obj){return function(attr,val){object.__setattr__(obj,attr,val)}}
+object.__setattr__.__str__=function(){return "method object.setattr"}
+object.__str__=function(self){if(self===undefined ||self.$nat=='kw'){throw _b_.TypeError.$factory("descriptor '__str__' of 'object' "+
+"object needs an argument")}
+var klass=self.__class__ ||$B.get_class(self)
+var repr_func=$B.$getattr(klass,"__repr__")
+return $B.$call(repr_func).apply(null,arguments)}
+object.__subclasshook__=function(){return _b_.NotImplemented}
+object.$factory=function(){var res={__class__:object},args=[res].concat(Array.prototype.slice.call(arguments))
+object.__init__.apply(null,args)
+return res}
+$B.set_func_names(object,"builtins")
+return object})(__BRYTHON__)
+;
+;(function($B){var _b_=$B.builtins
+$B.$class_constructor=function(class_name,class_obj,bases,parents_names,kwargs){bases=bases ||[]
+var metaclass
+var module=class_obj.__module__
+if(module===undefined){
+module=class_obj.__module__=$B.last($B.frames_stack)[2]}
+for(var i=0;i < bases.length;i++){if(bases[i]===undefined){
+$B.line_info=class_obj.$def_line
+throw $B.name_error(parents_names[i])}else if(bases[i]===_b_.bool){throw _b_.TypeError.$factory(
+"type 'bool' is not an acceptable base type")}}
+var extra_kwargs={},prepare_kwargs={}
+if(kwargs){for(var i=0;i < kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
+if(key=="metaclass"){
+metaclass=val}else{
+extra_kwargs[key]=val}
+prepare_kwargs[key]=val}}
+var mro0=class_obj
+if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){class_obj.__hash__=_b_.None}
+var orig_bases=bases.slice(),use_mro_entries=false
+for(var i=0;i < bases.length;i++){if(bases[i]===undefined ||
+(bases[i].__mro__===undefined)){var mro_entries=$B.$getattr(bases[i],"__mro_entries__",_b_.None)
+if(mro_entries !==_b_.None){var entries=_b_.list.$factory(mro_entries(bases))
+bases.splice(i,1,...entries)
+use_mro_entries=true
+i--
+continue}}}
+if(metaclass===undefined){metaclass=meta_from_bases(class_name,module,bases)}
+var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None),cl_dict=$B.$call(prepare)(class_name,bases)
+if(cl_dict.__class__ !==_b_.dict){var set_class_item=$B.$getattr(cl_dict,"__setitem__")}else{var set_class_item=function(attr,value){cl_dict.$string_dict[attr]=[value,cl_dict.$order++]}}
+set_class_item('__qualname__',class_name)
+for(var attr in class_obj){if(attr=="__annotations__"){if(cl_dict.$string_dict[attr]===undefined){cl_dict.$string_dict[attr]=[$B.empty_dict(),cl_dict.$order++]}
+for(var key in class_obj[attr].$string_dict){$B.$setitem(cl_dict.$string_dict[attr][0],key,class_obj[attr].$string_dict[key][0])}}else{if(attr.charAt(0)!="$"){set_class_item(attr,class_obj[attr])}}}
+if(use_mro_entries){set_class_item("__orig_bases__",_b_.tuple.$factory(orig_bases))}
+var class_dict={__bases__:bases,__class__:metaclass,__dict__:cl_dict}
+if(cl_dict.__class__===_b_.dict){for(var key in cl_dict.$string_dict){class_dict[key]=cl_dict.$string_dict[key][0]}}else{var get_class_item=$B.$getattr(cl_dict,"__getitem__")
+var it=_b_.iter(cl_dict)
+while(true){try{var key=_b_.next(it)
+class_dict[key]=get_class_item(key)}catch(err){break}}}
+class_dict.__mro__=_b_.type.mro(class_dict).slice(1)
+var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
+for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 :mro[i]
+for(var attr in kdict){if(non_abstract_methods[attr]){continue}
+var v=kdict[attr]
+if(typeof v=="function"){if(v.__isabstractmethod__===true ||
+(v.$attrs && v.$attrs.__isabstractmethod__)){is_instanciable=false
+abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}else{non_abstract_methods[attr]=true}}}
+var _slots=class_obj.__slots__
+if(_slots !==undefined){if(typeof _slots=="string"){_slots=[_slots]}else{_slots=_b_.list.$factory(_slots)}
+cl_dict.__slots__=_slots}
+for(var i=0;i < mro.length-1;i++){for(var attr in mro[i]){if(attr=="__setattr__"){cl_dict.$has_setattr=true
+break}else if(mro[i][attr]){if(mro[i][attr].__get__ ||(mro[i][attr].__class__ &&
+mro[i][attr].__class__.__get__)){
+cl_dict.$has_setattr=true
+break}}}}
+var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
+var kls=meta_new(metaclass,class_name,bases,cl_dict,{$nat:'kw',kw:extra_kwargs})
+kls.__module__=module
+kls.$infos={__module__:module,__name__:class_name,__qualname__:class_obj.$qualname}
+kls.$subclasses=[]
+if(kls.__bases__===undefined ||kls.__bases__.length==0){kls.__bases__=$B.fast_tuple([_b_.object])}
+for(var attr in class_obj){if(attr.charAt(0)!="$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
+if(kls.__class__===metaclass){
+var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
+meta_init(kls,class_name,bases,cl_dict)}
+for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
+bases[i].$subclasses.push(kls)}
+if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class "+
+"interface with abstract methods "+
+Object.keys(abstract_methods).join(", "))}
+kls.$factory=nofactory}
+return kls}
+function meta_from_bases(class_name,module,bases){var metaclass
+if(bases && bases.length > 0){metaclass=bases[0].__class__
+if(metaclass===undefined){
+if(typeof bases[0]=="function"){if(bases.length !=1){throw _b_.TypeError.$factory("A Brython class "+
+"can inherit at most 1 Javascript constructor")}
+metaclass=bases[0].__class__=$B.JSMeta
+$B.set_func_names(bases[0],module)}else{console.log('meta from bases',class_name,module,bases)
+throw _b_.TypeError.$factory("Argument of "+class_name+
+" is not a class (type '"+$B.class_name(bases[0])+
+"')")}}
+for(var i=1;i < bases.length;i++){var mc=bases[i].__class__
+if(mc===metaclass ||_b_.issubclass(metaclass,mc)){}else if(_b_.issubclass(mc,metaclass)){metaclass=mc}else if(metaclass.__bases__ &&
+metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass conflict: the "+
+"metaclass of a derived class must be a (non-"+
+"strict) subclass of the metaclasses of all its bases")}}}else{metaclass=_b_.type}
+return metaclass}
+$B.make_class=function(qualname,factory){
+var A={__class__:_b_.type,__mro__:[_b_.object],$infos:{__qualname__:qualname,__name__:$B.last(qualname.split('.'))},$is_class:true}
+A.$factory=factory
+return A}
+var type=$B.make_class("type",function(obj,bases,cl_dict){var missing={},$=$B.args('type',3,{obj:null,bases:null,cl_dict:null},['obj','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),obj=$.obj,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
+var kwargs={'$nat':'kw',kw:{}}
+for(var key in kw.$string_dict){kwargs.kw[key]=kw.$string_dict[key][0]}
+if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
+return obj.__class__ ||$B.get_class(obj)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases),meta_new=$B.$call($B.$getattr(meta,'__new__'))
+return meta_new(meta,obj,bases,cl_dict,kwargs)}}
+)
+type.__call__=function(){var extra_args=[],klass=arguments[0]
+for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
+var new_func=_b_.type.__getattribute__(klass,"__new__")
+var instance=new_func.apply(null,arguments),instance_class=instance.__class__ ||$B.get_class(instance)
+if(instance_class===klass){
+var init_func=_b_.type.__getattribute__(klass,"__init__")
+if(init_func !==_b_.object.__init__){
+var args=[instance].concat(extra_args)
+init_func.apply(null,args)}}
+return instance}
+type.__class__=type
+type.__format__=function(klass,fmt_spec){
+return _b_.str.$factory(klass)}
+type.__getattribute__=function(klass,attr){switch(attr){case "__bases__":
+return $B.fast_tuple(klass.__bases__ ||[_b_.object])
+case "__class__":
+return klass.__class__
+case "__doc__":
+return klass.__doc__ ||_b_.None
+case "__setattr__":
+if(klass["__setattr__"]!==undefined){var func=klass["__setattr__"]}else{var func=function(obj,key,value){obj[key]=value}}
+return method_wrapper.$factory(attr,klass,func)
+case "__delattr__":
+if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
+return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
+var res=klass[attr]
+var $test=attr=="__args__" 
+if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
+if(klass.__class__ &&
+klass.__class__[attr]&&
+klass.__class__[attr].__get__ &&
+klass.__class__[attr].__set__){
+if($test){console.log("data descriptor")}
+return klass.__class__[attr].__get__(klass)}
+if(res===undefined){
+var v=klass[attr]
+if(v===undefined){if($test){console.log(attr,'not in klass[attr], search in __dict__',klass.__dict__.$string_dict)}
+if(klass.__dict__ && klass.__dict__.$string_dict
+&& klass.__dict__.$string_dict[attr]){res=klass[attr]=klass.__dict__.$string_dict[attr][0]
+if($test){console.log('found in __dict__',v)}}else{var mro=klass.__mro__
+if(mro===undefined){console.log("no mro for",klass)}
+for(var i=0;i < mro.length;i++){var v=mro[i][attr]
+if(v !==undefined){res=v
+break}}}}else{res=v}
+if($test){console.log('search in class mro',res)
+if(res !==undefined){if(klass[attr]){console.log('found in klass',klass)}else{console.log('found in',mro[i])}}}}
+if(res===undefined){
+if(res===undefined){var meta=klass.__class__ ||$B.get_class(klass),res=meta[attr]
+if($test){console.log("search in meta",meta,res)}
+if(res===undefined){var meta_mro=meta.__mro__
+for(var i=0;i < meta_mro.length;i++){var res=meta_mro[i][attr]
+if(res !==undefined){break}}}
+if(res !==undefined){if($test){console.log("found in meta",res,typeof res)}
+if(res.__class__===_b_.property){return res.fget(klass)}
+if(typeof res=="function"){
+if(attr=='__new__'){
+return res}
+var meta_method=res.bind(null,klass)
+meta_method.__class__=$B.method
+meta_method.$infos={__self__:klass,__func__:res,__name__:attr,__qualname__:meta.$infos.__name__+"."+attr,__module__:res.$infos ? res.$infos.__module__ :""}
+if($test){console.log('return method from meta',meta_method,meta_method+'')}
+return meta_method}}}
+if(res===undefined){
+var getattr=meta.__getattr__
+if(getattr===undefined){for(var i=0;i < meta_mro.length;i++){if(meta_mro[i].__getattr__ !==undefined){getattr=meta_mro[i].__getattr__
+break}}}
+if(getattr !==undefined){return getattr(klass,attr)}}}
+if(res !==undefined){if($test){console.log("res",res)}
+if(res.__class__===_b_.property){return res}else if(res.__class__===_b_.classmethod){return _b_.classmethod.__get__(res,_b_.None,klass)}
+if(res.__get__){if(res.__class__===method){if($test){console.log('__get__ of method',res.$infos.__self__,klass)}
+if(res.$infos.__self__){
+return res}
+var result=res.__get__(res.__func__,klass)
+result.$infos={__func__:res,__name__:res.$infos.__name__,__qualname__:klass.$infos.__name__+"."+res.$infos.__name__,__self__:klass}}else{result=res.__get__(klass)}
+return result}else if(res.__class__ && res.__class__.__get__){
+if(!(attr.startsWith("__")&& attr.endsWith("__"))){return res.__class__.__get__(res,_b_.None,klass)}}
+if(typeof res=="function"){
+if(res.$infos===undefined && $B.debug > 1){console.log("warning: no attribute $infos for",res,"klass",klass,"attr",attr)}
+if($test){console.log("res is function",res)}
+if(attr=="__new__" ||
+res.__class__===$B.builtin_function){res.$type="staticmethod"}
+if((attr=="__class_getitem__" ||attr=="__init_subclass__")
+&& res.__class__ !==_b_.classmethod){res=_b_.classmethod.$factory(res)
+return _b_.classmethod.__get__(res,_b_.None,klass)}
+if(res.__class__===$B.method){return res.__get__(null,klass)}else{if($test){console.log("return res",res)}
+return res}}else{return res}}}
+type.__hash__=function(cls){return _b_.hash(cls)}
+type.__init__=function(){if(arguments.length==0){throw _b_.TypeError.$factory("descriptor '__init__' of 'type' "+
+"object needs an argument")}}
+type.__init_subclass__=function(){
+var $=$B.args("__init_subclass__",1,{},[],arguments,{},"args","kwargs")
+if($.kwargs !==undefined){if($.kwargs.__class__ !==_b_.dict ||
+Object.keys($.kwargs.$string_dict).length > 0){throw _b_.TypeError.$factory(
+"__init_subclass__() takes no keyword arguments")}}
+return _b_.None}
+type.__instancecheck__=function(cls,instance){var kl=instance.__class__ ||$B.get_class(instance)
+if(kl===cls){return true}
+else{for(var i=0;i < kl.__mro__.length;i++){if(kl.__mro__[i]===cls){return true}}}
+return false}
+type.__instancecheck__.$type="staticmethod"
+type.__name__={__get__:function(self){return self.$infos.__name__},__set__:function(self,value){self.$infos.__name__=value},__str__:function(self){return "type"},__eq__:function(self,other){return self.$infos.__name__==other}}
+type.__new__=function(meta,name,bases,cl_dict,extra_kwargs){
+var test=false 
+extra_kwargs=extra_kwargs===undefined ?{$nat:'kw',kw:{}}:
+extra_kwargs
+if(cl_dict.$string_dict===undefined){console.log('bizarre',meta,name,bases,cl_dict)
+alert()}
+var module=cl_dict.$string_dict.__module__
+if(module){module=module[0]}else{module=$B.last($B.frames_stack)[2]}
+var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,$infos:{__name__:name,__module__:module,__qualname__:name},$is_class:true,$has_setattr:cl_dict.$has_setattr}
+if(cl_dict.__slots__){var _slots=class_dict.__slots__=cl_dict.__slots__
+for(var name of _slots){class_dict[name]=member_descriptor.$factory(name,class_dict)}}
+class_dict.__mro__=type.mro(class_dict).slice(1)
+var items=$B.dict_to_list(cl_dict)
+for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
+if(key==="__module__"){continue}
+if(key==="__class__"){continue}
+if(v===undefined){continue}
+class_dict[key]=v
+if(v.__class__){
+var set_name=$B.$getattr(v.__class__,"__set_name__",_b_.None)
+if(set_name !==_b_.None){set_name(v,class_dict,key)}}
+if(typeof v=="function"){if(v.$infos===undefined){console.log("type new",v,v+"")
+console.log($B.frames_stack.slice())}else{v.$infos.$class=class_dict
+v.$infos.__qualname__=name+'.'+v.$infos.__name__
+if(v.$infos.$defaults){
+var $defaults=v.$infos.$defaults
+$B.Function.__setattr__(v,"__defaults__",$defaults)}}}}
+var sup=_b_.super.$factory(class_dict,class_dict)
+var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
+init_subclass(extra_kwargs)
+return class_dict}
+type.__or__=function(){var $=$B.args('__or__',2,{cls:null,other:null},['cls','other'],arguments,{},null,null),cls=$.cls,other=$.other
+if(other !==_b_.None && ! _b_.isinstance(other,type)){return _b_.NotImplemented}
+return $B.UnionType.$factory([cls,other])}
+type.__prepare__=function(){return $B.empty_dict()}
+type.__qualname__={__get__:function(self){return self.$infos.__qualname__ ||self.$infos.__name__},__set__:function(self,value){self.$infos.__qualname__=value},__str__:function(self){console.log("type.__qualname__")},__eq__:function(self,other){return self.$infos.__qualname__==other}}
+type.__repr__=function(kls){$B.builtins_repr_check(type,arguments)
+if(kls.$infos===undefined){console.log("no $infos",kls)}
+var qualname=kls.$infos.__qualname__
+if(kls.$infos.__module__ &&
+kls.$infos.__module__ !="builtins" &&
+!kls.$infos.__module__.startsWith("$")){qualname=kls.$infos.__module__+"."+qualname}
+return "<class '"+qualname+"'>"}
+type.__ror__=function(){var len=arguments.length
+if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
+return _b_.NotImplemented}
+type.mro=function(cls){
+if(cls===undefined){throw _b_.TypeError.$factory(
+'unbound method type.mro() needs an argument')}
+var bases=cls.__bases__,seqs=[],pos1=0
+for(var i=0;i < bases.length;i++){
+var bmro=[],pos=0
+if(bases[i]===undefined ||
+bases[i].__mro__===undefined){if(bases[i].__class__===undefined){
+return[_b_.object]}else{throw _b_.TypeError.$factory(
+"Object passed as base class is not a class")}}
+bmro[pos++]=bases[i]
+var _tmp=bases[i].__mro__
+if(_tmp[0]===bases[i]){_tmp.splice(0,1)}
+for(var k=0;k < _tmp.length;k++){bmro[pos++]=_tmp[k]}
+seqs[pos1++]=bmro}
+seqs[pos1++]=bases.slice()
+var mro=[cls],mpos=1
+while(1){var non_empty=[],pos=0
+for(var i=0;i < seqs.length;i++){if(seqs[i].length > 0){non_empty[pos++]=seqs[i]}}
+if(non_empty.length==0){break}
+for(var i=0;i < non_empty.length;i++){var seq=non_empty[i],candidate=seq[0],not_head=[],pos=0
+for(var j=0;j < non_empty.length;j++){var s=non_empty[j]
+if(s.slice(1).indexOf(candidate)>-1){not_head[pos++]=s}}
+if(not_head.length > 0){candidate=null}
+else{break}}
+if(candidate===null){throw _b_.TypeError.$factory(
+"inconsistent hierarchy, no C3 MRO is possible")}
+mro[mpos++]=candidate
+for(var i=0;i < seqs.length;i++){var seq=seqs[i]
+if(seq[0]===candidate){
+seqs[i].shift()}}}
+if(mro[mro.length-1]!==_b_.object){mro[mpos++]=_b_.object}
+return mro}
+type.__subclasscheck__=function(self,subclass){
+var klass=self
+if(klass===_b_.str){klass=$B.StringSubclass}else if(klass===_b_.float){klass=$B.FloatSubclass}
+if(subclass.__bases__===undefined){return self===_b_.object}
+return subclass.__bases__.indexOf(klass)>-1}
+$B.set_func_names(type,"builtins")
+_b_.type=type
+var property=_b_.property=$B.make_class("property",function(fget,fset,fdel,doc){var res={__class__:property}
+property.__init__(res,fget,fset,fdel,doc)
+return res}
+)
+property.__init__=function(self,fget,fset,fdel,doc){var $=$B.args('__init__',5,{self:null,fget:null,fset:null,fdel:null,doc:null},['self','fget','fset','fdel','doc'],arguments,{fget:_b_.None,fset:_b_.None,fdel:_b_.None,doc:_b_.None},null,null),self=$.self,fget=$.fget,fset=$.fset,fdel=$.fdel,doc=$.doc
+self.__doc__=doc ||""
+self.$type=fget.$type
+self.fget=fget
+self.fset=fset
+self.fdel=fdel
+self.$is_property=true
+if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
+self.__delete__=fdel;
+self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
+self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
+self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
+property.__get__=function(self,obj){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
+return $B.$call(self.fget)(obj)}
+property.__new__=function(cls){return{
+__class__:cls}}
+property.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
+$B.$getattr(self.fset,'__call__')(obj,value)}
+$B.set_func_names(property,"builtins")
+var wrapper_descriptor=$B.wrapper_descriptor=
+$B.make_class("wrapper_descriptor")
+$B.set_func_names(wrapper_descriptor,"builtins")
+type.__call__.__class__=wrapper_descriptor
+var $instance_creator=$B.$instance_creator=function(klass){var test=false 
+if(test){console.log('instance creator of',klass)}
+if(klass.prototype && klass.prototype.constructor==klass){
+return function(){return new klass(...arguments)}}
+if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
+"Can't instantiate abstract class interface "+
+"with abstract methods")}}
+var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
+if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){
+var obj=klass.__new__.bind(null,klass).
+apply(null,arguments)
+klass.__init__.bind(null,obj).apply(null,arguments)
+return obj}}else{factory=function(){return klass.__new__.bind(null,klass).
+apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var obj={__class__:klass,__dict__:$B.empty_dict()}
+klass.__init__.bind(null,obj).apply(null,arguments)
+return obj}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$nat &&
+Object.keys(arguments[0].kw).length==0){}else{throw _b_.TypeError.$factory("object() takes no parameters")}}
+var res=Object.create(null)
+$B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
+return res}}}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
+var factory=function(){if(call_func.$is_class){return $B.$call(call_func)(...arguments)}
+return call_func.bind(null,klass).apply(null,arguments)}}
+factory.__class__=$B.Function
+if(klass.$infos===undefined){console.log('no klass $infos',klass)
+console.log($B.frames_stack.slice())}
+factory.$infos={__name__:klass.$infos.__name__,__module__:klass.$infos.__module__}
+return factory}
+var method_wrapper=$B.method_wrapper=$B.make_class("method_wrapper",function(attr,klass,method){var f=function(){return method.apply(null,arguments)}
+f.$infos={__name__:attr,__module__:klass.__module__}
+return f}
+)
+method_wrapper.__str__=method_wrapper.__repr__=function(self){return "<method '"+self.$infos.__name__+"' of function object>"}
+var member_descriptor=$B.make_class("member_descriptor",function(attr,cls){return{__class__:member_descriptor,cls:cls,attr:attr}}
+)
+member_descriptor.__delete__=function(self,obj){if(obj.$slot_values===undefined ||
+! obj.$slot_values.hasOwnProperty(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+obj.$slot_values.delete(self.attr)}
+member_descriptor.__get__=function(self,obj,obj_type){if(obj===_b_.None){return self}
+if(obj.$slot_values===undefined ||
+! obj.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+return obj.$slot_values.get(self.attr)}
+member_descriptor.__set__=function(self,obj,value){if(obj.$slot_values===undefined){obj.$slot_values=new Map()}
+obj.$slot_values.set(self.attr,value)}
+member_descriptor.__str__=member_descriptor.__repr__=function(self){return "<member '"+self.attr+"' of '"+self.cls.$infos.__name__+
+"' objects>"}
+$B.set_func_names(member_descriptor,"builtins")
+var method=$B.method=$B.make_class("method",function(func,cls){var f=function(){return $B.$call(func).bind(null,cls).apply(null,arguments)}
+f.__class__=method
+f.$infos=func.$infos
+f.$infos.__func__=func
+f.$infos.__self__=cls
+f.$infos.__dict__=$B.empty_dict()
+return f}
+)
+method.__eq__=function(self,other){return self.$infos !==undefined &&
+other.$infos !==undefined &&
+self.$infos.__func__===other.$infos.__func__ &&
+self.$infos.__self__===other.$infos.__self__}
+method.__ne__=function(self,other){return ! $B.method.__eq__(self,other)}
+method.__get__=function(self){var f=function(){return self(arguments)}
+f.__class__=$B.method_wrapper
+f.$infos=method.$infos
+return f}
+method.__getattribute__=function(self,attr){
+var infos=self.$infos
+if(infos && infos[attr]){if(attr=="__code__"){var res={__class__:$B.Code}
+for(var attr in infos.__code__){res[attr]=infos.__code__[attr]}
+return res}else{return infos[attr]}}else if(method.hasOwnProperty(attr)){return _b_.object.__getattribute__(self,attr)}else{
+return $B.Function.__getattribute__(self.$infos.__func__,attr)}}
+method.__repr__=method.__str__=function(self){return "<bound method "+self.$infos.__qualname__+
+" of "+_b_.str.$factory(self.$infos.__self__)+">"}
+method.__setattr__=function(self,key,value){
+if(key=="__class__"){throw _b_.TypeError.$factory("__class__ assignment only supported "+
+"for heap types or ModuleType subclasses")}
+throw $B.attr_error(attr,self)}
+$B.set_func_names(method,"builtins")
+$B.method_descriptor=$B.make_class("method_descriptor")
+$B.classmethod_descriptor=$B.make_class("classmethod_descriptor")
+_b_.object.__class__=type
+$B.make_iterator_class=function(name){
+var klass={__class__:_b_.type,__mro__:[_b_.object],$factory:function(items){return{
+__class__:klass,__dict__:$B.empty_dict(),counter:-1,items:items,len:items.length,$builtin_iterator:true}},$infos:{__name__:name},$is_class:true,$iterator_class:true,__iter__:function(self){self.counter=self.counter===undefined ?-1 :self.counter
+self.len=self.items.length
+return self},__len__:function(self){return self.items.length},__next__:function(self){if(typeof self.test_change=="function" && self.test_change()){
+throw _b_.RuntimeError.$factory(
+"dictionary changed size during iteration")}
+self.counter++
+if(self.counter < self.items.length){var item=self.items[self.counter]
+if(self.items.$brython_class=="js"){
+item=$B.$JS2Py(item)}
+return item}
+delete self.items.$next_func 
+throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
+$B.set_func_names(klass,"builtins")
+return klass}
+$B.GenericAlias=$B.make_class("GenericAlias",function(origin_class,items){return{
+__class__:$B.GenericAlias,origin_class,items}}
+)
+$B.GenericAlias.__args__=_b_.property.$factory(
+self=> $B.fast_tuple(self.items)
+)
+$B.GenericAlias.__call__=function(self,...args){return self.origin_class.$factory.apply(null,args)}
+$B.GenericAlias.__eq__=function(self,other){if(! _b_.isinstance(other,$B.GenericAlias)){return false}
+return $B.rich_comp("__eq__",self.origin_class,other.origin_class)&&
+$B.rich_comp("__eq__",self.items,other.items)}
+$B.GenericAlias.__getitem__=function(self,item){throw _b_.TypeError.$factory("descriptor '__getitem__' for '"+
+self.origin_class.$infos.__name__+"' objects doesn't apply to a '"+
+$B.class_name(item)+"' object")}
+$B.GenericAlias.__or__=function(self,other){var $=$B.args('__or__',2,{self:null,other:null},['self','other'],arguments,{},null,null)
+return $B.UnionType.$factory([self,other])}
+$B.GenericAlias.__origin__=_b_.property.$factory(
+self=> self.origin_class
+)
+$B.GenericAlias.__parameters__=_b_.property.$factory(
+self=> $B.fast_tuple([])
+)
+$B.GenericAlias.__repr__=function(self){var items=[]
+for(var i=0,len=self.items.length;i < len;i++){if(self.items[i]===_b_.Ellipsis){items.push('...')}else{if(self.items[i].$is_class){items.push(self.items[i].$infos.__name__)}else{items.push(_b_.repr(self.items[i]))}}}
+return self.origin_class.$infos.__qualname__+'['+
+items.join(", ")+']'}
+$B.set_func_names($B.GenericAlias,"types")
+$B.UnionType=$B.make_class("UnionType",function(items){return{
+__class__:$B.UnionType,items}}
+)
+$B.UnionType.__args__=_b_.property.$factory(
+self=> $B.fast_tuple(self.items)
+)
+$B.UnionType.__eq__=function(self,other){if(! _b_.isinstance(other,$B.UnionType)){return _b_.NotImplemented}
+return _b_.list.__eq__(self.items,other.items)}
+$B.UnionType.__parameters__=_b_.property.$factory(
+()=> $B.fast_tuple([])
+)
+$B.UnionType.__repr__=function(self){var t=[]
+for(var item of self.items){if(item.$is_class){var s=item.$infos.__name__
+if(item.$infos.__module__ !=="builtins"){s=item.$infos.__module__+'.'+s}
+t.push(s)}else{t.push(_b_.repr(item))}}
+return t.join(' | ')}
+$B.set_func_names($B.UnionType,"types")})(__BRYTHON__)
 ;
 
 ;(function($B){var _b_=$B.builtins
@@ -6729,7 +6471,8 @@ method.$infos={__func__:func,__name__:attr,__self__:self,__qualname__:klass.$inf
 if(typeof obj=="object"){
 obj.__class__=klass
 obj.$method_cache=obj.$method_cache ||{}
-obj.$method_cache[attr]=method}
+if(obj.$method_cache){
+obj.$method_cache[attr]=method}}
 return method}else if(klass[attr].__class__===_b_.classmethod){return _b_.classmethod.__get__(klass[attr],obj,klass)}else if(klass[attr]!==undefined){return klass[attr]}
 attr_error(rawname,klass)}
 var mro,attr_func
@@ -6744,7 +6487,7 @@ if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\n',attr
 if(attr_func===odga){res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}else if(res===null){return null}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}
-if(res.$is_property){return property.__get__(res)}
+if(res.$is_property){return _b_.property.__get__(res)}
 if(res.__set__===undefined ||res.$is_class){if($test){console.log("return",res,res+'',res.__set__,res.$is_class)}
 return res}}}
 try{res=attr_func(obj,attr)
@@ -6825,9 +6568,8 @@ help.__repr__=help.__str__=function(){return "Type help() for interactive help, 
 function hex(obj){check_nb_args_no_kw('hex',1,arguments)
 return bin_hex_oct(16,obj)}
 function id(obj){check_nb_args_no_kw('id',1,arguments)
-if(isinstance(obj,[_b_.str,_b_.int,_b_.float])&&
-!isinstance(obj,$B.long_int)){return $B.$getattr(_b_.str.$factory(obj),'__hash__')()}else if(obj.$id !==undefined){return obj.$id}
-else{return obj.$id=$B.UUID()}}
+if(obj.$id !==undefined){return obj.$id}else if(isinstance(obj,[_b_.str,_b_.int,_b_.float])&&
+!isinstance(obj,$B.long_int)){return $B.$getattr(_b_.str.$factory(obj),'__hash__')()}else{return obj.$id=$B.UUID()}}
 function __import__(mod_name,globals,locals,fromlist,level){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},['name','globals','locals','fromlist','level'],arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
@@ -7067,29 +6809,6 @@ if(flush !==None){$B.$call(flush)()}
 return None}
 $print.__name__='print'
 $print.is_func=true
-var property=$B.make_class("property",function(fget,fset,fdel,doc){var res={__class__:property}
-property.__init__(res,fget,fset,fdel,doc)
-return res}
-)
-property.__init__=function(self,fget,fset,fdel,doc){var $=$B.args('__init__',5,{self:null,fget:null,fset:null,fdel:null,doc:null},['self','fget','fset','fdel','doc'],arguments,{fget:_b_.None,fset:_b_.None,fdel:_b_.None,doc:_b_.None},null,null),self=$.self,fget=$.fget,fset=$.fset,fdel=$.fdel,doc=$.doc
-self.__doc__=doc ||""
-self.$type=fget.$type
-self.fget=fget
-self.fset=fset
-self.fdel=fdel
-self.$is_property=true
-if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
-self.__delete__=fdel;
-self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
-self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
-self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
-property.__get__=function(self,obj){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
-return $B.$call(self.fget)(obj)}
-property.__new__=function(cls){return{
-__class__:cls}}
-property.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
-$B.$getattr(self.fset,'__call__')(obj,value)}
-$B.set_func_names(property,"builtins")
 function quit(){throw _b_.SystemExit}
 quit.__repr__=quit.__str__=function(){return "Use quit() or Ctrl-Z plus Return to exit"}
 function repr(obj){check_nb_args_no_kw('repr',1,arguments)
@@ -7271,7 +6990,7 @@ if($test){console.log("calling super",self.__self_class__,attr,f,"res",res)}
 return res}
 method.__class__=$B.method
 var module,qualname
-if(f.$infos !==undefined){module=f.$infos.__module__}else if(f.__class__===property){module=f.fget.$infos.__module}else if(f.$is_class){module=f.__module__}
+if(f.$infos !==undefined){module=f.$infos.__module__}else if(f.__class__===_b_.property){module=f.fget.$infos.__module}else if(f.$is_class){module=f.__module__}
 method.$infos={__self__:self.__self_class__,__func__:f,__name__:attr,__module__:module,__qualname__:klass.$infos.__name__+"."+attr}
 return method}
 throw $B.attr_error(attr,self)}
@@ -7563,6 +7282,289 @@ _b_['print']=$print
 _b_['super']=$$super
 _b_.object.__init__.__class__=$B.wrapper_descriptor 
 _b_.object.__new__.__class__=builtin_function})(__BRYTHON__)
+;
+;(function($B){
+var DEFAULT_MIN_MERGE=32
+var DEFAULT_MIN_GALLOPING=7
+var DEFAULT_TMP_STORAGE_LENGTH=256
+var POWERS_OF_TEN=[1e0,1e1,1e2,1e3,1e4,1e5,1e6,1e7,1e8,1e9]
+function log10(x){if(x < 1e5){if(x < 1e2){return x < 1e1 ? 0 :1}
+if(x < 1e4){return x < 1e3 ? 2 :3}
+return 4}
+if(x < 1e7){return x < 1e6 ? 5 :6}
+if(x < 1e9){return x < 1e8 ? 7 :8}
+return 9}
+function alphabeticalCompare(a,b){if(a===b){return 0}
+if(~~a===a && ~~b===b){if(a===0 ||b===0){return a < b ?-1 :1}
+if(a < 0 ||b < 0){if(b >=0){return-1}
+if(a >=0){return 1}
+a=-a
+b=-b}
+al=log10(a)
+bl=log10(b)
+var t=0
+if(al < bl){a*=POWERS_OF_TEN[bl-al-1]
+b/=10
+t=-1}else if(al > bl){b*=POWERS_OF_TEN[al-bl-1]
+a/=10;
+t=1;}
+if(a===b){return t}
+return a < b ?-1 :1}
+var aStr=String(a)
+var bStr=String(b)
+if(aStr===bStr){return 0}
+return aStr < bStr ?-1 :1}
+function minRunLength(n){var r=0
+while(n >=DEFAULT_MIN_MERGE){r |=(n & 1)
+n >>=1}
+return n+r}
+function makeAscendingRun(array,lo,hi,compare){var runHi=lo+1
+if(runHi===hi){return 1;}
+if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi-1])< 0){runHi++}
+reverseRun(array,lo,runHi)}else{while(runHi < hi && compare(array[runHi],array[runHi-1])>=0){runHi++}}
+return runHi-lo}
+function reverseRun(array,lo,hi){hi--
+while(lo < hi){var t=array[lo]
+array[lo++]=array[hi]
+array[hi--]=t}}
+function binaryInsertionSort(array,lo,hi,start,compare){if(start===lo){start++}
+for(;start < hi;start++){var pivot=array[start]
+var left=lo
+var right=start
+while(left < right){var mid=(left+right)>>> 1
+if(compare(pivot,array[mid])< 0){right=mid}else{left=mid+1}}
+var n=start-left
+switch(n){case 3:
+array[left+3]=array[left+2]
+case 2:
+array[left+2]=array[left+1]
+case 1:
+array[left+1]=array[left]
+break;
+default:
+while(n > 0){array[left+n]=array[left+n-1]
+n--;}}
+array[left]=pivot}}
+function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
+if(compare(value,array[start+hint])> 0){maxOffset=length-hint
+while(offset < maxOffset && compare(value,array[start+hint+offset])> 0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+lastOffset+=hint
+offset+=hint}else{maxOffset=hint+1
+while(offset < maxOffset && compare(value,array[start+hint-offset])<=0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+var tmp=lastOffset
+lastOffset=hint-offset
+offset=hint-tmp}
+lastOffset++
+while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
+if(compare(value,array[start+m])> 0){lastOffset=m+1}else{offset=m}}
+return offset}
+function gallopRight(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
+if(compare(value,array[start+hint])< 0){maxOffset=hint+1
+while(offset < maxOffset && compare(value,array[start+hint-offset])< 0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+var tmp=lastOffset
+lastOffset=hint-offset
+offset=hint-tmp}else{maxOffset=length-hint
+while(offset < maxOffset && compare(value,array[start+hint+offset])>=0){lastOffset=offset
+offset=(offset << 1)+1
+if(offset <=0){offset=maxOffset}}
+if(offset > maxOffset){offset=maxOffset}
+lastOffset+=hint
+offset+=hint}
+lastOffset++
+while(lastOffset < offset){var m=lastOffset+((offset-lastOffset)>>> 1)
+if(compare(value,array[start+m])< 0){offset=m}else{lastOffset=m+1}}
+return offset}
+var TIM_SORT_ASSERTION="TimSortAssertion"
+var TimSortAssertion=function(message){this.name=TIM_SORT_ASSERTION
+this.message=message}
+var TimSort=function(array,compare){var self={array:array,compare:compare,minGallop:DEFAULT_MIN_GALLOPING,length :array.length,tmpStorageLength:DEFAULT_TMP_STORAGE_LENGTH,stackLength:0,runStart:null,runLength:null,stackSize:0,
+pushRun:function(runStart,runLength){this.runStart[this.stackSize]=runStart
+this.runLength[this.stackSize]=runLength
+this.stackSize+=1},
+mergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
+if((n >=1 && this.runLength[n-1]<=
+this.runLength[n]+this.runLength[n+1])||
+(n >=2 && this.runLength[n-2]<=
+this.runLength[n]+this.runLength[n-1])){if(this.runLength[n-1]< this.runLength[n+1]){n--}}else if(this.runLength[n]> this.runLength[n+1]){break}
+this.mergeAt(n)}},
+forceMergeRuns:function(){while(this.stackSize > 1){var n=this.stackSize-2
+if(n > 0 && this.runLength[n-1]< this.runLength[n+1]){n--}
+this.mergeAt(n)}},
+mergeAt:function(i){var compare=this.compare,array=this.array,start1=this.runStart[i],length1=this.runLength[i],start2=this.runStart[i+1],length2=this.runLength[i+1]
+this.runLength[i]=length1+length2
+if(i===this.stackSize-3){this.runStart[i+1]=this.runStart[i+2]
+this.runLength[i+1]=this.runLength[i+2]}
+this.stackSize--;
+var k=gallopRight(array[start2],array,start1,length1,0,compare)
+start1+=k
+length1-=k
+if(length1===0){return}
+length2=gallopLeft(array[start1+length1-1],array,start2,length2,length2-1,compare)
+if(length2===0){return}
+if(length1 <=length2){this.mergeLow(start1,length1,start2,length2)}else{this.mergeHigh(start1,length1,start2,length2)}},
+mergeLow:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
+for(var i=0;i < length1;i++){tmp[i]=array[start1+i]}
+var cursor1=0,cursor2=start2,dest=start1
+array[dest++]=array[cursor2++]
+if(--length2===0){for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}
+return}
+if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
+array[dest+length2]=tmp[cursor1]
+return}
+var minGallop=this.minGallop
+while(true){var count1=0,count2=0,exit=false
+do{if(compare(array[cursor2],tmp[cursor1])< 0){array[dest++]=array[cursor2++]
+count2++
+count1=0
+if(--length2===0){exit=true
+break}}else{array[dest++]=tmp[cursor1++]
+count1++
+count2=0
+if(--length1===1){exit=true
+break}}}while((count1 |count2)< minGallop)
+if(exit){break}
+do{
+count1=gallopRight(array[cursor2],tmp,cursor1,length1,0,compare)
+if(count1 !==0){for(var i=0;i < count1;i++){array[dest+i]=tmp[cursor1+i]}
+dest+=count1
+cursor1+=count1
+length1-=count1
+if(length1 <=1){exit=true
+break}}
+array[dest++]=array[cursor2++]
+if(--length2===0){exit=true
+break}
+count2=gallopLeft(tmp[cursor1],array,cursor2,length2,0,compare)
+if(count2 !==0){for(var i=0;i < count2;i++){array[dest+i]=array[cursor2+i]}
+dest+=count2
+cursor2+=count2
+length2-=count2
+if(length2===0){exit=true
+break}}
+array[dest++]=tmp[cursor1++]
+if(--length1===1){exit=true
+break}
+minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||
+count2 >=DEFAULT_MIN_GALLOPING);
+if(exit){break}
+if(minGallop < 0){minGallop=0}
+minGallop+=2}
+this.minGallop=minGallop
+if(minGallop < 1){this.minGallop=1}
+if(length1===1){for(var i=0;i < length2;i++){array[dest+i]=array[cursor2+i]}
+array[dest+length2]=tmp[cursor1]}else if(length1===0){throw new TimSortAssertion('mergeLow preconditions were not respected')}else{for(var i=0;i < length1;i++){array[dest+i]=tmp[cursor1+i]}}},
+mergeHigh:function(start1,length1,start2,length2){var compare=this.compare,array=this.array,tmp=this.tmp,i=0
+for(var i=0;i < length2;i++){tmp[i]=array[start2+i]}
+var cursor1=start1+length1-1,cursor2=length2-1,dest=start2+length2-1,customCursor=0,customDest=0
+array[dest--]=array[cursor1--]
+if(--length1===0){customCursor=dest-(length2-1)
+for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}
+return}
+if(length2===1){dest-=length1
+cursor1-=length1
+customDest=dest+1
+customCursor=cursor1+1
+for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+array[dest]=tmp[cursor2]
+return}
+var minGallop=this.minGallop
+while(true){var count1=0,count2=0,exit=false
+do{if(compare(tmp[cursor2],array[cursor1])< 0){array[dest--]=array[cursor1--]
+count1++
+count2=0
+if(--length1===0){exit=true
+break}}else{array[dest--]=tmp[cursor2--]
+count2++
+count1=0
+if(--length2===1){exit=true
+break}}}while((count1 |count2)< minGallop)
+if(exit){break}
+do{count1=length1-gallopRight(tmp[cursor2],array,start1,length1,length1-1,compare)
+if(count1 !==0){dest-=count1
+cursor1-=count1
+length1-=count1
+customDest=dest+1
+customCursor=cursor1+1
+for(var i=count1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+if(length1===0){exit=true
+break}}
+array[dest--]=tmp[cursor2--]
+if(--length2===1){exit=true
+break}
+count2=length2-gallopLeft(array[cursor1],tmp,0,length2,length2-1,compare)
+if(count2 !==0){dest-=count2
+cursor2-=count2
+length2-=count2
+customDest=dest+1
+customCursor=cursor2+1
+for(var i=0;i < count2;i++){array[customDest+i]=tmp[customCursor+i]}
+if(length2 <=1){exit=true
+break}}
+array[dest--]=array[cursor1--]
+if(--length1===0){exit=true
+break}
+minGallop--}while(count1 >=DEFAULT_MIN_GALLOPING ||
+count2 >=DEFAULT_MIN_GALLOPING)
+if(exit){break}
+if(minGallop < 0){minGallop=0}
+minGallop+=2}
+this.minGallop=minGallop
+if(minGallop < 1){this.minGallop=1}
+if(length2===1){dest-=length1
+cursor1-=length1
+customDest=dest+1
+customCursor=cursor1+1
+for(var i=length1-1;i >=0;i--){array[customDest+i]=array[customCursor+i]}
+array[dest]=tmp[cursor2]}else if(length2==0){throw new TimSortAssertion("mergeHigh preconditions were not respected")}else{customCursor=dest-(length2-1)
+for(var i=0;i < length2;i++){array[customCursor+i]=tmp[i]}}}}
+if(self.length < 2*DEFAULT_TMP_STORAGE_LENGTH){self.tmpStorageLength=self.length >>> 1}
+self.tmp=new Array(self.tmpStorageLength)
+self.stackLength=
+(self.length < 120 ? 5 :
+self.length < 1542 ? 10 :
+self.length < 119151 ? 19 :40)
+self.runStart=new Array(self.stackLength)
+self.runLength=new Array(self.stackLength)
+return self}
+function tim_sort(array,compare,lo,hi){if(!Array.isArray(array)){throw _b_.TypeError.$factory("Can only sort arrays")}
+if(!compare){compare=alphabeticalCompare}else if(typeof compare !=="function"){hi=lo
+lo=compare
+compare=alphabeticalCompare}
+if(!lo){lo=0}
+if(!hi){hi=array.length}
+var remaining=hi-lo
+if(remaining < 2){return}
+var runLength=0
+if(remaining < DEFAULT_MIN_MERGE){runLength=makeAscendingRun(array,lo,hi,compare)
+binaryInsertionSort(array,lo,hi,lo+runLength,compare)
+return}
+var ts=new TimSort(array,compare)
+var minRun=minRunLength(remaining)
+do{runLength=makeAscendingRun(array,lo,hi,compare)
+if(runLength < minRun){var force=remaining
+if(force > minRun){force=minRun}
+binaryInsertionSort(array,lo,lo+force,lo+runLength,compare)
+runLength=force}
+ts.pushRun(lo,runLength)
+ts.mergeRuns()
+remaining-=runLength
+lo+=runLength}while(remaining !==0)
+ts.forceMergeRuns()}
+function tim_sort_safe(array,compare){
+try{
+tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
+throw e;}}}
+$B.$TimSort=tim_sort_safe
+$B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
@@ -14252,10 +14254,21 @@ case 'id':
 if(['False','None','True'].indexOf(js_node.value)>-1){return _b_[js_node.value]}
 break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
-return js_node}}}})(__BRYTHON__)
-;
-var docs={ArithmeticError:"Base class for arithmetic errors.",AssertionError:"Assertion failed.",AttributeError:"Attribute not found.",BaseException:"Common base class for all exceptions",BaseExceptionGroup:"A combination of multiple unrelated exceptions.",BlockingIOError:"I/O operation would block.",BrokenPipeError:"Broken pipe.",BufferError:"Buffer error.",BytesWarning:"Base class for warnings about bytes and buffer related problems, mostly\nrelated to conversion from str or comparing to str.",ChildProcessError:"Child process error.",ConnectionAbortedError:"Connection aborted.",ConnectionError:"Connection error.",ConnectionRefusedError:"Connection refused.",ConnectionResetError:"Connection reset.",DeprecationWarning:"Base class for warnings about deprecated features.",EOFError:"Read beyond end of file.",Ellipsis:"",EncodingWarning:"Base class for warnings about encodings.",EnvironmentError:"Base class for I/O related errors.",Exception:"Common base class for all non-exit exceptions.",ExceptionGroup:"",False:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",FileExistsError:"File already exists.",FileNotFoundError:"File not found.",FloatingPointError:"Floating point operation failed.",FutureWarning:"Base class for warnings about constructs that will change semantically\nin the future.",GeneratorExit:"Request that a generator exit.",IOError:"Base class for I/O related errors.",ImportError:"Import can't find module, or can't find name in module.",ImportWarning:"Base class for warnings about probable mistakes in module imports",IndentationError:"Improper indentation.",IndexError:"Sequence index out of range.",InterruptedError:"Interrupted by signal.",IsADirectoryError:"Operation doesn't work on directories.",KeyError:"Mapping key not found.",KeyboardInterrupt:"Program interrupted by user.",LookupError:"Base class for lookup errors.",MemoryError:"Out of memory.",ModuleNotFoundError:"Module not found.",NameError:"Name not found globally.",None:"",NotADirectoryError:"Operation only works on directories.",NotImplemented:"",NotImplementedError:"Method or function hasn't been implemented yet.",OSError:"Base class for I/O related errors.",OverflowError:"Result too large to be represented.",PendingDeprecationWarning:"Base class for warnings about features which will be deprecated\nin the future.",PermissionError:"Not enough permissions.",ProcessLookupError:"Process not found.",RecursionError:"Recursion limit exceeded.",ReferenceError:"Weak ref proxy used after referent went away.",ResourceWarning:"Base class for warnings about resource usage.",RuntimeError:"Unspecified run-time error.",RuntimeWarning:"Base class for warnings about dubious runtime behavior.",StopAsyncIteration:"Signal the end from iterator.__anext__().",StopIteration:"Signal the end from iterator.__next__().",SyntaxError:"Invalid syntax.",SyntaxWarning:"Base class for warnings about dubious syntax.",SystemError:"Internal error in the Python interpreter.\n\nPlease report this to the Python maintainer, along with the traceback,\nthe Python version, and the hardware/OS platform and version.",SystemExit:"Request to exit from the interpreter.",TabError:"Improper mixture of spaces and tabs.",TimeoutError:"Timeout expired.",True:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",TypeError:"Inappropriate argument type.",UnboundLocalError:"Local name referenced but not bound to a value.",UnicodeDecodeError:"Unicode decoding error.",UnicodeEncodeError:"Unicode encoding error.",UnicodeError:"Unicode related error.",UnicodeTranslateError:"Unicode translation error.",UnicodeWarning:"Base class for warnings about Unicode related problems, mostly\nrelated to conversion problems.",UserWarning:"Base class for warnings generated by user code.",ValueError:"Inappropriate argument value (of correct type).",Warning:"Base class for warning categories.",WindowsError:"Base class for I/O related errors.",ZeroDivisionError:"Second argument to a division or modulo operation was zero.",__debug__:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",abs:"Return the absolute value of the argument.",aiter:"Return an AsyncIterator for an AsyncIterable object.",all:"Return True if bool(x) is True for all values x in the iterable.\n\nIf the iterable is empty, return True.",anext:"async anext(aiterator[, default])\n\nReturn the next item from the async iterator.  If default is given and the async\niterator is exhausted, it is returned instead of raising StopAsyncIteration.",any:"Return True if bool(x) is True for any x in the iterable.\n\nIf the iterable is empty, return False.",ascii:"Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2.",bin:"Return the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'",bool:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",breakpoint:"breakpoint(*args, **kws)\n\nCall sys.breakpointhook(*args, **kws).  sys.breakpointhook() must accept\nwhatever arguments are passed.\n\nBy default, this drops you into the pdb debugger.",bytearray:"bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer",bytes:"bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",callable:"Return whether the object is callable (i.e., some kind of function).\n\nNote that classes are callable, as are instances of classes with a\n__call__() method.",chr:"Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.",classmethod:"classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      @classmethod\n      def f(cls, arg1, arg2, ...):\n          ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.",compile:"Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified.",complex:"Create a complex number from a real part and an optional imaginary part.\n\nThis is equivalent to (real + imag*1j) where imag defaults to 0.",copyright:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",credits:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",delattr:"Deletes the named attribute from the given object.\n\ndelattr(x, 'y') is equivalent to ``del x.y''",dict:"dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",dir:"dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes.",divmod:"Return the tuple (x//y, x%y).  Invariant: div*y + mod == x.",enumerate:"Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",eval:"Evaluate the given source in the C of globals and locals.\n\nThe source may be a string representing a Python expression\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",exec:"Execute the given source in the C of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.\nThe closure must be a tuple of cellvars, and can only be used\nwhen source is a code object requiring exactly that many cellvars.",exit:"",filter:"filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",float:"Convert a string or number to a floating point number, if possible.",format:"Return value.__format__(format_spec)\n\nformat_spec defaults to the empty string.\nSee the Format Specification Mini-Language section of help('FORMATTING') for\ndetails.",frozenset:"frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.",getattr:"getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case.",globals:"Return the dictionary containing the current scope's global variables.\n\nNOTE: Updates to this dictionary *will* affect name lookups in the current\nglobal scope and vice-versa.",hasattr:"Return whether the object has an attribute with the given name.\n\nThis is done by calling getattr(obj, name) and catching AttributeError.",hash:"Return the hash value for the given object.\n\nTwo objects that compare equal must also have the same hash value, but the\nreverse is not necessarily true.",help:"Define the builtin 'help'.\n\n    This is a wrapper around pydoc.help that provides a helpful message\n    when 'help' is typed at the Python interactive prompt.\n\n    Calling help() at the Python prompt starts an interactive help session.\n    Calling help(thing) prints help for the python object 'thing'.\n    ",hex:"Return the hexadecimal representation of an integer.\n\n   >>> hex(12648430)\n   '0xc0ffee'",id:"Return the identity of an object.\n\nThis is guaranteed to be unique among simultaneously existing objects.\n(CPython uses the object's memory address.)",input:"Read a string from standard input.  The trailing newline is stripped.\n\nThe prompt string, if given, is printed to standard output without a\ntrailing newline before reading input.\n\nIf the user hits EOF (*nix: Ctrl-D, Windows: Ctrl-Z+Return), raise EOFError.\nOn *nix systems, readline is used if available.",int:"int([x]) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",isinstance:"Return whether an object is an instance of a class or of a subclass thereof.\n\nA tuple, as in ``isinstance(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``isinstance(x, A) or isinstance(x, B)\nor ...`` etc.",issubclass:"Return whether 'cls' is derived from another class or is the same class.\n\nA tuple, as in ``issubclass(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``issubclass(x, A) or issubclass(x, B)\nor ...``.",iter:"iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.",len:"Return the number of items in a container.",license:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",list:"Built-in mutable sequence.\n\nIf no argument is given, the constructor creates a new empty list.\nThe argument must be an iterable if specified.",locals:"Return a dictionary containing the current scope's local variables.\n\nNOTE: Whether or not updates to this dictionary will affect name lookups in\nthe local scope and vice-versa is *implementation dependent* and not\ncovered by any backwards compatibility guarantees.",map:"map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",max:"max(iterable, *[, default=obj, key=func]) -> value\nmax(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its biggest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the largest argument.",memoryview:"Create a new memoryview object which references the given object.",min:"min(iterable, *[, default=obj, key=func]) -> value\nmin(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the smallest argument.",next:"next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.",object:"The base class of the class hierarchy.\n\nWhen called, it accepts no arguments and returns a new featureless\ninstance that has no instance attributes and cannot be given any.\n",oct:"Return the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'",open:"Open file and return a stream.  Raise OSError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory) of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped. (If a file descriptor is given, it is closed when the\nreturned I/O object is closed, unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode.  Other common values are 'w' for writing (truncating the file if\nit already exists), 'x' for creating and writing to a new file, and\n'a' for appending (which on some Unix systems, means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode, if encoding is not specified the encoding used is platform\ndependent: locale.getencoding() is called to get the current locale encoding.\n(For reading and writing raw bytes use binary mode and leave encoding\nunspecified.) The available modes are:\n\n========= ===============================================================\nCharacter Meaning\n--------- ---------------------------------------------------------------\n'r'       open for reading (default)\n'w'       open for writing, truncating the file first\n'x'       create a new file and open it for writing\n'a'       open for writing, appending to the end of the file if it exists\n'b'       binary mode\n't'       text mode (default)\n'+'       open a disk file for updating (reading and writing)\n========= ===============================================================\n\nThe default mode is 'rt' (open for reading text). For binary random\naccess, the mode 'w+b' opens and truncates the file to 0 bytes, while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n  \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.",ord:"Return the Unicode code point for a one-character string.",pow:"Equivalent to base**exp with 2 arguments or base**exp % mod with 3 arguments\n\nSome types, such as ints, are able to use a more efficient algorithm when\ninvoked using the three argument form.",print:"Prints the values to a stream, or to sys.stdout by default.\n\n  sep\n    string inserted between values, default a space.\n  end\n    string appended after the last value, default a newline.\n  file\n    a file-like object (stream); defaults to the current sys.stdout.\n  flush\n    whether to forcibly flush the stream.",property:"Property attribute.\n\n  fget\n    function to be used for getting an attribute value\n  fset\n    function to be used for setting an attribute value\n  fdel\n    function to be used for del'ing an attribute\n  doc\n    docstring\n\nTypical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",repr:"Return the canonical string representation of the object.\n\nFor many object types, including most builtins, eval(repr(obj)) == obj.",reversed:"Return a reverse iterator over the values of the given sequence.",round:"Round a number to a given precision in decimal digits.\n\nThe return value is an integer if ndigits is omitted or None.  Otherwise\nthe return value has the same type as the number.  ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"Sets the named attribute on the given object to the specified value.\n\nsetattr(x, 'y', v) is equivalent to ``x.y = v''",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"Return a new list containing all items from the iterable in ascending order.\n\nA custom key function can be supplied to customize the sort order, and the\nreverse flag can be set to request the result in descending order.",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n         @staticmethod\n         def f(arg1, arg2, ...):\n             ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()). Both the class and the instance are ignored, and\nneither is passed implicitly as the first argument to the method.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"Return the sum of a 'start' value (default: 0) plus an iterable of numbers\n\nWhen the iterable is empty, return the start value.\nThis function is intended specifically for use with numeric values and may\nreject non-numeric types.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object) -> the object's type\ntype(name, bases, dict, **kwds) -> a new type",vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]\n\nThe zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.",}
-for(var key in docs){if(__BRYTHON__.builtins[key]){__BRYTHON__.builtins[key].__doc__=docs[key]}}
+return js_node}}}
+var $io=$B.$io=$B.make_class("io",function(out){return{
+__class__:$io,out,encoding:'utf-8'}}
+)
+$io.flush=function(self){if(self.buf){console[self.out](self.buf.join(''))
+self.buf=[]}}
+$io.write=function(self,msg){
+if(self.buf===undefined){self.buf=[]}
+if(typeof msg !="string"){throw _b_.TypeError.$factory("write() argument must be str, not "+
+$B.class_name(msg))}
+self.buf.push(msg)
+return _b_.None}
+if(console.error !==undefined){$B.stderr=$io.$factory("error")}else{$B.stderr=$io.$factory("log")}
+$B.stdout=$io.$factory("log")
+$B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")
@@ -15710,8 +15723,10 @@ this.stack=[]
 this.blocks=new Map()
 this.cur=NULL;
 this.private=NULL;}
+function id(obj){if(obj.$id !==undefined){return obj.$id}
+return obj.$id=$B.UUID()}
 function ste_new(st,name,block,key,lineno,col_offset,end_lineno,end_col_offset){var ste
-ste={table:st,id:_b_.id(key),
+ste={table:st,id:id(key),
 name:name,directives:NULL,type:block,nested:0,free:0,varargs:0,varkeywords:0,opt_lineno:0,opt_col_offset:0,lineno:lineno,col_offset:col_offset,end_lineno:end_lineno,end_col_offset:end_col_offset}
 if(st.cur !=NULL &&
 (st.cur.nested ||
@@ -15826,10 +15841,7 @@ v_new=flags
 if(!v_new){return 0;}
 symbols.$string_dict[name][0]=v_new}
 v_free=FREE << SCOPE_OFFSET
-itr=_b_.iter(free)
-var next_func=$B.$getattr(itr,'__next__')
-while(true){try{name=next_func()}catch(err){break}
-v=symbols.$string_dict[name]
+for(var name of free){v=symbols.$string_dict[name]
 if(v){
 v=v[0]
 if(classflag &&
@@ -16471,4 +16483,7 @@ st=_PySymtable_Build(mod,filename,future);
 PyObject_Free(future);
 _PyArena_Free(arena);
 return st;}})(__BRYTHON__)
+;
+var docs={ArithmeticError:"Base class for arithmetic errors.",AssertionError:"Assertion failed.",AttributeError:"Attribute not found.",BaseException:"Common base class for all exceptions",BaseExceptionGroup:"A combination of multiple unrelated exceptions.",BlockingIOError:"I/O operation would block.",BrokenPipeError:"Broken pipe.",BufferError:"Buffer error.",BytesWarning:"Base class for warnings about bytes and buffer related problems, mostly\nrelated to conversion from str or comparing to str.",ChildProcessError:"Child process error.",ConnectionAbortedError:"Connection aborted.",ConnectionError:"Connection error.",ConnectionRefusedError:"Connection refused.",ConnectionResetError:"Connection reset.",DeprecationWarning:"Base class for warnings about deprecated features.",EOFError:"Read beyond end of file.",Ellipsis:"",EncodingWarning:"Base class for warnings about encodings.",EnvironmentError:"Base class for I/O related errors.",Exception:"Common base class for all non-exit exceptions.",ExceptionGroup:"",False:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",FileExistsError:"File already exists.",FileNotFoundError:"File not found.",FloatingPointError:"Floating point operation failed.",FutureWarning:"Base class for warnings about constructs that will change semantically\nin the future.",GeneratorExit:"Request that a generator exit.",IOError:"Base class for I/O related errors.",ImportError:"Import can't find module, or can't find name in module.",ImportWarning:"Base class for warnings about probable mistakes in module imports",IndentationError:"Improper indentation.",IndexError:"Sequence index out of range.",InterruptedError:"Interrupted by signal.",IsADirectoryError:"Operation doesn't work on directories.",KeyError:"Mapping key not found.",KeyboardInterrupt:"Program interrupted by user.",LookupError:"Base class for lookup errors.",MemoryError:"Out of memory.",ModuleNotFoundError:"Module not found.",NameError:"Name not found globally.",None:"",NotADirectoryError:"Operation only works on directories.",NotImplemented:"",NotImplementedError:"Method or function hasn't been implemented yet.",OSError:"Base class for I/O related errors.",OverflowError:"Result too large to be represented.",PendingDeprecationWarning:"Base class for warnings about features which will be deprecated\nin the future.",PermissionError:"Not enough permissions.",ProcessLookupError:"Process not found.",RecursionError:"Recursion limit exceeded.",ReferenceError:"Weak ref proxy used after referent went away.",ResourceWarning:"Base class for warnings about resource usage.",RuntimeError:"Unspecified run-time error.",RuntimeWarning:"Base class for warnings about dubious runtime behavior.",StopAsyncIteration:"Signal the end from iterator.__anext__().",StopIteration:"Signal the end from iterator.__next__().",SyntaxError:"Invalid syntax.",SyntaxWarning:"Base class for warnings about dubious syntax.",SystemError:"Internal error in the Python interpreter.\n\nPlease report this to the Python maintainer, along with the traceback,\nthe Python version, and the hardware/OS platform and version.",SystemExit:"Request to exit from the interpreter.",TabError:"Improper mixture of spaces and tabs.",TimeoutError:"Timeout expired.",True:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",TypeError:"Inappropriate argument type.",UnboundLocalError:"Local name referenced but not bound to a value.",UnicodeDecodeError:"Unicode decoding error.",UnicodeEncodeError:"Unicode encoding error.",UnicodeError:"Unicode related error.",UnicodeTranslateError:"Unicode translation error.",UnicodeWarning:"Base class for warnings about Unicode related problems, mostly\nrelated to conversion problems.",UserWarning:"Base class for warnings generated by user code.",ValueError:"Inappropriate argument value (of correct type).",Warning:"Base class for warning categories.",WindowsError:"Base class for I/O related errors.",ZeroDivisionError:"Second argument to a division or modulo operation was zero.",__debug__:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",abs:"Return the absolute value of the argument.",aiter:"Return an AsyncIterator for an AsyncIterable object.",all:"Return True if bool(x) is True for all values x in the iterable.\n\nIf the iterable is empty, return True.",anext:"async anext(aiterator[, default])\n\nReturn the next item from the async iterator.  If default is given and the async\niterator is exhausted, it is returned instead of raising StopAsyncIteration.",any:"Return True if bool(x) is True for any x in the iterable.\n\nIf the iterable is empty, return False.",ascii:"Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2.",bin:"Return the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'",bool:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",breakpoint:"breakpoint(*args, **kws)\n\nCall sys.breakpointhook(*args, **kws).  sys.breakpointhook() must accept\nwhatever arguments are passed.\n\nBy default, this drops you into the pdb debugger.",bytearray:"bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer",bytes:"bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",callable:"Return whether the object is callable (i.e., some kind of function).\n\nNote that classes are callable, as are instances of classes with a\n__call__() method.",chr:"Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.",classmethod:"classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      @classmethod\n      def f(cls, arg1, arg2, ...):\n          ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.",compile:"Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified.",complex:"Create a complex number from a real part and an optional imaginary part.\n\nThis is equivalent to (real + imag*1j) where imag defaults to 0.",copyright:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",credits:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",delattr:"Deletes the named attribute from the given object.\n\ndelattr(x, 'y') is equivalent to ``del x.y''",dict:"dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",dir:"dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes.",divmod:"Return the tuple (x//y, x%y).  Invariant: div*y + mod == x.",enumerate:"Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",eval:"Evaluate the given source in the C of globals and locals.\n\nThe source may be a string representing a Python expression\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",exec:"Execute the given source in the C of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.\nThe closure must be a tuple of cellvars, and can only be used\nwhen source is a code object requiring exactly that many cellvars.",exit:"",filter:"filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",float:"Convert a string or number to a floating point number, if possible.",format:"Return value.__format__(format_spec)\n\nformat_spec defaults to the empty string.\nSee the Format Specification Mini-Language section of help('FORMATTING') for\ndetails.",frozenset:"frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.",getattr:"getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case.",globals:"Return the dictionary containing the current scope's global variables.\n\nNOTE: Updates to this dictionary *will* affect name lookups in the current\nglobal scope and vice-versa.",hasattr:"Return whether the object has an attribute with the given name.\n\nThis is done by calling getattr(obj, name) and catching AttributeError.",hash:"Return the hash value for the given object.\n\nTwo objects that compare equal must also have the same hash value, but the\nreverse is not necessarily true.",help:"Define the builtin 'help'.\n\n    This is a wrapper around pydoc.help that provides a helpful message\n    when 'help' is typed at the Python interactive prompt.\n\n    Calling help() at the Python prompt starts an interactive help session.\n    Calling help(thing) prints help for the python object 'thing'.\n    ",hex:"Return the hexadecimal representation of an integer.\n\n   >>> hex(12648430)\n   '0xc0ffee'",id:"Return the identity of an object.\n\nThis is guaranteed to be unique among simultaneously existing objects.\n(CPython uses the object's memory address.)",input:"Read a string from standard input.  The trailing newline is stripped.\n\nThe prompt string, if given, is printed to standard output without a\ntrailing newline before reading input.\n\nIf the user hits EOF (*nix: Ctrl-D, Windows: Ctrl-Z+Return), raise EOFError.\nOn *nix systems, readline is used if available.",int:"int([x]) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",isinstance:"Return whether an object is an instance of a class or of a subclass thereof.\n\nA tuple, as in ``isinstance(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``isinstance(x, A) or isinstance(x, B)\nor ...`` etc.",issubclass:"Return whether 'cls' is derived from another class or is the same class.\n\nA tuple, as in ``issubclass(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``issubclass(x, A) or issubclass(x, B)\nor ...``.",iter:"iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.",len:"Return the number of items in a container.",license:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",list:"Built-in mutable sequence.\n\nIf no argument is given, the constructor creates a new empty list.\nThe argument must be an iterable if specified.",locals:"Return a dictionary containing the current scope's local variables.\n\nNOTE: Whether or not updates to this dictionary will affect name lookups in\nthe local scope and vice-versa is *implementation dependent* and not\ncovered by any backwards compatibility guarantees.",map:"map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",max:"max(iterable, *[, default=obj, key=func]) -> value\nmax(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its biggest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the largest argument.",memoryview:"Create a new memoryview object which references the given object.",min:"min(iterable, *[, default=obj, key=func]) -> value\nmin(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the smallest argument.",next:"next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.",object:"The base class of the class hierarchy.\n\nWhen called, it accepts no arguments and returns a new featureless\ninstance that has no instance attributes and cannot be given any.\n",oct:"Return the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'",open:"Open file and return a stream.  Raise OSError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory) of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped. (If a file descriptor is given, it is closed when the\nreturned I/O object is closed, unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode.  Other common values are 'w' for writing (truncating the file if\nit already exists), 'x' for creating and writing to a new file, and\n'a' for appending (which on some Unix systems, means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode, if encoding is not specified the encoding used is platform\ndependent: locale.getencoding() is called to get the current locale encoding.\n(For reading and writing raw bytes use binary mode and leave encoding\nunspecified.) The available modes are:\n\n========= ===============================================================\nCharacter Meaning\n--------- ---------------------------------------------------------------\n'r'       open for reading (default)\n'w'       open for writing, truncating the file first\n'x'       create a new file and open it for writing\n'a'       open for writing, appending to the end of the file if it exists\n'b'       binary mode\n't'       text mode (default)\n'+'       open a disk file for updating (reading and writing)\n========= ===============================================================\n\nThe default mode is 'rt' (open for reading text). For binary random\naccess, the mode 'w+b' opens and truncates the file to 0 bytes, while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n  \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.",ord:"Return the Unicode code point for a one-character string.",pow:"Equivalent to base**exp with 2 arguments or base**exp % mod with 3 arguments\n\nSome types, such as ints, are able to use a more efficient algorithm when\ninvoked using the three argument form.",print:"Prints the values to a stream, or to sys.stdout by default.\n\n  sep\n    string inserted between values, default a space.\n  end\n    string appended after the last value, default a newline.\n  file\n    a file-like object (stream); defaults to the current sys.stdout.\n  flush\n    whether to forcibly flush the stream.",property:"Property attribute.\n\n  fget\n    function to be used for getting an attribute value\n  fset\n    function to be used for setting an attribute value\n  fdel\n    function to be used for del'ing an attribute\n  doc\n    docstring\n\nTypical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",repr:"Return the canonical string representation of the object.\n\nFor many object types, including most builtins, eval(repr(obj)) == obj.",reversed:"Return a reverse iterator over the values of the given sequence.",round:"Round a number to a given precision in decimal digits.\n\nThe return value is an integer if ndigits is omitted or None.  Otherwise\nthe return value has the same type as the number.  ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"Sets the named attribute on the given object to the specified value.\n\nsetattr(x, 'y', v) is equivalent to ``x.y = v''",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"Return a new list containing all items from the iterable in ascending order.\n\nA custom key function can be supplied to customize the sort order, and the\nreverse flag can be set to request the result in descending order.",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n         @staticmethod\n         def f(arg1, arg2, ...):\n             ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()). Both the class and the instance are ignored, and\nneither is passed implicitly as the first argument to the method.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"Return the sum of a 'start' value (default: 0) plus an iterable of numbers\n\nWhen the iterable is empty, return the start value.\nThis function is intended specifically for use with numeric values and may\nreject non-numeric types.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object) -> the object's type\ntype(name, bases, dict, **kwds) -> a new type",vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]\n\nThe zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.",}
+for(var key in docs){if(__BRYTHON__.builtins[key]){__BRYTHON__.builtins[key].__doc__=docs[key]}}
 ;

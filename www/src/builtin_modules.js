@@ -998,5 +998,57 @@
         }
     }
 
+// Default standard output and error
+// Can be reset by sys.stdout or sys.stderr
+var $io = $B.$io = $B.make_class("io",
+    function(out){
+        return {
+            __class__: $io,
+            out,
+            encoding: 'utf-8'
+        }
+    }
+)
+
+$io.flush = function(self){
+    if(self.buf){
+        console[self.out](self.buf.join(''))
+        self.buf = []
+    }
+}
+
+$io.write = function(self, msg){
+    // Default to printing to browser console
+    if(self.buf === undefined){
+        self.buf = []
+    }
+    if(typeof msg != "string"){
+        throw _b_.TypeError.$factory("write() argument must be str, not " +
+            $B.class_name(msg))
+    }
+    self.buf.push(msg)
+    return _b_.None
+}
+
+if(console.error !== undefined){
+    $B.stderr = $io.$factory("error")
+}else{
+    $B.stderr = $io.$factory("log")
+}
+$B.stdout = $io.$factory("log")
+
+$B.stdin = {
+    __class__: $io,
+    __original__: true,
+    closed: false,
+    len: 1,
+    pos: 0,
+    read: function (){
+        return ""
+    },
+    readline: function(){
+        return ""
+    }
+}
 
 })(__BRYTHON__)

@@ -324,7 +324,7 @@ function pyargs2jsargs(pyargs){
 $B.JSObj = $B.make_class("JSObject",
     function(jsobj){
         if(Array.isArray(jsobj)){
-            //jsobj.__class__ = _b_.list
+            // Return a Python object that wraps the Javascript list
         }else if(typeof jsobj == "function"){
             jsobj.$is_js_func = true
             jsobj.__new__ = function(){

@@ -1232,7 +1232,11 @@ $B.$getattr = function(obj, attr, _default){
                 // as attribute of obj.$method_cache
                 obj.__class__ = klass
                 obj.$method_cache = obj.$method_cache || {}
-                obj.$method_cache[attr] = method
+                if(obj.$method_cache){
+                    // might not be set, eg for Javascript list proxy
+                    // in js_objects.js
+                    obj.$method_cache[attr] = method
+                }
             }
             return method
         }else if(klass[attr].__class__ === _b_.classmethod){
@@ -1283,7 +1287,7 @@ $B.$getattr = function(obj, attr, _default){
             if($test){console.log(obj, attr, obj[attr],
                 res.__set__ || res.$is_class)}
             if(res.$is_property){
-                return property.__get__(res)
+                return _b_.property.__get__(res)
             }
             // Cf. issue 1081
             if(res.__set__ === undefined || res.$is_class){
@@ -1524,11 +1528,14 @@ function hex(obj){
 
 function id(obj){
    check_nb_args_no_kw('id', 1, arguments)
-   if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
+   if(obj.$id !== undefined){
+       return obj.$id
+   }else if(isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
            !isinstance(obj, $B.long_int)){
        return $B.$getattr(_b_.str.$factory(obj), '__hash__')()
-   }else if(obj.$id !== undefined){return obj.$id}
-   else{return obj.$id = $B.UUID()}
+   }else{
+       return obj.$id = $B.UUID()
+   }
 }
 
 // The default __import__ function is a builtin
@@ -2178,77 +2185,6 @@ function $print(){
 $print.__name__ = 'print'
 $print.is_func = true
 
-// property (built in function)
-var property = $B.make_class("property",
-    function(fget, fset, fdel, doc){
-        var res = {
-            __class__: property
-        }
-        property.__init__(res, fget, fset, fdel, doc)
-        return res
-    }
-)
-
-property.__init__ = function(self, fget, fset, fdel, doc) {
-
-    var $ = $B.args('__init__', 5,
-                {self: null, fget: null, fset: null, fdel: null, doc: null},
-                ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
-                {fget: _b_.None, fset: _b_.None, fdel: _b_.None, doc: _b_.None},
-                null, null),
-        self = $.self,
-        fget = $.fget,
-        fset = $.fset,
-        fdel = $.fdel,
-        doc = $.doc
-    self.__doc__ = doc || ""
-    self.$type = fget.$type
-    self.fget = fget
-    self.fset = fset
-    self.fdel = fdel
-    self.$is_property = true
-
-    if(fget && fget.$attrs){
-        for(var key in fget.$attrs){
-            self[key] = fget.$attrs[key]
-        }
-    }
-
-    self.__delete__ = fdel;
-
-    self.getter = function(fget){
-        return property.$factory(fget, self.fset, self.fdel, self.__doc__)
-    }
-    self.setter = function(fset){
-        return property.$factory(self.fget, fset, self.fdel, self.__doc__)
-    }
-    self.deleter = function(fdel){
-        return property.$factory(self.fget, self.fset, fdel, self.__doc__)
-    }
-}
-
-property.__get__ = function(self, obj) {
-    if(self.fget === undefined){
-        throw _b_.AttributeError.$factory("unreadable attribute")
-    }
-    return $B.$call(self.fget)(obj)
-}
-
-property.__new__ = function(cls){
-    return {
-        __class__: cls
-    }
-}
-
-property.__set__ = function(self, obj, value){
-    if(self.fset === undefined){
-        throw _b_.AttributeError.$factory("can't set attribute")
-    }
-    $B.$getattr(self.fset, '__call__')(obj, value)
-}
-
-$B.set_func_names(property, "builtins")
-
 function quit(){
     throw _b_.SystemExit
 }
@@ -2797,7 +2733,7 @@ $$super.__getattribute__ = function(self, attr){
             qualname
         if(f.$infos !== undefined){
             module = f.$infos.__module__
-        }else if(f.__class__ === property){
+        }else if(f.__class__ === _b_.property){
             module = f.fget.$infos.__module
         }else if(f.$is_class){
             module = f.__module__

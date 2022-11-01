@@ -110,7 +110,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == "f"
+    var $test = false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -118,6 +118,9 @@ object.__getattribute__ = function(obj, attr){
         return klass
     }
     var res = obj[attr]
+    if($test){
+        console.log('obj[attr]', obj[attr])
+    }
     if(Array.isArray(obj) && Array.prototype[attr] !== undefined){
         // Special case for list subclasses. Cf. issue 1081
         res = undefined
@@ -171,7 +174,9 @@ object.__getattribute__ = function(obj, attr){
             return res
         }
     }
-
+    if($test){
+        console.log('after search classes', res)
+    }
     if(res !== undefined){
         if($test){console.log(res)}
         if(res.__class__ && _b_.issubclass(res.__class__, _b_.property)){
@@ -202,15 +207,19 @@ object.__getattribute__ = function(obj, attr){
         if($test){console.log("__get__", __get__)}
         // For descriptors, attribute resolution is done by applying __get__
         if(__get__ !== null){
+            if($test){
+                console.log('apply __get__', [obj, klass])
+            }
             try{
                 return __get__.apply(null, [obj, klass])
-            }
-            catch(err){
-                /*
+            }catch(err){
+
                 console.log('error in get.apply', err)
                 console.log("get attr", attr, "of", obj)
+                console.log('res', res)
+                console.log('__get__', __get__)
                 console.log(__get__ + '')
-                */
+
                 throw err
             }
         }
@@ -516,23 +525,6 @@ object.$factory = function(){
 
 $B.set_func_names(object, "builtins")
 
-$B.make_class = function(qualname, factory){
-    // Builds a basic class object
-
-    var A = {
-        __class__: _b_.type,
-        __mro__: [object],
-        $infos:{
-            __qualname__: qualname,
-            __name__: $B.last(qualname.split('.'))
-        },
-        $is_class: true
-    }
-
-    A.$factory = factory
-
-    return A
-}
 return object
 
 })(__BRYTHON__)

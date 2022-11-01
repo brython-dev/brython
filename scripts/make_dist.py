@@ -68,11 +68,11 @@ def run():
         'py_ast',
         'py2js',
         'loaders',
+        'py_utils',
         'py_object',
         'py_type',
-        'py_utils',
-        'py_sort',
         'py_builtin_functions',
+        'py_sort',
         'py_exceptions',
         'py_range_slice',
         'py_bytes',
@@ -92,10 +92,10 @@ def run():
         'py_dom',
         'py_pattern_matching',
         'builtin_modules',
-        'builtins_docstrings',
         'async',
         'ast_to_js',
-        'symtable'
+        'symtable',
+        'builtins_docstrings'
     ]
 
     res = """// brython.js brython.info

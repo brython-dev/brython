@@ -255,8 +255,9 @@ function meta_from_bases(class_name, module, bases){
                 metaclass = bases[0].__class__ = $B.JSMeta
                 $B.set_func_names(bases[0], module)
             }else{
+                console.log('meta from bases', class_name, module, bases)
                 throw _b_.TypeError.$factory("Argument of " + class_name +
-                    "is not a class (type '" + $B.class_name(bases[0]) +
+                    " is not a class (type '" + $B.class_name(bases[0]) +
                     "')")
             }
         }
@@ -278,6 +279,28 @@ function meta_from_bases(class_name, module, bases){
     }
     return metaclass
 }
+
+
+$B.make_class = function(qualname, factory){
+    // Builds a basic class object
+
+    var A = {
+        __class__: _b_.type,
+        __mro__: [_b_.object],
+        $infos:{
+            __qualname__: qualname,
+            __name__: $B.last(qualname.split('.'))
+        },
+        $is_class: true
+    }
+
+    A.$factory = factory
+
+    return A
+}
+
+
+
 
 var type = $B.make_class("type",
     function(obj, bases, cl_dict){
@@ -364,7 +387,7 @@ type.__getattribute__ = function(klass, attr){
                 function(key){delete klass[key]})
     }
     var res = klass[attr]
-    var $test = false // attr == "register" // && klass.$infos.__name__ == 'StrEnum'
+    var $test = attr == "__args__" // && klass.$infos.__name__ == 'StrEnum'
 
     if($test){
         console.log("attr", attr, "of", klass, '\n  ', res, res + "")
@@ -841,6 +864,76 @@ $B.set_func_names(type, "builtins")
 
 _b_.type = type
 
+// property (built in function)
+var property = _b_.property = $B.make_class("property",
+    function(fget, fset, fdel, doc){
+        var res = {
+            __class__: property
+        }
+        property.__init__(res, fget, fset, fdel, doc)
+        return res
+    }
+)
+
+property.__init__ = function(self, fget, fset, fdel, doc) {
+    var $ = $B.args('__init__', 5,
+                {self: null, fget: null, fset: null, fdel: null, doc: null},
+                ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
+                {fget: _b_.None, fset: _b_.None, fdel: _b_.None, doc: _b_.None},
+                null, null),
+        self = $.self,
+        fget = $.fget,
+        fset = $.fset,
+        fdel = $.fdel,
+        doc = $.doc
+    self.__doc__ = doc || ""
+    self.$type = fget.$type
+    self.fget = fget
+    self.fset = fset
+    self.fdel = fdel
+    self.$is_property = true
+
+    if(fget && fget.$attrs){
+        for(var key in fget.$attrs){
+            self[key] = fget.$attrs[key]
+        }
+    }
+
+    self.__delete__ = fdel;
+
+    self.getter = function(fget){
+        return property.$factory(fget, self.fset, self.fdel, self.__doc__)
+    }
+    self.setter = function(fset){
+        return property.$factory(self.fget, fset, self.fdel, self.__doc__)
+    }
+    self.deleter = function(fdel){
+        return property.$factory(self.fget, self.fset, fdel, self.__doc__)
+    }
+}
+
+property.__get__ = function(self, obj) {
+    if(self.fget === undefined){
+        throw _b_.AttributeError.$factory("unreadable attribute")
+    }
+    return $B.$call(self.fget)(obj)
+}
+
+property.__new__ = function(cls){
+    return {
+        __class__: cls
+    }
+}
+
+property.__set__ = function(self, obj, value){
+    if(self.fset === undefined){
+        throw _b_.AttributeError.$factory("can't set attribute")
+    }
+    $B.$getattr(self.fset, '__call__')(obj, value)
+}
+
+$B.set_func_names(property, "builtins")
+
 var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
 
@@ -1067,6 +1160,75 @@ $B.method_descriptor = $B.make_class("method_descriptor")
 
 $B.classmethod_descriptor = $B.make_class("classmethod_descriptor")
 
+// this could not be done before $type and $factory are defined
+_b_.object.__class__ = type
+
+$B.make_iterator_class = function(name){
+    // Builds a class to iterate over items
+
+    var klass = {
+        __class__: _b_.type,
+        __mro__: [_b_.object],
+        $factory: function(items){
+            return {
+                __class__: klass,
+                __dict__: $B.empty_dict(),
+                counter: -1,
+                items: items,
+                len: items.length,
+                $builtin_iterator: true
+            }
+        },
+        $infos:{
+            __name__: name
+        },
+        $is_class: true,
+        $iterator_class: true,
+
+        __iter__: function(self){
+            self.counter = self.counter === undefined ? -1 : self.counter
+            self.len = self.items.length
+            return self
+        },
+
+        __len__: function(self){
+            return self.items.length
+        },
+
+        __next__: function(self){
+            if(typeof self.test_change == "function" && self.test_change()){
+                // Used in dictionaries : test if the current dictionary
+                // attribute "$version" is the same as when the iterator was
+                // created. If not, items have been added to or removed from
+                // the dictionary
+                throw _b_.RuntimeError.$factory(
+                    "dictionary changed size during iteration")
+            }
+
+            self.counter++
+            if(self.counter < self.items.length){
+                var item = self.items[self.counter]
+                if(self.items.$brython_class == "js"){
+                    // iteration on Javascript lists produces Python objects
+                    // cf. issue #1388
+                    item = $B.$JS2Py(item)
+                }
+                return item
+            }
+            delete self.items.$next_func // set by $B.next_of()
+            throw _b_.StopIteration.$factory("StopIteration")
+        },
+
+        __reduce_ex__: function(self, protocol){
+            return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.items])])
+        }
+    }
+
+    $B.set_func_names(klass, "builtins")
+    return klass
+}
+
+
 // PEP 585
 $B.GenericAlias = $B.make_class("GenericAlias",
     function(origin_class, items){
@@ -1078,11 +1240,9 @@ $B.GenericAlias = $B.make_class("GenericAlias",
     }
 )
 
-$B.GenericAlias.__args__ = {
-    __get__: function(self){
-        return $B.fast_tuple(self.items)
-    }
-}
+$B.GenericAlias.__args__ = _b_.property.$factory(
+    self => $B.fast_tuple(self.items)
+)
 
 $B.GenericAlias.__call__ = function(self, ...args){
     return self.origin_class.$factory.apply(null, args)
@@ -1108,20 +1268,16 @@ $B.GenericAlias.__or__ = function(self, other){
     return $B.UnionType.$factory([self, other])
 }
 
-$B.GenericAlias.__origin__ = {
-    __get__: function(self){
-        return self.origin_class
-    }
-}
+$B.GenericAlias.__origin__ = _b_.property.$factory(
+    self => self.origin_class
+)
 
-$B.GenericAlias.__parameters__ = {
-    __get__: function(self){
-        // In PEP 585 : "a lazily computed tuple (possibly empty) of unique
-        // type variables found in __args__", but what are "unique type
-        // variables" ?
-        return $B.fast_tuple([])
-    }
-}
+$B.GenericAlias.__parameters__ = _b_.property.$factory(
+    // In PEP 585 : "a lazily computed tuple (possibly empty) of unique
+    // type variables found in __args__", but what are "unique type
+    // variables" ?
+    self => $B.fast_tuple([])
+)
 
 $B.GenericAlias.__repr__ = function(self){
     var items = []
@@ -1151,11 +1307,9 @@ $B.UnionType = $B.make_class("UnionType",
     }
 )
 
-$B.UnionType.__args__ = {
-    __get__: function(self){
-        return $B.fast_tuple(self.items)
-    }
-}
+$B.UnionType.__args__ = _b_.property.$factory(
+    self => $B.fast_tuple(self.items)
+)
 
 $B.UnionType.__eq__ = function(self, other){
     if(! _b_.isinstance(other, $B.UnionType)){
@@ -1164,11 +1318,9 @@ $B.UnionType.__eq__ = function(self, other){
     return _b_.list.__eq__(self.items, other.items)
 }
 
-$B.UnionType.__parameters__ = {
-    __get__: function(){
-        return $B.fast_tuple([])
-    }
-}
+$B.UnionType.__parameters__ = _b_.property.$factory(
+    () => $B.fast_tuple([])
+)
 
 $B.UnionType.__repr__ = function(self){
     var t = []
@@ -1188,7 +1340,6 @@ $B.UnionType.__repr__ = function(self){
 
 $B.set_func_names($B.UnionType, "types")
 
-// this could not be done before $type and $factory are defined
-_b_.object.__class__ = type
+
 
 })(__BRYTHON__)
