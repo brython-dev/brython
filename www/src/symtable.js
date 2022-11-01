@@ -155,6 +155,13 @@ function Symtable(){
 
 }
 
+function id(obj){
+    if(obj.$id !== undefined){
+        return obj.$id
+    }
+    return obj.$id = $B.UUID()
+}
+
 function ste_new(st, name, block,
         key, lineno, col_offset,
         end_lineno, end_col_offset){
@@ -163,7 +170,7 @@ function ste_new(st, name, block,
 
     ste = {
         table: st,
-        id: _b_.id(key), /* ste owns reference to AST object */
+        id: id(key), /* ste owns reference to AST object */
         name: name,
 
         directives: NULL,
@@ -498,15 +505,8 @@ function update_symbols(symbols, scopes, bound, free, classflag){
 
     /* Record not yet resolved free variables from children (if any) */
     v_free = FREE << SCOPE_OFFSET
-    itr = _b_.iter(free)
-    var next_func = $B.$getattr(itr, '__next__')
-
-    while (true) {
-        try{
-            name = next_func()
-        }catch(err){
-            break
-        }
+    
+    for(var name of free){
 
         v = symbols.$string_dict[name]
 
