@@ -1,22 +1,8 @@
+"""Generate /src/unicode_data.js from Unicode database files downloaded from
+unicode.org by script downloads.py.
+"""
+
 import os
-import urllib.request
-
-unicode_url = "https://www.unicode.org/Public/UCD/latest/ucd/"
-
-# Load required files from unicode.org
-if not os.path.exists("ucd"):
-    os.mkdir("ucd")
-
-for path in ["UnicodeData.txt", "CaseFolding.txt", "DerivedCoreProperties.txt"]:
-    abs_path = os.path.join("ucd", path)
-    if True: #not os.path.exists(abs_path):
-        f = urllib.request.urlopen(unicode_url + path)
-        print(f)
-        with open(abs_path, "wb") as out:
-            buf = f.read()
-            if not buf:
-                break
-            out.write(buf)
 
 dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
 
