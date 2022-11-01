@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Generate a Virtual File System (VFS) file such as brython_stdlib.js.
+"""
 
 import ast
 import json

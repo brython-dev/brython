@@ -1,4 +1,4 @@
-"""Build src/py_ast.js from the documentation of Python ast module."""
+"""Build src/py_ast_classes.js from CPython's Python.asdl"""
 
 import os
 import re
