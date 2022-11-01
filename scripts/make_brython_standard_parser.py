@@ -4,6 +4,9 @@ import json
 
 import transform_grammar_actions
 
+import make_dist
+import javascript_minifier
+
 grammar = {}
 
 keywords = set()
@@ -339,6 +342,24 @@ def generate_javascript():
         out.write(end)
         out.write('})(__BRYTHON__)')
 
+    # Generate brython_standard_parser.js
+    # When included in a page instead of brython.js, uses Python grammar
+    # to parse Python code and generate the AST
+    with open(make_dist.abs_path('brython.js'), encoding='utf-8') as f:
+        res = f.read()
+    src = ''
+    for fname in ['string_parser', 'number_parser', 'action_helpers',
+            'python_parser', 'full_grammar']:
+        src = open(make_dist.abs_path(fname)+'.js').read() + '\n'
+        try:
+            mini = javascript_minifier.minify(src) + ";\n"
+        except:
+            print('error in', fname)
+            raise
+        res += mini
+
+    with open(make_dist.abs_path('brython_standard_parser.js'), 'w', newline="\n") as out:
+        out.write(res)
 if __name__ == '__main__':
     generate_javascript()
     print('possible types', types)
