@@ -65,6 +65,7 @@ def run():
         'brython_builtins',
         'version_info',
         'python_tokenizer',
+        'py_ast_classes',
         'py_ast',
         'py2js',
         'loaders',

@@ -1,4 +1,4 @@
-// Set attribute __match_args__ of a number of builtin classes
+(function($B){
 
 $B.pattern_match = function(subject, pattern){
     var _b_ = $B.builtins,
@@ -337,3 +337,6 @@ $B.pattern_match = function(subject, pattern){
     }
     return false
 }
+
+})(__BRYTHON__)
+

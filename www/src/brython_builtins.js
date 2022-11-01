@@ -94,17 +94,9 @@ $B.file_cache = {}
 // Mapping between script url and script name
 $B.url2name = {}
 
-// Mapping between a Python module name and its source code
-$B.$py_src = {}
-
 // __BRYTHON__.path is the list of paths where Python modules are searched
 $B.path = [$path + 'Lib', $path + 'libs', $script_dir,
     $path + 'Lib/site-packages']
-
-// for the time being, a flag will be used to know if we should
-// enable async functionality.
-$B.async_enabled = false
-if($B.async_enabled){$B.block = {}}
 
 // Maps the name of imported modules to the module object
 $B.imported = {}

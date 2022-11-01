@@ -3,37 +3,40 @@
 <head>
 <title>Python ast</title>
 <meta charset="utf-8">
-<script type="text/javascript" src="../src/brython_builtins.js"></script>
-<script type="text/javascript" src="../src/version_info.js"></script>
-<script type="text/javascript" src="../src/python_tokenizer.js"></script>
-<script type="text/javascript" src="../src/py_ast.js"></script>
-<script type="text/javascript" src="../src/py2js.js"></script>
-<script type="text/javascript" src="../src/loaders.js"></script>
-<script type="text/javascript" src="../src/py_object.js"></script>
-<script type="text/javascript" src="../src/py_type.js"></script>
-<script type="text/javascript" src="../src/py_utils.js"></script>
-<script type="text/javascript" src="../src/py_sort.js"></script>
-<script type="text/javascript" src="../src/py_builtin_functions.js"></script>
-<script type="text/javascript" src="../src/py_exceptions.js"></script>
-<script type="text/javascript" src="../src/py_range_slice.js"></script>
-<script type="text/javascript" src="../src/py_bytes.js"></script>
-<script type="text/javascript" src="../src/py_set.js"></script>
-<script type="text/javascript" src="../src/js_objects.js"></script>
-<script type="text/javascript" src="../src/stdlib_paths.js"></script>
-<script type="text/javascript" src="../src/py_import.js"></script>
-<script type="text/javascript" src="../src/unicode_data.js"></script>
-<script type="text/javascript" src="../src/py_string.js"></script>
-<script type="text/javascript" src="../src/py_int.js"></script>
-<script type="text/javascript" src="../src/py_long_int.js"></script>
-<script type="text/javascript" src="../src/py_float.js"></script>
-<script type="text/javascript" src="../src/py_complex.js"></script>
-<script type="text/javascript" src="../src/py_dict.js"></script>
-<script type="text/javascript" src="../src/py_list.js"></script>
-<script type="text/javascript" src="../src/py_generator.js"></script>
-<script type="text/javascript" src="../src/py_dom.js"></script>
-<script type="text/javascript" src="../src/py_pattern_matching.js"></script>
-<script type="text/javascript" src="../src/builtin_modules.js"></script>
-<script type="text/javascript" src="../src/async.js"></script>
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast_classes.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
 
 <!-- script src="/src/brython_stdlib.js"></script -->
 <style>
@@ -100,7 +103,7 @@ def show_cpython(req):
       run()
 
 paths = ['abc.py', 'antigravity.py', 'argparse.py', 'ast.py', 'atexit.py', 'base64.py', 'bdb.py', 'binascii.py', 'bisect.py', 'calendar.py', 'cmath.py', 'cmd.py', 'code.py', 'codecs.py', 'codeop.py', 'colorsys.py', 'configparser.py', 'contextlib.py', 'contextvars.py', 'copy.py', 'copyreg.py', 'csv.py', 'dataclasses.py', 'datetime.py', 'decimal.py', 'difflib.py', 'doctest.py', 'enum.py', 'errno.py', 'external_import.py', 'faulthandler.py', 'fnmatch.py', 'formatter.py', 'fractions.py', 'functools.py', 'gc.py', 'genericpath.py', 'getopt.py', 'getpass.py', 'gettext.py', 'glob.py', 'gzip.py', 'heapq.py', 'hmac.py', 'imp.py', 'inspect.py', 'interpreter.py', 'io.py', 'ipaddress.py', 'itertools.py', 'json.py', 'keyword.py', 'linecache.py', 'locale.py', 'mimetypes.py', 'nntplib.py', 'ntpath.py', 'numbers.py', 'opcode.py', 'operator.py', 'optparse.py', 'os.py', 'pathlib.py', 'pdb.py', 'pickle.py', 'pkgutil.py', 'platform.py', 'posixpath.py', 'pprint.py', 'profile.py', 'pwd.py', 'pydoc.py', 'py_compile.py', 'queue.py', 'quopri.py', 're.py', 'reprlib.py', 'select.py', 'selectors.py', 'shlex.py', 'shutil.py', 'signal.py', 'site.py', 'socket.py', 'sre_compile.py', 'sre_constants.py', 'sre_parse.py', 'stat.py', 'statistics.py', 'string.py',
-#'stringprep.py', 
+#'stringprep.py',
 'struct.py', 'subprocess.py', 'sys.py', 'sysconfig.py', 'tabnanny.py', 'tarfile.py', 'tb.py', 'tempfile.py', 'textwrap.py', 'this.py', 'threading.py', 'time.py', 'timeit.py', 'token.py', 'tokenize.py', 'traceback.py', 'turtle.py', 'types.py', 'typing.py', 'uu.py', 'uuid.py', 'VFS_import.py', 'warnings.py', 'weakref.py', 'webbrowser.py', 'zipfile.py', 'zipimport.py', 'zlib.py', '_codecs.py', '_codecs_jp.py', '_collections.py', '_collections_abc.py', '_compat_pickle.py', '_compression.py', '_contextvars.py', '_csv.py', '_dummy_thread.py', '_frozen_importlib.py', '_functools.py', '_imp.py', '_io.py', '_markupbase.py', '_multibytecodec.py', '_operator.py', '_pydecimal.py', '_py_abc.py', '_queue.py', '_random.py', '_signal.py', '_socket.py', '_sre.py', '_struct.py', '_sysconfigdata.py', '_sysconfigdata_0_brython_.py', '_testcapi.py', '_thread.py', '_threading_local.py', '_weakref.py', '_weakrefset.py', '__future__.py']
 
 @bind('#parse', 'click')
