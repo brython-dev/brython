@@ -89,23 +89,7 @@ for key in keys:
 
 
 dest_dir = os.path.join(os.path.dirname(os.getcwd()), "www", "src")
-start_tag = '// --- start AST classes'
-end_tag = '// --- end AST classes'
 
-with open(os.path.join(dest_dir, 'py_ast.js'), encoding='utf-8') as f:
-    content = f.read()
-    start = content.find(start_tag)
-    if start == -1:
-        raise Exception('start tag not found')
-    end = content.find(end_tag)
-    if end == -1:
-        raise Exception('start tag not found')
-    head = content[:start]
-    tail = content[end:]
-
-with open(os.path.join(dest_dir, 'py_ast.js'), 'w', encoding='utf-8') as out:
-    out.write(head)
-    out.write(start_tag + '\n')
-    out.write('$B.ast_classes = {\n' + ',\n'.join(lines) + '\n}\n')
-    out.write(tail)
+with open(os.path.join(dest_dir, 'py_ast_classes.js'), 'w', encoding='utf-8') as out:
+    out.write('__BRYTHON__.ast_classes = {\n' + ',\n'.join(lines) + '\n}\n')
 
