@@ -2651,6 +2651,9 @@ str.$factory = function(arg, encoding, errors){
             return $B.JSObj.__str__($B.JSObj.$factory(arg))
         }
         var method = $B.$getattr(klass, "__str__", null)
+        if(method === null){
+            method = $B.$getattr(klass, '__repr__')
+        }
     }catch(err){
         console.log("no __str__ for", arg)
         console.log("err ", err)
