@@ -172,7 +172,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
     }
 
     if(Array.isArray(jsobj)){
-        return _b_.list.$factory(jsobj.map(jsobj2pyobj))
+        return $B.$list(jsobj.map(jsobj2pyobj))
     }else if(typeof jsobj === 'number'){
        if(jsobj.toString().indexOf('.') == -1){
            return _b_.int.$factory(jsobj)
@@ -321,10 +321,65 @@ function pyargs2jsargs(pyargs){
     return args
 }
 
+var js_list_meta = $B.make_class('js_list_meta')
+js_list_meta.__mro__ = [_b_.type, _b_.object]
+
+js_list_meta.__getattribute__ = function(_self, attr){
+    if(_b_.list[attr] === undefined){
+        throw _b_.AttributeError.$factory(attr)
+    }
+    if(['__delitem__', '__setitem__'].indexOf(attr) > -1){
+        // Transform Python values to Javascript values before setting item
+        return function(){
+            var args = [arguments[0]]
+            for(var i = 1, len = arguments.length; i < len; i++){
+                args.push(pyobj2jsobj(arguments[i]))
+            }
+            if(attr == '__contains__'){
+                console.log(attr, args)
+            }
+            return _b_.list[attr].apply(null, args)
+        }
+    }else if(['__add__', '__contains__', '__eq__', '__getitem__', '__mul__',
+              '__ge__', '__gt__', '__le__', '__lt__'].indexOf(attr) > -1){
+        // Apply to a Python copy of the JS list
+        return function(){
+            return jsobj2pyobj(_b_.list[attr].call(null,
+                jsobj2pyobj(arguments[0]),
+                ...Array.from(arguments).slice(1)))
+        }
+    }
+    return function(){
+        var js_list = arguments[0],
+            t = jsobj2pyobj(js_list),
+            args = [t]
+        return _b_.list[attr].apply(null, args)
+    }
+}
+
+$B.set_func_names(js_list_meta, 'builtins')
+
+
+var js_list = $B.make_class('jslist')
+js_list.__class__ = js_list_meta
+
+js_list.__getattribute__ = function(_self, attr){
+    if(_b_.list[attr] === undefined){
+        throw _b_.AttributeError.$factory(attr)
+    }
+    return function(){
+        var args = pyobj2jsobj(Array.from(arguments))
+        return _b_.list[attr].call(null, _self, ...args)
+    }
+}
+
+$B.set_func_names(js_list, 'builtins')
+
 $B.JSObj = $B.make_class("JSObject",
     function(jsobj){
         if(Array.isArray(jsobj)){
             // Return a Python object that wraps the Javascript list
+            jsobj.__class__ = js_list
         }else if(typeof jsobj == "function"){
             jsobj.$is_js_func = true
             jsobj.__new__ = function(){
@@ -385,7 +440,7 @@ $B.JSObj.__ne__ = function(_self, other){
 }
 
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "get_float"
+    var test = false // attr == "f"
     if(test){
         console.log("__ga__", _self, attr)
     }

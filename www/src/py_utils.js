@@ -838,7 +838,7 @@ $B.$setitem = function(obj, item, value){
     }
     var si = $B.$getattr(obj.__class__ || $B.get_class(obj), "__setitem__",
         null)
-    if(si === null){
+    if(si === null || typeof si != 'function'){
         throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
             "' object does not support item assignment")
     }

@@ -76,3 +76,14 @@ function jsFunction1696() {
 }
 
 var js_list = ['b', 'a', 'c']
+
+// for issue 2059
+window.make_js_list = function(){
+  return [0.5, 0.5]
+}
+
+window.test = function(t, ix, value){
+  if(t[ix] != value){
+    throw _b_.AssertionError.$factory(`at ${ix}, ${t[ix]} is not equal to ${value}`)
+  }
+}

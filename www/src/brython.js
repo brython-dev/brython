@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-01 18:47:45.763936"
-__BRYTHON__.timestamp=1667324865763
+__BRYTHON__.compiled_date="2022-11-02 11:42:23.332357"
+__BRYTHON__.timestamp=1667385743332
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5097,7 +5097,7 @@ obj[item]=value
 return}else if(obj.__class__===_b_.dict){_b_.dict.$setitem(obj,item,value)
 return}else if(obj.__class__===_b_.list){return _b_.list.$setitem(obj,item,value)}
 var si=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__setitem__",null)
-if(si===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
+if(si===null ||typeof si !='function'){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object does not support item assignment")}
 return si(obj,item,value)}
 $B.$delitem=function(obj,item){if(Array.isArray(obj)&& obj.__class__===_b_.list &&
@@ -6498,7 +6498,7 @@ obj.$method_cache[attr]=method}}
 return method}else if(klass[attr].__class__===_b_.classmethod){return _b_.classmethod.__get__(klass[attr],obj,klass)}else if(klass[attr]!==undefined){return klass[attr]}
 attr_error(rawname,klass)}
 var mro,attr_func
-if(is_class){attr_func=_b_.type.__getattribute__ }else{attr_func=klass.__getattribute__
+if(is_class){if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}}else{attr_func=klass.__getattribute__
 if(attr_func===undefined){var mro=klass.__mro__
 if(mro===undefined){console.log(obj,attr,"no mro, klass",klass)}
 for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
@@ -9141,7 +9141,7 @@ var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
 case false:
 return jsobj}
 if(jsobj===undefined){return $B.Undefined}else if(jsobj===null){return _b_.None}
-if(Array.isArray(jsobj)){return _b_.list.$factory(jsobj.map(jsobj2pyobj))}else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
+if(Array.isArray(jsobj)){return $B.$list(jsobj.map(jsobj2pyobj))}else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}else if(typeof jsobj=="string"){return $B.String(jsobj)}else if(typeof jsobj=="function"){
 return function(){var args=[]
 for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
@@ -9191,7 +9191,26 @@ throw _b_.TypeError.$factory(
 "A Javascript function can't take "+
 "keyword arguments")}else{args.push($B.pyobj2jsobj(arg))}}
 return args}
-$B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
+var js_list_meta=$B.make_class('js_list_meta')
+js_list_meta.__mro__=[_b_.type,_b_.object]
+js_list_meta.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
+if(['__delitem__','__setitem__'].indexOf(attr)>-1){
+return function(){var args=[arguments[0]]
+for(var i=1,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
+if(attr=='__contains__'){console.log(attr,args)}
+return _b_.list[attr].apply(null,args)}}else if(['__add__','__contains__','__eq__','__getitem__','__mul__','__ge__','__gt__','__le__','__lt__'].indexOf(attr)>-1){
+return function(){return jsobj2pyobj(_b_.list[attr].call(null,jsobj2pyobj(arguments[0]),...Array.from(arguments).slice(1)))}}
+return function(){var js_list=arguments[0],t=jsobj2pyobj(js_list),args=[t]
+return _b_.list[attr].apply(null,args)}}
+$B.set_func_names(js_list_meta,'builtins')
+var js_list=$B.make_class('jslist')
+js_list.__class__=js_list_meta
+js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
+return function(){var args=pyobj2jsobj(Array.from(arguments))
+return _b_.list[attr].call(null,_self,...args)}}
+$B.set_func_names(js_list,'builtins')
+$B.JSObj=$B.make_class("JSObject",function(jsobj){if(Array.isArray(jsobj)){
+jsobj.__class__=js_list}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
 jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
 return jsobj}
 )
@@ -10736,7 +10755,8 @@ encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
 var klass=arg.__class__ ||$B.get_class(arg)
 if(klass===undefined){return $B.JSObj.__str__($B.JSObj.$factory(arg))}
-var method=$B.$getattr(klass,"__str__",null)}catch(err){console.log("no __str__ for",arg)
+var method=$B.$getattr(klass,"__str__",null)
+if(method===null){method=$B.$getattr(klass,'__repr__')}}catch(err){console.log("no __str__ for",arg)
 console.log("err ",err)
 if($B.debug > 1){console.log(err)}
 console.log("Warning - no method __str__ or __repr__, "+

@@ -1015,7 +1015,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__bool__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__setitem__" // && obj === _b_.list // "Point"
     if($test){
         console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
         alert()
@@ -1250,7 +1250,11 @@ $B.$getattr = function(obj, attr, _default){
     var mro, attr_func
 
     if(is_class){
-        attr_func = _b_.type.__getattribute__ // XXX metaclass
+        if(klass === _b_.type){
+            attr_func = _b_.type.__getattribute__
+        }else{
+            attr_func = $B.$call($B.$getattr(klass, '__getattribute__'))
+        }
     }else{
         attr_func = klass.__getattribute__
         if(attr_func === undefined){

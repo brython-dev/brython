@@ -62,7 +62,6 @@ list.__class_getitem__ = function(cls, item){
     return $B.GenericAlias.$factory(cls, item)
 }
 
-
 list.__contains__ = function(self, item){
     var $ = $B.args("__contains__", 2, {self: null, item: null},
         ["self", "item"], arguments, {}, null, null),

@@ -189,4 +189,43 @@ assert ns.x == 3
 # method .sort of JS lists return the sorted list
 assert window.js_list.sort() == ['a', 'b', 'c']
 
+# issue 2059
+jslist = window.make_js_list() # [0.5, 0.5]
+jslist[0] = 1.7
+assert jslist == [1.7, 0.5]
+window.test(jslist, 0, 1.7)
+
+jslist.append(3.5)
+assert jslist == [1.7, 0.5, 3.5]
+assert jslist[2] == 3.5
+window.test(jslist, 2, 3.5)
+
+jslist.sort()
+assert jslist == [0.5, 1.7, 3.5]
+
+assert jslist + ['a'] == [0.5, 1.7, 3.5, 'a']
+assert jslist * 2 == [0.5, 1.7, 3.5, 0.5, 1.7, 3.5]
+
+del jslist[2]
+assert jslist == [0.5, 1.7]
+
+assert not jslist > [1, 2]
+assert jslist < [1, 2]
+
+jslist += ['a']
+assert jslist == [0.5, 1.7, 'a']
+
+assert 0.5 in jslist
+assert 'a' in jslist
+
+assert [item for item in jslist] == jslist
+
+jslist.reverse()
+assert jslist == ['a', 1.7, 0.5]
+
+jslist[0] += 'b'
+assert jslist == ['ab', 1.7, 0.5]
+window.test(jslist, 0, 'ab')
+
+
 print("all tests ok...")
