@@ -96,7 +96,7 @@ import io as StringIO
 import sys
 import time
 import unittest
-from browser import document, html, alert
+from browser import document, html, alert, console
 
 TestResult = unittest.TestResult
 
@@ -186,6 +186,10 @@ class _TestResult(TestResult):
 
     def excInfos(self, test, err):
         tb = err[2]
+        try:
+            tb.pos = 0
+        except:
+            pass
         infos = []
         while tb:
             fname = tb.tb_frame.f_code.co_filename
@@ -193,6 +197,12 @@ class _TestResult(TestResult):
             if fname == sys.modules[test.__class__.__module__].__file__:
                 infos.append(lineno)
             tb = tb.tb_next
+        if not infos:
+            # Brython-specific hack
+            try:
+                infos.append(err[2].linenos[0])
+            except:
+                pass
         infos = infos or ['unknown']
         try:
             str(err[1]).splitlines()
@@ -200,10 +210,14 @@ class _TestResult(TestResult):
             alert(err[1])
             alert(type(err[1]))
         lines = "\n".join(f"line {line}" for line in infos[:-1])
+        console.log('err', err)
+        message = str(err[1])
+        if message:
+            message = message.splitlines()[0].replace('<', '&lt;')
         return [html.TD(lines + "\nline %s - %s: %s" %(infos[-1],
             err[0].__name__,
-            str(err[1]).splitlines()[0].replace('<', '&lt;')),
-                Class="error_message")]
+            message),
+            Class="error_message")]
 
 class HTMLTestRunner:
     """
