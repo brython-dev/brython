@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-02 11:42:23.332357"
-__BRYTHON__.timestamp=1667385743332
+__BRYTHON__.compiled_date="2022-11-03 14:08:31.766026"
+__BRYTHON__.timestamp=1667480911765
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7637,7 +7637,8 @@ return{
 __class__ :traceback,$stack:stack,
 linenos:stack.map(x=> x.$lineno),pos:0}}
 )
-traceback.__getattribute__=function(_self,attr){switch(attr){case "tb_frame":
+traceback.__getattribute__=function(_self,attr){if(attr=='linenos'){console.log('get linenos',_self)}
+switch(attr){case "tb_frame":
 return _self.$stack[_self.pos]
 case "tb_lineno":
 return _self.linenos[_self.pos]
@@ -11006,6 +11007,7 @@ int.__ceil__=function(self){return Math.ceil(int_value(self))}
 int.__divmod__=function(self,other){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
 return $B.fast_tuple([int.__floordiv__(self,other),int.__mod__(self,other)])}
 int.__eq__=function(self,other){var self_as_int=int_value(self)
+if(self_as_int.__class__===$B.long_int){return $B.long_int.__eq__(self_as_int,other)}
 if(_b_.isinstance(other,int)){return int_value(self)==int_value(other)}
 return _b_.NotImplemented}
 int.__float__=function(self){return $B.fast_float(int_value(self))}
@@ -11076,7 +11078,9 @@ return _b_.NotImplemented}
 eval('int.__mul__ = '+op_model.replace(/\+/g,'*').replace(/add/g,"mul"))
 int.__ne__=function(self,other){var res=int.__eq__(self,other)
 return(res===_b_.NotImplemented)? res :!res}
-int.__neg__=function(self){return-self}
+int.__neg__=function(self){var self_as_int=int_value(self)
+if(self_as_int.__class__===$B.long_int){return $B.long_int.__neg__(self_as_int)}
+return-self}
 int.__new__=function(cls,value,base){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}else if(! _b_.isinstance(cls,_b_.type)){throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")}
 if(cls===int){return int.$factory(value,base)}
 return{
@@ -11118,7 +11122,11 @@ res.__class__=args[0]
 return res}
 int.__reduce_ex__=function(self){return $B.fast_tuple([__newobj__,$B.fast_tuple([self.__class__ ||int,int_value(self)]),_b_.None,_b_.None,_b_.None])}
 int.__repr__=function(self){$B.builtins_repr_check(int,arguments)
-return int_value(self).toString()}
+var value=int_value(self),x=value.__class__===$B.long_int ? value.value :value
+if($B.int_max_str_digits !=0 &&
+x >=10n**BigInt($B.int_max_str_digits)){throw _b_.ValueError.$factory(`Exceeds the limit `+
+`(${$B.int_max_str_digits}) for integer string conversion`)}
+return x.toString()}
 int.__setattr__=function(self,attr,value){if(typeof self=="number" ||typeof self=="boolean"){var cl_name=$B.class_name(self)
 if(_b_.dir(self).indexOf(attr)>-1){throw _b_.AttributeError.$factory("attribute '"+attr+
 `' of '${cl_name}' objects is not writable`)}else{throw _b_.AttributeError.$factory(`'${cl_name}' object`+
@@ -11215,10 +11223,6 @@ function invalid(base){throw _b_.ValueError.$factory("invalid literal for int() 
 base+": "+_b_.repr(initial_value))}
 if(typeof value !="string"){
 value=_b_.str.$to_string(value)}
-if(value.length > $B.int_max_str_digits){throw _b_.ValueError.$factory("Exceeds the limit "+
-`(${$B.int_max_str_digits}) for integer string conversion: `+
-`value has ${value.length} digits; use `+
-"sys.set_int_max_str_digits() to increase the limit.")}
 var _value=value.trim(),
 sign=''
 if(_value.startsWith('+')||_value.startsWith('-')){var sign=_value[0]
@@ -11233,20 +11237,26 @@ if(base==0){if(_pre=="0B"){base=2}else if(_pre=="0O"){base=8}else if(_pre=="0X")
 if(_value.match(/^0+$/)){return 0}
 invalid(base)}}else if(_pre=="0X" && base !=16){invalid(base)}else if(_pre=="0O" && base !=8){invalid(base)}
 if((_pre=="0B" && base==2)||_pre=="0O" ||_pre=="0X"){_value=_value.substr(2)
-while(_value.startsWith("_")){_value=_value.substr(1)}}}
+if(_value.startsWith('_')){
+_value=_value.substr(1)}}}
 if(base==0){
 base=10}
 var _digits=$valid_digits(base),_re=new RegExp("^[+-]?["+_digits+"]"+
 "["+_digits+"_]*$","i"),match=_re.exec(_value)
 if(match===null){invalid(base)}else{_value=_value.replace(/_/g,"")}
-if(base==10){res=BigInt(_value)}else{base=BigInt(base)
+if(base==2){res=BigInt('0b'+_value)}else if(base==8){res=BigInt('0o'+_value)}else if(base==16){res=BigInt('0x'+_value)}else{if($B.int_max_str_digits !=0 &&
+_value.length > $B.int_max_str_digits){throw _b_.ValueError.$factory("Exceeds the limit "+
+`(${$B.int_max_str_digits}) for integer string conversion: `+
+`value has ${value.length} digits; use `+
+"sys.set_int_max_str_digits() to increase the limit.")}
+if(base==10){res=BigInt(_value)}else{
+base=BigInt(base)
 var res=0n,coef=1n,char
 for(var i=_value.length-1;i >=0;i--){char=_value[i].toUpperCase()
 res+=coef*BigInt(_digits.indexOf(char))
-coef*=base}}
+coef*=base}}}
 if(sign=='-'){res=-res}
-var num=Number(res)
-if(! Number.isSafeInteger(num)){return $B.fast_long_int(res)}else{return Number(res)}}
+return int_or_long(res)}
 $B.set_func_names(int,"builtins")
 _b_.int=int
 $B.$bool=function(obj,bool_class){
@@ -11386,7 +11396,11 @@ return long_int.__pow__(self,power.$brython_value)}
 return _b_.NotImplemented}
 long_int.__rshift__=function(self,other){if(typeof other=="number"){return int_or_long(self.value >> BigInt(other))}else if(other.__class__===$B.long_int){return int_or_long(self.value >> other.value)}else if(typeof other=="boolean"){return int_or_long(self.value >>(other ? 1n :0n))}else if(_b_.isinstance(other,_b_.int)){return long_int.__rshift__(self,other.$brython_value)}
 return _b_.NotImplemented}
-long_int.__str__=long_int.__repr__=function(self){return self.value.toString()}
+long_int.__repr__=function(self){$B.builtins_repr_check($B.long_int,arguments)
+if($B.int_max_str_digits !=0 &&
+self.value >=10n**BigInt($B.int_max_str_digits)){throw _b_.ValueError.$factory(`Exceeds the limit `+
+`(${$B.int_max_str_digits}) for integer string conversion`)}
+return self.value.toString()}
 long_int.__sub__=function(self,other){if(typeof other=="number"){return int_or_long(self.value-BigInt(other))}else if(typeof other=="boolean"){return int_or_long(self.value-(other ? 1n :0n))}else if(other.__class__===$B.long_int){return int_or_long(self.value-other.value)}else if(_b_.isinstance(other,_b_.int)){
 return long_int.__sub__(self,other.$brython_value)}
 return _b_.NotImplemented}

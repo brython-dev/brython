@@ -293,7 +293,13 @@ long_int.__rshift__ = function(self, other){
     return _b_.NotImplemented
 }
 
-long_int.__str__ = long_int.__repr__ = function(self){
+long_int.__repr__ = function(self){
+    $B.builtins_repr_check($B.long_int, arguments) // in brython_builtins.js
+    if($B.int_max_str_digits != 0 &&
+            self.value >= 10n ** BigInt($B.int_max_str_digits)){
+        throw _b_.ValueError.$factory(`Exceeds the limit ` +
+            `(${$B.int_max_str_digits}) for integer string conversion`)
+    }
     return self.value.toString()
 }
 

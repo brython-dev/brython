@@ -213,6 +213,9 @@ int.__divmod__ = function(self, other){
 
 int.__eq__ = function(self, other){
     var self_as_int = int_value(self)
+    if(self_as_int.__class__ === $B.long_int){
+        return $B.long_int.__eq__(self_as_int, other)
+    }
     if(_b_.isinstance(other, int)){
         return int_value(self) == int_value(other)
     }
@@ -370,7 +373,13 @@ int.__ne__ = function(self, other){
     return (res  === _b_.NotImplemented) ? res : !res
 }
 
-int.__neg__ = function(self){return -self}
+int.__neg__ = function(self){
+    var self_as_int = int_value(self)
+    if(self_as_int.__class__ === $B.long_int){
+        return $B.long_int.__neg__(self_as_int)
+    }
+    return -self
+}
 
 int.__new__ = function(cls, value, base){
     if(cls === undefined){
@@ -506,7 +515,15 @@ int.__reduce_ex__ = function(self){
 
 int.__repr__ = function(self){
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
-    return int_value(self).toString()
+    var value = int_value(self),
+        x = value.__class__ === $B.long_int ? value.value : value
+
+    if($B.int_max_str_digits != 0 &&
+            x >= 10n ** BigInt($B.int_max_str_digits)){
+        throw _b_.ValueError.$factory(`Exceeds the limit ` +
+            `(${$B.int_max_str_digits}) for integer string conversion`)
+    }
+    return x.toString()
 }
 
 int.__setattr__ = function(self, attr, value){
@@ -774,13 +791,6 @@ int.$factory = function(value, base){
         value = _b_.str.$to_string(value)
     }
 
-    if(value.length > $B.int_max_str_digits){
-        throw _b_.ValueError.$factory("Exceeds the limit " +
-            `(${$B.int_max_str_digits}) for integer string conversion: ` +
-            `value has ${value.length} digits; use ` +
-            "sys.set_int_max_str_digits() to increase the limit.")
-    }
-
     var _value = value.trim(),    // remove leading/trailing whitespace
         sign = ''
 
@@ -809,7 +819,7 @@ int.$factory = function(value, base){
                 base = 2
             }else if(_pre == "0O"){
                 base = 8
-            }else if(_pre == "0X"){
+           }else if(_pre == "0X"){
                 base = 16
             }else if(_value.startsWith('0')){
                 _value = _value.replace(/_/g, '')
@@ -825,7 +835,7 @@ int.$factory = function(value, base){
         }
         if((_pre == "0B" && base == 2) || _pre == "0O" || _pre == "0X"){
             _value = _value.substr(2)
-            while(_value.startsWith("_")){
+            if(_value.startsWith('_')){ // case "0b_0"
                 _value = _value.substr(1)
             }
         }
@@ -846,30 +856,39 @@ int.$factory = function(value, base){
         _value = _value.replace(/_/g, "")
     }
 
-    if(base == 10){
-        res = BigInt(_value)
+    if(base == 2){
+        res = BigInt('0b' + _value)
+    }else if(base == 8){
+        res = BigInt('0o' + _value)
+    }else if(base == 16){
+        res = BigInt('0x' + _value)
     }else{
-        base = BigInt(base)
-        var res = 0n,
-            coef = 1n,
-            char
-        for(var i = _value.length - 1; i >= 0; i--){
-            char = _value[i].toUpperCase()
-            res += coef * BigInt(_digits.indexOf(char))
-            coef *= base
+        if($B.int_max_str_digits != 0 &&
+                _value.length > $B.int_max_str_digits){
+            throw _b_.ValueError.$factory("Exceeds the limit " +
+                `(${$B.int_max_str_digits}) for integer string conversion: ` +
+                `value has ${value.length} digits; use ` +
+                "sys.set_int_max_str_digits() to increase the limit.")
+        }
+        if(base == 10){
+            res = BigInt(_value)
+        }else {
+            base = BigInt(base)
+            var res = 0n,
+                coef = 1n,
+                char
+            for(var i = _value.length - 1; i >= 0; i--){
+                char = _value[i].toUpperCase()
+                res += coef * BigInt(_digits.indexOf(char))
+                coef *= base
+            }
         }
     }
     if(sign == '-'){
         res = -res
     }
-    var num = Number(res)
-    if(! Number.isSafeInteger(num)){
-        return $B.fast_long_int(res)
-    }else{
-        return Number(res)
-    }
+    return int_or_long(res)
 }
-
 $B.set_func_names(int, "builtins")
 
 _b_.int = int
