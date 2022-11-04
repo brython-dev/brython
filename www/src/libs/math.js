@@ -1787,8 +1787,15 @@ function pow(){
 
     var x1 = float_check(x)
     var y1 = float_check(y)
-    if(y1 == 0){return _b_.float.$factory(1)}
-    if(x1 == 0 && y1 < 0){throw _b_.ValueError.$factory('')}
+    if(y1 == 0){
+        return _b_.float.$factory(1)
+    }
+    if(x1 == 0 && y1 < 0){
+        if(y1 === -Infinity){
+            return INF
+        }
+        throw _b_.ValueError.$factory('math domain error')
+    }
     if(isFinite(x1) && x1 < 0 && isFinite(y1) && ! Number.isInteger(y1)){
         throw _b_.ValueError.$factory('math domain error')
     }
