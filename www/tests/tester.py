@@ -393,6 +393,14 @@ def assert_raises(exc_type, func, *args, msg=None, **kw):
     else:
         raise AssertionError(f'should have raised {exc_type.__name__}')
 
+def unittest_one_method(test_class, method_name):
+    import unittest
+
+    suite = unittest.TestSuite()
+    suite.addTest(test_class(method_name))
+    runner = unittest.TextTestRunner()
+    runner.run(suite)
+
 if __name__=='__main__':
     t = 1, 2
     assertRaises(TypeError, t, '__setitem__', 0, 1)
