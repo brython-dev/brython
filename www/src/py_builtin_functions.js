@@ -2277,16 +2277,7 @@ function round(){
     var klass = $B.get_class(arg)
 
     if(isinstance(arg, _b_.float)){
-        arg = _b_.float.$float_value(arg)
-        if(arg.value === Infinity || arg.value === -Infinity){
-            throw _b_.OverflowError.$factory(
-                "cannot convert float infinity to integer")
-        }else if(isNaN(arg.value)){
-            throw _b_.ValueError.$factory(
-                "cannot convert float NaN to integer")
-        }
-        var res = _b_.float.$round(arg, n)
-        return $.ndigits === None ? res : klass.$factory(res)
+        return _b_.float.__round__(arg, $.ndigits)
     }
 
     var mult = Math.pow(10, n),

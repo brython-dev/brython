@@ -385,11 +385,11 @@ float.fromhex = function(klass, s){
         if (round_up) {
             x += 2 * half_eps;
             if (top_exp == DBL_MAX_EXP &&
-                x == ldexp(2 * half_eps, DBL_MANT_DIG).value)
+                x == ldexp(2 * half_eps, DBL_MANT_DIG).value){
                 /* overflow corner case: pre-rounded value <
                    2**DBL_MAX_EXP; rounded=2**DBL_MAX_EXP. */
-                   console.log('cas 3')
                 throw overflow_error()
+            }
         }
     }
     x = ldexp(x, (exp + 4 * key_digit));
@@ -400,6 +400,11 @@ float.fromhex = function(klass, s){
 float.__getformat__ = function(arg){
     if(arg == "double" || arg == "float"){
         return "IEEE, little-endian"
+    }
+    if(typeof arg !== 'string'){
+        throw _b_.TypeError.$factory(
+            " __getformat__() argument must be str, not " +
+            $B.class_name(arg))
     }
     throw _b_.ValueError.$factory("__getformat__() argument 1 must be " +
         "'double' or 'float'")
@@ -1048,14 +1053,30 @@ float.__repr__ = function(self){
 
 float.__round__ = function(){
     var $ = $B.args('__round__', 2, {self: null, ndigits: null},
-            ['self', 'ndigits'], arguments, {ndigits: _b_.None}, null, null),
-        x = $.self,
-        ndigits = $.ndigits === _b_.None ? 0 : $.ndigits
-    return float.$round(x, ndigits)
+            ['self', 'ndigits'], arguments, {ndigits: _b_.None}, null, null)
+    return float.$round($.self, $.ndigits)
 }
 
 float.$round = function(x, ndigits){
+    function overflow(){
+        throw _b_.OverflowError.$factory(
+            "cannot convert float infinity to integer")
+    }
+
+    var no_digits = ndigits === _b_.None
+    if(isnan(x)){
+        if(ndigits === _b_.None){
+            throw _b_.ValueError.$factory(
+                "cannot convert float NaN to integer")
+        }
+        return NAN
+    }else if(isninf(x)){
+        return ndigits === _b_.None ? overflow() : NINF
+    }else if(isinf(x)){
+        return ndigits === _b_.None ? overflow() : INF
+    }
     x = float_value(x)
+    ndigits = ndigits === _b_.None ? 0 : ndigits
     if(ndigits == 0){
         var res = Math.round(x.value)
         if(Math.abs(x.value - res) == 0.5){
@@ -1064,7 +1085,11 @@ float.$round = function(x, ndigits){
                return res - 1
            }
        }
-       return res
+       if(no_digits){
+           // return an int
+           return res
+       }
+       return $B.fast_float(res)
     }
     if(ndigits.__class__ === $B.long_int){
         ndigits = Number(ndigits.value)
@@ -1255,9 +1280,10 @@ $B.fast_float = fast_float = function(value){
 
 var fast_float_with_hash = function(value, hash_value){
     return {
-               __class__: _b_.float,
-               __hashvalue__: hash_value,
-               value}
+         __class__: _b_.float,
+         __hashvalue__: hash_value,
+         value
+    }
 }
 
 // constructor for built-in class 'float'
@@ -1297,6 +1323,10 @@ float.$factory = function(value){
     }
 
     if(typeof value == "string"){
+       if(value.trim().length == 0){
+           throw _b_.ValueError.$factory(
+                   `could not convert string to float: ${_b_.repr(value)}`)
+       }
        value = value.trim()   // remove leading and trailing whitespace
        switch(value.toLowerCase()) {
            case "+inf":
@@ -1312,8 +1342,6 @@ float.$factory = function(value){
                return fast_float(Number.NaN)
            case "-nan":
                return fast_float(-Number.NaN)
-           case "":
-               throw _b_.ValueError.$factory("count not convert string to float")
            default:
                var parts = value.split('e')
                if(parts[1]){

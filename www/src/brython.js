@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-03 14:08:31.766026"
-__BRYTHON__.timestamp=1667480911765
+__BRYTHON__.compiled_date="2022-11-04 08:21:42.815176"
+__BRYTHON__.timestamp=1667546502815
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6856,12 +6856,7 @@ try{return $B.$call($B.$getattr(klass,"__round__")).apply(null,arguments)}catch(
 if(! isinstance(n,_b_.int)){throw _b_.TypeError.$factory("'"+$B.class_name(n)+
 "' object cannot be interpreted as an integer")}
 var klass=$B.get_class(arg)
-if(isinstance(arg,_b_.float)){arg=_b_.float.$float_value(arg)
-if(arg.value===Infinity ||arg.value===-Infinity){throw _b_.OverflowError.$factory(
-"cannot convert float infinity to integer")}else if(isNaN(arg.value)){throw _b_.ValueError.$factory(
-"cannot convert float NaN to integer")}
-var res=_b_.float.$round(arg,n)
-return $.ndigits===None ? res :klass.$factory(res)}
+if(isinstance(arg,_b_.float)){return _b_.float.__round__(arg,$.ndigits)}
 var mult=Math.pow(10,n),x=arg*mult,floor=Math.floor(x),diff=Math.abs(x-floor),res
 if(diff==0.5){if(floor % 2){floor+=1}
 res=_b_.int.__truediv__(floor,mult)}else{res=_b_.int.__truediv__(Math.round(x),mult)}
@@ -7637,8 +7632,7 @@ return{
 __class__ :traceback,$stack:stack,
 linenos:stack.map(x=> x.$lineno),pos:0}}
 )
-traceback.__getattribute__=function(_self,attr){if(attr=='linenos'){console.log('get linenos',_self)}
-switch(attr){case "tb_frame":
+traceback.__getattribute__=function(_self,attr){switch(attr){case "tb_frame":
 return _self.$stack[_self.pos]
 case "tb_lineno":
 return _self.linenos[_self.pos]
@@ -7647,6 +7641,8 @@ return-1
 case "tb_next":
 if(_self.pos < _self.$stack.length-1){_self.pos++
 return _self}else{return _b_.None}
+case "stack":
+return _self.$stack
 default:
 return _b_.object.__getattribute__(_self,attr)}}
 $B.set_func_names(traceback,"builtins")
@@ -7706,7 +7702,8 @@ return res}
 $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
-$B.freeze=function(err){if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()
+$B.freeze=function(err){if(err.$stack===undefined){console.log('set $stack',err.__class__.$infos.__name__)
+err.$stack=$B.frames_stack.slice()
 err.$linenos=$B.frames_stack.map(x=> x.$lineno)}
 err.__traceback__=traceback.$factory(err)}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
@@ -7749,12 +7746,7 @@ exc.args=_b_.tuple.$factory([$message])
 exc.$py_error=true
 js_exc.$py_exc=exc
 $B.freeze(exc)}else{var exc=js_exc
-$B.freeze(exc)
-if(in_ctx_manager){
-var current_locals=$B.last($B.frames_stack)[0]
-for(var i=0,len=exc.$stack.length;i < len;i++){if(exc.$stack[i][0]==current_locals){exc.$stack=exc.$stack.slice(i)
-exc.$traceback=traceback.$factory(exc)
-break}}}}
+$B.freeze(exc)}
 return exc}
 $B.is_exc=function(exc,exc_list){
 if(exc.__class__===undefined){exc=$B.exception(exc)}
@@ -11634,12 +11626,14 @@ key_digit+1 < ndigits &&(HEX_DIGIT(key_digit+1)& 1)!=0)){round_up=1;}else{for(va
 break;}}}
 if(round_up){x+=2*half_eps;
 if(top_exp==DBL_MAX_EXP &&
-x==ldexp(2*half_eps,DBL_MANT_DIG).value)
-console.log('cas 3')
-throw overflow_error()}}
+x==ldexp(2*half_eps,DBL_MANT_DIG).value){
+throw overflow_error()}}}
 x=ldexp(x,(exp+4*key_digit));
 return finished()}
 float.__getformat__=function(arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
+if(typeof arg !=='string'){throw _b_.TypeError.$factory(
+" __getformat__() argument must be str, not "+
+$B.class_name(arg))}
 throw _b_.ValueError.$factory("__getformat__() argument 1 must be "+
 "'double' or 'float'")}
 var format_sign=function(val,flags){switch(flags.sign){case '+':
@@ -11859,13 +11853,22 @@ if(rest.length > 1){mant+='.'+rest.substr(1)}
 if(exp.length==1){exp='0'+exp}
 return sign+mant+'e-'+exp}}
 return _b_.str.$factory(res)}
-float.__round__=function(){var $=$B.args('__round__',2,{self:null,ndigits:null},['self','ndigits'],arguments,{ndigits:_b_.None},null,null),x=$.self,ndigits=$.ndigits===_b_.None ? 0 :$.ndigits
-return float.$round(x,ndigits)}
-float.$round=function(x,ndigits){x=float_value(x)
+float.__round__=function(){var $=$B.args('__round__',2,{self:null,ndigits:null},['self','ndigits'],arguments,{ndigits:_b_.None},null,null)
+return float.$round($.self,$.ndigits)}
+float.$round=function(x,ndigits){function overflow(){throw _b_.OverflowError.$factory(
+"cannot convert float infinity to integer")}
+var no_digits=ndigits===_b_.None
+if(isnan(x)){if(ndigits===_b_.None){throw _b_.ValueError.$factory(
+"cannot convert float NaN to integer")}
+return NAN}else if(isninf(x)){return ndigits===_b_.None ? overflow():NINF}else if(isinf(x)){return ndigits===_b_.None ? overflow():INF}
+x=float_value(x)
+ndigits=ndigits===_b_.None ? 0 :ndigits
 if(ndigits==0){var res=Math.round(x.value)
 if(Math.abs(x.value-res)==0.5){
 if(res % 2){return res-1}}
+if(no_digits){
 return res}
+return $B.fast_float(res)}
 if(ndigits.__class__===$B.long_int){ndigits=Number(ndigits.value)}
 var pow1,pow2,y,z;
 if(ndigits >=0){if(ndigits > 22){
@@ -11943,7 +11946,9 @@ if(_b_.isinstance(value,_b_.memoryview)){value=_b_.memoryview.tobytes(value)}
 if(_b_.isinstance(value,_b_.bytes)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){throw _b_.ValueError.$factory(
 "could not convert string to float: "+
 _b_.repr(original_value))}}
-if(typeof value=="string"){value=value.trim()
+if(typeof value=="string"){if(value.trim().length==0){throw _b_.ValueError.$factory(
+`could not convert string to float: ${_b_.repr(value)}`)}
+value=value.trim()
 switch(value.toLowerCase()){case "+inf":
 case "inf":
 case "+infinity":
@@ -11957,8 +11962,6 @@ case "nan":
 return fast_float(Number.NaN)
 case "-nan":
 return fast_float(-Number.NaN)
-case "":
-throw _b_.ValueError.$factory("count not convert string to float")
 default:
 var parts=value.split('e')
 if(parts[1]){if(parts[1].startsWith('+')||parts[1].startsWith('-')){parts[1]=parts[1].substr(1)}}
