@@ -375,6 +375,25 @@ function atanh(x){
     return _b_.float.$factory(0.5 * Math.log((1 / y + 1)/(1 / y - 1)));
 }
 
+function cbrt(x){
+    // Cubic root
+    $B.check_nb_args('cbrt ', 1, arguments)
+    $B.check_no_kw('cbrt ', x)
+
+    var y = float_check(x)
+    if(y < 0){
+        throw _b_.ValueError.$factory("math range error")
+    }
+    if(_b_.float.$funcs.isinf(y)){
+        return _b_.float.$factory('inf')
+    }
+    var _r = $B.fast_float(Math.cbrt(y))
+    if(_b_.float.$funcs.isinf(_r)){
+        throw _b_.OverflowError.$factory("math range error")
+    }
+    return _r
+}
+
 function ceil(x){
     $B.check_nb_args('ceil', 1, arguments)
     $B.check_no_kw('ceil', x)
@@ -914,6 +933,10 @@ function exp(x){
          throw _b_.OverflowError.$factory("math range error")
      }
      return _b_.float.$factory(_r)
+}
+
+function exp2(x){
+    return pow(2, x)
 }
 
 function expm1(x){
@@ -2018,6 +2041,7 @@ var _mod = {
     atan,
     atan2,
     atanh,
+    cbrt,
     ceil,
     comb,
     copysign,
@@ -2029,6 +2053,7 @@ var _mod = {
     erf,
     erfc,
     exp,
+    exp2,
     expm1,
     fabs,
     factorial,
