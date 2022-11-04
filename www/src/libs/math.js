@@ -8,6 +8,7 @@ const INF = $B.fast_float(Number.POSITIVE_INFINITY),
       NAN = $B.fast_float(Number.NaN)
 
 var float_check = function(x) {
+    // Returns a Javascript number
     if(x.__class__ === $B.long_int){
         var res = parseInt(x.value)
         if(! isFinite(res)){
@@ -38,11 +39,20 @@ var isOdd = function(x) {return isWholeNumber(x) && 2 * Math.floor(x / 2) != x}
 
 var isNegZero = function(x) {return x === 0 && Math.atan2(x,x) < 0}
 
+function overflow(){
+    throw _b_.OverflowError.$factory("math range error")
+}
+
+function value_error(){
+    throw _b_.ValueError.$factory("math range error")
+}
+
 var EPSILON = Math.pow(2, -52),
     MAX_VALUE = (2 - EPSILON) * Math.pow(2, 1023),
     MIN_VALUE = Math.pow(2, -1022),
     Py_HUGE_VAL = Number.POSITIVE_INFINITY,
-    logpi = 1.144729885849400174143427351353058711647
+    logpi = 1.144729885849400174143427351353058711647,
+    sqrtpi = 1.772453850905516027298167483341145182798
 
 function nextUp(x){
     if(x !== x){ // NaN
@@ -201,7 +211,7 @@ function m_sinpi(x){
             r = sin(pi.value * (1.0 - y.value));
             break;
         case 3:
-            r = -cos(pi.value *(y.value - 1.5));
+            r = _b_.float.__neg__(cos(pi.value *(y.value - 1.5)))
             break;
         case 4:
             r = sin(pi.value * (y.value - 2.0));
@@ -231,10 +241,9 @@ function m_lgamma(x){
     var x1 = float_check(x)
     if(Number.isInteger(x1) && x1 <= 2.0){
         if(x1 <= 0.0){
-            errno = EDOM;  /* lgamma(n) = inf, divide-by-zero for */
-            return $B.fast_float(Py_HUGE_VAL); /* integers n <= 0 */
+            value_error()
         }else{
-            return  $B.fast_float(0.0); /* lgamma(1) = lgamma(2) = 0.0 */
+            return $B.fast_float(0.0); /* lgamma(1) = lgamma(2) = 0.0 */
         }
     }
 
@@ -250,14 +259,14 @@ function m_lgamma(x){
     var lsum = $B.fast_float(lanczos_sum(absx.value))
     r = log(lsum).value - lanczos_g;
     r += (absx.value - 0.5) *
-        (log($B.fast_float(absx.value + lanczos_g - 0.5)).value - 1);
+        (log($B.fast_float(absx.value + lanczos_g - 0.5)).value - 1)
     if (x1 < 0.0){
         /* Use reflection formula to get value for negative x. */
-        r = logpi - log(fabs(m_sinpi(absx))).value - log(absx).value - r;
+        r = logpi - log(fabs(m_sinpi(absx))).value - log(absx).value - r
     }
     r = $B.fast_float(r)
-    if (isinf(r)){
-        throw _b_.ValueError.$factory("math domain error")
+    if(isinf(r)){
+        overflow()
     }
     return r;
 }
@@ -334,9 +343,9 @@ function asinh(x){
 
     var y = float_check(x)
     if(_b_.float.$funcs.isninf(x)){
-        return _b_.float.$factory('-inf')
+        return NINF
     }else if(_b_.float.$funcs.isinf(x)){
-        return _b_.float.$factory('inf')
+        return INF
     }
     if(y == 0 && 1 / y === -Infinity){
         return $B.fast_float(-0.0)
@@ -353,11 +362,11 @@ function atan(x){
     return _b_.float.$factory(Math.atan(float_check(x)))
 }
 
-function atan2(y, x){
+function atan2(x, y){
     $B.check_nb_args('atan2', 2, arguments)
-    $B.check_no_kw('atan2', y, x)
+    $B.check_no_kw('atan2', x, y)
 
-    return _b_.float.$factory(Math.atan2(float_check(y), float_check(x)))
+    return _b_.float.$factory(Math.atan2(float_check(x), float_check(y)))
 }
 
 function atanh(x){
@@ -381,11 +390,10 @@ function cbrt(x){
     $B.check_no_kw('cbrt ', x)
 
     var y = float_check(x)
-    if(y < 0){
-        throw _b_.ValueError.$factory("math range error")
-    }
-    if(_b_.float.$funcs.isinf(y)){
-        return _b_.float.$factory('inf')
+    if(_b_.float.$funcs.isninf(x)){
+        return NINF
+    }else if(_b_.float.$funcs.isinf(x)){
+        return INF
     }
     var _r = $B.fast_float(Math.cbrt(y))
     if(_b_.float.$funcs.isinf(_r)){
@@ -739,7 +747,7 @@ function cosh(x){
     $B.check_nb_args('cosh', 1, arguments)
     $B.check_no_kw('cosh', x)
 
-    if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
+    if(_b_.float.$funcs.isinf(x)){return INF}
     var y = float_check(x)
     if(Math.cosh !== undefined){return _b_.float.$factory(Math.cosh(y))}
     return _b_.float.$factory((Math.pow(Math.E, y) +
@@ -872,33 +880,79 @@ function dist(p, q){
     }
 }
 
-var e = _b_.float.$factory(Math.E)
+const e = _b_.float.$factory(Math.E)
+
+const ERF_SERIES_CUTOFF = 1.5,
+      ERF_SERIES_TERMS = 25,
+      ERFC_CONTFRAC_CUTOFF = 30.0,
+      ERFC_CONTFRAC_TERMS = 50
+
+/*
+   Error function, via power series.
+   Given a finite float x, return an approximation to erf(x).
+   Converges reasonably fast for small x.
+*/
+
+function m_erf_series(x){
+    var x2, acc, fk, result
+    var i
+
+    x2 = x * x
+    acc = 0.0
+    fk = ERF_SERIES_TERMS + 0.5
+    for(i = 0; i < ERF_SERIES_TERMS; i++){
+        acc = 2.0 + x2 * acc / fk
+        fk -= 1.0
+    }
+    result = acc * x * exp(-x2).value / sqrtpi
+    return result
+}
+
+function m_erfc_contfrac(x){
+    var x2, a, da, p, p_last, q, q_last, b, result;
+    var i
+
+    if(x >= ERFC_CONTFRAC_CUTOFF){
+        return 0.0
+    }
+
+    x2 = x * x
+    a = 0.0
+    da = 0.5
+    p = 1.0
+    p_last = 0.0
+    q = da + x2
+    q_last = 1.0
+    for(i = 0; i < ERFC_CONTFRAC_TERMS; i++){
+        var temp
+        a += da
+        da += 2.0
+        b = da + x2
+        temp = p; p = b * p - a * p_last; p_last = temp
+        temp = q; q = b * q - a * q_last; q_last = temp
+    }
+    result = p / q * x * exp(-x2).value / sqrtpi
+    return result
+}
+
 
 function erf(x){
-    $B.check_nb_args('erf', 1, arguments)
-    $B.check_no_kw('erf', x)
-
-    // inspired from
-    // http://stackoverflow.com/questions/457408/is-there-an-easily-available-implementation-of-erf-for-python
-    var y = float_check(x)
-    var t = 1.0 / (1.0 + 0.5 * Math.abs(y))
-    var ans = 1 - t * Math.exp( -y * y - 1.26551223 +
-                 t * ( 1.00002368 +
-                 t * ( 0.37409196 +
-                 t * ( 0.09678418 +
-                 t * (-0.18628806 +
-                 t * ( 0.27886807 +
-                 t * (-1.13520398 +
-                 t * ( 1.48851587 +
-                 t * (-0.82215223 +
-                 t * 0.17087277)))))))))
-    if(y >= 0.0){return ans}
-    return -ans
+    var absx,
+        cf
+    var x1 = float_check(x)
+    if(isNaN(x1)){
+        return x
+    }
+    absx = fabs(x)
+    if(absx.value < ERF_SERIES_CUTOFF){
+        return $B.fast_float(m_erf_series(x1))
+    }else{
+        cf = m_erfc_contfrac(absx.value)
+        return $B.fast_float(x1 > 0.0 ? 1.0 - cf : cf - 1.0)
+    }
 }
 
 function erfc(x){
-    $B.check_nb_args('erfc', 1, arguments)
-    $B.check_no_kw('erfc', x)
 
     // inspired from
     // http://stackoverflow.com/questions/457408/is-there-an-easily-available-implementation-of-erf-for-python
@@ -918,6 +972,23 @@ function erfc(x){
     return 1 + ans
 }
 
+function erfc(x){
+    $B.check_nb_args_no_kw('erfc', 1, arguments)
+    var absx, cf;
+
+    var x1 = float_check(x)
+    if(isNaN(x1)){
+        return x
+    }
+    absx = fabs(x);
+    if(absx.value < ERF_SERIES_CUTOFF){
+        return $B.fast_float(1.0 - m_erf_series(x1))
+    }else{
+        cf = m_erfc_contfrac(absx.value)
+        return $B.fast_float(x1 > 0.0 ? cf : 2.0 - cf)
+    }
+}
+
 function exp(x){
     $B.check_nb_args('exp', 1, arguments)
     $B.check_no_kw('exp', x)
@@ -926,7 +997,7 @@ function exp(x){
          return _b_.float.$factory(0)
      }
      if(_b_.float.$funcs.isinf(x)){
-         return _b_.float.$factory('inf')
+         return INF
      }
      var _r = Math.exp(float_check(x))
      if(! isNaN(_r) && ! isFinite(_r)){
@@ -943,11 +1014,16 @@ function expm1(x){
     $B.check_nb_args('expm1', 1, arguments)
     $B.check_no_kw('expm1', x)
 
-     if(_b_.float.$funcs.isninf(x)){return _b_.float.$factory(0)}
-     if(_b_.float.$funcs.isinf(x)){return _b_.float.$factory('inf')}
+     if(_b_.float.$funcs.isninf(x)){
+         return $B.fast_float(-1)
+     }else if(_b_.float.$funcs.isinf(x)){
+         return INF
+     }
      var _r = Math.expm1(float_check(x))
-     if(_b_.float.$funcs.isinf(_r)){throw _b_.OverflowError.$factory("math range error")}
-     return _b_.float.$factory(_r)
+     if((! isNaN(_r)) && ! isFinite(_r)){
+         overflow()
+     }
+     return $B.fast_float(_r)
 }
 
 function fabs(x){
@@ -1216,17 +1292,18 @@ function gamma(x){
             throw _b_.ValueError.$factory("math domain error")
         }
         if($B.rich_comp('__le__', x, NGAMMA_INTEGRAL)){
-            return $B.fast_float(gamma_integral[x - 1])
+            return $B.fast_float(gamma_integral[x_as_number - 1])
         }
     }
-    var absx = _mod.fabs(x);
+    var absx = fabs(x)
 
     /* tiny arguments:  tgamma(x) ~ 1/x for x near 0 */
     if(absx.value < 1e-20){
         r = 1.0 / x_as_number
-        if(r === Number.POSITIVE_INFINITY){
-            throw _b_.ValueError.$factory("math domain error")
+        if(r === Infinity || r === -Infinity){
+            overflow()
         }
+        return $B.fast_float(r)
     }
 
     /* large arguments: assuming IEEE 754 doubles, tgamma(x) overflows for
@@ -1236,7 +1313,7 @@ function gamma(x){
         if(x_as_number < 0.0){
             return $B.fast_float(0.0 / m_sinpi(x).value);
         }else{
-            throw _b_.ValueError.$factory("math domain error")
+            overflow()
         }
     }
 
@@ -1278,7 +1355,7 @@ function gamma(x){
         }
     }
     if(r === Number.POSITIVE_INFINITY){
-        throw _b_.ValueError.$factory("math domain error")
+        overflow()
     }
     return $B.fast_float(r);
 }
@@ -1450,7 +1527,7 @@ function hypot(x, y){
     return $B.fast_float(Math.hypot(...args))
 }
 
-var inf = _b_.float.$factory('inf')
+var inf = INF
 
 function isclose(){
     var $ = $B.args("isclose",
@@ -1703,10 +1780,10 @@ function modf(x){
     $B.check_no_kw('modf', x)
 
     if(_b_.float.$funcs.isninf(x)){
-        return _b_.tuple.$factory([0.0, _b_.float.$factory('-inf')])
+        return _b_.tuple.$factory([0.0, NINF])
     }
     if(_b_.float.$funcs.isinf(x)){
-        return _b_.tuple.$factory([0.0, _b_.float.$factory('inf')])
+        return _b_.tuple.$factory([0.0, INF])
     }
     var x1 = float_check(x)
 
@@ -1787,6 +1864,7 @@ function pow(){
 
     var x1 = float_check(x)
     var y1 = float_check(y)
+
     if(y1 == 0){
         return _b_.float.$factory(1)
     }
@@ -1846,10 +1924,12 @@ function pow(){
     }
 
     var r = Math.pow(x1, y1)
-    if(isNaN(r)){return NAN}
-    if(_b_.float.$funcs.isninf(r)){return NINF}
-    if(_b_.float.$funcs.isinf(r)){return INF}
-
+    if(isNaN(r)){
+        return NAN
+    }
+    if(! isFinite(r)){
+        overflow()
+    }
     return _b_.float.$factory(r)
 }
 
@@ -1894,6 +1974,7 @@ function is_finite(x){
 
 function remainder(x, y){
     $B.check_nb_args_no_kw('remainder', 2, arguments)
+    float_check(x) // might raise TypeError
     /* Deal with most common case first. */
     if(is_finite(x) && is_finite(y)){
         var absx,
@@ -1962,18 +2043,20 @@ function sqrt(x){
     $B.check_nb_args('sqrt ', 1, arguments)
     $B.check_no_kw('sqrt ', x)
 
-  var y = float_check(x)
-  if(y < 0){
-      throw _b_.ValueError.$factory("math range error")
-  }
-  if(_b_.float.$funcs.isinf(y)){
-      return _b_.float.$factory('inf')
-  }
-  var _r = $B.fast_float(Math.sqrt(y))
-  if(_b_.float.$funcs.isinf(_r)){
-      throw _b_.OverflowError.$factory("math range error")
-  }
-  return _r
+    if(_b_.float.$funcs.isninf(x)){
+        value_error()
+    }else if(_b_.float.$funcs.isinf(x)){
+        return INF
+    }
+    var y = float_check(x)
+    if(y < 0){
+        value_error()
+    }
+    var _r = $B.fast_float(Math.sqrt(y))
+    if(_b_.float.$funcs.isinf(_r)){
+        overflow()
+    }
+    return _r
 }
 
 function tan(x) {
