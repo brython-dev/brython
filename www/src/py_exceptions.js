@@ -133,6 +133,8 @@ traceback.__getattribute__ = function(_self, attr){
             }else{
                 return _b_.None
             }
+        case "stack":
+            return _self.$stack
         default:
             return _b_.object.__getattribute__(_self, attr)
     }
@@ -342,6 +344,7 @@ $B.restore_stack = function(stack, locals){
 
 $B.freeze = function(err){
     if(err.$stack === undefined){
+        console.log('set $stack', err.__class__.$infos.__name__)
         err.$stack = $B.frames_stack.slice()
         err.$linenos = $B.frames_stack.map(x => x.$lineno)
     }
@@ -423,19 +426,6 @@ $B.exception = function(js_exc, in_ctx_manager){
     }else{
         var exc = js_exc
         $B.freeze(exc)
-        if(in_ctx_manager){
-            // Is this documented anywhere ? For exceptions raised inside a
-            // context manager, the frames stack starts at the current
-            // local level.
-            var current_locals = $B.last($B.frames_stack)[0]
-            for(var i = 0, len = exc.$stack.length; i < len; i++){
-                if(exc.$stack[i][0] == current_locals){
-                    exc.$stack = exc.$stack.slice(i)
-                    exc.$traceback = traceback.$factory(exc)
-                    break
-                }
-            }
-        }
     }
     return exc
 }
@@ -450,8 +440,12 @@ $B.is_exc = function(exc, exc_list){
     var this_exc_class = exc.$is_class ? exc : exc.__class__
     for(var i = 0; i < exc_list.length; i++){
         var exc_class = exc_list[i]
-        if(this_exc_class === undefined){console.log("exc class undefined", exc)}
-        if(_b_.issubclass(this_exc_class, exc_class)){return true}
+        if(this_exc_class === undefined){
+            console.log("exc class undefined", exc)
+        }
+        if(_b_.issubclass(this_exc_class, exc_class)){
+            return true
+        }
     }
     return false
 }
