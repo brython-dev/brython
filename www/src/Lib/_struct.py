@@ -82,6 +82,9 @@ def unpack_signed_int(data, index, size, le):
 INFINITY = 1e200 * 1e200
 NAN = INFINITY / INFINITY
 
+BIG_ENDIAN = 0
+LITTLE_ENDIAN = 1
+
 def unpack_char(data, index, size, le):
     return data[index:index + size]
 
@@ -155,7 +158,7 @@ def round_to_nearest(x):
         int_part += 1
     return int_part
 
-def float_unpack(Q, size, le):
+def float_unpack(Q, size, order=LITTLE_ENDIAN):
     """Convert a 32-bit or 64-bit integer created
     by float_pack into a Python float."""
 
@@ -193,7 +196,7 @@ def float_unpack(Q, size, le):
     return -result if sign else result
 
 
-def float_pack(x, size):
+def float_pack(x, size, order=LITTLE_ENDIAN):
     """Convert a Python float x into a 64-bit unsigned integer
     with the same byte representation."""
 
