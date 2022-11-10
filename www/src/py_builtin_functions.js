@@ -1755,8 +1755,12 @@ $B.$iter = function(obj, sentinel){
             if(err.__class__ === _b_.AttributeError){
                 try{
                     var gi_method = $B.$call($B.$getattr(klass, '__getitem__')),
-                        gi = function(i){return gi_method(obj, i)},
-                        ln = len(obj)
+                        gi = function(i){return gi_method(obj, i)}
+                    try{
+                        len = len(obj)
+                    }catch(err){
+                        len = null
+                    }
                     return iterator_class.$factory(gi, len)
                 }catch(err){
                     throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
@@ -2540,9 +2544,8 @@ $B.$setattr = function(obj, attr, value){
 function sorted(){
     var $ = $B.args('sorted', 1, {iterable: null}, ['iterable'],
         arguments, {}, null, 'kw')
-    var _list = _b_.list.$factory(iter($.iterable)),
-        args = [_list]
-    for(var i = 1; i < arguments.length; i++){args.push(arguments[i])}
+    var _list = _b_.list.$factory($.iterable),
+        args = [_list].concat(Array.from(arguments).slice(1))
     _b_.list.sort.apply(null, args)
     return _list
 }
