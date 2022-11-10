@@ -1196,13 +1196,15 @@ $B.make_iterator_class = function(name){
         },
 
         __next__: function(self){
-            if(typeof self.test_change == "function" && self.test_change()){
+            if(typeof self.test_change == "function"){
+                var message = self.test_change()
                 // Used in dictionaries : test if the current dictionary
                 // attribute "$version" is the same as when the iterator was
                 // created. If not, items have been added to or removed from
                 // the dictionary
-                throw _b_.RuntimeError.$factory(
-                    "dictionary changed size during iteration")
+                if(message){
+                    throw _b_.RuntimeError.$factory(message)
+                }
             }
 
             self.counter++
