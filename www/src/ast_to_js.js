@@ -1853,7 +1853,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
     // Set admin infos
     js += `${name2}.$infos = {\n` +
-        `__name__: "${this.name}", __qualname__: "${qualname}",\n` +
+        `__module__: "${gname}",\n` +
+        `__name__: "${this.name}"\n, ` +
+        `__qualname__: "${qualname}",\n` +
         `__defaults__: $B.fast_tuple([${default_names}]), ` +
         `__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n` +
         `__doc__: ${docstring},\n` +
