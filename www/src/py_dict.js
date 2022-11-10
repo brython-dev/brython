@@ -150,7 +150,10 @@ $B.make_view = function(name){
                 console.log($B.frames_stack.slice())
                 alert()
             }
-            return self.dict.$version != self.dict_version
+            if(self.dict.$version != self.dict_version){
+                return "dictionary changed size during iteration"
+            }
+            return false
         }
         return it
     }
@@ -166,7 +169,10 @@ $B.make_view = function(name){
     klass.__reversed__ = function(self){
         var it = klass.$iterator.$factory(self.items.reverse())
         it.test_change = function(){
-            return self.dict.$version != self.dict_version
+            if(self.dict.$version != self.dict_version){
+                return "dictionary changed size during iteration"
+            }
+            return false
         }
         return it
     }
@@ -204,6 +210,29 @@ var dict = {
     $match_mapping_pattern: true // for pattern matching (PEP 634)
 }
 
+dict.$make_iter = function(obj){
+    let version = obj.$version,
+        items = dict.$items_list(obj),
+        len = items.length
+
+    function check_version(d){
+        if(d.$version != version){
+            throw _b_.RuntimeError.$factory(
+                'dictionary changed size during iteration')
+        }
+    }
+
+    const iterator = {
+        *[Symbol.iterator](){
+            for(var item of items){
+                check_version(obj)
+                yield item[0]
+            }
+        }
+    }
+    return iterator
+}
+
 dict.$to_obj = function(d){
     // Function applied to dictionary that only have string keys,
     // return a Javascript objects with the kays mapped to the value,
@@ -213,6 +242,30 @@ dict.$to_obj = function(d){
         res[key] = d.$string_dict[key][0]
     }
     return res
+}
+
+dict.$items_list = function(d){
+    var items = []
+
+    for(var k in d.$numeric_dict){
+        items.push([parseFloat(k), d.$numeric_dict[k]])
+    }
+
+    for(var k in d.$string_dict){
+        items.push([k, d.$string_dict[k]])
+    }
+
+    for(var k in d.$object_dict){
+        d.$object_dict[k].forEach(function(item){
+            items.push(item)
+        })
+    }
+
+    // sort by insertion order
+    items.sort(function(a, b){
+        return a[1][1] - b[1][1]
+    })
+    return items.map(function(item){return [item[0], item[1][0]]})
 }
 
 function to_list(d, ix){
@@ -231,25 +284,7 @@ function to_list(d, ix){
             }
         }
     }else if(_b_.isinstance(d, _b_.dict)){
-        for(var k in d.$numeric_dict){
-            items.push([parseFloat(k), d.$numeric_dict[k]])
-        }
-
-        for(var k in d.$string_dict){
-            items.push([k, d.$string_dict[k]])
-        }
-
-        for(var k in d.$object_dict){
-            d.$object_dict[k].forEach(function(item){
-                items.push(item)
-            })
-        }
-
-        // sort by insertion order
-        items.sort(function(a, b){
-            return a[1][1] - b[1][1]
-        })
-        items = items.map(function(item){return [item[0], item[1][0]]})
+        items = dict.$items_list(d)
     }
     if(ix !== undefined){
         res = items.map(function(item){return item[ix]})
