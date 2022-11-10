@@ -309,17 +309,15 @@ int.__floordiv__ = function(self, other){
 }
 
 int.__hash__ = function(self){
-    if(self.$brython_value){
+    if(self.$brython_value !== undefined){
         // int subclass
-        var hash_method = $B.$getattr(self.__class__, '__hash__')
-        if(hash_method === int.__hash__){
-            if(typeof self.$brython_value == "number"){
-                return self.$brython_value
-            }else{ // long int
-                return $B.long_int.__hash__(self.$brython_value)
-            }
-        }else{
-            return hash_method(self)
+        if(self.__hashvalue__ !== undefined){
+            return self.__hashvalue__
+        }
+        if(typeof self.$brython_value == "number"){
+            return self.__hashvalue__ = self.$brython_value
+        }else{ // long int
+            return self.__hashvalue__ = $B.long_int.__hash__(self.$brython_value)
         }
     }
     return self.valueOf()
