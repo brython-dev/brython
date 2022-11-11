@@ -1411,7 +1411,7 @@ function hash(obj){
                 _b_.str.$factory($B.JSObj.$factory(obj)) + "'")
     }
 
-    var hash_method = $B.$getattr(klass, '__hash__', _b_.None)
+    var hash_method = _b_.type.__getattribute__(klass, '__hash__', _b_.None)
 
     if(hash_method === _b_.None){
         throw _b_.TypeError.$factory("unhashable type: '" +
@@ -1430,7 +1430,7 @@ function hash(obj){
     // throws an exception : unhashable type: 'A'
 
     if(hash_method.$infos.__func__ === _b_.object.__hash__){
-        if($B.$getattr(obj, '__eq__').$infos.__func__ !== _b_.object.__eq__){
+        if(_b_.type.__getattribute__(klass, '__eq__') !== _b_.object.__eq__){
             throw _b_.TypeError.$factory("unhashable type: '" +
                 $B.class_name(obj) + "'", 'hash')
         }else{
