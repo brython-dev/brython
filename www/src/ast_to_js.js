@@ -2547,7 +2547,7 @@ $B.ast.Set.prototype.to_js = function(scopes){
         js = `[${js}]`
     }
 
-    return `_b_.set.$factory(${js})`
+    return `_b_.set.$literal(${js})`
 }
 
 $B.ast.SetComp.prototype.to_js = function(scopes){
