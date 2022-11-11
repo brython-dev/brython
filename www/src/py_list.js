@@ -769,6 +769,16 @@ list.sort = function(self){
 
     self.$cl = $elts_class(self)
     var cmp = null;
+
+    function basic_cmp(a, b) {
+        return $B.rich_comp("__lt__", a, b) ? -1:
+               $B.rich_comp('__eq__', a, b) ? 0 : 1
+    }
+
+    function reverse_cmp(a, b) {
+        return basic_cmp(b, a)
+    }
+
     if(func === _b_.None && self.$cl === _b_.str){
         if(reverse){
             cmp = function(b, a){return $B.$AlphabeticalCompare(a, b)}
@@ -782,71 +792,28 @@ list.sort = function(self){
             cmp = function(a, b){return a - b}
         }
     }else{
+        cmp = reverse ?
+                function(t1, t2){
+                    return basic_cmp(t2[0], t1[0])
+                } :
+                function(t1, t2){
+                    return basic_cmp(t1[0], t2[0])
+                }
         if(func === _b_.None){
-            if(reverse){
-                cmp = function(b, a) {
-                    res = $B.$getattr(a, "__lt__")(b)
-                    if(res === _b_.NotImplemented){
-                        throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(b) + "() < " +
-                            $B.class_name(a) + "()")
-                    }
-                    if(res){
-                        if(a == b){return 0}
-                        return -1
-                    }
-                    return 1
-                }
-            }else{
-                cmp = function(a, b){
-                    res = $B.rich_comp("__lt__", a, b)
-                    if(res === _b_.NotImplemented){
-                        throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(a) + "() < " +
-                            $B.class_name(b) + "()")
-                    }
-                    if(res){
-                        return a == b ? 0 : -1
-                    }
-                    return 1
-                }
-            }
+            cmp = reverse ? reverse_cmp : basic_cmp
+            self.sort(cmp)
         }else{
-            if(reverse){
-                cmp = function(b, a) {
-                    var _a = func(a),
-                        _b = func(b)
-                    res = $B.$getattr(_a, "__lt__")(_b)
-                    if(res === _b_.NotImplemented){
-                        throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(b) + "() < " +
-                            $B.class_name(a) + "()")
-                    }
-                    if(res){
-                        if(_a == _b){return 0}
-                        return -1
-                    }
-                    return 1
-                }
-            }else{
-                cmp = function(a, b){
-                    var _a = func(a),
-                        _b = func(b)
-                    res = $B.$getattr(_a, "__lt__")(_b)
-                    if(res === _b_.NotImplemented){
-                        throw _b_.TypeError.$factory("unorderable types: " +
-                            $B.class_name(a) + "() < " +
-                            $B.class_name(b) + "()")
-                    }
-                    if(res){
-                        if(_a == _b){return 0}
-                        return -1
-                    }
-                    return 1
-                }
+            var temp = [],
+                saved = self.slice()
+            for(var i=0, len=self.length; i < len; i++){
+                temp.push([func(self[i]), i])
             }
-
+            temp.sort(cmp)
+            for(var i=0, len=temp.length; i < len; i++){
+                self[i] = saved[temp[i][1]]
+            }
         }
+        return self.__brython__ ? _b_.None : self
     }
     $B.$TimSort(self, cmp)
 
