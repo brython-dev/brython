@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-10 08:49:19.079442"
-__BRYTHON__.timestamp=1668066559078
+__BRYTHON__.compiled_date="2022-11-11 21:17:36.138293"
+__BRYTHON__.timestamp=1668197856137
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5707,7 +5707,7 @@ case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
 return method_wrapper.$factory(attr,klass,function(key){delete klass[key]})}
 var res=klass[attr]
-var $test=attr=="__args__" 
+var $test=false 
 if($test){console.log("attr",attr,"of",klass,'\n  ',res,res+"")}
 if(klass.__class__ &&
 klass.__class__[attr]&&
@@ -6552,10 +6552,10 @@ else{return hash_cache[obj]=_b_.str.__hash__(obj)}}
 var klass=obj.__class__ ||$B.get_class(obj)
 if(klass===undefined){throw _b_.TypeError.$factory("unhashable type: '"+
 _b_.str.$factory($B.JSObj.$factory(obj))+"'")}
-var hash_method=$B.$getattr(klass,'__hash__',_b_.None)
+var hash_method=_b_.type.__getattribute__(klass,'__hash__',_b_.None)
 if(hash_method===_b_.None){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'")}
-if(hash_method.$infos.__func__===_b_.object.__hash__){if($B.$getattr(obj,'__eq__').$infos.__func__ !==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
+if(hash_method.$infos.__func__===_b_.object.__hash__){if(_b_.type.__getattribute__(klass,'__eq__')!==_b_.object.__eq__){throw _b_.TypeError.$factory("unhashable type: '"+
 $B.class_name(obj)+"'",'hash')}else{return obj.__hashvalue__=_b_.object.__hash__(obj)}}else{return $B.$call(hash_method)(obj)}}
 function _get_builtins_doc(){if($B.builtins_doc===undefined){
 var url=$B.brython_path
@@ -8770,25 +8770,21 @@ _b_.bytearray=bytearray})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,object=_b_.object,$N=_b_.None
 function create_type(obj){return $B.get_class(obj).$factory()}
 function make_new_set(type){return{
-__class__:type,$items:[],$numbers:{},$hashes:{},$version:0,$used:0}}
+__class__:type,$store:{},$version:0,$used:0}}
 function make_new_set_base_type(so){return _b_.isinstance(so,set)?
 set.$factory():
 frozenset.$factory()}
-function set_add(so,item){if(set_contains(so,item)){return}
+function set_hash(item){if(typeof item=='string'){return 's'+item}else if(typeof item=='number'){return 'n'+item}else if(typeof item=='boolean'){return 'b'+item}else if(item.__class__===_b_.float){return 'n'+item.value}else{return 'o'+(item.__hashvalue__ ||_b_.hash(item))}}
+function set_add(so,item){var hash=set_hash(item)
+if(set_contains(so,item,hash)){return}
 so.$used++
-so.$items.push(item)
-if(typeof item=="number"){so.$numbers[item]=item}else if(item.__class__===_b_.float){so.$numbers[item.value]=item.value}else{var hash=_b_.hash(item),hashes=so.$hashes[hash]
-if(hashes){hashes.push(item)}else{so.$hashes[hash]=[item]}}}
-function set_contains(so,key){return !! set_lookkey(so,key)}
+if(hash[0]=='o'){if(so.$store[hash]){so.$store[hash].push(item)}else{so.$store[hash]=[item]}}else{so.$store[set_hash(item)]=item}}
+function set_contains(so,key,hash){return !! set_lookkey(so,key,hash)}
 function set_copy(obj){var res=make_new_set_base_type(obj)
-res.$items=obj.$items.slice()
-res.$numbers=$B.clone(obj.$numbers)
-for(key in obj.$hashes){res.$hashes[key]=obj.$hashes[key]}
+res.$store=$B.clone(obj.$store)
 res.$used=obj.$used
 return res}
-function set_copy_from(so,other){so.$items=other.$items.slice()
-so.$numbers=$B.clone(other.$numbers)
-for(key in other.$hashes){so.$hashes[key]=other.$hashes[key]}
+function set_copy_from(so,other){so.$store=$B.clone(other.$store)
 so.$used=other.$used}
 var set={__class__:_b_.type,$infos:{__module__:"builtins",__name__:"set"},$is_class:true,$native:true}
 function set_copy_and_difference(so,other){var result=set_copy(so)
@@ -8821,25 +8817,14 @@ for(var key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0,DISCARD_FOUND=1
 function set_discard_entry(so,key){var entry=set_lookkey(so,key)
 if(entry===null){return DISCARD_NOTFOUND}
-switch(entry.table){case '$items':
-so.$items.splice(entry.index,1)
-so.$used--
-break
-case '$numbers':
-delete so[entry.table][entry.key]
-so.$items.splice(entry.index,1)
-so.$used--
-break
-case '$hashes':
-var hashes=so.$hashes[entry.hash]
-if(hashes){so.$used--
-hashes.splice(entry.hash_index,1)
-so.$items.splice(entry.index,1)}
-break}}
+if(entry.hash[0]=='o'){if(so.$store[entry.hash]!==undefined){so.$store[entry.hash].splice(entry.hash_index,1)
+if(so.$store[entry.hash].length==0){delete so.$store[entry.hash]}}}else{delete so.$store[entry.hash]}
+so.$used--}
 function set_discard_key(so,key){return set_discard_entry(so,key);}
 function set_intersection(self,other){if(self===other){return set_copy(self)}
 var result=make_new_set_base_type(self),iterator
-if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){var temp=other,other=self,self=temp}
+if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){
+var temp=other,other=self,self=temp}
 iterator=make_iter(other)}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
 iterator=$B.next_of1(other,frame,lineno)}
 for(var other_item of iterator){var test=set_contains(self,other_item)
@@ -8849,29 +8834,21 @@ function set_intersection_multi(so,args){var result=set_copy(so)
 if(args.length==0){return result}
 for(var other of args){result=set_intersection(result,other)}
 return result;}
-function set_lookkey(so,key){if(typeof key=="string"){var index=so.$items.indexOf(key)
-return index >-1 ?{table:'$items',index}:null}else if(typeof key=="number"){if(so.$numbers[key]!==undefined){return{table:'$numbers',index,key}}
-return null}else if(key.__class__===_b_.float){if(so.$numbers[key.value]!==undefined){return{table:'$numbers',key:key.value,index}}
-return null}
-if(_b_.isinstance(key,set)){
-key=set_copy(key)
-key.__class__=frozenset}
-var hash=key.__hashvalue__ ||_b_.hash(key)
-if(so.$hashes[hash]){var hash_index=-1
-for(var hash_item of make_hash_iter(so,hash)){hash_index++
-if(hash_item===key ||
-$B.rich_comp('__eq__',hash_item,key)){return{table:'$hashes',hash,hash_index,index:so.$items.indexOf(hash_item)}}}}
-return null}
+function set_lookkey(so,key,hash){if(hash===undefined){if(key.__class__===set ||
+(key.__class__ && key.__class__.__mro__ &&
+key.__class__.__mro__.indexOf(set)>-1)){
+hash='o'+frozenset.__hash__(key)}else{hash=set_hash(key)}}
+if(hash[0]=='o'){if(so.$store[hash]===undefined){return null}
+var hash_index=-1
+for(var obj of so.$store[hash]){hash_index++
+if(obj===key ||$B.rich_comp('__eq__',obj,key)){return{hash,hash_index}}}
+return null}else{return so.$store[hash]===undefined ? null :{hash}}}
 function set_swap_bodies(a,b){var temp=set_copy(a)
 set.clear(a)
-a.$items=b.$items
-a.$numbers=b.$numbers
-a.$hashes=b.$hashes
 a.$used=b.$used
-b.$items=temp.$items
-b.$numbers=temp.$numbers
-b.$hashes=temp.$hashes
-b.$used=temp.$used}
+a.$store=b.$store
+b.$used=temp.$used
+b.$store=temp.$store}
 function set_symmetric_difference_update(so,other){var otherset,key,pos=0,hash,entry,rv
 if(so==other){return set.clear(so)}
 var iterator
@@ -8885,8 +8862,10 @@ set.__class_getitem__=function(cls,item){
 if(! Array.isArray(item)){item=[item]}
 return $B.GenericAlias.$factory(cls,item)}
 set.__contains__=function(self,item){return set_contains(self,item)}
-set.__eq__=function(self,other){if(_b_.isinstance(other,[_b_.set,_b_.frozenset])){if(other.$items.length==self.$items.length){var self_version=self.$version,other_version=other.$version
-for(var i=0,len=self.$items.length;i < len;i++){if(set.__contains__(self,other.$items[i])===false){return false}
+set.__eq__=function(self,other){if(_b_.isinstance(other,[_b_.set,_b_.frozenset])){set_make_items(self)
+set_make_items(other)
+if(other.$items.length==self.$items.length){var self_version=self.$version,other_version=other.$version
+for(var i=0,len=self.$items.length;i < len;i++){if(set_contains(self,other.$items[i])===false){return false}
 if(self.$version !==self_version ||
 other.$version !==other_version){throw _b_.RuntimeError.$factory(
 'set changed size during iteration')}}
@@ -8901,12 +8880,13 @@ return _b_.NotImplemented}
 set.__hash__=_b_.None
 set.__init__=function(self,iterable){if(iterable===undefined){return _b_.None}
 $B.check_nb_args_no_kw('set',2,arguments)
-if(self.$items.length > 0){set.clear(self)}
+if(Object.keys(self.$store).length > 0){set.clear(self)}
 set.update(self,iterable)
 return _b_.None}
 var set_iterator=$B.make_iterator_class("set iterator")
 set_iterator.__length_hint__=function(self){return self.len}
 set.__iter__=function(self){
+set_make_items(self)
 self.$items.sort(function(x,y){var hx=_b_.hash(x),hy=_b_.hash(y)
 return hx==hy ? 0 :
 hx < hy ?-1 :1})
@@ -8917,12 +8897,17 @@ return res}
 function check_version(s,version){if(s.$version !=version){throw _b_.RuntimeError.$factory(
 'Set changed size during iteration')}}
 function make_iter(obj){let version=obj.$version,pos=0
+set_make_items(obj)
 const iterator={*[Symbol.iterator](){while(pos < obj.$items.length){var result=obj.$items[pos]
 pos++
 yield result
 check_version(obj,version)}}}
 return iterator}
-function set_next(so,pos){var result=so.$items[pos]
+function set_make_items(so){
+so.$items=[]
+for(var hash in so.$store){if(hash[0]=='o'){so.$items=so.$items.concat(so.$store[hash])}else{so.$items.push(so.$store[hash])}}}
+function set_next(so,pos){if(pos==0){set_make_items(so)}
+var result=so.$items[pos]
 if(result===undefined){return 0}
 return[pos+1,result]}
 function make_hash_iter(obj,hash){let version=obj.$version,hashes=obj.$hashes[hash],len=hashes.length,i=0
@@ -8932,8 +8917,7 @@ yield result
 check_version(obj,version)}}}
 return iterator}
 set.__le__=function(self,other){
-if(_b_.isinstance(other,[set,frozenset])){var cfunc=_b_.getattr(other,"__contains__")
-for(var item of make_iter(self)){if(! cfunc(item)){return false}}
+if(_b_.isinstance(other,[set,frozenset])){for(var item of make_iter(self)){if(! set_contains(other,item)){return false}}
 return true}else{return _b_.NotImplemented}}
 set.__len__=function(self){return self.$used }
 set.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__le__(self,other)&&
@@ -8953,12 +8937,14 @@ set_add(res,other_item)}
 return res}
 set.__rand__=function(self,other){
 return set.__and__(self,other)}
-set.__reduce__=function(self){return $B.fast_tuple([self.__class__,$B.fast_tuple([self.$items]),_b_.None])}
+set.__reduce__=function(self){set_make_items(self)
+return $B.fast_tuple([self.__class__,$B.fast_tuple([self.$items]),_b_.None])}
 set.__reduce_ex__=function(self,protocol){return set.__reduce__(self)}
 set.__repr__=function(self){$B.builtins_repr_check(set,arguments)
 return set_repr(self)}
 function set_repr(self){
 klass_name=$B.class_name(self)
+set_make_items(self)
 if(self.$items.length===0){return klass_name+"()"}
 var head=klass_name+"({",tail="})"
 if(head=="set({"){head="{";tail="}"}
@@ -8987,7 +8973,7 @@ if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 return set_difference(self,other)}
 set.__xor__=function(self,other,accept_iter){
 if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
-var res=create_type(self),cfunc=_b_.getattr(other,"__contains__")
+var res=create_type(self)
 for(var item of make_iter(self)){if(! set_contains(other,item)){set_add(res,item)}}
 for(var other_item of make_iter(other)){if(! set_contains(self,other_item)){set_add(res,other_item)}}
 return res}
@@ -8997,10 +8983,8 @@ set_add(self,item)
 self.$version++
 return _b_.None}
 set.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
-$.self.$items=[]
-$.self.$numbers={}
-$.self.$hashes={}
 $.self.$used=0
+$.self.$store={}
 $.self.$version++
 return $N}
 set.copy=function(self){$B.check_nb_args_no_kw('copy',1,arguments)
@@ -9019,17 +9003,21 @@ var temp=set_intersection_multi(self,args)
 set_swap_bodies(self,temp)
 self.$version++
 return _b_.None}
-set.isdisjoint=function(){var $=$B.args("is_disjoint",2,{self:null,other:null},["self","other"],arguments,{},null,null)
-for(var item of make_iter($.self)){if(set_contains($.other,item)){return false}}
+set.isdisjoint=function(){var $=$B.args("isdisjoint",2,{self:null,other:null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
+if(self===other){return set.__len__(self)==0}
+var iterator
+if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){
+var temp=other,other=self,self=temp}
+iterator=make_iter(other)}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
+iterator=$B.next_of1(other,frame,lineno)}
+for(var item of iterator){if(set_contains(self,item)){return false}}
 return true}
-set.pop=function(self){if(self.$items.length===0){throw _b_.KeyError.$factory('pop from an empty set')}
-var item=self.$items.pop()
+set.pop=function(self){for(var hash in self.$store){}
+if(hash===undefined){throw _b_.KeyError.$factory('pop from an empty set')}
+var item
+if(hash[0]=='o'){item=self.$store[hash].pop()}else{item=self.$store[hash]
+delete self.$store[hash]}
 self.$used--
-if(typeof item !="string" && typeof item !="number"){
-var hash=_b_.hash(item),items=self.$hashes[hash],k=-1
-for(var hash_item of make_hash_iter(self,hash)){k++
-if($B.rich_comp("__eq__",hash_item,item)){self.$hashes[hash].splice(k,1)
-break}}}
 self.$version++
 return item}
 set.remove=function(self,item){
@@ -9092,6 +9080,9 @@ return self}
 set.__ior__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.update(self,other)
 return self}
+set.$literal=function(items){var res=make_new_set(set)
+for(var item of items){set_add(res,item)}
+return res}
 set.$factory=function(){var args=[set].concat(Array.from(arguments)),self=set.__new__.apply(null,args)
 set.__init__(self,...arguments)
 return self}
@@ -9109,6 +9100,7 @@ default:
 if(frozenset[attr]==undefined){if(typeof set[attr]=="function"){frozenset[attr]=(function(x){return function(){return set[x].apply(null,arguments)}})(attr)}else{frozenset[attr]=set[attr]}}}}
 frozenset.__hash__=function(self){if(self===undefined){return frozenset.__hashvalue__ ||$B.$py_next_hash--}
 if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
+set_make_items(self)
 var _hash=1927868237
 _hash*=self.$items.length
 for(var i=0,len=self.$items.length;i < len;i++){var _h=_b_.hash(self.$items[i])
@@ -13060,34 +13052,22 @@ if(self.length==0){return _b_.None}
 if(func !==_b_.None){func=$B.$call(func)}
 self.$cl=$elts_class(self)
 var cmp=null;
-if(func===_b_.None && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===_b_.None && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{cmp=function(a,b){return a-b}}}else{if(func===_b_.None){if(reverse){cmp=function(b,a){res=$B.$getattr(a,"__lt__")(b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(b)+"() < "+
-$B.class_name(a)+"()")}
-if(res){if(a==b){return 0}
-return-1}
-return 1}}else{cmp=function(a,b){res=$B.rich_comp("__lt__",a,b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(a)+"() < "+
-$B.class_name(b)+"()")}
-if(res){return a==b ? 0 :-1}
-return 1}}}else{if(reverse){cmp=function(b,a){var _a=func(a),_b=func(b)
-res=$B.$getattr(_a,"__lt__")(_b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(b)+"() < "+
-$B.class_name(a)+"()")}
-if(res){if(_a==_b){return 0}
-return-1}
-return 1}}else{cmp=function(a,b){var _a=func(a),_b=func(b)
-res=$B.$getattr(_a,"__lt__")(_b)
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(a)+"() < "+
-$B.class_name(b)+"()")}
-if(res){if(_a==_b){return 0}
-return-1}
-return 1}}}}
+function basic_cmp(a,b){return $B.rich_comp("__lt__",a,b)?-1:
+$B.rich_comp('__eq__',a,b)? 0 :1}
+function reverse_cmp(a,b){return basic_cmp(b,a)}
+if(func===_b_.None && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===_b_.None && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{cmp=function(a,b){return a-b}}}else{cmp=reverse ?
+function(t1,t2){return basic_cmp(t2[0],t1[0])}:
+function(t1,t2){return basic_cmp(t1[0],t2[0])}
+if(func===_b_.None){cmp=reverse ? reverse_cmp :basic_cmp
+self.sort(cmp)}else{var temp=[],saved=self.slice()
+for(var i=0,len=self.length;i < len;i++){temp.push([func(self[i]),i])}
+temp.sort(cmp)
+for(var i=0,len=temp.length;i < len;i++){self[i]=saved[temp[i][1]]}}
+return self.__brython__ ? _b_.None :self}
 $B.$TimSort(self,cmp)
 return self.__brython__ ? _b_.None :self}
+$B.nb_sort=0
+$B.nb_sort_string=0
 $B.$list=function(t){t.__brython__=true
 t.__class__=_b_.list
 return t}
@@ -15440,7 +15420,7 @@ $B.ast.Set.prototype.to_js=function(scopes){for(var elt of this.elts){if(elt ins
 var call_obj={args:this.elts,keywords:[]}
 var call=make_args.bind(call_obj)(scopes),js=call.js
 if(! call.has_starred){js=`[${js}]`}
-return `_b_.set.$factory(${js})`}
+return `_b_.set.$literal(${js})`}
 $B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scopes)}
 $B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_ast(this.lower,scopes):'_b_.None',upper=this.upper ? $B.js_from_ast(this.upper,scopes):'_b_.None',step=this.step ? $B.js_from_ast(this.step,scopes):'_b_.None'
 return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}

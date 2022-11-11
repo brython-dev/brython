@@ -344,7 +344,7 @@ object.__getattribute__ = function(obj, attr){
 
 object.__gt__ = function(){return _b_.NotImplemented}
 
-object.__hash__ = function (self) {
+object.__hash__ = function(self){
     var hash = self.__hashvalue__
     if(hash !== undefined){return hash}
     return self.__hashvalue__ = $B.$py_next_hash--
