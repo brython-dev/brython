@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-12 12:02:15.574097"
-__BRYTHON__.timestamp=1668250935574
+__BRYTHON__.compiled_date="2022-11-12 21:14:27.022383"
+__BRYTHON__.timestamp=1668284067022
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5143,20 +5143,17 @@ $B.is_or_equals=function(x,y){
 return $B.$is(x,y)||$B.rich_comp('__eq__',x,y)}
 $B.$is_member=function(item,_set){
 var f,_iter,method
-try{method=$B.$getattr(_set.__class__ ||$B.get_class(_set),"__contains__")}
-catch(err){}
-if(method){return $B.$call(method)(_set,item)}
-try{_iter=_b_.iter(_set)}
-catch(err){}
+method=$B.$getattr(_set.__class__ ||$B.get_class(_set),"__contains__",null)
+if(method !==null){return $B.$call(method)(_set,item)}
+try{_iter=_b_.iter(_set)}catch(err){}
 if(_iter){while(1){try{var elt=_b_.next(_iter)
-if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){return false}}}
-try{f=$B.$getattr(_set,"__getitem__")}
-catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(_set)+
+if($B.is_or_equals(elt,item)){return true}}catch(err){return false}}}
+try{f=$B.$getattr(_set,"__getitem__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(_set)+
 "' object is not iterable")}
 if(f){var i=-1
 while(1){i++
 try{var elt=f(i)
-if($B.rich_comp("__eq__",elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
+if($B.is_or_equals(elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
 throw err}}}}
 $B.$call=function(callable,position){callable=$B.$call1(callable)
 if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
@@ -5305,16 +5302,17 @@ var res
 if(x.$is_class ||x.$factory){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
-var x_class_op=$B.$call($B.$getattr(x.__class__ ||$B.get_class(x),op)),rev_op=reversed_op[op]||op
+var x_class_op=$B.$call($B.$getattr(x.__class__ ||$B.get_class(x),op)),rev_op=reversed_op[op]||op,y_rev_func
 if(x.__class__ && y.__class__){
-if(y.__class__.__mro__.indexOf(x.__class__)>-1){var rev_func=$B.$getattr(y,rev_op)
-res=$B.$call($B.$getattr(y,rev_op))(x)
+if(y.__class__.__mro__.indexOf(x.__class__)>-1){y_rev_func=$B.$getattr(y,rev_op)
+res=$B.$call(y_rev_func)(x)
 if(res !==_b_.NotImplemented){return res}}}
 res=x_class_op(x,y)
 if(res !==_b_.NotImplemented){return res}
-var y_class_op=$B.$call($B.$getattr(y.__class__ ||$B.get_class(y),rev_op))
-res=y_class_op(y,x)
-if(res !==_b_.NotImplemented ){return res}
+if(y_rev_func===undefined){
+y_rev_func=$B.$call($B.$getattr(y.__class__ ||$B.get_class(y),rev_op))
+res=y_rev_func(y,x)
+if(res !==_b_.NotImplemented ){return res}}
 if(op=="__eq__"){return _b_.False}else if(op=="__ne__"){return _b_.True}
 throw _b_.TypeError.$factory("'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
@@ -11596,7 +11594,8 @@ float.__divmod__=function(self,other){check_self_is_float(self,'__divmod__')
 if(! _b_.isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
 return $B.fast_tuple([float.__floordiv__(self,other),float.__mod__(self,other)])}
 float.__eq__=function(self,other){check_self_is_float(self,'__eq__')
-if(isNaN(self.value)&& isNaN(other)){return false}
+if(isNaN(self.value)&& 
+(_b_.isinstance(other,float)&& isNaN(other.value))){return false}
 if(_b_.isinstance(other,_b_.int)){return self.value==other}
 if(_b_.isinstance(other,float)){return self.value==other.value}
 if(_b_.isinstance(other,_b_.complex)){if(other.$imag !=0){return false}

@@ -956,25 +956,24 @@ $B.$is_member = function(item, _set){
 
     // Use __contains__ if defined *on the class* (implicit invocation of
     // special methods don't use object __dict__)
-    try{
-        method = $B.$getattr(_set.__class__ || $B.get_class(_set),
-            "__contains__")
+    method = $B.$getattr(_set.__class__ || $B.get_class(_set),
+            "__contains__", null)
 
-    }
-    catch(err){}
-
-    if(method){
+    if(method !== null){
         return $B.$call(method)(_set, item)
     }
 
     // use __iter__ if defined
-    try{_iter = _b_.iter(_set)}
-    catch(err){}
+    try{
+        _iter = _b_.iter(_set)
+    }catch(err){}
     if(_iter){
         while(1){
             try{
                 var elt = _b_.next(_iter)
-                if($B.rich_comp("__eq__", elt, item)){return true}
+                if($B.is_or_equals(elt, item)){
+                    return true
+                }
             }catch(err){
                 return false
             }
@@ -982,8 +981,9 @@ $B.$is_member = function(item, _set){
     }
 
     // use __getitem__ if defined
-    try{f = $B.$getattr(_set, "__getitem__")}
-    catch(err){
+    try{
+        f = $B.$getattr(_set, "__getitem__")
+    }catch(err){
         throw _b_.TypeError.$factory("'" + $B.class_name(_set) +
             "' object is not iterable")
     }
@@ -993,9 +993,13 @@ $B.$is_member = function(item, _set){
             i++
             try{
                 var elt = f(i)
-                if($B.rich_comp("__eq__", elt, item)){return true}
+                if($B.is_or_equals(elt, item)){
+                    return true
+                }
             }catch(err){
-                if(err.__class__ === _b_.IndexError){return false}
+                if(err.__class__ === _b_.IndexError){
+                    return false
+                }
                 throw err
             }
         }
@@ -1385,7 +1389,8 @@ $B.rich_comp = function(op, x, y){
     }
 
     var x_class_op = $B.$call($B.$getattr(x.__class__ || $B.get_class(x), op)),
-        rev_op = reversed_op[op] || op
+        rev_op = reversed_op[op] || op,
+        y_rev_func
     if(x.__class__ && y.__class__){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
@@ -1394,8 +1399,8 @@ $B.rich_comp = function(op, x, y){
         // reflected method of the right operand has priority, otherwise the
         // left operand's method has priority."
         if(y.__class__.__mro__.indexOf(x.__class__) > -1){
-            var rev_func = $B.$getattr(y, rev_op)
-            res = $B.$call($B.$getattr(y, rev_op))(x)
+            y_rev_func = $B.$getattr(y, rev_op)
+            res = $B.$call(y_rev_func)(x)
             if(res !== _b_.NotImplemented){
                 return res
             }
@@ -1406,11 +1411,15 @@ $B.rich_comp = function(op, x, y){
     if(res !== _b_.NotImplemented){
         return res
     }
-    var y_class_op = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),
-        rev_op))
-    res = y_class_op(y, x)
-    if(res !== _b_.NotImplemented ){
-        return res
+    if(y_rev_func === undefined){
+        // If y_rev_func is defined, it was called above, so don't try
+        // a second time
+        y_rev_func = $B.$call($B.$getattr(y.__class__ || $B.get_class(y),
+            rev_op))
+        res = y_rev_func(y, x)
+        if(res !== _b_.NotImplemented ){
+            return res
+        }
     }
 
     // If both operands return NotImplemented, return False if the operand is
