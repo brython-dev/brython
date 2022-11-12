@@ -138,7 +138,8 @@ float.__divmod__ = function(self, other){
 
 float.__eq__ = function(self, other){
     check_self_is_float(self, '__eq__')
-    if(isNaN(self.value) && isNaN(other)){
+    if(isNaN(self.value) && 
+            (_b_.isinstance(other, float) && isNaN(other.value))){
         return false
     }
     if(_b_.isinstance(other, _b_.int)){
