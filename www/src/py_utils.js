@@ -1607,18 +1607,20 @@ var repr_stack = new Set()
 
 $B.repr = {
     enter: function(obj){
-        if(repr_stack.has(obj)){
+        var obj_id = _b_.id(obj)
+        if(repr_stack.has(obj_id)){
             return true
         }else{
-            repr_stack.add(obj)
+            repr_stack.add(obj_id)
             if(repr_stack.size > $B.recursion_limit){
+                repr_stack.clear()
                 throw _b_.RecursionError.$factory("maximum recursion depth " +
                     "exceeded while getting the repr of an object")
             }
         }
     },
     leave: function(obj){
-        repr_stack.delete(obj)
+        repr_stack.delete(_b_.id(obj))
     }
 }
 

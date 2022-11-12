@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-11 21:17:36.138293"
-__BRYTHON__.timestamp=1668197856137
+__BRYTHON__.compiled_date="2022-11-12 12:02:15.574097"
+__BRYTHON__.timestamp=1668250935574
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5387,9 +5387,11 @@ if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(
 return res}else{return res}}
 $B.is_none=function(o){return o===undefined ||o===null ||o==_b_.None}
 var repr_stack=new Set()
-$B.repr={enter:function(obj){if(repr_stack.has(obj)){return true}else{repr_stack.add(obj)
-if(repr_stack.size > $B.recursion_limit){throw _b_.RecursionError.$factory("maximum recursion depth "+
-"exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(obj)}}})(__BRYTHON__)
+$B.repr={enter:function(obj){var obj_id=_b_.id(obj)
+if(repr_stack.has(obj_id)){return true}else{repr_stack.add(obj_id)
+if(repr_stack.size > $B.recursion_limit){repr_stack.clear()
+throw _b_.RecursionError.$factory("maximum recursion depth "+
+"exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(_b_.id(obj))}}})(__BRYTHON__)
 ;
 __BRYTHON__.builtins.object=(function($B){var _b_=$B.builtins
 var object={
@@ -13066,8 +13068,6 @@ for(var i=0,len=temp.length;i < len;i++){self[i]=saved[temp[i][1]]}}
 return self.__brython__ ? _b_.None :self}
 $B.$TimSort(self,cmp)
 return self.__brython__ ? _b_.None :self}
-$B.nb_sort=0
-$B.nb_sort_string=0
 $B.$list=function(t){t.__brython__=true
 t.__class__=_b_.list
 return t}
