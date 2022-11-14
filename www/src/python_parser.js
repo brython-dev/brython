@@ -74,7 +74,6 @@ for(var ast_class in $B.ast_classes){ // in py_ast.js
     var function_code = template.replace(/<ast_class>/g, ast_class)
                                 .replace(/<sep>/, sep)
                                 .replace(/<args>/g, args)
-    console.log(function_code)
     eval(function_code)
 }
 
