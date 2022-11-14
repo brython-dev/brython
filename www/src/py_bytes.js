@@ -338,8 +338,8 @@ bytes.__lt__ = function(self, other){
 
 bytes.__mod__ = function(self, args){
     // PEP 461
-    var s = decode(self, "ascii", "strict"),
-        res = _b_.str.__mod__(s, args)
+    var s = decode(self, "iso-8859-1", "strict"),
+        res = $B.printf_format(s, 'bytes', args) // _b_.str.__mod__(s, args)
     return _b_.str.encode(res, "ascii")
 }
 

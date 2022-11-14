@@ -158,8 +158,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-12 21:14:27.022383"
-__BRYTHON__.timestamp=1668284067022
+__BRYTHON__.compiled_date="2022-11-14 22:32:35.415676"
+__BRYTHON__.timestamp=1668461555415
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4483,7 +4483,8 @@ if(typeof src=='object'){var ix=src.ix,filename=src.filename,imported=src.import
 src=src.src}
 var locals_is_module=Array.isArray(locals_id)
 if(locals_is_module){locals_id=locals_id[0]}
-if($B.parser_to_ast){var _ast=new $B.Parser(src,filename).parse('file')}else{var root=$create_root_node({src,filename},module,locals_id,parent_scope)
+if($B.parser_to_ast){console.log('use parser_to_ast')
+var _ast=new $B.Parser(src,filename).parse('file')}else{var root=$create_root_node({src,filename},module,locals_id,parent_scope)
 dispatch_tokens(root)
 var _ast=root.ast()}
 var future=$B.future_features(_ast,filename)
@@ -6737,6 +6738,7 @@ format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b
 "is required, not '"+$B.class_name(obj)+"'")}}
 )
 memoryview.$match_sequence_pattern=true,
+memoryview.$buffer_protocol=true
 memoryview.__eq__=function(self,other){if(other.__class__ !==memoryview){return false}
 return $B.$getattr(self.obj,'__eq__')(other.obj)}
 memoryview.__getitem__=function(self,key){if(isinstance(key,_b_.int)){var start=key*self.itemsize
@@ -7701,8 +7703,7 @@ return res}
 $B.save_stack=function(){return $B.deep_copy($B.frames_stack)}
 $B.restore_stack=function(stack,locals){$B.frames_stack=stack
 $B.frames_stack[$B.frames_stack.length-1][1]=locals}
-$B.freeze=function(err){if(err.$stack===undefined){console.log('set $stack',err.__class__.$infos.__name__)
-err.$stack=$B.frames_stack.slice()
+$B.freeze=function(err){if(err.$stack===undefined){err.$stack=$B.frames_stack.slice()
 err.$linenos=$B.frames_stack.map(x=> x.$lineno)}
 err.__traceback__=traceback.$factory(err)}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
@@ -8257,7 +8258,7 @@ bytes.__len__=function(self){return self.source.length}
 bytes.__lt__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
 return _b_.list.__lt__(self.source,other.source)}
 bytes.__mod__=function(self,args){
-var s=decode(self,"ascii","strict"),res=_b_.str.__mod__(s,args)
+var s=decode(self,"iso-8859-1","strict"),res=$B.printf_format(s,'bytes',args)
 return _b_.str.encode(res,"ascii")}
 bytes.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other)
 var t=[],source=$.self.source,slen=source.length
@@ -10001,7 +10002,7 @@ if(fmt.type && fmt.type !="s"){throw _b_.ValueError.$factory("Unknown format cod
 "' for object of type 'str'")}
 return _self}
 str.__format__=function(_self,format_spec){[_self,format_spec]=to_string([_self,format_spec])
-var fmt=new $B.parse_format_spec(format_spec)
+var fmt=new $B.parse_format_spec(format_spec,_self)
 if(fmt.sign !==undefined){throw _b_.ValueError.$factory(
 "Sign not allowed in string format specifier")}
 if(fmt.precision){_self=_self.substr(0,fmt.precision)}
@@ -10051,7 +10052,9 @@ var len=_self.len=_self.length-_self.surrogates.length
 return len}
 var kwarg_key=new RegExp("([^\\)]*)\\)")
 var NotANumber=function(){this.name="NotANumber"}
-var number_check=function(s){if(! _b_.isinstance(s,[_b_.int,_b_.float])){throw new NotANumber()}}
+var number_check=function(s,flags){if(! _b_.isinstance(s,[_b_.int,_b_.float])){var type=flags.conversion_type
+throw _b_.TypeError.$factory(`%${type} format: a real number `+
+`is required, not ${$B.class_name(s)}`)}}
 var get_char_array=function(size,char){if(size <=0){return ""}
 return new Array(size+1).join(char)}
 var format_padding=function(s,flags,minus_one){var padding=flags.padding
@@ -10063,13 +10066,17 @@ if(minus_one){
 padding-=1}
 if(! flags.left){return get_char_array(padding-s.length,flags.pad_char)+s}else{
 return s+get_char_array(padding-s.length,flags.pad_char)}}
+const max_precision=2**31-4,max_repeat=2**30-1
 var format_int_precision=function(val,flags){var precision=flags.precision
 if(! precision){return val.toString()}
 precision=parseInt(precision,10)
+if(precision > max_precision){throw _b_.OverflowError.$factory('precision too large')}
 var s
 if(val.__class__===$B.long_int){s=$B.long_int.to_base(val,10)}else{s=val.toString()}
-if(s[0]==="-"){return "-"+get_char_array(precision-s.length+1,"0")+s.slice(1)}
-return get_char_array(precision-s.length,"0")+s}
+if(precision-s.length > max_repeat){throw _b_.OverflowError.$factory('precision too large')}
+if(s[0]==="-"){return "-"+"0".repeat(Math.max(0,precision-s.length+1))+
+s.slice(1)}
+return "0".repeat(Math.max(0,precision-s.length))+s}
 var format_float_precision=function(val,upper,flags,modifier){var precision=flags.precision
 if(isFinite(val)){return modifier(val,precision,flags,upper)}
 if(val===Infinity){val="inf"}else if(val===-Infinity){val="-inf"}else{val="nan"}
@@ -10080,7 +10087,7 @@ return ''}
 var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
-var num_format=function(val,flags){number_check(val)
+var num_format=function(val,flags){number_check(val,flags)
 if(val.__class__===$B.long_int){val=$B.long_int.to_base(val,10)}else if(_b_.isinstance(val,_b_.float)){val=parseInt(val.value)}else{val=parseInt(val)}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==="0"){if(val < 0){s=s.substring(1)
@@ -10090,10 +10097,14 @@ if(sign !==""){return sign+format_padding(s,flags,true)}}
 return format_padding(format_sign(val,flags)+s,flags)}
 var repr_format=function(val,flags){flags.pad_char=" " 
 return format_padding(_b_.repr(val),flags)}
-var ascii_format=function(val,flags){flags.pad_char=" " 
-return format_padding(_b_.ascii(val),flags)}
-var _float_helper=function(val,flags){number_check(val)
-if(! flags.precision){if(! flags.decimal_point){flags.precision=6}else{flags.precision=0}}else{flags.precision=parseInt(flags.precision,10)
+var ascii_format=function(val,flags,type){flags.pad_char=" " 
+var ascii
+if(type=='bytes'){var repr=_b_.repr(val)
+ascii=_b_.str.encode(repr,'ascii','backslashreplace')
+ascii=_b_.bytes.decode(ascii,'ascii')}else{ascii=_b_.ascii(val)}
+return format_padding(ascii,flags)}
+var _float_helper=function(val,flags){number_check(val,flags)
+if(flags.precision===undefined){if(! flags.decimal_point){flags.precision=6}else{flags.precision=0}}else{flags.precision=parseInt(flags.precision,10)
 validate_precision(flags.precision)}
 return _b_.isinstance(val,_b_.int)? val :val.value}
 var trailing_zeros=/(.*?)(0+)([eE].*)/,leading_zeros=/\.(0*)/,trailing_dot=/\.$/
@@ -10117,8 +10128,7 @@ flags.precision=Math.max(0,p-1-exp)
 res=floating_point_decimal_format(val,upper,flags)
 res=remove_zeros(res)}else{
 flags.precision=Math.max(0,p-1)
-var delim=upper ? 'E' :'e',exp_fmt=floating_point_exponential_format(val,upper,flags);
-parts=exp_fmt.split(delim)
+var delim=upper ? 'E' :'e',exp_fmt=floating_point_exponential_format(val,upper,flags),parts=exp_fmt.split(delim)
 parts[0]=remove_zeros(parts[0])
 res=parts.join(delim)}
 return format_padding(format_sign(val,flags)+res,flags)}
@@ -10133,13 +10143,12 @@ var last=res_floor[res_floor.length-1]
 res=last.match(/[02468]/)? res_floor :res_ceil}else{res=v-res_floor < res_ceil-v ? res_floor :res_ceil}
 return is_neg ? '-'+res :res}
 var floating_point_decimal_format=function(val,upper,flags){val=_float_helper(val,flags)
-return format_padding(format_sign(val,flags)+
-format_float_precision(val,upper,flags,function(val,precision,flags){
+var unpadded=format_float_precision(val,upper,flags,function(val,precision,flags){
 var res=roundDownToFixed(val,precision)
 if(precision===0 && flags.alternate){res+='.'}
 if(Object.is(val,-0)){res='-'+res}
-return res}),flags
-)}
+return res})
+return format_padding(format_sign(val,flags)+unpadded,flags)}
 var _floating_exp_helper=function(val,precision,flags,upper){var is_neg=false,val_pos=val.toString()
 if(val < 0){is_neg=true
 val_pos=val_pos.substr(1)}else if(Object.is(val,-0)){is_neg=true}
@@ -10183,7 +10192,7 @@ if(flags.alternate){if(ret.charAt(0)==="-"){if(upper){ret="-0X"+ret.slice(1)}
 else{ret="-0x"+ret.slice(1)}}else{if(upper){ret="0X"+ret}
 else{ret="0x"+ret}}}
 return format_padding(format_sign(val,flags)+ret,flags)}
-var octal_format=function(val,flags){number_check(val)
+var octal_format=function(val,flags){number_check(val,flags)
 var ret
 if(val.__class__===$B.long_int){ret=$B.long_int.to_base(8)}else{ret=parseInt(val)
 ret=ret.toString(8)}
@@ -10198,11 +10207,17 @@ return format_padding(ret,flags)}
 function series_of_bytes(val,flags){if(val.__class__ && val.__class__.$buffer_protocol){var it=_b_.iter(val),ints=[]
 while(true){try{ints.push(_b_.next(it))}catch(err){if(err.__class__===_b_.StopIteration){var b=_b_.bytes.$factory(ints)
 return format_padding(_b_.bytes.decode(b,"ascii"),flags)}
-throw err}}}else{try{bytes_obj=$B.$getattr(val,"__bytes__")
+throw err}}}else{try{bytes_obj=$B.$getattr(val,"__bytes__")()
 return format_padding(_b_.bytes.decode(bytes_obj),flags)}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("%b does not accept '"+
 $B.class_name(val)+"'")}
 throw err}}}
-var single_char_format=function(val,flags){if(_b_.isinstance(val,str)&& val.length==1){return val}else if(_b_.isinstance(val,_b_.bytes)&& val.source.length==1){val=val.source[0]}else{try{val=_b_.int.$factory(val)}catch(err){throw _b_.TypeError.$factory("%c requires int or char")}}
+var single_char_format=function(val,flags,type){if(type=='bytes'){if(_b_.isinstance(val,_b_.int)){if(val.__class__===$B.long_int ||val < 0 ||val > 255){throw _b_.OverflowError.$factory("%c arg not in range(256)")}}else if(_b_.isinstance(val,[_b_.bytes,_b_.bytearray])){if(val.source.length > 1){throw _b_.TypeError.$factory(
+"%c requires an integer in range(256) or a single byte")}
+val=val.source[0]}}else{if(_b_.isinstance(val,_b_.str)){if(_b_.str.__len__(val)==1){return val}
+throw _b_.TypeError.$factory("%c requires int or char")}else if(! _b_.isinstance(val,_b_.int)){throw _b_.TypeError.$factory("%c requires int or char")}
+if((val.__class__===$B.long_int &&
+(val.value < 0 ||val.value >=0x110000))||
+(val < 0 ||val >=0x110000)){throw _b_.OverflowError.$factory('%c arg not in range(0x110000)')}}
 return format_padding(_b_.chr(val),flags)}
 var num_flag=function(c,flags){if(c==="0" && ! flags.padding && ! flags.decimal_point && ! flags.left){flags.pad_char="0"
 return}
@@ -10217,56 +10232,67 @@ var sign_flag=function(val,flags){flags.sign=true}
 var alternate_flag=function(val,flags){flags.alternate=true}
 var char_mapping={"b":series_of_bytes,"s":str_format,"d":num_format,"i":num_format,"u":num_format,"o":octal_format,"r":repr_format,"a":ascii_format,"g":function(val,flags){return floating_point_format(val,false,flags)},"G":function(val,flags){return floating_point_format(val,true,flags)},"f":function(val,flags){return floating_point_decimal_format(val,false,flags)},"F":function(val,flags){return floating_point_decimal_format(val,true,flags)},"e":function(val,flags){return floating_point_exponential_format(val,false,flags)},"E":function(val,flags){return floating_point_exponential_format(val,true,flags)},"x":function(val,flags){return signed_hex_format(val,false,flags)},"X":function(val,flags){return signed_hex_format(val,true,flags)},"c":single_char_format,"0":function(val,flags){return num_flag("0",flags)},"1":function(val,flags){return num_flag("1",flags)},"2":function(val,flags){return num_flag("2",flags)},"3":function(val,flags){return num_flag("3",flags)},"4":function(val,flags){return num_flag("4",flags)},"5":function(val,flags){return num_flag("5",flags)},"6":function(val,flags){return num_flag("6",flags)},"7":function(val,flags){return num_flag("7",flags)},"8":function(val,flags){return num_flag("8",flags)},"9":function(val,flags){return num_flag("9",flags)},"-":neg_flag," ":space_flag,"+":sign_flag,".":decimal_point_flag,"#":alternate_flag}
 var UnsupportedChar=function(){this.name="UnsupportedChar"}
-str.__mod__=function(_self,args){_self=to_string(_self)
-var length=_self.length,pos=0 |0,argpos=null,getitem
-if(_b_.isinstance(args,_b_.tuple)){argpos=0 |0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
-var ret=''
-var $get_kwarg_string=function(s){
-++pos
-var rslt=kwarg_key.exec(s.substring(newpos))
-if(! rslt){throw _b_.ValueError.$factory("incomplete format key")}
-var key=rslt[1]
-newpos+=rslt[0].length
-try{var _self=getitem(key)}catch(err){if(err.__class__===_b_.KeyError){throw err}
-throw _b_.TypeError.$factory("format requires a mapping")}
-return get_string_value(s,_self)}
-var $get_arg_string=function(s){
-var _self
-if(argpos===null){
-_self=args}else{_self=args[argpos++]
-if(_self===undefined){throw _b_.TypeError.$factory(
-"not enough arguments for format string")}}
-return get_string_value(s,_self)}
-var get_string_value=function(s,_self){
-var flags={"pad_char":" "}
-do{var func=char_mapping[s[newpos]]
-try{if(func===undefined){throw new UnsupportedChar()}else{var ret=func(_self,flags)
-if(ret !==undefined){return ret}
-++newpos}}catch(err){if(err.name=="UnsupportedChar"){invalid_char=s[newpos]
-if(invalid_char===undefined){throw _b_.ValueError.$factory("incomplete format")}
-throw _b_.ValueError.$factory(
-"unsupported format character '"+invalid_char+
-"' (0x"+invalid_char.charCodeAt(0).toString(16)+
-") at index "+newpos)}else if(err.name==="NotANumber"){var try_char=s[newpos],cls=_self.__class__
-if(!cls){if(typeof(_self)==="string"){cls="str"}else{cls=typeof(_self)}}else{cls=cls.$infos.__name__}
-throw _b_.TypeError.$factory("%"+try_char+
-" format: a number is required, not "+cls)}else{throw err}}}while(true)}
-var nbph=0 
-do{var newpos=_self.indexOf("%",pos)
-if(newpos < 0){ret+=_self.substring(pos)
+const conversion_flags='#0- +',length_modifiers='hlL',conversion_types='diouxXeEfFgGcrsa'
+function parse_mod_format(s,type,pos){var flags={pad_char:' '},len=s.length,start_pos=pos,mo
+pos++
+while(pos < len){var char=s[pos]
+if(char=='('){var end=s.substr(pos).indexOf(')')
+if(end==-1){throw _b_.ValueError.$factory('incomplete format key')}else{flags.mapping_key=s.substr(pos+1,end-1)
+pos+=end+1}}else if(conversion_flags.indexOf(char)>-1){flags.conversion_flag=char
+if(char=='#'){flags.alternate=true}else if(char=='-'){flags.left=true}else if(char=='+'){flags.sign='+'}else if(char=='0'){flags.pad_char='0'}else if(char==' '){flags.space=true}
+pos++}else if(char=='*'){flags.padding='*'
+pos++}else if(mo=/^\d+/.exec(s.substr(pos))){flags.padding=mo[0]
+pos+=mo[0].length}else if(char=='.'){pos++
+if(s[pos]=='*'){flags.precision='*'
+pos++}else if(mo=/^\d+/.exec(s.substr(pos))){flags.precision=mo[0]
+pos+=mo[0].length}else{flags.precision="0"}}else if(length_modifiers.indexOf(char)>-1){flags.length_modifier=char
+pos++}else if((conversion_types.indexOf(char)>-1)||
+(char=='b' && type=='bytes')){if(type=='bytes'){if(char=='s'){
+char='b'}else if(char=='r'){char='a'}}
+flags.conversion_type=char
+flags.end=pos
+flags.string=s.substring(start_pos,pos+1)
+if(flags.left && flags.pad_char=='0'){
+flags.pad_char=' '}
+return flags}else{throw _b_.ValueError.$factory(`invalid character in format: ${char}`)}}
+throw _b_.ValueError.$factory('invalid format')}
+$B.printf_format=function(s,type,args){
+var length=s.length,pos=0,argpos=null,getitem
+if(_b_.isinstance(args,_b_.tuple)){argpos=0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
+var ret='',
+nbph=0,
+pos=0,
+len=s.length
+while(pos < len){var fmtpos=s.indexOf("%",pos)
+if(fmtpos < 0){ret+=s.substring(pos)
 break}
-ret+=_self.substring(pos,newpos)
-++newpos
-if(newpos < length){if(_self[newpos]==="%"){ret+="%"}else{nbph++
-if(_self[newpos]==="("){++newpos
-ret+=$get_kwarg_string(_self)}else{ret+=$get_arg_string(_self)}}}else{
-throw _b_.ValueError.$factory("incomplete format")}
-pos=newpos+1}while(pos < length)
+ret+=s.substring(pos,fmtpos)
+pos=fmtpos
+if(s[pos+1]=='%'){ret+='%'
+pos+=2}else{nbph++
+var fmt=parse_mod_format(s,type,pos)
+pos=fmt.end+1
+if(fmt.padding=='*'){
+if(args[argpos]===undefined){throw _b_.ValueError.$factory('no value for field width *')}
+fmt.padding=args[argpos]
+argpos++}
+if(fmt.precision=='*'){
+if(args[argpos]===undefined){throw _b_.ValueError.$factory('no value for precision *')}
+fmt.precision=args[argpos]
+argpos++}
+var func=char_mapping[fmt.conversion_type],value
+if(fmt.mapping_key !==undefined){value=getitem(fmt.mapping_key)}else{if(argpos===null){value=args}else{value=args[argpos]
+if(value===undefined){throw _b_.TypeError.$factory(
+"not enough arguments for format string")}
+argpos++}}
+ret+=func(value,fmt,type)}}
 if(argpos !==null){if(args.length > argpos){throw _b_.TypeError.$factory(
 "not enough arguments for format string")}else if(args.length < argpos){throw _b_.TypeError.$factory(
 "not all arguments converted during string formatting")}}else if(nbph==0){throw _b_.TypeError.$factory(
 "not all arguments converted during string formatting")}
 return ret}
+str.__mod__=function(_self,args){_self=to_string(_self)
+return $B.printf_format(_self,'str',args)}
 str.__mro__=[_b_.object]
 str.__mul__=function(){var $=$B.args("__mul__",2,{self:null,other:null},["self","other"],arguments,{},null,null),_self=to_string($.self)
 if(! _b_.isinstance($.other,_b_.int)){throw _b_.TypeError.$factory(
@@ -10816,7 +10842,7 @@ throw _b_.TypeError.$factory("__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}
 $B.set_func_names(str,"builtins")
 _b_.str=str
-$B.parse_format_spec=function(spec){if(spec==""){this.empty=true}else{var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))
+$B.parse_format_spec=function(spec,obj){if(spec==""){this.empty=true}else{var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))
 if(align_pos !=-1){if(spec.charAt(1)&& aligns.indexOf(spec.charAt(1))!=-1){
 this.fill=spec.charAt(0)
 this.align=spec.charAt(1)
@@ -10832,7 +10858,9 @@ var car=spec.charAt(pos)
 if(car=="+" ||car=="-" ||car==" "){this.sign=car
 pos++
 car=spec.charAt(pos)}
-if(car=="#"){this.alternate=true;pos++;car=spec.charAt(pos)}
+if(car=="#"){this.alternate=true;
+pos++;
+car=spec.charAt(pos)}
 if(car=="0"){
 this.fill="0"
 if(align_pos==-1){this.align="="}
@@ -10845,11 +10873,14 @@ if(this.width !==undefined){this.width=parseInt(this.width)}
 if(this.width===undefined && car=="{"){
 var end_param_pos=spec.substr(pos).search("}")
 this.width=spec.substring(pos,end_param_pos)
-console.log("width","["+this.width+"]")
 pos+=end_param_pos+1}
-if(car==","){this.comma=true
+if(car=="," ||car=="_"){this.comma=true
+this.grouping_option=car
 pos++
-car=spec.charAt(pos)}
+car=spec.charAt(pos)
+if(car=="," ||car=="_"){if(car==this.grouping_option){throw _b_.ValueError.$factory(
+`Cannot specify '${car}' with '${car}'.`)}else{throw _b_.ValueError.$factory(
+"Cannot specify both ',' and '_'.")}}}
 if(car=="."){if(digits.indexOf(spec.charAt(pos+1))==-1){throw _b_.ValueError.$factory(
 "Missing precision in format spec")}
 this.precision=spec.charAt(pos+1)
@@ -10862,7 +10893,9 @@ this.precision=parseInt(this.precision)}
 if(car && types.indexOf(car)>-1){this.type=car
 pos++
 car=spec.charAt(pos)}
-if(pos !==spec.length){throw _b_.ValueError.$factory("Invalid format specifier: "+spec)}}
+if(pos !==spec.length){var err_msg=`Invalid format specifier '${spec}'`
+if(obj){err_msg+=` for object of type '${$B.class_name(obj)}'`}
+throw _b_.ValueError.$factory(err_msg)}}
 this.toString=function(){return(this.fill===undefined ? "" :_b_.str.$factory(this.fill))+
 (this.align ||"")+
 (this.sign ||"")+
@@ -10979,8 +11012,7 @@ i++}}
 if(nb_braces > 0){fstring_error("f-string: expected '}'",pos)}}}
 if(current.length > 0){elts.push(current)}
 for(var elt of elts){if(typeof elt=="object"){if(elt.fmt_pos !==undefined &&
-elt.expression.charAt(elt.fmt_pos)!=':'){console.log('mauvais format',string,elts)
-throw Error()}}}
+elt.expression.charAt(elt.fmt_pos)!=':'){throw Error()}}}
 return elts}
 var _chr=$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
 return String.fromCodePoint(0xD800 |(code >> 10))+
@@ -11085,7 +11117,7 @@ case "n":
 return self }
 if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
 return res}
-int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec,self)
 if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
 return _b_.float.__format__(self,format_spec)}
 fmt.align=fmt.align ||">"
@@ -11389,7 +11421,7 @@ return self }
 if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
 return res}
 long_int.$to_js_number=function(self){return Number(self.value)}
-long_int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec)
+long_int.__format__=function(self,format_spec){var fmt=new $B.parse_format_spec(format_spec,self)
 if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
 return _b_.float.__format__(self,format_spec)}
 fmt.align=fmt.align ||">"
@@ -11594,7 +11626,7 @@ float.__divmod__=function(self,other){check_self_is_float(self,'__divmod__')
 if(! _b_.isinstance(other,[_b_.int,float])){return _b_.NotImplemented}
 return $B.fast_tuple([float.__floordiv__(self,other),float.__mod__(self,other)])}
 float.__eq__=function(self,other){check_self_is_float(self,'__eq__')
-if(isNaN(self.value)&& 
+if(isNaN(self.value)&&
 (_b_.isinstance(other,float)&& isNaN(other.value))){return false}
 if(_b_.isinstance(other,_b_.int)){return self.value==other}
 if(_b_.isinstance(other,float)){return self.value==other.value}
@@ -11746,7 +11778,9 @@ if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& value > 0){res=f
 if(fmt.type=="%"){res+="%"}
 return res}
 float.__format__=function(self,format_spec){check_self_is_float(self,'__format__')
-var fmt=new $B.parse_format_spec(format_spec)
+var fmt=new $B.parse_format_spec(format_spec,self)
+return float.$format(self,fmt)}
+float.$format=function(self,fmt){
 fmt.align=fmt.align ||">"
 var pf=preformat(self,fmt)
 var raw=pf.split('.'),_int=raw[0]
@@ -12097,6 +12131,37 @@ return self.$real.value==other.valueOf()}
 if(_b_.isinstance(other,_b_.float)){if(self.$imag.value !=0){return false}
 return self.$real.value==other.value}
 return _b_.NotImplemented}
+const max_precision=2**31-4,max_repeat=2**30-1
+complex.__format__=function(self,format_spec){if(format_spec.length==0){return _b_.str.$factory(self)}
+var fmt=new $B.parse_format_spec(format_spec,self),type=fmt.conversion_type
+var default_precision=6,skip_re,add_parens
+if(type===undefined ||'eEfFgGn'.indexOf(type)>-1){if(fmt.precision > max_precision){throw _b_.ValueError.$factory('precision too big')}
+if(fmt.fill_char=='0'){throw _b_.ValueError.$factory(
+"Zero padding is not allowed in complex format specifier")}
+if(fmt.align=='='){throw _b_.ValueError.$factory(
+"'=' alignment flag is not allowed in complex format "+
+"specifier")}
+var re=self.$real.value,im=self.$imag.value,precision=parseInt(fmt.precision,10)
+if(type===undefined){type='r'
+default_precision=0
+if(re==0 && Object.is(re,0)){skip_re=1}else{add_parens=1}}else if(type=='n'){type='g'}
+if(precision < 0){precision=6}else if(type=='r'){type='g'}
+var format=$B.clone(fmt)
+format.conversion_type=type
+format.precision=precision
+var res=''
+if(! skip_re){res+=_b_.float.$format(self.$real,format)
+if(self.$imag.value >=0){res+='+'}}
+var formatted_im=_b_.float.$format(self.$imag,format)
+var pos=-1,last_num
+for(var char of formatted_im){pos++
+if(char.match(/\d/)){last_num=pos}}
+formatted_im=formatted_im.substr(0,last_num+1)+'j'+
+formatted_im.substr(last_num+1)
+res+=formatted_im
+if(add_parens){res='('+res+')'}
+return res}
+throw _b_.ValueError.$factory(`invalid type for complex: ${type}`)}
 complex.__hash__=function(self){
 return self.$imag.value*1000003+self.$real.value}
 complex.__init__=function(){return _b_.None}

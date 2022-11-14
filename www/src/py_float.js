@@ -138,7 +138,7 @@ float.__divmod__ = function(self, other){
 
 float.__eq__ = function(self, other){
     check_self_is_float(self, '__eq__')
-    if(isNaN(self.value) && 
+    if(isNaN(self.value) &&
             (_b_.isinstance(other, float) && isNaN(other.value))){
         return false
     }
@@ -584,7 +584,12 @@ function preformat(self, fmt){
 
 float.__format__ = function(self, format_spec){
     check_self_is_float(self, '__format__')
-    var fmt = new $B.parse_format_spec(format_spec)
+    var fmt = new $B.parse_format_spec(format_spec, self)
+    return float.$format(self, fmt)
+}
+
+float.$format = function(self, fmt){
+    // fmt is the object parsed from a format_spec
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
     var raw = pf.split('.'),

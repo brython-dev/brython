@@ -344,7 +344,6 @@ $B.restore_stack = function(stack, locals){
 
 $B.freeze = function(err){
     if(err.$stack === undefined){
-        console.log('set $stack', err.__class__.$infos.__name__)
         err.$stack = $B.frames_stack.slice()
         err.$linenos = $B.frames_stack.map(x => x.$lineno)
     }

@@ -242,7 +242,7 @@ function preformat(_self, fmt){
 
 str.__format__ = function(_self, format_spec) {
     [_self, format_spec] = to_string([_self, format_spec])
-    var fmt = new $B.parse_format_spec(format_spec)
+    var fmt = new $B.parse_format_spec(format_spec, _self)
 
     if(fmt.sign !== undefined){
         throw _b_.ValueError.$factory(
@@ -380,9 +380,11 @@ var NotANumber = function() {
     this.name = "NotANumber"
 }
 
-var number_check = function(s){
+var number_check = function(s, flags){
     if(! _b_.isinstance(s, [_b_.int, _b_.float])){
-        throw new NotANumber()
+        var type = flags.conversion_type
+        throw _b_.TypeError.$factory(`%${type} format: a real number ` +
+            `is required, not ${$B.class_name(s)}`)
     }
 }
 
@@ -411,27 +413,36 @@ var format_padding = function(s, flags, minus_one){
     }
 }
 
+const max_precision = 2 ** 31 - 4,
+      max_repeat = 2 ** 30 - 1
+
 var format_int_precision = function(val, flags){
     var precision = flags.precision
     if(! precision){
         return val.toString()
     }
     precision = parseInt(precision, 10)
+    if(precision > max_precision){
+        throw _b_.OverflowError.$factory('precision too large')
+    }
     var s
     if(val.__class__ === $B.long_int){
        s = $B.long_int.to_base(val, 10)
     }else{
        s = val.toString()
     }
-    if(s[0] === "-"){
-        return "-" + get_char_array(precision - s.length + 1, "0") + s.slice(1)
+    if(precision - s.length > max_repeat){
+        throw _b_.OverflowError.$factory('precision too large')
     }
-    return get_char_array(precision - s.length, "0") + s
+    if(s[0] === "-"){
+        return "-" + "0".repeat(Math.max(0, precision - s.length + 1)) +
+            s.slice(1)
+    }
+    return "0".repeat(Math.max(0, precision - s.length)) + s
 }
 
 var format_float_precision = function(val, upper, flags, modifier){
     var precision = flags.precision
-    // val is a float
     if(isFinite(val)){
         return modifier(val, precision, flags, upper)
     }
@@ -469,7 +480,7 @@ var str_format = function(val, flags) {
 }
 
 var num_format = function(val, flags) {
-    number_check(val)
+    number_check(val, flags)
     if(val.__class__ === $B.long_int){
         val = $B.long_int.to_base(val, 10)
     }else if(_b_.isinstance(val, _b_.float)){
@@ -498,15 +509,23 @@ var repr_format = function(val, flags) {
     return format_padding(_b_.repr(val), flags)
 }
 
-var ascii_format = function(val, flags) {
+var ascii_format = function(val, flags, type) {
     flags.pad_char = " "  // even if 0 padding is defined, don't use it
-    return format_padding(_b_.ascii(val), flags)
+    var ascii
+    if(type == 'bytes'){
+        var repr = _b_.repr(val)
+        ascii = _b_.str.encode(repr, 'ascii', 'backslashreplace')
+        ascii = _b_.bytes.decode(ascii, 'ascii')
+    }else{
+        ascii = _b_.ascii(val)
+    }
+    return format_padding(ascii, flags)
 }
 
 // converts val to float and sets precision if missing
 var _float_helper = function(val, flags){
-    number_check(val)
-    if(! flags.precision){
+    number_check(val, flags)
+    if(flags.precision === undefined){
         if(! flags.decimal_point){
             flags.precision = 6
         }else{
@@ -588,7 +607,7 @@ var floating_point_format = function(val, upper, flags){
         */
         flags.precision = Math.max(0, p - 1)
         var delim = upper ? 'E' : 'e',
-            exp_fmt = floating_point_exponential_format(val, upper, flags);
+            exp_fmt = floating_point_exponential_format(val, upper, flags),
             parts = exp_fmt.split(delim)
         parts[0] = remove_zeros(parts[0])
         res = parts.join(delim)
@@ -623,22 +642,21 @@ var roundDownToFixed = $B.roundDownToFixed = function(v, d){
 // fF
 var floating_point_decimal_format = function(val, upper, flags){
     val = _float_helper(val, flags)
-    return format_padding(format_sign(val, flags) +
-        format_float_precision(val, upper, flags,
-            function(val, precision, flags) {
-                // can't use val.toFixed(precision) because
-                // (2.5).toFixed(0) returns "3", not "2"...
-                var res = roundDownToFixed(val, precision)
-                if(precision === 0 && flags.alternate){
-                    res += '.'
-                }
-                if(Object.is(val, -0)){
-                    res = '-' + res
-                }
-                return res
-            }),
-        flags
-    )
+    var unpadded = format_float_precision(val, upper, flags,
+        function(val, precision, flags) {
+            // can't use val.toFixed(precision) because
+            // (2.5).toFixed(0) returns "3", not "2"...
+            var res = roundDownToFixed(val, precision)
+            if(precision === 0 && flags.alternate){
+                res += '.'
+            }
+            if(Object.is(val, -0)){
+                res = '-' + res
+            }
+            return res
+        })
+    return format_padding(format_sign(val, flags) + unpadded,
+        flags)
 }
 
 var _floating_exp_helper = function(val, precision, flags, upper){
@@ -703,6 +721,7 @@ var _floating_exp_helper = function(val, precision, flags, upper){
 
 // eE
 var floating_point_exponential_format = function(val, upper, flags){
+
     val = _float_helper(val, flags)
     return format_padding(format_sign(val, flags) +
         format_float_precision(val, upper, flags, _floating_exp_helper), flags)
@@ -752,7 +771,7 @@ var signed_hex_format = function(val, upper, flags){
 }
 
 var octal_format = function(val, flags) {
-    number_check(val)
+    number_check(val, flags)
     var ret
 
     if(val.__class__ === $B.long_int){
@@ -799,7 +818,7 @@ function series_of_bytes(val, flags){
         }
     }else{
         try{
-            bytes_obj = $B.$getattr(val, "__bytes__")
+            bytes_obj = $B.$getattr(val, "__bytes__")()
             return format_padding(_b_.bytes.decode(bytes_obj), flags)
         }catch(err){
             if(err.__class__ === _b_.AttributeError){
@@ -811,16 +830,32 @@ function series_of_bytes(val, flags){
     }
 }
 
-var single_char_format = function(val, flags){
-    if(_b_.isinstance(val, str) && val.length == 1){
-        return val
-    }else if(_b_.isinstance(val, _b_.bytes) && val.source.length == 1){
-        val = val.source[0]
+var single_char_format = function(val, flags, type){
+    if(type == 'bytes'){
+        if(_b_.isinstance(val, _b_.int)){
+            if(val.__class__ === $B.long_int || val < 0 || val > 255){
+                throw _b_.OverflowError.$factory("%c arg not in range(256)")
+            }
+        }else if(_b_.isinstance(val, [_b_.bytes, _b_.bytearray])){
+            if(val.source.length > 1){
+                throw _b_.TypeError.$factory(
+                    "%c requires an integer in range(256) or a single byte")
+            }
+            val = val.source[0]
+        }
     }else{
-        try{
-            val = _b_.int.$factory(val)  // yes, floats are valid (they are cast to int)
-        }catch (err){
+        if(_b_.isinstance(val, _b_.str)){
+            if(_b_.str.__len__(val) == 1){
+                return val
+            }
             throw _b_.TypeError.$factory("%c requires int or char")
+        }else if(! _b_.isinstance(val, _b_.int)){
+            throw _b_.TypeError.$factory("%c requires int or char")
+        }
+        if((val.__class__ === $B.long_int &&
+                (val.value < 0 || val.value >= 0x110000)) ||
+                (val < 0 || val >= 0x110000)){
+            throw _b_.OverflowError.$factory('%c arg not in range(0x110000)')
         }
     }
     return format_padding(_b_.chr(val), flags)
@@ -913,128 +948,153 @@ var UnsupportedChar = function(){
     this.name = "UnsupportedChar"
 }
 
-str.__mod__ = function(_self, args){
-    _self = to_string(_self)
-    var length = _self.length,
-        pos = 0 | 0,
+const conversion_flags = '#0- +',
+      length_modifiers = 'hlL',
+      conversion_types = 'diouxXeEfFgGcrsa'
+
+function parse_mod_format(s, type, pos){
+    var flags = {pad_char: ' '},
+        len = s.length,
+        start_pos = pos,
+        mo
+    pos++
+    while(pos < len){
+        var char = s[pos]
+        if(char == '('){
+            var end = s.substr(pos).indexOf(')')
+            if(end == -1){
+                throw _b_.ValueError.$factory('incomplete format key')
+            }else{
+                flags.mapping_key = s.substr(pos + 1, end - 1)
+                pos += end + 1
+            }
+        }else if(conversion_flags.indexOf(char) > -1){
+            flags.conversion_flag = char
+            if(char == '#'){
+                flags.alternate = true
+            }else if(char == '-'){
+                flags.left = true
+            }else if(char == '+'){
+                flags.sign = '+'
+            }else if(char == '0'){
+                flags.pad_char = '0'
+            }else if(char == ' '){
+                flags.space = true
+            }
+            pos++
+        }else if(char == '*'){
+            flags.padding = '*'
+            pos++
+        }else if(mo = /^\d+/.exec(s.substr(pos))){
+            flags.padding = mo[0]
+            pos += mo[0].length
+        }else if(char == '.'){
+            pos++
+            if(s[pos] == '*'){
+                flags.precision = '*'
+                pos++
+            }else if(mo = /^\d+/.exec(s.substr(pos))){
+                flags.precision = mo[0]
+                pos += mo[0].length
+            }else{
+                flags.precision = "0"
+            }
+        }else if(length_modifiers.indexOf(char) > -1){
+            flags.length_modifier = char
+            pos++
+        }else if((conversion_types.indexOf(char) > -1) ||
+                (char == 'b' && type == 'bytes')){
+            if(type == 'bytes'){
+                if(char == 's'){
+                    // for bytes, 's' is an alias for 'b'
+                    char = 'b'
+                }else if(char == 'r'){
+                    char = 'a'
+                }
+            }
+            flags.conversion_type = char
+            flags.end = pos
+            flags.string = s.substring(start_pos, pos + 1)
+            if(flags.left && flags.pad_char == '0'){
+                // conversion flag "-" overrides "0" if both are given
+                flags.pad_char = ' '
+            }
+            return flags
+        }else{
+            throw _b_.ValueError.$factory(`invalid character in format: ${char}`)
+        }
+    }
+    throw _b_.ValueError.$factory('invalid format')
+}
+
+$B.printf_format = function(s, type, args){
+    // printf-style bytes or string formatting
+    // s is a string
+    // type is 'str' or 'bytes', the class of the original formatted object
+    // args are the arguments passed to %
+    var length = s.length,
+        pos = 0,
         argpos = null,
         getitem
     if(_b_.isinstance(args, _b_.tuple)){
-        argpos = 0 | 0
+        argpos = 0
     }else{
         getitem = $B.$getattr(args, "__getitem__", _b_.None)
     }
-    var ret = ''
-    var $get_kwarg_string = function(s){
-        // returns [self, newpos]
-        ++pos
-        var rslt = kwarg_key.exec(s.substring(newpos))
-        if(! rslt){
-            throw _b_.ValueError.$factory("incomplete format key")
-        }
-        var key = rslt[1]
-        newpos += rslt[0].length
-        try{
-            var _self = getitem(key)
-        }catch(err){
-            if(err.__class__ === _b_.KeyError){
-                throw err
-            }
-            throw _b_.TypeError.$factory("format requires a mapping")
-        }
-        return get_string_value(s, _self)
-    }
-
-    var $get_arg_string = function(s) {
-        // returns [self, newpos]
-        var _self
-
-        // non-tuple args
-        if(argpos === null){
-            // args is the value
-            _self = args
-        }else{
-            _self = args[argpos++]
-            if(_self === undefined){
-                throw _b_.TypeError.$factory(
-                    "not enough arguments for format string")
-            }
-        }
-        return get_string_value(s, _self)
-    }
-    var get_string_value = function(s, _self) {
-        // todo: get flags, type
-        // todo: string value based on flags, type, value
-        var flags = {"pad_char": " "}
-        do{
-            var func = char_mapping[s[newpos]]
-            try{
-                if(func === undefined){
-                    throw new UnsupportedChar()
-                }else{
-                    var ret = func(_self, flags)
-                    if(ret !== undefined){
-                        return ret
-                    }
-                    ++newpos
-                }
-            }catch (err){
-                if(err.name == "UnsupportedChar"){
-                    invalid_char = s[newpos]
-                    if(invalid_char === undefined){
-                        throw _b_.ValueError.$factory("incomplete format")
-                    }
-                    throw _b_.ValueError.$factory(
-                        "unsupported format character '" + invalid_char +
-                        "' (0x" + invalid_char.charCodeAt(0).toString(16) +
-                        ") at index " + newpos)
-                }else if(err.name === "NotANumber"){
-                    var try_char = s[newpos],
-                        cls = _self.__class__
-                    if(!cls){
-                        if(typeof(_self) === "string"){
-                            cls = "str"
-                        }else{
-                            cls = typeof(_self)
-                        }
-                    }else{
-                        cls = cls.$infos.__name__
-                    }
-                    throw _b_.TypeError.$factory("%" + try_char +
-                        " format: a number is required, not " + cls)
-                }else{
-                    throw err
-                }
-            }
-        }while (true)
-    }
-    var nbph = 0 // number of placeholders
-    do{
-        var newpos = _self.indexOf("%", pos)
-        if(newpos < 0){
-            ret += _self.substring(pos)
+    var ret = '', // return value
+        nbph = 0, // number of placeholders
+        pos = 0,  // position in s
+        len = s.length
+    while(pos < len){
+        var fmtpos = s.indexOf("%", pos)
+        if(fmtpos < 0){
+            ret += s.substring(pos)
             break
         }
-        ret += _self.substring(pos, newpos)
-        ++newpos
-        if(newpos < length){
-            if(_self[newpos] === "%"){
-                ret += "%"
+        ret += s.substring(pos, fmtpos)
+        pos = fmtpos
+        if(s[pos + 1] == '%'){
+            ret += '%'
+            pos += 2
+        }else{
+            nbph++
+            var fmt = parse_mod_format(s, type, pos)
+            pos = fmt.end + 1
+            if(fmt.padding == '*'){
+                // read value in arguments
+                if(args[argpos] === undefined){
+                    throw _b_.ValueError.$factory('no value for field width *')
+                }
+                fmt.padding = args[argpos]
+                argpos++
+            }
+            if(fmt.precision == '*'){
+                // read value in arguments
+                if(args[argpos] === undefined){
+                    throw _b_.ValueError.$factory('no value for precision *')
+                }
+                fmt.precision = args[argpos]
+                argpos++
+            }
+            var func = char_mapping[fmt.conversion_type],
+                value
+            if(fmt.mapping_key !== undefined){
+                value = getitem(fmt.mapping_key)
             }else{
-                nbph++
-                if(_self[newpos] === "("){
-                    ++newpos
-                    ret += $get_kwarg_string(_self)
+                if(argpos === null){
+                    value = args
                 }else{
-                    ret += $get_arg_string(_self)
+                    value = args[argpos]
+                    if(value === undefined){
+                        throw _b_.TypeError.$factory(
+                            "not enough arguments for format string")
+                    }
+                    argpos++
                 }
             }
-        }else{
-            // % at end of string
-            throw _b_.ValueError.$factory("incomplete format")
+            ret += func(value, fmt, type)
         }
-        pos = newpos + 1
-    }while(pos < length)
+    }
 
     if(argpos !== null){
         if(args.length > argpos){
@@ -1049,6 +1109,11 @@ str.__mod__ = function(_self, args){
             "not all arguments converted during string formatting")
     }
     return ret
+}
+
+str.__mod__ = function(_self, args){
+    _self = to_string(_self)
+    return $B.printf_format(_self, 'str', args)
 }
 
 str.__mro__ = [_b_.object]
@@ -2676,7 +2741,7 @@ $B.set_func_names(str, "builtins")
 _b_.str = str
 
 // Function to parse the 2nd argument of format()
-$B.parse_format_spec = function(spec){
+$B.parse_format_spec = function(spec, obj){
     if(spec == ""){
         this.empty = true
     }else{
@@ -2714,7 +2779,9 @@ $B.parse_format_spec = function(spec){
             car = spec.charAt(pos)
         }
         if(car == "#"){
-            this.alternate = true; pos++; car = spec.charAt(pos)
+            this.alternate = true;
+            pos++;
+            car = spec.charAt(pos)
         }
         if(car == "0"){
             // sign-aware : equivalent to fill = 0 and align == "="
@@ -2741,13 +2808,22 @@ $B.parse_format_spec = function(spec){
             // Width is determined by a parameter
             var end_param_pos = spec.substr(pos).search("}")
             this.width = spec.substring(pos, end_param_pos)
-            console.log("width", "[" + this.width + "]")
             pos += end_param_pos + 1
         }
-        if(car == ","){
+        if(car == "," || car == "_"){
             this.comma = true
+            this.grouping_option = car
             pos++
             car = spec.charAt(pos)
+            if(car == "," || car == "_"){
+                if(car == this.grouping_option){
+                    throw _b_.ValueError.$factory(
+                        `Cannot specify '${car}' with '${car}'.`)
+                }else{
+                    throw _b_.ValueError.$factory(
+                        "Cannot specify both ',' and '_'.")
+                }
+            }
         }
         if(car == "."){
             if(digits.indexOf(spec.charAt(pos + 1)) == -1){
@@ -2770,7 +2846,11 @@ $B.parse_format_spec = function(spec){
             car = spec.charAt(pos)
         }
         if(pos !== spec.length){
-            throw _b_.ValueError.$factory("Invalid format specifier: " + spec)
+            var err_msg = `Invalid format specifier '${spec}'`
+            if(obj){
+                err_msg += ` for object of type '${$B.class_name(obj)}'`
+            }
+            throw _b_.ValueError.$factory(err_msg)
         }
     }
 
@@ -3054,7 +3134,6 @@ $B.parse_fstring = function(string){
         if(typeof elt == "object"){
             if(elt.fmt_pos !== undefined &&
                     elt.expression.charAt(elt.fmt_pos) != ':'){
-                console.log('mauvais format', string, elts)
                 throw Error()
             }
         }

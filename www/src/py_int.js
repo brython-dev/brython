@@ -267,7 +267,7 @@ function preformat(self, fmt){
 
 
 int.__format__ = function(self, format_spec){
-    var fmt = new $B.parse_format_spec(format_spec)
+    var fmt = new $B.parse_format_spec(format_spec, self)
     if(fmt.type && 'eEfFgG%'.indexOf(fmt.type) != -1){
         // Call __format__ on float(self)
         return _b_.float.__format__(self, format_spec)

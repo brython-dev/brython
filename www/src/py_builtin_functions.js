@@ -1961,6 +1961,7 @@ var memoryview = $B.make_class('memoryview',
 )
 
 memoryview.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
+memoryview.$buffer_protocol = true
 
 memoryview.__eq__ = function(self, other){
     if(other.__class__ !== memoryview){return false}

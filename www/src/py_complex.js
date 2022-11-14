@@ -82,6 +82,86 @@ complex.__eq__ = function(self, other){
     return _b_.NotImplemented
 }
 
+const max_precision = 2 ** 31 - 4,
+      max_repeat = 2 ** 30 - 1
+
+complex.__format__ = function(self, format_spec){
+    if(format_spec.length == 0){
+        return _b_.str.$factory(self)
+    }
+    var fmt = new $B.parse_format_spec(format_spec, self),
+        type = fmt.conversion_type
+
+    var default_precision = 6,
+        skip_re,
+        add_parens
+
+    if(type === undefined || 'eEfFgGn'.indexOf(type) > -1){
+        if(fmt.precision > max_precision){
+            throw _b_.ValueError.$factory('precision too big')
+        }
+        if(fmt.fill_char == '0'){
+            throw _b_.ValueError.$factory(
+                "Zero padding is not allowed in complex format specifier")
+        }
+        if(fmt.align == '='){
+            throw _b_.ValueError.$factory(
+                 "'=' alignment flag is not allowed in complex format " +
+                 "specifier")
+        }
+        var re = self.$real.value,
+            im = self.$imag.value,
+            precision = parseInt(fmt.precision, 10)
+
+        if(type === undefined){
+            type = 'r'
+            default_precision = 0
+            if(re == 0 && Object.is(re, 0)){
+                skip_re = 1
+            }else{
+                add_parens = 1
+            }
+        }else if(type == 'n'){
+            type = 'g'
+        }
+        if(precision < 0){
+            precision = 6
+        }else if(type == 'r'){
+            type = 'g'
+        }
+        var format = $B.clone(fmt)
+        format.conversion_type = type
+        format.precision = precision
+
+        var res = ''
+        if(! skip_re){
+            res += _b_.float.$format(self.$real, format)
+            if(self.$imag.value >= 0){
+                res += '+'
+            }
+        }
+        var formatted_im = _b_.float.$format(self.$imag, format)
+        var pos = -1,
+            last_num
+        for(var char of formatted_im){
+            pos++
+            if(char.match(/\d/)){
+                last_num = pos
+            }
+        }
+        formatted_im = formatted_im.substr(0, last_num + 1) + 'j' +
+            formatted_im.substr(last_num + 1)
+        res += formatted_im
+        
+        if(add_parens){
+            res = '(' + res + ')'
+        }
+
+        return res
+    }
+    throw _b_.ValueError.$factory(`invalid type for complex: ${type}`)
+}
+
 complex.__hash__ = function(self){
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
