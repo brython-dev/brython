@@ -401,6 +401,12 @@ def unittest_one_method(test_class, method_name):
     runner = unittest.TextTestRunner()
     runner.run(suite)
 
+def show_tokens(src):
+    import tokenize
+    import io
+    for token in tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline):
+        print(token)
+        
 if __name__=='__main__':
     t = 1, 2
     assertRaises(TypeError, t, '__setitem__', 0, 1)
