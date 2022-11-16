@@ -944,14 +944,17 @@ $B.show_error = function(err){
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){
             // add ^ under the line
-            var start = err.offset - indent - 1,
+            console.log('error rgs', err.args[1])
+            console.log('err line', line)
+            console.log('offset', err.offset, 'indent', indent)
+            var start = err.offset - indent,
                 marks = '    ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){
                     nb_marks = line.length - start - indent
                 }else{
-                    nb_marks = err.end_offset - start - indent - 1
+                    nb_marks = err.end_offset - start - indent
                 }
                 if(nb_marks == 0 &&
                         err.end_offset == line.substr(indent).length){
