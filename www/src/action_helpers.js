@@ -531,20 +531,18 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
         lineno, col_offset, end_lineno, end_col_offset, errmsg, va){
     var exc = errtype.$factory(errmsg)
     exc.filename = p.filename
-    if(p.knwon_err_token){
+    if(p.known_err_token){
         var token = p.known_err_token
         exc.lineno = token.start[0]
-        exc.offset = token.start[1]
+        exc.offset = token.start[1] + 1
         exc.end_lineno = token.end[0]
         exc.end_offset = token.end[1]
         exc.text = token.line
-        exc.args[1] = [p.filename, exc.lineno, exc.offset, exc.text,
-            exc.end_lineno, exc.end_offset]
     }else{
         exc.lineno = lineno
-        exc.offset = col_offset
+        exc.offset = col_offset + 1
         exc.end_lineno = end_lineno
-        exc.end_offset = end_col_offset
+        exc.end_offset = end_col_offset + 1
         var src = $B.file_cache[p.filename]
         if(src !== undefined){
             var lines = src.split('\n'),
@@ -553,8 +551,9 @@ $B._PyPegen.raise_error_known_location = function(p, errtype,
         }else{
             exc.text = _b_.None
         }
-        exc.args[1] = [p.filename, lineno, col_offset, exc.text, end_lineno, end_col_offset]
     }
+    exc.args[1] = $B.fast_tuple([p.filename, exc.lineno, exc.offset, exc.text,
+        exc.end_lineno, exc.end_offset])
     throw exc
 }
 
@@ -657,11 +656,11 @@ function make_formatted_value(p, fmt_values){
     var seq = []
     for(var item of fmt_values){
         if(typeof item == 'string'){
-            var fmt_ast = new $B.ast.Constant({type: 'str', value: item})
+            var fmt_ast = new $B.ast.Constant(`"${item}"`)
             set_position_from_obj(fmt_ast, p.arena)
         }else{
             var src = item.expression.trimStart() // ignore leading whitespace
-            var _ast = new $B.Parser(src).parse('eval', p.filename)
+            var _ast = new $B.Parser(src, p.filename, 'eval').parse()
             var raw_value = _ast.body
             var fmt_ast = new $B.ast.FormattedValue(raw_value,
                 make_conversion_code(item.conversion),
@@ -707,7 +706,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         has_fstring = false,
         state
     for(var token of strings){
-        var s = $B.prepare_string(token),
+        var s = $B.prepare_string(token), // in string_parser.js
             v = s.value
         if(Array.isArray(v)){ // fstring
             has_fstring = true
@@ -717,7 +716,9 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             for(var fs_item of v){
                 if(typeof fs_item == 'string'){
                     fs_item = fs_item.replace(/\\n/g,'\n')
-                    fs_item = fs_item.replace(/\\r/g,'\r')
+                                     .replace(/\\r/g,'\r')
+                    // add quotes
+                    fs_item = `'${fs_item.replace(/'/g, "\\'")}'`
                 }
                 items.push(fs_item)
             }
@@ -727,29 +728,36 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                     (state == 'bytestring' && ! s.bytes)){
                 error('cannot mix bytes and nonbytes literals')
             }
-            state = s.bytes ? 'bytestring' : 'string'
-            v = v.replace(/\n/g,'\\n\\\n')
-            v = v.replace(/\r/g,'\\r\\\r')
-            try{
-                items.push(s.bytes ? eval(v.substr(1)) : eval(v))
-            }catch(err){
-                console.log('error eval', v, 's', s)
-                throw err
+
+            var is_bytes = v.charAt(0) == 'b',
+                value
+            state = is_bytes ? 'bytestring' : 'string'
+            if(! is_bytes){
+                value = v
+            }else{
+                value = v.substr(1).replace(/\n/g,'\\n\\\n')
+                                   .replace(/\r/g,'\\r\\\r')
+                value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
             }
+
+            items.push(value)
         }
     }
 
     if(state == 'bytestring'){
         // only bytestrings
-        var s = items.join(''),
-            b = _b_.str.encode(s, 'iso-8859-1')
-        var ast_obj = new $B.ast.Constant(b)
+        var source = []
+        for(var item of items){
+            source = source.concat(item.source)
+        }
+        items[0].source = source
+        var ast_obj = new $B.ast.Constant(items[0])
         set_position(ast_obj)
         return ast_obj
     }
 
     if(! has_fstring){
-        var ast_obj = new $B.ast.Constant(items.join(''))
+        var ast_obj = new $B.ast.Constant(items.join('+'))
         set_position(ast_obj)
         return ast_obj
     }
@@ -766,7 +774,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             items1.push(items[i])
             i++
             while(i < items.length & typeof items[i] == 'string'){
-                items1[items1.length - 1] += items[i]
+                items1[items1.length - 1] += '+' + items[i]
                 i++
             }
         }
@@ -776,6 +784,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 
     for(var item of items1){
         if(typeof item == 'string'){
+            var quoted = `"${item.replace(/"/g, '\\"')}"`
             var ast_obj = new $B.ast.Constant(item)
             set_position_from_token(ast_obj, token)
             jstr_values.push(ast_obj)
@@ -784,7 +793,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                 var _format = make_formatted_value(p, item.format)
             }
             var src = item.expression.trimStart() // ignore leading whitespace
-            var _ast = new $B.Parser(src).parse('eval', p.filename)
+            var _ast = new $B.Parser(src, p.filename, 'eval').parse()
             var raw_value = _ast.body
             var formatted = new $B.ast.FormattedValue(raw_value,
                 make_conversion_code(item.conversion),
@@ -800,7 +809,8 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 }
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
-    if (! (exp instanceof $B.ast.Constant) || exp.value.type != 'imaginary') {
+    if (! (exp instanceof $B.ast.Constant) || 
+            exp.value.__class__ != _b_.complex) {
         $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
             "imaginary number required in complex literal");
         return NULL

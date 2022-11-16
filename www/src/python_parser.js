@@ -6,7 +6,7 @@
 (function($B){
 
 var _b_ = $B.builtins,
-    debug = 0
+    debug = 1
 
 // ---- Define names used by grammar actions
 
@@ -37,7 +37,7 @@ var alias_ty = $B.ast.alias,
     asdl_identifier_seq = Array,
     asdl_pattern_seq = Array,
     AugOperator = $B.ast.AugAssign,
-    Py_Ellipsis = {type: 'ellipsis'},
+    Py_Ellipsis = _b_.Ellipsis,
     Py_False = false,
     Py_True = true,
     Py_None = _b_.None,
@@ -258,6 +258,25 @@ function _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
     return NULL;
 }
 
+function handle_errortoken(token, token_reader){
+    if(token.string == "'" || token.string == '"'){
+        return 'unterminated string literal ' +
+            `(detected at line ${token.start[0]})`
+    }else if(token.string == '\\'){
+        var nxt = token_reader.next
+        if((! nxt) || nxt.type == 'NEWLINE'){
+            return 'unexpected EOF while parsing'
+        }else{
+            return 'unexpected character after line continuation character'
+        }
+    }else if(' `$'.indexOf(token.string) == -1){
+        var u = _b_.ord(token.string).toString(16).toUpperCase()
+        u = 'U+' + '0'.repeat(Math.max(0, 4 - u.length)) + u
+        return `invalid character '${token.string}' (${u})`
+    }
+    return 'invalid syntax'
+}
+
 function set_position_from_EXTRA(ast_obj, EXTRA){
     for(var key in EXTRA){
         ast_obj[key] = EXTRA[key]
@@ -281,6 +300,8 @@ function generator_as_list(generator){
         get: function(target, ix){
             if(ix == 'last'){
                 return $B.last(this.tokens)
+            }else if(ix == 'next'){
+                ix = this.tokens.length
             }
           if(this.tokens === undefined){
               this.tokens = []
@@ -336,32 +357,27 @@ function HEAD(rule, involvedSet, evalSet){
 
 // An instance of Parser is created for each script / exec /
 // f-string expression
-var Parser = $B.Parser = function(src, filename){
+var Parser = $B.Parser = function(src, filename, mode){
+    // mode is 'file' for a script or exec(), 'eval' for eval()
     // Normalize line ends
     src = src.replace(/\r\n/gm, "\n")
-    // Remove trailing \, cf issue 970
-    // but don't hide syntax error if ends with \\, cf issue 1210
-    if(src.endsWith("\\") && !src.endsWith("\\\\")){
-        src = src.substr(0, src.length - 1)
-    }
-
-    var tokenizer = $B.tokenizer(src)
+    var tokenizer = $B.tokenizer(src, filename, mode)
     this.tokens = generator_as_list(tokenizer)
     this.src = src
     this.filename = filename
+    this.mode = mode
     this.memo = {}
     if(filename){
         p.filename = filename
     }
 }
 
-Parser.prototype.parse = function(top_rule){
-    // top_rule is 'file' for a script or exec(), 'eval' for eval()
+Parser.prototype.parse = function(){
     if(this.src.trim().length == 0){
         // eg empty __init__.py
         return new $B.ast.Module([])
     }
-    var rule = $B.grammar[top_rule],
+    var rule = $B.grammar[this.mode],
         match
     this.clear_memo()
     this.HEADS = {}
@@ -384,12 +400,17 @@ Parser.prototype.parse = function(top_rule){
     if(match === FAIL){
         var err_token = this.tokens.last
         p.filename = this.filename
+        p.known_err_token = err_token
+        var message = 'invalid syntax'
+        if(err_token.type == 'ERRORTOKEN'){
+            message = handle_errortoken(err_token, this.tokens)
+        }
         RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             err_token.start[0],
             err_token.start[1],
             err_token.end[0],
             err_token.end[1],
-            'invalid syntax')
+            message)
     }
 
     // If parsing succeeds, return AST object
@@ -769,16 +790,14 @@ function make_ast(match, tokens){
         console.log('make_ast', show_rule(rule, true), '\n    match', match)
     }
 
-    //if(match.end > match.start){
-        // name EXTRA is used in grammar actions
-        var token = tokens[match.start],
-            EXTRA = {lineno: token.start[0],
-                     col_offset: token.start[1],
-                     end_lineno: token.end[0],
-                     end_col_offset: token.end[1]
-                     }
-        p.arena = EXTRA
-    //}
+    // name EXTRA is used in grammar actions
+    var token = tokens[match.start],
+        EXTRA = {lineno: token.start[0],
+                 col_offset: token.start[1],
+                 end_lineno: token.end[0],
+                 end_col_offset: token.end[1]
+                 }
+    p.arena = EXTRA
 
     if(rule.repeat){
         // If a repeated rule has an alias, it applies to the repetition list
@@ -909,7 +928,7 @@ function make_ast(match, tokens){
         }
         if(rule.action){
             try{
-                // console.log(show_rule(rule, true))
+                //console.log(show_rule(rule, true))
                 ast = eval(rule.action)
             }catch(err){
                 if($B.debug > 2){
@@ -940,10 +959,9 @@ function make_ast(match, tokens){
             }catch(err){
                 RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p.arena,
                     'wrong number %s', token[1])
-
             }
-            var ast_obj = new $B.ast.Constant(prepared)
-            ast_obj.type = prepared.type
+            var value = $B.AST.$convert(prepared)
+            var ast_obj = new $B.ast.Constant(value)
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }else if(['STRING', 'string'].indexOf(rule.type) > -1){

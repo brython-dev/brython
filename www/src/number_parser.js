@@ -137,7 +137,7 @@ $B.prepare_number = function(n){
             return {type: 'imaginary',
                 value: $B.prepare_number(n.substr(0, n.length - 1))}
         }else{
-            return {type: 'float', value: n}
+            return {type: 'float', value: n + ''}
         }
         pos = j
     }else if(n.startsWith('0') && n != '0'){
@@ -148,7 +148,7 @@ $B.prepare_number = function(n){
             return {type: 'imaginary', value: $B.prepare_number(num.value)}
         }
         if(num.subtype == 'float'){
-            return {type: num.subtype, value: num.value}
+            return {type: num.subtype, value: num.value + ''}
         }
         if(num.subtype === undefined){
             base = 10
@@ -169,7 +169,7 @@ $B.prepare_number = function(n){
             }else{
                return {
                    type: 'float',
-                   value: num.value
+                   value: num.value + ''
                }
            }
         }else{

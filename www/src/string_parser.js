@@ -256,7 +256,7 @@ $B.prepare_string = function(token){
     }
     var $string = zone,
         string = ''
-
+    
     // Escape quotes inside string, except if they are
     // already escaped.
     // In raw mode, always escape.
