@@ -958,14 +958,15 @@
                 // literal constant
                 switch(js_node.type){
                     case 'int':
-                        var res = parseInt(js_node.value[1], js_node.value[0])
-                        if(res < $B.min_int || res > $B.max_int){
-                            var res = $B.fast_long_int(BigInt(res))
-                            return res
+                        var value = js_node.value[1],
+                            base = js_node.value[0]
+                        var res = parseInt(value, base)
+                        if(! Number.isSafeInteger(res)){
+                            res = $B.long_int.$factory(value, base)
                         }
-                        return js_node.sign == '-' ? -res : res
+                        return res
                     case 'float':
-                        return new Number(js_node.value)
+                        return $B.fast_float(parseFloat(js_node.value))
                     case 'imaginary':
                         return $B.make_complex(0,
                             $B.AST.$convert(js_node.value))
