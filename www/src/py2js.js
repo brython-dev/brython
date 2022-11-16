@@ -367,6 +367,9 @@ function raise_error_known_location(type, filename, lineno, col_offset,
     throw exc
 }
 
+$B.raise_error_known_location = raise_error_known_location
+
+
 function raise_syntax_error_known_range(context, a, b, msg){
     // a and b are the first and last tokens for the exception
     raise_error_known_location(_b_.SyntaxError, $get_module(context).filename,
@@ -382,7 +385,9 @@ function raise_error(errtype, context, msg, token){
     }
     msg = msg.trim()
     raise_error_known_location(errtype, filename,
-        token.start[0], token.start[1], token.end[0], token.end[1], token.line, msg)
+        token.start[0], token.start[1],
+        token.end[0], token.end[1] - 1, 
+        token.line, msg)
 }
 
 function raise_syntax_error(context, msg, token){
@@ -2578,7 +2583,7 @@ var $EllipsisCtx = $B.parser.$EllipsisCtx = function(context){
 }
 
 $EllipsisCtx.prototype.ast = function(){
-    var ast_obj = new ast.Constant({type: 'ellipsis'})
+    var ast_obj = new ast.Constant(_b_.Ellipsis)
     set_position(ast_obj, this.position)
     return ast_obj
 }
@@ -3975,13 +3980,14 @@ $IdCtx.prototype.ast = function(){
 }
 
 $IdCtx.prototype.transition = function(token, value){
-    var context = this
+    var context = this,
+        start = context.parent.$pos,
+        module = $get_module(this)
     if(context.value == 'case' && context.parent.parent.type == "node"){
         // case at the beginning of a line : if the line ends with a colon
         // (:), it is the "soft keyword" `case` for pattern matching
-        var start = context.parent.$pos,
-            src = $get_module(this).src,
-            line = get_first_line(src.substr(start)),
+        var src = module.src,
+            line = get_first_line(src.substr(start), module.filename),
             node = $get_node(context)
         if(line === true || line.text.endsWith(':')){
             var parent = node.parent
@@ -4008,10 +4014,8 @@ $IdCtx.prototype.transition = function(token, value){
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
         // same for match
-        var start = context.parent.$pos,
-            root = $get_module(this),
-            src = root.src
-        var line = get_first_line(src.substr(start))
+        var src = module.src
+        var line = get_first_line(src.substr(start), module.filename)
         if(line === true || line.text.endsWith(':')){
             return $transition(new $AbstractExprCtx(
                 new $MatchCtx(context.parent.parent), true),
@@ -5044,24 +5048,8 @@ var $NumberCtx = $B.parser.$NumberCtx = function(type, context, value){
 }
 
 $NumberCtx.prototype.ast = function(){
-    var ast_obj = new ast.Constant({type: this.type, value: this.value})
-    if(this.type == 'int'){
-        var value = parseInt(this.value[1], this.value[0])
-        if(! Number.isSafeInteger(value)){
-            value = _b_.int.$factory(this.value[1], this.value[0])
-        }
-        ast_obj.value = value
-    }else if(this.type == 'float'){
-        ast_obj.value = new Number(this.value)
-    }else if(this.type == 'imaginary'){
-        var imag = {
-            type: this.value.type,
-            value: this.value.value,
-            position: this.position
-        }
-        var imag_value = $NumberCtx.prototype.ast.bind(imag)().value
-        ast_obj.value = $B.make_complex(0, +imag_value)
-    }
+    var value = $B.AST.$convert(this), // in builtin_modules.js
+        ast_obj = new $B.ast.Constant(value)
     set_position(ast_obj, this.position)
     return ast_obj
 }
@@ -7546,11 +7534,11 @@ function test_num(num_lit){
 
 var opening = {')': '(', '}': '{', ']': '['}
 
-function get_first_line(src){
+function get_first_line(src, filename){
     // used to check if 'match' or 'case' are the "soft keywords" for pattern
     // matching, or ordinary ids
     var braces = [],
-        token_reader = new $B.TokenReader(src)
+        token_reader = new $B.TokenReader(src, filename)
     while(true){
         var token = token_reader.read()
         if(! token){
@@ -7778,6 +7766,7 @@ function prepare_string(context, s, position){
         zone = '',
         end = 0,
         src = inner
+
     while(end < src.length){
         if(escaped){
             if(src.charAt(end) == "a" && ! raw){
@@ -7881,6 +7870,7 @@ function prepare_string(context, s, position){
             end++
         }
     }
+
     var $string = zone,
         string = ''
 
@@ -8026,7 +8016,7 @@ var $token = {}
 
 var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
     var src = root.src
-    root.token_reader = new $B.TokenReader(src)
+    root.token_reader = new $B.TokenReader(src, root.filename)
     var braces_stack = []
 
     var unsupported = []
@@ -8191,10 +8181,7 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                                 raise_syntax_error(context,
                                     `'${op}' was never closed`)
                             }else{
-                                raise_error_known_location(_b_.SyntaxError,
-                                    root.filename, err.lineno, err.col_offset,
-                                    err.end_lineno, err.end_col_offset, err.line,
-                                    err.message)
+                                throw err
                             }
                         }
                     }else if(braces_opener[op]){
@@ -8340,6 +8327,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
 
     $pos = 0
 
+
     if(typeof module == "object"){
         var __package__ = module.__package__
         module = module.__name__
@@ -8365,7 +8353,8 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     }
 
     if($B.parser_to_ast){
-        var _ast = new $B.Parser(src, filename).parse('file')
+        console.log('use parser to ast')
+        var _ast = new $B.Parser(src, filename, 'file').parse()
     }else{
         var root = $create_root_node({src, filename},
                                      module, locals_id, parent_scope)
