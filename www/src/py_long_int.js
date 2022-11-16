@@ -441,14 +441,14 @@ function digits(base){
     // Number from 0 to base, or from 0 to 9 if base > 10
     for(var i = 0; i < base; i++){
         if(i == 10){break}
-        is_digits[i] = true
+        is_digits[i] = i
     }
     if(base > 10){
         // Additional letters
         // For instance in base 16, add "abcdefABCDEF" as keys
         for(var i = 0; i < base - 10; i++){
-            is_digits[String.fromCharCode(65 + i)] = true
-            is_digits[String.fromCharCode(97 + i)] = true
+            is_digits[String.fromCharCode(65 + i)] = 10 + i
+            is_digits[String.fromCharCode(97 + i)] = 10 + i
         }
     }
     return is_digits
@@ -480,7 +480,7 @@ long_int.$factory = function(value, base){
     // Check if all characters in value are valid in the base
     var is_digits = digits(base)
     for(var i = 0; i < value.length; i++){
-        if(! is_digits[value.charAt(i)]){
+        if(is_digits[value.charAt(i)] === undefined){
             throw _b_.ValueError.$factory(
                 'int argument is not a valid number: "' + value + '"')
         }
@@ -488,6 +488,10 @@ long_int.$factory = function(value, base){
     var res
     if(base == 10){
         res = BigInt(value)
+    }else if(base == 16){
+        res = BigInt('0x' + value)
+    }else if(base == 8){
+        res = BigInt('0o' + value)
     }else{
         base = BigInt(base)
         var res = 0n,
@@ -495,7 +499,7 @@ long_int.$factory = function(value, base){
             char
         for(var i = value.length - 1; i >= 0; i--){
             char = value[i].toUpperCase()
-            res += coef * BigInt(_digits.indexOf(char))
+            res += coef * BigInt(is_digits[char])
             coef *= base
         }
     }
