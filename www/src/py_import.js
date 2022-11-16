@@ -1169,7 +1169,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // mod_name == "tatsu.utils._command"
+    var test = false // fromlist[0] == 'storage' // mod_name == "tatsu.utils._command"
     if(test){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()
@@ -1272,6 +1272,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
 
     if(test){
         console.log('step 3, mod_name', mod_name, 'fromlist', fromlist)
+        console.log('modobj', modobj)
         alert()
     }
 

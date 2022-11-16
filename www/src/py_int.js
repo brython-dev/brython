@@ -270,7 +270,7 @@ int.__format__ = function(self, format_spec){
     var fmt = new $B.parse_format_spec(format_spec, self)
     if(fmt.type && 'eEfFgG%'.indexOf(fmt.type) != -1){
         // Call __format__ on float(self)
-        return _b_.float.__format__(self, format_spec)
+        return _b_.float.__format__($B.fast_float(self), format_spec)
     }
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)

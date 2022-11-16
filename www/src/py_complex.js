@@ -152,7 +152,7 @@ complex.__format__ = function(self, format_spec){
         formatted_im = formatted_im.substr(0, last_num + 1) + 'j' +
             formatted_im.substr(last_num + 1)
         res += formatted_im
-        
+
         if(add_parens){
             res = '(' + res + ')'
         }
