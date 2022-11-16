@@ -405,8 +405,39 @@ function compile() {
     }
 
     if($B.parser_to_ast){
-        var _ast = new $B.Parser($.source, filename).parse('file'),
-            future = $B.future_features(_ast, filename),
+        try{
+            var parser_mode = $.mode == 'eval' ? 'eval' : 'file'
+            var parser = new $B.Parser($.source, filename, parser_mode),
+                _ast = parser.parse()
+        }catch(err){
+            if($.mode == 'single'){
+                try{
+                    parser.tokens.next // throws an exception if tokenizer exhausted
+                }catch(err2){
+                    // special case
+                    var tokens = parser.tokens,
+                        tester = tokens[tokens.length - 2]
+                    if((tester.type == "NEWLINE" && ($.flags & 0x4000)) ||
+                            tester.type == "DEDENT" && ($.flags & 0x200)){
+                        err.__class__ = _b_.SyntaxError
+                        err.args[0] = 'incomplete input'
+                    }
+                }
+            }
+            throw err
+        }
+        if($.mode == 'single' && _ast.body.length == 1 &&
+                _ast.body[0] instanceof $B.ast.Expr){
+            // If mode is 'single' and the source is a single expression,
+            // set _ast to an Expression and set attribute .single_expression
+            // to compile() result. This is used in exec() to print the
+            // expression if it is not None
+            var parser = new $B.Parser($.source, filename, 'eval'),
+                _ast = parser.parse()
+            $.single_expression = true
+        }
+
+        var future = $B.future_features(_ast, filename),
             symtable = $B._PySymtable_Build(_ast, filename),
             js_obj = $B.js_from_root({ast:_ast, symtable, filename: $.filename})
         if($.flags == $B.PyCF_ONLY_AST){
@@ -786,7 +817,8 @@ function $$eval(src, _globals, _locals){
     try{
         if($B.parser_to_ast){
             if(! _ast){
-                _ast = new $B.Parser(src, filename).parse(mode == 'eval' ? 'eval' : 'file')
+                var _mode = mode == 'eval' ? 'eval' : 'file'
+                _ast = new $B.Parser(src, filename, _mode).parse()
             }
         }else{
             if(! _ast){
@@ -1373,7 +1405,7 @@ function globals(){
 function hasattr(obj,attr){
     check_nb_args_no_kw('hasattr', 2, arguments)
     try{
-        $B.$getattr(obj,attr)
+        $B.$getattr(obj, attr)
         return true
     }catch(err){
         return false
