@@ -14,10 +14,10 @@ function compiler_error(ast_obj, message, end){
         exc.text = _b_.none
     }
     exc.lineno = ast_obj.lineno
-    exc.offset = ast_obj.col_offset + 1
+    exc.offset = ast_obj.col_offset
     end = end || ast_obj
     exc.end_lineno = end.end_lineno
-    exc.end_offset = end.end_col_offset + 1
+    exc.end_offset = end.end_col_offset
     exc.args[1] = [exc.filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
     exc.$stack = $B.frames_stack.slice()
@@ -1174,12 +1174,17 @@ function make_args(scopes){
             named_args.push($B.js_from_ast(arg, scopes))
         }
     }
+    var kwds = new Set()
     for(var keyword of this.keywords){
         if(keyword.arg){
+            if(kwds.has(keyword.arg)){
+                compiler_error(keyword,
+                    `keyword argument repeated: ${keyword.arg}`)
+            }
+            kwds.add(keyword.arg)
             named_kwargs.push(
                 `${keyword.arg}: ${$B.js_from_ast(keyword.value, scopes)}`)
         }else{
-            //has_starred = true
             starred_kwargs.push($B.js_from_ast(keyword.value, scopes))
         }
     }
@@ -1412,46 +1417,16 @@ $B.ast.Constant.prototype.to_js = function(scopes){
         return this.value
     }else if(this.value.__class__ === $B.long_int){
         return `$B.fast_long_int(${this.value.value}n)`
-    }else if(this.value instanceof Number){
-        return `{__class__: _b_.float, value: ${+this.value}}`
+    }else if(this.value.__class__ === _b_.float){
+        return `({__class__: _b_.float, value: ${this.value.value}})`
     }else if(this.value.__class__ === _b_.complex){
         return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`
+    }else if(this.value === _b_.Ellipsis){
+        return `_b_.Ellipsis`
     }else{
-        var type = this.value.type,
-            value = this.value.value
+        console.log('invalid value', this.value)
+        throw SyntaxError('bad value', this.value)
     }
-
-    switch(type){
-        case 'int':
-            var v = parseInt(value[1], value[0])
-            if(v > $B.min_int && v < $B.max_int){
-                return v + ''
-            }else{
-                var v = $B.long_int.$factory(value[1], value[0])
-                return '$B.fast_long_int("' + v.value + '", ' + v.pos + ')'
-            }
-        case 'float':
-            // number literal
-            if(/^\d+$/.exec(value) || /^\d+\.\d*$/.exec(value)){
-                return '(new Number(' + value + '))'
-            }
-            return '_b_.float.$factory(' + value + ')'
-        case 'imaginary':
-            var v = $B.ast.Constant.prototype.to_js.bind({value})(scopes)
-            return '$B.make_complex(0,' + v + ')'
-        case 'ellipsis':
-            return `_b_.Ellipsis`
-        case 'str':
-            var lines = value.split('\n')
-            // lines = lines.map(line => line.replace(/\\/g, '\\\\'))
-            value = lines.join('\\n\\\n')
-            value = value.replace(new RegExp('\r', 'g'), '\\r').
-                          replace(new RegExp('\t', 'g'), '\\t').
-                          replace(new RegExp('\x07', 'g'), '\\x07')
-            return `$B.String(${value})`
-    }
-    console.log('unknown constant', this, value, value === true)
-    return '// unknown'
 }
 
 $B.ast.Continue.prototype.to_js = function(scopes){
@@ -2318,7 +2293,16 @@ $B.ast.MatchMapping.prototype.to_js = function(scopes){
         }else if(key instanceof $B.ast.Constant ||
                 key instanceof $B.ast.UnaryOp ||
                 key instanceof $B.ast.BinOp){
-            var value = eval(key.to_js(scopes))
+            var js = key.to_js(scopes),
+                locals = {} // in case js has a rich comp that sets locals.$result...
+            try{
+                // wrap inside () in case the result is an object, eg
+                // "{__class: _b_.float, value: 0}"
+                var value = eval('(' + js + ')')
+            }catch(err){
+                console.log('error', js)
+                throw err
+            }
             if(_b_.list.__contains__(keys, value)){
                 compiler_error(this, 'mapping pattern checks duplicate key ' +
                     `(${_b_.repr(value)})`)
