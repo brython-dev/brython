@@ -16,7 +16,7 @@ var comparison_ops = {
     '==': 'Eq', '!=': 'NotEq', '<': 'Lt', '<=': 'LtE', '>': 'Gt', '>=': 'GtE',
     'is': 'Is', 'is_not': 'IsNot', 'in': 'In', 'not_in': 'NotIn'}
 
-var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub'}
+var unary_ops = {unary_inv: 'Invert', unary_pos: 'UAdd', unary_neg: 'USub', unary_not: 'Not'}
 
 var op_types = $B.op_types = [binary_ops, boolean_ops, comparison_ops, unary_ops]
 
