@@ -18587,3 +18587,5 @@ for(var rule_name in grammar){grammar[rule_name].name=rule_name
 if(grammar[rule_name].choices){grammar[rule_name].choices.forEach(function(item,rank){item.parent_rule=rule_name
 item.rank=rank})}}})(__BRYTHON__)
 ;
+
+__BRYTHON__.parser_to_ast = true

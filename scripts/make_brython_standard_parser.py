@@ -360,6 +360,8 @@ def generate_javascript():
 
     with open(make_dist.abs_path('brython_standard_parser.js'), 'w', newline="\n") as out:
         out.write(res)
+        out.write('\n__BRYTHON__.parser_to_ast = true\n')
+
 if __name__ == '__main__':
     generate_javascript()
     print('possible types', types)
