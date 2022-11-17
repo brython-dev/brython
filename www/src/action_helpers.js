@@ -685,6 +685,11 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         value,
         values = []
 
+    function escape_line_feeds(s){
+        return s.replace(/\n/g,'\\n\\\n')
+                .replace(/\r/g,'\\r\\\r')
+    }
+    
     function error(message){
         var a = {lineno: first.start[0],
                  col_offset: first.start[1],
@@ -715,8 +720,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             }
             for(var fs_item of v){
                 if(typeof fs_item == 'string'){
-                    fs_item = fs_item.replace(/\\n/g,'\n')
-                                     .replace(/\\r/g,'\r')
+                    fs_item = escape_line_feeds(fs_item)
                     // add quotes
                     fs_item = `'${fs_item.replace(/'/g, "\\'")}'`
                 }
@@ -733,10 +737,9 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                 value
             state = is_bytes ? 'bytestring' : 'string'
             if(! is_bytes){
-                value = v
+                value = escape_line_feeds(v)
             }else{
-                value = v.substr(1).replace(/\n/g,'\\n\\\n')
-                                   .replace(/\r/g,'\\r\\\r')
+                value = escape_line_feeds(v.substr(1))
                 value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
             }
 
@@ -809,7 +812,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
 }
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
-    if (! (exp instanceof $B.ast.Constant) || 
+    if (! (exp instanceof $B.ast.Constant) ||
             exp.value.__class__ != _b_.complex) {
         $B.Parser.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
             "imaginary number required in complex literal");

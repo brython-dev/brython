@@ -386,7 +386,7 @@ function raise_error(errtype, context, msg, token){
     msg = msg.trim()
     raise_error_known_location(errtype, filename,
         token.start[0], token.start[1],
-        token.end[0], token.end[1] - 1, 
+        token.end[0], token.end[1] - 1,
         token.line, msg)
 }
 
@@ -6548,8 +6548,9 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     }
 
     this.is_bytes = value.charAt(0) == 'b'
+    
     if(! this.is_bytes){
-        this.value = value // prepare(value)
+        this.value = prepare(value)
     }else{
         this.value = prepare(value.substr(1))
     }

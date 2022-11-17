@@ -965,7 +965,10 @@ function make_ast(match, tokens){
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }else if(['STRING', 'string'].indexOf(rule.type) > -1){
-            var ast_obj = new $B.ast.Constant(tokens[match.start].string)
+            var s = tokens[match.start].string
+            s = s.replace(/\n/g,'\\n\\\n')
+                 .replace(/\r/g,'\\r\\\r')
+            var ast_obj = new $B.ast.Constant(s)
             set_position_from_EXTRA(ast_obj, EXTRA)
             return ast_obj
         }

@@ -1409,8 +1409,7 @@ $B.ast.Constant.prototype.to_js = function(scopes){
     }else if(this.value === _b_.None){
         return '_b_.None'
     }else if(typeof this.value == "string"){
-        var type = 'str',
-            value = this.value
+        return `$B.String(${this.value})`
     }else if(this.value.__class__ === _b_.bytes){
         return `_b_.bytes.$factory([${this.value.source}])`
     }else if(typeof this.value == "number"){
