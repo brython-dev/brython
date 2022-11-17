@@ -61,14 +61,12 @@ statement:
       {
         items: [
           {type: 'rule', name: 'compound_stmt', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
           {type: 'rule', name: 'simple_stmts', alias: 'a'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 statement_newline:
@@ -78,8 +76,7 @@ statement_newline:
         items: [
           {type: 'rule', name: 'compound_stmt', alias: 'a'},
           {type: 'NEWLINE'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
@@ -89,23 +86,7 @@ statement_newline:
       {
         items: [
           {type: 'NEWLINE'}
-        ], action: '$B._PyPegen.singleton_seq(p, CHECK($B.ast.stmt, $B._PyAST.Pass(EXTRA)))',
-           action1: [{f: $B._PyPegen.singleton_seq,
-                      args: [
-                          "p",
-                          {
-                              f: $B._PyPegen.CHECK,
-                              args:
-                                  [
-                                      $B.ast.stmt,
-                                      {
-                                          f: $B._PyAST.Pass,
-                                          args:["EXTRA"]
-                                      }
-                                  ]
-                          }
-                      ]
-                  }]
+        ], action: '$B._PyPegen.singleton_seq(p, CHECK($B.ast.stmt, $B._PyAST.Pass(EXTRA)))'
       },
       {
         items: [
@@ -121,8 +102,7 @@ simple_stmts:
           {type: 'rule', name: 'simple_stmt', alias: 'a'},
           {type: 'string', value: ';', lookahead: 'negative'},
           {type: 'NEWLINE'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
@@ -134,8 +114,7 @@ simple_stmts:
             repeat: '?'
           },
           {type: 'NEWLINE'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 simple_stmt:
@@ -149,8 +128,7 @@ simple_stmt:
       {
         items: [
           {type: 'rule', name: 'star_expressions', alias: 'e'}
-        ], action: '$B._PyAST.Expr(e, EXTRA)',
-           action1: {f: $B._PyAST.Expr, args:['e', 'EXTRA']}
+        ], action: '$B._PyAST.Expr(e, EXTRA)'
       },
       {
         items: [
@@ -406,18 +384,7 @@ assignment:
             ],
             repeat: '?', alias: 'tc'
           }
-        ], action: '$B._PyAST.Assign(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA)',
-          action1: {f: $B._PyAST.Assign,
-                     args: [
-                         'a',
-                         'b',
-                         {
-                             f: $B._PyPegen.NEW_TYPE_COMMENT,
-                             args: ['p', 'tc']
-                         },
-                         'EXTRA'
-                     ]
-                     }
+        ], action: '$B._PyAST.Assign(a, b, NEW_TYPE_COMMENT(p, tc), EXTRA)'
       },
       {
         items: [
@@ -437,16 +404,7 @@ assignment:
                 ]
               }], alias: 'c'
           }
-        ], action: '$B._PyAST.AugAssign(a, b.kind, c, EXTRA)',
-           action1: {
-               f: $B._PyAST.AugAssign,
-               args: [
-                   'a',
-                   ['b', 'kind'],
-                   'c',
-                   'EXTRA'
-                   ]
-               }
+        ], action: '$B._PyAST.AugAssign(a, b.kind, c, EXTRA)'
       },
       {
         items: [
@@ -474,8 +432,7 @@ augassign:
       {
         items: [
           {type: 'string', value: '+='}
-        ], action: '$B._PyPegen.augoperator(p, Add)',
-        action1: {f: $B._PyPegen.augoperator, args: ['p', new $B.ast.Add()]}
+        ], action: '$B._PyPegen.augoperator(p, Add)'
       },
       {
         items: [
@@ -485,8 +442,7 @@ augassign:
       {
         items: [
           {type: 'string', value: '*='}
-        ], action: '$B._PyPegen.augoperator(p, Mult)',
-        action1: {f: $B._PyPegen.augoperator, args: ['p', new $B.ast.Mult()]}
+        ], action: '$B._PyPegen.augoperator(p, Mult)'
       },
       {
         items: [
@@ -549,8 +505,7 @@ return_stmt:
         ],
         repeat: '?', alias: 'a'
       }
-    ], action: '$B._PyAST.Return(a, EXTRA)',
-    action1: {f: $B._PyAST.Return, args: ["a", "EXTRA"]}
+    ], action: '$B._PyAST.Return(a, EXTRA)'
   },
 raise_stmt:
   {
@@ -718,8 +673,7 @@ import_from_targets:
             repeat: '?'
           },
           {type: 'string', value: ')'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -742,8 +696,7 @@ import_from_as_names:
   {
     items: [
       {type: 'rule', name: 'import_from_as_name', join: ',', alias: 'a', repeat: '+'}
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 import_from_as_name:
   {
@@ -762,8 +715,7 @@ dotted_as_names:
   {
     items: [
       {type: 'rule', name: 'dotted_as_name', join: ',', alias: 'a', repeat: '+'}
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 dotted_as_name:
   {
@@ -803,8 +755,7 @@ block:
           {type: 'INDENT'},
           {type: 'rule', name: 'statements', alias: 'a'},
           {type: 'DEDENT'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -828,8 +779,7 @@ decorators:
         ],
         repeat: '+', alias: 'a', action: 'f'
       }
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 class_def:
   {
@@ -1038,16 +988,14 @@ slash_no_default:
           {type: 'rule', name: 'param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ','}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
           {type: 'rule', name: 'param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 slash_with_default:
@@ -1135,8 +1083,7 @@ kwds:
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'param_no_default', alias: 'a'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 param_no_default:
@@ -1234,16 +1181,14 @@ annotation:
     items: [
       {type: 'string', value: ':'},
       {type: 'rule', name: 'expression', alias: 'a'}
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 star_annotation:
   {
     items: [
       {type: 'string', value: ':'},
       {type: 'rule', name: 'star_expression', alias: 'a'}
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 default:
   {
@@ -1252,8 +1197,7 @@ default:
         items: [
           {type: 'string', value: '='},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -1666,8 +1610,7 @@ finally_block:
           {type: 'string', value: 'finally'},
           {type: 'string', value: ':'},
           {type: 'rule', name: 'block', alias: 'a'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 match_stmt:
@@ -2413,8 +2356,7 @@ star_named_expressions:
         ],
         repeat: '?'
       }
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 star_named_expression:
   {
@@ -2908,8 +2850,7 @@ slices:
         items: [
           {type: 'rule', name: 'slice', alias: 'a'},
           {type: 'string', value: ',', lookahead: 'negative'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -2971,8 +2912,7 @@ slice:
       {
         items: [
           {type: 'rule', name: 'named_expression', alias: 'a'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 atom:
@@ -3104,8 +3044,7 @@ group:
               }], alias: 'a'
           },
           {type: 'string', value: ')'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -3206,16 +3145,14 @@ lambda_slash_no_default:
           {type: 'rule', name: 'lambda_param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ','}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param_no_default', repeat: '+', alias: 'a'},
           {type: 'string', value: '/'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 lambda_slash_with_default:
@@ -3290,8 +3227,7 @@ lambda_kwds:
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'lambda_param_no_default', alias: 'a'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 lambda_param_no_default:
@@ -3301,15 +3237,13 @@ lambda_param_no_default:
         items: [
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
           {type: 'rule', name: 'lambda_param', alias: 'a'},
           {type: 'string', value: ':', lookahead: 'positive'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 lambda_param_with_default:
@@ -3358,8 +3292,7 @@ strings:
   {
     items: [
       {type: 'STRING', repeat: '+', alias: 'a'}
-    ], action: '$B._PyPegen.concatenate_strings(p, a)',
-    action1: {f: $B._PyPegen.concatenate_strings, args: ['p', 'a']}
+    ], action: '$B._PyPegen.concatenate_strings(p, a)'
   },
 list:
   {
@@ -3435,8 +3368,7 @@ double_starred_kvpairs:
         ],
         repeat: '?'
       }
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 double_starred_kvpair:
   {
@@ -3465,8 +3397,7 @@ for_if_clauses:
   {
     items: [
       {type: 'rule', name: 'for_if_clause', repeat: '+', alias: 'a'}
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 for_if_clause:
   {
@@ -3604,8 +3535,7 @@ arguments:
             repeat: '?'
           },
           {type: 'string', value: ')', lookahead: 'positive'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -3739,8 +3669,7 @@ star_targets:
         items: [
           {type: 'rule', name: 'star_target', alias: 'a'},
           {type: 'string', value: ',', lookahead: 'negative'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       },
       {
         items: [
@@ -3771,8 +3700,7 @@ star_targets_list_seq:
         ],
         repeat: '?'
       }
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 star_targets_tuple_seq:
   {
@@ -3799,8 +3727,7 @@ star_targets_tuple_seq:
         items: [
           {type: 'rule', name: 'star_target', alias: 'a'},
           {type: 'string', value: ','}
-        ], action: ' $B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: ' $B._PyPegen.singleton_seq(p, a)'
       }]
   },
 star_target:
@@ -3907,8 +3834,7 @@ single_target:
           {type: 'string', value: '('},
           {type: 'rule', name: 'single_target', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 single_subscript_attribute_target:
@@ -3977,8 +3903,7 @@ t_primary:
         items: [
           {type: 'rule', name: 'atom', alias: 'a'},
           {type: 'rule', name: 't_lookahead', lookahead: 'positive'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 t_lookahead:
@@ -4010,8 +3935,7 @@ del_targets:
         ],
         repeat: '?'
       }
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 del_target:
   {
@@ -4122,21 +4046,18 @@ type_expressions:
         items: [
           {type: 'string', value: '*'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
           {type: 'string', value: '**'},
           {type: 'rule', name: 'expression', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
           {type: 'rule', name: 'expression', join: ',', alias: 'a', repeat: '+'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 func_type_comment:
@@ -4517,8 +4438,7 @@ invalid_ann_assign_target:
           {type: 'string', value: '('},
           {type: 'rule', name: 'invalid_ann_assign_target', alias: 'a'},
           {type: 'string', value: ')'}
-        ], action: 'a',
-        action1: 'a'
+        ], action: 'a'
       }]
   },
 invalid_del_stmt:
@@ -4852,8 +4772,7 @@ invalid_parameters_helper:
       {
         items: [
           {type: 'rule', name: 'slash_with_default', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
@@ -4954,8 +4873,7 @@ invalid_lambda_parameters_helper:
       {
         items: [
           {type: 'rule', name: 'lambda_slash_with_default', alias: 'a'}
-        ], action: '$B._PyPegen.singleton_seq(p, a)',
-        action1: {f: $B._PyPegen.singleton_seq, args: ['p', 'a']}
+        ], action: '$B._PyPegen.singleton_seq(p, a)'
       },
       {
         items: [
@@ -5532,8 +5450,7 @@ invalid_class_argument_pattern:
       {type: 'rule', name: 'keyword_patterns'},
       {type: 'string', value: ','},
       {type: 'rule', name: 'positional_patterns', alias: 'a'}
-    ], action: 'a',
-        action1: 'a'
+    ], action: 'a'
   },
 invalid_if_stmt:
   {
