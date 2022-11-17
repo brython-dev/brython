@@ -140,6 +140,7 @@ $B.TokenReader.prototype.read = function(){
         var res = this.tokenizer.next()
         if(res.done){
             this.done = true
+            console.log('fini !')
             return
         }
         res = res.value

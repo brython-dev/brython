@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-17 09:22:27.626521"
-__BRYTHON__.timestamp=1668673347626
+__BRYTHON__.compiled_date="2022-11-17 23:57:35.917120"
+__BRYTHON__.timestamp=1668725855917
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -222,6 +222,7 @@ this.tokenizer=$B.tokenizer(src,filename)
 this.position=0}
 $B.TokenReader.prototype.read=function(){if(this.position < this.tokens.length){var res=this.tokens[this.position]}else{var res=this.tokenizer.next()
 if(res.done){this.done=true
+console.log('fini !')
 return}
 res=res.value
 this.tokens.push(res)}
@@ -1003,10 +1004,6 @@ var $AnnotationCtx=$B.parser.$AnnotationCtx=function(C){
 this.type='annotation'
 this.parent=C
 this.tree=[]
-this.src=$get_module(this).src
-var rest=this.src.substr($pos)
-if(rest.startsWith(':')){this.start=$pos+1}else if(rest.startsWith('->')){this.start=$pos+2}
-this.string=''
 C.annotation=this
 var scope=$get_scope(C)
 if(scope.ntype=="def" && C.tree && C.tree.length > 0 &&
@@ -1014,7 +1011,6 @@ C.tree[0].type=="id"){var name=C.tree[0].value
 scope.annotations=scope.annotations ||new Set()
 scope.annotations.add(name)}}
 $AnnotationCtx.prototype.transition=function(token,value){var C=this
-this.string=this.src.substring(this.start,$pos)
 if(token=="eol" && C.tree.length==1 &&
 C.tree[0].tree.length==0){raise_syntax_error(C)}else if(token==':' && C.parent.type !="def"){raise_syntax_error(C,"more than one annotation")}else if(token=="augm_assign"){raise_syntax_error(C,"augmented assign as annotation")}else if(token=="op"){raise_syntax_error(C,"operator as annotation")}
 return $transition(C.parent,token)}
@@ -1174,7 +1170,6 @@ raise_syntax_error(C)}
 var $CallArgCtx=$B.parser.$CallArgCtx=function(C){
 this.type='call_arg'
 this.parent=C
-this.start=$pos
 this.tree=[]
 this.position=$token.value
 C.tree.push(this)
@@ -1241,8 +1236,7 @@ if(C.type !='class'){C.tree.pop()
 C.tree[C.tree.length]=this}else{
 C.args=this}
 this.expect='id'
-this.tree=[]
-this.start=$pos}
+this.tree=[]}
 $CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[]),keywords=new Set()
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=call_arg.tree[0].tree[0].ast(),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
@@ -1286,7 +1280,6 @@ case 'ellipsis':
 C.expect=','
 return $transition(new $CallArgCtx(C),token,value)
 case ')':
-C.end=$pos
 C.end_position=$token.value
 return C.parent
 case 'op':
@@ -1609,7 +1602,6 @@ this.type='dict_or_set'
 this.real='dict_or_set'
 this.expect=','
 this.closed=false
-this.start=$pos
 this.position=$token.value
 this.nb_items=0
 this.parent=C
@@ -1832,8 +1824,7 @@ set_position(res,this.position)}
 return res}
 $ExprCtx.prototype.transition=function(token,value){var C=this
 if(python_keywords.indexOf(token)>-1 &&
-['as','else','if','for','from','in'].indexOf(token)==-1){C.$pos=$pos
-raise_syntax_error(C)}
+['as','else','if','for','from','in'].indexOf(token)==-1){raise_syntax_error(C)}
 if(C.parent.expect=='star_target'){if(['pass','in','not','op','augm_assign','=',':=','if','eol'].
 indexOf(token)>-1){return $transition(C.parent,token,value)}}
 switch(token){case 'bytes':
@@ -2278,8 +2269,7 @@ break
 case ',':
 case ')':
 if(C.parent.has_default && C.tree.length==0 &&
-C.parent.has_star_arg===undefined){$pos-=C.name.length
-raise_syntax_error(C,'non-default argument follows default argument')}else{return $transition(C.parent,token)}
+C.parent.has_star_arg===undefined){raise_syntax_error(C,'non-default argument follows default argument')}else{return $transition(C.parent,token)}
 case ':':
 if(C.parent.parent.type=="lambda"){
 return $transition(C.parent.parent,":")}
@@ -2352,8 +2342,7 @@ this.expect='id'
 this.scope=$get_scope(this)
 this.module=$get_module(this)
 if(this.module.module !=='<module>'){
-while(this.module.module !=this.module.id){this.module=this.module.parent_block}}
-this.$pos=$pos}
+while(this.module.module !=this.module.id){this.module=this.module.parent_block}}}
 $GlobalCtx.prototype.ast=function(){
 var ast_obj=new ast.Global(this.tree.map(item=> item.value))
 set_position(ast_obj,this.position)
@@ -2399,26 +2388,19 @@ set_position(ast_obj,this.position)
 return ast_obj}
 $IdCtx.prototype.transition=function(token,value){var C=this,start=C.parent.$pos,module=$get_module(this)
 if(C.value=='case' && C.parent.parent.type=="node"){
-var src=module.src,line=get_first_line(src.substr(start),module.filename),node=$get_node(C)
-if(line===true ||line.text.endsWith(':')){var parent=node.parent
+var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
+module.token_reader.position=save_position
+if(ends_with_comma){var node=$get_node(C),parent=node.parent
 if((! node.parent)||!(node.parent.is_match)){raise_syntax_error(C,"('case' not inside 'match')")}else{if(node.parent.irrefutable){
 var name=node.parent.irrefutable,msg=name=='_' ? 'wildcard' :
 `name capture '${name}'`
 raise_syntax_error(C,`${msg} makes remaining patterns unreachable`)}}
 return $transition(new $PatternCtx(
-new $CaseCtx(C.parent.parent)),token,value)}else if(node.parent && node.parent.is_match){
-$token.value=line.newline_token
-raise_syntax_error(C,"expected ':'")}}else if(C.value=='match' && C.parent.parent.type=="node"){
-var src=module.src
-var line=get_first_line(src.substr(start),module.filename)
-if(line===true ||line.text.endsWith(':')){return $transition(new $AbstractExprCtx(
-new $MatchCtx(C.parent.parent),true),token,value)}else{
-try{$B.py2js({src:line.text.substr(5),filename:'<string>'},'fake','fake',$B.builtins_scope)}catch(err){
-var fake_match=line.text+':\n case _:\n  pass',misses_colon=false
-try{$B.py2js({src:fake_match,filename:'<string>'},'fake','fake',$B.builtins_scope)
-misses_colon=true}catch(err){}
-if(misses_colon){$token.value=line.newline_token
-raise_syntax_error(C,"expected ':'")}}}}
+new $CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
+var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
+module.token_reader.position=save_position
+if(ends_with_comma){return $transition(new $AbstractExprCtx(
+new $MatchCtx(C.parent.parent),true),token,value)}}
 switch(token){case '=':
 if(C.parent.type=='expr' &&
 C.parent.parent !==undefined &&
@@ -4168,6 +4150,19 @@ elt.length++
 return elt}else{error("invalid syntax")}}else{break}}
 return check(elt)}
 var opening={')':'(','}':'{',']':'['}
+function check_line(token_reader,filename){var braces=[]
+token_reader.position--
+while(true){var token=token_reader.read()
+if(! token){return false}
+if(token.type=='OP' && token.string==':' && braces.length==0){return true}else if(token.type=='OP'){if('([{'.indexOf(token.string)>-1){braces.push(token)}else if(')]}'.indexOf(token.string)>-1){if(braces.length==0){var err=SyntaxError(
+`unmatched '${token.string}'`)
+err.offset=token.start[1]
+throw err}else if($B.last(braces).string !=opening[token.string]){var err=SyntaxError("closing parenthesis "+
+`'${token.string}' does not match opening `+
+`parenthesis '${$B.last(braces).string}'`)
+err.offset=token.start[1]
+throw err}else{braces.pop()}}}else if(token.type=='NEWLINE'){return false}}
+return false}
 function get_first_line(src,filename){
 var braces=[],token_reader=new $B.TokenReader(src,filename)
 while(true){var token=token_reader.read()

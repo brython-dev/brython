@@ -1085,15 +1085,6 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
     this.type = 'annotation'
     this.parent = context
     this.tree = []
-    // get annotation string in source code for postponed evaluation
-    this.src = $get_module(this).src
-    var rest = this.src.substr($pos)
-    if(rest.startsWith(':')){
-        this.start = $pos + 1
-    }else if(rest.startsWith('->')){
-        this.start = $pos + 2
-    }
-    this.string = ''
     // annotation is stored in attribute "annotations" of parent, not "tree"
     context.annotation = this
 
@@ -1109,7 +1100,6 @@ var $AnnotationCtx = $B.parser.$AnnotationCtx = function(context){
 
 $AnnotationCtx.prototype.transition = function(token, value){
     var context = this
-    this.string = this.src.substring(this.start, $pos)
     if(token == "eol" && context.tree.length == 1 &&
             context.tree[0].tree.length == 0){
         raise_syntax_error(context)
@@ -1476,7 +1466,6 @@ var $CallArgCtx = $B.parser.$CallArgCtx = function(context){
     // Base class for arguments in a function call
     this.type = 'call_arg'
     this.parent = context
-    this.start = $pos
     this.tree = []
     this.position = $token.value
     context.tree.push(this)
@@ -1571,7 +1560,6 @@ var $CallCtx = $B.parser.$CallCtx = function(context){
     }
     this.expect = 'id'
     this.tree = []
-    this.start = $pos
 }
 
 $CallCtx.prototype.ast = function(){
@@ -1676,7 +1664,6 @@ $CallCtx.prototype.transition = function(token, value){
             return $transition(new $CallArgCtx(context), token,
                 value)
         case ')':
-            context.end = $pos
             context.end_position = $token.value
             return context.parent
         case 'op':
@@ -2334,7 +2321,6 @@ var $DictOrSetCtx = $B.parser.$DictOrSetCtx = function(context){
     this.real = 'dict_or_set'
     this.expect = ','
     this.closed = false
-    this.start = $pos
     this.position = $token.value
 
     this.nb_items = 0
@@ -2777,7 +2763,6 @@ $ExprCtx.prototype.transition = function(token, value){
     var context = this
     if(python_keywords.indexOf(token) > -1 &&
             ['as', 'else', 'if', 'for', 'from', 'in'].indexOf(token) == -1){
-        context.$pos = $pos
         raise_syntax_error(context)
     }
     if(context.parent.expect == 'star_target'){
@@ -3727,7 +3712,6 @@ $FuncArgIdCtx.prototype.transition = function(token, value){
         case ')':
             if(context.parent.has_default && context.tree.length == 0 &&
                     context.parent.has_star_arg === undefined){
-                $pos -= context.name.length
                 raise_syntax_error(context,
                     'non-default argument follows default argument')
             }else{
@@ -3883,7 +3867,6 @@ var $GlobalCtx = $B.parser.$GlobalCtx = function(context){
             this.module = this.module.parent_block
         }
     }
-    this.$pos = $pos
 }
 
 $GlobalCtx.prototype.ast = function(){
@@ -3986,11 +3969,12 @@ $IdCtx.prototype.transition = function(token, value){
     if(context.value == 'case' && context.parent.parent.type == "node"){
         // case at the beginning of a line : if the line ends with a colon
         // (:), it is the "soft keyword" `case` for pattern matching
-        var src = module.src,
-            line = get_first_line(src.substr(start), module.filename),
-            node = $get_node(context)
-        if(line === true || line.text.endsWith(':')){
-            var parent = node.parent
+        var save_position = module.token_reader.position,
+            ends_with_comma = check_line(module.token_reader, module.filename)
+            module.token_reader.position = save_position
+        if(ends_with_comma){
+            var node = $get_node(context),
+                parent = node.parent
             if((! node.parent) || !(node.parent.is_match)){
                 raise_syntax_error(context, "('case' not inside 'match')")
             }else{
@@ -4006,47 +3990,16 @@ $IdCtx.prototype.transition = function(token, value){
             return $transition(new $PatternCtx(
                 new $CaseCtx(context.parent.parent)),
                     token, value)
-        }else if(node.parent && node.parent.is_match){
-            // "case" starts a line whose parent is a match statement. The
-            // line does not end with a ':'
-            $token.value = line.newline_token
-            raise_syntax_error(context, "expected ':'")
         }
     }else if(context.value == 'match' && context.parent.parent.type == "node"){
         // same for match
-        var src = module.src
-        var line = get_first_line(src.substr(start), module.filename)
-        if(line === true || line.text.endsWith(':')){
+        var save_position = module.token_reader.position,
+            ends_with_comma = check_line(module.token_reader, module.filename)
+            module.token_reader.position = save_position
+        if(ends_with_comma){
             return $transition(new $AbstractExprCtx(
                 new $MatchCtx(context.parent.parent), true),
                 token, value)
-        }else{
-            // The line starting with "match" does not end with ':'. Check
-            // if line is ok without a trailing ':'
-            try{
-                $B.py2js({src: line.text.substr(5), filename: '<string>'},
-                    'fake', 'fake', $B.builtins_scope)
-                // no syntax error
-            }catch(err){
-                // If not, check if line would have been a valid match
-                // statement if it had ended with ':'
-
-                // Build a fake match block with a valid "case" block
-                var fake_match = line.text + ':\n case _:\n  pass',
-                    misses_colon = false
-                try{
-                    $B.py2js({src: fake_match, filename: '<string>'},
-                        'fake', 'fake', $B.builtins_scope)
-                    // no syntax error with ':'
-                    misses_colon = true
-                }catch(err){
-                    // not a match statement
-                }
-                if(misses_colon){
-                    $token.value = line.newline_token
-                    raise_syntax_error(context, "expected ':'")
-                }
-            }
         }
     }
     switch(token) {
@@ -6548,7 +6501,7 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     }
 
     this.is_bytes = value.charAt(0) == 'b'
-    
+
     if(! this.is_bytes){
         this.value = prepare(value)
     }else{
@@ -7535,6 +7488,42 @@ function test_num(num_lit){
 
 var opening = {')': '(', '}': '{', ']': '['}
 
+function check_line(token_reader, filename){
+    var braces = []
+    token_reader.position--
+    while(true){
+        var token = token_reader.read()
+        if(! token){
+            return false
+        }
+        if(token.type == 'OP' && token.string == ':' && braces.length == 0){
+            return true
+        }else if(token.type == 'OP'){
+            if('([{'.indexOf(token.string) > -1){
+                braces.push(token)
+            }else if(')]}'.indexOf(token.string) > -1){
+                if(braces.length == 0){
+                    var err = SyntaxError(
+                        `unmatched '${token.string}'`)
+                    err.offset = token.start[1]
+                    throw err
+                }else if($B.last(braces).string != opening[token.string]){
+                    var err = SyntaxError("closing parenthesis " +
+                        `'${token.string}' does not match opening ` +
+                        `parenthesis '${$B.last(braces).string}'`)
+                    err.offset = token.start[1]
+                    throw err
+                }else{
+                    braces.pop()
+                }
+            }
+        }else if(token.type == 'NEWLINE'){
+            return false
+        }
+    }
+    return false
+}
+
 function get_first_line(src, filename){
     // used to check if 'match' or 'case' are the "soft keywords" for pattern
     // matching, or ordinary ids
@@ -8328,7 +8317,6 @@ $B.py2js = function(src, module, locals_id, parent_scope){
 
     $pos = 0
 
-
     if(typeof module == "object"){
         var __package__ = module.__package__
         module = module.__name__
@@ -8369,6 +8357,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
                                   filename,
                                   imported})
     var js_from_ast = js_obj.js
+
     return {
         _ast,
         imports: js_obj.imports,
