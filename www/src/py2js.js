@@ -14,7 +14,7 @@ Number.isSafeInteger = Number.isSafeInteger || function (value) {
    return Number.isInteger(value) && Math.abs(value) <= Number.MAX_SAFE_INTEGER;
 };
 
-var js,$pos,res,$op
+var js,res,$op
 var _b_ = $B.builtins
 var _window
 if ($B.isNode){
@@ -2731,7 +2731,6 @@ var $ExprCtx = $B.parser.$ExprCtx = function(context, name, with_commas){
     // Base class for expressions
     this.type = 'expr'
     this.name = name
-    this.$pos = $pos
     this.position = $token.value //context.position
     // allow expression with comma-separted values, or a single value ?
     this.with_commas = with_commas
@@ -4323,8 +4322,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     context.tree[context.tree.length] = this
     this.tree = []
     this.position = $token.value
-    this.args_start = $pos + 6
-
+    
     // initialize object for names bound in the function
     this.node = $get_node(this)
 
@@ -4354,11 +4352,9 @@ $LambdaCtx.prototype.transition = function(token, value){
     if(token == ':' && context.args === undefined){
         context.args = context.tree
         context.tree = []
-        context.body_start = $pos
         return new $AbstractExprCtx(context, false)
     }
     if(context.args !== undefined){ // returning from expression
-        context.body_end = $pos
         return $transition(context.parent, token)
     }
     if(context.args === undefined){
@@ -4406,7 +4402,6 @@ var $ListOrTupleCtx = $B.parser.$ListOrTupleCtx = function(context, real){
     // The real type (list or tuple) is set inside $transition
     // as attribute 'real'
     this.type = 'list_or_tuple'
-    this.start = $pos
     this.real = real
     this.expect = 'id'
     this.closed = false
@@ -4683,7 +4678,6 @@ var NamedExprCtx = function(context){
     this.parent = context
     this.target.parent = this
     this.tree = []
-    this.$pos = $pos
     if(context.parent.type == 'list_or_tuple' &&
             context.parent.real == 'tuple'){
         // used to check assignments
@@ -4740,7 +4734,6 @@ $NodeCtx.prototype.transition = function(token, value){
         if(pctx.tree && pctx.tree.length == 1 &&
                 pctx.tree[0].type == "match"){
             if(token != 'eol' && (token !== 'id' || value !== 'case')){
-                context.$pos = $pos
                 raise_syntax_error(context) // 'line does not start with "case"'
             }
         }
@@ -4898,13 +4891,11 @@ var $NonlocalCtx = $B.parser.$NonlocalCtx = function(context){
     this.parent = context
     this.tree = []
     this.position = $token.value
-    this.names = {}
     context.tree[context.tree.length] = this
     this.expect = 'id'
 
     this.scope = $get_scope(this)
     this.scope.nonlocals = this.scope.nonlocals || new Set()
-
 }
 
 $NonlocalCtx.prototype.ast = function(){
@@ -4920,7 +4911,6 @@ $NonlocalCtx.prototype.transition = function(token, value){
         case 'id':
             if(context.expect == 'id'){
                new $IdCtx(context, value)
-               this.names[value] = [false, $pos]
                context.expect = ','
                return context
             }
@@ -5285,7 +5275,6 @@ var $PatternCaptureCtx = function(context, value){
     this.position = $token.value
     this.positions = [this.position]
     this.expect = '.'
-    this.$pos = $pos
 }
 
 $PatternCaptureCtx.prototype.ast = function(){
@@ -5818,7 +5807,6 @@ $PatternMappingCtx.prototype.transition = function(token, value){
         if(last instanceof $PatternKeyValueCtx){
             if(context.double_star){
                 // key-value after double star is not allowed
-                context.$pos = context.double_star.$pos
                 raise_syntax_error(context,
                     "can't use starred name here (consider moving to end)")
             }
@@ -5846,7 +5834,6 @@ $PatternMappingCtx.prototype.transition = function(token, value){
                 if(context.double_star){
                     var ix = context.tree.indexOf(context.double_star)
                     if(ix != context.tree.length - 1){
-                        context.$pos = context.double_star.$pos
                         raise_syntax_error(context,
                             "can't use starred name here (consider moving to end)")
                     }
@@ -5888,7 +5875,6 @@ $PatternMappingCtx.prototype.transition = function(token, value){
             var capture = $transition(p, token, value)
             if(capture instanceof $PatternCaptureCtx){
                 if(context.double_star){
-                    context.$pos = capture.$pos
                     raise_syntax_error(context,
                         "only one double star pattern is accepted")
                 }
@@ -5955,7 +5941,6 @@ $PatternKeyValueCtx.prototype.transition = function(token, value){
                         var key = $B.AST.$convert(key_obj.tree[0])
                         // check if present in this.literal_keys
                         if(_b_.list.__contains__(this.parent.literal_keys, key)){
-                            $pos--
                             raise_syntax_error(context, `mapping pattern checks ` +
                                 `duplicate key (${_b_.repr(key)})`)
                         }
@@ -6511,7 +6496,6 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     context.tree.push(this)
     this.tree = [this.value]
     this.raw = false
-    this.$pos = $pos
 }
 
 $StringCtx.prototype.ast = function(){
@@ -6538,7 +6522,6 @@ $StringCtx.prototype.transition = function(token, value){
         case 'str':
             if((this.is_bytes && ! value.startsWith('b')) ||
                     (! this.is_bytes && value.startsWith('b'))){
-                context.$pos = $pos
                 raise_syntax_error(context,
                     "cannot mix bytes and nonbytes literals")
             }
@@ -7033,8 +7016,6 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     while(true){
         var list_or_tuple = $parent_match(parent, {type: "list_or_tuple"})
         if(list_or_tuple){
-            list_or_tuple.yields = list_or_tuple.yields || []
-            list_or_tuple.yields.push([this, $pos])
             parent = list_or_tuple
         }else{
             break
@@ -7046,8 +7027,6 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     while(true){
         var set_or_dict = $parent_match(parent, {type: "dict_or_set"})
         if(set_or_dict){
-            set_or_dict.yields = set_or_dict.yields || []
-            set_or_dict.yields.push([this, $pos])
             parent = set_or_dict
         }else{
             break
@@ -7079,7 +7058,7 @@ var $YieldCtx = $B.parser.$YieldCtx = function(context, is_await){
     var root = $get_module(this)
 
     root.yields_func_check = root.yields_func_check || []
-    root.yields_func_check.push([this, $pos])
+    root.yields_func_check.push(this)
 
     var scope = this.scope = $get_scope(this, true),
         node = $get_node(this)
@@ -7627,10 +7606,9 @@ function prepare_number(n){
     }
 }
 
-function test_escape(context, text, string_start, antislash_pos){
+function test_escape(context, text, antislash_pos){
     // Test if the escape sequence starting at position "antislah_pos" in text
     // is is valid
-    // $pos is set at the position before the string quote in original string
     // string_start is the position of the first character after the quote
     // text is the content of the string between quotes
     // antislash_pos is the position of \ inside text
@@ -7647,7 +7625,6 @@ function test_escape(context, text, string_start, antislash_pos){
             if(mo[0].length != 2){
                 seq_end = antislash_pos + mo[0].length + 1
                 $token.value.start[1] = seq_end
-                // $pos = string_start + seq_end + 2
                 raise_syntax_error(context,
                      "(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
@@ -7717,7 +7694,6 @@ function prepare_string(context, s, position){
     }
 
     var raw = context.type == 'str' && context.raw,
-        string_start = $pos + pos + 1,
         bytes = false,
         fstring = false,
         sm_length, // length of string modifier
@@ -7832,8 +7808,7 @@ function prepare_string(context, s, position){
                         end++
                     }
                 }else{
-                    var esc = test_escape(context, src, string_start,
-                                          end)
+                    var esc = test_escape(context, src, end)
                     if(esc){
                         if(esc[0] == '\\'){
                             zone += '\\\\'
@@ -7894,9 +7869,6 @@ function prepare_string(context, s, position){
                 string_no_bs = string.replace(re, quote)
             var elts = $B.parse_fstring(string_no_bs) // in py_string.js
         }catch(err){
-            if(err.position){
-                $pos += err.position
-            }
             raise_syntax_error(context, err.message)
         }
     }
@@ -8044,7 +8016,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
         }catch(err){
             context = context || new $NodeCtx(node)
             if(err.type == 'IndentationError'){
-                $pos = line2pos[err.line_num]
                 raise_indentation_error(context, err.message)
             }else if(err instanceof SyntaxError){
                 if(braces_stack.length > 0){
@@ -8081,7 +8052,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             console.log('no start', token)
         }
         lnum = token.start[0]
-        $pos = line2pos[lnum] + token.start[1]
         // console.log('token', token, 'lnum', lnum, 'node', node)
         //console.log('context', context)
         if(expect_indent &&
@@ -8095,12 +8065,10 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
             case 'ENDMARKER':
                 // Check that all "yield"s are in a function
                 if(root.yields_func_check){
-                    var save_pos = $pos
                     for(const _yield of root.yields_func_check){
-                        $token.value = _yield[0].position
-                        _yield[0].check_in_function()
+                        $token.value = _yield.position
+                        _yield.check_in_function()
                     }
-                    $pos = save_pos
                 }
                 if(indent != 0){
                     raise_indentation_error(node.context,
@@ -8120,7 +8088,6 @@ var dispatch_tokens = $B.parser.dispatch_tokens = function(root){
                 continue
             case 'COMMENT':
                 var end = line2pos[token.end[0]] + token.end[1]
-                root.comments.push([$pos, end - $pos])
                 continue
             case 'ERRORTOKEN':
                 context = context || new $NodeCtx(node)
@@ -8293,7 +8260,6 @@ var $create_root_node = $B.parser.$create_root_node = function(src, module,
     root.parent_block = parent_block
     root.line_num = line_num
     root.indent = -1
-    root.comments = []
     root.imports = {}
 
     if(typeof src == "object"){
@@ -8315,8 +8281,6 @@ $B.py2js = function(src, module, locals_id, parent_scope){
     // parent_scope = the scope where the code is created
     //
     // Returns the Javascript code
-
-    $pos = 0
 
     if(typeof module == "object"){
         var __package__ = module.__package__
