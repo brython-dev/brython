@@ -948,7 +948,7 @@ $B.show_error = function(err){
             console.log('err line', line)
             console.log('offset', err.offset, 'indent', indent)
             var start = err.offset - indent,
-                marks = '    ' + ' '.repeat(start),
+                marks = '   ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){

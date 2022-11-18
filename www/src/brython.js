@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-17 23:59:54.689590"
-__BRYTHON__.timestamp=1668725994689
+__BRYTHON__.compiled_date="2022-11-18 09:03:53.429252"
+__BRYTHON__.timestamp=1668758633429
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -2385,7 +2385,7 @@ $IdCtx.prototype.ast=function(){var ast_obj
 if(['True','False','None'].indexOf(this.value)>-1){ast_obj=new ast.Constant(_b_[this.value])}else{ast_obj=new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())}
 set_position(ast_obj,this.position)
 return ast_obj}
-$IdCtx.prototype.transition=function(token,value){var C=this,start=C.parent.$pos,module=$get_module(this)
+$IdCtx.prototype.transition=function(token,value){var C=this,module=$get_module(this)
 if(C.value=='case' && C.parent.parent.type=="node"){
 var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
 module.token_reader.position=save_position
@@ -2488,22 +2488,22 @@ for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
 value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefined){value.format=new JoinedStrCtx(this,value.format)
 this.tree.pop()}
 var src=value.expression.trimStart(),
-save_pos=$pos,root=$create_root_node(src,this.scope.module,this.scope.id,this.scope.parent_block,line_num)
-try{dispatch_tokens(root)}catch(err){err.args[1][1]+=line_num-1
-var line_start=save_pos,source=$get_module(this).src
-while(line_start--> 0 && source[line_start]!='\n'){}
-err.args[1][2]+=value.start+save_pos-line_start
-err.lineno+=line_num-1
-err.args[1][3]=$get_module(this).src.split('\n')[line_num-1]
+filename=$get_module(this).filename,root=$create_root_node(src,this.scope.module,this.scope.id,this.scope.parent_block,line_num)
+try{dispatch_tokens(root)}catch(err){var fstring_lineno=this.position.start[0],fstring_offset=this.position.start[1]
+err.filename=$get_module(this).filename
+err.lineno+=fstring_lineno-1
+err.offset+=fstring_offset-1
+err.end_lineno+=fstring_lineno-1
+err.end_offset+=fstring_offset-1
+err.text=this.position.string
+err.args[1]=$B.fast_tuple([filename,err.lineno,err.offset,err.text,err.end_lineno,err.end_offset])
 throw err}
-$pos=save_pos
 var expr=root.children[0].C.tree[0]
 this.tree.push(expr)
 expr.parent=this
 expr.elt=value}}
 C.tree.push(this)
-this.raw=false
-this.$pos=$pos}
+this.raw=false}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
 var state
 for(var item of this.tree){if(item instanceof $StringCtx){if(state=='string'){
@@ -7989,7 +7989,7 @@ err.text){
 console.log('error rgs',err.args[1])
 console.log('err line',line)
 console.log('offset',err.offset,'indent',indent)
-var start=err.offset-indent,marks='    '+' '.repeat(start),nb_marks=1
+var start=err.offset-indent,marks='   '+' '.repeat(start),nb_marks=1
 if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent}
 if(nb_marks==0 &&
 err.end_offset==line.substr(indent).length){nb_marks=1}}

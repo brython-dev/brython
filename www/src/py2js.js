@@ -3964,7 +3964,6 @@ $IdCtx.prototype.ast = function(){
 
 $IdCtx.prototype.transition = function(token, value){
     var context = this,
-        start = context.parent.$pos,
         module = $get_module(this)
     if(context.value == 'case' && context.parent.parent.type == "node"){
         // case at the beginning of a line : if the line ends with a colon
@@ -4151,25 +4150,28 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
                 this.tree.pop()
             }
             var src = value.expression.trimStart(), // ignore leading whitespace
-                save_pos = $pos,
+                filename = $get_module(this).filename,
                 root = $create_root_node(src,
                     this.scope.module, this.scope.id,
                     this.scope.parent_block, line_num)
-
             try{
                 dispatch_tokens(root)
             }catch(err){
-                err.args[1][1] += line_num - 1
-                var line_start = save_pos,
-                    source = $get_module(this).src
-                while(line_start-- > 0 && source[line_start] != '\n'){}
-                err.args[1][2] += value.start + save_pos - line_start
-                err.lineno += line_num - 1
-                err.args[1][3] = $get_module(this).src.split('\n')[line_num - 1]
+                var fstring_lineno = this.position.start[0],
+                    fstring_offset = this.position.start[1]
+                err.filename = $get_module(this).filename
+                err.lineno += fstring_lineno - 1
+                err.offset += fstring_offset - 1
+                err.end_lineno += fstring_lineno - 1
+                err.end_offset += fstring_offset - 1
+                err.text = this.position.string
+                err.args[1] = $B.fast_tuple([filename,
+                                             err.lineno, err.offset,
+                                             err.text,
+                                             err.end_lineno, err.end_offset])
                 throw err
             }
 
-            $pos = save_pos
             var expr = root.children[0].context.tree[0]
             this.tree.push(expr)
             expr.parent = this
@@ -4178,7 +4180,6 @@ var JoinedStrCtx = $B.parser.JoinedStrCtx = function(context, values){
     }
     context.tree.push(this)
     this.raw = false
-    this.$pos = $pos
 }
 
 JoinedStrCtx.prototype.ast = function(){
