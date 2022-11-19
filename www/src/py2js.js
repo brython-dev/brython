@@ -6484,46 +6484,46 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     this.raw = false
 }
 
-$StringCtx.prototype.add_value = function(value){
-    function prepare(value){
-        value = value.replace(/\n/g,'\\n\\\n')
-        value = value.replace(/\r/g,'\\r\\\r')
-        if(value[0] == "'"){
-            var unquoted = value.substr(1, value.length - 2)
-            return unquoted
-        }
-        var quote = "'"
-        if(value.indexOf("'") > -1){
-            // escape unescaped single quotes
-            var s = '',
-                escaped = false
-            for(var char of value){
-                if(char == '\\'){
-                    if(escaped){
-                        s += '\\\\'
-                    }
-                    escaped = !escaped
-                }else{
-                    if(char == "'" && ! escaped){
-                        s += '\\'
-                    }else if(escaped){
-                        s += '\\'
-                    }
-                    s += char
-                    escaped = false
-                }
-            }
-            value = s
-        }
-        return value.substr(1, value.length - 2)
+var make_string_for_ast_value = $B.make_string_for_ast_value = function(value){
+    value = value.replace(/\n/g,'\\n\\\n')
+    value = value.replace(/\r/g,'\\r\\\r')
+    if(value[0] == "'"){
+        var unquoted = value.substr(1, value.length - 2)
+        return unquoted
     }
+    var quote = "'"
+    // prepare value so that "'" + value + "'" is the correct string
+    if(value.indexOf("'") > -1){
+        var s = '',
+            escaped = false
+        for(var char of value){
+            if(char == '\\'){
+                if(escaped){
+                    s += '\\\\'
+                }
+                escaped = !escaped
+            }else{
+                if(char == "'" && ! escaped){
+                    // escape unescaped single quotes
+                    s += '\\'
+                }else if(escaped){
+                    s += '\\'
+                }
+                s += char
+                escaped = false
+            }
+        }
+        value = s
+    }
+    return value.substr(1, value.length - 2)
+}
 
+$StringCtx.prototype.add_value = function(value){
     this.is_bytes = value.charAt(0) == 'b'
-
     if(! this.is_bytes){
-        this.value += prepare(value)
+        this.value += make_string_for_ast_value(value)
     }else{
-        this.value += prepare(value.substr(1))
+        this.value += make_string_for_ast_value(value.substr(1))
     }
 }
 

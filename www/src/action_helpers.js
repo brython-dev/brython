@@ -656,7 +656,7 @@ function make_formatted_value(p, fmt_values){
     var seq = []
     for(var item of fmt_values){
         if(typeof item == 'string'){
-            var fmt_ast = new $B.ast.Constant(`"${item}"`)
+            var fmt_ast = new $B.ast.Constant(item)
             set_position_from_obj(fmt_ast, p.arena)
         }else{
             var src = item.expression.trimStart() // ignore leading whitespace
@@ -685,11 +685,6 @@ $B._PyPegen.concatenate_strings = function(p, strings){
         value,
         values = []
 
-    function escape_line_feeds(s){
-        return s.replace(/\n/g,'\\n\\\n')
-                .replace(/\r/g,'\\r\\\r')
-    }
-    
     function error(message){
         var a = {lineno: first.start[0],
                  col_offset: first.start[1],
@@ -720,7 +715,6 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             }
             for(var fs_item of v){
                 if(typeof fs_item == 'string'){
-                    fs_item = escape_line_feeds(fs_item)
                     // add quotes
                     fs_item = `'${fs_item.replace(/'/g, "\\'")}'`
                 }
@@ -737,12 +731,12 @@ $B._PyPegen.concatenate_strings = function(p, strings){
                 value
             state = is_bytes ? 'bytestring' : 'string'
             if(! is_bytes){
-                value = escape_line_feeds(v)
+                value = v
             }else{
-                value = escape_line_feeds(v.substr(1))
+                value = $B.make_string_for_ast_value(v.substr(1))
+                value = `'${value}'`
                 value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
             }
-
             items.push(value)
         }
     }
@@ -760,7 +754,8 @@ $B._PyPegen.concatenate_strings = function(p, strings){
     }
 
     if(! has_fstring){
-        var ast_obj = new $B.ast.Constant(items.join('+'))
+        items = items.map($B.make_string_for_ast_value) // in py2js.js
+        var ast_obj = new $B.ast.Constant(items.join(''))
         set_position(ast_obj)
         return ast_obj
     }
@@ -774,10 +769,10 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             items1.push(items[i])
             i++
         }else{
-            items1.push(items[i])
+            items1.push($B.make_string_for_ast_value(items[i]))
             i++
             while(i < items.length & typeof items[i] == 'string'){
-                items1[items1.length - 1] += '+' + items[i]
+                items1[items1.length - 1] += $B.make_string_for_ast_value(items[i])
                 i++
             }
         }
