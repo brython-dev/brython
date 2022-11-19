@@ -35,9 +35,13 @@ Quelques exemples :
 
 ```python
 document.select('.foo')       # éléments avec la classe "foo"
-document.select('form')       # liste des balises "<form>"
-document.select('H1.bar')     # balises H1 avec la classe "bar"
+document.select('form')       # liste des éléments "<form>"
+document.select('H1.bar')     # éléments H1 avec la classe "bar"
 document.select('#container') # liste avec l'élément dont l'id vaut "container", 
                               # similaire à [document["container"]]
-document.select('a[title]')   # balises A avec un attribut "title"
+document.select('a[title]')   # éléments A avec un attribut "title"
+document.select('#tid td')    # les éléments TD dans l'élément avec l'id #tid
 ```
+
+Voir la [documentation MDN](https://developer.mozilla.org/fr/docs/Web/CSS/CSS_Selectors)
+pour plus d'informations et d'exemples de sélecteurs CSS.

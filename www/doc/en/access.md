@@ -32,9 +32,13 @@ elements:
 
 ```python
 document.select('.foo')       # elements with class "foo"
-document.select('form')       # list of tags "<form>"
-document.select('H1.bar')     # H1 tags with class "bar"
+document.select('form')       # list of elements "<form>"
+document.select('H1.bar')     # H1 elements with class "bar"
 document.select('#container') # the element with id "container", same as
                               # [document["container"]]
-document.select('a[title]')   # A tags with an attribute "title"
+document.select('a[title]')   # A elements with an attribute "title"
+document.select('#tid td')    # the TD elements inside the element with id #tid
 ```
+
+See the [MDN documentation](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)
+for more information and examples of CSS selectors.
