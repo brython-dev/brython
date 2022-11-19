@@ -87,3 +87,13 @@ window.test = function(t, ix, value){
     throw _b_.AssertionError.$factory(`at ${ix}, ${t[ix]} is not equal to ${value}`)
   }
 }
+
+window.set_array_proto = function(){
+    Array.prototype.test = function () {
+        return "Array test"
+    }
+}
+
+window.del_array_proto = function(){
+    delete Array.prototype.test
+}

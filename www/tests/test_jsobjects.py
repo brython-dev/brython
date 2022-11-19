@@ -3,6 +3,8 @@
 # issue 744: Javascript objects should allow integer attribute names.
 from browser import window
 import javascript
+from tester import assert_raises
+
 
 a = window.Uint8ClampedArray.new(10)
 
@@ -227,5 +229,11 @@ jslist[0] += 'b'
 assert jslist == ['ab', 1.7, 0.5]
 window.test(jslist, 0, 'ab')
 
+# issue 2105
+window.set_array_proto() # sets Array.prototype.test
+assert jslist.test() == 'Array test'
+
+window.del_array_proto() # deletes Array.prototype.test
+assert_raises(AttributeError, getattr, jslist, 'test')
 
 print("all tests ok...")

@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-19 17:50:20.031801"
-__BRYTHON__.timestamp=1668876620031
+__BRYTHON__.compiled_date="2022-11-19 18:58:54.538572"
+__BRYTHON__.timestamp=1668880734538
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3704,21 +3704,21 @@ C.tree.push(this)
 this.value=''
 this.add_value(value)
 this.raw=false}
-$StringCtx.prototype.add_value=function(value){function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
+var make_string_for_ast_value=$B.make_string_for_ast_value=function(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
 if(value[0]=="'"){var unquoted=value.substr(1,value.length-2)
 return unquoted}
 var quote="'"
-if(value.indexOf("'")>-1){
-var s='',escaped=false
+if(value.indexOf("'")>-1){var s='',escaped=false
 for(var char of value){if(char=='\\'){if(escaped){s+='\\\\'}
-escaped=!escaped}else{if(char=="'" && ! escaped){s+='\\'}else if(escaped){s+='\\'}
+escaped=!escaped}else{if(char=="'" && ! escaped){
+s+='\\'}else if(escaped){s+='\\'}
 s+=char
 escaped=false}}
 value=s}
 return value.substr(1,value.length-2)}
-this.is_bytes=value.charAt(0)=='b'
-if(! this.is_bytes){this.value+=prepare(value)}else{this.value+=prepare(value.substr(1))}}
+$StringCtx.prototype.add_value=function(value){this.is_bytes=value.charAt(0)=='b'
+if(! this.is_bytes){this.value+=make_string_for_ast_value(value)}else{this.value+=make_string_for_ast_value(value.substr(1))}}
 $StringCtx.prototype.ast=function(){var value=this.value
 if(this.is_bytes){value=`'${value}'`
 value=_b_.bytes.$new(_b_.bytes,eval(value),'ISO-8859-1')}
@@ -9248,7 +9248,8 @@ return _b_.list[attr].apply(null,args)}}
 $B.set_func_names(js_list_meta,'builtins')
 var js_list=$B.make_class('jslist')
 js_list.__class__=js_list_meta
-js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){throw _b_.AttributeError.$factory(attr)}
+js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){if(Array.prototype[attr]!==undefined){return _self[attr]}
+throw _b_.AttributeError.$factory(attr)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 $B.set_func_names(js_list,'builtins')

@@ -365,6 +365,9 @@ js_list.__class__ = js_list_meta
 
 js_list.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
+        if(Array.prototype[attr] !== undefined){
+            return _self[attr]
+        }
         throw _b_.AttributeError.$factory(attr)
     }
     return function(){
