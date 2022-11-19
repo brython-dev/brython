@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-18 09:29:16.328538"
-__BRYTHON__.timestamp=1668760156328
+__BRYTHON__.compiled_date="2022-11-19 17:50:20.031801"
+__BRYTHON__.timestamp=1668876620031
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -2506,7 +2506,7 @@ this.raw=false}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
 var state
 for(var item of this.tree){if(item instanceof $StringCtx){if(state=='string'){
-$B.last(res.values).value+=' + '+item.value}else{var item_ast=new ast.Constant(item.value)
+$B.last(res.values).value+=item.value}else{var item_ast=new ast.Constant(item.value)
 set_position(item_ast,item.position)
 res.values.push(item_ast)}
 state='string'}else{var conv_num={a:97,r:114,s:115},format=item.elt.format
@@ -2529,8 +2529,7 @@ C.parent.tree[0]=C
 return new $CallCtx(C.parent)
 case 'str':
 if(C.tree.length > 0 &&
-$B.last(C.tree).type=="str"){C.tree[C.tree.length-1].value+=
-' + '+value}else{new $StringCtx(this,value)}
+$B.last(C.tree).type=="str"){C.tree[C.tree.length-1].add_value(value)}else{new $StringCtx(this,value)}
 return C
 case 'JoinedStr':
 var joined_expr=new JoinedStrCtx(C.parent,value)
@@ -2538,7 +2537,7 @@ C.parent.tree.pop()
 if(C.tree.length > 0 &&
 $B.last(C.tree)instanceof $StringCtx &&
 joined_expr.tree[0]instanceof $StringCtx){
-$B.last(C.tree).value+=' + '+joined_expr.tree[0].value
+$B.last(C.tree).value+=joined_expr.tree[0].value
 C.tree=C.tree.concat(joined_expr.tree.slice(1))}else{C.tree=C.tree.concat(joined_expr.tree)}
 return C}
 return $transition(C.parent,token,value)}
@@ -3701,16 +3700,28 @@ var $StringCtx=$B.parser.$StringCtx=function(C,value){
 this.type='str'
 this.parent=C
 this.position=this.end_position=$token.value
-function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
-value=value.replace(/\r/g,'\\r\\\r')
-return value}
-this.is_bytes=value.charAt(0)=='b'
-if(! this.is_bytes){this.value=prepare(value)}else{this.value=prepare(value.substr(1))}
 C.tree.push(this)
-this.tree=[this.value]
+this.value=''
+this.add_value(value)
 this.raw=false}
+$StringCtx.prototype.add_value=function(value){function prepare(value){value=value.replace(/\n/g,'\\n\\\n')
+value=value.replace(/\r/g,'\\r\\\r')
+if(value[0]=="'"){var unquoted=value.substr(1,value.length-2)
+return unquoted}
+var quote="'"
+if(value.indexOf("'")>-1){
+var s='',escaped=false
+for(var char of value){if(char=='\\'){if(escaped){s+='\\\\'}
+escaped=!escaped}else{if(char=="'" && ! escaped){s+='\\'}else if(escaped){s+='\\'}
+s+=char
+escaped=false}}
+value=s}
+return value.substr(1,value.length-2)}
+this.is_bytes=value.charAt(0)=='b'
+if(! this.is_bytes){this.value+=prepare(value)}else{this.value+=prepare(value.substr(1))}}
 $StringCtx.prototype.ast=function(){var value=this.value
-if(this.is_bytes){value=_b_.bytes.$new(_b_.bytes,eval(this.value),'ISO-8859-1')}
+if(this.is_bytes){value=`'${value}'`
+value=_b_.bytes.$new(_b_.bytes,eval(value),'ISO-8859-1')}
 var ast_obj=new ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
@@ -3723,7 +3734,7 @@ return new $CallCtx(C.parent)
 case 'str':
 if((this.is_bytes && ! value.startsWith('b'))||
 (! this.is_bytes && value.startsWith('b'))){raise_syntax_error(C,"cannot mix bytes and nonbytes literals")}
-C.value+=' + '+(this.is_bytes ? value.substr(1):value)
+C.add_value(value)
 return C
 case 'JoinedStr':
 C.parent.tree.pop()
@@ -14967,7 +14978,8 @@ copy_position(assign,this.target)
 js+=assign.to_js(scopes)+' // assign to target\n'
 for(var _if of this.ifs){js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
 return js}
-$B.ast.Constant.prototype.to_js=function(scopes){if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){return `$B.String(${this.value})`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){return this.value}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
+$B.ast.Constant.prototype.to_js=function(scopes){if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){var s=this.value
+return `$B.String('${s}')`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){return this.value}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
 throw SyntaxError('bad value',this.value)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
 return 'continue'}

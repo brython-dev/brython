@@ -4191,7 +4191,7 @@ JoinedStrCtx.prototype.ast = function(){
         if(item instanceof $StringCtx){
             if(state == 'string'){
                 // eg in "'ab' f'c{x}'"
-                $B.last(res.values).value += ' + ' + item.value
+                $B.last(res.values).value += item.value
             }else{
                 var item_ast = new ast.Constant(item.value)
                 set_position(item_ast, item.position)
@@ -4234,8 +4234,7 @@ JoinedStrCtx.prototype.transition = function(token, value){
         case 'str':
             if(context.tree.length > 0 &&
                     $B.last(context.tree).type == "str"){
-                context.tree[context.tree.length - 1].value +=
-                    ' + ' + value
+                context.tree[context.tree.length - 1].add_value(value)
             }else{
                 new $StringCtx(this, value)
             }
@@ -4248,7 +4247,7 @@ JoinedStrCtx.prototype.transition = function(token, value){
                     $B.last(context.tree) instanceof $StringCtx &&
                     joined_expr.tree[0] instanceof $StringCtx){
                 // merge last string in context and first in value
-                $B.last(context.tree).value += ' + ' + joined_expr.tree[0].value
+                $B.last(context.tree).value += joined_expr.tree[0].value
                 context.tree = context.tree.concat(joined_expr.tree.slice(1))
             }else{
                 context.tree = context.tree.concat(joined_expr.tree)
@@ -4322,7 +4321,7 @@ var $LambdaCtx = $B.parser.$LambdaCtx = function(context){
     context.tree[context.tree.length] = this
     this.tree = []
     this.position = $token.value
-    
+
     // initialize object for names bound in the function
     this.node = $get_node(this)
 
@@ -6479,29 +6478,60 @@ var $StringCtx = $B.parser.$StringCtx = function(context, value){
     this.type = 'str'
     this.parent = context
     this.position = this.end_position = $token.value
+    context.tree.push(this)
+    this.value = ''
+    this.add_value(value)
+    this.raw = false
+}
 
+$StringCtx.prototype.add_value = function(value){
     function prepare(value){
         value = value.replace(/\n/g,'\\n\\\n')
         value = value.replace(/\r/g,'\\r\\\r')
-        return value
+        if(value[0] == "'"){
+            var unquoted = value.substr(1, value.length - 2)
+            return unquoted
+        }
+        var quote = "'"
+        if(value.indexOf("'") > -1){
+            // escape unescaped single quotes
+            var s = '',
+                escaped = false
+            for(var char of value){
+                if(char == '\\'){
+                    if(escaped){
+                        s += '\\\\'
+                    }
+                    escaped = !escaped
+                }else{
+                    if(char == "'" && ! escaped){
+                        s += '\\'
+                    }else if(escaped){
+                        s += '\\'
+                    }
+                    s += char
+                    escaped = false
+                }
+            }
+            value = s
+        }
+        return value.substr(1, value.length - 2)
     }
 
     this.is_bytes = value.charAt(0) == 'b'
 
     if(! this.is_bytes){
-        this.value = prepare(value)
+        this.value += prepare(value)
     }else{
-        this.value = prepare(value.substr(1))
+        this.value += prepare(value.substr(1))
     }
-    context.tree.push(this)
-    this.tree = [this.value]
-    this.raw = false
 }
 
 $StringCtx.prototype.ast = function(){
     var value = this.value
     if(this.is_bytes){
-        value = _b_.bytes.$new(_b_.bytes, eval(this.value), 'ISO-8859-1')
+        value = `'${value}'`
+        value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
     }
     var ast_obj = new ast.Constant(value)
     set_position(ast_obj, this.position)
@@ -6525,7 +6555,7 @@ $StringCtx.prototype.transition = function(token, value){
                 raise_syntax_error(context,
                     "cannot mix bytes and nonbytes literals")
             }
-            context.value += ' + ' + (this.is_bytes ? value.substr(1) : value)
+            context.add_value(value)
             return context
         case 'JoinedStr':
             // replace by a new JoinedStr where the first value is this
