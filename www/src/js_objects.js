@@ -158,7 +158,9 @@ JSConstructor.$factory = function(obj){
 
 
 
-var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
+var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
+    // If _this is passed and jsobj is a function, the function is called
+    // with built-in value `this` set to _this
     switch(jsobj) {
       case true:
       case false:
@@ -183,12 +185,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj) {
         return $B.String(jsobj)
     }else if(typeof jsobj == "function"){
         // transform Python arguments to equivalent JS arguments
+        _this = _this === undefined ? null : _this
         return function(){
             var args = []
             for(var i = 0, len = arguments.length; i < len; i++){
                 args.push(pyobj2jsobj(arguments[i]))
             }
-            return jsobj2pyobj(jsobj.apply(null, args))
+            return jsobj2pyobj(jsobj.apply(_this, args))
         }
     }
 
@@ -365,8 +368,13 @@ js_list.__class__ = js_list_meta
 
 js_list.__getattribute__ = function(_self, attr){
     if(_b_.list[attr] === undefined){
-        if(Array.prototype[attr] !== undefined){
-            return _self[attr]
+        // Methods of Python lists take precedence, but if they fail, try
+        // attributes of _self Javascript prototype
+        var proto = Object.getPrototypeOf(_self),
+            res = proto[attr]
+        if(res !== undefined){
+            // pass _self as `this` if res is a function
+            return jsobj2pyobj(res, _self)
         }
         throw _b_.AttributeError.$factory(attr)
     }

@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-19 18:58:54.538572"
-__BRYTHON__.timestamp=1668880734538
+__BRYTHON__.compiled_date="2022-11-19 19:22:29.344000"
+__BRYTHON__.timestamp=1668882149344
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9180,15 +9180,17 @@ return $B.$JS2Py(res)}}
 return JSObject.__getattribute__(_self,attr)}
 JSConstructor.$factory=function(obj){return{
 __class__:JSConstructor,js:obj,func:obj.js_func}}
-var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj){switch(jsobj){case true:
+var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj,_this){
+switch(jsobj){case true:
 case false:
 return jsobj}
 if(jsobj===undefined){return $B.Undefined}else if(jsobj===null){return _b_.None}
 if(Array.isArray(jsobj)){return $B.$list(jsobj.map(jsobj2pyobj))}else if(typeof jsobj==='number'){if(jsobj.toString().indexOf('.')==-1){return _b_.int.$factory(jsobj)}
 return _b_.float.$factory(jsobj)}else if(typeof jsobj=="string"){return $B.String(jsobj)}else if(typeof jsobj=="function"){
+_this=_this===undefined ? null :_this
 return function(){var args=[]
 for(var i=0,len=arguments.length;i < len;i++){args.push(pyobj2jsobj(arguments[i]))}
-return jsobj2pyobj(jsobj.apply(null,args))}}
+return jsobj2pyobj(jsobj.apply(_this,args))}}
 if(jsobj.$nat==='kw'){return jsobj}
 if($B.$isNode(jsobj)){return $B.DOMNode.$factory(jsobj)}
 return $B.JSObj.$factory(jsobj)}
@@ -9248,7 +9250,10 @@ return _b_.list[attr].apply(null,args)}}
 $B.set_func_names(js_list_meta,'builtins')
 var js_list=$B.make_class('jslist')
 js_list.__class__=js_list_meta
-js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){if(Array.prototype[attr]!==undefined){return _self[attr]}
+js_list.__getattribute__=function(_self,attr){if(_b_.list[attr]===undefined){
+var proto=Object.getPrototypeOf(_self),res=proto[attr]
+if(res !==undefined){
+return jsobj2pyobj(res,_self)}
 throw _b_.AttributeError.$factory(attr)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
