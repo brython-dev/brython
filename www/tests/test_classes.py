@@ -909,5 +909,20 @@ assert trace == [(Plugin, Client),
                  (Plugin1, Plugin),
                  (Plugin1, Client),
                  (Plugin1, PluginBase)]
-                 
+
+# `klass.x = y` is `klass.__class__.__setattr__(klass, x, y)`
+t = []
+class Meta(type):
+
+  def __setattr__(cls, attr, value):
+    t.append('Meta setattr')
+    type.__setattr__(cls, attr, value)
+
+class A(metaclass=Meta):
+    ONE = 1
+
+assert not t
+A.TWO = 2
+assert len(t) == 1
+
 print('passed all tests..')

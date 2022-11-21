@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-19 19:22:29.344000"
-__BRYTHON__.timestamp=1668882149344
+__BRYTHON__.compiled_date="2022-11-21 22:31:21.015954"
+__BRYTHON__.timestamp=1669066281015
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5557,7 +5557,8 @@ var klass=self.__class__ ||$B.get_class(self)
 var repr_func=$B.$getattr(klass,"__repr__")
 return $B.$call(repr_func).apply(null,arguments)}
 object.__subclasshook__=function(){return _b_.NotImplemented}
-object.$factory=function(){var res={__class__:object},args=[res].concat(Array.prototype.slice.call(arguments))
+object.$factory=function(){if(arguments.length > 0){throw _b_.TypeError.$factory('object() takes no arguments')}
+var res={__class__:object},args=[res]
 object.__init__.apply(null,args)
 return res}
 $B.set_func_names(object,"builtins")
@@ -5654,12 +5655,12 @@ $B.make_class=function(qualname,factory){
 var A={__class__:_b_.type,__mro__:[_b_.object],$infos:{__qualname__:qualname,__name__:$B.last(qualname.split('.'))},$is_class:true}
 A.$factory=factory
 return A}
-var type=$B.make_class("type",function(obj,bases,cl_dict){var missing={},$=$B.args('type',3,{obj:null,bases:null,cl_dict:null},['obj','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),obj=$.obj,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
+var type=$B.make_class("type",function(kls,bases,cl_dict){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
 var kwargs={'$nat':'kw',kw:{}}
 for(var key in kw.$string_dict){kwargs.kw[key]=kw.$string_dict[key][0]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
-return obj.__class__ ||$B.get_class(obj)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(obj,module,bases),meta_new=$B.$call($B.$getattr(meta,'__new__'))
-return meta_new(meta,obj,bases,cl_dict,kwargs)}}
+return kls.__class__ ||$B.get_class(kls)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(kls,module,bases),meta_new=$B.$call($B.$getattr(meta,'__new__'))
+return meta_new(meta,kls,bases,cl_dict,kwargs)}}
 )
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
@@ -5681,7 +5682,7 @@ return klass.__class__
 case "__doc__":
 return klass.__doc__ ||_b_.None
 case "__setattr__":
-if(klass["__setattr__"]!==undefined){var func=klass["__setattr__"]}else{var func=function(obj,key,value){obj[key]=value}}
+if(klass["__setattr__"]!==undefined){var func=klass["__setattr__"]}else{var func=function(kls,key,value){kls[key]=value}}
 return method_wrapper.$factory(attr,klass,func)
 case "__delattr__":
 if(klass["__delattr__"]!==undefined){return klass["__delattr__"]}
@@ -5808,6 +5809,22 @@ return "<class '"+qualname+"'>"}
 type.__ror__=function(){var len=arguments.length
 if(len !=1){throw _b_.TypeError.$factory(`expected 1 argument, got ${len}`)}
 return _b_.NotImplemented}
+type.__setattr__=function(kls,attr,value){var $test=false
+if($test){console.log("kls is class",type,types[attr])}
+if(type[attr]&& type[attr].__get__ &&
+type[attr].__set__){type[attr].__set__(kls,value)
+return _b_.None}
+if(attr=="__module__"){kls.$infos.__module__=value
+return _b_.None}
+if(kls.$infos && kls.$infos.__module__=="builtins"){throw _b_.TypeError.$factory(
+`cannot set '${attr}' attribute of immutable type '`+
+kls.$infos.__name__+"'")}
+kls[attr]=value
+if(attr=="__init__" ||attr=="__new__"){
+kls.$factory=$B.$instance_creator(kls)}else if(attr=="__bases__"){
+kls.__mro__=_b_.type.mro(kls)}
+if($test){console.log("after setattr",kls)}
+return _b_.None}
 type.mro=function(cls){
 if(cls===undefined){throw _b_.TypeError.$factory(
 'unbound method type.mro() needs an argument')}
@@ -5864,12 +5881,12 @@ self.__delete__=fdel;
 self.getter=function(fget){return property.$factory(fget,self.fset,self.fdel,self.__doc__)}
 self.setter=function(fset){return property.$factory(self.fget,fset,self.fdel,self.__doc__)}
 self.deleter=function(fdel){return property.$factory(self.fget,self.fset,fdel,self.__doc__)}}
-property.__get__=function(self,obj){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
-return $B.$call(self.fget)(obj)}
+property.__get__=function(self,kls){if(self.fget===undefined){throw _b_.AttributeError.$factory("unreadable attribute")}
+return $B.$call(self.fget)(kls)}
 property.__new__=function(cls){return{
 __class__:cls}}
-property.__set__=function(self,obj,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
-$B.$getattr(self.fset,'__call__')(obj,value)}
+property.__set__=function(self,kls,value){if(self.fset===undefined){throw _b_.AttributeError.$factory("can't set attribute")}
+$B.$getattr(self.fset,'__call__')(kls,value)}
 $B.set_func_names(property,"builtins")
 var wrapper_descriptor=$B.wrapper_descriptor=
 $B.make_class("wrapper_descriptor")
@@ -5884,13 +5901,13 @@ if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$fact
 "with abstract methods")}}
 var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
 if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){
-var obj=klass.__new__.bind(null,klass).
+var kls=klass.__new__.bind(null,klass).
 apply(null,arguments)
-klass.__init__.bind(null,obj).apply(null,arguments)
-return obj}}else{factory=function(){return klass.__new__.bind(null,klass).
-apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var obj={__class__:klass,__dict__:$B.empty_dict()}
-klass.__init__.bind(null,obj).apply(null,arguments)
-return obj}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$nat &&
+klass.__init__.bind(null,kls).apply(null,arguments)
+return kls}}else{factory=function(){return klass.__new__.bind(null,klass).
+apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var kls={__class__:klass,__dict__:$B.empty_dict()}
+klass.__init__.bind(null,kls).apply(null,arguments)
+return kls}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$nat &&
 Object.keys(arguments[0].kw).length==0){}else{throw _b_.TypeError.$factory("object() takes no parameters")}}
 var res=Object.create(null)
 $B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
@@ -5909,15 +5926,15 @@ return f}
 method_wrapper.__str__=method_wrapper.__repr__=function(self){return "<method '"+self.$infos.__name__+"' of function object>"}
 var member_descriptor=$B.make_class("member_descriptor",function(attr,cls){return{__class__:member_descriptor,cls:cls,attr:attr}}
 )
-member_descriptor.__delete__=function(self,obj){if(obj.$slot_values===undefined ||
-! obj.$slot_values.hasOwnProperty(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
-obj.$slot_values.delete(self.attr)}
-member_descriptor.__get__=function(self,obj,obj_type){if(obj===_b_.None){return self}
-if(obj.$slot_values===undefined ||
-! obj.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
-return obj.$slot_values.get(self.attr)}
-member_descriptor.__set__=function(self,obj,value){if(obj.$slot_values===undefined){obj.$slot_values=new Map()}
-obj.$slot_values.set(self.attr,value)}
+member_descriptor.__delete__=function(self,kls){if(kls.$slot_values===undefined ||
+! kls.$slot_values.hasOwnProperty(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+kls.$slot_values.delete(self.attr)}
+member_descriptor.__get__=function(self,kls,obj_type){if(kls===_b_.None){return self}
+if(kls.$slot_values===undefined ||
+! kls.$slot_values.has(self.attr)){throw _b_.AttributeError.$factory(self.attr)}
+return kls.$slot_values.get(self.attr)}
+member_descriptor.__set__=function(self,kls,value){if(kls.$slot_values===undefined){kls.$slot_values=new Map()}
+kls.$slot_values.set(self.attr,value)}
 member_descriptor.__str__=member_descriptor.__repr__=function(self){return "<member '"+self.attr+"' of '"+self.cls.$infos.__name__+
 "' objects>"}
 $B.set_func_names(member_descriptor,"builtins")
@@ -6880,21 +6897,8 @@ obj.__class__=value
 return None}else if(attr=="__doc__" && obj.__class__===_b_.property){obj[attr]=value}
 if($test){console.log("set attr",attr,"to",obj)}
 if(obj.$factory ||obj.$is_class){var metaclass=obj.__class__
-if($test){console.log("obj is class",metaclass,metaclass[attr])}
-if(metaclass && metaclass[attr]&& metaclass[attr].__get__ &&
-metaclass[attr].__set__){metaclass[attr].__set__(obj,value)
-return None}
-if(attr=="__module__"){obj.$infos.__module__=value
-return _b_.None}
-if(obj.$infos && obj.$infos.__module__=="builtins"){throw _b_.TypeError.$factory(
-`cannot set '${attr}' attribute of immutable type '`+
-obj.$infos.__name__+"'")}
-obj[attr]=value
-if(attr=="__init__" ||attr=="__new__"){
-obj.$factory=$B.$instance_creator(obj)}else if(attr=="__bases__"){
-obj.__mro__=_b_.type.mro(obj)}
-if($test){console.log("after setattr",obj)}
-return None}
+if(metaclass===_b_.type){return _b_.type.__setattr__(obj,attr,value)}
+return $B.$call($B.$getattr(metaclass,'__setattr__'))(obj,attr,value)}
 var res=obj[attr],klass=obj.__class__ ||$B.get_class(obj)
 if($test){console.log('set attr',attr,'of obj',obj,'class',klass,"obj[attr]",obj[attr])}
 if(res===undefined && klass){res=klass[attr]

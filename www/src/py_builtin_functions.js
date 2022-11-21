@@ -2403,6 +2403,11 @@ $B.$setattr = function(obj, attr, value){
     if($test){console.log("set attr", attr, "to", obj)}
     if(obj.$factory || obj.$is_class){
         var metaclass = obj.__class__
+        if(metaclass === _b_.type){
+            return _b_.type.__setattr__(obj, attr, value)
+        }
+        return $B.$call($B.$getattr(metaclass, '__setattr__'))(obj, attr, value)
+        /*
         if($test){console.log("obj is class", metaclass, metaclass[attr])}
         if(metaclass && metaclass[attr] && metaclass[attr].__get__ &&
                 metaclass[attr].__set__){
@@ -2428,6 +2433,7 @@ $B.$setattr = function(obj, attr, value){
         }
         if($test){console.log("after setattr", obj)}
         return None
+        */
     }
 
     var res = obj[attr],

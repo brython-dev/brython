@@ -303,12 +303,12 @@ $B.make_class = function(qualname, factory){
 
 
 var type = $B.make_class("type",
-    function(obj, bases, cl_dict){
+    function(kls, bases, cl_dict){
         var missing = {},
-            $ = $B.args('type', 3, {obj: null, bases: null, cl_dict: null},
-                ['obj', 'bases', 'cl_dict'], arguments,
+            $ = $B.args('type', 3, {kls: null, bases: null, cl_dict: null},
+                ['kls', 'bases', 'cl_dict'], arguments,
                 {bases: missing, cl_dict: missing}, null, 'kw'),
-            obj = $.obj,
+            kls = $.kls,
             bases = $.bases,
             cl_dict = $.cl_dict,
             kw = $.kw
@@ -321,12 +321,12 @@ var type = $B.make_class("type",
             if(bases !== missing){
                 throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
             }
-            return obj.__class__ || $B.get_class(obj)
+            return kls.__class__ || $B.get_class(kls)
         }else{
             var module = $B.last($B.frames_stack)[2],
-                meta = meta_from_bases(obj, module, bases),
+                meta = meta_from_bases(kls, module, bases),
                 meta_new = $B.$call($B.$getattr(meta, '__new__'))
-            return meta_new(meta, obj, bases, cl_dict, kwargs)
+            return meta_new(meta, kls, bases, cl_dict, kwargs)
         }
     }
 )
@@ -374,8 +374,8 @@ type.__getattribute__ = function(klass, attr){
             if(klass["__setattr__"] !== undefined){
                 var func = klass["__setattr__"]
             }else{
-                var func = function(obj, key, value){
-                    obj[key] = value
+                var func = function(kls, key, value){
+                    kls[key] = value
                 }
             }
             return method_wrapper.$factory(attr, klass, func)
@@ -766,6 +766,35 @@ type.__ror__ = function(){
     return _b_.NotImplemented
 }
 
+type.__setattr__ = function(kls, attr, value){
+    var $test = false
+    if($test){console.log("kls is class", type, types[attr])}
+    if(type[attr] && type[attr].__get__ &&
+            type[attr].__set__){
+        type[attr].__set__(kls, value)
+        return _b_.None
+    }
+    if(attr == "__module__"){
+        kls.$infos.__module__ = value
+        return _b_.None
+    }
+    if(kls.$infos && kls.$infos.__module__ == "builtins"){
+        throw _b_.TypeError.$factory(
+            `cannot set '${attr}' attribute of immutable type '` +
+                kls.$infos.__name__ + "'")
+    }
+    kls[attr] = value
+    if(attr == "__init__" || attr == "__new__"){
+        // redefine the function that creates instances of the class
+        kls.$factory = $B.$instance_creator(kls)
+    }else if(attr == "__bases__"){
+        // redefine mro
+        kls.__mro__ = _b_.type.mro(kls)
+    }
+    if($test){console.log("after setattr", kls)}
+    return _b_.None
+}
+
 type.mro = function(cls){
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
@@ -912,11 +941,11 @@ property.__init__ = function(self, fget, fset, fdel, doc) {
     }
 }
 
-property.__get__ = function(self, obj) {
+property.__get__ = function(self, kls) {
     if(self.fget === undefined){
         throw _b_.AttributeError.$factory("unreadable attribute")
     }
-    return $B.$call(self.fget)(obj)
+    return $B.$call(self.fget)(kls)
 }
 
 property.__new__ = function(cls){
@@ -925,11 +954,11 @@ property.__new__ = function(cls){
     }
 }
 
-property.__set__ = function(self, obj, value){
+property.__set__ = function(self, kls, value){
     if(self.fset === undefined){
         throw _b_.AttributeError.$factory("can't set attribute")
     }
-    $B.$getattr(self.fset, '__call__')(obj, value)
+    $B.$getattr(self.fset, '__call__')(kls, value)
 }
 
 $B.set_func_names(property, "builtins")
@@ -968,10 +997,10 @@ var $instance_creator = $B.$instance_creator = function(klass){
             if(klass.hasOwnProperty("__init__")){
                 factory = function(){
                     // Call __new__ with klass as first argument
-                    var obj = klass.__new__.bind(null, klass).
+                    var kls = klass.__new__.bind(null, klass).
                                             apply(null, arguments)
-                    klass.__init__.bind(null, obj).apply(null, arguments)
-                    return obj
+                    klass.__init__.bind(null, kls).apply(null, arguments)
+                    return kls
                 }
             }else{
                 factory = function(){
@@ -981,12 +1010,12 @@ var $instance_creator = $B.$instance_creator = function(klass){
             }
         }else if(klass.hasOwnProperty("__init__")){
             factory = function(){
-                var obj = {
+                var kls = {
                     __class__: klass,
                     __dict__: $B.empty_dict()
                 }
-                klass.__init__.bind(null, obj).apply(null, arguments)
-                return obj
+                klass.__init__.bind(null, kls).apply(null, arguments)
+                return kls
             }
         }else{
             factory = function(){
@@ -1051,30 +1080,30 @@ var member_descriptor = $B.make_class("member_descriptor",
     }
 )
 
-member_descriptor.__delete__ = function(self, obj){
-    if(obj.$slot_values === undefined ||
-            ! obj.$slot_values.hasOwnProperty(self.attr)){
+member_descriptor.__delete__ = function(self, kls){
+    if(kls.$slot_values === undefined ||
+            ! kls.$slot_values.hasOwnProperty(self.attr)){
         throw _b_.AttributeError.$factory(self.attr)
     }
-    obj.$slot_values.delete(self.attr)
+    kls.$slot_values.delete(self.attr)
 }
 
-member_descriptor.__get__ = function(self, obj, obj_type){
-    if(obj === _b_.None){
+member_descriptor.__get__ = function(self, kls, obj_type){
+    if(kls === _b_.None){
         return self
     }
-    if(obj.$slot_values === undefined ||
-            ! obj.$slot_values.has(self.attr)){
+    if(kls.$slot_values === undefined ||
+            ! kls.$slot_values.has(self.attr)){
         throw _b_.AttributeError.$factory(self.attr)
     }
-    return obj.$slot_values.get(self.attr)
+    return kls.$slot_values.get(self.attr)
 }
 
-member_descriptor.__set__ = function(self, obj, value){
-    if(obj.$slot_values === undefined){
-        obj.$slot_values = new Map()
+member_descriptor.__set__ = function(self, kls, value){
+    if(kls.$slot_values === undefined){
+        kls.$slot_values = new Map()
     }
-    obj.$slot_values.set(self.attr, value)
+    kls.$slot_values.set(self.attr, value)
 }
 
 member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
