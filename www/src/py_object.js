@@ -517,8 +517,11 @@ object.__subclasshook__ = function(){return _b_.NotImplemented}
 
 // constructor of the built-in class 'object'
 object.$factory = function(){
+    if(arguments.length > 0){
+        throw _b_.TypeError.$factory('object() takes no arguments')
+    }
     var res = {__class__:object},
-        args = [res].concat(Array.prototype.slice.call(arguments))
+        args = [res]
     object.__init__.apply(null, args)
     return res
 }

@@ -978,6 +978,9 @@ f()
 # issue 2071
 assert_raises(SyntaxError, exec, "f(x, 2a)",
     msg='invalid decimal literal')
-    
+
+# object(1) raises TypeError
+assert_raises(TypeError, object, 1)
+
 
 print('passed all tests...')
