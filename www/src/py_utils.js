@@ -1290,7 +1290,7 @@ $B.leave_frame = function(arg){
             }
         }
     }
-    frame[1].$current_exception = undefined
+    delete frame[1].$current_exception
     return _b_.None
 }
 

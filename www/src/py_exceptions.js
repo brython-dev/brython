@@ -4,7 +4,7 @@ var _b_ = $B.builtins
 
 $B.del_exc = function(){
     var frame = $B.last($B.frames_stack)
-    frame[1].$current_exception = undefined
+    delete frame[1].$current_exception
 }
 
 $B.set_exc = function(exc){
