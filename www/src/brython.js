@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-24 14:01:56.760876"
-__BRYTHON__.timestamp=1669294916760
+__BRYTHON__.compiled_date="2022-11-24 14:08:43.125349"
+__BRYTHON__.timestamp=1669295323125
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12573,7 +12573,7 @@ return _count}
 dict.__ne__=function(self,other){var res=dict.__eq__(self,other)
 return res===_b_.NotImplemented ? res :! res}
 dict.__new__=function(cls){if(cls===undefined){throw _b_.TypeError.$factory("int.__new__(): not enough arguments")}
-var instance={__class__:cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0,$order:0}
+var instance={__class__:cls,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:Object.create(null),$version:0,$order:0}
 if(cls !==dict){instance.__dict__=$B.empty_dict()}
 return instance}
 dict.__or__=function(self,other){
@@ -12592,7 +12592,7 @@ if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj,self.$exclude))}
 if($B.repr.enter(self)){return "{...}"}
 var res=[],items=to_list(self)
-items.forEach(function(item){try{res.push(_b_.repr(item[0])+": "+_b_.repr(item[1]))}catch(err){throw err}})
+for(var item of items){res.push(_b_.repr(item[0])+": "+_b_.repr(item[1]))}
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
 var dict_reversekeyiterator=$B.make_class("dict_reversekeyiterator",function(keys){return{
@@ -12668,7 +12668,7 @@ dict.clear=function(){
 var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null),self=$.self
 self.$numeric_dict={}
 self.$string_dict={}
-self.$str_hash={}
+self.$str_hash=Object.create(null)
 self.$object_dict={}
 if(self.$jsobj){for(var attr in self.$jsobj){if(attr.charAt(0)!=="$" && attr !=="__class__"){delete self.$jsobj[attr]}}}
 self.$version++
@@ -12761,7 +12761,7 @@ _b_.dict=dict
 $B.set_func_names(dict,"builtins")
 dict.__class_getitem__=_b_.classmethod.$factory(dict.__class_getitem__)
 $B.empty_dict=function(){return{
-__class__:dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:{},$version:0,$order:0}}
+__class__:dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:Object.create(null),$version:0,$order:0}}
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)
 $B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr){return{
 __class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr:attr}}
@@ -12775,7 +12775,9 @@ res.$version=0
 return res}
 )
 mappingproxy.$match_mapping_pattern=true 
-mappingproxy.__repr__=function(){return '<mappingproxy object>'}
+mappingproxy.__repr__=function(self){var d=$B.empty_dict()
+for(var key in self.$jsobj){d.$string_dict[key]=[self.$jsobj[key],d.$order++]}
+return dict.__repr__(d)}
 mappingproxy.__setitem__=function(){throw _b_.TypeError.$factory("'mappingproxy' object does not support "+
 "item assignment")}
 for(var attr in dict){if(mappingproxy[attr]!==undefined ||

@@ -3157,6 +3157,16 @@ assert_raises(SyntaxError, exec, "f(🠞)",
 # issue 2093
 assert_raises(SyntaxError, exec, "x ~= 1")
 
+# issue 2106
+import enum
+
+class MyEnum(enum.Enum):
+    ONE = enum.auto()
+
+
+assert MyEnum.ONE.value == 1
+assert type(MyEnum.ONE.value) is int
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

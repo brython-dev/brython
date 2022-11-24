@@ -757,7 +757,7 @@ dict.__new__ = function(cls){
         $numeric_dict : {},
         $object_dict : {},
         $string_dict : {},
-        $str_hash: {},
+        $str_hash: Object.create(null),
         $version: 0,
         $order: 0
     }
@@ -805,13 +805,9 @@ dict.__repr__ = function(self){
     }
     var res = [],
         items = to_list(self)
-    items.forEach(function(item){
-        try{
-            res.push(_b_.repr(item[0]) + ": " + _b_.repr(item[1]))
-        }catch(err){
-            throw err
-        }
-    })
+    for(var item of items){
+        res.push(_b_.repr(item[0]) + ": " + _b_.repr(item[1]))
+    }
     $B.repr.leave(self)
     return "{" + res.join(", ") + "}"
 }
@@ -1018,7 +1014,7 @@ dict.clear = function(){
 
     self.$numeric_dict = {}
     self.$string_dict = {}
-    self.$str_hash = {}
+    self.$str_hash = Object.create(null)
     self.$object_dict = {}
 
     if(self.$jsobj){
@@ -1265,7 +1261,7 @@ $B.empty_dict = function(){
         $numeric_dict : {},
         $object_dict : {},
         $string_dict : {},
-        $str_hash: {},
+        $str_hash: Object.create(null),
         $version: 0,
         $order: 0
     }
@@ -1312,8 +1308,12 @@ var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
 
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
-mappingproxy.__repr__ = function(){
-    return '<mappingproxy object>'
+mappingproxy.__repr__ = function(self){
+    var d = $B.empty_dict()
+    for(var key in self.$jsobj){
+        d.$string_dict[key] = [self.$jsobj[key], d.$order++]
+    }
+    return dict.__repr__(d)
 }
 
 mappingproxy.__setitem__ = function(){
@@ -1520,3 +1520,4 @@ jsobj_as_pydict.values = function(self){
 $B.set_func_names(jsobj_as_pydict, 'builtins')
 
 })(__BRYTHON__)
+
