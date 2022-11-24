@@ -45,51 +45,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
             has_kw_args = true
             var kw_args = args[nb_pos].kw
             if(Array.isArray(kw_args)){
-                var kwa = kw_args[0]
-                for(var i = 1, len = kw_args.length; i < len; i++){
-                    var kw_arg = kw_args[i]
-                    if(kw_arg.__class__ === _b_.dict){
-                        for(var k in kw_arg.$numeric_dict){
-                            throw _b_.TypeError.$factory(fname +
-                                "() keywords must be strings")
-                        }
-                        for(var k in kw_arg.$object_dict){
-                            throw _b_.TypeError.$factory(fname +
-                                "() keywords must be strings")
-                        }
-                        for(var k in kw_arg.$string_dict){
-                            if(kwa[k] !== undefined){
-                                throw _b_.TypeError.$factory(fname +
-                                    "() got multiple values for argument '" +
-                                    k + "'")
-                            }
-                            kwa[k] = kw_arg.$string_dict[k][0]
-                        }
-                    }else{
-                        var it = _b_.iter(kw_arg),
-                            getitem = $B.$getattr(kw_arg, '__getitem__')
-                        while(true){
-                            try{
-                                var k = _b_.next(it)
-                                if(typeof k !== "string"){
-                                    throw _b_.TypeError.$factory(fname +
-                                        "() keywords must be strings")
-                                }
-                                if(kwa[k] !== undefined){
-                                    throw _b_.TypeError.$factory(fname +
-                                        "() got multiple values for argument '" +
-                                        k + "'")
-                                }
-                                kwa[k] = getitem(k)
-                            }catch(err){
-                                if($B.is_exc(err, [_b_.StopIteration])){
-                                    break
-                                }
-                                throw err
-                            }
-                        }
-                    }
-                }
+                var kwa = $B.parse_kwargs(kw_args, fname)
                 kw_args = kwa
                 var nb_kw_args = Object.keys(kw_args).length
                 if(nb_kw_args == 0){
@@ -269,6 +225,55 @@ $B.wrong_nb_args = function(name, received, expected, positional){
             " positional argument" + (expected > 1 ? "s" : "") +
             " but more were given")
     }
+}
+
+$B.parse_kwargs = function(kw_args, fname){
+    var kwa = kw_args[0]
+    for(var i = 1, len = kw_args.length; i < len; i++){
+        var kw_arg = kw_args[i]
+        if(kw_arg.__class__ === _b_.dict){
+            for(var k in kw_arg.$numeric_dict){
+                throw _b_.TypeError.$factory(fname +
+                    "() keywords must be strings")
+            }
+            for(var k in kw_arg.$object_dict){
+                throw _b_.TypeError.$factory(fname +
+                    "() keywords must be strings")
+            }
+            for(var k in kw_arg.$string_dict){
+                if(kwa[k] !== undefined){
+                    throw _b_.TypeError.$factory(fname +
+                        "() got multiple values for argument '" +
+                        k + "'")
+                }
+                kwa[k] = kw_arg.$string_dict[k][0]
+            }
+        }else{
+            var it = _b_.iter(kw_arg),
+                getitem = $B.$getattr(kw_arg, '__getitem__')
+            while(true){
+                try{
+                    var k = _b_.next(it)
+                    if(typeof k !== "string"){
+                        throw _b_.TypeError.$factory(fname +
+                            "() keywords must be strings")
+                    }
+                    if(kwa[k] !== undefined){
+                        throw _b_.TypeError.$factory(fname +
+                            "() got multiple values for argument '" +
+                            k + "'")
+                    }
+                    kwa[k] = getitem(k)
+                }catch(err){
+                    if($B.is_exc(err, [_b_.StopIteration])){
+                        break
+                    }
+                    throw err
+                }
+            }
+        }
+    }
+    return kwa
 }
 
 $B.get_class = function(obj){
@@ -1634,3 +1639,4 @@ $B.repr = {
 }
 
 })(__BRYTHON__)
+

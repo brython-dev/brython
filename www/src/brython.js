@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-24 14:08:43.125349"
-__BRYTHON__.timestamp=1669295323125
+__BRYTHON__.compiled_date="2022-11-24 14:19:17.249982"
+__BRYTHON__.timestamp=1669295957249
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4789,24 +4789,7 @@ only_positional=var_names.slice(0,end_positional)}
 if(nb_pos > 0 && args[nb_pos-1]&& args[nb_pos-1].$nat){nb_pos--
 if(Object.keys(args[nb_pos].kw).length > 0){has_kw_args=true
 var kw_args=args[nb_pos].kw
-if(Array.isArray(kw_args)){var kwa=kw_args[0]
-for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i]
-if(kw_arg.__class__===_b_.dict){for(var k in kw_arg.$numeric_dict){throw _b_.TypeError.$factory(fname+
-"() keywords must be strings")}
-for(var k in kw_arg.$object_dict){throw _b_.TypeError.$factory(fname+
-"() keywords must be strings")}
-for(var k in kw_arg.$string_dict){if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
-"() got multiple values for argument '"+
-k+"'")}
-kwa[k]=kw_arg.$string_dict[k][0]}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
-while(true){try{var k=_b_.next(it)
-if(typeof k !=="string"){throw _b_.TypeError.$factory(fname+
-"() keywords must be strings")}
-if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
-"() got multiple values for argument '"+
-k+"'")}
-kwa[k]=getitem(k)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
-throw err}}}}
+if(Array.isArray(kw_args)){var kwa=$B.parse_kwargs(kw_args,fname)
 kw_args=kwa
 var nb_kw_args=Object.keys(kw_args).length
 if(nb_kw_args==0){has_kw_args=false}else if(! extra_kw_args){for(var k in kwa){if(slots[k]===undefined){throw _b_.TypeError.$factory(
@@ -4876,6 +4859,25 @@ throw _b_.TypeError.$factory(name+"() missing "+missing+
 positional.slice(received))}else{throw _b_.TypeError.$factory(name+"() takes "+expected+
 " positional argument"+(expected > 1 ? "s" :"")+
 " but more were given")}}
+$B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
+for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i]
+if(kw_arg.__class__===_b_.dict){for(var k in kw_arg.$numeric_dict){throw _b_.TypeError.$factory(fname+
+"() keywords must be strings")}
+for(var k in kw_arg.$object_dict){throw _b_.TypeError.$factory(fname+
+"() keywords must be strings")}
+for(var k in kw_arg.$string_dict){if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
+"() got multiple values for argument '"+
+k+"'")}
+kwa[k]=kw_arg.$string_dict[k][0]}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
+while(true){try{var k=_b_.next(it)
+if(typeof k !=="string"){throw _b_.TypeError.$factory(fname+
+"() keywords must be strings")}
+if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
+"() got multiple values for argument '"+
+k+"'")}
+kwa[k]=getitem(k)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
+throw err}}}}
+return kwa}
 $B.get_class=function(obj){
 if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
@@ -7581,7 +7583,7 @@ $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
-frame[1].$current_exception=undefined}
+delete frame[1].$current_exception}
 $B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
