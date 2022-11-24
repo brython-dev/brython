@@ -1412,7 +1412,8 @@ function hasattr(obj,attr){
     }
 }
 
-var hash_cache = {} // for strings
+var hash_cache = $B.hash_cache = Object.create(null) // for strings
+
 function hash(obj){
     check_nb_args_no_kw('hash', 1, arguments)
 

@@ -332,14 +332,14 @@ function fnv(p){
 
 str.__hash__ = function(_self){
     _self = to_string(_self)
-    if(str_hash_cache[_self] !== undefined){
-        return str_hash_cache[_self]
+    if($B.hash_cache[_self] !== undefined){
+        return $B.hash_cache[_self]
     }
     str.$nb_str_hash_cache++
     if(str.$nb_str_hash_cache > 100000){
         // Avoid memory overflow
         str.$nb_str_hash_cache = 0
-        str_hash_cache = {}
+        $B.hash_cache = Object.create(null)
     }
     try{
         return str_hash_cache[_self] = fnv(to_codepoints(_self))
@@ -3162,3 +3162,4 @@ var _ord = $B.jsstring2codepoint = function(c){
 }
 
 })(__BRYTHON__)
+

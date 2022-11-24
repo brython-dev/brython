@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-21 22:31:21.015954"
-__BRYTHON__.timestamp=1669066281015
+__BRYTHON__.compiled_date="2022-11-24 14:01:56.760876"
+__BRYTHON__.timestamp=1669294916760
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6548,7 +6548,7 @@ return res}
 function hasattr(obj,attr){check_nb_args_no_kw('hasattr',2,arguments)
 try{$B.$getattr(obj,attr)
 return true}catch(err){return false}}
-var hash_cache={}
+var hash_cache=$B.hash_cache=Object.create(null)
 function hash(obj){check_nb_args_no_kw('hash',1,arguments)
 if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
 if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
@@ -10039,11 +10039,11 @@ x=(x ^ suffix)& mask
 if(x==-1){x=-2}
 return x}
 str.__hash__=function(_self){_self=to_string(_self)
-if(str_hash_cache[_self]!==undefined){return str_hash_cache[_self]}
+if($B.hash_cache[_self]!==undefined){return $B.hash_cache[_self]}
 str.$nb_str_hash_cache++
 if(str.$nb_str_hash_cache > 100000){
 str.$nb_str_hash_cache=0
-str_hash_cache={}}
+$B.hash_cache=Object.create(null)}
 try{return str_hash_cache[_self]=fnv(to_codepoints(_self))}catch(err){console.log('error hash, cps',_self,to_codepoints(_self))
 throw err}}
 str.__init__=function(self,arg){
