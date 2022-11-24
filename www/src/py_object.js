@@ -117,7 +117,9 @@ object.__getattribute__ = function(obj, attr){
     if(attr === "__class__"){
         return klass
     }
+
     var res = obj[attr]
+    
     if($test){
         console.log('obj[attr]', obj[attr])
     }
@@ -517,10 +519,13 @@ object.__subclasshook__ = function(){return _b_.NotImplemented}
 
 // constructor of the built-in class 'object'
 object.$factory = function(){
-    if(arguments.length > 0){
+    if(arguments.length > 0 ||
+            (arguments.length == 1 && arguments[0].$nat &&
+                Object.keys(arguments[0].kw).length > 0)
+            ){
         throw _b_.TypeError.$factory('object() takes no arguments')
     }
-    var res = {__class__:object},
+    var res = {__class__: object},
         args = [res]
     object.__init__.apply(null, args)
     return res
@@ -531,3 +536,4 @@ $B.set_func_names(object, "builtins")
 return object
 
 })(__BRYTHON__)
+

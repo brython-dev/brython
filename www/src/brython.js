@@ -160,8 +160,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-24 14:22:13.692356"
-__BRYTHON__.timestamp=1669296133692
+__BRYTHON__.compiled_date="2022-11-24 14:28:40.311978"
+__BRYTHON__.timestamp=1669296520311
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5559,7 +5559,10 @@ var klass=self.__class__ ||$B.get_class(self)
 var repr_func=$B.$getattr(klass,"__repr__")
 return $B.$call(repr_func).apply(null,arguments)}
 object.__subclasshook__=function(){return _b_.NotImplemented}
-object.$factory=function(){if(arguments.length > 0){throw _b_.TypeError.$factory('object() takes no arguments')}
+object.$factory=function(){if(arguments.length > 0 ||
+(arguments.length==1 && arguments[0].$nat &&
+Object.keys(arguments[0].kw).length > 0)
+){throw _b_.TypeError.$factory('object() takes no arguments')}
 var res={__class__:object},args=[res]
 object.__init__.apply(null,args)
 return res}
