@@ -7,10 +7,10 @@
 # Don't use the stdlib module json (much too slow), use Javascript object
 # JSON instead
 from browser import window
+import json
 
-json = window.JSON
-src = open('sudoku.json').read()
-data = json.parse(src)
+with open('sudoku.json', encoding='utf-8') as f:
+    data = json.load(f)
 
 w2q = data['w2q']
 q2w = data['q2w']
