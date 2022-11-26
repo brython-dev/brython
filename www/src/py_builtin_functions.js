@@ -77,6 +77,7 @@ var NoneType = {
     __class__: _b_.type,
     __hash__: function(self){return 0},
     __mro__: [_b_.object],
+    __qualname__: 'NoneType',
     __repr__: function(self){return 'None'},
     __str__: function(self){return 'None'},
     $is_class: true
@@ -1047,51 +1048,13 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__setitem__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__mro__" // && obj === _b_.list // "Point"
+
     if($test){
-        console.log("$getattr", attr, '\nobj', obj, '\nklass', klass)
-        alert()
+        console.log("attr", attr, "of", obj, "class", klass,
+        "isclass", is_class)
     }
-
-    // Shortcut for classes without parents
-    if(klass !== undefined && (! klass.$native) && klass.__bases__ &&
-            klass.__getattribute__ === undefined &&
-            (klass.__bases__.length == 0 ||
-                (klass.__bases__.length == 1 &&
-                 klass.__bases__[0] === _b_.object))){
-        if($test){
-            console.log("class without parent", klass)
-            console.log('\nobj[attr]', obj[attr])
-        }
-        if(obj[attr] !== undefined){
-            if(attr == "__class__" && obj.__class__.__dict__ &&
-                    obj.__class__.__dict__.$string_dict.__class__){
-                // special case : the objects' class has an explicit attribute
-                // __class__ (eg NonCallableMock in unittest.mock...)
-            }else{
-                return obj[attr]
-            }
-        }else if(obj.__dict__ &&
-                obj.__dict__.$string_dict.hasOwnProperty(attr) &&
-                ! (klass.hasOwnProperty(attr) &&
-                   klass[attr].__get__)){
-            return obj.__dict__.$string_dict[attr][0]
-        }else if(klass.hasOwnProperty(attr)){
-            if($test){
-                console.log('class has attr', attr, klass[attr])
-            }
-            if(typeof klass[attr] != "function" &&
-                    attr != "__dict__" &&
-                    klass[attr].__get__ === undefined){
-                var kl = klass[attr].__class__
-                if(! in_mro(kl, "__get__")){
-                    return klass[attr]
-                }
-            }
-        }
-    }
-
-    if($test){console.log("attr", attr, "of", obj, "class", klass, "isclass", is_class)}
+    
     if(klass === undefined){
         klass = $B.get_class(obj)
         if(klass === undefined){
@@ -1183,16 +1146,16 @@ $B.$getattr = function(obj, attr, _default){
               )
           }
       case '__mro__':
-          if(obj.$is_class){
-              // The attribute __mro__ of class objects doesn't include the
-              // class itself
+          // The attribute __mro__ of class objects doesn't include the
+          // class itself
+          if(obj.__mro__){
               return _b_.tuple.$factory([obj].concat(obj.__mro__))
           }else if(obj.__dict__ &&
                   obj.__dict__.$string_dict.__mro__ !== undefined){
               return obj.__dict__.$string_dict.__mro__
           }
           // stop search here, looking in the objects's class would return
-          // the classe's __mro__
+          // the class's __mro__
           throw $B.attr_error(attr, obj)
       case '__subclasses__':
           if(klass.$factory || klass.$is_class){
@@ -1712,11 +1675,9 @@ function issubclass(klass, classinfo){
             'issubclass() arg 2 cannot be a parameterized generic')
     }
 
-    if(classinfo.$factory || classinfo.$is_class){
-        if(klass === classinfo ||
-                mro.indexOf(classinfo) > -1){
-            return true
-        }
+    if(klass === classinfo ||
+            mro.indexOf(classinfo) > -1){
+        return true
     }
 
     // Search __subclasscheck__ on classinfo
@@ -3418,6 +3379,7 @@ $B.Function = {
     __code__: {__class__: FunctionCode, __name__: 'function code'},
     __globals__: {__class__: FunctionGlobals, __name__: 'function globals'},
     __mro__: [_b_.object],
+    __qualname__: 'function',
     $infos: {
         __name__: 'function',
         __module__: "builtins"

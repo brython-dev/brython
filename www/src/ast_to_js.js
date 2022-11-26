@@ -1282,27 +1282,48 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         }
     }
 
-    scopes.push(class_scope)
+    var keywords = [],
+        metaclass
+    for(var keyword of this.keywords){
+        if(keyword.arg == 'metaclass'){
+            metaclass = keyword.value
+        }
+        keywords.push(`["${keyword.arg}", ` +
+            $B.js_from_ast(keyword.value, scopes) + ']')
+    }
+
+    var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
 
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
     js += `var ${ref} = (function(){\n` +
-          `var ${locals_name} = {},\n` +
-          `locals = ${locals_name}\n` +
-          `locals.$name = "${this.name}"\n` +
-          `locals.$qualname = "${qualname}"\n` +
-          `locals.$is_class = true\n` +
+              `var _frames = $B.frames_stack.slice(),\n` +
+                  `bases = [${bases}],\n` +
+                  `resolved_bases = $B.resolve_mro_entries(bases),\n` +
+                  `metaclass = $B.get_metaclass("${this.name}", ` +
+                  `"${glob}", resolved_bases`
+    if(metaclass){
+        js += `, ${metaclass.to_js(scopes)}`
+    }
+    js += ')\n'
+
+    js += `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
+              `"${this.name}", "${glob}" ,"${qualname}", resolved_bases, bases),\n`
+
+    js += `locals = ${locals_name}\n` +
           `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n` +
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `locals.$f_trace = $B.enter_frame(frame)\n` +
           `var _frames = $B.frames_stack.slice()\n` +
-          `if(locals.$f_trace !== _b_.None){$B.trace_line()}\n`
+          `if(locals.$f_trace !== _b_.None){\n$B.trace_line()}\n`
 
-    js += `locals.__annotations__ = $B.empty_dict()\n`
+    js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
     class_scope.has_annotation = true
     class_scope.locals.add('__annotations__')
+
+    scopes.push(class_scope)
 
     js += add_body(this.body, scopes)
 
@@ -1312,7 +1333,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
               '$B.trace_return(_b_.None)\n' +
           '}\n' +
           '$B.leave_frame()\n' +
-          'return locals\n})()\n'
+          'return {\nlocals, metaclass, bases}\n})()\n'
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
