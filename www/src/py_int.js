@@ -37,10 +37,6 @@ var int = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
     __mro__: [_b_.object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "int"
-    },
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -944,10 +940,6 @@ var bool = {
     __bases__: [int],
     __class__: _b_.type,
     __mro__: [int, _b_.object],
-    $infos:{
-        __name__: "bool",
-        __module__: "builtins"
-    },
     $is_class: true,
     $native: true,
     $descriptors: {

@@ -449,15 +449,8 @@ function $EventsList(elt, evt, arg){
     }
 }
 
-var OpenFile = $B.OpenFile = {
-    __class__: _b_.type,  // metaclass type
-    __mro__: [object],
-    $infos: {
-        __module__: "<pydom>",
-        __name__: "OpenFile"
-    },
-    $is_class: true
-}
+var OpenFile = $B.OpenFile = $B.make_class('OpenFile')
+OpenFile.__module__ = "<pydom>"
 
 OpenFile.$factory = function(file, mode, encoding) {
     var res = {
@@ -827,11 +820,13 @@ DOMNode.__getitem__ = function(self, key){
     if(self.nodeType == 9){ // Document
         if(typeof key.valueOf() == "string"){
             var res = self.getElementById(key)
-            if(res){return DOMNode.$factory(res)}
+            if(res){
+                return DOMNode.$factory(res)
+            }
             throw _b_.KeyError.$factory(key)
         }else{
             try{
-                var elts = self.getElementsByTagName(key.$infos.__name__),
+                var elts = self.getElementsByTagName(key.__name__),
                     res = []
                     for(var i = 0; i < elts.length; i++){
                         res.push(DOMNode.$factory(elts[i]))
@@ -845,15 +840,21 @@ DOMNode.__getitem__ = function(self, key){
         if((typeof key == "number" || typeof key == "boolean") &&
             typeof self.item == "function"){
                 var key_to_int = _b_.int.$factory(key)
-                if(key_to_int < 0){key_to_int += self.length}
+                if(key_to_int < 0){
+                    key_to_int += self.length
+                }
                 var res = DOMNode.$factory(self.item(key_to_int))
-                if(res === undefined){throw _b_.KeyError.$factory(key)}
+                if(res === undefined){
+                    throw _b_.KeyError.$factory(key)
+                }
                 return res
         }else if(typeof key == "string" &&
                  self.attributes &&
                  typeof self.attributes.getNamedItem == "function"){
              var attr = self.attributes.getNamedItem(key)
-             if(!!attr){return attr.value}
+             if(!!attr){
+                 return attr.value
+             }
              throw _b_.KeyError.$factory(key)
         }
     }

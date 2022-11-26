@@ -163,7 +163,7 @@ $B.make_view = function(name){
     }
 
     klass.__repr__ = function(self){
-        return klass.$infos.__name__ + '(' + _b_.repr(self.items) + ')'
+        return klass.__name__ + '(' + _b_.repr(self.items) + ')'
     }
 
     klass.__reversed__ = function(self){
@@ -201,10 +201,6 @@ var mappingproxy_handler = {
 var dict = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "dict"
-    },
     $is_class: true,
     $native: true,
     $match_mapping_pattern: true // for pattern matching (PEP 634)
@@ -1283,7 +1279,7 @@ $B.getset_descriptor = $B.make_class("getset_descriptor",
 )
 
 $B.getset_descriptor.__repr__ = $B.getset_descriptor.__str__ = function(self){
-    return `<attribute '${self.attr}' of '${self.cls.$infos.__name__}' objects>`
+    return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`
 }
 
 $B.set_func_names($B.getset_descriptor, "builtins")

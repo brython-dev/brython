@@ -136,178 +136,170 @@ function handle_kwargs(self, kw, method){
     return {cache, data, encoding, headers, mode, timeout}
 }
 
-var ajax = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
+var ajax = $B.make_class('ajax')
 
-    __repr__ : function(self){return '<object Ajax>'},
-    __str__ : function(self){return '<object Ajax>'},
+ajax.__repr__ = function(self){
+    return '<object Ajax>'
+}
 
-    $infos: {
-        __module__: "builtins",
-        __name__: "ajax"
-    },
-
-    __getattribute__: function(self, attr){
-        if(ajax[attr] !== undefined){
-            return function(){
-                return ajax[attr].call(null, self, ...arguments)
-            }
-        }else if(attr == "text"){
-            return _read(self)
-        }else if(attr == "json"){
-            if(self.js.responseType == "json"){
-                return _read(self)
-            }else{
-                var resp = _read(self)
-                try{
-                    return $B.structuredclone2pyobj(JSON.parse(resp))
-                }catch(err){
-                    console.log('attr json, invalid resp', resp)
-                    throw err
-                }
-            }
-        }else if(self.js[attr] !== undefined){
-            if(typeof self.js[attr] == "function"){
-                return function(){
-                    if(attr == "setRequestHeader"){
-                        ajax.set_header.call(null, self, ...arguments)
-                    }else{
-                        if(attr == 'overrideMimeType'){
-                            console.log('override mime type')
-                            self.hasMimeType = true
-                        }
-                        return self.js[attr](...arguments)
-                    }
-                }
-            }else{
-                return self.js[attr]
-            }
-        }else if(attr == "xml"){
-            return $B.JSObj.$factory(self.js.responseXML)
+ajax.__getattribute__ = function(self, attr){
+    if(ajax[attr] !== undefined){
+        return function(){
+            return ajax[attr].call(null, self, ...arguments)
         }
-    },
-
-    bind: function(self, evt, func){
-        // req.bind(evt,func) is the same as req.onevt = func
-        self.js['on' + evt] = function(){
-            try{
-                return func.apply(null, arguments)
-            }catch(err){
-                $B.handle_error(err)
-            }
-        }
-        return _b_.None
-    },
-
-    open: function(){
-        var $ = $B.args('open', 4,
-                {self: null, method: null, url: null, async: null},
-                ['self', 'method', 'url', 'async'], arguments,
-                {async: true}, null, null),
-            self = $.self,
-            method = $.method,
-            url = $.url,
-            async = $.async
-        if(typeof method !== "string"){
-            throw _b_.TypeError.$factory(
-                'open() argument method should be string, got ' +
-                $B.class_name(method))
-        }
-        if(typeof url !== "string"){
-            throw _b_.TypeError.$factory(
-                'open() argument url should be string, got ' +
-                $B.class_name(url))
-        }
-        self.$method = method
-        self.blocking = ! self.async
-        self.js.open(method, url, async)
-    },
-
-    read: function(self){
+    }else if(attr == "text"){
         return _read(self)
-    },
-
-    send: function(self, params){
-        // params can be Python dictionary or string
-        var content_type
-        for(var key in self.headers){
-            var header = self.headers[key]
-            self.js.setRequestHeader(header[0], header[1])
-            if(key == 'content-type'){
-                content_type = header[1]
-            }
-        }
-        if((self.encoding || self.blocking) && ! self.hasMimeType){
-            // On blocking mode, or if an encoding has been specified,
-            // override Mime type so that bytes are not processed
-            // (unless the Mime type has been explicitely set)
-            self.js.overrideMimeType('text/plain;charset=x-user-defined')
-            self.charset_user_defined = true
-        }
-        var res = ''
-        if(! params){
-            self.js.send()
-            return _b_.None
-        }
-        if(_b_.isinstance(params, _b_.str)){
-            res = params
-        }else if(_b_.isinstance(params, _b_.dict)){
-            if(content_type == 'multipart/form-data'){
-                // The FormData object serializes the data in the 'multipart/form-data'
-                // content-type so we may as well override that header if it was set
-                // by the user.
-                res = new FormData()
-                var items = _b_.list.$factory(_b_.dict.items(params))
-                for(var i = 0, len = items.length; i < len; i++){
-                    add_to_res(res, _b_.str.$factory(items[i][0]), items[i][1])
-                }
-            }else{
-                if(self.$method && self.$method.toUpperCase() == "POST" &&
-                        ! content_type){
-                    // Set default Content-Type for POST requests
-                    self.js.setRequestHeader("Content-Type",
-                        "application/x-www-form-urlencoded")
-                }
-                var items = _b_.list.$factory(_b_.dict.items(params))
-                for(var i = 0, len = items.length; i < len; i++){
-                    var key = encodeURIComponent(_b_.str.$factory(items[i][0]));
-                    if(_b_.isinstance(items[i][1], _b_.list)){
-                        for (j = 0; j < items[i][1].length; j++) {
-                            res += key +'=' +
-                                encodeURIComponent(_b_.str.$factory(items[i][1][j])) + '&'
-                        }
-                    }else{
-                        res += key + '=' +
-                            encodeURIComponent(_b_.str.$factory(items[i][1])) + '&'
-                    }
-                }
-                res = res.substr(0, res.length - 1)
-            }
-        }else if(params instanceof FormData){
-            res = params
+    }else if(attr == "json"){
+        if(self.js.responseType == "json"){
+            return _read(self)
         }else{
-            throw _b_.TypeError.$factory(
-                "send() argument must be string or dictionary, not '" +
-                _b_.str.$factory(params.__class__) + "'")
+            var resp = _read(self)
+            try{
+                return $B.structuredclone2pyobj(JSON.parse(resp))
+            }catch(err){
+                console.log('attr json, invalid resp', resp)
+                throw err
+            }
         }
-        self.js.send(res)
-        return _b_.None
-    },
-
-    set_header: function(self, key, value){
-        self.headers[key.toLowerCase()] = [key, value]
-    },
-
-    set_timeout: function(self, seconds, func){
-        self.js.$requestTimer = setTimeout(
-            function() {
-                self.js.abort()
-                func()
-            },
-            seconds * 1000)
+    }else if(self.js[attr] !== undefined){
+        if(typeof self.js[attr] == "function"){
+            return function(){
+                if(attr == "setRequestHeader"){
+                    ajax.set_header.call(null, self, ...arguments)
+                }else{
+                    if(attr == 'overrideMimeType'){
+                        console.log('override mime type')
+                        self.hasMimeType = true
+                    }
+                    return self.js[attr](...arguments)
+                }
+            }
+        }else{
+            return self.js[attr]
+        }
+    }else if(attr == "xml"){
+        return $B.JSObj.$factory(self.js.responseXML)
     }
+}
 
+ajax.bind = function(self, evt, func){
+    // req.bind(evt,func) is the same as req.onevt = func
+    self.js['on' + evt] = function(){
+        try{
+            return func.apply(null, arguments)
+        }catch(err){
+            $B.handle_error(err)
+        }
+    }
+    return _b_.None
+}
+
+ajax.open = function(){
+    var $ = $B.args('open', 4,
+            {self: null, method: null, url: null, async: null},
+            ['self', 'method', 'url', 'async'], arguments,
+            {async: true}, null, null),
+        self = $.self,
+        method = $.method,
+        url = $.url,
+        async = $.async
+    if(typeof method !== "string"){
+        throw _b_.TypeError.$factory(
+            'open() argument method should be string, got ' +
+            $B.class_name(method))
+    }
+    if(typeof url !== "string"){
+        throw _b_.TypeError.$factory(
+            'open() argument url should be string, got ' +
+            $B.class_name(url))
+    }
+    self.$method = method
+    self.blocking = ! self.async
+    self.js.open(method, url, async)
+}
+
+ajax.read = function(self){
+    return _read(self)
+}
+
+ajax.send = function(self, params){
+    // params can be Python dictionary or string
+    var content_type
+    for(var key in self.headers){
+        var header = self.headers[key]
+        self.js.setRequestHeader(header[0], header[1])
+        if(key == 'content-type'){
+            content_type = header[1]
+        }
+    }
+    if((self.encoding || self.blocking) && ! self.hasMimeType){
+        // On blocking mode, or if an encoding has been specified,
+        // override Mime type so that bytes are not processed
+        // (unless the Mime type has been explicitely set)
+        self.js.overrideMimeType('text/plain;charset=x-user-defined')
+        self.charset_user_defined = true
+    }
+    var res = ''
+    if(! params){
+        self.js.send()
+        return _b_.None
+    }
+    if(_b_.isinstance(params, _b_.str)){
+        res = params
+    }else if(_b_.isinstance(params, _b_.dict)){
+        if(content_type == 'multipart/form-data'){
+            // The FormData object serializes the data in the 'multipart/form-data'
+            // content-type so we may as well override that header if it was set
+            // by the user.
+            res = new FormData()
+            var items = _b_.list.$factory(_b_.dict.items(params))
+            for(var i = 0, len = items.length; i < len; i++){
+                add_to_res(res, _b_.str.$factory(items[i][0]), items[i][1])
+            }
+        }else{
+            if(self.$method && self.$method.toUpperCase() == "POST" &&
+                    ! content_type){
+                // Set default Content-Type for POST requests
+                self.js.setRequestHeader("Content-Type",
+                    "application/x-www-form-urlencoded")
+            }
+            var items = _b_.list.$factory(_b_.dict.items(params))
+            for(var i = 0, len = items.length; i < len; i++){
+                var key = encodeURIComponent(_b_.str.$factory(items[i][0]));
+                if(_b_.isinstance(items[i][1], _b_.list)){
+                    for (j = 0; j < items[i][1].length; j++) {
+                        res += key +'=' +
+                            encodeURIComponent(_b_.str.$factory(items[i][1][j])) + '&'
+                    }
+                }else{
+                    res += key + '=' +
+                        encodeURIComponent(_b_.str.$factory(items[i][1])) + '&'
+                }
+            }
+            res = res.substr(0, res.length - 1)
+        }
+    }else if(params instanceof FormData){
+        res = params
+    }else{
+        throw _b_.TypeError.$factory(
+            "send() argument must be string or dictionary, not '" +
+            _b_.str.$factory(params.__class__) + "'")
+    }
+    self.js.send(res)
+    return _b_.None
+}
+
+ajax.set_header = function(self, key, value){
+    self.headers[key.toLowerCase()] = [key, value]
+}
+
+ajax.set_timeout = function(self, seconds, func){
+    self.js.$requestTimer = setTimeout(
+        function() {
+            self.js.abort()
+            func()
+        },
+        seconds * 1000)
 }
 
 ajax.$factory = function(){
@@ -411,7 +403,7 @@ function _request_with_body(method){
     if(_b_.isinstance(data, _b_.dict)){
         data = stringify(data)
     }
-    
+
     set_timeout(self, timeout)
     for(var key in items.headers){
         var header = items.headers[key]

@@ -76,7 +76,7 @@ function define(tag_name, cls){
         }
     }
     `
-    var name = cls.$infos.__name__
+    var name = cls.__name__
     eval(src.replace(/WebComponent/g, name))
     var webcomp = eval(name) // JS class for component
     webcomp.$cls = cls

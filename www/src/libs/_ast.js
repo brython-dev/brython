@@ -364,7 +364,7 @@ function validate_expr(exp, ctx){
         actual_ctx = 0;
     }
     actual_ctx = actual_ctx === 0 ? actual_ctx :
-                 actual_ctx.__class__.$infos.__name__
+                 actual_ctx.__class__.__name__
     if(check_ctx && actual_ctx != ctx){
         throw _b_.ValueError.$factory(`expression must have ` +
             `${ctx} context but has ${actual_ctx} instead`)

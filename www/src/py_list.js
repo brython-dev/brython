@@ -21,10 +21,6 @@ function $list(){
 var list = {
     __class__: _b_.type,
     __mro__: [object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "list"
-    },
     $is_class: true,
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
@@ -834,7 +830,7 @@ var factory = function(){
     if(arguments.length == 0){
         return $B.$list([])
     }
-    var $ = $B.args(klass.$infos.__name__, 1, {obj: null}, ["obj"],
+    var $ = $B.args(klass.__name__, 1, {obj: null}, ["obj"],
         arguments, {}, null, null),
         obj = $.obj
     if(Array.isArray(obj)){ // most simple case
@@ -939,10 +935,6 @@ function $tuple(arg){return arg} // used for parenthesed expressions
 var tuple = {
     __class__: _b_.type,
     __mro__: [object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "tuple"
-    },
     $is_class: true,
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)

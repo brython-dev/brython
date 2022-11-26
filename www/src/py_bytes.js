@@ -55,10 +55,6 @@ var bytearray = {
     __class__: _b_.type,
     __mro__: [_b_.object],
     $buffer_protocol: true,
-    $infos: {
-        __module__: "builtins",
-        __name__: "bytearray"
-    },
     $is_class: true
 }
 
@@ -192,10 +188,6 @@ var bytes = {
     __class__ : _b_.type,
     __mro__: [_b_.object],
     $buffer_protocol: true,
-    $infos: {
-        __module__: "builtins",
-        __name__: "bytes"
-    },
     $is_class: true
 }
 

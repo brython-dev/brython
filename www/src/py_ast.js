@@ -103,7 +103,7 @@ $B.ast_py_to_js = function(obj){
     }else if(typeof obj == "string"){
         return obj
     }else{
-        var class_name = obj.__class__.$infos.__name__,
+        var class_name = $B.class_name(obj),
             js_class = $B.ast[class_name]
         if(js_class === undefined){
             return obj

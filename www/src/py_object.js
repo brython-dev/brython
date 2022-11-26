@@ -6,9 +6,6 @@ var _b_ = $B.builtins
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
-    $infos:{
-        __name__: "object"
-    },
     $is_class: true,
     $native: true
 }
@@ -308,22 +305,18 @@ object.__getattribute__ = function(obj, attr){
                             __self__: cls,
                             __func__: res,
                             __name__: res.$infos.__name__,
-                            __qualname__: cls.$infos.__name__ + "." +
+                            __qualname__: cls.__name__ + "." +
                                 res.$infos.__name__
                         }
                         return clmethod
                     }
                     method.__get__.__class__ = $B.method_wrapper
                     method.__get__.$infos = res.$infos
-                    if(klass.$infos===undefined){
-                        console.log("no $infos", klass)
-                        console.log($B.last($B.frames_stack))
-                    }
                     method.$infos = {
                         __self__: self,
                         __func__: res,
                         __name__: attr,
-                        __qualname__: klass.$infos.__name__ + "." + attr
+                        __qualname__: klass.__qualname__ + "." + attr
                     }
                     if($test){console.log("return method", method)}
                     if(is_own_class_instance_method){
@@ -464,10 +457,10 @@ object.__repr__ = function(self){
     if(self.__class__ === _b_.type) {
         return "<class '" + self.__name__ + "'>"
     }
-    var module = self.__class__.$infos.__module__
+    var module = self.__class__.__module__
     if(module !== undefined && !module.startsWith("$") &&
             module !== "builtins"){
-        return "<" + self.__class__.$infos.__module__ + "." +
+        return "<" + self.__class__.__module__ + "." +
             $B.class_name(self) + " object>"
     }else{
         return "<" + $B.class_name(self) + " object>"

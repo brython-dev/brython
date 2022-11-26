@@ -75,15 +75,8 @@ function set_copy_from(so, other){
     so.$used = other.$used
 }
 
-var set = {
-    __class__: _b_.type,
-    $infos: {
-        __module__: "builtins",
-        __name__: "set"
-    },
-    $is_class: true,
-    $native: true
-}
+var set = $B.make_class('set')
+set.$native = true
 
 function set_copy_and_difference(so, other){
     var result = set_copy(so)
@@ -933,16 +926,8 @@ $B.set_func_names(set, "builtins")
 
 set.__class_getitem__ = _b_.classmethod.$factory(set.__class_getitem__)
 
-var frozenset = {
-    __class__: _b_.type,
-    __mro__: [object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "frozenset"
-    },
-    $is_class: true,
-    $native: true
-}
+var frozenset = $B.make_class('frozenset')
+frozenset.$native = true
 
 for(var attr in set){
     switch(attr) {

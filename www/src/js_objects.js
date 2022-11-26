@@ -105,15 +105,9 @@ $B.structuredclone2pyobj = function(obj){
 // Transforms a Javascript constructor into a Python function
 // that returns instances of the constructor, converted to Python objects
 
-var JSConstructor = {
-    __class__: _b_.type,
-    __mro__: [object],
-    $infos: {
-        __module__: "<javascript>",
-        __name__: 'JSConstructor'
-    },
-    $is_class: true
-}
+var JSConstructor = $B.make_class('JSConstructor')
+
+JSConstructor.__module__ = "<javascript>"
 
 JSConstructor.__call__ = function(_self){
     // _self.func is a constructor

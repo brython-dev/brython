@@ -204,19 +204,6 @@ $B.lambda_magic = Math.random().toString(36).substr(2, 8)
 
 // Set __name__ attribute of klass methods
 $B.set_func_names = function(klass, module){
-    if(klass.$infos){
-        var name = klass.$infos.__name__
-        klass.$infos.__module__ = module
-        klass.$infos.__qualname__ = name
-    }else{
-        var name = klass.__name__
-        klass.$infos = {
-            __name__: name,
-            __module__: module,
-            __qualname__: name
-        }
-    }
-    klass.__module__ = module
     for(var attr in klass){
         if(typeof klass[attr] == 'function'){
             klass[attr].$infos = {
@@ -273,7 +260,7 @@ $B.builtins_repr_check = function(builtin, args){
         _b_ = $B.builtins
     if(! _b_.isinstance(self, builtin)){
         throw _b_.TypeError.$factory("descriptor '__repr__' requires a " +
-            `'${builtin.$infos.__name__}' object but received a ` +
+            `'${builtin.__name__}' object but received a ` +
             `'${$B.class_name(self)}'`)
     }
 }

@@ -248,17 +248,7 @@ $B._frame = frame // used in builtin_modules.js
 
 // built-in exceptions
 
-var BaseException = _b_.BaseException =  {
-    __class__: _b_.type,
-    __bases__ : [_b_.object],
-    __mro__: [_b_.object],
-    args: [],
-    $infos:{
-        __name__: "BaseException",
-        __module__: "builtins"
-    },
-    $is_class: true
-}
+var BaseException = _b_.BaseException =  $B.make_class('BaseException')
 
 BaseException.__init__ = function(self){
     var args = arguments[1] === undefined ? [] : [arguments[1]]
@@ -266,7 +256,7 @@ BaseException.__init__ = function(self){
 }
 
 BaseException.__repr__ = function(self){
-    var res =  self.__class__.$infos.__name__ + '('
+    var res =  self.__class__.__name__ + '('
     if(self.args[0] !== undefined){
         res += _b_.repr(self.args[0])
     }
@@ -480,10 +470,11 @@ var $make_exc = $B.$make_exc = function(names, parent){
         $exc = $exc.replace("// placeholder", code)
         // class dictionary
         _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
-            '__bases__: [_b_.' + parent.$infos.__name__ + '], ' +
-            '__mro__: [_b_.' + parent.$infos.__name__ +
-            "].concat(parent.__mro__), $is_class: true," +
-            "$infos: {__name__:'" + name + "'}}"
+            '__bases__: [_b_.' + parent.__name__ + '], ' +
+            '__name__: "' + name + '", ' +
+            '__qualname__: "' + name + '", ' +
+            '__mro__: [_b_.' + parent.__name__ +
+            "].concat(parent.__mro__), $is_class: true};"
         _str[pos++] = "_b_." + name + ".$factory = " + $exc
         _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
             name + '", __qualname__: "' + name + '"}'
@@ -500,6 +491,7 @@ var $make_exc = $B.$make_exc = function(names, parent){
 
 $make_exc(["SystemExit", "KeyboardInterrupt", "GeneratorExit", "Exception"],
     BaseException)
+
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],
     ["StopAsyncIteration","err.value = arguments[0]"],
     "ArithmeticError", "AssertionError", "BufferError", "EOFError",
@@ -550,7 +542,7 @@ $B.set_func_names(_b_.AttributeError, 'builtins')
 // Shortcut to create an AttributeError
 $B.attr_error = function(name, obj){
     if(obj.$is_class){
-        var msg = `type object '${obj.$infos.__name__}'`
+        var msg = `type object '${obj.__name__}'`
     }else{
         var msg = `'${$B.class_name(obj)}' object`
     }
@@ -964,7 +956,7 @@ $B.show_error = function(err){
             marks += '^'.repeat(nb_marks) + '\n'
             trace += marks
         }
-        trace += `${err.__class__.$infos.__name__}: ${err.args[0]}`
+        trace += `${err.__class__.__name__}: ${err.args[0]}`
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
         trace += trace_from_stack(err)

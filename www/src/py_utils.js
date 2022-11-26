@@ -332,7 +332,7 @@ $B.class_name = function(obj){
     if(klass === $B.JSObj){
         return 'Javascript ' + obj.constructor.name
     }else{
-        return klass.$infos.__name__
+        return klass.__name__
     }
 }
 
@@ -1063,7 +1063,7 @@ $B.$call1 = function(callable){
 
 function $err(op, klass, other){
     var msg = "unsupported operand type(s) for " + op + ": '" +
-        klass.$infos.__name__ + "' and '" + $B.class_name(other) + "'"
+        klass.__name__ + "' and '" + $B.class_name(other) + "'"
     throw _b_.TypeError.$factory(msg)
 }
 

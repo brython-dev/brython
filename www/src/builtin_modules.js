@@ -171,11 +171,9 @@
                 // return the dictionary for the class associated with tagName
                 var dict = {
                     __class__: _b_.type,
-                    $infos:{
-                        __name__: tagName,
-                        __module__: "browser.html",
-                        __qualname__: tagName
-                    }
+                    __name__: tagName,
+                    __module__: "browser.html",
+                    __qualname__: tagName
                 }
 
                 dict.__init__ = function(){
@@ -265,11 +263,11 @@
             function makeFactory(klass){
                 // Create the factory function for HTML tags.
                 var factory = function(){
-                    if(klass.$infos.__name__ == 'SVG'){
+                    if(klass.__name__ == 'SVG'){
                         var res = $B.DOMNode.$factory(
                             document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                     }else{
-                        var res = document.createElement(klass.$infos.__name__)
+                        var res = document.createElement(klass.__name__)
                     }
                     // apply __init__
                     var init = $B.$getattr(klass, "__init__", null)
@@ -535,8 +533,8 @@
         UndefinedType: $B.UndefinedType
     }
 
-    modules.javascript.NullType.$infos.__module__ = 'javascript'
-    modules.javascript.UndefinedType.$infos.__module__ = 'javascript'
+    modules.javascript.NullType.__module__ = 'javascript'
+    modules.javascript.UndefinedType.__module__ = 'javascript'
 
     var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
         "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
@@ -865,13 +863,15 @@
     for(var name in _b_){
         if(_b_[name].__class__ === _b_.type){
             _b_[name].__qualname__ = name
+            _b_[name].__module__ = 'builtins'
+            _b_[name].__name__ = name
             $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
             for(var key in _b_[name]){
                 var value = _b_[name][key]
-                if(value === undefined){continue}
-                else if(value.__class__){continue}
-                else if(typeof value != "function"){continue}
-                else if(key == "__new__"){
+                if(value === undefined || value.__class__ ||
+                        typeof value != 'function'){
+                    continue
+                }else if(key == "__new__"){
                     value.__class__ = $B.builtin_function
                 }else if(key.startsWith("__")){
                     value.__class__ = $B.wrapper_descriptor
@@ -940,10 +940,8 @@
     $B.AST = {
         __class__: _b_.type,
         __mro__: [_b_.object],
-        $infos:{
-            __qualname__: 'AST',
-            __name__: 'AST'
-        },
+        __name__: 'AST',
+        __qualname__: 'AST',
         $is_class: true,
         $convert: function(js_node){
             if(js_node === undefined){

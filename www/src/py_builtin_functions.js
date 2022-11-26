@@ -69,14 +69,12 @@ var NoneType = {
     $factory: function(){
         return None
     },
-    $infos:{
-        __name__: "NoneType",
-        __module__: "builtins"
-    },
     __bool__: function(self){return False},
     __class__: _b_.type,
     __hash__: function(self){return 0},
+    __module__: 'builtins',
     __mro__: [_b_.object],
+    __name__: 'NoneType',
     __qualname__: 'NoneType',
     __repr__: function(self){return 'None'},
     __str__: function(self){return 'None'},
@@ -1054,7 +1052,7 @@ $B.$getattr = function(obj, attr, _default){
         console.log("attr", attr, "of", obj, "class", klass,
         "isclass", is_class)
     }
-    
+
     if(klass === undefined){
         klass = $B.get_class(obj)
         if(klass === undefined){
@@ -1181,9 +1179,9 @@ $B.$getattr = function(obj, attr, _default){
         }
 
         if($test){console.log("native class", klass, klass[attr])}
-        if(attr == "__doc__" && klass[attr] === undefined && klass.$infos){
+        if(attr == "__doc__" && klass[attr] === undefined){
             _get_builtins_doc()
-            klass[attr] = $B.builtins_doc[klass.$infos.__name__]
+            klass[attr] = $B.builtins_doc[klass.__name__]
         }
         if(klass[attr] === undefined){
             var object_attr = _b_.object[attr]
@@ -1220,7 +1218,7 @@ $B.$getattr = function(obj, attr, _default){
                 __func__: func,
                 __name__: attr,
                 __self__: self,
-                __qualname__: klass.$infos.__name__ + "." + attr
+                __qualname__: klass.__qualname__ + "." + attr
             }
             if(typeof obj == "object"){
                 // Optimization : set attribute __class__ and store method
@@ -1347,8 +1345,8 @@ $B.$getattr = function(obj, attr, _default){
     if(res !== undefined){return res}
     if(_default !== undefined){return _default}
 
-    var cname = klass.$infos.__name__
-    if(is_class){cname = obj.$infos.__name__}
+    var cname = klass.__name__
+    if(is_class){cname = obj.__name__}
 
     attr_error(rawname, is_class ? obj : klass)
 }
@@ -1674,9 +1672,8 @@ function issubclass(klass, classinfo){
         throw _b_.TypeError.$factory(
             'issubclass() arg 2 cannot be a parameterized generic')
     }
-
-    if(klass === classinfo ||
-            mro.indexOf(classinfo) > -1){
+    
+    if(klass === classinfo || mro.indexOf(classinfo) > -1){
         return true
     }
 
@@ -2369,33 +2366,6 @@ $B.$setattr = function(obj, attr, value){
             return _b_.type.__setattr__(obj, attr, value)
         }
         return $B.$call($B.$getattr(metaclass, '__setattr__'))(obj, attr, value)
-        /*
-        if($test){console.log("obj is class", metaclass, metaclass[attr])}
-        if(metaclass && metaclass[attr] && metaclass[attr].__get__ &&
-                metaclass[attr].__set__){
-            metaclass[attr].__set__(obj, value)
-            return None
-        }
-        if(attr == "__module__"){
-            obj.$infos.__module__ = value
-            return _b_.None
-        }
-        if(obj.$infos && obj.$infos.__module__ == "builtins"){
-            throw _b_.TypeError.$factory(
-                `cannot set '${attr}' attribute of immutable type '` +
-                    obj.$infos.__name__ + "'")
-        }
-        obj[attr] = value
-        if(attr == "__init__" || attr == "__new__"){
-            // redefine the function that creates instances of the class
-            obj.$factory = $B.$instance_creator(obj)
-        }else if(attr == "__bases__"){
-            // redefine mro
-            obj.__mro__ = _b_.type.mro(obj)
-        }
-        if($test){console.log("after setattr", obj)}
-        return None
-        */
     }
 
     var res = obj[attr],
@@ -2494,7 +2464,7 @@ $B.$setattr = function(obj, attr, value){
                     if(Array.isArray(klass.__slots__)){
                         return klass.__slots__.map(function(item){
                             if(item.startsWith("__") && ! item.endsWith("_")){
-                                return "_" + klass.$infos.__name__ + item
+                                return "_" + klass.__name__ + item
                             }else{
                                 return item
                             }
@@ -2683,6 +2653,10 @@ $$super.__getattribute__ = function(self, attr){
 
     var f
     for(var klass of search_classes){
+        if(klass === undefined){
+            console.log('klass undef in super', self)
+            console.log('mro', mro)
+        }
         if(klass[attr] !== undefined){
             f = klass[attr]
             break
@@ -2742,7 +2716,7 @@ $$super.__getattribute__ = function(self, attr){
             __func__: f,
             __name__: attr,
             __module__: module,
-            __qualname__: klass.$infos.__name__ + "." + attr
+            __qualname__: klass.__name__ + "." + attr
         }
         return method
     }
@@ -2763,9 +2737,9 @@ $$super.__init__ = function(cls){
 
 $$super.__repr__ = function(self){
     $B.builtins_repr_check($$super, arguments) // in brython_builtins.js
-    var res = "<super: <class '" + self.__thisclass__.$infos.__name__ + "'>"
+    var res = "<super: <class '" + self.__thisclass__.__name__ + "'>"
     if(self.__self_class__ !== undefined){
-        res += ', <' + self.__self_class__.__class__.$infos.__name__ + ' object>'
+        res += ', <' + self.__self_class__.__class__.__name__ + ' object>'
     }else{
         res += ', NULL'
     }
@@ -3322,7 +3296,7 @@ $B.set_func_names(zip, "builtins")
 
 function no_set_attr(klass, attr){
     if(klass[attr] !== undefined){
-        throw _b_.AttributeError.$factory("'" + klass.$infos.__name__ +
+        throw _b_.AttributeError.$factory("'" + klass.__name__ +
             "' object attribute '" + attr + "' is read-only")
     }else{
         throw $B.attr_error(attr, klass)
@@ -3379,11 +3353,8 @@ $B.Function = {
     __code__: {__class__: FunctionCode, __name__: 'function code'},
     __globals__: {__class__: FunctionGlobals, __name__: 'function globals'},
     __mro__: [_b_.object],
+    __name__: 'function',
     __qualname__: 'function',
-    $infos: {
-        __name__: 'function',
-        __module__: "builtins"
-    },
     $is_class: true
 }
 

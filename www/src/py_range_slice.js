@@ -6,10 +6,6 @@ var _b_ = $B.builtins,
     range = {
         __class__: _b_.type,
         __mro__: [_b_.object],
-        $infos:{
-            __module__: "builtins",
-            __name__: "range"
-        },
         $is_class: true,
         $native: true,
         $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
@@ -107,20 +103,18 @@ range.__hash__ = function(self){
     return _b_.hash(_b_.tuple.$factory([len, self.start, self.step]))
 }
 
-var RangeIterator = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __iter__: function(self){return self},
-    __next__: function(self){return _b_.next(self.obj)},
-    $infos:{
-        __name__: "range_iterator",
-        __module__: "builtins"
-    },
-    $is_class: true
+var RangeIterator = $B.make_class("range_iterator",
+    function(obj){
+        return {__class__: RangeIterator, obj: obj}
+    }
+)
+
+RangeIterator.__iter__ = function(self){
+    return self
 }
 
-RangeIterator.$factory = function(obj){
-    return {__class__: RangeIterator, obj: obj}
+RangeIterator.__next__ = function(self){
+    return _b_.next(self.obj)
 }
 
 $B.set_func_names(RangeIterator, "builtins")
@@ -310,10 +304,6 @@ $B.set_func_names(range, "builtins")
 var slice = {
     __class__: _b_.type,
     __mro__: [_b_.object],
-    $infos: {
-        __module__: "builtins",
-        __name__: "slice"
-    },
     $is_class: true,
     $native: true,
     $descriptors: {

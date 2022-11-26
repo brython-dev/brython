@@ -125,18 +125,13 @@ $B.$class_constructor = function(class_name, class_ns, bases,
     var kls = meta_new(metaclass, class_name, bases, dict,
                        {$nat: 'kw', kw: extra_kwargs})
     kls.__module__ = module
-    kls.$infos = {
-        __module__: module,
-        __name__: class_name,
-        __qualname__: class_obj.$qualname
-    }
     kls.$subclasses = []
 
     if(kls.__bases__ === undefined || kls.__bases__.length == 0){
         kls.__bases__ = $B.fast_tuple([_b_.object])
     }
 
-    kls.__orig_bases__ = bases
+    // kls.__orig_bases__ = bases
 
     // Set attribute "$class" of functions defined in the class. Used in
     // py_builtin_functions / Function.__setattr__ to reset the function
@@ -263,6 +258,7 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
     // Use __prepare__ (PEP 3115)
     var class_dict = _b_.dict.$factory([
                          ['__module__', module],
+                         ['__name__', class_name],
                          ['__qualname__', qualname],
                          ['__orig_bases__', orig_bases]
                          ])
@@ -357,11 +353,8 @@ $B.make_class = function(qualname, factory){
     var A = {
         __class__: _b_.type,
         __mro__: [_b_.object],
+        __name__: qualname,
         __qualname__: qualname,
-        $infos:{
-            __qualname__: qualname,
-            __name__: $B.last(qualname.split('.'))
-        },
         $is_class: true
     }
 
@@ -438,6 +431,8 @@ type.__getattribute__ = function(klass, attr){
             return klass.__class__
         case "__doc__":
             return klass.__doc__ || _b_.None
+        case '__name__':
+            return klass.__name__ || klass.__qualname__
         case "__setattr__":
             if(klass["__setattr__"] !== undefined){
                 var func = klass["__setattr__"]
@@ -544,7 +539,7 @@ type.__getattribute__ = function(klass, attr){
                         __self__: klass,
                         __func__: res,
                         __name__: attr,
-                        __qualname__: meta.$infos.__name__ + "." + attr,
+                        __qualname__: meta.__name__ + "." + attr,
                         __module__: res.$infos ? res.$infos.__module__ : ""
                     }
                     if($test){
@@ -596,7 +591,7 @@ type.__getattribute__ = function(klass, attr){
                 result.$infos = {
                     __func__: res,
                     __name__: res.$infos.__name__,
-                    __qualname__: klass.$infos.__name__ + "." + res.$infos.__name__,
+                    __qualname__: klass.__name__ + "." + res.$infos.__name__,
                     __self__: klass
                 }
             }else{
@@ -678,21 +673,7 @@ type.__instancecheck__ = function(cls, instance){
 type.__instancecheck__.$type = "staticmethod"
 
 // __name__ is a data descriptor
-type.__name__ = {
-    __get__: function(self){
-        return self.$infos.__name__
-    },
-    __set__: function(self, value){
-        self.$infos.__name__ = value
-    },
-    __str__: function(self){
-        return "type"
-    },
-    __eq__: function(self, other){
-        return self.$infos.__name__ == other
-    }
-}
-
+type.__name__ = 'type'
 
 type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // Return a new type object. This is essentially a dynamic form of the
@@ -718,19 +699,20 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     }else{
         module = $B.last($B.frames_stack)[2]
     }
+    var qualname
+    try{
+        qualname = $B.$getitem(cl_dict, '__qualname__')
+    }catch(err){
+        qualname = name
+    }
     var class_dict = {
         __class__ : meta,
         __bases__ : bases,
         __dict__ : cl_dict,
-        __qualname__: name,
+        __qualname__: qualname,
         __module__: module,
-        $infos:{
-            __name__: name,
-            __module__: module,
-            __qualname__: name
-        },
-        $is_class: true,
-        $has_setattr: cl_dict.$has_setattr
+        __name__: name,
+        $is_class: true
     }
 
     try{
@@ -805,9 +787,6 @@ type.__qualname__ = 'type'
 
 type.__repr__ = function(kls){
     $B.builtins_repr_check(type, arguments) // in brython_builtins.js
-    if(kls.$infos === undefined){
-        console.log("no $infos", kls)
-    }
     var qualname = kls.__qualname__
     if(kls.__module__    &&
             kls.__module__ != "builtins" &&
@@ -833,10 +812,10 @@ type.__setattr__ = function(kls, attr, value){
         type[attr].__set__(kls, value)
         return _b_.None
     }
-    if(kls.$infos && kls.$infos.__module__ == "builtins"){
+    if(kls.__module__ == "builtins"){
         throw _b_.TypeError.$factory(
             `cannot set '${attr}' attribute of immutable type '` +
-                kls.$infos.__name__ + "'")
+                kls.__qualname__ + "'")
     }
     kls[attr] = value
     if(attr == "__init__" || attr == "__new__"){
@@ -891,7 +870,7 @@ type.mro = function(cls){
     }
 
     seqs[pos1++] = bases.slice()
-
+    
     var mro = [cls],
         mpos = 1
     while(1){
@@ -928,18 +907,12 @@ type.mro = function(cls){
     if(mro[mro.length - 1] !== _b_.object){
         mro[mpos++] = _b_.object
     }
-
     return mro
 }
 
 type.__subclasscheck__ = function(self, subclass){
     // Is subclass a subclass of self ?
     var klass = self
-    if(klass === _b_.str){
-        klass = $B.StringSubclass
-    }else if(klass === _b_.float){
-        klass = $B.FloatSubclass
-    }
     if(subclass.__bases__ === undefined){
         return self === _b_.object
     }
@@ -1099,13 +1072,9 @@ var $instance_creator = $B.$instance_creator = function(klass){
         }
     }
     factory.__class__ = $B.Function
-    if(klass.$infos === undefined){
-        console.log('no klass $infos', klass)
-        console.log($B.frames_stack.slice())
-    }
     factory.$infos = {
-        __name__: klass.$infos.__name__,
-        __module__: klass.$infos.__module__
+        __name__: klass.__name__,
+        __module__: klass.__module__
     }
     return factory
 }
@@ -1164,7 +1133,7 @@ member_descriptor.__set__ = function(self, kls, value){
 }
 
 member_descriptor.__str__ = member_descriptor.__repr__ = function(self){
-    return "<member '" + self.attr + "' of '" + self.cls.$infos.__name__ +
+    return "<member '" + self.attr + "' of '" + self.cls.__name__ +
         "' objects>"
 }
 
@@ -1255,6 +1224,9 @@ $B.make_iterator_class = function(name){
     var klass = {
         __class__: _b_.type,
         __mro__: [_b_.object],
+        __name__: name,
+        __qualname__: name,
+
         $factory: function(items){
             return {
                 __class__: klass,
@@ -1264,9 +1236,6 @@ $B.make_iterator_class = function(name){
                 len: items.length,
                 $builtin_iterator: true
             }
-        },
-        $infos:{
-            __name__: name
         },
         $is_class: true,
         $iterator_class: true,
@@ -1306,8 +1275,6 @@ $B.make_iterator_class = function(name){
             delete self.items.$next_func // set by $B.next_of()
             throw _b_.StopIteration.$factory("StopIteration")
         },
-
-        __qualname__: name,
 
         __reduce_ex__: function(self, protocol){
             return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.items])])
@@ -1350,7 +1317,7 @@ $B.GenericAlias.__eq__ = function(self, other){
 
 $B.GenericAlias.__getitem__ = function(self, item){
     throw _b_.TypeError.$factory("descriptor '__getitem__' for '" +
-        self.origin_class.$infos.__name__ +"' objects doesn't apply to a '" +
+        self.origin_class.__name__ +"' objects doesn't apply to a '" +
         $B.class_name(item) +"' object")
 }
 
@@ -1389,13 +1356,13 @@ $B.GenericAlias.__repr__ = function(self){
             items.push('...')
         }else{
             if(self.items[i].$is_class){
-                items.push(self.items[i].$infos.__name__)
+                items.push(self.items[i].__name__)
             }else{
                 items.push(_b_.repr(self.items[i]))
             }
         }
     }
-    return self.origin_class.$infos.__qualname__ + '[' +
+    return self.origin_class.__qualname__ + '[' +
         items.join(", ") + ']'
 }
 
@@ -1429,9 +1396,9 @@ $B.UnionType.__repr__ = function(self){
     var t = []
     for(var item of self.items){
         if(item.$is_class){
-            var s = item.$infos.__name__
-            if(item.$infos.__module__ !== "builtins"){
-                s = item.$infos.__module__ + '.' + s
+            var s = item.__name__
+            if(item.__module__ !== "builtins"){
+                s = item.__module__ + '.' + s
             }
             t.push(s)
         }else{

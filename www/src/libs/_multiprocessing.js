@@ -3,14 +3,7 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
-var Process = {
-    __class__:_b_.type,
-    __mro__: [_b_.object],
-    $infos:{
-        __name__:'Process'
-    },
-    $is_class: true
-}
+var Process = $B.make_class('Process')
 
 var $convert_args=function(args) {
     var _list=[]

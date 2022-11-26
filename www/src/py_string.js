@@ -80,10 +80,6 @@ function to_string(args){
 var str = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
-    $infos: {
-        __module__: "builtins",
-        __name__: "str"
-    },
     $is_class: true,
     $native: true
 }
