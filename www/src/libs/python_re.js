@@ -46,10 +46,10 @@ var $error_2 = {
     __module__: "re"
 }
 
-var error = $B.$class_constructor("error", $error_2,
-    _b_.tuple.$factory([_b_.Exception]),["_b_.Exception"],[])
-error.__doc__ = _b_.None
-error.$factory = $B.$instance_creator(error)
+var error = $B.make_class("error")
+error.__bases__ = [_b_.Exception, _b_.object]
+error.__mro__ = [_b_.Exception, _b_.object]
+
 error.__str__ = function(self){
     var s = self.msg + ' at position ' + self.pos
     if(self.lineno > 1){

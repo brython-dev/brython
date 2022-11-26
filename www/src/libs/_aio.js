@@ -279,8 +279,15 @@ function make_error(name, module){
 }
 
 
-var InvalidStateError = make_error('InvalidStateError', 'browser.aio')
-var CancelledError = make_error('CancelledError', 'browser.aio')
+var InvalidStateError = $B.make_class('InvalidStateError')
+InvalidStateError.__bases__ = [_b_.Exception, _b_.object]
+InvalidStateError.__mro__ = [_b_.Exception, _b_.object]
+$B.set_func_names(InvalidStateError, 'browser.aio')
+
+var CancelledError = $B.make_class('CancelledError')
+CancelledError.__bases__ = [_b_.Exception, _b_.object]
+CancelledError.__mro__ = [_b_.Exception, _b_.object]
+$B.set_func_names(CancelledError, 'browser.aio')
 
 
 var Future = $B.make_class("Future",
