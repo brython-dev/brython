@@ -386,6 +386,10 @@ $B.next_of = function(iterator){
 $B.next_of1 = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
     // "for(item of $B.next_of1(...)){"
+    if(frame === undefined){
+        frame = $B.last($B.frames_stack)
+        lineno = frame.$lineno
+    }
     if(iterator.__class__ === _b_.range){
         var obj = {ix: iterator.start}
         if(iterator.step > 0){
