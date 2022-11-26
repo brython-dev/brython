@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-26 15:05:59.178175"
-__BRYTHON__.timestamp=1669471559178
+__BRYTHON__.compiled_date="2022-11-26 15:33:41.865895"
+__BRYTHON__.timestamp=1669473221865
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5670,7 +5670,7 @@ var entries=_b_.list.$factory(mro_entries(bases))
 new_bases=new_bases.concat(entries)}else{new_bases.push(base)}}else{new_bases.push(base)}}
 return has_mro_entries ? new_bases :bases}
 $B.make_class=function(qualname,factory){
-var A={__class__:_b_.type,__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
+var A={__class__:_b_.type,__bases__:[_b_.object],__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
 A.$factory=factory
 return A}
 var type=$B.make_class("type",function(kls,bases,cl_dict){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw

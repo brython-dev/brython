@@ -352,6 +352,7 @@ $B.make_class = function(qualname, factory){
 
     var A = {
         __class__: _b_.type,
+        __bases__: [_b_.object],
         __mro__: [_b_.object],
         __name__: qualname,
         __qualname__: qualname,
@@ -870,7 +871,7 @@ type.mro = function(cls){
     }
 
     seqs[pos1++] = bases.slice()
-    
+
     var mro = [cls],
         mpos = 1
     while(1){
