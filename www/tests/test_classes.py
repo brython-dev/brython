@@ -925,4 +925,51 @@ assert not t
 A.TWO = 2
 assert len(t) == 1
 
+# bases of a class may not be classes
+t = []
+
+class Base:
+
+  def __new__(cls, *args):
+    t.append('new')
+    return object.__new__(cls)
+
+  def __init__(*args):
+    t.append('init')
+
+  def f(self):
+    return 99
+
+base = Base()
+assert t == ['new', 'init']
+base.g = 12
+
+base2 = Base()
+assert len(t) == 4
+
+base2.truc = 754
+
+class A(base, base2):
+  x = 8
+
+assert len(t) == 6
+
+assert hasattr(Base, '__mro__')
+assert not hasattr(A, '__mro__')
+
+assert A.f() == 99
+
+assert not isinstance(A, type)
+
+assert A.__class__ is Base
+
+t = list[int]
+
+assert not issubclass(t, type)
+
+class B(list[int]):
+  pass
+
+
+
 print('passed all tests..')

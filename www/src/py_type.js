@@ -126,12 +126,7 @@ $B.$class_constructor = function(class_name, class_ns, bases,
                        {$nat: 'kw', kw: extra_kwargs})
     kls.__module__ = module
     kls.$subclasses = []
-
-    if(kls.__bases__ === undefined || kls.__bases__.length == 0){
-        kls.__bases__ = $B.fast_tuple([_b_.object])
-    }
-
-    // kls.__orig_bases__ = bases
+    kls.$is_class = true
 
     // Set attribute "$class" of functions defined in the class. Used in
     // py_builtin_functions / Function.__setattr__ to reset the function
@@ -162,7 +157,6 @@ $B.$class_constructor = function(class_name, class_ns, bases,
                 Object.keys(abstract_methods).join(", "))}
         kls.$factory = nofactory
     }
-
     return kls
 }
 
@@ -253,6 +247,14 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
     return metaclass
 }
 
+function set_attr_if_absent(dict, attr, value){
+    try{
+        $B.$getitem(dict, attr)
+    }catch(err){
+        $B.$setitem(dict, attr, value)
+    }
+}
+
 $B.make_class_namespace = function(metaclass, class_name, module, qualname,
                                    bases, orig_bases){
     // Use __prepare__ (PEP 3115)
@@ -266,17 +268,11 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
         var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None)
         if(prepare !== _b_.None){
             class_dict = $B.$call(prepare)(class_name, bases) // dict or dict-like
-            function set_attr_if_absent(attr, value){
-                try{
-                    $B.$getitem(class_dict, attr)
-                }catch(err){
-                    $B.$setitem(class_dict, attr, value)
-                }
-            }
-            set_attr_if_absent('__module__', module)
-            set_attr_if_absent('__qualname__', qualname)
+
+            set_attr_if_absent(class_dict, '__module__', module)
+            set_attr_if_absent(class_dict, '__qualname__', qualname)
             if(orig_bases !== bases){
-                set_attr_if_absent('__orig_bases__', orig_bases)
+                set_attr_if_absent(class_dict, '__orig_bases__', orig_bases)
             }
         }
     }
@@ -427,7 +423,10 @@ type.__format__ = function(klass, fmt_spec){
 type.__getattribute__ = function(klass, attr){
     switch(attr) {
         case "__bases__":
-            return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__) || [_b_.object])
+            if(klass.__bases__ !== undefined){
+                return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__))
+            }
+            throw $B.attr_error(attr, klass)
         case "__class__":
             return klass.__class__
         case "__doc__":
@@ -706,9 +705,10 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     }catch(err){
         qualname = name
     }
+
     var class_dict = {
         __class__ : meta,
-        __bases__ : bases,
+        __bases__ : bases.length == 0 ? [_b_.object] : bases,
         __dict__ : cl_dict,
         __qualname__: qualname,
         __module__: module,
@@ -731,8 +731,10 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     for(var i = 0; i < items.length; i++){
         var key = items[i][0],
             v = items[i][1]
-        if(key === "__module__"){continue} // already set
-        if(key === "__class__"){continue} // already set
+        if(['__module__', '__class__', '__name__', '__qualname__'].
+                indexOf(key) > -1){
+            continue
+        }
         if(key.startsWith('$')){continue}
 
         if(v === undefined){continue}

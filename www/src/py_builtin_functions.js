@@ -1046,7 +1046,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__mro__" // && obj === _b_.list // "Point"
+    var $test = false //attr == "__bases__" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass,
@@ -1243,10 +1243,17 @@ $B.$getattr = function(obj, attr, _default){
     var mro, attr_func
 
     if(is_class){
+        if($test){
+            console.log('obj is class', obj)
+            console.log('is type ?', _b_.isinstance(klass, _b_.type))
+        }
         if(klass === _b_.type){
             attr_func = _b_.type.__getattribute__
         }else{
             attr_func = $B.$call($B.$getattr(klass, '__getattribute__'))
+        }
+        if($test){
+            console.log('attr func', attr_func)
         }
     }else{
         attr_func = klass.__getattribute__
@@ -1270,7 +1277,7 @@ $B.$getattr = function(obj, attr, _default){
     var odga = _b_.object.__getattribute__
     if($test){
         console.log("attr_func is odga ?", attr_func,
-            attr_func === odga, '\n', attr_func + '',
+            attr_func === odga, '\n', 
             '\nobj[attr]', obj[attr])
     }
     if(attr_func === odga){
@@ -1672,7 +1679,7 @@ function issubclass(klass, classinfo){
         throw _b_.TypeError.$factory(
             'issubclass() arg 2 cannot be a parameterized generic')
     }
-    
+
     if(klass === classinfo || mro.indexOf(classinfo) > -1){
         return true
     }

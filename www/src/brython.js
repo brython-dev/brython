@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-26 15:33:41.865895"
-__BRYTHON__.timestamp=1669473221865
+__BRYTHON__.compiled_date="2022-11-27 09:23:08.509621"
+__BRYTHON__.timestamp=1669537388509
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5601,7 +5601,7 @@ if(metaclass.__qualname__=='_TypedDictMeta'){bases=$B.resolve_mro_entries(bases)
 var kls=meta_new(metaclass,class_name,bases,dict,{$nat:'kw',kw:extra_kwargs})
 kls.__module__=module
 kls.$subclasses=[]
-if(kls.__bases__===undefined ||kls.__bases__.length==0){kls.__bases__=$B.fast_tuple([_b_.object])}
+kls.$is_class=true
 for(var attr in class_obj){if(attr.charAt(0)!="$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
@@ -5646,15 +5646,15 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "metaclass of a derived class must be a (non-"+
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=metaclass ||_b_.type}
 return metaclass}
+function set_attr_if_absent(dict,attr,value){try{$B.$getitem(dict,attr)}catch(err){$B.$setitem(dict,attr,value)}}
 $B.make_class_namespace=function(metaclass,class_name,module,qualname,bases,orig_bases){
 var class_dict=_b_.dict.$factory([['__module__',module],['__name__',class_name],['__qualname__',qualname],['__orig_bases__',orig_bases]
 ])
 if(metaclass !==_b_.type){var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None)
 if(prepare !==_b_.None){class_dict=$B.$call(prepare)(class_name,bases)
-function set_attr_if_absent(attr,value){try{$B.$getitem(class_dict,attr)}catch(err){$B.$setitem(class_dict,attr,value)}}
-set_attr_if_absent('__module__',module)
-set_attr_if_absent('__qualname__',qualname)
-if(orig_bases !==bases){set_attr_if_absent('__orig_bases__',orig_bases)}}}
+set_attr_if_absent(class_dict,'__module__',module)
+set_attr_if_absent(class_dict,'__qualname__',qualname)
+if(orig_bases !==bases){set_attr_if_absent(class_dict,'__orig_bases__',orig_bases)}}}
 if(class_dict.__class__===_b_.dict){return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return _b_.dict}else if(prop=='$target'){return target}
 if(target.$string_dict.hasOwnProperty(prop)){return target.$string_dict[prop][0]}
 return undefined},set:function(target,prop,value){if(target.$string_dict.hasOwnProperty(prop)){target.$string_dict[prop][0]=value}
@@ -5694,7 +5694,8 @@ type.__class__=type
 type.__format__=function(klass,fmt_spec){
 return _b_.str.$factory(klass)}
 type.__getattribute__=function(klass,attr){switch(attr){case "__bases__":
-return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__)||[_b_.object])
+if(klass.__bases__ !==undefined){return $B.fast_tuple($B.resolve_mro_entries(klass.__bases__))}
+throw $B.attr_error(attr,klass)
 case "__class__":
 return klass.__class__
 case "__doc__":
@@ -5793,14 +5794,14 @@ var module=cl_dict.$string_dict.__module__
 if(module){module=module[0]}else{module=$B.last($B.frames_stack)[2]}
 var qualname
 try{qualname=$B.$getitem(cl_dict,'__qualname__')}catch(err){qualname=name}
-var class_dict={__class__ :meta,__bases__ :bases,__dict__ :cl_dict,__qualname__:qualname,__module__:module,__name__:name,$is_class:true}
+var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,__dict__ :cl_dict,__qualname__:qualname,__module__:module,__name__:name,$is_class:true}
 try{var slots=$B.$getitem(cl_dict,'__slots__')
 for(var name of $B.next_of1(slots)){class_dict[name]=member_descriptor.$factory(name,class_dict)}}catch(err){}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
-if(key==="__module__"){continue}
-if(key==="__class__"){continue}
+if(['__module__','__class__','__name__','__qualname__'].
+indexOf(key)>-1){continue}
 if(key.startsWith('$')){continue}
 if(v===undefined){continue}
 class_dict[key]=v
@@ -6507,14 +6508,17 @@ obj.$method_cache[attr]=method}}
 return method}else if(klass[attr].__class__===_b_.classmethod){return _b_.classmethod.__get__(klass[attr],obj,klass)}else if(klass[attr]!==undefined){return klass[attr]}
 attr_error(rawname,klass)}
 var mro,attr_func
-if(is_class){if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}}else{attr_func=klass.__getattribute__
+if(is_class){if($test){console.log('obj is class',obj)
+console.log('is type ?',_b_.isinstance(klass,_b_.type))}
+if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}
+if($test){console.log('attr func',attr_func)}}else{attr_func=klass.__getattribute__
 if(attr_func===undefined){var mro=klass.__mro__
 if(mro===undefined){console.log(obj,attr,"no mro, klass",klass)}
 for(var i=0,len=mro.length;i < len;i++){attr_func=mro[i]['__getattribute__']
 if(attr_func !==undefined){break}}}}
 if(typeof attr_func !=='function'){console.log(attr+' is not a function '+attr_func,klass)}
 var odga=_b_.object.__getattribute__
-if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\n',attr_func+'','\nobj[attr]',obj[attr])}
+if($test){console.log("attr_func is odga ?",attr_func,attr_func===odga,'\n','\nobj[attr]',obj[attr])}
 if(attr_func===odga){res=obj[attr]
 if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}else if(res===null){return null}else if(res !==undefined){if($test){console.log(obj,attr,obj[attr],res.__set__ ||res.$is_class)}
