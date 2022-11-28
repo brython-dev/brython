@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-28 10:05:25.186276"
-__BRYTHON__.timestamp=1669626325186
+__BRYTHON__.compiled_date="2022-11-28 21:26:28.873954"
+__BRYTHON__.timestamp=1669667188873
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -896,6 +896,7 @@ case 'lambda':
 return new $LambdaCtx(new $ExprCtx(C,'lambda',commas))
 case 'op':
 var tg=value
+if(C.parent.type=='op' && '+-~'.indexOf(tg)==-1){raise_syntax_error(C)}
 switch(tg){case '*':
 C.parent.tree.pop()
 var commas=C.with_commas
@@ -5668,6 +5669,7 @@ if(mro_entries !==_b_.None){has_mro_entries=true
 var entries=_b_.list.$factory(mro_entries(bases))
 new_bases=new_bases.concat(entries)}else{new_bases.push(base)}}else{new_bases.push(base)}}
 return has_mro_entries ? new_bases :bases}
+var type_getsets={__name__:"getset",__qualname__:"getset",__bases__:"getset",__module__:"getset",__abstractmethods__:"getset",__dict__:"get",__doc__:"getset",__text_signature__:"get",__annotations__:"getset"}
 $B.make_class=function(qualname,factory){
 var A={__class__:_b_.type,__bases__:[_b_.object],__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
 A.$factory=factory
@@ -7997,11 +7999,13 @@ trace+=`  File "${filename}", line ${err.args[1][1]}\n`+
 `    ${line.trim()}\n`
 if(err.__class__ !==_b_.IndentationError &&
 err.text){
-console.log('error rgs',err.args[1])
+if($B.debug > 1){console.log('error args',err.args[1])
 console.log('err line',line)
-console.log('offset',err.offset,'indent',indent)
-var start=err.offset-indent,marks='   '+' '.repeat(start),nb_marks=1
-if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=err.end_offset-start-indent}
+console.log('indent',indent)}
+var start=err.offset-indent,end_offset=err.end_offset+
+(err.end_offset==err.offset ? 1 :0)
+marks='   '+' '.repeat(start),nb_marks=1
+if(err.end_lineno){if(err.end_lineno > err.lineno){nb_marks=line.length-start-indent}else{nb_marks=end_offset-start-indent}
 if(nb_marks==0 &&
 err.end_offset==line.substr(indent).length){nb_marks=1}}
 marks+='^'.repeat(nb_marks)+'\n'
@@ -14470,7 +14474,7 @@ return obj}})(__BRYTHON__)
 function compiler_error(ast_obj,message,end){var exc=_b_.SyntaxError.$factory(message)
 exc.filename=state.filename
 if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
-exc.text=line}else{exc.text=_b_.none}
+exc.text=line}else{exc.text=_b_.None}
 exc.lineno=ast_obj.lineno
 exc.offset=ast_obj.col_offset
 end=end ||ast_obj

@@ -949,6 +949,9 @@ $AbstractExprCtx.prototype.transition = function(token, value){
             return new $LambdaCtx(new $ExprCtx(context, 'lambda', commas))
         case 'op':
             var tg = value
+            if(context.parent.type == 'op' && '+-~'.indexOf(tg) == -1){
+                raise_syntax_error(context)
+            }
             switch(tg) {
                 case '*':
                     context.parent.tree.pop() // remove abstract expression

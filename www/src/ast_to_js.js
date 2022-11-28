@@ -11,7 +11,7 @@ function compiler_error(ast_obj, message, end){
             line = lines[ast_obj.lineno - 1]
         exc.text = line
     }else{
-        exc.text = _b_.none
+        exc.text = _b_.None
     }
     exc.lineno = ast_obj.lineno
     exc.offset = ast_obj.col_offset

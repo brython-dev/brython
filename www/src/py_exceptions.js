@@ -936,17 +936,21 @@ $B.show_error = function(err){
         if(err.__class__ !== _b_.IndentationError &&
                 err.text){
             // add ^ under the line
-            console.log('error rgs', err.args[1])
-            console.log('err line', line)
-            console.log('offset', err.offset, 'indent', indent)
+            if($B.debug > 1){
+                console.log('error args', err.args[1])
+                console.log('err line', line)
+                console.log('indent', indent)
+            }
             var start = err.offset - indent,
+                end_offset = err.end_offset +
+                    (err.end_offset == err.offset ? 1 : 0)
                 marks = '   ' + ' '.repeat(start),
                 nb_marks = 1
             if(err.end_lineno){
                 if(err.end_lineno > err.lineno){
                     nb_marks = line.length - start - indent
                 }else{
-                    nb_marks = err.end_offset - start - indent
+                    nb_marks = end_offset - start - indent
                 }
                 if(nb_marks == 0 &&
                         err.end_offset == line.substr(indent).length){

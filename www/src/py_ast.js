@@ -189,7 +189,7 @@ $B.create_python_ast_classes = function(){
             cls.__mro__ = [$B.AST, _b_.object]
             cls.__module__ = 'ast'
             cls.__dict__ = $B.empty_dict()
-            
+
             return cls
         })(klass)
     }
@@ -198,6 +198,7 @@ $B.create_python_ast_classes = function(){
 // Map operators to ast type (BinOp, etc.) and name (Add, etc.)
 var op2ast_class = $B.op2ast_class = {},
     ast_types = [ast.BinOp, ast.BoolOp, ast.Compare, ast.UnaryOp]
+
 for(var i = 0; i < 4; i++){
     for(var op in op_types[i]){
         op2ast_class[op] = [ast_types[i], ast[op_types[i][op]]]

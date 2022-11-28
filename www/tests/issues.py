@@ -3167,6 +3167,12 @@ class MyEnum(enum.Enum):
 assert MyEnum.ONE.value == 1
 assert type(MyEnum.ONE.value) is int
 
+# issue 2108
+try:
+    exec('f(1 + *x)')
+except SyntaxError as e:
+    assert e.args[1][3].strip() == 'f(1 + *x)'
+    
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
