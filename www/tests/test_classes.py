@@ -958,6 +958,7 @@ assert hasattr(Base, '__mro__')
 assert not hasattr(A, '__mro__')
 
 assert A.f() == 99
+assert not hasattr(A, "g") # although A.__bases__[0] has "g"
 
 assert not isinstance(A, type)
 
