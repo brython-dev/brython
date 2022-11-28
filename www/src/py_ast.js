@@ -188,6 +188,8 @@ $B.create_python_ast_classes = function(){
             }
             cls.__mro__ = [$B.AST, _b_.object]
             cls.__module__ = 'ast'
+            cls.__dict__ = $B.empty_dict()
+            
             return cls
         })(klass)
     }
