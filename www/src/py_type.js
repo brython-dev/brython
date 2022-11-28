@@ -331,6 +331,18 @@ $B.resolve_mro_entries = function(bases){
     return has_mro_entries ? new_bases : bases
 }
 
+var type_getsets = {
+    __name__: "getset",
+    __qualname__: "getset",
+    __bases__: "getset",
+    __module__: "getset",
+    __abstractmethods__: "getset",
+    __dict__: "get",
+    __doc__: "getset",
+    __text_signature__: "get",
+    __annotations__: "getset"
+}
+
 $B.make_class = function(qualname, factory){
     // Builds a basic class object
 
