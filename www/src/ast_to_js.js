@@ -795,7 +795,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes){
     var scope = last_scope(scopes)
     var js = ''
     if(! scope.has_annotation){
-        js += 'locals.__annotations__ = $B.empty_dict()\n'
+        js += 'locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n'
         scope.has_annotation = true
         scope.locals.add('__annotations__')
     }
@@ -1312,16 +1312,13 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
               `"${this.name}", "${glob}" ,"${qualname}", resolved_bases, bases),\n`
 
     js += `locals = ${locals_name}\n` +
+          `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n` +
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `locals.$f_trace = $B.enter_frame(frame)\n` +
           `var _frames = $B.frames_stack.slice()\n` +
           `if(locals.$f_trace !== _b_.None){\n$B.trace_line()}\n`
-
-    js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
-    class_scope.has_annotation = true
-    class_scope.locals.add('__annotations__')
 
     scopes.push(class_scope)
 
@@ -1333,7 +1330,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
               '$B.trace_return(_b_.None)\n' +
           '}\n' +
           '$B.leave_frame()\n' +
-          'return {\nlocals, metaclass, bases}\n})()\n'
+          'return {\nlocals, metaclass, bases, resolved_bases}\n})()\n'
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
