@@ -1277,7 +1277,7 @@ $B.$getattr = function(obj, attr, _default){
     var odga = _b_.object.__getattribute__
     if($test){
         console.log("attr_func is odga ?", attr_func,
-            attr_func === odga, '\n', 
+            attr_func === odga, '\n',
             '\nobj[attr]', obj[attr])
     }
     if(attr_func === odga){
@@ -1810,7 +1810,13 @@ function locals(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments)
-    var res = $B.obj_dict($B.clone($B.last($B.frames_stack)[1]))
+    var locals_obj = $B.last($B.frames_stack)[1]
+    // In a class body, locals() is a proxy around a dict(-like) object
+    var class_locals = locals_obj.$target
+    if(class_locals){
+        return class_locals
+    }
+    var res = $B.obj_dict($B.clone(locals_obj))
     res.$is_namespace = true
     delete res.$jsobj.__annotations__
     return res
