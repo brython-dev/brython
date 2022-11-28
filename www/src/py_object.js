@@ -107,7 +107,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == "__args__"
+    var $test = attr == '__bases__' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -115,8 +115,12 @@ object.__getattribute__ = function(obj, attr){
         return klass
     }
 
+    if(obj.$is_class && attr == '__bases__'){
+        throw $B.attr_error(attr, obj)
+    }
+
     var res = obj[attr]
-    
+
     if($test){
         console.log('obj[attr]', obj[attr])
     }
