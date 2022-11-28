@@ -2875,6 +2875,9 @@ $ExprCtx.prototype.transition = function(token, value){
           if(context.parent.type == 'withitem' && context.parent.tree.length == 2){
               raise_syntax_error(context, "expected ':'")
           }
+          if(value == '~'){
+              raise_syntax_error(context)
+          }
           // handle operator precedence ; fasten seat belt ;-)
           var op_parent = context.parent,
               op = value
