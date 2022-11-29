@@ -651,7 +651,7 @@
             var $ = $B.args("settrace", 1, {tracefunc: null}, ['tracefunc'],
                     arguments, {}, null, null)
             $B.tracefunc = $.tracefunc
-            $B.last($B.frames_stack)[1].$f_trace = $B.tracefunc
+            $B.last($B.frames_stack).$f_trace = $B.tracefunc
             // settrace() does not activite the trace function on the current
             // frame (the one sys.settrace() was called in); we set an
             // attribute to identify this frame. It is used in the functions

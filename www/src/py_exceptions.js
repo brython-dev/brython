@@ -152,7 +152,7 @@ var frame = $B.frame = $B.make_class("frame",
 
 frame.__delattr__ = function(_self, attr){
     if(attr == "f_trace"){
-        _self[1].$f_trace = _b_.None
+        _self.$f_trace = _b_.None
     }
 }
 
@@ -178,17 +178,17 @@ frame.__getattr__ = function(_self, attr){
         }
     }else if(attr == "f_trace"){
         var locals = _self[1]
-        if(locals.$f_trace === undefined){
+        if(_self.$f_trace === undefined){
             return _b_.None
         }
-        return locals.$f_trace
+        return _self.$f_trace
     }
 }
 
 frame.__setattr__ = function(_self, attr, value){
     if(attr == "f_trace"){
         // used in trace functions, as defined by sys.settrace()
-        _self[1].$f_trace = value
+        _self.$f_trace = value
     }
 }
 
@@ -238,7 +238,7 @@ frame.f_locals = {
 
 frame.f_trace = {
     __get__: function(_self){
-        return _self[1].$f_trace
+        return _self.$f_trace
     }
 }
 

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-29 16:28:08.728342"
-__BRYTHON__.timestamp=1669735688728
+__BRYTHON__.compiled_date="2022-11-29 16:48:34.666982"
+__BRYTHON__.timestamp=1669736914666
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4972,7 +4972,7 @@ var res=[]
 while(true){try{res.push(next_func())}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return $B.fast_tuple(res)}
 throw err}}}
 $B.set_lineno=function(frame,lineno){frame.$lineno=lineno
-if(frame[1].$f_trace !==_b_.None){$B.trace_line()}
+if(frame.$f_trace !==_b_.None){$B.trace_line()}
 return true}
 $B.handle_annotation=function(annotation_string){
 if($B.imported.__future__ &&
@@ -5222,21 +5222,22 @@ throw err}}}else{$B.tracefunc=_b_.None}
 return _b_.None}
 $B.trace_exception=function(){var frame=$B.last($B.frames_stack)
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=frame[1].$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
+var trace_func=frame.$f_trace,exc=frame[1].$current_exception,frame_obj=$B.last($B.frames_stack)
 return trace_func(frame_obj,'exception',$B.fast_tuple([exc.__class__,exc,$B.traceback.$factory(exc)]))}
 $B.trace_line=function(){var frame=$B.last($B.frames_stack)
 if(frame[0]==$B.tracefunc.$current_frame_id){return _b_.None}
-var trace_func=frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
+var trace_func=frame.$f_trace,frame_obj=$B.last($B.frames_stack)
+if(trace_func===undefined){console.log('trace line, frame',frame)}
 return trace_func(frame_obj,'line',_b_.None)}
-$B.trace_return=function(value){var frame=$B.last($B.frames_stack),trace_func=frame[1].$f_trace,frame_obj=$B.last($B.frames_stack)
+$B.trace_return=function(value){var frame=$B.last($B.frames_stack),trace_func=frame.$f_trace,frame_obj=$B.last($B.frames_stack)
 if(frame[0]==$B.tracefunc.$current_frame_id){
 return _b_.None}
 trace_func(frame_obj,'return',value)}
 $B.leave_frame=function(arg){
 if($B.frames_stack.length==0){
 return}
-if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack)[1].$f_trace===undefined){$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc}
-if($B.last($B.frames_stack)[1].$f_trace !==_b_.None){$B.trace_return(arg.value)}}
+if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack).$f_trace===undefined){$B.last($B.frames_stack).$f_trace=$B.tracefunc}
+if($B.last($B.frames_stack).$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
 for(var key in frame[1]){if(! key.startsWith('$')){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
 if(gen.$frame===undefined){continue}
@@ -6367,7 +6368,7 @@ var _ast
 var frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
 frame.__file__=filename
-exec_locals.$f_trace=$B.enter_frame(frame)
+frame.$f_trace=$B.enter_frame(frame)
 var _frames=$B.frames_stack.slice()
 frame.$lineno=1
 if(src.__class__===code){_ast=src._ast
@@ -7671,15 +7672,15 @@ $B.set_func_names(traceback,"builtins")
 var frame=$B.frame=$B.make_class("frame",function(frame_list){frame_list.__class__=frame
 return frame_list}
 )
-frame.__delattr__=function(_self,attr){if(attr=="f_trace"){_self[1].$f_trace=_b_.None}}
+frame.__delattr__=function(_self,attr){if(attr=="f_trace"){_self.$f_trace=_b_.None}}
 frame.__dir__=function(_self){return _b_.object.__dir__(frame).concat(['clear','f_back','f_builtins','f_code','f_globals','f_lasti','f_lineno','f_locals','f_trace','f_trace_lines','f_trace_opcodes'])}
 frame.__getattr__=function(_self,attr){
 if(attr=="f_back"){var pos=$B.frames_stack.indexOf(_self)
 if(pos > 0){return frame.$factory($B.frames_stack[pos-1])}else{return _b_.None}}else if(attr=="clear"){return function(){}}else if(attr=="f_trace"){var locals=_self[1]
-if(locals.$f_trace===undefined){return _b_.None}
-return locals.$f_trace}}
+if(_self.$f_trace===undefined){return _b_.None}
+return _self.$f_trace}}
 frame.__setattr__=function(_self,attr,value){if(attr=="f_trace"){
-_self[1].$f_trace=value}}
+_self.$f_trace=value}}
 frame.__str__=frame.__repr__=function(_self){return '<frame object, file '+_self.__file__+
 ', line '+_self.$lineno+', code '+
 frame.f_code.__get__(_self).co_name+'>'}
@@ -7691,7 +7692,7 @@ return res}}
 frame.f_globals={__get__:function(_self){return $B.obj_dict(_self[3])}}
 frame.f_lineno={__get__:function(_self){return _self.$lineno}}
 frame.f_locals={__get__:function(_self){return $B.obj_dict(_self[1])}}
-frame.f_trace={__get__:function(_self){return _self[1].$f_trace}}
+frame.f_trace={__get__:function(_self){return _self.$f_trace}}
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
 var BaseException=_b_.BaseException=$B.make_class('BaseException')
@@ -14339,7 +14340,7 @@ function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},
 " 'sys.path_importer_cache'")}
 ),setrecursionlimit:function(value){$B.recursion_limit=value},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},['tracefunc'],arguments,{},null,null)
 $B.tracefunc=$.tracefunc
-$B.last($B.frames_stack)[1].$f_trace=$B.tracefunc
+$B.last($B.frames_stack).$f_trace=$B.tracefunc
 $B.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
 return _b_.None},stderr:_b_.property.$factory(
 function(){return $B.stderr},function(self,value){$B.stderr=value}
@@ -14696,7 +14697,7 @@ return `var ${comp.locals_name} = {},\n`+
 `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
 `}\n`+
 `var next_func_${comp.id} = $B.next_of1(expr, frame, ${comp.ast.lineno})\n`+
-`locals.$f_trace = $B.enter_frame(frame)\n`+
+`frame.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`}
 function make_comp(scopes){
 var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
@@ -14977,13 +14978,13 @@ js+=`locals = ${locals_name}\n`+
 `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n`+
 `frame.__file__ = '${scopes.filename}'\n`+
 `frame.$lineno = ${this.lineno}\n`+
-`locals.$f_trace = $B.enter_frame(frame)\n`+
+`frame.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`+
-`if(locals.$f_trace !== _b_.None){\n$B.trace_line()}\n`
+`if(frame.$f_trace !== _b_.None){\n$B.trace_line()}\n`
 scopes.push(class_scope)
 js+=add_body(this.body,scopes)
 scopes.pop()
-js+='\nif(locals.$f_trace !== _b_.None){\n'+
+js+='\nif(frame.$f_trace !== _b_.None){\n'+
 '$B.trace_return(_b_.None)\n'+
 '}\n'+
 '$B.leave_frame()\n'+
@@ -15154,7 +15155,7 @@ js+=`${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
 js+=`var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
-    locals.$f_trace = $B.enter_frame(frame)
+    frame.$f_trace = $B.enter_frame(frame)
     var _frames = $B.frames_stack.slice()
     var stack_length = $B.frames_stack.length\n`
 if(is_async){js+='frame.$async = true\n'}
@@ -15170,13 +15171,13 @@ js+=`locals.__class__ = `+
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
 js+='var result = _b_.None\n'+
-'if(locals.$f_trace !== _b_.None){\n'+
+'if(frame.$f_trace !== _b_.None){\n'+
 '$B.trace_return(_b_.None)\n}\n'+
 '$B.leave_frame();return result\n'}
 js+=`}catch(err){
     $B.set_exc(err)
-    if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){
-    ${locals_name}.$f_trace = $B.trace_exception()
+    if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
+    frame.$f_trace = $B.trace_exception()
     }
     $B.leave_frame();throw err
     }
@@ -15251,7 +15252,7 @@ var head=init_comprehension(comp,scopes)
 var first=this.generators[0]
 var js=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`+
-`locals.$f_trace = $B.enter_frame(frame)\n`
+`frame.$f_trace = $B.enter_frame(frame)\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -15458,7 +15459,7 @@ js+=`\nframe.__file__ = '${scopes.filename || "<string>"}'\n`+
 `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 if(! scopes.imported){js+=`locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`}
 if(! namespaces){
-js+=`locals.$f_trace = $B.enter_frame(frame)\n`}
+js+=`frame.$f_trace = $B.enter_frame(frame)\n`}
 js+=`$B.set_lineno(frame, 1)\n`+
 '\nvar _frames = $B.frames_stack.slice()\n'+
 `var stack_length = $B.frames_stack.length\n`+
@@ -15467,8 +15468,8 @@ add_body(this.body,scopes)+'\n'+
 (namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
 `}catch(err){\n`+
 `$B.set_exc(err)\n`+
-`if((! err.$in_trace_func) && locals.$f_trace !== _b_.None){\n`+
-`locals.$f_trace = $B.trace_exception()\n`+
+`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
+`frame.$f_trace = $B.trace_exception()\n`+
 `}\n`+
 (namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
 'throw err\n'+
@@ -15506,7 +15507,7 @@ compiler_check(this)
 var js=`$B.set_lineno(frame, ${this.lineno})\n`+
 'var result = '+
 (this.value ? $B.js_from_ast(this.value,scopes):' _b_.None')
-js+=`\nif(locals.$f_trace !== _b_.None){\n`+
+js+=`\nif(frame.$f_trace !== _b_.None){\n`+
 `$B.trace_return(result)\n}\n`+
 `$B.leave_frame()\nreturn result\n`
 return js}
@@ -15538,8 +15539,8 @@ if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
 `$B.set_exc(${err})\n`+
-`if(locals.$f_trace !== _b_.None){\n`+
-`locals.$f_trace = $B.trace_exception()}\n`
+`if(frame.$f_trace !== _b_.None){\n`+
+`frame.$f_trace = $B.trace_exception()}\n`
 if(has_else){js+=`failed${id} = true\n`}
 var first=true,has_untyped_except=false
 for(var handler of this.handlers){if(first){js+='if'
@@ -15594,8 +15595,8 @@ if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
 `$B.set_exc(${err})\n`+
-`if(locals.$f_trace !== _b_.None){\n`+
-`locals.$f_trace = $B.trace_exception()\n`+
+`if(frame.$f_trace !== _b_.None){\n`+
+`frame.$f_trace = $B.trace_exception()\n`+
 `}\n`+
 `if(! _b_.isinstance(${err}, _b_.BaseExceptionGroup)){\n`+
 `${err} = _b_.BaseExceptionGroup.$factory(_b_.None, [${err}])\n`+

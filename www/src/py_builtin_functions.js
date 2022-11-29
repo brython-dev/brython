@@ -800,7 +800,7 @@ function $$eval(src, _globals, _locals){
     var frame = [__name__, exec_locals, __name__, exec_globals]
     frame.is_exec_top = true
     frame.__file__ = filename
-    exec_locals.$f_trace = $B.enter_frame(frame)
+    frame.$f_trace = $B.enter_frame(frame)
     var _frames = $B.frames_stack.slice()
     frame.$lineno = 1
 

@@ -527,7 +527,7 @@ $B.rest_iter = function(next_func){
 
 $B.set_lineno = function(frame, lineno){
     frame.$lineno = lineno
-    if(frame[1].$f_trace !== _b_.None){
+    if(frame.$f_trace !== _b_.None){
         $B.trace_line()
     }
     return true
@@ -1227,7 +1227,7 @@ $B.trace_exception = function(){
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
-    var trace_func = frame[1].$f_trace,
+    var trace_func = frame.$f_trace,
         exc = frame[1].$current_exception,
         frame_obj = $B.last($B.frames_stack)
     return trace_func(frame_obj, 'exception', $B.fast_tuple([
@@ -1239,14 +1239,17 @@ $B.trace_line = function(){
     if(frame[0] == $B.tracefunc.$current_frame_id){
         return _b_.None
     }
-    var trace_func = frame[1].$f_trace,
+    var trace_func = frame.$f_trace,
         frame_obj = $B.last($B.frames_stack)
+    if(trace_func === undefined){
+        console.log('trace line, frame', frame)
+    }
     return trace_func(frame_obj, 'line', _b_.None)
 }
 
 $B.trace_return = function(value){
     var frame = $B.last($B.frames_stack),
-        trace_func = frame[1].$f_trace,
+        trace_func = frame.$f_trace,
         frame_obj = $B.last($B.frames_stack)
     if(frame[0] == $B.tracefunc.$current_frame_id){
         // don't call trace func when returning from the frame where
@@ -1266,10 +1269,10 @@ $B.leave_frame = function(arg){
     // When leaving a module, arg is set as an object of the form
     // {$locals, value: _b_.None}
     if(arg && arg.value !== undefined && $B.tracefunc){
-        if($B.last($B.frames_stack)[1].$f_trace === undefined){
-            $B.last($B.frames_stack)[1].$f_trace = $B.tracefunc
+        if($B.last($B.frames_stack).$f_trace === undefined){
+            $B.last($B.frames_stack).$f_trace = $B.tracefunc
         }
-        if($B.last($B.frames_stack)[1].$f_trace !== _b_.None){
+        if($B.last($B.frames_stack).$f_trace !== _b_.None){
             $B.trace_return(arg.value)
         }
     }
