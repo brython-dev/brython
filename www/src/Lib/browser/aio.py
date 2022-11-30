@@ -1,5 +1,4 @@
 from _aio import * # in libs/_aio.js
-from browser import window
 
 
 def _task(coro, Id, block):
