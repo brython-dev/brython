@@ -588,6 +588,10 @@ float.$format = function(self, fmt){
     // fmt is the object parsed from a format_spec
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
+    if(fmt.z && Object.is(parseFloat(pf), -0)){
+        // if 'z' option is set, remove minus sign for negative zero
+        pf = pf.substr(1)
+    }
     var raw = pf.split('.'),
         _int = raw[0]
     if(fmt.comma){

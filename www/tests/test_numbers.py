@@ -736,4 +736,8 @@ assert_raises(ValueError, int, s)
 sys.set_int_max_str_digits(5100)
 int(s)
 
+# issue 2095
+x = -.00001
+assert f'{x:z.1f}' == '0.0'
+
 print('passed all tests...')

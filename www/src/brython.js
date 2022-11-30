@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-29 16:48:34.666982"
-__BRYTHON__.timestamp=1669736914666
+__BRYTHON__.compiled_date="2022-11-30 08:29:30.380444"
+__BRYTHON__.timestamp=1669793370380
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -10898,6 +10898,9 @@ var car=spec.charAt(pos)
 if(car=="+" ||car=="-" ||car==" "){this.sign=car
 pos++
 car=spec.charAt(pos)}
+if(car=="z"){this.z=true
+pos++
+car=spec.charAt(pos)}
 if(car=="#"){this.alternate=true;
 pos++;
 car=spec.charAt(pos)}
@@ -11823,6 +11826,8 @@ return float.$format(self,fmt)}
 float.$format=function(self,fmt){
 fmt.align=fmt.align ||">"
 var pf=preformat(self,fmt)
+if(fmt.z && Object.is(parseFloat(pf),-0)){
+pf=pf.substr(1)}
 var raw=pf.split('.'),_int=raw[0]
 if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
 for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}

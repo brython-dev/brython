@@ -2774,6 +2774,11 @@ $B.parse_format_spec = function(spec, obj){
             pos++
             car = spec.charAt(pos)
         }
+        if(car == "z"){
+            this.z = true
+            pos++
+            car = spec.charAt(pos)
+        }
         if(car == "#"){
             this.alternate = true;
             pos++;
