@@ -982,5 +982,10 @@ assert_raises(SyntaxError, exec, "f(x, 2a)",
 # object(1) raises TypeError
 assert_raises(TypeError, object, 1)
 
+# issue 2112
+t = [((1, 2),), ((3, 4),)]
+lc = [f'{a + x}{b}' for (a, b), in t for x in range(2)]
+assert lc == ['12', '22', '34', '44']
+
 
 print('passed all tests...')

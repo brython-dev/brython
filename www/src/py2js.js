@@ -1888,15 +1888,17 @@ $ClassCtx.prototype.set_name = function(name){
 }
 
 var Comprehension = {
-    generators: function(comp){
+    generators: function(comps){
         // Return a list of comprehensions
         // ast.comprehension(target, iter, ifs, is_async)
         var comprehensions = []
-        for(item of comp){
+        for(var item of comps){
             if(item.type == 'for'){
+                var target = item.tree[0].ast()
+                set_ctx_to_store(target)
                 comprehensions.push(
                     new ast.comprehension(
-                        item.tree[0].ast(),
+                        target,
                         item.tree[1].ast(),
                         [],
                         item.is_async ? 1 : 0

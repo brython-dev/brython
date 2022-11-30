@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-30 08:51:46.103498"
-__BRYTHON__.timestamp=1669794706103
+__BRYTHON__.compiled_date="2022-11-30 14:49:22.868047"
+__BRYTHON__.timestamp=1669816162868
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -1392,11 +1392,13 @@ while(parent_block.C &&
 'def' !=parent_block.C.tree[0].type &&
 'generator' !=parent_block.C.tree[0].type){parent_block=parent_block.parent}
 this.parent.node.parent_block=parent_block}
-var Comprehension={generators:function(comp){
+var Comprehension={generators:function(comps){
 var comprehensions=[]
-for(item of comp){if(item.type=='for'){comprehensions.push(
+for(var item of comps){if(item.type=='for'){var target=item.tree[0].ast()
+set_ctx_to_store(target)
+comprehensions.push(
 new ast.comprehension(
-item.tree[0].ast(),item.tree[1].ast(),[],item.is_async ? 1 :0
+target,item.tree[1].ast(),[],item.is_async ? 1 :0
 )
 )}else{$B.last(comprehensions).ifs.push(item.tree[0].ast())}}
 return comprehensions},make_comp:function(comp,C){if(C.tree[0].type=='yield'){var comp_type=comp.type=='listcomp' ? 'list comprehension' :
