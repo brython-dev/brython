@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-30 15:04:11.097337"
-__BRYTHON__.timestamp=1669817051096
+__BRYTHON__.compiled_date="2022-11-30 15:12:46.733779"
+__BRYTHON__.timestamp=1669817566732
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14742,9 +14742,13 @@ js+=`}catch(err){\n`+
 `$B.set_exc(err)\n`+
 `throw err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
-js+=`\n$B.leave_frame()`
-js+=`\nreturn result_${id}`
-js+=`\n}\n)(${outmost_expr})\n`
+js+='\nif(frame.$f_trace !== _b_.None){\n'+
+'$B.trace_return(_b_.None)\n'+
+'}\n'+
+`$B.leave_frame()\n`+
+`return result_${id}\n`+
+`}\n`+
+`)(${outmost_expr})\n`
 scopes.pop()
 return js}
 var exec_num={value:0}

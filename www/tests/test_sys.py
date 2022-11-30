@@ -142,5 +142,17 @@ traces = []
 f3()
 assert traces == ['call', 'line', 'line', 'line', 'return']
 
+# issue 2113
+t = []
+
+def traceFn(frame, event, arg):
+    t.append(event)
+    return traceFn
+
+sys.settrace(traceFn)
+[x for x in ()]
+
+assert t == ['call', 'line', 'return']
+
 # remove trace for next tests
 sys.settrace(None)

@@ -701,10 +701,13 @@ function make_comp(scopes){
           `throw err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
-
-    js += `\n$B.leave_frame()`
-    js += `\nreturn result_${id}`
-    js += `\n}\n)(${outmost_expr})\n`
+    js += '\nif(frame.$f_trace !== _b_.None){\n' +
+              '$B.trace_return(_b_.None)\n' +
+          '}\n' +
+          `$B.leave_frame()\n` +
+          `return result_${id}\n` +
+          `}\n` +
+          `)(${outmost_expr})\n`
 
     scopes.pop()
     return js
