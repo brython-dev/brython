@@ -505,7 +505,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
 
     /* Record not yet resolved free variables from children (if any) */
     v_free = FREE << SCOPE_OFFSET
-    
+
     for(var name of free){
 
         v = symbols.$string_dict[name]
@@ -851,7 +851,7 @@ function VISIT_QUIT(ST, X){
 }
 
 function VISIT(ST, TYPE, V){
-    var f = eval(`symtable_visit_${TYPE}`)
+    var f = symtable_visitors[TYPE]
     if (!f(ST, V)){
         VISIT_QUIT(ST, 0);
     }
@@ -859,7 +859,7 @@ function VISIT(ST, TYPE, V){
 
 function VISIT_SEQ(ST, TYPE, SEQ) {
     for (var elt of SEQ){
-        if (! eval(`symtable_visit_${TYPE}`)(ST, elt)){
+        if (! symtable_visitors[TYPE](ST, elt)){
             VISIT_QUIT(ST, 0)
         }
     }
@@ -868,7 +868,7 @@ function VISIT_SEQ(ST, TYPE, SEQ) {
 function VISIT_SEQ_TAIL(ST, TYPE, SEQ, START) {
     for (var i = START, len = SEQ.length; i < len; i++) {
         var elt = SEQ[i];
-        if (! eval(`symtable_visit_${TYPE}`)((ST), elt)){
+        if (! symtable_visitors[TYPE](ST, elt)){
             VISIT_QUIT(ST, 0)
         }
     }
@@ -879,7 +879,7 @@ function VISIT_SEQ_WITH_NULL(ST, TYPE, SEQ) {
         if(! elt){
             continue /* can be NULL */
         }
-        if(! eval(`symtable_visit_${TYPE}`)(ST, elt)){
+        if(! symtable_visitors[TYPE](ST, elt)){
             VISIT_QUIT((ST), 0)
         }
     }
@@ -1654,12 +1654,10 @@ function symtable_visit_comprehension(st, lc){
     return 1;
 }
 
-
 function symtable_visit_keyword(st, k){
     VISIT(st, expr, k.value);
     return 1;
 }
-
 
 function symtable_handle_comprehension(st, e,
                               scope_name, generators,
@@ -1797,4 +1795,11 @@ function _Py_SymtableStringObjectFlags(str, filename,
     return st;
 }
 
+var symtable_visitors = {}
+for(var type of ['stmt', 'expr', 'pattern', 'params', 'annotation',
+        'argannotations', 'annotation', 'arguments', 'excepthandler',
+        'withitem', 'match_case', 'alias', 'comprehension', 'keyword',
+        'genexp', 'listcomp', 'setcomp', 'dictcomp']){
+    symtable_visitors[type] = eval('symtable_visit_' + type)
+}
 })(__BRYTHON__)
