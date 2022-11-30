@@ -452,8 +452,8 @@ $B.resolve_local = function(name, position){
             return value
         }
     }
-    var exc = _b_.UnboundLocalError.$factory(`local variable '${name}' ` +
-        'referenced before assignment')
+    var exc = _b_.UnboundLocalError.$factory(`cannot access local variable ` +
+              `'${name}' where it is not associated with a value`)
     if(position){
         $B.set_exception_offsets(exc, position)
     }

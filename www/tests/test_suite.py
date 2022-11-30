@@ -875,7 +875,7 @@ try:
     exec(src)
     raise Exception('should have raises UnboundLocalError')
 except UnboundLocalError as exc:
-    assert str(exc) == "local variable 'n' referenced before assignment"
+    assert str(exc) == "cannot access local variable 'n' where it is not associated with a value"
 
 # symtable syntax errors
 def test_syntax_error(code, message):
