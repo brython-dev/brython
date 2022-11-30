@@ -267,6 +267,9 @@ long_int.__neg__ = function(self){
 long_int.__pos__ = function(self){return self}
 
 long_int.__pow__ = function(self, power, z){
+    if(z !== undefined){
+        return _b_.int.__pow__(self, power, z)
+    }
     if(typeof power == "number"){
         return int_or_long(self.value ** BigInt(power))
     }else if(typeof power == "boolean"){

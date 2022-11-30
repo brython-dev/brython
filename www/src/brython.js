@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-30 08:34:04.566726"
-__BRYTHON__.timestamp=1669793644566
+__BRYTHON__.compiled_date="2022-11-30 08:51:46.103498"
+__BRYTHON__.timestamp=1669794706103
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6852,7 +6852,7 @@ function pow(){var $=$B.args('pow',3,{x:null,y:null,mod:null},['x','y','mod'],ar
 var klass=x.__class__ ||$B.get_class(x)
 if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(x !=_b_.int.$factory(x)||y !=_b_.int.$factory(y)){throw _b_.TypeError.$factory("pow() 3rd argument not allowed "+
 "unless all arguments are integers")}
-return $B.$call($B.$getattr(klass,'__pow__'))(x,y,z)}}
+return _b_.int.__pow__(x,y,z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var ks=$ns['kw'].$string_dict
 var end=(ks['end']===undefined ||ks['end']===None)? '\n' :ks['end'][0],sep=(ks['sep']===undefined ||ks['sep']===None)? ' ' :ks['sep'][0],file=ks['file']===undefined ? $B.stdout :ks['file'][0],args=$ns['args'],writer=$B.$getattr(file,'write')
@@ -11513,7 +11513,8 @@ long_int.__ne__=function(self,other){var res=long_int.__eq__(self,other)
 return res===_b_.NotImplemented ? res :!res}
 long_int.__neg__=function(self){return $B.fast_long_int(-self.value)}
 long_int.__pos__=function(self){return self}
-long_int.__pow__=function(self,power,z){if(typeof power=="number"){return int_or_long(self.value**BigInt(power))}else if(typeof power=="boolean"){return int_or_long(self.value**power ? 1n :0n)}else if(power.__class__===$B.long_int){return int_or_long(self.value**power.value)}else if(_b_.isinstance(power,_b_.int)){
+long_int.__pow__=function(self,power,z){if(z !==undefined){return _b_.int.__pow__(self,power,z)}
+if(typeof power=="number"){return int_or_long(self.value**BigInt(power))}else if(typeof power=="boolean"){return int_or_long(self.value**power ? 1n :0n)}else if(power.__class__===$B.long_int){return int_or_long(self.value**power.value)}else if(_b_.isinstance(power,_b_.int)){
 return long_int.__pow__(self,power.$brython_value)}
 return _b_.NotImplemented}
 long_int.__rshift__=function(self,other){if(typeof other=="number"){return int_or_long(self.value >> BigInt(other))}else if(other.__class__===$B.long_int){return int_or_long(self.value >> other.value)}else if(typeof other=="boolean"){return int_or_long(self.value >>(other ? 1n :0n))}else if(_b_.isinstance(other,_b_.int)){return long_int.__rshift__(self,other.$brython_value)}

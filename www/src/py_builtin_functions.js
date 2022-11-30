@@ -2167,7 +2167,7 @@ function pow() {
             throw _b_.TypeError.$factory("pow() 3rd argument not allowed " +
                 "unless all arguments are integers")
         }
-        return $B.$call($B.$getattr(klass, '__pow__'))(x, y, z)
+        return _b_.int.__pow__(x, y, z)
     }
 }
 
