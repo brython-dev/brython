@@ -7,8 +7,8 @@ $B.del_exc = function(){
     delete frame[1].$current_exception
 }
 
-$B.set_exc = function(exc){
-    var frame = $B.last($B.frames_stack)
+$B.set_exc = function(exc, frame){
+    // var frame = $B.last($B.frames_stack)
     if(frame === undefined){
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
         console.error(['Traceback (most recent call last):',

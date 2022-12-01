@@ -697,7 +697,7 @@ function make_comp(scopes){
     js += `}catch(err){\n` +
           (has_await ? '$B.restore_stack(save_stack, locals)\n' : '') +
           `$B.leave_frame()\n` +
-          `$B.set_exc(err)\n` +
+          `$B.set_exc(err, frame)\n` +
           `throw err\n}\n` +
           (has_await ? '\n$B.restore_stack(save_stack, locals);' : '')
 
@@ -1312,7 +1312,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     js += ')\n'
 
     js += `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
-              `"${this.name}", "${glob}" ,"${qualname}", resolved_bases, bases),\n`
+              `"${this.name}", "${glob}" ,"${qualname}", resolved_bases),\n`
 
     js += `locals = ${locals_name}\n` +
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
@@ -1790,7 +1790,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     js += `}catch(err){
-    $B.set_exc(err)
+    $B.set_exc(err, frame)
     if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
     frame.$f_trace = $B.trace_exception()
     }
@@ -2457,7 +2457,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
               add_body(this.body, scopes) + '\n' +
               (namespaces ? '' : `$B.leave_frame({locals, value: _b_.None})\n`) +
           `}catch(err){\n` +
-              `$B.set_exc(err)\n` +
+              `$B.set_exc(err, frame)\n` +
               `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n` +
                   `frame.$f_trace = $B.trace_exception()\n` +
               `}\n` +
@@ -2623,7 +2623,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         var err = 'err' + id
         js += '}\n' // close try
         js += `catch(${err}){\n` +
-              `$B.set_exc(${err})\n` +
+              `$B.set_exc(${err}, frame)\n` +
               `if(frame.$f_trace !== _b_.None){\n` +
               `frame.$f_trace = $B.trace_exception()}\n`
         if(has_else){
@@ -2739,7 +2739,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
         var err = 'err' + id
         js += '}\n' // close try
         js += `catch(${err}){\n` +
-              `$B.set_exc(${err})\n` +
+              `$B.set_exc(${err}, frame)\n` +
               `if(frame.$f_trace !== _b_.None){\n` +
                   `frame.$f_trace = $B.trace_exception()\n`+
               `}\n` +
@@ -3057,7 +3057,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
             try{
                 var _y${n} = _b_.next(_i${n})
             }catch(_e){
-                $B.set_exc(_e)
+                $B.set_exc(_e, frame)
                 failed${n} = true
                 $B.pmframe = $B.last($B.frames_stack)
                 _e = $B.exception(_e)

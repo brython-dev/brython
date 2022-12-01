@@ -1186,7 +1186,7 @@ $B.enter_frame = function(frame){
     // Enter execution frame : save on top of frames stack
     if($B.frames_stack.length > 1000){
         var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
-        $B.set_exc(exc)
+        $B.set_exc(exc, frame)
         throw exc
     }
     frame.__class__ = $B.frame
@@ -1210,7 +1210,7 @@ $B.enter_frame = function(frame){
             try{
                 return $B.tracefunc($B.last($B.frames_stack), 'call', _b_.None)
             }catch(err){
-                $B.set_exc(err)
+                $B.set_exc(err, frame)
                 $B.frames_stack.pop()
                 err.$in_trace_func = true
                 throw err

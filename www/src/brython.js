@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-11-30 15:12:46.733779"
-__BRYTHON__.timestamp=1669817566732
+__BRYTHON__.compiled_date="2022-12-01 09:36:24.925565"
+__BRYTHON__.timestamp=1669883784925
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5207,7 +5207,7 @@ throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
 $B.enter_frame=function(frame){
 if($B.frames_stack.length > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
-$B.set_exc(exc)
+$B.set_exc(exc,frame)
 throw exc}
 frame.__class__=$B.frame
 $B.frames_stack.push(frame)
@@ -5217,7 +5217,7 @@ frame[4]===$B.tracefunc.$infos.__func__)){
 $B.tracefunc.$frame_id=frame[0]
 return _b_.None}else{
 for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.tracefunc.$frame_id){return _b_.None}}
-try{return $B.tracefunc($B.last($B.frames_stack),'call',_b_.None)}catch(err){$B.set_exc(err)
+try{return $B.tracefunc($B.last($B.frames_stack),'call',_b_.None)}catch(err){$B.set_exc(err,frame)
 $B.frames_stack.pop()
 err.$in_trace_func=true
 throw err}}}else{$B.tracefunc=_b_.None}
@@ -5651,14 +5651,13 @@ metaclass.__bases__.indexOf(mc)==-1){throw _b_.TypeError.$factory("metaclass con
 "strict) subclass of the metaclasses of all its bases")}}}else{metaclass=metaclass ||_b_.type}
 return metaclass}
 function set_attr_if_absent(dict,attr,value){try{$B.$getitem(dict,attr)}catch(err){$B.$setitem(dict,attr,value)}}
-$B.make_class_namespace=function(metaclass,class_name,module,qualname,bases,orig_bases){
+$B.make_class_namespace=function(metaclass,class_name,module,qualname,bases){
 var class_dict=_b_.dict.$factory([['__module__',module],['__qualname__',qualname]
 ])
 if(metaclass !==_b_.type){var prepare=$B.$getattr(metaclass,"__prepare__",_b_.None)
 if(prepare !==_b_.None){class_dict=$B.$call(prepare)(class_name,bases)
 set_attr_if_absent(class_dict,'__module__',module)
-set_attr_if_absent(class_dict,'__qualname__',qualname)
-if(orig_bases !==bases){set_attr_if_absent(class_dict,'__orig_bases__',orig_bases)}}}
+set_attr_if_absent(class_dict,'__qualname__',qualname)}}
 if(class_dict.__class__===_b_.dict){return new Proxy(class_dict,{get:function(target,prop){if(prop=='__class__'){return _b_.dict}else if(prop=='$target'){return target}
 if(target.$string_dict.hasOwnProperty(prop)){return target.$string_dict[prop][0]}
 return undefined},set:function(target,prop,value){if(target.$string_dict.hasOwnProperty(prop)){target.$string_dict[prop][0]=value}
@@ -7611,7 +7610,7 @@ $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 $B.del_exc=function(){var frame=$B.last($B.frames_stack)
 delete frame[1].$current_exception}
-$B.set_exc=function(exc){var frame=$B.last($B.frames_stack)
+$B.set_exc=function(exc,frame){
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$stack),msg].join('\n'))
 if($B.debug > 1){console.log(exc.args)
@@ -14739,7 +14738,7 @@ for(var i=0;i < nb_paren;i++){js+='}\n'}
 js+=`}catch(err){\n`+
 (has_await ? '$B.restore_stack(save_stack, locals)\n' :'')+
 `$B.leave_frame()\n`+
-`$B.set_exc(err)\n`+
+`$B.set_exc(err, frame)\n`+
 `throw err\n}\n`+
 (has_await ? '\n$B.restore_stack(save_stack, locals);' :'')
 js+='\nif(frame.$f_trace !== _b_.None){\n'+
@@ -14984,7 +14983,7 @@ js+=`var ${ref} = (function(){\n`+
 if(metaclass){js+=`, ${metaclass.to_js(scopes)}`}
 js+=')\n'
 js+=`var ${locals_name} = $B.make_class_namespace(metaclass, `+
-`"${this.name}", "${glob}" ,"${qualname}", resolved_bases, bases),\n`
+`"${this.name}", "${glob}" ,"${qualname}", resolved_bases),\n`
 js+=`locals = ${locals_name}\n`+
 `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n`+
 `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n`+
@@ -15187,7 +15186,7 @@ js+='var result = _b_.None\n'+
 '$B.trace_return(_b_.None)\n}\n'+
 '$B.leave_frame();return result\n'}
 js+=`}catch(err){
-    $B.set_exc(err)
+    $B.set_exc(err, frame)
     if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
     frame.$f_trace = $B.trace_exception()
     }
@@ -15479,7 +15478,7 @@ js+=`$B.set_lineno(frame, 1)\n`+
 add_body(this.body,scopes)+'\n'+
 (namespaces ? '' :`$B.leave_frame({locals, value: _b_.None})\n`)+
 `}catch(err){\n`+
-`$B.set_exc(err)\n`+
+`$B.set_exc(err, frame)\n`+
 `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()\n`+
 `}\n`+
@@ -15550,7 +15549,7 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc(${err})\n`+
+`$B.set_exc(${err}, frame)\n`+
 `if(frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()}\n`
 if(has_else){js+=`failed${id} = true\n`}
@@ -15606,7 +15605,7 @@ js+=add_body(this.body,scopes)+'\n'
 if(has_except_handlers){var err='err'+id
 js+='}\n' 
 js+=`catch(${err}){\n`+
-`$B.set_exc(${err})\n`+
+`$B.set_exc(${err}, frame)\n`+
 `if(frame.$f_trace !== _b_.None){\n`+
 `frame.$f_trace = $B.trace_exception()\n`+
 `}\n`+
@@ -15760,7 +15759,7 @@ return `yield* (function* f(){
             try{
                 var _y${n} = _b_.next(_i${n})
             }catch(_e){
-                $B.set_exc(_e)
+                $B.set_exc(_e, frame)
                 failed${n} = true
                 $B.pmframe = $B.last($B.frames_stack)
                 _e = $B.exception(_e)

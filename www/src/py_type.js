@@ -246,7 +246,7 @@ function set_attr_if_absent(dict, attr, value){
 }
 
 $B.make_class_namespace = function(metaclass, class_name, module, qualname,
-                                   bases, orig_bases){
+                                   bases){
     // Use __prepare__ (PEP 3115)
     var class_dict = _b_.dict.$factory([
                          ['__module__', module],
@@ -259,9 +259,6 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
 
             set_attr_if_absent(class_dict, '__module__', module)
             set_attr_if_absent(class_dict, '__qualname__', qualname)
-            if(orig_bases !== bases){
-                set_attr_if_absent(class_dict, '__orig_bases__', orig_bases)
-            }
         }
     }
 
