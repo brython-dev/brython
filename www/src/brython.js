@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-01 09:36:24.925565"
-__BRYTHON__.timestamp=1669883784925
+__BRYTHON__.compiled_date="2022-12-01 09:44:32.858560"
+__BRYTHON__.timestamp=1669884272857
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14986,6 +14986,7 @@ js+=`var ${locals_name} = $B.make_class_namespace(metaclass, `+
 `"${this.name}", "${glob}" ,"${qualname}", resolved_bases),\n`
 js+=`locals = ${locals_name}\n`+
 `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n`+
+`locals.__doc__ = ${docstring}\n`+
 `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n`+
 `frame.__file__ = '${scopes.filename}'\n`+
 `frame.$lineno = ${this.lineno}\n`+
@@ -15008,8 +15009,7 @@ var keywords=[]
 for(var keyword of this.keywords){keywords.push(`["${keyword.arg}", `+
 $B.js_from_ast(keyword.value,scopes)+']')}
 js+=`${class_ref} = $B.$class_constructor("${this.name}", ${ref}, `+
-`$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n`+
-`${class_ref}.__doc__ = ${docstring}\n`
+`$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n`
 if(decorated){js+=reference(scopes,enclosing_scope,this.name)+' = '
 var decorate=class_ref
 for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}

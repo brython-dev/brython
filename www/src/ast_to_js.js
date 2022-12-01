@@ -1316,6 +1316,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     js += `locals = ${locals_name}\n` +
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
+          `locals.__doc__ = ${docstring}\n` +
           `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n` +
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
@@ -1350,8 +1351,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
 
     js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
-          `$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n` +
-          `${class_ref}.__doc__ = ${docstring}\n`
+          `$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n`
 
     if(decorated){
         js += reference(scopes, enclosing_scope, this.name) + ' = '
