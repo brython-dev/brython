@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-02 18:27:40.642091"
-__BRYTHON__.timestamp=1670002060642
+__BRYTHON__.compiled_date="2022-12-02 18:42:51.376384"
+__BRYTHON__.timestamp=1670002971376
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5587,7 +5587,7 @@ if(key !="metaclass"){
 extra_kwargs[key]=val}
 prepare_kwargs[key]=val}}
 var mro0=class_obj
-if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){class_obj.__hash__=_b_.None}
+if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){$B.$setitem(dict,'__hash__',_b_.None)}
 var slots=class_obj.__slots__
 if(slots !==undefined){if(typeof slots=="string"){slots=[slots]}else{for(var item of $B.next_of1(slots)){if(typeof item !='string'){throw _b_.TypeError.$factory('__slots__ items must be '+
 `strings, not '${$B.class_name(item)}'`)}}}

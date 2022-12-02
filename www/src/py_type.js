@@ -54,7 +54,7 @@ $B.$class_constructor = function(class_name, class_ns, bases,
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
     if(class_obj.__eq__ !== undefined && class_obj.__hash__ === undefined){
-        class_obj.__hash__ = _b_.None
+        $B.$setitem(dict, '__hash__', _b_.None)
     }
 
     // Check if class has __slots__

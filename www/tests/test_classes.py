@@ -989,4 +989,15 @@ class ConcreteClass(AbstractClass):
 
 assert_raises(TypeError, ConcreteClass)
 
+# instances of a class that defines __eq__ and not __hash__
+# are not hashable
+class A:
+
+  def __eq__(self, other):
+    return True
+
+hash(A)
+assert_raises(TypeError, hash, A())
+
+
 print('passed all tests..')
