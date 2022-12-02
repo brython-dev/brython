@@ -485,6 +485,7 @@
                         alias.pop() // remove extension
                     }
                     alias = alias.join('.')
+                    result.__name__ = alias
                 }
                 $B.imported[alias] = result
                 var frame = $B.last($B.frames_stack)
