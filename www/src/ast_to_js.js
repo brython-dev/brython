@@ -1877,14 +1877,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_varnames: $B.fast_tuple([${varnames}])\n` +
         `}\n}\n`
 
-    if(is_async){
-        if(is_generator){
-            js += `${name2}\n`
-        }else{
-            js += `${name2} = $B.make_async(${name2})\n`
-        }
-    }else{
-        js += `${name2}\n`
+    if(is_async && ! is_generator){
+        js += `${name2} = $B.make_async(${name2})\n`
     }
 
     js += `$B.make_function_defaults(${name2}) // makes ${name2}.$defaults\n`
