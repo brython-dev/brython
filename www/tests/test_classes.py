@@ -999,5 +999,18 @@ class A:
 hash(A)
 assert_raises(TypeError, hash, A())
 
+# metaclass __new__ and __init__ receive extra keyword arguments
+class Meta(type):
+
+  def __new__(meta, name, bases, ns, **kw):
+      assert kw == {'x': 9}
+      return type.__new__(meta, name, bases, ns)
+
+  def __init__(cls, name, bases, ns, **kw):
+      assert kw == {'x': 9}
+
+class A(x=9, metaclass=Meta):
+    pass
+    
 
 print('passed all tests..')

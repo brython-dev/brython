@@ -35,8 +35,7 @@ $B.$class_constructor = function(class_name, class_ns, bases,
     }
 
     // Keyword arguments passed to the class
-    var extra_kwargs = {},
-        prepare_kwargs = {} // used by __prepare__, includes the metaclass
+    var extra_kwargs = {}
     if(kwargs){
         for(var  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],
@@ -45,11 +44,8 @@ $B.$class_constructor = function(class_name, class_ns, bases,
                 // other keyword arguments will be passed to __init_subclass__
                 extra_kwargs[key] = val
             }
-            prepare_kwargs[key] = val
         }
     }
-
-    var mro0 = class_obj
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
@@ -91,10 +87,12 @@ $B.$class_constructor = function(class_name, class_ns, bases,
             }
         }
     }
+
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
-        meta_init(kls, class_name, bases, dict)
+        meta_init(kls, class_name, resolved_bases, dict,
+                  {$nat: 'kw', kw: extra_kwargs})
     }
 
     // Set new class as subclass of its parents
