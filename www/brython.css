@@ -172,7 +172,7 @@ h1.brython{
   font-size: 3em;
   color:var(--dark-2);
   background-color:var(--clear-2);
-  padding: 1em 1em 0.5em 1em;
+  padding: 0em 1em 0em 1em;
   width:15%;
   cursor: pointer;
 }
