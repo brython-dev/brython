@@ -971,6 +971,22 @@ assert not issubclass(t, type)
 class B(list[int]):
   pass
 
+# class with abstract method cannot be instanciated
+import abc
 
+class AbstractClass(metaclass=abc.ABCMeta):
+
+    @abc.abstractmethod
+    def abstractMethod1(self):
+        pass
+
+
+class ConcreteClass(AbstractClass):
+
+    def __init__(self):
+        self.me = "me"
+
+
+assert_raises(TypeError, ConcreteClass)
 
 print('passed all tests..')
