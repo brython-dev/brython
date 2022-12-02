@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-01 09:44:32.858560"
-__BRYTHON__.timestamp=1669884272857
+__BRYTHON__.compiled_date="2022-12-02 12:21:15.143947"
+__BRYTHON__.timestamp=1669980075143
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5674,7 +5674,7 @@ new_bases=new_bases.concat(entries)}else{new_bases.push(base)}}else{new_bases.pu
 return has_mro_entries ? new_bases :bases}
 var type_getsets={__name__:"getset",__qualname__:"getset",__bases__:"getset",__module__:"getset",__abstractmethods__:"getset",__dict__:"get",__doc__:"getset",__text_signature__:"get",__annotations__:"getset"}
 $B.make_class=function(qualname,factory){
-var A={__class__:_b_.type,__bases__:[_b_.object],__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
+var A={__class__:type,__bases__:[_b_.object],__mro__:[_b_.object],__name__:qualname,__qualname__:qualname,$is_class:true}
 A.$factory=factory
 return A}
 var type=$B.make_class("type",function(kls,bases,cl_dict){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
@@ -5684,6 +5684,19 @@ if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() 
 return kls.__class__ ||$B.get_class(kls)}else{var module=$B.last($B.frames_stack)[2],meta=meta_from_bases(kls,module,bases),meta_new=$B.$call($B.$getattr(meta,'__new__'))
 return meta_new(meta,kls,bases,cl_dict,kwargs)}}
 )
+type.__class__=type
+$B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr,getter,setter){var res={__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr,getter,setter}
+return res}
+)
+$B.getset_descriptor.__get__=function(self,obj,klass){console.log('__get__',self,obj,klass)
+if(obj===_b_.None){return self}
+return self.getter(self,obj,klass)}
+$B.getset_descriptor.__set__=function(self,klass,value){return self.setter(self,klass,value)}
+$B.getset_descriptor.__repr__=function(self){return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`}
+$B.set_func_names($B.getset_descriptor,"builtins")
+var data_descriptors=['__abstractmethods__','__annotations__','__base__','__bases__','__basicsize__',
+'__dictoffset__','__doc__','__flags__','__itemsize__','__module__','__mro__','__name__','__qualname__','__text_signature__','__weakrefoffset__'
+]
 type.__call__=function(){var extra_args=[],klass=arguments[0]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
 var new_func=_b_.type.__getattribute__(klass,"__new__")
@@ -6445,6 +6458,19 @@ if(klass.hasOwnProperty(attr)){return klass[attr]}
 var mro=klass.__mro__
 for(var i=0,len=mro.length;i < len;i++){if(mro[i].hasOwnProperty(attr)){return mro[i][attr]}}
 return false}
+function find_name_in_mro(cls,name,_default){
+for(var base of[cls].concat(cls.__mro__)){if(base.__dict__===undefined){console.log('base',base,'has not dict')}
+var res=base.__dict__[name]
+if(res !==undefined){return res}}
+return _default}
+$B.$getattr1=function(obj,name,_default){
+var objtype=$B.get_class(obj),cls_var=find_name_in_mro(objtype,name,null),cls_var_type=$B.get_class(cls_var),descr_get=_b_.type.__getattribute__(cls_var_type,'__get__')
+if(descr_get !==undefined){if(_b_.type.__getattribute__(cls_var_type,'__set__')
+||_b_.type.__getattribute__(cls_var_type,'__delete__')){return $B.$call(descr_get)(cls_var,obj,objtype)}}
+if(obj.__dict__ !==undefined && obj.__dict__[name]!==undefined){return obj.__dict__[name]}
+if(descr_get !==undefined){return $B.$call(descr_get)(cls_var,obj,objtype)}
+if(cls_var !==null){return cls_var }
+throw $B.attr_error(name,obj)}
 $B.$getattr=function(obj,attr,_default){
 var res
 if(obj===undefined){console.log('attr',attr,'of obj undef')}
@@ -6528,7 +6554,8 @@ return method}else if(klass[attr].__class__===_b_.classmethod){return _b_.classm
 attr_error(rawname,klass)}
 var mro,attr_func
 if(is_class){if($test){console.log('obj is class',obj)
-console.log('is type ?',_b_.isinstance(klass,_b_.type))}
+console.log('is a type ?',_b_.isinstance(klass,_b_.type))
+console.log('is type',klass===_b_.type)}
 if(klass===_b_.type){attr_func=_b_.type.__getattribute__}else{attr_func=$B.$call($B.$getattr(klass,'__getattribute__'))}
 if($test){console.log('attr func',attr_func)}}else{attr_func=klass.__getattribute__
 if(attr_func===undefined){var mro=klass.__mro__
@@ -7045,8 +7072,7 @@ if(self.__self_class__ !==undefined){res+=', <'+self.__self_class__.__class__.__
 return res+'>'}
 $B.set_func_names($$super,"builtins")
 function vars(){var def={},$=$B.args('vars',1,{obj:null},['obj'],arguments,{obj:def},null,null)
-if($.obj===def){return _b_.locals()}else{try{return $B.$getattr($.obj,'__dict__')}
-catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
+if($.obj===def){return _b_.locals()}else{try{return $B.$getattr($.obj,'__dict__')}catch(err){if(err.__class__===_b_.AttributeError){throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")}
 throw err}}}
 var $Reader=$B.make_class("Reader")
 $Reader.__enter__=function(self){return self}
@@ -10862,9 +10888,7 @@ if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
 if(typeof arg=="string" ||arg instanceof String ||
 typeof arg=="number"){if(isFinite(arg)){return arg.toString()}}
-try{if(arg.$is_class ||arg.$factory){
-var func=$B.$getattr(arg.__class__,"__str__")
-return func(arg)}
+try{
 if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
@@ -12799,11 +12823,6 @@ dict.__class_getitem__=_b_.classmethod.$factory(dict.__class_getitem__)
 $B.empty_dict=function(){return{
 __class__:dict,$numeric_dict :{},$object_dict :{},$string_dict :{},$str_hash:Object.create(null),$version:0,$order:0}}
 dict.fromkeys=_b_.classmethod.$factory(dict.fromkeys)
-$B.getset_descriptor=$B.make_class("getset_descriptor",function(klass,attr){return{
-__class__:$B.getset_descriptor,__doc__:_b_.None,cls:klass,attr:attr}}
-)
-$B.getset_descriptor.__repr__=$B.getset_descriptor.__str__=function(self){return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`}
-$B.set_func_names($B.getset_descriptor,"builtins")
 var mappingproxy=$B.mappingproxy=$B.make_class("mappingproxy",function(obj){if(_b_.isinstance(obj,dict)){
 var res=$B.obj_dict(dict.$to_obj(obj))}else{var res=$B.obj_dict(obj)}
 res.__class__=mappingproxy
@@ -14305,7 +14324,8 @@ xhr.send()
 if(_b_.isinstance(result,_b_.BaseException)){$B.handle_error(result)}else{if(alias===_b_.None){
 alias=url.split('.')
 if(alias.length > 1){alias.pop()}
-alias=alias.join('.')}
+alias=alias.join('.')
+result.__name__=alias}
 $B.imported[alias]=result
 var frame=$B.last($B.frames_stack)
 frame[1][alias]=result}},JSObject:$B.JSObj,JSON:{__class__:$B.make_class("JSON"),parse:function(){return $B.structuredclone2pyobj(
@@ -14492,7 +14512,9 @@ exc.end_offset=end.end_col_offset
 exc.args[1]=[exc.filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset]
 exc.$stack=$B.frames_stack.slice()
 throw exc}
-$B.set_func_infos=function(func,name,qualname,docstring){func.$is_func=true}
+function fast_id(obj){
+if(obj.$id !==undefined){return obj.$id}
+return obj.$id=$B.UUID()}
 function copy_position(target,origin){target.lineno=origin.lineno
 target.col_offset=origin.col_offset
 target.end_lineno=origin.end_lineno
@@ -14579,8 +14601,8 @@ if(scopes.length==0){
 return{found:false,resolve:'all'}}
 var scope=$B.last(scopes),up_scope=last_scope(scopes),name=mangle(scopes,scope,name)
 if(up_scope.ast===undefined){console.log('no ast',scope)}
-block=scopes.symtable.table.blocks.get(_b_.id(up_scope.ast))
-if(block===undefined){console.log('no block',scope,scope.ast,'id',_b_.id(up_scope.ast))
+block=scopes.symtable.table.blocks.get(fast_id(up_scope.ast))
+if(block===undefined){console.log('no block',scope,scope.ast,'id',fast_id(up_scope.ast))
 console.log('scopes',scopes.slice())
 console.log('symtable',scopes.symtable)}
 try{flags=block.symbols.$string_dict[name][0]}catch(err){console.log('name',name,'not in symbols of block',block)
@@ -14596,14 +14618,14 @@ return{found:false,resolve:'global'}}else if(block.type==TYPE_MODULE){return{fou
 return{found:false,resolve:'local'}}else{return{found:l_scope.scope}}}else if(scope.globals.has(name)){var global_scope=scopes[0]
 if(global_scope.locals.has(name)){return{found:global_scope}}
 return{found:false,resolve:'global'}}else if(scope.nonlocals.has(name)){
-for(var i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+for(var i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
 if(block && block.symbols.$string_dict[name]){var fl=block.symbols.$string_dict[name],local_to_block=
 [LOCAL,CELL].indexOf((fl >> SCOPE_OFF)& SCOPE_MASK)>-1
 if(! local_to_block){continue}
 return{found:scopes[i]}}}}
 if(scope.has_import_star){return{found:false,resolve:is_local ? 'all' :'global'}}
 for(var i=scopes.length-2;i >=0;i--){block=undefined
-if(scopes[i].ast){block=scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))}
+if(scopes[i].ast){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))}
 if(scopes[i].globals.has(name)){return{found:false,resolve:'global'}}
 if(scopes[i].locals.has(name)&& scopes[i].type !='class'){return{found:scopes[i]}}else if(block && block.symbols.$string_dict[name]){flags=block.symbols.$string_dict[name][0]
 var __scope=(flags >> SCOPE_OFF)& SCOPE_MASK
@@ -14707,7 +14729,7 @@ return `var ${comp.locals_name} = {},\n`+
 `frame.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`}
 function make_comp(scopes){
-var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
+var id=$B.UUID(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`${type}_${id}`,'comprehension',this)
@@ -14754,7 +14776,7 @@ var exec_num={value:0}
 function init_scopes(type,scopes){
 var filename=scopes.symtable.table.filename,name=$B.url2name[filename]
 if(name){name=name.replace(/-/g,'_')}else if(filename.startsWith('<')&& filename.endsWith('>')){name='exec'}else{name=filename.replace(/\./g,'_')}
-var top_scope=new Scope(name,`${type}`,this),block=scopes.symtable.table.blocks.get(_b_.id(this))
+var top_scope=new Scope(name,`${type}`,this),block=scopes.symtable.table.blocks.get(fast_id(this))
 if(block && block.$has_import_star){top_scope.has_import_star=true}
 scopes.push(top_scope)
 var namespaces=scopes.namespaces
@@ -14869,6 +14891,7 @@ var has_generator=scope.is_generator
 for(var item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_scope(scopes),this.attr)
+if(this.value instanceof $B.ast.Name && this.value.id=='axw'){return `${$B.js_from_ast(this.value, scopes)}.${attr}`}
 if($B.pep657){return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', `+
 `[${this.value.col_offset}, ${this.value.col_offset}, `+
@@ -15121,7 +15144,7 @@ var kw_default_names=[]
 for(var kw of this.args.kwonlyargs){kw_default_names.push(`defaults.${kw.arg}`)}
 var default_str=`{${_defaults.join(', ')}}`
 return{default_names,_defaults,positional,has_posonlyargs,kw_default_names,default_str,annotations}}
-$B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(_b_.id(this))
+$B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
 if(in_class){var class_scope=last_scope(scopes)}
 var decorators=[],decorated=false,decs=''
@@ -15253,7 +15276,7 @@ var decorate=func_ref
 for(var dec of decorators.reverse()){decorate=`$B.$call(${dec})(${decorate})`}
 js+=decorate}
 return js}
-$B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(_b_.id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
+$B.ast.GeneratorExp.prototype.to_js=function(scopes){var id=$B.UUID(),symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=symtable_block.varnames.map(x=> `"${x}"`)
 var expr=this.elt,first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
@@ -15331,7 +15354,7 @@ $B.ast.Lambda.prototype.to_js=function(scopes){
 var id=$B.UUID(),name='lambda_'+$B.lambda_magic+'_'+id
 var f=new $B.ast.FunctionDef(name,this.args,this.body,[])
 f.lineno=this.lineno
-f.$id=_b_.id(this)
+f.$id=fast_id(this)
 f.$is_lambda=true
 var js=f.to_js(scopes),lambda_ref=reference(scopes,last_scope(scopes),name)
 return `(function(){ ${js}\n`+
@@ -15737,7 +15760,7 @@ s+=`}\nfinally{\n`+
 return s}
 var _with=this,scope=last_scope(scopes),lineno=this.lineno
 js=add_body(this.body,scopes)+'\n'
-var in_generator=scopes.symtable.table.blocks.get(_b_.id(scope.ast)).generator
+var in_generator=scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator
 for(var item of this.items.slice().reverse()){js=add_item(item,js)}
 return `$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.Yield.prototype.to_js=function(scopes){
