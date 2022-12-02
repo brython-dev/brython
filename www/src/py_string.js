@@ -2688,17 +2688,6 @@ str.$factory = function(arg, encoding, errors){
     }
 
     try{
-        if(arg.$is_class || arg.$factory){
-            // arg is a class
-            // In this case, str() doesn't use the attribute __str__ of the
-            // class or its subclasses, but the attribute __str__ of the
-            // class metaclass (usually "type") or its subclasses (usually
-            // "object")
-            // The metaclass is the attribute __class__ of the class dictionary
-            var func = $B.$getattr(arg.__class__, "__str__")
-            return func(arg)
-        }
-
         if(arg.__class__ && arg.__class__ === _b_.bytes &&
                 encoding !== undefined){
             // str(bytes, encoding, errors) is equal to
