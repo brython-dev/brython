@@ -344,7 +344,7 @@ $B.make_class = function(qualname, factory){
     // Builds a basic class object
 
     var A = {
-        __class__: _b_.type,
+        __class__: type,
         __bases__: [_b_.object],
         __mro__: [_b_.object],
         __name__: qualname,
@@ -356,6 +356,9 @@ $B.make_class = function(qualname, factory){
 
     return A
 }
+
+
+
 
 var type = $B.make_class("type",
     function(kls, bases, cl_dict){
@@ -385,6 +388,84 @@ var type = $B.make_class("type",
         }
     }
 )
+
+type.__class__ = type
+
+$B.getset_descriptor = $B.make_class("getset_descriptor",
+    function(klass, attr, getter, setter){
+        var res = {
+            __class__: $B.getset_descriptor,
+            __doc__: _b_.None,
+            cls: klass,
+            attr,
+            getter,
+            setter
+        }
+        return res
+    }
+)
+
+$B.getset_descriptor.__get__ = function(self, obj, klass){
+    console.log('__get__', self, obj, klass)
+    if(obj === _b_.None){
+        return self
+    }
+    return self.getter(self, obj, klass)
+}
+
+$B.getset_descriptor.__set__ = function(self, klass, value){
+    return self.setter(self, klass, value)
+}
+
+$B.getset_descriptor.__repr__ = function(self){
+    return `<attribute '${self.attr}' of '${self.cls.__name__}' objects>`
+}
+
+$B.set_func_names($B.getset_descriptor, "builtins")
+
+/*
+type.__annotations__ = $B.getset_descriptor.$factory(type, '__annotations__',
+    function(self, klass){
+        return klass[self.attr]
+    },
+    function(self, klass, value){
+        klass[self.attr] = value
+        return _b_.None
+    }
+)
+*/
+
+var data_descriptors = ['__abstractmethods__',
+                        '__annotations__',
+                        '__base__',
+                        '__bases__',
+                        '__basicsize__',
+                        // '__dict__',
+                        '__dictoffset__',
+                        '__doc__',
+                        '__flags__',
+                        '__itemsize__',
+                        '__module__',
+                        '__mro__',
+                        '__name__',
+                        '__qualname__',
+                        '__text_signature__',
+                        '__weakrefoffset__'
+                        ]
+/*
+for(var attr of data_descriptors){
+    type[attr] = $B.getset_descriptor.$factory(type, attr,
+        function(self, klass){
+            console.log('get', attr)
+            return klass[self.attr]
+        },
+        function(self, klass, value){
+            klass[self.attr] = value
+            return _b_.None
+        }
+    )
+}
+*/
 
 type.__call__ = function(){
     var extra_args = [],
@@ -795,6 +876,22 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     var sup = _b_.super.$factory(class_dict, class_dict)
     var init_subclass = _b_.super.__getattribute__(sup, "__init_subclass__")
     init_subclass(extra_kwargs)
+    /*
+    return new Proxy(class_dict, {
+        get: function(target, attr){
+            console.log('get attr', attr, 'of class', name)
+            try{
+                return $B.$getattr(target, attr)
+            }catch(err){
+                return undefined
+            }
+        },
+        set: function(target, attr, value){
+            console.log('set attr', attr, 'of class', name, 'to', value)
+            return $B.$setattr(target, attr, value)
+        }
+    })
+    */
     return class_dict
 }
 
@@ -1027,6 +1124,9 @@ property.__set__ = function(self, kls, value){
 }
 
 $B.set_func_names(property, "builtins")
+
+
+
 
 var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
