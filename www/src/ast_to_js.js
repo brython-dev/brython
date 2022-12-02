@@ -24,8 +24,12 @@ function compiler_error(ast_obj, message, end){
     throw exc
 }
 
-$B.set_func_infos = function(func, name, qualname, docstring){
-    func.$is_func = true
+function fast_id(obj){
+    // faster than calling _b_.id
+    if(obj.$id !== undefined){
+        return obj.$id
+    }
+    return obj.$id = $B.UUID()
 }
 
 function copy_position(target, origin){
@@ -257,9 +261,9 @@ function name_scope(name, scopes){
     if(up_scope.ast === undefined){
         console.log('no ast', scope)
     }
-    block = scopes.symtable.table.blocks.get(_b_.id(up_scope.ast))
+    block = scopes.symtable.table.blocks.get(fast_id(up_scope.ast))
     if(block === undefined){
-        console.log('no block', scope, scope.ast, 'id', _b_.id(up_scope.ast))
+        console.log('no block', scope, scope.ast, 'id', fast_id(up_scope.ast))
         console.log('scopes', scopes.slice())
         console.log('symtable', scopes.symtable)
     }
@@ -310,7 +314,7 @@ function name_scope(name, scopes){
     }else if(scope.nonlocals.has(name)){
         // Search name in the surrounding scopes, using symtable
         for(var i = scopes.length - 2; i >= 0; i--){
-            block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+            block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
             if(block && block.symbols.$string_dict[name]){
                 var fl = block.symbols.$string_dict[name],
                     local_to_block =
@@ -329,7 +333,7 @@ function name_scope(name, scopes){
     for(var i = scopes.length - 2; i >= 0; i--){
         block = undefined
         if(scopes[i].ast){
-            block = scopes.symtable.table.blocks.get(_b_.id(scopes[i].ast))
+            block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
         }
         if(scopes[i].globals.has(name)){
             return {found: false, resolve: 'global'}
@@ -617,7 +621,7 @@ function make_comp(scopes){
     // Code common to list / set / dict comprehensions
     var id = $B.UUID(),
         type = this.constructor.$name,
-        symtable_block = scopes.symtable.table.blocks.get(_b_.id(this)),
+        symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
     var first_for = this.generators[0],
@@ -731,7 +735,7 @@ function init_scopes(type, scopes){
     }
 
     var top_scope = new Scope(name, `${type}`, this),
-        block = scopes.symtable.table.blocks.get(_b_.id(this))
+        block = scopes.symtable.table.blocks.get(fast_id(this))
     if(block && block.$has_import_star){
         top_scope.has_import_star = true
     }
@@ -1023,6 +1027,9 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes){
 
 $B.ast.Attribute.prototype.to_js = function(scopes){
     var attr = mangle(scopes, last_scope(scopes), this.attr)
+    if(this.value instanceof $B.ast.Name && this.value.id == 'axw'){
+        return `${$B.js_from_ast(this.value, scopes)}.${attr}`
+    }
     if($B.pep657){
         return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, ` +
                `'${attr}', ` +
@@ -1647,7 +1654,7 @@ function transform_args(scopes){
 }
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
-    var symtable_block = scopes.symtable.table.blocks.get(_b_.id(this))
+    var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
         is_async = this instanceof $B.ast.AsyncFunctionDef
     if(in_class){
@@ -1923,7 +1930,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
 $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     var id = $B.UUID(),
-        symtable_block = scopes.symtable.table.blocks.get(_b_.id(this)),
+        symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
         varnames = symtable_block.varnames.map(x => `"${x}"`)
 
     var expr = this.elt,
@@ -2101,7 +2108,7 @@ $B.ast.Lambda.prototype.to_js = function(scopes){
         name = 'lambda_' + $B.lambda_magic + '_' + id
     var f = new $B.ast.FunctionDef(name, this.args, this.body, [])
     f.lineno = this.lineno
-    f.$id = _b_.id(this) // FunctionDef accesses symtable through if
+    f.$id = fast_id(this) // FunctionDef accesses symtable through if
     f.$is_lambda = true
     var js = f.to_js(scopes),
         lambda_ref = reference(scopes, last_scope(scopes), name)
@@ -2978,7 +2985,7 @@ $B.ast.With.prototype.to_js = function(scopes){
         lineno = this.lineno
 
     js = add_body(this.body, scopes) + '\n'
-    var in_generator = scopes.symtable.table.blocks.get(_b_.id(scope.ast)).generator
+    var in_generator = scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator
     for(var item of this.items.slice().reverse()){
         js = add_item(item, js)
     }
