@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-02 12:21:15.143947"
-__BRYTHON__.timestamp=1669980075143
+__BRYTHON__.compiled_date="2022-12-02 18:27:40.642091"
+__BRYTHON__.timestamp=1670002060642
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5588,15 +5588,6 @@ extra_kwargs[key]=val}
 prepare_kwargs[key]=val}}
 var mro0=class_obj
 if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){class_obj.__hash__=_b_.None}
-var class_dict={__bases__:resolved_bases,__class__:metaclass,__dict__:dict }
-for(var key in class_obj){class_dict[key]=class_obj[key]}
-var is_instanciable=true,non_abstract_methods={},abstract_methods={},mro=[class_dict].concat(class_dict.__mro__)
-for(var i=0;i < mro.length;i++){var kdict=i==0 ? mro0 :mro[i]
-for(var attr in kdict){if(non_abstract_methods[attr]){continue}
-var v=kdict[attr]
-if(typeof v=="function"){if(v.__isabstractmethod__===true ||
-(v.$attrs && v.$attrs.__isabstractmethod__)){is_instanciable=false
-abstract_methods[attr]=true}else{non_abstract_methods[attr]=true}}else{non_abstract_methods[attr]=true}}}
 var slots=class_obj.__slots__
 if(slots !==undefined){if(typeof slots=="string"){slots=[slots]}else{for(var item of $B.next_of1(slots)){if(typeof item !='string'){throw _b_.TypeError.$factory('__slots__ items must be '+
 `strings, not '${$B.class_name(item)}'`)}}}
@@ -5612,10 +5603,6 @@ var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
 meta_init(kls,class_name,bases,dict)}
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)}
-if(!is_instanciable){function nofactory(){throw _b_.TypeError.$factory("Can't instantiate abstract class "+
-"interface with abstract methods "+
-Object.keys(abstract_methods).join(", "))}
-kls.$factory=nofactory}
 return kls}
 function meta_from_bases(class_name,module,bases){var metaclass
 if(bases && bases.length > 0){metaclass=bases[0].__class__
@@ -5947,9 +5934,12 @@ var $instance_creator=$B.$instance_creator=function(klass){var test=false
 if(test){console.log('instance creator of',klass)}
 if(klass.prototype && klass.prototype.constructor==klass){
 return function(){return new klass(...arguments)}}
-if(klass.$instanciable !==undefined){return function(){throw _b_.TypeError.$factory(
+if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){return function(){var ams=Array.from($B.next_of1(klass.__abstractmethods__))
+ams.sort()
+var msg=(ams.length > 1 ? 's ' :' ')+ams.join(', ')
+throw _b_.TypeError.$factory(
 "Can't instantiate abstract class interface "+
-"with abstract methods")}}
+"with abstract method"+msg)}}
 var metaclass=klass.__class__ ||$B.get_class(klass),call_func,factory
 if(metaclass===_b_.type &&(!klass.__bases__ ||klass.__bases__.length==0)){if(klass.hasOwnProperty("__new__")){if(klass.hasOwnProperty("__init__")){factory=function(){
 var kls=klass.__new__.bind(null,klass).
@@ -10888,8 +10878,7 @@ if(encoding !==undefined){
 var $=$B.args("str",3,{arg:null,encoding:null,errors:null},["arg","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),encoding=$.encoding,errors=$.errors}
 if(typeof arg=="string" ||arg instanceof String ||
 typeof arg=="number"){if(isFinite(arg)){return arg.toString()}}
-try{
-if(arg.__class__ && arg.__class__===_b_.bytes &&
+try{if(arg.__class__ && arg.__class__===_b_.bytes &&
 encoding !==undefined){
 return _b_.bytes.decode(arg,$.encoding,$.errors)}
 var klass=arg.__class__ ||$B.get_class(arg)

@@ -1017,6 +1017,44 @@ function in_mro(klass, attr){
     return false
 }
 
+function find_name_in_mro(cls, name, _default){
+    // Emulate _PyType_Lookup() in Objects/typeobject.c
+    for(var base of [cls].concat(cls.__mro__)){
+        if(base.__dict__ === undefined){
+            console.log('base', base, 'has not dict')
+        }
+        var res = base.__dict__[name]
+        if(res !== undefined){
+            return res
+        }
+    }
+    return _default
+}
+
+$B.$getattr1 = function(obj, name, _default){
+    // Emulate PyObject_GenericGetAttr() in Objects/object.c
+    var objtype = $B.get_class(obj),
+        cls_var = find_name_in_mro(objtype, name, null),
+        cls_var_type = $B.get_class(cls_var),
+        descr_get = _b_.type.__getattribute__(cls_var_type, '__get__')
+    if(descr_get !== undefined){
+        if(_b_.type.__getattribute__(cls_var_type, '__set__')
+                || _b_.type.__getattribute__(cls_var_type, '__delete__')){
+            return $B.$call(descr_get)(cls_var, obj, objtype)     // data descriptor
+        }
+    }
+    if(obj.__dict__ !== undefined && obj.__dict__[name] !== undefined){
+        return obj.__dict__[name] // instance variable
+    }
+    if(descr_get !== undefined){
+        return $B.$call(descr_get)(cls_var, obj, objtype) // non-data descriptor
+    }
+    if(cls_var !== null){
+        return cls_var // class variable
+    }
+    throw $B.attr_error(name, obj)
+}
+
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
     var res
@@ -1041,12 +1079,15 @@ $B.$getattr = function(obj, attr, _default){
     if(obj === undefined){
         console.log("get attr", attr, "of undefined")
     }
-
+    /*
+    console.log('attr', attr, 'of', obj)
+    console.log('getattr1 from getattr', $B.$getattr1(obj, attr, _default))
+    */
     var is_class = obj.$is_class || obj.$factory
 
     var klass = obj.__class__
 
-    var $test = false //attr == "__bases__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "__str__" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass,
@@ -1245,7 +1286,8 @@ $B.$getattr = function(obj, attr, _default){
     if(is_class){
         if($test){
             console.log('obj is class', obj)
-            console.log('is type ?', _b_.isinstance(klass, _b_.type))
+            console.log('is a type ?', _b_.isinstance(klass, _b_.type))
+            console.log('is type', klass === _b_.type)
         }
         if(klass === _b_.type){
             attr_func = _b_.type.__getattribute__
@@ -2768,8 +2810,9 @@ function vars(){
     if($.obj === def){
         return _b_.locals()
     }else{
-        try{return $B.$getattr($.obj, '__dict__')}
-        catch(err){
+        try{
+            return $B.$getattr($.obj, '__dict__')
+        }catch(err){
             if(err.__class__ === _b_.AttributeError){
                 throw _b_.TypeError.$factory("vars() argument must have __dict__ attribute")
             }

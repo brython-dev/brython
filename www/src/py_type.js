@@ -57,43 +57,6 @@ $B.$class_constructor = function(class_name, class_ns, bases,
         class_obj.__hash__ = _b_.None
     }
 
-    // Create the class dictionary
-    var class_dict = {
-        __bases__: resolved_bases,
-        __class__: metaclass,
-        __dict__: dict // class namespace as a Python dict
-    }
-
-    for(var key in class_obj){
-        class_dict[key] = class_obj[key]
-    }
-
-    // Check if at least one method is abstract (cf PEP 3119)
-    // If this is the case, the class cannot be instanciated
-    var is_instanciable = true,
-        non_abstract_methods = {},
-        abstract_methods = {},
-        mro = [class_dict].concat(class_dict.__mro__)
-
-    for(var i = 0; i < mro.length; i++){
-        var kdict = i == 0 ? mro0 : mro[i]
-        for(var attr in kdict){
-            if(non_abstract_methods[attr]){continue}
-            var v = kdict[attr]
-            if(typeof v == "function"){
-                if(v.__isabstractmethod__ === true ||
-                        (v.$attrs && v.$attrs.__isabstractmethod__)){
-                    is_instanciable = false
-                    abstract_methods[attr] = true
-                }else{
-                    non_abstract_methods[attr] = true
-                }
-            }else{
-                non_abstract_methods[attr] = true
-            }
-        }
-    }
-
     // Check if class has __slots__
     var slots = class_obj.__slots__
     if(slots !== undefined){
@@ -140,13 +103,6 @@ $B.$class_constructor = function(class_name, class_ns, bases,
         bases[i].$subclasses.push(kls)
     }
 
-    if(!is_instanciable){
-        function nofactory(){
-            throw _b_.TypeError.$factory("Can't instantiate abstract class " +
-                "interface with abstract methods " +
-                Object.keys(abstract_methods).join(", "))}
-        kls.$factory = nofactory
-    }
     return kls
 }
 
@@ -1125,9 +1081,6 @@ property.__set__ = function(self, kls, value){
 
 $B.set_func_names(property, "builtins")
 
-
-
-
 var wrapper_descriptor = $B.wrapper_descriptor =
     $B.make_class("wrapper_descriptor")
 
@@ -1149,10 +1102,15 @@ var $instance_creator = $B.$instance_creator = function(klass){
     }
 
     // The class may not be instanciable if it has at least one abstract method
-    if(klass.$instanciable !== undefined){
-        return function(){throw _b_.TypeError.$factory(
-            "Can't instantiate abstract class interface " +
-                "with abstract methods")}
+    if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){
+        return function(){
+            var ams = Array.from($B.next_of1(klass.__abstractmethods__))
+            ams.sort()
+            var msg = (ams.length > 1 ? 's ' : ' ') + ams.join(', ')
+            throw _b_.TypeError.$factory(
+                "Can't instantiate abstract class interface " +
+                "with abstract method" + msg)
+        }
     }
     var metaclass = klass.__class__ || $B.get_class(klass),
         call_func,
