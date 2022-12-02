@@ -1309,7 +1309,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     js += `var ${ref} = (function(){\n` +
               `var _frames = $B.frames_stack.slice(),\n` +
-                  `bases = [${bases}],\n` +
+                  `bases = $B.fast_tuple([${bases}]),\n` +
                   `resolved_bases = $B.resolve_mro_entries(bases),\n` +
                   `metaclass = $B.get_metaclass("${this.name}", ` +
                   `"${glob}", resolved_bases`
@@ -1616,6 +1616,7 @@ function transform_args(scopes){
         positional = this.args.posonlyargs.concat(this.args.args),
         ix = positional.length - nb_defaults,
         default_names = [],
+        kw_defaults = [],
         annotations
     for(var arg of positional.concat(this.args.kwonlyargs).concat(
             [this.args.vararg, this.args.kwarg])){
@@ -1625,7 +1626,7 @@ function transform_args(scopes){
         }
     }
     for(var i = ix; i < positional.length; i++){
-        default_names.push(`defaults.${positional[i].arg}`)
+        default_names.push(`${positional[i].arg}`)
         _defaults.push(`${positional[i].arg}: ` +
             `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)
     }
@@ -1638,19 +1639,18 @@ function transform_args(scopes){
         if(this.args.kw_defaults[ix] === undefined){
             _defaults.push(`${arg.arg}: _b_.None`)
         }else{
-            _defaults.push(`${arg.arg}: ` +
-                $B.js_from_ast(this.args.kw_defaults[ix], scopes))
+            var v = $B.js_from_ast(this.args.kw_defaults[ix], scopes)
+            _defaults.push(`${arg.arg}: ` + v)
+            kw_defaults.push(`['${arg.arg}', ${v}]`)
         }
     }
     var kw_default_names = []
     for(var kw of this.args.kwonlyargs){
-        kw_default_names.push(`defaults.${kw.arg}`)
+        kw_default_names.push(`'${kw.arg}'`)
     }
 
-    var default_str = `{${_defaults.join(', ')}}`
-
     return {default_names, _defaults, positional, has_posonlyargs,
-            kw_default_names, default_str, annotations}
+            kw_defaults, kw_default_names, annotations}
 }
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes){
@@ -1683,9 +1683,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         _defaults = parsed_args._defaults,
         positional = parsed_args.positional,
         has_posonlyargs = parsed_args.has_posonlyargs,
-        kw_default_names = parsed_args.kw_default_names,
-        default_str = parsed_args.default_str
+        kw_defaults = parsed_args.kw_defaults,
+        kw_default_names = parsed_args.kw_default_names
 
+    var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,
+        kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
+            `_b_.dict.$factory([${kw_defaults}])`
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
 
@@ -1732,8 +1735,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         name2 = this.name + id
 
     var js = decs +
-             `$B.set_lineno(frame, ${this.lineno})\n` +
-             `var ${name1} = function(defaults){\n`
+             `$B.set_lineno(frame, ${this.lineno})\n`
 
     if(is_async && ! is_generator){
         js += 'async '
@@ -1749,7 +1751,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     parse_args.push('{' + slots.join(', ') + '} , ' +
         '[' + arg_names.join(', ') + '], ' +
-        'arguments, defaults, ' +
+        `arguments, ${name2}.$defaults, ` +
         (this.args.vararg ? `'${this.args.vararg.arg}', ` :
             (this.args.kwonlyargs.length > 0 ? "'*', " : 'null, ')) +
         (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
@@ -1857,10 +1859,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set admin infos
     js += `${name2}.$infos = {\n` +
         `__module__: "${gname}",\n` +
-        `__name__: "${this.name}"\n, ` +
+        `__name__: "${this.name}",\n` +
         `__qualname__: "${qualname}",\n` +
-        `__defaults__: $B.fast_tuple([${default_names}]), ` +
-        `__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n` +
+        `__defaults__: ${defaults},\n` +
+        `__kwdefaults__: ${kw_defaults},\n` +
         `__doc__: ${docstring},\n` +
         `__code__:{\n` +
         `co_argcount: ${positional.length},\n ` +
@@ -1877,14 +1879,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     if(is_async){
         if(is_generator){
-            js += `return ${name2}`
+            js += `${name2}\n`
         }else{
-            js += `return $B.make_async(${name2})`
+            js += `${name2} = $B.make_async(${name2})\n`
         }
     }else{
-        js += `return ${name2}`
+        js += `${name2}\n`
     }
-    js += `}\n`
+
+    js += `$B.make_function_defaults(${name2}) // makes ${name2}.$defaults\n`
 
     var mangled = mangle(scopes, func_name_scope, this.name),
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`
@@ -1894,10 +1897,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var '
     }
 
-    js += `${func_ref} = ${name1}(${default_str})\n` +
-          `${func_ref}.$set_defaults = function(value){\n`+
-          `return ${func_ref} = ${name1}(value)\n}\n`
-
+    js += `${func_ref} = ${name2}\n`
     if(this.returns || parsed_args.annotations){
         var ann_items = []
         if(this.returns){

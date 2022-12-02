@@ -172,10 +172,10 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
         if(missing.length == 1){
             var arg_type = 'positional'
             if(var_names.indexOf(missing[0]) >= argcount){
-                arg_type = 'required keyword-only'
+                arg_type = 'keyword-only'
             }
             throw _b_.TypeError.$factory(fname +
-                ` missing 1 ${arg_type} argument: '${missing[0]}'`)
+                `() missing 1 required ${arg_type} argument: '${missing[0]}'`)
         }else{
             var missing_positional = missing.filter(arg =>
                     var_names.indexOf(arg) < argcount),

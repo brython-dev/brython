@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-02 18:42:51.376384"
-__BRYTHON__.timestamp=1670002971376
+__BRYTHON__.compiled_date="2022-12-02 23:21:32.257204"
+__BRYTHON__.timestamp=1670019692257
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4836,9 +4836,9 @@ slots[key]=value}}}
 var missing=[]
 for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push(attr)}}}
 if(missing.length > 0){if(missing.length==1){var arg_type='positional'
-if(var_names.indexOf(missing[0])>=argcount){arg_type='required keyword-only'}
+if(var_names.indexOf(missing[0])>=argcount){arg_type='keyword-only'}
 throw _b_.TypeError.$factory(fname+
-` missing 1 ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
+`() missing 1 required ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
 var_names.indexOf(arg)< argcount),missing_kwonly=missing.filter(arg=>
 var_names.indexOf(arg)>=argcount)
 function format_missing(m,type){var msg=m.length+
@@ -5581,12 +5581,10 @@ if(module===undefined){
 module=class_obj.__module__=$B.last($B.frames_stack)[2]}
 for(var base of bases){if(bases[i]===_b_.bool){throw _b_.TypeError.$factory(
 "type 'bool' is not an acceptable base type")}}
-var extra_kwargs={},prepare_kwargs={}
+var extra_kwargs={}
 if(kwargs){for(var i=0;i < kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key !="metaclass"){
-extra_kwargs[key]=val}
-prepare_kwargs[key]=val}}
-var mro0=class_obj
+extra_kwargs[key]=val}}}
 if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){$B.$setitem(dict,'__hash__',_b_.None)}
 var slots=class_obj.__slots__
 if(slots !==undefined){if(typeof slots=="string"){slots=[slots]}else{for(var item of $B.next_of1(slots)){if(typeof item !='string'){throw _b_.TypeError.$factory('__slots__ items must be '+
@@ -5600,7 +5598,7 @@ kls.$is_class=true
 for(var attr in class_obj){if(attr.charAt(0)!="$"){if(typeof class_obj[attr]=="function"){class_obj[attr].$infos.$class=kls}}}
 if(kls.__class__===metaclass){
 var meta_init=_b_.type.__getattribute__(metaclass,"__init__")
-meta_init(kls,class_name,bases,dict)}
+meta_init(kls,class_name,resolved_bases,dict,{$nat:'kw',kw:extra_kwargs})}
 for(var i=0;i < bases.length;i++){bases[i].$subclasses=bases[i].$subclasses ||[]
 bases[i].$subclasses.push(kls)}
 return kls}
@@ -7280,29 +7278,28 @@ cells.push($B.cell.$factory(None))}}
 return _b_.tuple.$factory(cells)}else if(attr=="__globals__"){return $B.obj_dict($B.imported[self.$infos.__module__])}else if(self.$attrs && self.$attrs[attr]!==undefined){return self.$attrs[attr]}else{return _b_.object.__getattribute__(self,attr)}}
 $B.Function.__repr__=function(self){if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
 $B.Function.__mro__=[_b_.object]
+$B.make_function_defaults=function(f){if(f.$infos && f.$infos.__code__){
+var argcount=f.$infos.__code__.co_argcount,varnames=f.$infos.__code__.co_varnames,params=varnames.slice(0,argcount),value=f.$infos.__defaults__,$defaults={}
+for(var i=value.length-1;i >=0;i--){var pos=params.length-value.length+i
+if(pos < 0){break}
+$defaults[params[pos]]=value[i]}
+if(f.$infos.__kwdefaults__ !==_b_.None){var kwdef=f.$infos.__kwdefaults__
+for(var kw of $B.next_of1(kwdef)){$defaults[kw]=$B.$getitem(kwdef,kw)}}
+f.$defaults=$defaults
+return _b_.None}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+" of "+_b_.str.$factory(self))}}
 $B.Function.__setattr__=function(self,attr,value){if(attr=="__closure__"){throw _b_.AttributeError.$factory("readonly attribute")}else if(attr=="__defaults__"){
 if(value===_b_.None){value=[]}else if(! isinstance(value,_b_.tuple)){throw _b_.TypeError.$factory(
 "__defaults__ must be set to a tuple object")}
-var set_func=self.$set_defaults
-if(set_func===undefined){throw _b_.AttributeError.$factory("cannot set attribute "+attr+
-" of "+_b_.str.$factory(self))}
-if(self.$infos && self.$infos.__code__){
-var argcount=self.$infos.__code__.co_argcount,varnames=self.$infos.__code__.co_varnames,params=varnames.slice(0,argcount),$defaults={}
-for(var i=value.length-1;i >=0;i--){var pos=params.length-value.length+i
-if(pos < 0){break}
-$defaults[params[pos]]=value[i]}}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
-" of "+_b_.str.$factory(self))}
-var klass=self.$infos.$class 
-var new_func=set_func($defaults)
-new_func.$set_defaults=set_func
-if(klass){klass[self.$infos.__name__]=new_func
-new_func.$infos.$class=klass
-new_func.$infos.__defaults__=value}else{
-self.$infos.$defaults=value
-self.$infos.__defaults__=value}
-return _b_.None}
-if(self.$infos[attr]!==undefined){self.$infos[attr]=value}
-else{self.$attrs=self.$attrs ||{};self.$attrs[attr]=value}}
+if(self.$infos){self.$infos.__defaults__=value
+$B.make_function_defaults(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+" of "+_b_.str.$factory(self))}}else if(attr=="__kwdefaults__"){if(value===_b_.None){value=$B.empty_dict}else if(! isinstance(value,_b_.dict)){throw _b_.TypeError.$factory(
+"__kwdefaults__ must be set to a dict object")}
+if(self.$infos){self.$infos.__kwdefaults__=value
+$B.make_function_defaults(self)}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
+" of "+_b_.str.$factory(self))}}
+if(self.$infos[attr]!==undefined){self.$infos[attr]=value}else{self.$attrs=self.$attrs ||{}
+self.$attrs[attr]=value}}
 $B.Function.$factory=function(){}
 $B.set_func_names($B.Function,"builtins")
 _b_.__BRYTHON__=__BRYTHON__
@@ -14988,7 +14985,7 @@ var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
 var docstring=extract_docstring(this,scopes)
 js+=`var ${ref} = (function(){\n`+
 `var _frames = $B.frames_stack.slice(),\n`+
-`bases = [${bases}],\n`+
+`bases = $B.fast_tuple([${bases}]),\n`+
 `resolved_bases = $B.resolve_mro_entries(bases),\n`+
 `metaclass = $B.get_metaclass("${this.name}", `+
 `"${glob}", resolved_bases`
@@ -15117,22 +15114,22 @@ $B.js_from_ast(this.format_spec,scopes)+
 ` + '}', ${value})`}else if(this.conversion==-1){value=`_b_.str.$factory(${value})`}
 return value}
 function transform_args(scopes){
-var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[],annotations
+var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[],kw_defaults=[],annotations
 for(var arg of positional.concat(this.args.kwonlyargs).concat(
 [this.args.vararg,this.args.kwarg])){if(arg && arg.annotation){annotations=annotations ||{}
 annotations[arg.arg]=arg.annotation}}
-for(var i=ix;i < positional.length;i++){default_names.push(`defaults.${positional[i].arg}`)
+for(var i=ix;i < positional.length;i++){default_names.push(`${positional[i].arg}`)
 _defaults.push(`${positional[i].arg}: `+
 `${$B.js_from_ast(this.args.defaults[i - ix], scopes)}`)}
 var ix=-1
 for(var arg of this.args.kwonlyargs){ix++
 if(this.args.kw_defaults[ix]===_b_.None){continue}
-if(this.args.kw_defaults[ix]===undefined){_defaults.push(`${arg.arg}: _b_.None`)}else{_defaults.push(`${arg.arg}: `+
-$B.js_from_ast(this.args.kw_defaults[ix],scopes))}}
+if(this.args.kw_defaults[ix]===undefined){_defaults.push(`${arg.arg}: _b_.None`)}else{var v=$B.js_from_ast(this.args.kw_defaults[ix],scopes)
+_defaults.push(`${arg.arg}: `+v)
+kw_defaults.push(`['${arg.arg}', ${v}]`)}}
 var kw_default_names=[]
-for(var kw of this.args.kwonlyargs){kw_default_names.push(`defaults.${kw.arg}`)}
-var default_str=`{${_defaults.join(', ')}}`
-return{default_names,_defaults,positional,has_posonlyargs,kw_default_names,default_str,annotations}}
+for(var kw of this.args.kwonlyargs){kw_default_names.push(`'${kw.arg}'`)}
+return{default_names,_defaults,positional,has_posonlyargs,kw_defaults,kw_default_names,annotations}}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef
 if(in_class){var class_scope=last_scope(scopes)}
@@ -15143,7 +15140,9 @@ decorators.push(dec_id)
 decs+=`$B.set_lineno(frame, ${dec.lineno})\n`
 decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
 var docstring=extract_docstring(this,scopes)
-var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_default_names=parsed_args.kw_default_names,default_str=parsed_args.default_str
+var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
+var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,kw_defaults=kw_default_names.length==0 ? '_b_.None' :
+`_b_.dict.$factory([${kw_defaults}])`
 var func_scope=new Scope(this.name,'def',this)
 scopes.push(func_scope)
 var args=positional.concat(this.args.kwonlyargs),parse_args=[`"${this.name}"`,positional.length],slots=[],arg_names=[]
@@ -15161,8 +15160,7 @@ var body=[_return],function_body=add_body(body,scopes)}else{var function_body=ad
 var is_generator=symtable_block.generator
 var id=$B.UUID(),name1=this.name+'$'+id,name2=this.name+id
 var js=decs+
-`$B.set_lineno(frame, ${this.lineno})\n`+
-`var ${name1} = function(defaults){\n`
+`$B.set_lineno(frame, ${this.lineno})\n`
 if(is_async && ! is_generator){js+='async '}
 js+=`function ${name2}(){\n`
 var locals_name=make_scope_name(scopes,func_scope),gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
@@ -15170,7 +15168,7 @@ js+=`var ${locals_name},
                locals\n`
 parse_args.push('{'+slots.join(', ')+'} , '+
 '['+arg_names.join(', ')+'], '+
-'arguments, defaults, '+
+`arguments, ${name2}.$defaults, `+
 (this.args.vararg ? `'${this.args.vararg.arg}', ` :
 (this.args.kwonlyargs.length > 0 ? "'*', " :'null, '))+
 (this.args.kwarg ? `'${this.args.kwarg.arg}'` :'null'))
@@ -15229,10 +15227,10 @@ if(in_class){js+=`${name2}.$is_method = true\n`}
 if(is_async){js+=`${name2}.$is_async = true\n`}
 js+=`${name2}.$infos = {\n`+
 `__module__: "${gname}",\n`+
-`__name__: "${this.name}"\n, `+
+`__name__: "${this.name}",\n`+
 `__qualname__: "${qualname}",\n`+
-`__defaults__: $B.fast_tuple([${default_names}]), `+
-`__kwdefaults__: $B.fast_tuple([${kw_default_names}]),\n`+
+`__defaults__: ${defaults},\n`+
+`__kwdefaults__: ${kw_defaults},\n`+
 `__doc__: ${docstring},\n`+
 `__code__:{\n`+
 `co_argcount: ${positional.length},\n `+
@@ -15246,14 +15244,12 @@ js+=`${name2}.$infos = {\n`+
 `co_posonlyargcount: ${this.args.posonlyargs.length},\n`+
 `co_varnames: $B.fast_tuple([${varnames}])\n`+
 `}\n}\n`
-if(is_async){if(is_generator){js+=`return ${name2}`}else{js+=`return $B.make_async(${name2})`}}else{js+=`return ${name2}`}
-js+=`}\n`
+if(is_async){if(is_generator){js+=`${name2}\n`}else{js+=`${name2} = $B.make_async(${name2})\n`}}else{js+=`${name2}\n`}
+js+=`$B.make_function_defaults(${name2}) // makes ${name2}.$defaults\n`
 var mangled=mangle(scopes,func_name_scope,this.name),func_ref=`${make_scope_name(scopes, func_name_scope)}.${mangled}`
 if(decorated){func_ref=`decorated${$B.UUID()}`
 js+='var '}
-js+=`${func_ref} = ${name1}(${default_str})\n`+
-`${func_ref}.$set_defaults = function(value){\n`+
-`return ${func_ref} = ${name1}(value)\n}\n`
+js+=`${func_ref} = ${name2}\n`
 if(this.returns ||parsed_args.annotations){var ann_items=[]
 if(this.returns){ann_items.push(`['return', ${this.returns.to_js(scopes)}]`)}
 if(parsed_args.annotations){for(var arg_ann in parsed_args.annotations){var value=parsed_args.annotations[arg_ann].to_js(scopes)

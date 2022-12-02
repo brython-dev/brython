@@ -987,5 +987,40 @@ t = [((1, 2),), ((3, 4),)]
 lc = [f'{a + x}{b}' for (a, b), in t for x in range(2)]
 assert lc == ['12', '22', '34', '44']
 
+# setting function attributes __defaults__ and __kwdefaults__
+def f(x=4):
+  return x
+assert f.__defaults__ == (4,)
+assert f.__kwdefaults__ is None
+assert f() == 4
+
+def f(x=4, *, y= 'y', z='z'):
+  return x, y, z
+
+assert f.__defaults__ == (4,)
+assert f.__kwdefaults__ == {'y': 'y', 'z': 'z'}
+assert f() == (4, 'y', 'z')
+
+f.__defaults__ = ()
+assert_raises(TypeError, f,
+    msg="f() missing 1 required positional argument: 'x'")
+
+f.__kwdefaults__ = {'y': 99}
+assert f(1, z=2) == (1, 99, 2)
+
+assert_raises(TypeError, f, 1,
+    msg="f() missing 1 required keyword-only argument: 'z'")
+
+class A:
+
+    def f(self, x=0):
+      return x
+
+a = A()
+assert a.f() == 0
+assert A.f.__defaults__ == (0,)
+A.f.__defaults__ = (1,)
+assert a.f() == 1
+
 
 print('passed all tests...')
