@@ -34,6 +34,7 @@ def run():
     import make_ast_classes       # generates /src/py_ast_classes.js
     import make_unicode_tables    # generates /src/unicode_data.js
     import make_stdlib_static     # generates /src/stdlib_paths.js
+    import make_class_flags       # generate __flags__ for builtin classes
     import make_version_info      # generates /src/version_info.js
 
     # build brython.js from base Javascript files
@@ -73,8 +74,9 @@ def run():
         'py_generator',
         'py_dom',
         'py_pattern_matching',
-        'builtin_modules',
         'async',
+        'py_flags',
+        'builtin_modules',
         'ast_to_js',
         'symtable',
         'builtins_docstrings'
