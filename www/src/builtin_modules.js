@@ -857,8 +857,8 @@
         _b_[attr] = value
     }
 
-    $B.method_descriptor.__getattribute__ = $B.Function.__getattribute__
-    $B.wrapper_descriptor.__getattribute__ = $B.Function.__getattribute__
+    $B.method_descriptor.__getattribute__ = $B.function.__getattribute__
+    $B.wrapper_descriptor.__getattribute__ = $B.function.__getattribute__
 
     // Set type of methods of builtin classes
     for(var name in _b_){
@@ -873,7 +873,7 @@
                         typeof value != 'function'){
                     continue
                 }else if(key == "__new__"){
-                    value.__class__ = $B.builtin_function
+                    value.__class__ = $B.builtin_function_or_method
                 }else if(key.startsWith("__")){
                     value.__class__ = $B.wrapper_descriptor
                 }else{
@@ -883,6 +883,7 @@
             }
         }
     }
+
     // Attributes of __BRYTHON__ are Python lists
     for(var attr in $B){
         if(Array.isArray($B[attr])){
@@ -936,6 +937,28 @@
     })
 
     $B.set_func_names($B.cell, "builtins")
+
+    // Set __flags__ of internal classes, defined in py_flags.js
+    for(var flag in $B.builtin_class_flags.builtins){
+        for(var key of $B.builtin_class_flags.builtins[flag]){
+            if(_b_[key]){
+                _b_[key].__flags__ = parseInt(flag)
+            }else{
+                console.log('not in _b_', key)
+            }
+        }
+    }
+
+    for(var flag in $B.builtin_class_flags.types){
+        for(var key of $B.builtin_class_flags.types[flag]){
+            if($B[key]){
+                $B[key].__flags__ = parseInt(flag)
+            }else{
+                console.log('not in $B', key)
+            }
+        }
+    }
+
 
 
     $B.AST = {
