@@ -209,7 +209,7 @@ $B.set_func_names = function(klass, module){
             klass[attr].$infos = {
                 __doc__: klass[attr].__doc__ || "",
                 __module__: module,
-                __qualname__ : name + '.' + attr,
+                __qualname__ : klass.__qualname__ + '.' + attr,
                 __name__: attr
             }
             if(klass[attr].$type == "classmethod"){
