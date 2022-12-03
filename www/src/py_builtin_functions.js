@@ -364,7 +364,7 @@ function compile() {
             return res
         }
     }else{
-        var root = $B.parser.$create_root_node(
+        var root = $B.parser.create_root_node(
                 {src: $.source, filename},
                 module_name, module_name)
         root.mode = $.mode
@@ -391,7 +391,7 @@ function compile() {
             // set _ast to an Expression and set attribute .single_expression
             // to compile() result. This is used in exec() to print the
             // expression if it is not None
-            root = $B.parser.$create_root_node(
+            root = $B.parser.create_root_node(
                 {src: $.source, filename},
                 module_name, module_name)
             root.mode = 'eval'
@@ -739,7 +739,7 @@ function $$eval(src, _globals, _locals){
             }
         }else{
             if(! _ast){
-                var root = $B.parser.$create_root_node(src, '<module>', frame[0], frame[2],
+                var root = $B.parser.create_root_node(src, '<module>', frame[0], frame[2],
                         1)
                 root.mode = mode
                 root.filename = filename
