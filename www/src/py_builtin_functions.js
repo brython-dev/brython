@@ -8,62 +8,9 @@ _b_.__debug__ = false
 $B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
 $B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'ge'}
 
-var check_nb_args = $B.check_nb_args = function(name, expected, args){
-    // Check the number of arguments
-    var len = args.length,
-        last = args[len - 1]
-    if(last && last.$nat == "kw"){
-        var kw = last.kw
-        if(Array.isArray(kw) && kw[1] && kw[1].__class__ === _b_.dict){
-            if(Object.keys(kw[1].$string_dict).length == 0){
-                len--
-            }
-        }
-    }
-    if(len != expected){
-        if(expected == 0){
-            throw _b_.TypeError.$factory(name + "() takes no argument" +
-                " (" + len + " given)")
-        }else{
-            throw _b_.TypeError.$factory(name + "() takes exactly " +
-                expected + " argument" + (expected < 2 ? '' : 's') +
-                " (" + len + " given)")
-        }
-    }
-}
-
-var check_no_kw = $B.check_no_kw = function(name, x, y){
-    // Throw error if one of x, y is a keyword argument
-    if(x === undefined){
-        console.log("x undef", name, x, y)
-    }
-    if((x.$nat && x.kw && x.kw[0] && x.kw[0].length > 0) ||
-            (y !== undefined && y.$nat)){
-        throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
-}
-
-var check_nb_args_no_kw = $B.check_nb_args_no_kw = function(name, expected, args){
-    // Check the number of arguments and absence of keyword args
-    var len = args.length,
-        last = args[len - 1]
-    if(last && last.$nat == "kw"){
-        if(last.kw.length == 2 && Object.keys(last.kw[0]).length == 0){
-            len--
-        }else{
-            throw _b_.TypeError.$factory(name + "() takes no keyword arguments")
-        }
-    }
-    if(len != expected){
-        if(expected == 0){
-            throw _b_.TypeError.$factory(name + "() takes no argument" +
-                " (" + len + " given)")
-        }else{
-            throw _b_.TypeError.$factory(name + "() takes exactly " +
-                expected + " argument" + (expected < 2 ? '' : 's') +
-                " (" + len + " given)")
-        }
-    }
-}
+var check_nb_args = $B.check_nb_args,
+    check_no_kw = $B.check_no_kw,
+    check_nb_args_no_kw = $B.check_nb_args_no_kw
 
 var NoneType = {
     $factory: function(){
@@ -281,35 +228,6 @@ function chr(i){
         return String.fromCodePoint(i)
     }
 }
-
-//classmethod() (built in class)
-var classmethod = $B.make_class("classmethod",
-    function(func) {
-        check_nb_args_no_kw('classmethod', 1, arguments)
-        return {
-            __class__: classmethod,
-            __func__: func
-        }
-    }
-)
-
-classmethod.__get__ = function(self, obj, cls){
-    // adapted from
-    // https://docs.python.org/3/howto/descriptor.html#class-methods
-    if(cls === _b_.None){
-        cls = $B.get_class(obj)
-    }
-    var func_class = $B.get_class(self.__func__),
-        candidates = [func_class].concat(func_class.__mro__)
-    for(var candidate of candidates){
-        if(candidate.__get__){
-            return candidate.__get__(self.__func__, cls, cls)
-        }
-    }
-    return $B.method.$factory(self.__func__, cls)
-}
-
-$B.set_func_names(classmethod, "builtins")
 
 var code = $B.code = $B.make_class("code")
 
@@ -2576,26 +2494,6 @@ function sorted(){
     return _list
 }
 
-// staticmethod() built in function
-var staticmethod = $B.make_class("staticmethod",
-    function(func){
-        return {
-            __class__: staticmethod,
-            __func__: func
-        }
-    }
-)
-
-staticmethod.__call__ = function(self){
-    return $B.$call(self.__func__)
-}
-
-staticmethod.__get__ = function(self){
-    return self.__func__
-}
-
-
-$B.set_func_names(staticmethod, "builtins")
 
 // str() defined in py_string.js
 
@@ -3619,12 +3517,11 @@ var other_builtins = [
 ]
 
 var builtin_names = $B.builtin_funcs.
-    concat($B.builtin_classes).
-    concat(other_builtins)
+                    concat($B.builtin_classes).
+                    concat(other_builtins)
 
-for(var i = 0; i < builtin_names.length; i++){
-    var name = builtin_names[i],
-        orig_name = name,
+for(var name of builtin_names){
+    var orig_name = name,
         name1 = name
     if(name == 'open'){name1 = '$url_open'}
     if(name == 'super'){name1 = '$$super'}
@@ -3641,9 +3538,7 @@ for(var i = 0; i < builtin_names.length; i++){
                 __qualname__: orig_name
             }
         }
-
-    }
-    catch(err){
+    }catch(err){
         // Error for the built-in names that are not defined in this script,
         // eg int, str, float, etc.
     }

@@ -3,13 +3,9 @@
 var _b_ = $B.builtins
 
 // generic code for class constructor
-$B.$class_constructor = function(class_name, class_ns, bases,
-        parents_names, kwargs){
-    // class obj is a JS object with attributes
-    var class_obj_proxy = class_ns.locals,
-        metaclass = class_ns.metaclass,
-        resolved_bases = class_ns.resolved_bases
-
+$B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
+                                 resolved_bases, bases,
+                                 kwargs){
     // class_obj_proxy is a proxy around a Python dict(-like) object
     // Transform it into a JS object
     var class_obj = Object.create(null),
@@ -77,17 +73,6 @@ $B.$class_constructor = function(class_name, class_ns, bases,
     kls.$subclasses = []
     kls.$is_class = true
 
-    // Set attribute "$class" of functions defined in the class. Used in
-    // py_builtin_functions / Function.__setattr__ to reset the function
-    // if the attribute __defaults__ is reset.
-    for(var attr in class_obj){
-        if(attr.charAt(0) != "$"){
-            if(typeof class_obj[attr] == "function"){
-                class_obj[attr].$infos.$class = kls
-            }
-        }
-    }
-
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
@@ -104,44 +89,6 @@ $B.$class_constructor = function(class_name, class_ns, bases,
     return kls
 }
 
-function meta_from_bases(class_name, module, bases){
-    var metaclass
-    if(bases && bases.length > 0){
-        metaclass = bases[0].__class__
-        if(metaclass === undefined){
-            // Might inherit a Javascript constructor
-            if(typeof bases[0] == "function"){
-                if(bases.length != 1){
-                    throw _b_.TypeError.$factory("A Brython class " +
-                        "can inherit at most 1 Javascript constructor")
-                }
-                metaclass = bases[0].__class__ = $B.JSMeta
-                $B.set_func_names(bases[0], module)
-            }else{
-                console.log('meta from bases', class_name, module, bases)
-                throw _b_.TypeError.$factory("Argument of " + class_name +
-                    " is not a class (type '" + $B.class_name(bases[0]) +
-                    "')")
-            }
-        }
-        for(var i = 1; i < bases.length; i++){
-            var mc = bases[i].__class__
-            if(mc === metaclass || _b_.issubclass(metaclass, mc)){
-                // same metaclass or a subclass, do nothing
-            }else if(_b_.issubclass(mc, metaclass)){
-                metaclass = mc
-            }else if(metaclass.__bases__ &&
-                    metaclass.__bases__.indexOf(mc) == -1){
-                throw _b_.TypeError.$factory("metaclass conflict: the " +
-                    "metaclass of a derived class must be a (non-" +
-                    "strict) subclass of the metaclasses of all its bases")
-            }
-        }
-    }else{
-        metaclass = _b_.type
-    }
-    return metaclass
-}
 
 $B.get_metaclass = function(class_name, module, bases, kw_meta){
     // If a keyword argument "metaclass=kw_meta" is passed, kw_meta is set
@@ -210,7 +157,6 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
         var prepare = $B.$getattr(metaclass, "__prepare__", _b_.None)
         if(prepare !== _b_.None){
             class_dict = $B.$call(prepare)(class_name, bases) // dict or dict-like
-
             set_attr_if_absent(class_dict, '__module__', module)
             set_attr_if_absent(class_dict, '__qualname__', qualname)
         }
@@ -336,14 +282,66 @@ var type = $B.make_class("type",
             return kls.__class__ || $B.get_class(kls)
         }else{
             var module = $B.last($B.frames_stack)[2],
-                meta = meta_from_bases(kls, module, bases),
-                meta_new = $B.$call($B.$getattr(meta, '__new__'))
-            return meta_new(meta, kls, bases, cl_dict, kwargs)
+                resolved_bases = $B.resolve_mro_entries(bases),
+                metaclass = $B.get_metaclass(kls, module, resolved_bases)
+            return type.__call__(metaclass, kls, resolved_bases, cl_dict, kwargs)
         }
     }
 )
 
 type.__class__ = type
+
+
+//classmethod() (built in class)
+var classmethod = _b_.classmethod = $B.make_class("classmethod",
+    function(func) {
+        $B.check_nb_args_no_kw('classmethod', 1, arguments)
+        return {
+            __class__: classmethod,
+            __func__: func
+        }
+    }
+)
+
+classmethod.__get__ = function(self, obj, cls){
+    // adapted from
+    // https://docs.python.org/3/howto/descriptor.html#class-methods
+    if(cls === _b_.None){
+        cls = $B.get_class(obj)
+    }
+    var func_class = $B.get_class(self.__func__),
+        candidates = [func_class].concat(func_class.__mro__)
+    for(var candidate of candidates){
+        if(candidate.__get__){
+            return candidate.__get__(self.__func__, cls, cls)
+        }
+    }
+    return $B.method.$factory(self.__func__, cls)
+}
+
+$B.set_func_names(classmethod, "builtins")
+
+
+// staticmethod() built in function
+var staticmethod = _b_.staticmethod = $B.make_class("staticmethod",
+    function(func){
+        return {
+            __class__: staticmethod,
+            __func__: func
+        }
+    }
+)
+
+staticmethod.__call__ = function(self){
+    return $B.$call(self.__func__)
+}
+
+staticmethod.__get__ = function(self){
+    return self.__func__
+}
+
+
+$B.set_func_names(staticmethod, "builtins")
 
 $B.getset_descriptor = $B.make_class("getset_descriptor",
     function(klass, attr, getter, setter){
@@ -376,18 +374,6 @@ $B.getset_descriptor.__repr__ = function(self){
 }
 
 $B.set_func_names($B.getset_descriptor, "builtins")
-
-/*
-type.__annotations__ = $B.getset_descriptor.$factory(type, '__annotations__',
-    function(self, klass){
-        return klass[self.attr]
-    },
-    function(self, klass, value){
-        klass[self.attr] = value
-        return _b_.None
-    }
-)
-*/
 
 var data_descriptors = ['__abstractmethods__',
                         '__annotations__',
@@ -709,22 +695,32 @@ type.__init__ = function(){
 
 type.__init_subclass__ = function(){
     // Default implementation only checks that no keyword arguments were passed
-    var $ = $B.args("__init_subclass__", 1, {}, [],
+    // Defined as classmethod after set_func_names is called
+    var $ = $B.args("__init_subclass__", 1, {cls: null}, ['cls'],
         arguments, {}, "args", "kwargs")
+    if($.args.length > 0){
+        throw _b_.TypeError.$factory(
+            `${$.cls.__qualname__}.__init_subclass__ takes no arguments ` +
+            `(${$.args.length} given)`)
+    }
     if($.kwargs !== undefined){
         if($.kwargs.__class__ !== _b_.dict ||
                 Object.keys($.kwargs.$string_dict).length > 0){
             throw _b_.TypeError.$factory(
-                "__init_subclass__() takes no keyword arguments")
+                `${$.cls.__qualname__}.__init_subclass__() ` +
+                `takes no keyword arguments`)
         }
     }
     return _b_.None
 }
 
+_b_.object.__init_subclass__ = type.__init_subclass__
+
 type.__instancecheck__ = function(cls, instance){
     var kl = instance.__class__ || $B.get_class(instance)
-    if(kl === cls){return true}
-    else{
+    if(kl === cls){
+        return true
+    }else{
         for(var i = 0; i < kl.__mro__.length; i++){
             if(kl.__mro__[i] === cls){return true}
         }
@@ -1006,6 +1002,10 @@ type.__subclasscheck__ = function(self, subclass){
 }
 
 $B.set_func_names(type, "builtins")
+
+// Must do it after set_func_names to have $infos set
+type.__init_subclass__ = _b_.classmethod.$factory(type.__init_subclass__)
+
 
 _b_.type = type
 

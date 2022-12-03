@@ -6,6 +6,8 @@ var _b_ = $B.builtins
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined
     // __bases__ : set to an empty tuple in py_list.js after tuple is defined
+    __name__: 'object',
+    __qualname__: 'object',
     $is_class: true,
     $native: true
 }
@@ -357,13 +359,6 @@ object.__init__ = function(){
     // object.__init__ does nothing else
     return _b_.None
 }
-
-object.__init_subclass__ = function(){
-    // only checks that no argument is passed
-    var $ = $B.args("__init_subclass__", 0, {}, [], arguments, {}, null, null)
-    return _b_.None
-}
-object.__init_subclass__.$type = "staticmethod"
 
 object.__le__ = function(){return _b_.NotImplemented}
 

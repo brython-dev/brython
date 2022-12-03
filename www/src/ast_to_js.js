@@ -1307,24 +1307,23 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     // Detect doc string
     var docstring = extract_docstring(this, scopes)
 
-    js += `var ${ref} = (function(){\n` +
+    js += `var ${ref} = (function(name, module, bases){\n` +
               `var _frames = $B.frames_stack.slice(),\n` +
-                  `bases = $B.fast_tuple([${bases}]),\n` +
                   `resolved_bases = $B.resolve_mro_entries(bases),\n` +
-                  `metaclass = $B.get_metaclass("${this.name}", ` +
-                  `"${glob}", resolved_bases`
+                  `metaclass = $B.get_metaclass(name, module, ` +
+                  `resolved_bases`
     if(metaclass){
         js += `, ${metaclass.to_js(scopes)}`
     }
     js += ')\n'
 
     js += `var ${locals_name} = $B.make_class_namespace(metaclass, ` +
-              `"${this.name}", "${glob}" ,"${qualname}", resolved_bases),\n`
+              `name, module ,"${qualname}", resolved_bases),\n`
 
     js += `locals = ${locals_name}\n` +
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
           `locals.__doc__ = ${docstring}\n` +
-          `var frame = ["${this.name}", locals, "${glob}", ${globals_name}]\n` +
+          `var frame = [name, locals, module, ${globals_name}]\n` +
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
           `frame.$f_trace = $B.enter_frame(frame)\n` +
@@ -1337,11 +1336,19 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     scopes.pop()
 
+    var keywords = []
+    for(var keyword of this.keywords){
+        keywords.push(`["${keyword.arg}", ` +
+            $B.js_from_ast(keyword.value, scopes) + ']')
+    }
+
     js += '\nif(frame.$f_trace !== _b_.None){\n' +
               '$B.trace_return(_b_.None)\n' +
           '}\n' +
           '$B.leave_frame()\n' +
-          'return {\nlocals, metaclass, bases, resolved_bases}\n})()\n'
+          `return $B.$class_constructor('${this.name}', locals, metaclass, ` +
+              `resolved_bases, bases, [${keywords.join(', ')}])\n` +
+          `})('${this.name}', '${glob}', $B.fast_tuple([${bases}]))\n`
 
     var class_ref = reference(scopes, enclosing_scope, this.name)
 
@@ -1351,14 +1358,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
     }
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
 
-    var keywords = []
-    for(var keyword of this.keywords){
-        keywords.push(`["${keyword.arg}", ` +
-            $B.js_from_ast(keyword.value, scopes) + ']')
-    }
-
-    js += `${class_ref} = $B.$class_constructor("${this.name}", ${ref}, ` +
-          `$B.fast_tuple([${bases}]), [], [${keywords.join(', ')}])\n`
+    js += `${class_ref} = ${ref}\n`
 
     if(decorated){
         js += reference(scopes, enclosing_scope, this.name) + ' = '
