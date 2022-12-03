@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-03 14:09:09.099257"
-__BRYTHON__.timestamp=1670072949099
+__BRYTHON__.compiled_date="2022-12-03 15:22:24.232207"
+__BRYTHON__.timestamp=1670077344232
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -723,9 +723,9 @@ if(augmented){raise_syntax_error_known_range(
 C,a,b,`'${wrong_type}' is an illegal expression `+
 'for augmented assignment')}else{var msg=wrong_type
 if(Array.isArray(msg)){
-msg=msg[0]}else if($token.value.string=='=' && $token.value.type=='OP'){if($parent_match(C,{type:'augm_assign'})){
+msg=msg[0]}else if($token.value.string=='=' && $token.value.type=='OP'){if(parent_match(C,{type:'augm_assign'})){
 raise_syntax_error(C)}
-if(! $parent_match(C,{type:'list_or_tuple'})){msg+=" here. Maybe you meant '==' instead of '='?"}}
+if(! parent_match(C,{type:'list_or_tuple'})){msg+=" here. Maybe you meant '==' instead of '='?"}}
 raise_syntax_error_known_range(
 C,a,b,`cannot ${action} ${msg}`)}}
 if(C.type=='expr'){var upper_expr=C
@@ -736,14 +736,14 @@ if(in_left_side(C,'augm_assign')){raise_syntax_error(C)}
 if(C.type=='target_list'){for(var target of C.tree){check_assignment(target,{action:'assign to'})}
 return}
 ctx=C
-while(ctx){if(forbidden.indexOf(ctx.type)>-1){raise_syntax_error(C,`(assign to ${ctx.type})`)}else if(ctx.type=="expr"){if($parent_match(ctx,{type:'annotation'})){return true}
+while(ctx){if(forbidden.indexOf(ctx.type)>-1){raise_syntax_error(C,`(assign to ${ctx.type})`)}else if(ctx.type=="expr"){if(parent_match(ctx,{type:'annotation'})){return true}
 if(ctx.parent.type=='yield'){raise_syntax_error_known_range(ctx,ctx.parent.position,last_position(ctx),"assignment to yield expression not possible")}
 var assigned=ctx.tree[0]
-if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){if($parent_match(ctx,{type:'target_list'})){
+if(assigned.type=="op"){if($B.op2method.comparisons[ctx.tree[0].op]!==undefined){if(parent_match(ctx,{type:'target_list'})){
 raise_syntax_error(C)}
 report('comparison',assigned.tree[0].position,last_position(assigned))}else{report('expression',assigned.tree[0].position,last_position(assigned))}}else if(assigned.type=='attribute' &&
-$parent_match(ctx,{type:'condition'})){report('attribute',ctx.position,last_position(C))}else if(assigned.type=='sub' &&
-$parent_match(ctx,{type:'condition'})){report('subscript',ctx.position,last_position(C))}else if(assigned.type=='unary'){report('expression',assigned.position,last_position(assigned))}else if(assigned.type=='call'){report('function call',assigned.position,assigned.end_position)}else if(assigned.type=='id'){var name=assigned.value
+parent_match(ctx,{type:'condition'})){report('attribute',ctx.position,last_position(C))}else if(assigned.type=='sub' &&
+parent_match(ctx,{type:'condition'})){report('subscript',ctx.position,last_position(C))}else if(assigned.type=='unary'){report('expression',assigned.position,last_position(assigned))}else if(assigned.type=='call'){report('function call',assigned.position,assigned.end_position)}else if(assigned.type=='id'){var name=assigned.value
 if(['None','True','False','__debug__'].indexOf(name)>-1){
 if(name=='__debug__' && augmented){
 $token.value=assigned.position
@@ -753,7 +753,7 @@ if(noassign[name]===true){report(keyword)}}else if(['str','int','float','complex
 check_assignment(assigned.tree[0],{action,once:true})}else if(assigned.type=='named_expr'){if(! assigned.parenthesized){report('named expression')}else if(ctx.parent.type=='node'){raise_syntax_error_known_range(
 C,assigned.target.position,last_position(assigned),"cannot assign to named expression here. "+
 "Maybe you meant '==' instead of '='?")}else if(action=='delete'){report('named expression',assigned.position,last_position(assigned))}}else if(assigned.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(assigned.type=='dict_or_set'){if(assigned.closed){report(assigned.real=='set' ? 'set display' :'dict literal',ctx.position,last_position(assigned))}}else if(assigned.type=='lambda'){report('lambda')}else if(assigned.type=='ternary'){report(['conditional expression'])}else if(assigned.type=='JoinedStr'){report('f-string expression',assigned.position,last_position(assigned))}}else if(ctx.type=='list_or_tuple'){for(var item of ctx.tree){check_assignment(item,{action,once:true})}}else if(ctx.type=='ternary'){report(['conditional expression'],ctx.position,last_position(C))}else if(ctx.type=='op'){var a=ctx.tree[0].position,last=$B.last(ctx.tree).tree[0],b=last.end_position ||last.position
-if($B.op2method.comparisons[ctx.op]!==undefined){if($parent_match(C,{type:'target_list'})){
+if($B.op2method.comparisons[ctx.op]!==undefined){if(parent_match(C,{type:'target_list'})){
 raise_syntax_error(C)}
 report('comparison',a,b)}else{report('expression',a,b)}}else if(ctx.type=='yield'){report('yield expression')}else if(ctx.comprehension){break}
 if(once){break}
@@ -824,13 +824,13 @@ for(var child of this.children){res+=child.show(indent+4)}
 if(this.children.length > 0){res+=' '.repeat(indent)
 res+='}\n'}
 return res}
-var $AbstractExprCtx=$B.parser.$AbstractExprCtx=function(C,with_commas){this.type='abstract_expr'
+var AbstractExprCtx=$B.parser.AbstractExprCtx=function(C,with_commas){this.type='abstract_expr'
 this.with_commas=with_commas
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree.push(this)}
-$AbstractExprCtx.prototype.transition=function(token,value){var C=this
+AbstractExprCtx.prototype.transition=function(token,value){var C=this
 var packed=C.packed,is_await=C.is_await,position=C.position
 switch(token){case 'await':
 case 'id':
@@ -857,43 +857,43 @@ C.is_await=is_await
 if(C.position===undefined){C.position=$token.value}
 if(star_position){C.star_position=star_position}}
 switch(token){case 'await':
-return new $AbstractExprCtx(new $AwaitCtx(
-new $ExprCtx(C,'await',false)),false)
+return new AbstractExprCtx(new AwaitCtx(
+new ExprCtx(C,'await',false)),false)
 case 'id':
-return new $IdCtx(new $ExprCtx(C,'id',commas),value)
+return new IdCtx(new ExprCtx(C,'id',commas),value)
 case 'str':
-return new $StringCtx(new $ExprCtx(C,'str',commas),value)
+return new StringCtx(new ExprCtx(C,'str',commas),value)
 case 'JoinedStr':
-return new JoinedStrCtx(new $ExprCtx(C,'str',commas),value)
+return new JoinedStrCtx(new ExprCtx(C,'str',commas),value)
 case 'bytes':
-return new $StringCtx(new $ExprCtx(C,'bytes',commas),value)
+return new StringCtx(new ExprCtx(C,'bytes',commas),value)
 case 'int':
-return new $NumberCtx('int',new $ExprCtx(C,'int',commas),value)
+return new NumberCtx('int',new ExprCtx(C,'int',commas),value)
 case 'float':
-return new $NumberCtx('float',new $ExprCtx(C,'float',commas),value)
+return new NumberCtx('float',new ExprCtx(C,'float',commas),value)
 case 'imaginary':
-return new $NumberCtx('imaginary',new $ExprCtx(C,'imaginary',commas),value)
+return new NumberCtx('imaginary',new ExprCtx(C,'imaginary',commas),value)
 case '(':
-return new $ListOrTupleCtx(
-new $ExprCtx(C,'tuple',commas),'tuple')
+return new ListOrTupleCtx(
+new ExprCtx(C,'tuple',commas),'tuple')
 case '[':
-return new $ListOrTupleCtx(
-new $ExprCtx(C,'list',commas),'list')
+return new ListOrTupleCtx(
+new ExprCtx(C,'list',commas),'list')
 case '{':
-return new $AbstractExprCtx(
-new $DictOrSetCtx(
-new $ExprCtx(C,'dict_or_set',commas)),false)
+return new AbstractExprCtx(
+new DictOrSetCtx(
+new ExprCtx(C,'dict_or_set',commas)),false)
 case 'ellipsis':
-return new $EllipsisCtx(
-new $ExprCtx(C,'ellipsis',commas))
+return new EllipsisCtx(
+new ExprCtx(C,'ellipsis',commas))
 case 'not':
 if(C.type=='op' && C.op=='is'){
 C.op='is_not'
 return C}
-return new $AbstractExprCtx(
-new $NotCtx(new $ExprCtx(C,'not',commas)),false)
+return new AbstractExprCtx(
+new NotCtx(new ExprCtx(C,'not',commas)),false)
 case 'lambda':
-return new $LambdaCtx(new $ExprCtx(C,'lambda',commas))
+return new LambdaCtx(new ExprCtx(C,'lambda',commas))
 case 'op':
 var tg=value
 if(C.parent.type=='op' && '+-~'.indexOf(tg)==-1){raise_syntax_error(C)}
@@ -902,33 +902,33 @@ C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.position=$token.value
-return new $AbstractExprCtx(
-new $StarredCtx(
-new $ExprCtx(C,'expr',commas)),false)
+return new AbstractExprCtx(
+new StarredCtx(
+new ExprCtx(C,'expr',commas)),false)
 case '**':
 C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
 C.position=$token.value
-return new $AbstractExprCtx(
+return new AbstractExprCtx(
 new KwdCtx(
-new $ExprCtx(C,'expr',commas)),false)
+new ExprCtx(C,'expr',commas)),false)
 case '-':
 case '~':
 case '+':
 C.parent.tree.pop()
-return new $AbstractExprCtx(
-new $UnaryCtx(
-new $ExprCtx(C.parent,'unary',false),tg),false
+return new AbstractExprCtx(
+new UnaryCtx(
+new ExprCtx(C.parent,'unary',false),tg),false
 )
 case 'not':
 C.parent.tree.pop()
 var commas=C.with_commas
 C=C.parent
-return new $NotCtx(
-new $ExprCtx(C,'not',commas))
+return new NotCtx(
+new ExprCtx(C,'not',commas))
 case '...':
-return new $EllipsisCtx(new $ExprCtx(C,'ellipsis',commas))}
+return new EllipsisCtx(new ExprCtx(C,'ellipsis',commas))}
 raise_syntax_error(C)
 case 'in':
 if(C.parent.type=='op' && C.parent.op=='not'){C.parent.op='not_in'
@@ -938,11 +938,11 @@ case '=':
 if(C.parent.type=="yield"){raise_syntax_error(C,"assignment to yield expression not possible",C.parent.position,)}
 raise_syntax_error(C)
 case 'yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
+return new AbstractExprCtx(new YieldCtx(C),true)
 case ':':
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
-C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}
+C.parent.parent.type=="sub")){return new AbstractExprCtx(new SliceCtx(C.parent),false)}
 return $transition(C.parent,token,value)
 case ')':
 case ',':
@@ -955,7 +955,7 @@ break
 case 'match':
 if(token==','){
 C.parent.tree.pop()
-var tuple=new $ListOrTupleCtx(C.parent,'tuple')
+var tuple=new ListOrTupleCtx(C.parent,'tuple')
 tuple.implicit=true
 tuple.has_comma=true
 tuple.tree=[C]
@@ -980,12 +980,12 @@ case 'try':
 raise_syntax_error(C)
 break}
 return $transition(C.parent,token,value)}
-var $AliasCtx=$B.parser.$AliasCtx=function(C){
+var AliasCtx=$B.parser.AliasCtx=function(C){
 this.type='ctx_manager_alias'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length-1].alias=this}
-$AliasCtx.prototype.transition=function(token,value){var C=this
+AliasCtx.prototype.transition=function(token,value){var C=this
 switch(token){case ',':
 case ')':
 case ':':
@@ -996,7 +996,7 @@ case 'eol':
 $token.value=last_position(C)
 raise_syntax_error(C,"expected ':'")}
 raise_syntax_error(C)}
-var $AnnotationCtx=$B.parser.$AnnotationCtx=function(C){
+var AnnotationCtx=$B.parser.AnnotationCtx=function(C){
 this.type='annotation'
 this.parent=C
 this.tree=[]
@@ -1006,29 +1006,29 @@ if(scope.ntype=="def" && C.tree && C.tree.length > 0 &&
 C.tree[0].type=="id"){var name=C.tree[0].value
 scope.annotations=scope.annotations ||new Set()
 scope.annotations.add(name)}}
-$AnnotationCtx.prototype.transition=function(token,value){var C=this
+AnnotationCtx.prototype.transition=function(token,value){var C=this
 if(token=="eol" && C.tree.length==1 &&
 C.tree[0].tree.length==0){raise_syntax_error(C)}else if(token==':' && C.parent.type !="def"){raise_syntax_error(C,"more than one annotation")}else if(token=="augm_assign"){raise_syntax_error(C,"augmented assign as annotation")}else if(token=="op"){raise_syntax_error(C,"operator as annotation")}
 return $transition(C.parent,token)}
-var $AssertCtx=$B.parser.$AssertCtx=function(C){
+var AssertCtx=$B.parser.AssertCtx=function(C){
 this.type='assert'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$AssertCtx.prototype.ast=function(){
+AssertCtx.prototype.ast=function(){
 var msg=this.tree[1],ast_obj=new ast.Assert(this.tree[0].ast(),msg===undefined ? msg :msg.ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-$AssertCtx.prototype.transition=function(token,value){var C=this
+AssertCtx.prototype.transition=function(token,value){var C=this
 if(token==","){if(this.tree.length > 1){raise_syntax_error(C,'(too many commas after assert)')}
-return new $AbstractExprCtx(this,false)}
+return new AbstractExprCtx(this,false)}
 if(token=='eol'){if(this.tree.length==1 &&
 this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){$B.warn(_b_.SyntaxWarning,"assertion is always true, perhaps remove parentheses?",$get_module(C).filename,$token.value)}
 return $transition(C.parent,token)}
 raise_syntax_error(C)}
-var $AssignCtx=$B.parser.$AssignCtx=function(C,expression){
+var AssignCtx=$B.parser.AssignCtx=function(C,expression){
 check_assignment(C)
 this.type='assign'
 this.position=$token.value
@@ -1043,7 +1043,7 @@ if(['None','True','False','__debug__'].indexOf(id)>-1){raise_syntax_error(C,'can
 if(assigned.parent.in_tuple===undefined){raise_syntax_error(C,"starred assignment target must be in a list or tuple")}}}}
 function set_ctx_to_store(obj){if(Array.isArray(obj)){for(var item of obj){set_ctx_to_store(item)}}else if(obj instanceof ast.List ||
 obj instanceof ast.Tuple){for(var item of obj.elts){set_ctx_to_store(item)}}else if(obj instanceof ast.Starred){obj.value.ctx=new ast.Store()}else if(obj===undefined){}else if(obj.ctx){obj.ctx=new ast.Store()}else{console.log('bizarre',obj,obj.constructor.$name)}}
-$AssignCtx.prototype.ast=function(){var value=this.tree[1].ast(),targets=[],target=this.tree[0]
+AssignCtx.prototype.ast=function(){var value=this.tree[1].ast(),targets=[],target=this.tree[0]
 if(target.type=='expr' && target.tree[0].type=='list_or_tuple'){target=target.tree[0]}
 if(target.type=='list_or_tuple'){target=target.ast()
 target.ctx=new ast.Store()
@@ -1059,23 +1059,23 @@ ast_obj.target.ctx=new ast.Store()}else{var ast_obj=new ast.Assign(targets,value
 set_position(ast_obj,this.position)
 set_ctx_to_store(ast_obj.targets)
 return ast_obj}
-$AssignCtx.prototype.transition=function(token,value){var C=this
+AssignCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){raise_syntax_error(C)}
 return $transition(C.parent,'eol')}
 raise_syntax_error(C)}
-var $AsyncCtx=$B.parser.$AsyncCtx=function(C){
+var AsyncCtx=$B.parser.AsyncCtx=function(C){
 this.type='async'
 this.parent=C
 C.async=true
 this.position=C.position=$token.value}
-$AsyncCtx.prototype.transition=function(token,value){var C=this
+AsyncCtx.prototype.transition=function(token,value){var C=this
 if(token=="def"){return $transition(C.parent,token,value)}else if(token=="with"){var ctx=$transition(C.parent,token,value)
 ctx.async=C 
 return ctx}else if(token=="for"){var ctx=$transition(C.parent,token,value)
 ctx.parent.async=C 
 return ctx}
 raise_syntax_error(C)}
-var $AttrCtx=$B.parser.$AttrCtx=function(C){
+var AttrCtx=$B.parser.AttrCtx=function(C){
 this.type='attribute'
 this.value=C.tree[0]
 this.parent=C
@@ -1084,13 +1084,13 @@ C.tree.pop()
 C.tree[C.tree.length]=this
 this.tree=[]
 this.func='getattr' }
-$AttrCtx.prototype.ast=function(){
+AttrCtx.prototype.ast=function(){
 var value=this.value.ast(),attr=this.unmangled_name,ctx=new ast.Load()
 if(this.func=='setattr'){ctx=new ast.Store()}else if(this.func=='delattr'){ctx=new ast.Delete()}
 var ast_obj=new ast.Attribute(value,attr,ctx)
 set_position(ast_obj,this.position,this.end_position)
 return ast_obj}
-$AttrCtx.prototype.transition=function(token,value){var C=this
+AttrCtx.prototype.transition=function(token,value){var C=this
 if(token==='id'){var name=value
 if(name=='__debug__'){raise_syntax_error(C,'cannot assign to __debug__')}else if(noassign[name]===true){raise_syntax_error(C)}
 C.unmangled_name=name
@@ -1100,7 +1100,7 @@ name=$mangle(name,C)
 C.name=name
 return C.parent}
 raise_syntax_error(C)}
-var $AugmentedAssignCtx=$B.parser.$AugmentedAssignCtx=function(C,op){
+var AugmentedAssignCtx=$B.parser.AugmentedAssignCtx=function(C,op){
 check_assignment(C,{augmented:true})
 this.type='augm_assign'
 this.C=C
@@ -1112,7 +1112,7 @@ this.op=op
 this.tree=[C]
 var scope=this.scope=$get_scope(this)
 this.module=scope.module}
-$AugmentedAssignCtx.prototype.ast=function(){
+AugmentedAssignCtx.prototype.ast=function(){
 var target=this.tree[0].ast(),value=this.tree[1].ast()
 target.ctx=new ast.Store()
 value.ctx=new ast.Load()
@@ -1120,11 +1120,11 @@ var op=this.op.substr(0,this.op.length-1),ast_type_class=op2ast_class[op],ast_cl
 var ast_obj=new ast.AugAssign(target,new ast_class(),value)
 set_position(ast_obj,this.position)
 return ast_obj}
-$AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
+AugmentedAssignCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){if(C.tree[1].type=='abstract_expr'){raise_syntax_error(C)}
 return $transition(C.parent,'eol')}
 raise_syntax_error(C)}
-var $AwaitCtx=$B.parser.$AwaitCtx=function(C){
+var AwaitCtx=$B.parser.AwaitCtx=function(C){
 this.type='await'
 this.parent=C
 this.tree=[]
@@ -1136,14 +1136,14 @@ p=p.parent}
 var node=$get_node(this)
 node.awaits=node.awaits ||[]
 node.awaits.push(this)}
-$AwaitCtx.prototype.ast=function(){
+AwaitCtx.prototype.ast=function(){
 var ast_obj=new ast.Await(this.tree[0].ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-$AwaitCtx.prototype.transition=function(token,value){var C=this
+AwaitCtx.prototype.transition=function(token,value){var C=this
 C.parent.is_await=true
 return $transition(C.parent,token,value)}
-var $BodyCtx=$B.parser.$BodyCtx=function(C){
+var BodyCtx=$B.parser.BodyCtx=function(C){
 var ctx_node=C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
@@ -1151,26 +1151,26 @@ var body_node=new $Node()
 body_node.is_body_node=true
 body_node.line_num=tree_node.line_num
 tree_node.insert(0,body_node)
-return new $NodeCtx(body_node)}
-var $BreakCtx=$B.parser.$BreakCtx=function(C){
+return new NodeCtx(body_node)}
+var BreakCtx=$B.parser.BreakCtx=function(C){
 this.type='break'
 this.position=$token.value
 this.parent=C
 C.tree[C.tree.length]=this}
-$BreakCtx.prototype.ast=function(){var ast_obj=new ast.Break()
+BreakCtx.prototype.ast=function(){var ast_obj=new ast.Break()
 set_position(ast_obj,this.position)
 return ast_obj}
-$BreakCtx.prototype.transition=function(token,value){var C=this
+BreakCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return $transition(C.parent,'eol')}
 raise_syntax_error(C)}
-var $CallArgCtx=$B.parser.$CallArgCtx=function(C){
+var CallArgCtx=$B.parser.CallArgCtx=function(C){
 this.type='call_arg'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree.push(this)
 this.expect='id'}
-$CallArgCtx.prototype.transition=function(token,value){var C=this
+CallArgCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'await':
 case 'id':
 case 'imaginary':
@@ -1188,27 +1188,27 @@ case 'not':
 case 'lambda':
 if(C.expect=='id'){this.position=$token.value
 C.expect=','
-var expr=new $AbstractExprCtx(C,false)
+var expr=new AbstractExprCtx(C,false)
 return $transition(expr,token,value)}
 break
 case '=':
-if(C.expect==','){return new $ExprCtx(new $KwArgCtx(C),'kw_value',false)}
+if(C.expect==','){return new ExprCtx(new KwArgCtx(C),'kw_value',false)}
 break
 case 'for':
-return new $TargetListCtx(new $ForExpr(new GeneratorExpCtx(C)))
+return new TargetListCtx(new ForExpr(new GeneratorExpCtx(C)))
 case 'op':
 if(C.expect=='id'){var op=value
 C.expect=','
 switch(op){case '+':
 case '-':
 case '~':
-return $transition(new $AbstractExprCtx(C,false),token,op)
+return $transition(new AbstractExprCtx(C,false),token,op)
 case '*':
 C.parent.tree.pop()
-return new $StarArgCtx(C.parent)
+return new StarArgCtx(C.parent)
 case '**':
 C.parent.tree.pop()
-return new $DoubleStarArgCtx(C.parent)}}
+return new DoubleStarArgCtx(C.parent)}}
 raise_syntax_error(C)
 case ')':
 return $transition(C.parent,token)
@@ -1219,7 +1219,7 @@ break
 case ',':
 if(C.expect==','){return $transition(C.parent,token,value)}}
 raise_syntax_error(C)}
-var $CallCtx=$B.parser.$CallCtx=function(C){
+var CallCtx=$B.parser.CallCtx=function(C){
 this.position=$token.value
 this.type='call'
 this.func=C.tree[0]
@@ -1233,7 +1233,7 @@ C.tree[C.tree.length]=this}else{
 C.args=this}
 this.expect='id'
 this.tree=[]}
-$CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[]),keywords=new Set()
+CallCtx.prototype.ast=function(){var res=new ast.Call(this.func.ast(),[],[]),keywords=new Set()
 for(var call_arg of this.tree){if(call_arg.type=='double_star_arg'){var value=call_arg.tree[0].tree[0].ast(),keyword=new ast.keyword(_b_.None,value)
 delete keyword.arg
 res.keywords.push(keyword)}else if(call_arg.type=='star_arg'){if(res.keywords.length > 0){if(! res.keywords[0].arg){raise_syntax_error(this,'iterable argument unpacking follows keyword argument unpacking')}}
@@ -1253,7 +1253,7 @@ res.keywords.push(keyword)}else{if(res.keywords.length > 0){if(res.keywords[0].a
 res.args.push(item.ast())}}}
 set_position(res,this.position,this.end_position)
 return res}
-$CallCtx.prototype.transition=function(token,value){var C=this
+CallCtx.prototype.transition=function(token,value){var C=this
 switch(token){case ',':
 if(C.expect=='id'){raise_syntax_error(C)}
 C.expect='id'
@@ -1274,7 +1274,7 @@ case 'not':
 case 'lambda':
 case 'ellipsis':
 C.expect=','
-return $transition(new $CallArgCtx(C),token,value)
+return $transition(new CallArgCtx(C),token,value)
 case ')':
 C.end_position=$token.value
 return C.parent
@@ -1284,33 +1284,33 @@ switch(value){case '-':
 case '~':
 case '+':
 C.expect=','
-return $transition(new $CallArgCtx(C),token,value)
+return $transition(new CallArgCtx(C),token,value)
 case '*':
 C.has_star=true
-return new $StarArgCtx(C)
+return new StarArgCtx(C)
 case '**':
 C.has_dstar=true
-return new $DoubleStarArgCtx(C)}
+return new DoubleStarArgCtx(C)}
 raise_syntax_error(C)
 case 'yield':
 raise_syntax_error(C)}
 return $transition(C.parent,token,value)}
-var $CaseCtx=$B.parser.$CaseCtx=function(node_ctx){
+var CaseCtx=$B.parser.CaseCtx=function(node_ctx){
 this.type="case"
 this.position=$token.value
 node_ctx.tree=[this]
 this.parent=node_ctx
 this.tree=[]
 this.expect='as'}
-$CaseCtx.prototype.ast=function(){
+CaseCtx.prototype.ast=function(){
 var ast_obj=new ast.match_case(this.tree[0].ast(),this.has_guard ? this.tree[1].tree[0].ast():undefined,ast_body(this.parent))
 set_position(ast_obj,this.position)
 return ast_obj}
-$CaseCtx.prototype.set_alias=function(name){this.alias=name}
-$CaseCtx.prototype.transition=function(token,value){var C=this
+CaseCtx.prototype.set_alias=function(name){this.alias=name}
+CaseCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'as':
 C.expect=':'
-return new $AbstractExprCtx(new $AliasCtx(C))
+return new AbstractExprCtx(new AliasCtx(C))
 case ':':
 function is_irrefutable(pattern){var cause
 if(pattern.type=="capture_pattern"){return pattern.tree[0]}else if(pattern.type=="or_pattern"){for(var subpattern of pattern.tree){if(cause=is_irrefutable(subpattern)){return cause}}}else if(pattern.type=="sequence_pattern" &&
@@ -1326,19 +1326,19 @@ case 'as':
 case ':':
 var last=$B.last(C.tree)
 if(last && last.type=='sequence_pattern'){remove_empty_pattern(last)}
-return $BodyCtx(C)}
+return BodyCtx(C)}
 break
 case 'op':
-if(value=='|'){return new $PatternCtx(new $PatternOrCtx(C))}
+if(value=='|'){return new PatternCtx(new PatternOrCtx(C))}
 raise_syntax_error(C,'expected :')
 case ',':
-if(C.expect==':' ||C.expect=='as'){return new $PatternCtx(new $PatternSequenceCtx(C))}
+if(C.expect==':' ||C.expect=='as'){return new PatternCtx(new PatternSequenceCtx(C))}
 case 'if':
 C.has_guard=true
-return new $AbstractExprCtx(new $ConditionCtx(C,token),false)
+return new AbstractExprCtx(new ConditionCtx(C,token),false)
 default:
 raise_syntax_error(C,'expected :')}}
-var $ClassCtx=$B.parser.$ClassCtx=function(C){
+var ClassCtx=$B.parser.ClassCtx=function(C){
 this.type='class'
 this.parent=C
 this.tree=[]
@@ -1348,13 +1348,13 @@ this.expect='id'
 var scope=this.scope=$get_scope(this)
 this.parent.node.parent_block=scope
 this.parent.node.bound={}}
-$ClassCtx.prototype.ast=function(){
+ClassCtx.prototype.ast=function(){
 var decorators=get_decorators(this.parent.node),bases=[],keywords=[]
 if(this.args){for(var arg of this.args.tree){if(arg.tree[0].type=='kwarg'){keywords.push(new ast.keyword(arg.tree[0].tree[0].value,arg.tree[0].tree[1].ast()))}else{bases.push(arg.tree[0].ast())}}}
 var ast_obj=new ast.ClassDef(this.name,bases,keywords,ast_body(this.parent),decorators)
 set_position(ast_obj,this.position)
 return ast_obj}
-$ClassCtx.prototype.transition=function(token,value){var C=this
+ClassCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.expect=='id'){C.set_name(value)
 C.expect='(:'
@@ -1363,7 +1363,7 @@ break
 case '(':
 if(C.name===undefined){raise_syntax_error(C,'missing class name')}
 C.parenthesis_position=$token.value
-return new $CallCtx(C)
+return new CallCtx(C)
 case ':':
 if(this.args){for(var arg of this.args.tree){var param=arg.tree[0]
 if(arg.type !='call_arg'){$token.value=C.parenthesis_position
@@ -1372,11 +1372,11 @@ if((param.type=='expr' && param.name=='id')||
 param.type=="kwarg"){continue}
 $token.value=arg.position
 raise_syntax_error(arg,'invalid class parameter')}}
-return $BodyCtx(C)
+return BodyCtx(C)
 case 'eol':
 raise_syntax_error(C,"expected ':'")}
 raise_syntax_error(C)}
-$ClassCtx.prototype.set_name=function(name){var C=this.parent
+ClassCtx.prototype.set_name=function(name){var C=this.parent
 this.random=$B.UUID()
 this.name=name
 this.id=C.node.module+'_'+name+'_'+this.random
@@ -1422,7 +1422,7 @@ comp.module_ref=comp.module.replace(/\./g,'_')
 C.parent.tree[C.parent.tree.length-1]=comp
 Comprehension.set_parent_block(C.tree[0],comp)},set_parent_block:function(ctx,parent_block){if(ctx.tree){for(var item of ctx.tree){if(item.comprehension){item.parent_block=parent_block}
 Comprehension.set_parent_block(item,parent_block)}}}}
-var $ConditionCtx=$B.parser.$ConditionCtx=function(C,token){
+var ConditionCtx=$B.parser.ConditionCtx=function(C,token){
 this.type='condition'
 this.token=token
 this.parent=C
@@ -1434,42 +1434,42 @@ if(token=='elif'){
 var rank=this.node.parent.children.indexOf(this.node),previous=this.node.parent.children[rank-1]
 previous.C.tree[0].orelse=this}
 C.tree.push(this)}
-$ConditionCtx.prototype.ast=function(){
+ConditionCtx.prototype.ast=function(){
 var types={'if':'If','while':'While','elif':'If'}
 var res=new ast[types[this.token]](this.tree[0].ast())
 if(this.orelse){if(this.orelse.token=='elif'){res.orelse=[this.orelse.ast()]}else{res.orelse=this.orelse.ast()}}else{res.orelse=[]}
 res.body=ast_body(this)
 set_position(res,this.position)
 return res}
-$ConditionCtx.prototype.transition=function(token,value){var C=this
+ConditionCtx.prototype.transition=function(token,value){var C=this
 if(token==':'){if(C.tree[0].type=="abstract_expr" &&
 C.tree[0].tree.length==0){
 raise_syntax_error(C)}
-return $BodyCtx(C)}else if(C.in_comp && C.token=='if'){
-if(token==']'){return $transition(C.parent,token,value)}else if(token=='if'){var if_exp=new $ConditionCtx(C.parent,'if')
+return BodyCtx(C)}else if(C.in_comp && C.token=='if'){
+if(token==']'){return $transition(C.parent,token,value)}else if(token=='if'){var if_exp=new ConditionCtx(C.parent,'if')
 if_exp.in_comp=C.in_comp
-return new $AbstractExprCtx(if_exp,false)}else if(')]}'.indexOf(token)>-1){return $transition(this.parent,token,value)}else if(C.in_comp && token=='for'){return new $TargetListCtx(new $ForExpr(C.parent))}
-if(token==',' && $parent_match(C,{type:'call'})){raise_syntax_error_known_range(C,C.in_comp.position,last_position(C),'Generator expression must be parenthesized')}}
+return new AbstractExprCtx(if_exp,false)}else if(')]}'.indexOf(token)>-1){return $transition(this.parent,token,value)}else if(C.in_comp && token=='for'){return new TargetListCtx(new ForExpr(C.parent))}
+if(token==',' && parent_match(C,{type:'call'})){raise_syntax_error_known_range(C,C.in_comp.position,last_position(C),'Generator expression must be parenthesized')}}
 raise_syntax_error(C,"expected ':'")}
-var $ContinueCtx=$B.parser.$ContinueCtx=function(C){
+var ContinueCtx=$B.parser.ContinueCtx=function(C){
 this.type='continue'
 this.parent=C
 this.position=$token.value
 $get_node(this).is_continue=true
 C.tree[C.tree.length]=this}
-$ContinueCtx.prototype.ast=function(){var ast_obj=new ast.Continue()
+ContinueCtx.prototype.ast=function(){var ast_obj=new ast.Continue()
 set_position(ast_obj,this.position)
 return ast_obj}
-$ContinueCtx.prototype.transition=function(token,value){var C=this
+ContinueCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
 raise_syntax_error(C)}
-var $DecoratorCtx=$B.parser.$DecoratorCtx=function(C){
+var DecoratorCtx=$B.parser.DecoratorCtx=function(C){
 this.type='decorator'
 this.parent=C
 C.tree[C.tree.length]=this
 this.tree=[]
 this.position=$token.value}
-$DecoratorCtx.prototype.transition=function(token,value){var C=this
+DecoratorCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return $transition(C.parent,token)}
 raise_syntax_error(C)}
 function get_decorators(node){var decorators=[]
@@ -1480,7 +1480,7 @@ if(rank < 0){break}else if(parent_node.children[rank].C.tree[0].type==
 'decorator'){var deco=parent_node.children[rank].C.tree[0].tree[0]
 decorators.splice(0,0,deco.ast())}else{break}}
 return decorators}
-var $DefCtx=$B.parser.$DefCtx=function(C){this.type='def'
+var DefCtx=$B.parser.DefCtx=function(C){this.type='def'
 this.name=null
 this.parent=C
 this.tree=[]
@@ -1508,22 +1508,22 @@ this.default_list=[]
 this.other_args=null
 this.other_kw=null
 this.after_star=[]}
-$DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[]},decorators=get_decorators(this.parent.node),func_args=this.tree[1],state='arg',default_value,res
+DefCtx.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[]},decorators=get_decorators(this.parent.node),func_args=this.tree[1],state='arg',default_value,res
 args=func_args.ast()
 if(this.async){res=new ast.AsyncFunctionDef(this.name,args,[],decorators)}else{res=new ast.FunctionDef(this.name,args,[],decorators)}
 if(this.annotation){res.returns=this.annotation.tree[0].ast()}
 res.body=ast_body(this.parent)
 set_position(res,this.position)
 return res}
-$DefCtx.prototype.set_name=function(name){if(["None","True","False"].indexOf(name)>-1){raise_syntax_error(this)}
-var id_ctx=new $IdCtx(this,name)
+DefCtx.prototype.set_name=function(name){if(["None","True","False"].indexOf(name)>-1){raise_syntax_error(this)}
+var id_ctx=new IdCtx(this,name)
 this.name=name
 this.id=this.scope.id+'_'+name
 this.id=this.id.replace(/\./g,'_')
 this.id+='_'+$B.UUID()
 this.parent.node.id=this.id
 this.parent.node.module=this.module}
-$DefCtx.prototype.transition=function(token,value){var C=this
+DefCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.name){raise_syntax_error(C)}
 C.set_name(value)
@@ -1531,23 +1531,23 @@ return C
 case '(':
 if(C.name==null){raise_syntax_error(C,"missing name in function definition")}
 C.has_args=true;
-return new $FuncArgs(C)
+return new FuncArgs(C)
 case ')':
 return C
 case 'annotation':
-return new $AbstractExprCtx(new $AnnotationCtx(C),true)
+return new AbstractExprCtx(new AnnotationCtx(C),true)
 case ':':
-if(C.has_args){return $BodyCtx(C)}else{raise_syntax_error(C,"missing function parameters")}
+if(C.has_args){return BodyCtx(C)}else{raise_syntax_error(C,"missing function parameters")}
 case 'eol':
 if(C.has_args){raise_syntax_error(C,"expected ':'")}}
 raise_syntax_error(C)}
-var $DelCtx=$B.parser.$DelCtx=function(C){
+var DelCtx=$B.parser.DelCtx=function(C){
 this.type='del'
 this.parent=C
 C.tree.push(this)
 this.tree=[]
 this.position=$token.value}
-$DelCtx.prototype.ast=function(){var targets
+DelCtx.prototype.ast=function(){var targets
 if(this.tree[0].type=='list_or_tuple'){
 targets=this.tree[0].tree.map(x=> x.ast())}else if(this.tree[0].type=='expr' &&
 this.tree[0].tree[0].type=='list_or_tuple'){
@@ -1561,7 +1561,7 @@ for(var target of targets){target.ctx=new ast.Del()}
 var ast_obj=new ast.Delete(targets)
 set_position(ast_obj,this.position)
 return ast_obj}
-$DelCtx.prototype.transition=function(token,value){var C=this
+DelCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){check_assignment(this.tree[0],{action:'delete'})
 return $transition(C.parent,token)}
 raise_syntax_error(C)}
@@ -1595,7 +1595,7 @@ return ast_obj}
 DictCompCtx.prototype.transition=function(token,value){var C=this
 if(token=='}'){return this.parent}
 raise_syntax_error(C)}
-var $DictOrSetCtx=$B.parser.$DictOrSetCtx=function(C){
+var DictOrSetCtx=$B.parser.DictOrSetCtx=function(C){
 this.type='dict_or_set'
 this.real='dict_or_set'
 this.expect=','
@@ -1605,7 +1605,7 @@ this.nb_items=0
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$DictOrSetCtx.prototype.ast=function(){
+DictOrSetCtx.prototype.ast=function(){
 var ast_obj
 if(this.real=='dict'){var keys=[],values=[]
 var t0=Date.now()
@@ -1621,11 +1621,11 @@ items.push(starred)}else{items.push(item.ast())}}
 ast_obj=new ast.Set(items)}
 set_position(ast_obj,this.position)
 return ast_obj}
-$DictOrSetCtx.prototype.transition=function(token,value){var C=this
+DictOrSetCtx.prototype.transition=function(token,value){var C=this
 if(C.closed){switch(token){case '[':
-return new $AbstractExprCtx(new $SubCtx(C.parent),false)
+return new AbstractExprCtx(new SubscripCtx(C.parent),false)
 case '(':
-return new $CallArgCtx(new $CallCtx(C.parent))}
+return new CallArgCtx(new CallCtx(C.parent))}
 return $transition(C.parent,token,value)}else{if(C.expect==','){function check_last(){var last=$B.last(C.tree),err_msg
 if(last && last.wrong_assignment){
 err_msg="invalid syntax. Maybe you meant '==' or ':=' instead of '='?"}else if(C.real=='dict' && last.type=='expr' &&
@@ -1661,7 +1661,7 @@ if(C.real=='dict_or_set'){var last=C.tree[0]
 C.real=(last.type=='expr' &&
 last.tree[0].type=='kwd')? 'dict' :'set'}
 if(C.real=='dict' && C.nb_items % 2){raise_syntax_error(C,"':' expected after dictionary key")}
-return new $AbstractExprCtx(C,false)
+return new AbstractExprCtx(C,false)
 case ':':
 if(C.real=='dict_or_set'){C.real='dict'}
 if(C.real=='dict'){C.expect='value'
@@ -1675,23 +1675,23 @@ raise_syntax_error(C,"did you forget "+
 var expr=C.tree[0],err_msg
 if(expr.type=='expr'){if(expr.tree[0].type=='kwd'){err_msg='dict unpacking cannot be used in dict comprehension'}else if(expr.tree[0].type=='starred'){err_msg='iterable unpacking cannot be used in comprehension'}
 if(err_msg){raise_syntax_error_known_range(C,expr.position,last_position(expr),err_msg)}}
-if(C.real=='dict_or_set'){return new $TargetListCtx(new $ForExpr(
-new SetCompCtx(this)))}else{return new $TargetListCtx(new $ForExpr(
+if(C.real=='dict_or_set'){return new TargetListCtx(new ForExpr(
+new SetCompCtx(this)))}else{return new TargetListCtx(new ForExpr(
 new DictCompCtx(this)))}}
-raise_syntax_error(C)}else if(C.expect=='value'){if(python_keywords.indexOf(token)>-1){var ae=new $AbstractExprCtx(C,false)
+raise_syntax_error(C)}else if(C.expect=='value'){if(python_keywords.indexOf(token)>-1){var ae=new AbstractExprCtx(C,false)
 try{$transition(ae,token,value)
 C.tree.pop()}catch(err){raise_syntax_error(C)}}
 try{C.expect=','
-return $transition(new $AbstractExprCtx(C,false),token,value)}catch(err){$token.value=C.value_pos
+return $transition(new AbstractExprCtx(C,false),token,value)}catch(err){$token.value=C.value_pos
 raise_syntax_error(C,"expression expected after "+
 "dictionary key and ':'")}}
 return $transition(C.parent,token,value)}}
-var $DoubleStarArgCtx=$B.parser.$DoubleStarArgCtx=function(C){
+var DoubleStarArgCtx=$B.parser.DoubleStarArgCtx=function(C){
 this.type='double_star_arg'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$DoubleStarArgCtx.prototype.transition=function(token,value){var C=this
+DoubleStarArgCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -1705,33 +1705,33 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
-return $transition(new $AbstractExprCtx(C,false),token,value)
+return $transition(new AbstractExprCtx(C,false),token,value)
 case ',':
 case ')':
 return $transition(C.parent,token)
 case ':':
 if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
 raise_syntax_error(C)}
-var $EllipsisCtx=$B.parser.$EllipsisCtx=function(C){
+var EllipsisCtx=$B.parser.EllipsisCtx=function(C){
 this.type='ellipsis'
 this.parent=C
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$EllipsisCtx.prototype.ast=function(){var ast_obj=new ast.Constant(_b_.Ellipsis)
+EllipsisCtx.prototype.ast=function(){var ast_obj=new ast.Constant(_b_.Ellipsis)
 set_position(ast_obj,this.position)
 return ast_obj}
-$EllipsisCtx.prototype.transition=function(token,value){var C=this
+EllipsisCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
-var $EndOfPositionalCtx=$B.parser.$EndOfConditionalCtx=function(C){
+var EndOfPositionalCtx=$B.parser.$EndOfConditionalCtx=function(C){
 this.type="end_positional"
 this.parent=C
 C.has_end_positional=true
 C.parent.pos_only=C.tree.length
 C.tree.push(this)}
-$EndOfPositionalCtx.prototype.transition=function(token,value){var C=this
+EndOfPositionalCtx.prototype.transition=function(token,value){var C=this
 if(token=="," ||token==")"){return $transition(C.parent,token,value)}
 raise_syntax_error(C)}
-var $ExceptCtx=$B.parser.$ExceptCtx=function(C){
+var ExceptCtx=$B.parser.ExceptCtx=function(C){
 this.type='except'
 this.position=$token.value
 this.parent=C
@@ -1743,13 +1743,13 @@ while(node.parent.children[ix].C.tree[0].type !='try'){ix--}
 this.try_node=node.parent.children[ix]
 this.is_first_child=rank==ix+1
 if(this.try_node.C.is_trystar){this.expect='*'}else{this.expect='id'}}
-$ExceptCtx.prototype.ast=function(){
+ExceptCtx.prototype.ast=function(){
 var ast_obj=new ast.ExceptHandler(
 this.tree.length==1 ? this.tree[0].ast():undefined,this.has_alias ? this.tree[0].alias :undefined,ast_body(this.parent)
 )
 set_position(ast_obj,this.position)
 return ast_obj}
-$ExceptCtx.prototype.transition=function(token,value){var C=this
+ExceptCtx.prototype.transition=function(token,value){var C=this
 if(token=='op' && value=='*'){
 if(C.is_first_child){
 C.try_node.C.is_trystar=true
@@ -1773,7 +1773,7 @@ case '{':
 case 'not':
 case 'lambda':
 if(C.expect=='id'){C.expect='as'
-return $transition(new $AbstractExprCtx(C,false),token,value)}
+return $transition(new AbstractExprCtx(C,false),token,value)}
 case 'as':
 if(C.expect=='as' &&
 C.has_alias===undefined){C.expect='alias'
@@ -1786,7 +1786,7 @@ return C}
 break
 case ':':
 var _ce=C.expect
-if(_ce=='id' ||_ce=='as' ||_ce==':'){return $BodyCtx(C)}
+if(_ce=='id' ||_ce=='as' ||_ce==':'){return BodyCtx(C)}
 break
 case '(':
 if(C.expect=='id' && C.tree.length==0){C.parenth=true
@@ -1803,8 +1803,8 @@ return C}else if(C.parenth===undefined){raise_syntax_error(C,"multiple exception
 case 'eol':
 raise_syntax_error(C,"expected ':'")}
 raise_syntax_error(C)}
-$ExceptCtx.prototype.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)}
-var $ExprCtx=$B.parser.$ExprCtx=function(C,name,with_commas){
+ExceptCtx.prototype.set_alias=function(alias){this.tree[0].alias=$mangle(alias,this)}
+var ExprCtx=$B.parser.ExprCtx=function(C,name,with_commas){
 this.type='expr'
 this.name=name
 this.position=$token.value 
@@ -1814,12 +1814,12 @@ this.parent=C
 if(C.packed){this.packed=C.packed}
 this.tree=[]
 C.tree[C.tree.length]=this}
-$ExprCtx.prototype.ast=function(){var res=this.tree[0].ast()
+ExprCtx.prototype.ast=function(){var res=this.tree[0].ast()
 if(this.packed){}else if(this.annotation){res=new ast.AnnAssign(
 res,this.annotation.tree[0].ast(),undefined,this.$was_parenthesized ? 0 :1)
 set_position(res,this.position)}
 return res}
-$ExprCtx.prototype.transition=function(token,value){var C=this
+ExprCtx.prototype.transition=function(token,value){var C=this
 if(python_keywords.indexOf(token)>-1 &&
 ['as','else','if','for','from','in'].indexOf(token)==-1){raise_syntax_error(C)}
 if(C.parent.expect=='star_target'){if(['pass','in','not','op','augm_assign','=',':=','if','eol'].
@@ -1839,15 +1839,15 @@ break
 case '{':
 if(C.tree[0].type !="id" ||
 ["print","exec"].indexOf(C.tree[0].value)==-1){raise_syntax_error(C)}
-return new $AbstractExprCtx(new $DictOrSetCtx(C),false)
+return new AbstractExprCtx(new DictOrSetCtx(C),false)
 case '[':
 case '(':
 case '.':
 case 'not':
 if(C.expect=='expr'){C.expect=','
-return $transition(new $AbstractExprCtx(C,false),token,value)}}
+return $transition(new AbstractExprCtx(C,false),token,value)}}
 switch(token){case 'not':
-if(C.expect==','){return new $ExprNot(C)}
+if(C.expect==','){return new ExprNot(C)}
 break
 case 'in':
 if(C.parent.type=='target_list'){
@@ -1864,9 +1864,9 @@ C.parent.parent.type !='node'){
 var for_expr=C.parent.parent
 raise_syntax_error_known_range(C,first_position(for_expr),last_position(for_expr),'Generator expression must be parenthesized')}
 if(C.with_commas ||
-["assign","return"].indexOf(C.parent.type)>-1){if($parent_match(C,{type:"yield","from":true})){raise_syntax_error(C,"no implicit tuple for yield from")}
+["assign","return"].indexOf(C.parent.type)>-1){if(parent_match(C,{type:"yield","from":true})){raise_syntax_error(C,"no implicit tuple for yield from")}
 C.parent.tree.pop()
-var tuple=new $ListOrTupleCtx(C.parent,'tuple')
+var tuple=new ListOrTupleCtx(C.parent,'tuple')
 tuple.implicit=true
 tuple.has_comma=true
 tuple.tree=[C]
@@ -1874,19 +1874,19 @@ C.parent=tuple
 return tuple}}
 return $transition(C.parent,token)
 case '.':
-return new $AttrCtx(C)
+return new AttrCtx(C)
 case '[':
 if(C.tree[0].type=='id'){
 delete C.tree[0].bound}
-return new $AbstractExprCtx(new $SubCtx(C),true)
+return new AbstractExprCtx(new SubscripCtx(C),true)
 case '(':
-return new $CallCtx(C)
+return new CallCtx(C)
 case 'op':
 if(C.parent.type=='withitem' && C.parent.tree.length==2){raise_syntax_error(C,"expected ':'")}
 if(value=='~'){raise_syntax_error(C)}
 var op_parent=C.parent,op=value
-if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new $OpCtx(C,op)
-return new $AbstractExprCtx(new_op,false)}
+if(op_parent.type=='ternary' && op_parent.in_else){var new_op=new OpCtx(C,op)
+return new AbstractExprCtx(new_op,false)}
 var op1=C.parent,repl=null
 while(1){if(op1.type=='unary' && op !=='**'){repl=op1
 op1=op1.parent}else if(op1.type=='expr'){op1=op1.parent}else if(op1.type=='op' &&
@@ -1897,21 +1897,21 @@ op1=op1.parent}else if(op1.type=="not" &&
 $op_weight['not']> $op_weight[op]){repl=op1
 op1=op1.parent}else{break}}
 if(repl===null){if(op1.type=='op'){
-var right=op1.tree.pop(),expr=new $ExprCtx(op1,'operand',C.with_commas)
+var right=op1.tree.pop(),expr=new ExprCtx(op1,'operand',C.with_commas)
 expr.tree.push(right)
 right.parent=expr
-var new_op=new $OpCtx(expr,op)
-return new $AbstractExprCtx(new_op,false)}
+var new_op=new OpCtx(expr,op)
+return new AbstractExprCtx(new_op,false)}
 var position=C.position
 while(C.parent !==op1){C=C.parent
 op_parent=C.parent}
 C.parent.tree.pop()
-var expr=new $ExprCtx(op_parent,'operand',C.with_commas)
+var expr=new ExprCtx(op_parent,'operand',C.with_commas)
 expr.position=position
 expr.expect=','
 C.parent=expr
-var new_op=new $OpCtx(C,op)
-return new $AbstractExprCtx(new_op,false)}else{
+var new_op=new OpCtx(C,op)
+return new AbstractExprCtx(new_op,false)}else{
 if(op==='and' ||op==='or'){while(repl.parent.type=='not' ||
 (repl.parent.type=='expr' &&
 repl.parent.parent.type=='not')){
@@ -1937,14 +1937,14 @@ case 'in':
 case 'not_in':
 repl.ops=repl.ops ||[repl.op]
 repl.ops.push(op)
-return new $AbstractExprCtx(repl,false)}}}
+return new AbstractExprCtx(repl,false)}}}
 repl.parent.tree.pop()
-var expr=new $ExprCtx(repl.parent,'operand',false)
+var expr=new ExprCtx(repl.parent,'operand',false)
 expr.tree=[op1]
 expr.position=op1.position
 repl.parent=expr
-var new_op=new $OpCtx(repl,op)
-return new $AbstractExprCtx(new_op,false)
+var new_op=new OpCtx(repl,op)
+return new AbstractExprCtx(new_op,false)
 case 'augm_assign':
 check_assignment(C,{augmented:true})
 var parent=C
@@ -1953,29 +1953,29 @@ while(parent){if(parent.type=="assign" ||parent.type=="augm_assign"){raise_synta
 " expression for augmented assignment")}else if(['dict_or_set'].indexOf(parent.name)>-1){raise_syntax_error(C,`'${parent.tree[0].real } display'`+
 " is an illegal expression for augmented assignment")}
 parent=parent.parent}
-if(C.expect==','){return new $AbstractExprCtx(
-new $AugmentedAssignCtx(C,value),true)}
+if(C.expect==','){return new AbstractExprCtx(
+new AugmentedAssignCtx(C,value),true)}
 return $transition(C.parent,token,value)
 case ":":
 if(C.parent.type=="sub" ||
 (C.parent.type=="list_or_tuple" &&
-C.parent.parent.type=="sub")){return new $AbstractExprCtx(new $SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
+C.parent.parent.type=="sub")){return new AbstractExprCtx(new SliceCtx(C.parent),false)}else if(C.parent.type=="slice"){return $transition(C.parent,token,value)}else if(C.parent.type=="node"){
 if(C.tree.length==1){var child=C.tree[0]
 check_assignment(child)
-if(["id","sub","attribute"].indexOf(child.type)>-1){return new $AbstractExprCtx(new $AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
-child.tree.length==1){return new $AbstractExprCtx(new $AnnotationCtx(child.tree[0]),false)}}
+if(["id","sub","attribute"].indexOf(child.type)>-1){return new AbstractExprCtx(new AnnotationCtx(C),false)}else if(child.real=="tuple" && child.expect=="," &&
+child.tree.length==1){return new AbstractExprCtx(new AnnotationCtx(child.tree[0]),false)}}
 var type=C.tree[0].real
 raise_syntax_error_known_range(C,C.position,last_position(C),`only single target (not ${type}) can be annotated`)}
 break
 case '=':
-var call_arg=$parent_match(C,{type:'call_arg'})
+var call_arg=parent_match(C,{type:'call_arg'})
 try{check_assignment(C)}catch(err){if(call_arg){var ctx=C
 while(ctx.parent !==call_arg){ctx=ctx.parent}
 raise_syntax_error_known_range(ctx,ctx.position,$token.value,'expression cannot contain assignment, perhaps you meant "=="?')}else{throw err}}
 var annotation
 if(C.expect==','){if(C.parent.type=="call_arg"){
 if(C.tree[0].type !="id"){raise_syntax_error_known_range(C,C.position,$token.value,'expression cannot contain assignment, perhaps you meant "=="?')}
-return new $AbstractExprCtx(new $KwArgCtx(C),true)}else if(annotation=$parent_match(C,{type:"annotation"})){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
+return new AbstractExprCtx(new KwArgCtx(C),true)}else if(annotation=parent_match(C,{type:"annotation"})){return $transition(annotation,token,value)}else if(C.parent.type=="op"){
 raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="not"){
 raise_syntax_error(C,"cannot assign to operator")}else if(C.parent.type=="with"){raise_syntax_error(C,"expected :")}else if(C.parent.type=='dict_or_set'){if(C.parent.expect==','){
 C.wrong_assignment=true
@@ -1995,7 +1995,7 @@ while(C.parent !==undefined){C=C.parent
 if(C.type=="condition"){raise_syntax_error(C,"invalid syntax. Maybe you"+
 " meant '==' or ':=' instead of '='?")}else if(C.type=="augm_assign"){raise_syntax_error(C,"(assignment inside augmented assignment)")}}
 C=C.tree[0]
-return new $AbstractExprCtx(new $AssignCtx(C),true)}
+return new AbstractExprCtx(new AssignCtx(C),true)}
 break
 case ':=':
 var ptype=C.parent.type
@@ -2009,7 +2009,7 @@ raise_syntax_error(C,'(:= invalid inside function arguments)' )}
 if(C.tree.length==1 && C.tree[0].type=="id"){var scope=$get_scope(C),name=C.tree[0].value
 if(['None','True','False'].indexOf(name)>-1){raise_syntax_error(C,`cannot use assignment expressions with ${name}`)}else if(name=='__debug__'){raise_syntax_error(C,'cannot assign to __debug__')}
 while(scope.comprehension){scope=scope.parent_block}
-return new $AbstractExprCtx(new NamedExprCtx(C),false)}
+return new AbstractExprCtx(new NamedExprCtx(C),false)}
 raise_syntax_error(C)
 case 'if':
 var in_comp=false,ctx=C.parent
@@ -2029,7 +2029,7 @@ while(ctx.parent &&
 ctx.parent.type=='not' ||
 ctx.parent.type=='unary' ||
 (ctx.parent.type=="expr" && ctx.parent.name=="operand"))){ctx=ctx.parent}
-return new $AbstractExprCtx(new $TernaryCtx(ctx),false)
+return new AbstractExprCtx(new TernaryCtx(ctx),false)
 case 'eol':
 if(C.tree.length==2 &&
 C.tree[0].type=="id" &&
@@ -2038,23 +2038,23 @@ raise_syntax_error_known_range(C,C.position,$token.value,"Missing parentheses in
 `to '${func}'. Did you mean ${func}(...)?`)}
 if(["dict_or_set","list_or_tuple","str"].indexOf(C.parent.type)==-1){var t=C.tree[0]
 if(t.type=="starred"){$token.value=t.position
-if($parent_match(C,{type:'del'})){raise_syntax_error(C,'cannot delete starred')}
+if(parent_match(C,{type:'del'})){raise_syntax_error(C,'cannot delete starred')}
 raise_syntax_error_known_range(C,t.position,last_position(t),"can't use starred expression here")}else if(t.type=="call" && t.func.type=="starred"){$token.value=t.func.position
 raise_syntax_error(C,"can't use starred expression here")}}}
 return $transition(C.parent,token)}
-var $ExprNot=$B.parser.$ExprNot=function(C){
+var ExprNot=$B.parser.ExprNot=function(C){
 this.type='expr_not'
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$ExprNot.prototype.transition=function(token,value){var C=this
+ExprNot.prototype.transition=function(token,value){var C=this
 if(token=='in'){
 C.parent.tree.pop()
 var op1=C.parent
 while(op1.type !=='expr'){op1=op1.parent}
 return op1.transition('op','not_in')}
 raise_syntax_error(C)}
-var $ForExpr=$B.parser.$ForExpr=function(C){
+var ForExpr=$B.parser.ForExpr=function(C){
 if(C.node && C.node.parent.is_comp){
 C.node.parent.first_for=this}
 this.type='for'
@@ -2064,25 +2064,25 @@ this.position=$token.value
 C.tree.push(this)
 this.scope=$get_scope(this)
 this.module=this.scope.module}
-$ForExpr.prototype.ast=function(){
+ForExpr.prototype.ast=function(){
 var target=this.tree[0].ast(),iter=this.tree[1].ast(),orelse=this.orelse ? this.orelse.ast():[],type_comment,body=ast_body(this.parent)
 set_ctx_to_store(target)
 var klass=this.async ? ast.AsyncFor :ast.For
 var ast_obj=new klass(target,iter,body,orelse,type_comment)
 set_position(ast_obj,this.async ? this.async.position :this.position,last_position(this))
 return ast_obj}
-$ForExpr.prototype.transition=function(token,value){var C=this
+ForExpr.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
 if(C.tree[0].tree.length==0){
 raise_syntax_error(C,"(missing target between 'for' and 'in')")}
 check_assignment(C.tree[0])
-return new $AbstractExprCtx(
-new $ExprCtx(C,'iterator',true),false)
+return new AbstractExprCtx(
+new ExprCtx(C,'iterator',true),false)
 case ':':
 check_assignment(C.tree[0])
 if(C.tree.length < 2 
 ||C.tree[1].tree[0].type=="abstract_expr"){raise_syntax_error(C)}
-return $BodyCtx(C)}
+return BodyCtx(C)}
 if(this.parent.comprehension){switch(token){case ']':
 if(this.parent.type=='listcomp'){return $transition(this.parent,token,value)}
 break
@@ -2094,15 +2094,15 @@ if(this.parent.type=='dictcomp' ||
 this.parent.type=='setcomp'){return $transition(this.parent,token,value)}
 break
 case 'for':
-return new $TargetListCtx(new $ForExpr(this.parent))
+return new TargetListCtx(new ForExpr(this.parent))
 case 'if':
-var if_ctx=new $ConditionCtx(this.parent,'if')
+var if_ctx=new ConditionCtx(this.parent,'if')
 if_ctx.in_comp=this.parent
-return new $AbstractExprCtx(if_ctx,false)}}
+return new AbstractExprCtx(if_ctx,false)}}
 if(token=='eol'){$token.value=last_position(C)
 if(C.tree.length==2){raise_syntax_error(C,"expected ':'")}}
 raise_syntax_error(C)}
-var $FromCtx=$B.parser.$FromCtx=function(C){
+var FromCtx=$B.parser.FromCtx=function(C){
 this.type='from'
 this.parent=C
 this.module=''
@@ -2112,7 +2112,7 @@ this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='module'
 this.scope=$get_scope(this)}
-$FromCtx.prototype.ast=function(){
+FromCtx.prototype.ast=function(){
 var module=this.module,level=0,alias
 while(module.length > 0 && module.startsWith('.')){level++
 module=module.substr(1)}
@@ -2124,11 +2124,11 @@ res.names.push(alias)}
 var ast_obj=new ast.ImportFrom(res.module,res.names,res.level)
 set_position(ast_obj,this.position)
 return ast_obj}
-$FromCtx.prototype.add_name=function(name){this.names.push(name)
+FromCtx.prototype.add_name=function(name){this.names.push(name)
 this.names_position.push($token.value)
 if(name=='*'){this.scope.blurred=true}
 this.end_position=$token.value}
-$FromCtx.prototype.transition=function(token,value){var C=this
+FromCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.expect=='module'){C.module+=value
 return C}else if(C.expect=='id'){C.add_name(value)
@@ -2180,7 +2180,7 @@ case ')':
 if(C.expect==',' ||C.expect=='id'){C.expect='eol'
 return C}}
 raise_syntax_error(C)}
-var $FuncArgs=$B.parser.$FuncArgs=function(C){
+var FuncArgs=$B.parser.FuncArgs=function(C){
 this.type='func_args'
 this.parent=C
 this.tree=[]
@@ -2190,7 +2190,7 @@ this.expect='id'
 this.has_default=false
 this.has_star_arg=false
 this.has_kw_arg=false}
-$FuncArgs.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[]},state='arg',default_value
+FuncArgs.prototype.ast=function(){var args={posonlyargs:[],args:[],kwonlyargs:[],kw_defaults:[],defaults:[]},state='arg',default_value
 for(var arg of this.tree){if(arg.type=='end_positional'){args.posonlyargs=args.args
 args.args=[]}else if(arg.type=='func_star_arg'){state='kwonly'
 if(arg.op=='*' && arg.name !='*'){args.vararg=new ast.arg(arg.name)
@@ -2207,7 +2207,7 @@ if(default_value){args.kw_defaults.push(default_value)}else{args.kw_defaults.pus
 if(default_value){args.defaults.push(default_value)}}}}
 var res=new ast.arguments(args.posonlyargs,args.args,args.vararg,args.kwonlyargs,args.kw_defaults,args.kwarg,args.defaults)
 return res}
-$FuncArgs.prototype.transition=function(token,value){var C=this
+FuncArgs.prototype.transition=function(token,value){var C=this
 function check(){if(C.tree.length==0){return}
 var last=$B.last(C.tree)
 if(C.has_default && ! last.has_default){if(last.type=='func_star_arg' ||
@@ -2224,7 +2224,7 @@ if(C.has_kw_arg){raise_syntax_error(C,'duplicate keyword argument')}
 if(C.expect=='id'){C.expect=','
 if(C.names.indexOf(value)>-1){raise_syntax_error(C,'duplicate argument '+value+
 ' in function definition')}}
-return new $FuncArgIdCtx(C,value)
+return new FuncArgIdCtx(C,value)
 case ',':
 if(C.expect==','){check()
 C.expect='id'
@@ -2239,14 +2239,14 @@ if(C.has_kw_arg){raise_syntax_error(C,"(unpacking after '**' argument)")}
 var op=value
 C.expect=','
 if(op=='*'){if(C.has_star_arg){raise_syntax_error(C,"(only one '*' argument allowed)")}
-return new $FuncStarArgCtx(C,'*')}else if(op=='**'){return new $FuncStarArgCtx(C,'**')}else if(op=='/'){
+return new FuncStarArgCtx(C,'*')}else if(op=='**'){return new FuncStarArgCtx(C,'**')}else if(op=='/'){
 if(C.has_end_positional){raise_syntax_error(C,'/ may appear only once')}else if(C.has_star_arg){raise_syntax_error(C,'/ must be ahead of *')}
-return new $EndOfPositionalCtx(C)}
+return new EndOfPositionalCtx(C)}
 raise_syntax_error(C)
 case ':':
 if(C.parent.type=="lambda"){return $transition(C.parent,token)}}
 raise_syntax_error(C)}
-var $FuncArgIdCtx=$B.parser.$FuncArgIdCtx=function(C,name){
+var FuncArgIdCtx=$B.parser.FuncArgIdCtx=function(C,name){
 this.type='func_arg_id'
 if(["None","True","False"].indexOf(name)>-1){raise_syntax_error(C)}
 if(name=='__debug__'){raise_syntax_error(C,'cannot assign to __debug__')}
@@ -2257,12 +2257,12 @@ if(C.has_star_arg){C.parent.after_star.push(name)}else{C.parent.positional_list.
 this.tree=[]
 C.tree[C.tree.length]=this
 this.expect='='}
-$FuncArgIdCtx.prototype.transition=function(token,value){var C=this
+FuncArgIdCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '=':
 if(C.expect=='='){C.has_default=true
 var def_ctx=C.parent.parent
 if(C.parent.has_star_arg){def_ctx.default_list.push(def_ctx.after_star.pop())}else{def_ctx.default_list.push(def_ctx.positional_list.pop())}
-return new $AbstractExprCtx(C,false)}
+return new AbstractExprCtx(C,false)}
 break
 case ',':
 case ')':
@@ -2273,9 +2273,9 @@ if(C.parent.parent.type=="lambda"){
 return $transition(C.parent.parent,":")}
 if(C.has_default){
 raise_syntax_error(C)}
-return new $AbstractExprCtx(new $AnnotationCtx(C),false)}
+return new AbstractExprCtx(new AnnotationCtx(C),false)}
 raise_syntax_error(C)}
-var $FuncStarArgCtx=$B.parser.$FuncStarArgCtx=function(C,op){
+var FuncStarArgCtx=$B.parser.FuncStarArgCtx=function(C,op){
 this.type='func_star_arg'
 this.op=op
 this.parent=C
@@ -2284,7 +2284,7 @@ this.position=$token.value
 C.has_star_arg=op=='*'
 C.has_kw_arg=op=='**'
 C.tree[C.tree.length]=this}
-$FuncStarArgCtx.prototype.transition=function(token,value){var C=this
+FuncStarArgCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.name===undefined){if(C.parent.names.indexOf(value)>-1){raise_syntax_error(C,'duplicate argument '+value+
 ' in function definition')}}
@@ -2303,10 +2303,10 @@ if(C.parent.parent.type=="lambda"){
 if(C.name===undefined){raise_syntax_error(C,'named arguments must follow bare *')}
 return $transition(C.parent.parent,":")}
 if(C.name===undefined){raise_syntax_error(C,'(annotation on an unnamed parameter)')}
-return new $AbstractExprCtx(
-new $AnnotationCtx(C),false)}
+return new AbstractExprCtx(
+new AnnotationCtx(C),false)}
 raise_syntax_error(C)}
-$FuncStarArgCtx.prototype.set_name=function(name){if(name=='__debug__'){raise_syntax_error_known_range(this,this.position,$token.value,'cannot assign to __debug__')}
+FuncStarArgCtx.prototype.set_name=function(name){if(name=='__debug__'){raise_syntax_error_known_range(this,this.position,$token.value,'cannot assign to __debug__')}
 this.name=name
 var ctx=this.parent
 while(ctx.parent !==undefined){if(ctx.type=='def'){break}
@@ -2330,7 +2330,7 @@ if(C.parent.tree.length > 1){raise_syntax_error_known_range(C,first_position(C),
 return this.parent.parent}
 return this.parent}
 raise_syntax_error(C)}
-var $GlobalCtx=$B.parser.$GlobalCtx=function(C){
+var GlobalCtx=$B.parser.GlobalCtx=function(C){
 this.type='global'
 this.parent=C
 this.tree=[]
@@ -2341,13 +2341,13 @@ this.scope=$get_scope(this)
 this.module=$get_module(this)
 if(this.module.module !=='<module>'){
 while(this.module.module !=this.module.id){this.module=this.module.parent_block}}}
-$GlobalCtx.prototype.ast=function(){
+GlobalCtx.prototype.ast=function(){
 var ast_obj=new ast.Global(this.tree.map(item=> item.value))
 set_position(ast_obj,this.position)
 return ast_obj}
-$GlobalCtx.prototype.transition=function(token,value){var C=this
+GlobalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){new $IdCtx(C,value)
+if(C.expect=='id'){new IdCtx(C,value)
 C.add(value)
 C.expect=','
 return C}
@@ -2360,14 +2360,14 @@ case 'eol':
 if(C.expect==','){return $transition(C.parent,token)}
 break}
 raise_syntax_error(C)}
-$GlobalCtx.prototype.add=function(name){if(this.scope.type=="module"){
+GlobalCtx.prototype.add=function(name){if(this.scope.type=="module"){
 return}
 var mod=this.scope.parent_block
 if(this.module.module.startsWith("$exec")){while(mod && mod.parent_block !==this.module){
 mod._globals=mod._globals ||new Map()
 mod._globals.set(name,this.module.id)
 mod=mod.parent_block}}}
-var $IdCtx=$B.parser.$IdCtx=function(C,value){
+var IdCtx=$B.parser.IdCtx=function(C,value){
 this.type='id'
 this.value=value 
 this.parent=C
@@ -2376,15 +2376,15 @@ C.tree[C.tree.length]=this
 this.position=$token.value
 var scope=this.scope=$get_scope(this)
 this.blurred_scope=this.scope.blurred
-if(["def","generator"].indexOf(scope.ntype)>-1){if((!(C instanceof $GlobalCtx))&&
-!(C instanceof $NonlocalCtx)){scope.referenced=scope.referenced ||{}
+if(["def","generator"].indexOf(scope.ntype)>-1){if((!(C instanceof GlobalCtx))&&
+!(C instanceof NonlocalCtx)){scope.referenced=scope.referenced ||{}
 if(! $B.builtins[this.value]){scope.referenced[this.value]=true}}}
 if(C.parent.type=='call_arg'){this.call_arg=true}}
-$IdCtx.prototype.ast=function(){var ast_obj
+IdCtx.prototype.ast=function(){var ast_obj
 if(['True','False','None'].indexOf(this.value)>-1){ast_obj=new ast.Constant(_b_[this.value])}else{ast_obj=new ast.Name(this.value,this.bound ? new ast.Store():new ast.Load())}
 set_position(ast_obj,this.position)
 return ast_obj}
-$IdCtx.prototype.transition=function(token,value){var C=this,module=$get_module(this)
+IdCtx.prototype.transition=function(token,value){var C=this,module=$get_module(this)
 if(C.value=='case' && C.parent.parent.type=="node"){
 var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
 module.token_reader.position=save_position
@@ -2393,17 +2393,17 @@ if((! node.parent)||!(node.parent.is_match)){raise_syntax_error(C,"('case' not i
 var name=node.parent.irrefutable,msg=name=='_' ? 'wildcard' :
 `name capture '${name}'`
 raise_syntax_error(C,`${msg} makes remaining patterns unreachable`)}}
-return $transition(new $PatternCtx(
-new $CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
+return $transition(new PatternCtx(
+new CaseCtx(C.parent.parent)),token,value)}}else if(C.value=='match' && C.parent.parent.type=="node"){
 var save_position=module.token_reader.position,ends_with_comma=check_line(module.token_reader,module.filename)
 module.token_reader.position=save_position
-if(ends_with_comma){return $transition(new $AbstractExprCtx(
-new $MatchCtx(C.parent.parent),true),token,value)}}
+if(ends_with_comma){return $transition(new AbstractExprCtx(
+new MatchCtx(C.parent.parent),true),token,value)}}
 switch(token){case '=':
 if(C.parent.type=='expr' &&
 C.parent.parent !==undefined &&
-C.parent.parent.type=='call_arg'){return new $AbstractExprCtx(
-new $KwArgCtx(C.parent),false)}
+C.parent.parent.type=='call_arg'){return new AbstractExprCtx(
+new KwArgCtx(C.parent),false)}
 return $transition(C.parent,token,value)
 case '.':
 delete this.bound
@@ -2418,18 +2418,18 @@ case 'float':
 case 'imaginary':
 if(["print","exec"].indexOf(C.value)>-1 ){var f=C.value,msg=`Missing parentheses in call to '${f}'.`+
 ` Did you mean ${f}(...)?`}else{var msg='invalid syntax. Perhaps you forgot a comma?'}
-var call_arg=$parent_match(C,{type:'call_arg'})
+var call_arg=parent_match(C,{type:'call_arg'})
 raise_syntax_error_known_range(C,this.position,$token.value,msg)}
 if(this.parent.parent.type=="starred"){if(['.','[','('].indexOf(token)==-1){return this.parent.parent.transition(token,value)}}
 return $transition(C.parent,token,value)}
-var $ImportCtx=$B.parser.$ImportCtx=function(C){
+var ImportCtx=$B.parser.ImportCtx=function(C){
 this.type='import'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this
 this.expect='id'}
-$ImportCtx.prototype.ast=function(){
+ImportCtx.prototype.ast=function(){
 var names=[]
 for(var item of this.tree){
 var alias=new ast.alias(item.name)
@@ -2438,9 +2438,9 @@ names.push(alias)}
 var ast_obj=new ast.Import(names)
 set_position(ast_obj,this.position)
 return ast_obj}
-$ImportCtx.prototype.transition=function(token,value){var C=this
+ImportCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){new $ImportedModuleCtx(C,value)
+if(C.expect=='id'){new ImportedModuleCtx(C,value)
 C.expect=','
 return C}
 if(C.expect=='qual'){C.expect=','
@@ -2470,12 +2470,12 @@ case 'eol':
 if(C.expect==','){return $transition(C.parent,token)}
 break}
 raise_syntax_error(C)}
-var $ImportedModuleCtx=$B.parser.$ImportedModuleCtx=function(C,name){this.type='imported module'
+var ImportedModuleCtx=$B.parser.ImportedModuleCtx=function(C,name){this.type='imported module'
 this.parent=C
 this.name=name
 this.alias=name
 C.tree[C.tree.length]=this}
-$ImportedModuleCtx.prototype.transition=function(token,value){var C=this}
+ImportedModuleCtx.prototype.transition=function(token,value){var C=this}
 var JoinedStrCtx=$B.parser.JoinedStrCtx=function(C,values){
 this.type='JoinedStr'
 this.parent=C
@@ -2483,7 +2483,7 @@ this.tree=[]
 this.position=$token.value
 this.scope=$get_scope(C)
 var line_num=$get_node(C).line_num
-for(var value of values){if(typeof value=="string"){new $StringCtx(this,"'"+
+for(var value of values){if(typeof value=="string"){new StringCtx(this,"'"+
 value.replace(new RegExp("'","g"),"\\"+"'")+"'")}else{if(value.format !==undefined){value.format=new JoinedStrCtx(this,value.format)
 this.tree.pop()}
 var src=value.expression.trimStart(),
@@ -2505,7 +2505,7 @@ C.tree.push(this)
 this.raw=false}
 JoinedStrCtx.prototype.ast=function(){var res={type:'JoinedStr',values:[]}
 var state
-for(var item of this.tree){if(item instanceof $StringCtx){if(state=='string'){
+for(var item of this.tree){if(item instanceof StringCtx){if(state=='string'){
 $B.last(res.values).value+=item.value}else{var item_ast=new ast.Constant(item.value)
 set_position(item_ast,item.position)
 res.values.push(item_ast)}
@@ -2523,26 +2523,24 @@ set_position(ast_obj,this.position)
 return ast_obj}
 JoinedStrCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
-return new $AbstractExprCtx(new $SubCtx(C.parent),false)
+return new AbstractExprCtx(new SubscripCtx(C.parent),false)
 case '(':
 C.parent.tree[0]=C
-return new $CallCtx(C.parent)
+return new CallCtx(C.parent)
 case 'str':
 if(C.tree.length > 0 &&
-$B.last(C.tree).type=="str"){C.tree[C.tree.length-1].add_value(value)}else{new $StringCtx(this,value)}
+$B.last(C.tree).type=="str"){C.tree[C.tree.length-1].add_value(value)}else{new StringCtx(this,value)}
 return C
 case 'JoinedStr':
 var joined_expr=new JoinedStrCtx(C.parent,value)
 C.parent.tree.pop()
 if(C.tree.length > 0 &&
-$B.last(C.tree)instanceof $StringCtx &&
-joined_expr.tree[0]instanceof $StringCtx){
+$B.last(C.tree)instanceof StringCtx &&
+joined_expr.tree[0]instanceof StringCtx){
 $B.last(C.tree).value+=joined_expr.tree[0].value
 C.tree=C.tree.concat(joined_expr.tree.slice(1))}else{C.tree=C.tree.concat(joined_expr.tree)}
 return C}
 return $transition(C.parent,token,value)}
-var $JSCode=$B.parser.$JSCode=function(js){this.js=js}
-$JSCode.prototype.transition=function(token,value){var C=this}
 var KwdCtx=$B.parser.KwdCtx=function(C){
 this.type='kwd'
 this.position=C.position
@@ -2554,7 +2552,7 @@ set_position(ast_obj,this.position)
 return ast_obj}
 KwdCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
-var $KwArgCtx=$B.parser.$KwArgCtx=function(C){
+var KwArgCtx=$B.parser.KwArgCtx=function(C){
 this.type='kwarg'
 this.parent=C.parent
 this.position=first_position(C)
@@ -2563,12 +2561,12 @@ this.tree=[C.tree[0]]
 C.parent.tree.pop()
 C.parent.tree.push(this)
 C.parent.parent.has_kw=true}
-$KwArgCtx.prototype.transition=function(token,value){var C=this
-if(token==','){return new $CallArgCtx(C.parent.parent)}else if(token=='for'){
+KwArgCtx.prototype.transition=function(token,value){var C=this
+if(token==','){return new CallArgCtx(C.parent.parent)}else if(token=='for'){
 raise_syntax_error_known_range(C,C.position,C.equal_sign_position,"invalid syntax. "+
 "Maybe you meant '==' or ':=' instead of '='?")}
 return $transition(C.parent,token)}
-var $LambdaCtx=$B.parser.$LambdaCtx=function(C){
+var LambdaCtx=$B.parser.LambdaCtx=function(C){
 this.type='lambda'
 this.parent=C
 C.tree[C.tree.length]=this
@@ -2580,19 +2578,19 @@ this.default_list=[]
 this.other_args=null
 this.other_kw=null
 this.after_star=[]}
-$LambdaCtx.prototype.ast=function(){
+LambdaCtx.prototype.ast=function(){
 var args
 if(this.args.length==0){args=new ast.arguments([],[],undefined,[],[],undefined,[])}else{args=this.args[0].ast()}
 var ast_obj=new ast.Lambda(args,this.tree[0].ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-$LambdaCtx.prototype.transition=function(token,value){var C=this
+LambdaCtx.prototype.transition=function(token,value){var C=this
 if(token==':' && C.args===undefined){C.args=C.tree
 C.tree=[]
-return new $AbstractExprCtx(C,false)}
+return new AbstractExprCtx(C,false)}
 if(C.args !==undefined){
 return $transition(C.parent,token)}
-if(C.args===undefined){if(token=='('){raise_syntax_error(C,'Lambda expression parameters cannot be parenthesized')}else{return $transition(new $FuncArgs(C),token,value)}}
+if(C.args===undefined){if(token=='('){raise_syntax_error(C,'Lambda expression parameters cannot be parenthesized')}else{return $transition(new FuncArgs(C),token,value)}}
 raise_syntax_error(C)}
 var ListCompCtx=function(C){
 this.type='listcomp'
@@ -2608,7 +2606,7 @@ return res}
 ListCompCtx.prototype.transition=function(token,value){var C=this
 if(token==']'){return this.parent}
 raise_syntax_error(C)}
-var $ListOrTupleCtx=$B.parser.$ListOrTupleCtx=function(C,real){
+var ListOrTupleCtx=$B.parser.ListOrTupleCtx=function(C,real){
 this.type='list_or_tuple'
 this.real=real
 this.expect='id'
@@ -2617,19 +2615,19 @@ this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$ListOrTupleCtx.prototype.ast=function(){var elts=this.tree.map(x=> x.ast()),ast_obj
+ListOrTupleCtx.prototype.ast=function(){var elts=this.tree.map(x=> x.ast()),ast_obj
 if(this.real=='list'){ast_obj=new ast.List(elts,new ast.Load())}else if(this.real=='tuple'){ast_obj=new ast.Tuple(elts,new ast.Load())}
 set_position(ast_obj,this.position,this.end_position)
 return ast_obj}
-$ListOrTupleCtx.prototype.transition=function(token,value){var C=this
-if(C.closed){if(token=='['){return new $AbstractExprCtx(
-new $SubCtx(C.parent),false)}
-if(token=='('){return new $CallCtx(C.parent)}
+ListOrTupleCtx.prototype.transition=function(token,value){var C=this
+if(C.closed){if(token=='['){return new AbstractExprCtx(
+new SubscripCtx(C.parent),false)}
+if(token=='('){return new CallCtx(C.parent)}
 return $transition(C.parent,token,value)}else{if(C.expect==','){switch(C.real){case 'tuple':
 if(token==')'){if(C.implicit){return $transition(C.parent,token,value)}
 var close=true
 C.end_position=$token.value
-if(C.tree.length==1){if($parent_match(C,{type:'del'})&&
+if(C.tree.length==1){if(parent_match(C,{type:'del'})&&
 C.tree[0].type=='expr' &&
 C.tree[0].tree[0].type=='starred'){raise_syntax_error_known_range(C,C.tree[0].tree[0].position,last_position(C.tree[0]),'cannot use starred expression here')}
 var grandparent=C.parent.parent
@@ -2661,9 +2659,9 @@ case 'for':
 if(C.real=='list'){if(this.tree.length > 1){
 raise_syntax_error(C,"did you forget "+
 "parentheses around the comprehension target?")}
-return new $TargetListCtx(new $ForExpr(
+return new TargetListCtx(new ForExpr(
 new ListCompCtx(C)))}
-else{return new $TargetListCtx(new $ForExpr(
+else{return new TargetListCtx(new ForExpr(
 new GeneratorExpCtx(C)))}}
 return $transition(C.parent,token,value)}else if(C.expect=='id'){switch(C.real){case 'tuple':
 if(token==')'){C.close()
@@ -2680,7 +2678,7 @@ switch(token){case '=':
 if(C.real=='tuple' &&
 C.implicit===true){C.close()
 C.parent.tree.pop()
-var expr=new $ExprCtx(C.parent,'tuple',false)
+var expr=new ExprCtx(C.parent,'tuple',false)
 expr.tree=[C]
 C.parent=expr
 return $transition(C.parent,token)}
@@ -2711,16 +2709,16 @@ case 'await':
 case 'not':
 case ':':
 C.expect=','
-var expr=new $AbstractExprCtx(C,false)
+var expr=new AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case 'op':
 if('+-~*'.indexOf(value)>-1 ||value=='**'){C.expect=','
-var expr=new $AbstractExprCtx(C,false)
+var expr=new AbstractExprCtx(C,false)
 return $transition(expr,token,value)}
 raise_syntax_error(C,`(unexpected operator: ${value})`)
 default:
 raise_syntax_error(C)}}else{return $transition(C.parent,token,value)}}}
-$ListOrTupleCtx.prototype.close=function(){this.closed=true
+ListOrTupleCtx.prototype.close=function(){this.closed=true
 this.end_position=$token.value
 this.src=$get_module(this).src
 for(var i=0,len=this.tree.length;i < len;i++){
@@ -2731,7 +2729,7 @@ elt.tree[0].real=="tuple" &&
 elt.tree[0].tree.length==1 &&
 elt.tree[0].expect==","){this.tree[i]=elt.tree[0].tree[0]
 this.tree[i].parent=this}}}
-var $MatchCtx=$B.parser.$MatchCtx=function(node_ctx){
+var MatchCtx=$B.parser.MatchCtx=function(node_ctx){
 this.type="match"
 this.position=$token.value
 node_ctx.tree=[this]
@@ -2740,18 +2738,18 @@ this.parent=node_ctx
 this.tree=[]
 this.expect='as'
 this.token_position=$get_module(this).token_reader.position}
-$MatchCtx.prototype.ast=function(){
+MatchCtx.prototype.ast=function(){
 var res=new ast.Match(this.tree[0].ast(),ast_body(this.parent))
 set_position(res,this.position)
 res.$line_num=$get_node(this).line_num
 return res}
-$MatchCtx.prototype.transition=function(token,value){var C=this
+MatchCtx.prototype.transition=function(token,value){var C=this
 switch(token){case ':':
 if(this.tree[0].type=='list_or_tuple'){remove_abstract_expr(this.tree[0].tree)}
 switch(C.expect){case 'id':
 case 'as':
 case ':':
-return $BodyCtx(C)}
+return BodyCtx(C)}
 break
 case 'eol':
 raise_syntax_error(C,"expected ':'")}
@@ -2773,7 +2771,7 @@ res.target.ctx=new ast.Store()
 set_position(res,this.position)
 return res}
 NamedExprCtx.prototype.transition=function(token,value){return $transition(this.parent,token,value)}
-var $NodeCtx=$B.parser.$NodeCtx=function(node){
+var NodeCtx=$B.parser.NodeCtx=function(node){
 this.node=node
 node.C=this
 this.tree=[]
@@ -2790,7 +2788,7 @@ if(_break_flag){break}
 tree_node=tree_node.parent}
 if(scope===null){scope=tree_node.parent ||tree_node }
 this.scope=scope}
-$NodeCtx.prototype.transition=function(token,value){var C=this
+NodeCtx.prototype.transition=function(token,value){var C=this
 if(this.node.parent && this.node.parent.C){var pctx=this.node.parent.C
 if(pctx.tree && pctx.tree.length==1 &&
 pctx.tree[0].type=="match"){if(token !='eol' &&(token !=='id' ||value !=='case')){raise_syntax_error(C)}}}
@@ -2802,7 +2800,7 @@ switch(token){case ',':
 if(C.tree && C.tree.length==0){raise_syntax_error(C)}
 var first=C.tree[0]
 C.tree=[]
-var implicit_tuple=new $ListOrTupleCtx(C)
+var implicit_tuple=new ListOrTupleCtx(C)
 implicit_tuple.real="tuple"
 implicit_tuple.implicit=0
 implicit_tuple.tree.push(first)
@@ -2821,98 +2819,98 @@ case 'str':
 case 'JoinedStr':
 case 'not':
 case 'lambda':
-var expr=new $AbstractExprCtx(C,true)
+var expr=new AbstractExprCtx(C,true)
 return $transition(expr,token,value)
 case 'assert':
-return new $AbstractExprCtx(
-new $AssertCtx(C),false,true)
+return new AbstractExprCtx(
+new AssertCtx(C),false,true)
 case 'async':
-return new $AsyncCtx(C)
+return new AsyncCtx(C)
 case 'await':
-return new $AbstractExprCtx(new $AwaitCtx(C),false)
+return new AbstractExprCtx(new AwaitCtx(C),false)
 case 'break':
-return new $BreakCtx(C)
+return new BreakCtx(C)
 case 'class':
-return new $ClassCtx(C)
+return new ClassCtx(C)
 case 'continue':
-return new $ContinueCtx(C)
+return new ContinueCtx(C)
 case 'def':
-return new $DefCtx(C)
+return new DefCtx(C)
 case 'del':
-return new $AbstractExprCtx(new $DelCtx(C),true)
+return new AbstractExprCtx(new DelCtx(C),true)
 case 'elif':
 try{var previous=$previous(C)}catch(err){raise_syntax_error(C,"('elif' does not follow 'if')")}
 if(['condition'].indexOf(previous.type)==-1 ||
 previous.token=='while'){raise_syntax_error(C,`(elif after ${previous.type})`)}
-return new $AbstractExprCtx(
-new $ConditionCtx(C,token),false)
+return new AbstractExprCtx(
+new ConditionCtx(C,token),false)
 case 'ellipsis':
-var expr=new $AbstractExprCtx(C,true)
+var expr=new AbstractExprCtx(C,true)
 return $transition(expr,token,value)
 case 'else':
 var previous=$previous(C)
 if(['condition','except','for'].
 indexOf(previous.type)==-1){raise_syntax_error(C,`(else after ${previous.type})`)}
-return new $SingleKwCtx(C,token)
+return new SingleKwCtx(C,token)
 case 'except':
 var previous=$previous(C)
 if(['try','except'].indexOf(previous.type)==-1){raise_syntax_error(C,`(except after ${previous.type})`)}
-return new $ExceptCtx(C)
+return new ExceptCtx(C)
 case 'finally':
 var previous=$previous(C)
 if(['try','except'].indexOf(previous.type)==-1 &&
 (previous.type !='single_kw' ||
 previous.token !='else')){raise_syntax_error(C,`finally after ${previous.type})`)}
-return new $SingleKwCtx(C,token)
+return new SingleKwCtx(C,token)
 case 'for':
-return new $TargetListCtx(new $ForExpr(C))
+return new TargetListCtx(new ForExpr(C))
 case 'from':
-return new $FromCtx(C)
+return new FromCtx(C)
 case 'global':
-return new $GlobalCtx(C)
+return new GlobalCtx(C)
 case 'if':
 case 'while':
-return new $AbstractExprCtx(
-new $ConditionCtx(C,token),false)
+return new AbstractExprCtx(
+new ConditionCtx(C,token),false)
 case 'import':
-return new $ImportCtx(C)
+return new ImportCtx(C)
 case 'lambda':
-return new $LambdaCtx(C)
+return new LambdaCtx(C)
 case 'nonlocal':
-return new $NonlocalCtx(C)
+return new NonlocalCtx(C)
 case 'op':
 switch(value){case '*':
-var expr=new $AbstractExprCtx(C,true)
+var expr=new AbstractExprCtx(C,true)
 return $transition(expr,token,value)
 case '+':
 case '-':
 case '~':
 C.position=$token.value
-var expr=new $ExprCtx(C,'unary',true)
-return new $AbstractExprCtx(
-new $UnaryCtx(expr,value),false)
+var expr=new ExprCtx(C,'unary',true)
+return new AbstractExprCtx(
+new UnaryCtx(expr,value),false)
 case '@':
-return new $AbstractExprCtx(new $DecoratorCtx(C),false)}
+return new AbstractExprCtx(new DecoratorCtx(C),false)}
 break
 case 'pass':
-return new $PassCtx(C)
+return new PassCtx(C)
 case 'raise':
-return new $AbstractExprCtx(new $RaiseCtx(C),false)
+return new AbstractExprCtx(new RaiseCtx(C),false)
 case 'return':
-return new $AbstractExprCtx(new $ReturnCtx(C),true)
+return new AbstractExprCtx(new ReturnCtx(C),true)
 case 'try':
-return new $TryCtx(C)
+return new TryCtx(C)
 case 'with':
-return new $WithCtx(C)
+return new WithCtx(C)
 case 'yield':
-return new $AbstractExprCtx(new $YieldCtx(C),true)
+return new AbstractExprCtx(new YieldCtx(C),true)
 case 'eol':
 if(C.tree.length==0){
 C.node.parent.children.pop()
 return C.node.parent.C}
 return C}
 raise_syntax_error(C)}
-var $NonlocalCtx=$B.parser.$NonlocalCtx=function(C){
+var NonlocalCtx=$B.parser.NonlocalCtx=function(C){
 this.type='nonlocal'
 this.parent=C
 this.tree=[]
@@ -2921,13 +2919,13 @@ C.tree[C.tree.length]=this
 this.expect='id'
 this.scope=$get_scope(this)
 this.scope.nonlocals=this.scope.nonlocals ||new Set()}
-$NonlocalCtx.prototype.ast=function(){
+NonlocalCtx.prototype.ast=function(){
 var ast_obj=new ast.Nonlocal(this.tree.map(item=> item.value))
 set_position(ast_obj,this.position)
 return ast_obj}
-$NonlocalCtx.prototype.transition=function(token,value){var C=this
+NonlocalCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.expect=='id'){new $IdCtx(C,value)
+if(C.expect=='id'){new IdCtx(C,value)
 C.expect=','
 return C}
 break
@@ -2939,19 +2937,19 @@ case 'eol':
 if(C.expect==','){return $transition(C.parent,token)}
 break}
 raise_syntax_error(C)}
-var $NotCtx=$B.parser.$NotCtx=function(C){
+var NotCtx=$B.parser.NotCtx=function(C){
 this.type='not'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$NotCtx.prototype.ast=function(){var ast_obj=new ast.UnaryOp(new ast.Not(),this.tree[0].ast())
+NotCtx.prototype.ast=function(){var ast_obj=new ast.UnaryOp(new ast.Not(),this.tree[0].ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-$NotCtx.prototype.transition=function(token,value){var C=this
+NotCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'in':
 C.parent.parent.tree.pop()
-return new $ExprCtx(new $OpCtx(C.parent,'not_in'),'op',false)
+return new ExprCtx(new OpCtx(C.parent,'not_in'),'op',false)
 case 'id':
 case 'imaginary':
 case 'int':
@@ -2965,28 +2963,28 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
-var expr=new $AbstractExprCtx(C,false)
+var expr=new AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case 'op':
 var a=value
-if('+'==a ||'-'==a ||'~'==a){var expr=new $AbstractExprCtx(C,false)
+if('+'==a ||'-'==a ||'~'==a){var expr=new AbstractExprCtx(C,false)
 return $transition(expr,token,value)}}
 return $transition(C.parent,token)}
-var $NumberCtx=$B.parser.$NumberCtx=function(type,C,value){
+var NumberCtx=$B.parser.NumberCtx=function(type,C,value){
 this.type=type
 this.value=value
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$NumberCtx.prototype.ast=function(){var value=$B.AST.$convert(this),
+NumberCtx.prototype.ast=function(){var value=$B.AST.$convert(this),
 ast_obj=new $B.ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
-$NumberCtx.prototype.transition=function(token,value){var C=this
+NumberCtx.prototype.transition=function(token,value){var C=this
 if(token=='id' && value=='_'){raise_syntax_error(C,'invalid decimal literal')}
 return $transition(C.parent,token,value)}
-var $OpCtx=$B.parser.$OpCtx=function(C,op){
+var OpCtx=$B.parser.OpCtx=function(C,op){
 this.type='op'
 this.op=op
 this.parent=C.parent
@@ -2996,7 +2994,7 @@ this.scope=$get_scope(this)
 if(C.type=="expr"){if(['int','float','str'].indexOf(C.tree[0].type)>-1){this.left_type=C.tree[0].type}}
 C.parent.tree.pop()
 C.parent.tree.push(this)}
-$OpCtx.prototype.ast=function(){
+OpCtx.prototype.ast=function(){
 var ast_type_class=op2ast_class[this.op],op_type=ast_type_class[0],ast_class=ast_type_class[1],ast_obj
 if(op_type===ast.Compare){var left=this.tree[0].ast(),ops=[new ast_class()]
 if(this.ops){for(var op of this.ops.slice(1)){ops.push(new op2ast_class[op][1]())}
@@ -3011,7 +3009,7 @@ set_position(ast_obj,this.position)
 return ast_obj}
 function is_literal(expr){return expr.type=='expr' &&
 ['int','str','float','imaginary'].indexOf(expr.tree[0].type)>-1}
-$OpCtx.prototype.transition=function(token,value){var C=this
+OpCtx.prototype.transition=function(token,value){var C=this
 if(C.op===undefined){console.log('C has no op',C)
 raise_syntax_error(C)}
 if((C.op=='is' ||C.op=='is_not')
@@ -3031,47 +3029,47 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
-return $transition(new $AbstractExprCtx(C,false),token,value)
+return $transition(new AbstractExprCtx(C,false),token,value)
 case 'op':
 switch(value){case '+':
 case '-':
 case '~':
-return new $UnaryCtx(C,value)}
+return new UnaryCtx(C,value)}
 default:
 if(C.tree[C.tree.length-1].type==
 'abstract_expr'){raise_syntax_error(C)}}
 return $transition(C.parent,token)}
-var $PassCtx=$B.parser.$PassCtx=function(C){
+var PassCtx=$B.parser.PassCtx=function(C){
 this.type='pass'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$PassCtx.prototype.ast=function(){var ast_obj=new ast.Pass()
+PassCtx.prototype.ast=function(){var ast_obj=new ast.Pass()
 set_position(ast_obj,this.position)
 return ast_obj}
-$PassCtx.prototype.transition=function(token,value){var C=this
+PassCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol'){return C.parent}
 raise_syntax_error(C)}
-var $PatternCtx=$B.parser.$PatternCtx=function(C){
+var PatternCtx=$B.parser.PatternCtx=function(C){
 this.type="pattern"
 this.parent=C
 this.tree=[]
 C.tree.push(this)
 this.expect='id'}
-$PatternCtx.prototype.transition=function(token,value){var C=this
+PatternCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case 'id':
 switch(token){case 'str':
 case 'int':
 case 'float':
 case 'imaginary':
 C.expect=','
-return new $PatternLiteralCtx(C,token,value)
+return new PatternLiteralCtx(C,token,value)
 case 'op':
 switch(value){case '-':
 case '+':
 C.expect=','
-return new $PatternLiteralCtx(C,{sign:value})
+return new PatternLiteralCtx(C,{sign:value})
 case '*':
 C.expect='starred_id'
 return C
@@ -3079,22 +3077,22 @@ default:
 raise_syntax_error(C)}
 case 'id':
 C.expect=','
-if(['None','True','False'].indexOf(value)>-1){return new $PatternLiteralCtx(C,token,value)}else{return new $PatternCaptureCtx(C,value)}
+if(['None','True','False'].indexOf(value)>-1){return new PatternLiteralCtx(C,token,value)}else{return new PatternCaptureCtx(C,value)}
 break
 case '[':
-return new $PatternCtx(
-new $PatternSequenceCtx(C.parent,token))
+return new PatternCtx(
+new PatternSequenceCtx(C.parent,token))
 case '(':
-return new $PatternCtx(
-new $PatternGroupCtx(C.parent,token))
+return new PatternCtx(
+new PatternGroupCtx(C.parent,token))
 case '{':
-return new $PatternMappingCtx(C.parent,token)
+return new PatternMappingCtx(C.parent,token)
 case 'JoinedStr':
 raise_syntax_error(C,"patterns may only match "+
 "literals and attribute lookups")}
 break
 case 'starred_id':
-if(token=='id'){var capture=new $PatternCaptureCtx(C,value)
+if(token=='id'){var capture=new PatternCaptureCtx(C,value)
 capture.starred=true
 return capture}
 raise_syntax_error(C,"(expected id after '*')")
@@ -3103,16 +3101,16 @@ switch(token){case 'int':
 case 'float':
 case 'imaginary':
 C.expect=','
-return new $PatternLiteralCtx(C,token,value,C.sign)
+return new PatternLiteralCtx(C,token,value,C.sign)
 default:
 raise_syntax_error(C)}
 case ',':
 switch(token){case ',':
-if(C.parent instanceof $PatternSequenceCtx){return new $PatternCtx(C.parent)}
-return new $PatternCtx(
-new $PatternSequenceCtx(C.parent))
+if(C.parent instanceof PatternSequenceCtx){return new PatternCtx(C.parent)}
+return new PatternCtx(
+new PatternSequenceCtx(C.parent))
 case ':':
-return $BodyCtx(C)}}
+return BodyCtx(C)}}
 return C.parent.transition(token,value)}
 function as_pattern(C,token,value){
 if(C.expect=='as'){if(token=='as'){C.expect='alias'
@@ -3120,7 +3118,7 @@ return C}else{return $transition(C.parent,token,value)}}else if(C.expect=='alias
 if(C.bindings().indexOf(value)>-1){raise_syntax_error(C,`multiple assignments to name '${value}' in pattern`)}
 C.alias=value
 return C.parent}else{raise_syntax_error(C,'invalid pattern target')}}}
-var $PatternCaptureCtx=function(C,value){
+var PatternCaptureCtx=function(C,value){
 this.type="capture_pattern"
 this.parent=C.parent
 C.parent.tree.pop()
@@ -3129,7 +3127,7 @@ this.tree=[value]
 this.position=$token.value
 this.positions=[this.position]
 this.expect='.'}
-$PatternCaptureCtx.prototype.ast=function(){var ast_obj
+PatternCaptureCtx.prototype.ast=function(){var ast_obj
 try{if(this.tree.length > 1){var pattern=new ast.Name(this.tree[0],new ast.Load())
 set_position(pattern,this.position)
 for(var i=1;i < this.tree.length;i++){pattern=new ast.Attribute(pattern,this.tree[i],new ast.Load())
@@ -3139,7 +3137,7 @@ copy_position(pattern,pattern.value)}else if(this.starred){var v=this.tree[0]
 if(v=='_'){ast_obj=new ast.MatchStar()}else{ast_obj=new ast.MatchStar(v)}
 set_position(ast_obj,this.position)}else{var pattern=this.tree[0]
 if(typeof pattern=='string'){}else if(pattern.type=='group_pattern'){pattern=pattern.ast()}else{console.log('bizarre',pattern)
-pattern=$NumberCtx.prototype.ast.bind(this)()}
+pattern=NumberCtx.prototype.ast.bind(this)()}
 if(pattern=='_'){pattern=new ast.MatchAs()
 set_position(pattern,this.position)}}
 if(this.alias){if(typeof pattern=="string"){pattern=new ast.MatchAs(undefined,pattern)
@@ -3149,15 +3147,15 @@ set_position(ast_obj,this.position)
 return ast_obj}catch(err){console.log('error capture ast')
 show_line(this)
 throw err}}
-$PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree.slice()
+PatternCaptureCtx.prototype.bindings=function(){var bindings=this.tree[0]=='_' ?[]:this.tree.slice()
 if(this.alias){bindings.push(this.alias)}
 return bindings}
-$PatternCaptureCtx.prototype.transition=function(token,value){var C=this
+PatternCaptureCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case '.':
 if(token=='.'){C.type="value_pattern"
 C.expect='id'
 return C}else if(token=='('){
-return new $PatternCtx(new $PatternClassCtx(C))}else if(C.parent instanceof $PatternMappingCtx){return C.parent.transition(token,value)}else{C.expect='as'
+return new PatternCtx(new PatternClassCtx(C))}else if(C.parent instanceof PatternMappingCtx){return C.parent.transition(token,value)}else{C.expect='as'
 return C.transition(token,value)}
 case 'as':
 case 'alias':
@@ -3169,7 +3167,7 @@ C.positions.push($token.value)
 C.expect='.'
 return C}}
 return $transition(C.parent,token,value)}
-$PatternClassCtx=function(C){this.type="class_pattern"
+PatternClassCtx=function(C){this.type="class_pattern"
 this.tree=[]
 this.parent=C.parent
 this.position=$token.value
@@ -3183,7 +3181,7 @@ this.expect=','
 this.keywords=[]
 this.positionals=[]
 this.bound_names=[]}
-$PatternClassCtx.prototype.ast=function(){
+PatternClassCtx.prototype.ast=function(){
 if(this.class_id.length==1){var cls=new ast.Name(this.class_id[0])}else{
 var cls
 for(var i=0,len=this.class_id.length;i < len-1;i++){var value=new ast.Name(this.class_id[i],new ast.Load())
@@ -3202,12 +3200,12 @@ set_position(ast_obj,this.position)
 if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)
 set_position(ast_obj,this.position)}
 return ast_obj}
-$PatternClassCtx.prototype.bindings=function(){var bindings=this.bound_names
+PatternClassCtx.prototype.bindings=function(){var bindings=this.bound_names
 if(this.alias){bindings.push(this.alias)}
 return bindings}
-$PatternClassCtx.prototype.transition=function(token,value){var C=this
+PatternClassCtx.prototype.transition=function(token,value){var C=this
 function check_last_arg(){var last=$B.last(C.tree),bound
-if(last instanceof $PatternCaptureCtx){if(! last.is_keyword &&
+if(last instanceof PatternCaptureCtx){if(! last.is_keyword &&
 C.keywords.length > 0){$token.value=last.position
 raise_syntax_error(C,'positional patterns follow keyword patterns')}
 if(last.is_keyword){if(C.keywords.indexOf(last.tree[0])>-1){raise_syntax_error(C,`keyword argument repeated: ${last.tree[0]}`)}
@@ -3219,15 +3217,15 @@ C.bound_names=C.bound_names.concat(bound)}}
 switch(this.expect){case ',':
 switch(token){case '=':
 var current=$B.last(this.tree)
-if(current instanceof $PatternCaptureCtx){
+if(current instanceof PatternCaptureCtx){
 if(this.keywords.indexOf(current.tree[0])>-1){raise_syntax_error(C,'attribute name repeated in class pattern: '+
 current.tree[0])}
 current.is_keyword=true
-return new $PatternCtx(current)}
+return new PatternCtx(current)}
 raise_syntax_error(this,"'=' after non-capture")
 case ',':
 check_last_arg()
-return new $PatternCtx(this)
+return new PatternCtx(this)
 case ')':
 check_last_arg()
 if($B.last(this.tree).tree.length==0){this.tree.pop()}
@@ -3239,7 +3237,7 @@ case 'as':
 case 'alias':
 return as_pattern(C,token,value)}
 return $transition(C.parent,token,value)}
-var $PatternGroupCtx=function(C){
+var PatternGroupCtx=function(C){
 this.type="group_pattern"
 this.parent=C
 this.position=$token.value
@@ -3248,27 +3246,27 @@ var first_pattern=C.tree.pop()
 this.expect=',|'
 C.tree.push(this)}
 function remove_empty_pattern(C){var last=$B.last(C.tree)
-if(last && last instanceof $PatternCtx &&
+if(last && last instanceof PatternCtx &&
 last.tree.length==0){C.tree.pop()}}
-$PatternGroupCtx.prototype.ast=function(){var ast_obj
-if(this.tree.length==1 && ! this.has_comma){ast_obj=this.tree[0].ast()}else{ast_obj=$PatternSequenceCtx.prototype.ast.bind(this)()}
+PatternGroupCtx.prototype.ast=function(){var ast_obj
+if(this.tree.length==1 && ! this.has_comma){ast_obj=this.tree[0].ast()}else{ast_obj=PatternSequenceCtx.prototype.ast.bind(this)()}
 if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
 set_position(ast_obj,this.position)
 return ast_obj}
-$PatternGroupCtx.prototype.bindings=function(){var bindings=[]
+PatternGroupCtx.prototype.bindings=function(){var bindings=[]
 for(var item of this.tree){bindings=bindings.concat(item.bindings())}
 if(this.alias){bindings.push(this.alias)}
 return bindings}
-$PatternGroupCtx.prototype.transition=function(token,value){var C=this
+PatternGroupCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case ',|':
 if(token==")"){
 remove_empty_pattern(C)
 C.expect='as'
 return C}else if(token==','){C.expect='id'
 C.has_comma=true
-return C}else if(token=='op' && value=='|'){var opctx=new $PatternOrCtx(C.parent)
+return C}else if(token=='op' && value=='|'){var opctx=new PatternOrCtx(C.parent)
 opctx.parenthese=true
-return new $PatternCtx(opctx)}else if(this.token===undefined){return $transition(C.parent,token,value)}
+return new PatternCtx(opctx)}else if(this.token===undefined){return $transition(C.parent,token,value)}
 raise_syntax_error(C)
 case 'as':
 case 'alias':
@@ -3279,9 +3277,9 @@ remove_empty_pattern(C)
 C.expect='as'
 return C}
 C.expect=',|'
-return $transition(new $PatternCtx(C),token,value)}
+return $transition(new PatternCtx(C),token,value)}
 raise_syntax_error(C)}
-var $PatternLiteralCtx=function(C,token,value,sign){
+var PatternLiteralCtx=function(C,token,value,sign){
 this.type="literal_pattern"
 this.parent=C.parent
 this.position=$token.value
@@ -3289,20 +3287,20 @@ C.parent.tree.pop()
 C.parent.tree.push(this)
 if(token.sign){this.tree=[{sign:token.sign}]
 this.expect='number'}else{if(token=='str'){this.tree=[]
-new $StringCtx(this,value)}else if(token=='JoinedStr'){raise_syntax_error(this,"patterns cannot include f-strings")}else{this.tree=[{type:token,value,sign}]}
+new StringCtx(this,value)}else if(token=='JoinedStr'){raise_syntax_error(this,"patterns cannot include f-strings")}else{this.tree=[{type:token,value,sign}]}
 this.expect='op'}}
-$PatternLiteralCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
+PatternLiteralCtx.prototype.ast=function(){var lineno=$get_node(this).line_num
 try{var first=this.tree[0],result
-if(first.type=='str'){var v=$StringCtx.prototype.ast.bind(first)()
+if(first.type=='str'){var v=StringCtx.prototype.ast.bind(first)()
 result=new ast.MatchValue(v)}else if(first.type=='id'){result=new ast.MatchSingleton(_b_[first.value])}else{first.position=this.position
-var num=$NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
+var num=NumberCtx.prototype.ast.bind(first)(),res=new ast.MatchValue(num)
 if(first.sign && first.sign !='+'){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[first.sign]
 var unary_op=new ast.UnaryOp(new op(),res.value)
 set_position(unary_op,this.position)
 res=new ast.MatchValue(unary_op)
 set_position(res,this.position)}
 if(this.tree.length==1){result=res}else{this.tree[2].position=this.position
-var num2=$NumberCtx.prototype.ast.bind(this.tree[2])(),binop=new ast.BinOp(res.value,this.tree[1]=='+' ? new ast.Add():new ast.Sub(),num2)
+var num2=NumberCtx.prototype.ast.bind(this.tree[2])(),binop=new ast.BinOp(res.value,this.tree[1]=='+' ? new ast.Add():new ast.Sub(),num2)
 set_position(binop,this.position)
 result=new ast.MatchValue(binop)}}
 set_position(result,this.position)
@@ -3313,9 +3311,9 @@ if(this.alias){result=new ast.MatchAs(result,this.alias)}
 set_position(result,this.position)
 return result}catch(err){show_line(this)
 throw err}}
-$PatternLiteralCtx.prototype.bindings=function(){if(this.alias){return[this.alias]}
+PatternLiteralCtx.prototype.bindings=function(){if(this.alias){return[this.alias]}
 return[]}
-$PatternLiteralCtx.prototype.transition=function(token,value){var C=this
+PatternLiteralCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case 'op':
 if(token=="op"){switch(value){case '+':
 case '-':
@@ -3351,7 +3349,7 @@ return as_pattern(C,token,value)}
 if(token=='as' && C.tree.length==1){C.expect='as'
 return C.transition(token,value)}
 return $transition(C.parent,token,value)}
-var $PatternMappingCtx=function(C){
+var PatternMappingCtx=function(C){
 this.type="mapping_pattern"
 this.parent=C
 this.position=$token.value
@@ -3361,22 +3359,22 @@ C.tree.push(this)
 this.expect='key_value_pattern'
 this.literal_keys=[]
 this.bound_names=[]}
-$PatternMappingCtx.prototype.ast=function(){
+PatternMappingCtx.prototype.ast=function(){
 var keys=[],patterns=[]
 for(var item of this.tree){keys.push(item.tree[0].ast().value)
-if(item.tree[0]instanceof $PatternLiteralCtx){patterns.push(item.tree[1].ast())}else{patterns.push(item.tree[2].ast())}}
+if(item.tree[0]instanceof PatternLiteralCtx){patterns.push(item.tree[1].ast())}else{patterns.push(item.tree[2].ast())}}
 var res=new ast.MatchMapping(keys,patterns)
 if(this.double_star){res.rest=this.double_star.tree[0]}
 set_position(res,this.position)
 return res}
-$PatternMappingCtx.prototype.bindings=function(){var bindings=[]
+PatternMappingCtx.prototype.bindings=function(){var bindings=[]
 for(var item of this.tree){bindings=bindings.concat(item.bindings())}
 if(this.rest){bindings=bindings.concat(this.rest.bindings())}
 if(this.alias){bindings.push(this.alias)}
 return bindings}
-$PatternMappingCtx.prototype.transition=function(token,value){var C=this
+PatternMappingCtx.prototype.transition=function(token,value){var C=this
 function check_duplicate_names(){var last=$B.last(C.tree),bindings
-if(last instanceof $PatternKeyValueCtx){if(C.double_star){
+if(last instanceof PatternKeyValueCtx){if(C.double_star){
 raise_syntax_error(C,"can't use starred name here (consider moving to end)")}
 if(last.tree[0].type=='value_pattern'){bindings=last.tree[2].bindings()}else{bindings=last.tree[1].bindings()}
 for(var binding of bindings){if(C.bound_names.indexOf(binding)>-1){raise_syntax_error(C,`multiple assignments to name '${binding}'`+
@@ -3391,22 +3389,22 @@ C.rest=C.tree.pop()}
 return token==',' ? C :C.parent}
 if(token=='op' && value=='**'){C.expect='capture_pattern'
 return C}
-var p=new $PatternCtx(C)
+var p=new PatternCtx(C)
 try{var lit_or_val=p.transition(token,value)}catch(err){raise_syntax_error(C,"mapping pattern keys may only "+
 "match literals and attribute lookups")}
 if(C.double_star){
 raise_syntax_error(C)}
-if(lit_or_val instanceof $PatternLiteralCtx){C.tree.pop()
-new $PatternKeyValueCtx(C,lit_or_val)
-return lit_or_val}else if(lit_or_val instanceof $PatternCaptureCtx){C.has_value_pattern_keys=true
+if(lit_or_val instanceof PatternLiteralCtx){C.tree.pop()
+new PatternKeyValueCtx(C,lit_or_val)
+return lit_or_val}else if(lit_or_val instanceof PatternCaptureCtx){C.has_value_pattern_keys=true
 C.tree.pop()
-new $PatternKeyValueCtx(C,lit_or_val)
+new PatternKeyValueCtx(C,lit_or_val)
 C.expect='.'
 return this}else{raise_syntax_error(C,'(expected key or **)')}
 case 'capture_pattern':
-var p=new $PatternCtx(C)
+var p=new PatternCtx(C)
 var capture=$transition(p,token,value)
-if(capture instanceof $PatternCaptureCtx){if(C.double_star){raise_syntax_error(C,"only one double star pattern is accepted")}
+if(capture instanceof PatternCaptureCtx){if(C.double_star){raise_syntax_error(C,"only one double star pattern is accepted")}
 if(value=='_'){raise_syntax_error(C)}
 if(C.bound_names.indexOf(value)>-1){raise_syntax_error(C,'duplicate binding: '+value)}
 C.bound_names.push(value)
@@ -3421,29 +3419,29 @@ return C.transition(token,value)}
 raise_syntax_error(C)
 case '.':
 if(C.tree.length > 0){var last=$B.last(C.tree)
-if(last instanceof $PatternKeyValueCtx){
-new $IdCtx(last,last.tree[0].tree[0])
+if(last instanceof PatternKeyValueCtx){
+new IdCtx(last,last.tree[0].tree[0])
 C.expect='key_value_pattern'
 return $transition(last.tree[0],token,value)}}
 raise_syntax_error(C)}
 return $transition(C.parent,token,value)}
-var $PatternKeyValueCtx=function(C,literal_or_value){this.type="pattern_key_value"
+var PatternKeyValueCtx=function(C,literal_or_value){this.type="pattern_key_value"
 this.parent=C
 this.tree=[literal_or_value]
 literal_or_value.parent=this
 this.expect=':'
 C.tree.push(this)}
-$PatternKeyValueCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
-$PatternKeyValueCtx.prototype.transition=function(token,value){var C=this
+PatternKeyValueCtx.prototype.bindings=PatternMappingCtx.prototype.bindings
+PatternKeyValueCtx.prototype.transition=function(token,value){var C=this
 switch(C.expect){case ':':
 switch(token){case ':':
 var key_obj=this.tree[0]
-if(key_obj instanceof $PatternLiteralCtx){var key=$B.AST.$convert(key_obj.tree[0])
+if(key_obj instanceof PatternLiteralCtx){var key=$B.AST.$convert(key_obj.tree[0])
 if(_b_.list.__contains__(this.parent.literal_keys,key)){raise_syntax_error(C,`mapping pattern checks `+
 `duplicate key (${_b_.repr(key)})`)}
 this.parent.literal_keys.push(key)}
 this.expect=','
-return new $PatternCtx(this)
+return new PatternCtx(this)
 default:
 raise_syntax_error(C,'(expected :)')}
 case ',':
@@ -3454,15 +3452,15 @@ C.parent.expect='key_value_pattern'
 return $transition(C.parent,token,value)
 case 'op':
 if(value=='|'){
-return new $PatternCtx(new $PatternOrCtx(C))}}
+return new PatternCtx(new PatternOrCtx(C))}}
 raise_syntax_error(C,"(expected ',' or '}')")}
 return $transition(C.parent,token,value)}
-var $PatternOrCtx=function(C){
+var PatternOrCtx=function(C){
 this.type="or_pattern"
 this.parent=C
 this.position=$token.value
 var first_pattern=C.tree.pop()
-if(first_pattern instanceof $PatternGroupCtx &&
+if(first_pattern instanceof PatternGroupCtx &&
 first_pattern.expect !='as'){
 first_pattern=first_pattern.tree[0]}
 this.tree=[first_pattern]
@@ -3470,28 +3468,28 @@ first_pattern.parent=this
 this.expect='|'
 C.tree.push(this)
 this.check_reachable()}
-$PatternOrCtx.prototype.ast=function(){
+PatternOrCtx.prototype.ast=function(){
 var ast_obj=new ast.MatchOr(this.tree.map(x=> x.ast()))
 set_position(ast_obj,this.position)
 if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)}
 set_position(ast_obj,this.position)
 return ast_obj}
-$PatternOrCtx.prototype.bindings=function(){var names
+PatternOrCtx.prototype.bindings=function(){var names
 for(var subpattern of this.tree){if(subpattern.bindings===undefined){console.log('no binding',subpattern)}
 var subbindings=subpattern.bindings()
 if(names===undefined){names=subbindings}else{for(var item of names){if(subbindings.indexOf(item)==-1){raise_syntax_error(this,"alternative patterns bind different names")}}
 for(var item of subbindings){if(names.indexOf(item)==-1){raise_syntax_error(this,"alternative patterns bind different names")}}}}
 if(this.alias){return names.concat(this.alias)}
 return names}
-$PatternOrCtx.prototype.check_reachable=function(){
+PatternOrCtx.prototype.check_reachable=function(){
 var item=$B.last(this.tree)
 var capture
 if(item.type=='capture_pattern'){capture=item.tree[0]}else if(item.type=='group_pattern' && item.tree.length==1 &&
-item.tree[0].type=='capture_pattern'){capture=item.tree[0].tree[0]}else if(item instanceof $PatternOrCtx){item.check_reachable()}
+item.tree[0].type=='capture_pattern'){capture=item.tree[0].tree[0]}else if(item instanceof PatternOrCtx){item.check_reachable()}
 if(capture){var msg=capture=='_' ? 'wildcard' :
 `name capture '${capture}'`
 raise_syntax_error(this,`${msg} makes remaining patterns unreachable`)}}
-$PatternOrCtx.prototype.transition=function(token,value){function set_alias(){
+PatternOrCtx.prototype.transition=function(token,value){function set_alias(){
 var last=$B.last(C.tree)
 if(last.alias){C.alias=last.alias
 delete last.alias}}
@@ -3500,7 +3498,7 @@ if(['as','alias'].indexOf(C.expect)>-1){return as_pattern(C,token,value)}
 if(token=='op' && value=="|"){
 for(var item of C.tree){if(item.alias){raise_syntax_error(C,'(no as pattern inside or pattern)')}}
 C.check_reachable()
-return new $PatternCtx(C)}else if(token==')' && C.parenthese){set_alias()
+return new PatternCtx(C)}else if(token==')' && C.parenthese){set_alias()
 C.bindings()
 delete C.parenthese
 C.expect='as'
@@ -3508,7 +3506,7 @@ return C}
 set_alias()
 C.bindings()
 return $transition(C.parent,token,value)}
-var $PatternSequenceCtx=function(C,token){
+var PatternSequenceCtx=function(C,token){
 this.type="sequence_pattern"
 this.parent=C
 this.position=$token.value
@@ -3523,14 +3521,14 @@ first_pattern.parent=this}else{
 this.token=token}
 this.expect=','
 C.tree.push(this)}
-$PatternSequenceCtx.prototype.ast=function(){var ast_obj=new ast.MatchSequence(this.tree.map(x=> x.ast()))
+PatternSequenceCtx.prototype.ast=function(){var ast_obj=new ast.MatchSequence(this.tree.map(x=> x.ast()))
 set_position(ast_obj,this.position)
 if(this.alias){ast_obj=new ast.MatchAs(ast_obj,this.alias)
 set_position(ast_obj,this.position)}
 return ast_obj}
-$PatternSequenceCtx.prototype.bindings=$PatternMappingCtx.prototype.bindings
-$PatternSequenceCtx.prototype.transition=function(token,value){function check_duplicate_names(){var last=$B.last(C.tree)
-if(!(last instanceof $PatternCtx)){
+PatternSequenceCtx.prototype.bindings=PatternMappingCtx.prototype.bindings
+PatternSequenceCtx.prototype.transition=function(token,value){function check_duplicate_names(){var last=$B.last(C.tree)
+if(!(last instanceof PatternCtx)){
 var last_bindings=last.bindings()
 for(var b of last_bindings){if(C.bound_names.indexOf(b)>-1){raise_syntax_error(C,"multiple assignments to"+
 ` name '${b}' in pattern`)}}
@@ -3541,7 +3539,7 @@ var C=this
 if(C.expect==','){if((C.token=='[' && token==']')||
 (C.token=='(' && token==")")){
 var nb_starred=0
-for(var item of C.tree){if(item instanceof $PatternCaptureCtx && item.starred){nb_starred++
+for(var item of C.tree){if(item instanceof PatternCaptureCtx && item.starred){nb_starred++
 if(nb_starred > 1){raise_syntax_error(C,'multiple starred names in sequence pattern')}}}
 C.expect='as'
 check_duplicate_names()
@@ -3550,7 +3548,7 @@ return C}else if(token==','){check_duplicate_names()
 C.expect='id'
 return C}else if(token=='op' && value=='|'){
 remove_empty_pattern(C)
-return new $PatternCtx(new $PatternOrCtx(C))}else if(this.token===undefined){
+return new PatternCtx(new PatternOrCtx(C))}else if(this.token===undefined){
 check_duplicate_names()
 return $transition(C.parent,token,value)}
 raise_syntax_error(C)}else if(C.expect=='as'){if(token=='as'){this.expect='alias'
@@ -3558,30 +3556,30 @@ return C}
 return $transition(C.parent,token,value)}else if(C.expect=='alias'){if(token='id'){C.alias=value
 return C.parent}
 raise_syntax_error(C,'expected alias')}else if(C.expect=='id'){C.expect=','
-return $transition(new $PatternCtx(C),token,value)}}
-var $RaiseCtx=$B.parser.$RaiseCtx=function(C){
+return $transition(new PatternCtx(C),token,value)}}
+var RaiseCtx=$B.parser.RaiseCtx=function(C){
 this.type='raise'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this
 this.scope_type=$get_scope(this).ntype}
-$RaiseCtx.prototype.ast=function(){
+RaiseCtx.prototype.ast=function(){
 var ast_obj=new ast.Raise(...this.tree.map(x=> x.ast()))
 set_position(ast_obj,this.position)
 return ast_obj}
-$RaiseCtx.prototype.transition=function(token,value){var C=this
+RaiseCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
-if(C.tree.length==0){return new $IdCtx(new $ExprCtx(C,'exc',false),value)}
+if(C.tree.length==0){return new IdCtx(new ExprCtx(C,'exc',false),value)}
 break
 case 'from':
-if(C.tree.length > 0){return new $AbstractExprCtx(C,false)}
+if(C.tree.length > 0){return new AbstractExprCtx(C,false)}
 break
 case 'eol':
 remove_abstract_expr(this.tree)
 return $transition(C.parent,token)}
 raise_syntax_error(C)}
-var $ReturnCtx=$B.parser.$ReturnCtx=function(C){
+var ReturnCtx=$B.parser.ReturnCtx=function(C){
 this.type='return'
 this.parent=C
 this.tree=[]
@@ -3594,15 +3592,15 @@ while(node.parent){if(node.parent.C){var elt=node.parent.C.tree[0]
 if(elt.type=='for'){elt.has_return=true
 break}else if(elt.type=='try'){elt.has_return=true}else if(elt.type=='single_kw' && elt.token=='finally'){elt.has_return=true}}
 node=node.parent}}
-$ReturnCtx.prototype.ast=function(){var res=new ast.Return()
+ReturnCtx.prototype.ast=function(){var res=new ast.Return()
 if(this.tree.length > 0){res.value=this.tree[0].ast()}
 set_position(res,this.position)
 return res}
-$ReturnCtx.prototype.transition=function(token,value){var C=this
+ReturnCtx.prototype.transition=function(token,value){var C=this
 if(token=='eol' && this.tree.length==1 &&
 this.tree[0].type=='abstract_expr'){
 this.tree.pop()}
-return $transition(new $AbstractExprCtx(C.parent,false),token,value)}
+return $transition(new AbstractExprCtx(C.parent,false),token,value)}
 var SetCompCtx=function(C){
 this.type='setcomp'
 this.tree=[C.tree[0]]
@@ -3617,7 +3615,7 @@ return ast_obj}
 SetCompCtx.prototype.transition=function(token,value){var C=this
 if(token=='}'){return this.parent}
 raise_syntax_error(C)}
-var $SingleKwCtx=$B.parser.$SingleKwCtx=function(C,token){
+var SingleKwCtx=$B.parser.SingleKwCtx=function(C,token){
 this.type='single_kw'
 this.token=token
 this.parent=C
@@ -3630,37 +3628,37 @@ if(elt.type=='for' ||
 elt.type=='asyncfor' ||
 (elt.type=='condition' && elt.token=='while')){elt.has_break=true
 elt.else_node=$get_node(this)}}}}
-$SingleKwCtx.prototype.ast=function(){return ast_body(this.parent)}
-$SingleKwCtx.prototype.transition=function(token,value){var C=this
-if(token==':'){return $BodyCtx(C)}else if(token=='eol'){raise_syntax_error(C,"expected ':'")}
+SingleKwCtx.prototype.ast=function(){return ast_body(this.parent)}
+SingleKwCtx.prototype.transition=function(token,value){var C=this
+if(token==':'){return BodyCtx(C)}else if(token=='eol'){raise_syntax_error(C,"expected ':'")}
 raise_syntax_error(C)}
-var $SliceCtx=$B.parser.$SliceCtx=function(C){
+var SliceCtx=$B.parser.SliceCtx=function(C){
 this.type='slice'
 this.parent=C
 this.position=$token.value
 this.tree=C.tree.length > 0 ?[C.tree.pop()]:[]
 C.tree.push(this)}
-$SliceCtx.prototype.ast=function(){var slice=new ast.Slice()
+SliceCtx.prototype.ast=function(){var slice=new ast.Slice()
 var attrs=['lower','upper','step']
 for(var i=0;i < this.tree.length;i++){var item=this.tree[i]
 if(item.type !=='abstract_expr'){slice[attrs[i]]=item.ast()}}
 set_position(slice,this.position)
 return slice}
-$SliceCtx.prototype.transition=function(token,value){var C=this
-if(token==":"){return new $AbstractExprCtx(C,false)}
+SliceCtx.prototype.transition=function(token,value){var C=this
+if(token==":"){return new AbstractExprCtx(C,false)}
 return $transition(C.parent,token,value)}
-var $StarArgCtx=$B.parser.$StarArgCtx=function(C){
+var StarArgCtx=$B.parser.StarArgCtx=function(C){
 this.type='star_arg'
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$StarArgCtx.prototype.transition=function(token,value){var C=this
+StarArgCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.parent.type=="target_list"){C.tree.push(value)
 C.parent.expect=','
 return C.parent}
-return $transition(new $AbstractExprCtx(C,false),token,value)
+return $transition(new AbstractExprCtx(C,false),token,value)
 case 'imaginary':
 case 'int':
 case 'float':
@@ -3672,7 +3670,7 @@ case '(':
 case '{':
 case 'not':
 case 'lambda':
-return $transition(new $AbstractExprCtx(C,false),token,value)
+return $transition(new AbstractExprCtx(C,false),token,value)
 case ',':
 case ')':
 if(C.tree.length==0){raise_syntax_error(C,"(unnamed star argument)")}
@@ -3680,7 +3678,7 @@ return $transition(C.parent,token)
 case ':':
 if(C.parent.parent.type=='lambda'){return $transition(C.parent.parent,token)}}
 raise_syntax_error(C)}
-var $StarredCtx=$B.parser.$StarredCtx=function(C){
+var StarredCtx=$B.parser.StarredCtx=function(C){
 this.type='starred'
 this.position=C.position
 if(C.parent.type=='list_or_tuple' &&
@@ -3691,12 +3689,12 @@ if(child.type=='expr' && child.tree.length > 0
 this.parent=C
 this.tree=[]
 C.tree[C.tree.length]=this}
-$StarredCtx.prototype.ast=function(){var ast_obj=new ast.Starred(this.tree[0].ast(),new ast.Load())
+StarredCtx.prototype.ast=function(){var ast_obj=new ast.Starred(this.tree[0].ast(),new ast.Load())
 set_position(ast_obj,this.position)
 return ast_obj}
-$StarredCtx.prototype.transition=function(token,value){var C=this
+StarredCtx.prototype.transition=function(token,value){var C=this
 return $transition(C.parent,token,value)}
-var $StringCtx=$B.parser.$StringCtx=function(C,value){
+var StringCtx=$B.parser.StringCtx=function(C,value){
 this.type='str'
 this.parent=C
 this.position=this.end_position=$token.value
@@ -3717,20 +3715,20 @@ s+=char
 escaped=false}}
 value=s}
 return value.substr(1,value.length-2)}
-$StringCtx.prototype.add_value=function(value){this.is_bytes=value.charAt(0)=='b'
+StringCtx.prototype.add_value=function(value){this.is_bytes=value.charAt(0)=='b'
 if(! this.is_bytes){this.value+=make_string_for_ast_value(value)}else{this.value+=make_string_for_ast_value(value.substr(1))}}
-$StringCtx.prototype.ast=function(){var value=this.value
+StringCtx.prototype.ast=function(){var value=this.value
 if(this.is_bytes){value=`'${value}'`
 value=_b_.bytes.$new(_b_.bytes,eval(value),'ISO-8859-1')}
 var ast_obj=new ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
-$StringCtx.prototype.transition=function(token,value){var C=this
+StringCtx.prototype.transition=function(token,value){var C=this
 switch(token){case '[':
-return new $AbstractExprCtx(new $SubCtx(C.parent),false)
+return new AbstractExprCtx(new SubscripCtx(C.parent),false)
 case '(':
 C.parent.tree[0]=C
-return new $CallCtx(C.parent)
+return new CallCtx(C.parent)
 case 'str':
 if((this.is_bytes && ! value.startsWith('b'))||
 (! this.is_bytes && value.startsWith('b'))){raise_syntax_error(C,"cannot mix bytes and nonbytes literals")}
@@ -3742,7 +3740,7 @@ var joined_str=new JoinedStrCtx(C.parent,value)
 if(typeof joined_str.tree[0].value=="string"){joined_str.tree[0].value=this.value+' + '+joined_str.tree[0].value}else{joined_str.tree.splice(0,0,this)}
 return joined_str}
 return $transition(C.parent,token,value)}
-var $SubCtx=$B.parser.$SubCtx=function(C){
+var SubscripCtx=$B.parser.SubscripCtx=function(C){
 this.type='sub'
 this.func='getitem' 
 this.value=C.tree[0]
@@ -3751,7 +3749,7 @@ C.tree.pop()
 C.tree[C.tree.length]=this
 this.parent=C
 this.tree=[]}
-$SubCtx.prototype.ast=function(){var slice
+SubscripCtx.prototype.ast=function(){var slice
 if(this.tree.length > 1){var slice_items=this.tree.map(x=> x.ast())
 slice=new ast.Tuple(slice_items)
 set_position(slice,this.position,this.end_position)}else{slice=this.tree[0].ast()}
@@ -3764,7 +3762,7 @@ ast_obj.col_offset=value.col_offset
 ast_obj.end_lineno=slice.end_lineno
 ast_obj.end_col_offset=slice.end_col_offset
 return ast_obj}
-$SubCtx.prototype.transition=function(token,value){var C=this
+SubscripCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 case 'imaginary':
 case 'int':
@@ -3778,7 +3776,7 @@ case '{':
 case '.':
 case 'not':
 case 'lambda':
-var expr=new $AbstractExprCtx(C,false)
+var expr=new AbstractExprCtx(C,false)
 return $transition(expr,token,value)
 case ']':
 C.end_position=$token.value
@@ -3786,11 +3784,11 @@ if(C.parent.packed){return C.parent}
 if(C.tree[0].tree.length > 0){return C.parent}
 break
 case ':':
-return new $AbstractExprCtx(new $SliceCtx(C),false)
+return new AbstractExprCtx(new SliceCtx(C),false)
 case ',':
-return new $AbstractExprCtx(C,false)}
+return new AbstractExprCtx(C,false)}
 raise_syntax_error(C)}
-var $TargetListCtx=$B.parser.$TargetListCtx=function(C){
+var TargetListCtx=$B.parser.TargetListCtx=function(C){
 this.type='target_list'
 this.parent=C
 this.tree=[]
@@ -3798,7 +3796,7 @@ this.position=$token.value
 this.expect='id'
 this.nb_packed=0
 C.tree[C.tree.length]=this}
-$TargetListCtx.prototype.ast=function(){if(this.tree.length==1 && ! this.implicit_tuple){var item=this.tree[0].ast()
+TargetListCtx.prototype.ast=function(){if(this.tree.length==1 && ! this.implicit_tuple){var item=this.tree[0].ast()
 item.ctx=new ast.Store()
 if(item instanceof ast.Tuple){for(var target of item.elts){target.ctx=new ast.Store()}}
 return item}else{var items=[]
@@ -3808,21 +3806,21 @@ items.push(item)}
 var ast_obj=new ast.Tuple(items,new ast.Store())
 set_position(ast_obj,this.position)
 return ast_obj}}
-$TargetListCtx.prototype.transition=function(token,value){var C=this
+TargetListCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'id':
 if(C.expect=='id'){C.expect=','
-return new $IdCtx(
-new $ExprCtx(C,'target',false),value)}
+return new IdCtx(
+new ExprCtx(C,'target',false),value)}
 case 'op':
 if(C.expect=='id' && value=='*'){
 this.nb_packed++
 C.expect=','
-return new $AbstractExprCtx(
-new $StarredCtx(C),false)}
+return new AbstractExprCtx(
+new StarredCtx(C),false)}
 case '(':
 case '[':
 if(C.expect=='id'){C.expect=','
-return new $ListOrTupleCtx(C,token=='(' ? 'tuple' :'list')}
+return new ListOrTupleCtx(C,token=='(' ? 'tuple' :'list')}
 case ')':
 case ']':
 if(C.expect==','){return C.parent}
@@ -3835,38 +3833,38 @@ return $transition(C.parent,token,value)}
 console.log('unexpected token for target list',token,value)
 console.log(C)
 raise_syntax_error(C)}
-var $TernaryCtx=$B.parser.$TernaryCtx=function(C){
+var TernaryCtx=$B.parser.TernaryCtx=function(C){
 this.type='ternary'
 this.position=C.position
 C.parent.tree.pop()
-var expr=new $ExprCtx(C.parent,'ternary',false)
+var expr=new ExprCtx(C.parent,'ternary',false)
 expr.tree.push(this)
 this.parent=expr
 this.tree=[C]
 C.parent=this}
-$TernaryCtx.prototype.ast=function(){
+TernaryCtx.prototype.ast=function(){
 var ast_obj=new ast.IfExp(this.tree[1].ast(),this.tree[0].ast(),this.tree[2].ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-$TernaryCtx.prototype.transition=function(token,value){var C=this
+TernaryCtx.prototype.transition=function(token,value){var C=this
 if(token=='else'){C.in_else=true
-return new $AbstractExprCtx(C,false)}else if(! C.in_else){if(token==':'){raise_syntax_error(C)}
+return new AbstractExprCtx(C,false)}else if(! C.in_else){if(token==':'){raise_syntax_error(C)}
 raise_syntax_error_known_range(C,C.position,last_position(C),"expected 'else' after 'if' expression")}else if(token==","){
 if(["assign","augm_assign","node","return"].
 indexOf(C.parent.type)>-1){C.parent.tree.pop()
-var t=new $ListOrTupleCtx(C.parent,'tuple')
+var t=new ListOrTupleCtx(C.parent,'tuple')
 t.implicit=true
 t.tree[0]=C
 C.parent=t
 t.expect="id"
 return t}}
 return $transition(C.parent,token,value)}
-var $TryCtx=$B.parser.$TryCtx=function(C){
+var TryCtx=$B.parser.TryCtx=function(C){
 this.type='try'
 this.parent=C
 this.position=$token.value
 C.tree[C.tree.length]=this}
-$TryCtx.prototype.ast=function(){
+TryCtx.prototype.ast=function(){
 var node=this.parent.node,res={body:ast_body(this.parent),handlers:[],orelse:[],finalbody:[]}
 var rank=node.parent.children.indexOf(node)
 for(var child of node.parent.children.slice(rank+1)){var t=child.C.tree[0],type=t.type
@@ -3878,20 +3876,20 @@ var klass=this.parent.is_trystar ? ast.TryStar :ast.Try
 var res=new klass(res.body,res.handlers,res.orelse,res.finalbody)
 set_position(res,this.position)
 return res}
-$TryCtx.prototype.transition=function(token,value){var C=this
-if(token==':'){return $BodyCtx(C)}
+TryCtx.prototype.transition=function(token,value){var C=this
+if(token==':'){return BodyCtx(C)}
 raise_syntax_error(C,"expected ':'")}
-var $UnaryCtx=$B.parser.$UnaryCtx=function(C,op){
+var UnaryCtx=$B.parser.UnaryCtx=function(C,op){
 this.type='unary'
 this.op=op
 this.parent=C
 this.tree=[]
 this.position=$token.value
 C.tree.push(this)}
-$UnaryCtx.prototype.ast=function(){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op],ast_obj=new ast.UnaryOp(new op(),this.tree[0].ast())
+UnaryCtx.prototype.ast=function(){var op={'+':ast.UAdd,'-':ast.USub,'~':ast.Invert}[this.op],ast_obj=new ast.UnaryOp(new op(),this.tree[0].ast())
 set_position(ast_obj,this.position)
 return ast_obj}
-$UnaryCtx.prototype.transition=function(token,value){var C=this
+UnaryCtx.prototype.transition=function(token,value){var C=this
 switch(token){case 'op':
 if('+'==value ||'-'==value){if(C.op===value){C.op='+'}else{C.op='-'}
 return C}
@@ -3899,13 +3897,13 @@ case 'int':
 case 'float':
 case 'imaginary':
 if(C.parent.type=="starred"){raise_syntax_error(C,"can't use starred expression here")}
-var res=new $NumberCtx(token,C,value)
+var res=new NumberCtx(token,C,value)
 return res
 case 'id':
-return $transition(new $AbstractExprCtx(C,false),token,value)}
+return $transition(new AbstractExprCtx(C,false),token,value)}
 if(this.tree.length==0 ||this.tree[0].type=='abstract_expr'){raise_syntax_error(C)}
 return $transition(C.parent,token,value)}
-var $WithCtx=$B.parser.$WithCtx=function(C){
+var WithCtx=$B.parser.WithCtx=function(C){
 this.type='with'
 this.parent=C
 this.position=$token.value
@@ -3913,14 +3911,14 @@ C.tree[C.tree.length]=this
 this.tree=[]
 this.expect='expr'
 this.scope=$get_scope(this)}
-$WithCtx.prototype.ast=function(){
+WithCtx.prototype.ast=function(){
 var withitems=[],withitem
 for(var withitem of this.tree){withitems.push(withitem.ast())}
 var klass=this.async ? ast.AsyncWith :ast.With
 var ast_obj=new klass(withitems,ast_body(this.parent))
 set_position(ast_obj,this.async ? this.async.position :this.position,last_position(this))
 return ast_obj}
-$WithCtx.prototype.transition=function(token,value){var C=this
+WithCtx.prototype.transition=function(token,value){var C=this
 function check_last(){var last=$B.last(C.tree)
 if(last.tree.length > 1){var alias=last.tree[1]
 if(alias.tree.length==0){raise_syntax_error(C,"expected ':'")}
@@ -3935,11 +3933,11 @@ case 'id':
 if(C.expect=='expr'){
 C.expect=','
 return $transition(
-new $AbstractExprCtx(new withitem(C),false),token,value)}
+new AbstractExprCtx(new withitem(C),false),token,value)}
 raise_syntax_error(C)
 case ':':
 if((! C.parenth)||C.parenth=='implicit'){check_last()}
-return $BodyCtx(C)
+return BodyCtx(C)
 case ')':
 case ']':
 if(C.parenth==opening[token]){if(C.expect==',' ||C.expect=='expr'){check_last()
@@ -3955,7 +3953,7 @@ break
 case 'eol':
 raise_syntax_error(C,"expected ':'")}
 raise_syntax_error(C)}
-$WithCtx.prototype.set_alias=function(ctx){var ids=[]
+WithCtx.prototype.set_alias=function(ctx){var ids=[]
 if(ctx.type=="id"){ids=[ctx]}else if(ctx.type=="list_or_tuple"){
 for(var expr of ctx.tree){if(expr.type=="expr" && expr.tree[0].type=="id"){ids.push(expr.tree[0])}}}}
 var withitem=function(C){this.type='withitem'
@@ -3971,9 +3969,9 @@ set_position(ast_obj,this.position)
 return ast_obj}
 withitem.prototype.transition=function(token,value){var C=this
 if(token=='as' && C.expect=='as'){C.expect='star_target'
-return new $AbstractExprCtx(C,false)}else{return $transition(C.parent,token,value)}
+return new AbstractExprCtx(C,false)}else{return $transition(C.parent,token,value)}
 raise_syntax_error(C,"expected ':'")}
-var $YieldCtx=$B.parser.$YieldCtx=function(C,is_await){
+var YieldCtx=$B.parser.YieldCtx=function(C,is_await){
 this.type='yield'
 this.parent=C
 this.tree=[]
@@ -3981,19 +3979,19 @@ this.is_await=is_await
 this.position=$token.value
 C.tree[C.tree.length]=this
 if(C.type=="list_or_tuple" && C.tree.length > 1){raise_syntax_error(C,"(non-parenthesized yield)")}
-if($parent_match(C,{type:"annotation"})){raise_syntax_error(C,"'yield' outside function")}
+if(parent_match(C,{type:"annotation"})){raise_syntax_error(C,"'yield' outside function")}
 var parent=this
-while(true){var list_or_tuple=$parent_match(parent,{type:"list_or_tuple"})
+while(true){var list_or_tuple=parent_match(parent,{type:"list_or_tuple"})
 if(list_or_tuple){parent=list_or_tuple}else{break}}
 var parent=this
-while(true){var set_or_dict=$parent_match(parent,{type:"dict_or_set"})
+while(true){var set_or_dict=parent_match(parent,{type:"dict_or_set"})
 if(set_or_dict){parent=set_or_dict}else{break}}
 var root=$get_module(this)
 root.yields_func_check=root.yields_func_check ||[]
 root.yields_func_check.push(this)
 var scope=this.scope=$get_scope(this,true),node=$get_node(this)
 node.has_yield=this
-var in_comp=$parent_match(this,{type:"comprehension"})
+var in_comp=parent_match(this,{type:"comprehension"})
 if($get_scope(this).id.startsWith("lc"+$B.lambda_magic)){delete node.has_yield}
 if(in_comp){var outermost_expr=in_comp.tree[0].tree[1]
 var parent=C
@@ -4016,12 +4014,12 @@ case 'list_or_tuple':
 break
 default:
 raise_syntax_error(C,'(non-parenthesized yield)')}}}
-$YieldCtx.prototype.ast=function(){
+YieldCtx.prototype.ast=function(){
 var ast_obj
 if(this.from){ast_obj=new ast.YieldFrom(this.tree[0].ast())}else if(this.tree.length==1){ast_obj=new ast.Yield(this.tree[0].ast())}else{ast_obj=new ast.Yield()}
 set_position(ast_obj,this.position)
 return ast_obj}
-$YieldCtx.prototype.transition=function(token,value){var C=this
+YieldCtx.prototype.transition=function(token,value){var C=this
 if(token=='from'){
 if(C.tree[0].type !='abstract_expr'){
 raise_syntax_error(C,"('from' must follow 'yield')")}
@@ -4030,7 +4028,7 @@ C.from_num=$B.UUID()
 return C.tree[0]}else{remove_abstract_expr(C.tree)
 if(C.from && C.tree.length==0){raise_syntax_error(C)}}
 return $transition(C.parent,token)}
-$YieldCtx.prototype.check_in_function=function(){if(this.in_lambda){return}
+YieldCtx.prototype.check_in_function=function(){if(this.in_lambda){return}
 var scope=$get_scope(this),in_func=scope.is_function,func_scope=scope
 if(! in_func && scope.comprehension){var parent=scope.parent_block
 while(parent.comprehension){parent=parent_block}
@@ -4038,7 +4036,7 @@ in_func=parent.is_function
 func_scope=parent}
 if(in_func){var def=func_scope.C.tree[0]
 if(! this.is_await){def.type='generator'}}}
-function $parent_match(ctx,obj){
+function parent_match(ctx,obj){
 var flag
 while(ctx.parent){flag=true
 for(var attr in obj){if(ctx.parent[attr]!=obj[attr]){flag=false
@@ -4072,7 +4070,7 @@ var scope=tree_node.parent ||tree_node
 scope.ntype="module"
 return scope}
 var $get_module=$B.parser.$get_module=function(C){
-var ctx_node=C instanceof $NodeCtx ? C :C.parent
+var ctx_node=C instanceof NodeCtx ? C :C.parent
 while(ctx_node.type !=='node'){ctx_node=ctx_node.parent}
 var tree_node=ctx_node.node
 if(tree_node.ntype=="module"){return tree_node}
@@ -4095,8 +4093,6 @@ $B.nb_debug_lines=0}
 if($B.track_transitions){console.log("C",C,"token",token,value)
 $B.nb_debug_lines++}
 return C.transition(token,value)}
-$B.forbidden=[]
-$B.aliased_names=Object.create(null)
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
 function SurrogatePair(value){
@@ -4341,7 +4337,7 @@ var C=null,expect_indent=false,indent=0
 var line2pos={0:0,1:0},line_num=1
 for(var pos=0,len=src.length;pos < len;pos++){if(src[pos]=='\n'){line_num++
 line2pos[line_num]=pos+1}}
-while(true){try{var token=root.token_reader.read()}catch(err){C=C ||new $NodeCtx(node)
+while(true){try{var token=root.token_reader.read()}catch(err){C=C ||new NodeCtx(node)
 if(err.type=='IndentationError'){raise_indentation_error(C,err.message)}else if(err instanceof SyntaxError){if(braces_stack.length > 0){var last_brace=$B.last(braces_stack),start=last_brace.start
 $token.value=last_brace
 raise_syntax_error(C,`'${last_brace.string}'`+
@@ -4357,7 +4353,7 @@ console.log('src',src)}
 if(token.start===undefined){console.log('no start',token)}
 lnum=token.start[0]
 if(expect_indent &&
-['INDENT','COMMENT','NL'].indexOf(token.type)==-1){C=C ||new $NodeCtx(node)
+['INDENT','COMMENT','NL'].indexOf(token.type)==-1){C=C ||new NodeCtx(node)
 raise_indentation_error(C,"expected an indented block",expect_indent)}
 switch(token.type){case 'ENDMARKER':
 if(root.yields_func_check){for(const _yield of root.yields_func_check){$token.value=_yield.position
@@ -4375,14 +4371,14 @@ case 'COMMENT':
 var end=line2pos[token.end[0]]+token.end[1]
 continue
 case 'ERRORTOKEN':
-C=C ||new $NodeCtx(node)
+C=C ||new NodeCtx(node)
 if(token.string !=' '){handle_errortoken(C,token,root.token_reader)}
 continue}
 switch(token[0]){case 'NAME':
 case 'NUMBER':
 case 'OP':
 case 'STRING':
-C=C ||new $NodeCtx(node)}
+C=C ||new NodeCtx(node)}
 switch(token[0]){case 'NAME':
 var name=token[1]
 if(python_keywords.indexOf(name)>-1){if(unsupported.indexOf(name)>-1){raise_syntax_error(C,"(Unsupported Python keyword '"+name+"')")}
@@ -4402,7 +4398,7 @@ if(C.node && C.node.is_body_node){node=C.node}}else if(op=='...'){C=$transition(
 $transition(C,'eol')
 var new_node=new $Node()
 new_node.line_num=token[2][0]+1
-C=new $NodeCtx(new_node)
+C=new NodeCtx(new_node)
 node.parent.add(new_node)
 node=new_node}else if($augmented_assigns[op]){C=$transition(C,'augm_assign',op)}else{C=$transition(C,'op',op)}
 continue
@@ -4416,26 +4412,26 @@ C=$transition(C,prepared.type,prepared.value)
 continue
 case 'NEWLINE':
 if(C && C.node && C.node.is_body_node){expect_indent=C.node.parent}
-C=C ||new $NodeCtx(node)
+C=C ||new NodeCtx(node)
 $transition(C,'eol')
 var new_node=new $Node()
 new_node.line_num=token[2][0]+1
 if(node.parent.children.length > 0 &&
 node.parent.children[0].is_body_node){node.parent.parent.add(new_node)}else{node.parent.add(new_node)}
-C=new $NodeCtx(new_node)
+C=new NodeCtx(new_node)
 node=new_node
 continue
 case 'DEDENT':
 indent--
 if(! indent_continuation){node.parent.children.pop()
 node.parent.parent.add(node)
-C=new $NodeCtx(node)}
+C=new NodeCtx(node)}
 continue
 case 'INDENT':
 indent++
 var indent_continuation=false
 if(! expect_indent){if(token.line.trim()=='\\'){
-indent_continuation=true}else{C=C ||new $NodeCtx(node)
+indent_continuation=true}else{C=C ||new NodeCtx(node)
 raise_indentation_error(C,'unexpected indent')}}
 expect_indent=false
 continue}}}
