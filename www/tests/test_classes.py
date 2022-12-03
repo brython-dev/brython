@@ -1011,6 +1011,33 @@ class Meta(type):
 
 class A(x=9, metaclass=Meta):
     pass
-    
+
+# create classes with type()
+t = []
+
+class Meta(type):
+
+    def __new__(*args):
+        t.append('new')
+        return type.__new__(*args)
+
+    def __init__(*args):
+        t.append('init')
+
+
+class B(metaclass=Meta):
+    pass
+
+assert t == ['new', 'init']
+
+C = type('C', (B,), {'x': 1})
+assert C.__class__ is Meta
+assert t == ['new', 'init', 'new', 'init']
+
+assert_raises(TypeError, type, 'D', (), {'x': 1}, metaclass=Meta)
+
+D = type('D', (), {'x': 1})
+assert D.__class__ is type
+
 
 print('passed all tests..')
