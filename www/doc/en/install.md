@@ -87,8 +87,14 @@ pip install attrs
 brython-cli add_package attrs
 ```
 
-All the files in the package must of course be usable by Brython; this
-excludes files written in C for instance.
+_**Important warning**_ : Brython executes programs written in Python, but not
+those written in C. This means that for instance __`numpy`__ and the data
+science packages that use it will not work.
+
+Additionnaly, the ability of browsers to send HTTP request is limited for
+security reasons. Packages such as __`requests`__, or __`urllib.request`__ in
+the standard distribution, will not be able to send arbitrary requests to any 
+url. This is common to all the implementations of Python in the browser.
 
 Other commands
 --------------

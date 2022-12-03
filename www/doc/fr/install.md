@@ -88,9 +88,15 @@ pip install attrs
 brython-cli add_package attrs
 ```
 
-Pour cela il faut naturellement que tous les fichiers du package soient
-exécutables par Brython ; cela exclut les fichiers écrits en langage C par
-exemple.
+_**Avertissement important**_ : Brython exécute des programmes écrits en
+Python, mais pas ceux écrits en C. Cela signifie que par exemple __`numpy`__
+et les paquetages de data science qui l'utilisent ne fonctionneront pas.
+
+En outre, la capacité des navigateurs à envoyer des requêtes est limitée
+pour des raisons de sécurité. Des packages comme __`requests`__, ou le
+module __`urllib.request`__ de la distribution standard, ne peuvent pas
+envoyer de requête arbitraire à n'importe quelle url. Cette limitation est
+commune à toutes les implémentations de Python dans le navigateur.
 
 Autres commandes
 ----------------

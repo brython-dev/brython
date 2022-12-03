@@ -105,8 +105,8 @@ which uses the IP stack to execute HTTP requests to arbitrary urls, when a
 browser can only send Ajax requests to the same domain, or the the (rare)
 sites that support cross-origin requests.
 
-__Q__ : _why use the operator `<=` to build the tree of DOM elements ? This
-is not pythonic !_
+__Q__ : _why use the operator `<=` to build the tree of DOM elements ? This_
+_is not pythonic !_
 
 __A__ : Python has no built-in structure to manipulate trees, ie to add
 "child" or "sibling" nodes to a tree node. For these operations, functions
