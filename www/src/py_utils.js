@@ -440,9 +440,9 @@ $B.next_of = function(iterator){
     return $B.$call($B.$getattr(_b_.iter(iterator), '__next__'))
 }
 
-$B.next_of1 = function(iterator, frame, lineno){
+$B.make_js_iterator = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
-    // "for(item of $B.next_of1(...)){"
+    // "for(item of $B.make_js_iterator(...)){"
     if(frame === undefined){
         frame = $B.last($B.frames_stack)
         lineno = frame.$lineno

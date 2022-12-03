@@ -612,7 +612,7 @@ function init_comprehension(comp, scopes){
                `co_posonlyargount: 0,\n` +
                `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n` +
            `}\n` +
-           `var next_func_${comp.id} = $B.next_of1(expr, frame, ${comp.ast.lineno})\n` +
+           `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
            `frame.$f_trace = $B.enter_frame(frame)\n` +
            `var _frames = $B.frames_stack.slice()\n`
 }
@@ -1414,7 +1414,7 @@ $B.ast.comprehension.prototype.to_js = function(scopes){
     var id = $B.UUID(),
         iter = $B.js_from_ast(this.iter, scopes)
 
-    var js = `var next_func_${id} = $B.next_of1(${iter}, frame, ${this.lineno})\n` +
+    var js = `var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n` +
              `for(var next_${id} of next_func_${id}){\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
@@ -1564,7 +1564,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     }else{
         js += `var no_break_${id} = true,\n` +
                  `iterator_${id} = ${iter}\n` +
-             `for(var next_${id} of $B.next_of1(iterator_${id}, frame, ${this.lineno})){\n`
+             `for(var next_${id} of $B.make_js_iterator(iterator_${id}, frame, ${this.lineno})){\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
@@ -1945,7 +1945,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // special case for first generator
     var first = this.generators[0]
-    var js = `var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n` +
+    var js = `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
           `for(var next_${id} of next_func_${id}){\n` +
               `frame.$f_trace = $B.enter_frame(frame)\n`
     // assign result of iteration to target

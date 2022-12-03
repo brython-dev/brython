@@ -165,7 +165,7 @@ function set_difference_update(so, other){
         }
     }else{
         var frame = $B.last($B.frames_stack)
-        var iterator = $B.next_of1(other, frame, frame.$lineno)
+        var iterator = $B.make_js_iterator(other, frame, frame.$lineno)
         for(var key of iterator){
             set_discard_key(so, key)
         }
@@ -214,7 +214,7 @@ function set_intersection(self, other){
     }else{
         var frame = $B.last($B.frames_stack),
             lineno = frame.$lineno
-        iterator = $B.next_of1(other, frame, lineno)
+        iterator = $B.make_js_iterator(other, frame, lineno)
     }
     for(var other_item of iterator){
         var test = set_contains(self, other_item)
@@ -714,7 +714,7 @@ set.isdisjoint = function(){
     }else{
         var frame = $B.last($B.frames_stack),
             lineno = frame.$lineno
-        iterator = $B.next_of1(other, frame, lineno)
+        iterator = $B.make_js_iterator(other, frame, lineno)
     }
     for(var item of iterator){
         if(set_contains(self, item)){
@@ -786,7 +786,7 @@ set.update = function(self){
             }
         }else{
             var frame = $B.last($B.frames_stack),
-                iterator = $B.next_of1(iterable, frame, frame.$lineno)
+                iterator = $B.make_js_iterator(iterable, frame, frame.$lineno)
             for(var item of iterator){
                 set_add(self, item)
             }
@@ -867,7 +867,7 @@ set.issuperset = function(){
         return set.issubset(other, self)
     }
     var frame = $B.last($B.frames_stack)
-    for(var item of $B.next_of1(other, frame, frame.$lineno)){
+    for(var item of $B.make_js_iterator(other, frame, frame.$lineno)){
         if(! set_contains(self, item)){
             return false
         }

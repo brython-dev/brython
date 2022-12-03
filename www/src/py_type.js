@@ -11,7 +11,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     var class_obj = Object.create(null),
         dict = class_obj_proxy.$target,
         frame = $B.last($B.frames_stack),
-        iter = $B.next_of1(dict, frame, frame.$lineno)
+        iter = $B.make_js_iterator(dict, frame, frame.$lineno)
     for(var key of iter){
         class_obj[key] = $B.$getitem(dict, key)
     }
@@ -55,7 +55,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         if(typeof slots == "string"){
             slots = [slots]
         }else{
-            for(var item of $B.next_of1(slots)){
+            for(var item of $B.make_js_iterator(slots)){
                 if(typeof item != 'string'){
                     throw _b_.TypeError.$factory('__slots__ items must be ' +
                         `strings, not '${$B.class_name(item)}'`)
@@ -776,7 +776,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
 
     try{
         var slots = $B.$getitem(cl_dict, '__slots__')
-        for(var name of $B.next_of1(slots)){
+        for(var name of $B.make_js_iterator(slots)){
             class_dict[name] = member_descriptor.$factory(name, class_dict)
         }
     }catch(err){
@@ -1102,7 +1102,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
     // The class may not be instanciable if it has at least one abstract method
     if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){
         return function(){
-            var ams = Array.from($B.next_of1(klass.__abstractmethods__))
+            var ams = Array.from($B.make_js_iterator(klass.__abstractmethods__))
             ams.sort()
             var msg = (ams.length > 1 ? 's ' : ' ') + ams.join(', ')
             throw _b_.TypeError.$factory(

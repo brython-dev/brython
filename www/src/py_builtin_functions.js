@@ -3411,7 +3411,7 @@ $B.make_function_defaults = function(f){
         }
         if(f.$infos.__kwdefaults__ !== _b_.None){
             var kwdef = f.$infos.__kwdefaults__
-            for(var kw of $B.next_of1(kwdef)){
+            for(var kw of $B.make_js_iterator(kwdef)){
                 $defaults[kw] = $B.$getitem(kwdef, kw)
             }
         }

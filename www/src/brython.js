@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-03 15:29:17.175135"
-__BRYTHON__.timestamp=1670077757175
+__BRYTHON__.compiled_date="2022-12-03 15:34:38.294413"
+__BRYTHON__.timestamp=1670078078294
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4936,7 +4936,7 @@ return res}}
 if(iterator.$builtin_iterator){if(iterator.$next_func===undefined){iterator.$next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
 return iterator.$next_func}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
-$B.next_of1=function(iterator,frame,lineno){
+$B.make_js_iterator=function(iterator,frame,lineno){
 if(frame===undefined){frame=$B.last($B.frames_stack)
 lineno=frame.$lineno}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
@@ -5584,7 +5584,7 @@ return object})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 $B.$class_constructor=function(class_name,class_obj_proxy,metaclass,resolved_bases,bases,kwargs){
-var class_obj=Object.create(null),dict=class_obj_proxy.$target,frame=$B.last($B.frames_stack),iter=$B.next_of1(dict,frame,frame.$lineno)
+var class_obj=Object.create(null),dict=class_obj_proxy.$target,frame=$B.last($B.frames_stack),iter=$B.make_js_iterator(dict,frame,frame.$lineno)
 for(var key of iter){class_obj[key]=$B.$getitem(dict,key)}
 var module=class_obj.__module__
 if(module===undefined){
@@ -5597,7 +5597,7 @@ if(key !="metaclass"){
 extra_kwargs[key]=val}}}
 if(class_obj.__eq__ !==undefined && class_obj.__hash__===undefined){$B.$setitem(dict,'__hash__',_b_.None)}
 var slots=class_obj.__slots__
-if(slots !==undefined){if(typeof slots=="string"){slots=[slots]}else{for(var item of $B.next_of1(slots)){if(typeof item !='string'){throw _b_.TypeError.$factory('__slots__ items must be '+
+if(slots !==undefined){if(typeof slots=="string"){slots=[slots]}else{for(var item of $B.make_js_iterator(slots)){if(typeof item !='string'){throw _b_.TypeError.$factory('__slots__ items must be '+
 `strings, not '${$B.class_name(item)}'`)}}}
 $B.$setitem(dict,'__slots__',slots)}
 var meta_new=_b_.type.__getattribute__(metaclass,"__new__")
@@ -5823,7 +5823,7 @@ var qualname
 try{qualname=$B.$getitem(cl_dict,'__qualname__')}catch(err){qualname=name}
 var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,__dict__ :cl_dict,__qualname__:qualname,__module__:module,__name__:name,$is_class:true}
 try{var slots=$B.$getitem(cl_dict,'__slots__')
-for(var name of $B.next_of1(slots)){class_dict[name]=member_descriptor.$factory(name,class_dict)}}catch(err){}
+for(var name of $B.make_js_iterator(slots)){class_dict[name]=member_descriptor.$factory(name,class_dict)}}catch(err){}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 var items=$B.dict_to_list(cl_dict)
 for(var i=0;i < items.length;i++){var key=items[i][0],v=items[i][1]
@@ -5946,7 +5946,7 @@ var $instance_creator=$B.$instance_creator=function(klass){var test=false
 if(test){console.log('instance creator of',klass)}
 if(klass.prototype && klass.prototype.constructor==klass){
 return function(){return new klass(...arguments)}}
-if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){return function(){var ams=Array.from($B.next_of1(klass.__abstractmethods__))
+if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){return function(){var ams=Array.from($B.make_js_iterator(klass.__abstractmethods__))
 ams.sort()
 var msg=(ams.length > 1 ? 's ' :' ')+ams.join(', ')
 throw _b_.TypeError.$factory(
@@ -7264,7 +7264,7 @@ for(var i=value.length-1;i >=0;i--){var pos=params.length-value.length+i
 if(pos < 0){break}
 $defaults[params[pos]]=value[i]}
 if(f.$infos.__kwdefaults__ !==_b_.None){var kwdef=f.$infos.__kwdefaults__
-for(var kw of $B.next_of1(kwdef)){$defaults[kw]=$B.$getitem(kwdef,kw)}}
+for(var kw of $B.make_js_iterator(kwdef)){$defaults[kw]=$B.$getitem(kwdef,kw)}}
 f.$defaults=$defaults
 return _b_.None}else{throw _b_.AttributeError.$factory("cannot set attribute "+attr+
 " of "+_b_.str.$factory(self))}}
@@ -8837,7 +8837,7 @@ while(true){var next=set_next(other,pos),other_item
 if(! next){break};
 [pos,other_item]=next
 set_discard_key(so,other_item)}}else{var frame=$B.last($B.frames_stack)
-var iterator=$B.next_of1(other,frame,frame.$lineno)
+var iterator=$B.make_js_iterator(other,frame,frame.$lineno)
 for(var key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0,DISCARD_FOUND=1
 function set_discard_entry(so,key){var entry=set_lookkey(so,key)
@@ -8851,7 +8851,7 @@ var result=make_new_set_base_type(self),iterator
 if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){
 var temp=other,other=self,self=temp}
 iterator=make_iter(other)}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
-iterator=$B.next_of1(other,frame,lineno)}
+iterator=$B.make_js_iterator(other,frame,lineno)}
 for(var other_item of iterator){var test=set_contains(self,other_item)
 if(test){set_add(result,other_item)}}
 return result}
@@ -9034,7 +9034,7 @@ var iterator
 if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){
 var temp=other,other=self,self=temp}
 iterator=make_iter(other)}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
-iterator=$B.next_of1(other,frame,lineno)}
+iterator=$B.make_js_iterator(other,frame,lineno)}
 for(var item of iterator){if(set_contains(self,item)){return false}}
 return true}
 set.pop=function(self){for(var hash in self.$store){}
@@ -9060,7 +9060,7 @@ for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable
 while(true){var next=set_next(iterable,pos)
 if(! next){break};
 [pos,other_item]=next
-set_add(self,other_item)}}else{var frame=$B.last($B.frames_stack),iterator=$B.next_of1(iterable,frame,frame.$lineno)
+set_add(self,other_item)}}else{var frame=$B.last($B.frames_stack),iterator=$B.make_js_iterator(iterable,frame,frame.$lineno)
 for(var item of iterator){set_add(self,item)}}}
 self.$version++
 return _b_.None}
@@ -9091,7 +9091,7 @@ return true}
 set.issuperset=function(){var $=$B.args("issuperset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
 if(_b_.isinstance(other,[set,frozenset])){return set.issubset(other,self)}
 var frame=$B.last($B.frames_stack)
-for(var item of $B.next_of1(other,frame,frame.$lineno)){if(! set_contains(self,item)){return false}}
+for(var item of $B.make_js_iterator(other,frame,frame.$lineno)){if(! set_contains(self,item)){return false}}
 return true}
 set.__iand__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.intersection_update(self,other)
@@ -14690,7 +14690,7 @@ return `var ${comp.locals_name} = {},\n`+
 `co_posonlyargount: 0,\n`+
 `co_varnames: $B.fast_tuple(['.0', ${varnames}])\n`+
 `}\n`+
-`var next_func_${comp.id} = $B.next_of1(expr, frame, ${comp.ast.lineno})\n`+
+`var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`+
 `frame.$f_trace = $B.enter_frame(frame)\n`+
 `var _frames = $B.frames_stack.slice()\n`}
 function make_comp(scopes){
@@ -15017,7 +15017,7 @@ if(this.ops[i]instanceof $B.ast.In){comps.push(`$B.$is_member(${left}, `+
 if(len > 1){left='locals.$op'}}
 return comps.join(' && ')}
 $B.ast.comprehension.prototype.to_js=function(scopes){var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes)
-var js=`var next_func_${id} = $B.next_of1(${iter}, frame, ${this.lineno})\n`+
+var js=`var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.target)
@@ -15074,7 +15074,7 @@ if(this instanceof $B.ast.AsyncFor){js+=`var iter_${id} = ${iter},\n`+
 `    else{\nthrow err}\n`+
 `  }\n`}else{js+=`var no_break_${id} = true,\n`+
 `iterator_${id} = ${iter}\n`+
-`for(var next_${id} of $B.next_of1(iterator_${id}, frame, ${this.lineno})){\n`}
+`for(var next_${id} of $B.make_js_iterator(iterator_${id}, frame, ${this.lineno})){\n`}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
 name.to_js=function(){return `next_${id}`}
@@ -15248,7 +15248,7 @@ scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
 var head=init_comprehension(comp,scopes)
 var first=this.generators[0]
-var js=`var next_func_${id} = $B.next_of1(expr, frame, ${this.lineno})\n`+
+var js=`var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n`+
 `for(var next_${id} of next_func_${id}){\n`+
 `frame.$f_trace = $B.enter_frame(frame)\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
