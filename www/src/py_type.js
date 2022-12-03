@@ -2,29 +2,49 @@
 
 var _b_ = $B.builtins
 
+var TPFLAGS = {
+    STATIC_BUILTIN: 1 << 1,
+    MANAGED_WEAKREF: 1 << 3,
+    MANAGED_DICT: 1 << 4,
+    SEQUENCE: 1 << 5,
+    MAPPING: 1 << 6,
+    DISALLOW_INSTANTIATION: 1 << 7,
+    IMMUTABLETYPE: 1 << 8,
+    HEAPTYPE: 1 << 9,
+    BASETYPE: 1 << 10,
+    HAVE_VECTORCALL: 1 << 11,
+    READY: 1 << 12,
+    READYING: 1 << 13,
+    HAVE_GC: 1 << 14,
+    METHOD_DESCRIPTOR: 1 << 17,
+    VALID_VERSION_TAG:  1 << 19,
+    IS_ABSTRACT: 1 << 20,
+    MATCH_SELF: 1 << 22,
+    LONG_SUBCLASS: 1 << 24,
+    LIST_SUBCLASS: 1 << 25,
+    TUPLE_SUBCLASS: 1 << 26,
+    BYTES_SUBCLASS: 1 << 27,
+    UNICODE_SUBCLASS: 1 << 28,
+    DICT_SUBCLASS: 1 << 29,
+    BASE_EXC_SUBCLASS: 1 << 30,
+    TYPE_SUBCLASS: 1 << 31,
+    HAVE_FINALIZE: 1 << 0,
+    HAVE_VERSION_TAG: 1 << 18
+}
+
 // generic code for class constructor
 $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
                                  resolved_bases, bases,
                                  kwargs){
-    // class_obj_proxy is a proxy around a Python dict(-like) object
-    // Transform it into a JS object
-    var class_obj = Object.create(null),
-        dict = class_obj_proxy.$target,
-        frame = $B.last($B.frames_stack),
-        iter = $B.make_js_iterator(dict, frame, frame.$lineno)
-    for(var key of iter){
-        class_obj[key] = $B.$getitem(dict, key)
-    }
+    // class_obj_proxy is a Javascript proxy around the Python dict(-like)
+    // class namespace object
+    var dict = class_obj_proxy.$target,
+        module = class_obj_proxy.__module__
 
-    var module = class_obj.__module__
-    if(module === undefined){
-        // Get module of current frame
-        module = class_obj.__module__ = $B.last($B.frames_stack)[2]
-    }
-
-    // bool is not a valide base
+    // bool is not a valid base
     for(var base of bases){
-        if(bases[i] === _b_.bool){
+        if(base.__flags__ !== undefined && 
+                 ! (base.__flags__ & TPFLAGS.BASETYPE)){
             throw _b_.TypeError.$factory(
                 "type 'bool' is not an acceptable base type")
         }
@@ -45,12 +65,13 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
-    if(class_obj.__eq__ !== undefined && class_obj.__hash__ === undefined){
+    if(class_obj_proxy.__eq__ !== undefined &&
+            class_obj_proxy.__hash__ === undefined){
         $B.$setitem(dict, '__hash__', _b_.None)
     }
 
     // Check if class has __slots__
-    var slots = class_obj.__slots__
+    var slots = class_obj_proxy.__slots__
     if(slots !== undefined){
         if(typeof slots == "string"){
             slots = [slots]
@@ -661,7 +682,7 @@ type.__getattribute__ = function(klass, attr){
             if($test){console.log("res is function", res)}
 
             if(attr == "__new__" ||
-                    res.__class__ === $B.builtin_function){
+                    res.__class__ === $B.builtin_function_or_method){
                 res.$type = "staticmethod"
             }
             if((attr == "__class_getitem__"  || attr == "__init_subclass__")
@@ -816,7 +837,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
                     // stored in v.$infos.$defaults (cf. Function.__setattr__ in
                     // py_builtin_functions.js)
                     var $defaults = v.$infos.$defaults
-                    $B.Function.__setattr__(v, "__defaults__",
+                    $B.function.__setattr__(v, "__defaults__",
                         $defaults)
                 }
             }
@@ -1162,7 +1183,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
             return call_func.bind(null, klass).apply(null, arguments)
         }
     }
-    factory.__class__ = $B.Function
+    factory.__class__ = $B.function
     factory.$infos = {
         __name__: klass.__name__,
         __module__: klass.__module__
@@ -1187,7 +1208,7 @@ method_wrapper.__str__ = method_wrapper.__repr__ = function(self){
 }
 
 // Used for class members, defined in __slots__
-var member_descriptor = $B.make_class("member_descriptor",
+var member_descriptor = $B.member_descriptor = $B.make_class("member_descriptor",
     function(attr, cls){
         return{
             __class__: member_descriptor,
@@ -1281,7 +1302,7 @@ method.__getattribute__ = function(self, attr){
     }else if(method.hasOwnProperty(attr)){
         return _b_.object.__getattribute__(self, attr)
     }else{ // use attributes of underlying function __func__
-        return $B.Function.__getattribute__(self.$infos.__func__, attr)
+        return $B.function.__getattribute__(self.$infos.__func__, attr)
     }
 }
 
