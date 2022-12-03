@@ -359,8 +359,8 @@ $B.get_class = function(obj){
                     // Javascript function or constructor
                     return $B.JSObj
                 }
-                obj.__class__ = $B.Function
-                return $B.Function
+                obj.__class__ = $B.function
+                return $B.function
             case "object":
                 if(Array.isArray(obj)){
                     if(Object.getPrototypeOf(obj) === Array.prototype){

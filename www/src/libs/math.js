@@ -2188,7 +2188,7 @@ var _mod = {
 
 for(var $attr in _mod){
     if(typeof _mod[$attr] === 'function'){
-        _mod[$attr].__class__ = $B.builtin_function
+        _mod[$attr].__class__ = $B.builtin_function_or_method
     }
 }
 

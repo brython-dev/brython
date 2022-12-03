@@ -44,7 +44,8 @@ var int = {
         "denominator": true,
         "imag": true,
         "real": true
-    }
+    },
+    $is_int_subclass: true
 }
 
 var int_or_long = int.$int_or_long = function(bigint){
@@ -941,6 +942,7 @@ var bool = {
     __class__: _b_.type,
     __mro__: [int, _b_.object],
     $is_class: true,
+    $not_basetype: true, // bool cannot be a base class
     $native: true,
     $descriptors: {
         "numerator": true,

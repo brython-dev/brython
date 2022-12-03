@@ -9,6 +9,7 @@ var _b_ = $B.builtins,
         $is_class: true,
         $native: true,
         $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
+        $not_basetype: true, // range cannot be a base class
         $descriptors:{
             start: true,
             step: true,
@@ -306,6 +307,7 @@ var slice = {
     __mro__: [_b_.object],
     $is_class: true,
     $native: true,
+    $not_basetype: true, // slice cannot be a base class
     $descriptors: {
         start: true,
         step: true,

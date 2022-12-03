@@ -245,7 +245,7 @@ object.__getattribute__ = function(obj, attr){
             // __new__ is a static method
             // ... and so are builtin functions (is this documented ?)
             if(attr == "__new__" ||
-                    res.__class__ === $B.builtin_function){
+                    res.__class__ === $B.builtin_function_or_method){
                 res.$type = "staticmethod"
             }
             var res1 = __get__.apply(null, [res, obj, klass])

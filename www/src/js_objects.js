@@ -258,7 +258,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
         return pyobj.value
 
-    }else if(klass === $B.Function || klass === $B.method){
+    }else if(klass === $B.function || klass === $B.method){
         // Transform arguments
         if(pyobj.prototype &&
                 pyobj.prototype.constructor === pyobj &&

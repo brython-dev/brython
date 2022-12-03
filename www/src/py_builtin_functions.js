@@ -12,7 +12,7 @@ var check_nb_args = $B.check_nb_args,
     check_no_kw = $B.check_no_kw,
     check_nb_args_no_kw = $B.check_nb_args_no_kw
 
-var NoneType = {
+var NoneType = $B.NoneType = {
     $factory: function(){
         return None
     },
@@ -1354,7 +1354,7 @@ function hash(obj){
 
     if(obj.$is_class ||
             obj.__class__ === _b_.type ||
-            obj.__class__ === $B.Function){
+            obj.__class__ === $B.function){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     if(typeof obj == "string"){
@@ -1926,6 +1926,7 @@ var memoryview = $B.make_class('memoryview',
 
 memoryview.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
 memoryview.$buffer_protocol = true
+memoryview.$not_basetype = true // cannot be a base class
 
 memoryview.__eq__ = function(self, other){
     if(other.__class__ !== memoryview){return false}
@@ -2056,9 +2057,11 @@ function next(obj){
         "' object is not an iterator")
 }
 
-var NotImplementedType = $B.make_class("NotImplementedType",
-    function(){return NotImplemented}
-)
+var NotImplementedType = $B.NotImplementedType =
+    $B.make_class("NotImplementedType",
+        function(){return NotImplemented}
+    )
+
 NotImplementedType.__repr__ = NotImplementedType.__str__ = function(self){
     return "NotImplemented"
 }
@@ -3262,12 +3265,14 @@ function no_set_attr(klass, attr){
 var True = true
 var False = false
 
-var ellipsis = $B.make_class("ellipsis",
+var ellipsis = $B.ellipsis = $B.make_class("ellipsis",
     function(){return Ellipsis}
 )
+
 ellipsis.__repr__ = function(self){
     return 'Ellipsis'
 }
+
 var Ellipsis = {__class__: ellipsis}
 
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
@@ -3302,7 +3307,7 @@ var FunctionCode = $B.make_class("function code")
 
 var FunctionGlobals = $B.make_class("function globals")
 
-$B.Function = {
+$B.function = {
     __class__: _b_.type,
     __code__: {__class__: FunctionCode, __name__: 'function code'},
     __globals__: {__class__: FunctionGlobals, __name__: 'function globals'},
@@ -3312,13 +3317,13 @@ $B.Function = {
     $is_class: true
 }
 
-$B.Function.__delattr__ = function(self, attr){
+$B.function.__delattr__ = function(self, attr){
     if(attr == "__dict__"){
         throw _b_.TypeError.$factory("can't deleted function __dict__")
     }
 }
 
-$B.Function.__dir__ = function(self){
+$B.function.__dir__ = function(self){
     var infos = self.$infos || {},
         attrs = self.$attrs || {}
 
@@ -3327,11 +3332,11 @@ $B.Function.__dir__ = function(self){
                filter(x => !x.startsWith('$'))
 }
 
-$B.Function.__eq__ = function(self, other){
+$B.function.__eq__ = function(self, other){
     return self === other
 }
 
-$B.Function.__get__ = function(self, obj){
+$B.function.__get__ = function(self, obj){
     // adapated from
     // https://docs.python.org/3/howto/descriptor.html#functions-and-methods
     if(obj === _b_.None){
@@ -3340,7 +3345,7 @@ $B.Function.__get__ = function(self, obj){
     return $B.method.$factory(self, obj)
 }
 
-$B.Function.__getattribute__ = function(self, attr){
+$B.function.__getattribute__ = function(self, attr){
     // Internal attributes __name__, __module__, __doc__ etc.
     // are stored in self.$infos
     if(self.$infos && self.$infos[attr] !== undefined){
@@ -3386,7 +3391,7 @@ $B.Function.__getattribute__ = function(self, attr){
     }
 }
 
-$B.Function.__repr__ = function(self){
+$B.function.__repr__ = function(self){
     if(self.$infos === undefined){
         return '<function ' + self.name + '>'
     }else{
@@ -3394,7 +3399,7 @@ $B.Function.__repr__ = function(self){
     }
 }
 
-$B.Function.__mro__ = [_b_.object]
+$B.function.__mro__ = [_b_.object]
 
 $B.make_function_defaults = function(f){
     if(f.$infos && f.$infos.__code__){
@@ -3423,7 +3428,7 @@ $B.make_function_defaults = function(f){
     }
 }
 
-$B.Function.__setattr__ = function(self, attr, value){
+$B.function.__setattr__ = function(self, attr, value){
     if(attr == "__closure__"){
         throw _b_.AttributeError.$factory("readonly attribute")
     }else if(attr == "__defaults__"){
@@ -3465,9 +3470,9 @@ $B.Function.__setattr__ = function(self, attr, value){
     }
 }
 
-$B.Function.$factory = function(){}
+$B.function.$factory = function(){}
 
-$B.set_func_names($B.Function, "builtins")
+$B.set_func_names($B.function, "builtins")
 
 _b_.__BRYTHON__ = __BRYTHON__
 
@@ -3482,13 +3487,13 @@ $B.builtin_funcs = [
     "sorted", "sum", "vars"
 ]
 
-var builtin_function = $B.builtin_function = $B.make_class(
+var builtin_function = $B.builtin_function_or_method = $B.make_class(
     "builtin_function_or_method", function(f){
         f.__class__ = builtin_function
         return f
     })
 
-builtin_function.__getattribute__ = $B.Function.__getattribute__
+builtin_function.__getattribute__ = $B.function.__getattribute__
 builtin_function.__reduce_ex__ = builtin_function.__reduce__ = function(self){
     return self.$infos.__name__
 }
