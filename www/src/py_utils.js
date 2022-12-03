@@ -276,6 +276,63 @@ $B.parse_kwargs = function(kw_args, fname){
     return kwa
 }
 
+$B.check_nb_args = function(name, expected, args){
+    // Check the number of arguments
+    var len = args.length,
+        last = args[len - 1]
+    if(last && last.$nat == "kw"){
+        var kw = last.kw
+        if(Array.isArray(kw) && kw[1] && kw[1].__class__ === _b_.dict){
+            if(Object.keys(kw[1].$string_dict).length == 0){
+                len--
+            }
+        }
+    }
+    if(len != expected){
+        if(expected == 0){
+            throw _b_.TypeError.$factory(name + "() takes no argument" +
+                " (" + len + " given)")
+        }else{
+            throw _b_.TypeError.$factory(name + "() takes exactly " +
+                expected + " argument" + (expected < 2 ? '' : 's') +
+                " (" + len + " given)")
+        }
+    }
+}
+
+$B.check_no_kw = function(name, x, y){
+    // Throw error if one of x, y is a keyword argument
+    if(x === undefined){
+        console.log("x undef", name, x, y)
+    }
+    if((x.$nat && x.kw && x.kw[0] && x.kw[0].length > 0) ||
+            (y !== undefined && y.$nat)){
+        throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
+}
+
+$B.check_nb_args_no_kw = function(name, expected, args){
+    // Check the number of arguments and absence of keyword args
+    var len = args.length,
+        last = args[len - 1]
+    if(last && last.$nat == "kw"){
+        if(last.kw.length == 2 && Object.keys(last.kw[0]).length == 0){
+            len--
+        }else{
+            throw _b_.TypeError.$factory(name + "() takes no keyword arguments")
+        }
+    }
+    if(len != expected){
+        if(expected == 0){
+            throw _b_.TypeError.$factory(name + "() takes no argument" +
+                " (" + len + " given)")
+        }else{
+            throw _b_.TypeError.$factory(name + "() takes exactly " +
+                expected + " argument" + (expected < 2 ? '' : 's') +
+                " (" + len + " given)")
+        }
+    }
+}
+
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
