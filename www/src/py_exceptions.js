@@ -183,6 +183,7 @@ frame.__getattr__ = function(_self, attr){
         }
         return _self.$f_trace
     }
+    throw $B.attr_error(attr, _self)
 }
 
 frame.__setattr__ = function(_self, attr, value){
@@ -220,7 +221,13 @@ frame.f_code = {
 
 frame.f_globals = {
     __get__: function(_self){
-        return $B.obj_dict(_self[3])
+        if(_self.f_globals){
+            return _self.f_globals
+        }else if(_self.f_locals && _self[1] == _self[3]){
+            return _self.f_globals = _self.f_locals
+        }else{
+            return _self.f_globals = $B.obj_dict(_self[3])
+        }
     }
 }
 
@@ -232,7 +239,15 @@ frame.f_lineno = {
 
 frame.f_locals = {
     __get__: function(_self){
-        return $B.obj_dict(_self[1])
+        // If locals and globals are the same, f_locals and f_globals
+        // are the same object
+        if(_self.f_locals){
+            return _self.f_locals
+        }else if(_self.f_globals && _self[1] == _self[3]){
+            return _self.f_locals = _self.f_globals
+        }else{
+            return _self.f_locals = $B.obj_dict(_self[1])
+        }
     }
 }
 

@@ -779,9 +779,8 @@ function $$eval(src, _globals, _locals){
                  `_b_.print(result)\n` +
              `}`
     }
-
     try{
-        var exec_func = new Function('$B', '_b_', 'locals',
+        var exec_func = new Function('$B', '_b_',
                                      local_name, global_name,
                                      'frame', '_frames', js)
     }catch(err){
@@ -793,7 +792,7 @@ function $$eval(src, _globals, _locals){
     }
 
     try{
-        var res = exec_func($B, _b_, exec_locals,
+        var res = exec_func($B, _b_,
                             exec_locals, exec_globals, frame, _frames)
     }catch(err){
         if($B.debug > 2){
@@ -1290,12 +1289,7 @@ $B.$getattr = function(obj, attr, _default){
                 console.log('try with getattr', getattr)
             }
             try{
-                if(false && klass === $B.module){
-                    res = getattr(attr)
-                }else{
-                    res = getattr(obj, attr)
-                }
-                return res
+                return getattr(obj, attr)
             }catch(err){
                 if(_default !== undefined){
                     return _default
@@ -1306,6 +1300,7 @@ $B.$getattr = function(obj, attr, _default){
         if(_default !== undefined){
             return _default
         }
+
         throw err
     }
 
