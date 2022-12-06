@@ -754,4 +754,10 @@ assert pow(m, 2, rsa129) == m * m % rsa129
 assert pow(pow(2, 53) - 1, 1, 2) == 1
 assert pow(pow(2, 53), 1, 2) == 0
 
+# issue 2122
+nzi64 = int("0x910FDB1DBC8650BE", 16)
+ltnzi64 = int("0x3C039E0D19DFDB8A", 16)
+gAnswer = (ltnzi64 - nzi64) % (2 ** 64)
+assert gAnswer == 0xAAF3C2EF5D598ACC, gAnswer
+
 print('passed all tests...')

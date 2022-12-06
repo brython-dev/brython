@@ -230,7 +230,9 @@ long_int.__mod__ = function(self, other){
     if(typeof other == "number"){
         return int_or_long(self.value % BigInt(other))
     }else if(other.__class__ === $B.long_int){
-        return int_or_long(self.value % other.value)
+        var n = self.value,
+            m = other.value
+        return int_or_long(((n % m) + m) % m)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value % (other ? 1n : 0n))
     }else if(_b_.isinstance(other, _b_.int)){
