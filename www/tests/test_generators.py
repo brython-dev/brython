@@ -1214,5 +1214,26 @@ except StopIteration as ee:
     assert ee.value == expected, ee.value
 else:
     assert False
+
+# issue 2123
+def g(): yield
+
+try:
+    g().throw(Exception('foo1'))
+except Exception as exc:
+    assert exc.__class__ is Exception
+    assert exc.args[0] == 'foo1'
+
+try:
+    g().throw(Exception('foo2'), None)
+except Exception as exc:
+    assert exc.__class__ is Exception
+    assert exc.args[0] == 'foo2'
+
+try:
+    g().throw(Exception('foo3'), None, None)
+except Exception as exc:
+    assert exc.__class__ is Exception
+    assert exc.args[0] == 'foo3'
     
 print('passed all tests...')
