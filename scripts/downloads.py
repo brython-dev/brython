@@ -34,7 +34,10 @@ unicode_url = "https://www.unicode.org/Public/UCD/latest/ucd/"
 if not os.path.exists("ucd"):
     os.mkdir("ucd")
 
-for path in ["UnicodeData.txt", "CaseFolding.txt", "DerivedCoreProperties.txt"]:
+for path in ["UnicodeData.txt",
+             "CaseFolding.txt",
+             "DerivedCoreProperties.txt",
+             "NameAliases.txt"]:
     abs_path = os.path.join("ucd", path)
     f = urllib.request.urlopen(unicode_url + path)
     print(f'downloading {path}')

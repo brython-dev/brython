@@ -19,6 +19,8 @@ decimals = {}
 digits = {}
 numerics = {}
 
+from handle_unicode_name_aliases import aliases
+
 with open(dest_path, "w", encoding="ascii") as out:
     with open(os.path.join("ucd", "UnicodeData.txt"), encoding="ascii") as f:
         for line in f:
@@ -47,6 +49,13 @@ with open(dest_path, "w", encoding="ascii") as out:
             out.write("{};{};{};{};{};{};{};{};{}\n".format(
                 cp, lit, category, combining, bidir, decomp,
                 decimal, digit, numeric))
+
+            if cp in aliases:
+                for alias in aliases[cp]:
+                    out.write("{};{};{};{};{};{};{};{};{}\n".format(
+                        cp, alias, category, combining, bidir, decomp,
+                        decimal, digit, numeric))
+                    
 
 test_dir = os.path.join(root_dir, "www", "tests")
 
