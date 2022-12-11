@@ -401,7 +401,7 @@ function resolve_in_namespace(name, ns){
                         value: $B.$call(ns.$missing)(ns.$dict, name)
                     }
                 }catch(err){
-                    if(! $B.$is_exc(err, [_b_.KeyError])){
+                    if(! $B.is_exc(err, [_b_.KeyError])){
                         throw err
                     }
                 }
@@ -3076,6 +3076,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                         var _s${n} = yield _y${n}
                         $B.frames_stack.push(frame)
                     }catch(_e){
+                        $B.set_exc(_e, frame)
                         if(_e.__class__ === _b_.GeneratorExit){
                             var failed2${n} = false
                             try{
@@ -3092,7 +3093,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                             throw _e
                         }else if($B.is_exc(_e, [_b_.BaseException])){
                             var sys_module = $B.imported._sys,
-                                _x = sys_module.exc_info()
+                                _x${n} = sys_module.exc_info()
                             var failed3${n} = false
                             try{
                                 var _m${n} = $B.$getattr(_i${n}, "throw")
@@ -3107,7 +3108,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                                     _y${n} = $B.$call(_m${n}).apply(null,
                                         _b_.list.$factory(_x${n}))
                                 }catch(err){
-                                    if($B.$is_exc(err, [_b_.StopIteration])){
+                                    if($B.is_exc(err, [_b_.StopIteration])){
                                         _r${n} = $B.$getattr(err, "value")
                                         break
                                     }

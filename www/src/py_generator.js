@@ -148,7 +148,7 @@ $B.generator.throw = function(self, type, value, traceback){
         if(! _b_.issubclass(type, _b_.BaseException)){
             throw _b_.TypeError.$factory("exception value must be an " +
                 "instance of BaseException")
-        }else if(value === undefined){
+        }else if(value === undefined || value === _b_.None){
             exc = $B.$call(exc)()
         }else if(_b_.isinstance(value, type)){
             exc = value
