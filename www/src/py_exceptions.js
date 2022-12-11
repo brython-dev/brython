@@ -979,7 +979,8 @@ $B.show_error = function(err){
     }else if(err.__class__ !== undefined){
         var name = $B.class_name(err)
         trace += trace_from_stack(err)
-        trace += name + ': ' + _b_.str.$factory(err)
+        var args_str = _b_.str.$factory(err)
+        trace += name + (args_str ? ': ' + args_str : '')
         if(err.__class__ === _b_.NameError){
             var suggestion = offer_suggestions_for_name_error(err)
             if(suggestion){
