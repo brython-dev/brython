@@ -34,3 +34,6 @@ class TestUserCode(unittest.TestCase):
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestUserCode)
 unittest.TextTestRunner(verbosity=1).run(suite)
+
+# issue 2129
+from unittest import mock

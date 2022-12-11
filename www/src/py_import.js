@@ -1169,7 +1169,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // fromlist[0] == 'storage' // mod_name == "tatsu.utils._command"
+    var test = false // mod_name == "_frozen_importlib_external"
     if(test){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()
@@ -1186,7 +1186,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         // set attribute _bootstrap_external of importlib._bootstrap
         // and _frozen_importlib
         var _bootstrap = $B.imported.importlib._bootstrap,
-            _bootstrap_external = $B.imported.importlib[alias]
+            _bootstrap_external = $B.imported.importlib['_bootstrap_external']
         _bootstrap_external._set_bootstrap_module(_bootstrap)
         _bootstrap._bootstap_external = _bootstrap_external
 
