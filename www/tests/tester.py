@@ -378,10 +378,12 @@ class Support:
 
 support = Support()
 
-def assert_raises(exc_type, func, *args, msg=None, **kw):
+def assert_raises(exc_type, func, *args, msg=None, nb_args=None, **kw):
     try:
         func(*args, **kw)
     except exc_type as exc:
+        if nb_args is not None:
+            assert len(exc.args) == nb_args
         if msg is not None:
             if isinstance(msg, str):
                 if exc.args[0] != msg:
@@ -406,7 +408,7 @@ def show_tokens(src):
     import io
     for token in tokenize.tokenize(io.BytesIO(src.encode('utf-8')).readline):
         print(token)
-        
+
 if __name__=='__main__':
     t = 1, 2
     assertRaises(TypeError, t, '__setitem__', 0, 1)
