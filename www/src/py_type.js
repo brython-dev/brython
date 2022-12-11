@@ -43,7 +43,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
 
     // bool is not a valid base
     for(var base of bases){
-        if(base.__flags__ !== undefined && 
+        if(base.__flags__ !== undefined &&
                  ! (base.__flags__ & TPFLAGS.BASETYPE)){
             throw _b_.TypeError.$factory(
                 "type 'bool' is not an acceptable base type")
@@ -453,6 +453,16 @@ type.__call__ = function(){
 }
 
 type.__class__ = type
+
+type.__class_getitem__ = function(kls, origin, args){
+    // subclasses of type that don't define __class_getitem__ are
+    // not subscriptable, but type[] is valid
+    if(kls !== type){
+        throw _b_.TypeError.$factory(`type '${kls.__qualname__}' ` +
+            "is not subscriptable")
+    }
+    return $B.GenericAlias.$factory(kls, origin, args)
+}
 
 function merge_class_dict(dict, klass){
     var classdict,
@@ -1466,20 +1476,22 @@ $B.GenericAlias.__parameters__ = _b_.property.$factory(
 )
 
 $B.GenericAlias.__repr__ = function(self){
-    var items = []
-    for(var i = 0, len = self.items.length; i < len; i++){
-        if(self.items[i] === _b_.Ellipsis){
-            items.push('...')
+    var items = Array.isArray(self.items) ? self.items : [self.items]
+
+    var reprs = []
+    for(var item of items){
+        if(item === _b_.Ellipsis){
+            reprs.push('...')
         }else{
-            if(self.items[i].$is_class){
-                items.push(self.items[i].__name__)
+            if(item.$is_class){
+                reprs.push(item.__name__)
             }else{
-                items.push(_b_.repr(self.items[i]))
+                reprs.push(_b_.repr(item))
             }
         }
     }
     return self.origin_class.__qualname__ + '[' +
-        items.join(", ") + ']'
+        reprs.join(", ") + ']'
 }
 
 $B.set_func_names($B.GenericAlias, "types")
@@ -1525,7 +1537,5 @@ $B.UnionType.__repr__ = function(self){
 }
 
 $B.set_func_names($B.UnionType, "types")
-
-
 
 })(__BRYTHON__)

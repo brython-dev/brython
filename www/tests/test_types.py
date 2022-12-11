@@ -106,5 +106,10 @@ class A(TypedDict):
 
 assert A(a=1) == {'a': 1}
 
+# issue 2128
+from typing import ForwardRef
+
+assert str(ForwardRef("test", is_class=True)) == "ForwardRef('test')"
+
 
 print("Passed all tests...")

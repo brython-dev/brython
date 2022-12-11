@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-10 11:28:09.404118"
-__BRYTHON__.timestamp=1670668089404
+__BRYTHON__.compiled_date="2022-12-11 08:56:38.505404"
+__BRYTHON__.timestamp=1670745398505
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5586,7 +5586,7 @@ return object})(__BRYTHON__)
 var TPFLAGS={STATIC_BUILTIN:1 << 1,MANAGED_WEAKREF:1 << 3,MANAGED_DICT:1 << 4,SEQUENCE:1 << 5,MAPPING:1 << 6,DISALLOW_INSTANTIATION:1 << 7,IMMUTABLETYPE:1 << 8,HEAPTYPE:1 << 9,BASETYPE:1 << 10,HAVE_VECTORCALL:1 << 11,READY:1 << 12,READYING:1 << 13,HAVE_GC:1 << 14,METHOD_DESCRIPTOR:1 << 17,VALID_VERSION_TAG:1 << 19,IS_ABSTRACT:1 << 20,MATCH_SELF:1 << 22,LONG_SUBCLASS:1 << 24,LIST_SUBCLASS:1 << 25,TUPLE_SUBCLASS:1 << 26,BYTES_SUBCLASS:1 << 27,UNICODE_SUBCLASS:1 << 28,DICT_SUBCLASS:1 << 29,BASE_EXC_SUBCLASS:1 << 30,TYPE_SUBCLASS:1 << 31,HAVE_FINALIZE:1 << 0,HAVE_VERSION_TAG:1 << 18}
 $B.$class_constructor=function(class_name,class_obj_proxy,metaclass,resolved_bases,bases,kwargs){
 var dict=class_obj_proxy.$target,module=class_obj_proxy.__module__
-for(var base of bases){if(base.__flags__ !==undefined && 
+for(var base of bases){if(base.__flags__ !==undefined &&
 !(base.__flags__ & TPFLAGS.BASETYPE)){throw _b_.TypeError.$factory(
 "type 'bool' is not an acceptable base type")}}
 var extra_kwargs={}
@@ -5701,6 +5701,10 @@ var args=[instance].concat(extra_args)
 init_func.apply(null,args)}}
 return instance}
 type.__class__=type
+type.__class_getitem__=function(kls,origin,args){
+if(kls !==type){throw _b_.TypeError.$factory(`type '${kls.__qualname__}' `+
+"is not subscriptable")}
+return $B.GenericAlias.$factory(kls,origin,args)}
 function merge_class_dict(dict,klass){var classdict,bases
 classdict=$B.$getattr(klass,'__dict__',null)
 if(classdict !==null){_b_.dict.update(dict,classdict)}else{return}
@@ -6060,10 +6064,11 @@ self=> self.origin_class
 $B.GenericAlias.__parameters__=_b_.property.$factory(
 self=> $B.fast_tuple([])
 )
-$B.GenericAlias.__repr__=function(self){var items=[]
-for(var i=0,len=self.items.length;i < len;i++){if(self.items[i]===_b_.Ellipsis){items.push('...')}else{if(self.items[i].$is_class){items.push(self.items[i].__name__)}else{items.push(_b_.repr(self.items[i]))}}}
+$B.GenericAlias.__repr__=function(self){var items=Array.isArray(self.items)? self.items :[self.items]
+var reprs=[]
+for(var item of items){if(item===_b_.Ellipsis){reprs.push('...')}else{if(item.$is_class){reprs.push(item.__name__)}else{reprs.push(_b_.repr(item))}}}
 return self.origin_class.__qualname__+'['+
-items.join(", ")+']'}
+reprs.join(", ")+']'}
 $B.set_func_names($B.GenericAlias,"types")
 $B.UnionType=$B.make_class("UnionType",function(items){return{
 __class__:$B.UnionType,items}}
@@ -14158,7 +14163,7 @@ $B.promise=function(obj){if(obj.__class__===coroutine){return coroutine.send(obj
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
 ;
-(function($B){$B.builtin_class_flags={builtins:{1073763584:['ConnectionResetError','UnicodeDecodeError','MemoryError','UnicodeTranslateError','ZeroDivisionError','RecursionError','TimeoutError','ArithmeticError','EnvironmentError','RuntimeError','UnboundLocalError','StopIteration','Warning','ImportWarning','SystemExit','WindowsError','BrokenPipeError','LookupError','FutureWarning','SyntaxWarning','AssertionError','ReferenceError','KeyError','BytesWarning','SyntaxError','UserWarning','TabError','ValueError','IndexError','NotImplementedError','RuntimeWarning','FileExistsError','GeneratorExit','SystemError','UnicodeEncodeError','InterruptedError','OSError','IndentationError','OverflowError','PermissionError','UnicodeWarning','NotADirectoryError','IOError','BaseExceptionGroup','ChildProcessError','KeyboardInterrupt','ProcessLookupError','BlockingIOError','ConnectionError','ConnectionRefusedError','IsADirectoryError','ConnectionAbortedError','DeprecationWarning','PendingDeprecationWarning','ResourceWarning','BufferError','FileNotFoundError','FloatingPointError','EOFError','EncodingWarning','StopAsyncIteration','UnicodeError'],1074287872:['ModuleNotFoundError','BaseException','TypeError','NameError','Exception','ImportError','AttributeError'],1073763840:['ExceptionGroup'],21500160:['bool'],4723968:['float','bytearray'],138941696:['bytes'],546048:['map','classmethod','staticmethod','property'],5376:['complex'],541611328:['dict'],21760:['enumerate','reversed','filter','zip','super'],4740352:['set','frozenset'],21501184:['int'],38294816:['list'],545056:['memoryview'],529664:['object'],528672:['range'],20736:['slice'],273159424:['str'],71849248:['tuple'],2148031744:['type'],},types:{20864:['method-wrapper','classmethod_descriptor','async_generator'],547200:['builtin_function_or_method'],20736:['cell'],4352:['code'],545152:['generator','member_descriptor','getset_descriptor','frame','coroutine'],528640:['ellipsis','NotImplementedType','NoneType'],678144:['function'],545088:['mappingproxy'],153984:['method_descriptor'],22784:['method'],546048:['module'],545024:['traceback'],676224:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1073763584:['TimeoutError','BrokenPipeError','ImportWarning','BufferError','BytesWarning','NotImplementedError','UnicodeTranslateError','WindowsError','OSError','UnicodeWarning','AssertionError','ResourceWarning','KeyError','RecursionError','UnicodeError','ProcessLookupError','SyntaxError','ReferenceError','PendingDeprecationWarning','FutureWarning','UnboundLocalError','UserWarning','MemoryError','FileNotFoundError','PermissionError','ConnectionError','SystemExit','DeprecationWarning','TabError','SyntaxWarning','StopAsyncIteration','EOFError','ConnectionAbortedError','InterruptedError','FileExistsError','EnvironmentError','FloatingPointError','IsADirectoryError','BlockingIOError','LookupError','IndentationError','ConnectionResetError','ValueError','UnicodeEncodeError','IndexError','ConnectionRefusedError','BaseExceptionGroup','NotADirectoryError','Warning','StopIteration','ArithmeticError','EncodingWarning','RuntimeError','UnicodeDecodeError','SystemError','GeneratorExit','ChildProcessError','KeyboardInterrupt','RuntimeWarning','OverflowError','ZeroDivisionError','IOError'],1074287872:['AttributeError','NameError','ModuleNotFoundError','BaseException','ImportError','TypeError','Exception'],1073763840:['ExceptionGroup'],21500160:['bool'],4723968:['float','bytearray'],138941696:['bytes'],546048:['classmethod','property','staticmethod','map'],5376:['complex'],541611328:['dict'],21760:['super','filter','zip','enumerate','reversed'],4740352:['set','frozenset'],21501184:['int'],38294816:['list'],545056:['memoryview'],529664:['object'],528672:['range'],20736:['slice'],273159424:['str'],71849248:['tuple'],2148031744:['type'],},types:{20864:['async_generator','classmethod_descriptor','method-wrapper'],547200:['builtin_function_or_method'],20736:['cell'],4352:['code'],545152:['member_descriptor','generator','frame','getset_descriptor','coroutine'],528640:['ellipsis','NotImplementedType','NoneType'],678144:['function'],545088:['mappingproxy'],153984:['method_descriptor'],22784:['method'],546048:['module'],545024:['traceback'],676224:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
  ;(function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
