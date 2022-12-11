@@ -449,4 +449,39 @@ try:
 except TypeError:
     pass
 
+# issue 2106
+messages = [
+    (0, False),
+    (0, True),
+    (1, True)
+]
+
+messages.sort(key=lambda m: (m[1], m[0]), reverse=True)
+assert messages == [(1, True), (0, True), (0, False)]
+
+# comparisons
+assert [0.5, 1.7] < [1, 2]
+assert [0.5, 1.7] < [1, 2, 3]
+assert [1, 2] < [1, 2, 3]
+
+assert not [1] < [1]
+assert [1] < [1, 2]
+assert not [1, 2] < [1, 2]
+assert not [1, 2] < [1]
+
+assert [0.5, 1.7] <= [1, 2]
+assert [0.5, 1.7] <= [1, 2, 3]
+assert [1, 2] <= [1, 2, 3]
+
+assert [1] <= [1]
+assert [1] <= [1, 2]
+assert [1, 2] <= [1, 2]
+assert not [1, 2] <= [1]
+
+assert [1, 2] > [0.5, 1.7]
+assert [1, 2, 3] > [1, 2]
+assert not [1, 2] > [1, 2]
+assert [1, 2] >= [1, 2]
+
+
 print("passed all tests..")

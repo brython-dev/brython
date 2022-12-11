@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-11 10:24:00.957994"
-__BRYTHON__.timestamp=1670750640957
+__BRYTHON__.compiled_date="2022-12-11 15:04:22.199391"
+__BRYTHON__.timestamp=1670767462199
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12958,24 +12958,16 @@ for(var i=start;i > stop;i+=step){res[pos++]=items[i]}
 return factory(res)}}
 throw _b_.TypeError.$factory($B.class_name(self)+
 " indices must be integer, not "+$B.class_name(key))}
-list.__ge__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
-var i=0
-while(i < self.length){if(i >=other.length){return true}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{res=$B.$getattr(self[i],"__ge__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(self[i])+"() >= "+
-$B.class_name(other[i])+"()")}else{return res}}}
-return other.length==self.length}
-list.__gt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
-var i=0
-while(i < self.length){if(i >=other.length){return true}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}
-else{res=$B.$getattr(self[i],"__gt__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(self[i])+"() > "+
-$B.class_name(other[i])+"()")}else return res}}
-return false}
+list.__ge__=function(self,other){
+if(! _b_.isinstance(other,list)){return _b_.NotImplemented}
+var res=list.__le__(other,self)
+if(res===_b_.NotImplemented){return res}
+return res}
+list.__gt__=function(self,other){
+if(! _b_.isinstance(other,list)){return _b_.NotImplemented}
+var res=list.__lt__(other,self)
+if(res===_b_.NotImplemented){return res}
+return res}
 list.__hash__=_b_.None
 list.__iadd__=function(){var $=$B.args("__iadd__",2,{self:null,x:null},["self","x"],arguments,{},null,null)
 var x=list.$factory($B.$iter($.x))
@@ -13002,18 +12994,27 @@ return _b_.None}
 var list_iterator=$B.make_iterator_class("list_iterator")
 list_iterator.__reduce__=list_iterator.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
 list.__iter__=function(self){return list_iterator.$factory(self)}
-list.__le__=function(self,other){var res=list.__ge__(self,other)
-if(res===_b_.NotImplemented){return res}
-return ! res}
-list.__len__=function(self){return self.length}
-list.__lt__=function(self,other){if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
+list.__le__=function(self,other){
+if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
 var i=0
-while(i < self.length){if(i >=other.length){return false}
-if($B.rich_comp("__eq__",self[i],other[i])){i++}else{res=$B.$getattr(self[i],"__lt__")(other[i])
-if(res===_b_.NotImplemented){throw _b_.TypeError.$factory("unorderable types: "+
-$B.class_name(self[i])+"() >= "+
-$B.class_name(other[i])+"()")}else{return res}}}
-return other.length > self.length}
+while(i < self.length && i < other.length &&
+$B.is_or_equals(self[i],other[i])){i++}
+if(i==self.length){
+return self.length <=other.length}
+if(i==other.length){
+return false}
+return $B.rich_comp('__le__',self[i],other[i])}
+list.__len__=function(self){return self.length}
+list.__lt__=function(self,other){
+if(! isinstance(other,[list,_b_.tuple])){return _b_.NotImplemented}
+var i=0
+while(i < self.length && i < other.length &&
+$B.is_or_equals(self[i],other[i])){i++}
+if(i==self.length){
+return self.length < other.length}
+if(i==other.length){
+return false}
+return $B.rich_comp('__lt__',self[i],other[i])}
 list.__mul__=function(self,other){try{other=$B.PyNumber_Index(other)}catch(err){throw _b_.TypeError.$factory("can't multiply sequence by non-int "+
 `of type '${$B.class_name(other)}'`)}
 if(self.length==0){return list.__new__(list)}

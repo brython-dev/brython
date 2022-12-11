@@ -219,45 +219,27 @@ list.$getitem = function(self, key){
 }
 
 list.__ge__ = function(self, other){
-    if(! isinstance(other, [list, _b_.tuple])){
+    // self >= other is the same as other <= self
+    if(! _b_.isinstance(other, list)){
         return _b_.NotImplemented
     }
-    var i = 0
-    while(i < self.length){
-        if(i >= other.length){return true}
-        if($B.rich_comp("__eq__", self[i], other[i])){i++}
-        else{
-            res = $B.$getattr(self[i], "__ge__")(other[i])
-            if(res === _b_.NotImplemented){
-                throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.class_name(self[i])  + "() >= " +
-                    $B.class_name(other[i]) + "()")
-            }else{return res}
-        }
+    var res = list.__le__(other, self)
+    if(res === _b_.NotImplemented){
+        return res
     }
-
-    return other.length == self.length
+    return res
 }
 
 list.__gt__ = function(self, other){
-    if(! isinstance(other, [list, _b_.tuple])){
+    // self > other is the same as other < self
+    if(! _b_.isinstance(other, list)){
         return _b_.NotImplemented
     }
-    var i = 0
-    while(i < self.length){
-        if(i >= other.length){return true}
-        if($B.rich_comp("__eq__", self[i], other[i])){i++}
-        else{
-            res = $B.$getattr(self[i], "__gt__")(other[i])
-            if(res === _b_.NotImplemented){
-                throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.class_name(self[i]) + "() > " +
-                    $B.class_name(other[i]) + "()")
-            }else return res
-        }
+    var res = list.__lt__(other, self)
+    if(res === _b_.NotImplemented){
+        return res
     }
-    // other starts like self, but is as long or longer
-    return false
+    return res
 }
 
 list.__hash__ = _b_.None
@@ -336,9 +318,27 @@ list.__iter__ = function(self){
 }
 
 list.__le__ = function(self, other){
-    var res = list.__ge__(self, other)
-    if(res === _b_.NotImplemented){return res}
-    return ! res
+    // True if all items in self are <= than in other,
+    // or if all are equal and len(self) <= len(other)
+    if(! isinstance(other, [list, _b_.tuple])){
+        return _b_.NotImplemented
+    }
+    var i = 0
+    // skip all items that compare equal
+    while(i < self.length && i < other.length &&
+            $B.is_or_equals(self[i], other[i])){
+        i++
+    }
+    if(i == self.length){
+        // [1] <= [1, 2] is True
+        return self.length <= other.length
+    }
+    if(i == other.length){
+        // [1, 2] <= [1] is false
+        return false
+    }
+    // First different item: [1, x] <= [1, y] is x <= y
+    return $B.rich_comp('__le__', self[i], other[i])
 }
 
 list.__len__ = function(self){
@@ -346,26 +346,27 @@ list.__len__ = function(self){
 }
 
 list.__lt__ = function(self, other){
+    // True if all items in self are lesser than in other,
+    // or if all are equal and len(self) < len(other)
     if(! isinstance(other, [list, _b_.tuple])){
         return _b_.NotImplemented
     }
     var i = 0
-    while(i < self.length){
-        if(i >= other.length){return false}
-        if($B.rich_comp("__eq__", self[i], other[i])){
-            i++
-        }else{
-            res = $B.$getattr(self[i], "__lt__")(other[i])
-            if(res === _b_.NotImplemented){
-                throw _b_.TypeError.$factory("unorderable types: " +
-                    $B.class_name(self[i])  + "() >= " +
-                    $B.class_name(other[i]) + "()")
-            }else{return res}
-        }
+    // skip all items that compare equal
+    while(i < self.length && i < other.length &&
+            $B.is_or_equals(self[i], other[i])){
+        i++
     }
-    // If all items are equal, return True if other is longer
-    // Cf. issue #941
-    return other.length > self.length
+    if(i == self.length){
+        // [1] < [1, 2] is True
+        return self.length < other.length
+    }
+    if(i == other.length){
+        // [1, 2] < [1] is false
+        return false
+    }
+    // First different item: [1, x] < [1, y] is x < y
+    return $B.rich_comp('__lt__', self[i], other[i])
 }
 
 list.__mul__ = function(self, other){
