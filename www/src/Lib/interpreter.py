@@ -172,7 +172,7 @@ class Interpreter:
 
     def __init__(self, elt_id=None, title="Interactive Interpreter",
                  globals=None, locals=None, history=None,
-                 rows=30, cols=60, default_css=True,
+                 rows=30, cols=120, default_css=True,
                  clear_zone=True, banner=True):
         """
         Create the interpreter.
@@ -203,8 +203,8 @@ class Interpreter:
             self.dialog.close_button.bind('click', self.close)
             self.zone = html.DIV(Class="brython-interpreter",
                                  contenteditable=True)
-            self.zone.style.width = f'{cols}em'
-            self.zone.style.height = f'{rows}em'
+            self.zone.style.width = f'{cols}ch'
+            self.zone.style.height = f'{rows}ch'
             self.dialog.panel <= self.zone
         else:
             if isinstance(elt_id, str):
