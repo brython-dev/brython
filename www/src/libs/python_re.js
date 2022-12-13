@@ -46,7 +46,14 @@ var $error_2 = {
     __module__: "re"
 }
 
-var error = $B.make_class("error")
+var error = $B.make_class("error",
+    function(message){
+        return {
+            __class__: error,
+            msg: message,
+            args: $B.fast_tuple([])
+        }
+    })
 error.__bases__ = [_b_.Exception, _b_.object]
 error.__mro__ = [_b_.Exception, _b_.object]
 
