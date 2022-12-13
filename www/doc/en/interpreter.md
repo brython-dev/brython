@@ -8,17 +8,17 @@ and the [editor](https://www.brython.info/tests/editor.html) of the site
 
 ### Classes
 
-`Interpreter(element=None, title="Interactive Interpreter", globals=None, locals=None, rows=30, cols=84, default_css=True)`
+`Interpreter(element=None, title="Interactive Interpreter", globals=None, locals=None, rows=30, cols=120, default_css=True)`
 
 - if _element_ is `None`, the interpreter is opened in a new dialog box (cf.
   module [browser.widgets.dialog](widgets-dialog.html)).
 
-  Otherwise, _element_ can be an existing TEXTAREA in the page page, or the
-  attribute `id` of an existing TEXTAREA.
+  Otherwise, _element_ can be an existing DIV with attribute `contenteditable`
+  in the page, or the attribute `id` of an existing content-editable DIV.
 - if _element_ is `None`, _title_ is the title of the dialog box
 - dictionaries _globals_ and _locals_ are the environment where the interpreter
   commands are executed (by default, empty dictionaries)
-- _rows_ and _cols_ are the TEXTAREA dimensions
+- _rows_ and _cols_ are the dimensions in number of characters
 - _default_css_ specifies if the CSS stylesheet provided by the module should
   be used. If the value is `False`, the styles defined in the HTML page are
   used (cf. "CSS style" below)
@@ -32,7 +32,7 @@ Interpreter()
 </blockquote>
 
 
-`Inspector(title="Frames inspector", rows=30, cols=84, default_css=True)`
+`Inspector(title="Frames inspector", rows=30, cols=120, default_css=True)`
 > Opens a dialog box with an interactive interpreter running in the
 > program execution frames. This can be used for debugging purposes.
 >
@@ -57,7 +57,7 @@ f(5)
 
 ### CSS style
 
-If an interpreter is opened in an existing TEXTAREA, the HTML stylesheet is
+If an interpreter is opened in an existing DIV, the HTML stylesheet is
 used.
 
 Otherwise, if argument _default_css_ is `True` (default), the following
@@ -69,11 +69,22 @@ stylesheet in inserted in the page:
     background-color: #000;
     color: #fff;
     font-family: consolas, courier;
+    caret-color: #fff;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+pre{
+    display:inline;
 }
 ```
 </blockquote>
-
-Pour personnaliser l'apparence des boites, il faut passer comme argument
 
 To customize the interpreter look, pass `default_css=False` and redefine the
 CSS class `brython-interpreter`. The most straightforward is to copy-paste
