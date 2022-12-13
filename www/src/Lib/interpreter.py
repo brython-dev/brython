@@ -82,6 +82,19 @@ style_sheet = """
     background-color: #000;
     color: #fff;
     font-family: consolas, courier;
+    caret-color: #fff;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+pre{
+    display:inline;
 }
 """
 
@@ -92,27 +105,61 @@ class Output:
     def __init__(self, interpreter):
         self.interpreter = interpreter
 
-    def flush(self, *args, **kw):
-        self.interpreter.flush(*args, **kw)
-
     def write(self, *args, **kw):
         self.interpreter.write(*args, **kw)
 
     def __len__(self):
         return len(self.interpreter.buffer)
 
+# ANSI-style color characters support
+# cf. https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
+
+color_character_pattern = re.compile(r'^\033\[([0-9;]*)m')
+
+def swap_color_bgcolor(element):
+    """Used for color character 7: Revert"""
+    element.style.color, element.style.backgroundColor = \
+        element.style.backgroundColor, element.style.color
+
+cc_styles = {
+    0: ["fontStyle", "normal"],
+    1: ["fontWeight", "bold"],
+    2: ["fontWeight", "lighter"],
+    3: ["fontStyle", "italic"],
+    4: ["textDecoration", "underline"],
+    5: ["animation", "blinker 1s step-start infinite"],
+    6: ["animation", "blinker 0.5s step-start infinite"],
+    7: swap_color_bgcolor
+}
+
+cc_colors = {
+    30: "Black",
+    31: "Red",
+    32: "Green",
+    33: "Yellow",
+    34: "Blue",
+    35: "Magenta",
+    36: "Cyan",
+    37: "White"
+}
+
+cc_bgcolors = {k + 10: v for (k, v) in cc_colors.items()}
+
+
 class Trace:
 
-    def __init__(self):
+    def __init__(self, exc):
         self.buf = ""
+        self.is_syntax_error = exc.__name__ in ['SyntaxError',
+                                                'IndentationError']
 
     def write(self, data):
         self.buf += str(data)
 
     def format(self):
         """Remove calls to function in this script from the traceback."""
-        lines = self.buf.split("\n")
-        stripped = [lines[0]]
+        lines = self.buf.strip().split("\n")
+        stripped = [lines[0]] if not self.is_syntax_error else ['']
         for i in range(1, len(lines), 2):
             if __file__ in lines[i]:
                 continue
@@ -125,12 +172,12 @@ class Interpreter:
 
     def __init__(self, elt_id=None, title="Interactive Interpreter",
                  globals=None, locals=None, history=None,
-                 rows=30, cols=84, default_css=True,
+                 rows=30, cols=60, default_css=True,
                  clear_zone=True, banner=True):
         """
         Create the interpreter.
-        - "elt_id" is the id of a textarea in the document. If not set, a new
-          popup window is added with a textarea.
+        - "elt_id" is the id of a div in the document. If not set, a new
+          popup window is added with a div.
         - "globals" and "locals" are the namespaces the RPEL runs in
         - "history", if set, must be a list of strings
         """
@@ -142,47 +189,57 @@ class Interpreter:
             else:
                 document <= html.STYLE(style_sheet, id="brython-interpreter")
 
+        self.cc_style = None
+        self.cc_color = None
+        self.cc_bgcolor = None
+        self.default_cc_color = '#fff'
+        self.default_cc_bgcolor = '#000'
+
         if elt_id is None:
             self.dialog = Dialog(title=title, top=10, left=10,
                 default_css=default_css)
             self.dialog.bind('blur', self.blur)
             self.dialog.bind('click', self.focus)
             self.dialog.close_button.bind('click', self.close)
-            self.zone = html.TEXTAREA(rows=rows, cols=cols,
-                Class="brython-interpreter")
+            self.zone = html.DIV(Class="brython-interpreter",
+                                 contenteditable=True)
+            self.zone.style.width = f'{cols}em'
+            self.zone.style.height = f'{rows}em'
             self.dialog.panel <= self.zone
         else:
             if isinstance(elt_id, str):
                 try:
                     elt = document[elt_id]
-                    if elt.tagName != "TEXTAREA":
+                    if elt.tagName != "DIV":
                         raise ValueError(
                             f"element {elt_id} is a {elt.tagName}, " +
-                            "not a TEXTAREA")
+                            "not a DIV")
                     self.zone = elt
                 except KeyError:
                     raise KeyError(f"no element with id '{elt_id}'")
             elif isinstance(elt_id, DOMNode):
-                if elt_id.tagName == "TEXTAREA":
+                if elt_id.tagName == "DIV":
                     self.zone = elt_id
                 else:
-                    raise ValueError("element is not a TEXTAREA")
+                    raise ValueError("element is not a DIV")
             else:
                 raise ValueError("element should be a string or " +
-                    f"a TEXTAREA, got '{elt_id.__class__.__name__}'")
+                    f"a DIV, got '{elt_id.__class__.__name__}'")
+            if self.zone.contentEditable != 'true':
+                raise ValueError("DIV element must be contenteditable")
         v = sys.implementation.version
         if clear_zone:
-            self.zone.value = ''
+            self.clear()
         if banner:
-            self.zone.value += (
+            self.insert(
                 f"Brython {v[0]}.{v[1]}.{v[2]} on "
                 f"{window.navigator.appName} {window.navigator.appVersion}"
                 "\n"
             )
-            self.zone.value += ('Type "help", "copyright", "credits" '
-                                'or "license" for more information.\n')
-        self.zone.value += ">>> "
-        self.cursor_to_end()
+            self.insert('Type "help", "copyright", "credits" '
+                                'or "license" for more information.' + '\n')
+        self.insert_prompt()
+
         self._status = "main"
         self.history = history or []
         self.current = len(self.history)
@@ -191,16 +248,49 @@ class Interpreter:
         self.globals.update(editor_ns)
         self.locals = self.globals if locals is None else locals
 
-        self.buffer = ''
         self.zone.bind('keypress', self.keypress)
         self.zone.bind('keydown', self.keydown)
         self.zone.bind('mouseup', self.mouseup)
 
         self.zone.bind('focus', self.focus)
         self.zone.bind('blur', self.blur)
-        self.zone.focus()
+        self.focus()
+
+        self.cursor_to_end()
 
         active.append(self)
+
+    def clear(self):
+        self.zone.text = ''
+
+    def insert(self, text):
+        # used for header text and prompts
+        pre = html.PRE(style="display:inline;")
+        pre.text = text
+        if self.cc_color is not None:
+            pre.style.color = self.cc_color
+        if self.cc_bgcolor is not None:
+            pre.style.backgroundColor = self.cc_bgcolor
+        if self.cc_style is not None:
+            style = cc_styles[self.cc_style]
+            if isinstance(style, list):
+                attr, value = style
+                setattr(pre.style, attr, value)
+            else:
+                style(pre)
+        self.zone <= pre
+
+    def insert_prompt(self):
+        self.insert('>>> ')
+
+    def insert_continuation(self):
+        self.insert('\n... ')
+
+    def insert_cr(self):
+        self.insert('\n')
+
+    def get_content(self):
+        return self.zone.text
 
     def blur(self, ev):
         if hasattr(self, 'dialog'):
@@ -210,9 +300,15 @@ class Interpreter:
         active.remove(self)
 
     def cursor_to_end(self, *args):
-        pos = len(self.zone.value)
-        self.zone.setSelectionRange(pos, pos)
-        self.zone.scrollTop = self.zone.scrollHeight
+        # set caret at the end of last child
+        sel = window.getSelection()
+        # self.zone.lastChild is a PRE, take its internal text node
+        last_child = self.zone.lastChild.firstChild
+        pos = len(last_child.text)
+        # put caret at the end of text
+        sel.setBaseAndExtent(last_child, pos, last_child, pos)
+        # make sure last line is visible
+        self.zone.lastChild.scrollIntoView()
 
     def focus(self, *args):
         """When the interpreter gets focus, set sys.stdout and stderr"""
@@ -225,29 +321,18 @@ class Interpreter:
         sys.stdout = sys.stderr = Output(self)
         self.zone.focus()
 
-    def get_col(self):
-        # returns the column num of cursor
-        sel = self.zone.selectionStart
-        lines = self.zone.value.split('\n')
-        for line in lines[:-1]:
-            sel -= len(line) + 1
-        return sel
-
     def keypress(self, event):
-        if event.key == "Tab":  # tab key
+        if event.key == "Tab":
             event.preventDefault()
-            self.zone.value += "    "
-        elif event.key == "Enter":  # return
-            sel_start = self.zone.selectionStart
-            sel_end = self.zone.selectionEnd
-            if sel_end > sel_start:
+            self.insert("    ")
+        elif event.key == "Enter":
+            event.preventDefault() # don't insert line feed yet
+            selection = window.getSelection().toString()
+            if selection:
                 # If text was selected by the mouse, copy to clipboard
-                document.execCommand("copy")
                 self.cursor_to_end()
-                event.preventDefault() # don't insert line feed
                 return
-            src = self.zone.value
-            self.handle_line(self, event)
+            self.handle_line(event)
 
     def feed(self, src):
         """src is Python source code, possibly on several lines.
@@ -255,15 +340,15 @@ class Interpreter:
         Can be used for debugging, or showing how a code snippet executes.
         """
         current_indent = 0
-        for line in src.split('\n'):
-            mo = re.match('^\s*', line)
-            indent = mo.end() - mo.start()
-            current_indent = indent
-            self.zone.value += line
-            self.handle_line(line)
+        lines = src.strip().split('\n')
+        for line in lines:
+            self.insert(line)
+            self.handle_line()
+        if len(lines) > 1:
+            self.handle_line()
 
-    def handle_line(self, code, event=None):
-        src = self.zone.value
+    def handle_line(self, event=None):
+        src = self.get_content().strip()
         if self._status == "main":
             currentLine = src[src.rfind('\n>>>') + 5:]
         elif self._status == "3string":
@@ -272,149 +357,156 @@ class Interpreter:
         else:
             currentLine = src[src.rfind('\n...') + 5:]
         if self._status == 'main' and not currentLine.strip():
-            self.zone.value += '\n>>> '
+            self.insert_cr()
+            self.insert_prompt()
+            self.cursor_to_end()
             if event is not None:
                 event.preventDefault()
             return
-        self.zone.value += '\n'
         self.history.append(currentLine)
         self.current = len(self.history)
         if self._status in ["main", "3string"]:
             # special case
             if currentLine == "help":
                 self.write(_help)
-                self.flush()
-                self.zone.value += '\n>>> '
+                self.insert_prompt()
                 if event is not None:
                     event.preventDefault()
                 return
             try:
-                _ = self.globals['_'] = eval(currentLine,
-                                          self.globals,
-                                          self.locals)
-                if _ is not None:
-                    self.write(repr(_) + '\n')
-                self.flush()
-                self.zone.value += '>>> '
-                self._status = "main"
+                code = compile(currentLine, '<stdin>', 'eval')
             except IndentationError:
-                self.zone.value += '... '
+                self.insert_continuation()
                 self._status = "block"
             except SyntaxError as msg:
                 if str(msg).startswith('unterminated triple-quoted string literal'):
-                    self.zone.value += '... '
+                    self.insert_continuation()
                     self._status = "3string"
                 elif str(msg) == 'decorator expects function':
-                    self.zone.value += '... '
+                    self.insert_continuation()
                     self._status = "block"
                 elif str(msg).endswith('was never closed'):
-                    self.zone.value += '... '
+                    self.insert_continuation()
                     self._status = "block"
                 else:
                     try:
-                        exec(currentLine,
-                            self.globals,
-                            self.locals)
+                        code = compile(currentLine, '<stdin>', 'exec')
+                        exec(code, self.globals, self.locals)
                     except:
-                        self.print_tb()
-                    #self.syntax_error(msg.args)
-                    self.zone.value += '>>> '
+                        self.print_tb(msg)
+                    self.insert_prompt()
                     self._status = "main"
-            except:
+            except Exception as exc:
                 # the full traceback includes the call to eval(); to
                 # remove it, it is stored in a buffer and the 2nd and 3rd
                 # lines are removed
-                self.print_tb()
-                self.zone.value += '>>> '
+                self.print_tb(exc)
+                self.insert_prompt()
                 self._status = "main"
+            else:
+                self.insert_cr()
+                try:
+                    _ = self.globals['_'] = eval(code,
+                                              self.globals,
+                                              self.locals)
+                    if _ is not None:
+                        self.write(repr(_) + '\n')
+                    self.insert_prompt()
+                    self._status = "main"
+                except Exception as exc:
+                    self.print_tb(exc)
+                    self.insert_prompt()
+                    self._status = "main"
+
         elif currentLine == "":  # end of block
             block = src[src.rfind('\n>>>') + 5:].splitlines()
             block = [block[0]] + [b[4:] for b in block[1:]]
             block_src = '\n'.join(block)
+            self.insert_cr()
             # status must be set before executing code in globals()
             self._status = "main"
             try:
-                _ = exec(block_src,
-                         self.globals,
-                         self.locals)
-                if _ is not None:
-                    print(repr(_))
-            except:
-                self.print_tb()
-            self.flush()
-            self.zone.value += '>>> '
+                exec(block_src, self.globals, self.locals)
+            except Exception as exc:
+                self.print_tb(exc)
+            self.insert_prompt()
+
         else:
-            self.zone.value += '... '
+            self.insert_continuation()
 
         self.cursor_to_end()
         if event is not None:
             event.preventDefault()
 
     def keydown(self, event):
-        if event.key == "ArrowLeft":
-            sel = self.get_col()
-            if sel < 5:
-                event.preventDefault()
-                event.stopPropagation()
-        elif event.key == "Home":
-            pos = self.zone.selectionStart
-            col = self.get_col()
-            self.zone.setSelectionRange(pos - col + 4, pos - col + 4)
+        sel = window.getSelection()
+        if event.key in ("ArrowLeft", "Backspace"):
+            # make sure the caret does not reach the prompt
+            if sel.anchorNode is not self.zone:
+                caret_column = sel.anchorOffset
+                if caret_column >= 5:
+                    return
             event.preventDefault()
+            event.stopPropagation()
+        elif event.key == "Home":
+            anchor = sel.anchorNode
+            sel.setBaseAndExtent(anchor, 4, anchor, 4)
+            event.preventDefault()
+            event.stopPropagation()
         elif event.key == "ArrowUp":
             if self.current > 0:
-                pos = self.zone.selectionStart
-                col = self.get_col()
-                # remove current line
-                self.zone.value = self.zone.value[:pos - col + 4]
+                last_child = self.zone.lastChild
+                last_child.text = last_child.text[:4] + self.history[self.current - 1]
                 self.current -= 1
-                self.zone.value += self.history[self.current]
+                self.cursor_to_end()
             event.preventDefault()
         elif event.key == "ArrowDown":
             if self.current < len(self.history) - 1:
-                pos = self.zone.selectionStart
-                col = self.get_col()
-                # remove current line
-                self.zone.value = self.zone.value[:pos - col + 4]
                 self.current += 1
-                self.zone.value += self.history[self.current]
+                last_child = self.zone.lastChild
+                last_child.text = last_child.text[:4] + self.history[self.current]
+                self.cursor_to_end()
             event.preventDefault()
-        elif event.key == "Backspace":
-            src = self.zone.value
-            lstart = src.rfind('\n')
-            if (lstart == -1 and len(src) < 5) or (len(src) - lstart < 6):
-                event.preventDefault()
-                event.stopPropagation()
         elif event.key in ["PageUp", "PageDown"]:
             event.preventDefault()
 
     def mouseup(self, ev):
-        """If nothing was selected by the mouse, set cursor to prompt."""
-        sel_start = self.zone.selectionStart
-        sel_end = self.zone.selectionEnd
-        if sel_end == sel_start:
+        """If nothing was selected by the mouse, set cursor to end of zone"""
+        sel = window.getSelection()
+        if sel.type == 'Caret':
             self.cursor_to_end()
 
     def write(self, data):
-        self.buffer += str(data)
+        """Use for stdout / stderr."""
+        data = str(data)
+        mo = color_character_pattern.search(data)
+        if mo:
+            data = data[mo.end():]
+            last_child = self.zone.lastChild
+            if not mo.groups()[0]:
+                tags = []
+            else:
+                tags = mo.groups()[0].split(';')
+            self.cc_style = 0
+            self.cc_color = self.default_cc_color
+            self.cc_bgcolor = self.default_cc_bgcolor
+            for tag in tags:
+                tag = int(tag)
+                if tag in cc_styles:
+                    self.cc_style = tag
+                elif tag in cc_colors:
+                    self.cc_color = cc_colors[tag]
+                elif tag in cc_bgcolors:
+                    self.cc_bgcolor = cc_bgcolors[tag]
+        self.insert(data)
+        self.cursor_to_end()
 
-    def flush(self):
-        self.zone.value += self.buffer
-        self.buffer = ''
-
-    def print_tb(self):
-        trace = Trace()
+    def print_tb(self, exc):
+        trace = Trace(exc)
         traceback.print_exc(file=trace)
         self.write(trace.format())
-        self.flush()
+        self.insert_cr()
 
-    def syntax_error(self, args):
-        info, [filename, lineno, offset, line] = args
-        print(f"  File {filename}, line {lineno}")
-        print("    " + line.rstrip())
-        print("    " + offset * " " + "^")
-        print("SyntaxError:", info)
-        self.flush()
 
 class Inspector(Interpreter):
 

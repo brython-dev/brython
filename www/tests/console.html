@@ -13,12 +13,12 @@
     <link rel=stylesheet href="/brython.css">
 
     <script type="text/javascript" src="/src/brython_builtins.js"></script>
-    
+
     <script type="text/javascript" src="/src/py_ast_classes.js"></script>
     <script type="text/javascript" src="/src/stdlib_paths.js"></script>
     <script type="text/javascript" src="/src/unicode_data.js"></script>
     <script type="text/javascript" src="/src/version_info.js"></script>
-    
+
     <script type="text/javascript" src="/src/python_tokenizer.js"></script>
     <script type="text/javascript" src="/src/py_ast.js"></script>
     <script type="text/javascript" src="/src/py2js.js"></script>
@@ -64,7 +64,10 @@
         color:#fff;
         font-family:'Oxygen Mono', Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace;
         font-size:14px;
-        overflow:auto
+        overflow:auto;
+        width: 60em;
+        height: 20em;
+        margin-left: 2%;
     }
 
     </style>
@@ -79,7 +82,7 @@
     </div>
 
 
-    <textarea id="code" class="codearea" rows="20" cols="100"></textarea>
+    <div id="code" class="codearea" contenteditable></div>
 
     <div id="content"></div>
 

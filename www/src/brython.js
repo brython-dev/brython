@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-11 15:04:22.199391"
-__BRYTHON__.timestamp=1670767462199
+__BRYTHON__.compiled_date="2022-12-13 08:50:26.067403"
+__BRYTHON__.timestamp=1670917826067
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6353,7 +6353,7 @@ if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builti
 if(_locals===_b_.None){exec_locals=exec_globals}else{if(_locals===_globals){
 global_name+='_globals'
 exec_locals=exec_globals}else if(_locals.$jsobj){for(var key in _locals.$jsobj){exec_globals[key]=_locals.$jsobj[key]}}else{if(_locals.$jsobj){exec_locals=_locals.$jsobj}else{var klass=$B.get_class(_locals),getitem=$B.$call($B.$getattr(klass,'__getitem__')),setitem=$B.$call($B.$getattr(klass,'__setitem__'))
-exec_locals=new Proxy(_locals,{get(target,prop){if(prop=='$proxy'){return true}
+exec_locals=new Proxy(_locals,{get(target,prop){if(prop=='$target'){return target}
 try{return getitem(target,prop)}catch(err){return undefined}},set(target,prop,value){return setitem(target,prop,value)}})}}}}
 var save_frames_stack=$B.frames_stack.slice()
 var _ast
@@ -6393,7 +6393,8 @@ return res}
 $$eval.$is_func=true
 function exec(src,globals,locals){var missing={}
 var $=$B.args("exec",3,{src:null,globals:null,locals:null},["src","globals","locals","/"],arguments,{globals:_b_.None,locals:_b_.None},null,null),src=$.src,globals=$.globals,locals=$.locals
-return $$eval(src,globals,locals,"exec")||_b_.None}
+$$eval(src,globals,locals,"exec")
+return _b_.None}
 exec.$is_func=true
 function exit(){throw _b_.SystemExit}
 exit.__repr__=exit.__str__=function(){return "Use exit() or Ctrl-Z plus Return to exit"}
