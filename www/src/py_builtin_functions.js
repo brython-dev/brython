@@ -693,8 +693,8 @@ function $$eval(src, _globals, _locals){
                         setitem = $B.$call($B.$getattr(klass, '__setitem__'))
                     exec_locals = new Proxy(_locals, {
                         get(target, prop){
-                            if(prop == '$proxy'){
-                                return true
+                            if(prop == '$target'){
+                                return target
                             }
                             try{
                                 return getitem(target, prop)
@@ -835,7 +835,8 @@ function exec(src, globals, locals){
         src = $.src,
         globals = $.globals,
         locals = $.locals
-    return $$eval(src, globals, locals, "exec") || _b_.None
+    $$eval(src, globals, locals, "exec")
+    return _b_.None
 }
 
 exec.$is_func = true

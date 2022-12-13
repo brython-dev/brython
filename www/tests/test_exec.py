@@ -193,5 +193,11 @@ assert B == 6
 
 click()
 
+# explicit locals
+ns1 = {}
+ns2 = {'x': 0}
+
+exec("assert locals()['x'] == 0", ns1, ns2)
+
 
 print("passed all tests...")
