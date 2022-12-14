@@ -394,6 +394,8 @@ class Interpreter:
                         exec(code, self.globals, self.locals)
                     except:
                         self.print_tb(msg)
+                    if self._status == "3string":
+                        self.insert_cr()
                     self.insert_prompt()
                     self._status = "main"
             except Exception as exc:
