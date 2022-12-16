@@ -344,8 +344,6 @@ class Interpreter:
         for line in lines:
             self.insert(line)
             self.handle_line()
-        if len(lines) > 1:
-            self.handle_line()
 
     def handle_line(self, event=None):
         src = self.get_content().strip()
@@ -394,7 +392,7 @@ class Interpreter:
                         exec(code, self.globals, self.locals)
                     except:
                         self.print_tb(msg)
-                    if self._status == "3string":
+                    else:
                         self.insert_cr()
                     self.insert_prompt()
                     self._status = "main"
@@ -408,11 +406,11 @@ class Interpreter:
             else:
                 self.insert_cr()
                 try:
-                    _ = self.globals['_'] = eval(code,
+                    self.globals['_'] = eval(code,
                                               self.globals,
                                               self.locals)
-                    if _ is not None:
-                        self.write(repr(_) + '\n')
+                    if self.globals['_'] is not None:
+                        self.write(repr(self.globals['_']) + '\n')
                     self.insert_prompt()
                     self._status = "main"
                 except Exception as exc:
