@@ -199,5 +199,11 @@ ns2 = {'x': 0}
 
 exec("assert locals()['x'] == 0", ns1, ns2)
 
+# issue 2131
+assert eval("True and True") is True
+
+x = 10
+y = 60
+assert eval('x < 100 and True and y < 100') is True
 
 print("passed all tests...")

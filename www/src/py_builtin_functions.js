@@ -772,7 +772,9 @@ function $$eval(src, _globals, _locals){
     }
 
     if(mode == 'eval'){
-        js = 'return ' + js
+        // must set locals, might be used if expression is like
+        // "True and True"
+        js = `var locals = ${local_name}\nreturn ${js}`
     }else if(src.single_expression){
         js = `var result = ${js}\n` +
              `if(result !== _b_.None){\n` +
