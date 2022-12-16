@@ -1404,11 +1404,12 @@ str.encode = function(){
         var res = ""
         for(var i = 0, len = _self.length; i < len ; i++){
             var char = _self.charAt(i)
+            console.log('char', char)
             if(("a" <= char && char <= "m") || ("A" <= char && char <= "M")){
-                res += String.fromCharCode(String.charCodeAt(char) + 13)
+                res += String.fromCharCode(char.charCodeAt(0) + 13)
             }else if(("m" < char && char <= "z") ||
                     ("M" < char && char <= "Z")){
-                res += String.fromCharCode(String.charCodeAt(char) - 13)
+                res += String.fromCharCode(char.charCodeAt(0) - 13)
             }else{res += char}
         }
         return res

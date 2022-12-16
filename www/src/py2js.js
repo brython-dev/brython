@@ -6531,7 +6531,7 @@ StringCtx.prototype.ast = function(){
     var value = this.value
     if(this.is_bytes){
         value = `'${value}'`
-        value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1')
+        value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1').source
     }
     var ast_obj = new ast.Constant(value)
     set_position(ast_obj, this.position)

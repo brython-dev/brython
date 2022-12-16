@@ -462,4 +462,8 @@ class A:
 assert_raises(TypeError, str, A(),
     msg="__str__ returned non-string (type int)")
 
+# issue 2132
+text = codecs.encode("Beautiful is better than ugly.", "rot13")
+assert text == "Ornhgvshy vf orggre guna htyl."
+
 print("passed all tests...")

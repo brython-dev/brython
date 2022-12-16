@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-14 08:30:08.996654"
-__BRYTHON__.timestamp=1671003008996
+__BRYTHON__.compiled_date="2022-12-16 17:12:17.621854"
+__BRYTHON__.timestamp=1671207137621
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3719,7 +3719,7 @@ StringCtx.prototype.add_value=function(value){this.is_bytes=value.charAt(0)=='b'
 if(! this.is_bytes){this.value+=make_string_for_ast_value(value)}else{this.value+=make_string_for_ast_value(value.substr(1))}}
 StringCtx.prototype.ast=function(){var value=this.value
 if(this.is_bytes){value=`'${value}'`
-value=_b_.bytes.$new(_b_.bytes,eval(value),'ISO-8859-1')}
+value=_b_.bytes.$new(_b_.bytes,eval(value),'ISO-8859-1').source}
 var ast_obj=new ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
@@ -8187,8 +8187,7 @@ _b_.slice=slice})(__BRYTHON__)
 var from_unicode={},to_unicode={}
 $B.to_bytes=function(obj){var res
 if(_b_.isinstance(obj,[bytes,bytearray])){res=obj.source}else{var ga=$B.$getattr(obj,"tobytes",null)
-if(ga !==null){res=$B.$call(ga)().source}
-else{throw _b_.TypeError.$factory("object doesn't support the buffer protocol")}}
+if(ga !==null){res=$B.$call(ga)().source}else{throw _b_.TypeError.$factory("object doesn't support the buffer protocol")}}
 return res}
 function _strip(self,cars,lr){if(cars===undefined){cars=[]
 var ws='\r\n \t'
@@ -8292,7 +8291,7 @@ bytes.__len__=function(self){return self.source.length}
 bytes.__lt__=function(self,other){if(invalid(other)){return _b_.NotImplemented}
 return _b_.list.__lt__(self.source,other.source)}
 bytes.__mod__=function(self,args){
-var s=decode(self,"iso-8859-1","strict"),res=$B.printf_format(s,'bytes',args)
+var s=decode(self,"latin-1","strict"),res=$B.printf_format(s,'bytes',args)
 return _b_.str.encode(res,"ascii")}
 bytes.__mul__=function(){var $=$B.args('__mul__',2,{self:null,other:null},['self','other'],arguments,{},null,null),other=$B.PyNumber_Index($.other)
 var t=[],source=$.self.source,slen=source.length
@@ -8306,8 +8305,11 @@ var source
 if($.source===missing){return{
 __class__:$.cls,source:[]}}else if(typeof $.source=="string" ||_b_.isinstance($.source,_b_.str)){if($.encoding===missing){throw _b_.TypeError.$factory('string argument without an encoding')}
 $.errors=$.errors===missing ? 'strict' :$.errors
-return{
-__class__:$.cls,source:encode($.source,$.encoding,$.errors)}}
+var res=encode($.source,$.encoding,$.errors)
+if(! _b_.isinstance(res,bytes)){throw _b_.TypeError.$factory(`'${$.encoding}' codec returns `+
+`${$B.class_name(res)}, not bytes`)}
+res.__class__=$.cls
+return res}
 if($.encoding !==missing){throw _b_.TypeError.$factory("encoding without a string argument")}
 if(typeof $.source=="number" ||_b_.isinstance($.source,_b_.int)){var size=$B.PyNumber_Index($.source)
 source=[]
@@ -8643,10 +8645,14 @@ function $UnicodeDecodeError(encoding,position){throw _b_.UnicodeDecodeError.$fa
 function _hex(_int){var h=_int.toString(16)
 return '0x'+'0'.repeat(2-h.length)+h}
 function _int(hex){return parseInt(hex,16)}
-function normalise(encoding){var enc=encoding.toLowerCase()
-if(enc.substr(0,7)=="windows"){enc="cp"+enc.substr(7)}
-if(enc.startsWith("cp-")||enc.startsWith("iso-")){enc=enc.replace("-","")}
-enc=enc.replace(/-/g,"_")
+var aliases={ascii:['646','us-ascii'],big5:['big5-tw','csbig5'],big5hkscs:['big5-hkscs','hkscs'],cp037:['IBM037','IBM039'],cp273:['273','IBM273','csIBM273'],cp424:['EBCDIC-CP-HE','IBM424'],cp437:['437','IBM437'],cp500:['EBCDIC-CP-BE','EBCDIC-CP-CH','IBM500'],cp775:['IBM775'],cp850:['850','IBM850'],cp852:['852','IBM852'],cp855:['855','IBM855'],cp857:['857','IBM857'],cp858:['858','IBM858'],cp860:['860','IBM860'],cp861:['861','CP-IS','IBM861'],cp862:['862','IBM862'],cp863:['863','IBM863'],cp864:['IBM864'],cp865:['865','IBM865'],cp866:['866','IBM866'],cp869:['869','CP-GR','IBM869'],cp932:['932','ms932','mskanji','ms-kanji'],cp949:['949','ms949','uhc'],cp950:['950','ms950'],cp1026:['ibm1026'],cp1125:['1125','ibm1125','cp866u','ruscii'],cp1140:['ibm1140'],cp1250:['windows-1250'],cp1251:['windows-1251'],cp1252:['windows-1252'],cp1253:['windows-1253'],cp1254:['windows-1254'],cp1255:['windows-1255'],cp1256:['windows-1256'],cp1257:['windows-1257'],cp1258:['windows-1258'],euc_jp:['eucjp','ujis','u-jis'],euc_jis_2004:['jisx0213','eucjis2004'],euc_jisx0213:['eucjisx0213'],euc_kr:['euckr','korean','ksc5601','ks_c-5601','ks_c-5601-1987','ksx1001','ks_x-1001'],gb2312:['chinese','csiso58gb231280','euc-cn','euccn','eucgb2312-cn','gb2312-1980','gb2312-80','iso-ir-58'],gbk:['936','cp936','ms936'],gb18030:['gb18030-2000'],hz:['hzgb','hz-gb','hz-gb-2312'],iso2022_jp:['csiso2022jp','iso2022jp','iso-2022-jp'],iso2022_jp_1:['iso2022jp-1','iso-2022-jp-1'],iso2022_jp_2:['iso2022jp-2','iso-2022-jp-2'],iso2022_jp_2004:['iso2022jp-2004','iso-2022-jp-2004'],iso2022_jp_3:['iso2022jp-3','iso-2022-jp-3'],iso2022_jp_ext:['iso2022jp-ext','iso-2022-jp-ext'],iso2022_kr:['csiso2022kr','iso2022kr','iso-2022-kr'],latin_1:['iso-8859-1','iso8859-1','8859','cp819','latin','latin1','L1'],iso8859_2:['iso-8859-2','latin2','L2'],iso8859_3:['iso-8859-3','latin3','L3'],iso8859_4:['iso-8859-4','latin4','L4'],iso8859_5:['iso-8859-5','cyrillic'],iso8859_6:['iso-8859-6','arabic'],iso8859_7:['iso-8859-7','greek','greek8'],iso8859_8:['iso-8859-8','hebrew'],iso8859_9:['iso-8859-9','latin5','L5'],iso8859_10:['iso-8859-10','latin6','L6'],iso8859_11:['iso-8859-11','thai'],iso8859_13:['iso-8859-13','latin7','L7'],iso8859_14:['iso-8859-14','latin8','L8'],iso8859_15:['iso-8859-15','latin9','L9'],iso8859_16:['iso-8859-16','latin10','L10'],johab:['cp1361','ms1361'],kz1048:['kz_1048','strk1048_2002','rk1048'],mac_cyrillic:['maccyrillic'],mac_greek:['macgreek'],mac_iceland:['maciceland'],mac_latin2:['maclatin2','maccentraleurope','mac_centeuro'],mac_roman:['macroman','macintosh'],mac_turkish:['macturkish'],ptcp154:['csptcp154','pt154','cp154','cyrillic-asian'],shift_jis:['csshiftjis','shiftjis','sjis','s_jis'],shift_jis_2004:['shiftjis2004','sjis_2004','sjis2004'],shift_jisx0213:['shiftjisx0213','sjisx0213','s_jisx0213'],utf_32:['U32','utf32'],utf_32_be:['UTF-32BE'],utf_32_le:['UTF-32LE'],utf_16:['U16','utf16'],utf_16_be:['UTF-16BE'],utf_16_le:['UTF-16LE'],utf_7:['U7','unicode-1-1-utf-7'],utf_8:['U8','UTF','utf8','cp65001'],mbcs:['ansi','dbcs'],bz2_codec:['bz2'],hex_codec:['hex'],quopri_codec:['quopri','quotedprintable','quoted_printable'],uu_codec:['uu'],zlib_codec:['zip','zlib'],rot_13:['rot13']}
+var codecs_aliases={}
+for(var name in aliases){for(var alias of aliases[name]){codecs_aliases[alias.toLowerCase().replace(/-/g,'_')]=name}}
+function normalise(encoding){
+var enc=encoding.toLowerCase()
+.replace(/ /g,'_')
+.replace(/-/g,'_')
+if(codecs_aliases[enc]!==undefined){enc=codecs_aliases[enc]}
 return enc}
 function load_decoder(enc){
 if(to_unicode[enc]===undefined){var mod=_b_.__import__("encodings."+enc)
@@ -8741,24 +8747,22 @@ cp.toString(16)+" in position "+i+
 throw _b_.UnicodeDecodeError.$factory(msg)}}}
 break
 default:
-try{load_decoder(enc)}catch(err){console.log(b,encoding,"error load_decoder",err)
-throw _b_.LookupError.$factory("unknown encoding: "+enc)}
+try{load_decoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+enc)}
+console.log('use decoder',enc,'obj',obj)
 var decoded=to_unicode[enc](obj)[0]
 for(var i=0,len=decoded.length;i < len;i++){if(decoded.codePointAt(i)==0xfffe){throw _b_.UnicodeDecodeError.$factory("'charmap' codec "+
 `can't decode byte ${_hex(b[i])} in position ${i}: `+
 "character maps to <undefined>")}}
 return decoded}
 return s}
-var encode=$B.encode=function(){
-var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
+var encode=$B.encode=function(){var $=$B.args("encode",3,{s:null,encoding:null,errors:null},["s","encoding","errors"],arguments,{encoding:"utf-8",errors:"strict"},null,null),s=$.s,encoding=$.encoding,errors=$.errors
 var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
-var res=[]
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(cp < 0x7f){res.push(cp)}else if(cp < 0x7ff){res.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp < 0xffff){res.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
-return res
+if(cp < 0x7f){t.push(cp)}else if(cp < 0x7ff){t.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp < 0xffff){t.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
+break
 case "latin":
 case "latin1":
 case "latin-1":
@@ -8770,8 +8774,7 @@ case "8859":
 case "cp819":
 case "windows1252":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(cp <=255){t[pos++]=cp}
-else if(errors !="ignore"){$UnicodeEncodeError(encoding,i)}}
+if(cp <=255){t[pos++]=cp}else if(errors !="ignore"){$UnicodeEncodeError(encoding,i)}}
 break
 case "ascii":
 for(var i=0,len=_b_.str.__len__(s);i < len;i++){var cp=s.charCodeAt(i),
@@ -8789,8 +8792,10 @@ for(var j=0;j < us.length;j++){t[pos++]=us.charCodeAt(j)}}}
 break
 default:
 try{load_encoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+encoding)}
-t=from_unicode[enc](s)[0].source}
-return t}
+return from_unicode[enc](s)[0]}
+return fast_bytes(t)}
+function fast_bytes(t){return{
+__class__:_b_.bytes,source:t}}
 bytes.$factory=function(source,encoding,errors){return bytes.__new__.bind(null,bytes).apply(null,arguments)}
 bytes.__class__=_b_.type
 bytes.$is_class=true
@@ -10435,8 +10440,9 @@ str.encode=function(){var $=$B.args("encode",3,{self:null,encoding:null,errors:n
 if($.encoding=="rot13" ||$.encoding=="rot_13"){
 var res=""
 for(var i=0,len=_self.length;i < len ;i++){var char=_self.charAt(i)
-if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(String.charCodeAt(char)+13)}else if(("m" < char && char <="z")||
-("M" < char && char <="Z")){res+=String.fromCharCode(String.charCodeAt(char)-13)}else{res+=char}}
+console.log('char',char)
+if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(char.charCodeAt(0)+13)}else if(("m" < char && char <="z")||
+("M" < char && char <="Z")){res+=String.fromCharCode(char.charCodeAt(0)-13)}else{res+=char}}
 return res}
 return _b_.bytes.__new__(_b_.bytes,$.self,$.encoding,$.errors)}
 str.endswith=function(){

@@ -14,8 +14,9 @@ $B.to_bytes = function(obj){
         res = obj.source
     }else{
         var ga = $B.$getattr(obj, "tobytes", null)
-        if(ga !== null){res = $B.$call(ga)().source}
-        else{
+        if(ga !== null){
+            res = $B.$call(ga)().source
+        }else{
             throw _b_.TypeError.$factory("object doesn't support the buffer protocol")
         }
     }
@@ -330,7 +331,7 @@ bytes.__lt__ = function(self, other){
 
 bytes.__mod__ = function(self, args){
     // PEP 461
-    var s = decode(self, "iso-8859-1", "strict"),
+    var s = decode(self, "latin-1", "strict"),
         res = $B.printf_format(s, 'bytes', args) // _b_.str.__mod__(s, args)
     return _b_.str.encode(res, "ascii")
 }
@@ -373,10 +374,14 @@ bytes.__new__ = function(cls, source, encoding, errors){
             throw _b_.TypeError.$factory('string argument without an encoding')
         }
         $.errors = $.errors === missing ? 'strict' : $.errors
-        return {
-            __class__: $.cls,
-            source: encode($.source, $.encoding, $.errors)
+        var res = encode($.source, $.encoding, $.errors)
+        if(! _b_.isinstance(res, bytes)){
+            throw _b_.TypeError.$factory(`'${$.encoding}' codec returns ` +
+                `${$B.class_name(res)}, not bytes`)
         }
+        // encode returns bytes
+        res.__class__ = $.cls
+        return res
     }
     if($.encoding !== missing){
         throw _b_.TypeError.$factory("encoding without a string argument")
@@ -1399,13 +1404,119 @@ function _int(hex){
     return parseInt(hex, 16)
 }
 
-function normalise(encoding){
-    var enc = encoding.toLowerCase()
-    if(enc.substr(0, 7) == "windows"){enc = "cp" + enc.substr(7)}
-    if(enc.startsWith("cp-") || enc.startsWith("iso-")){
-        enc = enc.replace("-", "") // first hyphen, like in cp-1250
+var aliases = {
+    ascii: ['646', 'us-ascii'],
+    big5: ['big5-tw', 'csbig5'],
+    big5hkscs: ['big5-hkscs', 'hkscs'],
+    cp037: ['IBM037', 'IBM039'],
+    cp273: ['273', 'IBM273', 'csIBM273'],
+    cp424: ['EBCDIC-CP-HE', 'IBM424'],
+    cp437: ['437', 'IBM437'],
+    cp500: ['EBCDIC-CP-BE', 'EBCDIC-CP-CH', 'IBM500'],
+    cp775: ['IBM775'],
+    cp850: ['850', 'IBM850'],
+    cp852: ['852', 'IBM852'],
+    cp855: ['855', 'IBM855'],
+    cp857: ['857', 'IBM857'],
+    cp858: ['858', 'IBM858'],
+    cp860: ['860', 'IBM860'],
+    cp861: ['861', 'CP-IS', 'IBM861'],
+    cp862: ['862', 'IBM862'],
+    cp863: ['863', 'IBM863'],
+    cp864: ['IBM864'],
+    cp865: ['865', 'IBM865'],
+    cp866: ['866', 'IBM866'],
+    cp869: ['869', 'CP-GR', 'IBM869'],
+    cp932: ['932', 'ms932', 'mskanji', 'ms-kanji'],
+    cp949: ['949', 'ms949', 'uhc'],
+    cp950: ['950', 'ms950'],
+    cp1026: ['ibm1026'],
+    cp1125: ['1125', 'ibm1125', 'cp866u', 'ruscii'],
+    cp1140: ['ibm1140'],
+    cp1250: ['windows-1250'],
+    cp1251: ['windows-1251'],
+    cp1252: ['windows-1252'],
+    cp1253: ['windows-1253'],
+    cp1254: ['windows-1254'],
+    cp1255: ['windows-1255'],
+    cp1256: ['windows-1256'],
+    cp1257: ['windows-1257'],
+    cp1258: ['windows-1258'],
+    euc_jp: ['eucjp', 'ujis', 'u-jis'],
+    euc_jis_2004: ['jisx0213', 'eucjis2004'],
+    euc_jisx0213: ['eucjisx0213'],
+    euc_kr: ['euckr', 'korean', 'ksc5601', 'ks_c-5601', 'ks_c-5601-1987', 'ksx1001', 'ks_x-1001'],
+    gb2312: ['chinese', 'csiso58gb231280', 'euc-cn', 'euccn', 'eucgb2312-cn', 'gb2312-1980', 'gb2312-80', 'iso-ir-58'],
+    gbk: ['936', 'cp936', 'ms936'],
+    gb18030: ['gb18030-2000'],
+    hz: ['hzgb', 'hz-gb', 'hz-gb-2312'],
+    iso2022_jp: ['csiso2022jp', 'iso2022jp', 'iso-2022-jp'],
+    iso2022_jp_1: ['iso2022jp-1', 'iso-2022-jp-1'],
+    iso2022_jp_2: ['iso2022jp-2', 'iso-2022-jp-2'],
+    iso2022_jp_2004: ['iso2022jp-2004', 'iso-2022-jp-2004'],
+    iso2022_jp_3: ['iso2022jp-3', 'iso-2022-jp-3'],
+    iso2022_jp_ext: ['iso2022jp-ext', 'iso-2022-jp-ext'],
+    iso2022_kr: ['csiso2022kr', 'iso2022kr', 'iso-2022-kr'],
+    latin_1: ['iso-8859-1', 'iso8859-1', '8859', 'cp819', 'latin', 'latin1', 'L1'],
+    iso8859_2: ['iso-8859-2', 'latin2', 'L2'],
+    iso8859_3: ['iso-8859-3', 'latin3', 'L3'],
+    iso8859_4: ['iso-8859-4', 'latin4', 'L4'],
+    iso8859_5: ['iso-8859-5', 'cyrillic'],
+    iso8859_6: ['iso-8859-6', 'arabic'],
+    iso8859_7: ['iso-8859-7', 'greek', 'greek8'],
+    iso8859_8: ['iso-8859-8', 'hebrew'],
+    iso8859_9: ['iso-8859-9', 'latin5', 'L5'],
+    iso8859_10: ['iso-8859-10', 'latin6', 'L6'],
+    iso8859_11: ['iso-8859-11', 'thai'],
+    iso8859_13: ['iso-8859-13', 'latin7', 'L7'],
+    iso8859_14: ['iso-8859-14', 'latin8', 'L8'],
+    iso8859_15: ['iso-8859-15', 'latin9', 'L9'],
+    iso8859_16: ['iso-8859-16', 'latin10', 'L10'],
+    johab: ['cp1361', 'ms1361'],
+    kz1048: ['kz_1048', 'strk1048_2002', 'rk1048'],
+    mac_cyrillic: ['maccyrillic'],
+    mac_greek: ['macgreek'],
+    mac_iceland: ['maciceland'],
+    mac_latin2: ['maclatin2', 'maccentraleurope', 'mac_centeuro'],
+    mac_roman: ['macroman', 'macintosh'],
+    mac_turkish: ['macturkish'],
+    ptcp154: ['csptcp154', 'pt154', 'cp154', 'cyrillic-asian'],
+    shift_jis: ['csshiftjis', 'shiftjis', 'sjis', 's_jis'],
+    shift_jis_2004: ['shiftjis2004', 'sjis_2004', 'sjis2004'],
+    shift_jisx0213: ['shiftjisx0213', 'sjisx0213', 's_jisx0213'],
+    utf_32: ['U32', 'utf32'],
+    utf_32_be: ['UTF-32BE'],
+    utf_32_le: ['UTF-32LE'],
+    utf_16: ['U16', 'utf16'],
+    utf_16_be: ['UTF-16BE'],
+    utf_16_le: ['UTF-16LE'],
+    utf_7: ['U7', 'unicode-1-1-utf-7'],
+    utf_8: ['U8', 'UTF', 'utf8', 'cp65001'],
+    mbcs: ['ansi', 'dbcs'],
+    bz2_codec: ['bz2'],
+    hex_codec: ['hex'],
+    quopri_codec: ['quopri', 'quotedprintable', 'quoted_printable'],
+    uu_codec: ['uu'],
+    zlib_codec: ['zip', 'zlib'],
+    rot_13: ['rot13']
+}
+
+var codecs_aliases = {}
+for(var name in aliases){
+    for(var alias of aliases[name]){
+        codecs_aliases[alias.toLowerCase().replace(/-/g, '_')] = name
     }
-    enc = enc.replace(/-/g, "_") // second, like in iso-8859-1
+}
+
+function normalise(encoding){
+    // lowercase, replace " " and "-" by "-"
+    var enc = encoding.toLowerCase()
+                      .replace(/ /g, '_')
+                      .replace(/-/g, '_')
+    // replace aliases by name, eg 'rot13' by 'rot_13'
+    if(codecs_aliases[enc] !== undefined){
+        enc = codecs_aliases[enc]
+    }
     return enc
 }
 
@@ -1623,9 +1734,9 @@ var decode = $B.decode = function(obj, encoding, errors){
           try{
               load_decoder(enc)
           }catch(err){
-              console.log(b, encoding, "error load_decoder", err)
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
+          console.log('use decoder', enc, 'obj', obj)
           var decoded = to_unicode[enc](obj)[0]
           for(var i = 0, len = decoded.length; i < len; i++){
               if(decoded.codePointAt(i) == 0xfffe){
@@ -1640,7 +1751,6 @@ var decode = $B.decode = function(obj, encoding, errors){
 }
 
 var encode = $B.encode = function(){
-    // returns a list of ints in [0, 256[
     var $ = $B.args("encode", 3, {s: null, encoding: null, errors: null},
         ["s", "encoding", "errors"],
         arguments, {encoding: "utf-8", errors:"strict"}, null, null),
@@ -1655,23 +1765,22 @@ var encode = $B.encode = function(){
         case "utf-8":
         case "utf_8":
         case "utf8":
-            var res = []
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i)
                 if(cp < 0x7f){
-                    res.push(cp)
+                    t.push(cp)
                 }else if(cp < 0x7ff){
-                    res.push(0xc0 + (cp >> 6),
+                    t.push(0xc0 + (cp >> 6),
                              0x80 + (cp & 0x3f))
                 }else if(cp < 0xffff){
-                    res.push(0xe0 + (cp >> 12),
+                    t.push(0xe0 + (cp >> 12),
                              0x80 + ((cp & 0xfff) >> 6),
                              0x80 + (cp & 0x3f))
                 }else{
                     console.log("4 bytes")
                 }
             }
-            return res
+            break
         case "latin":
         case "latin1":
         case "latin-1":
@@ -1684,8 +1793,11 @@ var encode = $B.encode = function(){
         case "windows1252":
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i) // code point
-                if(cp <= 255){t[pos++] = cp}
-                else if(errors != "ignore"){$UnicodeEncodeError(encoding, i)}
+                if(cp <= 255){
+                    t[pos++] = cp
+                }else if(errors != "ignore"){
+                    $UnicodeEncodeError(encoding, i)
+                }
             }
             break
         case "ascii":
@@ -1732,11 +1844,17 @@ var encode = $B.encode = function(){
             }catch(err){
                 throw _b_.LookupError.$factory("unknown encoding: " + encoding)
             }
-            t = from_unicode[enc](s)[0].source
+            return from_unicode[enc](s)[0]
     }
-    return t
+    return fast_bytes(t)
 }
 
+function fast_bytes(t){
+    return {
+        __class__: _b_.bytes,
+        source: t
+    }
+}
 
 bytes.$factory = function(source, encoding, errors){
     return bytes.__new__.bind(null, bytes).apply(null, arguments)
