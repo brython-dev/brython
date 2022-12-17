@@ -139,7 +139,7 @@ if name == 'nt':
 
 
 def scandir(*args, **kw):
-    raise NotImplementedError
+    raise NotImplementedError('browsers cannot read a directory content')
 
 def waitstatus_to_exitcode(status):
     return status >> 8
