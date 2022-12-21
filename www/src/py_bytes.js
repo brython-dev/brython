@@ -1736,7 +1736,6 @@ var decode = $B.decode = function(obj, encoding, errors){
           }catch(err){
               throw _b_.LookupError.$factory("unknown encoding: " + enc)
           }
-          console.log('use decoder', enc, 'obj', obj)
           var decoded = to_unicode[enc](obj)[0]
           for(var i = 0, len = decoded.length; i < len; i++){
               if(decoded.codePointAt(i) == 0xfffe){
