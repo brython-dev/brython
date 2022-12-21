@@ -1022,5 +1022,17 @@ assert A.f.__defaults__ == (0,)
 A.f.__defaults__ = (1,)
 assert a.f() == 1
 
+# issue 2134
+for i in range(5):
+    if i == 3:
+        break
+else:
+    raise AssertionError('"for" loop had a break')
+
+while True:
+    break
+else:
+    raise AssertionError('"while" loop had a break')
+
 
 print('passed all tests...')

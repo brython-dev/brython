@@ -1151,7 +1151,8 @@ $B.ast.Break.prototype.to_js = function(scopes){
     }
     var js = ''
     for(var scope of scopes.slice().reverse()){
-        if(scope.ast instanceof $B.ast.For){
+        if(scope.ast instanceof $B.ast.For ||
+                scope.ast instanceof $B.ast.While){
             js += `no_break_${scope.id} = false\n`
             break
         }
@@ -2857,7 +2858,7 @@ $B.ast.While.prototype.to_js = function(scopes){
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
     var scope = $B.last(scopes),
-        new_scope = copy_scope(scope, this)
+        new_scope = copy_scope(scope, this, id)
 
     scopes.push(new_scope)
 

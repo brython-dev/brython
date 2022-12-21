@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-17 08:33:14.763557"
-__BRYTHON__.timestamp=1671262394763
+__BRYTHON__.compiled_date="2022-12-21 21:47:36.454061"
+__BRYTHON__.timestamp=1671655656454
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8749,7 +8749,6 @@ throw _b_.UnicodeDecodeError.$factory(msg)}}}
 break
 default:
 try{load_decoder(enc)}catch(err){throw _b_.LookupError.$factory("unknown encoding: "+enc)}
-console.log('use decoder',enc,'obj',obj)
 var decoded=to_unicode[enc](obj)[0]
 for(var i=0,len=decoded.length;i < len;i++){if(decoded.codePointAt(i)==0xfffe){throw _b_.UnicodeDecodeError.$factory("'charmap' codec "+
 `can't decode byte ${_hex(b[i])} in position ${i}: `+
@@ -14934,7 +14933,8 @@ scope.ast instanceof $B.ast.While){return true}}
 return false}
 $B.ast.Break.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'break' outside loop")}
 var js=''
-for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For){js+=`no_break_${scope.id} = false\n`
+for(var scope of scopes.slice().reverse()){if(scope.ast instanceof $B.ast.For ||
+scope.ast instanceof $B.ast.While){js+=`no_break_${scope.id} = false\n`
 break}}
 js+=`break`
 return js}
@@ -15685,7 +15685,7 @@ if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $
 var method=opclass2dunder[this.op.constructor.$name]
 return `$B.$getattr($B.get_class(locals.$result = ${operand}), '${method}')(locals.$result)`}
 $B.ast.While.prototype.to_js=function(scopes){var id=$B.UUID()
-var scope=$B.last(scopes),new_scope=copy_scope(scope,this)
+var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
 var js=`var no_break_${id} = true\n`
 js+=`while($B.set_lineno(frame, ${this.lineno}) && `+
