@@ -1,0 +1,528 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="Brython">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Dan Stromberg, Pierre Quentel">
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+
+<script type="text/javascript" src="/src/py_ast_classes.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+<script type="text/javascript" src="/src/py_flags.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
+
+<script type="text/python" src="show_source.py"></script>
+
+<style>
+.container {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  width: 660px;
+  height: 110px;
+  white-space: nowrap;
+  margin: 10px;
+}
+
+.keyboard {
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.key {
+  cursor: pointer;
+  font: 16px "Open Sans", "Lucida Grande", "Arial", sans-serif;
+  border: 1px solid black;
+  border-radius: 5px;
+  width: 20px;
+  height: 80px;
+  text-align: center;
+  box-shadow: 2px 2px darkgray;
+  display: inline-block;
+  position: relative;
+  margin-right: 3px;
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.key div {
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+  pointer-events: none;
+}
+
+.key div sub {
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.key:hover {
+  background-color: #eef;
+}
+
+.key:active, .key-active {
+  background-color: #000;
+  color: #fff;
+}
+
+.octave {
+  display: inline-block;
+  padding: 0 6px 0 0;
+}
+
+.settingsBar {
+  padding-top: 8px;
+  font: 14px "Open Sans", "Lucida Grande", "Arial", sans-serif;
+  position: relative;
+  vertical-align: middle;
+  width: 100%;
+  height: 30px;
+}
+
+.left {
+  width: 50%;
+  position: absolute;
+  left: 0;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.left span,
+.left input {
+  vertical-align: middle;
+}
+
+.right {
+  width: 50%;
+  position: absolute;
+  right: 0;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.right span {
+  vertical-align: middle;
+}
+
+.right input {
+  vertical-align: baseline;
+}
+
+</style>
+
+<title>Brython synth keyboard</title>
+
+</head>
+<body onload="brython(2)">
+
+<script type="text/python">
+from browser import document, window, html, console, bind, timer
+
+audioContext = None
+oscList = []
+envelop = None
+
+keyboard = document.select_one(".keyboard")
+wavePicker = document.select_one("select[name='waveform']")
+scaleControl = document.select_one("select[name='scale']")
+volumeControl = document.select_one("input[name='volume']")
+
+noteFreq = None
+customWaveform = None
+sineTerms = None
+cosineTerms = None
+
+notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
+
+note_freqs = {}
+
+def create_major_scale(base, octave=3):
+    """Create the sequence of notes that make the major scale starting at
+    note "base" in octave.
+    """
+    i_note = notes.index(base)
+    scale.clear()
+    scale.append((octave, base))
+    intervals = [2, 2, 1, 2, 2, 2, 1]
+    octave0 = octave
+    for octave in range(octave0, octave0 + 3):
+        change_at_C = base < 'C'
+        change_octave = False
+        for interval in intervals:
+            i_note += interval
+            if i_note >= len(notes):
+                i_note -= len(notes)
+                change_at_C = True
+            note = notes[i_note]
+            if change_at_C and note > 'B' and not change_octave:
+                octave += 1
+                change_octave = True
+            scale.append((octave, notes[i_note]))
+    return scale
+
+
+def create_note_table():
+    i_range = 4
+    i_note = 0
+
+    note_freqs[i_range] = {notes[i_note]: 440}
+
+    a = 1.059463094359
+
+    f0 = note_freqs[i_range][notes[i_note]]
+    mult = a
+    i = -1
+    while True:
+        i_note -=1
+        if i_note < 0:
+            i_note = len(notes) - 1
+        if notes[i_note] == 'B':
+            i_range -= 1
+            if i_range < 0:
+                break
+            note_freqs[i_range] = {}
+        note_freqs[i_range][notes[i_note]] = f0 / mult
+
+        mult *= a
+
+        i -= 1
+
+    mult = a
+    i = 1
+    i_range = 4
+    i_note = 0
+
+    while True:
+        i_note +=1
+        if i_note == len(notes):
+            i_note = 0
+        if notes[i_note] == 'C':
+            i_range += 1
+            if i_range > 7:
+                break
+            note_freqs[i_range] = {}
+        note_freqs[i_range][notes[i_note]] = f0 * mult
+
+        mult *= a
+
+        i += 1
+
+create_note_table()
+
+keyElements = {}
+
+def createKey(note, octave, freq):
+    keyElement = html.DIV(Class="key")
+    labelElement = html.DIV()
+
+    keyElement.dataset["octave"] = octave
+    keyElement.dataset["note"] = note
+    keyElement.dataset["frequency"] = freq
+
+    labelElement.html = f'{note}<sub>{octave}</sub>'
+    keyElement <= labelElement
+
+    keyElement.bind("mousedown", notePressed)
+    keyElement.bind("mouseup", noteReleased)
+    keyElement.bind("mouseover", notePressed)
+    keyElement.bind("mouseleave", noteReleased)
+
+    keyElements[(octave, note)] = keyElement
+
+    return keyElement
+
+@bind(volumeControl, "change")
+def changeVolume(event):
+    print('change volume', volumeControl.value)
+    envelop.gain.value = volumeControl.value
+
+@bind(scaleControl, "change")
+def changeScale(event):
+    setup(3, event.target.value)
+
+playing = {}
+scale = []
+
+key_mapping = {
+  'w': '3C', 'x': '3D', 'c': '3E', 'v': '3F', 'b': '3G', 'n': '3A', ',': '3B',
+  'q': '4C', 's': '4D', 'd': '4E', 'f': '4F', 'g': '4G', 'h': '4A', 'j': '4B',
+  'a': '5C', 'z': '5D', 'e': '5E', 'r': '5F', 't': '5G', 'y': '5A', 'u': '5B',
+}
+
+key_lines = 'wxcvbn,', 'qsdfghj', 'azertyu'
+
+chord_mapping = {
+  '1': '3C',
+  '2': '3D',
+  '3': '3E',
+  '4': '3F',
+  '5': '3G',
+  '6': '3A',
+  '7': '3B'
+}
+
+def make_chord_notes(octave, note):
+    chord_notes = [(octave, note)]
+    i_note = scale.index((octave, note))
+    for _ in range(2):
+        i_note += 2
+        if i_note > 7:
+            i_note -= 7
+        chord_notes.append(scale[i_note])
+    return chord_notes
+
+def highlight(key):
+    keyElements[key].classList.add('key-active')
+
+def unhighlight(key):
+    keyElements[key].classList.remove('key-active')
+
+
+def notePressed(event):
+    if hasattr(event, "key"):
+        if event.key in playing:
+            return
+        if event.key in key_mapping:
+            key = key_mapping[event.key]
+            octave, note = key_mapping[event.key]
+            octave = int(octave)
+            highlight((octave, note))
+            playing[event.key] = playTone(note_freqs[octave][note])
+        elif event.key in chord_mapping:
+            playing[event.key] = {'notes': []}
+            chord = make_chord_notes(*chord_mapping[event.key])
+            playing[event.key]['chord'] = chord
+            for key in chord:
+                highlight(key)
+                octave, note = key
+                playing[event.key]['notes'].append(playTone(note_freqs[int(octave)][note]))
+        return
+
+    if event.buttons & 1:
+        dataset = event.target.dataset
+
+        if not hasattr(dataset, "pressed") or dataset.pressed == "no":
+            octave = int(dataset.octave)
+            oscList[octave][dataset.note] = playTone(dataset.frequency)
+            dataset.pressed = "yes"
+
+def fade_out(osc, envelop):
+    t = audioContext.currentTime
+    envelop.gain.setTargetAtTime(0, t, 0.02)
+    osc.stop(t + 0.08)
+
+def noteReleased(event):
+    if hasattr(event, "key"):
+        if event.key in playing:
+            if event.key in key_mapping:
+                fade_out(*playing[event.key])
+                del playing[event.key]
+                key = key_mapping[event.key]
+                unhighlight(key)
+            elif event.key in chord_mapping:
+                base = chord_mapping[event.key]
+                for tone in playing[event.key]['notes']:
+                    fade_out(*tone)
+                for key in playing[event.key]['chord']:
+                    unhighlight(key)
+                del playing[event.key]
+        return
+
+    dataset = event.target.dataset
+
+    if dataset:
+        if hasattr(dataset, "pressed") and dataset.pressed == "yes":
+            octave = int(dataset.octave)
+            oscList[octave][dataset.note][0].stop()
+            del oscList[octave][dataset.note]
+            dataset.pressed = "no"
+
+def playTone(freq, time=0, length=None):
+    global audioContext, envelop
+
+    if audioContext is None:
+        audioContext = window.AudioContext.new()
+
+    envelop = audioContext.createGain()
+    envelop.connect(audioContext.destination)
+    envelop.gain.value = volumeControl.value
+
+    osc = audioContext.createOscillator()
+    t = audioContext.currentTime + time
+
+    envelop.gain.setValueAtTime(0, t)
+    attackTime = 0.1
+    envelop.gain.linearRampToValueAtTime(volumeControl.value, t + attackTime)
+    if length is not None:
+        releaseTime = length / 10
+        envelop.gain.linearRampToValueAtTime(0, t + length - releaseTime)
+
+    osc.connect(envelop) #.connect(mainGainNode)
+
+    _type = wavePicker.options[wavePicker.selectedIndex].value
+
+    if _type == "custom":
+        osc.setPeriodicWave(customWaveform)
+    else:
+        osc.type = _type
+
+    osc.frequency.value = freq
+    if time is None:
+        osc.start()
+    else:
+        currentTime = audioContext.currentTime
+        osc.start(currentTime + time)
+        if length is not None:
+            osc.stop(currentTime + time + length)
+
+    return osc, envelop
+
+
+def setup(octave=3, base='C'):
+    global mainGainNode, customWaveform, audioContext
+
+    base = scaleControl.value
+    create_major_scale(base, octave)
+
+    for chord_num, (octave, note) in enumerate(scale[:7]):
+        chord_mapping[str(chord_num + 1)] = octave, note
+
+    # draw keyboard
+    keyboard.clear()
+
+    for octave, note in scale:
+        octaveElem = html.DIV(Class="octave")
+        octaveElem <= createKey(note, octave, note_freqs[octave][note])
+        keyboard <= octaveElem
+
+    lines = ''.join(key_lines)
+    key_mapping.clear()
+
+    for x, y in zip(lines, scale):
+        key_mapping[x] = y
+
+    for i in range(9):
+        oscList.append({})
+
+setup()
+
+document.bind('keydown', notePressed)
+document.bind('keyup', noteReleased)
+
+def play_chord(base, time, length, nb=None):
+    octave = int(base[0])
+    note = base[1:]
+    chord = make_chord_notes(octave, note)
+    for key in chord:
+        timer.set_timeout(highlight, time * 1000, key)
+        timer.set_timeout(unhighlight, (time + length) * 1000, key)
+        octave, note = key
+        freq = note_freqs[int(octave)][note]
+        if nb is not None:
+            repeat_length = length / nb
+            for i in range(nb):
+                playTone(freq, time + i * repeat_length, repeat_length)
+        else:
+            playTone(freq, time, length)
+
+@bind('#play_chords', 'click')
+def play_chords(ev):
+    chords = [('3C', 0, 1, 4),
+              ('3F', 1, 0.5, None),
+              ('3F', 1.5, 0.5, None),
+              ('3G', 2, 1, None)]
+    for chord, time, length, nb in chords:
+        play_chord(chord, time, length, nb)
+
+</script>
+
+<div class="container">
+  <div class="keyboard"></div>
+</div>
+
+<div class="settingsBar">
+  <div class="left">
+    <span>Volume: </span>
+    <input
+      type="range"
+      min="0.0"
+      max="1.0"
+      step="0.01"
+      value="0.5"
+      list="volumes"
+      name="volume" />
+    <datalist id="volumes">
+      <option value="0.0" label="Mute"></option>
+      <option value="1.0" label="100%"></option>
+    </datalist>
+  </div>
+</div>
+
+  <div class="right">
+    <span>Current waveform: </span>
+    <select name="waveform">
+      <option value="sine" selected>Sine</option>
+      <option value="square">Square</option>
+      <option value="sawtooth">Sawtooth</option>
+    </select>
+  </div>
+</div>
+
+    <span>Scale </span>
+    <select name="scale">
+      <option>A</option>
+      <option>A#</option>
+      <option>B</option>
+      <option selected>C</option>
+      <option>C#</option>
+      <option>D</option>
+      <option>D#</option>
+      <option>E</option>
+      <option>F</option>
+      <option>F#</option>
+      <option>G</option>
+      <option>G#</option>
+    </select>
+
+<button id="play_chords">Play chords</button>
+</body>
+</html>
+
+
