@@ -155,96 +155,21 @@
 <script type="text/python">
 from browser import document, window, html, console, bind, timer
 
-audioContext = None
+import music
+import synthesizer
+
 oscList = []
-envelop = None
 
 keyboard = document.select_one(".keyboard")
 wavePicker = document.select_one("select[name='waveform']")
 scaleControl = document.select_one("select[name='scale']")
+octaveControl = document.select_one("select[name='octave']")
 volumeControl = document.select_one("input[name='volume']")
 
 noteFreq = None
 customWaveform = None
 sineTerms = None
 cosineTerms = None
-
-notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
-
-note_freqs = {}
-
-def create_major_scale(base, octave=3):
-    """Create the sequence of notes that make the major scale starting at
-    note "base" in octave.
-    """
-    i_note = notes.index(base)
-    scale.clear()
-    scale.append((octave, base))
-    intervals = [2, 2, 1, 2, 2, 2, 1]
-    octave0 = octave
-    for octave in range(octave0, octave0 + 3):
-        change_at_C = base < 'C'
-        change_octave = False
-        for interval in intervals:
-            i_note += interval
-            if i_note >= len(notes):
-                i_note -= len(notes)
-                change_at_C = True
-            note = notes[i_note]
-            if change_at_C and note > 'B' and not change_octave:
-                octave += 1
-                change_octave = True
-            scale.append((octave, notes[i_note]))
-    return scale
-
-
-def create_note_table():
-    i_range = 4
-    i_note = 0
-
-    note_freqs[i_range] = {notes[i_note]: 440}
-
-    a = 1.059463094359
-
-    f0 = note_freqs[i_range][notes[i_note]]
-    mult = a
-    i = -1
-    while True:
-        i_note -=1
-        if i_note < 0:
-            i_note = len(notes) - 1
-        if notes[i_note] == 'B':
-            i_range -= 1
-            if i_range < 0:
-                break
-            note_freqs[i_range] = {}
-        note_freqs[i_range][notes[i_note]] = f0 / mult
-
-        mult *= a
-
-        i -= 1
-
-    mult = a
-    i = 1
-    i_range = 4
-    i_note = 0
-
-    while True:
-        i_note +=1
-        if i_note == len(notes):
-            i_note = 0
-        if notes[i_note] == 'C':
-            i_range += 1
-            if i_range > 7:
-                break
-            note_freqs[i_range] = {}
-        note_freqs[i_range][notes[i_note]] = f0 * mult
-
-        mult *= a
-
-        i += 1
-
-create_note_table()
 
 keyElements = {}
 
@@ -268,45 +193,22 @@ def createKey(note, octave, freq):
 
     return keyElement
 
-@bind(volumeControl, "change")
-def changeVolume(event):
-    print('change volume', volumeControl.value)
-    envelop.gain.value = volumeControl.value
 
 @bind(scaleControl, "change")
 def changeScale(event):
-    setup(3, event.target.value)
+    setup(int(octaveControl.value), event.target.value)
 
+@bind(octaveControl, "change")
+def changeOctave(event):
+    setup(int(event.target.value), scaleControl.value)
+    
 playing = {}
-scale = []
 
-key_mapping = {
-  'w': '3C', 'x': '3D', 'c': '3E', 'v': '3F', 'b': '3G', 'n': '3A', ',': '3B',
-  'q': '4C', 's': '4D', 'd': '4E', 'f': '4F', 'g': '4G', 'h': '4A', 'j': '4B',
-  'a': '5C', 'z': '5D', 'e': '5E', 'r': '5F', 't': '5G', 'y': '5A', 'u': '5B',
-}
+key_mapping = {}
 
 key_lines = 'wxcvbn,', 'qsdfghj', 'azertyu'
 
-chord_mapping = {
-  '1': '3C',
-  '2': '3D',
-  '3': '3E',
-  '4': '3F',
-  '5': '3G',
-  '6': '3A',
-  '7': '3B'
-}
-
-def make_chord_notes(octave, note):
-    chord_notes = [(octave, note)]
-    i_note = scale.index((octave, note))
-    for _ in range(2):
-        i_note += 2
-        if i_note > 7:
-            i_note -= 7
-        chord_notes.append(scale[i_note])
-    return chord_notes
+chord_mapping = {}
 
 def highlight(key):
     keyElements[key].classList.add('key-active')
@@ -314,6 +216,19 @@ def highlight(key):
 def unhighlight(key):
     keyElements[key].classList.remove('key-active')
 
+def play(octave, note):
+    freq = music.note_freqs[octave][note]
+
+    kwargs = {"gain_value": volumeControl.value}
+
+    _type = wavePicker.options[wavePicker.selectedIndex].value
+
+    if _type == "custom":
+        kwargs["wave"] = customWaveform
+    else:
+        kwargs["type"] = _type
+
+    return synthesizer.playTone(freq, **kwargs)
 
 def notePressed(event):
     if hasattr(event, "key"):
@@ -324,15 +239,15 @@ def notePressed(event):
             octave, note = key_mapping[event.key]
             octave = int(octave)
             highlight((octave, note))
-            playing[event.key] = playTone(note_freqs[octave][note])
+            playing[event.key] = play(octave, note)
         elif event.key in chord_mapping:
             playing[event.key] = {'notes': []}
-            chord = make_chord_notes(*chord_mapping[event.key])
+            chord = music.make_chord_notes(*chord_mapping[event.key])
             playing[event.key]['chord'] = chord
             for key in chord:
                 highlight(key)
                 octave, note = key
-                playing[event.key]['notes'].append(playTone(note_freqs[int(octave)][note]))
+                playing[event.key]['notes'].append(play(int(octave), note))
         return
 
     if event.buttons & 1:
@@ -340,26 +255,22 @@ def notePressed(event):
 
         if not hasattr(dataset, "pressed") or dataset.pressed == "no":
             octave = int(dataset.octave)
-            oscList[octave][dataset.note] = playTone(dataset.frequency)
+            oscList[octave][dataset.note] = play(octave, dataset.note)
             dataset.pressed = "yes"
 
-def fade_out(osc, envelop):
-    t = audioContext.currentTime
-    envelop.gain.setTargetAtTime(0, t, 0.02)
-    osc.stop(t + 0.08)
 
 def noteReleased(event):
     if hasattr(event, "key"):
         if event.key in playing:
             if event.key in key_mapping:
-                fade_out(*playing[event.key])
+                synthesizer.fade_out(*playing[event.key])
                 del playing[event.key]
                 key = key_mapping[event.key]
                 unhighlight(key)
             elif event.key in chord_mapping:
                 base = chord_mapping[event.key]
                 for tone in playing[event.key]['notes']:
-                    fade_out(*tone)
+                    synthesizer.fade_out(*tone)
                 for key in playing[event.key]['chord']:
                     unhighlight(key)
                 del playing[event.key]
@@ -370,72 +281,32 @@ def noteReleased(event):
     if dataset:
         if hasattr(dataset, "pressed") and dataset.pressed == "yes":
             octave = int(dataset.octave)
-            oscList[octave][dataset.note][0].stop()
+            synthesizer.fade_out(*oscList[octave][dataset.note])
             del oscList[octave][dataset.note]
             dataset.pressed = "no"
-
-def playTone(freq, time=0, length=None):
-    global audioContext, envelop
-
-    if audioContext is None:
-        audioContext = window.AudioContext.new()
-
-    envelop = audioContext.createGain()
-    envelop.connect(audioContext.destination)
-    envelop.gain.value = volumeControl.value
-
-    osc = audioContext.createOscillator()
-    t = audioContext.currentTime + time
-
-    envelop.gain.setValueAtTime(0, t)
-    attackTime = 0.1
-    envelop.gain.linearRampToValueAtTime(volumeControl.value, t + attackTime)
-    if length is not None:
-        releaseTime = length / 10
-        envelop.gain.linearRampToValueAtTime(0, t + length - releaseTime)
-
-    osc.connect(envelop) #.connect(mainGainNode)
-
-    _type = wavePicker.options[wavePicker.selectedIndex].value
-
-    if _type == "custom":
-        osc.setPeriodicWave(customWaveform)
-    else:
-        osc.type = _type
-
-    osc.frequency.value = freq
-    if time is None:
-        osc.start()
-    else:
-        currentTime = audioContext.currentTime
-        osc.start(currentTime + time)
-        if length is not None:
-            osc.stop(currentTime + time + length)
-
-    return osc, envelop
-
 
 def setup(octave=3, base='C'):
     global mainGainNode, customWaveform, audioContext
 
     base = scaleControl.value
-    create_major_scale(base, octave)
+    music.create_major_scale(base, octave)
 
-    for chord_num, (octave, note) in enumerate(scale[:7]):
+    chord_mapping.clear()
+    for chord_num, (octave, note) in enumerate(music.scale[:7]):
         chord_mapping[str(chord_num + 1)] = octave, note
 
     # draw keyboard
     keyboard.clear()
 
-    for octave, note in scale:
+    for octave, note in music.scale:
         octaveElem = html.DIV(Class="octave")
-        octaveElem <= createKey(note, octave, note_freqs[octave][note])
+        octaveElem <= createKey(note, octave, music.note_freqs[octave][note])
         keyboard <= octaveElem
 
     lines = ''.join(key_lines)
     key_mapping.clear()
 
-    for x, y in zip(lines, scale):
+    for x, y in zip(lines, music.scale):
         key_mapping[x] = y
 
     for i in range(9):
@@ -449,7 +320,7 @@ document.bind('keyup', noteReleased)
 def play_chord(base, time, length, nb=None):
     octave = int(base[0])
     note = base[1:]
-    chord = make_chord_notes(octave, note)
+    chord = music.make_chord_notes(octave, note)
     for key in chord:
         timer.set_timeout(highlight, time * 1000, key)
         timer.set_timeout(unhighlight, (time + length) * 1000, key)
@@ -521,6 +392,16 @@ def play_chords(ev):
       <option>G#</option>
     </select>
 
+    <span>Octave </span>
+    <select name="octave">
+      <option>1</option>
+      <option>2</option>
+      <option selected>3</option>
+      <option>4</option>
+      <option>5</option>
+      <option>6</option>
+      <option>7</option>
+    </select>
 <button id="play_chords">Play chords</button>
 </body>
 </html>
