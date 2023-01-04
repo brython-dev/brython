@@ -8706,8 +8706,7 @@ var brython = $B.parser.brython = function(options){
                 // format <script type="text/python" src="python_script.py">
                 // get source code by an Ajax call
                 $B.tasks.push([$B.ajax_load_script,
-                    {name: worker.id, url: worker.src, is_ww: true, 
-                     attrs:worker.attributes}])
+                    {name: worker.id, url: worker.src, is_ww: true}])
             }else{
                 // Get source code inside the script element
                 var source = (worker.innerText || worker.textContent)

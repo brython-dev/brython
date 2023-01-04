@@ -367,7 +367,7 @@ $B.ajax_load_script = function(script){
                 if(this.status == 200){
                     var src = this.responseText
                     if(script.is_ww){
-                        $B.webworkers[name] = src
+                        $B.webworkers[name] = {source: src}
                     }else{
                         $B.tasks.splice(0, 0, [$B.run_script, src, name,
                             url, true])

@@ -129,26 +129,25 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
 })
 
 var AsyncWorker = function(){
-    var $ = $B.args("__init__", 3, {id: null, onmessage: null, onerror: null},
-            ['id', 'onmessage', 'onerror'], arguments,
-            {onmessage: _b_.None, onerror: _b_.None}, null, null),
+    var $ = $B.args("__init__", 4,
+                    {id: null, onready: null, onmessage: null, onerror: null},
+                    ['id', 'onready', 'onmessage', 'onerror'], arguments,
+                    {onready: _b_.None, onmessage: _b_.None, onerror: null},
+                    null, null),
         id = $.id,
-        worker_script = $B.webworkers[id]
+        worker_script = $B.webworkers[id],
+        onready = $.onready === _b_.None ? _b_.None : $B.$call($.onready),
+        onmessage = $.onmessage === _b_.None ? _b_.None : $B.$call($.onmessage),
+        onerror = $.onerror === _b_.None ? _b_.None : $B.$call($.onerror)
 
     if(worker_script === undefined){
         throw _b_.KeyError.$factory(id)
     }
     var src = worker_script.source
-    console.log('source', worker_script)
     var script_id = "worker" + $B.UUID(),
         filename = $B.script_path + "#" + id
     $B.url2name[filename] = script_id
     $B.file_cache[filename] = src
-    console.log('set file_cache for', filename)
-
-    var indexedDB = worker_script.attributes &&
-            worker_script.attributes.getNamedItem('indexedDB') !== null
-    console.log('uses indexedDB ?', indexedDB)
 
     var js = $B.py2js({src, filename}, script_id).to_js(),
         header = '';
@@ -173,6 +172,8 @@ var AsyncWorker = function(){
     module.__file__ = "${filename}"
     module.__doc__ = _b_.None
     $B.imported["${script_id}"] = module\n`
+
+    header += '$B.file_cache[module.__file__] = `' + src + '`\n'
     // restore brython_path
     header += '__BRYTHON__.brython_path = "' + $B.brython_path +
         '"\n'
@@ -182,20 +183,20 @@ var AsyncWorker = function(){
     header += `brython(${JSON.stringify($B.$options)})\n`
 
     // send dummy message to trigger resolution of Promise
-    js = 'self.postMessage("worker ok")\n' + js
+    var ok_token = Math.random().toString(36).substr(2, 8),
+        error_token = Math.random().toString(36).substr(2, 8)
 
     // open indexedDB cache before running worker code
     js = `$B.idb_open_promise().then(function(){\n` +
          `try{\n` +
              `${js}\n` +
+             `self.postMessage('${ok_token}')\n` +
          `}catch(err){\n` +
-             `self.postMessage("Error in worker ${id}\\n" + $B.error_trace(err))\n` +
+             `self.postMessage("${error_token}Error in worker ${id}\\n" + $B.error_trace(err))\n` +
          `}\n})`
     js = header + js
 
-    console.log('js', js)
-
-    return new Promise(function(resolve, reject){
+    var p = new Promise(function(resolve, reject){
         try{
             var blob = new Blob([js], {type: "application/js"}),
                 url = URL.createObjectURL(blob),
@@ -204,13 +205,32 @@ var AsyncWorker = function(){
         }catch(err){
             reject(err)
         }
-        function ready(ev){
-            resolve(ev.target)
-            w.removeEventListener("message", ready)
+
+        w.onmessage = function(ev){
+            if(ev.data == ok_token){
+                resolve(res)
+            }else if(typeof ev.data == 'string' &&
+                    ev.data.startsWith(error_token)){
+                reject(ev.data.substr(error_token.length))
+            }else{
+                if(onmessage !== _b_.None){
+                    onmessage(ev)
+                }
+                resolve(res)
+            }
         }
-        w.addEventListener("message", ready)
+
         return res
     })
+
+    var error_func = onerror === _b_.None ? console.debug : onerror
+
+    if(onready !== _b_.None){
+        p.then(onready).catch(error_func)
+    }else{
+        p.catch(error_func)
+    }
+    return _b_.None
 }
 
 return {

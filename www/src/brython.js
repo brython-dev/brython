@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-04 09:42:42.588782"
-__BRYTHON__.timestamp=1672821762588
+__BRYTHON__.compiled_date="2023-01-04 15:31:05.640591"
+__BRYTHON__.timestamp=1672842665640
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4521,11 +4521,10 @@ _importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 $B.options_parsed=true
 return options}
-if(!($B.isWebWorker ||$B.isNode)){$B.loaded_scripts=[]
-var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
+if(!($B.isWebWorker ||$B.isNode)){var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
 observer.observe(document.documentElement,{childList:true,subtree:true});}
-function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT'){if(addedNode.type=="text/python"){var options={}
-for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}}
+function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){var options={}
+for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}
 var brython=$B.parser.brython=function(options){options=$B.parse_options(options)
 if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()}else if($B.isNode){return}
 if(options===undefined){options={}}
@@ -4571,7 +4570,7 @@ if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts 
 var src
 for(var i=0,len=webworkers.length;i < len;i++){var worker=webworkers[i]
 if(worker.src){
-$B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true,attrs:worker.attributes}])}else{
+$B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true}])}else{
 var source=(worker.innerText ||worker.textContent)
 source=unindent(source)
 source=source.replace(/^\n/,'')
@@ -4743,7 +4742,8 @@ loop()}else if($B.protocol !="file"){var req=new XMLHttpRequest(),qs=$B.$options
 (url.search(/\?/)>-1 ? '&' :'?')+Date.now()
 req.open("GET",url+qs,true)
 req.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){var src=this.responseText
-if(script.is_ww){$B.webworkers[name]=src}else{$B.tasks.splice(0,0,[$B.run_script,src,name,url,true])}
+if(script.is_ww){console.log('loaded webworker',src)
+$B.webworkers[name]={source:src}}else{$B.tasks.splice(0,0,[$B.run_script,src,name,url,true])}
 loop()}else if(this.status==404){throw Error(url+" not found")}}}
 req.send()}else{throw _b_.IOError.$factory("can't load external script at "+
 script.url+" (Ajax calls not supported with protocol file:///)")}}
@@ -14509,7 +14509,7 @@ if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq_
 return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
 $B.set_func_names($B.cell,"builtins")
 for(var flag in $B.builtin_class_flags.builtins){for(var key of $B.builtin_class_flags.builtins[flag]){if(_b_[key]){_b_[key].__flags__=parseInt(flag)}else{console.log('not in _b_',key)}}}
-for(var flag in $B.builtin_class_flags.types){for(var key of $B.builtin_class_flags.types[flag]){if($B[key]){$B[key].__flags__=parseInt(flag)}else{console.log('not in $B',key)}}}
+for(var flag in $B.builtin_class_flags.types){for(var key of $B.builtin_class_flags.types[flag]){if($B[key]){$B[key].__flags__=parseInt(flag)}}}
 $B.AST={__class__:_b_.type,__mro__:[_b_.object],__name__:'AST',__qualname__:'AST',$is_class:true,$convert:function(js_node){if(js_node===undefined){return _b_.None}
 var constr=js_node.constructor
 if(constr && constr.$name){$B.create_python_ast_classes()
