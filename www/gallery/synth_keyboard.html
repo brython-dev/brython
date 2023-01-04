@@ -48,8 +48,8 @@
 
 <style>
 .container {
-  overflow-x: scroll;
-  overflow-y: hidden;
+  /* overflow-x: scroll;
+  overflow-y: hidden; */
   width: 660px;
   height: 110px;
   white-space: nowrap;
@@ -68,7 +68,7 @@
   border: 1px solid black;
   border-radius: 5px;
   width: 20px;
-  height: 80px;
+  height: 20px;
   text-align: center;
   box-shadow: 2px 2px darkgray;
   display: inline-block;
@@ -201,7 +201,7 @@ def changeScale(event):
 @bind(octaveControl, "change")
 def changeOctave(event):
     setup(int(event.target.value), scaleControl.value)
-    
+
 playing = {}
 
 key_mapping = {}
@@ -289,24 +289,31 @@ def setup(octave=3, base='C'):
     global mainGainNode, customWaveform, audioContext
 
     base = scaleControl.value
-    music.create_major_scale(base, octave)
+    scale = music.create_major_scale(base, octave)[:3 * 7]
 
     chord_mapping.clear()
-    for chord_num, (octave, note) in enumerate(music.scale[:7]):
+    for chord_num, (octave, note) in enumerate(scale[:7]):
         chord_mapping[str(chord_num + 1)] = octave, note
 
     # draw keyboard
     keyboard.clear()
 
-    for octave, note in music.scale:
+    line_num = -1
+
+    for i, (octave, note) in enumerate(scale):
+        if i // 7 > line_num:
+            print('new line before child', keyboard.firstChild)
+            keyboard.insertBefore(line := html.DIV(), keyboard.firstChild)
+            line_num += 1
+            print('new line', i, octave, note, line_num)
         octaveElem = html.DIV(Class="octave")
         octaveElem <= createKey(note, octave, music.note_freqs[octave][note])
-        keyboard <= octaveElem
+        line <= octaveElem
 
     lines = ''.join(key_lines)
     key_mapping.clear()
 
-    for x, y in zip(lines, music.scale):
+    for x, y in zip(lines, scale):
         key_mapping[x] = y
 
     for i in range(9):

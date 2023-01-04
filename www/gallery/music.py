@@ -1,4 +1,3 @@
-scale = []
 
 notes = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#']
 
@@ -57,8 +56,7 @@ def create_major_scale(base, octave=3):
     note "base" in octave.
     """
     i_note = notes.index(base)
-    scale.clear()
-    scale.append((octave, base))
+    scale = [(octave, base)]
     intervals = [2, 2, 1, 2, 2, 2, 1]
     octave0 = octave
     for octave in range(octave0, octave0 + 3):
