@@ -953,8 +953,6 @@
         for(var key of $B.builtin_class_flags.types[flag]){
             if($B[key]){
                 $B[key].__flags__ = parseInt(flag)
-            }else{
-                console.log('not in $B', key)
             }
         }
     }
