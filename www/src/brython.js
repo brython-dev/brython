@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2022-12-21 21:47:36.454061"
-__BRYTHON__.timestamp=1671655656454
+__BRYTHON__.compiled_date="2023-01-04 09:42:42.588782"
+__BRYTHON__.timestamp=1672821762588
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4521,12 +4521,13 @@ _importlib.optimize_import_for_path(e.href,filetype)}}}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{$B.__ARGV=_b_.list.$factory([])}
 $B.options_parsed=true
 return options}
-if(!($B.isWebWorker ||$B.isNode)){var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
+if(!($B.isWebWorker ||$B.isNode)){$B.loaded_scripts=[]
+var observer=new MutationObserver(function(mutations){for(var i=0;i < mutations.length;i++){for(var j=0;j < mutations[i].addedNodes.length;j++){checkPythonScripts(mutations[i].addedNodes[j]);}}});
 observer.observe(document.documentElement,{childList:true,subtree:true});}
-function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT' && addedNode.type=="text/python"){var options={}
-for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}
+function checkPythonScripts(addedNode){if(addedNode.tagName=='SCRIPT'){if(addedNode.type=="text/python"){var options={}
+for(var attr of addedNode.attributes){if(attr.nodeName=="type"){continue}else if(attr.nodeName=='debug'){options[attr.nodeName]=parseInt(attr.nodeValue)}else{options[attr.nodeName]=attr.nodeValue}}}}}
 var brython=$B.parser.brython=function(options){options=$B.parse_options(options)
-if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()}else{return}
+if(!($B.isWebWorker ||$B.isNode)){observer.disconnect()}else if($B.isNode){return}
 if(options===undefined){options={}}
 var kk=Object.keys(_window)
 var defined_ids={},$elts=[],webworkers=[]
@@ -4536,7 +4537,7 @@ var scripts=[]
 for(var id of options.ids){var elt=document.getElementById(id)
 if(elt===null){throw _b_.KeyError.$factory(`no script with id '${id}'`)}
 if(elt.tagName !=="SCRIPT"){throw _b_.KeyError.$factory(`element ${id} is not a script`)}
-scripts.push(elt)}}else{var scripts=document.getElementsByTagName('script')}
+scripts.push(elt)}}else if($B.isWebWorker){var scripts=[]}else{var scripts=document.getElementsByTagName('script')}
 for(var i=0;i < scripts.length;i++){var script=scripts[i]
 if(script.type=="text/python" ||script.type=="text/python3"){if(script.className=="webworker"){if(script.id===undefined){throw _b_.AttributeError.$factory(
 "webworker script has no attribute 'id'")}
@@ -4562,7 +4563,7 @@ $err=_b_.RuntimeError.$factory($err+'')}
 var $trace=$B.$getattr($err,'info')+'\n'+$err.__name__+
 ': '+$err.args
 try{$B.$getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
-throw $err}}else{if($elts.length > 0){if(options.indexedDB && $B.has_indexedDB &&
+throw $err}}else{if($elts.length > 0 ||$B.isWebWorker){if(options.indexedDB && $B.has_indexedDB &&
 $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts with the "+
@@ -4570,14 +4571,15 @@ if(elt.id){if(defined_ids[elt.id]){throw Error("Brython error : Found 2 scripts 
 var src
 for(var i=0,len=webworkers.length;i < len;i++){var worker=webworkers[i]
 if(worker.src){
-$B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true}])}else{
-src=(worker.innerHTML ||worker.textContent)
-src=unindent(src)
-src=src.replace(/^\n/,'')
-$B.webworkers[worker.id]=src
+$B.tasks.push([$B.ajax_load_script,{name:worker.id,url:worker.src,is_ww:true,attrs:worker.attributes}])}else{
+var source=(worker.innerText ||worker.textContent)
+source=unindent(source)
+source=source.replace(/^\n/,'')
+worker.source=source
+$B.webworkers[worker.id]=worker
 var filename=$B.script_path+"#"+worker.id
 $B.url2name[filename]=worker.id
-$B.file_cache[filename]=src}}
+$B.file_cache[filename]=source}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
 if(elt.type=="text/python" ||elt.type=="text/python3"){
 if(elt.id){module_name=elt.id}else{
@@ -4671,6 +4673,34 @@ var db=$B.idb_cx.result,tx=db.transaction("modules","readonly")
 try{var store=tx.objectStore("modules")
 req=store.get(module)
 req.onsuccess=function(evt){idb_load(evt,module)}}catch(err){console.info('error',err)}}
+$B.idb_open_promise=function(){return new Promise(function(resolve,reject){$B.idb_name="brython-cache"
+var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
+idb_cx.onsuccess=function(){var db=idb_cx.result
+if(!db.objectStoreNames.contains("modules")){var version=db.version
+db.close()
+idb_cx=indexedDB.open($B.idb_name,version+1)
+idb_cx.onupgradeneeded=function(){var db=$B.idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
+store.onsuccess=resolve}
+idb_cx.onsuccess=function(){var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
+store.onsuccess=resolve}}else{
+var tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),record,outdated=[]
+var openCursor=store.openCursor()
+openCursor.onerror=function(evt){reject("open cursor error")}
+openCursor.onsuccess=function(evt){cursor=evt.target.result
+if(cursor){record=cursor.value
+if(record.timestamp==$B.timestamp){if(!$B.VFS ||!$B.VFS[record.name]||
+$B.VFS[record.name].timestamp==record.source_ts){
+if(record.is_package){$B.precompiled[record.name]=[record.content]}else{$B.precompiled[record.name]=record.content}}else{
+outdated.push(record.name)}}else{outdated.push(record.name)}
+cursor.continue()}else{$B.outdated=outdated
+resolve()}}}}
+idb_cx.onupgradeneeded=function(){var db=idb_cx.result,store=db.createObjectStore("modules",{"keyPath":"name"})
+store.onsuccess=resolve}
+idb_cx.onerror=function(){
+$B.idb_cx=null
+$B.idb_name=null
+$B.$options.indexedDB=false
+reject('could not open indexedDB database')}})}
 $B.idb_open=function(obj){$B.idb_name="brython-cache"
 var idb_cx=$B.idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(){var db=idb_cx.result
@@ -4726,16 +4756,19 @@ if(elts===undefined){console.log('bizarre',module)}
 var ext=elts[0],source=elts[1],is_package=elts.length==4
 if(ext==".py"){if($B.idb_cx && !$B.idb_cx.$closed){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
 loop()}
+function report_precompile(mod){if(typeof document !=='undefined'){document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
+' from cache'}))}}
+function report_close(){if(typeof document !=='undefined'){document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))}}
+function report_done(mod){if(typeof document !=='undefined'){document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))}}
 var loop=$B.loop=function(){if($B.tasks.length==0){
 if($B.idb_cx && ! $B.idb_cx.$closed){var db=$B.idb_cx.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules")
 while($B.outdated.length > 0){var module=$B.outdated.pop(),req=store.delete(module)
 req.onsuccess=(function(mod){return function(event){if($B.debug > 1){console.info("delete outdated",mod)}
-document.dispatchEvent(new CustomEvent('precompile',{detail:'remove outdated '+mod+
-' from cache'}))}})(module)}
-document.dispatchEvent(new CustomEvent('precompile',{detail:"close"}))
+report_precompile(mod)}})(module)}
+report_close()
 $B.idb_cx.result.close()
 $B.idb_cx.$closed=true}
-document.dispatchEvent(new CustomEvent("brython_done",{detail:$B.obj_dict($B.$options)}))
+report_done()
 return}
 var task=$B.tasks.shift(),func=task[0],args=task.slice(1)
 if(func=="execute"){try{var script=task[1],script_id=script.__name__.replace(/\./g,"_"),module=$B.module.$factory(script.__name__)
@@ -5110,7 +5143,30 @@ var di=$B.$getattr(obj.__class__ ||$B.get_class(obj),"__delitem__",null)
 if(di===null){throw _b_.TypeError.$factory("'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
 return di(obj,item)}
-$B.augm_assign=function(left,op,right){
+function num_result_type(x,y){var is_int,is_float,x_num,y_num
+if(typeof x=="number"){x_num=x
+if(typeof y=="number"){is_int=true
+y_num=y}else if(y.__class__===_b_.float){is_float=true
+y_num=y.value}}else if(x.__class__===_b_.float){x_num=x.value
+if(typeof y=="number"){y_num=y
+is_float=true}else if(y.__class__===_b_.float){is_float=true
+y_num=y.value}}
+return{is_int,is_float,x:x_num,y:y_num}}
+$B.augm_assign=function(left,op,right){var res_type=num_result_type(left,right)
+if(res_type.is_int ||res_type.is_float){var z
+switch(op){case '+=':
+z=res_type.x+res_type.y
+break
+case '-=':
+z=res_type.x-res_type.y
+break
+case '*=':
+z=res_type.x*res_type.y
+break
+case '/=':
+z=res_type.x/res_type.y
+break}
+if(z){if(res_type.is_int && Number.isSafeInteger(z)){return z}else if(res_type.res_is_float){return $B.fast_float(z)}}}else if(op=='*='){if(typeof left=="number" && typeof right=="string"){return left <=0 ? '' :right.repeat(left)}else if(typeof left=="string" && typeof right=="number"){return right <=0 ? '' :left.repeat(right)}}else if(op=='+='){if(typeof left=="string" && typeof right=="string"){return left+right}}
 var op1=op.substr(0,op.length-1),method=$B.op2method.augmented_assigns[op],augm_func=$B.$getattr(left,'__'+method+'__',null)
 if(augm_func !==null){var res=$B.$call(augm_func)(right)
 if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(`unsupported operand type(s)`+
@@ -7974,7 +8030,7 @@ var src=$B.file_cache[filename]
 trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
 if(src){var lines=src.split('\n'),line=lines[lineno-1]
-if(line){trace.push('    '+line.trim())}
+if(line){trace.push('    '+line.trim())}else{console.log('no line',line)}
 if(err.$positions !==undefined){var position=err.$positions[frame_num],trace_line=''
 if(position &&(
 (position[1]!=position[0]||
@@ -7984,13 +8040,14 @@ trace_line+='    '+' '.repeat((position[0]-indent))+
 '~'.repeat(position[1]-position[0])+
 '^'.repeat(position[2]-position[1])
 if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
-trace.push(trace_line)}}}}
+trace.push(trace_line)}}}else{console.log('no src for filename',filename)
+console.log('in file_cache',Object.keys($B.file_cache).join('\n'))}}
 if(count_repeats > 0){var len=trace.length
 for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
-$B.show_error=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
+$B.error_trace=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
 console.log(err.stack)}
 var trace=''
@@ -8020,10 +8077,12 @@ var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
 if(err.__class__===_b_.NameError){var suggestion=offer_suggestions_for_name_error(err)
 if(suggestion){trace+=`. Did you mean '${suggestion}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=offer_suggestions_for_attribute_error(err)
-if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}}else{console.log(err)
-trace=err+""}
-try{$B.$getattr($B.stderr,'write')(trace)
-var flush=$B.$getattr($B.stderr,'flush',_b_.None)
+if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}}else{trace=err+""}
+return trace}
+$B.show_error=function(err){var trace=$B.error_trace(err)
+try{var stderr=$B.imported._sys.stderr
+$B.$getattr(stderr,'write')(trace)
+var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}catch(print_exc_err){console.debug(trace)}}
 $B.handle_error=function(err){
 if(err.$handled){return}
@@ -14898,9 +14957,7 @@ var left_scope=scope.resolve=='global' ?
 make_scope_name(scopes,scopes[0]):'locals'
 return `${left_scope}.${this.target.id} = $B.augm_assign(`+
 make_ref(this.target.id,scopes,scope)+`, '${iop}', ${value})`}else{var ref=`${make_scope_name(scopes, scope.found)}.${this.target.id}`
-if(op=='@' ||op=='//' ||op=='%' ||op=='<<'){js=`${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`}else{js=ref+` = typeof ${ref} == "number" && `+
-`$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n`+
-`locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`}}}else if(this.target instanceof $B.ast.Subscript){var op=opclass2dunder[this.op.constructor.$name]
+js=`${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`}}else if(this.target instanceof $B.ast.Subscript){var op=opclass2dunder[this.op.constructor.$name]
 js=`$B.$setitem((locals.$tg = ${this.target.value.to_js(scopes)}), `+
 `(locals.$key = ${this.target.slice.to_js(scopes)}), `+
 `$B.augm_assign($B.$getitem(locals.$tg, locals.$key), '${iop}', ${value}))`}else if(this.target instanceof $B.ast.Attribute){var op=opclass2dunder[this.op.constructor.$name],mangled=mangle(scopes,last_scope(scopes),this.target.attr)

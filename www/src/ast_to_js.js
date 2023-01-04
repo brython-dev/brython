@@ -1063,13 +1063,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes){
                 make_ref(this.target.id, scopes, scope) + `, '${iop}', ${value})`
         }else{
             var ref = `${make_scope_name(scopes, scope.found)}.${this.target.id}`
-            if(op == '@' || op == '//' || op == '%' || op == '<<'){
-                js = `${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`
-            }else{
-                js = ref + ` = typeof ${ref} == "number" && ` +
-                    `$B.is_safe_int(locals.$result = ${ref} ${op} ${value}) ?\n` +
-                    `locals.$result : $B.augm_assign(${ref}, '${iop}', ${value})`
-            }
+            js = `${ref} = $B.augm_assign(${ref}, '${iop}', ${value})`
         }
     }else if(this.target instanceof $B.ast.Subscript){
         var op = opclass2dunder[this.op.constructor.$name]

@@ -466,4 +466,9 @@ assert_raises(TypeError, str, A(),
 text = codecs.encode("Beautiful is better than ugly.", "rot13")
 assert text == "Ornhgvshy vf orggre guna htyl."
 
+# issue 2136
+s = " "
+s *= 3
+assert s == "   "
+
 print("passed all tests...")

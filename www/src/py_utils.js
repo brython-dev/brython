@@ -937,7 +937,69 @@ $B.$delitem = function(obj, item){
     return di(obj, item)
 }
 
+function num_result_type(x, y){
+    var is_int,
+        is_float,
+        x_num,
+        y_num
+    if(typeof x == "number"){
+        x_num = x
+        if(typeof y == "number"){
+            is_int = true
+            y_num = y
+        }else if(y.__class__ === _b_.float){
+            is_float = true
+            y_num = y.value
+        }
+    }else if(x.__class__ === _b_.float){
+        x_num = x.value
+        if(typeof y == "number"){
+            y_num = y
+            is_float = true
+        }else if(y.__class__ === _b_.float){
+            is_float = true
+            y_num = y.value
+        }
+    }
+    return {is_int, is_float, x: x_num, y: y_num}
+}
+
 $B.augm_assign = function(left, op, right){
+    var res_type = num_result_type(left, right)
+    if(res_type.is_int || res_type.is_float){
+        var z
+        switch(op){
+            case '+=':
+                z = res_type.x + res_type.y
+                break
+            case '-=':
+                z = res_type.x - res_type.y
+                break
+            case '*=':
+                z = res_type.x * res_type.y
+                break
+            case '/=':
+                z = res_type.x / res_type.y
+                break
+        }
+        if(z){
+            if(res_type.is_int && Number.isSafeInteger(z)){
+                return z
+            }else if(res_type.res_is_float){
+                return $B.fast_float(z)
+            }
+        }
+    }else if(op == '*='){
+        if(typeof left == "number" && typeof right == "string"){
+            return left <= 0 ? '' : right.repeat(left)
+        }else if(typeof left == "string" && typeof right == "number"){
+            return right <= 0 ? '' : left.repeat(right)
+        }
+    }else if(op == '+='){
+        if(typeof left == "string" && typeof right == "string"){
+            return left + right
+        }
+    }
     // augmented assignment
     var op1 = op.substr(0, op.length - 1),
         method = $B.op2method.augmented_assigns[op],
