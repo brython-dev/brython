@@ -8571,7 +8571,7 @@ var brython = $B.parser.brython = function(options){
     options = $B.parse_options(options)
     if(!($B.isWebWorker || $B.isNode)){
         observer.disconnect()
-    }else{
+    }else if($B.isNode){
         return
     }
     if(options === undefined){
@@ -8605,6 +8605,8 @@ var brython = $B.parser.brython = function(options){
             }
             scripts.push(elt)
         }
+    }else if($B.isWebWorker){
+        var scripts = []
     }else{
         var scripts = document.getElementsByTagName('script')
     }
@@ -8678,7 +8680,7 @@ var brython = $B.parser.brython = function(options){
             throw $err
         }
     }else{
-        if($elts.length > 0){
+        if($elts.length > 0 || $B.isWebWorker){
             if(options.indexedDB && $B.has_indexedDB &&
                     $B.hasOwnProperty("VFS")){
                 $B.tasks.push([$B.idb_open])
@@ -8704,17 +8706,19 @@ var brython = $B.parser.brython = function(options){
                 // format <script type="text/python" src="python_script.py">
                 // get source code by an Ajax call
                 $B.tasks.push([$B.ajax_load_script,
-                    {name: worker.id, url: worker.src, is_ww: true}])
+                    {name: worker.id, url: worker.src, is_ww: true, 
+                     attrs:worker.attributes}])
             }else{
                 // Get source code inside the script element
-                src = (worker.innerHTML || worker.textContent)
-                src = unindent(src) // remove global indentation
+                var source = (worker.innerText || worker.textContent)
+                source = unindent(source) // remove global indentation
                 // remove leading CR if any
-                src = src.replace(/^\n/, '')
-                $B.webworkers[worker.id] = src
+                source = source.replace(/^\n/, '')
+                worker.source = source
+                $B.webworkers[worker.id] = worker
                 var filename = $B.script_path + "#" + worker.id
                 $B.url2name[filename] = worker.id
-                $B.file_cache[filename] = src
+                $B.file_cache[filename] = source
             }
         }
 

@@ -54,19 +54,9 @@ function idb_load(evt, module){
                 }
                 // Delete temporary import
                 delete $B.imported[module]
-                if($B.debug > 1){console.log("precompile", module)}
-
-                // Store Javascript translation in indexedDB
-                /*
-                var parts = module.split(".")
-                if(parts.length > 1){parts.pop()}
-                if($B.stdlib.hasOwnProperty(parts.join("."))){
-                    var imports = elts[2]
-                    imports = imports.join(",")
-                    $B.tasks.splice(0, 0, [store_precompiled,
-                        module, js, source_ts, imports, is_package])
+                if($B.debug > 1){
+                    console.log("precompile", module)
                 }
-                */
             }else{
                 console.log('bizarre', module, ext)
             }
@@ -161,15 +151,101 @@ function idb_get(module){
     // Sends a request to the indexedDB database for the module name.
     var db = $B.idb_cx.result,
         tx = db.transaction("modules", "readonly")
-
     try{
         var store = tx.objectStore("modules")
             req = store.get(module)
-        req.onsuccess = function(evt){idb_load(evt, module)}
+        req.onsuccess = function(evt){
+            idb_load(evt, module)
+        }
     }catch(err){
         console.info('error', err)
     }
 }
+
+$B.idb_open_promise = function(){
+    return new Promise(function(resolve, reject){
+        $B.idb_name = "brython-cache"
+        var idb_cx = $B.idb_cx = indexedDB.open($B.idb_name)
+
+        idb_cx.onsuccess = function(){
+            var db = idb_cx.result
+            if(!db.objectStoreNames.contains("modules")){
+                var version = db.version
+                db.close()
+                idb_cx = indexedDB.open($B.idb_name, version + 1)
+                idb_cx.onupgradeneeded = function(){
+                    var db = $B.idb_cx.result,
+                        store = db.createObjectStore("modules", {"keyPath": "name"})
+                    store.onsuccess = resolve
+                }
+                idb_cx.onsuccess = function(){
+                    var db = idb_cx.result,
+                        store = db.createObjectStore("modules", {"keyPath": "name"})
+                    store.onsuccess = resolve
+                }
+            }else{
+                // Preload all compiled modules
+
+                var tx = db.transaction("modules", "readwrite"),
+                    store = tx.objectStore("modules"),
+                    record,
+                    outdated = []
+
+                var openCursor = store.openCursor()
+
+                openCursor.onerror = function(evt){
+                    reject("open cursor error")
+                }
+
+                openCursor.onsuccess = function(evt){
+                    cursor = evt.target.result
+                    if(cursor){
+                        record = cursor.value
+                        // A record is valid if the Brython engine timestamp is
+                        // the same as record.timestamp, and the timestamp of the
+                        // VFS file where the file stands is the same as
+                        // record.source_ts
+                        if(record.timestamp == $B.timestamp){
+                            if(!$B.VFS || !$B.VFS[record.name] ||
+                                    $B.VFS[record.name].timestamp == record.source_ts){
+                                // Load in __BRYTHON__.precompiled
+                                if(record.is_package){
+                                    $B.precompiled[record.name] = [record.content]
+                                }else{
+                                    $B.precompiled[record.name] = record.content
+                                }
+                            }else{
+                                // If module with name record.name exists in a VFS
+                                // and its timestamp is not the VFS timestamp,
+                                // remove from cache
+                                outdated.push(record.name)
+                            }
+                        }else{
+                            outdated.push(record.name)
+                        }
+                        cursor.continue()
+                    }else{
+                        $B.outdated = outdated
+                        resolve()
+                    }
+                }
+            }
+        }
+        idb_cx.onupgradeneeded = function(){
+            var db = idb_cx.result,
+                store = db.createObjectStore("modules", {"keyPath": "name"})
+            store.onsuccess = resolve
+        }
+        idb_cx.onerror = function(){
+            // Proceed without indexedDB
+            $B.idb_cx = null
+            $B.idb_name = null
+            $B.$options.indexedDB = false
+            reject('could not open indexedDB database')
+        }
+    })
+}
+
 
 $B.idb_open = function(obj){
     $B.idb_name = "brython-cache"
@@ -181,7 +257,7 @@ $B.idb_open = function(obj){
             var version = db.version
             db.close()
             console.info('create object store', version)
-            idb_cx = indexedDB.open($B.idb_name, version+1)
+            idb_cx = indexedDB.open($B.idb_name, version + 1)
             idb_cx.onupgradeneeded = function(){
                 console.info("upgrade needed")
                 var db = $B.idb_cx.result,
@@ -338,6 +414,28 @@ var inImported = $B.inImported = function(module){
     loop()
 }
 
+function report_precompile(mod){
+    if(typeof document !== 'undefined'){
+        document.dispatchEvent(new CustomEvent('precompile',
+            {detail: 'remove outdated ' + mod +
+             ' from cache'}))
+    }
+}
+
+function report_close(){
+    if(typeof document !== 'undefined'){
+        document.dispatchEvent(new CustomEvent('precompile',
+            {detail: "close"}))
+    }
+}
+
+function report_done(mod){
+    if(typeof document !== 'undefined'){
+        document.dispatchEvent(new CustomEvent("brython_done",
+            {detail: $B.obj_dict($B.$options)}))
+    }
+}
+
 var loop = $B.loop = function(){
     if($B.tasks.length == 0){
         // No more task to process.
@@ -353,20 +451,16 @@ var loop = $B.loop = function(){
                         if($B.debug > 1){
                             console.info("delete outdated", mod)
                         }
-                        document.dispatchEvent(new CustomEvent('precompile',
-                            {detail: 'remove outdated ' + mod +
-                             ' from cache'}))
+                        report_precompile(mod)
                     }
                 })(module)
             }
-            document.dispatchEvent(new CustomEvent('precompile',
-                {detail: "close"}))
+            report_close()
             $B.idb_cx.result.close()
             $B.idb_cx.$closed = true
         }
         // dispatch event "brython_done"
-        document.dispatchEvent(new CustomEvent("brython_done",
-            {detail: $B.obj_dict($B.$options)}))
+        report_done()
         return
     }
     var task = $B.tasks.shift(),

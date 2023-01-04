@@ -9,24 +9,27 @@ var VFS = $B.brython_modules ? 'brython_modules' : 'brython_stdlib'
 if($B.debug > 2){
     var brython_scripts = [
         'brython_builtins',
+
+        'py_ast_classes',
+        'unicode_data',
+        'stdlib_paths',
         'version_info',
+
         'python_tokenizer',
         'py_ast',
         'py2js',
         'loaders',
+        'py_utils',
         'py_object',
         'py_type',
-        'py_utils',
-        'py_sort',
         'py_builtin_functions',
+        'py_sort',
         'py_exceptions',
         'py_range_slice',
         'py_bytes',
         'py_set',
         'js_objects',
-        'stdlib_paths',
         'py_import',
-        'unicode_data',
         'py_string',
         'py_int',
         'py_long_int',
@@ -37,10 +40,12 @@ if($B.debug > 2){
         'py_generator',
         'py_dom',
         'py_pattern_matching',
-        'builtin_modules',
         'async',
+        'py_flags',
+        'builtin_modules',
         'ast_to_js',
         'symtable',
+        'builtins_docstrings',
         VFS]
 
 }else{
@@ -65,16 +70,20 @@ wclass.__mro__ = [$B.JSObj, _b_.object]
 
 $B.set_func_names(wclass, "browser.worker")
 
+
 var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     var $ = $B.args("__init__", 3, {id: null, onmessage: null, onerror: null},
             ['id', 'onmessage', 'onerror'], arguments,
             {onmessage: _b_.None, onerror: _b_.None}, null, null),
         id = $.id,
-        src = $B.webworkers[id]
+        worker_script = $B.webworkers[id]
 
-    if(src === undefined){
+    if(worker_script === undefined){
         throw _b_.KeyError.$factory(id)
     }
+    var src = worker_script.source
+    var indexedDB = worker_script.attributes &&
+            worker_script.attributes.hasNamedItem('indexedDB')
     var script_id = "worker" + $B.UUID(),
         filename = $B.script_path + "#" + id
     $B.url2name[filename] = script_id
@@ -119,8 +128,94 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     return res
 })
 
+var AsyncWorker = function(){
+    var $ = $B.args("__init__", 3, {id: null, onmessage: null, onerror: null},
+            ['id', 'onmessage', 'onerror'], arguments,
+            {onmessage: _b_.None, onerror: _b_.None}, null, null),
+        id = $.id,
+        worker_script = $B.webworkers[id]
+
+    if(worker_script === undefined){
+        throw _b_.KeyError.$factory(id)
+    }
+    var src = worker_script.source
+    console.log('source', worker_script)
+    var script_id = "worker" + $B.UUID(),
+        filename = $B.script_path + "#" + id
+    $B.url2name[filename] = script_id
+    $B.file_cache[filename] = src
+    console.log('set file_cache for', filename)
+
+    var indexedDB = worker_script.attributes &&
+            worker_script.attributes.getNamedItem('indexedDB') !== null
+    console.log('uses indexedDB ?', indexedDB)
+
+    var js = $B.py2js({src, filename}, script_id).to_js(),
+        header = '';
+    for(var script of brython_scripts){
+        if(script != VFS || VFS == "brython_stdlib"){
+            var url = $B.brython_path + script + ".js"
+        }else{
+            // attribute $B.brython_modules is set to the path of
+            // brython_modules.js by the script itself
+            var url = $B.brython_modules
+        }
+        if(! $B.$options.cache){ // cf. issue 1954
+            url += '?' + (new Date()).getTime()
+        }
+        header += 'importScripts("' + url + '")\n'
+    }
+    // set __BRYTHON__.imported[script_id]
+    header += `
+    var $B = __BRYTHON__,
+        _b_ = $B.builtins
+    var module = $B.module.$factory("${script_id}")
+    module.__file__ = "${filename}"
+    module.__doc__ = _b_.None
+    $B.imported["${script_id}"] = module\n`
+    // restore brython_path
+    header += '__BRYTHON__.brython_path = "' + $B.brython_path +
+        '"\n'
+    // restore path for imports (cf. issue #1305)
+    header += '__BRYTHON__.path = "' + $B.path +'".split(",")\n'
+    // Call brython() to initialize internal Brython values
+    header += `brython(${JSON.stringify($B.$options)})\n`
+
+    // send dummy message to trigger resolution of Promise
+    js = 'self.postMessage("worker ok")\n' + js
+
+    // open indexedDB cache before running worker code
+    js = `$B.idb_open_promise().then(function(){\n` +
+         `try{\n` +
+             `${js}\n` +
+         `}catch(err){\n` +
+             `self.postMessage("Error in worker ${id}\\n" + $B.error_trace(err))\n` +
+         `}\n})`
+    js = header + js
+
+    console.log('js', js)
+
+    return new Promise(function(resolve, reject){
+        try{
+            var blob = new Blob([js], {type: "application/js"}),
+                url = URL.createObjectURL(blob),
+                w = new Worker(url),
+                res = wclass.$factory(w)
+        }catch(err){
+            reject(err)
+        }
+        function ready(ev){
+            resolve(ev.target)
+            w.removeEventListener("message", ready)
+        }
+        w.addEventListener("message", ready)
+        return res
+    })
+}
+
 return {
-    Worker: _Worker
+    Worker: _Worker,
+    AsyncWorker
 }
 
 })(__BRYTHON__)

@@ -893,6 +893,8 @@ function trace_from_stack(err){
                 line = lines[lineno - 1]
             if(line){
                 trace.push('    ' + line.trim())
+            }else{
+                console.log('no line', line)
             }
             // preliminary for PEP 657
             if(err.$positions !== undefined){
@@ -912,6 +914,9 @@ function trace_from_stack(err){
                     trace.push(trace_line)
                 }
             }
+        }else{
+            console.log('no src for filename', filename)
+            console.log('in file_cache', Object.keys($B.file_cache).join('\n'))
         }
     }
     if(count_repeats > 0){
@@ -929,7 +934,7 @@ function trace_from_stack(err){
     return trace.join('\n') + '\n'
 }
 
-$B.show_error = function(err){
+$B.error_trace = function(err){
     if($B.debug > 1){
         console.log("handle error", err.__class__, err.args)
         console.log('stack', err.$stack)
@@ -993,12 +998,17 @@ $B.show_error = function(err){
             }
         }
     }else{
-        console.log(err)
         trace = err + ""
     }
+    return trace
+}
+
+$B.show_error = function(err){
+    var trace = $B.error_trace(err)
     try{
-        $B.$getattr($B.stderr, 'write')(trace)
-        var flush = $B.$getattr($B.stderr, 'flush', _b_.None)
+        var stderr = $B.imported._sys.stderr
+        $B.$getattr(stderr, 'write')(trace)
+        var flush = $B.$getattr(stderr, 'flush', _b_.None)
         if(flush !== _b_.None){
             flush()
         }
