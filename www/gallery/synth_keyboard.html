@@ -158,6 +158,7 @@ from browser import document, window, html, console, bind, timer
 import music
 import synthesizer
 
+
 oscList = []
 
 keyboard = document.select_one(".keyboard")
@@ -165,13 +166,29 @@ wavePicker = document.select_one("select[name='waveform']")
 scaleControl = document.select_one("select[name='scale']")
 octaveControl = document.select_one("select[name='octave']")
 volumeControl = document.select_one("input[name='volume']")
+keyboardControl = document.select_one("select[name='keyboard']")
 
-noteFreq = None
-customWaveform = None
-sineTerms = None
-cosineTerms = None
+keyboard_mapping = {
+    'AZERTY': 'wxcvbn,' + 'qsdfghj' + 'azertyu',
+    'QWERTY': 'zxcvbnm' + 'asdfghj' + 'qwertyu',
+    'QWERTZ': 'yxcvbnm' + 'asdfghj' + 'qwertzu'
+}
 
-keyElements = {}
+def set_keys():
+    global keys
+    keys = keyboard_mapping[keyboardControl.value]
+
+lang = window.navigator.language
+if lang.startswith('fr'):
+    keyboardControl.value = 'AZERTY'
+elif lang.startswith('de'):
+    keyboardControl.value = 'QWERTZ'
+else:
+    keyboardControl.value = 'QWERTY'
+
+set_keys()
+
+keyElements = []
 
 def createKey(note, octave, freq):
     keyElement = html.DIV(Class="key")
@@ -189,32 +206,32 @@ def createKey(note, octave, freq):
     keyElement.bind("mouseover", notePressed)
     keyElement.bind("mouseleave", noteReleased)
 
-    keyElements[(octave, note)] = keyElement
+    keyElements.append(keyElement)
 
     return keyElement
 
 
 @bind(scaleControl, "change")
 def changeScale(event):
-    setup(int(octaveControl.value), event.target.value)
+    setup()
 
 @bind(octaveControl, "change")
 def changeOctave(event):
-    setup(int(event.target.value), scaleControl.value)
+    setup()
+
+@bind(keyboardControl, "change")
+def changeKeyboard(event):
+    set_keys()
 
 playing = {}
 
-key_mapping = {}
+chords = '1234567'
 
-key_lines = 'wxcvbn,', 'qsdfghj', 'azertyu'
+def highlight(elt):
+    elt.classList.add('key-active')
 
-chord_mapping = {}
-
-def highlight(key):
-    keyElements[key].classList.add('key-active')
-
-def unhighlight(key):
-    keyElements[key].classList.remove('key-active')
+def unhighlight(elt):
+    elt.classList.remove('key-active')
 
 def play(octave, note):
     freq = music.note_freqs[octave][note]
@@ -230,23 +247,29 @@ def play(octave, note):
 
     return synthesizer.playTone(freq, **kwargs)
 
+def chord_notes(chord_num):
+    ranks = [chord_num - 1, (chord_num + 1) % 7, (chord_num + 3) % 7]
+    return [keyElements[rank] for rank in ranks]
+
 def notePressed(event):
     if hasattr(event, "key"):
         if event.key in playing:
             return
-        if event.key in key_mapping:
-            key = key_mapping[event.key]
-            octave, note = key_mapping[event.key]
-            octave = int(octave)
-            highlight((octave, note))
+        if event.key in keys:
+            index = keys.index(event.key)
+            keyElement = keyElements[index]
+            octave = int(keyElement.dataset['octave'])
+            note = keyElement.dataset['note']
+            highlight(keyElement)
             playing[event.key] = play(octave, note)
-        elif event.key in chord_mapping:
+        elif event.key in chords:
             playing[event.key] = {'notes': []}
-            chord = music.make_chord_notes(*chord_mapping[event.key])
+            chord = chord_notes(int(event.key))
             playing[event.key]['chord'] = chord
-            for key in chord:
-                highlight(key)
-                octave, note = key
+            for keyElement in chord:
+                highlight(keyElement)
+                octave = int(keyElement.dataset['octave'])
+                note = keyElement.dataset['note']
                 playing[event.key]['notes'].append(play(int(octave), note))
         return
 
@@ -262,13 +285,12 @@ def notePressed(event):
 def noteReleased(event):
     if hasattr(event, "key"):
         if event.key in playing:
-            if event.key in key_mapping:
+            if event.key in keys:
                 synthesizer.fade_out(*playing[event.key])
                 del playing[event.key]
-                key = key_mapping[event.key]
-                unhighlight(key)
-            elif event.key in chord_mapping:
-                base = chord_mapping[event.key]
+                keyElement = keyElements[keys.index(event.key)]
+                unhighlight(keyElement)
+            elif event.key in chords:
                 for tone in playing[event.key]['notes']:
                     synthesizer.fade_out(*tone)
                 for key in playing[event.key]['chord']:
@@ -285,37 +307,26 @@ def noteReleased(event):
             del oscList[octave][dataset.note]
             dataset.pressed = "no"
 
-def setup(octave=3, base='C'):
-    global mainGainNode, customWaveform, audioContext
-
+def setup():
     base = scaleControl.value
+    octave = int(octaveControl.value)
     scale = music.create_major_scale(base, octave)[:3 * 7]
-
-    chord_mapping.clear()
-    for chord_num, (octave, note) in enumerate(scale[:7]):
-        chord_mapping[str(chord_num + 1)] = octave, note
 
     # draw keyboard
     keyboard.clear()
+    keyElements.clear()
 
     line_num = -1
 
     for i, (octave, note) in enumerate(scale):
         if i // 7 > line_num:
-            print('new line before child', keyboard.firstChild)
             keyboard.insertBefore(line := html.DIV(), keyboard.firstChild)
             line_num += 1
-            print('new line', i, octave, note, line_num)
         octaveElem = html.DIV(Class="octave")
         octaveElem <= createKey(note, octave, music.note_freqs[octave][note])
         line <= octaveElem
 
-    lines = ''.join(key_lines)
-    key_mapping.clear()
-
-    for x, y in zip(lines, scale):
-        key_mapping[x] = y
-
+    oscList.clear()
     for i in range(9):
         oscList.append({})
 
@@ -324,39 +335,13 @@ setup()
 document.bind('keydown', notePressed)
 document.bind('keyup', noteReleased)
 
-def play_chord(base, time, length, nb=None):
-    octave = int(base[0])
-    note = base[1:]
-    chord = music.make_chord_notes(octave, note)
-    for key in chord:
-        timer.set_timeout(highlight, time * 1000, key)
-        timer.set_timeout(unhighlight, (time + length) * 1000, key)
-        octave, note = key
-        freq = note_freqs[int(octave)][note]
-        if nb is not None:
-            repeat_length = length / nb
-            for i in range(nb):
-                playTone(freq, time + i * repeat_length, repeat_length)
-        else:
-            playTone(freq, time, length)
-
-@bind('#play_chords', 'click')
-def play_chords(ev):
-    chords = [('3C', 0, 1, 4),
-              ('3F', 1, 0.5, None),
-              ('3F', 1.5, 0.5, None),
-              ('3G', 2, 1, None)]
-    for chord, time, length, nb in chords:
-        play_chord(chord, time, length, nb)
-
 </script>
 
 <div class="container">
   <div class="keyboard"></div>
 </div>
 
-<div class="settingsBar">
-  <div class="left">
+<div>
     <span>Volume: </span>
     <input
       type="range"
@@ -370,19 +355,18 @@ def play_chords(ev):
       <option value="0.0" label="Mute"></option>
       <option value="1.0" label="100%"></option>
     </datalist>
-  </div>
-</div>
 
-  <div class="right">
-    <span>Current waveform: </span>
+    <span>Waveform: </span>
     <select name="waveform">
       <option value="sine" selected>Sine</option>
       <option value="square">Square</option>
       <option value="sawtooth">Sawtooth</option>
+      <option value="triangle">Triangle</option>
     </select>
-  </div>
+
 </div>
 
+<div>
     <span>Scale </span>
     <select name="scale">
       <option>A</option>
@@ -409,7 +393,18 @@ def play_chords(ev):
       <option>6</option>
       <option>7</option>
     </select>
-<button id="play_chords">Play chords</button>
+
+</div>
+
+<div>
+    <span>Keyboard type</span>
+    <select name="keyboard">
+      <option selected>QWERTY</option>
+      <option>QWERTZ</option>
+      <option>AZERTY</option>
+    </select>
+</div>
+
 </body>
 </html>
 
