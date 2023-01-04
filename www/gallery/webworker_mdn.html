@@ -29,16 +29,16 @@ example
 
   <form>
     <div>
-      <label for="number1">Multiply number 1: </label>
-      <input type="text" id="number1" autocomplete="off" value="0">
+      <label for="number1">Multiply : </label>
+      <input type="text" id="number1" autocomplete="off" value="2">
     </div>
     <div>
-      <label for="number2">Multiply number 2: </label>
-      <input type="text" id="number2" autocomplete="off" value="0">
+      <label for="number2">by: </label>
+      <input type="text" id="number2" autocomplete="off" value="2">
     </div>
   </form>
 
-  <p class="result">Result: 0</p>
+  <p class="result">Result: 4</p>
 
 </div>
 
@@ -57,8 +57,8 @@ def message(evt):
         result = int(evt.data[0]) * int(evt.data[1])
         workerResult = f'Result: {result}'
         # Send a message to the main script.
-        # In the main script, it will be handled by the function bound to
-        # the event "message" for the worker.
+        # In the main script, it will be handled by the function passed as the
+        # argument "onmessage" of create_worker().
         self.send(workerResult)
     except ValueError:
         self.send('Please write two numbers')
@@ -72,21 +72,21 @@ from browser import bind, document, worker
 result = document.select_one('.result')
 inputs = document.select("input")
 
-
-# Create a web worker, identified by a script id in this page.
-myWorker = worker.Worker("worker")
-
-@bind(inputs, "change")
-def change(evt):
-    """Called when the value in one of the input fields changes."""
-    # Send a message (here a list of values) to the worker
-    myWorker.send([x.value for x in inputs])
-
-@bind(myWorker, "message")
 def onmessage(e):
     """Handles the messages sent by the worker."""
     result.text = e.data
 
-    </script>
-  </body>
+def onready(myWorker):
+
+    @bind(inputs, "change")
+    def change(evt):
+        """Called when the value in one of the input fields changes."""
+        # Send a message (here a list of values) to the worker
+        myWorker.send([x.value for x in inputs])
+
+# Create a web worker, identified by a script id in this page.
+worker.create_worker("worker", onready, onmessage)
+
+</script>
+</body>
 </html>

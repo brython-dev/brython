@@ -128,11 +128,11 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     return res
 })
 
-var AsyncWorker = function(){
+function create_worker(){
     var $ = $B.args("__init__", 4,
                     {id: null, onready: null, onmessage: null, onerror: null},
                     ['id', 'onready', 'onmessage', 'onerror'], arguments,
-                    {onready: _b_.None, onmessage: _b_.None, onerror: null},
+                    {onready: _b_.None, onmessage: _b_.None, onerror: _b_.None},
                     null, null),
         id = $.id,
         worker_script = $B.webworkers[id],
@@ -141,7 +141,7 @@ var AsyncWorker = function(){
         onerror = $.onerror === _b_.None ? _b_.None : $B.$call($.onerror)
 
     if(worker_script === undefined){
-        throw _b_.KeyError.$factory(id)
+        throw _b_.RuntimeError.$factory(`No webworker with id '${id}'`)
     }
     var src = worker_script.source
     var script_id = "worker" + $B.UUID(),
@@ -235,7 +235,7 @@ var AsyncWorker = function(){
 
 return {
     Worker: _Worker,
-    AsyncWorker
+    create_worker
 }
 
 })(__BRYTHON__)
