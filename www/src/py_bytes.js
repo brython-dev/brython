@@ -1766,12 +1766,12 @@ var encode = $B.encode = function(){
         case "utf8":
             for(var i = 0, len = s.length; i < len; i++){
                 var cp = s.charCodeAt(i)
-                if(cp < 0x7f){
+                if(cp <= 0x7f){
                     t.push(cp)
-                }else if(cp < 0x7ff){
+                }else if(cp <= 0x7ff){
                     t.push(0xc0 + (cp >> 6),
                              0x80 + (cp & 0x3f))
-                }else if(cp < 0xffff){
+                }else if(cp <= 0xffff){
                     t.push(0xe0 + (cp >> 12),
                              0x80 + ((cp & 0xfff) >> 6),
                              0x80 + (cp & 0x3f))

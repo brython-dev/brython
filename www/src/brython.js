@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-04 18:31:39.579717"
-__BRYTHON__.timestamp=1672853499579
+__BRYTHON__.compiled_date="2023-01-05 09:35:04.981321"
+__BRYTHON__.timestamp=1672907704981
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8819,7 +8819,7 @@ switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
 for(var i=0,len=s.length;i < len;i++){var cp=s.charCodeAt(i)
-if(cp < 0x7f){t.push(cp)}else if(cp < 0x7ff){t.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp < 0xffff){t.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
+if(cp <=0x7f){t.push(cp)}else if(cp <=0x7ff){t.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp <=0xffff){t.push(0xe0+(cp >> 12),0x80+((cp & 0xfff)>> 6),0x80+(cp & 0x3f))}else{console.log("4 bytes")}}
 break
 case "latin":
 case "latin1":
