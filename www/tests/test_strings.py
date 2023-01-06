@@ -471,4 +471,9 @@ s = " "
 s *= 3
 assert s == "   "
 
+# issue 2137
+assert '\u007f'.encode('utf-8') == b'\x7f'
+assert '\u07ff'.encode('utf-8') == b'\xdf\xbf'
+assert '\uffff'.encode('utf-8') == b'\xef\xbf\xbf'
+
 print("passed all tests...")
