@@ -1116,7 +1116,7 @@ DOMNode.bind = function(self, event){
                 if(err.__class__ !== undefined){
                     $B.handle_error(err)
                 }else{
-                    try{$B.$getattr($B.stderr, "write")(err)}
+                    try{$B.$getattr($B.get_stderr(), "write")(err)}
                     catch(err1){console.log(err)}
                 }
             }

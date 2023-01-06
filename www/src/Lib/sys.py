@@ -1,5 +1,7 @@
 # hack to return special attributes
 from _sys import *
+
+import browser
 import javascript
 
 class Error(Exception):
@@ -283,8 +285,8 @@ class _float_info:
         self.min = __BRYTHON__.MIN_VALUE
         self.min_exp = -1021
         self.min_10_exp = -307
-        self.radix=2
-        self.rounds=1
+        self.radix = 2
+        self.rounds = 1
         self._tuple = (self.max, self.max_exp, self.max_10_exp, self.min,
             self.min_exp, self.min_10_exp, self.dig, self.mant_dig, self.epsilon,
             self.radix, self.rounds)
@@ -302,9 +304,23 @@ warnoptions = []
 def getfilesystemencoding():
     return 'utf-8'
 
+class Output:
+
+    def __init__(self, channel):
+        if channel == 'stdout':
+            self.func = browser.console.log
+        elif channel == 'stderr':
+            self.func = browser.console.error
+
+    def write(self, *args):
+        self.func(' '.join(str(arg) for arg in args))
+
+stdout = Output('stdout')
+stderr = Output('stderr')
+
 ## __stdxxx__ contains the original values of sys.stdxxx
-__stdout__ = __BRYTHON__.stdout
-__stderr__ = __BRYTHON__.stderr
-__stdin__ = __BRYTHON__.stdin
+__stdout__ = stdout
+__stderr__ = stderr
+__stdin__ = stdin
 
 __excepthook__ = excepthook # from _sys

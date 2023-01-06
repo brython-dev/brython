@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-05 09:35:04.981321"
-__BRYTHON__.timestamp=1672907704981
+__BRYTHON__.compiled_date="2023-01-06 22:57:04.795057"
+__BRYTHON__.timestamp=1673042224795
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4561,7 +4561,7 @@ if($err.$py_error===undefined){console.log('Javascript error',$err)
 $err=_b_.RuntimeError.$factory($err+'')}
 var $trace=$B.$getattr($err,'info')+'\n'+$err.__name__+
 ': '+$err.args
-try{$B.$getattr($B.stderr,'write')($trace)}catch(print_exc_err){console.log($trace)}
+try{$B.$getattr($B.get_stderr(),'write')($trace)}catch(print_exc_err){console.log($trace)}
 throw $err}}else{if($elts.length > 0 ||$B.isWebWorker){if(options.indexedDB && $B.has_indexedDB &&
 $B.hasOwnProperty("VFS")){$B.tasks.push([$B.idb_open])}}
 for(var i=0;i < $elts.length;i++){var elt=$elts[i]
@@ -6919,7 +6919,7 @@ if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(x !=_b_.int.$factory(x
 return _b_.int.__pow__(x,y,z)}}
 function $print(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
 var ks=$ns['kw'].$string_dict
-var end=(ks['end']===undefined ||ks['end']===None)? '\n' :ks['end'][0],sep=(ks['sep']===undefined ||ks['sep']===None)? ' ' :ks['sep'][0],file=ks['file']===undefined ? $B.stdout :ks['file'][0],args=$ns['args'],writer=$B.$getattr(file,'write')
+var end=(ks['end']===undefined ||ks['end']===None)? '\n' :ks['end'][0],sep=(ks['sep']===undefined ||ks['sep']===None)? ' ' :ks['sep'][0],file=ks['file']===undefined ? $B.get_stdout():ks['file'][0],args=$ns['args'],writer=$B.$getattr(file,'write')
 var items=[]
 for(var i=0,len=args.length;i < len;i++){var arg=_b_.str.$factory(args[i])
 writer(arg)
@@ -8078,8 +8078,12 @@ if(err.__class__===_b_.NameError){var suggestion=offer_suggestions_for_name_erro
 if(suggestion){trace+=`. Did you mean '${suggestion}'?`}}else if(err.__class__===_b_.AttributeError){var suggestion=offer_suggestions_for_attribute_error(err)
 if(suggestion){trace+=`. Did you mean: '${suggestion}'?`}}}else{trace=err+""}
 return trace}
+$B.get_stderr=function(){if($B.imported.sys){return $B.imported.sys.stderr}
+return $B.imported._sys.stderr}
+$B.get_stdout=function(){if($B.imported.sys){return $B.imported.sys.stdout}
+return $B.imported._sys.stdout}
 $B.show_error=function(err){var trace=$B.error_trace(err)
-try{var stderr=$B.imported._sys.stderr
+try{var stderr=$B.get_stderr()
 $B.$getattr(stderr,'write')(trace)
 var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){flush()}}catch(print_exc_err){console.debug(trace)}}
@@ -13855,7 +13859,7 @@ DOMNode.bind=function(self,event){
 var $=$B.args("bind",4,{self:null,event:null,func:null,options:null},["self","event","func","options"],arguments,{func:_b_.None,options:_b_.None},null,null),self=$.self,event=$.event,func=$.func,options=$.options
 if(func===_b_.None){
 return function(f){return DOMNode.bind(self,event,f)}}
-var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.stderr,"write")(err)}
+var callback=(function(f){return function(ev){try{return f($DOMEvent(ev))}catch(err){if(err.__class__ !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}
 catch(err1){console.log(err)}}}}}
 )(func)
 callback.$infos=func.$infos
@@ -14403,6 +14407,17 @@ modules.javascript.NullType.__module__='javascript'
 modules.javascript.UndefinedType.__module__='javascript'
 var arraybuffers=["Int8Array","Uint8Array","Uint8ClampedArray","Int16Array","Uint16Array","Int32Array","Uint32Array","Float32Array","Float64Array","BigInt64Array","BigUint64Array"]
 arraybuffers.forEach(function(ab){if(self[ab]!==undefined){modules['javascript'][ab]=$B.JSObj.$factory(self[ab])}})
+var $io=$B.$io=$B.make_class("io",function(out){return{
+__class__:$io,out,encoding:'utf-8'}}
+)
+$io.flush=function(self){if(self.buf){console[self.out](self.buf.join(''))
+self.buf=[]}}
+$io.write=function(self,msg){
+if(self.buf===undefined){self.buf=[]}
+if(typeof msg !="string"){throw _b_.TypeError.$factory("write() argument must be str, not "+
+$B.class_name(msg))}
+self.buf.push(msg)
+return _b_.None}
 var _b_=$B.builtins
 modules['_sys']={
 Getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth
@@ -14432,11 +14447,7 @@ function(){return _b_.dict.$factory($B.JSObj.$factory($B.path_importer_cache))},
 $B.tracefunc=$.tracefunc
 $B.last($B.frames_stack).$f_trace=$B.tracefunc
 $B.tracefunc.$current_frame_id=$B.last($B.frames_stack)[0]
-return _b_.None},stderr:_b_.property.$factory(
-function(){return $B.stderr},function(self,value){$B.stderr=value}
-),stdout:_b_.property.$factory(
-function(){return $B.stdout},function(self,value){$B.stdout=value}
-),stdin:_b_.property.$factory(
+return _b_.None},stdin:_b_.property.$factory(
 function(){return $B.stdin},function(self,value){$B.stdin=value}
 ),vfs:_b_.property.$factory(
 function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _b_.None}},function(){throw _b_.TypeError.$factory("Read only property 'sys.vfs'")}
@@ -14532,19 +14543,6 @@ if(['False','None','True'].indexOf(js_node.value)>-1){return _b_[js_node.value]}
 break}}else if(['string','number'].indexOf(typeof js_node)>-1){return js_node}else if(js_node.$name){
 return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)>-1){return js_node}else if(js_node.__class__){return js_node}else{console.log('cannot handle',js_node)
 return js_node}}}
-var $io=$B.$io=$B.make_class("io",function(out){return{
-__class__:$io,out,encoding:'utf-8'}}
-)
-$io.flush=function(self){if(self.buf){console[self.out](self.buf.join(''))
-self.buf=[]}}
-$io.write=function(self,msg){
-if(self.buf===undefined){self.buf=[]}
-if(typeof msg !="string"){throw _b_.TypeError.$factory("write() argument must be str, not "+
-$B.class_name(msg))}
-self.buf.push(msg)
-return _b_.None}
-if(console.error !==undefined){$B.stderr=$io.$factory("error")}else{$B.stderr=$io.$factory("log")}
-$B.stdout=$io.$factory("log")
 $B.stdin={__class__:$io,__original__:true,closed:false,len:1,pos:0,read:function(){return ""},readline:function(){return ""}}})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins

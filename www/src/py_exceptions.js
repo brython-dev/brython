@@ -1003,10 +1003,24 @@ $B.error_trace = function(err){
     return trace
 }
 
+$B.get_stderr = function(){
+    if($B.imported.sys){
+        return $B.imported.sys.stderr
+    }
+    return $B.imported._sys.stderr
+}
+
+$B.get_stdout = function(){
+    if($B.imported.sys){
+        return $B.imported.sys.stdout
+    }
+    return $B.imported._sys.stdout
+}
+
 $B.show_error = function(err){
     var trace = $B.error_trace(err)
     try{
-        var stderr = $B.imported._sys.stderr
+        var stderr = $B.get_stderr()
         $B.$getattr(stderr, 'write')(trace)
         var flush = $B.$getattr(stderr, 'flush', _b_.None)
         if(flush !== _b_.None){

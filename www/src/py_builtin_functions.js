@@ -2138,7 +2138,7 @@ function $print(){
     var ks = $ns['kw'].$string_dict
     var end = (ks['end'] === undefined || ks['end'] === None) ? '\n' : ks['end'][0],
         sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'][0],
-        file = ks['file'] === undefined ? $B.stdout : ks['file'][0],
+        file = ks['file'] === undefined ? $B.get_stdout() : ks['file'][0],
         args = $ns['args'],
         writer = $B.$getattr(file, 'write')
     var items = []

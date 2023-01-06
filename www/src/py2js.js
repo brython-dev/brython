@@ -8672,7 +8672,7 @@ var brython = $B.parser.brython = function(options){
             var $trace = $B.$getattr($err, 'info') + '\n' + $err.__name__ +
                 ': ' + $err.args
             try{
-                $B.$getattr($B.stderr, 'write')($trace)
+                $B.$getattr($B.get_stderr(), 'write')($trace)
             }catch(print_exc_err){
                 console.log($trace)
             }
