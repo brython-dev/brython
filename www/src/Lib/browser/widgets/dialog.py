@@ -113,7 +113,7 @@ class Dialog(html.DIV):
             height = round(float(cstyle.height[:-2]) + 0.5)
             top = int((window.innerHeight - height) / 2)
         # top is relative to document scrollTop
-        top += document.scrollingElement.scrollTop
+        top += round(document.scrollingElement.scrollTop)
         self.top = top
         self.style.top = f'{top}px'
 
