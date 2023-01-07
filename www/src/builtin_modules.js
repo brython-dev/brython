@@ -557,14 +557,14 @@
             }
         }
     )
-    
+
     $io.flush = function(self){
         if(self.buf){
             console[self.out](self.buf.join(''))
             self.buf = []
         }
     }
-    
+
     $io.write = function(self, msg){
         // Default to printing to browser console
         if(self.buf === undefined){
@@ -692,6 +692,9 @@
             $B.tracefunc.$current_frame_id = $B.last($B.frames_stack)[0]
             return _b_.None
         },
+        stderr: console.error !== undefined ? $io.$factory("error") : 
+                    $io.$factory("log"),
+        stdout: $io.$factory("log"),
         stdin: _b_.property.$factory(
             function(){
                 return $B.stdin

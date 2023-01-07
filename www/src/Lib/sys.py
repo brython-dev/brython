@@ -304,20 +304,6 @@ warnoptions = []
 def getfilesystemencoding():
     return 'utf-8'
 
-class Output:
-
-    def __init__(self, channel):
-        if channel == 'stdout':
-            self.func = browser.console.log
-        elif channel == 'stderr':
-            self.func = browser.console.error
-
-    def write(self, *args):
-        self.func(' '.join(str(arg) for arg in args))
-
-stdout = Output('stdout')
-stderr = Output('stderr')
-
 ## __stdxxx__ contains the original values of sys.stdxxx
 __stdout__ = stdout
 __stderr__ = stderr
