@@ -1545,7 +1545,15 @@ function isinstance(obj, cls){
         }
         return false
     }
-
+    if(cls.__class__ === $B.UnionType){
+        for(var kls of cls.items){
+            if(isinstance(obj, kls)){
+                return true
+            }
+        }
+        return false
+    }
+    
     if(cls.__class__ === $B.GenericAlias){
         // PEP 585
         throw _b_.TypeError.$factory(

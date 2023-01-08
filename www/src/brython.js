@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-07 21:39:09.770440"
-__BRYTHON__.timestamp=1673123949770
+__BRYTHON__.compiled_date="2023-01-08 08:48:07.574369"
+__BRYTHON__.timestamp=1673164087574
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5904,7 +5904,7 @@ var init_subclass=_b_.super.__getattribute__(sup,"__init_subclass__")
 init_subclass(extra_kwargs)
 return class_dict}
 type.__or__=function(){var $=$B.args('__or__',2,{cls:null,other:null},['cls','other'],arguments,{},null,null),cls=$.cls,other=$.other
-if(other !==_b_.None && ! _b_.isinstance(other,type)){return _b_.NotImplemented}
+if(other !==_b_.None && ! _b_.isinstance(other,[type,$B.GenericAlias])){return _b_.NotImplemented}
 return $B.UnionType.$factory([cls,other])}
 type.__prepare__=function(){return $B.empty_dict()}
 type.__qualname__='type'
@@ -6697,6 +6697,8 @@ function isinstance(obj,cls){check_nb_args_no_kw('isinstance',2,arguments)
 if(obj===null){return cls===None}
 if(obj===undefined){return false}
 if(Array.isArray(cls)){for(var kls of cls){if(isinstance(obj,kls)){return true}}
+return false}
+if(cls.__class__===$B.UnionType){for(var kls of cls.items){if(isinstance(obj,kls)){return true}}
 return false}
 if(cls.__class__===$B.GenericAlias){
 throw _b_.TypeError.$factory(

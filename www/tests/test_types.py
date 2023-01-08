@@ -1,5 +1,7 @@
 import sys
 
+from tester import assert_raises
+
 def _f(): pass
 
 FunctionType = type(_f)
@@ -111,5 +113,11 @@ from typing import ForwardRef
 
 assert str(ForwardRef("test", is_class=True)) == "ForwardRef('test')"
 
+# issue 2142
+ga = int | set[int]
+assert ga.__args__ == (int, set[int])
+
+assert isinstance(4, ga)
+assert_raises(TypeError, isinstance, {4}, ga)
 
 print("Passed all tests...")
