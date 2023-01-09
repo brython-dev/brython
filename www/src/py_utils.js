@@ -1149,6 +1149,7 @@ $B.$call = function(callable, position){
     return callable
 }
 
+
 $B.$call1 = function(callable){
     if(callable.__class__ === $B.method){
         return callable
@@ -1400,18 +1401,16 @@ $B.leave_frame = function(arg){
     // managers, close them. In standard Python this happens when the
     // generator is garbage-collected.
     for(var key in frame[1]){
-        if(! key.startsWith('$')){
-            if(frame[1][key] && frame[1][key].__class__ === $B.generator){
-                var gen = frame[1][key]
-                if(gen.$frame === undefined){
-                    continue
-                }
-                var ctx_managers = gen.$frame[1].$context_managers
-                if(ctx_managers){
-                    for(var cm of ctx_managers){
-                        $B.$call($B.$getattr(cm, '__exit__'))(
-                            _b_.None, _b_.None, _b_.None)
-                    }
+        if(frame[1][key] && frame[1][key].__class__ === $B.generator){
+            var gen = frame[1][key]
+            if(gen.$frame === undefined){
+                continue
+            }
+            var ctx_managers = gen.$frame[1].$context_managers
+            if(ctx_managers){
+                for(var cm of ctx_managers){
+                    $B.$call($B.$getattr(cm, '__exit__'))(
+                        _b_.None, _b_.None, _b_.None)
                 }
             }
         }
