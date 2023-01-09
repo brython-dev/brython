@@ -44,7 +44,7 @@
 <script type="text/javascript" src="/src/ast_to_js.js"></script>
 <script type="text/javascript" src="/src/symtable.js"></script>
 
-<script type="text/python" src="show_source.py"></script>
+<!-- script type="text/python" src="show_source.py"></script -->
 
 <style>
 .container {
@@ -153,7 +153,10 @@
 <body onload="brython(2)">
 
 <script type="text/python">
-from browser import document, window, html, console, bind, timer
+import sys
+
+
+from browser import document, window, html, console, bind, timer, alert
 
 import music
 import synthesizer
@@ -202,7 +205,9 @@ def createKey(note, octave, freq):
     keyElement <= labelElement
 
     keyElement.bind("mousedown", notePressed)
+    keyElement.bind("touchstart", notePressed)
     keyElement.bind("mouseup", noteReleased)
+    keyElement.bind("touchend", noteReleased)
     keyElement.bind("mouseover", notePressed)
     keyElement.bind("mouseleave", noteReleased)
 
@@ -252,6 +257,7 @@ def chord_notes(chord_num):
     return [keyElements[rank] for rank in ranks]
 
 def notePressed(event):
+
     if hasattr(event, "key"):
         if event.key in playing:
             return
@@ -273,13 +279,13 @@ def notePressed(event):
                 playing[event.key]['notes'].append(play(int(octave), note))
         return
 
-    if event.buttons & 1:
-        dataset = event.target.dataset
+    # mousedown or touchstart
+    dataset = event.target.dataset
 
-        if not hasattr(dataset, "pressed") or dataset.pressed == "no":
-            octave = int(dataset.octave)
-            oscList[octave][dataset.note] = play(octave, dataset.note)
-            dataset.pressed = "yes"
+    if not hasattr(dataset, "pressed") or dataset.pressed == "no":
+        octave = int(dataset.octave)
+        oscList[octave][dataset.note] = play(octave, dataset.note)
+        dataset.pressed = "yes"
 
 
 def noteReleased(event):
@@ -335,6 +341,13 @@ setup()
 document.bind('keydown', notePressed)
 document.bind('keyup', noteReleased)
 
+class Output:
+
+  def write(self, *args):
+      document['output'].value += ' '.join(str(arg) for arg in args)
+
+#sys.stderr = sys.stdout = Output()
+
 </script>
 
 <div class="container">
@@ -349,12 +362,9 @@ document.bind('keyup', noteReleased)
       max="1.0"
       step="0.01"
       value="0.5"
-      list="volumes"
-      name="volume" />
-    <datalist id="volumes">
-      <option value="0.0" label="Mute"></option>
-      <option value="1.0" label="100%"></option>
-    </datalist>
+      name="volume"
+      style="width:100px" />
+
 
     <span>Waveform: </span>
     <select name="waveform">
@@ -404,6 +414,9 @@ document.bind('keyup', noteReleased)
     </select>
 </div>
 
+<button id="btn" style="display:none;">play</button>
+
+<textarea rows=20 cols=60 id="output" autocomplete="off" style="display:none;"></textarea>
 </body>
 </html>
 

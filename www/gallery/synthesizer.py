@@ -1,4 +1,4 @@
-from browser import window
+from browser import window, alert
 
 audioContext = None
 envelop = None
@@ -16,6 +16,7 @@ def playTone(freq,
              wave=None,
              type="sine"):
     global audioContext, envelop
+    #alert('play tone')
 
     if audioContext is None:
         audioContext = window.AudioContext.new()
@@ -42,7 +43,8 @@ def playTone(freq,
         osc.type = type
 
     osc.frequency.value = freq
-    if time is None:
+    #alert(f'ready to start')
+    if time == 0:
         osc.start()
     else:
         currentTime = audioContext.currentTime
