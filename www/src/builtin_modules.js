@@ -692,7 +692,7 @@
             $B.tracefunc.$current_frame_id = $B.last($B.frames_stack)[0]
             return _b_.None
         },
-        stderr: console.error !== undefined ? $io.$factory("error") : 
+        stderr: console.error !== undefined ? $io.$factory("error") :
                     $io.$factory("log"),
         stdout: $io.$factory("log"),
         stdin: _b_.property.$factory(
@@ -820,8 +820,9 @@
                 if(line){
                     trace += '\n    ' + line.trim()
                 }
-                $B.$getattr($B.stderr, 'write')(trace + '\n')
-                var flush = $B.$getattr($B.stderr, 'flush', _b_.None)
+                var stderr = $B.get_stderr()
+                $B.$getattr(stderr, 'write')(trace + '\n')
+                var flush = $B.$getattr(stderr, 'flush', _b_.None)
                 if(flush !== _b_.None){
                     flush()
                 }
