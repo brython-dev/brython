@@ -20,6 +20,7 @@ function $list(){
 
 var list = {
     __class__: _b_.type,
+    __qualname__: 'list',
     __mro__: [object],
     $is_class: true,
     $native: true,
@@ -936,6 +937,7 @@ function $tuple(arg){return arg} // used for parenthesed expressions
 var tuple = {
     __class__: _b_.type,
     __mro__: [object],
+    __qualname__: 'tuple',
     $is_class: true,
     $native: true,
     $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
