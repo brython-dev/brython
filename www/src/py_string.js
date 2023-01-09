@@ -302,8 +302,7 @@ str.__getitem__ = function(_self, arg){
 
 var prefix = 2,
     suffix = 3,
-    mask = (2 ** 32 - 1),
-    str_hash_cache = {}
+    mask = (2 ** 32 - 1)
 
 str.$nb_str_hash_cache = 0
 
@@ -338,7 +337,7 @@ str.__hash__ = function(_self){
         $B.hash_cache = Object.create(null)
     }
     try{
-        return str_hash_cache[_self] = fnv(to_codepoints(_self))
+        return $B.hash_cache[_self] = fnv(to_codepoints(_self))
     }catch(err){
         console.log('error hash, cps', _self, to_codepoints(_self))
         throw err
