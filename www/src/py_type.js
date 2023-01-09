@@ -413,20 +413,24 @@ var data_descriptors = ['__abstractmethods__',
                         '__text_signature__',
                         '__weakrefoffset__'
                         ]
-/*
-for(var attr of data_descriptors){
-    type[attr] = $B.getset_descriptor.$factory(type, attr,
-        function(self, klass){
-            console.log('get', attr)
-            return klass[self.attr]
-        },
-        function(self, klass, value){
-            klass[self.attr] = value
-            return _b_.None
+
+
+type.$call = function(klass, new_func, init_func){
+    return function(){
+        // create an instance with __new__
+        var instance = new_func.bind(null, klass).apply(null, arguments),
+            instance_class = instance.__class__ || $B.get_class(instance)
+        if(instance_class === klass){
+            // call __init__ with the same parameters
+            if(init_func !== _b_.object.__init__){
+                // object.__init__ is not called in this case (it would raise an
+                // exception if there are parameters).
+                init_func.bind(null, instance).apply(null, arguments)
+            }
         }
-    )
+        return instance
+    }
 }
-*/
 
 type.__call__ = function(){
     var extra_args = [],
@@ -1117,6 +1121,7 @@ $B.set_func_names(wrapper_descriptor, "builtins")
 
 type.__call__.__class__ = wrapper_descriptor
 
+
 var $instance_creator = $B.$instance_creator = function(klass){
     var test = false // klass.$infos && klass.$infos.__name__ == 'auto'
     if(test){
@@ -1184,13 +1189,17 @@ var $instance_creator = $B.$instance_creator = function(klass){
                 return res
             }
         }
+
+    }else if(metaclass === _b_.type){
+        var new_func = type.__getattribute__(klass, '__new__'),
+            init_func = type.__getattribute__(klass, '__init__')
+        factory = type.$call(klass, new_func, init_func)
     }else{
         call_func = _b_.type.__getattribute__(metaclass, "__call__")
-        var factory = function(){
-            if(call_func.$is_class){
-                return $B.$call(call_func)(...arguments)
-            }
-            return call_func.bind(null, klass).apply(null, arguments)
+        if(call_func.$is_class){
+            factory = $B.$call(call_func)
+        }else{
+            factory = call_func.bind(null, klass)
         }
     }
     factory.__class__ = $B.function
