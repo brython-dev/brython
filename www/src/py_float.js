@@ -607,8 +607,14 @@ float.$format = function(self, fmt){
 
 var nan_hash = $B.$py_next_hash--
 
+var mp2_31 = Math.pow(2, 31)
+
 float.__hash__ = function(self) {
     check_self_is_float(self, '__hash__')
+    return float.$hash_func(self)
+}
+
+float.$hash_func = function(self){
     if(self.__hashvalue__ !== undefined){
         return self.__hashvalue__
     }
@@ -628,11 +634,11 @@ float.__hash__ = function(self) {
     }
 
     var r = frexp(self)
-    r[0] *= Math.pow(2, 31)
+    r[0] *= mp2_31
     var hipart = parseInt(r[0])
-    r[0] = (r[0] - hipart) * Math.pow(2, 31)
-    var x = hipart + _b_.int.$factory(r[0]) + (r[1] << 15)
-    return x & 0xFFFFFFFF
+    r[0] = (r[0] - hipart) * mp2_31
+    var x = hipart + parseInt(r[0]) + (r[1] << 15)
+    return self.__hashvalue__ = x & 0xFFFFFFFF
 }
 
 function isninf(x) {
@@ -671,28 +677,6 @@ function frexp(x){
         var exp = x.value.toString(2).length,
             power = 2n ** BigInt(exp)
         return[$B.fast_float(Number(x.value) / Number(power)), exp]
-        /*
-        const absArg = Math.abs(arg)
-        // Math.log2 was introduced in ES2015, use it when available
-        const log2 = Math.log2 || function log2 (n) { return Math.log(n) * Math.LOG2E }
-        //let exp = Math.max(-1023, Math.floor(log2(absArg)) + 1)
-        x1 = absArg * Math.pow(2, -exp)
-        // These while loops compensate for rounding errors that sometimes occur because of ECMAScript's Math.log2's undefined precision
-        // and also works around the issue of Math.pow(2, -exp) === Infinity when exp <= -1024
-        while (x1 < 0.5) {
-          x1 *= 2
-          exp--
-        }
-        while (x1 >= 1) {
-          x1 *= 0.5
-          exp++
-        }
-        if (arg < 0) {
-          x1 = -x1
-        }
-        console.log(x, 'absarg', absArg, 'returned', [x1, exp])
-        return [x1, exp]
-        */
     }
     if(x1 == 0){
         return [0, 0]

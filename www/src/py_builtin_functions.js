@@ -1357,10 +1357,13 @@ function hash(obj){
     }
     if(typeof obj == "string"){
         var cached = hash_cache[obj]
-        if(cached !== undefined){return cached}
-        else{
+        if(cached !== undefined){
+            return cached
+        }else{
             return hash_cache[obj] = _b_.str.__hash__(obj)
         }
+    }else if(obj.__class__ === _b_.float){
+        return _b_.float.$hash_func(obj)
     }
     // Implicit invocation of special methods uses object class, even if
     // obj has an attribute __hash__
@@ -1553,7 +1556,7 @@ function isinstance(obj, cls){
         }
         return false
     }
-    
+
     if(cls.__class__ === $B.GenericAlias){
         // PEP 585
         throw _b_.TypeError.$factory(
