@@ -297,8 +297,10 @@ function name_scope(name, scopes){
             if(block.type == TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
+                scope.needs_frames = true
                 return {found: false, resolve: 'global'}
             }else if(block.type == TYPE_MODULE){
+                scope.needs_frames = true
                 return {found: false, resolve: 'global'}
             }
             return {found: false, resolve: 'local'}
@@ -310,6 +312,7 @@ function name_scope(name, scopes){
         if(global_scope.locals.has(name)){
             return {found: global_scope}
         }
+        scope.needs_frames = true
         return {found: false, resolve: 'global'}
     }else if(scope.nonlocals.has(name)){
         // Search name in the surrounding scopes, using symtable
@@ -328,6 +331,9 @@ function name_scope(name, scopes){
     }
 
     if(scope.has_import_star){
+        if(! is_local){
+            scope.needs_frames = true
+        }
         return {found: false, resolve: is_local ? 'all' : 'global'}
     }
     for(var i = scopes.length - 2; i >= 0; i--){
@@ -336,6 +342,7 @@ function name_scope(name, scopes){
             block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
         }
         if(scopes[i].globals.has(name)){
+            scope.needs_frames = true
             return {found: false, resolve: 'global'}
         }
         if(scopes[i].locals.has(name) && scopes[i].type != 'class'){
@@ -1723,6 +1730,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }else{
         var function_body = add_body(this.body, scopes)
     }
+
     var is_generator = symtable_block.generator
 
     var id = $B.UUID(),
@@ -1754,9 +1762,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
-    frame.$f_trace = $B.enter_frame(frame)
-    var _frames = $B.frames_stack.slice()
-    var stack_length = $B.frames_stack.length\n`
+    frame.$f_trace = $B.enter_frame(frame)\n`
+
+    if(scope.needs_stack_length){
+        js += `var stack_length = $B.frames_stack.length\n`
+    }
+    
+    if(func_scope.needs_frames || is_async){
+        js += `    var _frames = $B.frames_stack.slice()\n`
+    }
 
     if(is_async){
         js += 'frame.$async = true\n'
@@ -1780,7 +1794,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             class_ref = class_scope.name // XXX qualname
         bind("__class__", scopes)
         js += `locals.__class__ = ` +
-            `$B.get_method_class(${scope_ref}, "${class_ref}")\n`
+                  `$B.get_method_class(${scope_ref}, "${class_ref}")\n`
     }
 
     js += function_body + '\n'
@@ -1790,7 +1804,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += 'var result = _b_.None\n' +
               'if(frame.$f_trace !== _b_.None){\n' +
               '$B.trace_return(_b_.None)\n}\n' +
-              '$B.leave_frame();return result\n'
+              '$B.leave_frame()\n' +
+              'return result\n'
     }
 
     js += `}catch(err){
@@ -2972,6 +2987,8 @@ $B.ast.With.prototype.to_js = function(scopes){
     var _with = this,
         scope = last_scope(scopes),
         lineno = this.lineno
+
+    scope.needs_stack_length = true
 
     js = add_body(this.body, scopes) + '\n'
     var in_generator = scopes.symtable.table.blocks.get(fast_id(scope.ast)).generator
