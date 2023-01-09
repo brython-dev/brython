@@ -109,7 +109,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = attr == '__bases__' // false // attr == "__args__"
+    var $test = false // attr == 'f' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -167,6 +167,9 @@ object.__getattribute__ = function(obj, attr){
                 }
             }
         }else{
+            if($test){
+                console.log(attr, 'found in own class')
+            }
             if(res.__class__ !== $B.method && res.__get__ === undefined){
                 is_own_class_instance_method = true
             }
@@ -297,11 +300,7 @@ object.__getattribute__ = function(obj, attr){
                 }else{
                     var self = res.__class__ === $B.method ? klass : obj,
                         method = function(){
-                            var args = [self] // add self as first argument
-                            for(var i = 0, len = arguments.length; i < len; i++){
-                                args.push(arguments[i])
-                            }
-                            return res.apply(this, args)
+                            return res.bind(null, self).apply(this, arguments)
                         }
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){

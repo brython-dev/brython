@@ -12,7 +12,7 @@ attributes:
 . $version: an integer with an initial value of 0, incremented at each
   insertion
 . $numeric_dict: for keys of type int
-. $string_dict and $str_hash: for keys of type str
+. $string_dict: for keys of type str
 . $object_dict: for keys of other types
 
 The value associated to a key in $numeric_dict and $string_dict is a pair
@@ -247,6 +247,10 @@ dict.$items_list = function(d){
         items.push([parseFloat(k), d.$numeric_dict[k]])
     }
 
+    for(var k in d.$float_dict){
+        items.push([$B.fast_float(k), d.$float_dict[k]])
+    }
+
     for(var k in d.$string_dict){
         items.push([k, d.$string_dict[k]])
     }
@@ -347,6 +351,27 @@ dict.__class_getitem__ = function(cls, item){
     return $B.GenericAlias.$factory(cls, item)
 }
 
+function match_string_key(d, obj, hash){
+    // If a string key in d has its hash equal to "hash", return it
+    for(var s in d.$string_dict){
+        if(_b_.str.__hash__(s) == hash && $B.rich_comp("__eq__", obj, s)){
+            return s
+        }
+    }
+    return null
+}
+
+function match_float_key(d, obj, hash){
+    // If a string key in d has its hash equal to "hash", return it
+    for(var f in d.$float_dict){
+        var v = $B.fast_float(parseFloat(f))
+        if(_b_.float.$hash_func(v) == hash && $B.rich_comp("__eq__", obj, v)){
+            return f
+        }
+    }
+    return null
+}
+
 dict.__contains__ = function(){
     var $ = $B.args("__contains__", 2, {self: null, key: null},
         ["self", "key"], arguments, {}, null, null),
@@ -361,16 +386,25 @@ dict.__contains__ = function(){
         case "string":
             return self.$string_dict.hasOwnProperty(key)
         case "number":
-            return self.$numeric_dict[key] !== undefined
+            return self.$numeric_dict[key] !== undefined ||
+                self.$float_dict[key] !== undefined
+    }
+
+    if(key.__class__ === _b_.float){
+        return self.$float_dict[key.value] !== undefined ||
+               self.$numeric_dict[key.value] !== undefined
     }
 
     var hash = _b_.hash(key)
-    if(self.$str_hash[hash] !== undefined &&
-            $B.rich_comp("__eq__", key, self.$str_hash[hash])){
-        return true
-    }
     if(self.$numeric_dict[hash] !== undefined &&
             $B.rich_comp("__eq__", key, hash)){
+        return true
+    }
+
+    if(match_string_key(self, key, hash) !== null){
+        return true
+    }
+    if(match_float_key(self, key, hash) !== null){
         return true
     }
     return rank(self, hash, key) > -1
@@ -394,19 +428,36 @@ dict.__delitem__ = function(){
                 throw _b_.KeyError.$factory(_b_.str.$factory(arg))
             }
             delete self.$string_dict[arg]
-            delete self.$str_hash[str_hash(arg)]
             self.$version++
             return $N
         case "number":
-            if(self.$numeric_dict[arg] === undefined){
+            if(self.$numeric_dict[arg] !== undefined){
+                delete self.$numeric_dict[arg]
+                self.$version++
+            }else if(self.$float_dict[arg] !== undefined){
+                delete self.$float_dict[arg]
+                self.$version++
+            }else{
                 throw _b_.KeyError.$factory(_b_.str.$factory(arg))
             }
-            delete self.$numeric_dict[arg]
-            self.$version++
             return $N
+        case "boolean":
+            return dict.__delitem__(self, arg ? 1 : 0)
     }
-    // go with defaults
 
+    if(arg.__class__ === _b_.float){
+        if(self.$float_dict[arg.value] !== undefined){
+            delete self.$float_dict[arg.value]
+        }else if(self.$numeric_dict[arg.value] !== undefined){
+            delete self.$numeric_dict[arg.value]
+        }else{
+            throw _b_.KeyError.$factory(_b_.str.$factory(arg))
+        }
+        self.$version++
+        return _b_.None
+    }
+
+    // go with defaults
     var hash = _b_.hash(arg),
         ix
 
@@ -541,8 +592,21 @@ dict.$getitem = function(self, arg, ignore_missing){
                 return self.$numeric_dict[arg][0]
             }
             break
+        case "boolean":
+            try{
+                return dict.$getitem(self, arg ? 1 : 0, ignore_missing)
+            }catch(err){
+                // ignore
+            }
     }
 
+    if(arg.__class__ === _b_.float){
+        if(self.$numeric_dict[arg.value] !== undefined){
+            return self.$numeric_dict[arg.value][0]
+        }else if(self.$float_dict[arg.value] !== undefined){
+            return self.$float_dict[arg.value][0]
+        }
+    }
     // since the key is more complex use 'default' method of getting item
 
     var hash = _b_.hash(arg),
@@ -551,13 +615,21 @@ dict.$getitem = function(self, arg, ignore_missing){
     if(typeof arg == "object"){
         arg.$hash = hash // cache for setdefault
     }
-    var sk = self.$str_hash[hash]
-    if(sk !== undefined && _eq(sk)){
-        return self.$string_dict[sk][0]
+
+    var res = match_string_key(self, arg, hash)
+    if(res !== null){
+        return self.$string_dict[res][0]
     }
+
+    var res = match_float_key(self, arg, hash)
+    if(res !== null){
+        return self.$float_dict[res][0]
+    }
+
     if(self.$numeric_dict[hash] !== undefined && _eq(hash)){
          return self.$numeric_dict[hash][0]
     }
+
     if(_b_.isinstance(arg, _b_.str)){
         // string subclass
         if(self.$string_dict.hasOwnProperty(arg.valueOf())){
@@ -589,10 +661,12 @@ dict.$getitem = function(self, arg, ignore_missing){
 
 dict.__hash__ = _b_.None
 
+$B.nb_init_from_list = 0
+
 function init_from_list(self, args){
     var i = -1,
         stop = args.length - 1,
-        si = dict.__setitem__
+        si = dict.$setitem
     while(i++ < stop){
         var item = args[i]
         if(item.length != 2){
@@ -601,8 +675,8 @@ function init_from_list(self, args){
         }
         switch(typeof item[0]) {
             case 'string':
+                $B.nb_init_from_list++
                 self.$string_dict[item[0]] = [item[1], self.$order++]
-                self.$str_hash[str_hash(item[0])] = item[0]
                 self.$version++
                 break
             case 'number':
@@ -652,7 +726,7 @@ dict.__init__ = function(self, first, second){
     }else if(args.length == 1){
         args = args[0]
         if(args.__class__ === dict){
-            ['$string_dict', '$str_hash', '$numeric_dict', '$object_dict'].
+            ['$string_dict', '$numeric_dict', '$object_dict'].
                 forEach(function(d){
                     for(key in args[d]){self[d][key] = args[d][key]}
                 })
@@ -694,7 +768,6 @@ dict.__init__ = function(self, first, second){
         switch(typeof attr){
             case "string":
                 self.$string_dict[attr] = [kw[attr][0], self.$order++]
-                self.$str_hash[str_hash(attr)] = attr
                 break
             case "number":
                 self.$numeric_dict[attr] = [kw[attr][0], self.$order++]
@@ -748,15 +821,8 @@ dict.__new__ = function(cls){
     if(cls === undefined){
         throw _b_.TypeError.$factory("int.__new__(): not enough arguments")
     }
-    var instance = {
-        __class__: cls,
-        $numeric_dict : {},
-        $object_dict : {},
-        $string_dict : {},
-        $str_hash: Object.create(null),
-        $version: 0,
-        $order: 0
-    }
+    var instance = $B.empty_dict()
+    instance.__class__ = cls
     if(cls !== dict){
         instance.__dict__ = $B.empty_dict()
     }
@@ -864,13 +930,12 @@ dict.$setitem = function(self, key, value, $hash){
     // If key is a string, set:
     // - $string_dict[key] = [value, order] where "order" is an auto-increment
     //   unique id to keep track of insertion order
-    // - $str_hash[hash(key)] to key
     //
     // If key is a number, set $numeric_dict[key] = value
     //
     // If key is another object, compute its hash value:
-    // - if the hash is a key of $str_hash, and key == $str_hash[hash],
-    //   replace $string_dict[$str_hash[hash]] by value
+    // - if the hash is equal to the hash of a string key sk, and key == sk,
+    //   replace $string_dict[sk] by value
     // - if the hash is a key of $numeric_dict, and hash == key, replace
     //   $numeric_dict[hash] by value
     // - if the hash is a key of $object_dict: $object_dict[hash] is a list
@@ -906,13 +971,22 @@ dict.$setitem = function(self, key, value, $hash){
         key = key.valueOf()
     }
 
+    if(key.__class__ === _b_.float){
+        if(Number.isInteger(key.value) &&
+                self.$numeric_dict[key.value] !== undefined){
+            self.$numeric_dict[key.value][0] = value
+        }else{
+            self.$float_dict[key.value] = [value, self.$order++]
+        }
+        return _b_.None
+    }
+
     switch(typeof key){
         case "string":
             if(self.$string_dict.hasOwnProperty(key)){
                 self.$string_dict[key][0] = value
             }else{
                 self.$string_dict[key] = [value, self.$order++]
-                self.$str_hash[str_hash(key)] = key
                 self.$version++
             }
             return $N
@@ -920,6 +994,8 @@ dict.$setitem = function(self, key, value, $hash){
             if(self.$numeric_dict[key] !== undefined){
                 // existing key: preserve order
                 self.$numeric_dict[key][0] = value
+            }else if(self.$float_dict[key] !== undefined){
+                self.$float_dict[key][0] = value
             }else{
                 // special case for 0 and 1 if True or False are keys
                 var done = false
@@ -966,13 +1042,14 @@ dict.$setitem = function(self, key, value, $hash){
         self.$version++
         return $N
     }
-    var sk = self.$str_hash[hash]
-    if(sk !== undefined && _eq(sk)){
-        self.$string_dict[sk] = [value, self.$string_dict[sk][1]]
-        self.$version++
-        return $N
+    if(key.__class__ !== _b_.float){
+        var sk = match_string_key(self, key, hash)
+        if(sk !== null){
+            self.$string_dict[sk] = [value, self.$string_dict[sk][1]]
+            self.$version++
+            return $N
+        }
     }
-
     // If $setitem is called from setdefault, don't test equality of key
     // with any object
     if($hash){
@@ -1010,7 +1087,6 @@ dict.clear = function(){
 
     self.$numeric_dict = {}
     self.$string_dict = {}
-    self.$str_hash = Object.create(null)
     self.$object_dict = {}
 
     if(self.$jsobj){
@@ -1255,9 +1331,9 @@ $B.empty_dict = function(){
     return {
         __class__: dict,
         $numeric_dict : {},
+        $float_dict: {},
         $object_dict : {},
         $string_dict : {},
-        $str_hash: Object.create(null),
         $version: 0,
         $order: 0
     }
