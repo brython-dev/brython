@@ -23,9 +23,9 @@ var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
 var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
-    if(self.__dict__ && self.__dict__.$string_dict &&
-            self.__dict__.$string_dict[attr] !== undefined){
-        delete self.__dict__.$string_dict[attr]
+    if(self.__dict__ && self.__dict__.string_dict &&
+            self.__dict__.string_dict[attr] !== undefined){
+        delete self.__dict__.string_dict[attr]
         return _b_.None
     }else if(self.__dict__ === undefined && self[attr] !== undefined){
         delete self[attr]
@@ -77,7 +77,7 @@ object.__dir__ = function(self) {
 
     // add object's own attributes
     if(self.__dict__){
-        for(var attr in self.__dict__.$string_dict){
+        for(var attr in self.__dict__.string_dict){
             if(attr.charAt(0) != "$"){res.push(attr)}
         }
     }
@@ -136,11 +136,11 @@ object.__getattribute__ = function(obj, attr){
         if(dict.__class__ === $B.getset_descriptor){
             return dict.cls[attr]
         }
-        if(dict.$string_dict.hasOwnProperty(attr)){
+        if(dict.string_dict.hasOwnProperty(attr)){
             if($test){
-                console.log("__dict__ hasOwnProperty", attr, dict.$string_dict[attr])
+                console.log("__dict__ hasOwnProperty", attr, dict.string_dict[attr])
             }
-            return dict.$string_dict[attr][0]
+            return dict.string_dict[attr][0]
         }
     }
 
@@ -405,9 +405,9 @@ object.__reduce__ = function(self){
     res.push(_b_.tuple.$factory([self.__class__].
         concat(self.__class__.__mro__)))
     var d = $B.empty_dict()
-    for(var attr in self.__dict__.$string_dict){
-        _b_.dict.$setitem(d.$string_dict, attr,
-            self.__dict__.$string_dict[attr][0])
+    for(var attr in self.__dict__.string_dict){
+        _b_.dict.$setitem(d.string_dict, attr,
+            self.__dict__.string_dict[attr][0])
     }
     console.log("object.__reduce__, d", d)
     res.push(d)
@@ -436,12 +436,12 @@ object.__reduce_ex__ = function(self){
         throw _b_.TypeError.$factory("cannot pickle '" +
             $B.class_name(self) + "' object")
     }
-    for(var attr in self.__dict__.$string_dict){
+    for(var attr in self.__dict__.string_dict){
         if(attr == "__class__" || attr.startsWith("$")){
             continue
         }
         _b_.dict.$setitem(d, attr,
-            self.__dict__.$string_dict[attr][0])
+            self.__dict__.string_dict[attr][0])
         nb++
     }
     if(nb == 0){d = _b_.None}

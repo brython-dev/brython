@@ -288,7 +288,7 @@ function set_symmetric_difference_update(so, other){
     }
     var iterator
     if(_b_.isinstance(other, _b_.dict)){
-        iterator = _b_.dict.$make_iter(other)
+        iterator = $B.make_js_iterator(_b_.dict.keys(other))
     }else if(_b_.isinstance(other, [set, frozenset])){
         iterator = make_iter(other)
     }else{

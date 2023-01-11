@@ -268,7 +268,7 @@ function name_scope(name, scopes){
         console.log('symtable', scopes.symtable)
     }
     try{
-        flags = block.symbols.$string_dict[name][0]
+        flags = block.symbols.string_dict[name][0]
     }catch(err){
         console.log('name', name, 'not in symbols of block', block)
         return {found: false, resolve: 'all'}
@@ -318,8 +318,8 @@ function name_scope(name, scopes){
         // Search name in the surrounding scopes, using symtable
         for(var i = scopes.length - 2; i >= 0; i--){
             block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
-            if(block && block.symbols.$string_dict[name]){
-                var fl = block.symbols.$string_dict[name],
+            if(block && block.symbols.string_dict[name]){
+                var fl = block.symbols.string_dict[name],
                     local_to_block =
                         [LOCAL, CELL].indexOf((fl >> SCOPE_OFF) & SCOPE_MASK) > -1
                 if(! local_to_block){
@@ -347,8 +347,8 @@ function name_scope(name, scopes){
         }
         if(scopes[i].locals.has(name) && scopes[i].type != 'class'){
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
-        }else if(block && block.symbols.$string_dict[name]){
-            flags = block.symbols.$string_dict[name][0]
+        }else if(block && block.symbols.string_dict[name]){
+            flags = block.symbols.string_dict[name][0]
             var __scope = (flags >> SCOPE_OFF) & SCOPE_MASK
             if([LOCAL, CELL].indexOf(__scope) > -1){
                 /* name is local to a surrounding scope but not yet bound
@@ -1841,11 +1841,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var parameters = [],
         locals = [],
-        identifiers = Object.keys(symtable_block.symbols.$string_dict)
+        identifiers = Object.keys(symtable_block.symbols.string_dict)
 
     var free_vars = []
     for(var ident of identifiers){
-        var flag = symtable_block.symbols.$string_dict[ident][0],
+        var flag = symtable_block.symbols.string_dict[ident][0],
             _scope = (flag >> SCOPE_OFF) & SCOPE_MASK
         if(_scope == FREE){
             free_vars.push(`'${ident}'`)

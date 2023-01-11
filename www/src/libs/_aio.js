@@ -24,9 +24,9 @@ function handle_kwargs(kw, method){
         format = "text",
         headers = {},
         timeout = {}
-    for(var key in kw.$string_dict){
+    for(var key in kw.string_dict){
         if(key == "data"){
-            var params = kw.$string_dict[key][0]
+            var params = kw.string_dict[key][0]
             if(typeof params == "string"){
                 data = params
             }else if(_b_.isinstance(params, _b_.bytes)){
@@ -41,7 +41,7 @@ function handle_kwargs(kw, method){
                         "expected dict, bytes or str, got " +
                         $B.class_name(params))
                 }
-                params = params.$string_dict
+                params = params.string_dict
                 var items = []
                 for(var key in params){
                     items.push(encodeURIComponent(key) + "=" +
@@ -50,20 +50,20 @@ function handle_kwargs(kw, method){
                 data = items.join("&")
             }
         }else if(key == "headers"){
-            headers = _b_.dict.$to_obj(kw.$string_dict[key][0])
+            headers = _b_.dict.$to_obj(kw.string_dict[key][0])
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.$string_dict[key][0]
+                timeout.func = kw.string_dict[key][0]
             }else{
-                ajax.bind(self, event, kw.$string_dict[key][0])
+                ajax.bind(self, event, kw.string_dict[key][0])
             }
         }else if(key == "timeout"){
-            timeout.seconds = kw.$string_dict[key][0]
+            timeout.seconds = kw.string_dict[key][0]
         }else if(key == "cache"){
-            cache = kw.$string_dict[key][0]
+            cache = kw.string_dict[key][0]
         }else if(key == "format"){
-            format = kw.$string_dict[key][0]
+            format = kw.string_dict[key][0]
         }
     }
     if(method == "post"){

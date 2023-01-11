@@ -51,14 +51,14 @@ var $module=(function($B) {
                     parent_block: $B.builtins_scope,
                     binding: {}
                 }
-                for(var attr in _globals.$string_dict){
+                for(var attr in _globals.string_dict){
                     parent_scope.binding[attr] = true
                 }
             }
 
             // Initialise block globals
             if(_globals.$jsobj){var items = _globals.$jsobj}
-            else{var items = _globals.$string_dict}
+            else{var items = _globals.string_dict}
             for(var item in items){
                 item1 = to_alias(item)
                 try{
@@ -74,7 +74,7 @@ var $module=(function($B) {
              // Initialise block locals
             var items = _b_.dict.items(_locals), item
             if(_locals.$jsobj){var items = _locals.$jsobj}
-            else{var items = _locals.$string_dict}
+            else{var items = _locals.string_dict}
             for(var item in items){
                 item1 = to_alias(item)
                 try{

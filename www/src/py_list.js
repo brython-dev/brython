@@ -749,9 +749,9 @@ list.sort = function(self){
 
     for(var i = 0; i < keys.length; i++){
         if(keys[i] == "key"){
-            func = kw_args.$string_dict[keys[i]][0]
+            func = kw_args.string_dict[keys[i]][0]
         }else if(keys[i] == "reverse"){
-            reverse = kw_args.$string_dict[keys[i]][0]
+            reverse = kw_args.string_dict[keys[i]][0]
         }else{
             throw _b_.TypeError.$factory("'" + keys[i] +
                 "' is an invalid keyword argument for this function")

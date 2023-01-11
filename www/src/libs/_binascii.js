@@ -123,8 +123,8 @@ var module = {
         var $ = $B.args("b2a_base64", 1, {data: null}, ['data'],
                 arguments, {}, null, "kw")
         var newline = false
-        if($.kw && $.kw.$string_dict.newline){
-            newline = $.kw.$string_dict.newline[0]
+        if($.kw && $.kw.string_dict.newline){
+            newline = $.kw.string_dict.newline[0]
         }
 
         var string = $B.to_bytes($.data),

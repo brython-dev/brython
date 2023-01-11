@@ -382,7 +382,7 @@ var GroupIndex = $B.make_class("GroupIndex",
         res.__class__ = GroupIndex
         for(var key in self.$groups){
             if(isNaN(parseInt(key))){
-                res.$string_dict[key] = [self.$groups[key].num,
+                res.string_dict[key] = [self.$groups[key].num,
                     res.$version++]
             }
         }

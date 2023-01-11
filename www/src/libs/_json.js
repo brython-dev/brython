@@ -24,7 +24,7 @@ function to_json(obj, level){
             sort_keys:_b_.False},
         $ = $B.args("to_json", 2, {obj: null, level: null}, ['obj', 'level'],
                     arguments, {level: 1}, null, "kw"),
-        kw = $.kw.$string_dict
+        kw = $.kw.string_dict
 
     for(key in $defaults){
         if(kw[key] === undefined){
@@ -550,8 +550,8 @@ var JSONDecoder = $B.make_class("JSONDecoder",
                 parse_constant: _b_.None, object_pairs_hook: _b_.None},
             $ = $B.args("decode", 0, {}, [], arguments, {}, null, "kw")
         var kw = {}
-        for(var key in $.kw.$string_dict){
-            kw[key] = $.kw.$string_dict[key][0]
+        for(var key in $.kw.string_dict){
+            kw[key] = $.kw.string_dict[key][0]
         }
         for(var key in $defaults){
             if(kw[key] === undefined){

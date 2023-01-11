@@ -49,8 +49,8 @@ $B.pyobj2structuredclone = function(obj, strict){
         return res
     }else if(_b_.isinstance(obj, _b_.dict)){
         if(strict){
-            if(Object.keys(obj.$numeric_dict).length > 0 ||
-                    Object.keys(obj.$object_dict).length > 0){
+            if(Object.keys(obj.int_dict).length > 0 ||
+                    Object.keys(obj.object_dict).length > 0){
                 throw _b_.TypeError.$factory("a dictionary with non-string " +
                     "keys does not support structured clone")
             }
@@ -663,12 +663,12 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     // Creating a class that inherits a Javascript class A must return
     // another Javascript class B that extends A
     eval("var " + class_name + ` = function(){
-        if(cl_dict.$string_dict.__init__){
+        if(cl_dict.string_dict.__init__){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
                 args.push(arguments[i])
             }
-            cl_dict.$string_dict.__init__[0].apply(this, args)
+            cl_dict.string_dict.__init__[0].apply(this, args)
         }else{
             return new bases[0].$js_func(...arguments)
         }

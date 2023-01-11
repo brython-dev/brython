@@ -131,7 +131,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
-                    extra_kw.$string_dict[key] = [value, extra_kw.$order++]
+                    extra_kw.string_dict[key] = [value, extra_kw.$order++]
                 }else{
                     throw _b_.TypeError.$factory(fname +
                         "() got an unexpected keyword argument '" + key + "'")
@@ -232,21 +232,21 @@ $B.parse_kwargs = function(kw_args, fname){
     for(var i = 1, len = kw_args.length; i < len; i++){
         var kw_arg = kw_args[i]
         if(kw_arg.__class__ === _b_.dict){
-            for(var k in kw_arg.$numeric_dict){
+            for(var k in kw_arg.int_dict){
                 throw _b_.TypeError.$factory(fname +
                     "() keywords must be strings")
             }
-            for(var k in kw_arg.$object_dict){
+            for(var k in kw_arg.object_dict){
                 throw _b_.TypeError.$factory(fname +
                     "() keywords must be strings")
             }
-            for(var k in kw_arg.$string_dict){
+            for(var k in kw_arg.string_dict){
                 if(kwa[k] !== undefined){
                     throw _b_.TypeError.$factory(fname +
                         "() got multiple values for argument '" +
                         k + "'")
                 }
-                kwa[k] = kw_arg.$string_dict[k][0]
+                kwa[k] = kw_arg.string_dict[k][0]
             }
         }else{
             var it = _b_.iter(kw_arg),
@@ -283,7 +283,7 @@ $B.check_nb_args = function(name, expected, args){
     if(last && last.$nat == "kw"){
         var kw = last.kw
         if(Array.isArray(kw) && kw[1] && kw[1].__class__ === _b_.dict){
-            if(Object.keys(kw[1].$string_dict).length == 0){
+            if(Object.keys(kw[1].string_dict).length == 0){
                 len--
             }
         }
@@ -698,12 +698,12 @@ $B.$getitem = function(obj, item, position){
                 index_error(obj)
             }
         }else if(is_dict){
-            if(obj.$numeric_dict[item] !== undefined){
-                return obj.$numeric_dict[item][0]
+            if(obj.int_dict[item] !== undefined){
+                return obj.int_dict[item][0]
             }
         }
     }else if(item.valueOf && typeof item.valueOf() == "string" && is_dict){
-        var res = obj.$string_dict[item]
+        var res = obj.string_dict[item]
         if(res !== undefined){
             return res[0]
         }

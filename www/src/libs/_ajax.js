@@ -66,7 +66,7 @@ function _read(req){
 }
 
 function stringify(d){
-    var params = d.$string_dict,
+    var params = d.string_dict,
         items = []
     for(var key in params){
         items.push(encodeURIComponent(key) + "=" +
@@ -82,13 +82,13 @@ function handle_kwargs(self, kw, method){
         cache,
         mode = "text",
         timeout = {}
-    for(var key in kw.$string_dict){
+    for(var key in kw.string_dict){
         if(key == "data"){
-            var params = kw.$string_dict[key][0]
+            var params = kw.string_dict[key][0]
             if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
-                for(var key in params.$numeric_dict){
+                for(var key in params.int_dict){
                     throw _b_.ValueError.$factory(
                         'data only supports string keys, got ' + key)
                 }
@@ -98,30 +98,30 @@ function handle_kwargs(self, kw, method){
                     $B.class_name(params))
             }
         }else if(key == "encoding"){
-            encoding = kw.$string_dict[key][0]
+            encoding = kw.string_dict[key][0]
         }else if(key == "headers"){
-            var value = kw.$string_dict[key][0]
+            var value = kw.string_dict[key][0]
             if(! _b_.isinstance(value, _b_.dict)){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
             }
-            for(key in value.$string_dict){
-                headers[key.toLowerCase()] = [key, value.$string_dict[key][0]]
+            for(key in value.string_dict){
+                headers[key.toLowerCase()] = [key, value.string_dict[key][0]]
             }
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.$string_dict[key][0]
+                timeout.func = kw.string_dict[key][0]
             }else{
-                var f = kw.$string_dict[key][0]
+                var f = kw.string_dict[key][0]
                 ajax.bind(self, event, f)
             }
         }else if(key == "mode"){
-            var mode = kw.$string_dict[key][0]
+            var mode = kw.string_dict[key][0]
         }else if(key == "timeout"){
-            timeout.seconds = kw.$string_dict[key][0]
+            timeout.seconds = kw.string_dict[key][0]
         }else if(key == "cache"){
-            cache = kw.$string_dict[key][0]
+            cache = kw.string_dict[key][0]
         }
     }
     if(encoding && mode != "text"){
@@ -498,12 +498,12 @@ function file_upload(){
     }
     set_timeout(self, timeout)
 
-    if(kw.$string_dict.method !== undefined){
-        method = kw.$string_dict.method[0]
+    if(kw.string_dict.method !== undefined){
+        method = kw.string_dict.method[0]
     }
 
-    if(kw.$string_dict.field_name !== undefined){
-        field_name = kw.$string_dict.field_name[0]
+    if(kw.string_dict.field_name !== undefined){
+        field_name = kw.string_dict.field_name[0]
     }
 
     var formdata = new FormData()
@@ -528,9 +528,9 @@ function file_upload(){
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(key in kw.$string_dict){
+    for(key in kw.string_dict){
         if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), kw.$string_dict[key][0])
+            ajax.bind(self, key.substr(2), kw.string_dict[key][0])
         }
     }
 }
