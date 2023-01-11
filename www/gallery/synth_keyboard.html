@@ -48,16 +48,14 @@
 
 <style>
 .container {
-  /* overflow-x: scroll;
-  overflow-y: hidden; */
-  width: 660px;
-  height: 110px;
+  width: 90%;
+  height: auto;
   white-space: nowrap;
   margin: 10px;
 }
 
 .keyboard {
-  width: auto;
+  width: 100%;
   padding: 0;
   margin: 0;
 }
@@ -67,7 +65,6 @@
   font: 16px "Open Sans", "Lucida Grande", "Arial", sans-serif;
   border: 1px solid black;
   border-radius: 5px;
-  width: 20px;
   height: 20px;
   text-align: center;
   box-shadow: 2px 2px darkgray;
@@ -195,6 +192,8 @@ keyElements = []
 
 def createKey(note, octave, freq):
     keyElement = html.DIV(Class="key")
+    keyElement.style.width = f'{int(window.innerWidth / 10)}px'
+    keyElement.style.height = f'{int(window.innerHeight / 10)}px'
     labelElement = html.DIV()
 
     keyElement.dataset["octave"] = octave
@@ -208,8 +207,6 @@ def createKey(note, octave, freq):
     keyElement.bind("touchstart", notePressed)
     keyElement.bind("mouseup", noteReleased)
     keyElement.bind("touchend", noteReleased)
-    keyElement.bind("mouseover", notePressed)
-    keyElement.bind("mouseleave", noteReleased)
 
     keyElements.append(keyElement)
 
