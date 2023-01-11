@@ -23,15 +23,18 @@ function to_json(obj, level){
             indent:_b_.None, separators:_b_.None, "default":_b_.None,
             sort_keys:_b_.False},
         $ = $B.args("to_json", 2, {obj: null, level: null}, ['obj', 'level'],
-                    arguments, {level: 1}, null, "kw"),
-        kw = $.kw.string_dict
+                    arguments, {level: 1}, null, "kw")
 
-    for(key in $defaults){
-        if(kw[key] === undefined){
-            kw[key] = $defaults[key]
-        }else{
-            kw[key] = kw[key][0]
+    for(var key in $defaults){
+        if(! _b_.dict.$contains_string($.kw), key){
+            _b_.dict.$setitem_string($.kw, key, $defaults[key])
         }
+    }
+
+    // Transform Python dict into Javascript object
+    var kw = {}
+    for(var key of _b_.dict.$keys_string($.kw)){
+        kw[key] = _b_.dict.$getitem_string($.kw, key)
     }
 
     var indent = kw.indent,
@@ -550,8 +553,8 @@ var JSONDecoder = $B.make_class("JSONDecoder",
                 parse_constant: _b_.None, object_pairs_hook: _b_.None},
             $ = $B.args("decode", 0, {}, [], arguments, {}, null, "kw")
         var kw = {}
-        for(var key in $.kw.string_dict){
-            kw[key] = $.kw.string_dict[key][0]
+        for(var key of _b_.dict.$keys_string($.kw)){
+            kw[key] = _b_.dict.$getitem_string($.kw, key)
         }
         for(var key in $defaults){
             if(kw[key] === undefined){

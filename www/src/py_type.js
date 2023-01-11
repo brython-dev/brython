@@ -191,16 +191,13 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
                 }else if(prop == '$target'){
                     return target
                 }
-                if(target.string_dict.hasOwnProperty(prop)){
-                    return target.string_dict[prop][0]
+                if(_b_.dict.$contains_string(target, prop)){
+                    return _b_.dict.$getitem_string(target, prop)
                 }
                 return undefined
             },
             set: function(target, prop, value){
-                if(target.string_dict.hasOwnProperty(prop)){
-                    target.string_dict[prop][0] = value
-                }
-                target.string_dict[prop] = [value, target.$order++]
+                _b_.dict.$setitem(target, prop, value)
             }
         })
     }else{
@@ -293,8 +290,8 @@ var type = $B.make_class("type",
             kw = $.kw
 
         var kwargs = {'$nat': 'kw', kw: {}}
-        for(var key in kw.string_dict){
-            kwargs.kw[key] = kw.string_dict[key][0]
+        for(var key of _b_.dict.$keys_string(kw)){
+            kwargs.kw[key] = _b_.dict.$getitem_string(kw, key)
         }
         if(cl_dict === missing){
             if(bases !== missing){
@@ -555,11 +552,11 @@ type.__getattribute__ = function(klass, attr){
         if(v === undefined){
             if($test){
                 console.log(attr, 'not in klass[attr], search in __dict__',
-                    klass.__dict__.string_dict)
+                    klass.__dict__)
             }
-            if(klass.__dict__ && klass.__dict__.string_dict
-                    && klass.__dict__.string_dict[attr]){
-                res = klass[attr] = klass.__dict__.string_dict[attr][0]
+            if(klass.__dict__ && klass.__dict__.__class__ === _b_.dict &&
+                    _b_.dict.$contains_string(klass.__dict__, attr)){
+                res = klass[attr] = _b_.dict.$getitem_string(klass.__dict__, attr)
                 if($test){
                     console.log('found in __dict__', v)
                 }
@@ -740,7 +737,7 @@ type.__init_subclass__ = function(){
     }
     if($.kwargs !== undefined){
         if($.kwargs.__class__ !== _b_.dict ||
-                Object.keys($.kwargs.string_dict).length > 0){
+                _b_.dict.$keys_string($.kwargs).length > 0){
             throw _b_.TypeError.$factory(
                 `${$.cls.__qualname__}.__init_subclass__() ` +
                 `takes no keyword arguments`)
@@ -782,14 +779,12 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         extra_kwargs
 
     // Create the class dictionary
-    if(cl_dict.string_dict === undefined){
+    if(! _b_.isinstance(cl_dict, _b_.dict)){
         console.log('bizarre', meta, name, bases, cl_dict)
         alert()
     }
-    var module = cl_dict.string_dict.__module__
-    if(module){
-        module = module[0]
-    }else{
+    var module = _b_.dict.$get_string(cl_dict, '__module__')
+    if(module === undefined){
         module = $B.last($B.frames_stack)[2]
     }
     var qualname

@@ -131,7 +131,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
-                    extra_kw.string_dict[key] = [value, extra_kw.$order++]
+                    _b_.dict.$setitem_string(extra_kw, key, value)
                 }else{
                     throw _b_.TypeError.$factory(fname +
                         "() got an unexpected keyword argument '" + key + "'")
@@ -232,21 +232,17 @@ $B.parse_kwargs = function(kw_args, fname){
     for(var i = 1, len = kw_args.length; i < len; i++){
         var kw_arg = kw_args[i]
         if(kw_arg.__class__ === _b_.dict){
-            for(var k in kw_arg.int_dict){
-                throw _b_.TypeError.$factory(fname +
-                    "() keywords must be strings")
-            }
-            for(var k in kw_arg.object_dict){
-                throw _b_.TypeError.$factory(fname +
-                    "() keywords must be strings")
-            }
-            for(var k in kw_arg.string_dict){
-                if(kwa[k] !== undefined){
+            for(var k of _b_.dict.$fast_iter_keys(kw_arg)){
+                if(typeof k !== 'string'){
+                    throw _b_.TypeError.$factory(fname +
+                        "() keywords must be strings")
+                }else if(kwa[k] !== undefined){
                     throw _b_.TypeError.$factory(fname +
                         "() got multiple values for argument '" +
                         k + "'")
+                }else{
+                    kwa[k] = _b_.dict.$getitem(kw_arg, k)
                 }
-                kwa[k] = kw_arg.string_dict[k][0]
             }
         }else{
             var it = _b_.iter(kw_arg),
@@ -283,7 +279,7 @@ $B.check_nb_args = function(name, expected, args){
     if(last && last.$nat == "kw"){
         var kw = last.kw
         if(Array.isArray(kw) && kw[1] && kw[1].__class__ === _b_.dict){
-            if(Object.keys(kw[1].string_dict).length == 0){
+            if(_b_.dict.$keys_string(kw[1]).length == 0){
                 len--
             }
         }
@@ -697,17 +693,9 @@ $B.$getitem = function(obj, item, position){
             }else{
                 index_error(obj)
             }
-        }else if(is_dict){
-            if(obj.int_dict[item] !== undefined){
-                return obj.int_dict[item][0]
-            }
         }
     }else if(item.valueOf && typeof item.valueOf() == "string" && is_dict){
-        var res = obj.string_dict[item]
-        if(res !== undefined){
-            return res[0]
-        }
-        throw _b_.KeyError.$factory(item)
+        return _b_.dict.$getitem(obj, item)
     }
 
     // PEP 560

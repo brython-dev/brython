@@ -151,7 +151,6 @@ $B.make_view = function(name){
                 alert()
             }
             if(_b_.len(self.dict) != self.len){
-                console.log('old len', self.len, 'new', _b_.len(self.dict))
                 return "dictionary changed size during iteration"
             }else if(self.dict.$version !== self.dict_version){
                 return "dictionary keys changed during iteration"
@@ -220,6 +219,25 @@ dict.$to_obj = function(d){
     return res
 }
 
+dict.$fast_iter_keys = function*(d){
+    for(var k in d.int_dict){
+        yield parseFloat(k)
+    }
+    for(var k in d.float_dict){
+        yield $B.fast_float(k)
+    }
+
+    for(var k in d.string_dict){
+        yield k
+    }
+
+    for(var k in d.object_dict){
+        for(var item of d.object_dict[k]){
+            yield item
+        }
+    }
+}
+
 dict.$items_list = function(d){
     var items = []
 
@@ -282,24 +300,13 @@ function to_list(d, ix){
 $B.dict_to_list = to_list // used in py_types.js
 
 var $copy_dict = function(left, right){
-    var it = _b_.iter($B.$call($B.$getattr(right, 'items'))()),
-        next_func = $B.$call($B.$getattr(it, '__next__')),
-        si = dict.$setitem
+    // left and right are dicts
     right.$version = right.$version || 0
-    var right_version = right.$version || 0,
-        item
-    while(true){
-        try{
-            item = next_func()
-            si(left, item[0], item[1])
-            if(right.$version != right_version){
-                throw _b_.RuntimeError.$factory("dict mutated during update")
-            }
-        }catch(err){
-            if($B.is_exc(err, [_b_.StopIteration])){
-                break
-            }
-            throw err
+    var right_version = right.$version
+    for(var item of to_list(right)){
+        dict.$setitem(left, item[0], item[1])
+        if(right.$version != right_version){
+            throw _b_.RuntimeError.$factory("dict mutated during update")
         }
     }
 }
@@ -545,6 +552,47 @@ dict.__getitem__ = function(){
         self = $.self,
         arg = $.arg
     return dict.$getitem(self, arg)
+}
+
+dict.$contains_string = function(self, key){
+    // Test if string "key" is in a dict where all keys are string
+    return self.string_dict.hasOwnProperty(key)
+}
+
+dict.$delete_string = function(self, key){
+    // Used for dicts where all keys are strings
+    delete self.string_dict[key]
+}
+
+dict.$get_string = function(self, key){
+    // Used for dicts where all keys are strings
+    if(self.string_dict.hasOwnProperty(key)){
+        return self.string_dict[key][0]
+    }
+}
+
+dict.$getitem_string = function(self, key){
+    // Used for dicts where all keys are strings
+    var res = self.string_dict[key]
+    if(res !== undefined){
+        return res[0]
+    }
+    throw _b_.KeyError.$factory(key)
+}
+
+dict.$keys_string = function(self){
+    // return the list of keys in a dict where are keys are strings
+    return Object.keys(self.string_dict)
+}
+
+dict.$setitem_string = function(self, key, value){
+    // Used for dicts where all keys are strings
+    if(self.string_dict.hasOwnProperty(key)){
+        self.string_dict[key][0] = value
+    }else{
+        self.string_dict[key] = [value, self.$order++]
+        self.$version++
+    }
 }
 
 dict.$getitem = function(self, arg, ignore_missing){
@@ -1224,8 +1272,9 @@ dict.setdefault = function(){
     }
 }
 
+$B.nb_updates = 0
 dict.update = function(self){
-
+    $B.nb_updates++
     var $ = $B.args("update", 1, {"self": null}, ["self"], arguments,
             {}, "args", "kw"),
         self = $.self,

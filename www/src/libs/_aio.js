@@ -24,9 +24,9 @@ function handle_kwargs(kw, method){
         format = "text",
         headers = {},
         timeout = {}
-    for(var key in kw.string_dict){
+    for(var key of _b_.dict.$keys_string(kw)){
         if(key == "data"){
-            var params = kw.string_dict[key][0]
+            var params = _b_.dict.$getitem_string(kw, key)
             if(typeof params == "string"){
                 data = params
             }else if(_b_.isinstance(params, _b_.bytes)){
@@ -41,29 +41,29 @@ function handle_kwargs(kw, method){
                         "expected dict, bytes or str, got " +
                         $B.class_name(params))
                 }
-                params = params.string_dict
                 var items = []
-                for(var key in params){
+                for(var key of _b_.dict.$keys_string(params)){
+                    var value = _b_.dict.$getitem_string(params, key)
                     items.push(encodeURIComponent(key) + "=" +
-                               encodeURIComponent($B.pyobj2jsobj(params[key][0])))
+                               encodeURIComponent($B.pyobj2jsobj(value)))
                 }
                 data = items.join("&")
             }
         }else if(key == "headers"){
-            headers = _b_.dict.$to_obj(kw.string_dict[key][0])
+            headers = _b_.dict.$to_obj(_b_.dict.$getitem_string(kw, key))
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.string_dict[key][0]
+                timeout.func = _b_.dict.$getitem_string(kw, key)
             }else{
-                ajax.bind(self, event, kw.string_dict[key][0])
+                ajax.bind(self, event, _b_.dict.getitem_string(kw, key))
             }
         }else if(key == "timeout"){
-            timeout.seconds = kw.string_dict[key][0]
+            timeout.seconds = _b_.dict.$getitem_string(kw, key)
         }else if(key == "cache"){
-            cache = kw.string_dict[key][0]
+            cache = _b_.dict.$getitem_string(kw, key)
         }else if(key == "format"){
-            format = kw.string_dict[key][0]
+            format = _b_.dict.$getitem_string(kw, key)
         }
     }
     if(method == "post"){

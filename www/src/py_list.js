@@ -745,15 +745,15 @@ list.sort = function(self){
     var func = _b_.None,
         reverse = false,
         kw_args = $.kw,
-        keys = _b_.list.$factory(_b_.dict.keys(kw_args))
+        keys = _b_.dict.$keys_string(kw_args)
 
-    for(var i = 0; i < keys.length; i++){
-        if(keys[i] == "key"){
-            func = kw_args.string_dict[keys[i]][0]
-        }else if(keys[i] == "reverse"){
-            reverse = kw_args.string_dict[keys[i]][0]
+    for(var key of keys){
+        if(key == "key"){
+            func = _b_.dict.$getitem_string(kw_args, key)
+        }else if(key == "reverse"){
+            reverse = _b_.dict.$getitem_string(kw_args, key)
         }else{
-            throw _b_.TypeError.$factory("'" + keys[i] +
+            throw _b_.TypeError.$factory("'" + key +
                 "' is an invalid keyword argument for this function")
         }
     }

@@ -257,10 +257,10 @@ function PySymtable_Lookup(st, key){
 }
 
 function _PyST_GetSymbol(ste, name){
-    if(! ste.symbols.string_dict.hasOwnProperty(name)){
+    if(! _b_.dict.$contains_string(ste.symbols, name)){
         return 0
     }
-    return ste.symbols.string_dict[name][0]
+    return _b_.dict.$getitem_string(ste.symbols, name)
 }
 
 function PyErr_Format(exc_type, message, arg){
@@ -491,8 +491,8 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         pos = 0
 
     /* Update scope information for all symbols in this scope */
-    for(var name in symbols.string_dict){
-        var flags = symbols.string_dict[name][0]
+    for(var name of _b_.dict.$keys_string(symbols)){
+        var flags = _b_.dict.$getitem_string(symbols, name)
         v_scope = scopes[name]
         var scope = v_scope
         flags |= (scope << SCOPE_OFFSET)
@@ -500,7 +500,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         if (!v_new){
             return 0;
         }
-        symbols.string_dict[name][0] = v_new
+        _b_.dict.$setitem_string(symbols, name, v_new)
     }
 
     /* Record not yet resolved free variables from children (if any) */
@@ -508,7 +508,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
 
     for(var name of free){
 
-        v = symbols.string_dict[name]
+        v = _b_.dict.$get_string(symbols, name)
 
         /* Handle symbol that already exists in this scope */
         if (v) {
@@ -516,7 +516,6 @@ function update_symbols(symbols, scopes, bound, free, classflag){
                the class that has the same name as a local
                or global in the class scope.
             */
-            v = v[0]
             if  (classflag &&
                  v & (DEF_BOUND | DEF_GLOBAL)) {
                 var flags = v | DEF_FREE_CLASS;
@@ -524,7 +523,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
                 if (! v_new) {
                     return 0;
                 }
-                symbols.string_dict[name][0] = v_new
+                _b_.dict.$setitem_string(symbols, name, v_new)
             }
             /* It's a cell, or already free in this scope */
             continue;
@@ -534,8 +533,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
             continue;       /* it's a global */
         }
         /* Propagate new free symbol up the lexical stack */
-        _b_.dict.$setitem(symbols, name, v_free)
-        //symbols.string_dict[name] = [v_free, symbols.$order++]
+        _b_.dict.$setitem_string(symbols, name, v_free)
     }
 
     return 1
@@ -601,8 +599,8 @@ function analyze_block(ste, bound, free, global){
         }
     }
 
-    for(var name in ste.symbols.string_dict){
-        var flags = ste.symbols.string_dict[name][0]
+    for(var name of _b_.dict.$keys_string(ste.symbols)){
+        var flags = _b_.dict.$getitem_string(ste.symbols, name)
         if (!analyze_name(ste, scopes, name, flags,
                           bound, local, free, global)){
             return 0
@@ -780,8 +778,8 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         return 0
     }
     dict = ste.symbols
-    if(dict.string_dict.hasOwnProperty(mangled)){
-        o = dict.string_dict[mangled][0]
+    if(_b_.dict.$contains_string(dict, mangled)){
+        o = _b_.dict.$getitem_string(dict, mangled)
         val = o
         if ((flag & DEF_PARAM) && (val & DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */

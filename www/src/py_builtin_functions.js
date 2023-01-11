@@ -591,8 +591,8 @@ function $$eval(src, _globals, _locals){
 
     var __name__ = 'exec'
     if(_globals !== _b_.None && _globals.__class__ == _b_.dict &&
-            _globals.string_dict.__name__){
-        __name__ = _globals.string_dict.__name__[0]
+            _b_.dict.$contains_string(_globals, '__name__')){
+        __name__ = _b_.dict.$getitem_string(_globals, '__name__')
     }
     $B.url2name[filename] = __name__
 
@@ -662,8 +662,8 @@ function $$eval(src, _globals, _locals){
             }else{
                 exec_globals = _globals.$jsobj = {}
             }
-            for(var key in _globals.string_dict){
-                _globals.$jsobj[key] = _globals.string_dict[key][0]
+            for(var key of _b_.dict.$keys_string(_globals)){
+                _globals.$jsobj[key] = _b_.dict.$getitem_string(_globals, key)
                 if(key == '__name__'){
                     __name__ = _globals.$jsobj[key]
                 }
@@ -1054,13 +1054,11 @@ $B.$getattr = function(obj, attr, _default){
       case '__class__':
           // attribute __class__ is set for all Python objects
           if(klass.__dict__){
-              var klass_from_dict
-              if(klass.__dict__.string_dict){
-                  if(klass.__dict__.string_dict.__class__){
-                      klass_from_dict = klass.__dict__.string_dict.__class__[0]
-                  }
+              var klass_from_dict = _b_.None
+              if(_b_.isinstance(klass.__dict__, _b_.dict)){
+                  klass_from_dict = $B.$call($B.$getattr(klass.__dict__, 'get'))('__class__')
               }
-              if(klass_from_dict !== undefined){
+              if(klass_from_dict !== _b_.None){
                   if(klass_from_dict.$is_property){
                       return klass_from_dict.fget(obj)
                   }
@@ -1072,8 +1070,8 @@ $B.$getattr = function(obj, attr, _default){
           if(is_class){
               var dict = {}
               if(obj.__dict__){
-                  for(var key in obj.__dict__.string_dict){
-                      dict[key] = obj.__dict__.string_dict[key][0]
+                  for(var key of _b_.dict.$keys_string(obj.__dict__)){
+                      dict[key] = _b_.dict.$getitem_string(obj.__dict__, key)
                   }
               }else{
                   for(var key in obj){
@@ -1110,8 +1108,8 @@ $B.$getattr = function(obj, attr, _default){
           if(obj.__mro__){
               return _b_.tuple.$factory([obj].concat(obj.__mro__))
           }else if(obj.__dict__ &&
-                  obj.__dict__.string_dict.__mro__ !== undefined){
-              return obj.__dict__.string_dict.__mro__
+                  _b_.dict.$contains_string(obj.__dict__, '__mro__')){
+              return _b_.dict.$getitem_string(obj.__dict__, '__mro__')
           }
           // stop search here, looking in the objects's class would return
           // the class's __mro__
@@ -1152,9 +1150,8 @@ $B.$getattr = function(obj, attr, _default){
             }else{
                 if($test){console.log("obj[attr]", obj[attr])}
                 var attrs = obj.__dict__
-                if(attrs &&
-                        (object_attr = attrs.string_dict[attr]) !== undefined){
-                    return object_attr[0]
+                if(attrs && _b_.dict.$contains_string(attrs, attr)){
+                    return _b_.dict.$getitem_string(attrs, attr)
                 }
                 if(_default === undefined){
                     throw $B.attr_error(attr, obj)
@@ -1831,13 +1828,13 @@ function $extreme(args, op){ // used by min() and max()
 
     var has_default = false,
         func = false
-    for(var attr in $.kw.string_dict){
+    for(var attr of _b_.dict.$keys_string($.kw)){
         switch(attr){
             case 'key':
-                func = $.kw.string_dict[attr][0]
+                func = _b_.dict.$getitem_string($.kw, attr)
                 break
             case 'default':
-                var default_value = $.kw.string_dict[attr][0]
+                var default_value = _b_.dict.$getitem_string($.kw, attr)
                 has_default = true
                 break
             default:
@@ -2148,10 +2145,13 @@ function pow() {
 function $print(){
     var $ns = $B.args('print', 0, {}, [], arguments,
         {}, 'args', 'kw')
-    var ks = $ns['kw'].string_dict
-    var end = (ks['end'] === undefined || ks['end'] === None) ? '\n' : ks['end'][0],
-        sep = (ks['sep'] === undefined || ks['sep'] === None) ? ' ' : ks['sep'][0],
-        file = ks['file'] === undefined ? $B.get_stdout() : ks['file'][0],
+    var kw = $ns['kw'],
+        end = _b_.dict.$get_string(kw, 'end'),
+        sep = _b_.dict.$get_string(kw, 'sep'),
+        file = _b_.dict.$get_string(kw, 'file')
+    var end = (end === undefined || end === None) ? '\n' : end,
+        sep = (sep === undefined || sep === None) ? ' ' : sep,
+        file = file === undefined ? $B.get_stdout() : file,
         args = $ns['args'],
         writer = $B.$getattr(file, 'write')
     var items = []
@@ -3147,8 +3147,7 @@ var zip = $B.make_class("zip",
         }
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
         var _args = $ns['args'],
-            strict = $ns.kw.string_dict.strict &&
-                $ns.kw.string_dict.strict[0]
+            strict = $B.$bool(_b_.dict.$get_string($ns.kw, 'strict'))
         var nexts = [],
             only_lists = true,
             min_len
@@ -3376,8 +3375,8 @@ $B.function.__getattribute__ = function(self, attr){
             return self.$infos[attr]
         }
     }else if(self.$infos && self.$infos.__dict__ &&
-                self.$infos.__dict__.string_dict[attr] !== undefined){
-            return self.$infos.__dict__.string_dict[attr][0]
+                _b_.dict.$contains_string(self.$infos.__dict__, attr)){
+            return _b_.dict.$getitem_string(self.$infos.__dict__, attr)
     }else if(attr == "__closure__"){
         var free_vars = self.$infos.__code__.co_freevars
         if(free_vars.length == 0){

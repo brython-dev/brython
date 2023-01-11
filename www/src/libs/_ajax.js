@@ -66,11 +66,11 @@ function _read(req){
 }
 
 function stringify(d){
-    var params = d.string_dict,
-        items = []
-    for(var key in params){
+    var items = []
+    for(var key in _b_.dict.$fast_iter_keys(d)){
+        var value = _b_.dict.$getitem(d, key)
         items.push(encodeURIComponent(key) + "=" +
-                   encodeURIComponent(params[key][0]))
+                   encodeURIComponent(value))
     }
     return items.join("&")
 }
@@ -82,15 +82,18 @@ function handle_kwargs(self, kw, method){
         cache,
         mode = "text",
         timeout = {}
-    for(var key in kw.string_dict){
+    for(var key of _b_.dict.$keys_string(kw)){
         if(key == "data"){
-            var params = kw.string_dict[key][0]
+            var params = _b_.dict.$getitem_string(kw, key)
             if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
-                for(var key in params.int_dict){
-                    throw _b_.ValueError.$factory(
-                        'data only supports string keys, got ' + key)
+                for(var key of _b_.dict.$fast_iter_keys(params)){
+                    if(typeof key !== 'string'){
+                        throw _b_.ValueError.$factory(
+                            'data only supports string keys, got ' +
+                            `'${$B.class_name(key)}' object`)
+                    }
                 }
                 data = params
             }else{
@@ -98,30 +101,31 @@ function handle_kwargs(self, kw, method){
                     $B.class_name(params))
             }
         }else if(key == "encoding"){
-            encoding = kw.string_dict[key][0]
+            encoding = _b_.dict.$getitem_string(kw, key)
         }else if(key == "headers"){
-            var value = kw.string_dict[key][0]
+            var value = _b_.dict.$getitem_string(kw, key)
             if(! _b_.isinstance(value, _b_.dict)){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
             }
-            for(key in value.string_dict){
-                headers[key.toLowerCase()] = [key, value.string_dict[key][0]]
+            for(key of _b_.dict.$keys_string(value)){
+                headers[key.toLowerCase()] = [key,
+                    _b_.dict.$getitem_string(value, key)]
             }
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.string_dict[key][0]
+                timeout.func = _b_.dict.$getitem_string(kw, key)
             }else{
-                var f = kw.string_dict[key][0]
+                var f = _b_.dict.$getitem_string(kw, key)
                 ajax.bind(self, event, f)
             }
         }else if(key == "mode"){
-            var mode = kw.string_dict[key][0]
+            var mode = _b_.dict.$getitem_string(kw, key)
         }else if(key == "timeout"){
-            timeout.seconds = kw.string_dict[key][0]
+            timeout.seconds = _b_.dict.$getitem_string(kw, key)
         }else if(key == "cache"){
-            cache = kw.string_dict[key][0]
+            cache = _b_.dict.$getitem_string(kw, key)
         }
     }
     if(encoding && mode != "text"){
@@ -498,12 +502,12 @@ function file_upload(){
     }
     set_timeout(self, timeout)
 
-    if(kw.string_dict.method !== undefined){
-        method = kw.string_dict.method[0]
+    if(_b_.dict.$contains_string(kw, 'method')){
+        method = _b_.dict.$getitem_string(kw, 'method')
     }
 
-    if(kw.string_dict.field_name !== undefined){
-        field_name = kw.string_dict.field_name[0]
+    if(_b_.dict.$contains_string(kw, 'field_name')){
+        field_name = _b_.dict.$getitem_string(kw, 'field_name')
     }
 
     var formdata = new FormData()
@@ -528,9 +532,10 @@ function file_upload(){
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(key in kw.string_dict){
+    for(key of _b_.dict.$keys_string(kw)){
         if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), kw.string_dict[key][0])
+            ajax.bind(self, key.substr(2), 
+                _b_.dict.$getitem_string(kw, key))
         }
     }
 }

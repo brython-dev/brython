@@ -21,9 +21,14 @@
                     ["elt", "evt", "options"], arguments,
                     {options: _b_.None}, null, null)
             var options = $.options
-            if(typeof options == "boolean"){}
-            else if(options.__class__ === _b_.dict){
-                options = options.$string_dict
+            if(typeof options == "boolean"){
+                // ignore
+            }else if(options.__class__ === _b_.dict){
+                var _options = {}
+                for(var key of _b_.dict.$keys_string(options)){
+                    _options[key] = _b_.dict.$getitem_string(options, key)
+                }
+                options = _options
             }else{
                 options == false
             }
