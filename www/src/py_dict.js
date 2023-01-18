@@ -106,15 +106,45 @@ dict_view_op = {
 
 }
 
+var iterator = function*(self, version, keys_length, len){
+    var counter = -1
+    while(true){
+        counter++
+        if(counter >= keys_length){
+            break
+        }
+        var key = self.dict._keys[counter]
+        if(key !== undefined){
+            var value = self.dict._values[counter]
+            if(self.name == 'dict_items'){
+                yield $B.fast_tuple([key, value])
+            }else if(self.name == 'dict_keys'){
+                yield key
+            }else if(self.name == 'dict_values'){
+                yield value
+            }
+            if(self.dict.$version != version){
+                throw _b_.RuntimeError.$factory("dictionary keys changed during iteration")
+            }else if(dict.__len__(self.dict) !== len){
+                throw _b_.RuntimeError.$factory("dictionary size changed during iteration")
+            }
+        }
+    }
+}
+
 $B.make_view = function(name){
     var klass = $B.make_class(name,
         function(d){
-            return {
+            var res = {
                 __class__: klass,
                 __dict__: $B.empty_dict(),
                 dict: d,
                 name
             }
+            res[Symbol.iterator] = function(){
+                return iterator(res, d.$version, d._keys.length, dict.__len__(d))
+            }
+            return res
         }
     )
 
@@ -172,7 +202,7 @@ $B.make_view = function(name){
     klass.__iter__ = function(self){
         // returns an instance of dict_keyiterator for keys, etc.
         if(self.dict.$jsobj){
-            var iterator = function*(self){
+            var _iterator = function*(self){
                 for(var key in self.dict.$jsobj){
                     if(key.startsWith('$')){
                         continue
@@ -187,37 +217,12 @@ $B.make_view = function(name){
                     }
                 }
             }
+            var res = _iterator(self)
         }else{
-            var iterator = function*(self){
-                var version = self.dict.$version,
-                    keys_length = self.dict._keys.length,
-                    len = dict.__len__(self.dict)
-                while(true){
-                    iterator.counter++
-                    if(iterator.counter >= keys_length){
-                        break
-                    }
-                    var key = self.dict._keys[iterator.counter]
-                    if(key !== undefined){
-                        var value = self.dict._values[iterator.counter]
-                        if(self.name == 'dict_items'){
-                            yield $B.fast_tuple([key, value])
-                        }else if(self.name == 'dict_keys'){
-                            yield key
-                        }else if(self.name == 'dict_values'){
-                            yield value
-                        }
-                        if(self.dict.$version != version){
-                            throw _b_.RuntimeError.$factory("dictionary keys changed during iteration")
-                        }else if(dict.__len__(self.dict) !== len){
-                            throw _b_.RuntimeError.$factory("dictionary size changed during iteration")
-                        }
-                    }
-                }
-            }
-            iterator.counter = -1
+            var d = self.dict,
+                res = iterator(self, d.$version, d._keys.length, dict.__len__(d))
+
         }
-        var res = iterator(self)
         return klass.iterator.$factory(res)
     }
 
@@ -926,7 +931,6 @@ dict.get = function(){
 }
 
 var dict_items = $B.make_view("dict_items", true)
-dict_items.$iterator = $B.make_iterator_class("dict_itemiterator")
 
 dict.items = function(self){
     var $ = $B.args('items', 1, {self: null}, ['self'], arguments,
@@ -936,7 +940,6 @@ dict.items = function(self){
 
 
 var dict_keys = $B.make_view("dict_keys")
-dict_keys.$iterator = $B.make_iterator_class("dict_keyiterator")
 
 dict.keys = function(self){
     var $ = $B.args('keys', 1, {self: null}, ['self'], arguments,
