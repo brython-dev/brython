@@ -1764,10 +1764,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`
 
-    if(func_scope.needs_stack_length){
+    if(scope.needs_stack_length){
         js += `var stack_length = $B.frames_stack.length\n`
     }
-
+    
     if(func_scope.needs_frames || is_async){
         js += `    var _frames = $B.frames_stack.slice()\n`
     }

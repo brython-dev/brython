@@ -56,7 +56,7 @@ $B.pyobj2structuredclone = function(obj, strict){
                 }
             }
         }
-        var items = Array.from(_b_.dict.$iter_items(obj)),
+        var items = $B.dict_to_list(obj),
             res = {}
         for(var i = 0, len = items.length; i < len; i++){
             res[to_simple(items[i][0])] = $B.pyobj2structuredclone(items[i][1])

@@ -230,21 +230,18 @@ $B.wrong_nb_args = function(name, received, expected, positional){
 $B.parse_kwargs = function(kw_args, fname){
     var kwa = kw_args[0]
     for(var i = 1, len = kw_args.length; i < len; i++){
-        var kw_arg = kw_args[i],
-            key,
-            value
+        var kw_arg = kw_args[i]
         if(kw_arg.__class__ === _b_.dict){
-            for(var item of _b_.dict.$iter_items(kw_arg)){
-                key = item[0]
-                if(typeof key !== 'string'){
+            for(var k of _b_.dict.$fast_iter_keys(kw_arg)){
+                if(typeof k !== 'string'){
                     throw _b_.TypeError.$factory(fname +
                         "() keywords must be strings")
-                }else if(kwa[key] !== undefined){
+                }else if(kwa[k] !== undefined){
                     throw _b_.TypeError.$factory(fname +
                         "() got multiple values for argument '" +
-                        key + "'")
+                        k + "'")
                 }else{
-                    kwa[key] = item[1]
+                    kwa[k] = _b_.dict.$getitem(kw_arg, k)
                 }
             }
         }else{
@@ -1527,6 +1524,7 @@ $B.rich_comp = function(op, x, y){
             }
         }
     }
+
     res = x_class_op(x, y)
     if(res !== _b_.NotImplemented){
         return res

@@ -815,9 +815,10 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     class_dict.__mro__ = type.mro(class_dict).slice(1)
 
     // set class attributes for faster lookups
-    for(var item of _b_.dict.$iter_items(cl_dict)){
-        var key = item[0],
-            v = item[1]
+    var items = $B.dict_to_list(cl_dict) // defined in py_dict.js
+    for(var i = 0; i < items.length; i++){
+        var key = items[i][0],
+            v = items[i][1]
         if(['__module__', '__class__', '__name__', '__qualname__'].
                 indexOf(key) > -1){
             continue
