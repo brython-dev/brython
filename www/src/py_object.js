@@ -111,7 +111,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'f' // false // attr == "__args__"
+    var $test = false // attr == 'show' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -408,10 +408,9 @@ object.__reduce__ = function(self){
         concat(self.__class__.__mro__)))
     var d = $B.empty_dict()
     for(var attr of _b_.dict.$keys_string(self.__dict__)){
-        _b_.dict.$setitem(d, attr, 
+        _b_.dict.$setitem(d, attr,
             _b_.dict.$getitem_string(self.__dict__, attr))
     }
-    console.log("object.__reduce__, d", d)
     res.push(d)
     return _b_.tuple.$factory(res)
 }
@@ -426,6 +425,11 @@ __newobj__.$infos = {
 _b_.__newobj__ = __newobj__
 
 object.__reduce_ex__ = function(self){
+    var klass = $B.get_class(self),
+        reduce = $B.$getattr(klass, '__reduce__')
+    if(reduce !== object.__reduce__){
+        return $B.$call(reduce)(self)
+    }
     var res = [__newobj__]
     var arg2 = _b_.tuple.$factory([self.__class__])
     if(Array.isArray(self)){

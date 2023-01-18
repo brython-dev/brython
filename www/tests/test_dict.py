@@ -250,5 +250,15 @@ for (k, v) in d.items():
 
 assert d == {True: 'y'}
 
+# same hash + compare equal
+class A:
+  def __eq__(self, other):
+     return True
+  def __hash__(self):
+     return hash('a')
+
+d = {A(): 0}
+assert 'a' in d
+
 
 print("passed all tests..")

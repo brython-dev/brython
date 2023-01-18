@@ -1735,8 +1735,9 @@ $B.$iter = function(obj, sentinel){
             throw err
         }
         var res = $B.$call(_iter)(obj)
-        try{$B.$getattr(res, '__next__')}
-        catch(err){
+        try{
+            $B.$getattr(res, '__next__')
+        }catch(err){
             if(isinstance(err, _b_.AttributeError)){
                 throw _b_.TypeError.$factory(
                     "iter() returned non-iterator of type '" +
