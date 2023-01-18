@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-18 19:22:09.979704"
-__BRYTHON__.timestamp=1674066129979
+__BRYTHON__.compiled_date="2023-01-18 15:59:20.174608"
+__BRYTHON__.timestamp=1674053960174
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -12466,16 +12466,8 @@ flag=true
 break}}
 if(! flag){items.push(y)}}
 return items}}
-var iterator=function*(self,version,keys_length,len){var counter=-1
-while(true){counter++
-if(counter >=keys_length){break}
-var key=self.dict._keys[counter]
-if(key !==undefined){var value=self.dict._values[counter]
-if(self.name=='dict_items'){yield $B.fast_tuple([key,value])}else if(self.name=='dict_keys'){yield key}else if(self.name=='dict_values'){yield value}
-if(self.dict.$version !=version){throw _b_.RuntimeError.$factory("dictionary keys changed during iteration")}else if(dict.__len__(self.dict)!==len){throw _b_.RuntimeError.$factory("dictionary size changed during iteration")}}}}
-$B.make_view=function(name){var klass=$B.make_class(name,function(d){var res={__class__:klass,__dict__:$B.empty_dict(),dict:d,name}
-res[Symbol.iterator]=function(){return iterator(res,d.$version,d._keys.length,dict.__len__(d))}
-return res}
+$B.make_view=function(name){var klass=$B.make_class(name,function(d){return{
+__class__:klass,__dict__:$B.empty_dict(),dict:d,name}}
 )
 klass.iterator=$B.make_class(`${name}iterator`,function(it){return{
 __class__:klass.iterator,__dict__:$B.empty_dict(),it}}
@@ -12495,10 +12487,17 @@ if(other.__class__ !==klass){return false}
 var other_items=_b_.list.$factory(other)
 return dict_view_op[op](self.items,other_items)}}})(op)}
 klass.__iter__=function(self){
-if(self.dict.$jsobj){var _iterator=function*(self){for(var key in self.dict.$jsobj){if(key.startsWith('$')){continue}
+if(self.dict.$jsobj){var iterator=function*(self){for(var key in self.dict.$jsobj){if(key.startsWith('$')){continue}
 var value=self.dict.$jsobj[key]
-if(self.name=='dict_items'){yield $B.fast_tuple([key,value])}else if(self.name=='dict_keys'){yield key}else if(self.name=='dict_values'){yield value}}}
-var res=_iterator(self)}else{var d=self.dict,res=iterator(self,d.$version,d._keys.length,dict.__len__(d))}
+if(self.name=='dict_items'){yield $B.fast_tuple([key,value])}else if(self.name=='dict_keys'){yield key}else if(self.name=='dict_values'){yield value}}}}else{var iterator=function*(self){var version=self.dict.$version,keys_length=self.dict._keys.length,len=dict.__len__(self.dict)
+while(true){iterator.counter++
+if(iterator.counter >=keys_length){break}
+var key=self.dict._keys[iterator.counter]
+if(key !==undefined){var value=self.dict._values[iterator.counter]
+if(self.name=='dict_items'){yield $B.fast_tuple([key,value])}else if(self.name=='dict_keys'){yield key}else if(self.name=='dict_values'){yield value}
+if(self.dict.$version !=version){throw _b_.RuntimeError.$factory("dictionary keys changed during iteration")}else if(dict.__len__(self.dict)!==len){throw _b_.RuntimeError.$factory("dictionary size changed during iteration")}}}}
+iterator.counter=-1}
+var res=iterator(self)
 return klass.iterator.$factory(res)}
 klass.__len__=function(self){return dict.__len__(self.dict)}
 klass.__repr__=function(self){var items=Array.from(dict.$iter_items(self.dict))
@@ -12737,9 +12736,11 @@ try{
 return dict.$getitem($.self,$.key,true)}catch(err){if(_b_.isinstance(err,_b_.KeyError)){return $._default}
 else{throw err}}}
 var dict_items=$B.make_view("dict_items",true)
+dict_items.$iterator=$B.make_iterator_class("dict_itemiterator")
 dict.items=function(self){var $=$B.args('items',1,{self:null},['self'],arguments,{},null,null)
 return dict_items.$factory(self)}
 var dict_keys=$B.make_view("dict_keys")
+dict_keys.$iterator=$B.make_iterator_class("dict_keyiterator")
 dict.keys=function(self){var $=$B.args('keys',1,{self:null},['self'],arguments,{},null,null)
 return dict_keys.$factory(self)}
 dict.pop=function(){var missing={},$=$B.args("pop",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:missing},null,null),self=$.self,key=$.key,_default=$._default
