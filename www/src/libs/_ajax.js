@@ -67,7 +67,7 @@ function _read(req){
 
 function stringify(d){
     var items = []
-    for(var key in _b_.dict.$fast_iter_keys(d)){
+    for(var key of _b_.dict.$fast_iter_keys(d)){
         var value = _b_.dict.$getitem(d, key)
         items.push(encodeURIComponent(key) + "=" +
                    encodeURIComponent(value))
