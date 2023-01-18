@@ -20,15 +20,40 @@ $B.has_surrogate = function(s){
 $B.String = function(s){
     var codepoints = [],
         surrogates = [],
-        j = 0
+        j = 0,
+        in_cache = $B.hash_cache[s] !== undefined
+
+    if(s.length == 0 && ! in_cache){
+        $B.hash_cache[s] = 0
+        in_cache = true
+    }
+
     for(var i = 0, len = s.length; i < len; i++){
         var cp = s.codePointAt(i)
+        if(! in_cache){
+            if(i == 0){
+                var h = prefix
+                h = (h ^ (cp << 7)) & mask
+            }
+            h = ((1000003 * h) ^ cp) & mask
+        }
         if(cp >= 0x10000){
             surrogates.push(j)
             i++
         }
         j++
     }
+
+    if(! in_cache){
+        h = (h ^ s.length) & mask
+        h = (h ^ suffix) & mask
+
+        if(h == -1){
+            h = -2
+        }
+        $B.hash_cache[s] = h
+    }
+
     if(surrogates.length == 0){
         return s
     }
