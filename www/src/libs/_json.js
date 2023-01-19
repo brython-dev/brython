@@ -26,7 +26,7 @@ function to_json(obj, level){
                     arguments, {level: 1}, null, "kw")
 
     for(var key in $defaults){
-        if(! _b_.dict.$contains_string($.kw), key){
+        if(! _b_.dict.$contains_string($.kw, key)){
             _b_.dict.$setitem_string($.kw, key, $defaults[key])
         }
     }
@@ -152,7 +152,7 @@ function to_json(obj, level){
         return "null"
     }else if(_b_.isinstance(obj, _b_.dict)){
         var res = [],
-            items = $B.dict_to_list(obj)
+            items = Array.from(_b_.dict.$iter_items(obj))
         if(sort_keys){
             // Sort keys by alphabetical order
             items.sort()

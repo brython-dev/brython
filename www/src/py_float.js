@@ -609,6 +609,8 @@ var nan_hash = $B.$py_next_hash--
 
 var mp2_31 = Math.pow(2, 31)
 
+$B.float_hash_cache = new Map()
+
 float.__hash__ = function(self) {
     check_self_is_float(self, '__hash__')
     return float.$hash_func(self)
@@ -619,6 +621,10 @@ float.$hash_func = function(self){
         return self.__hashvalue__
     }
     var _v = self.value
+    var in_cache = $B.float_hash_cache.get(_v)
+    if(in_cache !== undefined){
+        return in_cache
+    }
     if(_v === Infinity){
         return 314159
     }else if(_v === -Infinity){
@@ -638,7 +644,9 @@ float.$hash_func = function(self){
     var hipart = parseInt(r[0])
     r[0] = (r[0] - hipart) * mp2_31
     var x = hipart + parseInt(r[0]) + (r[1] << 15)
-    return self.__hashvalue__ = x & 0xFFFFFFFF
+    x &= 0xFFFFFFFF
+    $B.float_hash_cache.set(_v, x)
+    return self.__hashvalue__ = x
 }
 
 function isninf(x) {

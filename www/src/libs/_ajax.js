@@ -67,10 +67,9 @@ function _read(req){
 
 function stringify(d){
     var items = []
-    for(var key of _b_.dict.$fast_iter_keys(d)){
-        var value = _b_.dict.$getitem(d, key)
-        items.push(encodeURIComponent(key) + "=" +
-                   encodeURIComponent(value))
+    for(var item of _b_.dict.$iter_items(d)){
+        items.push(encodeURIComponent(item[0]) + "=" +
+                   encodeURIComponent(item[1]))
     }
     return items.join("&")
 }
@@ -397,13 +396,11 @@ function _request_with_body(method){
         async = !$.blocking,
         kw = $.kw,
         content_type
-
     var self = ajax.$factory()
     self.js.open(method.toUpperCase(), url, async)
     var items = handle_kwargs(self, kw, method),
         data = items.data,
         timeout = items.timeout
-
     if(_b_.isinstance(data, _b_.dict)){
         data = stringify(data)
     }
@@ -534,7 +531,7 @@ function file_upload(){
 
     for(key of _b_.dict.$keys_string(kw)){
         if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), 
+            ajax.bind(self, key.substr(2),
                 _b_.dict.$getitem_string(kw, key))
         }
     }
