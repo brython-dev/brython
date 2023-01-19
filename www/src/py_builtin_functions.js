@@ -1339,7 +1339,10 @@ var hash_cache = $B.hash_cache = Object.create(null) // for strings
 
 function hash(obj){
     check_nb_args_no_kw('hash', 1, arguments)
+    return $B.$hash(obj)
+}
 
+$B.$hash = function(obj){
     if(obj.__hashvalue__ !== undefined){
         return obj.__hashvalue__
     }
@@ -1735,8 +1738,9 @@ $B.$iter = function(obj, sentinel){
             throw err
         }
         var res = $B.$call(_iter)(obj)
-        try{$B.$getattr(res, '__next__')}
-        catch(err){
+        try{
+            $B.$getattr(res, '__next__')
+        }catch(err){
             if(isinstance(err, _b_.AttributeError)){
                 throw _b_.TypeError.$factory(
                     "iter() returned non-iterator of type '" +
