@@ -5,7 +5,6 @@ var _b_ = $B.builtins
 // build tables from data in unicode_data.js
 var unicode_tables = $B.unicode_tables
 
-
 $B.has_surrogate = function(s){
     // Check if there are "surrogate pairs" characters in string s
     for(var i = 0; i < s.length; i++){
@@ -20,38 +19,16 @@ $B.has_surrogate = function(s){
 $B.String = function(s){
     var codepoints = [],
         surrogates = [],
-        j = 0,
-        in_cache = $B.hash_cache[s] !== undefined
+        j = 0
 
-    if(s.length == 0 && ! in_cache){
-        $B.hash_cache[s] = 0
-        in_cache = true
-    }
 
     for(var i = 0, len = s.length; i < len; i++){
         var cp = s.codePointAt(i)
-        if(! in_cache){
-            if(i == 0){
-                var h = prefix
-                h = (h ^ (cp << 7)) & mask
-            }
-            h = ((1000003 * h) ^ cp) & mask
-        }
         if(cp >= 0x10000){
             surrogates.push(j)
             i++
         }
         j++
-    }
-
-    if(! in_cache){
-        h = (h ^ s.length) & mask
-        h = (h ^ suffix) & mask
-
-        if(h == -1){
-            h = -2
-        }
-        $B.hash_cache[s] = h
     }
 
     if(surrogates.length == 0){
@@ -351,22 +328,12 @@ function fnv(p){
 }
 
 str.__hash__ = function(_self){
-    _self = to_string(_self)
-    if($B.hash_cache[_self] !== undefined){
-        return $B.hash_cache[_self]
-    }
-    str.$nb_str_hash_cache++
-    if(str.$nb_str_hash_cache > 100000){
-        // Avoid memory overflow
-        str.$nb_str_hash_cache = 0
-        $B.hash_cache = Object.create(null)
-    }
-    try{
-        return $B.hash_cache[_self] = fnv(to_codepoints(_self))
-    }catch(err){
-        console.log('error hash, cps', _self, to_codepoints(_self))
-        throw err
-    }
+    // copied from
+    // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
+    return _self.split("").reduce(function(a, b) {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0)
 }
 
 str.__init__ = function(self, arg){
