@@ -29,19 +29,8 @@ function set_hash(item){
     return $B.$hash(item)
 }
 
-function set_add(so, item){
-    var hash
-    if(typeof item == 'string'){
-        hash = $B.hash_cache[item]
-        hash = hash === undefined ? $B.$hash(item) : hash
-    }else if(typeof item == 'number'){
-        hash = item
-    }else if(item.__class__ === _b_.float){
-        hash = $B.float_hash_cache[item.value]
-        hash = hash === undefined ? $B.$hash(item) : hash
-    }else{
-        hash = $B.$hash(item)
-    }
+function set_add(so, item, hash){
+    hash = hash === undefined ? $B.$hash(item) : hash
     if(set_contains(so, item, hash)){
         return
     }else{
@@ -144,16 +133,12 @@ function set_difference_update(so, other){
         return set.clear(so);
     }
     if(_b_.isinstance(other, [set, frozenset])){
-        var entry,
-            pos = 0;
-        while(true){
-            var next = set_next(other, pos),
-                other_item
-            if(! next){
-                break
-            };
-            [pos, other_item] = next
-            set_discard_key(so, other_item)
+        for(var entry of set_iter_with_hash(other)){
+            set_discard_entry(so, entry.item, entry.hash)
+        }
+    }else if(_b_.isinstance(other, _b_.dict)){
+        for(var item of _b_.dict.$iter_with_hash(other)){
+            set_dicard_entry(so, entry.item, entry.hash)
         }
     }else{
         var frame = $B.last($B.frames_stack)
@@ -167,45 +152,68 @@ function set_difference_update(so, other){
 const DISCARD_NOTFOUND = 0,
       DISCARD_FOUND = 1
 
-function set_discard_entry(so, key){
-    var entry = set_lookkey(so, key)
+function set_discard_entry(so, key, hash){
+    var entry = set_lookkey(so, key, hash)
     if(! entry){
         return DISCARD_NOTFOUND
     }
-    so.$store[entry.hash].splice(entry.index, 1)
-    if(so.$store[entry.hash].length == 0){
-        delete so.$store[entry.hash]
-    }
-    so.$used--
+    set_remove(so, entry.hash, entry.index)
 }
 
 function set_discard_key(so, key){
     return set_discard_entry(so, key);
 }
 
-function set_intersection(self, other){
-    if(self === other){
-        return set_copy(self)
+function* set_iter_with_hash(so){
+    for(var hash in so.$store){
+        for(var item of so.$store[hash]){
+            yield {item, hash}
+        }
     }
-    var result = make_new_set_base_type(self),
+}
+
+function set_remove(so, hash, index){
+    so.$store[hash].splice(index, 1)
+    if(so.$store[hash].length == 0){
+        delete so.$store[hash]
+    }
+    so.$used--
+}
+
+function set_intersection(so, other){
+    // set of items present in self and in other
+    if(so === other){
+        return set_copy(so)
+    }
+    var result = make_new_set_base_type(so),
         iterator
     if(_b_.isinstance(other, [set, frozenset])){
-        if(set.__len__(other) > set.__len__(self)){
-            // swap self and other
-            var temp = other,
-                other = self,
-                self = temp
+        if(other.$used > so.$used){
+            var tmp = so
+            so = other
+            other = tmp
         }
-        iterator = make_iter(other)
+        for(var entry of set_iter_with_hash(other)){
+            if(set_contains(so, entry.item, entry.hash)){
+                set_add(result, entry.item, entry.hash)
+            }
+        }
+    }else if(_b_.isinstance(other, _b_.dict)){
+        for(var entry of _b_.dict.$iter_with_hash(other)){
+            if(set_contains(self, entry.item, entry.hash)){
+                set_add(result, entry.item, entry.hash)
+            }
+        }
     }else{
         var frame = $B.last($B.frames_stack),
             lineno = frame.$lineno
         iterator = $B.make_js_iterator(other, frame, lineno)
-    }
-    for(var other_item of iterator){
-        var test = set_contains(self, other_item)
-        if(test){
-            set_add(result, other_item)
+
+        for(var other_item of iterator){
+            var test = set_contains(self, other_item)
+            if(test){
+                set_add(result, other_item)
+            }
         }
     }
     return result
@@ -264,16 +272,16 @@ function set_symmetric_difference_update(so, other){
     }
     var iterator
     if(_b_.isinstance(other, _b_.dict)){
-        iterator = $B.make_js_iterator(_b_.dict.keys(other))
+        iterator = _b_.dict.$iter_with_hash(other)
     }else if(_b_.isinstance(other, [set, frozenset])){
-        iterator = make_iter(other)
+        iterator = set_iter_with_hash(other)
     }else{
-        iterator = make_iter(set.$factory(other))
+        return set_symmetric_difference_update(so, set.$factory(other))
     }
-    for(var key of iterator){
-        rv = set_discard_entry(so, key)
+    for(var entry of iterator){
+        rv = set_discard_entry(so, entry.item, entry.hash)
         if(rv == DISCARD_NOTFOUND){
-            set_add(so, key)
+            set_add(so, entry.item, entry.hash)
         }
     }
     return _b_.None
@@ -447,25 +455,19 @@ function make_hash_iter(obj, hash){
 set.__le__ = function(self, other){
     // Test whether every element in the set is in other.
     if(_b_.isinstance(other, [set, frozenset])){
-        for(var item of make_iter(self)){
-            if(! set_contains(other, item)){
-                return false
-            }
-        }
-        return true
-    }else{
-        return _b_.NotImplemented
+        return set.issubset(self, other)
     }
+    return _b_.NotImplemented
 }
 
 set.__len__ = function(self){
-    return self.$used //$items.length
+    return self.$used
 }
 
 set.__lt__ = function(self, other){
     if(_b_.isinstance(other, [set, frozenset])){
         return set.__le__(self, other) &&
-            set.__len__(self) < _b_.getattr(other, "__len__")()
+            set.__len__(self) < set.__len__(other)
     }else{
         return _b_.NotImplemented
     }
@@ -488,31 +490,10 @@ set.__new__ = function(cls, iterable){
 }
 
 set.__or__ = function(self, other){
-    if(! _b_.isinstance(other, [set, frozenset])){
-        return _b_.NotImplemented
+    if(_b_.isinstance(other, [set, frozenset])){
+        return set.union(self, other)
     }
-    var res = set_copy(self),
-        other_items
-    for(var hash in other.$store){
-        if(res.$store[hash] === undefined){
-            res.$store[hash] = other.$store[hash].slice()
-        }else{
-            var items = res.$store[hash]
-            for(var other_item of other.$store[hash]){
-                var found = false
-                for(var item of items){
-                    if($B.is_or_equals(item, other_item)){
-                        found = true
-                        break
-                    }
-                }
-                if(! found){
-                    items.push(other_item)
-                }
-            }
-        }
-    }
-    return res
+    return _b_.NotImplemented
 }
 
 set.__rand__ = function(self, other){
@@ -677,34 +658,15 @@ set.intersection_update = function(){
 }
 
 set.isdisjoint = function(){
+    /* Return True if the set has no elements in common with other. Sets are
+    disjoint if and only if their intersection is the empty set. */
     var $ = $B.args("isdisjoint", 2,
             {self: null, other: null}, ["self", "other"],
             arguments, {}, null, null),
         self = $.self,
         other = $.other
-    if(self === other){
-        return set.__len__(self) == 0
-    }
-    var iterator
-    if(_b_.isinstance(other, [set, frozenset])){
-        if(set.__len__(other) > set.__len__(self)){
-            // swap self and other
-            var temp = other,
-                other = self,
-                self = temp
-        }
-        iterator = make_iter(other)
-    }else{
-        var frame = $B.last($B.frames_stack),
-            lineno = frame.$lineno
-        iterator = $B.make_js_iterator(other, frame, lineno)
-    }
-    for(var item of iterator){
-        if(set_contains(self, item)){
-            return false
-        }
-    }
-    return true
+    var intersection = set_intersection(self, other)
+    return intersection.$used == 0
 }
 
 set.pop = function(self){
@@ -756,14 +718,12 @@ set.update = function(self){
                 set_add(self, iterable[i])
             }
         }else if(_b_.isinstance(iterable, [set, frozenset])){
-            var pos = 0
-            while(true){
-                var next = set_next(iterable, pos)
-                if(! next){
-                    break
-                };
-                [pos, other_item] = next
-                set_add(self, other_item)
+            for(var entry of set_iter_with_hash(iterable)){
+                set_add(self, entry.item, entry.hash)
+            }
+        }else if(_b_.isinstance(iterable, _b_.dict)){
+            for(var entry of _b_.dict.$iter_with_hash(iterable)){
+                set_add(self, entry.key, entry.hash)
             }
         }else{
             var frame = $B.last($B.frames_stack),
@@ -795,20 +755,42 @@ set.difference = function(){
 
     var res = set_copy($.self)
     for(var arg of $.args){
-        var other = set.$factory(arg)
-        res = set.__sub__(res, other)
+        if(_b_.isinstance(arg, [set, frozenset])){
+            for(var hash in arg.$store){
+                var items = res.$store[hash]
+                if(items === undefined){
+                    continue
+                }
+                for(var item of arg.$store[hash]){
+                    set_discard_entry(res, item, hash)
+                }
+            }
+        }else{
+            var other = set.$factory(arg)
+            res = set.difference(res, other)
+        }
     }
     return res
 }
 
-var fc = set.difference + "" // source code
-eval("set.intersection = "+
-    fc.replace(/difference/g, "intersection").replace("__sub__", "__and__"))
-eval("set.symmetric_difference = " +
-    fc.replace(/difference/g, "symmetric_difference").replace("__sub__",
-        "__xor__"))
+set.intersection = function(){
+    var $ = $B.args("difference", 1, {self: null},
+        ["self"], arguments, {}, "args", null)
+    if($.args.length == 0){
+        return set.copy($.self)
+    }
+    return set_intersection_multi($.self, $.args)
+}
 
-set.union = function(){
+set.symmetric_difference = function(self, other){
+    // Return a new set with elements in either the set or other but not both
+    var $ = $B.args("symmetric_difference", 2, {self: null, other: null},
+            ["self", "other"], arguments, {}, null, null)
+    var otherset = set.$factory(other)
+    return set_symmetric_difference_update(otherset, self)
+}
+
+set.union = function(self){
     var $ = $B.args("union", 1, {self: null},
         ["self"], arguments, {}, "args", null)
 
@@ -818,74 +800,68 @@ set.union = function(){
     }
 
     for(var arg of $.args){
-        if(arg.__class__ === set || arg.__class__ === frozenset){
-            for(var hash in arg.$store){
-                if(res[hash] === undefined){
-                    res.$store[hash] = arg.$store[hash]
-                }
+        if(_b_.isinstance(arg, [set, frozenset])){
+            for(var entry of set_iter_with_hash(arg)){
+                set_add(res, entry.item, entry.hash)
             }
         }else if(arg.__class__ === _b_.dict){
             // dict.$iter_items_hash produces [key, value, hash]
-            for(var item in _b_.dict.$iter_items_hash(arg)){
-                var hash = item[2],
-                    entry = set_lookkey(res, item, hash)
-                if(! entry){
-                    res.$store[hash] = [item[0]]
-                }
+            for(var item in _b_.dict.$iter_with_hash(arg)){
+                set_add(res, item.key, item.hash)
             }
         }else{
             var other = set.$factory(arg)
-            res = set.__or__(res, other)
+            res = set.union(res, other)
         }
     }
     return res
 }
 
-
 set.issubset = function(){
+    // Test whether every element in the set is in other.
     var $ = $B.args("issubset", 2, {self: null, other: null},
             ["self", "other"], arguments, {}, "args", null),
         self = $.self,
         other = $.other
-    if(! _b_.isinstance(other, [set, frozenset])){
-        var temp = set_intersection(self, other)
-        return set.__len__(temp) == set.__len__(self)
-    }
-    if(set.__len__(self) > set.__len__(other)){
-        return false
-    }
-    var pos = 0,
-        next,
-        rv
-    while(true){
-        next = set_next(self, pos)
-        if(! next){
-            break
-        };
-        [pos, key] = next
-        rv = set_contains(other, key)
-        if(! rv){
+    if(_b_.isinstance(other, [set, frozenset])){
+        if(set.__len__(self) > set.__len__(other)){
             return false
         }
+        for(var entry of set_iter_with_hash(self)){
+            if(! set_lookkey(other, entry.item, entry.hash)){
+                return false
+            }
+        }
+        return true
+    }else if(_b_.isinstance(other, _b_.dict)){
+        for(var entry of _b_.dict.$iter_with_hash(self)){
+            if(! set_lookkey(other, entry.item, entry.hash)){
+                return false
+            }
+        }
+        return true
+    }else{
+        var member_func = $B.member_func(other)
+        for(var entry of set_iter_with_hash(self)){
+            if(! member_func(entry.item)){
+                return false
+            }
+        }
+        return true
     }
-    return true
 }
 
 set.issuperset = function(){
+    // Test whether every element in other is in the set.
     var $ = $B.args("issuperset", 2, {self: null, other: null},
             ["self", "other"], arguments, {}, "args", null),
         self = $.self,
         other = $.other
     if(_b_.isinstance(other, [set, frozenset])){
         return set.issubset(other, self)
+    }else{
+        return set.issubset(set.$factory(other), self)
     }
-    var frame = $B.last($B.frames_stack)
-    for(var item of $B.make_js_iterator(other, frame, frame.$lineno)){
-        if(! set_contains(self, item)){
-            return false
-        }
-    }
-    return true
 }
 
 set.__iand__ = function(self, other){

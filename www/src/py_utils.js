@@ -1069,60 +1069,59 @@ $B.is_or_equals = function(x, y){
     return $B.$is(x, y) || $B.rich_comp('__eq__', x, y)
 }
 
-$B.$is_member = function(item, _set){
-    // used for "item in _set"
-    var f, _iter, method
-
-    // Use __contains__ if defined *on the class* (implicit invocation of
-    // special methods don't use object __dict__)
-    method = $B.$getattr(_set.__class__ || $B.get_class(_set),
-            "__contains__", null)
-
-    if(method !== null){
-        return $B.$call(method)(_set, item)
+$B.member_func = function(obj){
+    var klass = $B.get_class(obj),
+        contains = $B.$getattr(klass, "__contains__", null)
+    // use __contains__ if defined
+    if(contains !== null){
+        contains = $B.$call(contains)
+        return contains.bind(null, obj)
     }
-
-    // use __iter__ if defined
     try{
-        _iter = _b_.iter(_set)
-    }catch(err){}
-    if(_iter){
-        while(1){
+        // use iteration if possible
+        var iterator = $B.make_js_iterator(obj)
+        return function(key){
             try{
-                var elt = _b_.next(_iter)
-                if($B.is_or_equals(elt, item)){
-                    return true
+                for(var item of iterator){
+                    if($B.is_or_equals(key, item)){
+                        return true
+                    }
                 }
+                return false
             }catch(err){
                 return false
             }
         }
-    }
-
-    // use __getitem__ if defined
-    try{
-        f = $B.$getattr(_set, "__getitem__")
     }catch(err){
-        throw _b_.TypeError.$factory("'" + $B.class_name(_set) +
-            "' object is not iterable")
-    }
-    if(f){
-        var i = -1
-        while(1){
-            i++
-            try{
-                var elt = f(i)
-                if($B.is_or_equals(elt, item)){
-                    return true
+        // use __getitem__ if defined
+        var getitem = $B.$getattr(klass, '__getitem__', null)
+        if(getitem !== null){
+            return function(key){
+                var i = -1
+                while(true){
+                    i++
+                    try{
+                        var item = getitem(obj, i)
+                        if($B.is_or_equals(key, item)){
+                            return true
+                        }
+                    }catch(err){
+                        if($B.$is_exc(err, [_b_.StopIteration])){
+                            return false
+                        }
+                        throw err
+                    }
                 }
-            }catch(err){
-                if(err.__class__ === _b_.IndexError){
-                    return false
-                }
-                throw err
             }
+        }else{
+            throw _b_.TypeError.$factory('argument of type ' +
+                `'${$B.class_name(obj)}' is not iterable`)
         }
     }
+}
+
+$B.$is_member = function(item, _set){
+    return $B.member_func(_set)(item)
 }
 
 $B.$call = function(callable, position){

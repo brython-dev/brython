@@ -297,5 +297,10 @@ assert len({'a', A(False)}) == 2
 assert A(True) in set1
 assert A(False) not in set1
 
+set1 = {A(False)}
+set2 = {'a'}
+
+assert len(set1.union(set2)) == 2
+
 
 print("passed all tests..")

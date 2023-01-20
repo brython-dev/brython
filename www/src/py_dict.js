@@ -317,11 +317,11 @@ dict.$set_like = function(self){
     return true
 }
 
-dict.$iter_items_hash = function*(d){
+dict.$iter_with_hash = function*(d){
     for(var hash in d.table){
         var indices = d.table[hash]
         for(var index of indices){
-            yield [self._keys[index], self._values[index], hash]
+            yield {key: d._keys[index], hash}
         }
     }
 }
@@ -836,20 +836,7 @@ dict.$setitem = function(self, key, value, $hash){
     if(key instanceof String){
         key = key.valueOf()
     }
-    var hash
-    if($hash !== undefined){
-        hash = $hash
-    }else if(typeof key == 'string'){
-        hash = $B.hash_cache[key]
-        hash = hash === undefined ? $B.$hash(key) : hash
-    }else if(typeof key == 'number'){
-        hash = key
-    }else if(key.__class__ === _b_.float){
-        hash = $B.float_hash_cache.get(key.value)
-        hash = hash === undefined ? $B.$hash(key) : hash
-    }else{
-        hash = $B.$hash(key)
-    }
+    var hash = $hash !== undefined ? $hash : $B.$hash(key)
     var index
 
     if(self.table[hash] === undefined){

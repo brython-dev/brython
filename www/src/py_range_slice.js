@@ -17,7 +17,7 @@ var _b_ = $B.builtins,
         }
     }
 
-range.__contains__ = function(self,other){
+range.__contains__ = function(self, other){
     if(range.__len__(self) == 0){
         return false
     }

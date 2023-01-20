@@ -1335,8 +1335,6 @@ function hasattr(obj,attr){
     }
 }
 
-var hash_cache = $B.hash_cache = Object.create(null) // for strings
-
 function hash(obj){
     check_nb_args_no_kw('hash', 1, arguments)
     return $B.$hash(obj)
@@ -1356,12 +1354,11 @@ $B.$hash = function(obj){
         return obj.__hashvalue__ = $B.$py_next_hash--
     }
     if(typeof obj == "string"){
-        var cached = hash_cache[obj]
-        if(cached !== undefined){
-            return cached
-        }else{
-            return hash_cache[obj] = _b_.str.__hash__(obj)
-        }
+        return _b_.str.__hash__(obj)
+    }else if(typeof obj == "number"){
+        return obj
+    }else if(typeof obj == "boolean"){
+        return obj ? 1 : 0
     }else if(obj.__class__ === _b_.float){
         return _b_.float.$hash_func(obj)
     }
