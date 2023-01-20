@@ -1,25 +1,23 @@
 from browser import window, alert
 
-audioContext = None
 envelop = None
 
-def fade_out(osc, envelop):
+def make_context():
+    return window.AudioContext.new()
+
+def fade_out(audioContext, osc, envelop):
     t = audioContext.currentTime
     envelop.gain.setTargetAtTime(0, t, 0.02)
     osc.stop(t + 0.08)
 
-
-def playTone(freq,
+def playTone(audioContext,
+             freq,
              time=0,
              length=None,
              gain_value=1,
              wave=None,
              type="sine"):
-    global audioContext, envelop
-    #alert('play tone')
-
-    if audioContext is None:
-        audioContext = window.AudioContext.new()
+    global envelop
 
     envelop = audioContext.createGain()
     envelop.connect(audioContext.destination)
@@ -43,7 +41,6 @@ def playTone(freq,
         osc.type = type
 
     osc.frequency.value = freq
-    #alert(f'ready to start')
     if time == 0:
         osc.start()
     else:
