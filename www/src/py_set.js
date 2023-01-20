@@ -14,7 +14,7 @@ function create_type(obj){
 function make_new_set(type){
     return {
         __class__: type,
-        $store: {},
+        $store: Object.create(null),
         $version: 0,
         $used: 0
         }
@@ -26,33 +26,28 @@ function make_new_set_base_type(so){
 }
 
 function set_hash(item){
-    if(typeof item == 'string'){
-        return 's' + item
-    }else if(typeof item == 'number'){
-        return 'n' + item
-    }else if(typeof item == 'boolean'){
-        return 'b' + item
-    }else if(item.__class__ === _b_.float){
-        return 'n' + item.value
-    }else{
-        return 'o' + (item.__hashvalue__ || _b_.hash(item))
-    }
+    return $B.$hash(item)
 }
 
 function set_add(so, item){
-    var hash = set_hash(item)
+    var hash
+    if(typeof item == 'string'){
+        hash = $B.hash_cache[item]
+        hash = hash === undefined ? $B.$hash(item) : hash
+    }else if(typeof item == 'number'){
+        hash = item
+    }else if(item.__class__ === _b_.float){
+        hash = $B.float_hash_cache[item.value]
+        hash = hash === undefined ? $B.$hash(item) : hash
+    }else{
+        hash = $B.$hash(item)
+    }
     if(set_contains(so, item, hash)){
         return
-    }
-    so.$used++
-    if(hash[0] == 'o'){
-        if(so.$store[hash]){
-            so.$store[hash].push(item)
-        }else{
-            so.$store[hash] = [item]
-        }
     }else{
-        so.$store[set_hash(item)] = item
+        so.$store[hash] = so.$store[hash] || []
+        so.$store[hash].push(item)
+        so.$used++
     }
 }
 
@@ -65,14 +60,11 @@ function set_contains(so, key, hash){
 // array $items
 function set_copy(obj){
     var res = make_new_set_base_type(obj) // set or frozenset
-    res.$store = $B.clone(obj.$store)
+    for(var hash in obj.$store){
+        res.$store[hash] = obj.$store[hash].slice()
+    }
     res.$used = obj.$used
     return res
-}
-
-function set_copy_from(so, other){
-    so.$store = $B.clone(other.$store)
-    so.$used = other.$used
 }
 
 var set = $B.make_class('set')
@@ -177,17 +169,11 @@ const DISCARD_NOTFOUND = 0,
 
 function set_discard_entry(so, key){
     var entry = set_lookkey(so, key)
-    if(entry === null){
+    if(! entry){
         return DISCARD_NOTFOUND
     }
-    if(entry.hash[0] == 'o'){
-        if(so.$store[entry.hash] !== undefined){
-            so.$store[entry.hash].splice(entry.hash_index, 1)
-            if(so.$store[entry.hash].length == 0){
-                delete so.$store[entry.hash]
-            }
-        }
-    }else{
+    so.$store[entry.hash].splice(entry.index, 1)
+    if(so.$store[entry.hash].length == 0){
         delete so.$store[entry.hash]
     }
     so.$used--
@@ -239,31 +225,21 @@ function set_intersection_multi(so, args){
 }
 
 function set_lookkey(so, key, hash){
+    // Returns false if key not found in set so, else returns
+    // {hash, index} where index is such that so[hash][index] == key
     if(hash === undefined){
-        if(key.__class__ === set ||
-                (key.__class__ && key.__class__.__mro__ &&
-                 key.__class__.__mro__.indexOf(set) > -1)){
-            // search sets as frozensets
-            hash = 'o' + frozenset.__hash__(key)
-        }else{
-            hash = set_hash(key)
+        hash = $B.$hash(key)
+    }
+    var items = so.$store[hash]
+    if(items === undefined){
+        return false
+    }
+    for(var index = 0, len = so.$store[hash].length; index < len; index++){
+        if($B.is_or_equals(key, items[index])){
+            return {hash, index}
         }
     }
-    if(hash[0] == 'o'){
-        if(so.$store[hash] === undefined){
-            return null
-        }
-        var hash_index = -1
-        for(var obj of so.$store[hash]){
-            hash_index++
-            if(obj === key || $B.rich_comp('__eq__', obj, key)){
-                return {hash, hash_index}
-            }
-        }
-        return null
-    }else{
-        return so.$store[hash] === undefined ? null : {hash}
-    }
+    return false
 }
 
 function set_swap_bodies(a, b){
@@ -434,11 +410,7 @@ function set_make_items(so){
     // make so.$items
     so.$items = []
     for(var hash in so.$store){
-        if(hash[0] == 'o'){
-            so.$items = so.$items.concat(so.$store[hash])
-        }else{
-            so.$items.push(so.$store[hash])
-        }
+        so.$items = so.$items.concat(so.$store[hash])
     }
 }
 
@@ -515,19 +487,30 @@ set.__new__ = function(cls, iterable){
     return self
 }
 
-set.__or__ = function(self, other, accept_iter){
+set.__or__ = function(self, other){
     if(! _b_.isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     var res = set_copy(self),
-        pos = 0
-    while(true){
-        var next = set_next(other, pos)
-        if(! next){
-            break
-        };
-        [pos, other_item] = next
-        set_add(res, other_item)
+        other_items
+    for(var hash in other.$store){
+        if(res.$store[hash] === undefined){
+            res.$store[hash] = other.$store[hash].slice()
+        }else{
+            var items = res.$store[hash]
+            for(var other_item of other.$store[hash]){
+                var found = false
+                for(var item of items){
+                    if($B.is_or_equals(item, other_item)){
+                        found = true
+                        break
+                    }
+                }
+                if(! found){
+                    items.push(other_item)
+                }
+            }
+        }
     }
     return res
 }
@@ -651,7 +634,7 @@ set.clear = function(){
     var $ = $B.args("clear", 1, {self: null}, ["self"],
         arguments, {}, null, null)
     $.self.$used = 0
-    $.self.$store = {}
+    $.self.$store = Object.create(null)
     $.self.$version++
     return $N
 }
@@ -731,10 +714,8 @@ set.pop = function(self){
         throw _b_.KeyError.$factory('pop from an empty set')
     }
     var item
-    if(hash[0] == 'o'){
-        item = self.$store[hash].pop()
-    }else{
-        item = self.$store[hash]
+    item = self.$store[hash].pop()
+    if(self.$store[hash].length == 0){
         delete self.$store[hash]
     }
     self.$used--
@@ -826,8 +807,40 @@ eval("set.intersection = "+
 eval("set.symmetric_difference = " +
     fc.replace(/difference/g, "symmetric_difference").replace("__sub__",
         "__xor__"))
-eval("set.union = " +
-    fc.replace(/difference/g, "union").replace("__sub__", "__or__"))
+
+set.union = function(){
+    var $ = $B.args("union", 1, {self: null},
+        ["self"], arguments, {}, "args", null)
+
+    var res = set_copy($.self)
+    if($.args.length == 0){
+        return res
+    }
+
+    for(var arg of $.args){
+        if(arg.__class__ === set || arg.__class__ === frozenset){
+            for(var hash in arg.$store){
+                if(res[hash] === undefined){
+                    res.$store[hash] = arg.$store[hash]
+                }
+            }
+        }else if(arg.__class__ === _b_.dict){
+            // dict.$iter_items_hash produces [key, value, hash]
+            for(var item in _b_.dict.$iter_items_hash(arg)){
+                var hash = item[2],
+                    entry = set_lookkey(res, item, hash)
+                if(! entry){
+                    res.$store[hash] = [item[0]]
+                }
+            }
+        }else{
+            var other = set.$factory(arg)
+            res = set.__or__(res, other)
+        }
+    }
+    return res
+}
+
 
 set.issubset = function(){
     var $ = $B.args("issubset", 2, {self: null, other: null},

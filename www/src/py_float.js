@@ -715,9 +715,7 @@ function frexp(x){
 
 // copied from
 // https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
-$B.nb_ldexp = 0
 function ldexp(mantissa, exponent) {
-    $B.nb_ldexp++
     if(isninf(mantissa)){
         return NINF
     }else if(isinf(mantissa)){

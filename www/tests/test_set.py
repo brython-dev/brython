@@ -281,4 +281,21 @@ s.clear()
 s.add(1)
 assert s == {1}
 
+# collisions
+class A:
+  def __init__(self, x):
+    self.x = x
+  def __eq__(self, other):
+    return self.x
+  def __hash__(self):
+    return hash('a')
+
+set1 = {'a', 'b', 'c', 0, 1, 2, 1.5, 2.5, 3.5}
+
+assert len({'a', A(False)}) == 2
+
+assert A(True) in set1
+assert A(False) not in set1
+
+
 print("passed all tests..")

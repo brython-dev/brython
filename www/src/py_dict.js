@@ -317,6 +317,15 @@ dict.$set_like = function(self){
     return true
 }
 
+dict.$iter_items_hash = function*(d){
+    for(var hash in d.table){
+        var indices = d.table[hash]
+        for(var index of indices){
+            yield [self._keys[index], self._values[index], hash]
+        }
+    }
+}
+
 dict.$iter_items = function*(d){
     for(var i = 0, len = d._keys.length; i < len; i++){
         if(d._keys[i] !== undefined){

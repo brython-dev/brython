@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-19 08:41:25.122906"
-__BRYTHON__.timestamp=1674114085122
+__BRYTHON__.compiled_date="2023-01-20 09:39:46.130752"
+__BRYTHON__.timestamp=1674203986099
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8871,22 +8871,23 @@ _b_.bytearray=bytearray})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,object=_b_.object,$N=_b_.None
 function create_type(obj){return $B.get_class(obj).$factory()}
 function make_new_set(type){return{
-__class__:type,$store:{},$version:0,$used:0}}
+__class__:type,$store:Object.create(null),$version:0,$used:0}}
 function make_new_set_base_type(so){return _b_.isinstance(so,set)?
 set.$factory():
 frozenset.$factory()}
-function set_hash(item){if(typeof item=='string'){return 's'+item}else if(typeof item=='number'){return 'n'+item}else if(typeof item=='boolean'){return 'b'+item}else if(item.__class__===_b_.float){return 'n'+item.value}else{return 'o'+(item.__hashvalue__ ||_b_.hash(item))}}
-function set_add(so,item){var hash=set_hash(item)
-if(set_contains(so,item,hash)){return}
-so.$used++
-if(hash[0]=='o'){if(so.$store[hash]){so.$store[hash].push(item)}else{so.$store[hash]=[item]}}else{so.$store[set_hash(item)]=item}}
+function set_hash(item){return $B.$hash(item)}
+function set_add(so,item){var hash
+if(typeof item=='string'){hash=$B.hash_cache[item]
+hash=hash===undefined ? $B.$hash(item):hash}else if(typeof item=='number'){hash=item}else if(item.__class__===_b_.float){hash=$B.float_hash_cache[item.value]
+hash=hash===undefined ? $B.$hash(item):hash}else{hash=$B.$hash(item)}
+if(set_contains(so,item,hash)){return}else{so.$store[hash]=so.$store[hash]||[]
+so.$store[hash].push(item)
+so.$used++}}
 function set_contains(so,key,hash){return !! set_lookkey(so,key,hash)}
 function set_copy(obj){var res=make_new_set_base_type(obj)
-res.$store=$B.clone(obj.$store)
+for(var hash in obj.$store){res.$store[hash]=obj.$store[hash].slice()}
 res.$used=obj.$used
 return res}
-function set_copy_from(so,other){so.$store=$B.clone(other.$store)
-so.$used=other.$used}
 var set=$B.make_class('set')
 set.$native=true
 function set_copy_and_difference(so,other){var result=set_copy(so)
@@ -8918,9 +8919,9 @@ var iterator=$B.make_js_iterator(other,frame,frame.$lineno)
 for(var key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0,DISCARD_FOUND=1
 function set_discard_entry(so,key){var entry=set_lookkey(so,key)
-if(entry===null){return DISCARD_NOTFOUND}
-if(entry.hash[0]=='o'){if(so.$store[entry.hash]!==undefined){so.$store[entry.hash].splice(entry.hash_index,1)
-if(so.$store[entry.hash].length==0){delete so.$store[entry.hash]}}}else{delete so.$store[entry.hash]}
+if(! entry){return DISCARD_NOTFOUND}
+so.$store[entry.hash].splice(entry.index,1)
+if(so.$store[entry.hash].length==0){delete so.$store[entry.hash]}
 so.$used--}
 function set_discard_key(so,key){return set_discard_entry(so,key);}
 function set_intersection(self,other){if(self===other){return set_copy(self)}
@@ -8936,15 +8937,12 @@ function set_intersection_multi(so,args){var result=set_copy(so)
 if(args.length==0){return result}
 for(var other of args){result=set_intersection(result,other)}
 return result;}
-function set_lookkey(so,key,hash){if(hash===undefined){if(key.__class__===set ||
-(key.__class__ && key.__class__.__mro__ &&
-key.__class__.__mro__.indexOf(set)>-1)){
-hash='o'+frozenset.__hash__(key)}else{hash=set_hash(key)}}
-if(hash[0]=='o'){if(so.$store[hash]===undefined){return null}
-var hash_index=-1
-for(var obj of so.$store[hash]){hash_index++
-if(obj===key ||$B.rich_comp('__eq__',obj,key)){return{hash,hash_index}}}
-return null}else{return so.$store[hash]===undefined ? null :{hash}}}
+function set_lookkey(so,key,hash){
+if(hash===undefined){hash=$B.$hash(key)}
+var items=so.$store[hash]
+if(items===undefined){return false}
+for(var index=0,len=so.$store[hash].length;index < len;index++){if($B.is_or_equals(key,items[index])){return{hash,index}}}
+return false}
 function set_swap_bodies(a,b){var temp=set_copy(a)
 set.clear(a)
 a.$used=b.$used
@@ -9007,7 +9005,7 @@ check_version(obj,version)}}}
 return iterator}
 function set_make_items(so){
 so.$items=[]
-for(var hash in so.$store){if(hash[0]=='o'){so.$items=so.$items.concat(so.$store[hash])}else{so.$items.push(so.$store[hash])}}}
+for(var hash in so.$store){so.$items=so.$items.concat(so.$store[hash])}}
 function set_next(so,pos){if(pos==0){set_make_items(so)}
 var result=so.$items[pos]
 if(result===undefined){return 0}
@@ -9030,12 +9028,13 @@ var self=make_new_set(cls)
 if(iterable===undefined){return self}
 if(cls===set){$B.check_nb_args_no_kw('__new__',2,arguments)}
 return self}
-set.__or__=function(self,other,accept_iter){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
-var res=set_copy(self),pos=0
-while(true){var next=set_next(other,pos)
-if(! next){break};
-[pos,other_item]=next
-set_add(res,other_item)}
+set.__or__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
+var res=set_copy(self),other_items
+for(var hash in other.$store){if(res.$store[hash]===undefined){res.$store[hash]=other.$store[hash].slice()}else{var items=res.$store[hash]
+for(var other_item of other.$store[hash]){var found=false
+for(var item of items){if($B.is_or_equals(item,other_item)){found=true
+break}}
+if(! found){items.push(other_item)}}}}
 return res}
 set.__rand__=function(self,other){
 return set.__and__(self,other)}
@@ -9086,7 +9085,7 @@ self.$version++
 return _b_.None}
 set.clear=function(){var $=$B.args("clear",1,{self:null},["self"],arguments,{},null,null)
 $.self.$used=0
-$.self.$store={}
+$.self.$store=Object.create(null)
 $.self.$version++
 return $N}
 set.copy=function(self){$B.check_nb_args_no_kw('copy',1,arguments)
@@ -9117,8 +9116,8 @@ return true}
 set.pop=function(self){for(var hash in self.$store){}
 if(hash===undefined){throw _b_.KeyError.$factory('pop from an empty set')}
 var item
-if(hash[0]=='o'){item=self.$store[hash].pop()}else{item=self.$store[hash]
-delete self.$store[hash]}
+item=self.$store[hash].pop()
+if(self.$store[hash].length==0){delete self.$store[hash]}
 self.$used--
 self.$version++
 return item}
@@ -9152,8 +9151,14 @@ eval("set.intersection = "+
 fc.replace(/difference/g,"intersection").replace("__sub__","__and__"))
 eval("set.symmetric_difference = "+
 fc.replace(/difference/g,"symmetric_difference").replace("__sub__","__xor__"))
-eval("set.union = "+
-fc.replace(/difference/g,"union").replace("__sub__","__or__"))
+set.union=function(){var $=$B.args("union",1,{self:null},["self"],arguments,{},"args",null)
+var res=set_copy($.self)
+if($.args.length==0){return res}
+for(var arg of $.args){if(arg.__class__===set ||arg.__class__===frozenset){for(var hash in arg.$store){if(res[hash]===undefined){res.$store[hash]=arg.$store[hash]}}}else if(arg.__class__===_b_.dict){
+for(var item in _b_.dict.$iter_items_hash(arg)){var hash=item[2],entry=set_lookkey(res,item,hash)
+if(! entry){res.$store[hash]=[item[0]]}}}else{var other=set.$factory(arg)
+res=set.__or__(res,other)}}
+return res}
 set.issubset=function(){var $=$B.args("issubset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
 if(! _b_.isinstance(other,[set,frozenset])){var temp=set_intersection(self,other)
 return set.__len__(temp)==set.__len__(self)}
@@ -9183,7 +9188,9 @@ set.__ior__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){ret
 set.update(self,other)
 return self}
 set.$literal=function(items){var res=make_new_set(set)
-for(var item of items){set_add(res,item)}
+for(var item of items){try{set_add(res,item)}catch(err){console.log('err set literal',items)
+console.log('item',item)
+throw err}}
 return res}
 set.$factory=function(){var args=[set].concat(Array.from(arguments)),self=set.__new__.apply(null,args)
 set.__init__(self,...arguments)
@@ -10031,20 +10038,11 @@ $B.has_surrogate=function(s){
 for(var i=0;i < s.length;i++){code=s.charCodeAt(i)
 if(code >=0xD800 && code <=0xDBFF){return true}}
 return false}
-$B.String=function(s){var codepoints=[],surrogates=[],j=0,in_cache=$B.hash_cache[s]!==undefined
-if(s.length==0 && ! in_cache){$B.hash_cache[s]=0
-in_cache=true}
+$B.String=function(s){var codepoints=[],surrogates=[],j=0
 for(var i=0,len=s.length;i < len;i++){var cp=s.codePointAt(i)
-if(! in_cache){if(i==0){var h=prefix
-h=(h ^(cp << 7))& mask}
-h=((1000003*h)^ cp)& mask}
 if(cp >=0x10000){surrogates.push(j)
 i++}
 j++}
-if(! in_cache){h=(h ^ s.length)& mask
-h=(h ^ suffix)& mask
-if(h==-1){h=-2}
-$B.hash_cache[s]=h}
 if(surrogates.length==0){return s}
 var res=new String(s)
 res.__class__=str
@@ -10151,14 +10149,9 @@ x=(x ^ p.length)& mask
 x=(x ^ suffix)& mask
 if(x==-1){x=-2}
 return x}
-str.__hash__=function(_self){_self=to_string(_self)
-if($B.hash_cache[_self]!==undefined){return $B.hash_cache[_self]}
-str.$nb_str_hash_cache++
-if(str.$nb_str_hash_cache > 100000){
-str.$nb_str_hash_cache=0
-$B.hash_cache=Object.create(null)}
-try{return $B.hash_cache[_self]=fnv(to_codepoints(_self))}catch(err){console.log('error hash, cps',_self,to_codepoints(_self))
-throw err}}
+str.__hash__=function(_self){
+return _self.split("").reduce(function(a,b){a=((a << 5)-a)+b.charCodeAt(0);
+return a & a;},0)}
 str.__init__=function(self,arg){
 return _b_.None}
 var str_iterator=$B.make_iterator_class("str_iterator")
@@ -11957,9 +11950,7 @@ while(man >=1.0){man*=0.5
 ex++}
 man*=sign
 return[man,ex]}
-$B.nb_ldexp=0
-function ldexp(mantissa,exponent){$B.nb_ldexp++
-if(isninf(mantissa)){return NINF}else if(isinf(mantissa)){return INF}
+function ldexp(mantissa,exponent){if(isninf(mantissa)){return NINF}else if(isinf(mantissa)){return INF}
 if(_b_.isinstance(mantissa,_b_.float)){mantissa=mantissa.value}
 if(mantissa==0){return ZERO}else if(isNaN(mantissa)){return NAN}
 if(_b_.isinstance(exponent,$B.long_int)){if(exponent.value < 0){return ZERO}else{throw _b_.OverflowError.$factory('overflow')}}else if(! isFinite(mantissa*Math.pow(2,exponent))){throw _b_.OverflowError.$factory('overflow')}
@@ -12531,6 +12522,8 @@ for(var v of self._values){if(v===undefined){continue}else if(typeof v=='string'
 typeof v=='number' ||
 typeof v=='boolean'){continue}else if([_b_.tuple,_b_.float,_b_.complex].indexOf(v.__class__)>-1){continue}else if(! _b_.hasattr(v.__class__,'__hash__')){return false}}
 return true}
+dict.$iter_items_hash=function*(d){for(var hash in d.table){var indices=d.table[hash]
+for(var index of indices){yield[self._keys[index],self._values[index],hash]}}}
 dict.$iter_items=function*(d){for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield[d._keys[i],d._values[i]]}}}
 var $copy_dict=function(left,right){
 right.$version=right.$version ||0
