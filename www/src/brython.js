@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-21 14:19:35.762714"
-__BRYTHON__.timestamp=1674307175762
+__BRYTHON__.compiled_date="2023-01-21 15:13:53.154538"
+__BRYTHON__.timestamp=1674310433154
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7780,7 +7780,7 @@ err.__traceback__=traceback.$factory(err)}
 var show_stack=$B.show_stack=function(stack){stack=stack ||$B.frames_stack
 for(const frame of stack){console.log(frame[0],frame[1].$line_info)}}
 var be_factory=`
-function (){
+    var _b_ = __BRYTHON__.builtins
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
@@ -7792,8 +7792,9 @@ function (){
     err.__cause__ = _b_.None // XXX fix me
     err.__context__ = _b_.None // XXX fix me
     err.__suppress_context__ = false // XXX fix me
-    return err}`
-eval('BaseException.$factory = '+be_factory)
+    return err
+`
+BaseException.$factory=Function(be_factory)
 BaseException.$factory.$infos={__name__:"BaseException",__qualname__:"BaseException"}
 $B.set_func_names(BaseException)
 _b_.BaseException=BaseException
@@ -7837,21 +7838,12 @@ for(var name of names){var code=""
 if(Array.isArray(name)){
 var code=name[1],name=name[0]}
 $B.builtins_scope[name]=true
-var $exc=(be_factory).replace(/BaseException/g,name)
+var $exc=be_factory.replace(/BaseException/g,name)
 $exc=$exc.replace("// placeholder",code)
-_str[pos++]="_b_."+name+' = {__class__:_b_.type, '+
-'__bases__: [_b_.'+parent.__name__+'], '+
-'__name__: "'+name+'", '+
-'__qualname__: "'+name+'", '+
-'__mro__: [_b_.'+parent.__name__+
-"].concat(parent.__mro__), $is_class: true};"
-_str[pos++]="_b_."+name+".$factory = "+$exc
-_str[pos++]="_b_."+name+'.$factory.$infos = {__name__: "'+
-name+'", __qualname__: "'+name+'"}'
-_str[pos++]="$B.set_func_names(_b_."+name+", 'builtins')"}
-try{eval(_str.join(";"))}catch(err){console.log("--err"+err)
-console.log(_str.join(''))
-throw err}}
+_b_[name]={__class__:_b_.type,__bases__:[_b_[parent.__name__]],__name__:name,__mro__:[_b_[parent.__name__]].concat(parent.__mro__),$is_class:true}
+_b_[name].$factory=Function($exc)
+_b_[name].$factory.$infos={__name__:name,__qualname__:name}
+$B.set_func_names(_b_[name],'builtins')}}
 $make_exc(["SystemExit","KeyboardInterrupt","GeneratorExit","Exception"],BaseException)
 $make_exc([["StopIteration","err.value = arguments[0] || _b_.None"],["StopAsyncIteration","err.value = arguments[0]"],"ArithmeticError","AssertionError","BufferError","EOFError",["ImportError","err.name = arguments[0]"],"LookupError","MemoryError","OSError","ReferenceError","RuntimeError",["SyntaxError","err.msg = arguments[0]"],"SystemError","TypeError","ValueError","Warning"],_b_.Exception)
 $make_exc(["FloatingPointError","OverflowError","ZeroDivisionError"],_b_.ArithmeticError)
@@ -12080,28 +12072,50 @@ float.__truediv__=function(self,other){if(_b_.isinstance(other,_b_.int)){if(othe
 return float.$factory(self.value/other)}else if(_b_.isinstance(other,float)){if(other.value==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 return float.$factory(self.value/other.value)}
 return _b_.NotImplemented}
-var $op_func=function(self,other){if(_b_.isinstance(other,_b_.int)){if(typeof other=="boolean"){return other ? $B.fast_float(self.value-1):self}else if(other.__class__===$B.long_int){return float.$factory(self.value-parseInt(other.value))}else{return fast_float(self.value-other)}}
-if(_b_.isinstance(other,float)){return fast_float(self.value-other.value)}
-return _b_.NotImplemented}
-$op_func+="" 
-var $ops={"+":"add","-":"sub"}
-for(var $op in $ops){var $opf=$op_func.replace(/-/gm,$op)
-$opf=$opf.replace(/__rsub__/gm,"__r"+$ops[$op]+"__")
-eval("float.__"+$ops[$op]+"__ = "+$opf)}
-var $comp_func=function(self,other){if(_b_.isinstance(other,_b_.int)){if(other.__class__===$B.long_int){return self.value > parseInt(other.value)}
-return self.value > other.valueOf()}
-if(_b_.isinstance(other,float)){return self.value > other.value}
-if(_b_.isinstance(other,_b_.bool)){return self.value > _b_.bool.__hash__(other)}
-if(_b_.hasattr(other,"__int__")||_b_.hasattr(other,"__index__")){return _b_.int.__gt__(self.value,$B.$GetInt(other))}
-var inv_op=$B.$getattr(other,"__le__",_b_.None)
-if(inv_op !==_b_.None){return inv_op(self)}
+var op_func_body=
+`var $B = __BRYTHON__,
+        _b_ = __BRYTHON__.builtins
+    if(_b_.isinstance(other, _b_.int)){
+        if(typeof other == "boolean"){
+            return other ? $B.fast_float(self.value - 1) : self
+        }else if(other.__class__ === $B.long_int){
+            return _b_.float.$factory(self.value - parseInt(other.value))
+        }else{
+            return $B.fast_float(self.value - other)
+        }
+    }
+    if(_b_.isinstance(other, _b_.float)){
+        return $B.fast_float(self.value - other.value)
+    }
+    return _b_.NotImplemented`
+var ops={"+":"add","-":"sub"}
+for(var op in ops){var body=op_func_body.replace(/-/gm,op)
+float[`__${ops[op]}__`]=Function('self','other',body)}
+var comp_func_body=`
+var $B = __BRYTHON__,
+    _b_ = $B.builtins
+if(_b_.isinstance(other, _b_.int)){
+    if(other.__class__ === $B.long_int){
+        return self.value > parseInt(other.value)
+    }
+    return self.value > other.valueOf()}
+if(_b_.isinstance(other, _b_.float)){
+    return self.value > other.value}
+if(_b_.isinstance(other, _b_.bool)) {
+    return self.value > _b_.bool.__hash__(other)}
+if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
+   return _b_.int.__gt__(self.value, $B.$GetInt(other))}
+// See if other has the opposite operator, eg <= for >
+var inv_op = $B.$getattr(other, "__le__", _b_.None)
+if(inv_op !== _b_.None){
+    return inv_op(self)}
 throw _b_.TypeError.$factory(
-"unorderable types: float() > "+$B.class_name(other)+"()")}
-$comp_func+="" 
-for(var $op in $B.$comps){eval("float.__"+$B.$comps[$op]+"__ = "+
-$comp_func.replace(/>/gm,$op).
-replace(/__gt__/gm,"__"+$B.$comps[$op]+"__").
-replace(/__le__/,"__"+$B.$inv_comps[$op]+"__"))}
+    "unorderable types: float() > " + $B.class_name(other) + "()")
+`
+for(var op in $B.$comps){var body=comp_func_body.replace(/>/gm,op).
+replace(/__gt__/gm,`__${$B.$comps[op]}__`).
+replace(/__le__/,`__${$B.$inv_comps[op]}__`)
+float[`__${$B.$comps[op]}__`]=Function('self','other',body)}
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or","divmod"]
 for(var r_opname of r_opnames){if(float["__r"+r_opname+"__"]===undefined &&
 float['__'+r_opname+'__']){float["__r"+r_opname+"__"]=(function(name){return function(self,other){var other_as_num=_b_.int.$to_js_number(other)
@@ -12157,7 +12171,7 @@ if(value.indexOf('__')>-1){throw _b_.ValueError.$factory('invalid float literal 
 value)}
 value=value.charAt(0)+value.substr(1).replace(/_/g,"")
 value=to_digits(value)
-if(isFinite(value)){return fast_float(eval(value))}else{throw _b_.TypeError.$factory(
+if(isFinite(value)){return fast_float(parseFloat(value))}else{throw _b_.TypeError.$factory(
 "could not convert string to float: "+
 _b_.repr(original_value))}}}
 var klass=value.__class__,float_method=$B.$getattr(klass,'__float__',null)
@@ -14183,13 +14197,10 @@ items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){if($B.deb
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}
-var items=_b_.list.$factory(_b_.dict.items($ns['kw']))
-for(var i=0,len=items.length;i < len;i++){
-var arg=items[i][0],value=items[i][1]
+for(var item of _b_.dict.$iter_items($ns.kw)){
+var arg=item[0],value=item[1]
 if(arg.toLowerCase().substr(0,2)=="on"){
-var js='$B.DOMNode.bind(self,"'+
-arg.toLowerCase().substr(2)
-eval(js+'",function(){'+value+'})')}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
+$B.DOMNode.bind(self,arg.toLowerCase().substr(2),value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{
 arg=$B.imported["browser.html"].
 attribute_mapper(arg)

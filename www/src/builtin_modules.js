@@ -219,17 +219,16 @@
                     }
 
                     // attributes
-                    var items = _b_.list.$factory(_b_.dict.items($ns['kw']))
-                    for(var i = 0, len = items.length; i < len; i++){
+                    for(var item of _b_.dict.$iter_items($ns.kw)){
                         // keyword arguments
-                        var arg = items[i][0],
-                            value = items[i][1]
+                        var arg = item[0],
+                            value = item[1]
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects
-                            var js = '$B.DOMNode.bind(self,"' +
-                                arg.toLowerCase().substr(2)
-                            eval(js + '",function(){' + value + '})')
+                            $B.DOMNode.bind(self,
+                                            arg.toLowerCase().substr(2),
+                                            value)
                         }else if(arg.toLowerCase() == "style"){
                             $B.DOMNode.set_style(self, value)
                         }else{
