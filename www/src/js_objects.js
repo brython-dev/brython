@@ -677,7 +677,9 @@ $B.JSMeta.__init_subclass__ = function(){
 $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     // Creating a class that inherits a Javascript class A must return
     // another Javascript class B that extends A
-    eval("var " + class_name + ` = function(){
+    var body = `
+    var _b_ = __BRYTHON__.builtins
+    return function(){
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
@@ -687,11 +689,12 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
         }else{
             return new bases[0].$js_func(...arguments)
         }
-    }`)
-    var new_js_class = eval(class_name)
+    }`
+    var new_js_class = Function('cl_dict', 'bases', body)(cl_dict, bases)
     new_js_class.prototype = Object.create(bases[0].$js_func.prototype)
     new_js_class.prototype.constructor = new_js_class
     new_js_class.__mro__ = [bases[0], _b_.type]
+    new_js_class.__qualname__ = class_name
     new_js_class.$is_js_class = true
     return new_js_class
 }

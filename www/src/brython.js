@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-21 15:13:53.154538"
-__BRYTHON__.timestamp=1674310433154
+__BRYTHON__.compiled_date="2023-01-21 17:29:09.076609"
+__BRYTHON__.timestamp=1674318549076
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -9437,7 +9437,9 @@ $B.JSMeta.__getattribute__=function(cls,attr){if(cls[attr]!==undefined){return c
 return _b_.type.__getattribute__(cls,attr)}}
 $B.JSMeta.__init_subclass__=function(){}
 $B.JSMeta.__new__=function(metaclass,class_name,bases,cl_dict){
-eval("var "+class_name+` = function(){
+var body=`
+    var _b_ = __BRYTHON__.builtins
+    return function(){
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
@@ -9447,11 +9449,12 @@ eval("var "+class_name+` = function(){
         }else{
             return new bases[0].$js_func(...arguments)
         }
-    }`)
-var new_js_class=eval(class_name)
+    }`
+var new_js_class=Function('cl_dict','bases',body)(cl_dict,bases)
 new_js_class.prototype=Object.create(bases[0].$js_func.prototype)
 new_js_class.prototype.constructor=new_js_class
 new_js_class.__mro__=[bases[0],_b_.type]
+new_js_class.__qualname__=class_name
 new_js_class.$is_js_class=true
 return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
@@ -9545,7 +9548,7 @@ js+='return '+prefix
 js+=module.__name__.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id=prefix+module.__name__.replace(/\./g,'_')
-var $module=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)
+var mod=(new Function(module_id,js))(module)}catch(err){if($B.debug > 1){console.log(err+" for module "+module.__name__)
 console.log("module",module)
 console.log(root)
 if($B.debug > 1){console.log($B.format_indent(js,0))}
@@ -9556,7 +9559,6 @@ console.log("linenum: "+err.lineNumber)
 console.log(err.stack)}
 throw err}finally{$B.clear_ns(module.__name__)}
 try{
-var mod=eval("$module")
 for(var attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
 $B.imported[module.__name__]=module
@@ -11155,9 +11157,16 @@ if(byteorder=="big"){res.reverse()}
 return{
 __class__:_b_.bytes,source:res}}
 int.__abs__=function(self){return Math.abs(int_value(self))}
-int.__add__=function(self,other){if(typeof other=="number"){return int_or_long(BigInt(self)+BigInt(other))}else if(other.__class__===$B.long_int){return int_or_long(BigInt(self)+other.value)}else if(typeof other=="boolean"){return int_or_long(BigInt(self)+(other ? 1n :0n))}else if(_b_.isinstance(other,_b_.int)){return int.__add__(self,other.$brython_value)}
-return _b_.NotImplemented}
-var op_model=int.__add__+''
+var op_model=
+`var _b_ = __BRYTHON__.builtins
+if(typeof other == "number"){
+    return _b_.int.$int_or_long(BigInt(self) + BigInt(other))}else if(other.__class__ === $B.long_int){
+    return _b_.int.$int_or_long(BigInt(self) + other.value)}else if(typeof other == "boolean"){
+    return _b_.int.$int_or_long(BigInt(self) + (other ? 1n : 0n))}else if(_b_.isinstance(other, _b_.int)){
+    return _b_.int.__add__(self, other.$brython_value)}
+return _b_.NotImplemented
+`
+int.__add__=Function('self','other',op_model)
 int.__bool__=function(self){return int_value(self).valueOf()==0 ? false :true}
 int.__ceil__=function(self){return Math.ceil(int_value(self))}
 int.__divmod__=function(self,other){if(! _b_.isinstance(other,int)){return _b_.NotImplemented}
@@ -11231,7 +11240,7 @@ if(other==0){throw _b_.ZeroDivisionError.$factory(
 "integer division or modulo by zero")}
 return(self % other+other)% other}
 return _b_.NotImplemented}
-eval('int.__mul__ = '+op_model.replace(/\+/g,'*').replace(/add/g,"mul"))
+int.__mul__=Function('self','other',op_model.replace(/\+/g,'*').replace(/add/g,"mul"))
 int.__ne__=function(self,other){var res=int.__eq__(self,other)
 return(res===_b_.NotImplemented)? res :!res}
 int.__neg__=function(self){var self_as_int=int_value(self)
@@ -11290,8 +11299,7 @@ if(_b_.dir(self).indexOf(attr)>-1){throw _b_.AttributeError.$factory("attribute 
 throw _b_.AttributeError.$factory(msg)}
 _b_.dict.$setitem(self.__dict__,attr,value)
 return _b_.None}
-eval('int.__sub__ = '+
-op_model.replace(/\+/g,'-').replace(/__add__/g,'__sub__'))
+int.__sub__=Function('self','other',op_model.replace(/\+/g,'-').replace(/__add__/g,'__sub__'))
 int.__truediv__=function(self,other){if(_b_.isinstance(other,int)){other=int_value(other)
 if(other==0){throw _b_.ZeroDivisionError.$factory("division by zero")}
 if(other.__class__===$B.long_int){return $B.fast_float(self/parseInt(other.value))}
@@ -11309,19 +11317,21 @@ int.imag=function(self){return int.$factory(0)}
 int.real=function(self){return self}
 for(var attr of['numerator','denominator','imag','real']){int[attr].setter=(function(x){return function(self,value){throw _b_.AttributeError.$factory(`attribute '${x}' of `+
 `'${$B.class_name(self)}' objects is not writable`)}})(attr)}
-int.__and__=function(self,other){if(typeof other=="number"){
-return int_or_long(BigInt(self)& BigInt(other))}else if(typeof other=="boolean"){return self &(other ? 1 :0)}else if(other.__class__===$B.long_int){return int_or_long(BigInt(self)& other.value)}else if(_b_.isinstance(other,_b_.int)){
-return int.__and__(self,other.$brython_value)}
-return _b_.NotImplemented}
-var model=int.__and__+''
-eval("int.__lshift__ = "+
-model.replace(/&/g,'<<').replace(/__and__/g,'__lshift__'))
-eval("int.__rshift__ = "+
-model.replace(/&/g,'>>').replace(/__and__/g,'__rshift__'))
-eval("int.__or__ = "+
-model.replace(/&/g,'|').replace(/__and__/g,'__or__'))
-eval("int.__xor__ = "+
-model.replace(/&/g,'^').replace(/__and__/g,'__xor__'))
+var model=
+`var _b_ = __BRYTHON__.builtins
+if(typeof other == "number"){
+    // transform into BigInt: JS converts numbers to 32 bits
+    return _b_.int.$int_or_long(BigInt(self) & BigInt(other))}else if(typeof other == "boolean"){
+    return self & (other ? 1 : 0)}else if(other.__class__ === $B.long_int){
+    return _b_.int.$int_or_long(BigInt(self) & other.value)}else if(_b_.isinstance(other, _b_.int)){
+    // int subclass
+    return _b_.int.__and__(self, other.$brython_value)}
+return _b_.NotImplemented`
+int.__and__=Function('self','other',model)
+int.__lshift__=Function('self','other',model.replace(/&/g,'<<').replace(/__and__/g,'__lshift__'))
+int.__rshift__=Function('self','other',model.replace(/&/g,'>>').replace(/__and__/g,'__rshift__'))
+int.__or__=Function('self','other',model.replace(/&/g,'|').replace(/__and__/g,'__or__'))
+int.__xor__=Function('self','other',model.replace(/&/g,'^').replace(/__and__/g,'__xor__'))
 int.__ge__=function(self,other){self=int_value(self)
 if(typeof other=="number"){return self >=other}else if(other.__class__===$B.long_int){return self >=other.value}else if(typeof other=="boolean"){return self >=other ? 1 :0}else if(_b_.isinstance(other,_b_.int)){return self >=other.$brython_value}
 return _b_.NotImplemented}
@@ -11466,7 +11476,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){
 var _b_=$B.builtins
-try{eval("window")}catch(err){window=self}
+if($B.isWebWorker){window=self}
 var long_int={__class__:_b_.type,__mro__:[_b_.int,_b_.object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 var max_safe_divider=$B.max_int/9
 var int_or_long=_b_.int.$int_or_long
@@ -11578,20 +11588,25 @@ var infos=_infos(x)
 return _b_.float.$factory(infos.nbits-1+
 Math.log(1+infos.relative_rest/Math.LN2))}
 long_int.$log10=function(x){if(x.value < 0){throw _b_.ValueError.$factory('math domain error')}
-var x_string=x.value.toString(),exp=x_string.length-1,mant=eval(x_string[0]+'.'+x_string.substr(1))
+var x_string=x.value.toString(),exp=x_string.length-1,mant=parseFloat(x_string[0]+'.'+x_string.substr(1))
 return _b_.float.$factory(exp+Math.log10(mant))}
 long_int.numerator=function(self){return self}
 long_int.denominator=function(self){return _b_.int.$factory(1)}
 long_int.imag=function(self){return _b_.int.$factory(0)}
 long_int.real=function(self){return self}
-long_int.__and__=function(self,other){if(typeof other=="number"){return int_or_long(self.value & BigInt(other))}else if(typeof other=="boolean"){return int_or_long(self.value &(other ? 1n :0n))}else if(other.__class__===$B.long_int){return int_or_long(self.value & other.value)}else if(_b_.isinstance(other,_b_.int)){
-return long_int.__and__(self,other.$brython_value)}
-return _b_.NotImplemented}
-var model=long_int.__and__+''
-eval("long_int.__or__ = "+
-model.replace(/&/g,'|').replace(/__and__/g,'__or__'))
-eval("long_int.__xor__ = "+
-model.replace(/&/g,'^').replace(/__and__/g,'__xor__'))
+var body=
+`var $B = __BRYTHON__,
+    _b_ = $B.builtins
+if(typeof other == "number"){
+    return _b_.int.$int_or_long(self.value & BigInt(other))}else if(typeof other == "boolean"){
+    return _b_.int.$int_or_long(self.value & (other ? 1n : 0n))}else if(other.__class__ === $B.long_int){
+    return _b_.int.$int_or_long(self.value & other.value)}else if(_b_.isinstance(other, _b_.int)){
+    // int subclass
+    return $B.long_int.__and__(self, other.$brython_value)}
+return _b_.NotImplemented`
+long_int.__and__=Function('self','other',body)
+long_int.__or__=Function('self','other',body.replace(/&/g,'|').replace(/__and__/g,'__or__'))
+long_int.__xor__=Function('self','other',body.replace(/&/g,'^').replace(/__and__/g,'__xor__'))
 long_int.to_bytes=function(self,len,byteorder,signed){
 var res=[],v=self.value
 if(! $B.$bool(signed)&& v < 0){throw _b_.OverflowError.$factory("can't convert negative int to unsigned")}

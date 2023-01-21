@@ -177,20 +177,21 @@ int.__abs__ = function(self){
     return Math.abs(int_value(self))
 }
 
-int.__add__ = function(self, other){
-    if(typeof other == "number"){
-        return int_or_long(BigInt(self) + BigInt(other))
-    }else if(other.__class__ === $B.long_int){
-        return int_or_long(BigInt(self) + other.value)
-    }else if(typeof other == "boolean"){
-        return int_or_long(BigInt(self) + (other ? 1n : 0n))
-    }else if(_b_.isinstance(other, _b_.int)){
-        return int.__add__(self, other.$brython_value)
-    }
-    return _b_.NotImplemented
+var op_model =
+`var _b_ = __BRYTHON__.builtins
+if(typeof other == "number"){
+    return _b_.int.$int_or_long(BigInt(self) + BigInt(other))
+}else if(other.__class__ === $B.long_int){
+    return _b_.int.$int_or_long(BigInt(self) + other.value)
+}else if(typeof other == "boolean"){
+    return _b_.int.$int_or_long(BigInt(self) + (other ? 1n : 0n))
+}else if(_b_.isinstance(other, _b_.int)){
+    return _b_.int.__add__(self, other.$brython_value)
 }
+return _b_.NotImplemented
+`
 
-var op_model = int.__add__ + ''
+int.__add__ = Function('self', 'other', op_model)
 
 int.__bool__ = function(self){
     return int_value(self).valueOf() == 0 ? false : true
@@ -361,7 +362,8 @@ int.__mod__ = function(self, other) {
     return _b_.NotImplemented
 }
 
-eval('int.__mul__ = ' + op_model.replace(/\+/g, '*').replace(/add/g, "mul"))
+int.__mul__ = Function('self', 'other',
+    op_model.replace(/\+/g, '*').replace(/add/g, "mul"))
 
 int.__ne__ = function(self, other){
     var res = int.__eq__(self, other)
@@ -538,7 +540,7 @@ int.__setattr__ = function(self, attr, value){
     return _b_.None
 }
 
-eval('int.__sub__ = ' +
+int.__sub__ = Function('self', 'other',
      op_model.replace(/\+/g, '-').replace(/__add__/g, '__sub__'))
 
 int.__truediv__ = function(self, other){
@@ -596,30 +598,29 @@ for(var attr of ['numerator', 'denominator', 'imag', 'real']){
 }
 
 // code for operands & | ^
-int.__and__ = function(self, other){
-    if(typeof other == "number"){
-        // transform into BigInt: JS converts numbers to 32 bits
-        return int_or_long(BigInt(self) & BigInt(other))
-    }else if(typeof other == "boolean"){
-        return self & (other ? 1 : 0)
-    }else if(other.__class__ === $B.long_int){
-        return int_or_long(BigInt(self) & other.value)
-    }else if(_b_.isinstance(other, _b_.int)){
-        // int subclass
-        return int.__and__(self, other.$brython_value)
-    }
-    return _b_.NotImplemented
+var model =
+`var _b_ = __BRYTHON__.builtins
+if(typeof other == "number"){
+    // transform into BigInt: JS converts numbers to 32 bits
+    return _b_.int.$int_or_long(BigInt(self) & BigInt(other))
+}else if(typeof other == "boolean"){
+    return self & (other ? 1 : 0)
+}else if(other.__class__ === $B.long_int){
+    return _b_.int.$int_or_long(BigInt(self) & other.value)
+}else if(_b_.isinstance(other, _b_.int)){
+    // int subclass
+    return _b_.int.__and__(self, other.$brython_value)
 }
+return _b_.NotImplemented`
 
-var model = int.__and__ + ''
-
-eval("int.__lshift__ = " +
+int.__and__ = Function('self', 'other', model)
+int.__lshift__ = Function('self', 'other', 
      model.replace(/&/g, '<<').replace(/__and__/g, '__lshift__'))
-eval("int.__rshift__ = " +
+int.__rshift__ = Function('self', 'other', 
      model.replace(/&/g, '>>').replace(/__and__/g, '__rshift__'))
-eval("int.__or__ = " +
+int.__or__ = Function('self', 'other', 
      model.replace(/&/g, '|').replace(/__and__/g, '__or__'))
-eval("int.__xor__ = " +
+int.__xor__ = Function('self', 'other', 
      model.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
 
 int.__ge__ = function(self, other){
