@@ -1554,6 +1554,7 @@ $B.ast.For.prototype.to_js = function(scopes){
         js += `var iter_${id} = ${iter},\n` +
                  `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
+            `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `var next_func_${id} = $B.$call(` +
             `$B.$getattr(type_${id}, '__anext__'))\n` +
             `while(true){\n`+
