@@ -214,7 +214,7 @@ frame.f_code = {
                 co_varnames: $B.fast_tuple([])
             }
         }
-        res.__class__ = $B.code
+        res.__class__ = _b_.code
         return res
     }
 }

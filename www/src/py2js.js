@@ -7270,7 +7270,7 @@ var get_docstring = $B.parser.get_docstring = function(node){
         var firstchild = node.body[0]
         if(firstchild instanceof $B.ast.Constant &&
                 typeof firstchild.value == 'string'){
-            doc_string = eval(firstchild.value)
+            doc_string = firstchild.value
         }
     }
     return doc_string
@@ -7856,8 +7856,8 @@ function prepare_string(context, s, position){
                             raise_syntax_error(context, " (unicode error) " +
                                 "unknown Unicode character name")
                         }
-                        var cp = "0x" + search[1] // code point
-                        zone += String.fromCodePoint(eval(cp))
+                        var cp = parseInt(search[1], 16) // code point
+                        zone += String.fromCodePoint(cp)
                         end = end_lit + 1
                     }else{
                         end++

@@ -580,19 +580,18 @@ for(var r_opname of r_opnames){
     }
 }
 
-
 // comparison methods
-var $comp_func = function(self, other){
+var comp_func_body = `
+    var _b_ = __BRYTHON__.builtins
     if(other === undefined || other == _b_.None){
         return _b_.NotImplemented
     }
     throw _b_.TypeError.$factory("no ordering relation " +
-        "is defined for complex numbers")
-}
-$comp_func += '' // source code
+        "is defined for complex numbers")`
+
 for(var $op in $B.$comps){
-    eval("complex.__" + $B.$comps[$op] + "__ = " +
-        $comp_func.replace(/>/gm, $op))
+    complex['__' + $B.$comps[$op] + '__'] = Function('self', 'other',
+        comp_func_body.replace(/>/gm, $op))
 }
 
 // Descriptors to return real and imag

@@ -32,7 +32,7 @@ NoneType.__setattr__ = function(self, attr){
     return no_set_attr(NoneType, attr)
 }
 
-var None = {
+var None = _b_.None = {
     __class__: NoneType
 }
 
@@ -63,11 +63,11 @@ for(var $func in None){
 
 $B.set_func_names(NoneType, "builtins")
 
-function __build_class__(){
+_b_.__build_class__ = function(){
     throw _b_.NotImplementedError.$factory('__build_class__')
 }
 
-function abs(obj){
+var abs = _b_.abs = function(obj){
     check_nb_args_no_kw('abs', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
@@ -83,11 +83,11 @@ function abs(obj){
     return $B.$call(method)(obj)
 }
 
-function aiter(async_iterable){
+var aiter = _b_.aiter = function(async_iterable){
     return $B.$call($B.$getattr(async_iterable, '__aiter__'))()
 }
 
-function all(obj){
+var all = _b_.all = function(obj){
     check_nb_args_no_kw('all', 1, arguments)
     var iterable = iter(obj)
     while(1){
@@ -98,7 +98,7 @@ function all(obj){
     }
 }
 
-function anext(async_iterator, _default){
+var anext = _b_.anext = function(async_iterator, _default){
     var missing = {},
         $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 ['async_iterator', '_default'], arguments,
@@ -107,7 +107,7 @@ function anext(async_iterator, _default){
     return awaitable
 }
 
-function any(obj){
+var any = _b_.any = function(obj){
     check_nb_args_no_kw('any', 1, arguments)
     var next_of = $B.next_of(obj)
     while(1){
@@ -122,7 +122,7 @@ function any(obj){
     }
 }
 
-function ascii(obj) {
+var ascii = _b_.ascii = function(obj) {
     check_nb_args_no_kw('ascii', 1, arguments)
     var res = repr(obj), res1 = '', cp
     for(var i = 0; i < res.length; i++){
@@ -191,12 +191,12 @@ function bin_hex_oct(base, obj){
 }
 
 // bin() (built in function)
-function bin(obj) {
+var bin = _b_.bin = function(obj) {
     check_nb_args_no_kw('bin', 1, arguments)
     return bin_hex_oct(2, obj)
 }
 
-function breakpoint(){
+var breakpoint = _b_.breakpoint = function(){
     // PEP 553
     $B.$import('sys', [])
     var missing = {},
@@ -207,13 +207,13 @@ function breakpoint(){
     return $B.$call(hook).apply(null, arguments)
 }
 
-function callable(obj) {
+var callable = _b_.callable = function(obj) {
     check_nb_args_no_kw('callable', 1, arguments)
 
     return hasattr(obj, '__call__')
 }
 
-function chr(i){
+var chr = _b_.chr = function(i){
     check_nb_args_no_kw('chr', 1, arguments)
 
     i = $B.PyNumber_Index(i)
@@ -229,7 +229,7 @@ function chr(i){
     }
 }
 
-var code = $B.code = $B.make_class("code")
+var code = _b_.code = $B.make_class("code")
 
 code.__repr__ = code.__str__ = function(_self){
     return `<code object ${_self.co_name}, file '${_self.co_filename}', ` +
@@ -243,7 +243,7 @@ code.__getattribute__ = function(self, attr){
 $B.set_func_names(code, "builtins")
 
 //compile() (built in function)
-function compile() {
+var compile = _b_.compile = function() {
     var $ = $B.args('compile', 6,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
          optimize:null, _feature_version:null},
@@ -426,9 +426,9 @@ function compile() {
 //function complex is located in py_complex.js
 
 // built-in variable __debug__
-var __debug__ = $B.debug > 0
+var __debug__ = _b_.debug = $B.debug > 0
 
-function delattr(obj, attr) {
+var delattr = _b_.delattr = function(obj, attr) {
     // descriptor protocol : if obj has attribute attr and this attribute has
     // a method __delete__(), use it
     check_nb_args_no_kw('delattr', 2, arguments)
@@ -467,7 +467,7 @@ $B.$delete = function(name, is_global){
     }
 }
 
-function dir(obj){
+var dir = _b_.dir = function(obj){
     if(obj === undefined){
         // if dir is called without arguments, use locals
         var frame = $B.last($B.frames_stack)
@@ -517,7 +517,7 @@ function dir(obj){
 }
 
 //divmod() (built in function)
-function divmod(x,y){
+var divmod = _b_.divmod = function(x,y){
    check_nb_args_no_kw('divmod', 2, arguments)
 
    var klass = x.__class__ || $B.get_class(x)
@@ -529,7 +529,7 @@ function divmod(x,y){
        $B.$getattr(klass, '__mod__')(x, y)])
 }
 
-var enumerate = $B.make_class("enumerate",
+var enumerate = _b_.enumerate = $B.make_class("enumerate",
     function(){
         var $ns = $B.args("enumerate", 2, {iterable: null, start: null},
             ['iterable', 'start'], arguments, {start: 0}, null, null),
@@ -558,7 +558,7 @@ enumerate.__next__ = function(self){
 $B.set_func_names(enumerate, "builtins")
 
 //eval() (built in function)
-function $$eval(src, _globals, _locals){
+var $$eval = _b_.eval = function(src, _globals, _locals){
     var $ = $B.args("eval", 4,
             {src: null, globals: null, locals: null, mode: null} ,
             ['src', 'globals', 'locals', 'mode', '/'],
@@ -829,7 +829,7 @@ function $$eval(src, _globals, _locals){
 
 $$eval.$is_func = true
 
-function exec(src, globals, locals){
+var exec = _b_.exec = function(src, globals, locals){
     var missing = {}
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
         ["src", "globals", "locals", "/"], arguments,
@@ -843,7 +843,7 @@ function exec(src, globals, locals){
 
 exec.$is_func = true
 
-function exit(){
+var exit = _b_.exit = function(){
     throw _b_.SystemExit
 }
 
@@ -851,7 +851,7 @@ exit.__repr__ = exit.__str__ = function(){
     return "Use exit() or Ctrl-Z plus Return to exit"
 }
 
-var filter = $B.make_class("filter",
+var filter = _b_.filter = $B.make_class("filter",
     function(func, iterable){
         check_nb_args_no_kw('filter', 2, arguments)
 
@@ -877,7 +877,7 @@ filter.__next__ = function(self) {
 
 $B.set_func_names(filter, "builtins")
 
-function format(value, format_spec) {
+var format = _b_.format = function(value, format_spec) {
     var $ = $B.args("format", 2, {value: null, format_spec: null},
         ["value", "format_spec"], arguments, {format_spec: ''}, null, null)
     var klass = value.__class__ || $B.get_class(value)
@@ -911,7 +911,7 @@ function attr_error(attr, obj){
     }
 }
 
-function getattr(){
+var getattr = _b_.getattr = function(){
     var missing = {}
     var $ = $B.args("getattr", 3, {obj: null, attr: null, _default: null},
         ["obj", "attr", "_default"], arguments, {_default: missing},
@@ -1315,7 +1315,7 @@ $B.$getattr = function(obj, attr, _default){
 
 //globals() (built in function)
 
-function globals(){
+var globals = _b_.globals = function(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args_no_kw('globals', 0, arguments)
@@ -1325,7 +1325,7 @@ function globals(){
     return res
 }
 
-function hasattr(obj,attr){
+var hasattr = _b_.hasattr = function(obj,attr){
     check_nb_args_no_kw('hasattr', 2, arguments)
     try{
         $B.$getattr(obj, attr)
@@ -1335,7 +1335,7 @@ function hasattr(obj,attr){
     }
 }
 
-function hash(obj){
+var hash = _b_.hash = function(obj){
     check_nb_args_no_kw('hash', 1, arguments)
     return $B.$hash(obj)
 }
@@ -1420,7 +1420,7 @@ function _get_builtins_doc(){
     }
 }
 
-function help(obj){
+var help = _b_.help = function(obj){
     if(obj === undefined){obj = 'help'}
 
     if(typeof obj == 'string'){
@@ -1484,12 +1484,12 @@ help.__repr__ = help.__str__ = function(){
         "for help about object."
 }
 
-function hex(obj){
+var hex = _b_.hex = function(obj){
     check_nb_args_no_kw('hex', 1, arguments)
     return bin_hex_oct(16, obj)
 }
 
-function id(obj){
+var id = _b_.id = function(obj){
    check_nb_args_no_kw('id', 1, arguments)
    if(obj.$id !== undefined){
        return obj.$id
@@ -1502,7 +1502,7 @@ function id(obj){
 }
 
 // The default __import__ function is a builtin
-function __import__(mod_name, globals, locals, fromlist, level) {
+var __import__ = _b_.__import__ = function(mod_name, globals, locals, fromlist, level) {
     // TODO : Install $B.$__import__ in builtins module to avoid nested call
     var $ = $B.args('__import__', 5,
         {name: null, globals: null, locals: null, fromlist: null, level: null},
@@ -1514,7 +1514,7 @@ function __import__(mod_name, globals, locals, fromlist, level) {
 }
 
 // not a direct alias of prompt: input has no default value
-function input(msg) {
+var input = _b_.input = function(msg) {
     var res = prompt(msg || '') || ''
     if($B.imported["sys"] && $B.imported["sys"].ps1){
         // Interactive mode : echo the prompt + input
@@ -1528,7 +1528,7 @@ function input(msg) {
     return res
 }
 
-function isinstance(obj, cls){
+var isinstance = _b_.isinstance = function(obj, cls){
     check_nb_args_no_kw('isinstance', 2, arguments)
 
     if(obj === null){
@@ -1619,7 +1619,7 @@ function isinstance(obj, cls){
     return false
 }
 
-function issubclass(klass, classinfo){
+var issubclass = _b_.issubclass = function(klass, classinfo){
     check_nb_args_no_kw('issubclass', 2, arguments)
     var mro
     if(!klass.__class__ ||
@@ -1750,7 +1750,7 @@ $B.$iter = function(obj, sentinel){
     }
 }
 
-function iter(){
+var iter = _b_.iter = function(){
     // Function exposed to Brython programs, with arguments control
     var $ = $B.args('iter', 1, {obj: null}, ['obj'], arguments,
         {}, 'args', 'kw'),
@@ -1761,7 +1761,7 @@ function iter(){
     return $B.$iter($.obj, sentinel)
 }
 
-function len(obj){
+var len = _b_.len = function(obj){
     check_nb_args_no_kw('len', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
@@ -1774,7 +1774,7 @@ function len(obj){
     return $B.$call(method)(obj)
 }
 
-function locals(){
+var locals = _b_.locals = function(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args('locals', 0, arguments)
@@ -1791,7 +1791,7 @@ function locals(){
 }
 
 
-var map = $B.make_class("map",
+var map = _b_.map = $B.make_class("map",
     function(){
         var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
                 arguments, {}, 'args', null),
@@ -1900,11 +1900,11 @@ function $extreme(args, op){ // used by min() and max()
     }
 }
 
-function max(){
+var max = _b_.max = function(){
     return $extreme(arguments, '__gt__')
 }
 
-var memoryview = $B.make_class('memoryview',
+var memoryview = _b_.memoryview = $B.make_class('memoryview',
     function(obj){
         check_nb_args_no_kw('memoryview', 1, arguments)
         if(obj.__class__ === memoryview){
@@ -2031,11 +2031,11 @@ memoryview.tolist = function(self){
 
 $B.set_func_names(memoryview, "builtins")
 
-function min(){
+var min = _b_.min = function(){
     return $extreme(arguments, '__lt__')
 }
 
-function next(obj){
+var next = _b_.next = function(obj){
     check_no_kw('next', obj)
     var missing = {},
         $ = $B.args("next", 2, {obj: null, def: null}, ['obj', 'def'],
@@ -2075,18 +2075,16 @@ NotImplementedType.__repr__ = NotImplementedType.__str__ = function(self){
 }
 $B.set_func_names(NotImplementedType, "builtins")
 
-var NotImplemented = {
+var NotImplemented = _b_.NotImplemented = {
     __class__: NotImplementedType
 }
 
-function $not(obj){return !$B.$bool(obj)}
-
-function oct(obj){
+var oct = _b_.oct = function(obj){
     check_nb_args_no_kw('oct', 1, arguments)
     return bin_hex_oct(8, obj)
 }
 
-function ord(c){
+var ord = _b_.ord = function(c){
     check_nb_args_no_kw('ord', 1, arguments)
     //return String.charCodeAt(c)  <= this returns an undefined function error
     // see http://msdn.microsoft.com/en-us/library/ie/hza4d04f(v=vs.94).aspx
@@ -2124,7 +2122,7 @@ function ord(c){
     }
 }
 
-function pow() {
+var pow = _b_.pow = function() {
     var $ = $B.args('pow', 3, {x: null, y: null, mod: null},['x', 'y', 'mod'],
         arguments, {mod: None}, null, null),
         x = $.x,
@@ -2142,7 +2140,7 @@ function pow() {
     }
 }
 
-function $print(){
+var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
         {}, 'args', 'kw')
     var kw = $ns['kw'],
@@ -2172,7 +2170,7 @@ function $print(){
 $print.__name__ = 'print'
 $print.is_func = true
 
-function quit(){
+var quit = _b_.quit = function(){
     throw _b_.SystemExit
 }
 
@@ -2180,14 +2178,14 @@ quit.__repr__ = quit.__str__ = function(){
     return "Use quit() or Ctrl-Z plus Return to exit"
 }
 
-function repr(obj){
+var repr = _b_.repr = function(obj){
     check_nb_args_no_kw('repr', 1, arguments)
 
     var klass = obj.__class__ || $B.get_class(obj)
     return $B.$call($B.$getattr(klass, "__repr__"))(obj)
 }
 
-var reversed = $B.make_class("reversed",
+var reversed = _b_.reversed = $B.make_class("reversed",
     function(seq){
         // Return a reverse iterator. seq must be an object which has a
         // __reversed__() method or supports the sequence protocol (the
@@ -2232,7 +2230,7 @@ reversed.__next__ = function(self){
 
 $B.set_func_names(reversed, "builtins")
 
-function round(){
+var round = _b_.round = function(){
     var $ = $B.args('round', 2, {number: null, ndigits: null},
         ['number', 'ndigits'], arguments, {ndigits: None}, null, null),
         arg = $.number,
@@ -2289,7 +2287,7 @@ function round(){
     }
 }
 
-function setattr(){
+var setattr = _b_.setattr = function(){
 
     var $ = $B.args('setattr', 3, {obj: null, attr: null, value: null},
         ['obj', 'attr', 'value'], arguments, {}, null, null),
@@ -2499,7 +2497,7 @@ $B.$setattr = function(obj, attr, value){
     return None
 }
 
-function sorted(){
+var sorted = _b_.sorted = function(){
     var $ = $B.args('sorted', 1, {iterable: null}, ['iterable'],
         arguments, {}, null, 'kw')
     var _list = _b_.list.$factory($.iterable),
@@ -2511,7 +2509,7 @@ function sorted(){
 
 // str() defined in py_string.js
 
-function sum(iterable, start){
+var sum = _b_.sum = function(iterable, start){
     var $ = $B.args('sum', 2, {iterable: null, start: null},
         ['iterable', 'start'], arguments, {start: 0}, null, null),
         iterable = $.iterable,
@@ -2545,7 +2543,7 @@ $B.missing_super2 = function(obj){
     return obj
 }
 
-var $$super = $B.make_class("super",
+var $$super = _b_.super = $B.make_class("super",
     function (_type, object_or_type){
         var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
@@ -2715,7 +2713,7 @@ $$super.__repr__ = function(self){
 
 $B.set_func_names($$super, "builtins")
 
-function vars(){
+var vars = _b_.vars = function(){
     var def = {},
         $ = $B.args('vars', 1, {obj: null}, ['obj'], arguments, {obj: def},
         null, null)
@@ -3007,7 +3005,7 @@ $B.Reader = $Reader
 $B.TextIOWrapper = $TextIOWrapper
 $B.BufferedReader = $BufferedReader
 
-function $url_open(){
+var $url_open = _b_.open = function(){
     // first argument is file : can be a string, or an instance of a DOM File object
     var $ = $B.args('open', 3, {file: null, mode: null, encoding: null},
         ['file', 'mode', 'encoding'], arguments,
@@ -3136,7 +3134,7 @@ function $url_open(){
     }
 }
 
-var zip = $B.make_class("zip",
+var zip = _b_.zip = $B.make_class("zip",
     function(){
         var res = {
             __class__: zip,
@@ -3272,8 +3270,8 @@ function no_set_attr(klass, attr){
 
 // True and False are the same as Javascript true and false
 
-var True = true
-var False = false
+var True = _b_.True = true
+var False = _b_.False = false
 
 var ellipsis = $B.ellipsis = $B.make_class("ellipsis",
     function(){return Ellipsis}
@@ -3283,7 +3281,7 @@ ellipsis.__repr__ = function(self){
     return 'Ellipsis'
 }
 
-var Ellipsis = {__class__: ellipsis}
+var Ellipsis = _b_.Ellipsis = {__class__: ellipsis}
 
 for(var $key in $B.$comps){ // Ellipsis is not orderable with any type
     switch($B.$comps[$key]) {
@@ -3536,15 +3534,8 @@ var builtin_names = $B.builtin_funcs.
                     concat(other_builtins)
 
 for(var name of builtin_names){
-    var orig_name = name,
-        name1 = name
-    if(name == 'open'){name1 = '$url_open'}
-    if(name == 'super'){name1 = '$$super'}
-    if(name == 'eval'){name1 = '$$eval'}
-    if(name == 'print'){name1 = '$print'}
     try{
-        _b_[name] = eval(name1)
-        if($B.builtin_funcs.indexOf(orig_name) > -1){
+        if($B.builtin_funcs.indexOf(name) > -1){
             _b_[name].__class__ = builtin_function
             // used by inspect module
             _b_[name].$infos = {
@@ -3559,9 +3550,6 @@ for(var name of builtin_names){
     }
 }
 
-_b_['open'] = $url_open
-_b_['print'] = $print
-_b_['super'] = $$super
 
 _b_.object.__init__.__class__ = $B.wrapper_descriptor // in py_type.js
 _b_.object.__new__.__class__ = builtin_function
