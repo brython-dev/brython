@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-20 09:39:46.130752"
-__BRYTHON__.timestamp=1674203986099
+__BRYTHON__.compiled_date="2023-01-21 11:54:33.852444"
+__BRYTHON__.timestamp=1674298473852
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -3699,7 +3699,8 @@ this.type='str'
 this.parent=C
 this.position=this.end_position=$token.value
 C.tree.push(this)
-this.value=''
+this.is_bytes=value.startsWith('b')
+this.value=this.is_bytes ?[]:''
 this.add_value(value)
 this.raw=false}
 var make_string_for_ast_value=$B.make_string_for_ast_value=function(value){value=value.replace(/\n/g,'\\n\\\n')
@@ -3716,10 +3717,21 @@ escaped=false}}
 value=s}
 return value.substr(1,value.length-2)}
 StringCtx.prototype.add_value=function(value){this.is_bytes=value.charAt(0)=='b'
-if(! this.is_bytes){this.value+=make_string_for_ast_value(value)}else{this.value+=make_string_for_ast_value(value.substr(1))}}
+if(! this.is_bytes){this.value+=make_string_for_ast_value(value)}else{value=value.substr(2,value.length-3)
+try{var b=encode_bytestring(value)}catch(err){raise_syntax_error(C,'bytes can only contain ASCII literal characters')}
+this.value=this.value.concat(b)}}
+function encode_bytestring(s){s=s.replace(/\\t/g,'\t')
+.replace(/\\n/g,'\n')
+.replace(/\\r/g,'\r')
+.replace(/\\f/g,'\f')
+.replace(/\\\\/g,'\\')
+var t=[]
+for(var i=0,len=s.length;i < len;i++){var cp=s.codePointAt(i)
+if(cp > 255){throw Error()}
+t.push(cp)}
+return t}
 StringCtx.prototype.ast=function(){var value=this.value
-if(this.is_bytes){value=`'${value}'`
-value=_b_.bytes.$new(_b_.bytes,eval(value),'ISO-8859-1').source}
+if(this.is_bytes){value=_b_.bytes.$factory(this.value)}
 var ast_obj=new ast.Constant(value)
 set_position(ast_obj,this.position)
 return ast_obj}
@@ -5190,20 +5202,21 @@ if((a===undefined ||a===$B.Undefined)&&
 return a===b}
 $B.is_or_equals=function(x,y){
 return $B.$is(x,y)||$B.rich_comp('__eq__',x,y)}
-$B.$is_member=function(item,_set){
-var f,_iter,method
-method=$B.$getattr(_set.__class__ ||$B.get_class(_set),"__contains__",null)
-if(method !==null){return $B.$call(method)(_set,item)}
-try{_iter=_b_.iter(_set)}catch(err){}
-if(_iter){while(1){try{var elt=_b_.next(_iter)
-if($B.is_or_equals(elt,item)){return true}}catch(err){return false}}}
-try{f=$B.$getattr(_set,"__getitem__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(_set)+
-"' object is not iterable")}
-if(f){var i=-1
-while(1){i++
-try{var elt=f(i)
-if($B.is_or_equals(elt,item)){return true}}catch(err){if(err.__class__===_b_.IndexError){return false}
-throw err}}}}
+$B.member_func=function(obj){var klass=$B.get_class(obj),contains=$B.$getattr(klass,"__contains__",null)
+if(contains !==null){contains=$B.$call(contains)
+return contains.bind(null,obj)}
+try{
+var iterator=$B.make_js_iterator(obj)
+return function(key){try{for(var item of iterator){if($B.is_or_equals(key,item)){return true}}
+return false}catch(err){return false}}}catch(err){
+var getitem=$B.$getattr(klass,'__getitem__',null)
+if(getitem !==null){return function(key){var i=-1
+while(true){i++
+try{var item=getitem(obj,i)
+if($B.is_or_equals(key,item)){return true}}catch(err){if($B.$is_exc(err,[_b_.StopIteration])){return false}
+throw err}}}}else{throw _b_.TypeError.$factory('argument of type '+
+`'${$B.class_name(obj)}' is not iterable`)}}}
+$B.$is_member=function(item,_set){return $B.member_func(_set)(item)}
 $B.$call=function(callable,position){callable=$B.$call1(callable)
 if(position){return function(){try{return callable.apply(null,arguments)}catch(exc){$B.set_exception_offsets(exc,position)
 throw exc}}}
@@ -6631,7 +6644,6 @@ return res}
 function hasattr(obj,attr){check_nb_args_no_kw('hasattr',2,arguments)
 try{$B.$getattr(obj,attr)
 return true}catch(err){return false}}
-var hash_cache=$B.hash_cache=Object.create(null)
 function hash(obj){check_nb_args_no_kw('hash',1,arguments)
 return $B.$hash(obj)}
 $B.$hash=function(obj){if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
@@ -6639,8 +6651,7 @@ if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
 if(obj.$is_class ||
 obj.__class__===_b_.type ||
 obj.__class__===$B.function){return obj.__hashvalue__=$B.$py_next_hash--}
-if(typeof obj=="string"){var cached=hash_cache[obj]
-if(cached !==undefined){return cached}else{return hash_cache[obj]=_b_.str.__hash__(obj)}}else if(obj.__class__===_b_.float){return _b_.float.$hash_func(obj)}
+if(typeof obj=="string"){return _b_.str.__hash__(obj)}else if(typeof obj=="number"){return obj}else if(typeof obj=="boolean"){return obj ? 1 :0}else if(obj.__class__===_b_.float){return _b_.float.$hash_func(obj)}
 var klass=obj.__class__ ||$B.get_class(obj)
 if(klass===undefined){throw _b_.TypeError.$factory("unhashable type: '"+
 _b_.str.$factory($B.JSObj.$factory(obj))+"'")}
@@ -6845,8 +6856,7 @@ return self.obj.source[key]}else{
 return self.obj.source[key]}}
 var res=self.obj.__class__.__getitem__(self.obj,key)
 if(key.__class__===_b_.slice){return memoryview.$factory(res)}}
-memoryview.__len__=function(self){console.log('len',len)
-return len(self.obj)/self.itemsize}
+memoryview.__len__=function(self){return len(self.obj)/self.itemsize}
 memoryview.__setitem__=function(self,key,value){try{$B.$setitem(self.obj,key,value)}catch(err){throw _b_.TypeError.$factory("cannot modify read-only memory")}}
 memoryview.cast=function(self,format){switch(format){case "B":
 return memoryview.$factory(self.obj)
@@ -8876,10 +8886,7 @@ function make_new_set_base_type(so){return _b_.isinstance(so,set)?
 set.$factory():
 frozenset.$factory()}
 function set_hash(item){return $B.$hash(item)}
-function set_add(so,item){var hash
-if(typeof item=='string'){hash=$B.hash_cache[item]
-hash=hash===undefined ? $B.$hash(item):hash}else if(typeof item=='number'){hash=item}else if(item.__class__===_b_.float){hash=$B.float_hash_cache[item.value]
-hash=hash===undefined ? $B.$hash(item):hash}else{hash=$B.$hash(item)}
+function set_add(so,item,hash){hash=hash===undefined ? $B.$hash(item):hash
 if(set_contains(so,item,hash)){return}else{so.$store[hash]=so.$store[hash]||[]
 so.$store[hash].push(item)
 so.$used++}}
@@ -8910,28 +8917,28 @@ rv=set_contains(other,key)
 if(!rv){set_add(result,key)}}
 return result;}
 function set_difference_update(so,other){if(so===other){return set.clear(so);}
-if(_b_.isinstance(other,[set,frozenset])){var entry,pos=0;
-while(true){var next=set_next(other,pos),other_item
-if(! next){break};
-[pos,other_item]=next
-set_discard_key(so,other_item)}}else{var frame=$B.last($B.frames_stack)
+if(_b_.isinstance(other,[set,frozenset])){for(var entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if(_b_.isinstance(other,_b_.dict)){for(var item of _b_.dict.$iter_with_hash(other)){set_dicard_entry(so,entry.item,entry.hash)}}else{var frame=$B.last($B.frames_stack)
 var iterator=$B.make_js_iterator(other,frame,frame.$lineno)
 for(var key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0,DISCARD_FOUND=1
-function set_discard_entry(so,key){var entry=set_lookkey(so,key)
+function set_discard_entry(so,key,hash){var entry=set_lookkey(so,key,hash)
 if(! entry){return DISCARD_NOTFOUND}
-so.$store[entry.hash].splice(entry.index,1)
-if(so.$store[entry.hash].length==0){delete so.$store[entry.hash]}
-so.$used--}
+set_remove(so,entry.hash,entry.index)}
 function set_discard_key(so,key){return set_discard_entry(so,key);}
-function set_intersection(self,other){if(self===other){return set_copy(self)}
-var result=make_new_set_base_type(self),iterator
-if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){
-var temp=other,other=self,self=temp}
-iterator=make_iter(other)}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
-iterator=$B.make_js_iterator(other,frame,lineno)}
+function*set_iter_with_hash(so){for(var hash in so.$store){for(var item of so.$store[hash]){yield{item,hash}}}}
+function set_remove(so,hash,index){so.$store[hash].splice(index,1)
+if(so.$store[hash].length==0){delete so.$store[hash]}
+so.$used--}
+function set_intersection(so,other){
+if(so===other){return set_copy(so)}
+var result=make_new_set_base_type(so),iterator
+if(_b_.isinstance(other,[set,frozenset])){if(other.$used > so.$used){var tmp=so
+so=other
+other=tmp}
+for(var entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(other)){if(set_contains(self,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
+iterator=$B.make_js_iterator(other,frame,lineno)
 for(var other_item of iterator){var test=set_contains(self,other_item)
-if(test){set_add(result,other_item)}}
+if(test){set_add(result,other_item)}}}
 return result}
 function set_intersection_multi(so,args){var result=set_copy(so)
 if(args.length==0){return result}
@@ -8952,9 +8959,9 @@ b.$store=temp.$store}
 function set_symmetric_difference_update(so,other){var otherset,key,pos=0,hash,entry,rv
 if(so==other){return set.clear(so)}
 var iterator
-if(_b_.isinstance(other,_b_.dict)){iterator=$B.make_js_iterator(_b_.dict.keys(other))}else if(_b_.isinstance(other,[set,frozenset])){iterator=make_iter(other)}else{iterator=make_iter(set.$factory(other))}
-for(var key of iterator){rv=set_discard_entry(so,key)
-if(rv==DISCARD_NOTFOUND){set_add(so,key)}}
+if(_b_.isinstance(other,_b_.dict)){iterator=_b_.dict.$iter_with_hash(other)}else if(_b_.isinstance(other,[set,frozenset])){iterator=set_iter_with_hash(other)}else{return set_symmetric_difference_update(so,set.$factory(other))}
+for(var entry of iterator){rv=set_discard_entry(so,entry.item,entry.hash)
+if(rv==DISCARD_NOTFOUND){set_add(so,entry.item,entry.hash)}}
 return _b_.None}
 set.__and__=function(self,other,accept_iter){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 return set_intersection(self,other)}
@@ -9017,25 +9024,19 @@ yield result
 check_version(obj,version)}}}
 return iterator}
 set.__le__=function(self,other){
-if(_b_.isinstance(other,[set,frozenset])){for(var item of make_iter(self)){if(! set_contains(other,item)){return false}}
-return true}else{return _b_.NotImplemented}}
-set.__len__=function(self){return self.$used }
+if(_b_.isinstance(other,[set,frozenset])){return set.issubset(self,other)}
+return _b_.NotImplemented}
+set.__len__=function(self){return self.$used}
 set.__lt__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.__le__(self,other)&&
-set.__len__(self)< _b_.getattr(other,"__len__")()}else{return _b_.NotImplemented}}
+set.__len__(self)< set.__len__(other)}else{return _b_.NotImplemented}}
 set.__mro__=[_b_.object]
 set.__new__=function(cls,iterable){if(cls===undefined){throw _b_.TypeError.$factory("set.__new__(): not enough arguments")}
 var self=make_new_set(cls)
 if(iterable===undefined){return self}
 if(cls===set){$B.check_nb_args_no_kw('__new__',2,arguments)}
 return self}
-set.__or__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
-var res=set_copy(self),other_items
-for(var hash in other.$store){if(res.$store[hash]===undefined){res.$store[hash]=other.$store[hash].slice()}else{var items=res.$store[hash]
-for(var other_item of other.$store[hash]){var found=false
-for(var item of items){if($B.is_or_equals(item,other_item)){found=true
-break}}
-if(! found){items.push(other_item)}}}}
-return res}
+set.__or__=function(self,other){if(_b_.isinstance(other,[set,frozenset])){return set.union(self,other)}
+return _b_.NotImplemented}
 set.__rand__=function(self,other){
 return set.__and__(self,other)}
 set.__reduce__=function(self){set_make_items(self)
@@ -9104,15 +9105,10 @@ var temp=set_intersection_multi(self,args)
 set_swap_bodies(self,temp)
 self.$version++
 return _b_.None}
-set.isdisjoint=function(){var $=$B.args("isdisjoint",2,{self:null,other:null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
-if(self===other){return set.__len__(self)==0}
-var iterator
-if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(other)> set.__len__(self)){
-var temp=other,other=self,self=temp}
-iterator=make_iter(other)}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
-iterator=$B.make_js_iterator(other,frame,lineno)}
-for(var item of iterator){if(set_contains(self,item)){return false}}
-return true}
+set.isdisjoint=function(){
+var $=$B.args("isdisjoint",2,{self:null,other:null},["self","other"],arguments,{},null,null),self=$.self,other=$.other
+var intersection=set_intersection(self,other)
+return intersection.$used==0}
 set.pop=function(self){for(var hash in self.$store){}
 if(hash===undefined){throw _b_.KeyError.$factory('pop from an empty set')}
 var item
@@ -9132,49 +9128,43 @@ var $=$B.args("symmetric_difference_update",2,{self:null,s:null},["self","s"],ar
 return set_symmetric_difference_update(self,s)}
 set.update=function(self){
 var $=$B.args("update",1,{self:null},["self"],arguments,{},"args",null)
-for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if(_b_.isinstance(iterable,[set,frozenset])){var pos=0
-while(true){var next=set_next(iterable,pos)
-if(! next){break};
-[pos,other_item]=next
-set_add(self,other_item)}}else{var frame=$B.last($B.frames_stack),iterator=$B.make_js_iterator(iterable,frame,frame.$lineno)
+for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if(_b_.isinstance(iterable,[set,frozenset])){for(var entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if(_b_.isinstance(iterable,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(iterable)){set_add(self,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack),iterator=$B.make_js_iterator(iterable,frame,frame.$lineno)
 for(var item of iterator){set_add(self,item)}}}
 self.$version++
 return _b_.None}
 set.difference=function(){var $=$B.args("difference",1,{self:null},["self"],arguments,{},"args",null)
 if($.args.length==0){return set.copy($.self)}
 var res=set_copy($.self)
-for(var arg of $.args){var other=set.$factory(arg)
-res=set.__sub__(res,other)}
+for(var arg of $.args){if(_b_.isinstance(arg,[set,frozenset])){for(var hash in arg.$store){var items=res.$store[hash]
+if(items===undefined){continue}
+for(var item of arg.$store[hash]){set_discard_entry(res,item,hash)}}}else{var other=set.$factory(arg)
+res=set.difference(res,other)}}
 return res}
-var fc=set.difference+"" 
-eval("set.intersection = "+
-fc.replace(/difference/g,"intersection").replace("__sub__","__and__"))
-eval("set.symmetric_difference = "+
-fc.replace(/difference/g,"symmetric_difference").replace("__sub__","__xor__"))
-set.union=function(){var $=$B.args("union",1,{self:null},["self"],arguments,{},"args",null)
+set.intersection=function(){var $=$B.args("difference",1,{self:null},["self"],arguments,{},"args",null)
+if($.args.length==0){return set.copy($.self)}
+return set_intersection_multi($.self,$.args)}
+set.symmetric_difference=function(self,other){
+var $=$B.args("symmetric_difference",2,{self:null,other:null},["self","other"],arguments,{},null,null)
+var otherset=set.$factory(other)
+return set_symmetric_difference_update(otherset,self)}
+set.union=function(self){var $=$B.args("union",1,{self:null},["self"],arguments,{},"args",null)
 var res=set_copy($.self)
 if($.args.length==0){return res}
-for(var arg of $.args){if(arg.__class__===set ||arg.__class__===frozenset){for(var hash in arg.$store){if(res[hash]===undefined){res.$store[hash]=arg.$store[hash]}}}else if(arg.__class__===_b_.dict){
-for(var item in _b_.dict.$iter_items_hash(arg)){var hash=item[2],entry=set_lookkey(res,item,hash)
-if(! entry){res.$store[hash]=[item[0]]}}}else{var other=set.$factory(arg)
-res=set.__or__(res,other)}}
+for(var arg of $.args){if(_b_.isinstance(arg,[set,frozenset])){for(var entry of set_iter_with_hash(arg)){set_add(res,entry.item,entry.hash)}}else if(arg.__class__===_b_.dict){
+for(var item in _b_.dict.$iter_with_hash(arg)){set_add(res,item.key,item.hash)}}else{var other=set.$factory(arg)
+res=set.union(res,other)}}
 return res}
-set.issubset=function(){var $=$B.args("issubset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
-if(! _b_.isinstance(other,[set,frozenset])){var temp=set_intersection(self,other)
-return set.__len__(temp)==set.__len__(self)}
-if(set.__len__(self)> set.__len__(other)){return false}
-var pos=0,next,rv
-while(true){next=set_next(self,pos)
-if(! next){break};
-[pos,key]=next
-rv=set_contains(other,key)
-if(! rv){return false}}
-return true}
-set.issuperset=function(){var $=$B.args("issuperset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
-if(_b_.isinstance(other,[set,frozenset])){return set.issubset(other,self)}
-var frame=$B.last($B.frames_stack)
-for(var item of $B.make_js_iterator(other,frame,frame.$lineno)){if(! set_contains(self,item)){return false}}
-return true}
+set.issubset=function(){
+var $=$B.args("issubset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
+if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(self)> set.__len__(other)){return false}
+for(var entry of set_iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
+return true}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
+return true}else{var member_func=$B.member_func(other)
+for(var entry of set_iter_with_hash(self)){if(! member_func(entry.item)){return false}}
+return true}}
+set.issuperset=function(){
+var $=$B.args("issuperset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
+if(_b_.isinstance(other,[set,frozenset])){return set.issubset(other,self)}else{return set.issubset(set.$factory(other),self)}}
 set.__iand__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set.intersection_update(self,other)
 return self}
@@ -9188,9 +9178,7 @@ set.__ior__=function(self,other){if(! _b_.isinstance(other,[set,frozenset])){ret
 set.update(self,other)
 return self}
 set.$literal=function(items){var res=make_new_set(set)
-for(var item of items){try{set_add(res,item)}catch(err){console.log('err set literal',items)
-console.log('item',item)
-throw err}}
+for(var item of items){set_add(res,item)}
 return res}
 set.$factory=function(){var args=[set].concat(Array.from(arguments)),self=set.__new__.apply(null,args)
 set.__init__(self,...arguments)
@@ -9378,13 +9366,15 @@ jsobj.__class__=js_list}else if(typeof jsobj=="function"){jsobj.$is_js_func=true
 jsobj.__new__=function(){return new jsobj.$js_func(...arguments)}}else if(typeof jsobj=="number" && ! Number.isInteger(jsobj)){return{__class__:_b_.float,value:jsobj}}
 return jsobj}
 )
-$B.JSObj.__sub__=function(_self,other){
-if(typeof _self=="bigint" && typeof other=="bigint"){return _self-other}
-throw _b_.TypeError.$factory("unsupported operand type(s) for - : '"+
-$B.class_name(_self)+"' and '"+$B.class_name(other)+"'")}
-var ops={'+':'__add__','*':'__mul__','**':'__pow__','%' :'__mod__'}
-for(var op in ops){eval('$B.JSObj.'+ops[op]+' = '+
-($B.JSObj.__sub__+'').replace(/-/g,op))}
+function check_big_int(x,y){if(typeof x !="bigint" ||typeof y !="bigint"){throw _b_.TypeError.$factory("unsupported operand type(s) for - : '"+
+$B.class_name(x)+"' and '"+$B.class_name(y)+"'")}}
+var js_ops={__add__:function(_self,other){check_big_int(_self,other)
+return _self+other},__mod__:function(_self,other){check_big_int(_self,other)
+return _self % other},__mul__:function(_self,other){check_big_int(_self,other)
+return _self*other},__pow__:function(_self,other){check_big_int(_self,other)
+return _self**other},__sub__:function(_self,other){check_big_int(_self,other)
+return _self-other}}
+for(var js_op in js_ops){$B.JSObj[js_op]=js_ops[js_op]}
 $B.JSObj.__eq__=function(_self,other){switch(typeof _self){case "object":
 if(_self.__eq__ !==undefined){return _self.__eq__(other)}
 if(Object.keys(_self).length !==Object.keys(other).length){return false}
@@ -12522,8 +12512,8 @@ for(var v of self._values){if(v===undefined){continue}else if(typeof v=='string'
 typeof v=='number' ||
 typeof v=='boolean'){continue}else if([_b_.tuple,_b_.float,_b_.complex].indexOf(v.__class__)>-1){continue}else if(! _b_.hasattr(v.__class__,'__hash__')){return false}}
 return true}
-dict.$iter_items_hash=function*(d){for(var hash in d.table){var indices=d.table[hash]
-for(var index of indices){yield[self._keys[index],self._values[index],hash]}}}
+dict.$iter_with_hash=function*(d){if(d.$jsobj){for(var key in d.$jsobj){yield{key,hash:$B.$hash(key)}}}else{for(var hash in d.table){var indices=d.table[hash]
+for(var index of indices){yield{key:d._keys[index],hash}}}}}
 dict.$iter_items=function*(d){for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield[d._keys[i],d._values[i]]}}}
 var $copy_dict=function(left,right){
 right.$version=right.$version ||0
@@ -12698,10 +12688,7 @@ if(key=="__init__" ||key=="__new__"){
 self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=value}
 return $N}
 if(key instanceof String){key=key.valueOf()}
-var hash
-if($hash !==undefined){hash=$hash}else if(typeof key=='string'){hash=$B.hash_cache[key]
-hash=hash===undefined ? $B.$hash(key):hash}else if(typeof key=='number'){hash=key}else if(key.__class__===_b_.float){hash=$B.float_hash_cache.get(key.value)
-hash=hash===undefined ? $B.$hash(key):hash}else{hash=$B.$hash(key)}
+var hash=$hash !==undefined ? $hash :$B.$hash(key)
 var index
 if(self.table[hash]===undefined){index=self._keys.length
 self.table[hash]=[index]
@@ -15063,6 +15050,7 @@ scopes.push(new_scope)
 if(this instanceof $B.ast.AsyncFor){js+=`var iter_${id} = ${iter},\n`+
 `type_${id} = _b_.type.$factory(iter_${id})\n`+
 `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
+`type_${id} = _b_.type.$factory(iter_${id})\n`+
 `var next_func_${id} = $B.$call(`+
 `$B.$getattr(type_${id}, '__anext__'))\n`+
 `while(true){\n`+
@@ -15399,16 +15387,10 @@ var kw=[]
 for(var i=0,len=this.kwd_patterns.length;i < len;i++){kw.push(this.kwd_attrs[i]+': {'+
 $B.js_from_ast(this.kwd_patterns[i],scopes)+'}')}
 return `class: ${cls}, args: [${patterns}], keywords: {${kw.join(', ')}}`}
-$B.ast.MatchMapping.prototype.to_js=function(scopes){var keys=[]
-for(var key of this.keys){if(key instanceof $B.ast.Attribute){continue}else if(key instanceof $B.ast.Constant ||
+$B.ast.MatchMapping.prototype.to_js=function(scopes){for(var key of this.keys){if(key instanceof $B.ast.Attribute ||
+key instanceof $B.ast.Constant ||
 key instanceof $B.ast.UnaryOp ||
-key instanceof $B.ast.BinOp){var js=key.to_js(scopes),locals={}
-try{
-var value=eval('('+js+')')}catch(err){console.log('error',js)
-throw err}
-if(_b_.list.__contains__(keys,value)){compiler_error(this,'mapping pattern checks duplicate key '+
-`(${_b_.repr(value)})`)}
-keys.push(value)}else{compiler_error(key,'mapping pattern keys may only match literals and attribute lookups')}}
+key instanceof $B.ast.BinOp){continue}else{compiler_error(key,'mapping pattern keys may only match literals and attribute lookups')}}
 var names=[]
 for(var pattern of this.patterns){if(pattern instanceof $B.ast.MatchAs && pattern.name){if(names.indexOf(pattern.name)>-1){compiler_error(pattern,`multiple assignments to name '${pattern.name}' in pattern`)}
 names.push(pattern.name)}}
@@ -15933,14 +15915,14 @@ if(!symtable_enter_block(st,'top',ModuleBlock,mod,0,0,0,0)){return NULL;}
 st.top=st.cur
 switch(mod.constructor){case $B.ast.Module:
 seq=mod.body
-for(var item of seq){symtable_visit_stmt(st,item)}
+for(var item of seq){visitor.stmt(st,item)}
 break
 case $B.ast.Expression:
-symtable_visit_expr(st,mod.body)
+visitor.expr(st,mod.body)
 break
 case $B.ast.Interactive:
 seq=mod.body
-for(var item of seq){symtable_visit_stmt(st,item)}
+for(var item of seq){visitor.stmt(st,item)}
 break}
 symtable_analyze(st)
 return st.top;}
@@ -16117,13 +16099,13 @@ st.global[mangled]=o}
 return 1}
 function symtable_add_def(st,name,flag,_location){return symtable_add_def_helper(st,name,flag,st.cur,_location);}
 function VISIT_QUIT(ST,X){return X}
-function VISIT(ST,TYPE,V){var f=symtable_visitors[TYPE]
+function VISIT(ST,TYPE,V){var f=visitor[TYPE]
 if(!f(ST,V)){VISIT_QUIT(ST,0);}}
-function VISIT_SEQ(ST,TYPE,SEQ){for(var elt of SEQ){if(! symtable_visitors[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
+function VISIT_SEQ(ST,TYPE,SEQ){for(var elt of SEQ){if(! visitor[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
 function VISIT_SEQ_TAIL(ST,TYPE,SEQ,START){for(var i=START,len=SEQ.length;i < len;i++){var elt=SEQ[i];
-if(! symtable_visitors[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
+if(! visitor[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
 function VISIT_SEQ_WITH_NULL(ST,TYPE,SEQ){for(var elt of SEQ){if(! elt){continue }
-if(! symtable_visitors[TYPE](ST,elt)){VISIT_QUIT((ST),0)}}}
+if(! visitor[TYPE](ST,elt)){VISIT_QUIT((ST),0)}}}
 function symtable_record_directive(st,name,lineno,col_offset,end_lineno,end_col_offset){var data,mangled,res;
 if(!st.cur.directives){st.cur.directives=[]}
 mangled=_Py_Mangle(st.private,name);
@@ -16131,14 +16113,15 @@ if(!mangled){return 0;}
 data=$B.fast_tuple([mangled,lineno,col_offset,end_lineno,end_col_offset])
 st.cur.directives.push(data);
 return true}
-function symtable_visit_stmt(st,s){switch(s.constructor){case $B.ast.FunctionDef:
+var visitor={}
+visitor.stmt=function(st,s){switch(s.constructor){case $B.ast.FunctionDef:
 if(!symtable_add_def(st,s.name,DEF_LOCAL,LOCATION(s)))
 VISIT_QUIT(st,0)
 if(s.args.defaults)
 VISIT_SEQ(st,expr,s.args.defaults)
 if(s.args.kw_defaults)
 VISIT_SEQ_WITH_NULL(st,expr,s.args.kw_defaults)
-if(!symtable_visit_annotations(st,s,s.args,s.returns))
+if(!visitor.annotations(st,s,s.args,s.returns))
 VISIT_QUIT(st,0)
 if(s.decorator_list){VISIT_SEQ(st,expr,s.decorator_list)}
 if(!symtable_enter_block(st,s.name,FunctionBlock,s,...LOCATION(s))){VISIT_QUIT(st,0)}
@@ -16186,7 +16169,7 @@ throw exc}
 if(s.simple &&
 ! symtable_add_def(st,e_name.id,DEF_ANNOT |DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}else{if(s.value
 && !symtable_add_def(st,e_name.id,DEF_LOCAL,LOCATION(e_name))){VISIT_QUIT(st,0)}}}else{VISIT(st,expr,s.target)}
-if(!symtable_visit_annotation(st,s.annotation)){VISIT_QUIT(st,0)}
+if(!visitor.annotation(st,s.annotation)){VISIT_QUIT(st,0)}
 if(s.value){VISIT(st,expr,s.value)}
 break
 case $B.ast.AugAssign:
@@ -16287,7 +16270,7 @@ if(s.args.defaults)
 VISIT_SEQ(st,expr,s.args.defaults)
 if(s.args.kw_defaults)
 VISIT_SEQ_WITH_NULL(st,expr,s.args.kw_defaults)
-if(!symtable_visit_annotations(st,s,s.args,s.returns))
+if(!visitor.annotations(st,s,s.args,s.returns))
 VISIT_QUIT(st,0)
 if(s.decorator_list)
 VISIT_SEQ(st,expr,s.decorator_list)
@@ -16351,7 +16334,7 @@ VISIT(st,expr,e.value);
 VISIT(st,expr,e.target);
 return 1;}
 const alias='alias',comprehension='comprehension',excepthandler='excepthandler',expr='expr',keyword='keyword',match_case='match_case',pattern='pattern',stmt='stmt',withitem='withitem'
-function symtable_visit_expr(st,e){switch(e.constructor){case $B.ast.NamedExpr:
+visitor.expr=function(st,e){switch(e.constructor){case $B.ast.NamedExpr:
 if(!symtable_raise_if_annotation_block(st,"named expression",e)){VISIT_QUIT(st,0);}
 if(!symtable_handle_namedexpr(st,e))
 VISIT_QUIT(st,0);
@@ -16392,19 +16375,19 @@ case $B.ast.Set:
 VISIT_SEQ(st,'expr',e.elts);
 break;
 case $B.ast.GeneratorExp:
-if(!symtable_visit_genexp(st,e))
+if(!visitor.genexp(st,e))
 VISIT_QUIT(st,0);
 break;
 case $B.ast.ListComp:
-if(!symtable_visit_listcomp(st,e))
+if(!visitor.listcomp(st,e))
 VISIT_QUIT(st,0);
 break;
 case $B.ast.SetComp:
-if(!symtable_visit_setcomp(st,e))
+if(!visitor.setcomp(st,e))
 VISIT_QUIT(st,0);
 break;
 case $B.ast.DictComp:
-if(!symtable_visit_dictcomp(st,e))
+if(!visitor.dictcomp(st,e))
 VISIT_QUIT(st,0);
 break;
 case $B.ast.Yield:
@@ -16479,7 +16462,7 @@ case $B.ast.Tuple:
 VISIT_SEQ(st,expr,e.elts);
 break;}
 VISIT_QUIT(st,1);}
-function symtable_visit_pattern(st,p){switch(p.constructor){case $B.ast.MatchValue:
+visitor.pattern=function(st,p){switch(p.constructor){case $B.ast.MatchValue:
 VISIT(st,expr,p.value);
 break;
 case $B.ast.MatchSingleton:
@@ -16511,46 +16494,46 @@ VISIT_QUIT(st,1);}
 function symtable_implicit_arg(st,pos){var id='.'+pos
 if(!symtable_add_def(st,id,DEF_PARAM,ST_LOCATION(st.cur))){return 0;}
 return 1;}
-function symtable_visit_params(st,args){var i;
+visitor.params=function(st,args){var i;
 if(!args)
 return-1;
 for(var arg of args){if(!symtable_add_def(st,arg.arg,DEF_PARAM,LOCATION(arg)))
 return 0;}
 return 1;}
-function symtable_visit_annotation(st,annotation){var future_annotations=st.future.features & CO_FUTURE_ANNOTATIONS;
+visitor.annotation=function(st,annotation){var future_annotations=st.future.features & CO_FUTURE_ANNOTATIONS;
 if(future_annotations &&
 !symtable_enter_block(st,'_annotation',AnnotationBlock,annotation,annotation.lineno,annotation.col_offset,annotation.end_lineno,annotation.end_col_offset)){VISIT_QUIT(st,0);}
 VISIT(st,expr,annotation);
 if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0);}
 return 1;}
-function symtable_visit_argannotations(st,args){var i;
+visitor.argannotations=function(st,args){var i;
 if(!args)
 return-1;
 for(var arg of args){if(arg.annotation)
 VISIT(st,expr,arg.annotation);}
 return 1;}
-function symtable_visit_annotations(st,o,a,returns){var future_annotations=st.future.ff_features & CO_FUTURE_ANNOTATIONS;
+visitor.annotations=function(st,o,a,returns){var future_annotations=st.future.ff_features & CO_FUTURE_ANNOTATIONS;
 if(future_annotations &&
 !symtable_enter_block(st,'_annotation',AnnotationBlock,o,o.lineno,o.col_offset,o.end_lineno,o.end_col_offset)){VISIT_QUIT(st,0);}
-if(a.posonlyargs && !symtable_visit_argannotations(st,a.posonlyargs))
+if(a.posonlyargs && !visitor.argannotations(st,a.posonlyargs))
 return 0;
-if(a.args && !symtable_visit_argannotations(st,a.args))
+if(a.args && !visitor.argannotations(st,a.args))
 return 0;
 if(a.vararg && a.vararg.annotation)
 VISIT(st,expr,a.vararg.annotation);
 if(a.kwarg && a.kwarg.annotation)
 VISIT(st,expr,a.kwarg.annotation);
-if(a.kwonlyargs && !symtable_visit_argannotations(st,a.kwonlyargs))
+if(a.kwonlyargs && !visitor.argannotations(st,a.kwonlyargs))
 return 0;
 if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0);}
-if(returns && !symtable_visit_annotation(st,returns)){VISIT_QUIT(st,0);}
+if(returns && !visitor.annotation(st,returns)){VISIT_QUIT(st,0);}
 return 1;}
-function symtable_visit_arguments(st,a){
-if(a.posonlyargs && !symtable_visit_params(st,a.posonlyargs))
+visitor.arguments=function(st,a){
+if(a.posonlyargs && !visitor.params(st,a.posonlyargs))
 return 0;
-if(a.args && !symtable_visit_params(st,a.args))
+if(a.args && !visitor.params(st,a.args))
 return 0;
-if(a.kwonlyargs && !symtable_visit_params(st,a.kwonlyargs))
+if(a.kwonlyargs && !visitor.params(st,a.kwonlyargs))
 return 0;
 if(a.vararg){if(!symtable_add_def(st,a.vararg.arg,DEF_PARAM,LOCATION(a.vararg)))
 return 0;
@@ -16559,21 +16542,21 @@ if(a.kwarg){if(!symtable_add_def(st,a.kwarg.arg,DEF_PARAM,LOCATION(a.kwarg)))
 return 0;
 st.cur.varkeywords=1;}
 return 1;}
-function symtable_visit_excepthandler(st,eh){if(eh.type)
+visitor.excepthandler=function(st,eh){if(eh.type)
 VISIT(st,expr,eh.type);
 if(eh.name)
 if(!symtable_add_def(st,eh.name,DEF_LOCAL,LOCATION(eh)))
 return 0;
 VISIT_SEQ(st,stmt,eh.body);
 return 1;}
-function symtable_visit_withitem(st,item){VISIT(st,'expr',item.context_expr);
+visitor.withitem=function(st,item){VISIT(st,'expr',item.context_expr);
 if(item.optional_vars){VISIT(st,'expr',item.optional_vars);}
 return 1;}
-function symtable_visit_match_case(st,m){VISIT(st,pattern,m.pattern);
+visitor.match_case=function(st,m){VISIT(st,pattern,m.pattern);
 if(m.guard){VISIT(st,expr,m.guard);}
 VISIT_SEQ(st,stmt,m.body);
 return 1;}
-function symtable_visit_alias(st,a){
+visitor.alias=function(st,a){
 var store_name,name=(a.asname==NULL)? a.name :a.asname;
 var dot=name.search('\\.');
 if(dot !=-1){store_name=name.substring(0,dot);
@@ -16586,7 +16569,7 @@ set_exc_info(exc,st.filename,lineno,col_offset,end_lineno,end_col_offset);
 throw exc}
 st.cur.$has_import_star=true
 return 1;}}
-function symtable_visit_comprehension(st,lc){st.cur.comp_iter_target=1;
+visitor.comprehension=function(st,lc){st.cur.comp_iter_target=1;
 VISIT(st,expr,lc.target);
 st.cur.comp_iter_target=0;
 st.cur.comp_iter_expr++;
@@ -16595,7 +16578,7 @@ st.cur.comp_iter_expr--;
 VISIT_SEQ(st,expr,lc.ifs);
 if(lc.is_async){st.cur.coroutine=1;}
 return 1;}
-function symtable_visit_keyword(st,k){VISIT(st,expr,k.value);
+visitor.keyword=function(st,k){VISIT(st,expr,k.value);
 return 1;}
 function symtable_handle_comprehension(st,e,scope_name,generators,elt,value){var is_generator=(e.constructor===$B.ast.GeneratorExp);
 var outermost=generators[0]
@@ -16632,10 +16615,10 @@ var is_async=st.cur.coroutine && !is_generator;
 if(!symtable_exit_block(st)){return 0;}
 if(is_async){st.cur.coroutine=1;}
 return 1;}
-function symtable_visit_genexp(st,e){return symtable_handle_comprehension(st,e,'genexpr',e.generators,e.elt,NULL);}
-function symtable_visit_listcomp(st,e){return symtable_handle_comprehension(st,e,'listcomp',e.generators,e.elt,NULL);}
-function symtable_visit_setcomp(st,e){return symtable_handle_comprehension(st,e,'setcomp',e.generators,e.elt,NULL);}
-function symtable_visit_dictcomp(st,e){return symtable_handle_comprehension(st,e,'dictcomp',e.generators,e.key,e.value);}
+visitor.genexp=function(st,e){return symtable_handle_comprehension(st,e,'genexpr',e.generators,e.elt,NULL);}
+visitor.listcomp=function(st,e){return symtable_handle_comprehension(st,e,'listcomp',e.generators,e.elt,NULL);}
+visitor.setcomp=function(st,e){return symtable_handle_comprehension(st,e,'setcomp',e.generators,e.elt,NULL);}
+visitor.dictcomp=function(st,e){return symtable_handle_comprehension(st,e,'dictcomp',e.generators,e.key,e.value);}
 function symtable_raise_if_annotation_block(st,name,e){if(st.cur.type !=AnnotationBlock){return 1;}
 var exc=PyErr_Format(PyExc_SyntaxError,ANNOTATION_NOT_ALLOWED,name);
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
@@ -16662,9 +16645,7 @@ future.features |=flags.cf_flags;
 st=_PySymtable_Build(mod,filename,future);
 PyObject_Free(future);
 _PyArena_Free(arena);
-return st;}
-var symtable_visitors={}
-for(var type of['stmt','expr','pattern','params','annotation','argannotations','annotation','arguments','excepthandler','withitem','match_case','alias','comprehension','keyword','genexp','listcomp','setcomp','dictcomp']){symtable_visitors[type]=eval('symtable_visit_'+type)}})(__BRYTHON__)
+return st;}})(__BRYTHON__)
 ;
 var docs={ArithmeticError:"Base class for arithmetic errors.",AssertionError:"Assertion failed.",AttributeError:"Attribute not found.",BaseException:"Common base class for all exceptions",BaseExceptionGroup:"A combination of multiple unrelated exceptions.",BlockingIOError:"I/O operation would block.",BrokenPipeError:"Broken pipe.",BufferError:"Buffer error.",BytesWarning:"Base class for warnings about bytes and buffer related problems, mostly\nrelated to conversion from str or comparing to str.",ChildProcessError:"Child process error.",ConnectionAbortedError:"Connection aborted.",ConnectionError:"Connection error.",ConnectionRefusedError:"Connection refused.",ConnectionResetError:"Connection reset.",DeprecationWarning:"Base class for warnings about deprecated features.",EOFError:"Read beyond end of file.",Ellipsis:"",EncodingWarning:"Base class for warnings about encodings.",EnvironmentError:"Base class for I/O related errors.",Exception:"Common base class for all non-exit exceptions.",ExceptionGroup:"",False:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",FileExistsError:"File already exists.",FileNotFoundError:"File not found.",FloatingPointError:"Floating point operation failed.",FutureWarning:"Base class for warnings about constructs that will change semantically\nin the future.",GeneratorExit:"Request that a generator exit.",IOError:"Base class for I/O related errors.",ImportError:"Import can't find module, or can't find name in module.",ImportWarning:"Base class for warnings about probable mistakes in module imports",IndentationError:"Improper indentation.",IndexError:"Sequence index out of range.",InterruptedError:"Interrupted by signal.",IsADirectoryError:"Operation doesn't work on directories.",KeyError:"Mapping key not found.",KeyboardInterrupt:"Program interrupted by user.",LookupError:"Base class for lookup errors.",MemoryError:"Out of memory.",ModuleNotFoundError:"Module not found.",NameError:"Name not found globally.",None:"",NotADirectoryError:"Operation only works on directories.",NotImplemented:"",NotImplementedError:"Method or function hasn't been implemented yet.",OSError:"Base class for I/O related errors.",OverflowError:"Result too large to be represented.",PendingDeprecationWarning:"Base class for warnings about features which will be deprecated\nin the future.",PermissionError:"Not enough permissions.",ProcessLookupError:"Process not found.",RecursionError:"Recursion limit exceeded.",ReferenceError:"Weak ref proxy used after referent went away.",ResourceWarning:"Base class for warnings about resource usage.",RuntimeError:"Unspecified run-time error.",RuntimeWarning:"Base class for warnings about dubious runtime behavior.",StopAsyncIteration:"Signal the end from iterator.__anext__().",StopIteration:"Signal the end from iterator.__next__().",SyntaxError:"Invalid syntax.",SyntaxWarning:"Base class for warnings about dubious syntax.",SystemError:"Internal error in the Python interpreter.\n\nPlease report this to the Python maintainer, along with the traceback,\nthe Python version, and the hardware/OS platform and version.",SystemExit:"Request to exit from the interpreter.",TabError:"Improper mixture of spaces and tabs.",TimeoutError:"Timeout expired.",True:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",TypeError:"Inappropriate argument type.",UnboundLocalError:"Local name referenced but not bound to a value.",UnicodeDecodeError:"Unicode decoding error.",UnicodeEncodeError:"Unicode encoding error.",UnicodeError:"Unicode related error.",UnicodeTranslateError:"Unicode translation error.",UnicodeWarning:"Base class for warnings about Unicode related problems, mostly\nrelated to conversion problems.",UserWarning:"Base class for warnings generated by user code.",ValueError:"Inappropriate argument value (of correct type).",Warning:"Base class for warning categories.",WindowsError:"Base class for I/O related errors.",ZeroDivisionError:"Second argument to a division or modulo operation was zero.",__debug__:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",abs:"Return the absolute value of the argument.",aiter:"Return an AsyncIterator for an AsyncIterable object.",all:"Return True if bool(x) is True for all values x in the iterable.\n\nIf the iterable is empty, return True.",anext:"async anext(aiterator[, default])\n\nReturn the next item from the async iterator.  If default is given and the async\niterator is exhausted, it is returned instead of raising StopAsyncIteration.",any:"Return True if bool(x) is True for any x in the iterable.\n\nIf the iterable is empty, return False.",ascii:"Return an ASCII-only representation of an object.\n\nAs repr(), return a string containing a printable representation of an\nobject, but escape the non-ASCII characters in the string returned by\nrepr() using \\\\x, \\\\u or \\\\U escapes. This generates a string similar\nto that returned by repr() in Python 2.",bin:"Return the binary representation of an integer.\n\n   >>> bin(2796202)\n   '0b1010101010101010101010'",bool:"bool(x) -> bool\n\nReturns True when the argument x is true, False otherwise.\nThe builtins True and False are the only two instances of the class bool.\nThe class bool is a subclass of the class int, and cannot be subclassed.",breakpoint:"breakpoint(*args, **kws)\n\nCall sys.breakpointhook(*args, **kws).  sys.breakpointhook() must accept\nwhatever arguments are passed.\n\nBy default, this drops you into the pdb debugger.",bytearray:"bytearray(iterable_of_ints) -> bytearray\nbytearray(string, encoding[, errors]) -> bytearray\nbytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer\nbytearray(int) -> bytes array of size given by the parameter initialized with null bytes\nbytearray() -> empty bytes array\n\nConstruct a mutable bytearray object from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - a bytes or a buffer object\n  - any object implementing the buffer API.\n  - an integer",bytes:"bytes(iterable_of_ints) -> bytes\nbytes(string, encoding[, errors]) -> bytes\nbytes(bytes_or_buffer) -> immutable copy of bytes_or_buffer\nbytes(int) -> bytes object of size given by the parameter initialized with null bytes\nbytes() -> empty bytes object\n\nConstruct an immutable array of bytes from:\n  - an iterable yielding integers in range(256)\n  - a text string encoded using the specified encoding\n  - any object implementing the buffer API.\n  - an integer",callable:"Return whether the object is callable (i.e., some kind of function).\n\nNote that classes are callable, as are instances of classes with a\n__call__() method.",chr:"Return a Unicode string of one character with ordinal i; 0 <= i <= 0x10ffff.",classmethod:"classmethod(function) -> method\n\nConvert a function to be a class method.\n\nA class method receives the class as implicit first argument,\njust like an instance method receives the instance.\nTo declare a class method, use this idiom:\n\n  class C:\n      @classmethod\n      def f(cls, arg1, arg2, ...):\n          ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()).  The instance is ignored except for its class.\nIf a class method is called for a derived class, the derived class\nobject is passed as the implied first argument.\n\nClass methods are different than C++ or Java static methods.\nIf you want those, see the staticmethod builtin.",compile:"Compile source into a code object that can be executed by exec() or eval().\n\nThe source code may represent a Python module, statement or expression.\nThe filename will be used for run-time error messages.\nThe mode must be 'exec' to compile a module, 'single' to compile a\nsingle (interactive) statement, or 'eval' to compile an expression.\nThe flags argument, if present, controls which future statements influence\nthe compilation of the code.\nThe dont_inherit argument, if true, stops the compilation inheriting\nthe effects of any future statements in effect in the code calling\ncompile; if absent or false these statements do influence the compilation,\nin addition to any features explicitly specified.",complex:"Create a complex number from a real part and an optional imaginary part.\n\nThis is equivalent to (real + imag*1j) where imag defaults to 0.",copyright:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",credits:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",delattr:"Deletes the named attribute from the given object.\n\ndelattr(x, 'y') is equivalent to ``del x.y''",dict:"dict() -> new empty dictionary\ndict(mapping) -> new dictionary initialized from a mapping object's\n    (key, value) pairs\ndict(iterable) -> new dictionary initialized as if via:\n    d = {}\n    for k, v in iterable:\n        d[k] = v\ndict(**kwargs) -> new dictionary initialized with the name=value pairs\n    in the keyword argument list.  For example:  dict(one=1, two=2)",dir:"dir([object]) -> list of strings\n\nIf called without an argument, return the names in the current scope.\nElse, return an alphabetized list of names comprising (some of) the attributes\nof the given object, and of attributes reachable from it.\nIf the object supplies a method named __dir__, it will be used; otherwise\nthe default dir() logic is used and returns:\n  for a module object: the module's attributes.\n  for a class object:  its attributes, and recursively the attributes\n    of its bases.\n  for any other object: its attributes, its class's attributes, and\n    recursively the attributes of its class's base classes.",divmod:"Return the tuple (x//y, x%y).  Invariant: div*y + mod == x.",enumerate:"Return an enumerate object.\n\n  iterable\n    an object supporting iteration\n\nThe enumerate object yields pairs containing a count (from start, which\ndefaults to zero) and a value yielded by the iterable argument.\n\nenumerate is useful for obtaining an indexed list:\n    (0, seq[0]), (1, seq[1]), (2, seq[2]), ...",eval:"Evaluate the given source in the C of globals and locals.\n\nThe source may be a string representing a Python expression\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.",exec:"Execute the given source in the C of globals and locals.\n\nThe source may be a string representing one or more Python statements\nor a code object as returned by compile().\nThe globals must be a dictionary and locals can be any mapping,\ndefaulting to the current globals and locals.\nIf only globals is given, locals defaults to it.\nThe closure must be a tuple of cellvars, and can only be used\nwhen source is a code object requiring exactly that many cellvars.",exit:"",filter:"filter(function or None, iterable) --> filter object\n\nReturn an iterator yielding those items of iterable for which function(item)\nis true. If function is None, return the items that are true.",float:"Convert a string or number to a floating point number, if possible.",format:"Return value.__format__(format_spec)\n\nformat_spec defaults to the empty string.\nSee the Format Specification Mini-Language section of help('FORMATTING') for\ndetails.",frozenset:"frozenset() -> empty frozenset object\nfrozenset(iterable) -> frozenset object\n\nBuild an immutable unordered collection of unique elements.",getattr:"getattr(object, name[, default]) -> value\n\nGet a named attribute from an object; getattr(x, 'y') is equivalent to x.y.\nWhen a default argument is given, it is returned when the attribute doesn't\nexist; without it, an exception is raised in that case.",globals:"Return the dictionary containing the current scope's global variables.\n\nNOTE: Updates to this dictionary *will* affect name lookups in the current\nglobal scope and vice-versa.",hasattr:"Return whether the object has an attribute with the given name.\n\nThis is done by calling getattr(obj, name) and catching AttributeError.",hash:"Return the hash value for the given object.\n\nTwo objects that compare equal must also have the same hash value, but the\nreverse is not necessarily true.",help:"Define the builtin 'help'.\n\n    This is a wrapper around pydoc.help that provides a helpful message\n    when 'help' is typed at the Python interactive prompt.\n\n    Calling help() at the Python prompt starts an interactive help session.\n    Calling help(thing) prints help for the python object 'thing'.\n    ",hex:"Return the hexadecimal representation of an integer.\n\n   >>> hex(12648430)\n   '0xc0ffee'",id:"Return the identity of an object.\n\nThis is guaranteed to be unique among simultaneously existing objects.\n(CPython uses the object's memory address.)",input:"Read a string from standard input.  The trailing newline is stripped.\n\nThe prompt string, if given, is printed to standard output without a\ntrailing newline before reading input.\n\nIf the user hits EOF (*nix: Ctrl-D, Windows: Ctrl-Z+Return), raise EOFError.\nOn *nix systems, readline is used if available.",int:"int([x]) -> integer\nint(x, base=10) -> integer\n\nConvert a number or string to an integer, or return 0 if no arguments\nare given.  If x is a number, return x.__int__().  For floating point\nnumbers, this truncates towards zero.\n\nIf x is not a number or if base is given, then x must be a string,\nbytes, or bytearray instance representing an integer literal in the\ngiven base.  The literal can be preceded by '+' or '-' and be surrounded\nby whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.\nBase 0 means to interpret the base from the string as an integer literal.\n>>> int('0b100', base=0)\n4",isinstance:"Return whether an object is an instance of a class or of a subclass thereof.\n\nA tuple, as in ``isinstance(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``isinstance(x, A) or isinstance(x, B)\nor ...`` etc.",issubclass:"Return whether 'cls' is derived from another class or is the same class.\n\nA tuple, as in ``issubclass(x, (A, B, ...))``, may be given as the target to\ncheck against. This is equivalent to ``issubclass(x, A) or issubclass(x, B)\nor ...``.",iter:"iter(iterable) -> iterator\niter(callable, sentinel) -> iterator\n\nGet an iterator from an object.  In the first form, the argument must\nsupply its own iterator, or be a sequence.\nIn the second form, the callable is called until it returns the sentinel.",len:"Return the number of items in a container.",license:"interactive prompt objects for printing the license text, a list of\n    contributors and the copyright notice.",list:"Built-in mutable sequence.\n\nIf no argument is given, the constructor creates a new empty list.\nThe argument must be an iterable if specified.",locals:"Return a dictionary containing the current scope's local variables.\n\nNOTE: Whether or not updates to this dictionary will affect name lookups in\nthe local scope and vice-versa is *implementation dependent* and not\ncovered by any backwards compatibility guarantees.",map:"map(func, *iterables) --> map object\n\nMake an iterator that computes the function using arguments from\neach of the iterables.  Stops when the shortest iterable is exhausted.",max:"max(iterable, *[, default=obj, key=func]) -> value\nmax(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its biggest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the largest argument.",memoryview:"Create a new memoryview object which references the given object.",min:"min(iterable, *[, default=obj, key=func]) -> value\nmin(arg1, arg2, *args, *[, key=func]) -> value\n\nWith a single iterable argument, return its smallest item. The\ndefault keyword-only argument specifies an object to return if\nthe provided iterable is empty.\nWith two or more arguments, return the smallest argument.",next:"next(iterator[, default])\n\nReturn the next item from the iterator. If default is given and the iterator\nis exhausted, it is returned instead of raising StopIteration.",object:"The base class of the class hierarchy.\n\nWhen called, it accepts no arguments and returns a new featureless\ninstance that has no instance attributes and cannot be given any.\n",oct:"Return the octal representation of an integer.\n\n   >>> oct(342391)\n   '0o1234567'",open:"Open file and return a stream.  Raise OSError upon failure.\n\nfile is either a text or byte string giving the name (and the path\nif the file isn't in the current working directory) of the file to\nbe opened or an integer file descriptor of the file to be\nwrapped. (If a file descriptor is given, it is closed when the\nreturned I/O object is closed, unless closefd is set to False.)\n\nmode is an optional string that specifies the mode in which the file\nis opened. It defaults to 'r' which means open for reading in text\nmode.  Other common values are 'w' for writing (truncating the file if\nit already exists), 'x' for creating and writing to a new file, and\n'a' for appending (which on some Unix systems, means that all writes\nappend to the end of the file regardless of the current seek position).\nIn text mode, if encoding is not specified the encoding used is platform\ndependent: locale.getencoding() is called to get the current locale encoding.\n(For reading and writing raw bytes use binary mode and leave encoding\nunspecified.) The available modes are:\n\n========= ===============================================================\nCharacter Meaning\n--------- ---------------------------------------------------------------\n'r'       open for reading (default)\n'w'       open for writing, truncating the file first\n'x'       create a new file and open it for writing\n'a'       open for writing, appending to the end of the file if it exists\n'b'       binary mode\n't'       text mode (default)\n'+'       open a disk file for updating (reading and writing)\n========= ===============================================================\n\nThe default mode is 'rt' (open for reading text). For binary random\naccess, the mode 'w+b' opens and truncates the file to 0 bytes, while\n'r+b' opens the file without truncation. The 'x' mode implies 'w' and\nraises an `FileExistsError` if the file already exists.\n\nPython distinguishes between files opened in binary and text modes,\neven when the underlying operating system doesn't. Files opened in\nbinary mode (appending 'b' to the mode argument) return contents as\nbytes objects without any decoding. In text mode (the default, or when\n't' is appended to the mode argument), the contents of the file are\nreturned as strings, the bytes having been first decoded using a\nplatform-dependent encoding or using the specified encoding if given.\n\nbuffering is an optional integer used to set the buffering policy.\nPass 0 to switch buffering off (only allowed in binary mode), 1 to select\nline buffering (only usable in text mode), and an integer > 1 to indicate\nthe size of a fixed-size chunk buffer.  When no buffering argument is\ngiven, the default buffering policy works as follows:\n\n* Binary files are buffered in fixed-size chunks; the size of the buffer\n  is chosen using a heuristic trying to determine the underlying device's\n  \"block size\" and falling back on `io.DEFAULT_BUFFER_SIZE`.\n  On many systems, the buffer will typically be 4096 or 8192 bytes long.\n\n* \"Interactive\" text files (files for which isatty() returns True)\n  use line buffering.  Other text files use the policy described above\n  for binary files.\n\nencoding is the name of the encoding used to decode or encode the\nfile. This should only be used in text mode. The default encoding is\nplatform dependent, but any encoding supported by Python can be\npassed.  See the codecs module for the list of supported encodings.\n\nerrors is an optional string that specifies how encoding errors are to\nbe handled---this argument should not be used in binary mode. Pass\n'strict' to raise a ValueError exception if there is an encoding error\n(the default of None has the same effect), or pass 'ignore' to ignore\nerrors. (Note that ignoring encoding errors can lead to data loss.)\nSee the documentation for codecs.register or run 'help(codecs.Codec)'\nfor a list of the permitted encoding error strings.\n\nnewline controls how universal newlines works (it only applies to text\nmode). It can be None, '', '\\n', '\\r', and '\\r\\n'.  It works as\nfollows:\n\n* On input, if newline is None, universal newlines mode is\n  enabled. Lines in the input can end in '\\n', '\\r', or '\\r\\n', and\n  these are translated into '\\n' before being returned to the\n  caller. If it is '', universal newline mode is enabled, but line\n  endings are returned to the caller untranslated. If it has any of\n  the other legal values, input lines are only terminated by the given\n  string, and the line ending is returned to the caller untranslated.\n\n* On output, if newline is None, any '\\n' characters written are\n  translated to the system default line separator, os.linesep. If\n  newline is '' or '\\n', no translation takes place. If newline is any\n  of the other legal values, any '\\n' characters written are translated\n  to the given string.\n\nIf closefd is False, the underlying file descriptor will be kept open\nwhen the file is closed. This does not work when a file name is given\nand must be True in that case.\n\nA custom opener can be used by passing a callable as *opener*. The\nunderlying file descriptor for the file object is then obtained by\ncalling *opener* with (*file*, *flags*). *opener* must return an open\nfile descriptor (passing os.open as *opener* results in functionality\nsimilar to passing None).\n\nopen() returns a file object whose type depends on the mode, and\nthrough which the standard file operations such as reading and writing\nare performed. When open() is used to open a file in a text mode ('w',\n'r', 'wt', 'rt', etc.), it returns a TextIOWrapper. When used to open\na file in a binary mode, the returned class varies: in read binary\nmode, it returns a BufferedReader; in write binary and append binary\nmodes, it returns a BufferedWriter, and in read/write mode, it returns\na BufferedRandom.\n\nIt is also possible to use a string or bytearray as a file for both\nreading and writing. For strings StringIO can be used like a file\nopened in a text mode, and for bytes a BytesIO can be used like a file\nopened in a binary mode.",ord:"Return the Unicode code point for a one-character string.",pow:"Equivalent to base**exp with 2 arguments or base**exp % mod with 3 arguments\n\nSome types, such as ints, are able to use a more efficient algorithm when\ninvoked using the three argument form.",print:"Prints the values to a stream, or to sys.stdout by default.\n\n  sep\n    string inserted between values, default a space.\n  end\n    string appended after the last value, default a newline.\n  file\n    a file-like object (stream); defaults to the current sys.stdout.\n  flush\n    whether to forcibly flush the stream.",property:"Property attribute.\n\n  fget\n    function to be used for getting an attribute value\n  fset\n    function to be used for setting an attribute value\n  fdel\n    function to be used for del'ing an attribute\n  doc\n    docstring\n\nTypical use is to define a managed attribute x:\n\nclass C(object):\n    def getx(self): return self._x\n    def setx(self, value): self._x = value\n    def delx(self): del self._x\n    x = property(getx, setx, delx, \"I'm the 'x' property.\")\n\nDecorators make defining new properties or modifying existing ones easy:\n\nclass C(object):\n    @property\n    def x(self):\n        \"I am the 'x' property.\"\n        return self._x\n    @x.setter\n    def x(self, value):\n        self._x = value\n    @x.deleter\n    def x(self):\n        del self._x",quit:"",range:"range(stop) -> range object\nrange(start, stop[, step]) -> range object\n\nReturn an object that produces a sequence of integers from start (inclusive)\nto stop (exclusive) by step.  range(i, j) produces i, i+1, i+2, ..., j-1.\nstart defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.\nThese are exactly the valid indices for a list of 4 elements.\nWhen step is given, it specifies the increment (or decrement).",repr:"Return the canonical string representation of the object.\n\nFor many object types, including most builtins, eval(repr(obj)) == obj.",reversed:"Return a reverse iterator over the values of the given sequence.",round:"Round a number to a given precision in decimal digits.\n\nThe return value is an integer if ndigits is omitted or None.  Otherwise\nthe return value has the same type as the number.  ndigits may be negative.",set:"set() -> new empty set object\nset(iterable) -> new set object\n\nBuild an unordered collection of unique elements.",setattr:"Sets the named attribute on the given object to the specified value.\n\nsetattr(x, 'y', v) is equivalent to ``x.y = v''",slice:"slice(stop)\nslice(start, stop[, step])\n\nCreate a slice object.  This is used for extended slicing (e.g. a[0:10:2]).",sorted:"Return a new list containing all items from the iterable in ascending order.\n\nA custom key function can be supplied to customize the sort order, and the\nreverse flag can be set to request the result in descending order.",staticmethod:"staticmethod(function) -> method\n\nConvert a function to be a static method.\n\nA static method does not receive an implicit first argument.\nTo declare a static method, use this idiom:\n\n     class C:\n         @staticmethod\n         def f(arg1, arg2, ...):\n             ...\n\nIt can be called either on the class (e.g. C.f()) or on an instance\n(e.g. C().f()). Both the class and the instance are ignored, and\nneither is passed implicitly as the first argument to the method.\n\nStatic methods in Python are similar to those found in Java or C++.\nFor a more advanced concept, see the classmethod builtin.",str:"str(object='') -> str\nstr(bytes_or_buffer[, encoding[, errors]]) -> str\n\nCreate a new string object from the given object. If encoding or\nerrors is specified, then the object must expose a data buffer\nthat will be decoded using the given encoding and error handler.\nOtherwise, returns the result of object.__str__() (if defined)\nor repr(object).\nencoding defaults to sys.getdefaultencoding().\nerrors defaults to 'strict'.",sum:"Return the sum of a 'start' value (default: 0) plus an iterable of numbers\n\nWhen the iterable is empty, return the start value.\nThis function is intended specifically for use with numeric values and may\nreject non-numeric types.",super:"super() -> same as super(__class__, <first argument>)\nsuper(type) -> unbound super object\nsuper(type, obj) -> bound super object; requires isinstance(obj, type)\nsuper(type, type2) -> bound super object; requires issubclass(type2, type)\nTypical use to call a cooperative superclass method:\nclass C(B):\n    def meth(self, arg):\n        super().meth(arg)\nThis works for class methods too:\nclass C(B):\n    @classmethod\n    def cmeth(cls, arg):\n        super().cmeth(arg)\n",tuple:"Built-in immutable sequence.\n\nIf no argument is given, the constructor returns an empty tuple.\nIf iterable is specified the tuple is initialized from iterable's items.\n\nIf the argument is a tuple, the return value is the same object.",type:"type(object) -> the object's type\ntype(name, bases, dict, **kwds) -> a new type",vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",zip:"zip(*iterables, strict=False) --> Yield tuples until an input is exhausted.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]\n\nThe zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.",}
 for(var key in docs){if(__BRYTHON__.builtins[key]){__BRYTHON__.builtins[key].__doc__=docs[key]}}

@@ -1968,7 +1968,6 @@ memoryview.__getitem__ = function(self, key){
 }
 
 memoryview.__len__ = function(self){
-    console.log('len', len)
     return len(self.obj) / self.itemsize
 }
 
