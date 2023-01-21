@@ -2319,28 +2319,12 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchMapping.prototype.to_js = function(scopes){
-    var keys = []
     for(var key of this.keys){
-        if(key instanceof $B.ast.Attribute){
-            continue
-        }else if(key instanceof $B.ast.Constant ||
+        if(key instanceof $B.ast.Attribute ||
+                key instanceof $B.ast.Constant ||
                 key instanceof $B.ast.UnaryOp ||
                 key instanceof $B.ast.BinOp){
-            var js = key.to_js(scopes),
-                locals = {} // in case js has a rich comp that sets locals.$result...
-            try{
-                // wrap inside () in case the result is an object, eg
-                // "{__class: _b_.float, value: 0}"
-                var value = eval('(' + js + ')')
-            }catch(err){
-                console.log('error', js)
-                throw err
-            }
-            if(_b_.list.__contains__(keys, value)){
-                compiler_error(this, 'mapping pattern checks duplicate key ' +
-                    `(${_b_.repr(value)})`)
-            }
-            keys.push(value)
+            continue
         }else{
             compiler_error(key,
                 'mapping pattern keys may only match literals and attribute lookups')

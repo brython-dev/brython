@@ -6479,7 +6479,8 @@ var StringCtx = $B.parser.StringCtx = function(context, value){
     this.parent = context
     this.position = this.end_position = $token.value
     context.tree.push(this)
-    this.value = ''
+    this.is_bytes = value.startsWith('b')
+    this.value = this.is_bytes ? [] : ''
     this.add_value(value)
     this.raw = false
 }
@@ -6523,15 +6524,38 @@ StringCtx.prototype.add_value = function(value){
     if(! this.is_bytes){
         this.value += make_string_for_ast_value(value)
     }else{
-        this.value += make_string_for_ast_value(value.substr(1))
+        value = value.substr(2, value.length - 3)
+        try{
+            var b = encode_bytestring(value)
+        }catch(err){
+            raise_syntax_error(context,
+                'bytes can only contain ASCII literal characters')
+        }
+        this.value = this.value.concat(b)
     }
+}
+
+function encode_bytestring(s){
+    s = s.replace(/\\t/g, '\t')
+         .replace(/\\n/g, '\n')
+         .replace(/\\r/g, '\r')
+         .replace(/\\f/g, '\f')
+         .replace(/\\\\/g, '\\')
+    var t = []
+    for(var i = 0, len = s.length; i < len; i++){
+        var cp = s.codePointAt(i)
+        if(cp > 255){
+            throw Error()
+        }
+        t.push(cp)
+    }
+    return t
 }
 
 StringCtx.prototype.ast = function(){
     var value = this.value
     if(this.is_bytes){
-        value = `'${value}'`
-        value = _b_.bytes.$new(_b_.bytes, eval(value), 'ISO-8859-1').source
+        value = _b_.bytes.$factory(this.value)
     }
     var ast_obj = new ast.Constant(value)
     set_position(ast_obj, this.position)

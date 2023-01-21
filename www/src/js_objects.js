@@ -399,24 +399,38 @@ $B.JSObj = $B.make_class("JSObject",
 )
 
 // Operations are implemented only for BigInt objects (cf. issue 1417)
-$B.JSObj.__sub__ = function(_self, other){
-    // If self - other means anything, return it
-    if(typeof _self == "bigint" && typeof other == "bigint"){
-        return _self - other
+function check_big_int(x, y){
+    if(typeof x != "bigint" || typeof y != "bigint"){
+        throw _b_.TypeError.$factory("unsupported operand type(s) for - : '" +
+            $B.class_name(x) + "' and '" + $B.class_name(y) + "'")
     }
-    throw _b_.TypeError.$factory("unsupported operand type(s) for - : '" +
-        $B.class_name(_self) + "' and '" + $B.class_name(other) + "'")
 }
 
-var ops = {'+': '__add__',
-           '*': '__mul__',
-           '**': '__pow__',
-           '%' : '__mod__'
-          }
+var js_ops = {
+    __add__: function(_self, other){
+        check_big_int(_self, other)
+        return _self + other
+    },
+    __mod__: function(_self, other){
+        check_big_int(_self, other)
+        return _self % other
+    },
+    __mul__: function(_self, other){
+        check_big_int(_self, other)
+        return _self * other
+    },
+    __pow__: function(_self, other){
+        check_big_int(_self, other)
+        return _self ** other
+    },
+    __sub__: function(_self, other){
+        check_big_int(_self, other)
+        return _self - other
+    }
+}
 
-for(var op in ops){
-    eval('$B.JSObj.' + ops[op] + ' = ' +
-        ($B.JSObj.__sub__ + '').replace(/-/g, op))
+for(var js_op in js_ops){
+    $B.JSObj[js_op] = js_ops[js_op]
 }
 
 $B.JSObj.__eq__ = function(_self, other){
