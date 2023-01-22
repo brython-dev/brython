@@ -217,8 +217,8 @@ $B.prepare_string = function(token){
                             string_error(token, "(unicode error) " +
                                 "unknown Unicode character name")
                         }
-                        var cp = "0x" + search[1] // code point
-                        zone += String.fromCodePoint(eval(cp))
+                        var cp = parseInt(search[1], 16) // code point
+                        zone += String.fromCodePoint(cp)
                         end = end_lit + 1
                     }else{
                         end++
