@@ -9,7 +9,7 @@ requête Ajax.
 Mots clés et fonctions intégrées
 --------------------------------
 
-Brython supporte tous les mots-clés et les fonctions intégrées de la version 
+Brython supporte tous les mots-clés et les fonctions intégrées de la version
 Python de même numéro de version.
 
 Quelques particularités liées au contexte d'exécution dans un navigateur :
@@ -38,9 +38,14 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
 - par défaut, `print()` affiche sur la console du navigateur, et les messages
   d'erreur sont également affichés sur cette console. `sys.stderr` et
   `sys.stdout` peuvent être affectés à un objet qui implémente une méthode
-  `write()`, ce qui permet par exemple d'afficher les messages d'erreurs dans
+  `write()`, ce qui permet par exemple d'afficher les messages d'erreur dans
   une fenêtre
 
+- par défaut, `sys.stdout.write()` et `sys.stderr.write()` n'affichent pas
+  immédiatement dans la console parce qu'il y aurait un saut de ligne à chaque
+  appel. Le message est stocké dans un buffer, pour afficher dans la console
+  il faut appeler la méthode `flush()` de `sys.stdout` ou `sys.stderr`
+  
 - pour lancer une impression sur imprimante, utiliser la méthode `print()` de
   l'objet `window` défini dans le module **browser** :
 
