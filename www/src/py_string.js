@@ -82,6 +82,7 @@ function to_string(args){
 var str = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
+    __qualname__: 'str',
     $is_class: true,
     $native: true
 }
@@ -1262,28 +1263,19 @@ str.__str__ = function(_self){
     return repl
 }
 
-str.toString = function(){return "str"}
+var body = `var _b_ = __BRYTHON__.builtins
+if(typeof other !== typeof _self){
+    return _b_.NotImplemented
+}else if(typeof _self == "string"){
+    return _self > other
+}else{
+    return _self.$brython_value > other.$brython_value
+}`
 
-// generate comparison methods
-var $comp_func = function(_self, other){
-    if(typeof other !== typeof _self){
-        return _b_.NotImplemented
-    }else if(typeof _self == "string"){
-        return _self > other
-    }else{
-        return _self.$brython_value > other.$brython_value
-    }
-}
-$comp_func += "" // source code
-var $comps = {">": "gt", ">=": "ge", "<": "lt", "<=": "le"}
-for(var $op in $comps){
-    eval("str.__" + $comps[$op] + '__ = ' + $comp_func.replace(/>/gm,$op))
-}
-
-// unsupported operations
-var $notimplemented = function(self, other){
-    throw _b_.NotImplementedError.$factory(
-        "OPERATOR not implemented for class str")
+var comps = {">": "gt", ">=": "ge", "<": "lt", "<=": "le"}
+for(var op in comps){
+    str[`__${comps[op]}__`] = Function('_self', 'other',
+        body.replace(/>/gm, op))
 }
 
 str.capitalize = function(){
