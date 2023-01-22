@@ -403,10 +403,12 @@ def set_record(ev):
     if ev.target.dataset.status == 'off':
         ev.target.dataset.status = 'on'
         ev.target.html = '&#x23f9;'
+        ev.target.style.color = '#000'
         record = Record()
     else:
         ev.target.dataset.status = 'off'
         ev.target.html = '&#x23fa'
+        ev.target.style.color = 'red'
         playControl.disabled = False
         playControl.html = '&#x23f5'
 
@@ -417,11 +419,40 @@ def play_record(ev):
         if notes:
             freq = music.note_freqs[octave][note]
             for start, stop in notes:
-                sequence.append((freq,
-                                 0.5 + start - record.startTime,
-                                 stop - start))
-    for event in sequence:
-        synthesizer.playTone(audioContext, *event)
+                sequence.append([freq,
+                                 start - record.startTime,
+                                 stop - record.startTime])
+    sequence.sort(key = lambda x: x[1])
+    previous = 0
+    for note in sequence:
+        note.append(1000*(note[1] - previous))
+        previous = note[1]
+    t0 = audioContext.currentTime
+    timer.set_timeout(play_one, sequence[0][3], sequence, 0)
+
+def play_one(sequence, index):
+    freq, start, stop, delta = sequence[index]
+    envelop = window.GainNode.new(audioContext)
+    gain_value = float(volumeControl.value)
+    envelop.gain.value = gain_value
+    attackTime = 0.05
+    releaseTime = 0.035
+
+    osc = audioContext.createOscillator()
+    osc.frequency.value = freq
+    osc.type = wavePicker.value
+    osc.connect(envelop)
+    envelop.connect(audioContext.destination)
+    t0 = audioContext.currentTime
+    envelop.gain.linearRampToValueAtTime(0, t0)
+    envelop.gain.linearRampToValueAtTime(gain_value, t0 + attackTime)
+    osc.start(t0)
+    envelop.gain.linearRampToValueAtTime(0, t0 + stop - start)
+    osc.stop(t0 + stop)
+    index += 1
+    if index < len(sequence):
+        delta = sequence[index][3]
+        timer.set_timeout(play_one, delta, sequence, index)
 
 class Output:
 
@@ -480,8 +511,6 @@ class Output:
       <option selected>3</option>
       <option>4</option>
       <option>5</option>
-      <option>6</option>
-      <option>7</option>
     </select>
 
     <span>Keyboard type</span>

@@ -23,7 +23,6 @@ def playTone(audioContext,
     osc = audioContext.createOscillator()
     t = audioContext.currentTime + time
 
-    envelop.gain.setValueAtTime(0, 0)
     envelop.gain.setValueAtTime(0, t)
     attackTime = 0.1
     envelop.gain.linearRampToValueAtTime(gain_value, t + attackTime)
