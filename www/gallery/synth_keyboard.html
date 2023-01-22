@@ -141,25 +141,27 @@
   vertical-align: baseline;
 }
 
-.record_off {
-	width: 35px;
-	height: 35px;
-	font-size: 0;
-	background-color: red;
-	border: 0;
-	border-radius: 35px;
-	margin: 18px;
-	outline: none;
+#record {
+    width: 2em;
+    font-size: 3em;
+    background-color: #fff;
+    color: red;
+    border: 1px;
+    border-radius: 5px;
+    border-style: solid;
+    border-color: #000;
+    margin: 0.5em;
+    outline: none;
 }
 
-.record_on {
-	width: 35px;
-	height: 35px;
-	font-size: 0;
-	background-color: black;
-	border: 0;
-	margin: 18px;
-	outline: none;
+#play {
+    width: 2em;
+    font-size: 3em;
+    background-color: #fff;
+    color: #000;
+    border: 0;
+    margin: 18px;
+    outline: none;
 }
 
 </style>
@@ -279,6 +281,13 @@ def chord_notes(chord_num):
     ranks = [chord_num - 1, (chord_num + 1) % 7, (chord_num + 3) % 7]
     return [keyElements[rank] for rank in ranks]
 
+def check_record_start(octave, note, key=None):
+    if record is not None:
+        if key is not None:
+            record.key2note[key] = octave, note
+        record.notes.setdefault((octave, note), [])
+        record.notes[(octave, note)].append([audioContext.currentTime])
+
 def notePressed(event):
 
     if hasattr(event, "key"):
@@ -291,9 +300,7 @@ def notePressed(event):
             note = keyElement.dataset['note']
             highlight(keyElement)
             playing[event.key] = play(octave, note)
-            if record is not None:
-                record.key2note[event.key] = octave, note
-                record.notes[event.key].append([audioContext.currentTime])
+            check_record_start(octave, note, event.key)
         elif event.key in chords:
             playing[event.key] = {'notes': []}
             chord = chord_notes(int(event.key))
@@ -310,9 +317,10 @@ def notePressed(event):
 
     if not hasattr(dataset, "pressed") or dataset.pressed == "no":
         octave = int(dataset.octave)
-        oscList[octave][dataset.note] = play(octave, dataset.note)
+        note = dataset.note
+        oscList[octave][note] = play(octave, note)
         dataset.pressed = "yes"
-
+        check_record_start(octave, note)
 
 def noteReleased(event):
     if hasattr(event, "key"):
@@ -320,7 +328,8 @@ def noteReleased(event):
             if event.key in keys:
                 synthesizer.fade_out(audioContext, *playing[event.key])
                 if record is not None:
-                    record.notes[event.key][-1].append(audioContext.currentTime)
+                    octave, note = record.key2note[event.key]
+                    record.notes[(octave, note)][-1].append(audioContext.currentTime)
                 del playing[event.key]
                 keyElement = keyElements[keys.index(event.key)]
                 unhighlight(keyElement)
@@ -337,9 +346,12 @@ def noteReleased(event):
     if dataset:
         if hasattr(dataset, "pressed") and dataset.pressed == "yes":
             octave = int(dataset.octave)
-            synthesizer.fade_out(audioContext, *oscList[octave][dataset.note])
-            del oscList[octave][dataset.note]
+            note = dataset.note
+            synthesizer.fade_out(audioContext, *oscList[octave][note])
+            del oscList[octave][note]
             dataset.pressed = "no"
+            if record is not None:
+                record.notes[(octave, note)][-1].append(audioContext.currentTime)
 
 def setup():
     base = scaleControl.value
@@ -373,7 +385,7 @@ class Record:
 
     def __init__(self):
         self.startTime = audioContext.currentTime
-        self.notes = {key: [] for key in keys}
+        self.notes = {}
         self.key2note = {}
 
 recordControl = document['record']
@@ -396,14 +408,13 @@ def set_record(ev):
         ev.target.dataset.status = 'off'
         ev.target.html = '&#x23fa'
         playControl.disabled = False
+        playControl.html = '&#x23f5'
 
 @bind(playControl, 'click')
 def play_record(ev):
     sequence = []
-    for key in record.notes:
-        notes = record.notes[key]
+    for (octave, note), notes in record.notes.items():
         if notes:
-            octave, note = record.key2note[key]
             freq = music.note_freqs[octave][note]
             for start, stop in notes:
                 sequence.append((freq,
@@ -481,8 +492,9 @@ class Output:
     </select>
 </div>
 
+<button id="play" data-status="off" disabled></button>
 <button id="record" data-status="off">&#x23fa;</button>
-<button id="play" data-status="off" disabled>play</button>
+
 <textarea rows=20 cols=60 id="output" autocomplete="off" style="display:none;"></textarea>
 </body>
 </html>
