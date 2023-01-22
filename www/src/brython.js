@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-21 17:29:09.076609"
-__BRYTHON__.timestamp=1674318549076
+__BRYTHON__.compiled_date="2023-01-22 10:40:59.880934"
+__BRYTHON__.timestamp=1674380459880
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","bry_re","builtins","dis","encoding_cp932","hashlib","html_parser","long_int","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7698,6 +7698,7 @@ $B.last_frame=function(){var frame=$B.last($B.frames_stack)
 return `file ${frame.__file__} line ${frame.$lineno}`}
 var traceback=$B.traceback=$B.make_class("traceback",function(exc){var stack=exc.$stack ||$B.frames_stack.slice()
 if(_b_.isinstance(exc,_b_.SyntaxError)){stack.pop()}
+if(stack.length==0){return _b_.None}
 return{
 __class__ :traceback,$stack:stack,
 linenos:stack.map(x=> x.$lineno),pos:0}}
@@ -10027,7 +10028,7 @@ while(s.surrogates[nb]+nb < jspos){nb++}
 return jspos-nb}
 function to_string(args){if(Array.isArray(args)){for(var i=0,len=args.length;i < len;i++){args[i]=to_string(args[i])}
 return args}else{if(args.__class__ && !(args instanceof String)){return args.$brython_value}else{return args}}}
-var str={__class__:_b_.type,__dir__:_b_.object.__dir__,$is_class:true,$native:true}
+var str={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'str',$is_class:true,$native:true}
 str.$to_string=to_string
 function normalize_start_end($){var len
 if(typeof $.self=="string"){len=$.self.length}else{len=str.__len__($.self)}
@@ -10429,13 +10430,13 @@ if(chars.length==_self.length){return _self.replace(combining_re,"\u200B$1")}
 for(var i=0;i < chars.length;i++){var cp=_b_.ord(chars[i])
 if(cp >=0x300 && cp <=0x36F){repl+="\u200B"+chars[i]}else{repl+=chars[i]}}
 return repl}
-str.toString=function(){return "str"}
-var $comp_func=function(_self,other){if(typeof other !==typeof _self){return _b_.NotImplemented}else if(typeof _self=="string"){return _self > other}else{return _self.$brython_value > other.$brython_value}}
-$comp_func+="" 
-var $comps={">":"gt",">=":"ge","<":"lt","<=":"le"}
-for(var $op in $comps){eval("str.__"+$comps[$op]+'__ = '+$comp_func.replace(/>/gm,$op))}
-var $notimplemented=function(self,other){throw _b_.NotImplementedError.$factory(
-"OPERATOR not implemented for class str")}
+var body=`var _b_ = __BRYTHON__.builtins
+if(typeof other !== typeof _self){
+    return _b_.NotImplemented}else if(typeof _self == "string"){
+    return _self > other}else{
+    return _self.$brython_value > other.$brython_value}`
+var comps={">":"gt",">=":"ge","<":"lt","<=":"le"}
+for(var op in comps){str[`__${comps[op]}__`]=Function('_self','other',body.replace(/>/gm,op))}
 str.capitalize=function(){var $=$B.args("capitalize",1,{self},["self"],arguments,{},null,null),_self=to_string($.self)
 if(_self.length==0){return ""}
 return _self.charAt(0).toUpperCase()+_self.substr(1)}
@@ -15672,7 +15673,7 @@ $B.js_from_ast(item.context_expr,scopes)+',\n'+
 `var exit_${id} = $B.$getattr(klass, '__exit__'),\n`+
 `enter_${id} = $B.$getattr(klass, '__enter__')\n`+
 `}catch(err){\n`+
-`var klass_name = $B.get_class(mgr_${id})\n`+
+`var klass_name = $B.class_name(mgr_${id})\n`+
 `throw _b_.TypeError.$factory("'" + klass_name + `+
 `"' object does not support the con`+
 `text manager protocol")\n`+

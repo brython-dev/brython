@@ -108,6 +108,9 @@ var traceback = $B.traceback = $B.make_class("traceback",
         if(_b_.isinstance(exc, _b_.SyntaxError)){
             stack.pop()
         }
+        if(stack.length == 0){
+            return _b_.None
+        }
         return {
             __class__ : traceback,
             $stack: stack,
