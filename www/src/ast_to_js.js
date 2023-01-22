@@ -2914,7 +2914,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                   `var exit_${id} = $B.$getattr(klass, '__exit__'),\n` +
                       `enter_${id} = $B.$getattr(klass, '__enter__')\n` +
               `}catch(err){\n` +
-                  `var klass_name = $B.get_class(mgr_${id})\n` +
+                  `var klass_name = $B.class_name(mgr_${id})\n` +
                   `throw _b_.TypeError.$factory("'" + klass_name + ` +
                       `"' object does not support the con` +
                       // split word 'context', replaced by "C" in brython.js...
