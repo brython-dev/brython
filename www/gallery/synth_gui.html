@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+<head>
+<meta name="description" content="Brython">
+<meta name="keywords" content="Python,Brython">
+<meta name="author" content="Dan Stromberg, Pierre Quentel">
+<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+
+<script type="text/javascript" src="/src/brython_builtins.js"></script>
+
+<script type="text/javascript" src="/src/py_ast_classes.js"></script>
+<script type="text/javascript" src="/src/stdlib_paths.js"></script>
+<script type="text/javascript" src="/src/unicode_data.js"></script>
+<script type="text/javascript" src="/src/version_info.js"></script>
+
+<script type="text/javascript" src="/src/python_tokenizer.js"></script>
+<script type="text/javascript" src="/src/py_ast.js"></script>
+<script type="text/javascript" src="/src/py2js.js"></script>
+<script type="text/javascript" src="/src/loaders.js"></script>
+<script type="text/javascript" src="/src/py_utils.js"></script>
+<script type="text/javascript" src="/src/py_object.js"></script>
+<script type="text/javascript" src="/src/py_type.js"></script>
+<script type="text/javascript" src="/src/py_builtin_functions.js"></script>
+<script type="text/javascript" src="/src/py_sort.js"></script>
+<script type="text/javascript" src="/src/py_exceptions.js"></script>
+<script type="text/javascript" src="/src/py_range_slice.js"></script>
+<script type="text/javascript" src="/src/py_bytes.js"></script>
+<script type="text/javascript" src="/src/py_set.js"></script>
+<script type="text/javascript" src="/src/js_objects.js"></script>
+<script type="text/javascript" src="/src/py_import.js"></script>
+<script type="text/javascript" src="/src/py_string.js"></script>
+<script type="text/javascript" src="/src/py_int.js"></script>
+<script type="text/javascript" src="/src/py_long_int.js"></script>
+<script type="text/javascript" src="/src/py_float.js"></script>
+<script type="text/javascript" src="/src/py_complex.js"></script>
+<script type="text/javascript" src="/src/py_dict.js"></script>
+<script type="text/javascript" src="/src/py_list.js"></script>
+<script type="text/javascript" src="/src/py_generator.js"></script>
+<script type="text/javascript" src="/src/py_dom.js"></script>
+<script type="text/javascript" src="/src/py_pattern_matching.js"></script>
+<script type="text/javascript" src="/src/async.js"></script>
+<script type="text/javascript" src="/src/py_flags.js"></script>
+<script type="text/javascript" src="/src/builtin_modules.js"></script>
+<script type="text/javascript" src="/src/ast_to_js.js"></script>
+<script type="text/javascript" src="/src/symtable.js"></script>
+
+<!-- script type="text/python" src="show_source.py"></script -->
+
+<style>
+.plug {
+    width: 20px;
+    background-color: #fff;
+    border-width: 2px;
+    border-radius: 10px;
+    border-color: #000;
+}
+</style>
+
+<title>Brython synth keyboard</title>
+
+</head>
+<body onload="brython(2)">
+
+<script type="text/python">
+from browser import document, window, html, console, bind, timer, alert, svg
+from browser.widgets import dialog
+
+audioContext = None
+playground = document['playground']
+playground.width = window.innerWidth
+playground.height = window.innerHeight - 100
+
+def play(ev):
+    panel = ev.target.closest('DIV')
+    freq = float(panel.select_one('INPUT').value)
+
+
+dx = 0
+dy = 50
+
+line = None
+
+class Plug(html.BUTTON):
+
+    def __init__(self, *args, **kw):
+        html.BUTTON.__init__(self, *args, **kw)
+        self.bind('mousedown', self.click_plug)
+        self.bind('mouseover', self.mouseover)
+        self.bind('mouseup', self.mouseup)
+
+    def click_plug(self, ev):
+        global line
+        self.mouse_pos = [ev.x, ev.y]
+        line = svg.line(x1=ev.x + dx,
+                         y1=ev.y - dy,
+                         x2=ev.x + dx,
+                         y2=ev.y - dy,
+                         stroke='red',
+                         stroke_width=2)
+        line.origin = self
+        playground <= line
+        document.bind('mousemove', self.draw_cable)
+        document.bind('mouseup', self.plug)
+
+    def draw_cable(self, ev):
+        line.attrs['x2'] = ev.x + dx
+        line.attrs['y2'] = ev.y - dy
+
+    def plug(self, ev):
+        global line
+        line = None
+        document.unbind('mousemove')
+        document.unbind('mouseup')
+
+    def mouseover(self, ev):
+        if line is not None:
+            print('mouseover', ev.x, ev.y)
+
+    def mouseup(self, ev):
+        if line is not None:
+            print('mouseup', ev.x, ev.y)
+            line.origin.connect(self)
+
+    def connect(self, other):
+        print('connected')
+        global line
+        line = None
+        
+@bind('#oscillator', 'click')
+def add_oscillator(ev):
+    global audioContext
+    if audioContext is None:
+        audioContext = window.AudioContext.new()
+    d = dialog.Dialog('Oscillator', left=100, top=100)
+    t = html.TABLE() <= html.TR() <= (left := html.TD()) + (right := html.TD())
+    left <= 'Frequency' + freq := html.INPUT()
+    left.style.verticalAlign = 'middle'
+    freq.value = 440
+    for i in range(4):
+        right <= Plug('&nbsp;', Class='plug') + html.BR()
+
+    d.panel <= t
+    d.panel <= html.P() + button := html.BUTTON('Play')
+    button.bind('click', play)
+    d.oscillator = window.OscillatorNode.new(audioContext)
+
+@bind('#gain', 'click')
+def add_gain(ev):
+    d = dialog.Dialog('GainNode')
+    gain = html.INPUT(type='range',
+                      min="0.0",
+                      max="1.0",
+                      step="0.01",
+                      value="0.5",
+                      style="width:100px")
+    d.panel <= 'Volume' + gain
+
+
+</script>
+
+<button id="oscillator">add oscillator</button>
+<button id="gain">add gain</button>
+
+<div id="zone">
+  <svg id="playground" width=800 height=600 style="position:absolute;left:10px;top:50px;background-color:#eee"></svg>
+</div>
+</body>
+</html>
+
+
