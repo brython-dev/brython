@@ -1,23 +1,11 @@
-from browser import console, self as window
+from browser import self as window
 
 def wrap(func, *args):
     # Transforms a function f into another function that prints a
     # traceback in case of exception
     def f():
-        try:
-            return func(*args)
-        except Exception as exc:
-            msg = ''
-            try:
-                if exc.args:
-                    msg = '{0.info}\n{0.__class__.__name__}: {0.args[0]}'.format(exc)
-                else:
-                    msg = str(exc)
-                import sys
-                sys.stderr.write(msg)
-            except Exception as exc2:
-                console.log("Error printing exception traceback", exc2, func,
-                    args, kw)
+        return func(*args)
+
     return f
 
 clear_interval = window.clearInterval

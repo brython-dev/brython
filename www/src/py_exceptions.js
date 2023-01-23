@@ -108,6 +108,9 @@ var traceback = $B.traceback = $B.make_class("traceback",
         if(_b_.isinstance(exc, _b_.SyntaxError)){
             stack.pop()
         }
+        if(stack.length == 0){
+            return _b_.None
+        }
         return {
             __class__ : traceback,
             $stack: stack,
@@ -214,7 +217,7 @@ frame.f_code = {
                 co_varnames: $B.fast_tuple([])
             }
         }
-        res.__class__ = $B.code
+        res.__class__ = _b_.code
         return res
     }
 }
@@ -371,7 +374,7 @@ var show_stack = $B.show_stack = function(stack){
 // The line '// placeholder' is meant to be replaced by exception-specific
 // code passed to make_exc()
 var be_factory = `
-function (){
+    var _b_ = __BRYTHON__.builtins
     var err = Error()
     err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
     err.__class__ = _b_.BaseException
@@ -384,9 +387,9 @@ function (){
     err.__context__ = _b_.None // XXX fix me
     err.__suppress_context__ = false // XXX fix me
     return err
-}`
+`
 
-eval('BaseException.$factory = ' + be_factory)
+BaseException.$factory = Function(be_factory)
 
 BaseException.$factory.$infos = {
     __name__: "BaseException",
@@ -481,26 +484,22 @@ var $make_exc = $B.$make_exc = function(names, parent){
         }
         // create a class for exception called "name"
         $B.builtins_scope[name] = true
-        var $exc = (be_factory).replace(/BaseException/g,name)
+        var $exc = be_factory.replace(/BaseException/g,name)
         $exc = $exc.replace("// placeholder", code)
         // class dictionary
-        _str[pos++] = "_b_." + name + ' = {__class__:_b_.type, ' +
-            '__bases__: [_b_.' + parent.__name__ + '], ' +
-            '__name__: "' + name + '", ' +
-            '__qualname__: "' + name + '", ' +
-            '__mro__: [_b_.' + parent.__name__ +
-            "].concat(parent.__mro__), $is_class: true};"
-        _str[pos++] = "_b_." + name + ".$factory = " + $exc
-        _str[pos++] = "_b_." + name + '.$factory.$infos = {__name__: "' +
-            name + '", __qualname__: "' + name + '"}'
-        _str[pos++] = "$B.set_func_names(_b_." + name + ", 'builtins')"
-    }
-    try{
-        eval(_str.join(";"))
-    }catch(err){
-        console.log("--err" + err)
-        console.log(_str.join(''))
-        throw err
+        _b_[name] = {
+            __class__: _b_.type,
+            __bases__: [_b_[parent.__name__]],
+            __name__: name,
+            __mro__: [_b_[parent.__name__]].concat(parent.__mro__),
+            $is_class: true
+        }
+        _b_[name].$factory = Function($exc)
+        _b_[name].$factory.$infos = {
+            __name__: name,
+            __qualname__: name
+        }
+        $B.set_func_names(_b_[name], 'builtins')
     }
 }
 

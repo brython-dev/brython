@@ -282,11 +282,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                 }
                 return pyobj2jsobj(res)
             }catch(err){
-                if($B.debug > 1){
-                    console.log($B.class_name(err) + ':',
-                        err.args ? err.args[0] : '' )
-                }
-                throw err
+                $B.handle_error(err)
             }
         }
     }else{
@@ -399,24 +395,38 @@ $B.JSObj = $B.make_class("JSObject",
 )
 
 // Operations are implemented only for BigInt objects (cf. issue 1417)
-$B.JSObj.__sub__ = function(_self, other){
-    // If self - other means anything, return it
-    if(typeof _self == "bigint" && typeof other == "bigint"){
-        return _self - other
+function check_big_int(x, y){
+    if(typeof x != "bigint" || typeof y != "bigint"){
+        throw _b_.TypeError.$factory("unsupported operand type(s) for - : '" +
+            $B.class_name(x) + "' and '" + $B.class_name(y) + "'")
     }
-    throw _b_.TypeError.$factory("unsupported operand type(s) for - : '" +
-        $B.class_name(_self) + "' and '" + $B.class_name(other) + "'")
 }
 
-var ops = {'+': '__add__',
-           '*': '__mul__',
-           '**': '__pow__',
-           '%' : '__mod__'
-          }
+var js_ops = {
+    __add__: function(_self, other){
+        check_big_int(_self, other)
+        return _self + other
+    },
+    __mod__: function(_self, other){
+        check_big_int(_self, other)
+        return _self % other
+    },
+    __mul__: function(_self, other){
+        check_big_int(_self, other)
+        return _self * other
+    },
+    __pow__: function(_self, other){
+        check_big_int(_self, other)
+        return _self ** other
+    },
+    __sub__: function(_self, other){
+        check_big_int(_self, other)
+        return _self - other
+    }
+}
 
-for(var op in ops){
-    eval('$B.JSObj.' + ops[op] + ' = ' +
-        ($B.JSObj.__sub__ + '').replace(/-/g, op))
+for(var js_op in js_ops){
+    $B.JSObj[js_op] = js_ops[js_op]
 }
 
 $B.JSObj.__eq__ = function(_self, other){
@@ -663,7 +673,9 @@ $B.JSMeta.__init_subclass__ = function(){
 $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
     // Creating a class that inherits a Javascript class A must return
     // another Javascript class B that extends A
-    eval("var " + class_name + ` = function(){
+    var body = `
+    var _b_ = __BRYTHON__.builtins
+    return function(){
         if(_b_.dict.$contains_string(cl_dict, '__init__')){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
@@ -673,11 +685,12 @@ $B.JSMeta.__new__ = function(metaclass, class_name, bases, cl_dict){
         }else{
             return new bases[0].$js_func(...arguments)
         }
-    }`)
-    var new_js_class = eval(class_name)
+    }`
+    var new_js_class = Function('cl_dict', 'bases', body)(cl_dict, bases)
     new_js_class.prototype = Object.create(bases[0].$js_func.prototype)
     new_js_class.prototype.constructor = new_js_class
     new_js_class.__mro__ = [bases[0], _b_.type]
+    new_js_class.__qualname__ = class_name
     new_js_class.$is_js_class = true
     return new_js_class
 }

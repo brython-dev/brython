@@ -1172,65 +1172,65 @@ float.__truediv__ = function(self, other){
 }
 
 // operations
-var $op_func = function(self, other){
+var op_func_body =
+    `var $B = __BRYTHON__,
+        _b_ = __BRYTHON__.builtins
     if(_b_.isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value - 1) : self
         }else if(other.__class__ === $B.long_int){
-            return float.$factory(self.value - parseInt(other.value))
+            return _b_.float.$factory(self.value - parseInt(other.value))
         }else{
-            return fast_float(self.value - other)
+            return $B.fast_float(self.value - other)
         }
     }
-    if(_b_.isinstance(other, float)){
-        return fast_float(self.value - other.value)
+    if(_b_.isinstance(other, _b_.float)){
+        return $B.fast_float(self.value - other.value)
     }
-    return _b_.NotImplemented
-}
-$op_func += "" // source code
-var $ops = {"+": "add", "-": "sub"}
-for(var $op in $ops){
-    var $opf = $op_func.replace(/-/gm, $op)
-    $opf = $opf.replace(/__rsub__/gm, "__r" + $ops[$op] + "__")
-    eval("float.__" + $ops[$op] + "__ = " + $opf)
+    return _b_.NotImplemented`
+
+var ops = {"+": "add", "-": "sub"}
+for(var op in ops){
+    var body = op_func_body.replace(/-/gm, op)
+    float[`__${ops[op]}__`] = Function('self', 'other', body)
 }
 
 // comparison methods
-var $comp_func = function(self, other){
-
-    if(_b_.isinstance(other, _b_.int)){
-        if(other.__class__ === $B.long_int){
-            return self.value > parseInt(other.value)
-        }
-        return self.value > other.valueOf()
+var comp_func_body = `
+var $B = __BRYTHON__,
+    _b_ = $B.builtins
+if(_b_.isinstance(other, _b_.int)){
+    if(other.__class__ === $B.long_int){
+        return self.value > parseInt(other.value)
     }
-    if(_b_.isinstance(other, float)){
-        return self.value > other.value
-    }
-
-    if(_b_.isinstance(other, _b_.bool)) {
-        return self.value > _b_.bool.__hash__(other)
-    }
-    if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
-       return _b_.int.__gt__(self.value, $B.$GetInt(other))
-    }
-
-    // See if other has the opposite operator, eg <= for >
-    var inv_op = $B.$getattr(other, "__le__", _b_.None)
-    if(inv_op !== _b_.None){
-        return inv_op(self)
-    }
-
-    throw _b_.TypeError.$factory(
-        "unorderable types: float() > " + $B.class_name(other) + "()")
+    return self.value > other.valueOf()
+}
+if(_b_.isinstance(other, _b_.float)){
+    return self.value > other.value
 }
 
-$comp_func += "" // source code
-for(var $op in $B.$comps){
-    eval("float.__" + $B.$comps[$op] + "__ = "+
-          $comp_func.replace(/>/gm, $op).
-              replace(/__gt__/gm, "__" + $B.$comps[$op] + "__").
-              replace(/__le__/, "__" + $B.$inv_comps[$op] + "__"))
+if(_b_.isinstance(other, _b_.bool)) {
+    return self.value > _b_.bool.__hash__(other)
+}
+if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
+   return _b_.int.__gt__(self.value, $B.$GetInt(other))
+}
+
+// See if other has the opposite operator, eg <= for >
+var inv_op = $B.$getattr(other, "__le__", _b_.None)
+if(inv_op !== _b_.None){
+    return inv_op(self)
+}
+
+throw _b_.TypeError.$factory(
+    "unorderable types: float() > " + $B.class_name(other) + "()")
+`
+
+for(var op in $B.$comps){
+    var body = comp_func_body.replace(/>/gm, op).
+                  replace(/__gt__/gm, `__${$B.$comps[op]}__`).
+                  replace(/__le__/, `__${$B.$inv_comps[op]}__`)
+    float[`__${$B.$comps[op]}__`] = Function('self', 'other', body)
 }
 
 // add "reflected" methods
@@ -1359,7 +1359,7 @@ float.$factory = function(value){
                value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
                value = to_digits(value) // convert arabic-indic digits to latin
                if(isFinite(value)){
-                   return fast_float(eval(value))
+                   return fast_float(parseFloat(value))
                }else{
                    throw _b_.TypeError.$factory(
                        "could not convert string to float: " +

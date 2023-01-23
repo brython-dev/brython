@@ -5,9 +5,7 @@ Module to manipulate long integers
 
 var _b_ = $B.builtins
 
-try{
-    eval("window")
-}catch(err){
+if($B.isWebWorker){
     window = self
 }
 
@@ -378,7 +376,7 @@ long_int.$log10 = function(x){
     // x = mant * 10 ** exp
     var x_string = x.value.toString(),
         exp = x_string.length - 1,
-        mant = eval(x_string[0] + '.' + x_string.substr(1))
+        mant = parseFloat(x_string[0] + '.' + x_string.substr(1))
     return _b_.float.$factory(exp + Math.log10(mant))
 }
 
@@ -389,27 +387,27 @@ long_int.imag = function(self){return _b_.int.$factory(0)}
 long_int.real = function(self){return self}
 
 // code for & | ^
-long_int.__and__ = function(self, other){
-    if(typeof other == "number"){
-        return int_or_long(self.value & BigInt(other))
-    }else if(typeof other == "boolean"){
-        return int_or_long(self.value & (other ? 1n : 0n))
-    }else if(other.__class__ === $B.long_int){
-        return int_or_long(self.value & other.value)
-    }else if(_b_.isinstance(other, _b_.int)){
-        // int subclass
-        return long_int.__and__(self, other.$brython_value)
-    }
-    return _b_.NotImplemented
+var body =
+`var $B = __BRYTHON__,
+    _b_ = $B.builtins
+if(typeof other == "number"){
+    return _b_.int.$int_or_long(self.value & BigInt(other))
+}else if(typeof other == "boolean"){
+    return _b_.int.$int_or_long(self.value & (other ? 1n : 0n))
+}else if(other.__class__ === $B.long_int){
+    return _b_.int.$int_or_long(self.value & other.value)
+}else if(_b_.isinstance(other, _b_.int)){
+    // int subclass
+    return $B.long_int.__and__(self, other.$brython_value)
 }
+return _b_.NotImplemented`
 
+long_int.__and__ = Function('self', 'other', body)
 
-var model = long_int.__and__ + ''
-
-eval("long_int.__or__ = " +
-     model.replace(/&/g, '|').replace(/__and__/g, '__or__'))
-eval("long_int.__xor__ = " +
-     model.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
+long_int.__or__ = Function('self', 'other', 
+     body.replace(/&/g, '|').replace(/__and__/g, '__or__'))
+long_int.__xor__ = Function('self', 'other', 
+     body.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
 
 long_int.to_bytes = function(self, len, byteorder, signed){
     // The integer is represented using len bytes. An OverflowError is raised

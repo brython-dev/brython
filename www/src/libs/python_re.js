@@ -1466,7 +1466,7 @@ function escaped_char(args){
             mo = /^[0-9a-fA-F]{0,2}/.exec(rest),
             hh = mo ? mo[0] : ''
         if(mo && mo[0].length == 2){
-            var cp = eval("0x" + mo[0])
+            var cp = parseInt(mo[0], 16)
             return {
                 type: 'x',
                 ord: cp,
@@ -1481,7 +1481,7 @@ function escaped_char(args){
             mo = /^[0-9a-fA-F]{0,4}/.exec(rest),
             xx = mo ? mo[0] : ''
         if(mo && mo[0].length == 4){
-            var cp = eval("0x" + mo[0])
+            var cp = parseInt(mo[0], 16)
             return {
                 type: 'u',
                 ord: cp,
@@ -1496,7 +1496,7 @@ function escaped_char(args){
             mo = /^[0-9a-fA-F]{0,8}/.exec(rest),
             xx = mo ? mo[0] : ''
         if(mo && mo[0].length == 8){
-            var cp = eval("0x" + mo[0])
+            var cp = parseInt(mo[0], 16)
             if(cp > 0x10FFFF){
                 fail(`bad escape \\U${mo[0]}`, pos)
             }
@@ -1519,7 +1519,7 @@ function escaped_char(args){
             mo = /^0[0-7]*/.exec(rest)
         }
         if(mo){
-            var octal_value = eval('0o' + mo[0])
+            var octal_value = parseInt(mo[0], 8)
             if(octal_value > 0o377){
                 fail(`octal escape value \\` +
                     `${mo[0]} outside of range 0-0o377`, pos)
@@ -1723,7 +1723,7 @@ function validate_named_char(description, pos){
         if(search === null){
             fail(`undefined character name '${description}'`, pos)
         }
-        return eval("0x" + search[1])
+        return parseInt(search[1], 16)
     }else{
         fail("could not load unicode.txt", pos)
     }

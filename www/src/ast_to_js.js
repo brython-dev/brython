@@ -1554,6 +1554,7 @@ $B.ast.For.prototype.to_js = function(scopes){
         js += `var iter_${id} = ${iter},\n` +
                  `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
+            `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `var next_func_${id} = $B.$call(` +
             `$B.$getattr(type_${id}, '__anext__'))\n` +
             `while(true){\n`+
@@ -2318,28 +2319,12 @@ $B.ast.MatchClass.prototype.to_js = function(scopes){
 }
 
 $B.ast.MatchMapping.prototype.to_js = function(scopes){
-    var keys = []
     for(var key of this.keys){
-        if(key instanceof $B.ast.Attribute){
-            continue
-        }else if(key instanceof $B.ast.Constant ||
+        if(key instanceof $B.ast.Attribute ||
+                key instanceof $B.ast.Constant ||
                 key instanceof $B.ast.UnaryOp ||
                 key instanceof $B.ast.BinOp){
-            var js = key.to_js(scopes),
-                locals = {} // in case js has a rich comp that sets locals.$result...
-            try{
-                // wrap inside () in case the result is an object, eg
-                // "{__class: _b_.float, value: 0}"
-                var value = eval('(' + js + ')')
-            }catch(err){
-                console.log('error', js)
-                throw err
-            }
-            if(_b_.list.__contains__(keys, value)){
-                compiler_error(this, 'mapping pattern checks duplicate key ' +
-                    `(${_b_.repr(value)})`)
-            }
-            keys.push(value)
+            continue
         }else{
             compiler_error(key,
                 'mapping pattern keys may only match literals and attribute lookups')
@@ -2929,7 +2914,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                   `var exit_${id} = $B.$getattr(klass, '__exit__'),\n` +
                       `enter_${id} = $B.$getattr(klass, '__enter__')\n` +
               `}catch(err){\n` +
-                  `var klass_name = $B.get_class(mgr_${id})\n` +
+                  `var klass_name = $B.class_name(mgr_${id})\n` +
                   `throw _b_.TypeError.$factory("'" + klass_name + ` +
                       `"' object does not support the con` +
                       // split word 'context', replaced by "C" in brython.js...

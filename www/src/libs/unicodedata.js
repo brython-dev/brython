@@ -209,7 +209,14 @@ var $module = (function($B){
             if(_default){return _default}
             throw _b_.KeyError.$factory(chr)
         }
-        return $B.fast_float(eval(search.numeric))
+        var parts = search.numeric.split('/'),
+            value
+        if(parts.length == 1){
+            value = parseFloat(search.numeric)
+        }else{
+            value = parseInt(parts[0]) / parseInt(parts[1])
+        }
+        return $B.fast_float(value)
     }
 
     var module = {

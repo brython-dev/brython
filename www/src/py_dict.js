@@ -318,10 +318,16 @@ dict.$set_like = function(self){
 }
 
 dict.$iter_with_hash = function*(d){
-    for(var hash in d.table){
-        var indices = d.table[hash]
-        for(var index of indices){
-            yield {key: d._keys[index], hash}
+    if(d.$jsobj){
+        for(var key in d.$jsobj){
+            yield {key, hash: $B.$hash(key)}
+        }
+    }else{
+        for(var hash in d.table){
+            var indices = d.table[hash]
+            for(var index of indices){
+                yield {key: d._keys[index], hash}
+            }
         }
     }
 }

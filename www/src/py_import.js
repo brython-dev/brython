@@ -223,7 +223,7 @@ function run_py(module_contents, path, module, compiled) {
         js += module.__name__.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
             "return $module"
         var module_id = prefix + module.__name__.replace(/\./g, '_')
-        var $module = (new Function(module_id, js))(module)
+        var mod = (new Function(module_id, js))(module)
     }catch(err){
         if($B.debug > 1){
             console.log(err + " for module " + module.__name__)
@@ -247,8 +247,6 @@ function run_py(module_contents, path, module, compiled) {
     }
 
     try{
-        // Create module object
-        var mod = eval("$module")
         // Apply side-effects upon input module object
         for(var attr in mod){
             module[attr] = mod[attr]

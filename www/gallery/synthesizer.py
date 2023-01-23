@@ -1,7 +1,5 @@
 from browser import window, alert
 
-envelop = None
-
 def make_context():
     return window.AudioContext.new()
 
@@ -17,11 +15,10 @@ def playTone(audioContext,
              gain_value=1,
              wave=None,
              type="sine"):
-    global envelop
 
     envelop = audioContext.createGain()
     envelop.connect(audioContext.destination)
-    envelop.gain.value = gain_value
+    #envelop.gain.value = gain_value
 
     osc = audioContext.createOscillator()
     t = audioContext.currentTime + time
