@@ -132,8 +132,15 @@ class Dialog(html.DIV):
         document.bind("touchmove", self.mousemove)
         self.is_moving = True
         self.initial = [self.left - event.x, self.top - event.y]
+        self.mouse_start = [event.x, event.y]
         # prevent default behaviour to avoid selecting the moving element
         event.preventDefault()
+
+        ev = window.CustomEvent.new('dialog_down')
+        ev.x = event.x
+        ev.y = event.y
+        ev.dialog = self
+        document.dispatchEvent(ev)
 
     def mousemove(self, event):
         if not self.is_moving:
@@ -142,6 +149,12 @@ class Dialog(html.DIV):
         # set new moving element coordinates
         self.left = self.initial[0] + event.x
         self.top = self.initial[1] + event.y
+
+        ev = window.CustomEvent.new('dialog_move')
+        ev.dx = event.x - self.mouse_start[0]
+        ev.dy = event.y - self.mouse_start[1]
+        ev.dialog = self
+        document.dispatchEvent(ev)
 
     def mouseup(self, event):
         self.is_moving = False
