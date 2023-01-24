@@ -47,7 +47,15 @@
 <!-- script type="text/python" src="show_source.py"></script -->
 
 <style>
-.plug {
+.plugin {
+    width: 20px;
+    background-color: #fff;
+    border-width: 2px;
+    border-radius: 10px;
+    border-color: #000;
+}
+
+.plugout {
     width: 20px;
     background-color: #fff;
     border-width: 2px;
@@ -70,9 +78,24 @@ playground = document['playground']
 playground.width = window.innerWidth
 playground.height = window.innerHeight - 100
 
-def play(ev):
-    panel = ev.target.closest('DIV')
+def start_play(ev):
+    start_play_panel(ev.target.closest('DIV'))
+
+def start_play_panel(panel):
+    panel.osc = window.OscillatorNode.new(audioContext)
+    for plugout in panel.select('.plugout'):
+        if plugout.connected:
+            panel.osc.connect(plugout.destination.widget.audio_node)
     freq = float(panel.select_one('INPUT').value)
+    panel.osc.frequency.value = freq
+    t0 = audioContext.currentTime
+    panel.osc.start(t0)
+
+def stop_play(ev):
+    stop_play_panel(ev.target.closest('DIV'))
+
+def stop_play_panel(panel):
+    panel.osc.stop()
 
 
 dx = 0
@@ -80,13 +103,25 @@ dy = 50
 
 line = None
 
-class Plug(html.BUTTON):
+def connect(plugout, plugin):
+    print('connect', plugin, plugout)
+    plugin.connected = True
+    plugin.origin = plugout
+    plugin.line = line
+    plugout.connected = True
+    plugout.destination = plugin
+    plugout.line = line
+    if plugin.widget.audio_node and plugout.widget.audio_node:
+        plugout.widget.audio_node.connect(plugin.widget.audio_node)
 
-    def __init__(self, *args, **kw):
+class PlugOut(html.BUTTON):
+
+    def __init__(self, widget, *args, **kw):
         html.BUTTON.__init__(self, *args, **kw)
+        self.widget = widget
+        self.connected = False
+        self.style.display = 'block'
         self.bind('mousedown', self.click_plug)
-        self.bind('mouseover', self.mouseover)
-        self.bind('mouseup', self.mouseup)
 
     def click_plug(self, ev):
         global line
@@ -108,9 +143,21 @@ class Plug(html.BUTTON):
 
     def plug(self, ev):
         global line
+        if not self.connected:
+            line.remove()
         line = None
         document.unbind('mousemove')
         document.unbind('mouseup')
+
+class PlugIn(html.BUTTON):
+
+    def __init__(self, widget, *args, **kw):
+        html.BUTTON.__init__(self, *args, **kw)
+        self.widget = widget
+        self.connected = False
+        self.style.display = 'block'
+        self.bind('mouseover', self.mouseover)
+        self.bind('mouseup', self.mouseup)
 
     def mouseover(self, ev):
         if line is not None:
@@ -118,48 +165,115 @@ class Plug(html.BUTTON):
 
     def mouseup(self, ev):
         if line is not None:
-            print('mouseup', ev.x, ev.y)
-            line.origin.connect(self)
+            connect(line.origin, self)
+            self.connected = line
 
-    def connect(self, other):
-        print('connected')
-        global line
-        line = None
-        
+oscillators = []
+
 @bind('#oscillator', 'click')
 def add_oscillator(ev):
-    global audioContext
-    if audioContext is None:
-        audioContext = window.AudioContext.new()
-    d = dialog.Dialog('Oscillator', left=100, top=100)
-    t = html.TABLE() <= html.TR() <= (left := html.TD()) + (right := html.TD())
-    left <= 'Frequency' + freq := html.INPUT()
-    left.style.verticalAlign = 'middle'
+    init_context()
+    widget = Widget('oscillator')
+    widget.add_plugins(4)
+    widget.add_plugouts(4)
+    widget.middle <= 'Frequency' + freq := html.INPUT()
+    widget.middle.style.verticalAlign = 'middle'
+    widget.audio_node = None
     freq.value = 440
-    for i in range(4):
-        right <= Plug('&nbsp;', Class='plug') + html.BR()
-
-    d.panel <= t
+    d = dialog.Dialog('Oscillator', left=100, top=100)
+    d.panel <= widget
     d.panel <= html.P() + button := html.BUTTON('Play')
-    button.bind('click', play)
-    d.oscillator = window.OscillatorNode.new(audioContext)
+    button.bind('mousedown', start_play)
+    button.bind('mouseup', stop_play)
+    oscillators.append(widget)
+
+@bind(document, 'dialog_down')
+def dialog_move(ev):
+    for plugin in ev.dialog.select('.plugin'):
+        if plugin.connected:
+            plugin.x2_start = int(plugin.line.attrs['x2'])
+            plugin.y2_start = int(plugin.line.attrs['y2'])
+    for plugout in ev.dialog.select('.plugout'):
+        if plugout.connected:
+            plugout.x1_start = int(plugout.line.attrs['x1'])
+            plugout.y1_start = int(plugout.line.attrs['y1'])
+
+@bind(document, 'dialog_move')
+def dialog_move(ev):
+    for plugin in ev.dialog.select('.plugin'):
+        if plugin.connected:
+            plugin.line.attrs['x2'] = plugin.x2_start + ev.dx
+            plugin.line.attrs['y2'] = plugin.y2_start + ev.dy
+    for plugout in ev.dialog.select('.plugout'):
+        if plugout.connected:
+            plugout.line.attrs['x1'] = plugout.x1_start + ev.dx
+            plugout.line.attrs['y1'] = plugout.y1_start + ev.dy
 
 @bind('#gain', 'click')
 def add_gain(ev):
+    init_context()
+    widget = Widget('gain')
+    widget.add_plugins(4)
+    widget.add_plugouts(4)
     d = dialog.Dialog('GainNode')
-    gain = html.INPUT(type='range',
+    d <= widget
+    gain_control = html.INPUT(type='range',
                       min="0.0",
                       max="1.0",
                       step="0.01",
                       value="0.5",
                       style="width:100px")
-    d.panel <= 'Volume' + gain
+    widget.middle <= 'Volume' + gain_control
+    widget.audio_node = window.GainNode.new(audioContext)
+    @bind(gain_control, 'change')
+    def change_gain(ev):
+        widget.audio_node.gain.value = ev.target.value
 
+class Widget(html.TABLE):
+
+    def __init__(self, _type):
+        super().__init__()
+        self.type = _type
+        self.plugins = html.TD()
+        self.middle = html.TD()
+        self.plugouts = html.TD()
+        self <= html.TR(self.plugins + self.middle + self.plugouts)
+
+    def add_plugins(self, nb=4):
+        for i in range(4):
+            self.plugins <= PlugIn(self, '&nbsp;', Class='plugin')
+
+    def add_plugouts(self, nb=4):
+        for i in range(4):
+            self.plugouts <= PlugOut(self, '&nbsp;', Class='plugout')
+
+def init_context():
+    global audioContext
+    if audioContext is None:
+        audioContext = window.AudioContext.new()
+        w.audio_node = audioContext.destination
+
+@bind('#play_all', 'mousedown')
+def play_all(ev):
+    for osc in oscillators:
+        start_play_panel(osc)
+
+@bind('#play_all', 'mouseup')
+def play_all(ev):
+    for osc in oscillators:
+        stop_play_panel(osc)
+
+
+w = Widget('destination')
+w.add_plugins(4)
+destination = dialog.Dialog('Destination', left=8 * window.innerWidth // 10)
+destination.panel <= w
 
 </script>
 
 <button id="oscillator">add oscillator</button>
 <button id="gain">add gain</button>
+<button id="play_all">play all</button>
 
 <div id="zone">
   <svg id="playground" width=800 height=600 style="position:absolute;left:10px;top:50px;background-color:#eee"></svg>
