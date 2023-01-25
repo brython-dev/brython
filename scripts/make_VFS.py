@@ -152,7 +152,7 @@ def process(filename, exclude_dirs=['test','site-packages']):
                    mod_name = mod_name[:-9]
 
                 tail = file_name[len(main_root) + 1:]
-                if old_vfs and not check_changed(main_root, tail):
+                if old_vfs and mod_name in old_vfs and not check_changed(main_root, tail):
                     # if last modif time did not change, use the previous
                     # version stored in brython_stdlib.js
                     nb_unchanged += 1
