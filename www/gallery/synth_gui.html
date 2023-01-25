@@ -78,25 +78,22 @@ input[type=range]:focus {
   outline: none;
 }
 input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 16px;
+  width: 5em;
+  height: 1em;
   cursor: pointer;
   animate: 0.2s;
   box-shadow: 0px 0px 0px #000000;
   background: #B6B6B6;
-  border-radius: 25px;
   border: 1px solid #8A8A8A;
 }
 input[type=range]::-webkit-slider-thumb {
   box-shadow: 1px 1px 1px #828282;
   border: 1px solid #8A8A8A;
-  height: 24px;
-  width: 35px;
-  border-radius: 6px;
+  height: 0.9em;
+  width: 1em;
   background: #DADADA;
   cursor: pointer;
   -webkit-appearance: none;
-  margin-top: -5px;
 }
 input[type=range]:focus::-webkit-slider-runnable-track {
   background: #B6B6B6;
@@ -178,6 +175,9 @@ input[type=range]:focus::-ms-fill-upper {
 <body onload="brython(2)">
 
 <script type="text/python">
+import random
+import math
+
 from browser import document, window, html, console, bind, timer, alert, svg
 from browser.widgets import dialog
 
@@ -202,18 +202,30 @@ def search_gains(widget, t=None):
                 search_gains(plugout.destination.widget, t)
     return t
 
-def start_play(ev):
-    start_play_panel(ev.target.closest('DIV'))
+def create_oscillator(freq, detune=0):
+    osc = window.OscillatorNode.new(audioContext)
+    osc.frequency.value = freq
+    osc.detune.value = detune
+    return osc
 
 def start_play_panel(panel, freq=None):
-    panel.osc = window.OscillatorNode.new(audioContext)
-    panel.osc.type = panel.select_one('#wave').value
-    for plugout in panel.select('.plugout'):
-        if plugout.connected:
-            panel.osc.connect(plugout.destination.widget.audio_node)
     if freq is None:
         freq = float(panel.select_one('INPUT').value)
-    panel.osc.frequency.value = freq
+
+    width = float(panel.width_control.value)
+    freqs = [freq]
+
+    osc_list = [create_oscillator(freq)]
+    if width:
+        osc_list.append(create_oscillator(freq, width))
+        osc_list.append(create_oscillator(freq, -width))
+
+    for osc in osc_list:
+        osc.type = panel.select_one('#wave').value
+        for plugout in panel.select('.plugout'):
+            if plugout.connected:
+                osc.connect(plugout.destination.widget.audio_node)
+
     t0 = audioContext.currentTime
     gains = search_gains(panel)
     for gain_widget in gains:
@@ -223,7 +235,11 @@ def start_play_panel(panel, freq=None):
         gain.cancelScheduledValues(t0)
         gain.setValueAtTime(0, t0)
         gain.linearRampToValueAtTime(v, t0 + attack)
-    panel.osc.start(t0)
+
+    for osc in osc_list:
+        osc.start(t0)
+
+    return [osc_list, gains]
 
 def stop_play(ev):
     stop_play_panel(ev.target.closest('DIV'))
@@ -237,24 +253,52 @@ def stop_play_panel(panel):
         gain.linearRampToValueAtTime(0, t0 + release)
     panel.osc.stop(t0 + release + 0.1)
 
-def start_play_note(octave, name):
-    for osc in oscillators:
-        freq = music.note_freqs[octave][name]
-        start_play_panel(osc, freq)
+def stop_oscillator(osc, gains):
+    t0 = audioContext.currentTime
+    release = 0.05
+    for gain_widget in gains:
+        release = float(gain_widget.release_control.value)
+        gain = gain_widget.audio_node.gain
+        gain.linearRampToValueAtTime(0, t0 + release)
+    osc.stop(t0 + release + 0.1)
 
-def stop_play_note():
-    for osc in oscillators:
-        stop_play_panel(osc)
+def start_play_note(freq):
+    playing[freq] = []
+    for panel in oscillators:
+        playing[freq].append(start_play_panel(panel, freq))
 
+def stop_play_note(freq):
+    for panel, (osc_list, gains) in zip(oscillators, playing[freq]):
+        for osc in osc_list:
+            stop_oscillator(osc, gains)
+    del playing[freq]
 
 buttons = document["buttons"]
-for (octave, name) in music.create_major_scale('C', 4)[:8]:
-    mousedown = lambda ev, octave=octave, name=name: start_play_note(octave, name)
-    mouseup = lambda ev, octave=octave, name=name: stop_play_note(octave, name)
-    button = html.BUTTON(name,
-        onmousedown=lambda ev, octave=octave, name=name: start_play_note(octave, name),
-        onmouseup=lambda ev: stop_play_note())
+scale = music.create_major_scale('C', 4)[:8]
+for (octave, name) in scale:
+    freq = music.note_freqs[octave][name]
+    mousedown = lambda ev, freq=freq: start_play_note(freq)
+    mouseup = lambda ev, freq=freq: stop_play_note(freq)
+    button = html.BUTTON(name, onmousedown=mousedown, onmouseup=mouseup)
     buttons <= button
+
+playing = {}
+
+@bind(document, 'keydown')
+def keydown(ev):
+    if ev.key in '12345678':
+        octave, name = scale[int(ev.key) - 1]
+        freq = music.note_freqs[octave][name]
+        if freq not in playing:
+            start_play_note(freq)
+
+@bind(document, 'keyup')
+def keyup(ev):
+    if ev.key in '12345678':
+        octave, name = scale[int(ev.key) - 1]
+        freq = music.note_freqs[octave][name]
+        stop_play_note(freq)
+
 
 dx = 0
 dy = 50
@@ -350,19 +394,20 @@ def add_oscillator(ev):
     widget = Widget('oscillator')
     widget.add_plugins(4)
     widget.add_plugouts(4)
-    widget.middle <= html.DIV('Frequency' + freq := html.INPUT(size=5))
+
+    widget.audio_node = None
+    d = dialog.Dialog('Oscillator', left=100, top=100)
+    d.panel.type = 'oscillator'
+    d.panel <= widget
+
     waveform_control = html.SELECT(html.OPTION(w) for w in shapes)
     waveform_control.id = 'wave'
     widget.middle <= html.DIV('Waveform' + waveform_control)
     widget.middle.style.verticalAlign = 'middle'
-    widget.audio_node = None
-    freq.value = 440
-    d = dialog.Dialog('Oscillator', left=100, top=100)
-    d.panel.type = 'oscillator'
-    d.panel <= widget
-    d.panel <= html.P() + button := html.BUTTON('Play')
-    button.bind('mousedown', start_play)
-    button.bind('mouseup', stop_play)
+
+    widget.width_control = Control('Width', 0, 50, 1, 0)
+    widget.middle <= widget.width_control
+
     oscillators.append(widget)
 
 @bind(document, 'dialog_down')
@@ -412,7 +457,11 @@ class Control(html.DIV):
         def change(ev):
             control_show.text = self.control.value
             if variable is not None:
-                setattr(variable, "value", self.control.value)
+                if hasattr(variable, 'setValueAtTime'):
+                    variable.setValueAtTime(self.control.value,
+                      audioContext.currentTime)
+                else:
+                    setattr(variable, "value", self.control.value)
 
         self <= (html.SPAN(legend, Class='control-legend') +
                  self.control +
@@ -432,16 +481,18 @@ def add_gain(ev):
     d = dialog.Dialog('GainNode')
     d.panel <= widget
     d.panel.type = 'gain'
-    widget.gain_control = Control('Volume', 0, 1, 0.01, 0.5)
-    widget.attack_control = Control('Attack', 0, 1, 0.01, 0.5)
-    widget.release_control = Control('Release', 0, 1, 0.01, 0.5)
+
+    widget.audio_node = window.GainNode.new(audioContext)
+
+    widget.gain_control = Control('Volume', 0, 1, 0.01, 0.5,
+                                  variable=widget.audio_node.gain)
+    widget.attack_control = Control('Attack', 0, 1, 0.01, 0.2)
+    widget.release_control = Control('Release', 0, 1, 0.01, 0.2)
 
     widget.middle <= (widget.gain_control +
                       widget.attack_control +
                       widget.release_control)
 
-    widget.audio_node = window.GainNode.new(audioContext)
-    widget.audio_node.gain.value = 0.5
 
 @bind('#filter', 'click')
 def add_filter(ev):
@@ -460,12 +511,10 @@ def add_filter(ev):
     widget.frequency_control = Control('Frequency', 0, max_filter_freq, 1, 440,
                                        variable=widget.audio_node.frequency)
     widget.q_control = Control('Q', 0, 50, 1, 25,
-                                variable=widget.audio_node.Q)
+                               variable=widget.audio_node.Q)
 
     widget.middle <= widget.frequency_control + widget.q_control
 
-    widget.audio_node.frequency.value = float(widget.frequency_control.value)
-    widget.audio_node.Q.value = widget.q_control.value
 
 @bind('#delay', 'click')
 def add_delay(ev):
@@ -552,6 +601,7 @@ destination = dialog.Dialog('Destination',
                             left=8 * window.innerWidth // 10)
 destination.panel <= w
 destination.panel.type = None
+
 
 </script>
 
