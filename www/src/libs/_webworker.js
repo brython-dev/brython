@@ -83,7 +83,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
     }
     var src = worker_script.source
     var indexedDB = worker_script.attributes &&
-            worker_script.attributes.hasNamedItem('indexedDB')
+            worker_script.attributes.getNamedItem('indexedDB')
     var script_id = "worker" + $B.UUID(),
         filename = $B.script_path + "#" + id
     $B.url2name[filename] = script_id
