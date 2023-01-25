@@ -62,6 +62,8 @@
     border-radius: 10px;
     border-color: #000;
 }
+
+
 </style>
 
 <title>Brython synth keyboard</title>
@@ -78,24 +80,50 @@ playground = document['playground']
 playground.width = window.innerWidth
 playground.height = window.innerHeight - 100
 
+def search_gains(widget):
+    # return a list of the gain nodes connected to the widget
+    gains = []
+    if widget.type == 'gain':
+        gains.append(widget)
+    for plugout in widget.select('.plugout'):
+        if plugout.connected:
+            gains += search_gains(plugout.destination.widget)
+    return gains
+
 def start_play(ev):
     start_play_panel(ev.target.closest('DIV'))
 
 def start_play_panel(panel):
     panel.osc = window.OscillatorNode.new(audioContext)
+    panel.osc.type = panel.select_one('#wave').value
     for plugout in panel.select('.plugout'):
         if plugout.connected:
             panel.osc.connect(plugout.destination.widget.audio_node)
     freq = float(panel.select_one('INPUT').value)
     panel.osc.frequency.value = freq
     t0 = audioContext.currentTime
+    gains = search_gains(panel)
+    print('gains', gains)
+    for gain_widget in gains:
+        attack = float(gain_widget.attack_control.value)
+        gain = gain_widget.audio_node.gain
+        v = gain.value = float(gain_widget.gain_control.value)
+        gain.cancelScheduledValues(t0)
+        gain.setValueAtTime(0, t0)
+        gain.linearRampToValueAtTime(v, t0 + attack)
     panel.osc.start(t0)
 
 def stop_play(ev):
     stop_play_panel(ev.target.closest('DIV'))
 
 def stop_play_panel(panel):
-    panel.osc.stop()
+    t0 = audioContext.currentTime
+    release = 0.05
+    for gain_widget in search_gains(panel):
+        release = float(gain_widget.release_control.value)
+        gain = gain_widget.audio_node.gain
+        gain.linearRampToValueAtTime(0, t0 + release)
+    panel.osc.stop(t0 + release + 0.1)
 
 
 dx = 0
@@ -104,15 +132,30 @@ dy = 50
 line = None
 
 def connect(plugout, plugin):
-    print('connect', plugin, plugout)
     plugin.connected = True
     plugin.origin = plugout
     plugin.line = line
+    plugin.style.backgroundColor = '#000'
     plugout.connected = True
     plugout.destination = plugin
     plugout.line = line
+    plugout.style.backgroundColor = '#000'
+
     if plugin.widget.audio_node and plugout.widget.audio_node:
         plugout.widget.audio_node.connect(plugin.widget.audio_node)
+
+def disconnect(plugout, plugin):
+    plugin.connected = False
+    del plugin.origin
+    plugin.line.remove()
+    plugin.style.backgroundColor = '#fff'
+    del plugin.line
+    plugout.connected = False
+    plugout.style.backgroundColor = '#fff'
+    del plugout.destination
+    del plugout.line
+    if plugin.widget.audio_node and plugout.widget.audio_node:
+        plugout.widget.audio_node.disconnect(plugin.widget.audio_node)
 
 class PlugOut(html.BUTTON):
 
@@ -124,13 +167,17 @@ class PlugOut(html.BUTTON):
         self.bind('mousedown', self.click_plug)
 
     def click_plug(self, ev):
+        if self.connected:
+            # disconnect
+            disconnect(self, self.destination)
+            return
         global line
         self.mouse_pos = [ev.x, ev.y]
         line = svg.line(x1=ev.x + dx,
                          y1=ev.y - dy,
                          x2=ev.x + dx,
                          y2=ev.y - dy,
-                         stroke='red',
+                         stroke='#000',
                          stroke_width=2)
         line.origin = self
         playground <= line
@@ -164,11 +211,13 @@ class PlugIn(html.BUTTON):
             print('mouseover', ev.x, ev.y)
 
     def mouseup(self, ev):
+        if self.connected:
+            return
         if line is not None:
             connect(line.origin, self)
-            self.connected = line
 
 oscillators = []
+shapes = "sine", "sawtooth", "triangle", "square"
 
 @bind('#oscillator', 'click')
 def add_oscillator(ev):
@@ -176,11 +225,15 @@ def add_oscillator(ev):
     widget = Widget('oscillator')
     widget.add_plugins(4)
     widget.add_plugouts(4)
-    widget.middle <= 'Frequency' + freq := html.INPUT()
+    widget.middle <= html.DIV('Frequency' + freq := html.INPUT(size=5))
+    waveform_control = html.SELECT(html.OPTION(w) for w in shapes)
+    waveform_control.id = 'wave'
+    widget.middle <= html.DIV('Waveform' + waveform_control)
     widget.middle.style.verticalAlign = 'middle'
     widget.audio_node = None
     freq.value = 440
     d = dialog.Dialog('Oscillator', left=100, top=100)
+    d.panel.type = 'oscillator'
     d.panel <= widget
     d.panel <= html.P() + button := html.BUTTON('Play')
     button.bind('mousedown', start_play)
@@ -209,6 +262,16 @@ def dialog_move(ev):
             plugout.line.attrs['x1'] = plugout.x1_start + ev.dx
             plugout.line.attrs['y1'] = plugout.y1_start + ev.dy
 
+@bind(document, 'dialog_close')
+def dialog_move(ev):
+    print('dialog close', ev.dialog)
+    for plugin in ev.dialog.select('.plugin'):
+        if plugin.connected:
+            disconnect(plugin.origin, plugin)
+    for plugout in ev.dialog.select('.plugout'):
+        if plugout.connected:
+            disconnect(plugout, plugout.destination)
+
 @bind('#gain', 'click')
 def add_gain(ev):
     init_context()
@@ -216,18 +279,83 @@ def add_gain(ev):
     widget.add_plugins(4)
     widget.add_plugouts(4)
     d = dialog.Dialog('GainNode')
-    d <= widget
-    gain_control = html.INPUT(type='range',
+    d.panel <= widget
+    d.panel.type = 'gain'
+    widget.gain_control = html.INPUT(type='range',
                       min="0.0",
                       max="1.0",
                       step="0.01",
                       value="0.5",
                       style="width:100px")
-    widget.middle <= 'Volume' + gain_control
+
+    widget.middle <= html.DIV('Volume' + widget.gain_control)
+
+    widget.attack_control = html.INPUT(type='range',
+                      min="0.0",
+                      max="1.0",
+                      step="0.01",
+                      value="0.5",
+                      style="width:100px")
+    widget.middle <= html.DIV('Attack' + widget.attack_control)
+
+    widget.release_control = html.INPUT(type='range',
+                      min="0.0",
+                      max="1.0",
+                      step="0.01",
+                      value="0.5",
+                      style="width:100px")
+    widget.middle <= html.DIV('Release' + widget.release_control)
+
     widget.audio_node = window.GainNode.new(audioContext)
-    @bind(gain_control, 'change')
+    widget.audio_node.gain.value = float(widget.gain_control.value)
+
+    @bind(widget.gain_control, 'change')
     def change_gain(ev):
-        widget.audio_node.gain.value = ev.target.value
+        widget.audio_node.gain.value = float(ev.target.value)
+
+@bind('#filter', 'click')
+def add_filter(ev):
+    init_context()
+    widget = Widget('filter')
+    widget.add_plugins(4)
+    widget.add_plugouts(4)
+    d = dialog.Dialog('FilterNode')
+    d.panel <= widget
+    d.panel.type = 'filter'
+    max_filter_freq = audioContext.sampleRate / 2
+    widget.frequency_control = html.INPUT(type='range',
+                      min="0.0",
+                      max="1.0",
+                      step="0.01",
+                      value="0.15",
+                      style="width:100px")
+
+    widget.middle <= html.DIV('Frequency' + widget.frequency_control)
+    widget.middle <= html.DIV(freq_v := html.INPUT())
+
+    widget.q_control = html.INPUT(type='range',
+                      min="0.0",
+                      max="1.0",
+                      step="0.01",
+                      value="0.8",
+                      style="width:100px")
+    widget.middle <= html.DIV('Q' + widget.q_control)
+
+
+    widget.audio_node = window.BiquadFilterNode.new(audioContext)
+    widget.audio_node.type = 'lowpass'
+    widget.audio_node.frequency.value = freq_v.value = \
+        max_filter_freq * float(widget.frequency_control.value)
+    widget.audio_node.Q.value = 30 * float(widget.q_control.value)
+
+    @bind(widget.frequency_control, 'change')
+    def change_freq(ev):
+        widget.audio_node.frequency.value = freq_v.value = \
+            max_filter_freq * float(ev.target.value)
+
+    @bind(widget.q_control, 'change')
+    def change_q(ev):
+        widget.audio_node.Q.value = 30 * float(ev.target.value)
 
 class Widget(html.TABLE):
 
@@ -266,13 +394,17 @@ def play_all(ev):
 
 w = Widget('destination')
 w.add_plugins(4)
-destination = dialog.Dialog('Destination', left=8 * window.innerWidth // 10)
+destination = dialog.Dialog('Destination',
+                            can_close=False,
+                            left=8 * window.innerWidth // 10)
 destination.panel <= w
+destination.panel.type = None
 
 </script>
 
 <button id="oscillator">add oscillator</button>
 <button id="gain">add gain</button>
+<button id="filter">add filter</button>
 <button id="play_all">play all</button>
 
 <div id="zone">
