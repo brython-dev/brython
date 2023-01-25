@@ -63,6 +63,112 @@
     border-color: #000;
 }
 
+.controlValue {
+    width: 2em;
+    font-size: 0.5em;
+}
+
+input[type=range] {
+  height: 1em;
+  -webkit-appearance: none;
+  margin: 0.2em 0;
+  width: 6em;
+}
+input[type=range]:focus {
+  outline: none;
+}
+input[type=range]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 16px;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0px 0px 0px #000000;
+  background: #B6B6B6;
+  border-radius: 25px;
+  border: 1px solid #8A8A8A;
+}
+input[type=range]::-webkit-slider-thumb {
+  box-shadow: 1px 1px 1px #828282;
+  border: 1px solid #8A8A8A;
+  height: 24px;
+  width: 35px;
+  border-radius: 6px;
+  background: #DADADA;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -5px;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+  background: #B6B6B6;
+}
+input[type=range]::-moz-range-track {
+  width: 5em;
+  height: 1em;
+  cursor: pointer;
+  animate: 0.2s;
+  box-shadow: 0px 0px 0px #000000;
+  background: #B6B6B6;
+  border: 1px solid #8A8A8A;
+}
+input[type=range]::-moz-range-thumb {
+  box-shadow: 1px 1px 1px #828282;
+  border: 1px solid #8A8A8A;
+  height: 0.9em;
+  width: 1em;
+  background: #DADADA;
+  cursor: pointer;
+}
+input[type=range]::-ms-track {
+  width: 100%;
+  height: 16px;
+  cursor: pointer;
+  animate: 0.2s;
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+  background: #B6B6B6;
+  border: 1px solid #8A8A8A;
+  border-radius: 50px;
+  box-shadow: 0px 0px 0px #000000;
+}
+input[type=range]::-ms-fill-upper {
+  background: #B6B6B6;
+  border: 1px solid #8A8A8A;
+  border-radius: 50px;
+  box-shadow: 0px 0px 0px #000000;
+}
+input[type=range]::-ms-thumb {
+  margin-top: 1px;
+  box-shadow: 1px 1px 1px #828282;
+  border: 1px solid #8A8A8A;
+  height: 24px;
+  width: 35px;
+  border-radius: 6px;
+  background: #DADADA;
+  cursor: pointer;
+}
+input[type=range]:focus::-ms-fill-lower {
+  background: #B6B6B6;
+}
+input[type=range]:focus::-ms-fill-upper {
+  background: #B6B6B6;
+}
+
+.control-legend {
+  display: inline-block;
+  width: 5em;
+  font-size: 0.7em;
+  color: blue;
+  text-align: center;
+}
+
+.control-show {
+  display: inline-block;
+  width: 1em;
+  color: blue;
+}
 
 </style>
 
@@ -75,35 +181,41 @@
 from browser import document, window, html, console, bind, timer, alert, svg
 from browser.widgets import dialog
 
+import music
+
+scale = music.create_major_scale('C')
+
 audioContext = None
 playground = document['playground']
 playground.width = window.innerWidth
 playground.height = window.innerHeight - 100
 
-def search_gains(widget):
+def search_gains(widget, t=None):
     # return a list of the gain nodes connected to the widget
-    gains = []
-    if widget.type == 'gain':
-        gains.append(widget)
-    for plugout in widget.select('.plugout'):
-        if plugout.connected:
-            gains += search_gains(plugout.destination.widget)
-    return gains
+    if t is None:
+        t = []
+    if widget not in t:
+        if widget.type == 'gain':
+            t.append(widget)
+        for plugout in widget.select('.plugout'):
+            if plugout.connected:
+                search_gains(plugout.destination.widget, t)
+    return t
 
 def start_play(ev):
     start_play_panel(ev.target.closest('DIV'))
 
-def start_play_panel(panel):
+def start_play_panel(panel, freq=None):
     panel.osc = window.OscillatorNode.new(audioContext)
     panel.osc.type = panel.select_one('#wave').value
     for plugout in panel.select('.plugout'):
         if plugout.connected:
             panel.osc.connect(plugout.destination.widget.audio_node)
-    freq = float(panel.select_one('INPUT').value)
+    if freq is None:
+        freq = float(panel.select_one('INPUT').value)
     panel.osc.frequency.value = freq
     t0 = audioContext.currentTime
     gains = search_gains(panel)
-    print('gains', gains)
     for gain_widget in gains:
         attack = float(gain_widget.attack_control.value)
         gain = gain_widget.audio_node.gain
@@ -125,6 +237,24 @@ def stop_play_panel(panel):
         gain.linearRampToValueAtTime(0, t0 + release)
     panel.osc.stop(t0 + release + 0.1)
 
+def start_play_note(octave, name):
+    for osc in oscillators:
+        freq = music.note_freqs[octave][name]
+        start_play_panel(osc, freq)
+
+def stop_play_note():
+    for osc in oscillators:
+        stop_play_panel(osc)
+
+
+buttons = document["buttons"]
+for (octave, name) in music.create_major_scale('C', 4)[:8]:
+    mousedown = lambda ev, octave=octave, name=name: start_play_note(octave, name)
+    mouseup = lambda ev, octave=octave, name=name: stop_play_note(octave, name)
+    button = html.BUTTON(name,
+        onmousedown=lambda ev, octave=octave, name=name: start_play_note(octave, name),
+        onmouseup=lambda ev: stop_play_note())
+    buttons <= button
 
 dx = 0
 dy = 50
@@ -203,12 +333,7 @@ class PlugIn(html.BUTTON):
         self.widget = widget
         self.connected = False
         self.style.display = 'block'
-        self.bind('mouseover', self.mouseover)
         self.bind('mouseup', self.mouseup)
-
-    def mouseover(self, ev):
-        if line is not None:
-            print('mouseover', ev.x, ev.y)
 
     def mouseup(self, ev):
         if self.connected:
@@ -241,7 +366,7 @@ def add_oscillator(ev):
     oscillators.append(widget)
 
 @bind(document, 'dialog_down')
-def dialog_move(ev):
+def dialog_down(ev):
     for plugin in ev.dialog.select('.plugin'):
         if plugin.connected:
             plugin.x2_start = int(plugin.line.attrs['x2'])
@@ -263,14 +388,40 @@ def dialog_move(ev):
             plugout.line.attrs['y1'] = plugout.y1_start + ev.dy
 
 @bind(document, 'dialog_close')
-def dialog_move(ev):
-    print('dialog close', ev.dialog)
+def dialog_close(ev):
     for plugin in ev.dialog.select('.plugin'):
         if plugin.connected:
             disconnect(plugin.origin, plugin)
     for plugout in ev.dialog.select('.plugout'):
         if plugout.connected:
             disconnect(plugout, plugout.destination)
+
+class Control(html.DIV):
+
+    def __init__(self, legend, min_value, max_value, step, value, variable=None):
+        html.DIV.__init__(self)
+
+        self.control = html.INPUT(type='range', min=min_value, max=max_value,
+                                  step=step,
+                                  value=value)
+        control_show = html.SPAN(self.control.value, Class='controlValue')
+        if variable is not None:
+            setattr(variable, "value", self.control.value)
+
+        @bind(self.control, 'change')
+        def change(ev):
+            control_show.text = self.control.value
+            if variable is not None:
+                setattr(variable, "value", self.control.value)
+
+        self <= (html.SPAN(legend, Class='control-legend') +
+                 self.control +
+                 html.SPAN(control_show, Class='control-show'))
+
+    @property
+    def value(self):
+        return self.control.value
+
 
 @bind('#gain', 'click')
 def add_gain(ev):
@@ -281,37 +432,16 @@ def add_gain(ev):
     d = dialog.Dialog('GainNode')
     d.panel <= widget
     d.panel.type = 'gain'
-    widget.gain_control = html.INPUT(type='range',
-                      min="0.0",
-                      max="1.0",
-                      step="0.01",
-                      value="0.5",
-                      style="width:100px")
+    widget.gain_control = Control('Volume', 0, 1, 0.01, 0.5)
+    widget.attack_control = Control('Attack', 0, 1, 0.01, 0.5)
+    widget.release_control = Control('Release', 0, 1, 0.01, 0.5)
 
-    widget.middle <= html.DIV('Volume' + widget.gain_control)
-
-    widget.attack_control = html.INPUT(type='range',
-                      min="0.0",
-                      max="1.0",
-                      step="0.01",
-                      value="0.5",
-                      style="width:100px")
-    widget.middle <= html.DIV('Attack' + widget.attack_control)
-
-    widget.release_control = html.INPUT(type='range',
-                      min="0.0",
-                      max="1.0",
-                      step="0.01",
-                      value="0.5",
-                      style="width:100px")
-    widget.middle <= html.DIV('Release' + widget.release_control)
+    widget.middle <= (widget.gain_control +
+                      widget.attack_control +
+                      widget.release_control)
 
     widget.audio_node = window.GainNode.new(audioContext)
-    widget.audio_node.gain.value = float(widget.gain_control.value)
-
-    @bind(widget.gain_control, 'change')
-    def change_gain(ev):
-        widget.audio_node.gain.value = float(ev.target.value)
+    widget.audio_node.gain.value = 0.5
 
 @bind('#filter', 'click')
 def add_filter(ev):
@@ -322,40 +452,63 @@ def add_filter(ev):
     d = dialog.Dialog('FilterNode')
     d.panel <= widget
     d.panel.type = 'filter'
-    max_filter_freq = audioContext.sampleRate / 2
-    widget.frequency_control = html.INPUT(type='range',
-                      min="0.0",
-                      max="1.0",
-                      step="0.01",
-                      value="0.15",
-                      style="width:100px")
-
-    widget.middle <= html.DIV('Frequency' + widget.frequency_control)
-    widget.middle <= html.DIV(freq_v := html.INPUT())
-
-    widget.q_control = html.INPUT(type='range',
-                      min="0.0",
-                      max="1.0",
-                      step="0.01",
-                      value="0.8",
-                      style="width:100px")
-    widget.middle <= html.DIV('Q' + widget.q_control)
-
 
     widget.audio_node = window.BiquadFilterNode.new(audioContext)
     widget.audio_node.type = 'lowpass'
-    widget.audio_node.frequency.value = freq_v.value = \
-        max_filter_freq * float(widget.frequency_control.value)
-    widget.audio_node.Q.value = 30 * float(widget.q_control.value)
 
-    @bind(widget.frequency_control, 'change')
-    def change_freq(ev):
-        widget.audio_node.frequency.value = freq_v.value = \
-            max_filter_freq * float(ev.target.value)
+    max_filter_freq = 1000
+    widget.frequency_control = Control('Frequency', 0, max_filter_freq, 1, 440,
+                                       variable=widget.audio_node.frequency)
+    widget.q_control = Control('Q', 0, 50, 1, 25,
+                                variable=widget.audio_node.Q)
 
-    @bind(widget.q_control, 'change')
-    def change_q(ev):
-        widget.audio_node.Q.value = 30 * float(ev.target.value)
+    widget.middle <= widget.frequency_control + widget.q_control
+
+    widget.audio_node.frequency.value = float(widget.frequency_control.value)
+    widget.audio_node.Q.value = widget.q_control.value
+
+@bind('#delay', 'click')
+def add_delay(ev):
+    init_context()
+    widget = Widget('delay')
+    widget.add_plugins(4)
+    widget.add_plugouts(4)
+    d = dialog.Dialog('DelayNode')
+    d.panel <= widget
+    d.panel.type = 'filter'
+
+    widget.audio_node = window.DelayNode.new(audioContext)
+
+    widget.delayTime_control = Control('Delay time', 0, 1, 0.01, 0.2,
+                                       variable=widget.audio_node.delayTime)
+
+    widget.middle <= widget.delayTime_control
+
+@bind('#delay_feedback', 'click')
+def add_delay_feedback(ev):
+    init_context()
+    widget = Widget('delay')
+    widget.add_plugins(4)
+    widget.add_plugouts(4)
+    d = dialog.Dialog('DelayFeedbackNode')
+    d.panel <= widget
+    d.panel.type = 'delay_feedback'
+
+    widget.audio_node = window.DelayNode.new(audioContext)
+    feedback = window.GainNode.new(audioContext)
+
+    widget.delayTime_control = Control('Delay time', 0, 1, 0.01, 0.2,
+                                       variable=widget.audio_node.delayTime)
+
+    feedback_control = Control('Feedback', 0, 1, 0.01, 0.2,
+                                       variable=feedback.gain)
+
+    widget.audio_node.connect(feedback)
+    feedback.connect(widget.audio_node)
+
+    widget.middle <= widget.delayTime_control + feedback_control
+
+
 
 class Widget(html.TABLE):
 
@@ -402,10 +555,14 @@ destination.panel.type = None
 
 </script>
 
+<div id="buttons">
 <button id="oscillator">add oscillator</button>
 <button id="gain">add gain</button>
 <button id="filter">add filter</button>
+<button id="delay">add delay</button>
+<button id="delay_feedback">add delay + feedback</button>
 <button id="play_all">play all</button>
+</div>
 
 <div id="zone">
   <svg id="playground" width=800 height=600 style="position:absolute;left:10px;top:50px;background-color:#eee"></svg>
