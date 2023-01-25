@@ -476,4 +476,7 @@ assert '\u007f'.encode('utf-8') == b'\x7f'
 assert '\u07ff'.encode('utf-8') == b'\xdf\xbf'
 assert '\uffff'.encode('utf-8') == b'\xef\xbf\xbf'
 
+# issue 2154
+assert 'abcdef'[3:1] == ''
+
 print("passed all tests...")

@@ -773,35 +773,7 @@ $B.getitem_slice = function(obj, slice){
             return _b_.list.$getitem(obj, slice)
         }
     }else if(typeof obj == "string"){
-        if(slice.start === _b_.None && slice.stop === _b_.None){
-            if(slice.step === _b_.None || slice.step == 1){
-                res = obj
-            }else if(slice.step == -1){
-                res = obj.split("").reverse().join("");
-            }
-        }else if(slice.step === _b_.None){
-            if(slice.start === _b_.None){
-                slice.start = 0
-            }
-            if(slice.stop === _b_.None){
-                slice.stop = obj.length
-            }
-            if(typeof slice.start == "number" &&
-                    typeof slice.stop == "number"){
-                if(slice.start < 0){
-                    slice.start += obj.length
-                }
-                if(slice.stop < 0){
-                    slice.stop += obj.length
-                }
-                res = obj.substring(slice.start, slice.stop)
-            }
-        }
-        if(res !== undefined){
-            return res
-        }else{
-            return _b_.str.__getitem__(obj, slice)
-        }
+        return _b_.str.__getitem__(obj, slice)
     }
     return $B.$getattr(obj, "__getitem__")(slice)
 }

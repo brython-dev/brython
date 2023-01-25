@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-22 17:00:27.881473"
-__BRYTHON__.timestamp=1674403227881
+__BRYTHON__.compiled_date="2023-01-25 09:35:36.539600"
+__BRYTHON__.timestamp=1674635736539
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5088,13 +5088,7 @@ if(slice.stop < 0){slice.stop+=obj.length}
 res=obj.slice(slice.start,slice.stop)}}
 if(res){res.__class__=obj.__class__ 
 res.__brython__=true
-return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){if(slice.start===_b_.None && slice.stop===_b_.None){if(slice.step===_b_.None ||slice.step==1){res=obj}else if(slice.step==-1){res=obj.split("").reverse().join("");}}else if(slice.step===_b_.None){if(slice.start===_b_.None){slice.start=0}
-if(slice.stop===_b_.None){slice.stop=obj.length}
-if(typeof slice.start=="number" &&
-typeof slice.stop=="number"){if(slice.start < 0){slice.start+=obj.length}
-if(slice.stop < 0){slice.stop+=obj.length}
-res=obj.substring(slice.start,slice.stop)}}
-if(res !==undefined){return res}else{return _b_.str.__getitem__(obj,slice)}}
+return res}else{return _b_.list.$getitem(obj,slice)}}else if(typeof obj=="string"){return _b_.str.__getitem__(obj,slice)}
 return $B.$getattr(obj,"__getitem__")(slice)}
 $B.$getattr_pep657=function(obj,attr,position){try{return $B.$getattr(obj,attr)}catch(err){$B.set_exception_offsets(err,position)
 throw err}}
@@ -10024,7 +10018,8 @@ if(s.surrogates===undefined){return jspos}
 var nb=0
 while(s.surrogates[nb]+nb < jspos){nb++}
 return jspos-nb}
-function to_string(args){if(Array.isArray(args)){for(var i=0,len=args.length;i < len;i++){args[i]=to_string(args[i])}
+function to_string(args){if(typeof args=='string'){return args}
+if(Array.isArray(args)){for(var i=0,len=args.length;i < len;i++){args[i]=to_string(args[i])}
 return args}else{if(args.__class__ && !(args instanceof String)){return args.$brython_value}else{return args}}}
 var str={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'str',$is_class:true,$native:true}
 str.$to_string=to_string
@@ -10091,20 +10086,21 @@ if(fmt.precision){_self=_self.substr(0,fmt.precision)}
 fmt.align=fmt.align ||"<"
 return $B.format_width(preformat(_self,fmt),fmt)}
 str.__getitem__=function(_self,arg){_self=to_string(_self)
-var len=str.__len__(_self)
-if(_b_.isinstance(arg,_b_.int)){var pos=arg
+if(_b_.isinstance(arg,_b_.int)){var len=str.__len__(_self)
+var pos=arg
 if(arg < 0){pos+=len}
 if(pos >=0 && pos < len){var jspos=pypos2jspos(_self,pos)
 if(_self.codePointAt(jspos)>=0x10000){return $B.String(_self.substr(jspos,2))}else{return _self[jspos]}}
 throw _b_.IndexError.$factory("string index out of range")}
-if(_b_.isinstance(arg,_b_.slice)){var s=_b_.slice.$conv_for_seq(arg,len),start=pypos2jspos(_self,s.start),stop=pypos2jspos(_self,s.stop),step=s.step
+if(_b_.isinstance(arg,_b_.slice)){return _b_.str.$getitem_slice(_self,arg)}
+if(_b_.isinstance(arg,_b_.bool)){return _self.__getitem__(_b_.int.$factory(arg))}
+throw _b_.TypeError.$factory("string indices must be integers")}
+str.$getitem_slice=function(_self,slice){var len=str.__len__(_self),s=_b_.slice.$conv_for_seq(slice,len),start=pypos2jspos(_self,s.start),stop=pypos2jspos(_self,s.stop),step=s.step
 var res="",i=null
 if(step > 0){if(stop <=start){return ""}
 for(var i=start;i < stop;i+=step){res+=_self[i]}}else{if(stop >=start){return ''}
 for(var i=start;i > stop;i+=step){res+=_self[i]}}
 return $B.String(res)}
-if(_b_.isinstance(arg,_b_.bool)){return _self.__getitem__(_b_.int.$factory(arg))}
-throw _b_.TypeError.$factory("string indices must be integers")}
 var prefix=2,suffix=3,mask=(2**32-1)
 str.$nb_str_hash_cache=0
 function fnv(p){if(p.length==0){return 0}

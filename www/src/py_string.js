@@ -65,6 +65,9 @@ function jspos2pypos(s, jspos){
 }
 
 function to_string(args){
+    if(typeof args == 'string'){
+        return args
+    }
     if(Array.isArray(args)){
         for(var i = 0, len = args.length; i < len; i++){
             args[i] = to_string(args[i])
@@ -257,8 +260,8 @@ str.__format__ = function(_self, format_spec) {
 
 str.__getitem__ = function(_self, arg){
     _self = to_string(_self)
-    var len = str.__len__(_self)
     if(_b_.isinstance(arg, _b_.int)){
+        var len = str.__len__(_self)
         var pos = arg
         if(arg < 0){
             pos += len
@@ -274,33 +277,38 @@ str.__getitem__ = function(_self, arg){
         throw _b_.IndexError.$factory("string index out of range")
     }
     if(_b_.isinstance(arg, _b_.slice)){
-        var s = _b_.slice.$conv_for_seq(arg, len),
-            start = pypos2jspos(_self, s.start),
-            stop = pypos2jspos(_self, s.stop),
-            step = s.step
-        var res = "",
-            i = null
-        if(step > 0){
-            if(stop <= start){
-                return ""
-            }
-            for(var i = start; i < stop; i += step){
-                res += _self[i]
-            }
-        }else{
-            if(stop >= start){
-                return ''
-            }
-            for(var i = start; i > stop; i += step){
-                res += _self[i]
-            }
-        }
-        return $B.String(res)
+        return _b_.str.$getitem_slice(_self, arg)
     }
     if(_b_.isinstance(arg, _b_.bool)){
         return _self.__getitem__(_b_.int.$factory(arg))
     }
     throw _b_.TypeError.$factory("string indices must be integers")
+}
+
+str.$getitem_slice = function(_self, slice){
+    var len = str.__len__(_self),
+        s = _b_.slice.$conv_for_seq(slice, len),
+        start = pypos2jspos(_self, s.start),
+        stop = pypos2jspos(_self, s.stop),
+        step = s.step
+    var res = "",
+        i = null
+    if(step > 0){
+        if(stop <= start){
+            return ""
+        }
+        for(var i = start; i < stop; i += step){
+            res += _self[i]
+        }
+    }else{
+        if(stop >= start){
+            return ''
+        }
+        for(var i = start; i > stop; i += step){
+            res += _self[i]
+        }
+    }
+    return $B.String(res)
 }
 
 var prefix = 2,
