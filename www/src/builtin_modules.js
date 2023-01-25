@@ -238,7 +238,7 @@
                                     // Call attribute mapper (cf. issue#1187)
                                     arg = $B.imported["browser.html"].
                                         attribute_mapper(arg)
-                                    self.setAttribute(arg, value)
+                                    self.setAttribute(arg, $B.pyobj2jsobj(value))
                                 }catch(err){
                                     throw _b_.ValueError.$factory(
                                         "can't set attribute " + arg)

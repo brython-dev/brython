@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,0,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-25 09:35:36.539600"
-__BRYTHON__.timestamp=1674635736539
+__BRYTHON__.compiled_date="2023-01-25 16:11:21.494052"
+__BRYTHON__.timestamp=1674659481494
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -14214,7 +14214,7 @@ $B.DOMNode.bind(self,arg.toLowerCase().substr(2),value)}else if(arg.toLowerCase(
 try{
 arg=$B.imported["browser.html"].
 attribute_mapper(arg)
-self.setAttribute(arg,value)}catch(err){throw _b_.ValueError.$factory(
+self.setAttribute(arg,$B.pyobj2jsobj(value))}catch(err){throw _b_.ValueError.$factory(
 "can't set attribute "+arg)}}}}}
 dict.__mro__=[$B.DOMNode,$B.builtins.object]
 dict.__new__=function(cls){
