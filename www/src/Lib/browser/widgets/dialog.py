@@ -66,7 +66,8 @@ class Dialog(html.DIV):
     """
 
     def __init__(self, title="", *,
-            top=None, left=None, ok_cancel=False, default_css=True):
+            top=None, left=None, ok_cancel=False, can_close=True,
+            default_css=True):
         if default_css:
             for stylesheet in document.styleSheets:
                 if stylesheet.ownerNode.id == "brython-dialog":
@@ -79,9 +80,11 @@ class Dialog(html.DIV):
 
         self.title_bar = html.DIV(html.SPAN(title), Class="brython-dialog-title")
         self <= self.title_bar
-        self.close_button = html.SPAN("&times;", Class="brython-dialog-close")
-        self.title_bar <= self.close_button
-        self.close_button.bind("click", self.close)
+        if can_close:
+            self.close_button = html.SPAN("&times;", Class="brython-dialog-close")
+            self.title_bar <= self.close_button
+            self.close_button.bind("click", self.close)
+
         self.panel = html.DIV(Class="brython-dialog-panel")
         self <= self.panel
 
@@ -125,6 +128,10 @@ class Dialog(html.DIV):
         self.is_moving = False
 
     def close(self, *args):
+        ev = window.CustomEvent.new('dialog_close')
+        ev.dialog = self
+        document.dispatchEvent(ev)
+
         self.remove()
 
     def mousedown(self, event):
