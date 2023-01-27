@@ -214,8 +214,7 @@ def plug(osc, node, widget):
         if plugout.connected:
             plugin = plugout.destination.widget
             destination_node = plugin.create_audio()
-            if plugin.type == 'gain':
-                gains[osc].append([plugin, destination_node])
+            graph[osc].append([plugin, destination_node])
             if destination_node is not None:
                 node.connect(destination_node)
                 plug(osc, destination_node, plugout.destination.widget)
@@ -240,6 +239,7 @@ def create_oscillator(freq, detune=0):
 
 # list of GainNode instances associated with an oscillator
 gains = {}
+graph = {}
 
 def start_play_panel(panel, freq=None):
     if freq is None:
@@ -256,40 +256,29 @@ def start_play_panel(panel, freq=None):
     for osc in osc_list:
         osc.type = panel.wave_control.value
         gains[osc] = []
+        graph[osc] = []
         plug(osc, osc, panel)
         t0 = audioContext.currentTime
 
-        for gain_widget, gain_node in gains[osc]:
-            attack = float(gain_widget.attack_control.value)
-            v = gain_node.value = float(gain_widget.gain_control.value)
-            gain_node.gain.cancelScheduledValues(t0)
-            gain_node.gain.setValueAtTime(0, t0)
-            gain_node.gain.linearRampToValueAtTime(v, t0 + attack)
+        for widget, node in graph[osc]:
+            if isinstance(widget, GainWidget):
+                attack = float(widget.attack_control.value)
+                v = float(widget.gain_control.value)
+                node.gain.setValueAtTime(0, t0)
+                node.gain.setTargetAtTime(v, t0, attack)
 
         osc.start(t0)
 
     return osc_list
 
-def stop_play(ev):
-    stop_play_panel(ev.target.closest('DIV'))
-
-def stop_play_panel(panel):
-    t0 = audioContext.currentTime
-    release = 0.05
-    for gain_widget in search_gains(panel):
-        release = float(gain_widget.release_control.value)
-        gain = gain_widget.audio_node.gain
-        gain.linearRampToValueAtTime(0, t0 + release)
-    panel.osc.stop(t0 + release + 0.1)
-
 def stop_oscillator(osc):
     t0 = audioContext.currentTime
     release = 0.05
-    for (gain_widget, gain_node) in gains[osc]:
-        release = float(gain_widget.release_control.value)
-        gain_node.gain.linearRampToValueAtTime(0, t0 + release)
-    osc.stop(t0 + release + 0.1)
-    del gains[osc]
+    for (widget, node) in graph[osc]:
+        if isinstance(widget, GainWidget):
+            release = max(release, widget.stop(node))
+    osc.stop(audioContext.currentTime + release + 0.5)
+    del graph[osc]
 
 def start_play_note(freq):
     playing[freq] = []
@@ -454,7 +443,7 @@ class Control(html.DIV):
         if variable is not None:
             setattr(variable, "value", self.control.value)
 
-        @bind(self.control, 'change')
+        @bind(self.control, 'input')
         def change(ev):
             control_show.text = self.control.value
             if variable is not None:
@@ -502,6 +491,13 @@ def add_gain(ev):
     widget.add_plugouts(4)
 
     widget.gain_control = Control('Volume', 0, 1, 0.01, 0.5)
+
+    @bind(widget.gain_control, 'input')
+    def change_gain(ev):
+        for node in widget.nodes:
+            node.gain.setValueAtTime(float(ev.target.value),
+                audioContext.currentTime)
+
     widget.attack_control = Control('Attack', 0, 1, 0.01, 0.2)
     widget.release_control = Control('Release', 0, 1, 0.01, 0.2)
 
@@ -517,33 +513,46 @@ def add_filter(ev):
     widget.add_plugins(4)
     widget.add_plugouts(4)
 
-    max_filter_freq = 1000
+    max_filter_freq = audioContext.sampleRate / 2
     widget.frequency_control = Control('Frequency', 0, max_filter_freq, 1, 440)
-    widget.q_control = Control('Q', 0, 50, 1, 25)
+    widget.q_control = Control('Q', 0, 100, 1, 25)
+
+    @bind(widget.frequency_control, 'input')
+    def change_freq(ev):
+        value = float(ev.target.value)
+        for node in widget.nodes:
+            node.frequency.value = value
+
+    @bind(widget.q_control, 'input')
+    def change_freq(ev):
+        value = float(ev.target.value)
+        for node in widget.nodes:
+            node.Q.value = value
 
     widget.middle <= widget.frequency_control + widget.q_control
 
 
-@bind('#delay', 'click')
-def add_delay(ev):
+@bind('#echo', 'click')
+def add_echo(ev):
     init_context()
-    widget = Widget('Delay', 'delay')
-    widget.add_plugins(4)
-    widget.add_plugouts(4)
-
-    widget.delayTime_control = Control('Delay time', 0, 1, 0.01, 0.2)
-
-    widget.middle <= widget.delayTime_control
-
-@bind('#delay_feedback', 'click')
-def add_delay_feedback(ev):
-    init_context()
-    widget = DelayFeedbackWidget('Delay + feedback', 'delay_feedback')
+    widget = EchoWidget('Echo', 'echo')
     widget.add_plugins(4)
     widget.add_plugouts(4)
 
     widget.delayTime_control = Control('Delay time', 0, 1, 0.01, 0.2)
     widget.feedback_control = Control('Feedback', 0, 1, 0.01, 0.2)
+
+    @bind(widget.delayTime_control, 'input')
+    def change_delay_time(ev):
+        value = float(ev.target.value)
+        for delay, feedback in widget.nodes:
+            delay.delayTime.value = value
+
+    @bind(widget.feedback_control, 'input')
+    def change_delay_time(ev):
+        value = float(ev.target.value)
+        for delay, feedback in widget.nodes:
+            feedback.gain.value = value
 
     widget.middle <= widget.delayTime_control + widget.feedback_control
 
@@ -560,6 +569,7 @@ class Widget(dialog.Dialog):
         self.plugouts = html.TD(Class="plugouts")
         self.panel <= html.TABLE(html.TR(self.plugins + self.middle + self.plugouts),
                                  cellpadding=0, cellspacing=0)
+        self.nodes = []
 
     def __repr__(self):
         return f'<{self.type} widget>'
@@ -581,22 +591,27 @@ class GainWidget(Widget):
 
     def create_audio(self):
         node = window.GainNode.new(audioContext)
-        attack_time = float(self.attack_control.value)
-        node.gain.value = v = float(self.gain_control.value)
-        node.gain.setValueAtTime(0, audioContext.currentTime)
-        node.gain.setValueAtTime(v, audioContext.currentTime + attack_time)
+        node.gain.value = 0
+        self.nodes.append(node)
         return node
 
-class DelayFeedbackWidget(Widget):
+    def stop(self, node):
+        release_time = float(self.release_control.value)
+        node.gain.setTargetAtTime(0, audioContext.currentTime, release_time)
+        self.nodes.remove(node)
+        return release_time
+
+class EchoWidget(Widget):
 
     def create_audio(self):
-        node = window.DelayNode.new(audioContext)
-        node.delayTime.value = float(self.delayTime_control.value)
+        delay = window.DelayNode.new(audioContext)
+        delay.delayTime.value = float(self.delayTime_control.value)
         feedback = window.GainNode.new(audioContext)
         feedback.gain.value = float(self.feedback_control.value)
-        node.connect(feedback)
-        feedback.connect(node)
-        return node
+        delay.connect(feedback)
+        feedback.connect(delay)
+        self.nodes.append((delay, feedback))
+        return delay
 
 class FilterWidget(Widget):
 
@@ -605,6 +620,7 @@ class FilterWidget(Widget):
         node.type = 'lowpass'
         node.frequency.value = float(self.frequency_control.value)
         node.Q.value = float(self.q_control.value)
+        self.nodes.append(node)
         return node
 
 def init_context():
@@ -613,15 +629,6 @@ def init_context():
         audioContext = window.AudioContext.new()
         w.audio_node = audioContext.destination
 
-@bind('#play_all', 'mousedown')
-def play_all(ev):
-    for osc in oscillators:
-        start_play_panel(osc)
-
-@bind('#play_all', 'mouseup')
-def play_all(ev):
-    for osc in oscillators:
-        stop_play_panel(osc)
 
 class DestinationWidget(Widget):
 
@@ -642,9 +649,7 @@ w.add_plugins(4)
 <button id="oscillator">add oscillator</button>
 <button id="gain">add gain</button>
 <button id="filter">add filter</button>
-<button id="delay">add delay</button>
-<button id="delay_feedback">add delay + feedback</button>
-<button id="play_all">play all</button>
+<button id="echo">add echo</button>
 </div>
 
 <div id="zone">

@@ -8,19 +8,34 @@ def fade_out(audioContext, osc, envelop):
     envelop.gain.setTargetAtTime(0, t, 0.02)
     osc.stop(t + 0.08)
 
+def create_oscillator(context, freq, detune=None):
+    osc = window.OscillatorNode.new(context)
+    osc.frequency.value = freq
+    if detune is not None:
+        osc.detune.value = detune
+    return osc
+
 def playTone(audioContext,
              freq,
              time=0,
              length=None,
              gain_value=1,
+             width=0,
              wave=None,
+             _filter=None,
+             destination=None,
              type="sine"):
 
     envelop = audioContext.createGain()
-    envelop.connect(audioContext.destination)
-    #envelop.gain.value = gain_value
 
-    osc = audioContext.createOscillator()
+    if isinstance(destination, (list, tuple)):
+        for dest in destination:
+            envelop.connect(dest)
+    elif destination is None:
+        envelop.connect(audioContext.destination)
+    else:
+        envelop.connect(destination)
+
     t = audioContext.currentTime + time
 
     envelop.gain.setValueAtTime(0, t)
@@ -30,20 +45,25 @@ def playTone(audioContext,
         releaseTime = length / 10
         envelop.gain.linearRampToValueAtTime(0, t + length - releaseTime)
 
-    osc.connect(envelop)
+    osc_list = []
+    osc_list.append(create_oscillator(audioContext, freq))
+    if width:
+        for detune in [-width, width]:
+            osc_list.append(create_oscillator(audioContext, freq, detune))
 
-    if wave is not None:
-        osc.setPeriodicWave(wave)
-    else:
-        osc.type = type
+    for osc in osc_list:
+        osc.connect(envelop)
+        if wave is not None:
+            osc.setPeriodicWave(wave)
+        else:
+            osc.type = type
 
-    osc.frequency.value = freq
-    if time == 0:
-        osc.start()
-    else:
-        currentTime = audioContext.currentTime
-        osc.start(currentTime + time)
-        if length is not None:
-            osc.stop(currentTime + time + length)
+        if time == 0:
+            osc.start()
+        else:
+            currentTime = audioContext.currentTime
+            osc.start(currentTime + time)
+            if length is not None:
+                osc.stop(currentTime + time + length)
 
-    return osc, envelop
+    return osc_list, envelop
