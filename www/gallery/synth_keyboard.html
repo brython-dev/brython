@@ -351,7 +351,26 @@ def play_record(ev):
     if not record_seq:
         return
     record_seq.sort(key = lambda x: x[0])
-
+    t0 = record_seq[0][0]
+    seq = []
+    for r in record_seq:
+        key = r[1]
+        start = r[0] - t0
+        length = r[2] - r[0]
+        if key in keys:
+            octave, note = note_from_key(key)
+            seq.append((start, music.note_freqs[octave][note], length))
+            print(octave, note, start, length)
+        elif key in chords:
+            ranks = chord_notes(int(key))
+            for i in ranks:
+                octave, note = note_from_key(keys[i])
+                seq.append((start, music.note_freqs[octave][note], length))
+        else:
+            note = key[:-1]
+            octave = int(key[-1])
+            seq.append((start, music.note_freqs[octave][note], length))
+    print(seq)
 
 for octave in '12345':
     octaves <= html.BUTTON(octave, value=octave, Class='tone')
@@ -384,6 +403,7 @@ def createKey(note, octave, freq):
     keyElement <= labelElement
 
     keyElement.bind("mousedown", notePressed)
+    keyElement.bind("mouseleave", noteReleased)
     keyElement.bind("touchstart", notePressed)
     keyElement.bind("mouseup", noteReleased)
     keyElement.bind("touchend", noteReleased)
@@ -503,13 +523,15 @@ def notePressed(event):
             keyElement = keyElements[keys.index(key)]
             highlight(keyElement)
             octave, note = note_from_key(key)
+            playing[key] = [play(octave, note)]
         elif event.key in chords:
-            playing[key] = []
             ranks = chord_notes(int(key))
+            playing[key] = []
             key_list = [keys[i] for i in ranks]
             for i in ranks:
                 highlight(keyElements[i])
                 octave, note = note_from_key(keys[i])
+                playing[key].append(play(octave, note))
         else:
             return
     else:
@@ -521,13 +543,10 @@ def notePressed(event):
             note = dataset.note
             key = f'{note}{octave}'
             key_list = [key]
+            playing[key] = [play(octave, note)]
             dataset.pressed = "yes"
         else:
             return
-
-    playing[key] = []
-    for k in key_list:
-        playing[key].append(play(octave, note))
 
     if record.value == "on":
         last_hit[key] = len(record_seq)
