@@ -67,6 +67,7 @@ input[type=range]:focus {
   width: 100%;
   padding: 0;
   margin: 0;
+  text-align: center;
 }
 
 .key {
@@ -111,6 +112,7 @@ input[type=range]:focus {
 .controls {
   color: white;
   font-family: Consolas;
+  text-align: center;
 }
 
 .control {
@@ -127,13 +129,13 @@ input[type=range]:focus {
 }
 
 .tone {
-  width: 2em;
+  width: 2.5em;
   text-align: center;
   border-radius: 0;
 }
 
 .selected {
-  background-color: red;
+  background-color: #3c768c;
 }
 
 .width {
@@ -324,13 +326,32 @@ def changeTone(ev):
 octaves = html.SPAN('OCTAVE', Class="controls")
 tone_octave <= octaves
 
-record_play = html.DIV(Class="controls")
-record_play <= html.BUTTON('&#x23fa;', id='record')
-record_play <= html.BUTTON('&#x23f9;', Class='record_play')
-record_play <= html.BUTTON('&#x23f5;', Class='record_play')
-record_play <= html.BUTTON('&#x23f8;', Class='record_play')
 
-controls_row <= record_play
+record_play = html.DIV(Class="controls")
+document['container'] <= html.TR(html.TD(record_play))
+
+record_play <= record:= html.BUTTON('&#x23fa;', value="off", id='record')
+record_play <= play_record := html.BUTTON('&#x23f5;', id='play_record', Class='record_play')
+record_play <= html.BUTTON('&#x23f8;', id='stop_play_record', Class='record_play')
+
+record_seq = []
+last_hit = {}
+
+@bind(record, 'click')
+def click_record(ev):
+    if ev.target.value == "off":
+        ev.target.value = "on"
+        record_seq.clear()
+    else:
+        ev.target.value = "off"
+        print('recorded', record_seq)
+
+@bind(play_record, 'click')
+def play_record(ev):
+    if not record_seq:
+        return
+    record_seq.sort(key = lambda x: x[0])
+
 
 for octave in '12345':
     octaves <= html.BUTTON(octave, value=octave, Class='tone')
@@ -386,6 +407,8 @@ config = {}
 def play(octave, note):
     global audioContext
 
+    freq = music.note_freqs[octave][note]
+
     delayTime = float(controls['delay'].value)
     feedback = float(controls['feedback'].value)
     filter_freq = int(controls['filter_freq'].value)
@@ -393,8 +416,6 @@ def play(octave, note):
 
     if audioContext is None:
         audioContext = synthesizer.make_context()
-
-
         echo = config['echo'] = window.DelayNode.new(audioContext)
         echo_feedback = config['feedback'] = window.GainNode.new(audioContext)
         echo.connect(echo_feedback)
@@ -410,9 +431,6 @@ def play(octave, note):
         filter_node = config['filter']
 
     volume = window.GainNode.new(audioContext)
-
-    freq = music.note_freqs[octave][note]
-
     width = float(controls['width'].value)
     wave_type = document.select_one('button[class="waveform selected"]').value
 
@@ -458,7 +476,7 @@ def play(octave, note):
 
 def chord_notes(chord_num):
     ranks = [chord_num - 1, (chord_num + 1) % 7, (chord_num + 3) % 7]
-    return [keyElements[rank] for rank in ranks]
+    return ranks #[keyElements[rank] for rank in ranks]
 
 def check_record_start(octave, note, key=None):
     if record is not None:
@@ -479,32 +497,42 @@ def notePressed(event):
     if hasattr(event, "key"):
         if event.key in playing:
             return
+        key = event.key
         if event.key in keys:
-            keyElement = keyElements[keys.index(event.key)]
+            key_list = [key]
+            keyElement = keyElements[keys.index(key)]
             highlight(keyElement)
-            octave, note = note_from_key(event.key)
-            playing[event.key] = play(octave, note)
-            check_record_start(octave, note, event.key)
+            octave, note = note_from_key(key)
         elif event.key in chords:
-            playing[event.key] = []
-            chord = chord_notes(int(event.key))
-            for keyElement in chord:
-                highlight(keyElement)
-                octave = int(keyElement.dataset['octave'])
-                note = keyElement.dataset['note']
-                playing[event.key].append(play(octave, note))
-        return
+            playing[key] = []
+            ranks = chord_notes(int(key))
+            key_list = [keys[i] for i in ranks]
+            for i in ranks:
+                highlight(keyElements[i])
+                octave, note = note_from_key(keys[i])
+        else:
+            return
+    else:
+        # mousedown or touchstart
+        dataset = event.target.dataset
 
-    # mousedown or touchstart
-    dataset = event.target.dataset
+        if not hasattr(dataset, "pressed") or dataset.pressed == "no":
+            octave = int(dataset.octave)
+            note = dataset.note
+            key = f'{note}{octave}'
+            key_list = [key]
+            dataset.pressed = "yes"
+        else:
+            return
 
-    if not hasattr(dataset, "pressed") or dataset.pressed == "no":
-        octave = int(dataset.octave)
-        note = dataset.note
-        print('play', octave, note)
-        playing[f'{note}{octave}'] = play(octave, note)
-        dataset.pressed = "yes"
-        check_record_start(octave, note)
+    playing[key] = []
+    for k in key_list:
+        playing[key].append(play(octave, note))
+
+    if record.value == "on":
+        last_hit[key] = len(record_seq)
+        record_seq.append([audioContext.currentTime, key])
+
 
 def end_note(octave, note):
     osc_list = oscList[octave][note]
@@ -528,37 +556,39 @@ def end_oscillators(playing):
 
     for osc in osc_list:
         osc.stop(t0 + release + 0.5)
-    if record is not None:
-        record.notes[(octave, note)][-1].append(audioContext.currentTime)
 
 def noteReleased(event):
     if hasattr(event, "key"):
         if event.key in playing:
-            if event.key in keys:
-                end_oscillators(playing[event.key])
-                if record is not None:
-                    octave, note = record.key2note[event.key]
-                    record.notes[(octave, note)][-1].append(audioContext.currentTime)
+            key = event.key
+            if key in keys:
                 keyElement = keyElements[keys.index(event.key)]
                 unhighlight(keyElement)
-            elif event.key in chords:
-                for p in playing[event.key]:
-                    end_oscillators(p)
-                chord = chord_notes(int(event.key))
-                for keyElement in chord:
-                    unhighlight(keyElement)
+            elif key in chords:
+                ranks = chord_notes(int(key))
+                for rank in ranks:
+                    unhighlight(keyElements[rank])
+            else:
+                return
+        else:
+            return
+    else:
+        dataset = event.target.dataset
 
-            del playing[event.key]
-        return
-
-    dataset = event.target.dataset
-
-    if dataset:
-        if hasattr(dataset, "pressed") and dataset.pressed == "yes":
+        if dataset and hasattr(dataset, "pressed") and dataset.pressed == "yes":
             octave = int(dataset.octave)
             note = dataset.note
-            end_oscillators(playing[f'{note}{octave}'])
+            key = f'{note}{octave}'
             dataset.pressed = "no"
+        else:
+            return
+
+    for p in playing[key]:
+        end_oscillators(p)
+
+    if record.value == "on":
+        record_seq[last_hit[key]].append(audioContext.currentTime)
+    del playing[key]
 
 def setup():
     base = tones.select_one('button[class*="selected"]').value
@@ -597,7 +627,6 @@ class Record:
 
 """recordControl = document['record']
 playControl = document['play']"""
-record = None
 
 # https://en.wikipedia.org/wiki/Media_control_symbols
 
@@ -675,8 +704,6 @@ def set_waveform(ev):
     current = document.select_one('button[class="waveform selected"]')
     current.classList.remove('selected')
     ev.target.classList.add('selected')
-    print('selected', document.select_one('button[class="waveform selected"]'))
-
 
 
 </script>
@@ -684,9 +711,11 @@ def set_waveform(ev):
 <table id="container">
   <tr>
     <td>
-      <table class="controls">
-        <tr id="controls_row"></tr>
-      </table>
+      <div class="controls">
+        <table width="100%">
+          <tr id="controls_row"></tr>
+        </table>
+      </div>
     </td>
   </tr>
   <tr>
