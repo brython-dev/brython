@@ -45,7 +45,7 @@ Quelques particularités liées au contexte d'exécution dans un navigateur :
   immédiatement dans la console parce qu'il y aurait un saut de ligne à chaque
   appel. Le message est stocké dans un buffer, pour afficher dans la console
   il faut appeler la méthode `flush()` de `sys.stdout` ou `sys.stderr`
-  
+
 - pour lancer une impression sur imprimante, utiliser la méthode `print()` de
   l'objet `window` défini dans le module **browser** :
 
@@ -66,14 +66,8 @@ Bibliothèque standard
 Brython est fourni avec une partie de la bibliothèque standard de Python.
 
 Certains des modules qui sont écrits en C dans la distribution CPython ont été
-écrits en Javascript dans la distribution Brython (`math`, `random`, `re`,
-`unicodedata`...).
-
-Le module `json` est également écrit en Javascript. Il s'appuie sur l'objet
-`JSON` de Javascript, ce qui implique quelques différences mineures avec le
-package CPython; les valeurs `NaN, Infinity, -Infinity` qui sont reconnues par
-CPython n'étant pas dans la spécification JSON produisent une `SyntaxError`
-avec le module Brython.
+écrits en Javascript dans la distribution Brython (`json`, `math`, `random`, 
+`re`, `unicodedata`...).
 
 Le package `xml` n'est pas fourni, parce que celui de la distribution
 CPython utilise un module en C (`pyexpat`) qui n'est disponible ni en

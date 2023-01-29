@@ -1,6 +1,5 @@
 Packages Brython
 ================
-_Nouveau en version 3.7.5_
 
 Un "package Brython" peut être inséré dans la page HTML pour donner accès à
 des modules importables. Il s'agit d'un fichier avec l'extension

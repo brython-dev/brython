@@ -85,7 +85,7 @@ def _open(ev):
         return
     global ws
     # open a web socket
-    ws = websocket.WebSocket("wss://echo.websocket.org")
+    ws = websocket.WebSocket("wss://echo.websocket.events")
     # bind functions to web socket events
     ws.bind('open',on_open)
     ws.bind('message',on_message)

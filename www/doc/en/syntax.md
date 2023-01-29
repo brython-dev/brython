@@ -56,14 +56,8 @@ Standard library
 Brython is shipped with a part of the CPython standard library.
 
 Some of the modules that are written in C in CPython standard library have
-been written in Javascript in Brython distribution (`math`, `random`, `re`,
-`unicodedata`...).
-
-The `json` module is also written in Javascript. It is based on the Javascript
-object `JSON`, which implies a few minor differences with the CPython
-package; the values `NaN, Infinity, -Infinity` which are recognized by
-CPython are not in the JSON specification and as such, throw a `SyntaxError`
-with the Brython module.
+been written in Javascript in Brython distribution (`json`, `math`, `random`, 
+`re`, `unicodedata`...).
 
 The `xml` package is not provided because that of the CPython distribution
 uses a C module (`pyexpat`) which is available neither in Javascript nor in

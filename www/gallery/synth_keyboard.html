@@ -55,6 +55,11 @@ input[type=range]:focus {
   outline: none;
 }
 
+.control-value {
+  font-size: 0.6em;
+  width: 3em;
+}
+
 #container {
   width: 90%;
   height: auto;
@@ -227,23 +232,51 @@ controls_row = document['controls_row']
 
 controls = {}
 
+def get_value(control):
+    return float(controls[control].value)
+
 def slider(legend, name, min_value, max_value, step, value):
     control = html.INPUT(type="range", min=min_value, max=max_value,
                          step=step, value=value)
     controls[name] = control
+    info = html.TD(value, Class="control-value")
+
     @bind(control, 'input')
     def change_control(ev):
-        print('change slider', name, 'in config', name in config)
-        if name in config:
-           config[name].value = ev.target.value
+        info.text = ev.target.value
+        if not name in instances:
+            return
+        if name == "volume":
+           for node in instances[name].values():
+               node.gain.setTargetAtTime(float(ev.target.value),
+                                        audioContext.currentTime,
+                                        0.05)
+        else:
+           node = instances[name]
+           attr = value_setters[name]
+           if attr == 'gain':
+               getattr(node, attr).setTargetAtTime(float(ev.target.value),
+                                    audioContext.currentTime,
+                                    0.05)
+           else:
+               param = getattr(node, attr)
+               param.value = float(ev.target.value)
 
-    return html.TR(html.TD(legend) + html.TD(control))
+    return html.TR(html.TD(legend) + html.TD(control) + info)
 
 controls_row <= html.TD(html.TABLE(
                        html.TR(html.TD('VOLUME', colspan=2)) +
                        slider('', 'volume', 0, 1, 0.05, 0.5)
                      )
                    )
+
+@bind(controls['volume'], 'input')
+def change_volume(ev):
+    for volume in instances['volume'].values():
+        volume.gain.setTargetAtTime(float(ev.target.value),
+                                    audioContext.currentTime,
+                                    0.2)
+
 waveforms = dict(SINE='sine', SQUA='square', SAWT='sawtooth', TRIA='triangle')
 
 wave_buttons = (html.BUTTON(waveform, value=value, Class="waveform")
@@ -255,6 +288,7 @@ controls_row <= html.TD(html.TABLE(
                       slider('WIDTH', 'width', 0, 50, 1, 0)
                     )
                   )
+
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('ENVELOP', colspan=2)) +
                       slider('Attack', 'attack', 0, 2, 0.1, 0.2) +
@@ -264,45 +298,52 @@ controls_row <= html.TD(html.TABLE(
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('ECHO', colspan=2)) +
-                      slider('Delay', 'delay', 0, 2, 0.1, 0) +
-                      slider('Feedback', 'feedback', 0, 1, 0.1, 0)
+                      slider('Delay', 'echo_delay', 0, 2, 0.1, 0) +
+                      slider('Feedback', 'echo_feedback', 0, 1, 0.1, 0)
                    )
                  )
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('FILTER', colspan=2)) +
-                      slider('Freq', 'filter_freq', 0, 1000, 10, 0) +
+                      slider('Freq', 'filter_freq', 0, 10000, 10, 0) +
                       slider('Q', 'filter_q', 0, 60, 0.1, 0)
                    )
                  )
 
-keyboard_mapping = {
-    'QWERTY': 'zxcvbnm' + 'asdfghj' + 'qwertyu',
-    'AZERTY': 'wxcvbn,' + 'qsdfghj' + 'azertyu',
-    'QWERTZ': 'yxcvbnm' + 'asdfghj' + 'qwertzu'
-}
+@bind(controls['filter_freq'], 'input')
+def change_filter_freq(ev):
+    config['filter'].frequency.value = float(ev.target.value)
 
-keyboard_control = html.SELECT(html.OPTION(kb, value=kb) for kb in keyboard_mapping)
-controls_row <= html.TD(keyboard_control)
+@bind(controls['filter_q'], 'input')
+def change_filter_q(ev):
+    config['filter'].Q.value = float(ev.target.value)
+
+controls_row <= html.TD(html.TABLE(
+                      html.TR(html.TD('LFO') +
+                              html.TD(lfo_on := html.INPUT(type="checkbox"))
+                              ) +
+                      slider('Freq', 'lfo_freq', 0, 20, 0.1, 0) +
+                      slider('Ampl', 'lfo_ampl', 0, 1, 0.01, 0)
+                   )
+                 )
+
+@bind(controls['lfo_freq'], 'input')
+def change_lfo_freq(ev):
+    for lfo in instances['lfo'].values():
+        lfo.frequency.value = float(ev.target.value)
+
+@bind(controls['lfo_ampl'], 'input')
+def change_lfo_ampl(ev):
+    for lfo_gain in instances['lfo_gain'].values():
+        lfo_gain.gain.value = float(ev.target.value)
+
+
+keys = [f'Key{c}' for c in 'ZXCVBNM' + 'ASDFGHJ' + 'QWERTYU']
 
 keyboard = document.select_one(".keyboard")
 scaleControl = document.select_one("select[name='scale']")
 octaveControl = document.select_one("select[name='octave']")
 volumeControl = controls['volume']
-
-def set_keys():
-    global keys
-    keys = keyboard_mapping[keyboard_control.value]
-
-lang = window.navigator.language
-if lang.startswith('fr'):
-    keyboard_control.value = 'AZERTY'
-elif lang.startswith('de'):
-    keyboard_control.value = 'QWERTZ'
-else:
-    keyboard_control.value = 'QWERTY'
-
-set_keys()
 
 
 tone_octave = html.DIV(Class="controls")
@@ -326,16 +367,18 @@ def changeTone(ev):
 octaves = html.SPAN('OCTAVE', Class="controls")
 tone_octave <= octaves
 
-
 record_play = html.DIV(Class="controls")
 document['container'] <= html.TR(html.TD(record_play))
 
+
+# https://en.wikipedia.org/wiki/Media_control_symbols
 record_play <= record:= html.BUTTON('&#x23fa;', value="off", id='record')
 record_play <= play_record := html.BUTTON('&#x23f5;', id='play_record', Class='record_play')
 record_play <= html.BUTTON('&#x23f8;', id='stop_play_record', Class='record_play')
 
 record_seq = []
 last_hit = {}
+instances = {}
 
 @bind(record, 'click')
 def click_record(ev):
@@ -344,33 +387,33 @@ def click_record(ev):
         record_seq.clear()
     else:
         ev.target.value = "off"
-        print('recorded', record_seq)
+
 
 @bind(play_record, 'click')
 def play_record(ev):
     if not record_seq:
         return
     record_seq.sort(key = lambda x: x[0])
-    t0 = record_seq[0][0]
-    seq = []
-    for r in record_seq:
-        key = r[1]
-        start = r[0] - t0
-        length = r[2] - r[0]
-        if key in keys:
-            octave, note = note_from_key(key)
-            seq.append((start, music.note_freqs[octave][note], length))
-            print(octave, note, start, length)
-        elif key in chords:
-            ranks = chord_notes(int(key))
-            for i in ranks:
-                octave, note = note_from_key(keys[i])
-                seq.append((start, music.note_freqs[octave][note], length))
-        else:
-            note = key[:-1]
-            octave = int(key[-1])
-            seq.append((start, music.note_freqs[octave][note], length))
-    print(seq)
+    print('record seq', record_seq)
+    timer.set_timeout(execute, record_seq[0][0], record_seq)
+
+
+def execute(seq, index=0):
+    t, kcode, length = seq[index]
+    print('kcode', kcode, length)
+    print('instances', instances)
+    for k in 'volume', 'attack', 'release':
+        print(k, get_value(k))
+    if kcode in keys:
+        octave, note = note_from_key(kcode)
+        sound = play(octave, note)
+        t0 = audioContext.currentTime
+        print('close at', t0 + length)
+        sound.volume.gain.setValueAtTime(0, t0 + length) #, get_value('release'))
+    if index < len(seq) - 1:
+        next = seq[index + 1]
+        dt = next[0] - t
+        timer.set_timeout(execute, 1000 * dt, seq, index + 1)
 
 for octave in '12345':
     octaves <= html.BUTTON(octave, value=octave, Class='tone')
@@ -382,10 +425,6 @@ def changeOctave(ev):
     current.classList.remove('selected')
     ev.target.classList.add('selected')
     setup()
-
-@bind(keyboard_control, "change")
-def changeKeyboard(event):
-    set_keys()
 
 keyElements = []
 
@@ -403,9 +442,9 @@ def createKey(note, octave, freq):
     keyElement <= labelElement
 
     keyElement.bind("mousedown", notePressed)
-    keyElement.bind("mouseleave", noteReleased)
     keyElement.bind("touchstart", notePressed)
     keyElement.bind("mouseup", noteReleased)
+    keyElement.bind("mouseleave", noteReleased)
     keyElement.bind("touchend", noteReleased)
 
     keyElements.append(keyElement)
@@ -414,7 +453,7 @@ def createKey(note, octave, freq):
 
 playing = {}
 
-chords = '1234567'
+chords = [f'Numpad{i}' for i in '1234567']
 
 def highlight(elt):
     elt.classList.add('key-active')
@@ -424,33 +463,54 @@ def unhighlight(elt):
 
 config = {}
 
-def play(octave, note):
+value_setters = {
+    'echo_delay': 'delayTime',
+    'echo_feedback': 'gain',
+    'filter_freq': 'frequency',
+    'filter_q': 'Q',
+    'volume': 'gain'
+}
+
+class Sound:
+
+    pass
+
+def play(octave, note, start_now=True):
     global audioContext
 
     freq = music.note_freqs[octave][note]
 
-    delayTime = float(controls['delay'].value)
-    feedback = float(controls['feedback'].value)
-    filter_freq = int(controls['filter_freq'].value)
-    filter_q = float(controls['filter_q'].value)
-
     if audioContext is None:
         audioContext = synthesizer.make_context()
-        echo = config['echo'] = window.DelayNode.new(audioContext)
-        echo_feedback = config['feedback'] = window.GainNode.new(audioContext)
-        echo.connect(echo_feedback)
-        echo_feedback.connect(echo)
+        echo_delay = instances['echo_delay'] = window.DelayNode.new(audioContext)
+        echo_feedback = instances['echo_feedback'] = window.GainNode.new(audioContext)
+        echo_delay.connect(echo_feedback)
+        echo_feedback.connect(echo_delay)
 
         filter_node = config['filter'] = window.BiquadFilterNode.new(audioContext)
         filter_node.type = 'lowpass'
-        filter_node.frequency.value = filter_freq
-        filter_node.Q.value = filter_q
+        instances['filter_freq'] = filter_node
+        instances['filter_q'] = filter_node
+
+        instances['volume'] = {}
+        instances['lfo'] = {}
+        instances['lfo_gain'] = {}
     else:
-        echo = config['echo']
-        echo_feedback = config['feedback']
+        echo_delay = instances['echo_delay']
+        echo_feedback = instances['echo_feedback']
         filter_node = config['filter']
 
     volume = window.GainNode.new(audioContext)
+
+    lfo = window.OscillatorNode.new(audioContext)
+    lfo.type = 'sine'
+    lfo.frequency.value = float(controls['lfo_freq'].value)
+    lfo_gain = window.GainNode.new(audioContext)
+    lfo_gain.gain.value = float(controls['lfo_ampl'].value)
+    lfo.connect(lfo_gain)
+    lfo_gain.connect(volume.gain)
+    lfo.start()
+
     width = float(controls['width'].value)
     wave_type = document.select_one('button[class="waveform selected"]').value
 
@@ -470,33 +530,40 @@ def play(octave, note):
     for osc in osc_list:
         osc.connect(volume)
 
-    if filter_freq or filter_q:
+    if get_value('filter_freq') or get_value('filter_q'):
         next_node = filter_node
-        filter_node.frequency.value = filter_freq
-        filter_node.Q.value = filter_q
+        filter_node.frequency.value = get_value('filter_freq')
+        filter_node.Q.value = get_value('filter_q')
         next_node.connect(audioContext.destination)
     else:
         next_node = audioContext.destination
 
-    if delayTime or feedback:
-        volume.connect(config['echo'])
-        echo.connect(next_node)
-        echo.delayTime.value = delayTime
-        echo_feedback.gain.value = feedback
+    if get_value('echo_delay') or get_value('echo_feedback'):
+        volume.connect(instances['echo_delay'])
+        echo_delay.connect(next_node)
+        echo_delay.delayTime.value = get_value('echo_delay')
+        echo_feedback.gain.value = get_value('echo_feedback')
 
     volume.connect(next_node)
-    volume.gain.value = v = float(volumeControl.value)
-    t0 = audioContext.currentTime
-    volume.gain.setValueAtTime(0, t0)
-    volume.gain.setTargetAtTime(v, t0, float(controls['attack'].value))
-    for osc in osc_list:
-        osc.start(t0)
+    if start_now:
+        volume.gain.value = v = get_value('volume')
+        t0 = audioContext.currentTime
+        volume.gain.setValueAtTime(0, t0)
+        volume.gain.setTargetAtTime(v, t0, get_value('attack'))
+        for osc in osc_list:
+            osc.start(t0)
+            print('start', t0, v)
 
-    return osc_list, volume
+    sound = Sound()
+    sound.osc_list = osc_list
+    sound.volume = volume
+    sound.lfo = lfo
+    sound.lfo_gain = lfo_gain
+    return sound
 
 def chord_notes(chord_num):
     ranks = [chord_num - 1, (chord_num + 1) % 7, (chord_num + 3) % 7]
-    return ranks #[keyElements[rank] for rank in ranks]
+    return ranks
 
 def check_record_start(octave, note, key=None):
     if record is not None:
@@ -515,24 +582,23 @@ def note_from_key(key):
 def notePressed(event):
 
     if hasattr(event, "key"):
-        if event.key in playing:
+        kcode = event.code
+        if kcode in playing:
             return
-        key = event.key
-        if event.key in keys:
-            key_list = [key]
-            keyElement = keyElements[keys.index(key)]
+        if kcode in keys:
+            key_list = [kcode]
+            keyElement = keyElements[keys.index(kcode)]
             highlight(keyElement)
-            octave, note = note_from_key(key)
-            playing[key] = [play(octave, note)]
-        elif event.key in chords:
-            ranks = chord_notes(int(key))
-            playing[key] = []
+            octave, note = note_from_key(kcode)
+        elif kcode in chords:
+            playing[kcode] = []
+            ranks = chord_notes(int(kcode[-1]))
             key_list = [keys[i] for i in ranks]
             for i in ranks:
                 highlight(keyElements[i])
                 octave, note = note_from_key(keys[i])
-                playing[key].append(play(octave, note))
         else:
+            print('unknown code', kcode)
             return
     else:
         # mousedown or touchstart
@@ -541,16 +607,23 @@ def notePressed(event):
         if not hasattr(dataset, "pressed") or dataset.pressed == "no":
             octave = int(dataset.octave)
             note = dataset.note
-            key = f'{note}{octave}'
-            key_list = [key]
-            playing[key] = [play(octave, note)]
+            kcode = f'{note}{octave}'
+            key_list = [kcode]
             dataset.pressed = "yes"
         else:
             return
 
+    playing[kcode] = []
+    for k in key_list:
+        sound = play(octave, note)
+        playing[kcode].append(sound)
+    instances['volume'][kcode] = sound.volume
+    instances['lfo'][kcode] = sound.lfo
+    instances['lfo_gain'][kcode] = sound.lfo_gain
+
     if record.value == "on":
-        last_hit[key] = len(record_seq)
-        record_seq.append([audioContext.currentTime, key])
+        last_hit[kcode] = len(record_seq)
+        record_seq.append([audioContext.currentTime, kcode])
 
 
 def end_note(octave, note):
@@ -565,26 +638,27 @@ def end_note(octave, note):
     if record is not None:
         record.notes[(octave, note)][-1].append(audioContext.currentTime)
 
-def end_oscillators(playing):
-    osc_list, volume = playing
+def end_oscillators(sound):
     release = float(controls['release'].value)
     release = max(release, 0.05) # avoids a click if release = 0
     t0 = audioContext.currentTime
-    volume.gain.cancelScheduledValues(t0)
-    volume.gain.setTargetAtTime(0, t0, release)
+    sound.volume.gain.cancelScheduledValues(t0)
+    sound.volume.gain.setTargetAtTime(0, t0, release)
+    if sound.lfo_gain is not None:
+        sound.lfo_gain.gain.setTargetAtTime(0, t0, release)
 
-    for osc in osc_list:
-        osc.stop(t0 + release + 0.5)
+    for osc in sound.osc_list:
+        osc.stop(t0 + release + 5)
 
 def noteReleased(event):
     if hasattr(event, "key"):
-        if event.key in playing:
-            key = event.key
-            if key in keys:
-                keyElement = keyElements[keys.index(event.key)]
+        if event.code in playing:
+            kcode = event.code
+            if kcode in keys:
+                keyElement = keyElements[keys.index(kcode)]
                 unhighlight(keyElement)
-            elif key in chords:
-                ranks = chord_notes(int(key))
+            elif kcode in chords:
+                ranks = chord_notes(int(kcode[-1]))
                 for rank in ranks:
                     unhighlight(keyElements[rank])
             else:
@@ -597,17 +671,18 @@ def noteReleased(event):
         if dataset and hasattr(dataset, "pressed") and dataset.pressed == "yes":
             octave = int(dataset.octave)
             note = dataset.note
-            key = f'{note}{octave}'
+            kcode = f'{note}{octave}'
             dataset.pressed = "no"
         else:
             return
 
-    for p in playing[key]:
+    for p in playing[kcode]:
         end_oscillators(p)
 
     if record.value == "on":
-        record_seq[last_hit[key]].append(audioContext.currentTime)
-    del playing[key]
+        record_seq[last_hit[kcode]].append(audioContext.currentTime)
+    del playing[kcode]
+    del instances['volume'][kcode]
 
 def setup():
     base = tones.select_one('button[class*="selected"]').value
@@ -637,53 +712,8 @@ setup()
 document.bind('keydown', notePressed)
 document.bind('keyup', noteReleased)
 
-class Record:
 
-    def __init__(self):
-        self.startTime = audioContext.currentTime
-        self.notes = {}
-        self.key2note = {}
 
-"""recordControl = document['record']
-playControl = document['play']"""
-
-# https://en.wikipedia.org/wiki/Media_control_symbols
-
-#@bind(recordControl, 'click')
-def set_record(ev):
-    global audioContext, record
-    if audioContext is None:
-        audioContext = synthesizer.make_context()
-
-    if ev.target.dataset.status == 'off':
-        ev.target.dataset.status = 'on'
-        ev.target.html = '&#x23f9;'
-        ev.target.style.color = '#000'
-        record = Record()
-    else:
-        ev.target.dataset.status = 'off'
-        ev.target.html = '&#x23fa'
-        ev.target.style.color = 'red'
-        playControl.disabled = False
-        playControl.html = '&#x23f5'
-
-#@bind(playControl, 'click')
-def play_record(ev):
-    sequence = []
-    for (octave, note), notes in record.notes.items():
-        if notes:
-            freq = music.note_freqs[octave][note]
-            for start, stop in notes:
-                sequence.append([freq,
-                                 start - record.startTime,
-                                 stop - record.startTime])
-    sequence.sort(key = lambda x: x[1])
-    previous = 0
-    for note in sequence:
-        note.append(1000*(note[1] - previous))
-        previous = note[1]
-    t0 = audioContext.currentTime
-    timer.set_timeout(play_one, sequence[0][3], sequence, 0)
 
 def play_one(sequence, index):
     freq, start, stop, delta = sequence[index]
@@ -724,7 +754,18 @@ def set_waveform(ev):
     current.classList.remove('selected')
     ev.target.classList.add('selected')
 
-
+@bind('#playrec', 'click')
+def playrec(ev):
+    sound = play(3, 'F', False)
+    t0 = audioContext.currentTime
+    release = get_value('release')
+    sound.volume.gain.value = v = get_value('volume')
+    sound.volume.gain.setValueAtTime(0, t0)
+    sound.volume.gain.setTargetAtTime(v, t0, get_value('attack'))
+    sound.volume.gain.setTargetAtTime(0, t0 + 1, release)
+    for osc in sound.osc_list:
+        osc.start(t0)
+        osc.stop(t0 + 1 + release + 0.5)
 </script>
 
 <table id="container">
@@ -745,6 +786,7 @@ def set_waveform(ev):
 
 </table>
 
+<button id="playrec">play rec</button>
 </div>
 </body>
 </html>

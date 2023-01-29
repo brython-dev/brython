@@ -75,7 +75,6 @@ _nom_evt_ se produit sur l'élément.
 
 Utilisation du décorateur `browser.bind`
 ----------------------------------------
-_Nouveau en version 3.6.0_
 
 Le module **browser** définit une fonction `bind` qui peut être utilisée comme
 décorateur pour un gestionnaire d'événement. Sa syntaxe est
@@ -291,14 +290,20 @@ document["disabled_cbox"].bind("click", click)
 
 <blockquote>
 ```exec_on_load
-from browser import document
+from browser import document, bind, alert
 from browser.widgets.dialog import InfoDialog
 
+def info(element):
+    InfoDialog('Event',
+               element.id,
+               top=element.scrolled_top,
+               remove_after=2)
+
 def show(ev):
-    InfoDialog("Events", f"clic sur {ev.currentTarget.id}")
+    info(ev.currentTarget)
 
 def show_stop(ev):
-    InfoDialog("Events", f"clic sur {ev.currentTarget.id}")
+    info(ev.currentTarget)
     ev.stopPropagation()
 
 document["jaune"].bind("click", show)

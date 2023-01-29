@@ -10,14 +10,13 @@
 <link rel="apple-touch-icon" href="icon.png"/>
 <link rel="apple-touch-startup-image" href="splash.png">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-   crossorigin="anonymous"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+     integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+     crossorigin=""/>
 
- <!-- Make sure you put this AFTER Leaflet's CSS -->
- <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-   crossorigin="anonymous"></script>
+ <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+     integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+     crossorigin=""></script>
 
 <script type="text/python" src="show_source.py"></script>
 <style>
@@ -49,6 +48,11 @@ world_map = document["mapid"]
 # Access the leaflet.js API
 leaflet = window.L
 
+myIcon = leaflet.icon({
+   'iconUrl': 'marker-icon.png',
+   'iconSize' : [25, 41],
+   'iconAnchor': [12, 41]
+})
 
 data = {"maxZoom": 18,
         "attribution": 'Map data &copy; ' \
@@ -81,7 +85,7 @@ def navi(pos):
     }).addTo(mymap);
 
     # Put marker on map
-    leaflet.marker([xyz.latitude, xyz.longitude]).addTo(mymap)
+    leaflet.marker([xyz.latitude, xyz.longitude], {'icon': myIcon}).addTo(mymap)
 
 def nonavi(error):
     document <= "Your browser doesn't support geolocation"

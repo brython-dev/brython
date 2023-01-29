@@ -6,7 +6,7 @@ different ways:
 - by the File / Open browser menu: in this case the browser uses the "file"
   protocol (the address in the address bar starts with _file://_)
 - by launching a local web server (for instance the one provided by Python
-  standard distribution: `brython-cli server`) and entering the file
+  standard distribution: `python -m http.server`) and entering the file
   address in the browser address bar (for instance _localhost:8000//app.html_).
   The protocol is "http" (or "https")
 

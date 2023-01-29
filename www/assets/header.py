@@ -40,8 +40,7 @@ links = {
 
 languages = [
     ["en", "English"],
-    ["fr", "Français"],
-    ["es", "Español"]
+    ["fr", "Français"]
 ]
 
 def show(language=None):

@@ -37,11 +37,15 @@ Quelques exemples :
 document.select('.foo')       # éléments avec la classe "foo"
 document.select('form')       # liste des éléments "<form>"
 document.select('H1.bar')     # éléments H1 avec la classe "bar"
-document.select('#container') # liste avec l'élément dont l'id vaut "container", 
+document.select('#container') # liste avec l'élément dont l'id vaut "container",
                               # similaire à [document["container"]]
 document.select('a[title]')   # éléments A avec un attribut "title"
 document.select('#tid td')    # les éléments TD dans l'élément avec l'id #tid
 ```
+
+Pour sélectionner un seul élément, utiliser `select_one()` au lieu de
+`select()`. Si le sélecteur correspond à plusieurs éléments, `select_one()` 
+renvoie le premier.
 
 Voir la [documentation MDN](https://developer.mozilla.org/fr/docs/Web/CSS/CSS_Selectors)
 pour plus d'informations et d'exemples de sélecteurs CSS.

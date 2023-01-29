@@ -84,7 +84,7 @@ Optimisation
 ============
 Le mécanisme décrit ci-dessus présente deux inconvénients :
 
-- la taille assez importante de __brython_stdlib.js__ (plus de 3 Mo)
+- la taille assez importante de __brython_stdlib.js__ (plus de 4 Mo)
 - le temps pris par les appels Ajax
 
 Pour optimiser les imports, si Brython a été installé par `pip`, vous pouvez
@@ -101,8 +101,9 @@ brython-cli modules
 A noter que ce programme analyse le code Brython contenu dans tous les scripts,
 modules et pages HTML qui se trouvent dans le répertoire et ses
 sous-répertoires. La version de CPython utilisée doit donc être compatible
-avec le code Brython : par exemple si ce code inclut des f-strings, il faut au
-minimum CPython 3.6, sinon le programme détectera des erreurs de syntaxe.
+avec le code Brython : par exemple si ce code inclut des `match / case`, il
+faut au minimum CPython 3.10, sinon le programme détectera des erreurs de 
+syntaxe.
 
 Vous pouvez ensuite remplacer toutes les occurrences de
 

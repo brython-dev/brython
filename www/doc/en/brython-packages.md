@@ -1,6 +1,5 @@
 Brython packages
 ================
-_New in version 3.7.5_
 
 A "Brython package" can be loaded in the HTML page to give access to
 importable modules. It consists in a file with the extension

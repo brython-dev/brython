@@ -6,7 +6,7 @@ navigateur de deux façons différentes:
 - par le menu Fichier / Ouvrir du navigateur : dans ce cas le protocole
   utilisé est "file"
 - en lançant un serveur web (par exemple celui de la distribution standard
-  Python : `brython-cli server`) et en entrant l'adresse du fichier dans la
+  Python : `python -m http.server`) et en entrant l'adresse du fichier dans la
   barre d'adresse du navigateur (par exemple _localhost:8000//app.html_). Le
   protocole correspondant est "http" (ou "https")
 
