@@ -51,7 +51,7 @@ with open(os.path.join(md_tutorial_path, "index.html"),
     index_tutorial = f.read()
 
 # documentation
-for lang in ['fr', 'en', 'es']:
+for lang in ['fr', 'en']:
     dest_path = os.path.join(static_doc_path, lang)
     dest_paths = [dest_path, os.path.join(dest_path,'cookbook')]
 
