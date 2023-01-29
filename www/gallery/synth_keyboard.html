@@ -418,6 +418,7 @@ def createKey(note, octave, freq):
     keyElement.bind("mousedown", notePressed)
     keyElement.bind("touchstart", notePressed)
     keyElement.bind("mouseup", noteReleased)
+    keyElement.bind("mouseleave", noteReleased)
     keyElement.bind("touchend", noteReleased)
 
     keyElements.append(keyElement)
@@ -468,22 +469,26 @@ def play(octave, note):
         filter_node.frequency.value = filter_freq
         filter_node.Q.value = filter_q
 
-        lfo = config['lfo'] = window.OscillatorNode.new(audioContext)
-        lfo.type = 'sine'
-        lfo.start()
-
         instances['volume'] = {}
+        instances['lfo'] = {}
     else:
         echo_delay = instances['echo_delay']
         echo_feedback = instances['echo_feedback']
         filter_node = config['filter']
-        lfo = config['lfo']
-
-    lfo.frequency.value = float(controls['lfo_freq'].value)
 
     volume = window.GainNode.new(audioContext)
+
+    lfo_gain = None
     if lfo_on.checked:
-        lfo.connect(volume.gain)
+        lfo = window.OscillatorNode.new(audioContext)
+        lfo.type = 'sine'
+        lfo.frequency.value = float(controls['lfo_freq'].value)
+        lfo_gain = window.GainNode.new(audioContext)
+        lfo_gain.gain.value = 0.05
+        lfo.connect(lfo_gain)
+        lfo_gain.connect(volume.gain)
+        lfo.start()
+
     width = float(controls['width'].value)
     wave_type = document.select_one('button[class="waveform selected"]').value
 
@@ -525,7 +530,7 @@ def play(octave, note):
     for osc in osc_list:
         osc.start(t0)
 
-    return osc_list, volume
+    return osc_list, volume, lfo_gain
 
 def chord_notes(chord_num):
     ranks = [chord_num - 1, (chord_num + 1) % 7, (chord_num + 3) % 7]
@@ -580,9 +585,10 @@ def notePressed(event):
 
     playing[key] = []
     for k in key_list:
-        osc_list, volume = play(octave, note)
-        playing[key].append((osc_list, volume))
+        osc_list, volume, lfo = play(octave, note)
+        playing[key].append((osc_list, volume, lfo))
     instances['volume'][key] = volume
+    instances['lfo'][key] = lfo
 
     if record.value == "on":
         last_hit[key] = len(record_seq)
@@ -602,15 +608,17 @@ def end_note(octave, note):
         record.notes[(octave, note)][-1].append(audioContext.currentTime)
 
 def end_oscillators(playing):
-    osc_list, volume = playing
+    osc_list, volume, lfo_gain = playing
     release = float(controls['release'].value)
     release = max(release, 0.05) # avoids a click if release = 0
     t0 = audioContext.currentTime
     volume.gain.cancelScheduledValues(t0)
     volume.gain.setTargetAtTime(0, t0, release)
+    if lfo_gain is not None:
+        lfo_gain.gain.setTargetAtTime(0, t0, release)
 
     for osc in osc_list:
-        osc.stop(t0 + release + 0.5)
+        osc.stop(t0 + release + 5)
 
 def noteReleased(event):
     if hasattr(event, "key"):
