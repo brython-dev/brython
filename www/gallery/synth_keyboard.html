@@ -55,6 +55,11 @@ input[type=range]:focus {
   outline: none;
 }
 
+.control-value {
+  font-size: 0.6em;
+  width: 3em;
+}
+
 #container {
   width: 90%;
   height: auto;
@@ -231,13 +236,30 @@ def slider(legend, name, min_value, max_value, step, value):
     control = html.INPUT(type="range", min=min_value, max=max_value,
                          step=step, value=value)
     controls[name] = control
+    info = html.TD(value, Class="control-value")
+
     @bind(control, 'input')
     def change_control(ev):
-        print('change slider', name, 'in config', name in config)
-        if name in config:
-           config[name].value = ev.target.value
+        info.text = ev.target.value
+        if not name in instances:
+            return
+        if name == "volume":
+           for node in instances[name].values():
+               node.gain.setTargetAtTime(float(ev.target.value),
+                                        audioContext.currentTime,
+                                        0.05)
+        else:
+           node = instances[name]
+           attr = value_setters[name]
+           if attr == 'gain':
+               getattr(node, attr).setTargetAtTime(float(ev.target.value),
+                                    audioContext.currentTime,
+                                    0.05)
+           else:
+               param = getattr(node, attr)
+               param.value = float(ev.target.value)
 
-    return html.TR(html.TD(legend) + html.TD(control))
+    return html.TR(html.TD(legend) + html.TD(control) + info)
 
 controls_row <= html.TD(html.TABLE(
                        html.TR(html.TD('VOLUME', colspan=2)) +
@@ -255,6 +277,7 @@ controls_row <= html.TD(html.TABLE(
                       slider('WIDTH', 'width', 0, 50, 1, 0)
                     )
                   )
+
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('ENVELOP', colspan=2)) +
                       slider('Attack', 'attack', 0, 2, 0.1, 0.2) +
@@ -264,15 +287,23 @@ controls_row <= html.TD(html.TABLE(
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('ECHO', colspan=2)) +
-                      slider('Delay', 'delay', 0, 2, 0.1, 0) +
-                      slider('Feedback', 'feedback', 0, 1, 0.1, 0)
+                      slider('Delay', 'echo_delay', 0, 2, 0.1, 0) +
+                      slider('Feedback', 'echo_feedback', 0, 1, 0.1, 0)
                    )
                  )
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('FILTER', colspan=2)) +
-                      slider('Freq', 'filter_freq', 0, 1000, 10, 0) +
+                      slider('Freq', 'filter_freq', 0, 10000, 10, 0) +
                       slider('Q', 'filter_q', 0, 60, 0.1, 0)
+                   )
+                 )
+
+controls_row <= html.TD(html.TABLE(
+                      html.TR(html.TD('LFO') +
+                              html.TD(lfo_on := html.INPUT(type="checkbox"))
+                              ) +
+                      slider('Freq', 'lfo_freq', 0, 20, 0.1, 0)
                    )
                  )
 
@@ -336,6 +367,7 @@ record_play <= html.BUTTON('&#x23f8;', id='stop_play_record', Class='record_play
 
 record_seq = []
 last_hit = {}
+instances = {}
 
 @bind(record, 'click')
 def click_record(ev):
@@ -344,7 +376,7 @@ def click_record(ev):
         record_seq.clear()
     else:
         ev.target.value = "off"
-        print('recorded', record_seq)
+
 
 @bind(play_record, 'click')
 def play_record(ev):
@@ -404,33 +436,54 @@ def unhighlight(elt):
 
 config = {}
 
+value_setters = {
+    'echo_delay': 'delayTime',
+    'echo_feedback': 'gain',
+    'filter_freq': 'frequency',
+    'filter_q': 'Q',
+    'volume': 'gain'
+}
+
 def play(octave, note):
     global audioContext
 
     freq = music.note_freqs[octave][note]
 
-    delayTime = float(controls['delay'].value)
-    feedback = float(controls['feedback'].value)
+    delayTime = float(controls['echo_delay'].value)
+    feedback = float(controls['echo_feedback'].value)
     filter_freq = int(controls['filter_freq'].value)
     filter_q = float(controls['filter_q'].value)
 
     if audioContext is None:
         audioContext = synthesizer.make_context()
-        echo = config['echo'] = window.DelayNode.new(audioContext)
-        echo_feedback = config['feedback'] = window.GainNode.new(audioContext)
-        echo.connect(echo_feedback)
-        echo_feedback.connect(echo)
+        echo_delay = instances['echo_delay'] = window.DelayNode.new(audioContext)
+        echo_feedback = instances['echo_feedback'] = window.GainNode.new(audioContext)
+        echo_delay.connect(echo_feedback)
+        echo_feedback.connect(echo_delay)
 
         filter_node = config['filter'] = window.BiquadFilterNode.new(audioContext)
         filter_node.type = 'lowpass'
+        instances['filter_freq'] = filter_node
+        instances['filter_q'] = filter_node
         filter_node.frequency.value = filter_freq
         filter_node.Q.value = filter_q
+
+        lfo = config['lfo'] = window.OscillatorNode.new(audioContext)
+        lfo.type = 'sine'
+        lfo.start()
+
+        instances['volume'] = {}
     else:
-        echo = config['echo']
-        echo_feedback = config['feedback']
+        echo_delay = instances['echo_delay']
+        echo_feedback = instances['echo_feedback']
         filter_node = config['filter']
+        lfo = config['lfo']
+
+    lfo.frequency.value = float(controls['lfo_freq'].value)
 
     volume = window.GainNode.new(audioContext)
+    if lfo_on.checked:
+        lfo.connect(volume.gain)
     width = float(controls['width'].value)
     wave_type = document.select_one('button[class="waveform selected"]').value
 
@@ -459,9 +512,9 @@ def play(octave, note):
         next_node = audioContext.destination
 
     if delayTime or feedback:
-        volume.connect(config['echo'])
-        echo.connect(next_node)
-        echo.delayTime.value = delayTime
+        volume.connect(instances['echo_delay'])
+        echo_delay.connect(next_node)
+        echo_delay.delayTime.value = delayTime
         echo_feedback.gain.value = feedback
 
     volume.connect(next_node)
@@ -527,7 +580,9 @@ def notePressed(event):
 
     playing[key] = []
     for k in key_list:
-        playing[key].append(play(octave, note))
+        osc_list, volume = play(octave, note)
+        playing[key].append((osc_list, volume))
+    instances['volume'][key] = volume
 
     if record.value == "on":
         last_hit[key] = len(record_seq)
@@ -589,6 +644,7 @@ def noteReleased(event):
     if record.value == "on":
         record_seq[last_hit[key]].append(audioContext.currentTime)
     del playing[key]
+    del instances['volume'][key]
 
 def setup():
     base = tones.select_one('button[class*="selected"]').value
