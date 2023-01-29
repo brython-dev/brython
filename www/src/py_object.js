@@ -302,7 +302,11 @@ object.__getattribute__ = function(obj, attr){
                 }else{
                     var self = res.__class__ === $B.method ? klass : obj,
                         method = function(){
-                            return res.bind(null, self).apply(this, arguments)
+                            var args = [self] // add self as first argument
+                            for(var i = 0, len = arguments.length; i < len; i++){
+                                args.push(arguments[i])
+                            }
+                            return res.apply(this, args)
                         }
                     method.__class__ = $B.method
                     method.__get__ = function(obj, cls){
