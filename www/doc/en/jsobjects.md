@@ -112,7 +112,7 @@ and if it is called from a Brython script by
 window.foo(y=0, x=1)
 ```
 
-passing the arguments in the excepted order is not possible, because the
+passing the arguments in the expected order is not possible, because the
 Brython script doesn't know the signature of the Javascript function.
 
 
@@ -173,7 +173,7 @@ jq.ajax('/cgi-bin/post_test.py',
 )
 
 # add an option to a SELECT box
-jq('#sel').append('<option>three')
+jq('#sel').append('<' + 'option>three')
 
 # access element attributes
 assert jq('#c').attr('id') == 'c'

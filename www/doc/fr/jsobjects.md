@@ -177,7 +177,7 @@ jq.ajax('/cgi-bin/post_test.py',
 )
 
 # ajouter une option à un menu déroulant SELECT
-jq('#sel').append('<option>three')
+jq('#sel').append('<' + 'option>three')
 
 # accéder aux attributs d'un élément
 assert jq('#c').attr('id') == 'c'

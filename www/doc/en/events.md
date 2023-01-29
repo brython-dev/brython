@@ -286,19 +286,25 @@ document["disabled_cbox"].bind("click",_cancel)
 
 <blockquote>
 ```exec_on_load
-from browser import document, alert
+from browser import document, bind, alert
 from browser.widgets.dialog import InfoDialog
 
+def info(element):
+    InfoDialog('Event', 
+               element.id,
+               top=element.scrolled_top,
+               remove_after=2)
+
 def show(ev):
-    InfoDialog("Events", f"click on %s" %ev.currentTarget.id)
+    info(ev.currentTarget)
 
 def show_stop(ev):
-    InfoDialog("Events", f"clic on %s" %ev.currentTarget.id)
+    info(ev.currentTarget)
     ev.stopPropagation()
 
-document["yellow"].bind("click",show)
-document["blue"].bind("click",show)
-document["green"].bind("click",show_stop)
+document["yellow"].bind("click", show)
+document["blue"].bind("click", show)
+document["green"].bind("click", show_stop)
 ```
 </blockquote>
 
