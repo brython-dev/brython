@@ -82,10 +82,10 @@ jsDelivr supports version ranges, so if you want the latest of the
 
 ```html
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.10/brython.min.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.11/brython.min.js">
 </script>
 <script type="text/javascript"
-    src="https://cdn.jsdelivr.net/npm/brython@3.10/brython_stdlib.js">
+    src="https://cdn.jsdelivr.net/npm/brython@3.11/brython_stdlib.js">
 </script>
 ```
 
@@ -152,12 +152,8 @@ Documentation
 You can start by reading the official [Brython tutorial](https://brython.info/static_tutorial/en/index.html).
 
 Full documentation is available on the [official site](http://www.brython.info "Brython Homepage").
-You can read the docs in [English](http://brython.info/static_doc/en/intro.html),
-[French](http://brython.info/static_doc/fr/intro.html) and
-[Spanish](http://brython.info/static_doc/es/intro.html).
-
-The most updated docs usually are the English and French versions so if you
-want to be up-to-date, please, use these versions.
+You can read the docs in [English](http://brython.info/static_doc/en/intro.html) and
+[French](http://brython.info/static_doc/fr/intro.html).
 
 Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/How%20Brython%20works) ?
 
