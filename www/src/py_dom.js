@@ -991,12 +991,12 @@ DOMNode.__setattr__ = function(self, attr, value){
             case "top":
             case "width":
             case "height":
-                if(_b_.isinstance(value, _b_.int) && self.nodeType == 1){
+                if(_b_.isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
                     self.style[attr] = value + "px"
                     return _b_.None
                 }else{
                     throw _b_.ValueError.$factory(attr + " value should be" +
-                        " an integer, not " + $B.class_name(value))
+                        " an integer or float, not " + $B.class_name(value))
                 }
                 break
         }
