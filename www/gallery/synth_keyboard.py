@@ -290,14 +290,14 @@ def play(octave, note, time=None):
 
     lfo = window.OscillatorNode.new(audioContext)
     lfo.type = 'sine'
-    lfo.frequency.value = float(controls['lfo_freq'].value)
+    lfo.frequency.value = get_value('lfo_freq')
     lfo_gain = window.GainNode.new(audioContext)
-    lfo_gain.gain.value = float(controls['lfo_ampl'].value)
+    lfo_gain.gain.value = get_value('lfo_ampl')
     lfo.connect(lfo_gain)
     lfo_gain.connect(volume.gain)
     lfo.start()
 
-    width = float(controls['width'].value)
+    width = get_value('width')
     wave_type = document.select_one('button[class="waveform selected"]').value
 
     osc = window.OscillatorNode.new(audioContext)
@@ -414,7 +414,7 @@ def notePressed(event):
 def end_note(octave, note):
     osc_list = oscList[octave][note]
     volume = config['volume']
-    release = float(controls['release'].value)
+    release = get_value('release')
     t0 = audioContext.currentTime
     volume.gain.setTargetAtTime(0, t0, release)
     for osc in osc_list:
@@ -424,7 +424,7 @@ def end_note(octave, note):
         record.notes[(octave, note)][-1].append(audioContext.currentTime)
 
 def end_oscillators(sound, time=None):
-    release = float(controls['release'].value)
+    release = get_value('release')
     release = max(release, 0.05) # avoids a click if release = 0
     t0 = audioContext.currentTime if time is None else time
     sound.volume.gain.setTargetAtTime(0, t0, release)
