@@ -8,8 +8,6 @@ import synthesizer
 
 audioContext = None
 
-oscList = []
-
 controls_row = document['controls_row']
 
 controls = {}
@@ -26,23 +24,6 @@ def slider(legend, name, min_value, max_value, step, value):
     @bind(control, 'input')
     def change_control(ev):
         info.text = ev.target.value
-        if not name in instances:
-            return
-        if name == "volume":
-           for node in instances[name].values():
-               node.gain.setTargetAtTime(float(ev.target.value),
-                                        audioContext.currentTime,
-                                        0.05)
-        else:
-           node = instances[name]
-           attr = value_setters[name]
-           if attr == 'gain':
-               getattr(node, attr).setTargetAtTime(float(ev.target.value),
-                                    audioContext.currentTime,
-                                    0.05)
-           else:
-               param = getattr(node, attr)
-               param.value = float(ev.target.value)
 
     return html.TR(html.TD(legend) + html.TD(control) + info)
 
@@ -61,8 +42,8 @@ def change_volume(ev):
 
 waveforms = dict(SINE='sine', SQUA='square', SAWT='sawtooth', TRIA='triangle')
 
-wave_buttons = (html.BUTTON(waveform, value=value, Class="waveform")
-                for waveform, value in waveforms.items())
+wave_buttons = [html.BUTTON(waveform, value=value, Class="waveform")
+                for waveform, value in waveforms.items()]
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('WAVEFORM', colspan=2)) +
@@ -70,6 +51,14 @@ controls_row <= html.TD(html.TABLE(
                       slider('WIDTH', 'width', 0, 50, 1, 0)
                     )
                   )
+
+wave_buttons[0].classList.add('selected')
+
+@bind(wave_buttons, 'click')
+def set_waveform(ev):
+    current = document.select_one('button[class="waveform selected"]')
+    current.classList.remove('selected')
+    ev.target.classList.add('selected')
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('ENVELOP', colspan=2)) +
@@ -120,14 +109,6 @@ def change_lfo_ampl(ev):
         lfo_gain.gain.value = float(ev.target.value)
 
 
-keys = [f'Key{c}' for c in 'ZXCVBNM' + 'ASDFGHJ' + 'QWERTYU']
-
-keyboard = document.select_one(".keyboard")
-scaleControl = document.select_one("select[name='scale']")
-octaveControl = document.select_one("select[name='octave']")
-volumeControl = controls['volume']
-
-
 tone_octave = html.DIV(Class="controls")
 document['container'] <= html.TR(html.TD(tone_octave))
 
@@ -149,6 +130,17 @@ def changeTone(ev):
 octaves = html.SPAN('OCTAVE', Class="controls")
 tone_octave <= octaves
 
+for octave in '12345':
+    octaves <= html.BUTTON(octave, value=octave, Class='tone')
+octaves.select('button')[2].classList.add('selected')
+
+@bind(octaves.select('BUTTON'), "click")
+def changeOctave(ev):
+    current = octaves.select_one('button[class*="selected"]')
+    current.classList.remove('selected')
+    ev.target.classList.add('selected')
+    setup()
+    
 record_play = html.DIV(Class="controls")
 document['container'] <= html.TR(html.TD(record_play))
 
@@ -201,16 +193,8 @@ def loop(t0, seq, i):
             return
     timer.set_timeout(loop, schedule_period, t0, seq, i)
 
-for octave in '12345':
-    octaves <= html.BUTTON(octave, value=octave, Class='tone')
-octaves.select('button')[2].classList.add('selected')
 
-@bind(octaves.select('BUTTON'), "click")
-def changeOctave(ev):
-    current = octaves.select_one('button[class*="selected"]')
-    current.classList.remove('selected')
-    ev.target.classList.add('selected')
-    setup()
+keys = [f'Key{c}' for c in 'ZXCVBNM' + 'ASDFGHJ' + 'QWERTYU']
 
 keyElements = []
 
@@ -411,18 +395,6 @@ def notePressed(event):
         record_seq.append([audioContext.currentTime, kcode])
 
 
-def end_note(octave, note):
-    osc_list = oscList[octave][note]
-    volume = config['volume']
-    release = get_value('release')
-    t0 = audioContext.currentTime
-    volume.gain.setTargetAtTime(0, t0, release)
-    for osc in osc_list:
-        osc.stop(t0 + release + 0.05)
-    del oscList[octave][note]
-    if record is not None:
-        record.notes[(octave, note)][-1].append(audioContext.currentTime)
-
 def end_oscillators(sound, time=None):
     release = get_value('release')
     release = max(release, 0.05) # avoids a click if release = 0
@@ -476,6 +448,8 @@ def setup():
     octave = int(octaves.select_one('button[class*="selected"]').value)
     scale = music.create_major_scale(base, octave)[:3 * 7]
 
+    keyboard = document.select_one(".keyboard")
+
     # draw keyboard
     keyboard.clear()
     keyElements.clear()
@@ -490,9 +464,6 @@ def setup():
         octaveElem <= createKey(note, octave, music.note_freqs[octave][note])
         line <= octaveElem
 
-    oscList.clear()
-    for i in range(9):
-        oscList.append({})
 
 setup()
 
@@ -500,61 +471,10 @@ document.bind('keydown', notePressed)
 document.bind('keyup', noteReleased)
 
 
-
-
-def play_one(sequence, index):
-    freq, start, stop, delta = sequence[index]
-    envelop = window.GainNode.new(audioContext)
-    gain_value = float(volumeControl.value)
-    envelop.gain.value = gain_value
-    attackTime = 0.05
-    releaseTime = 0.035
-
-    osc = audioContext.createOscillator()
-    osc.frequency.value = freq
-    osc.type = wave_type
-    osc.connect(envelop)
-    envelop.connect(audioContext.destination)
-    t0 = audioContext.currentTime
-    envelop.gain.linearRampToValueAtTime(0, t0)
-    envelop.gain.linearRampToValueAtTime(gain_value, t0 + attackTime)
-    osc.start(t0)
-    envelop.gain.linearRampToValueAtTime(0, t0 + stop - start)
-    osc.stop(t0 + stop)
-    index += 1
-    if index < len(sequence):
-        delta = sequence[index][3]
-        timer.set_timeout(play_one, delta, sequence, index)
-
 class Output:
 
   def write(self, *args):
       document['output'].value += ' '.join(str(arg) for arg in args)
 
 
-wave_buttons = document.select('button[class="waveform"]')
-wave_buttons[0].classList.add('selected')
 
-@bind(wave_buttons, 'click')
-def set_waveform(ev):
-    current = document.select_one('button[class="waveform selected"]')
-    current.classList.remove('selected')
-    ev.target.classList.add('selected')
-
-
-@bind('#playrec', 'click')
-def playrec(ev):
-    sound = play(3, 'F', False)
-    t0 = audioContext.currentTime
-    seq = [[0.2, (3, 'C')], [0.8, (3, 'D')], [1.6, (3, 'E')]]
-    loop(t0, seq, 0)
-
-    """
-    release = get_value('release')
-    sound.volume.gain.value = v = get_value('volume')
-    sound.volume.gain.setValueAtTime(0, t0)
-    sound.volume.gain.setTargetAtTime(v, t0, get_value('attack'))
-    sound.volume.gain.setTargetAtTime(0, t0 + 1, release)
-    for osc in sound.osc_list:
-        osc.start(t0)
-        osc.stop(t0 + 1 + release + 0.5)"""
