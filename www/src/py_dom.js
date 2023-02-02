@@ -613,9 +613,16 @@ DOMNode.__getattribute__ = function(self, attr){
             var computed = window.getComputedStyle(self).
                                   getPropertyValue(attr)
             if(computed !== undefined){
+                if(computed == ''){
+                    if(self.style[attr] !== undefined){
+                        return parseInt(self.style[attr])
+                    }else{
+                        return 0
+                    }
+                }
                 var prop = Math.floor(parseFloat(computed) + 0.5)
-                return isNaN(prop) ? computed : prop
-            } else if(self.style[attr]){
+                return isNaN(prop) ? 0 : prop
+            }else if(self.style[attr]){
                 return parseInt(self.style[attr])
             }else{
                 throw _b_.AttributeError.$factory("style." + attr +
