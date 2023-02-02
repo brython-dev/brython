@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-01-30 12:57:27.452467"
-__BRYTHON__.timestamp=1675079847452
+__BRYTHON__.compiled_date="2023-02-02 09:14:44.499850"
+__BRYTHON__.timestamp=1675325684499
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8015,9 +8015,12 @@ if(position &&(
 (position[1]!=position[0]||
 (position[2]-position[1])!=line.trim().length ||
 position[3]))){var indent=line.length-line.trimLeft().length
-trace_line+='    '+' '.repeat((position[0]-indent))+
-'~'.repeat(position[1]-position[0])+
-'^'.repeat(position[2]-position[1])
+var paddings=[position[0]-indent,position[1]-position[0],position[2]-position[1]]
+for(var padding in paddings){if(padding < 0){console.log('wrong values, position',position,'indent',indent)
+paddings[paddings.indexOf(padding)]=0}}
+trace_line+='    '+' '.repeat(padding[0])+
+'~'.repeat(padding[1])+
+'^'.repeat(padding[2])
 if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
 trace.push(trace_line)}}}else{console.log('no src for filename',filename)
 console.log('in file_cache',Object.keys($B.file_cache).join('\n'))}}
@@ -13584,8 +13587,9 @@ if(self.tagName=="CANVAS" && self[attr]){return self[attr]}
 if(self instanceof SVGElement){return self[attr].baseVal.value}
 var computed=window.getComputedStyle(self).
 getPropertyValue(attr)
-if(computed !==undefined){var prop=Math.floor(parseFloat(computed)+0.5)
-return isNaN(prop)? computed :prop}else if(self.style[attr]){return parseInt(self.style[attr])}else{throw _b_.AttributeError.$factory("style."+attr+
+if(computed !==undefined){if(computed==''){if(self.style[attr]!==undefined){return parseInt(self.style[attr])}else{return 0}}
+var prop=Math.floor(parseFloat(computed)+0.5)
+return isNaN(prop)? 0 :prop}else if(self.style[attr]){return parseInt(self.style[attr])}else{throw _b_.AttributeError.$factory("style."+attr+
 " is not set for "+_b_.str.$factory(self))}
 case "x":
 case "y":

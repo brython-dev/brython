@@ -143,6 +143,8 @@ class _version_info:
         return _s % (self.major, self.minor, self.micro,
                      self.releaselevel, self.serial)
 
+    __repr__ = __str__
+
     def __eq__(self, other):
         if isinstance(other, tuple):
            return (self.major, self.minor, self.micro) == other
@@ -182,7 +184,7 @@ class _version_info:
 
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
 version_info = _version_info(__BRYTHON__.version_info)
-
+print('version info', version_info)
 class SimpleNamespace:
 
     def __init__(self, /, **kwargs):
