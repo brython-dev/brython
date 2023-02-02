@@ -1,10 +1,10 @@
 import sys
 
-
 from browser import document, window, html, console, bind, timer, alert
 
 import music
 import synthesizer
+import widgets
 
 audioContext = None
 
@@ -12,24 +12,80 @@ controls_row = document['controls_row']
 
 controls = {}
 
+class Unit:
+    width = window.innerWidth
+    height = window.innerHeight
+
 def get_value(control):
     return float(controls[control].value)
 
 def slider(legend, name, min_value, max_value, step, value):
-    control = html.INPUT(type="range", min=min_value, max=max_value,
-                         step=step, value=value)
+    control = widgets.Slider(100, 15,
+                             min_value=min_value, max_value=max_value,
+                             step=step, value=value)
     controls[name] = control
     info = html.TD(value, Class="control-value")
 
     @bind(control, 'input')
     def change_control(ev):
-        info.text = ev.target.value
+        info.text = f'{float(ev.target.value):.2f}'
 
     return html.TR(html.TD(legend) + html.TD(control) + info)
 
+tone_selector = ((tone_down := html.BUTTON('<')) +
+                  (tone_value := html.DIV(Class="tone")) +
+                  (tone_up := html.BUTTON('>')))
+
+tone_value.text = 'C'
+@bind(tone_down, 'click')
+def tone_down(ev):
+    v = tone_value.text
+    rank = tone_list.index(tone_value.text)
+    rank -= 1
+    tone_value.text = tone_list[rank]
+    setup()
+
+@bind(tone_up, 'click')
+def tone_up(ev):
+    v = tone_value.text
+    rank = tone_list.index(tone_value.text)
+    rank += 1
+    if rank >= len(tone_list):
+        rank -= len(tone_list)
+    tone_value.text = tone_list[rank]
+    setup()
+
+octave_selector = ((octave_down := html.BUTTON('<')) +
+                  (octave_value := html.DIV(Class="tone")) +
+                  (octave_up := html.BUTTON('>')))
+octave_list = '12345'
+
+octave_value.text = '3'
+@bind(octave_down, 'click')
+def tone_down(ev):
+    v = octave_value.text
+    rank = octave_list.index(octave_value.text)
+    if rank == 0:
+        return
+    rank -= 1
+    octave_value.text = octave_list[rank]
+    setup()
+
+@bind(octave_up, 'click')
+def octave_up(ev):
+    v = octave_value.text
+    rank = octave_list.index(octave_value.text)
+    rank += 1
+    if rank >= len(octave_list):
+        return
+    octave_value.text = octave_list[rank]
+    setup()
+
 controls_row <= html.TD(html.TABLE(
-                       html.TR(html.TD('VOLUME', colspan=2)) +
-                       slider('', 'volume', 0, 1, 0.05, 0.5)
+                       html.TR(html.TD('VOLUME') +
+                               slider('', 'volume', 0, 1, 0.05, 0.5)) +
+                       html.TR(html.TD('TONE') + html.TD(tone_selector)) +
+                       html.TR(html.TD('OCTAVE') + html.TD(octave_selector))
                      )
                    )
 
@@ -83,11 +139,13 @@ controls_row <= html.TD(html.TABLE(
 
 @bind(controls['filter_freq'], 'input')
 def change_filter_freq(ev):
-    config['filter'].frequency.value = float(ev.target.value)
+    if 'filter' in config:
+        config['filter'].frequency.value = float(ev.target.value)
 
 @bind(controls['filter_q'], 'input')
 def change_filter_q(ev):
-    config['filter'].Q.value = float(ev.target.value)
+    if 'filter' in config:
+        config['filter'].Q.value = float(ev.target.value)
 
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('LFO') +
@@ -109,62 +167,44 @@ def change_lfo_ampl(ev):
         lfo_gain.gain.value = float(ev.target.value)
 
 
-tone_octave = html.DIV(Class="controls")
-document['container'] <= html.TR(html.TD(tone_octave))
+tone_list = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-tones = html.SPAN('TONE', Class="controls")
-tone_octave <= tones
-
-for tone in ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']:
-    tones <= html.BUTTON(tone, value=tone, Class='tone')
-
-tones.select('button')[0].classList.add('selected')
-
-@bind(tones.select('button'), 'click')
-def changeTone(ev):
-    current = tones.select_one('button[class*="selected"]')
-    current.classList.remove('selected')
-    ev.target.classList.add('selected')
-    setup()
-
-octaves = html.SPAN('OCTAVE', Class="controls")
-tone_octave <= octaves
-
-for octave in '12345':
-    octaves <= html.BUTTON(octave, value=octave, Class='tone')
-octaves.select('button')[2].classList.add('selected')
-
-@bind(octaves.select('BUTTON'), "click")
-def changeOctave(ev):
-    current = octaves.select_one('button[class*="selected"]')
-    current.classList.remove('selected')
-    ev.target.classList.add('selected')
-    setup()
-    
 record_play = html.DIV(Class="controls")
 document['container'] <= html.TR(html.TD(record_play))
 
 
 # https://en.wikipedia.org/wiki/Media_control_symbols
-record_play <= record:= html.BUTTON('&#x23fa;', value="off", id='record')
-record_play <= play_record := html.BUTTON('&#x23f5;', id='play_record', Class='record_play')
-record_play <= html.BUTTON('&#x23f8;', id='stop_play_record', Class='record_play')
+w = Unit.width / 50
+
+class Sequencer:
+
+    recording = False
+    playing = False
+
+rec_start_button = widgets.Disk(w, 'red')
+rec_stop_button = widgets.Square(w, 'black')
+record_play <= rec_start_button
+rec_play_button = widgets.Play(w, 'black')
+record_play <= rec_play_button
+rec_pause_button = widgets.Pause(w, 'black')
+record_play <= rec_pause_button
 
 record_seq = []
 last_hit = {}
-instances = {}
 
-@bind(record, 'click')
-def click_record(ev):
-    if ev.target.value == "off":
-        ev.target.value = "on"
-        record_seq.clear()
-    else:
-        ev.target.value = "off"
+@bind(rec_start_button, 'click')
+def rec_start(ev):
+    record_play.replaceChild(rec_stop_button, rec_start_button)
+    Sequencer.recording = True
+    record_seq.clear()
 
+@bind(rec_stop_button, 'click')
+def rec_stop(ev):
+    record_play.replaceChild(rec_start_button, rec_stop_button)
+    Sequencer.recording = False
 
-@bind(play_record, 'click')
-def play_record(ev):
+@bind(rec_play_button, 'click')
+def rec_play(ev):
     if not record_seq:
         return
     record_seq.sort(key = lambda x: x[0])
@@ -198,6 +238,8 @@ keys = [f'Key{c}' for c in 'ZXCVBNM' + 'ASDFGHJ' + 'QWERTYU']
 
 keyElements = []
 
+key_mapping = {}
+
 def createKey(note, octave, freq):
     keyElement = html.DIV(Class="key")
     keyElement.style.width = f'{int(window.innerWidth / 10)}px'
@@ -207,6 +249,8 @@ def createKey(note, octave, freq):
     keyElement.dataset["octave"] = octave
     keyElement.dataset["note"] = note
     keyElement.dataset["frequency"] = freq
+
+    key_mapping[f'{note}{octave}'] = (octave, note)
 
     labelElement.html = f'{note}<sub>{octave}</sub>'
     keyElement <= labelElement
@@ -245,6 +289,8 @@ class Sound:
 
     pass
 
+instances = {'volume': {}, 'lfo': {}, 'lfo_gain': {}}
+
 def play(octave, note, time=None):
     global audioContext
 
@@ -261,10 +307,6 @@ def play(octave, note, time=None):
         filter_node.type = 'lowpass'
         instances['filter_freq'] = filter_node
         instances['filter_q'] = filter_node
-
-        instances['volume'] = {}
-        instances['lfo'] = {}
-        instances['lfo_gain'] = {}
     else:
         echo_delay = instances['echo_delay']
         echo_feedback = instances['echo_feedback']
@@ -342,11 +384,11 @@ def check_record_start(octave, note, key=None):
         record.notes[(octave, note)].append([audioContext.currentTime])
 
 def note_from_key(key):
-    index = keys.index(key)
+    """index = keys.index(key)
     keyElement = keyElements[index]
     octave = int(keyElement.dataset['octave'])
-    note = keyElement.dataset['note']
-    return octave, note
+    note = keyElement.dataset['note']"""
+    return key_mapping[key] #octave, note
 
 def notePressed(event):
 
@@ -390,7 +432,7 @@ def notePressed(event):
     instances['lfo'][kcode] = sound.lfo
     instances['lfo_gain'][kcode] = sound.lfo_gain
 
-    if record.value == "on":
+    if Sequencer.recording:
         last_hit[kcode] = len(record_seq)
         record_seq.append([audioContext.currentTime, kcode])
 
@@ -438,14 +480,14 @@ def noteReleased(event):
     for p in playing[kcode]:
         end_oscillators(p)
 
-    if record.value == "on":
+    if Sequencer.recording:
         record_seq[last_hit[kcode]].append(audioContext.currentTime)
     del playing[kcode]
     del instances['volume'][kcode]
 
 def setup():
-    base = tones.select_one('button[class*="selected"]').value
-    octave = int(octaves.select_one('button[class*="selected"]').value)
+    base = tone_value.text
+    octave = int(octave_value.text)
     scale = music.create_major_scale(base, octave)[:3 * 7]
 
     keyboard = document.select_one(".keyboard")
@@ -463,7 +505,7 @@ def setup():
         octaveElem = html.DIV(Class="octave")
         octaveElem <= createKey(note, octave, music.note_freqs[octave][note])
         line <= octaveElem
-
+        key_mapping[keys[i]] = octave, note
 
 setup()
 
