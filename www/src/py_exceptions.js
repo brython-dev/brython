@@ -904,9 +904,18 @@ function trace_from_stack(err){
                             (position[2] - position[1]) != line.trim().length ||
                             position[3]))){
                     var indent = line.length - line.trimLeft().length
-                    trace_line += '    ' + ' '.repeat((position[0] - indent)) +
-                        '~'.repeat(position[1] - position[0]) +
-                        '^'.repeat(position[2] - position[1])
+                    var paddings = [position[0] - indent,
+                                    position[1] - position[0],
+                                    position[2] - position[1]]
+                    for(var padding in paddings){
+                        if(padding < 0){
+                            console.log('wrong values, position', position, 'indent', indent)
+                            paddings[paddings.indexOf(padding)] = 0
+                        }
+                    }
+                    trace_line += '    ' + ' '.repeat(padding[0]) +
+                        '~'.repeat(padding[1]) +
+                        '^'.repeat(padding[2])
                     if(position[3] !== undefined){
                         trace_line += '~'.repeat(position[3] - position[2])
                     }
