@@ -2091,16 +2091,18 @@ var ord = _b_.ord = function(c){
     if(typeof c.valueOf() == 'string'){
         if(c.length == 1){
             return c.charCodeAt(0)
+        }else if(c.length == 2){
+            var code = c.codePointAt(0)
+            if((code > 0x10000 && code <= 0x1FFFF) ||
+                    (code >= 0x20000 && code <= 0x2FFFF) ||
+                    (code >= 0x30000 && code <= 0x3FFFF) ||
+                    (code >= 0xD0000 && code <= 0xDFFFF) ||
+                    (code >= 0xE0000 && code <= 0xFFFFF)){
+                return code
+            }
         }
-        if((0xD800 <= c[0] && c[0] <= 0xDBFF) ||
-                (0xDC00 <= c[1] && c[1] <= 0xDFFF)){
-            throw _b_.TypeError.$factory('ord() expected a character, but ' +
-                'string of length ' + c.length + ' found')
-        }
-        var code = 0x10000
-        code += (c.charCodeAt(0) & 0x03FF) << 10
-        code += (c.charCodeAt(1) & 0x03FF)
-        return code
+        throw _b_.TypeError.$factory('ord() expected a character, but ' +
+            'string of length ' + c.length + ' found')
     }
     switch($B.get_class(c)){
       case _b_.str:

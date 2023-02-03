@@ -479,4 +479,7 @@ assert '\uffff'.encode('utf-8') == b'\xef\xbf\xbf'
 # issue 2154
 assert 'abcdef'[3:1] == ''
 
+# issue 2155
+assert_raises(TypeError, ord, 'ab')
+
 print("passed all tests...")

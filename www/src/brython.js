@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-02 09:14:44.499850"
-__BRYTHON__.timestamp=1675325684499
+__BRYTHON__.compiled_date="2023-02-03 09:01:39.812346"
+__BRYTHON__.timestamp=1675411299812
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6889,14 +6889,14 @@ var NotImplemented=_b_.NotImplemented={__class__:NotImplementedType}
 var oct=_b_.oct=function(obj){check_nb_args_no_kw('oct',1,arguments)
 return bin_hex_oct(8,obj)}
 var ord=_b_.ord=function(c){check_nb_args_no_kw('ord',1,arguments)
-if(typeof c.valueOf()=='string'){if(c.length==1){return c.charCodeAt(0)}
-if((0xD800 <=c[0]&& c[0]<=0xDBFF)||
-(0xDC00 <=c[1]&& c[1]<=0xDFFF)){throw _b_.TypeError.$factory('ord() expected a character, but '+
+if(typeof c.valueOf()=='string'){if(c.length==1){return c.charCodeAt(0)}else if(c.length==2){var code=c.codePointAt(0)
+if((code > 0x10000 && code <=0x1FFFF)||
+(code >=0x20000 && code <=0x2FFFF)||
+(code >=0x30000 && code <=0x3FFFF)||
+(code >=0xD0000 && code <=0xDFFFF)||
+(code >=0xE0000 && code <=0xFFFFF)){return code}}
+throw _b_.TypeError.$factory('ord() expected a character, but '+
 'string of length '+c.length+' found')}
-var code=0x10000
-code+=(c.charCodeAt(0)& 0x03FF)<< 10
-code+=(c.charCodeAt(1)& 0x03FF)
-return code}
 switch($B.get_class(c)){case _b_.str:
 if(c.length==1){return c.charCodeAt(0)}
 throw _b_.TypeError.$factory('ord() expected a character, but '+
