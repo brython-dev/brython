@@ -107,10 +107,13 @@ dict_view_op = {
 }
 
 var iterator = function*(self, version, keys_length, len){
-    var counter = -1
+    var reverse = self.name == 'dict_reversekeys',
+        counter = reverse ? keys_length : -1,
+        increment = reverse ? -1 : 1,
+        test_stop = reverse ? (x => x < 0) : (x => x >= keys_length)
     while(true){
-        counter++
-        if(counter >= keys_length){
+        counter += increment
+        if(test_stop(counter)){
             break
         }
         var key = self.dict._keys[counter]
@@ -118,7 +121,7 @@ var iterator = function*(self, version, keys_length, len){
             var value = self.dict._values[counter]
             if(self.name == 'dict_items'){
                 yield $B.fast_tuple([key, value])
-            }else if(self.name == 'dict_keys'){
+            }else if(self.name == 'dict_keys' || self.name == 'dict_reversekeys'){
                 yield key
             }else if(self.name == 'dict_values'){
                 yield value
@@ -238,12 +241,16 @@ $B.make_view = function(name){
             items = items.map(x => x[0])
         }else if(klass.__name__ == "dict_values"){
             items = items.map(x => x[1])
+        }else{
+            items = items.map($B.fast_tuple)
         }
         return klass.__name__ + '(' + _b_.repr(items) + ')'
     }
 
     klass.__reversed__ = function(self){
-        var it = klass.$iterator.$factory(self.items.reverse())
+        return klass.__iter__(self)
+        /*
+        var it = klass.iterator.$factory(self.items.reverse())
         it.test_change = function(){
             if(dict.__len__(self.dict) != self.len){
                 return "dictionary changed size during iteration"
@@ -251,6 +258,7 @@ $B.make_view = function(name){
             return false
         }
         return it
+        */
     }
 
     klass.mapping = {
@@ -277,6 +285,7 @@ var mappingproxy_handler = {
 var dict = {
     __class__: _b_.type,
     __mro__: [_b_.object],
+    __qualname__: 'dict',
     $is_class: true,
     $native: true,
     $match_mapping_pattern: true // for pattern matching (PEP 634)
@@ -367,6 +376,31 @@ dict.__class_getitem__ = function(cls, item){
     return $B.GenericAlias.$factory(cls, item)
 }
 
+dict.$lookup_by_key = function(d, key, hash){
+    hash = hash === undefined ? _b_.hash(key) : hash
+    var indices = d.table[hash],
+        index
+    if(indices !== undefined){
+        for(var i = 0, len = indices.length; i < len; i++){
+            index = indices[i]
+            if(d._keys[index] === undefined){
+                d.table[hash].splice(i, 1)
+                if(d.table[hash].length == 0){
+                    delete d.table[hash]
+                    return {found: false, hash}
+                }
+                continue
+            }
+            if($B.is_or_equals(d._keys[index], key)){
+                return {found: true,
+                        key: d._keys[index], value: d._values[index],
+                        hash, rank: i, index}
+            }
+        }
+    }
+    return {found: false, hash}
+}
+
 dict.__contains__ = function(){
     var $ = $B.args("__contains__", 2, {self: null, key: null},
         ["self", "key"], arguments, {}, null, null),
@@ -377,15 +411,7 @@ dict.__contains__ = function(){
         return self.$jsobj[key] !== undefined
     }
 
-    var indices = self.table[_b_.hash(key)]
-    if(indices !== undefined){
-        for(var index of indices){
-            if($B.is_or_equals(key, self._keys[index])){
-                return true
-            }
-        }
-    }
-    return false
+    return dict.$lookup_by_key(self, key).found
 }
 
 dict.__delitem__ = function(){
@@ -403,24 +429,17 @@ dict.__delitem__ = function(){
         return $N
     }
 
-    var h = _b_.hash(key),
-        indices = self.table[h]
-    if(indices !== undefined){
-        for(var i = 0, len = indices.length; i < len; i++){
-            var index = indices[i]
-            if($B.is_or_equals(key, self._keys[index])){
-                self.table[h].splice(i, 1)
-                if(self.table[h].length == 0){
-                    delete self.table[h]
-                }
-                delete self._values[index]
-                delete self._keys[index]
-                self.$version++
-                return _b_.None
-            }
+    var lookup = dict.$lookup_by_key(self, key)
+    if(lookup.found){
+        self.table[lookup.hash].splice(lookup.rank, 1)
+        if(self.table[lookup.hash].length == 0){
+            delete self.table[lookup.hash]
         }
+        delete self._values[lookup.index]
+        delete self._keys[lookup.index]
+        self.$version++
+        return _b_.None
     }
-
     throw _b_.KeyError.$factory(_b_.str.$factory(key))
 }
 
@@ -548,15 +567,9 @@ dict.$getitem = function(self, key, ignore_missing){
         return self.$jsobj[key]
     }
 
-    var index,
-        hash = _b_.hash(key)
-
-    if(self.table[hash] !== undefined){
-        for(var index of self.table[hash]){
-            if($B.is_or_equals(key, self._keys[index])){
-                return self._values[index]
-            }
-        }
+    var lookup = dict.$lookup_by_key(self, key)
+    if(lookup.found){
+        return lookup.value
     }
 
     if(! ignore_missing){
@@ -629,8 +642,6 @@ dict.__init__ = function(self, first, second){
             for(var item of dict.$iter_items(args)){
                 dict.$setitem(self, item[0], item[1])
             }
-        }else if(_b_.isinstance(args, dict)){
-            $copy_dict(self, args)
         }else{
             var keys = $B.$getattr(args, "keys", null)
             if(keys !== null){
@@ -765,38 +776,11 @@ dict.__repr__ = function(self){
     return "{" + res.join(", ") + "}"
 }
 
-var dict_reversekeyiterator = $B.make_class("dict_reversekeyiterator",
-    function(keys){
-        return {
-            __class__: dict_reversekeyiterator,
-            keys,
-            counter: -1,
-            length: keys.length
-        }
-    }
-)
-
-dict_reversekeyiterator.__iter__ = function(self){
-    return self
-}
-
-dict_reversekeyiterator.__next__ = function(self){
-    self.counter++
-    if(self.counter >= self.length){
-        throw _b_.StopIteration.$factory('StopIteration')
-    }
-    return self._keys[self.counter]
-}
-
-dict_reversekeyiterator.__reduce_ex__ = function(self, protocol){
-    return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self._keys])])
-}
-$B.set_func_names(dict_reversekeyiterator, "builtins")
+dict_reversekeyiterator = $B.make_view("dict_reversekeys")
 
 dict.__reversed__ = function(self){
-    var keys = _b_.list.$factory(dict._keys(self))
-    keys.reverse()
-    return dict_reversekeyiterator.$factory(keys)
+    return dict_reversekeyiterator.__iter__(
+        dict_reversekeyiterator.$factory(self))
 }
 
 dict.__ror__ = function(self, other){
@@ -842,6 +826,7 @@ dict.$setitem = function(self, key, value, $hash){
     if(key instanceof String){
         key = key.valueOf()
     }
+
     var hash = $hash !== undefined ? $hash : $B.$hash(key)
     var index
 
@@ -851,14 +836,20 @@ dict.$setitem = function(self, key, value, $hash){
         self._keys.push(key)
         self._values.push(value)
     }else{
-        for(var index of self.table[hash]){
-            if($B.is_or_equals(key, self._keys[index])){
-                self._values[index] = value
+        if($hash === undefined){
+            var lookup = dict.$lookup_by_key(self, key, hash)
+            if(lookup.found){
+                self._values[lookup.index] = value
                 return _b_.None
             }
         }
         index = self._keys.length
-        self.table[hash].push(index)
+        if(self.table[hash] === undefined){
+            // dict.$lookup_by_key might have removed self.table[hash]
+            self.table[hash] = [index]
+        }else{
+            self.table[hash].push(index)
+        }
         self._keys.push(key)
         self._values.push(value)
         self.$version++
@@ -897,7 +888,14 @@ dict.copy = function(self){
         null, null),
         self = $.self,
         res = $B.empty_dict()
-    $copy_dict(res, self)
+    if(self.__class__ === _b_.dict){
+        $copy_dict(res, self)
+        return res
+    }
+    var it = $B.make_js_iterator(self)
+    for(var k of it){
+        console.log('iteration yields key', k)
+    }
     return res
 }
 
@@ -909,10 +907,11 @@ dict.fromkeys = function(){
         value = $.value
 
     // class method
-    var klass = $.cls,
-        res = $B.$call(klass)(),
+    var cls = $.cls,
+        res = $B.$call(cls)(),
+        klass = $B.get_class(res), // might not be cls
         keys_iter = $B.$iter(keys),
-        setitem = klass === dict ? dict.$setitem : $B.$getattr(res, '__setitem__')
+        setitem = klass === dict ? dict.$setitem : $B.$getattr(klass, '__setitem__')
 
     while(1){
         try{
@@ -983,33 +982,31 @@ dict.popitem = function(self){
     var index = self._keys.length - 1
     while(index >= 0){
         if(self._keys[index] !== undefined){
-            return $B.fast_tuple([self._keys[index], self._values[index]])
+            var res = $B.fast_tuple([self._keys[index], self._values[index]])
+            delete self._keys[index]
+            delete self._values[index]
+            self.$version++
+            return res
         }
+        index--
     }
     throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
 }
 
 dict.setdefault = function(){
-
     var $ = $B.args("setdefault", 3, {self: null, key: null, _default: null},
             ["self", "key", "_default"], arguments, {_default: $N}, null, null),
         self = $.self,
         key = $.key,
         _default = $._default
-    try{
-        // Pass 3rd argument to dict.$getitem to avoid using __missing__
-        // Cf. issue #1598
-        return dict.$getitem(self, key, true)
-    }catch(err){
-        if(err.__class__ !== _b_.KeyError){
-            throw err
-        }
-        if(_default === undefined){_default = $N}
-        var hash = key.$hash
-        key.$hash = undefined
-        dict.$setitem(self, key, _default, hash)
-        return _default
+    var lookup = dict.$lookup_by_key(self, key)
+    if(lookup.found){
+        return lookup.value
     }
+    _default = _default === undefined ? _b_.None : _default
+    var hash = lookup.hash
+    dict.$setitem(self, key, _default, hash)
+    return _default
 }
 
 $B.nb_updates = 0
