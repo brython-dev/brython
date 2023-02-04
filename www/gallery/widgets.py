@@ -1,4 +1,4 @@
-from browser import bind, document, html, window, svg
+from browser import document, html, window, svg
 
 track_style = dict(
     position='relative',
@@ -77,92 +77,57 @@ class Slider(html.DIV):
       document.unbind('mouseup', self.mouseup)
       document.unbind('mousemove', self.mousemove)
 
-class _Widget:
-
-    @property
-    def color(self):
-        return self.element.attrs['fill']
-
-    @color.setter
-    def color(self, value):
-        self.element.attrs['fill'] = value
-
-    @property
-    def size(self):
-        if isinstance(self, Square):
-            return self.element.attrs['width']
-        elif isinstance(self, Disk):
-            return self.element.attrs['r']
-
-    @size.setter
-    def size(self, value):
-        if isinstance(self, Square):
-            self.element.attrs['width'] = self.element.attrs['height'] = value
-        elif isinstance(self, Disk):
-            print('set disk size', value, self.element)
-            self.attrs['width'] = value
-            self.attrs['height'] = value
-            self.element.attrs['r'] = f'calc({value} / 2)'
-            self.element.attrs['cx'] = f'calc({value} / 2)'
-            self.element.attrs['cx'] = f'calc({value} / 2)'
-            print('after change', self.element)
-
-class Square(svg.svg, _Widget):
+class Svg(svg.svg):
 
     def __init__(self, side, color="#000", bg="#fff"):
         svg.svg.__init__(self, width=side, height=side)
         self.style.backgroundColor = bg
+        self.style.borderColor = '#f00'
+        self.style.borderWidth = '2px'
+        self.style.borderRadius = '5px'
+        self.g = svg.g()
+        self <= self.g
+
+class Square(Svg):
+
+    def __init__(self, side, color, **kw):
+        super().__init__(side, **kw)
         a = 0.1 * side
         b = 0.9 * side
-        g = svg.g()
-        self <= g
-        self.element = svg.rect(x=a, y=a,
-                                width=b - a, height=b - a,
-                                fill=color)
-        g <= self.element
+        self.g <= svg.rect(x=a, y=a,
+                           width=b - a, height=b - a,
+                           fill=color)
 
-class Disk(svg.svg, _Widget):
 
-    def __init__(self, side, color="#000", bg="#fff"):
-        svg.svg.__init__(self, width=side, height=side)
-        self.style.backgroundColor = bg
-        g = svg.g()
-        self <= g
+class Disk(Svg):
+
+    def __init__(self, side, color, **kw):
+        super().__init__(side, **kw)
+
         r = 0.9 * side // 2
 
-        self.element = svg.circle(cx=side // 2, cy=side // 2, r=r,
-                                  fill=color)
-        g <= self.element
+        self.g <= svg.circle(cx=side // 2, cy=side // 2, r=r,
+                             fill=color)
 
-class Play(svg.svg, _Widget):
+class Play(Svg):
 
-    def __init__(self, side, color="#000", bg="#fff"):
-        svg.svg.__init__(self, width=side, height=side)
-        self.style.backgroundColor = bg
-        g = svg.g()
-        self <= g
+    def __init__(self, side, color, **kw):
+        super().__init__(side, **kw)
+
         a = 0.1 * side
         b = 0.9 * side
         points = f'{a},{a} {b},{side // 2} {a},{b} {a},{a}'
+        self.g <= svg.polygon(points=points, fill=color)
 
-        self.element = svg.polygon(points=points, fill=color)
-        g <= self.element
+class Pause(Svg):
 
-class Pause(svg.svg, _Widget):
+    def __init__(self, side, color, **kw):
+        super().__init__(side, **kw)
+        stroke_width = side // 6
+        bar1 = f'{side // 3},{side // 4} {side // 3},{3 * side // 4}'
+        bar2 = f'{2 * side // 3},{side // 4} {2 * side // 3},{3 * side // 4}'
 
-    def __init__(self, size, color="#000", bg="#fff"):
-        svg.svg.__init__(self, width=size, height=size,
-                         style=f"background-color:{bg}")
-        g = svg.g()
-        self <= g
-        stroke_width = size // 6
-        bar1 = f'{size // 3},{size // 4} {size // 3},{3 * size // 4}'
-        bar2 = f'{2 * size // 3},{size // 4} {2 * size // 3},{3 * size // 4}'
+        for bar in (bar1, bar2):
+            self.g <= svg.polygon(points=bar, stroke=color,
+                                  stroke_width=stroke_width)
 
-        self.elements = [
-                svg.polygon(points=bar1, stroke=color, stroke_width=stroke_width),
-                svg.polygon(points=bar2, stroke=color, stroke_width=stroke_width)
-            ]
-
-        g <= self.elements[0]
-        g <= self.elements[1]

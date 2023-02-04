@@ -32,9 +32,9 @@ def slider(legend, name, min_value, max_value, step, value):
 
     return html.TR(html.TD(legend) + html.TD(control) + info)
 
-tone_selector = ((tone_down := html.BUTTON('<')) +
-                  (tone_value := html.DIV(Class="tone")) +
-                  (tone_up := html.BUTTON('>')))
+tone_selector = ((tone_down := html.BUTTON('-')) +
+                 (tone_value := html.DIV(Class="tone")) +
+                 (tone_up := html.BUTTON('+')))
 
 tone_value.text = 'C'
 @bind(tone_down, 'click')
@@ -119,6 +119,8 @@ def set_waveform(ev):
 controls_row <= html.TD(html.TABLE(
                       html.TR(html.TD('ENVELOP', colspan=2)) +
                       slider('Attack', 'attack', 0, 2, 0.1, 0.2) +
+                      slider('Decay', 'decay', 0, 2, 0.1, 0.2) +
+                      slider('Sustain', 'sustain', 0, 1, 0.1, 1) +
                       slider('Release', 'release', 0, 2, 0.1, 0.2)
                    )
                  )
@@ -185,8 +187,10 @@ rec_start_button = widgets.Disk(w, 'red')
 rec_stop_button = widgets.Square(w, 'black')
 record_play <= rec_start_button
 rec_play_button = widgets.Play(w, 'black')
+rec_play_button.style.marginLeft = '1em'
 record_play <= rec_play_button
 rec_pause_button = widgets.Pause(w, 'black')
+rec_pause_button.style.marginLeft = '0.2em'
 record_play <= rec_pause_button
 
 record_seq = []
@@ -362,6 +366,11 @@ def play(octave, note, time=None):
     t0 = audioContext.currentTime if time is None else time
     volume.gain.setValueAtTime(0, t0)
     volume.gain.setTargetAtTime(v, t0, get_value('attack'))
+    sustain = get_value('volume') * get_value('sustain')
+    volume.gain.setTargetAtTime(sustain,
+                                t0 + get_value('attack'),
+                                get_value('decay'))
+
     for osc in osc_list:
         osc.start(t0)
 
@@ -441,6 +450,7 @@ def end_oscillators(sound, time=None):
     release = get_value('release')
     release = max(release, 0.05) # avoids a click if release = 0
     t0 = audioContext.currentTime if time is None else time
+    sound.volume.gain.cancelScheduledValues(t0)
     sound.volume.gain.setTargetAtTime(0, t0, release)
     if sound.lfo_gain is not None:
         sound.lfo_gain.gain.setTargetAtTime(0, t0, release)
