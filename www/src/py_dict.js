@@ -334,8 +334,12 @@ dict.$iter_with_hash = function*(d){
     }else{
         for(var hash in d.table){
             var indices = d.table[hash]
-            for(var index of indices){
-                yield {key: d._keys[index], hash}
+            if(indices !== undefined){
+                for(var index of indices){
+                    if(d._keys[index] !== undefined){
+                        yield {key: d._keys[index], hash}
+                    }
+                }
             }
         }
     }

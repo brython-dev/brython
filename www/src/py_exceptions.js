@@ -361,7 +361,7 @@ $B.freeze = function(err){
 var show_stack = $B.show_stack = function(stack){
     stack = stack || $B.frames_stack
     for(const frame of stack){
-        console.log(frame[0], frame[1].$line_info)
+        console.log(frame[2], frame[0], frame.$lineno)
     }
 }
 

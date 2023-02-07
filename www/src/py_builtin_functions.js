@@ -1853,7 +1853,7 @@ function $extreme(args, op){ // used by min() and max()
             " expected 1 arguments, got 0")
     }else if($.args.length == 1){
         // Only one positional argument : it must be an iterable
-        var $iter = iter($.args[0]),
+        var $iter = $B.make_js_iterator($.args[0]),
             res = null,
             x_value,
             extr_value
