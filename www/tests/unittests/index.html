@@ -18,15 +18,271 @@ td.error_message{
     font-family: courier new;
     padding-left: 1em;
 }
-tr.method, tr.header{
+tr.method td, tr.header th {
     border-style: solid;
     border-color: #888;
     border-width: 1px;
+    font-family: consolas;
 }
+
 tr.method:hover{
     background-color:#CCC;
 }
 </style>
+
+<script type="text/python" class="webworker" id="test_runner">
+"""
+A TestRunner for use with the Python unit testing framework. It
+generates a HTML report to show the result at a glance.
+
+The simplest way to use this is to invoke its main method. E.g.
+
+    import unittest
+    import HTMLTestRunner
+
+    ... define your tests ...
+
+    if __name__ == '__main__':
+        HTMLTestRunner.main()
+
+
+For more customization options, instantiates a HTMLTestRunner object.
+HTMLTestRunner is a counterpart to unittest's TextTestRunner. E.g.
+
+    # output to a file
+    fp = file('my_report.html', 'wb')
+    runner = HTMLTestRunner.HTMLTestRunner(
+                stream=fp,
+                title='My unit test',
+                description='This demonstrates the report output by HTMLTestRunner.'
+                )
+
+    # Use an external stylesheet.
+    # See the Template_mixin class for more customizable options
+    runner.STYLESHEET_TMPL = '<link rel="stylesheet" href="my_stylesheet.css" type="text/css">'
+
+    # run the test
+    runner.run(my_test_suite)
+
+
+------------------------------------------------------------------------
+Copyright (c) 2004-2007, Wai Yip Tung
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+* Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name Wai Yip Tung nor the names of its contributors may be
+  used to endorse or promote products derived from this software without
+  specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+# URL: http://tungwaiyip.info/software/HTMLTestRunner.html
+
+__author__ = "Wai Yip Tung"
+__version__ = "0.8.2"
+
+
+"""
+Change History
+
+Version 0.8.2
+* Show output inline instead of popup window (Viorel Lupu).
+
+Version in 0.8.1
+* Validated XHTML (Wolfgang Borgert).
+* Added description of test classes and test cases.
+
+Version in 0.8.0
+* Define Template_mixin class for customization.
+* Workaround a IE 6 bug that it does not treat <script> block as CDATA.
+
+Version in 0.7.1
+* Back port to Python 2.3 (Frank Horowitz).
+* Fix missing scroll bars in detail log (Podi).
+"""
+
+# TODO: color stderr
+# TODO: simplify javascript using more than 1 class in the class attribute?
+
+import datetime
+#import StringIO
+import io as StringIO
+import os
+import sys
+import time
+import unittest
+
+from browser import self as target, bind, console
+
+target.send('ready')
+sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
+
+TestResult = unittest.TestResult
+
+class _TestResult(TestResult):
+    # note: _TestResult is a pure representation of results.
+    # It lacks the output and reporting ability compares to unittest._TextTestResult.
+
+    def __init__(self, verbosity=1, report_success=False):
+        TestResult.__init__(self)
+        self.stdout0 = None
+        self.stderr0 = None
+        self.success_count = 0
+        self.failure_count = 0
+        self.error_count = 0
+        self.verbosity = verbosity
+
+        # result is a list of result in 4 tuple
+        # (
+        #   result code (0: success; 1: fail; 2: error),
+        #   TestCase object,
+        #   Test output (byte string),
+        #   stack trace,
+        # )
+        self.result = []
+        self.report_success = report_success
+
+    def startTest(self, test):
+        TestResult.startTest(self, test)
+        test.startTime = time.time()
+        method = getattr(test.__class__, test._testMethodName)
+        test.lineno = method.__code__.co_firstlineno
+
+    def ident(self, test):
+        return [test.__class__.__name__,
+                test._testMethodName,
+                test.lineno,
+                round(1000*(time.time() - test.startTime))]
+
+    def addSubTest(self, test, subtest, err):
+        TestResult.addSubTest(self, test, subtest, err)
+        # special case, don't use ident()
+        if not self.report_success:
+            return
+        cell2 = (test._testMethodName + '\n' +
+            str(subtest._subDescription())[:50])
+
+        row = [test.__class__.__name__,
+               cell2,
+               test.lineno,
+               round(1000*(time.time() - test.startTime)),
+               'ok']
+
+        target.send(row)
+        # reset startTime
+        test.startTime = time.time()
+        document['report'] <= row
+
+    def addSuccess(self, test):
+        self.success_count += 1
+        TestResult.addSuccess(self, test)
+        row = self.ident(test)
+        row.append('ok')
+        target.send(row)
+
+    def addError(self, test, err):
+        self.error_count += 1
+        TestResult.addError(self, test, err)
+        row = self.ident(test)
+        row.append('error')
+        row.append(self.excInfos(test, err))
+        target.send(row)
+
+    def addFailure(self, test, err):
+        self.failure_count += 1
+        TestResult.addFailure(self, test, err)
+        row = self.ident(test)
+        row.append('fail')
+        row.append(self.excInfos(test, err))
+        target.send(row)
+
+    def excInfos(self, test, err):
+        tb = err[2]
+        try:
+            tb.pos = 0
+        except:
+            pass
+        infos = []
+        while tb:
+            fname = tb.tb_frame.f_code.co_filename
+            lineno = tb.tb_frame.f_lineno
+            if fname == sys.modules[test.__class__.__module__].__file__:
+                infos.append(lineno)
+            tb = tb.tb_next
+        if not infos:
+            # Brython-specific hack
+            try:
+                infos.append(err[2].linenos[0])
+            except:
+                pass
+        infos = infos or ['unknown']
+        try:
+            str(err[1]).splitlines()
+        except:
+            alert(err[1])
+            alert(type(err[1]))
+        lines = "\n".join(f"line {line}" for line in infos[:-1])
+        message = str(err[1])
+        return [lines + "\nline %s - %s: %s" %(infos[-1], err[0].__name__, message)]
+
+class HTMLTestRunner:
+    """
+    """
+    def __init__(self, stream=sys.stdout, verbosity=1, title=None,
+                 description=None):
+        self.verbosity = 1
+        self.startTime = datetime.datetime.now()
+
+    def run(self, test, report_success=False, report_too_long=None):
+        "Run the given test case or test suite."
+        result = _TestResult(self.verbosity, report_success=report_success)
+        test(result)
+
+    def sortResult(self, result_list):
+        # unittest does not seems to run in any particular order.
+        # Here at least we want to group them together by class.
+        rmap = {}
+        classes = []
+        for n,t,o,e in result_list:
+            cls = t.__class__
+            if cls not in rmap:
+                rmap[cls] = []
+                classes.append(cls)
+            rmap[cls].append((n,t,o,e))
+        r = [(cls, rmap[cls]) for cls in classes]
+        return r
+
+
+@bind(target, 'message')
+def message(evt):
+    module = evt.data
+    mod = __import__(module)
+    _suite = unittest.TestLoader().loadTestsFromModule(mod)
+    runner = HTMLTestRunner(sys.stdout, verbosity=2)
+    runner.run(_suite)
+    target.send('end')
+
+</script>
+
 
 
 <script type="text/python">
@@ -37,48 +293,56 @@ from browser import document, window
 info = sys.implementation.version
 document['version'].text = '%s.%s.%s' % (info.major,info.minor,info.micro)
 
-_height = document.documentElement.clientHeight
-_top = document['container'].offsetTop
-document['container'].style.height = '%dpx' % (_height - _top - 10)
+
 </script>
 
 <script type="text/python">
-import sys
-import os
-from test import support
-import unittest
-import HTMLTestRunner
+from browser import worker
+from browser import document, alert, bind, window, html, console
 
-from browser import timer
-from browser import document, alert, bind, window, html
+worker = worker.Worker('test_runner')
 
-del document["msgbox"]
+table = document["result_table"]
+limit = document["duration"]
 
-sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
-
-def flush(*args):
-    from browser import console
-
-# a submodule of unittest expects the output object to have a flush function
-sys.stdout.flush = flush
+@bind(worker, 'message')
+def message(ev):
+    if ev.data == 'ready':
+        del document["msgbox"]
+        document["test"].disabled = False
+        document["btn_test"].disabled = False
+        return
+    elif ev.data == 'end':
+        table <= html.TR(
+            html.TD('Done', colspan=5),
+            Class="method")
+        return
+    test_class, method, lineno, duration, result, *comment = ev.data
+    if result == 'ok' and duration < float(limit.value) * 1000:
+        return
+    row = html.TR(
+        html.TD(f'{test_class}.{method}') +
+        html.TD(lineno, Class="number") +
+        html.TD(duration, Class="number") +
+        html.TD(result) +
+        html.TD(comment if comment else ''),
+        Class="method")
+    table <= row
+    row.scrollIntoView(False) # row is visible at the bottom of the page
 
 @bind("#btn_test", "click")
 def run_test(event):
-    import time
-    _start = time.time()
-    document["container"].clear()
+    table.clear()
+    table <= html.TR((html.TH(title) for title in
+                     ['Method', 'Line', 'Duration', 'Result',
+                      'Comments']), Class="header")
     sel = document['test']
     module = sel.options[sel.selectedIndex].value
 
     if module == '':
        return
 
-    mod = __import__(module)
-    _suite = unittest.TestLoader().loadTestsFromModule(mod)
-    runner = HTMLTestRunner.HTMLTestRunner(sys.stdout, verbosity=2)
-    runner.run(_suite)
-
-    sys.stderr.write('completed in %s seconds' % (time.time() - _start))
+    worker.send(module)
 
 @bind("#btn_show", "click")
 def show_test(event):
@@ -95,7 +359,7 @@ def show_test(event):
 
 </head>
 
-<body onload="brython({debug:2,
+<body onload="brython({debug:1,
                        static_stdlib_import: true
                        })">
 
@@ -104,7 +368,7 @@ def show_test(event):
 <div style="width:94%;padding: 0 3% 0 3%;">
 <div style="float:left">
 UnitTests:
-<select id="test" autocomplete="off">
+<select id="test" autocomplete="off" disabled>
   <option value="">--choose test--</option>
   <!-- option value="buffer_tests">buffer_tests</option -->
   <!-- option value="relimport">Relative Imports</option -->
@@ -156,8 +420,9 @@ UnitTests:
   <option value="test_string">test_string</option>
   <!-- option value="test_with">test_with</option -->
 </select>
-<button id="btn_test">Run test</button>
-<button id="btn_show">Show test</button>
+<button id="btn_test" disabled>Run test</button>
+
+&nbsp;Report tests longer than <input id="duration" size=2 value="3"> seconds
 
 </div>
 
@@ -171,8 +436,11 @@ Brython version: <span id="version"></span>
     height:auto; background-color:#9ed5d5; padding:40px; color:#000">
     Loading...</div>
 
-<div id="container" style="clear:both; width:100%;height:50%;overflow:auto">
-</div>
+
+<table id="result_table" width="100%"></table>
+
+
+
 
 <script type="text/javascript" src="/src/brython_builtins.js"></script>
 
