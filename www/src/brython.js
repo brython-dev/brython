@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-08 16:53:32.302931"
-__BRYTHON__.timestamp=1675871612302
+__BRYTHON__.compiled_date="2023-02-08 17:31:55.944842"
+__BRYTHON__.timestamp=1675873915940
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -15052,7 +15052,8 @@ $B.ast.For.prototype.to_js=function(scopes){
 var id=$B.UUID(),iter=$B.js_from_ast(this.iter,scopes),js=`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
-if(this instanceof $B.ast.AsyncFor){js+=`var iter_${id} = ${iter},\n`+
+if(this instanceof $B.ast.AsyncFor){js+=`var no_break_${id} = true,\n`+
+`iter_${id} = ${iter},\n`+
 `type_${id} = _b_.type.$factory(iter_${id})\n`+
 `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n`+
 `type_${id} = _b_.type.$factory(iter_${id})\n`+

@@ -1551,7 +1551,8 @@ $B.ast.For.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     if(this instanceof $B.ast.AsyncFor){
-        js += `var iter_${id} = ${iter},\n` +
+        js += `var no_break_${id} = true,\n` +
+                 `iter_${id} = ${iter},\n` +
                  `type_${id} = _b_.type.$factory(iter_${id})\n` +
             `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"))(iter_${id})\n` +
             `type_${id} = _b_.type.$factory(iter_${id})\n` +
