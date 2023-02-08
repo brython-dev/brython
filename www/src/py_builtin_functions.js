@@ -632,7 +632,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 // modifications to the default locals dictionary should not
                 // be attempted: this is why exec_locals is a clone of current
                 // locals
-                exec_locals = $B.clone(frames[1])
+                exec_locals = $B.clone(frame[1])
                 for(var attr in frame[3]){
                     exec_locals[attr] = frame[3][attr]
                 }
