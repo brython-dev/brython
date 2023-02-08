@@ -335,6 +335,10 @@ set.__eq__ = function(self, other){
           }
           var in_self = self.$store[hash],
               in_other = other.$store[hash]
+          if(in_self === undefined || in_other === undefined){
+              // might have been removed by $B.is_or_equals()
+              return false
+          }
           if(in_self.length != in_other.length){
               return false
           }
@@ -447,7 +451,7 @@ set_iterator.__next__ = function(self){
 }
 
 set_iterator.__reduce_ex__ = function(self, protocol){
-    return $B.fast_tuple([_b_.iter, 
+    return $B.fast_tuple([_b_.iter,
                           $B.fast_tuple([set_make_items(self.so)])])
 }
 
@@ -804,10 +808,9 @@ set.symmetric_difference = function(self, other){
     // Return a new set with elements in either the set or other but not both
     var $ = $B.args("symmetric_difference", 2, {self: null, other: null},
             ["self", "other"], arguments, {}, null, null)
-    var otherset = set.$factory(other)
-    set_symmetric_difference_update(otherset, self)
-    otherset.__class__ = self.__class__
-    return otherset
+    var res = set_copy(self)
+    set_symmetric_difference_update(res, other)
+    return res
 }
 
 set.union = function(self){

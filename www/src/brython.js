@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-07 09:18:47.216121"
-__BRYTHON__.timestamp=1675757927216
+__BRYTHON__.compiled_date="2023-02-08 16:53:32.302931"
+__BRYTHON__.timestamp=1675871612302
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6392,7 +6392,7 @@ if(_globals===_b_.None){
 if(frame[1]===frame[3]){
 global_name+='_globals'
 exec_locals=exec_globals=frame[3]}else{if(mode=="exec"){
-exec_locals=$B.clone(frames[1])
+exec_locals=$B.clone(frame[1])
 for(var attr in frame[3]){exec_locals[attr]=frame[3][attr]}
 exec_globals=exec_locals}else{
 exec_locals=frame[1]
@@ -8946,6 +8946,8 @@ set.__contains__=function(self,item){return set_contains(self,item)}
 set.__eq__=function(self,other){if(_b_.isinstance(other,[_b_.set,_b_.frozenset])){if(self.$used !=other.$used){return false}
 for(var hash in self.$store){if(other.$store[hash]===undefined){return false}
 var in_self=self.$store[hash],in_other=other.$store[hash]
+if(in_self===undefined ||in_other===undefined){
+return false}
 if(in_self.length !=in_other.length){return false}
 if(in_self.length==1){if(! $B.is_or_equals(in_self[0],in_other[0])){return false}}else{in_self=in_self.slice()
 in_other=in_other.slice()
@@ -9104,10 +9106,9 @@ if($.args.length==0){return set.copy($.self)}
 return set_intersection_multi($.self,$.args)}
 set.symmetric_difference=function(self,other){
 var $=$B.args("symmetric_difference",2,{self:null,other:null},["self","other"],arguments,{},null,null)
-var otherset=set.$factory(other)
-set_symmetric_difference_update(otherset,self)
-otherset.__class__=self.__class__
-return otherset}
+var res=set_copy(self)
+set_symmetric_difference_update(res,other)
+return res}
 set.union=function(self){var $=$B.args("union",1,{self:null},["self"],arguments,{},"args",null)
 var res=set_copy($.self)
 if($.args.length==0){return res}
@@ -14403,6 +14404,7 @@ $B.wrapper_descriptor.__getattribute__=$B.function.__getattribute__
 for(var name in _b_){if(_b_[name].__class__===_b_.type){_b_[name].__qualname__=name
 _b_[name].__module__='builtins'
 _b_[name].__name__=name
+_b_[name].$is_builtin_class=true
 $B.builtin_classes.push(_b_[name])
 for(var key in _b_[name]){var value=_b_[name][key]
 if(value===undefined ||value.__class__ ||
