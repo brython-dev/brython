@@ -4,7 +4,8 @@ var $module = (function($B){
 
 var _b_ = $B.builtins
 
-var VFS = $B.brython_modules ? 'brython_modules' : 'brython_stdlib'
+var VFS = $B.brython_modules ? 'brython_modules' :
+            $B.use_VFS ? 'brython_stdlib' : null
 
 if($B.debug > 2){
     var brython_scripts = [
@@ -45,11 +46,15 @@ if($B.debug > 2){
         'builtin_modules',
         'ast_to_js',
         'symtable',
-        'builtins_docstrings',
-        VFS]
+        'builtins_docstrings'
+        ]
 
 }else{
-    var brython_scripts = ['brython', VFS]
+    var brython_scripts = ['brython']
+}
+
+if(VFS !== null){
+    brython_scripts.push(VFS)
 }
 
 var wclass = $B.make_class("Worker",
