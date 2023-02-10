@@ -321,15 +321,24 @@ var classmethod = _b_.classmethod = $B.make_class("classmethod",
     }
 )
 
-classmethod.__get__ = function(self, obj, cls){
+classmethod.__get__ = function(){
     // adapted from
     // https://docs.python.org/3/howto/descriptor.html#class-methods
-    if(cls === _b_.None){
+    var $ = $B.args('classmethod', 3, {self: null, obj: null, cls: null},
+                    ['self', 'obj', 'cls'], arguments, {cls: _b_.None},
+                    null, null),
+        self = $.self,
+        obj = $.obj,
+        cls = $.cls
+    if(cls === _b_.None || cls === undefined){
         cls = $B.get_class(obj)
     }
     var func_class = $B.get_class(self.__func__),
         candidates = [func_class].concat(func_class.__mro__)
     for(var candidate of candidates){
+        if(candidate === $B.function){
+            break
+        }
         if(candidate.__get__){
             return candidate.__get__(self.__func__, cls, cls)
         }
@@ -1272,7 +1281,10 @@ var method = $B.method = $B.make_class("method",
             return $B.$call(func).bind(null, cls).apply(null, arguments)
         }
         f.__class__ = method
-        f.$infos = func.$infos
+        if(typeof func !== 'function'){
+            console.log('method from func w-o $infos', func, 'all', $B.$call(func))
+        }
+        f.$infos = func.$infos || {}
         f.$infos.__func__ = func
         f.$infos.__self__ = cls
         f.$infos.__dict__ = $B.empty_dict()
