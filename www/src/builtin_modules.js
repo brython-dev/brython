@@ -885,6 +885,7 @@
 
     // Set type of methods of builtin classes
     for(var name in _b_){
+        var builtin = _b_[name]
         if(_b_[name].__class__ === _b_.type){
             _b_[name].__qualname__ = name
             _b_[name].__module__ = 'builtins'
@@ -904,6 +905,11 @@
                     value.__class__ = $B.method_descriptor
                 }
                 value.__objclass__ = _b_[name]
+            }
+        }else if(typeof builtin == 'function'){
+            builtin.$infos = {
+                __name__: name,
+                __qualname__: name
             }
         }
     }
