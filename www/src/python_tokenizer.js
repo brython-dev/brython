@@ -645,48 +645,7 @@ $B.tokenizer = function*(src, filename, mode){
                         [line_num, pos - line_start + 1],
                         line)
                     state = null
-                }else if(false){ // ' \n\r\t\f;,:)]}*-+/%<>'.indexOf(char) == -1){
-                    if('0123456789'.indexOf(char) > -1){
-                        var msg = `invalid digit '${char}' in `
-                    }else{
-                        var msg = `invalid `
-                    }
-                    var base_name = {b: 'binary', o: 'octal', x: 'hexadecimal'}
-                    console.log('char', char, 'raises SE')
-                    var exc = SyntaxError(msg + base_name[num_type] + ' literal')
-                    exc.lineno = line_num
-                    exc.col_offset = pos - line_start
-                    exc.end_lineno = line_num
-                    exc.end_col_offset = exc.col_offset + 1
-                    exc.line = line
-                    throw exc
                 }else{
-                    var err_msg
-                    if('0123456789'.indexOf(char) > -1){
-                        err_msg = `invalid digit '${char}' in `
-                    }else if((char >= 'a' && char <= 'z') ||
-                             (char >= 'A' && char <= 'Z')){
-                        err_msg = `invalid `
-                    }
-                    if(err_msg){
-                        var base_name = {'': 'decimal',
-                                         b: 'binary',
-                                         o: 'octal',
-                                         x: 'hexadecimal'}
-                        err_msg += base_name[num_type] + ' literal'
-                        var exc = _b_.SyntaxError.$factory(err_msg)
-                        exc.lineno = line_num
-                        exc.col_offset = pos - line_start
-                        exc.end_lineno = line_num
-                        exc.end_col_offset = exc.col_offset + 1
-                        exc.line = line
-                        $B.raise_error_known_location(_b_.SyntaxError,
-                            filename,
-                            line_num, pos - line_start,
-                            line_num, exc.col_offset + 1,
-                            line,
-                            err_msg)
-                    }
                     yield Token('NUMBER', number,
                         [line_num, pos - line_start - number.length],
                         [line_num, pos - line_start],
