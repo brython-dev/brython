@@ -313,20 +313,20 @@ def message(ev):
         document["btn_test"].disabled = False
         return
     elif ev.data == 'end':
-        table <= html.TR(
+        row = html.TR(
             html.TD('Done', colspan=5),
             Class="method")
-        return
-    test_class, method, lineno, duration, result, *comment = ev.data
-    if result == 'ok' and duration < float(limit.value) * 1000:
-        return
-    row = html.TR(
-        html.TD(f'{test_class}.{method}') +
-        html.TD(lineno, Class="number") +
-        html.TD(duration, Class="number") +
-        html.TD(result) +
-        html.TD(comment if comment else ''),
-        Class="method")
+    else:
+        test_class, method, lineno, duration, result, *comment = ev.data
+        if result == 'ok' and duration < float(limit.value) * 1000:
+            return
+        row = html.TR(
+            html.TD(f'{test_class}.{method}') +
+            html.TD(lineno, Class="number") +
+            html.TD(duration, Class="number") +
+            html.TD(result) +
+            html.TD(comment if comment else ''),
+            Class="method")
     table <= row
     row.scrollIntoView(False) # row is visible at the bottom of the page
 
