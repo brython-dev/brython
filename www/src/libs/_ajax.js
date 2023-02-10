@@ -67,9 +67,9 @@ function _read(req){
 
 function stringify(d){
     var items = []
-    for(var item of _b_.dict.$iter_items(d)){
-        items.push(encodeURIComponent(item[0]) + "=" +
-                   encodeURIComponent(item[1]))
+    for(var entry of $B.make_js_iterator(_b_.dict.items(d))){
+        items.push(encodeURIComponent(entry[0]) + "=" +
+                   encodeURIComponent(entry[1]))
     }
     return items.join("&")
 }

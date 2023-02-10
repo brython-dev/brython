@@ -152,7 +152,7 @@ function to_json(obj, level){
         return "null"
     }else if(_b_.isinstance(obj, _b_.dict)){
         var res = [],
-            items = Array.from(_b_.dict.$iter_items(obj))
+            items = Array.from($B.make_js_iterator(_b_.dict.items(obj)))
         if(sort_keys){
             // Sort keys by alphabetical order
             items.sort()

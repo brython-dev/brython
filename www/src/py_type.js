@@ -824,9 +824,9 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     class_dict.__mro__ = type.mro(class_dict).slice(1)
 
     // set class attributes for faster lookups
-    for(var item of _b_.dict.$iter_items(cl_dict)){
-        var key = item[0],
-            v = item[1]
+    for(var entry of $B.make_js_iterator(_b_.dict.items(cl_dict))){
+        var key = entry[0],
+            v = entry[1]
         if(['__module__', '__class__', '__name__', '__qualname__'].
                 indexOf(key) > -1){
             continue

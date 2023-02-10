@@ -219,10 +219,10 @@
                     }
 
                     // attributes
-                    for(var item of _b_.dict.$iter_items($ns.kw)){
+                    for(var entry of $B.make_js_iterator(_b_.dict.items($ns.kw))){
                         // keyword arguments
-                        var arg = item[0],
-                            value = item[1]
+                        var arg = entry[0],
+                            value = entry[1]
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects
