@@ -106,161 +106,6 @@ dict_view_op = {
 
 }
 
-var iterator = function*(self, version, keys_length, len){
-    var reverse = self.name == 'dict_reversekeys',
-        counter = reverse ? keys_length : -1,
-        increment = reverse ? -1 : 1,
-        test_stop = reverse ? (x => x < 0) : (x => x >= keys_length)
-    while(true){
-        counter += increment
-        if(test_stop(counter)){
-            break
-        }
-        var key = self.dict._keys[counter]
-        if(key !== undefined){
-            var value = self.dict._values[counter]
-            if(self.name == 'dict_items'){
-                yield $B.fast_tuple([key, value])
-            }else if(self.name == 'dict_keys' || self.name == 'dict_reversekeys'){
-                yield key
-            }else if(self.name == 'dict_values'){
-                yield value
-            }
-            if(self.dict.$version != version){
-                throw _b_.RuntimeError.$factory("dictionary keys changed during iteration")
-            }else if(dict.__len__(self.dict) !== len){
-                throw _b_.RuntimeError.$factory("dictionary size changed during iteration")
-            }
-        }
-    }
-}
-
-$B.make_view = function(name){
-    var klass = $B.make_class(name,
-        function(d){
-            var res = {
-                __class__: klass,
-                __dict__: $B.empty_dict(),
-                dict: d,
-                name
-            }
-            if(d.$jsobj === undefined){
-                res[Symbol.iterator] = function(){
-                    return iterator(res, d.$version, d._keys.length, dict.__len__(d))
-                }
-            }
-            return res
-        }
-    )
-
-    klass.iterator = $B.make_class(`${name}iterator`,
-        function(it){
-            return {
-                __class__: klass.iterator,
-                __dict__: $B.empty_dict(),
-                it
-            }
-        }
-    )
-
-    klass.iterator.__iter__ = function(self){
-        return self
-    }
-
-    klass.iterator.__next__ = function(self){
-        var res = self.it.next()
-        if(res.done){
-            throw _b_.StopIteration.$factory()
-        }
-        return res.value
-    }
-
-    klass.iterator.__reduce__ = function(self){
-        var items = Array.from(self.it)
-        return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
-    }
-
-    $B.set_func_names(klass.iterator, 'builtins')
-
-    for(var i = 0, len = set_ops.length; i < len; i++){
-        var op = "__" + set_ops[i] + "__"
-        klass[op] = (function(op){
-            return function(self, other){
-                // compare set of items to other
-                if(self.name == 'dict_keys' ||
-                        (self.name == 'dict_items' && dict.$set_like(self.dict))){
-                    return _b_.set[op](_b_.set.$factory(self),
-                        _b_.set.$factory(other))
-                }else{
-                    // Non-set like views can only be compared to
-                    // instances of the same class
-                    if(other.__class__ !== klass){
-                        return false
-                    }
-                    var other_items = _b_.list.$factory(other)
-                    return dict_view_op[op](self.items, other_items)
-                }
-            }
-        })(op)
-    }
-
-    klass.__iter__ = function(self){
-        // returns an instance of dict_keyiterator for keys, etc.
-        if(self.dict.$jsobj){
-            var _iterator = function*(self){
-                for(var key in self.dict.$jsobj){
-                    if(key.startsWith('$')){
-                        continue
-                    }
-                    var value = self.dict.$jsobj[key]
-                    if(self.name == 'dict_items'){
-                        yield $B.fast_tuple([key, value])
-                    }else if(self.name == 'dict_keys'){
-                        yield key
-                    }else if(self.name == 'dict_values'){
-                        yield value
-                    }
-                }
-            }
-            var res = _iterator(self)
-        }else{
-            var d = self.dict,
-                res = iterator(self, d.$version, d._keys.length, dict.__len__(d))
-
-        }
-        return klass.iterator.$factory(res)
-    }
-
-    klass.__len__ = function(self){
-        return dict.__len__(self.dict)
-    }
-
-    klass.__repr__ = function(self){
-        var items = Array.from(dict.$iter_items(self.dict))
-        if(klass.__name__ == "dict_keys"){
-            items = items.map(x => x[0])
-        }else if(klass.__name__ == "dict_values"){
-            items = items.map(x => x[1])
-        }else{
-            items = items.map($B.fast_tuple)
-        }
-        return klass.__name__ + '(' + _b_.repr(items) + ')'
-    }
-
-    klass.__reversed__ = function(self){
-        return klass.__iter__(self)
-    }
-
-    klass.mapping = {
-        __get__: function(self){
-            return new Proxy(self.dict, mappingproxy_handler)
-        }
-    }
-
-    $B.set_func_names(klass, "builtins")
-    return klass
-}
-
 function make_view_comparison_methods(klass){
     for(var i = 0, len = set_ops.length; i < len; i++){
         var op = "__" + set_ops[i] + "__"
@@ -311,27 +156,21 @@ dict.$to_obj = function(d){
     // return a Javascript objects with the keys mapped to the value,
     // excluding the insertion rank
     var res = {}
-    for(var item of dict.$iter_items(d)){
-        res[item[0]] = item[1]
+    for(var entry of dict.$iter_items_with_hash(d)){
+        res[entry.key] = entry.value
     }
     return res
 }
 
-dict.$iter_keys = function*(d){
-    for(var item of dict.$iter_items(d)){
-        yield item[0]
-    }
-}
-
 dict.$iter_keys_check = function*(d){
-    for(var item of dict.$iter_items_check(d)){
-        yield item[0]
+    for(var entry of dict.$iter_items_with_hash(d)){
+        yield entry.key
     }
 }
 
 dict.$iter_values_check = function*(d){
-    for(var item of dict.$iter_items_check(d)){
-        yield item[1]
+    for(var entry of dict.$iter_items_with_hash(d)){
+        yield entry.value
     }
 }
 
@@ -353,37 +192,23 @@ dict.$set_like = function(self){
     return true
 }
 
-dict.$iter_with_hash = function*(d){
+dict.$iter_items_with_hash = function*(d){
     if(d.$jsobj){
         for(var key in d.$jsobj){
-            yield {key, hash: $B.$hash(key)}
+            yield {key, value: d.$jsobj[key]}
         }
     }else{
-        for(var hash in d.table){
-            var indices = d.table[hash]
-            if(indices !== undefined){
-                for(var index of indices){
-                    if(d._keys[index] !== undefined){
-                        yield {key: d._keys[index], hash}
-                    }
+        var version = d.$version
+        for(var i = 0, len = d._keys.length; i < len; i++){
+            if(d._keys[i] !== undefined){
+                yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
+                if(d.$version !== version){
+                    throw _b_.RuntimeError.$factory('changed in iteration')
                 }
             }
         }
-    }
-}
-
-dict.$iter_items = function*(d){
-    for(var i = 0, len = d._keys.length; i < len; i++){
-        if(d._keys[i] !== undefined){
-            yield [d._keys[i], d._values[i]]
-        }
-    }
-}
-
-dict.$iter_items_with_hash = function*(d){
-    for(var i = 0, len = d._keys.length; i < len; i++){
-        if(d._keys[i] !== undefined){
-            yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
+        if(d.$version !== version){
+            throw _b_.RuntimeError.$factory('changed in iteration')
         }
     }
 }
@@ -828,20 +653,88 @@ dict.__repr__ = function(self){
     var res = [],
         key,
         value
-    for(var item of dict.$iter_items(self)){
-        key = item[0]
-        value = item[1]
-        res.push(_b_.repr(key) + ": " + _b_.repr(value))
+    for(var entry of dict.$iter_items_with_hash(self)){
+        res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
     }
     $B.repr.leave(self)
     return "{" + res.join(", ") + "}"
 }
 
-dict_reversekeyiterator = $B.make_view("dict_reversekeys")
+dict.$iter_items_reversed = function*(d){
+    var version = d.$version
+    for(var i = d._keys.length - 1; i >= 0; i--){
+        var key = d._keys[i]
+        if(key !== undefined){
+            yield $B.fast_tuple([key, d._values[i]])
+            if(d.$version !== version){
+                throw _b_.RuntimeError.$factory('changed in iteration')
+            }
+        }
+    }
+    if(d.$version !== version){
+        throw _b_.RuntimeError.$factory('changed in iteration')
+    }
+}
+
+dict.$iter_keys_reversed = function*(d){
+    for(var entry of dict.$iter_items_reversed(d)){
+        yield entry[0]
+    }
+}
+
+dict.$iter_values_reversed = function*(d){
+    for(var entry of dict.$iter_items_reversed(d)){
+        yield entry[1]
+    }
+}
+
+function make_reverse_iterator(name, iter_func){
+    // Create the classes to iterate on dictionary keys / values / items
+    // in reverse order
+    // iter_func is the Javascript function that returns the generator for
+    // each specific iteration
+    var klass = $B.make_class(name,
+        function(d){
+            return {
+                __class__: klass,
+                d,
+                iter: iter_func(d),
+                make_iter:function(){
+                    return iter_func(d)
+                }
+            }
+        }
+    )
+
+    klass.__iter__ = function(self){
+        self[Symbol.iterator] = self.make_iter
+        return self
+    }
+
+    klass.__next__ = function(self){
+        var res = self.iter.next()
+        if(res.done){
+            throw _b_.StopIteration.$factory('')
+        }
+        return res.value
+    }
+
+    klass.__reduce_ex__ = function(self, protocol){
+        return $B.fast_tuple([_b_.iter,
+            $B.fast_tuple([Array.from(self.make_iter())])])
+    }
+
+    $B.set_func_names(klass, 'builtins')
+
+    return klass
+}
+
+dict_reversekeyiterator = make_reverse_iterator(
+    'dict_reversekeyiterator',
+    dict.$iter_keys_reversed)
 
 dict.__reversed__ = function(self){
-    return dict_reversekeyiterator.__iter__(
-        dict_reversekeyiterator.$factory(self))
+    return dict_reversekeyiterator.$factory(self)
 }
 
 dict.__ror__ = function(self, other){
@@ -1001,7 +894,11 @@ var dict_items = $B.make_class("dict_items",
         return {
             __class__: dict_items,
             dict: d,
-            make_iter: function(){return dict.$iter_items_check(d)}
+            make_iter: function*(){
+                for(var entry of dict.$iter_items_with_hash(d)){
+                    yield $B.fast_tuple([entry.key, entry.value])
+                }
+            }
         }
     }
 )
@@ -1023,6 +920,14 @@ dict_items.__repr__ = function(self){
     var items = Array.from(self.make_iter())
     items = items.map($B.fast_tuple)
     return 'dict_items(' + _b_.repr(items) + ')'
+}
+
+dict_reverseitemiterator = make_reverse_iterator(
+    'dict_reverseitemiterator',
+    dict.$iter_items_reversed)
+
+dict_items.__reversed__ = function(self){
+    return dict_reverseitemiterator.$factory(self.dict)
 }
 
 make_view_comparison_methods(dict_items)
@@ -1091,6 +996,10 @@ dict_keys.__reduce__ = function(self){
 dict_keys.__repr__ = function(self){
     var items = Array.from(self.make_iter())
     return 'dict_keys(' + _b_.repr(items) + ')'
+}
+
+dict_keys.__reversed__ = function(self){
+    return dict_reversekeyiterator.$factory(self.dict)
 }
 
 make_view_comparison_methods(dict_keys)
@@ -1264,6 +1173,14 @@ dict_values.__reduce__ = function(self){
 dict_values.__repr__ = function(self){
     var items = Array.from(self.make_iter())
     return 'dict_values(' + _b_.repr(items) + ')'
+}
+
+dict_reversevalueiterator = make_reverse_iterator(
+    'dict_reversevalueiterator',
+    dict.$iter_values_reversed)
+
+dict_values.__reversed__ = function(self){
+    return dict_reversevalueiterator.$factory(self.dict)
 }
 
 make_view_comparison_methods(dict_values)

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-10 11:05:01.721423"
-__BRYTHON__.timestamp=1676023501721
+__BRYTHON__.compiled_date="2023-02-10 21:12:47.305522"
+__BRYTHON__.timestamp=1676059967305
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4874,11 +4874,11 @@ positional.slice(received))}else{throw _b_.TypeError.$factory(name+"() takes "+e
 " but more were given")}}
 $B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
 for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i],key,value
-if(kw_arg.__class__===_b_.dict){for(var item of _b_.dict.$iter_items(kw_arg)){key=item[0]
+if(kw_arg.__class__===_b_.dict){for(var entry of $B.make_js_iterator(_b_.dict.items(kw_arg))){key=entry[0]
 if(typeof key !=='string'){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}else if(kwa[key]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
-key+"'")}else{kwa[key]=item[1]}}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
+key+"'")}else{kwa[key]=entry[1]}}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
 while(true){try{var k=_b_.next(it)
 if(typeof k !=="string"){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}
@@ -5866,7 +5866,7 @@ var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,_
 try{var slots=$B.$getitem(cl_dict,'__slots__')
 for(var name of $B.make_js_iterator(slots)){class_dict[name]=member_descriptor.$factory(name,class_dict)}}catch(err){}
 class_dict.__mro__=type.mro(class_dict).slice(1)
-for(var item of _b_.dict.$iter_items(cl_dict)){var key=item[0],v=item[1]
+for(var entry of $B.make_js_iterator(_b_.dict.items(cl_dict))){var key=entry[0],v=entry[1]
 if(['__module__','__class__','__name__','__qualname__'].
 indexOf(key)>-1){continue}
 if(key.startsWith('$')){continue}
@@ -8855,7 +8855,7 @@ for(var entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entr
 result.__class__=so.__class__
 return result}
 function set_difference_update(so,other){if(so===other){return set.clear(so);}
-if(_b_.isinstance(other,[set,frozenset])){for(var entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack)
+if(_b_.isinstance(other,[set,frozenset])){for(var entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack)
 var iterator=$B.make_js_iterator(other,frame,frame.$lineno)
 for(var key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0,DISCARD_FOUND=1
@@ -8876,7 +8876,7 @@ var result=make_new_set_base_type(so),iterator
 if(_b_.isinstance(other,[set,frozenset])){if(other.$used > so.$used){var tmp=so
 so=other
 other=tmp}
-for(var entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
+for(var entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{var frame=$B.last($B.frames_stack),lineno=frame.$lineno
 iterator=$B.make_js_iterator(other,frame,lineno)
 for(var other_item of iterator){var test=set_contains(so,other_item)
 if(test){set_add(result,other_item)}}}
@@ -8899,7 +8899,7 @@ b.$used=temp.$used
 b.$store=temp.$store}
 function set_symmetric_difference_update(so,other){var otherset,key,pos=0,hash,entry,rv
 if(so==other){return set.clear(so)}
-if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(other)){rv=set_discard_entry(so,entry.key,entry.hash)
+if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(other)){rv=set_discard_entry(so,entry.key,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.key,entry.hash)}}}else if(_b_.isinstance(other,[set,frozenset])){for(var entry of set_iter_with_hash(other)){rv=set_discard_entry(so,entry.item,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.item,entry.hash)}}}else{return set_symmetric_difference_update(so,set.$factory(other))}
 return _b_.None}
@@ -9057,7 +9057,7 @@ var $=$B.args("symmetric_difference_update",2,{self:null,s:null},["self","s"],ar
 return set_symmetric_difference_update(self,s)}
 set.update=function(self){
 var $=$B.args("update",1,{self:null},["self"],arguments,{},"args",null)
-for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if(_b_.isinstance(iterable,[set,frozenset])){for(var entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if(_b_.isinstance(iterable,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(iterable)){set_add(self,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack),iterator=$B.make_js_iterator(iterable,frame,frame.$lineno)
+for(var iterable of $.args){if(Array.isArray(iterable)){for(var i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if(_b_.isinstance(iterable,[set,frozenset])){for(var entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if(_b_.isinstance(iterable,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(iterable)){set_add(self,entry.key,entry.hash)}}else{var frame=$B.last($B.frames_stack),iterator=$B.make_js_iterator(iterable,frame,frame.$lineno)
 for(var item of iterator){set_add(self,item)}}}
 self.$version++
 return _b_.None}
@@ -9079,14 +9079,14 @@ set.union=function(self){var $=$B.args("union",1,{self:null},["self"],arguments,
 var res=set_copy($.self)
 if($.args.length==0){return res}
 for(var arg of $.args){if(_b_.isinstance(arg,[set,frozenset])){for(var entry of set_iter_with_hash(arg)){set_add(res,entry.item,entry.hash)}}else if(arg.__class__===_b_.dict){
-for(var entry of _b_.dict.$iter_with_hash(arg)){set_add(res,entry.key,entry.hash)}}else{var other=set.$factory(arg)
+for(var entry of _b_.dict.$iter_items_with_hash(arg)){set_add(res,entry.key,entry.hash)}}else{var other=set.$factory(arg)
 res=set.union(res,other)}}
 return res}
 set.issubset=function(){
 var $=$B.args("issubset",2,{self:null,other:null},["self","other"],arguments,{},"args",null),self=$.self,other=$.other
 if(_b_.isinstance(other,[set,frozenset])){if(set.__len__(self)> set.__len__(other)){return false}
 for(var entry of set_iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
-return true}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_with_hash(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
+return true}else if(_b_.isinstance(other,_b_.dict)){for(var entry of _b_.dict.$iter_items_with_hash(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
 return true}else{var member_func=$B.member_func(other)
 for(var entry of set_iter_with_hash(self)){if(! member_func(entry.item)){return false}}
 return true}}
@@ -9179,8 +9179,8 @@ obj.__class__===_b_.tuple){var res=[]
 for(var i=0,len=obj.length;i < len;i++){res.push($B.pyobj2structuredclone(obj[i]))}
 return res}else if(_b_.isinstance(obj,_b_.dict)){if(strict){for(var key of _b_.dict.$fast_iter_keys(obj)){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
 "keys does not support structured clone")}}}
-var items=Array.from(_b_.dict.$iter_items(obj)),res={}
-for(var i=0,len=items.length;i < len;i++){res[to_simple(items[i][0])]=$B.pyobj2structuredclone(items[i][1])}
+var res={}
+for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
 return res}else{return obj}}
 $B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean" ||
 typeof obj=="string"){return obj}else if(typeof obj=="number"){return Number.isInteger(obj)?
@@ -12408,8 +12408,7 @@ flag=true
 break}}
 if(! flag){return false}}
 return true}
-dict_view_op={__eq__:function(t1,t2){console.log('in dict_view_op',t1.length,t2.length)
-return t1.length==t2.length && is_sublist(t1,t2)},__ne__:function(t1,t2){return ! dict_view_op.__eq__(t1,t2)},__lt__:function(t1,t2){return t1.length < t2.length && is_sublist(t1,t2)},__gt__:function(t1,t2){return dict_view_op.__lt__(t2,t1)},__le__:function(t1,t2){return t1.length <=t2.length && is_sublist(t1,t2)},__ge__:function(t1,t2){return dict_view_op.__le__(t2,t1)},__and__:function(t1,t2){var items=[]
+dict_view_op={__eq__:function(t1,t2){return t1.length==t2.length && is_sublist(t1,t2)},__ne__:function(t1,t2){return ! dict_view_op.__eq__(t1,t2)},__lt__:function(t1,t2){return t1.length < t2.length && is_sublist(t1,t2)},__gt__:function(t1,t2){return dict_view_op.__lt__(t2,t1)},__le__:function(t1,t2){return t1.length <=t2.length && is_sublist(t1,t2)},__ge__:function(t1,t2){return dict_view_op.__le__(t2,t1)},__and__:function(t1,t2){var items=[]
 for(var i=0,ilen=t1.length;i < ilen;i++){var x=t1[i]
 flag=false
 for(var j=0,jlen=t2.length;j < jlen;j++){if($B.rich_comp("__eq__",x,t2[j])){t2.splice(j,1)
@@ -12422,48 +12421,6 @@ flag=true
 break}}
 if(! flag){items.push(y)}}
 return items}}
-var iterator=function*(self,version,keys_length,len){var reverse=self.name=='dict_reversekeys',counter=reverse ? keys_length :-1,increment=reverse ?-1 :1,test_stop=reverse ?(x=> x < 0):(x=> x >=keys_length)
-while(true){counter+=increment
-if(test_stop(counter)){break}
-var key=self.dict._keys[counter]
-if(key !==undefined){var value=self.dict._values[counter]
-if(self.name=='dict_items'){yield $B.fast_tuple([key,value])}else if(self.name=='dict_keys' ||self.name=='dict_reversekeys'){yield key}else if(self.name=='dict_values'){yield value}
-if(self.dict.$version !=version){throw _b_.RuntimeError.$factory("dictionary keys changed during iteration")}else if(dict.__len__(self.dict)!==len){throw _b_.RuntimeError.$factory("dictionary size changed during iteration")}}}}
-$B.make_view=function(name){var klass=$B.make_class(name,function(d){var res={__class__:klass,__dict__:$B.empty_dict(),dict:d,name}
-if(d.$jsobj===undefined){res[Symbol.iterator]=function(){return iterator(res,d.$version,d._keys.length,dict.__len__(d))}}
-return res}
-)
-klass.iterator=$B.make_class(`${name}iterator`,function(it){return{
-__class__:klass.iterator,__dict__:$B.empty_dict(),it}}
-)
-klass.iterator.__iter__=function(self){return self}
-klass.iterator.__next__=function(self){var res=self.it.next()
-if(res.done){throw _b_.StopIteration.$factory()}
-return res.value}
-klass.iterator.__reduce__=function(self){var items=Array.from(self.it)
-return $B.fast_tuple([_b_.iter,$B.fast_tuple([items])])}
-$B.set_func_names(klass.iterator,'builtins')
-for(var i=0,len=set_ops.length;i < len;i++){var op="__"+set_ops[i]+"__"
-klass[op]=(function(op){return function(self,other){
-if(self.name=='dict_keys' ||
-(self.name=='dict_items' && dict.$set_like(self.dict))){return _b_.set[op](_b_.set.$factory(self),_b_.set.$factory(other))}else{
-if(other.__class__ !==klass){return false}
-var other_items=_b_.list.$factory(other)
-return dict_view_op[op](self.items,other_items)}}})(op)}
-klass.__iter__=function(self){
-if(self.dict.$jsobj){var _iterator=function*(self){for(var key in self.dict.$jsobj){if(key.startsWith('$')){continue}
-var value=self.dict.$jsobj[key]
-if(self.name=='dict_items'){yield $B.fast_tuple([key,value])}else if(self.name=='dict_keys'){yield key}else if(self.name=='dict_values'){yield value}}}
-var res=_iterator(self)}else{var d=self.dict,res=iterator(self,d.$version,d._keys.length,dict.__len__(d))}
-return klass.iterator.$factory(res)}
-klass.__len__=function(self){return dict.__len__(self.dict)}
-klass.__repr__=function(self){var items=Array.from(dict.$iter_items(self.dict))
-if(klass.__name__=="dict_keys"){items=items.map(x=> x[0])}else if(klass.__name__=="dict_values"){items=items.map(x=> x[1])}else{items=items.map($B.fast_tuple)}
-return klass.__name__+'('+_b_.repr(items)+')'}
-klass.__reversed__=function(self){return klass.__iter__(self)}
-klass.mapping={__get__:function(self){return new Proxy(self.dict,mappingproxy_handler)}}
-$B.set_func_names(klass,"builtins")
-return klass}
 function make_view_comparison_methods(klass){for(var i=0,len=set_ops.length;i < len;i++){var op="__"+set_ops[i]+"__"
 klass[op]=(function(op){return function(self,other){
 if(self.__class__.__name__=='dict_keys' ||
@@ -12478,20 +12435,19 @@ return target[prop]}}
 var dict={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'dict',$is_class:true,$native:true,$match_mapping_pattern:true }
 dict.$to_obj=function(d){
 var res={}
-for(var item of dict.$iter_items(d)){res[item[0]]=item[1]}
+for(var entry of dict.$iter_items_with_hash(d)){res[entry.key]=entry.value}
 return res}
-dict.$iter_keys=function*(d){for(var item of dict.$iter_items(d)){yield item[0]}}
-dict.$iter_keys_check=function*(d){for(var item of dict.$iter_items_check(d)){yield item[0]}}
-dict.$iter_values_check=function*(d){for(var item of dict.$iter_items_check(d)){yield item[1]}}
+dict.$iter_keys_check=function*(d){for(var entry of dict.$iter_items_with_hash(d)){yield entry.key}}
+dict.$iter_values_check=function*(d){for(var entry of dict.$iter_items_with_hash(d)){yield entry.value}}
 dict.$set_like=function(self){
 for(var v of self._values){if(v===undefined){continue}else if(typeof v=='string' ||
 typeof v=='number' ||
 typeof v=='boolean'){continue}else if([_b_.tuple,_b_.float,_b_.complex].indexOf(v.__class__)>-1){continue}else if(! _b_.hasattr(v.__class__,'__hash__')){return false}}
 return true}
-dict.$iter_with_hash=function*(d){if(d.$jsobj){for(var key in d.$jsobj){yield{key,hash:$B.$hash(key)}}}else{for(var hash in d.table){var indices=d.table[hash]
-if(indices !==undefined){for(var index of indices){if(d._keys[index]!==undefined){yield{key:d._keys[index],hash}}}}}}}
-dict.$iter_items=function*(d){for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield[d._keys[i],d._values[i]]}}}
-dict.$iter_items_with_hash=function*(d){for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield{key:d._keys[i],value:d._values[i],hash:d._hashes[i]}}}}
+dict.$iter_items_with_hash=function*(d){if(d.$jsobj){for(var key in d.$jsobj){yield{key,value:d.$jsobj[key]}}}else{var version=d.$version
+for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield{key:d._keys[i],value:d._values[i],hash:d._hashes[i]}
+if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
+if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
 dict.$iter_items_check=function*(d){if(d.$jsobj){for(var key in d.$jsobj){yield[key,d.$jsobj[key]]}}else{var version=d.$version
 for(var i=0,len=d._keys.length;i < len;i++){if(d._keys[i]!==undefined){yield[d._keys[i],d._values[i]]
 if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
@@ -12644,14 +12600,31 @@ if(self.$jsobj){
 return dict.__repr__(jsobj2dict(self.$jsobj,self.$exclude))}
 if($B.repr.enter(self)){return "{...}"}
 var res=[],key,value
-for(var item of dict.$iter_items(self)){key=item[0]
-value=item[1]
-res.push(_b_.repr(key)+": "+_b_.repr(value))}
+for(var entry of dict.$iter_items_with_hash(self)){res.push(_b_.repr(entry.key)+": "+_b_.repr(entry.value))}
 $B.repr.leave(self)
 return "{"+res.join(", ")+"}"}
-dict_reversekeyiterator=$B.make_view("dict_reversekeys")
-dict.__reversed__=function(self){return dict_reversekeyiterator.__iter__(
-dict_reversekeyiterator.$factory(self))}
+dict.$iter_items_reversed=function*(d){var version=d.$version
+for(var i=d._keys.length-1;i >=0;i--){var key=d._keys[i]
+if(key !==undefined){yield $B.fast_tuple([key,d._values[i]])
+if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}}
+if(d.$version !==version){throw _b_.RuntimeError.$factory('changed in iteration')}}
+dict.$iter_keys_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[0]}}
+dict.$iter_values_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[1]}}
+function make_reverse_iterator(name,iter_func){
+var klass=$B.make_class(name,function(d){return{
+__class__:klass,d,iter:iter_func(d),make_iter:function(){return iter_func(d)}}}
+)
+klass.__iter__=function(self){self[Symbol.iterator]=self.make_iter
+return self}
+klass.__next__=function(self){var res=self.iter.next()
+if(res.done){throw _b_.StopIteration.$factory('')}
+return res.value}
+klass.__reduce_ex__=function(self,protocol){return $B.fast_tuple([_b_.iter,$B.fast_tuple([Array.from(self.make_iter())])])}
+$B.set_func_names(klass,'builtins')
+return klass}
+dict_reversekeyiterator=make_reverse_iterator(
+'dict_reversekeyiterator',dict.$iter_keys_reversed)
+dict.__reversed__=function(self){return dict_reversekeyiterator.$factory(self)}
 dict.__ror__=function(self,other){
 if(! _b_.isinstance(other,dict)){return _b_.NotImplemented}
 var res=dict.copy(other)
@@ -12709,7 +12682,7 @@ try{
 return dict.$getitem($.self,$.key,true)}catch(err){if(_b_.isinstance(err,_b_.KeyError)){return $._default}
 else{throw err}}}
 var dict_items=$B.make_class("dict_items",function(d){return{
-__class__:dict_items,dict:d,make_iter:function(){return dict.$iter_items_check(d)}}}
+__class__:dict_items,dict:d,make_iter:function*(){for(var entry of dict.$iter_items_with_hash(d)){yield $B.fast_tuple([entry.key,entry.value])}}}}
 )
 dict_items.__iter__=function(self){return dict_itemiterator.$factory(self.make_iter)}
 dict_items.__len__=function(self){return dict.__len__(self.dict)}
@@ -12718,6 +12691,9 @@ return $B.fast_tuple([_b_.iter,$B.fast_tuple([items])])}
 dict_items.__repr__=function(self){var items=Array.from(self.make_iter())
 items=items.map($B.fast_tuple)
 return 'dict_items('+_b_.repr(items)+')'}
+dict_reverseitemiterator=make_reverse_iterator(
+'dict_reverseitemiterator',dict.$iter_items_reversed)
+dict_items.__reversed__=function(self){return dict_reverseitemiterator.$factory(self.dict)}
 make_view_comparison_methods(dict_items)
 $B.set_func_names(dict_items,'builtins')
 var dict_itemiterator=$B.make_class('dict_itemiterator',function(make_iter){return{
@@ -12741,6 +12717,7 @@ dict_keys.__reduce__=function(self){var items=Array.from(self.make_iter())
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([items])])}
 dict_keys.__repr__=function(self){var items=Array.from(self.make_iter())
 return 'dict_keys('+_b_.repr(items)+')'}
+dict_keys.__reversed__=function(self){return dict_reversekeyiterator.$factory(self.dict)}
 make_view_comparison_methods(dict_keys)
 $B.set_func_names(dict_keys,'builtins')
 var dict_keyiterator=$B.make_class('dict_keyiterator',function(make_iter){return{
@@ -12805,6 +12782,9 @@ dict_values.__reduce__=function(self){var items=Array.from(self.make_iter())
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([items])])}
 dict_values.__repr__=function(self){var items=Array.from(self.make_iter())
 return 'dict_values('+_b_.repr(items)+')'}
+dict_reversevalueiterator=make_reverse_iterator(
+'dict_reversevalueiterator',dict.$iter_values_reversed)
+dict_values.__reversed__=function(self){return dict_reversevalueiterator.$factory(self.dict)}
 make_view_comparison_methods(dict_values)
 $B.set_func_names(dict_values,'builtins')
 var dict_valueiterator=$B.make_class('dict_valueiterator',function(make_iter){return{
@@ -13230,9 +13210,7 @@ tuple.__iter__=function(self){return tuple_iterator.$factory(self)}
 tuple.$factory=function(){var obj=factory.apply(tuple,arguments)
 obj.__class__=tuple
 return obj}
-$B.fast_tuple=function(array){if(! Array.isArray(array)){console.log('attention !!!',array)
-throw Error('mauvais fast tuple')}
-array.__class__=tuple
+$B.fast_tuple=function(array){array.__class__=tuple
 array.__brython__=true
 array.__dict__=$B.empty_dict()
 return array}
@@ -14248,8 +14226,8 @@ items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){if($B.deb
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}
-for(var item of _b_.dict.$iter_items($ns.kw)){
-var arg=item[0],value=item[1]
+for(var entry of $B.make_js_iterator(_b_.dict.items($ns.kw))){
+var arg=entry[0],value=entry[1]
 if(arg.toLowerCase().substr(0,2)=="on"){
 $B.DOMNode.bind(self,arg.toLowerCase().substr(2),value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{
