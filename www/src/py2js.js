@@ -5000,8 +5000,29 @@ NumberCtx.prototype.ast = function(){
 
 NumberCtx.prototype.transition = function(token, value){
     var context = this
-    if(token == 'id' && value == '_'){
-        raise_syntax_error(context, 'invalid decimal literal')
+    var num_type = {2: 'binary', 8: 'octal', 10: 'decimal',
+                    16: 'hexadecimal'}[this.value[0]]
+
+    if(token == 'id'){
+        if(value == '_'){
+            raise_syntax_error(context, 'invalid decimal literal')
+        }else if(["and", "else", "for", "if", "in", "is", "or"].indexOf(value) == -1){
+            raise_syntax_error(context, `invalid ${num_type} literal`)
+        }else if(num_type == 'hexadecimal' && this.value[1].length % 2 == 1){
+            $B.warn(_b_.SyntaxWarning,
+                    `invalid hexadecimal literal`,
+                    get_module(context).filename,
+                    $token.value)
+        }
+    }else if(token == 'op'){
+        if(["and", "in", "is", "or"].indexOf(value) > -1 &&
+                num_type == 'hexadecimal' && 
+                this.value[1].length % 2 == 1){
+            $B.warn(_b_.SyntaxWarning,
+                    `invalid hexadecimal literal`,
+                    get_module(context).filename,
+                    $token.value)
+        }
     }
     return transition(context.parent, token, value)
 }
@@ -7604,13 +7625,12 @@ function get_first_line(src, filename){
 function prepare_number(n){
     // n is a numeric literal
     // return an object {type: <int | float | imaginary>, value}
-    n = n.replace(/_/g, "")
     if(n.startsWith('.')){
         if(n.endsWith("j")){
             return {type: 'imaginary',
                 value: prepare_number(n.substr(0, n.length - 1))}
         }else{
-            return {type: 'float', value: n}
+            return {type: 'float', value: n.replace(/_/g, '')}
         }
         pos = j
     }else if(n.startsWith('0') && n != '0'){
