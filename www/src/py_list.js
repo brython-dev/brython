@@ -846,24 +846,7 @@ var factory = function(){
         }
         return obj
     }
-    if(obj[Symbol.iterator]){
-        return Array.from(obj)
-    }
-    var res = [],
-        pos = 0,
-        arg = $B.$iter(obj),
-        next_func = $B.$call($B.$getattr(arg, "__next__"))
-
-    while(1){
-        try{
-            res[pos++] = next_func()
-        }catch(err){
-            if(!isinstance(err, _b_.StopIteration)){
-                throw err
-            }
-            break
-        }
-    }
+    var res = Array.from($B.make_js_iterator(obj))
     res.__brython__ = true // false for Javascript arrays - used in sort()
     return res
 }
