@@ -249,16 +249,6 @@ $B.make_view = function(name){
 
     klass.__reversed__ = function(self){
         return klass.__iter__(self)
-        /*
-        var it = klass.iterator.$factory(self.items.reverse())
-        it.test_change = function(){
-            if(dict.__len__(self.dict) != self.len){
-                return "dictionary changed size during iteration"
-            }
-            return false
-        }
-        return it
-        */
     }
 
     klass.mapping = {
@@ -269,6 +259,31 @@ $B.make_view = function(name){
 
     $B.set_func_names(klass, "builtins")
     return klass
+}
+
+function make_view_comparison_methods(klass){
+    for(var i = 0, len = set_ops.length; i < len; i++){
+        var op = "__" + set_ops[i] + "__"
+        klass[op] = (function(op){
+            return function(self, other){
+                // compare set of items to other
+                if(self.__class__.__name__ == 'dict_keys' ||
+                        (self.__class__.__name__ == 'dict_items'
+                         && dict.$set_like(self.dict))){
+                    return _b_.set[op](_b_.set.$factory(self),
+                        _b_.set.$factory(other))
+                }else{
+                    // Non-set like views can only be compared to
+                    // instances of the same class
+                    if(other.__class__ !== klass){
+                        return false
+                    }
+                    var other_items = _b_.list.$factory(other)
+                    return dict_view_op[op](self.items, other_items)
+                }
+            }
+        })(op)
+    }
 }
 
 var mappingproxy = $B.make_class("mappingproxy")
@@ -302,9 +317,21 @@ dict.$to_obj = function(d){
     return res
 }
 
-dict.$fast_iter_keys = function*(d){
+dict.$iter_keys = function*(d){
     for(var item of dict.$iter_items(d)){
         yield item[0]
+    }
+}
+
+dict.$iter_keys_check = function*(d){
+    for(var item of dict.$iter_items_check(d)){
+        yield item[0]
+    }
+}
+
+dict.$iter_values_check = function*(d){
+    for(var item of dict.$iter_items_check(d)){
+        yield item[1]
     }
 }
 
@@ -353,12 +380,41 @@ dict.$iter_items = function*(d){
     }
 }
 
+dict.$iter_items_with_hash = function*(d){
+    for(var i = 0, len = d._keys.length; i < len; i++){
+        if(d._keys[i] !== undefined){
+            yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
+        }
+    }
+}
+
+dict.$iter_items_check = function*(d){
+    if(d.$jsobj){
+        for(var key in d.$jsobj){
+            yield [key, d.$jsobj[key]]
+        }
+    }else{
+        var version = d.$version
+        for(var i = 0, len = d._keys.length; i < len; i++){
+            if(d._keys[i] !== undefined){
+                yield [d._keys[i], d._values[i]]
+                if(d.$version !== version){
+                    throw _b_.RuntimeError.$factory('changed in iteration')
+                }
+            }
+        }
+        if(d.$version !== version){
+            throw _b_.RuntimeError.$factory('changed in iteration')
+        }
+    }
+}
+
 var $copy_dict = function(left, right){
     // left and right are dicts
     right.$version = right.$version || 0
     var right_version = right.$version
-    for(var item of dict.$iter_items(right)){
-        dict.$setitem(left, item[0], item[1])
+    for(var entry of dict.$iter_items_with_hash(right)){
+        dict.$setitem(left, entry.key, entry.value, entry.hash)
         if(right.$version != right_version){
             throw _b_.RuntimeError.$factory("dict mutated during update")
         }
@@ -441,6 +497,7 @@ dict.__delitem__ = function(){
         }
         delete self._values[lookup.index]
         delete self._keys[lookup.index]
+        delete self._hashes[lookup.index]
         self.$version++
         return _b_.None
     }
@@ -643,8 +700,8 @@ dict.__init__ = function(self, first, second){
     }else if(args.length == 1){
         args = args[0]
         if(args.__class__ === dict){
-            for(var item of dict.$iter_items(args)){
-                dict.$setitem(self, item[0], item[1])
+            for(var entry of dict.$iter_items_with_hash(args)){
+                dict.$setitem(self, entry.key, entry.value, entry.hash)
             }
         }else{
             var keys = $B.$getattr(args, "keys", null)
@@ -677,8 +734,8 @@ dict.__init__ = function(self, first, second){
         }
     }
 
-    for(var item of dict.$iter_items($.second)){
-        dict.$setitem(self, item[0], item[1])
+    for(var entry of dict.$iter_items_with_hash($.second)){
+        dict.$setitem(self, entry.key, entry.value, entry.hash)
     }
     return _b_.None
 }
@@ -803,13 +860,9 @@ dict.__setitem__ = function(self, key, value){
     return dict.$setitem($.self, $.key, $.value)
 }
 
-dict.$setitem = function(self, key, value, $hash){
+dict.$setitem = function(self, key, value, $hash, from_setdefault){
     // Set a dictionary item mapping key and value.
     //
-    // Parameter $hash is only set if this method is called by setdefault.
-    // In this case the hash of key has already been computed and we
-    // know that the key is not present in the dictionary, so it's no
-    // use computing hash(key) again, nor testing equality of keys
     if(self.$jsobj){
         if(self.$from_js){
             // dictionary created by method to_dict of JSObj instances
@@ -837,10 +890,10 @@ dict.$setitem = function(self, key, value, $hash){
     if(self.table[hash] === undefined){
         index = self._keys.length
         self.table[hash] = [index]
-        self._keys.push(key)
-        self._values.push(value)
     }else{
-        if($hash === undefined){
+        if(! from_setdefault){
+            // If $setitem was called from setdefault, it's no use trying
+            // another lookup
             var lookup = dict.$lookup_by_key(self, key, hash)
             if(lookup.found){
                 self._values[lookup.index] = value
@@ -854,10 +907,11 @@ dict.$setitem = function(self, key, value, $hash){
         }else{
             self.table[hash].push(index)
         }
-        self._keys.push(key)
-        self._values.push(value)
-        self.$version++
     }
+    self._keys.push(key)
+    self._values.push(value)
+    self._hashes.push(hash)
+    self.$version++
     return _b_.None
 }
 
@@ -942,7 +996,68 @@ dict.get = function(){
     }
 }
 
-var dict_items = $B.make_view("dict_items", true)
+var dict_items = $B.make_class("dict_items",
+    function(d){
+        return {
+            __class__: dict_items,
+            dict: d,
+            make_iter: function(){return dict.$iter_items_check(d)}
+        }
+    }
+)
+
+dict_items.__iter__ = function(self){
+    return dict_itemiterator.$factory(self.make_iter)
+}
+
+dict_items.__len__ = function(self){
+    return dict.__len__(self.dict)
+}
+
+dict_items.__reduce__ = function(self){
+    var items = Array.from(self.make_iter())
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
+}
+
+dict_items.__repr__ = function(self){
+    var items = Array.from(self.make_iter())
+    items = items.map($B.fast_tuple)
+    return 'dict_items(' + _b_.repr(items) + ')'
+}
+
+make_view_comparison_methods(dict_items)
+
+$B.set_func_names(dict_items, 'builtins')
+
+var dict_itemiterator = $B.make_class('dict_itemiterator',
+    function(make_iter){
+        return {
+            __class__: dict_itemiterator,
+            iter: make_iter(),
+            make_iter
+        }
+    }
+)
+
+dict_itemiterator.__iter__ = function(self){
+    self[Symbol.iterator] = function(){return self.iter}
+    return self
+}
+
+dict_itemiterator.__next__ = function(self){
+    var res = self.iter.next()
+    if(res.done){
+        throw _b_.StopIteration.$factory('')
+    }
+    return $B.fast_tuple(res.value)
+}
+
+dict_itemiterator.__reduce_ex__ = function(self, protocol){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([Array.from(self.make_iter())])])
+}
+
+$B.set_func_names(dict_itemiterator, 'builtins')
 
 dict.items = function(self){
     var $ = $B.args('items', 1, {self: null}, ['self'], arguments,
@@ -950,8 +1065,67 @@ dict.items = function(self){
     return dict_items.$factory(self)
 }
 
+var dict_keys = $B.make_class("dict_keys",
+    function(d){
+        return {
+            __class__: dict_keys,
+            dict: d,
+            make_iter: function(){return dict.$iter_keys_check(d)}
+        }
+    }
+)
 
-var dict_keys = $B.make_view("dict_keys")
+dict_keys.__iter__ = function(self){
+    return dict_keyiterator.$factory(self.make_iter)
+}
+
+dict_keys.__len__ = function(self){
+    return dict.__len__(self.dict)
+}
+
+dict_keys.__reduce__ = function(self){
+    var items = Array.from(self.make_iter())
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
+}
+
+dict_keys.__repr__ = function(self){
+    var items = Array.from(self.make_iter())
+    return 'dict_keys(' + _b_.repr(items) + ')'
+}
+
+make_view_comparison_methods(dict_keys)
+
+$B.set_func_names(dict_keys, 'builtins')
+
+var dict_keyiterator = $B.make_class('dict_keyiterator',
+    function(make_iter){
+        return {
+            __class__: dict_keyiterator,
+            iter: make_iter(),
+            make_iter
+        }
+    }
+)
+
+dict_keyiterator.__iter__ = function(self){
+    self[Symbol.iterator] = function(){return self.iter}
+    return self
+}
+
+dict_keyiterator.__next__ = function(self){
+    var res = self.iter.next()
+    if(res.done){
+        throw _b_.StopIteration.$factory('')
+    }
+    return res.value
+}
+
+dict_keyiterator.__reduce_ex__ = function(self, protocol){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([Array.from(self.make_iter())])])
+}
+
+$B.set_func_names(dict_keyiterator, 'builtins')
 
 dict.keys = function(self){
     var $ = $B.args('keys', 1, {self: null}, ['self'], arguments,
@@ -1009,7 +1183,7 @@ dict.setdefault = function(){
     }
     _default = _default === undefined ? _b_.None : _default
     var hash = lookup.hash
-    dict.$setitem(self, key, _default, hash)
+    dict.$setitem(self, key, _default, hash, true)
     return _default
 }
 
@@ -1064,7 +1238,68 @@ dict.update = function(self){
     return $N
 }
 
-var dict_values = $B.make_view("dict_values")
+var dict_values = $B.make_class("dict_values",
+    function(d){
+        return {
+            __class__: dict_values,
+            dict: d,
+            make_iter: function(){return dict.$iter_values_check(d)}
+        }
+    }
+)
+
+dict_values.__iter__ = function(self){
+    return dict_valueiterator.$factory(self.make_iter)
+}
+
+dict_values.__len__ = function(self){
+    return dict.__len__(self.dict)
+}
+
+dict_values.__reduce__ = function(self){
+    var items = Array.from(self.make_iter())
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
+}
+
+dict_values.__repr__ = function(self){
+    var items = Array.from(self.make_iter())
+    return 'dict_values(' + _b_.repr(items) + ')'
+}
+
+make_view_comparison_methods(dict_values)
+
+$B.set_func_names(dict_values, 'builtins')
+
+var dict_valueiterator = $B.make_class('dict_valueiterator',
+    function(make_iter){
+        return {
+            __class__: dict_valueiterator,
+            iter: make_iter(),
+            make_iter
+        }
+    }
+)
+
+dict_valueiterator.__iter__ = function(self){
+    self[Symbol.iterator] = function(){return self.iter}
+    return self
+}
+
+dict_valueiterator.__next__ = function(self){
+    var res = self.iter.next()
+    if(res.done){
+        throw _b_.StopIteration.$factory('')
+    }
+    return res.value
+}
+
+dict_valueiterator.__reduce_ex__ = function(self, protocol){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([Array.from(self.make_iter())])])
+}
+
+$B.set_func_names(dict_valueiterator, 'builtins')
+
 
 dict.values = function(self){
     var $ = $B.args('values', 1, {self: null}, ['self'], arguments,
@@ -1094,6 +1329,7 @@ $B.empty_dict = function(){
         table: Object.create(null),
         _keys: [],
         _values: [],
+        _hashes: [],
         $version: 0,
         $order: 0
     }
