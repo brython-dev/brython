@@ -234,8 +234,8 @@ $B.parse_kwargs = function(kw_args, fname){
             key,
             value
         if(kw_arg.__class__ === _b_.dict){
-            for(var item of _b_.dict.$iter_items(kw_arg)){
-                key = item[0]
+            for(var entry of $B.make_js_iterator(_b_.dict.items(kw_arg))){
+                key = entry[0]
                 if(typeof key !== 'string'){
                     throw _b_.TypeError.$factory(fname +
                         "() keywords must be strings")
@@ -244,7 +244,7 @@ $B.parse_kwargs = function(kw_args, fname){
                         "() got multiple values for argument '" +
                         key + "'")
                 }else{
-                    kwa[key] = item[1]
+                    kwa[key] = entry[1]
                 }
             }
         }else{
