@@ -229,6 +229,8 @@ var chr = _b_.chr = function(i){
     }
 }
 
+// classmethod is in py_type.js
+
 var code = _b_.code = $B.make_class("code")
 
 code.__repr__ = code.__str__ = function(_self){
@@ -1857,34 +1859,27 @@ function $extreme(args, op){ // used by min() and max()
             res = null,
             x_value,
             extr_value
-        while(true){
-            try{
-                var x = next($iter)
-                if(res === null){
-                    extr_value = func(x)
+        for(var x of $iter){
+            if(res === null){
+                extr_value = func(x)
+                res = x
+            }else{
+                x_value = func(x)
+                if($B.rich_comp(op, x_value, extr_value)){
                     res = x
-                }else{
-                    x_value = func(x)
-                    if($B.rich_comp(op, x_value, extr_value)){
-                        res = x
-                        extr_value = x_value
-                    }
+                    extr_value = x_value
                 }
-            }catch(err){
-                if(err.__class__ == _b_.StopIteration){
-                    if(res === null){
-                        if(has_default){
-                            return default_value
-                        }else{
-                            throw _b_.ValueError.$factory($op_name +
-                                "() arg is an empty sequence")
-                        }
-                    }else{
-                        return res
-                    }
-                }
-                throw err
             }
+        }
+        if(res === null){
+            if(has_default){
+                return default_value
+            }else{
+                throw _b_.ValueError.$factory($op_name +
+                    "() arg is an empty sequence")
+            }
+        }else{
+            return res
         }
     }else{
         if(has_default){
@@ -2040,14 +2035,6 @@ var next = _b_.next = function(obj){
     var missing = {},
         $ = $B.args("next", 2, {obj: null, def: null}, ['obj', 'def'],
             arguments, {def: missing}, null, null)
-    if(obj[Symbol.iterator]){
-        // JS iterator, used internally for speed
-        var next = obj.next()
-        if(next.done){
-            throw _b_.StopIteration.$factory('')
-        }
-        return next.value
-    }
     var klass = obj.__class__ || $B.get_class(obj),
         ga = $B.$call($B.$getattr(klass, "__next__"))
     if(ga !== undefined){
@@ -3136,6 +3123,14 @@ var $url_open = _b_.open = function(){
     }
 }
 
+function* zip_iter(args){
+    var t = []
+    for(var arg in args){
+        t.push($B.make_js_iterator(arg))
+    }
+    return t
+}
+
 var zip = _b_.zip = $B.make_class("zip",
     function(){
         var res = {
@@ -3151,110 +3146,49 @@ var zip = _b_.zip = $B.make_class("zip",
         var nexts = [],
             only_lists = true,
             min_len
-
-        for(var i = 0; i < _args.length; i++){
-            if(only_lists && Array.isArray(_args[i])){
-                if(strict){
-                    if(i == 0){
-                        var len = _args[i].length
-                    }else if(_args[i] != len){
-                        throw _b_.ValueError.$factory(`zip() argument ${i} ` +
-                            `is ${_args[i] > len ? 'longer' : 'shorter'} ` +
-                            `than argument ${i - 1}`)
-                    }
-                }
-                if(min_len === undefined || _args[i].length < min_len){
-                    min_len = _args[i].length
-                }
-            }else{
-                only_lists = false
-            }
+        var iters = []
+        for(var arg of _args){
+            iters.push($B.make_js_iterator(arg))
         }
-
-        var rank = 0,
-            items = []
-        if(only_lists){
-            for(var i = 0; i < min_len; i++){
-                var line = []
-                for(var _arg of _args){
-                    line.push(_arg[i])
-                }
-                items.push($B.fast_tuple(line))
-            }
-            res.items = items
-            var zip_it = {
-                __class__: zip,
-                counter: -1,
-                items,
-                last: items.length,
-                [Symbol.iterator](){
-                    return this
-                },
-                next(){
-                    this.counter++
-                    if(this.counter == this.last){
-                        return {done: true, value: null}
-                    }
-                    var line = $B.fast_tuple(this.items[this.counter])
-                    return {done: false, value: line}
-                }
-            }
-            return zip_it
-
-            //return zip_iterator.$factory(items)
+        return {
+            __class__: zip,
+            iters,
+            strict
         }
-        var args = _args.map($B.next_of)
-        function* iterator(args){
-            while(true){
-                var line = [],
-                    flag = true
-                for(var i = 0; i < args.length; i++){
-                    try{
-                        line.push(args[i]())
-                    }catch(err){
-                        if(err.__class__ == _b_.StopIteration){
-                            if(strict){
-                                if(i > 0){
-                                    throw _b_.ValueError.$factory(
-                                        `zip() argument ${i + 1} is shorter ` +
-                                        `than argument ${i}`)
-                                }else{
-                                    for(var j = 1; j < args.length; j++){
-                                        var exhausted = true
-                                        try{
-                                            args[j]()
-                                            exhausted = false
-                                        }catch(err){
-                                        }
-                                        if(! exhausted){
-                                            throw _b_.ValueError.$factory(
-                                                `zip() argument ${j + 1} is longer ` +
-                                                `than argument ${i + 1}`)
-                                        }
-                                    }
-                                }
-                            }
-                            flag = false
-                            break
-                        }else{
-                            throw err
-                        }
-                    }
-                }
-                if(! flag){
-                    return
-                }
-                yield $B.fast_tuple(line)
-            }
-        }
-        return $B.generator.$factory(iterator, 'zip')(args)
     }
 )
 
 var zip_iterator = $B.make_iterator_class('zip')
 
 zip.__iter__ = function(self){
-    return zip_iterator.$factory(self.items)
+    return self
+}
+
+zip.__next__ = function(self){
+    var res = [],
+        len = self.iters.length
+    for(var i = 0; i < len; i++){
+        var v = self.iters[i].next()
+        if(v.done){
+            if(self.strict){
+                if(i > 0){
+                    throw _b_.ValueError.$factory(
+                        `zip() argument ${i + 1} is longer than argument ${i}`)
+                }else{
+                    for(var j = 1; j < len; j++){
+                        var v = self.iters[j].next()
+                        if(! v.done){
+                            throw _b_.ValueError.$factory(
+                                `zip() argument ${j + 1} is longer than argument ${i + 1}`)
+                        }
+                    }
+                }
+            }
+            throw _b_.StopIteration.$factory('')
+        }
+        res.push(v.value)
+    }
+    return $B.fast_tuple(res)
 }
 
 $B.set_func_names(zip, "builtins")
