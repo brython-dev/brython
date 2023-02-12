@@ -87,7 +87,7 @@ function handle_kwargs(self, kw, method){
             if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
-                for(var key of _b_.dict.$fast_iter_keys(params)){
+                for(var key of $B.make_js_iterator(_b_.dict.keys(params))){
                     if(typeof key !== 'string'){
                         throw _b_.ValueError.$factory(
                             'data only supports string keys, got ' +

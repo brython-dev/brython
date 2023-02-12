@@ -49,7 +49,7 @@ $B.pyobj2structuredclone = function(obj, strict){
         return res
     }else if(_b_.isinstance(obj, _b_.dict)){
         if(strict){
-            for(var key of _b_.dict.$fast_iter_keys(obj)){
+            for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){
                 if(typeof key !== 'string'){
                     throw _b_.TypeError.$factory("a dictionary with non-string " +
                         "keys does not support structured clone")
