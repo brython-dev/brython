@@ -1,4 +1,5 @@
 from browser import aio, timer
+from tester import assert_raises
 
 results = []
 
@@ -242,6 +243,49 @@ async def test_issue_1906():
                  'cs after try is {0, 2}']
     print('issue 1906 ok')
 
+# issue 2158
+class T:
+    @classmethod
+    async def test(cls):
+        a, b = await cls.does_not_exist()
+
+async def test_issue_2158():
+
+    def not_async_function():
+        pass
+
+    assert_raises(TypeError, aio.run, not_async_function,
+                  msg="object is not a coroutine")
+
+    assert_raises(TypeError, aio.run, not_async_function(),
+                  msg="object is not a coroutine")
+
+    async def async_func1():
+      return 'af ok'
+
+    async def async_func2():
+      assert (await async_func1()) == 'af ok'
+
+    assert_raises(
+        TypeError, aio.run, async_func2,
+        msg="object is not a coroutine. Maybe you forgot to call the async function ?")
+
+    aio.run(async_func2())
+
+    assert_raises(TypeError, aio.run, T.test,
+        msg="object is not a coroutine. Maybe you forgot to call the async function ?")
+
+    async def test():
+        try:
+            await T.test()
+            raise AssertionError("should have raised AttributeError")
+        except AttributeError:
+            pass
+
+    aio.run(test())
+
+    print('test 2158 ok')
+
 async def main(secs, urls):
     print(f"wait {secs} seconds...")
     await aio.sleep(secs)
@@ -267,6 +311,8 @@ async def main(secs, urls):
     await test_fstring_with_global()
 
     await test_issue_1906()
+    
+    await test_issue_2158()
 
     await raise_error()
 

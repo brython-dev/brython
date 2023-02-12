@@ -442,9 +442,14 @@ $B.next_of = function(iterator){
 $B.make_js_iterator = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
     // "for(item of $B.make_js_iterator(...)){"
+    var set_lineno = $B.set_lineno
     if(frame === undefined){
-        frame = $B.last($B.frames_stack)
-        lineno = frame.$lineno
+        if($B.frames_stack.length == 0){
+            set_lineno = function(){}
+        }else{
+            frame = $B.last($B.frames_stack)
+            lineno = frame.$lineno
+        }
     }
     if(iterator.__class__ === _b_.range){
         var obj = {ix: iterator.start}
@@ -454,7 +459,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                     return this
                 },
                 next(){
-                    $B.set_lineno(frame, lineno)
+                    set_lineno(frame, lineno)
                     if(obj.ix >= iterator.stop){
                         return {done: true, value: null}
                     }
@@ -469,7 +474,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                     return this
                 },
                 next(){
-                    $B.set_lineno(frame, lineno)
+                    set_lineno(frame, lineno)
                     if(obj.ix <= iterator.stop){
                         return {done: true, value: null}
                     }
@@ -487,7 +492,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                 return this
             },
             next(){
-                $B.set_lineno(frame, lineno)
+                set_lineno(frame, lineno)
                 return it.next()
             }
         }
@@ -501,7 +506,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             return this
         },
         next(){
-            $B.set_lineno(frame, lineno)
+            set_lineno(frame, lineno)
             try{
                 var value = next_func()
                 return {done: false, value}

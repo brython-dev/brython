@@ -2,8 +2,8 @@
 
 var _b_ = $B.builtins
 
-$B.del_exc = function(){
-    var frame = $B.last($B.frames_stack)
+$B.del_exc = function(frame){
+    // var frame = $B.last($B.frames_stack)
     delete frame[1].$current_exception
 }
 

@@ -1836,11 +1836,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                               this.name
 
     // Flags
-    var flags = 67
+    var flags = 3
     if(this.args.vararg){flags |= 4}
     if(this.args.kwarg){flags |= 8}
     if(is_generator){flags |= 32}
-
+    if(is_async){flags |= 128}
+    
     var parameters = [],
         locals = [],
         identifiers = _b_.dict.$keys_string(symtable_block.symbols)
@@ -2656,7 +2657,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
             js += add_body(handler.body, scopes) + '\n'
             if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                 // delete current exception
-                js += '$B.del_exc()\n'
+                js += '$B.del_exc(frame)\n'
             }
         }
         if(! has_untyped_except){
@@ -2775,7 +2776,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes){
                 js += add_body(handler.body, scopes) + '\n'
                 if(! ($B.last(handler.body) instanceof $B.ast.Return)){
                     // delete current exception
-                    js += '$B.del_exc()\n'
+                    js += '$B.del_exc(frame)\n'
                 }
                 js += '}\n'
                 js += '}\n'

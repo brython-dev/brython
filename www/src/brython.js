@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-10 21:12:47.305522"
-__BRYTHON__.timestamp=1676059967305
+__BRYTHON__.compiled_date="2023-02-12 09:16:19.290782"
+__BRYTHON__.timestamp=1676189779290
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4951,27 +4951,28 @@ if(iterator.$builtin_iterator){if(iterator.$next_func===undefined){iterator.$nex
 return iterator.$next_func}
 return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
 $B.make_js_iterator=function(iterator,frame,lineno){
-if(frame===undefined){frame=$B.last($B.frames_stack)
-lineno=frame.$lineno}
+var set_lineno=$B.set_lineno
+if(frame===undefined){if($B.frames_stack.length==0){set_lineno=function(){}}else{frame=$B.last($B.frames_stack)
+lineno=frame.$lineno}}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
 if(iterator.step > 0){return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 if(obj.ix >=iterator.stop){return{done:true,value:null}}
 var value=obj.ix
 obj.ix+=iterator.step
 return{done:false,value}}}}else{return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 if(obj.ix <=iterator.stop){return{done:true,value:null}}
 var value=obj.ix
 obj.ix+=iterator.step
 return{done:false,value}}}}}
 if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator]()
 return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}
 var next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))
 return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 try{var value=next_func()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
 throw err}}}}
@@ -7614,7 +7615,7 @@ $B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
-$B.del_exc=function(){var frame=$B.last($B.frames_stack)
+$B.del_exc=function(frame){
 delete frame[1].$current_exception}
 $B.set_exc=function(exc,frame){
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
@@ -8020,6 +8021,7 @@ err.end_offset==line.substr(indent).length){nb_marks=1}}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
+console.log('report error',name)
 trace+=trace_from_stack(err)
 var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
@@ -14146,7 +14148,12 @@ return false}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins
 var coroutine=$B.coroutine=$B.make_class("coroutine")
 coroutine.close=function(self){}
-coroutine.send=function(self){return self.$func.apply(null,self.$args)}
+coroutine.send=function(self){if(! _b_.isinstance(self,coroutine)){var msg="object is not a coroutine"
+if(typeof self=="function" && self.$infos && self.$infos.__code__ &&
+self.$infos.__code__.co_flags & 128){msg+='. Maybe you forgot to call the async function ?'}
+throw _b_.TypeError.$factory(msg)}
+var res=self.$func.apply(null,self.$args)
+return res}
 coroutine.__repr__=coroutine.__str__=function(self){if(self.$func.$infos){return "<coroutine "+self.$func.$infos.__name__+">"}else{return "<coroutine object>"}}
 $B.set_func_names(coroutine,"builtins")
 $B.make_async=func=>{
@@ -15207,10 +15214,11 @@ scopes.pop()
 var func_name_scope=bind(this.name,scopes),in_class=func_name_scope.ast instanceof $B.ast.ClassDef
 var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
 this.name
-var flags=67
+var flags=3
 if(this.args.vararg){flags |=4}
 if(this.args.kwarg){flags |=8}
 if(is_generator){flags |=32}
+if(is_async){flags |=128}
 var parameters=[],locals=[],identifiers=_b_.dict.$keys_string(symtable_block.symbols)
 var free_vars=[]
 for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SCOPE_OFF)& SCOPE_MASK
@@ -15563,7 +15571,7 @@ var mangled=mangle(scopes,try_scope,handler.name)
 js+=`locals.${mangled} = ${err}\n`}
 js+=add_body(handler.body,scopes)+'\n'
 if(!($B.last(handler.body)instanceof $B.ast.Return)){
-js+='$B.del_exc()\n'}}
+js+='$B.del_exc(frame)\n'}}
 if(! has_untyped_except){
 js+=`}else{\nthrow ${err}\n`}
 js+='}\n'}
@@ -15632,7 +15640,7 @@ var mangled=mangle(scopes,try_scope,handler.name)
 js+=`locals.${mangled} = ${err}\n`}
 js+=add_body(handler.body,scopes)+'\n'
 if(!($B.last(handler.body)instanceof $B.ast.Return)){
-js+='$B.del_exc()\n'}
+js+='$B.del_exc(frame)\n'}
 js+='}\n'
 js+='}\n'
 js+=`${err} = rest\n`}}
