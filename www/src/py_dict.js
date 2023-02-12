@@ -485,7 +485,7 @@ function init_from_list(self, args){
         var item = args[i]
         if(item.length != 2){
             throw _b_.ValueError.$factory("dictionary " +
-                `update sequence element #${i} has length 1; 2 is required`)
+                `update sequence element #${i} has length ${item.length}; 2 is required`)
         }
         dict.$setitem(self, item[0], item[1])
     }
@@ -1222,6 +1222,14 @@ dict.values = function(self){
     var $ = $B.args('values', 1, {self: null}, ['self'], arguments,
                     {}, null, null)
     return dict_values.$factory(self)
+}
+
+dict.$literal = function(items){
+    var res = $B.empty_dict()
+    for(var item of items){
+        dict.$setitem(res, item[0], item[1], item[2])
+    }
+    return res
 }
 
 dict.$factory = function(){

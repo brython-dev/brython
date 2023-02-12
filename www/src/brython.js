@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-12 09:16:19.290782"
-__BRYTHON__.timestamp=1676189779290
+__BRYTHON__.compiled_date="2023-02-12 10:18:39.089758"
+__BRYTHON__.timestamp=1676193519089
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -8021,7 +8021,6 @@ err.end_offset==line.substr(indent).length){nb_marks=1}}
 marks+='^'.repeat(nb_marks)+'\n'
 trace+=marks}
 trace+=`${err.__class__.__name__}: ${err.args[0]}`}else if(err.__class__ !==undefined){var name=$B.class_name(err)
-console.log('report error',name)
 trace+=trace_from_stack(err)
 var args_str=_b_.str.$factory(err)
 trace+=name+(args_str ? ': '+args_str :'')
@@ -9179,7 +9178,7 @@ if(typeof obj=="boolean" ||typeof obj=="number" ||
 typeof obj=="string" ||obj instanceof String){return obj}else if(obj.__class__===_b_.float){return obj.value}else if(obj===_b_.None){return null }else if(Array.isArray(obj)||obj.__class__===_b_.list ||
 obj.__class__===_b_.tuple){var res=[]
 for(var i=0,len=obj.length;i < len;i++){res.push($B.pyobj2structuredclone(obj[i]))}
-return res}else if(_b_.isinstance(obj,_b_.dict)){if(strict){for(var key of _b_.dict.$fast_iter_keys(obj)){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
+return res}else if(_b_.isinstance(obj,_b_.dict)){if(strict){for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){if(typeof key !=='string'){throw _b_.TypeError.$factory("a dictionary with non-string "+
 "keys does not support structured clone")}}}
 var res={}
 for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
@@ -12543,7 +12542,7 @@ dict.__hash__=_b_.None
 function init_from_list(self,args){var i=-1,stop=args.length-1,si=dict.$setitem
 while(i++< stop){var item=args[i]
 if(item.length !=2){throw _b_.ValueError.$factory("dictionary "+
-`update sequence element #${i} has length 1; 2 is required`)}
+`update sequence element #${i} has length ${item.length}; 2 is required`)}
 dict.$setitem(self,item[0],item[1])}}
 dict.__init__=function(self,first,second){if(first===undefined){return _b_.None}
 if(second===undefined){if(first.$nat !='kw' && $B.get_class(first)===$B.JSObj){for(var key in first){dict.$setitem(self,key,first[key])}
@@ -12801,6 +12800,9 @@ dict_valueiterator.__reduce_ex__=function(self,protocol){return $B.fast_tuple([_
 $B.set_func_names(dict_valueiterator,'builtins')
 dict.values=function(self){var $=$B.args('values',1,{self:null},['self'],arguments,{},null,null)
 return dict_values.$factory(self)}
+dict.$literal=function(items){var res=$B.empty_dict()
+for(var item of items){dict.$setitem(res,item[0],item[1],item[2])}
+return res}
 dict.$factory=function(){var res=dict.__new__(dict)
 var args=[res]
 for(var arg of arguments){args.push(arg)}
@@ -15065,10 +15067,13 @@ function no_key(i){return keys[i]===_b_.None ||keys[i]===undefined}
 for(var i=0,len=this.keys.length;i < len;i++){if(no_key(i)){
 has_packed=true
 items.push('_b_.list.$factory(_b_.dict.items('+
-$B.js_from_ast(this.values[i],scopes)+'))')}else{try{items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, `+
-`${$B.js_from_ast(this.values[i], scopes)}]`)}catch(err){throw err}}}
-if(! has_packed){return `_b_.dict.$factory([${items}])`}
-var first=no_key(0)? items[0]:`[${items[0]}]`,js='_b_.dict.$factory('+first
+$B.js_from_ast(this.values[i],scopes)+'))')}else{var item=`[${$B.js_from_ast(this.keys[i], scopes)}, `+
+`${$B.js_from_ast(this.values[i], scopes)}`
+if(this.keys[i]instanceof $B.ast.Constant){try{var hash=$B.$hash(this.keys[i].value)
+item+=`, ${hash}`}catch(err){}}
+items.push(item+']')}}
+if(! has_packed){return `_b_.dict.$literal([${items}])`}
+var first=no_key(0)? items[0]:`[${items[0]}]`,js='_b_.dict.$literal('+first
 for(var i=1,len=items.length;i < len;i++){var arg=no_key(i)? items[i]:`[${items[i]}]`
 js+=`.concat(${arg})`}
 return js+')'}

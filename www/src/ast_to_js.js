@@ -1503,20 +1503,25 @@ $B.ast.Dict.prototype.to_js = function(scopes){
             items.push('_b_.list.$factory(_b_.dict.items(' +
                       $B.js_from_ast(this.values[i], scopes) + '))')
         }else{
-            try{
-                items.push(`[${$B.js_from_ast(this.keys[i], scopes)}, ` +
-                           `${$B.js_from_ast(this.values[i], scopes)}]`)
-            }catch(err){
-                throw err
+            var item = `[${$B.js_from_ast(this.keys[i], scopes)}, ` +
+                       `${$B.js_from_ast(this.values[i], scopes)}`
+            if(this.keys[i] instanceof $B.ast.Constant){
+                try{
+                    var hash = $B.$hash(this.keys[i].value)
+                    item += `, ${hash}`
+                }catch(err){
+                    // not hashable, will be raised at runtime
+                }
             }
+            items.push(item + ']')
         }
     }
     if(! has_packed){
-        return `_b_.dict.$factory([${items}])`
+        return `_b_.dict.$literal([${items}])`
     }
     // dict display has items of the form **t
     var first = no_key(0) ? items[0] : `[${items[0]}]`,
-        js = '_b_.dict.$factory(' + first
+        js = '_b_.dict.$literal(' + first
     for(var i = 1, len = items.length; i < len; i++){
         var arg = no_key(i) ? items[i] : `[${items[i]}]`
         js += `.concat(${arg})`
@@ -1841,7 +1846,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     if(this.args.kwarg){flags |= 8}
     if(is_generator){flags |= 32}
     if(is_async){flags |= 128}
-    
+
     var parameters = [],
         locals = [],
         identifiers = _b_.dict.$keys_string(symtable_block.symbols)
