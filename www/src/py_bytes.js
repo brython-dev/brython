@@ -1026,7 +1026,7 @@ bytes.removeprefix = function(){
 }
 
 bytes.removesuffix = function(){
-    var $ = $B.args("removesuffix", 2, {self: null, prefix: null},
+    var $ = $B.args("removesuffix", 2, {self: null, suffix: null},
                     ["self", "suffix"], arguments, {}, null, null)
     if(!_b_.isinstance($.suffix, [bytes, bytearray])){
         throw _b_.ValueError.$factory("suffix should be bytes, not " +
