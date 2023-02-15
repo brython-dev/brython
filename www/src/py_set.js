@@ -922,7 +922,15 @@ set.__ior__ = function(self, other){
 set.$literal = function(items){
     var res = make_new_set(set)
     for(var item of items){
-        set_add(res, item)
+        if(item.constant){
+            set_add(res, item.constant[0], item.constant[1])
+        }else if(item.starred){
+            for(var item of $B.make_js_iterator(item.starred)){
+                set_add(res, item)
+            }
+        }else{
+            set_add(res, item.item)
+        }
     }
     return res
 }
