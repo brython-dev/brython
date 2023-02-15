@@ -562,13 +562,13 @@ $B.attr_error = function(name, obj){
         var msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return _b_.AttributeError.$factory({$nat:"kw", kw:{name, obj, msg}})
+    return _b_.AttributeError.$factory({$kw:[{name, obj, msg}]})
 }
 
 // NameError supports keyword-only "name" parameter
 var js = '\nvar $ = $B.args("NameError", 1, {"message":null, "name": null}, ' +
-    '["message", "/", "name"], arguments, ' +
-    '{message: _b_.None, name: _b_.None}, "*", null);\n' +
+    '["message", "name"], arguments, ' +
+    '{message: _b_.None, name: _b_.None}, "*", null, 1);\n' +
     'err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])\n' +
     'err.name = $.name;\n'
 

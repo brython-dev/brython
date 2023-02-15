@@ -506,7 +506,7 @@ object.__setattr__.__get__ = function(obj){
 object.__setattr__.__str__ = function(){return "method object.setattr"}
 
 object.__str__ = function(self){
-    if(self === undefined || self.$nat == 'kw'){
+    if(self === undefined || self.$kw){
         throw _b_.TypeError.$factory("descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
@@ -521,8 +521,8 @@ object.__subclasshook__ = function(){return _b_.NotImplemented}
 // constructor of the built-in class 'object'
 object.$factory = function(){
     if(arguments.length > 0 ||
-            (arguments.length == 1 && arguments[0].$nat &&
-                Object.keys(arguments[0].kw).length > 0)
+            (arguments.length == 1 && arguments[0].$kw &&
+                Object.keys(arguments[0].$kw).length > 0)
             ){
         throw _b_.TypeError.$factory('object() takes no arguments')
     }

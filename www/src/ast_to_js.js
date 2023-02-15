@@ -1163,11 +1163,12 @@ $B.ast.Break.prototype.to_js = function(scopes){
 }
 
 $B.ast.Call.prototype.to_js = function(scopes){
-    var js = '$B.$call(' + $B.js_from_ast(this.func, scopes)
-    if($B.pep657){
-        js += `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
-    }
+    var func =  $B.js_from_ast(this.func, scopes),
+        js = '$B.$call1(' + func +
+             `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
+
     var args = make_args.bind(this)(scopes)
+
     return js + ')' + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
 }
@@ -1249,7 +1250,7 @@ function make_args(scopes){
         for(var starred_kwarg of starred_kwargs){
             kw += `, ${starred_kwarg}`
         }
-        kw = `{$nat: 'kw', kw:[${kw}]}`
+        kw = `{$kw:[${kw}]}`
         if(args.length > 0){
             if(has_starred){
                 kw = `.concat([${kw}])`
@@ -1702,7 +1703,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     scopes.push(func_scope)
 
     var args = positional.concat(this.args.kwonlyargs),
-        parse_args = [`"${this.name}"`, positional.length],
         slots = [],
         arg_names = []
     for(var arg of args){
@@ -1715,7 +1715,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
     if(has_posonlyargs){
         // add fake argument name to indicate end of positional args
-        arg_names.push("'/'")
+        //arg_names.push("'/'")
     }
     for(var arg of this.args.args.concat(this.args.kwonlyargs)){
         arg_names.push(`'${arg.arg}'`)
@@ -1744,6 +1744,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         name1 = this.name + '$' + id,
         name2 = this.name + id
 
+    var parse_args = [name2, positional.length]
+
     var js = decs +
              `$B.set_lineno(frame, ${this.lineno})\n`
 
@@ -1760,12 +1762,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                locals\n`
 
     parse_args.push('{' + slots.join(', ') + '} , ' +
-        '[' + arg_names.join(', ') + '], ' +
-        `arguments, ${name2}.$defaults, ` +
-        (this.args.vararg ? `'${this.args.vararg.arg}', ` :
-            (this.args.kwonlyargs.length > 0 ? "'*', " : 'null, ')) +
-        (this.args.kwarg ? `'${this.args.kwarg.arg}'` : 'null'))
-    js += `${locals_name} = locals = $B.args(${parse_args.join(', ')})\n`
+        `arguments`)
+
+    var args_vararg = this.args.vararg === undefined ? 'null' :
+                      "'" + this.args.vararg.arg + "'",
+        args_kwarg = this.args.kwarg === undefined ? 'null':
+                     "'" + this.args.kwarg.arg + "'"
+
+    js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
+
     js += `var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
@@ -1798,10 +1803,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             parent = scopes[ix - 1]
 
         var scope_ref = make_scope_name(scopes, parent),
-            class_ref = class_scope.name // XXX qualname
+            class_ref = class_scope.name, // XXX qualname
+            refs = class_ref.split('.').map(x => `'${x}'`)
         bind("__class__", scopes)
         js += `locals.__class__ = ` +
-                  `$B.get_method_class(${scope_ref}, "${class_ref}")\n`
+                  `$B.get_method_class(${scope_ref}, "${class_ref}", [${refs}])\n`
     }
 
     js += function_body + '\n'
@@ -1893,7 +1899,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_nlocals: ${varnames.length},\n` +
         `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
         `co_varnames: $B.fast_tuple([${varnames}])\n` +
-        `}\n}\n`
+        `},\n` +
+        `arg_names: [${arg_names}],\n` +
+        `vararg: ${args_vararg},\n` +
+        `kwarg: ${args_kwarg}\n` +
+        `}\n`
 
     if(is_async && ! is_generator){
         js += `${name2} = $B.make_async(${name2})\n`
@@ -2543,19 +2553,21 @@ $B.ast.Return.prototype.to_js = function(scopes){
 }
 
 $B.ast.Set.prototype.to_js = function(scopes){
+    var elts = []
     for(var elt of this.elts){
-        if(elt instanceof $B.ast.Starred){
-            elt.$handled = true
+        var js
+        if(elt instanceof $B.ast.Constant){
+            js = `{constant: [${$B.js_from_ast(elt, scopes)}, ` +
+                 `${$B.$hash(elt.value)}]}`
+        }else if(elt instanceof $B.ast.Starred){
+            js = `{starred: ${$B.js_from_ast(elt.value, scopes)}}`
+        }else{
+            js = `{item: ${$B.js_from_ast(elt, scopes)}}`
         }
-    }
-    var call_obj = {args: this.elts, keywords: []}
-    var call = make_args.bind(call_obj)(scopes),
-        js = call.js
-    if(! call.has_starred){
-        js = `[${js}]`
+        elts.push(js)
     }
 
-    return `_b_.set.$literal(${js})`
+    return `_b_.set.$literal([${elts.join(', ')}])`
 }
 
 $B.ast.SetComp.prototype.to_js = function(scopes){

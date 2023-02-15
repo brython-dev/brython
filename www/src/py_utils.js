@@ -6,8 +6,129 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
+$B.args1 = function(func, posonlyargs, args, kwonlyargs, vararg, kwarg, p, k){
+    /*
+    console.log('argcount', func.$infos.__code__.co_argcount,
+                'posonlyargcount', func.$infos.__code__.co_posonlyargcount,
+                'kwonlyargcount', func.$infos.__code__.co_kwonlyargcount)
+    console.log('positional args', p)
+    console.log('keyword args', k)
+    */
+    var locals = {},
+        i = 0
+    for(var posonlyarg of posonlyargs){
+        if(p[i] === undefined){
+            throw _b_.TypeError.$factory('missing positional')
+        }
+        locals[posonlyarg] = p[i]
+        i++
+    }
+    for(var arg of args){
+        if(p[i] === undefined){
+            throw _b_.TypeError.$factory('missing positional')
+        }
+        locals[arg] = p[i]
+        i++
+    }
+    if(p.length > i){
+        if(vararg){
+            locals[vararg] = p.slice(i)
+        }else{
+            throw _b_.TypeError.$factory('too many positional')
+        }
+    }
+    return locals
+}
+
+$B.args2 = function(name, args, p, k){
+    var locals = {},
+        i = 0
+    for(var arg of args){
+        locals[arg] = p[i]
+        i++
+    }
+    if(k){
+        for(var item of k){
+            locals[item[0]] = item[1]
+        }
+    }
+    return locals
+}
+
+$B.args3 = function(func, p, k){
+    var locals = Object.create(null),
+        i = 0,
+        code = func.$infos.__code__,
+        varnames = code.co_varnames,
+        nb_posonly = code.co_posonlyargcount,
+        posonly = varnames.slice(0, nb_posonly),
+        nb_args = code.co_argcount,
+        args = varnames.slice(nb_posonly, nb_args),
+        nb_kwonly = code.co_kwonlyargcount,
+        defaults = func.$infos.__defaults__,
+        kwdefaults = func.$infos.__kwdefaults__,
+        name = func.$infos.__name__
+    console.log('varnames', varnames,
+                'posonly', nb_posonly, posonly,
+                'args', nb_args, args,
+                'defaults', defaults)
+    for(var i = 0, len = p.length; i < len; i++){
+        locals[varnames[i]] = p[i]
+        i++
+    }
+    if(k){
+        for(var kv of k){
+            if(locals[kv[0]] !== undefined){
+                throw _b_.TypeError.$factory('duplicate arg ' + kv[0])
+            }
+            locals[kv[0]] = kv[1]
+        }
+    }
+    return locals
+}
+
+$B.make_func_locals = function(func, args){
+    // args is a list of positional arguments
+    var locals = Object.create(null),
+        i = 0,
+        code = func.$infos.__code__,
+        varnames = code.co_varnames,
+        nb_posonly = code.co_posonlyargcount,
+        posonly = varnames.slice(0, nb_posonly),
+        nb_args = code.co_argcount,
+        args = varnames.slice(nb_posonly, nb_args),
+        nb_kwonly = code.co_kwonlyargcount,
+        defaults = func.$infos.__defaults__,
+        kwdefaults = func.$infos.__kwdefaults__,
+        name = func.$infos.__name__
+    for(var i = 0, len = args.length; i < len; i++){
+        locals[varnames[i]] = args[i]
+    }
+    return locals
+}
+
+$B.args0 = function(func, argcount, slots, args){
+    var func_arg_names = func.$infos.arg_names
+    /*
+        if(! _b_.list.__eq__(var_names, func_arg_names)){
+        console.log(func, 'var_names', var_names, 'func arg names', func_arg_names)
+        alert()
+    }
+    */
+    return $B.args(func.$infos.__name__,
+                   argcount,
+                   slots,
+                   func.$infos.arg_names.slice(),
+                   args,
+                   func.$defaults,
+                   func.$infos.vararg,
+                   func.$infos.kwarg,
+                   func.$infos.__code__.co_posonlyargcount)
+
+}
+
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,
-    extra_pos_args, extra_kw_args){
+    extra_pos_args, extra_kw_args, nb_posonly){
     // builds a namespace from the arguments provided in $args
     // in a function defined as
     //     foo(x, y, z=1, *args, u, v, **kw)
@@ -31,32 +152,22 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
 
     // If the function definition indicates the end of positional arguments,
     // store the position and remove "/" from variable names
-    var end_positional = var_names.indexOf("/")
-    if(end_positional != -1){
-        var_names.splice(end_positional, 1)
-        only_positional = var_names.slice(0, end_positional)
+    if(nb_posonly !== undefined){
+        only_positional = var_names.slice(0, nb_posonly)
     }
-
     // If the function call had keywords arguments, they are in the last
-    // element of $args
-    if(nb_pos > 0 && args[nb_pos - 1] && args[nb_pos - 1].$nat){
+    // element of args
+    if(nb_pos > 0 && args[nb_pos - 1] && args[nb_pos - 1].$kw){
         nb_pos--
-        if(Object.keys(args[nb_pos].kw).length > 0){
+        var kw_args = $B.parse_kwargs(args[nb_pos].$kw, fname)
+        var nb_kw_args = 0
+        for(var k in kw_args){
             has_kw_args = true
-            var kw_args = args[nb_pos].kw
-            if(Array.isArray(kw_args)){
-                var kwa = $B.parse_kwargs(kw_args, fname)
-                kw_args = kwa
-                var nb_kw_args = Object.keys(kw_args).length
-                if(nb_kw_args == 0){
-                    has_kw_args = false
-                }else if(! extra_kw_args){
-                    for(var k in kwa){
-                        if(slots[k] === undefined){
-                            throw _b_.TypeError.$factory(
-                                `${fname}() got an unexpected keyword argument '${k}'`)
-                        }
-                    }
+            nb_kw_args++
+            if(slots[k] === undefined){
+                if(! extra_kw_args){
+                    throw _b_.TypeError.$factory(
+                        `${fname}() got an unexpected keyword argument '${k}'`)
                 }
             }
         }
@@ -68,7 +179,6 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     }
 
     if(extra_kw_args){
-        // Build a dict object faster than with _b_.dict()
         extra_kw = $B.empty_dict()
     }
 
@@ -227,15 +337,17 @@ $B.wrong_nb_args = function(name, received, expected, positional){
     }
 }
 
+$B.nb_parse_kwargs = 0
 $B.parse_kwargs = function(kw_args, fname){
+    $B.nb_parse_kwargs++
     var kwa = kw_args[0]
     for(var i = 1, len = kw_args.length; i < len; i++){
         var kw_arg = kw_args[i],
             key,
             value
         if(kw_arg.__class__ === _b_.dict){
-            for(var entry of $B.make_js_iterator(_b_.dict.items(kw_arg))){
-                key = entry[0]
+            for(var entry of _b_.dict.$iter_items_with_hash(kw_arg)){
+                key = entry.key
                 if(typeof key !== 'string'){
                     throw _b_.TypeError.$factory(fname +
                         "() keywords must be strings")
@@ -244,7 +356,7 @@ $B.parse_kwargs = function(kw_args, fname){
                         "() got multiple values for argument '" +
                         key + "'")
                 }else{
-                    kwa[key] = entry[1]
+                    kwa[key] = entry.value
                 }
             }
         }else{
@@ -279,9 +391,9 @@ $B.check_nb_args = function(name, expected, args){
     // Check the number of arguments
     var len = args.length,
         last = args[len - 1]
-    if(last && last.$nat == "kw"){
-        var kw = last.kw
-        if(Array.isArray(kw) && kw[1] && kw[1].__class__ === _b_.dict){
+    if(last && last.$kw){
+        var kw = last.$kw
+        if(kw[1] && kw[1].__class__ === _b_.dict){
             if(_b_.dict.$keys_string(kw[1]).length == 0){
                 len--
             }
@@ -304,8 +416,8 @@ $B.check_no_kw = function(name, x, y){
     if(x === undefined){
         console.log("x undef", name, x, y)
     }
-    if((x.$nat && x.kw && x.kw[0] && x.kw[0].length > 0) ||
-            (y !== undefined && y.$nat)){
+    if((x.$kw && x.$kw[0] && x.$kw[0].length > 0) ||
+            (y !== undefined && y.$kw)){
         throw _b_.TypeError.$factory(name + "() takes no keyword arguments")}
 }
 
@@ -313,8 +425,8 @@ $B.check_nb_args_no_kw = function(name, expected, args){
     // Check the number of arguments and absence of keyword args
     var len = args.length,
         last = args[len - 1]
-    if(last && last.$nat == "kw"){
-        if(last.kw.length == 2 && Object.keys(last.kw[0]).length == 0){
+    if(last && last.$kw){
+        if(last.$kw.length == 2 && Object.keys(last.$kw[0]).length == 0){
             len--
         }else{
             throw _b_.TypeError.$factory(name + "() takes no keyword arguments")
@@ -442,14 +554,9 @@ $B.next_of = function(iterator){
 $B.make_js_iterator = function(iterator, frame, lineno){
     // return a Javascript iterator usable in a loop
     // "for(item of $B.make_js_iterator(...)){"
-    var set_lineno = $B.set_lineno
     if(frame === undefined){
-        if($B.frames_stack.length == 0){
-            set_lineno = function(){}
-        }else{
-            frame = $B.last($B.frames_stack)
-            lineno = frame.$lineno
-        }
+        frame = $B.last($B.frames_stack)
+        lineno = frame.$lineno
     }
     if(iterator.__class__ === _b_.range){
         var obj = {ix: iterator.start}
@@ -459,7 +566,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                     return this
                 },
                 next(){
-                    set_lineno(frame, lineno)
+                    $B.set_lineno(frame, lineno)
                     if(obj.ix >= iterator.stop){
                         return {done: true, value: null}
                     }
@@ -474,7 +581,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                     return this
                 },
                 next(){
-                    set_lineno(frame, lineno)
+                    $B.set_lineno(frame, lineno)
                     if(obj.ix <= iterator.stop){
                         return {done: true, value: null}
                     }
@@ -492,7 +599,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
                 return this
             },
             next(){
-                set_lineno(frame, lineno)
+                $B.set_lineno(frame, lineno)
                 return it.next()
             }
         }
@@ -506,7 +613,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             return this
         },
         next(){
-            set_lineno(frame, lineno)
+            $B.set_lineno(frame, lineno)
             try{
                 var value = next_func()
                 return {done: false, value}
@@ -631,16 +738,14 @@ $B.clear_ns = function(name){
     if(alt_name != name){$B.clear_ns(alt_name)}
 }
 
-$B.get_method_class = function(ns, qualname){
+$B.get_method_class = function(ns, qualname, refs){
     // Used to set the cell __class__ in a method. ns is the namespace
     // and qualname is the qualified name of the class
     // Generally, for qualname = "A.B", the result is just ns.A.B
     // In some cases, ns.A might not yet be defined (cf. issue #1740).
     // In this case, a fake class is returned with the same qualname.
-    var refs = qualname.split('.'),
-        klass = ns
-    while(refs.length > 0){
-        var ref = refs.shift()
+    var klass = ns
+    for(var ref of refs){
         if(klass[ref] === undefined){
             var fake_class = $B.make_class(qualname)
             return fake_class
@@ -1114,7 +1219,6 @@ $B.$call = function(callable, position){
     }
     return callable
 }
-
 
 $B.$call1 = function(callable){
     if(callable.__class__ === $B.method){

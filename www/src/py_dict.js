@@ -496,7 +496,7 @@ dict.__init__ = function(self, first, second){
         return _b_.None
     }
     if(second === undefined){
-        if(first.$nat != 'kw' && $B.get_class(first) === $B.JSObj){
+        if((! first.$kw) && $B.get_class(first) === $B.JSObj){
             for(var key in first){
                 dict.$setitem(self, key, first[key])
             }

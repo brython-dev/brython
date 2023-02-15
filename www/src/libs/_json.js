@@ -60,9 +60,9 @@ function to_json(obj, level){
                 _b_.str.$factory(indent))
         }
     }
-    var kwarg = {$nat: "kw", kw: {}}
+    var kwarg = {$kw: [{}]}
     for(var key in kw){
-        kwarg.kw[key] = kw[key]
+        kwarg.$kw[0][key] = kw[key]
     }
 
     switch(typeof obj){

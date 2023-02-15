@@ -51,7 +51,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     }
 
     // Keyword arguments passed to the class
-    var extra_kwargs = {}
+    var extra_kwargs = Object.create(null)
     if(kwargs){
         for(var  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],
@@ -89,7 +89,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
     var kls = meta_new(metaclass, class_name, resolved_bases, dict,
-                       {$nat: 'kw', kw: extra_kwargs})
+                       {$kw: [extra_kwargs]})
     kls.__module__ = module
     kls.$subclasses = []
     kls.$is_class = true
@@ -98,7 +98,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
         meta_init(kls, class_name, resolved_bases, dict,
-                  {$nat: 'kw', kw: extra_kwargs})
+                  {$kw: [extra_kwargs]})
     }
 
     // Set new class as subclass of its parents
@@ -170,7 +170,7 @@ function set_attr_if_absent(dict, attr, value){
 $B.make_class_namespace = function(metaclass, class_name, module, qualname,
                                    bases){
     // Use __prepare__ (PEP 3115)
-    var class_dict = _b_.dict.$factory([
+    var class_dict = _b_.dict.$literal([
                          ['__module__', module],
                          ['__qualname__', qualname]
                          ])
@@ -289,10 +289,11 @@ var type = $B.make_class("type",
             cl_dict = $.cl_dict,
             kw = $.kw
 
-        var kwargs = {'$nat': 'kw', kw: {}}
+        var kwarg = Object.create(null)
         for(var key of _b_.dict.$keys_string(kw)){
-            kwargs.kw[key] = _b_.dict.$getitem_string(kw, key)
+            kwarg[key] = _b_.dict.$getitem_string(kw, key)
         }
+        var kwargs = {$kw: [kwarg]}
         if(cl_dict === missing){
             if(bases !== missing){
                 throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')
@@ -783,8 +784,8 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     // __dict__ attribute
     var test = false // name == '_GenericAlias'
 
-    // arguments passed as keywords in class defintion
-    extra_kwargs = extra_kwargs === undefined ? {$nat: 'kw', kw: {}} :
+    // arguments passed as keywords in class definition
+    extra_kwargs = extra_kwargs === undefined ? {$kw: [{}]} :
         extra_kwargs
 
     // Create the class dictionary
@@ -796,12 +797,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     if(module === undefined){
         module = $B.last($B.frames_stack)[2]
     }
-    var qualname
-    try{
-        qualname = $B.$getitem(cl_dict, '__qualname__')
-    }catch(err){
-        qualname = name
-    }
+    var qualname = _b_.dict.$get_string(cl_dict, '__qualname__') || name
 
     var class_dict = {
         __class__ : meta,
@@ -814,19 +810,22 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     }
 
     try{
-        var slots = $B.$getitem(cl_dict, '__slots__')
-        for(var name of $B.make_js_iterator(slots)){
-            class_dict[name] = member_descriptor.$factory(name, class_dict)
+        var slots = _b_.dict.$get_string(cl_dict, '__slots__')
+        if(slots !== undefined){
+            for(var name of $B.make_js_iterator(slots)){
+                class_dict[name] = member_descriptor.$factory(name, class_dict)
+            }
         }
     }catch(err){
     }
 
+
     class_dict.__mro__ = type.mro(class_dict).slice(1)
 
     // set class attributes for faster lookups
-    for(var entry of $B.make_js_iterator(_b_.dict.items(cl_dict))){
-        var key = entry[0],
-            v = entry[1]
+    for(var entry of _b_.dict.$iter_items_with_hash(cl_dict)){
+        var key = entry.key,
+            v = entry.value
         if(['__module__', '__class__', '__name__', '__qualname__'].
                 indexOf(key) > -1){
             continue
@@ -1180,8 +1179,8 @@ var $instance_creator = $B.$instance_creator = function(klass){
         }else{
             factory = function(){
                 if(arguments.length > 0){
-                    if(arguments.length == 1 && arguments[0].$nat &&
-                        Object.keys(arguments[0].kw).length == 0){
+                    if(arguments.length == 1 && arguments[0].$kw &&
+                        Object.keys(arguments[0].$kw).length == 0){
                     }else{
                         throw _b_.TypeError.$factory("object() takes no parameters")
                     }

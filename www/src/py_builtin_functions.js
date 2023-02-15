@@ -563,9 +563,9 @@ $B.set_func_names(enumerate, "builtins")
 var $$eval = _b_.eval = function(src, _globals, _locals){
     var $ = $B.args("eval", 4,
             {src: null, globals: null, locals: null, mode: null} ,
-            ['src', 'globals', 'locals', 'mode', '/'],
+            ['src', 'globals', 'locals', 'mode'],
             arguments, {globals: _b_.None, locals: _b_.None, mode: 'eval'},
-            null, null),
+            null, null, 4),
         src = $.src,
         _globals = $.globals,
         _locals = $.locals,
@@ -834,8 +834,8 @@ $$eval.$is_func = true
 var exec = _b_.exec = function(src, globals, locals){
     var missing = {}
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
-        ["src", "globals", "locals", "/"], arguments,
-        {globals: _b_.None, locals: _b_.None}, null, null),
+        ["src", "globals", "locals"], arguments,
+        {globals: _b_.None, locals: _b_.None}, null, null, 3),
         src = $.src,
         globals = $.globals,
         locals = $.locals
@@ -1886,7 +1886,7 @@ function $extreme(args, op){ // used by min() and max()
            throw _b_.TypeError.$factory("Cannot specify a default for " +
                $op_name + "() with multiple positional arguments")
         }
-        if($B.last(args).$nat){
+        if($B.last(args).$kw){
             var _args = [$.args].concat($B.last(args))
         }else{
             var _args = [$.args]

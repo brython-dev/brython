@@ -696,8 +696,8 @@ var $valid_digits = function(base) {
 
 int.$factory = function(value, base){
     var missing = {},
-        $ = $B.args("int", 2, {x: null, base: null}, ["x", "/", "base"],
-            arguments, {x: missing, base: missing}, null, null),
+        $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"],
+            arguments, {x: missing, base: missing}, null, null, 1),
             value = $.x,
             base = $.base === undefined ? missing : $.base,
             initial_value = value,

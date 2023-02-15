@@ -189,7 +189,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         }
     }
 
-    if(jsobj.$nat === 'kw') {
+    if(jsobj.$kw) {
         return jsobj
     }
 
@@ -297,7 +297,7 @@ function pyargs2jsargs(pyargs){
     for(var i = 0, len = pyargs.length; i < len; i++){
         var arg = pyargs[i]
         if(arg !== undefined && arg !== null &&
-                arg.$nat !== undefined){
+                arg.$kw !== undefined){
             // Passing keyword arguments to a Javascript function
             // raises a TypeError : since we don't know the
             // signature of the function, the result of Brython
