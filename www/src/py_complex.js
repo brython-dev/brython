@@ -10,6 +10,7 @@ function $UnsupportedOpType(op, class1, class2){
 var complex = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
+    __qualname__: 'complex',
     $is_class: true,
     $native: true,
     $descriptors: {real: true, imag: true}

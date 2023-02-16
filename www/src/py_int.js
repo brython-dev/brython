@@ -37,6 +37,7 @@ var int = {
     __class__: _b_.type,
     __dir__: _b_.object.__dir__,
     __mro__: [_b_.object],
+    __qualname__: 'int',
     $is_class: true,
     $native: true,
     $descriptors: {
@@ -614,13 +615,13 @@ if(typeof other == "number"){
 return _b_.NotImplemented`
 
 int.__and__ = Function('self', 'other', model)
-int.__lshift__ = Function('self', 'other', 
+int.__lshift__ = Function('self', 'other',
      model.replace(/&/g, '<<').replace(/__and__/g, '__lshift__'))
-int.__rshift__ = Function('self', 'other', 
+int.__rshift__ = Function('self', 'other',
      model.replace(/&/g, '>>').replace(/__and__/g, '__rshift__'))
-int.__or__ = Function('self', 'other', 
+int.__or__ = Function('self', 'other',
      model.replace(/&/g, '|').replace(/__and__/g, '__or__'))
-int.__xor__ = Function('self', 'other', 
+int.__xor__ = Function('self', 'other',
      model.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
 
 int.__ge__ = function(self, other){
@@ -942,6 +943,7 @@ var bool = {
     __bases__: [int],
     __class__: _b_.type,
     __mro__: [int, _b_.object],
+    __qualname__: 'bool',
     $is_class: true,
     $not_basetype: true, // bool cannot be a base class
     $native: true,

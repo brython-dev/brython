@@ -6,6 +6,7 @@ var _b_ = $B.builtins,
     range = {
         __class__: _b_.type,
         __mro__: [_b_.object],
+        __qualname__: 'range',
         $is_class: true,
         $native: true,
         $match_sequence_pattern: true, // for Pattern Matching (PEP 634)
@@ -305,6 +306,7 @@ $B.set_func_names(range, "builtins")
 var slice = {
     __class__: _b_.type,
     __mro__: [_b_.object],
+    __qualname__: 'slice',
     $is_class: true,
     $native: true,
     $not_basetype: true, // slice cannot be a base class

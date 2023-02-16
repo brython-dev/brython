@@ -495,6 +495,7 @@ $B.set_func_names(VFSLoader, "builtins")
 var finder_cpython = {
     __class__: _b_.type,
     __mro__: [_b_.object],
+    __qualname__: 'CPythonFinder',
     $infos: {
         __module__: "builtins",
         __name__: "CPythonFinder"
