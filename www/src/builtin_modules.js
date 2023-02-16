@@ -388,7 +388,7 @@
                 }else{
                     res = p(...arguments)
                 }
-                for(key in res){
+                for(var key in res){
                     b_self[key] = res[key]
                 }
                 return res
