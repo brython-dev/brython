@@ -6,19 +6,19 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-function too_many_pos_args_error(func, args, locals, varnames){
+function too_many_pos_args_error(func, args){
     var nb_pos = 0
-    var type = 'pos'
-    for(var arg of iter_args(args)){
+    for(var arg of args){
         if(arg === $B.end_pos){
-            type = 'kw'
-        }else if(type == 'pos'){
-            nb_pos++
+            break
+        }else if(arg.$starred){
+            for(var item of $B.make_js_iterator(arg.$starred)){
+                nb_pos++
+            }
         }else{
-            add_keyword_arg(func, arg.key, arg.value, locals, varnames)
+            nb_pos++
         }
     }
-
     var expected = func.$infos.arg_names.length -
                    func.$infos.__code__.co_kwonlyargcount,
         nb_defaults = func.$infos.__defaults__.length,
@@ -40,7 +40,7 @@ function add_positional_arg(func, varnames, args, arg, locals, i, max_nb_pos, va
             locals[vararg].push(arg)
             return 0
         }else{
-            throw too_many_pos_args_error(func, args, locals, varnames)
+            throw too_many_pos_args_error(func, args)
         }
     }else{
         locals[varnames[i]] = arg
@@ -79,58 +79,6 @@ function add_keyword_arg(func, key, value, locals, varnames){
 // Singleton to indicate end of positional arguments
 $B.end_pos = {name: 'end_pos'}
 
-function* iter_args(args){
-    var type = 'pos'
-    for(var arg of args){
-        if(arg === $B.end_pos){
-            type = 'kw'
-            yield arg
-        }else if(type == 'pos'){
-            if(arg.$starred){
-                for(var item of $B.make_js_iterator(arg.$starred)){
-                    yield item
-                }
-            }else{
-                yield arg
-            }
-        }else{
-            var key = arg[0],
-                value = arg[1]
-            if(key === null){
-                if(value.__class__ === _b_.dict || _b_.isinstance(value, _b_.dict)){
-                    for(var item of _b_.dict.$iter_items_with_hash(value)){
-                        yield item
-                    }
-                }else{
-                    var klass = $B.get_class(value)
-                    try{
-                        var keys_method = $B.$call($B.$getattr(klass, 'keys'))
-                    }catch(err){
-                        throw _b_.TypeError.$factory(
-                            `${func.$infos.__qualname__}() argument after ` +
-                            `** must be a mapping, not ${$B.class_name(value)}`)
-                    }
-                    var getitem
-                    for(var key of $B.make_js_iterator(keys_method(value))){
-                        if(! getitem){
-                            try{
-                                getitem = $B.$call($B.$getattr(klass, '__getitem__'))
-                            }catch(err){
-                                throw _b_.TypeError.$factory(
-                                    `'${$B.class_name(value)}' object is not subscriptable`)
-                            }
-                        }
-                        var v = getitem(value, key)
-                        yield {key, value: v}
-                    }
-                }
-            }else{
-                yield {key, value}
-            }
-        }
-    }
-}
-
 $B.nb_args1 = 0
 $B.args1 = function(func, args){
     var test = false // func.$infos.__name__ == 'assert_raises'
@@ -152,17 +100,64 @@ $B.args1 = function(func, args){
     var nb_pos = 0,
         nb_kw = 0,
         type = 'pos'
-    for(var arg of iter_args(args)){
+    for(var arg of args){
         if(arg === $B.end_pos){
             type = 'kw'
-        }else if(type == 'pos'){
-            nb_pos += add_positional_arg(func, varnames, args, arg, locals, nb_pos, max_nb_pos, vararg)
+            continue
+        }
+        if(type == 'pos'){
+            var starred = arg.$starred
+            if(starred){
+                for(var arg of $B.make_js_iterator(starred)){
+                    nb_pos += add_positional_arg(func, varnames, args, arg, locals, nb_pos, max_nb_pos, vararg)
+                }
+            }else{
+                nb_pos += add_positional_arg(func, varnames, args, arg, locals, nb_pos, max_nb_pos, vararg)
+            }
         }else{
             // keyword argument
-            nb_kw += add_keyword_arg(func, arg.key, arg.value, locals, varnames)
+            var key = arg[0],
+                value = arg[1]
+            if(key){
+                // x=...
+                nb_kw += add_keyword_arg(func, key, value, locals, varnames)
+            }else{
+                // **d
+                if(value === undefined){
+                    console.log('erreur', func, args)
+                }
+                if(value.__class__ === _b_.dict || _b_.isinstance(value, _b_.dict)){
+                    for(var item of _b_.dict.$iter_items_with_hash(value)){
+                        nb_kw += add_keyword_arg(func, item.key, item.value, locals, varnames)
+                    }
+                }else{
+                    var klass = $B.get_class(value)
+                    try{
+                        var keys_method = $B.$call($B.$getattr(klass, 'keys'))
+                    }catch(err){
+                        throw _b_.TypeError.$factory(
+                            `${func.$infos.__qualname__}() argument after ` +
+                            `** must be a mapping, not ${$B.class_name(value)}`)
+                    }
+                    var getitem
+                    for(var key of $B.make_js_iterator(keys_method(value))){
+                        if(! getitem){
+                            try{
+                                getitem = $B.$call($B.$getattr(klass, '__getitem__'))
+                            }catch(err){
+                                throw _b_.TypeError.$factory(
+                                    `'${$B.class_name(value)}' object is not subscriptable`)
+                            }
+                        }
+                        var v = getitem(value, key)
+                        nb_kw += add_keyword_arg(func, key, v, locals, varnames)
+                   }
+               }
+            }
         }
-    }
 
+    }
+    
     if(nb_pos + nb_kw < nb_expected){
         // check that all varnames are set
         // varnames is the list of expected variable names
@@ -245,40 +240,42 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     if(fname.startsWith("lambda_" + $B.lambda_magic)){
         fname = "<lambda>"
     }
+    var arg_type = 'pos',
+        i = 0
     for(var arg of args){
-        if(arg === undefined){
-            continue
-        }
-        if(arg === $B.end_pos || arg.$starred){
+        if(arg === $B.end_pos){
             // new style call on old style args
-            var arg_type = 'pos'
+            if(fname == '__init__'){
+                console.log('new on old')
+            }
             var kw = [{}]
             var new_args = []
-            for(var arg of args){
-                if(arg === $B.end_pos){
-                    arg_type = 'kw'
-                }else if(arg_type == 'pos'){
-                    if(arg.$starred){
-                        for(var item of $B.make_js_iterator(arg.$starred)){
-                            new_args.push(item)
-                        }
-                    }else{
-                        new_args.push(arg)
+            for(var j = 0; j < i; j++){
+                var argj = args[j]
+                if(argj.$starred){
+                    for(var item of $B.make_js_iterator(argj.$starred)){
+                        new_args.push(item)
                     }
                 }else{
-                    var key = arg[0],
-                        value = arg[1]
-                    if(key !== null){
-                        kw[0][key] = value
-                    }else{
-                        kw.push(value)
-                    }
+                    new_args.push(argj)
                 }
             }
-            new_args.push({$kw: kw})
-            args = new_args
-            break
+            arg_type = 'kw'
+        }else if(arg_type == 'kw'){
+            var key = arg[0],
+                value = arg[1]
+            if(key === null){
+                kw.push(value)
+            }else{
+                kw[0][key] = value
+            }
+        }else{
+            i++
         }
+    }
+    if(arg_type == 'kw'){
+        new_args.push({$kw: kw})
+        args = new_args
     }
     var has_kw_args = false,
         nb_pos = args.length,
