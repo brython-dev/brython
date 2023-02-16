@@ -16,6 +16,11 @@ $B.isWebWorker = ('undefined' !== typeof WorkerGlobalScope) &&
 $B.isNode = (typeof process !=='undefined') && (process.release.name==='node')
     && (process.__nwjs!==1)
 
+$B.update_obj = function(mod, data){
+    for(attr in data) {
+        mod[attr] = data[attr]
+    }
+}
 
 var _window
 if($B.isNode){

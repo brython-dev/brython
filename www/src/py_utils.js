@@ -6,126 +6,172 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-$B.args1 = function(func, posonlyargs, args, kwonlyargs, vararg, kwarg, p, k){
-    /*
-    console.log('argcount', func.$infos.__code__.co_argcount,
-                'posonlyargcount', func.$infos.__code__.co_posonlyargcount,
-                'kwonlyargcount', func.$infos.__code__.co_kwonlyargcount)
-    console.log('positional args', p)
-    console.log('keyword args', k)
-    */
-    var locals = {},
-        i = 0
-    for(var posonlyarg of posonlyargs){
-        if(p[i] === undefined){
-            throw _b_.TypeError.$factory('missing positional')
-        }
-        locals[posonlyarg] = p[i]
-        i++
-    }
+function too_many_pos_args_error(func, args){
+    var nb_pos = 0
     for(var arg of args){
-        if(p[i] === undefined){
-            throw _b_.TypeError.$factory('missing positional')
+        if(arg === $B.end_pos){
+            break
         }
-        locals[arg] = p[i]
-        i++
+        nb_pos++
     }
-    if(p.length > i){
+    var expected = func.$infos.arg_names.length -
+                   func.$infos.__code__.co_kwonlyargcount,
+        nb_defaults = func.$infos.__defaults__.length,
+        verb = nb_pos > 1 ? 'were' : 'was',
+        exp
+    if(nb_defaults == 0){
+        exp = expected + ' argument' + (expected == 1 ? '' : 's')
+    }else{
+        exp = `between ${expected - nb_defaults} and ${expected} arguments`
+    }
+    return _b_.TypeError.$factory(func.$infos.__name__ +
+        `() expected ${exp} but ${nb_pos} ${verb} received`)
+}
+
+function add_positional_arg(func, varnames, args, arg, locals, i, max_nb_pos, vararg){
+    if(i >= max_nb_pos){
         if(vararg){
-            locals[vararg] = p.slice(i)
+            locals[vararg].push(arg)
         }else{
-            throw _b_.TypeError.$factory('too many positional')
+            throw too_many_pos_args_error(func, args)
         }
+    }else{
+        locals[varnames[i]] = arg
     }
-    return locals
 }
 
-$B.args2 = function(name, args, p, k){
-    var locals = {},
-        i = 0
-    for(var arg of args){
-        locals[arg] = p[i]
-        i++
-    }
-    if(k){
-        for(var item of k){
-            locals[item[0]] = item[1]
-        }
-    }
-    return locals
-}
-
-$B.args3 = function(func, p, k){
-    var locals = Object.create(null),
-        i = 0,
-        code = func.$infos.__code__,
-        varnames = code.co_varnames,
-        nb_posonly = code.co_posonlyargcount,
-        posonly = varnames.slice(0, nb_posonly),
-        nb_args = code.co_argcount,
-        args = varnames.slice(nb_posonly, nb_args),
-        nb_kwonly = code.co_kwonlyargcount,
-        defaults = func.$infos.__defaults__,
-        kwdefaults = func.$infos.__kwdefaults__,
-        name = func.$infos.__name__
-    console.log('varnames', varnames,
-                'posonly', nb_posonly, posonly,
-                'args', nb_args, args,
-                'defaults', defaults)
-    for(var i = 0, len = p.length; i < len; i++){
-        locals[varnames[i]] = p[i]
-        i++
-    }
-    if(k){
-        for(var kv of k){
-            if(locals[kv[0]] !== undefined){
-                throw _b_.TypeError.$factory('duplicate arg ' + kv[0])
+function add_keyword_arg(func, key, value, locals, varnames){
+    var ix = 0
+    for(var name of varnames){
+        if(name == key){
+            if(ix < func.$infos.__code__.co_posonlyargcount){
+                throw _b_.TypeError.$factory(func.$infos.__name__ +
+                    '() got some positional-only arguments passed as keyword ' +
+                    `arguments: '${key}'`)
+            }else if(locals[key] !== undefined){
+                throw _b_.TypeError.$factory(func.$infos.__name__ +
+                    `() got multiple values for argument '${key}'`)
+            }else{
+                locals[key] = value
+                return
             }
-            locals[kv[0]] = kv[1]
+        }
+        ix++
+    }
+    var kwarg = func.$infos.kwarg
+    if(kwarg){
+        _b_.dict.$setitem(locals[kwarg], key, value)
+    }else{
+        throw _b_.TypeError.$factory(func.$infos.__name__ +
+            `() got an unexpected keyword argument '${key}'`)
+    }
+}
+
+$B.nb_args1 = 0
+$B.args1 = function(func, args){
+    var test = false // func.$infos.__name__ == '__init__'
+    $B.nb_args1++
+    var locals = Object.create(null),
+        code = func.$infos.__code__,
+        varnames = func.$infos.arg_names,
+        nb_expected = varnames.length,
+        vararg = func.$infos.vararg,
+        kwarg = func.$infos.kwarg,
+        max_nb_pos = varnames.length - code.co_kwonlyargcount
+
+    if(vararg){
+        locals[vararg] = $B.fast_tuple([])
+    }
+    if(kwarg){
+        locals[kwarg] = $B.empty_dict()
+    }
+    var nb_pos = 0,
+        nb_kw = 0,
+        type = 'pos'
+    for(var arg of args){
+        if(arg === $B.end_pos){
+            type = 'kw'
+            continue
+        }
+        if(type == 'pos'){
+            var starred = arg.$starred
+            if(starred){
+                for(var arg of $B.make_js_iterator(starred)){
+                    add_positional_arg(func, varnames, args, arg, locals, nb_pos, max_nb_pos, vararg)
+                    nb_pos++
+                }
+            }else{
+                add_positional_arg(func, varnames, args, arg, locals, nb_pos, max_nb_pos, vararg)
+                nb_pos++
+            }
+        }else{
+            // keyword argument
+            var key = arg[0],
+                value = arg[1]
+            if(key){
+                // x=...
+                add_keyword_arg(func, key, value, locals, varnames)
+                nb_kw++
+            }else{
+                // **d
+                if(value.__class__ === _b_.dict || _b_.isinstance(value, _b_.dict)){
+                    for(var item of _b_.dict.$iter_items_with_hash(value)){
+                        add_keyword_arg(func, item.key, item.value, locals, varnames)
+                        nb_kw++
+                    }
+                }else{
+                    var klass = $B.get_class(value)
+                    try{
+                        var keys_method = $B.$call($B.$getattr(klass, 'keys'))
+                    }catch(err){
+                        throw _b_.TypeError.$factory(
+                            `${func.$infos.__qualname__}() argument after ` +
+                            `** must be a mapping, not ${$B.class_name(value)}`)
+                    }
+                    var getitem
+                    for(var key of $B.make_js_iterator(keys_method(value))){
+                        if(! getitem){
+                            try{
+                                getitem = $B.$call($B.$getattr(klass, '__getitem__'))
+                            }catch(err){
+                                throw _b_.TypeError.$factory(
+                                    `'${$B.class_name(value)}' object is not subscriptable`)
+                            }
+                        }
+                        var v = getitem(value, key)
+                        add_keyword_arg(func, key, v, locals, varnames)
+                        nb_kw++
+                   }
+               }
+            }
+        }
+
+    }
+
+    if(nb_pos + nb_kw < nb_expected){
+        // check that all varnames are set
+        var nb_names = varnames.length,
+            nb_defaults = func.$infos.__defaults__.length,
+            first_default_rank = nb_names - nb_defaults,
+            i = 0
+        for(var name of varnames){
+            if(locals[name] === undefined){
+                // If there are 3 names and 1 default, there are defaults
+                // for i >= 2
+                if(i < first_default_rank){
+                    throw _b_.TypeError.$factory('missing positional ', name)
+                }
+                locals[name] = func.$infos.__defaults__[i - first_default_rank]
+            }
+            i++
         }
     }
-    return locals
-}
-
-$B.make_func_locals = function(func, args){
-    // args is a list of positional arguments
-    var locals = Object.create(null),
-        i = 0,
-        code = func.$infos.__code__,
-        varnames = code.co_varnames,
-        nb_posonly = code.co_posonlyargcount,
-        posonly = varnames.slice(0, nb_posonly),
-        nb_args = code.co_argcount,
-        args = varnames.slice(nb_posonly, nb_args),
-        nb_kwonly = code.co_kwonlyargcount,
-        defaults = func.$infos.__defaults__,
-        kwdefaults = func.$infos.__kwdefaults__,
-        name = func.$infos.__name__
-    for(var i = 0, len = args.length; i < len; i++){
-        locals[varnames[i]] = args[i]
+    if(test){
+        console.log('func', func, 'args', args, 'locals', locals)
     }
     return locals
 }
 
-$B.args0 = function(func, argcount, slots, args){
-    var func_arg_names = func.$infos.arg_names
-    /*
-        if(! _b_.list.__eq__(var_names, func_arg_names)){
-        console.log(func, 'var_names', var_names, 'func arg names', func_arg_names)
-        alert()
-    }
-    */
-    return $B.args(func.$infos.__name__,
-                   argcount,
-                   slots,
-                   func.$infos.arg_names.slice(),
-                   args,
-                   func.$defaults,
-                   func.$infos.vararg,
-                   func.$infos.kwarg,
-                   func.$infos.__code__.co_posonlyargcount)
-
-}
 
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     extra_pos_args, extra_kw_args, nb_posonly){
@@ -143,6 +189,31 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     //     kwonlyargcount = 2
     if(fname.startsWith("lambda_" + $B.lambda_magic)){
         fname = "<lambda>"
+    }
+    var arg_type = 'pos',
+        i = 0
+    for(var arg of args){
+        if(arg === $B.end_pos){
+            console.log('new style call on old style args', fname)
+            var kw = [{}]
+            var new_args = Array.from(args).slice(0, i)
+            arg_type = 'kw'
+        }else if(arg_type == 'kw'){
+            var key = arg[0],
+                value = arg[1]
+            if(key === undefined){
+                kw.push(value)
+            }else{
+                kw[0][key] = value
+            }
+        }else{
+            i++
+        }
+    }
+    if(arg_type == 'kw'){
+        new_args.push({$kw: kw})
+        console.log('new args', new_args)
+        args = new_args
     }
     var has_kw_args = false,
         nb_pos = args.length,
@@ -312,6 +383,14 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
             }else{
                 msg += format_missing(missing_kwonly, 'keyword-only')
             }
+            console.log('None', _b_.None)
+            console.log('fname', fname,
+                '\n  slots', slots,
+                '\n  var_names', var_names,
+                '\n  defaults', $dobj)
+            console.log('type error', msg)
+            console.log('args', args)
+            console.log($B.frames_stack.slice())
             throw _b_.TypeError.$factory(msg)
         }
 

@@ -12,6 +12,7 @@ if($B.isWebWorker){
 var long_int = {
     __class__: _b_.type,
     __mro__: [_b_.int, _b_.object],
+    __qualname__: 'int',
     $infos: {
         __module__: "builtins",
         __name__: "int"
@@ -404,9 +405,9 @@ return _b_.NotImplemented`
 
 long_int.__and__ = Function('self', 'other', body)
 
-long_int.__or__ = Function('self', 'other', 
+long_int.__or__ = Function('self', 'other',
      body.replace(/&/g, '|').replace(/__and__/g, '__or__'))
-long_int.__xor__ = Function('self', 'other', 
+long_int.__xor__ = Function('self', 'other',
      body.replace(/&/g, '^').replace(/__and__/g, '__xor__'))
 
 long_int.to_bytes = function(self, len, byteorder, signed){

@@ -88,8 +88,8 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
 
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
-    var kls = meta_new(metaclass, class_name, resolved_bases, dict,
-                       {$kw: [extra_kwargs]})
+    var kls = meta_new(metaclass, class_name, resolved_bases, dict, 
+                       $B.end_pos, extra_kwargs)
     kls.__module__ = module
     kls.$subclasses = []
     kls.$is_class = true
@@ -97,8 +97,8 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     if(kls.__class__ === metaclass){
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
-        meta_init(kls, class_name, resolved_bases, dict,
-                  {$kw: [extra_kwargs]})
+        meta_init(kls, class_name, resolved_bases, dict, $B.end_pos,
+            extra_kwargs)
     }
 
     // Set new class as subclass of its parents
@@ -1057,7 +1057,7 @@ var property = _b_.property = $B.make_class("property",
     }
 )
 
-property.__init__ = function(self, fget, fset, fdel, doc) {
+property.__init__ = function(self, fget, fset, fdel, doc){
     var $ = $B.args('__init__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
@@ -1125,7 +1125,7 @@ type.__call__.__class__ = wrapper_descriptor
 
 
 var $instance_creator = $B.$instance_creator = function(klass){
-    var test = false // klass.$infos && klass.$infos.__name__ == 'auto'
+    var test = klass.__name__ == 'A'
     if(test){
         console.log('instance creator of', klass)
     }

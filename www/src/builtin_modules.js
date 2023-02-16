@@ -1,10 +1,6 @@
  ;(function($B) {
      var _b_ = $B.builtins
-    var update = $B.update_obj = function(mod, data) {
-        for(attr in data) {
-            mod[attr] = data[attr]
-        }
-    }
+    var update = $B.update_obj
     var _window = self;
     var modules = {}
     var browser = {
@@ -276,6 +272,7 @@
                     // apply __init__
                     var init = $B.$getattr(klass, "__init__", null)
                     if(init !== null){
+                        console.log('call init with', res, arguments)
                         init(res, ...arguments)
                     }
                     return res
@@ -388,7 +385,7 @@
                 }else{
                     res = p(...arguments)
                 }
-                for(key in res){
+                for(var key in res){
                     b_self[key] = res[key]
                 }
                 return res
@@ -913,7 +910,6 @@
             }
         }
     }
-
     // Attributes of __BRYTHON__ are Python lists
     for(var attr in $B){
         if(Array.isArray($B[attr])){

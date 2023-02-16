@@ -1253,7 +1253,7 @@ var Group = function(pos, extension){
     this.items = []
     this.chars = []
     this.groups = []
-    for(key in extension){
+    for(var key in extension){
         this[key] = extension[key]
     }
     if(extension && extension.type){

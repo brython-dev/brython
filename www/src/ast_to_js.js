@@ -1162,13 +1162,34 @@ $B.ast.Break.prototype.to_js = function(scopes){
     return js
 }
 
+$B.end_pos = {}
+
 $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
         js = '$B.$call1(' + func +
              `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
-
-    var args = make_args.bind(this)(scopes)
-
+    if(true){ //this.func.id == 'fqsdf'){
+        var args = []
+        for(var arg of this.args){
+            if(arg instanceof $B.ast.Starred){
+                arg.$handled = true
+                args.push(`{$starred: ${$B.js_from_ast(arg.value, scopes)}}`)
+            }else{
+                args.push($B.js_from_ast(arg, scopes))
+            }
+        }
+        var keywords = []
+        for(var keyword of this.keywords){
+            var kw = keyword.arg === undefined ? 'null' : `'${keyword.arg}'`
+            keywords.push(`[${kw}, ${$B.js_from_ast(keyword.value, scopes)}]`)
+        }
+        if(keywords.length > 0){
+            args = args.concat(['$B.end_pos']).concat(keywords)
+        }
+        args = {js: args.join(', ')}
+    }else{
+        var args = make_args.bind(this)(scopes)
+    }
     return js + ')' + (args.has_starred ? `.apply(null, ${args.js})` :
                                     `(${args.js})`)
 }
@@ -1769,8 +1790,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
-    js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
-
+    if(true){ // this.name == 'fqsdf'){
+        js += `${locals_name} = locals = $B.args1(${name2}, arguments)\n`
+    }else{
+        js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
+    }
     js += `var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}

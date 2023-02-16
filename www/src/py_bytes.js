@@ -55,6 +55,7 @@ function invalid(other){
 var bytearray = {
     __class__: _b_.type,
     __mro__: [_b_.object],
+    __qualname__: 'bytearray',
     $buffer_protocol: true,
     $is_class: true
 }
@@ -188,6 +189,7 @@ bytearray.$factory = function(){
 var bytes = {
     __class__ : _b_.type,
     __mro__: [_b_.object],
+    __qualname__: 'bytes',
     $buffer_protocol: true,
     $is_class: true
 }

@@ -492,6 +492,7 @@ var $make_exc = $B.$make_exc = function(names, parent){
             __class__: _b_.type,
             __bases__: [_b_[parent.__name__]],
             __name__: name,
+            __qualname__: name,
             __mro__: [_b_[parent.__name__]].concat(parent.__mro__),
             $is_class: true
         }

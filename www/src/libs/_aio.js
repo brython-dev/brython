@@ -99,7 +99,7 @@ function ajax(){
         return new Promise(function(resolve, reject){
             var xhr = new XMLHttpRequest()
             xhr.open(method, url, true)
-            for(key in args.headers){
+            for(var key in args.headers){
                 xhr.setRequestHeader(key, args.headers[key])
             }
             xhr.format = args.format

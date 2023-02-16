@@ -36,6 +36,7 @@ var None = _b_.None = {
     __class__: NoneType
 }
 
+console.log('--- define None')
 None.__doc__ = None
 NoneType.__doc__ = None
 

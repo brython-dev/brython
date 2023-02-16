@@ -1664,20 +1664,20 @@ str.format = function(_self) {
     if(last_arg.$nat == "mapping"){
         var mapping = last_arg.mapping,
             getitem = $B.$getattr(mapping, "__getitem__")
+        console.log('last arg is mapping', mapping)
         // Get the rest of the arguments
         var args = []
         for(var i = 0, len = arguments.length - 1; i < len; i++){
             args.push(arguments[i])
         }
-        var $ = $B.args("format", 1, {self: null}, ["self"],
-                args, {}, "$args", null)
+        var $ = $B.args1(str.format, args)
     }else{
-        var $ = $B.args("format", 1, {self: null}, ["self"],
-                arguments, {}, "$args", "$kw"),
+        var $ = $B.args1(str.format, arguments),
             mapping = $.$kw, // dictionary
             getitem = function(key){
                 return _b_.dict.$getitem(mapping, key)
             }
+            console.log('mapping', mapping)
     }
     var _self = to_string($.self),
         parts = $B.split_format(_self)
@@ -1720,6 +1720,7 @@ str.format = function(_self) {
                 value = _b_.tuple.__getitem__($.$args, pos)
         }else{
             // Use keyword arguments
+            console.log('search item', fmt.name)
             var value = getitem(fmt.name)
         }
         // If name has extensions (attributes or subscriptions)
@@ -1753,6 +1754,8 @@ str.format = function(_self) {
     }
     return res
 }
+
+str.format.$signature = ["format", 1, ["self"], {}, "$args", "$kw"]
 
 str.format_map = function(){
     var $ = $B.args("format_map", 2, {self: null, mapping: null},

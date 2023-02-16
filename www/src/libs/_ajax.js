@@ -107,9 +107,9 @@ function handle_kwargs(self, kw, method){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
             }
-            for(key of _b_.dict.$keys_string(value)){
-                headers[key.toLowerCase()] = [key,
-                    _b_.dict.$getitem_string(value, key)]
+            for(var k of _b_.dict.$keys_string(value)){
+                headers[k.toLowerCase()] = [k,
+                    _b_.dict.$getitem_string(value, k)]
             }
         }else if(key.startsWith("on")){
             var event = key.substr(2)
@@ -529,7 +529,7 @@ function file_upload(){
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(key of _b_.dict.$keys_string(kw)){
+    for(var key of _b_.dict.$keys_string(kw)){
         if(key.startsWith("on")){
             ajax.bind(self, key.substr(2),
                 _b_.dict.$getitem_string(kw, key))

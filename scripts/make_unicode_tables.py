@@ -175,7 +175,7 @@ with open(os.path.join(dest_dir, "unicode_data.js"), "w",
     out.write("\n$B.unicode_identifiers = ")
     json.dump(identifiers, out, separators=[",", ":"])
     out.write("""\n$B.unicode_tables = {}
-for(var gc in $B.unicode){
+for(const gc in $B.unicode){
     $B.unicode_tables[gc] = {}
     $B.unicode[gc].forEach(function(item){
         if(Array.isArray(item)){
@@ -189,7 +189,7 @@ for(var gc in $B.unicode){
     })
 }
 
-for(var key in $B.unicode_identifiers){
+for(const key in $B.unicode_identifiers){
     $B.unicode_tables[key] = {}
     for(const item of $B.unicode_identifiers[key]){
         if(Array.isArray(item)){

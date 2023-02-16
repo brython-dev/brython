@@ -20,6 +20,7 @@ function float_value(obj){
 var float = {
     __class__: _b_.type,
     __dir__: object.__dir__,
+    __qualname__: 'float',
     $is_class: true,
     $native: true,
     $descriptors: {
