@@ -51,14 +51,14 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     }
 
     // Keyword arguments passed to the class
-    var extra_kwargs = Object.create(null)
+    var extra_kwargs = []
     if(kwargs){
         for(var  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],
                 val = kwargs[i][1]
             if(key != "metaclass"){
                 // other keyword arguments will be passed to __init_subclass__
-                extra_kwargs[key] = val
+                extra_kwargs.push([key, val])
             }
         }
     }
@@ -88,8 +88,8 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
 
     // Apply method __new__ of metaclass to create the class object
     var meta_new = _b_.type.__getattribute__(metaclass, "__new__")
-    var kls = meta_new(metaclass, class_name, resolved_bases, dict, 
-                       $B.end_pos, extra_kwargs)
+    var kls = meta_new(metaclass, class_name, resolved_bases, dict,
+                       $B.end_pos, ...extra_kwargs)
     kls.__module__ = module
     kls.$subclasses = []
     kls.$is_class = true
@@ -98,7 +98,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.__getattribute__(metaclass, "__init__")
         meta_init(kls, class_name, resolved_bases, dict, $B.end_pos,
-            extra_kwargs)
+            ...extra_kwargs)
     }
 
     // Set new class as subclass of its parents
@@ -275,9 +275,6 @@ $B.make_class = function(qualname, factory){
     return A
 }
 
-
-
-
 var type = $B.make_class("type",
     function(kls, bases, cl_dict){
         var missing = {},
@@ -310,6 +307,58 @@ var type = $B.make_class("type",
 
 type.__class__ = type
 
+
+var NoneType = $B.NoneType = {
+    $factory: function(){
+        return None
+    },
+    __bool__: function(self){return _b_.False},
+    __class__: _b_.type,
+    __hash__: function(self){return 0},
+    __module__: 'builtins',
+    __mro__: [_b_.object],
+    __name__: 'NoneType',
+    __qualname__: 'NoneType',
+    __repr__: function(self){return 'None'},
+    __str__: function(self){return 'None'},
+    $is_class: true
+}
+
+NoneType.__setattr__ = function(self, attr){
+    return no_set_attr(NoneType, attr)
+}
+
+var None = _b_.None = {
+    __class__: NoneType
+}
+
+None.__doc__ = None
+NoneType.__doc__ = None
+
+for(var $op in $B.$comps){ // None is not orderable with any type
+    var key = $B.$comps[$op]
+    switch(key){
+      case 'ge':
+      case 'gt':
+      case 'le':
+      case 'lt':
+        NoneType['__' + key + '__'] = (function(op){
+            return function(other){return _b_.NotImplemented}
+        })($op)
+    }
+}
+
+for(var $func in None){
+    if(typeof None[$func] == 'function'){
+        None[$func].__str__ = (function(f){
+            return function(){return "<method-wrapper " + f +
+                " of NoneType object>"
+            }
+        })($func)
+    }
+}
+
+$B.set_func_names(NoneType, "builtins")
 
 //classmethod() (built in class)
 var classmethod = _b_.classmethod = $B.make_class("classmethod",
@@ -741,6 +790,7 @@ type.__init_subclass__ = function(){
     var $ = $B.args("__init_subclass__", 1, {cls: null}, ['cls'],
         arguments, {}, "args", "kwargs")
     if($.args.length > 0){
+        console.log('args', $.args)
         throw _b_.TypeError.$factory(
             `${$.cls.__qualname__}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
@@ -1125,7 +1175,7 @@ type.__call__.__class__ = wrapper_descriptor
 
 
 var $instance_creator = $B.$instance_creator = function(klass){
-    var test = klass.__name__ == 'A'
+    var test = false // klass.__name__ == 'A'
     if(test){
         console.log('instance creator of', klass)
     }

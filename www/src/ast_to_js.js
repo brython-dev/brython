@@ -1162,8 +1162,6 @@ $B.ast.Break.prototype.to_js = function(scopes){
     return js
 }
 
-$B.end_pos = {}
-
 $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
         js = '$B.$call1(' + func +

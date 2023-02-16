@@ -1230,8 +1230,8 @@ bytes.splitlines = function(self) {
                     ['self', 'keepends'], arguments, {keepends: false},
                     null, null)
     if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
-        throw _b_.TypeError('integer argument expected, got '+
-            $B.get_class($.keepends).__name)
+        throw _b_.TypeError.$factory('integer argument expected, got '+
+            $B.class_name($.keepends))
     }
     var keepends = _b_.int.$factory($.keepends),
         res = [],

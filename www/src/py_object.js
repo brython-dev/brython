@@ -2,6 +2,7 @@ __BRYTHON__.builtins.object = (function($B){
 
 var _b_ = $B.builtins
 
+
 // class object for the built-in class 'object'
 var object = {
     //__class__:$type, : not here, added in py_type.js after $type is defined

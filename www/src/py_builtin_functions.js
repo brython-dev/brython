@@ -4,65 +4,12 @@
 var _b_ = $B.builtins
 _b_.__debug__ = false
 
-// maps comparison operator to method names
-$B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
-$B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'ge'}
 
 var check_nb_args = $B.check_nb_args,
     check_no_kw = $B.check_no_kw,
     check_nb_args_no_kw = $B.check_nb_args_no_kw
 
-var NoneType = $B.NoneType = {
-    $factory: function(){
-        return None
-    },
-    __bool__: function(self){return False},
-    __class__: _b_.type,
-    __hash__: function(self){return 0},
-    __module__: 'builtins',
-    __mro__: [_b_.object],
-    __name__: 'NoneType',
-    __qualname__: 'NoneType',
-    __repr__: function(self){return 'None'},
-    __str__: function(self){return 'None'},
-    $is_class: true
-}
 
-NoneType.__setattr__ = function(self, attr){
-    return no_set_attr(NoneType, attr)
-}
-
-var None = _b_.None = {
-    __class__: NoneType
-}
-
-console.log('--- define None')
-None.__doc__ = None
-NoneType.__doc__ = None
-
-for(var $op in $B.$comps){ // None is not orderable with any type
-    var key = $B.$comps[$op]
-    switch(key){
-      case 'ge':
-      case 'gt':
-      case 'le':
-      case 'lt':
-        NoneType['__' + key + '__'] = (function(op){
-            return function(other){return _b_.NotImplemented}
-        })($op)
-    }
-}
-for(var $func in None){
-    if(typeof None[$func] == 'function'){
-        None[$func].__str__ = (function(f){
-            return function(){return "<method-wrapper " + f +
-                " of NoneType object>"
-            }
-        })($func)
-    }
-}
-
-$B.set_func_names(NoneType, "builtins")
 
 _b_.__build_class__ = function(){
     throw _b_.NotImplementedError.$factory('__build_class__')
@@ -1225,6 +1172,9 @@ $B.$getattr = function(obj, attr, _default){
                 console.log(obj, attr, "no mro, klass", klass)
             }
             for(var i = 0, len = mro.length; i < len; i++){
+                if(mro[i] === undefined){
+                    console.log('mro[i] undef, klass', klass)
+                }
                 attr_func = mro[i]['__getattribute__']
                 if(attr_func !== undefined){
                     break
@@ -1511,7 +1461,7 @@ var __import__ = _b_.__import__ = function(mod_name, globals, locals, fromlist, 
         {name: null, globals: null, locals: null, fromlist: null, level: null},
         ['name', 'globals', 'locals', 'fromlist', 'level'],
         arguments,
-        {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
+        {globals:_b_.None, locals:_b_.None, fromlist:_b_.tuple.$factory(), level:0},
         null, null)
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist)
 }
@@ -1535,7 +1485,7 @@ var isinstance = _b_.isinstance = function(obj, cls){
     check_nb_args_no_kw('isinstance', 2, arguments)
 
     if(obj === null){
-        return cls === None
+        return cls === _b_.None
     }
     if(obj === undefined){
         return false
@@ -2114,7 +2064,7 @@ var ord = _b_.ord = function(c){
 
 var pow = _b_.pow = function() {
     var $ = $B.args('pow', 3, {x: null, y: null, mod: null},['x', 'y', 'mod'],
-        arguments, {mod: None}, null, null),
+        arguments, {mod: _b_.None}, null, null),
         x = $.x,
         y = $.y,
         z = $.mod
@@ -2137,8 +2087,8 @@ var $print = _b_.print = function(){
         end = _b_.dict.$get_string(kw, 'end'),
         sep = _b_.dict.$get_string(kw, 'sep'),
         file = _b_.dict.$get_string(kw, 'file')
-    var end = (end === undefined || end === None) ? '\n' : end,
-        sep = (sep === undefined || sep === None) ? ' ' : sep,
+    var end = (end === undefined || end === _b_.None) ? '\n' : end,
+        sep = (sep === undefined || sep === _b_.None) ? ' ' : sep,
         file = file === undefined ? $B.get_stdout() : file,
         args = $ns['args'],
         writer = $B.$getattr(file, 'write')
@@ -2151,11 +2101,11 @@ var $print = _b_.print = function(){
         }
     }
     writer(end)
-    var flush = $B.$getattr(file, 'flush', None)
-    if(flush !== None){
+    var flush = $B.$getattr(file, 'flush', _b_.None)
+    if(flush !== _b_.None){
         $B.$call(flush)()
     }
-    return None
+    return _b_.None
 }
 $print.__name__ = 'print'
 $print.is_func = true
@@ -2222,9 +2172,9 @@ $B.set_func_names(reversed, "builtins")
 
 var round = _b_.round = function(){
     var $ = $B.args('round', 2, {number: null, ndigits: null},
-        ['number', 'ndigits'], arguments, {ndigits: None}, null, null),
+        ['number', 'ndigits'], arguments, {ndigits: _b_.None}, null, null),
         arg = $.number,
-        n = $.ndigits === None ? 0 : $.ndigits
+        n = $.ndigits === _b_.None ? 0 : $.ndigits
 
     if(! isinstance(arg,[_b_.int, _b_.float])){
         var klass = arg.__class__ || $B.get_class(arg)
@@ -2268,7 +2218,7 @@ var round = _b_.round = function(){
         throw _b_.OverflowError.$factory(
             "rounded value too large to represent")
     }
-    if($.ndigits === None){
+    if($.ndigits === _b_.None){
         // Always return an integer
         return Math.floor(res.value)
     }else{
@@ -2304,10 +2254,10 @@ $B.$setattr = function(obj, attr, value){
         }
         if(obj.$infos){
             obj.$infos.__dict__ = value
-            return None
+            return _b_.None
         }
         obj.__dict__ = value
-        return None
+        return _b_.None
     }else if(attr == "__class__"){
         // __class__ assignment only supported for heap types or ModuleType
         // subclasses
@@ -2330,7 +2280,7 @@ $B.$setattr = function(obj, attr, value){
             }
         }
         obj.__class__ = value
-        return None
+        return _b_.None
     }else if(attr == "__doc__" && obj.__class__ === _b_.property){
         obj[attr] = value
     }
@@ -2371,7 +2321,7 @@ $B.$setattr = function(obj, attr, value){
         // descriptor protocol : if obj has attribute attr and this attribute
         // has a method __set__(), use it
         if(res.__set__ !== undefined){
-            res.__set__(res, obj, value); return None
+            res.__set__(res, obj, value); return _b_.None
         }
         var rcls = res.__class__, __set1__
         if(rcls !== undefined){
@@ -2390,14 +2340,14 @@ $B.$setattr = function(obj, attr, value){
             var __set__ = $B.$getattr(res, '__set__', null)
             if(__set__ && (typeof __set__ == 'function')) {
                 __set__.apply(res, [obj, value])
-                return None
+                return _b_.None
             }
         }else if(klass && klass.$descriptors !== undefined &&
                 klass[attr] !== undefined){
             var setter = klass[attr].setter
             if(typeof setter == 'function'){
                 setter(obj, value)
-                return None
+                return _b_.None
             }else{
                 throw _b_.AttributeError.$factory('readonly attribute')
             }
@@ -2484,7 +2434,7 @@ $B.$setattr = function(obj, attr, value){
         _setattr(obj, attr, value)
     }
 
-    return None
+    return _b_.None
 }
 
 var sorted = _b_.sorted = function(){
@@ -2534,7 +2484,7 @@ $B.missing_super2 = function(obj){
 }
 
 var $$super = _b_.super = $B.make_class("super",
-    function (_type, object_or_type){
+    function(_type, object_or_type){
         var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
             var frame = $B.last($B.frames_stack),
@@ -2601,7 +2551,7 @@ $$super.__getattribute__ = function(self, attr){
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__init_subclass__" && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = false // attr == "__init__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }
@@ -2756,7 +2706,7 @@ $Reader.close = function(self){
 }
 
 $Reader.flush = function(self){
-    return None
+    return _b_.None
 }
 
 $Reader.read = function(){
@@ -2902,7 +2852,7 @@ $Reader.seek = function(self, offset, whence){
     }else if(whence === 2){
         self.$counter = self.$length + offset
     }
-    return None
+    return _b_.None
 }
 
 $Reader.seekable = function(self){
@@ -3315,7 +3265,7 @@ $B.function.__getattribute__ = function(self, attr){
     }else if(attr == "__closure__"){
         var free_vars = self.$infos.__code__.co_freevars
         if(free_vars.length == 0){
-            return None
+            return _b_.None
         }
         var cells = []
         for(var i = 0; i < free_vars.length; i++){
@@ -3323,7 +3273,7 @@ $B.function.__getattribute__ = function(self, attr){
                 cells.push($B.cell.$factory($B.$check_def_free(free_vars[i])))
             }catch(err){
                 // empty cell
-                cells.push($B.cell.$factory(None))
+                cells.push($B.cell.$factory(_b_.None))
             }
         }
         return _b_.tuple.$factory(cells)

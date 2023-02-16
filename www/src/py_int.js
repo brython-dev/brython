@@ -903,7 +903,9 @@ $B.$bool = function(obj, bool_class){ // return true or false
             if(obj){return true}
             return false
         default:
-            if(obj.$is_class){return true}
+            if(obj.$is_class){
+                return true
+            }
             var klass = obj.__class__ || $B.get_class(obj),
                 missing = {},
                 bool_method = bool_class ?

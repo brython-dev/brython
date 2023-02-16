@@ -196,6 +196,10 @@ $B.special_string_repr = {
     160: "\\xa0"
 }
 
+// maps comparison operator to method names
+$B.$comps = {'>':'gt','>=':'ge','<':'lt','<=':'le'}
+$B.$inv_comps = {'>': 'lt', '>=': 'le', '<': 'gt', '<=': 'ge'}
+
 // Used to compute the hash value of some objects (see
 // py_builtin_functions.js)
 $B.$py_next_hash = Math.pow(2, 53) - 1

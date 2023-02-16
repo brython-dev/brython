@@ -272,7 +272,6 @@
                     // apply __init__
                     var init = $B.$getattr(klass, "__init__", null)
                     if(init !== null){
-                        console.log('call init with', res, arguments)
                         init(res, ...arguments)
                     }
                     return res
