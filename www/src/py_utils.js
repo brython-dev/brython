@@ -6,14 +6,25 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-function too_many_pos_args_error(func, args){
-    var nb_pos = 0
+function too_many_pos_args_error(func, args, locals, varnames){
+    var nb_pos = 0,
+        type = 'pos'
     for(var arg of args){
         if(arg === $B.end_pos){
-            break
+            type = 'kw'
         }else if(arg.$starred){
             for(var item of $B.make_js_iterator(arg.$starred)){
                 nb_pos++
+            }
+        }else if(type == 'kw'){
+            var key = arg[0],
+                value = arg[1]
+            if(key !== null){
+                add_keyword_arg(func, key, value, locals, varnames)
+            }else{
+                for(var key of $B.make_js_iterator(value)){
+                    add_keyword_arg(func, key, $B.$getitem(value, key), locals, varnames)
+                }
             }
         }else{
             nb_pos++
@@ -40,7 +51,7 @@ function add_positional_arg(func, varnames, args, arg, locals, i, max_nb_pos, va
             locals[vararg].push(arg)
             return 0
         }else{
-            throw too_many_pos_args_error(func, args)
+            throw too_many_pos_args_error(func, args, locals, varnames)
         }
     }else{
         locals[varnames[i]] = arg
@@ -116,48 +127,13 @@ $B.args1 = function(func, args){
             }
         }else{
             // keyword argument
-            var key = arg[0],
-                value = arg[1]
-            if(key){
-                // x=...
-                nb_kw += add_keyword_arg(func, key, value, locals, varnames)
-            }else{
-                // **d
-                if(value === undefined){
-                    console.log('erreur', func, args)
-                }
-                if(value.__class__ === _b_.dict || _b_.isinstance(value, _b_.dict)){
-                    for(var item of _b_.dict.$iter_items_with_hash(value)){
-                        nb_kw += add_keyword_arg(func, item.key, item.value, locals, varnames)
-                    }
-                }else{
-                    var klass = $B.get_class(value)
-                    try{
-                        var keys_method = $B.$call($B.$getattr(klass, 'keys'))
-                    }catch(err){
-                        throw _b_.TypeError.$factory(
-                            `${func.$infos.__qualname__}() argument after ` +
-                            `** must be a mapping, not ${$B.class_name(value)}`)
-                    }
-                    var getitem
-                    for(var key of $B.make_js_iterator(keys_method(value))){
-                        if(! getitem){
-                            try{
-                                getitem = $B.$call($B.$getattr(klass, '__getitem__'))
-                            }catch(err){
-                                throw _b_.TypeError.$factory(
-                                    `'${$B.class_name(value)}' object is not subscriptable`)
-                            }
-                        }
-                        var v = getitem(value, key)
-                        nb_kw += add_keyword_arg(func, key, v, locals, varnames)
-                   }
-               }
+            for(item of kwarg_to_list(arg)){
+                nb_kw += add_keyword_arg(func, item[0], item[1], locals, varnames)
             }
         }
 
     }
-    
+
     if(nb_pos + nb_kw < nb_expected){
         // check that all varnames are set
         // varnames is the list of expected variable names
@@ -221,6 +197,51 @@ $B.args1 = function(func, args){
     }
     return locals
 }
+
+function kwarg_to_list(kwarg){
+    // keyword argument
+    var key = kwarg[0],
+        value = kwarg[1],
+        items = []
+    if(key){
+        // x=...
+        items.push([key, value])
+    }else{
+        // **d
+        if(value === undefined){
+            console.log('erreur', func, args)
+        }
+        if(value.__class__ === _b_.dict || _b_.isinstance(value, _b_.dict)){
+            for(var item of _b_.dict.$iter_items_with_hash(value)){
+                items.push([item.key, item.value])
+            }
+        }else{
+            var klass = $B.get_class(value)
+            try{
+                var keys_method = $B.$call($B.$getattr(klass, 'keys'))
+            }catch(err){
+                throw _b_.TypeError.$factory(
+                    `${func.$infos.__qualname__}() argument after ` +
+                    `** must be a mapping, not ${$B.class_name(value)}`)
+            }
+            var getitem
+            for(var key of $B.make_js_iterator(keys_method(value))){
+                if(! getitem){
+                    try{
+                        getitem = $B.$call($B.$getattr(klass, '__getitem__'))
+                    }catch(err){
+                        throw _b_.TypeError.$factory(
+                            `'${$B.class_name(value)}' object is not subscriptable`)
+                    }
+                }
+                var v = getitem(value, key)
+                items.push([key, v])
+           }
+       }
+    }
+    return items
+}
+
 
 
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,
