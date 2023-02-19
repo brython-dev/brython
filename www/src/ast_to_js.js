@@ -1713,10 +1713,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     for(var arg of this.args.posonlyargs){
         arg_names.push(`'${arg.arg}'`)
     }
-    if(has_posonlyargs){
-        // add fake argument name to indicate end of positional args
-        //arg_names.push("'/'")
-    }
+
     for(var arg of this.args.args.concat(this.args.kwonlyargs)){
         arg_names.push(`'${arg.arg}'`)
     }
@@ -1761,9 +1758,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `var ${locals_name},
                locals\n`
 
+
     parse_args.push('{' + slots.join(', ') + '} , ' +
         `arguments`)
 
+    
     var args_vararg = this.args.vararg === undefined ? 'null' :
                       "'" + this.args.vararg.arg + "'",
         args_kwarg = this.args.kwarg === undefined ? 'null':

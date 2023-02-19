@@ -597,6 +597,12 @@ $B.name_error = function(name, obj){
     return exc
 }
 
+$B.recursion_error = function(frame){
+    var exc = _b_.RecursionError.$factory("maximum recursion depth exceeded")
+    $B.set_exc(exc, frame)
+    return exc
+}
+
 // Suggestions in case of NameError or AttributeError
 var MAX_CANDIDATE_ITEMS = 750,
     MAX_STRING_SIZE = 40,

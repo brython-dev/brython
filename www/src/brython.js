@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-15 11:50:13.664861"
-__BRYTHON__.timestamp=1676458213664
+__BRYTHON__.compiled_date="2023-02-19 19:16:10.389152"
+__BRYTHON__.timestamp=1676830570389
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4793,48 +4793,28 @@ return imports}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
-$B.args1=function(func,posonlyargs,args,kwonlyargs,vararg,kwarg,p,k){
-var locals={},i=0
-for(var posonlyarg of posonlyargs){if(p[i]===undefined){throw _b_.TypeError.$factory('missing positional')}
-locals[posonlyarg]=p[i]
-i++}
-for(var arg of args){if(p[i]===undefined){throw _b_.TypeError.$factory('missing positional')}
-locals[arg]=p[i]
-i++}
-if(p.length > i){if(vararg){locals[vararg]=p.slice(i)}else{throw _b_.TypeError.$factory('too many positional')}}
-return locals}
-$B.args2=function(name,args,p,k){var locals={},i=0
-for(var arg of args){locals[arg]=p[i]
-i++}
-if(k){for(var item of k){locals[item[0]]=item[1]}}
-return locals}
-$B.args3=function(func,p,k){var locals=Object.create(null),i=0,code=func.$infos.__code__,varnames=code.co_varnames,nb_posonly=code.co_posonlyargcount,posonly=varnames.slice(0,nb_posonly),nb_args=code.co_argcount,args=varnames.slice(nb_posonly,nb_args),nb_kwonly=code.co_kwonlyargcount,defaults=func.$infos.__defaults__,kwdefaults=func.$infos.__kwdefaults__,name=func.$infos.__name__
-console.log('varnames',varnames,'posonly',nb_posonly,posonly,'args',nb_args,args,'defaults',defaults)
-for(var i=0,len=p.length;i < len;i++){locals[varnames[i]]=p[i]
-i++}
-if(k){for(var kv of k){if(locals[kv[0]]!==undefined){throw _b_.TypeError.$factory('duplicate arg '+kv[0])}
-locals[kv[0]]=kv[1]}}
-return locals}
-$B.make_func_locals=function(func,args){
-var locals=Object.create(null),i=0,code=func.$infos.__code__,varnames=code.co_varnames,nb_posonly=code.co_posonlyargcount,posonly=varnames.slice(0,nb_posonly),nb_args=code.co_argcount,args=varnames.slice(nb_posonly,nb_args),nb_kwonly=code.co_kwonlyargcount,defaults=func.$infos.__defaults__,kwdefaults=func.$infos.__kwdefaults__,name=func.$infos.__name__
-for(var i=0,len=args.length;i < len;i++){locals[varnames[i]]=args[i]}
-return locals}
+$B.args1=function(func,argcount,args){var func_arg_names=func.$infos.arg_names
+return $B.args(func.$infos.__name__,argcount,func.$infos.slots,func.$infos.arg_names.slice(),args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
 $B.args0=function(func,argcount,slots,args){var func_arg_names=func.$infos.arg_names
 return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names.slice(),args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
-$B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
+$B.nb_short=0
+$B.args2=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
 if(fname.startsWith("lambda_"+$B.lambda_magic)){fname="<lambda>"}
-var has_kw_args=false,nb_pos=args.length,filled=0,extra_kw,only_positional
+var has_kw_args=false,nb_pos=args.length,filled=0,extra_kw,only_positional,locals=Object.create(null)
 if(nb_posonly !==undefined){only_positional=var_names.slice(0,nb_posonly)}
-if(nb_pos > 0 && args[nb_pos-1]&& args[nb_pos-1].$kw){nb_pos--
-var kw_args=$B.parse_kwargs(args[nb_pos].$kw,fname)
-var nb_kw_args=0
-for(var k in kw_args){has_kw_args=true
-nb_kw_args++
-if(slots[k]===undefined){if(! extra_kw_args){throw _b_.TypeError.$factory(
-`${fname}() got an unexpected keyword argument '${k}'`)}}}}
-if(extra_pos_args){slots[extra_pos_args]=[]
-slots[extra_pos_args].__class__=_b_.tuple}
-if(extra_kw_args){extra_kw=$B.empty_dict()}
+if(extra_pos_args){locals[extra_pos_args]=[]
+locals[extra_pos_args].__class__=_b_.tuple}
+if(extra_kw_args){locals[extra_kw_args]=extra_kw=$B.empty_dict()}
+var i=0
+for(var arg of args){if(arg.$kw){
+var first=arg.$kw[0]
+for(var k in first){if(slots[k]===null){if(locals[k]===undefined){locals[k]=first[k]
+filled++}else{throw _b_.TypeError.$factory('duplicate '+k)}}else if(extra_kw_args){_b_.dict.$setitem_string(extra_kw,k,first[k])}else{throw _b_.TypeError.$factory('unexpected '+k)}}}else{var k=var_names[i]
+if(slots[k]===null){locals[k]=arg
+filled++}else if(extra_pos_args){locals[extra_pos_args].push(arg)}else{throw _b_.TypeError.$factory('too many pos args')}
+i++}}
+if(filled==argcount){$B.nb_short++
+return locals}
 if(nb_pos > argcount){
 if(extra_pos_args===null ||extra_pos_args=="*"){
 var min_argcount=argcount
@@ -4887,6 +4867,82 @@ for(var i=0;i < m.length-2;i++){m[i]=m[i]+', '}}
 return msg+': '+m.join('')}
 var msg=fname+" missing "
 if(missing_positional.length > 0){msg+=format_missing(missing_positional,'positional')}else{msg+=format_missing(missing_kwonly,'keyword-only')}
+throw _b_.TypeError.$factory(msg)}}
+if(extra_kw_args){slots[extra_kw_args]=extra_kw}
+return slots}
+$B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
+if(fname.startsWith("lambda_"+$B.lambda_magic)){fname="<lambda>"}
+var has_kw_args=false,nb_pos=args.length,filled=0,nb_posonly=nb_posonly ||0,extra_kw,only_positional
+if(extra_pos_args){slots[extra_pos_args]=[]
+slots[extra_pos_args].__class__=_b_.tuple}
+if(extra_kw_args){slots[extra_kw_args]=extra_kw=$B.empty_dict()}
+if(nb_pos==0 && var_names.length==0){return slots}
+var last_is_kw=nb_pos > 0 && args[nb_pos-1]&&
+args[nb_pos-1].$kw
+if((! last_is_kw)&&
+nb_pos==var_names.length && nb_pos==argcount){for(var arg of args){slots[var_names[filled]]=arg
+filled++}
+return slots}
+if(nb_posonly !==undefined){only_positional=var_names.slice(0,nb_posonly)}
+if(last_is_kw){nb_pos--
+var kw_args=$B.parse_kwargs(args[nb_pos].$kw,fname)
+var nb_kw_args=0
+for(var k in kw_args){has_kw_args=true
+nb_kw_args++
+if(slots[k]===undefined){if(! extra_kw_args){throw _b_.TypeError.$factory(
+`${fname}() got an unexpected keyword argument '${k}'`)}}}}
+if(nb_pos > argcount){
+if(extra_pos_args===null ||extra_pos_args=="*"){
+var min_argcount=argcount
+for(var i=0;i < argcount;i++){if($dobj[var_names[i]]!==undefined){min_argcount--}}
+var kw_msg=''
+if(has_kw_args){var kw_msg=`(and ${nb_kw_args} keyword-only argument`+
+(nb_kw_args !=1 ? 's' :'')+')'}
+msg=fname+"() takes "+
+(min_argcount==argcount ? argcount :
+`from ${min_argcount} to ${argcount}`)+" positional argument"+
+(min_argcount !=argcount ||argcount !=1 ? "s" :"")+
+` but ${nb_pos}`+
+(has_kw_args ? ` positional arguments`+kw_msg :"")+
+(nb_pos==1 ? ' was' :' were')+' given'
+throw _b_.TypeError.$factory(msg)}else{
+for(var i=argcount;i < nb_pos;i++){slots[extra_pos_args].push(args[i])}
+nb_pos=argcount}}
+for(var i=0;i < nb_pos;i++){slots[var_names[i]]=args[i]
+filled++}
+if(filled==argcount && argcount===var_names.length &&
+! has_kw_args){return slots}
+if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
+if(slots[key]===undefined){
+if(extra_kw_args){
+_b_.dict.$setitem_string(extra_kw,key,value)}else{throw _b_.TypeError.$factory(fname+
+"() got an unexpected keyword argument '"+key+"'")}}else if(slots.hasOwnProperty(key)&& slots[key]!==null){
+if(key==extra_pos_args){throw _b_.TypeError.$factory(
+`${fname}() got an unexpected `+
+`keyword argument '${key}'`)}
+throw _b_.TypeError.$factory(fname+
+"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key)>-1){throw _b_.TypeError.$factory(`${fname}() got some `+
+`positional-only arguments passed as keyword `+
+`arguments: '${key}'`)}else{
+slots[key]=value}}}
+var missing=[]
+for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push(attr)}}}
+if(missing.length > 0){if(missing.length==1){var arg_type='positional'
+if(var_names.indexOf(missing[0])>=argcount){arg_type='keyword-only'}
+throw _b_.TypeError.$factory(fname+
+`() missing 1 required ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
+var_names.indexOf(arg)< argcount),missing_kwonly=missing.filter(arg=>
+var_names.indexOf(arg)>=argcount)
+function format_missing(m,type){var msg=m.length+
+` required ${type} argument`+
+(m.length > 1 ? 's' :'')
+m=m.map(x=> `'${x}'`)
+if(m.length > 1){m[m.length-1]=' and '+m[m.length-1]
+for(var i=0;i < m.length-2;i++){m[i]=m[i]+', '}}
+return msg+': '+m.join('')}
+var msg=fname+" missing "
+if(missing_positional.length > 0){msg+=format_missing(missing_positional,'positional')}else{msg+=format_missing(missing_kwonly,'keyword-only')}
+console.log(fname,'args',args)
 throw _b_.TypeError.$factory(msg)}}
 if(extra_kw_args){slots[extra_kw_args]=extra_kw}
 return slots}
@@ -7827,7 +7883,7 @@ var code=name[1],name=name[0]}
 $B.builtins_scope[name]=true
 var $exc=be_factory.replace(/BaseException/g,name)
 $exc=$exc.replace("// placeholder",code)
-_b_[name]={__class__:_b_.type,__bases__:[_b_[parent.__name__]],__name__:name,__mro__:[_b_[parent.__name__]].concat(parent.__mro__),$is_class:true}
+_b_[name]={__class__:_b_.type,__bases__:[_b_[parent.__name__]],__name__:name,__qualname__:name,__mro__:[_b_[parent.__name__]].concat(parent.__mro__),$is_class:true}
 _b_[name].$factory=Function($exc)
 _b_[name].$factory.$infos={__name__:name,__qualname__:name}
 $B.set_func_names(_b_[name],'builtins')}}
@@ -7870,6 +7926,9 @@ $B.set_func_names(_b_.UnboundLocalError,'builtins')
 $B.name_error=function(name,obj){var exc=_b_.NameError.$factory(`name '${name}' is not defined`)
 exc.name=name
 exc.$stack=$B.frames_stack.slice()
+return exc}
+$B.recursion_error=function(frame){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
+$B.set_exc(exc,frame)
 return exc}
 var MAX_CANDIDATE_ITEMS=750,MAX_STRING_SIZE=40,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
@@ -8068,7 +8127,7 @@ $B.show_error(err)
 throw err}})(__BRYTHON__)
 ;
 
-;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__:_b_.type,__mro__:[_b_.object],$is_class:true,$native:true,$match_sequence_pattern:true,
+;(function($B){var _b_=$B.builtins,None=_b_.None,range={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'range',$is_class:true,$native:true,$match_sequence_pattern:true,
 $not_basetype:true,
 $descriptors:{start:true,step:true,stop:true}}
 range.__contains__=function(self,other){if(range.__len__(self)==0){return false}
@@ -8163,7 +8222,7 @@ safe=(typeof start=="number" && typeof stop=="number" &&
 typeof step=="number")
 return{__class__:range,start:start,stop:stop,step:step,$is_range:true,$safe:safe}}
 $B.set_func_names(range,"builtins")
-var slice={__class__:_b_.type,__mro__:[_b_.object],$is_class:true,$native:true,$not_basetype:true,
+var slice={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'slice',$is_class:true,$native:true,$not_basetype:true,
 $descriptors:{start:true,step:true,stop:true}}
 slice.__eq__=function(self,other){var conv1=conv_slice(self),conv2=conv_slice(other)
 return conv1[0]==conv2[0]&&
@@ -8234,7 +8293,7 @@ return bytes.$factory(self.source.slice(i))}
 for(var i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break}}
 return bytes.$factory(self.source.slice(0,i+1))}
 function invalid(other){return ! _b_.isinstance(other,[bytes,bytearray])}
-var bytearray={__class__:_b_.type,__mro__:[_b_.object],$buffer_protocol:true,$is_class:true}
+var bytearray={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'bytearray',$buffer_protocol:true,$is_class:true}
 var mutable_methods=["__delitem__","clear","copy","count","index","pop","remove","reverse"]
 mutable_methods.forEach(function(method){bytearray[method]=(function(m){return function(self){var args=[self.source],pos=1
 for(var i=1,len=arguments.length;i < len;i++){args[pos++]=arguments[i]}
@@ -8281,7 +8340,7 @@ _b_.list.insert(self.source,pos,b)}
 bytearray.$factory=function(){var args=[bytearray]
 for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return bytearray.__new__.apply(null,args)}
-var bytes={__class__ :_b_.type,__mro__:[_b_.object],$buffer_protocol:true,$is_class:true}
+var bytes={__class__ :_b_.type,__mro__:[_b_.object],__qualname__:'bytes',$buffer_protocol:true,$is_class:true}
 bytes.__add__=function(self,other){var other_bytes
 if(_b_.isinstance(other,[bytes,bytearray])){other_bytes=other.source}else if(_b_.isinstance(other,_b_.memoryview)){other_bytes=_b_.memoryview.tobytes(other).source}
 if(other_bytes !==undefined){return{
@@ -9640,7 +9699,7 @@ idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modul
 request.onsuccess=function(){if($B.debug > 1){console.info(modobj.__name__,"stored in db")}}
 request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
 $B.set_func_names(VFSLoader,"builtins")
-var finder_cpython={__class__:_b_.type,__mro__:[_b_.object],$infos:{__module__:"builtins",__name__:"CPythonFinder"},create_module :function(cls,spec){
+var finder_cpython={__class__:_b_.type,__mro__:[_b_.object],__qualname__:'CPythonFinder',$infos:{__module__:"builtins",__name__:"CPythonFinder"},create_module :function(cls,spec){
 return _b_.None},exec_module :function(cls,modobj){console.log("exec PYthon module",modobj)
 var loader_state=modobj.__spec__.loader_state
 var content=loader_state.content
@@ -11090,7 +11149,7 @@ if(typeof obj=="boolean"){return obj ? 1 :0}
 return obj.$brython_value !==undefined ? obj.$brython_value :obj}
 function bigint_value(obj){
 if(typeof obj=="boolean"){return obj ? 1n :0n}else if(typeof obj=="number"){return BigInt(obj)}else if(obj.__class__===$B.long_int){return obj.value}else if(_b_.isinstance(obj,_b_.int)){return bigint_value(obj.$brython_value)}}
-var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true},$is_int_subclass:true}
+var int={__class__:_b_.type,__dir__:_b_.object.__dir__,__mro__:[_b_.object],__qualname__:'int',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true},$is_int_subclass:true}
 var int_or_long=int.$int_or_long=function(bigint){var res=Number(bigint)
 return Number.isSafeInteger(res)? res :$B.fast_long_int(bigint)}
 int.$to_js_number=function(obj){
@@ -11428,7 +11487,7 @@ if(res !==true && res !==false){throw _b_.TypeError.$factory("__bool__ should re
 "bool, returned "+$B.class_name(res))}
 if(test){console.log('bool method returns',res)}
 return res}}}
-var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],$is_class:true,$not_basetype:true,
+var bool={__bases__:[int],__class__:_b_.type,__mro__:[int,_b_.object],__qualname__:'bool',$is_class:true,$not_basetype:true,
 $native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 bool.__and__=function(self,other){if(_b_.isinstance(other,bool)){return self && other}else if(_b_.isinstance(other,int)){return int.__and__(bool.__index__(self),int.__index__(other))}
 return _b_.NotImplemented}
@@ -11456,7 +11515,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__)
 ;(function($B){
 var _b_=$B.builtins
 if($B.isWebWorker){window=self}
-var long_int={__class__:_b_.type,__mro__:[_b_.int,_b_.object],$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+var long_int={__class__:_b_.type,__mro__:[_b_.int,_b_.object],__qualname__:'int',$infos:{__module__:"builtins",__name__:"int"},$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 var max_safe_divider=$B.max_int/9
 var int_or_long=_b_.int.$int_or_long
 var len=((Math.pow(2,53)-1)+'').length-1
@@ -11661,7 +11720,7 @@ function $err(op,other){var msg="unsupported operand type(s) for "+op+
 throw _b_.TypeError.$factory(msg)}
 function float_value(obj){
 return obj.$brython_value !==undefined ? obj.$brython_value :obj}
-var float={__class__:_b_.type,__dir__:object.__dir__,$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
+var float={__class__:_b_.type,__dir__:object.__dir__,__qualname__:'float',$is_class:true,$native:true,$descriptors:{"numerator":true,"denominator":true,"imag":true,"real":true}}
 float.$float_value=float_value
 float.$to_js_number=function(self){if(self.__class__===float){return self.value}else{return float.$to_js_number(self.value)}}
 float.numerator=function(self){return self}
@@ -12204,7 +12263,7 @@ const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_I
 ;(function($B){var _b_=$B.builtins
 function $UnsupportedOpType(op,class1,class2){throw _b_.TypeError.$factory("unsupported operand type(s) for "+
 op+": '"+class1+"' and '"+class2+"'")}
-var complex={__class__:_b_.type,__dir__:_b_.object.__dir__,$is_class:true,$native:true,$descriptors:{real:true,imag:true}}
+var complex={__class__:_b_.type,__dir__:_b_.object.__dir__,__qualname__:'complex',$is_class:true,$native:true,$descriptors:{real:true,imag:true}}
 complex.__abs__=function(self){var _rf=isFinite(self.$real.value),_if=isFinite(self.$imag.value)
 if((_rf && isNaN(self.$imag.value))||(_if && isNaN(self.$real.value))||
 (isNaN(self.$imag.value)&& isNaN(self.$real.value))){return $B.fast_float(NaN)}
@@ -14314,7 +14373,7 @@ var super_class=$B.make_class("JavascriptSuper",function(){
 var b_super=_b_.super.$factory(),b_self=b_super.__self_class__,proto=Object.getPrototypeOf(b_self),parent=proto.constructor.$parent
 var factory=function(){var p=parent.bind(b_self),res
 if(parent.toString().startsWith("class")){res=new p(...arguments)}else{res=p(...arguments)}
-for(key in res){b_self[key]=res[key]}
+for(var key in res){b_self[key]=res[key]}
 return res}
 return{
 __class__:super_class,__init__:factory,__self_class__:b_self}}
@@ -15179,7 +15238,6 @@ var args=positional.concat(this.args.kwonlyargs),slots=[],arg_names=[]
 for(var arg of args){slots.push(arg.arg+': null')
 bind(arg.arg,scopes)}
 for(var arg of this.args.posonlyargs){arg_names.push(`'${arg.arg}'`)}
-if(has_posonlyargs){}
 for(var arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${arg.arg}'`)}
 if(this.args.vararg){bind(this.args.vararg.arg,scopes)}
 if(this.args.kwarg){bind(this.args.kwarg.arg,scopes)}
