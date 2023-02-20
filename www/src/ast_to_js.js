@@ -1768,6 +1768,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
+
     js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
 
     js += `var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]

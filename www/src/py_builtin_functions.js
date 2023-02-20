@@ -109,17 +109,12 @@ var anext = _b_.anext = function(async_iterator, _default){
 
 var any = _b_.any = function(obj){
     check_nb_args_no_kw('any', 1, arguments)
-    var next_of = $B.next_of(obj)
-    while(1){
-        try{
-            var elt = next_of()
-            if($B.$bool(elt)){
-                return true
-            }
-        }catch(err){
-            return false
+    for(var elt of $B.make_js_iterator(obj)){
+        if($B.$bool(elt)){
+            return true
         }
     }
+    return false
 }
 
 var ascii = _b_.ascii = function(obj) {
@@ -1798,24 +1793,50 @@ var map = _b_.map = $B.make_class("map",
         var $ = $B.args('map', 2, {func: null, it1:null}, ['func', 'it1'],
                 arguments, {}, 'args', null),
             func = $B.$call($.func)
-        var iter_args = [$.it1].concat($.args).map($B.next_of)
+        var iter_args = [$B.make_js_iterator($.it1)]
+        for(var arg of $.args){
+            iter_args.push($B.make_js_iterator(arg))
+        }
         var obj = {
             __class__: map,
             args: iter_args,
             func: func
+        }
+        obj[Symbol.iterator] = function(){
+            this.iters = []
+            for(var arg of this.args){
+                this.iters.push(arg[Symbol.iterator]())
+            }
+            return this
+        }
+        obj.next = function(){
+            var args = []
+            for(var iter of this.iters){
+                var arg = iter.next()
+                if(arg.done){
+                    return {done: true, value: null}
+                }
+                args.push(arg.value)
+            }
+            return {done: false, value: this.func.apply(null, args)}
         }
         return obj
     }
 )
 
 map.__iter__ = function (self){
+    self[Symbol.iterator]()
     return self
 }
 
 map.__next__ = function(self){
     var args = []
-    for(var next_of of self.args){
-        args.push(next_of())
+    for(var iter of self.iters){
+        var arg = iter.next()
+        if(arg.done){
+            throw _b_.StopIteration.$factory('')
+        }
+        args.push(arg.value)
     }
     return self.func.apply(null, args)
 }

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-19 19:16:10.389152"
-__BRYTHON__.timestamp=1676830570389
+__BRYTHON__.compiled_date="2023-02-20 09:01:57.866190"
+__BRYTHON__.timestamp=1676880117866
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4796,80 +4796,7 @@ return imports}})(__BRYTHON__)
 $B.args1=function(func,argcount,args){var func_arg_names=func.$infos.arg_names
 return $B.args(func.$infos.__name__,argcount,func.$infos.slots,func.$infos.arg_names.slice(),args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
 $B.args0=function(func,argcount,slots,args){var func_arg_names=func.$infos.arg_names
-return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names.slice(),args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
-$B.nb_short=0
-$B.args2=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
-if(fname.startsWith("lambda_"+$B.lambda_magic)){fname="<lambda>"}
-var has_kw_args=false,nb_pos=args.length,filled=0,extra_kw,only_positional,locals=Object.create(null)
-if(nb_posonly !==undefined){only_positional=var_names.slice(0,nb_posonly)}
-if(extra_pos_args){locals[extra_pos_args]=[]
-locals[extra_pos_args].__class__=_b_.tuple}
-if(extra_kw_args){locals[extra_kw_args]=extra_kw=$B.empty_dict()}
-var i=0
-for(var arg of args){if(arg.$kw){
-var first=arg.$kw[0]
-for(var k in first){if(slots[k]===null){if(locals[k]===undefined){locals[k]=first[k]
-filled++}else{throw _b_.TypeError.$factory('duplicate '+k)}}else if(extra_kw_args){_b_.dict.$setitem_string(extra_kw,k,first[k])}else{throw _b_.TypeError.$factory('unexpected '+k)}}}else{var k=var_names[i]
-if(slots[k]===null){locals[k]=arg
-filled++}else if(extra_pos_args){locals[extra_pos_args].push(arg)}else{throw _b_.TypeError.$factory('too many pos args')}
-i++}}
-if(filled==argcount){$B.nb_short++
-return locals}
-if(nb_pos > argcount){
-if(extra_pos_args===null ||extra_pos_args=="*"){
-var min_argcount=argcount
-for(var i=0;i < argcount;i++){if($dobj[var_names[i]]!==undefined){min_argcount--}}
-var kw_msg=''
-if(has_kw_args){var kw_msg=`(and ${nb_kw_args} keyword-only argument`+
-(nb_kw_args !=1 ? 's' :'')+')'}
-msg=fname+"() takes "+
-(min_argcount==argcount ? argcount :
-`from ${min_argcount} to ${argcount}`)+" positional argument"+
-(min_argcount !=argcount ||argcount !=1 ? "s" :"")+
-` but ${nb_pos}`+
-(has_kw_args ? ` positional arguments`+kw_msg :"")+
-(nb_pos==1 ? ' was' :' were')+' given'
-throw _b_.TypeError.$factory(msg)}else{
-for(var i=argcount;i < nb_pos;i++){slots[extra_pos_args].push(args[i])}
-nb_pos=argcount}}
-for(var i=0;i < nb_pos;i++){slots[var_names[i]]=args[i]
-filled++}
-if(filled==argcount && argcount===var_names.length &&
-! has_kw_args){if(extra_kw_args){slots[extra_kw_args]=extra_kw}
-return slots}
-if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
-if(slots[key]===undefined){
-if(extra_kw_args){
-_b_.dict.$setitem_string(extra_kw,key,value)}else{throw _b_.TypeError.$factory(fname+
-"() got an unexpected keyword argument '"+key+"'")}}else if(slots.hasOwnProperty(key)&& slots[key]!==null){
-if(key==extra_pos_args){throw _b_.TypeError.$factory(
-`${fname}() got an unexpected `+
-`keyword argument '${key}'`)}
-throw _b_.TypeError.$factory(fname+
-"() got multiple values for argument '"+key+"'")}else if(only_positional && only_positional.indexOf(key)>-1){throw _b_.TypeError.$factory(`${fname}() got some `+
-`positional-only arguments passed as keyword `+
-`arguments: '${key}'`)}else{
-slots[key]=value}}}
-var missing=[]
-for(var attr in slots){if(slots[attr]===null){if($dobj[attr]!==undefined){slots[attr]=$dobj[attr]}else{missing.push(attr)}}}
-if(missing.length > 0){if(missing.length==1){var arg_type='positional'
-if(var_names.indexOf(missing[0])>=argcount){arg_type='keyword-only'}
-throw _b_.TypeError.$factory(fname+
-`() missing 1 required ${arg_type} argument: '${missing[0]}'`)}else{var missing_positional=missing.filter(arg=>
-var_names.indexOf(arg)< argcount),missing_kwonly=missing.filter(arg=>
-var_names.indexOf(arg)>=argcount)
-function format_missing(m,type){var msg=m.length+
-` required ${type} argument`+
-(m.length > 1 ? 's' :'')
-m=m.map(x=> `'${x}'`)
-if(m.length > 1){m[m.length-1]=' and '+m[m.length-1]
-for(var i=0;i < m.length-2;i++){m[i]=m[i]+', '}}
-return msg+': '+m.join('')}
-var msg=fname+" missing "
-if(missing_positional.length > 0){msg+=format_missing(missing_positional,'positional')}else{msg+=format_missing(missing_kwonly,'keyword-only')}
-throw _b_.TypeError.$factory(msg)}}
-if(extra_kw_args){slots[extra_kw_args]=extra_kw}
-return slots}
+return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names,args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
 if(fname.startsWith("lambda_"+$B.lambda_magic)){fname="<lambda>"}
 var has_kw_args=false,nb_pos=args.length,filled=0,nb_posonly=nb_posonly ||0,extra_kw,only_positional
@@ -4942,33 +4869,26 @@ for(var i=0;i < m.length-2;i++){m[i]=m[i]+', '}}
 return msg+': '+m.join('')}
 var msg=fname+" missing "
 if(missing_positional.length > 0){msg+=format_missing(missing_positional,'positional')}else{msg+=format_missing(missing_kwonly,'keyword-only')}
-console.log(fname,'args',args)
 throw _b_.TypeError.$factory(msg)}}
-if(extra_kw_args){slots[extra_kw_args]=extra_kw}
 return slots}
-$B.wrong_nb_args=function(name,received,expected,positional){if(received < expected){var missing=expected-received
-throw _b_.TypeError.$factory(name+"() missing "+missing+
-" positional argument"+(missing > 1 ? "s" :"")+": "+
-positional.slice(received))}else{throw _b_.TypeError.$factory(name+"() takes "+expected+
-" positional argument"+(expected > 1 ? "s" :"")+
-" but more were given")}}
-$B.nb_parse_kwargs=0
-$B.parse_kwargs=function(kw_args,fname){$B.nb_parse_kwargs++
-var kwa=kw_args[0]
+$B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
 for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i],key,value
 if(kw_arg.__class__===_b_.dict){for(var entry of _b_.dict.$iter_items_with_hash(kw_arg)){key=entry.key
 if(typeof key !=='string'){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}else if(kwa[key]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
-key+"'")}else{kwa[key]=entry.value}}}else{var it=_b_.iter(kw_arg),getitem=$B.$getattr(kw_arg,'__getitem__')
-while(true){try{var k=_b_.next(it)
-if(typeof k !=="string"){throw _b_.TypeError.$factory(fname+
+key+"'")}else{kwa[key]=entry.value}}}else{var cls=$B.get_class(kw_arg)
+try{var keys_method=$B.$call1($B.$getattr(cls,'keys'))}catch(err){throw _b_.TypeError.$factory(`${fname} argument `+
+`after ** must be a mapping, not ${$B.class_name(kw_arg)}`)}
+var keys_iter=$B.make_js_iterator(keys_method(kw_arg)),getitem
+for(var k of keys_iter){if(typeof k !=="string"){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}
 if(kwa[k]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
 k+"'")}
-kwa[k]=getitem(k)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
-throw err}}}}
+if(! getitem){try{getitem=$B.$getattr(cls,'__getitem__')}catch(err){throw _b_.TypeError.$factory(
+`'${$B.class_name(kw_arg)}' object is not subscriptable`)}}
+kwa[k]=getitem(kw_arg,k)}}}
 return kwa}
 $B.check_nb_args=function(name,expected,args){
 var len=args.length,last=args[len-1]
@@ -5015,45 +4935,29 @@ if(klass===undefined){return $B.JSObj}
 return klass}
 $B.class_name=function(obj){var klass=$B.get_class(obj)
 if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass.__name__}}
-$B.next_of=function(iterator){
-if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
-if(iterator.step > 0){return function(){if(obj.ix >=iterator.stop){throw _b_.StopIteration.$factory('')}
-var res=obj.ix
-obj.ix+=iterator.step
-return res}}else{return function(){if(obj.ix <=iterator.stop){throw _b_.StopIteration.$factory('')}
-var res=obj.ix
-obj.ix+=iterator.step
-return res}}}
-if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator](),obj={ix:0},items=Array.from(it),len=items.length
-return function(){if(obj.ix==len){throw _b_.StopIteration.$factory('')}
-var res=items[obj.ix]
-obj.ix++
-return res}}
-if(iterator.$builtin_iterator){if(iterator.$next_func===undefined){iterator.$next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
-return iterator.$next_func}
-return $B.$call($B.$getattr(_b_.iter(iterator),'__next__'))}
 $B.make_js_iterator=function(iterator,frame,lineno){
-if(frame===undefined){frame=$B.last($B.frames_stack)
-lineno=frame.$lineno}
+var set_lineno=$B.set_lineno
+if(frame===undefined){if($B.frames_stack.length==0){function set_lineno(){}}else{frame=$B.last($B.frames_stack)
+lineno=frame.$lineno}}
 if(iterator.__class__===_b_.range){var obj={ix:iterator.start}
 if(iterator.step > 0){return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 if(obj.ix >=iterator.stop){return{done:true,value:null}}
 var value=obj.ix
 obj.ix+=iterator.step
 return{done:false,value}}}}else{return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 if(obj.ix <=iterator.stop){return{done:true,value:null}}
 var value=obj.ix
 obj.ix+=iterator.step
 return{done:false,value}}}}}
 if(iterator[Symbol.iterator]){var it=iterator[Symbol.iterator]()
 return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 return it.next()}}}
 var next_func=$B.$call($B.$getattr(_b_.iter(iterator),'__next__'))
 return{
-[Symbol.iterator](){return this},next(){$B.set_lineno(frame,lineno)
+[Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 try{var value=next_func()
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
 throw err}}}}
@@ -5330,6 +5234,16 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
+$B.set_local_trace_func=function(frame){if(frame[4]===$B.tracefunc ||
+($B.tracefunc.$infos && frame[4]&&
+frame[4]===$B.tracefunc.$infos.__func__)){
+$B.tracefunc.$frame_id=frame[0]
+return _b_.None}else{
+for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.tracefunc.$frame_id){return _b_.None}}
+try{return $B.tracefunc($B.last($B.frames_stack),'call',_b_.None)}catch(err){$B.set_exc(err,frame)
+$B.frames_stack.pop()
+err.$in_trace_func=true
+throw err}}}
 $B.enter_frame=function(frame){
 if($B.frames_stack.length > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
@@ -6155,7 +6069,6 @@ if(self.counter < self.items.length){var item=self.items[self.counter]
 if(self.items.$brython_class=="js"){
 item=$B.$JS2Py(item)}
 return item}
-delete self.items.$next_func 
 throw _b_.StopIteration.$factory("StopIteration")},__reduce_ex__:function(self,protocol){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
@@ -6244,9 +6157,8 @@ var anext=_b_.anext=function(async_iterator,_default){var missing={},$=$B.args('
 var awaitable=$B.$call($B.$getattr(async_iterator,'__anext__'))()
 return awaitable}
 var any=_b_.any=function(obj){check_nb_args_no_kw('any',1,arguments)
-var next_of=$B.next_of(obj)
-while(1){try{var elt=next_of()
-if($B.$bool(elt)){return true}}catch(err){return false}}}
+for(var elt of $B.make_js_iterator(obj)){if($B.$bool(elt)){return true}}
+return false}
 var ascii=_b_.ascii=function(obj){check_nb_args_no_kw('ascii',1,arguments)
 var res=repr(obj),res1='',cp
 for(var i=0;i < res.length;i++){cp=res.charCodeAt(i)
@@ -6848,13 +6760,25 @@ res.$is_namespace=true
 delete res.$jsobj.__annotations__
 return res}
 var map=_b_.map=$B.make_class("map",function(){var $=$B.args('map',2,{func:null,it1:null},['func','it1'],arguments,{},'args',null),func=$B.$call($.func)
-var iter_args=[$.it1].concat($.args).map($B.next_of)
+var iter_args=[$B.make_js_iterator($.it1)]
+for(var arg of $.args){iter_args.push($B.make_js_iterator(arg))}
 var obj={__class__:map,args:iter_args,func:func}
+obj[Symbol.iterator]=function(){this.iters=[]
+for(var arg of this.args){this.iters.push(arg[Symbol.iterator]())}
+return this}
+obj.next=function(){var args=[]
+for(var iter of this.iters){var arg=iter.next()
+if(arg.done){return{done:true,value:null}}
+args.push(arg.value)}
+return{done:false,value:this.func.apply(null,args)}}
 return obj}
 )
-map.__iter__=function(self){return self}
+map.__iter__=function(self){self[Symbol.iterator]()
+return self}
 map.__next__=function(self){var args=[]
-for(var next_of of self.args){args.push(next_of())}
+for(var iter of self.iters){var arg=iter.next()
+if(arg.done){throw _b_.StopIteration.$factory('')}
+args.push(arg.value)}
 return self.func.apply(null,args)}
 $B.set_func_names(map,"builtins")
 function $extreme(args,op){

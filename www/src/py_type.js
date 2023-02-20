@@ -1408,7 +1408,6 @@ $B.make_iterator_class = function(name){
                 }
                 return item
             }
-            delete self.items.$next_func // set by $B.next_of()
             throw _b_.StopIteration.$factory("StopIteration")
         },
 
