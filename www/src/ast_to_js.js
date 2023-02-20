@@ -1771,7 +1771,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
 
-    js += `var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+    js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
+          `locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`

@@ -952,6 +952,7 @@ function trace_from_stack(err){
 }
 
 $B.error_trace = function(err){
+    console.log('error trace, stack', err.$stack)
     if($B.debug > 1){
         console.log("handle error", err.__class__, err.args)
         console.log('stack', err.$stack)

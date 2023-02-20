@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-20 17:27:45.344416"
-__BRYTHON__.timestamp=1676910465344
+__BRYTHON__.compiled_date="2023-02-20 18:04:57.695870"
+__BRYTHON__.timestamp=1676912697695
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7943,7 +7943,8 @@ for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
-$B.error_trace=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
+$B.error_trace=function(err){console.log('error trace, stack',err.$stack)
+if($B.debug > 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
 console.log(err.stack)}
 var trace=''
@@ -15128,7 +15129,8 @@ var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.vararg.arg+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+this.args.kwarg.arg+"'"
 js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
-js+=`var frame = ["${this.name}", locals, "${gname}", ${globals_name}, ${name2}]
+js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
+`locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`
