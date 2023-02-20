@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-20 09:01:57.866190"
-__BRYTHON__.timestamp=1676880117866
+__BRYTHON__.compiled_date="2023-02-20 10:44:23.534659"
+__BRYTHON__.timestamp=1676886263534
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4535,7 +4535,6 @@ var root=$B.py2js($src,module_name,module_name)
 js=root.to_js()
 if($B.debug > 1){$log(js)}
 eval(js)
-$B.clear_ns(module_name)
 root=null
 js=null}catch($err){root=null
 js=null
@@ -4984,27 +4983,9 @@ var res=t.slice(t.index,t.length-nb_after_starred)
 t.index=t.length-nb_after_starred-1
 return res}
 return t}
-$B.rest_iter=function(next_func){
-var res=[]
-while(true){try{res.push(next_func())}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return $B.fast_tuple(res)}
-throw err}}}
 $B.set_lineno=function(frame,lineno){frame.$lineno=lineno
 if(frame.$f_trace !==_b_.None){$B.trace_line()}
 return true}
-$B.handle_annotation=function(annotation_string){
-if($B.imported.__future__ &&
-$B.frames_stack.length > 0 &&
-$B.last($B.frames_stack)[3].annotations===
-$B.imported.__future__.annotations){
-return annotation_string}else{return _b_.eval(annotation_string)}}
-$B.copy_namespace=function(){var ns={}
-for(const frame of $B.frames_stack){for(const kv of[frame[1],frame[3]]){for(var key in kv){if(! key.startsWith('$')){ns[key]=kv[key]}}}}
-return ns}
-$B.clear_ns=function(name){
-if(name.startsWith("__ge")){console.log("clear ns",name)}
-var len=name.length
-var alt_name=name.replace(/\./g,"_")
-if(alt_name !=name){$B.clear_ns(alt_name)}}
 $B.get_method_class=function(ns,qualname,refs){
 var klass=ns
 for(var ref of refs){if(klass[ref]===undefined){var fake_class=$B.make_class(qualname)
@@ -5132,17 +5113,6 @@ if(res===_b_.NotImplemented){throw _b_.TypeError.$factory(`unsupported operand t
 return res}else{var method1=$B.op2method.operations[op1]
 if(method1===undefined){method1=$B.op2method.binary[op1]}
 return $B.rich_op(`__${method1}__`,left,right)}}
-$B.extend=function(fname,arg){
-for(var i=2;i < arguments.length;i++){var mapping=arguments[i]
-var it=_b_.iter(mapping),getter=$B.$getattr(mapping,"__getitem__")
-while(true){try{var key=_b_.next(it)
-if(typeof key !=="string"){throw _b_.TypeError.$factory(fname+
-"() keywords must be strings")}
-if(arg[key]!==undefined){throw _b_.TypeError.$factory(fname+
-"() got multiple values for argument '"+key+"'")}
-arg[key]=getter(key)}catch(err){if(_b_.isinstance(err,[_b_.StopIteration])){break}
-throw err}}}
-return arg}
 $B.$is=function(a,b){
 if(a.__class__===_b_.float && b.__class__===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
 return a.value==b.value}
@@ -5179,9 +5149,6 @@ return function(){var res=callable(...arguments)
 return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
-function $err(op,klass,other){var msg="unsupported operand type(s) for "+op+": '"+
-klass.__name__+"' and '"+$B.class_name(other)+"'"
-throw _b_.TypeError.$factory(msg)}
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
 var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 $B.make_rmethods=function(klass){for(var r_opname of r_opnames){if(klass["__r"+r_opname+"__"]===undefined &&
@@ -5234,16 +5201,6 @@ else{throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 default:
 throw _b_.TypeError.$factory("'"+$B.class_name(v)+
 "' object cannot be interpreted as an integer")}}
-$B.set_local_trace_func=function(frame){if(frame[4]===$B.tracefunc ||
-($B.tracefunc.$infos && frame[4]&&
-frame[4]===$B.tracefunc.$infos.__func__)){
-$B.tracefunc.$frame_id=frame[0]
-return _b_.None}else{
-for(var i=$B.frames_stack.length-1;i >=0;i--){if($B.frames_stack[i][0]==$B.tracefunc.$frame_id){return _b_.None}}
-try{return $B.tracefunc($B.last($B.frames_stack),'call',_b_.None)}catch(err){$B.set_exc(err,frame)
-$B.frames_stack.pop()
-err.$in_trace_func=true
-throw err}}}
 $B.enter_frame=function(frame){
 if($B.frames_stack.length > 1000){var exc=_b_.RecursionError.$factory("maximum recursion depth exceeded")
 $B.set_exc(exc,frame)
@@ -5287,24 +5244,10 @@ if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__')
 _b_.None,_b_.None,_b_.None)}}}}
 delete frame[1].$current_exception
 return _b_.None}
-var min_int=Math.pow(-2,53),max_int=Math.pow(2,53)-1
-$B.is_safe_int=function(arg){return typeof arg=="number" &&
-Number.isSafeInteger(arg)}
-$B.add=function(x,y){return $B.rich_op('__add__',x,y)}
-$B.mul=function(x,y){return $B.rich_op('__mul__',x,y)}
-$B.sub=function(x,y){return $B.rich_op('__sub__',x,y)}
-$B.eq=function(x,y){if(Number.isSafeInteger(x)&& Number.isSafeInteger(y)){return x==y}
-return $B.long_int.__eq__($B.long_int.$factory(x),$B.long_int.$factory(y))}
 $B.floordiv=function(x,y){var z=x/y
 if(Number.isSafeInteger(x)&&
 Number.isSafeInteger(y)&&
 Number.isSafeInteger(z)){return Math.floor(z)}else{return $B.long_int.__floordiv__($B.long_int.$factory(x),$B.long_int.$factory(y))}}
-$B.ge=function(x,y){if(typeof x=="number" && typeof y=="number"){return x >=y}
-else if(typeof x=="number" && typeof y !="number"){return ! y.pos}
-else if(typeof x !="number" && typeof y=="number"){return x.pos===true}else{return $B.long_int.__ge__(x,y)}}
-$B.gt=function(x,y){if(typeof x=="number" && typeof y=="number"){return x > y}
-else if(typeof x=="number" && typeof y !="number"){return ! y.pos}
-else if(typeof x !="number" && typeof y=="number"){return x.pos===true}else{return $B.long_int.__gt__(x,y)}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
 $B.rich_comp=function(op,x,y){if(x===undefined){throw _b_.RuntimeError.$factory('error in rich comp')}
@@ -7021,7 +6964,7 @@ if(_b_.isinstance(start,[_b_.str,_b_.bytes])){throw _b_.TypeError.$factory("sum(
 " [use b''.join(seq) instead]")}
 var res=start,iterable=iter(iterable)
 while(1){try{var _item=next(iterable)
-res=$B.add(res,_item)}catch(err){if(err.__class__===_b_.StopIteration){break}else{throw err}}}
+res=$B.rich_op('__add__',res,_item)}catch(err){if(err.__class__===_b_.StopIteration){break}else{throw err}}}
 return res}
 $B.missing_super2=function(obj){obj.$missing=true
 return obj}
@@ -8063,25 +8006,26 @@ var sub=other-start,fl=sub/step,res=step*fl
 if(res==sub){if(stop > start){return other >=start && stop > other}else{return start >=other && other > stop}}else{return false}}
 range.__delattr__=function(self,attr,value){throw _b_.AttributeError.$factory("readonly attribute")}
 range.__eq__=function(self,other){if(_b_.isinstance(other,range)){var len=range.__len__(self)
-if(! $B.eq(len,range.__len__(other))){return false}
+if(! $B.rich_comp('__eq__',len,range.__len__(other))){return false}
 if(len==0){return true}
-if(! $B.eq(self.start,other.start)){return false}
+if(! $B.rich_comp('__eq__',self.start,other.start)){return false}
 if(len==1){return true}
-return $B.eq(self.step,other.step)}
+return $B.rich_comp('__eq__',self.step,other.step)}
 return false}
 function compute_item(r,i){var len=range.__len__(r)
-if(len==0){return r.start}
-else if(i > len){return r.stop}
-return $B.add(r.start,$B.mul(r.step,i))}
-range.__getitem__=function(self,rank){if(_b_.isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,range.__len__(self)),substep=$B.mul(self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
+if(len==0){return r.start}else if(i > len){return r.stop}
+return $B.rich_op('__add__',r.start,$B.rich_op('__mul__',r.step,i))}
+range.__getitem__=function(self,rank){if(_b_.isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,range.__len__(self)),substep=$B.rich_op('__mul__',self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
 return range.$factory(substart,substop,substep)}
 if(typeof rank !="number"){rank=$B.$GetInt(rank)}
-if($B.gt(0,rank)){rank=$B.add(rank,range.__len__(self))}
-var res=$B.add(self.start,$B.mul(rank,self.step))
-if(($B.gt(self.step,0)&&
-($B.ge(res,self.stop)||$B.gt(self.start,res)))||
-($B.gt(0,self.step)&&
-($B.ge(self.stop,res)||$B.gt(res,self.start)))){throw _b_.IndexError.$factory("range object index out of range")}
+if($B.rich_comp('__gt__',0,rank)){rank=$B.rich_op('__add__',rank,range.__len__(self))}
+var res=$B.rich_op('__add__',self.start,$B.rich_op('__mul__',rank,self.step))
+if(($B.rich_comp('__gt__',self.step,0)&&
+($B.rich_comp('__ge__',res,self.stop)||
+$B.rich_comp('__gt__',self.start,res)))||
+($B.rich_comp('__gt__',0,self.step)&&
+($B.rich_comp('__ge__',self.stop,res)||
+$B.rich_comp('__gt__',res,self.start)))){throw _b_.IndexError.$factory("range object index out of range")}
 return res}
 range.__hash__=function(self){var len=range.__len__(self)
 if(len==0){return _b_.hash(_b_.tuple.$factory([0,None,None]))}
@@ -8093,7 +8037,7 @@ RangeIterator.__iter__=function(self){return self}
 RangeIterator.__next__=function(self){return _b_.next(self.obj)}
 $B.set_func_names(RangeIterator,"builtins")
 range.__iter__=function(self){var res={__class__ :range,start:self.start,stop:self.stop,step:self.step}
-if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.sub(self.start,self.step)}
+if(self.$safe){res.$counter=self.start-self.step}else{res.$counter=$B.rich_op('__sub__',self.start,self.step)}
 return RangeIterator.$factory(res)}
 range.__len__=function(self){var len,start=_b_.int.$to_bigint(self.start),stop=_b_.int.$to_bigint(self.stop),step=_b_.int.$to_bigint(self.step)
 if(self.step > 0){if(self.start >=self.stop){return 0}
@@ -8102,12 +8046,12 @@ len=1n+(start-stop-1n)/-step}
 return _b_.int.$int_or_long(len)}
 range.__next__=function(self){if(self.$safe){self.$counter+=self.step
 if((self.step > 0 && self.$counter >=self.stop)
-||(self.step < 0 && self.$counter <=self.stop)){throw _b_.StopIteration.$factory("")}}else{self.$counter=$B.add(self.$counter,self.step)
-if(($B.gt(self.step,0)&& $B.ge(self.$counter,self.stop))
-||($B.gt(0,self.step)&& $B.ge(self.stop,self.$counter))){throw _b_.StopIteration.$factory("")}}
+||(self.step < 0 && self.$counter <=self.stop)){throw _b_.StopIteration.$factory("")}}else{self.$counter=$B.rich_op('__add__',self.$counter,self.step)
+if(($B.rich_comp('__gt__',self.step,0)&& $B.rich_comp('__ge__',self.$counter,self.stop))
+||($B.rich_comp('__gt__',0,self.step)&& $B.rich_comp('__ge__',self.stop,self.$counter))){throw _b_.StopIteration.$factory("")}}
 return self.$counter}
-range.__reversed__=function(self){var n=$B.sub(range.__len__(self),1)
-return range.$factory($B.add(self.start,$B.mul(n,self.step)),$B.sub(self.start,self.step),$B.mul(-1,self.step))}
+range.__reversed__=function(self){var n=$B.rich_op('__sub__',range.__len__(self),1)
+return range.$factory($B.rich_op('__add__',self.start,$B.rich_op('__mul__',n,self.step)),$B.rich_op('__sub__',self.start,self.step),$B.rich_op('__mul__',-1,self.step))}
 range.__repr__=function(self){$B.builtins_repr_check(range,arguments)
 var res="range("+_b_.str.$factory(self.start)+", "+
 _b_.str.$factory(self.stop)
@@ -8125,11 +8069,13 @@ while(true){try{if(comp(_next(it))){return nb}
 nb++}catch(err){if(_b_.isinstance(err,_b_.StopIteration)){throw _b_.ValueError.$factory(_b_.str.$factory(other)+
 " not in range")}
 throw err}}}
-var sub=$B.sub(other,self.start),fl=$B.floordiv(sub,self.step),res=$B.mul(self.step,fl)
-if($B.eq(res,sub)){if(($B.gt(self.stop,self.start)&& $B.ge(other,self.start)
-&& $B.gt(self.stop,other))||
-($B.ge(self.start,self.stop)&& $B.ge(self.start,other)
-&& $B.gt(other,self.stop))){return fl}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
+var sub=$B.rich_op('__sub__',other,self.start),fl=$B.rich_op('__floordiv__',sub,self.step),res=$B.rich_op('__mul__',self.step,fl)
+if($B.rich_comp('__eq__',res,sub)){if(($B.rich_comp('__gt__',self.stop,self.start)&&
+$B.rich_comp('__ge__',other,self.start)&&
+$B.rich_comp('__gt__',self.stop,other))||
+($B.rich_comp('__ge__',self.start,self.stop)&&
+$B.rich_comp('__ge__',self.start,other)
+&& $B.rich_comp('__gt__',other,self.stop))){return fl}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
 ' not in range')}}else{throw _b_.ValueError.$factory(_b_.str.$factory(other)+
 " not in range")}}
 range.$factory=function(){var $=$B.args("range",3,{start:null,stop:null,step:null},["start","stop","step"],arguments,{start:null,stop:null,step:null},null,null),start=$.start,stop=$.stop,step=$.step,safe
@@ -8162,16 +8108,16 @@ if(val===_b_.None){res.push(val)}else{try{res.push($B.PyNumber_Index(val))}catch
 "integers or None or have an __index__ method")}}}
 return res}
 slice.$conv_for_seq=function(self,len){
-var step=self.step===None ? 1 :$B.PyNumber_Index(self.step),step_is_neg=$B.gt(0,step),len_1=$B.sub(len,1)
+var step=self.step===None ? 1 :$B.PyNumber_Index(self.step),step_is_neg=$B.rich_comp('__gt__',0,step),len_1=$B.rich_op('__sub__',len,1)
 if(step==0){throw _b_.ValueError.$factory('slice step cannot be zero')}
 var start
 if(self.start===None){start=step_is_neg ? len_1 :0}else{start=$B.PyNumber_Index(self.start)
-if($B.gt(0,start)){start=$B.add(start,len)
-if($B.gt(0,start)){start=0}}
-if($B.ge(start,len)){start=step < 0 ? len_1 :len}}
+if($B.rich_comp('__gt__',0,start)){start=$B.rich_op('__add__',start,len)
+if($B.rich_comp('__gt__',0,start)){start=0}}
+if($B.rich_comp('__ge__',start,len)){start=step < 0 ? len_1 :len}}
 if(self.stop===None){stop=step_is_neg ?-1 :len}else{stop=$B.PyNumber_Index(self.stop)
-if($B.gt(0,stop)){stop=$B.add(stop,len)}
-if($B.ge(stop,len)){stop=step_is_neg ? len_1 :len}}
+if($B.rich_comp('__gt__',0,stop)){stop=$B.rich_op('__add__',stop,len)}
+if($B.rich_comp('__ge__',stop,len)){stop=step_is_neg ? len_1 :len}}
 return{start:start,stop:stop,step:step}}
 slice.start=function(self){return self.start}
 slice.step=function(self){return self.step}
@@ -9516,7 +9462,7 @@ console.log("message: "+err.$message)
 console.log("filename: "+err.fileName)
 console.log("linenum: "+err.lineNumber)
 console.log(err.stack)}
-throw err}finally{$B.clear_ns(module.__name__)}
+throw err}
 try{
 for(var attr in mod){module[attr]=mod[attr]}
 module.__initializing__=false
@@ -12199,7 +12145,8 @@ throw _b_.OverflowError.$factory("absolute value too large")}
 return $B.fast_float(mag)}
 complex.__add__=function(self,other){if(_b_.isinstance(other,complex)){return make_complex(self.$real.value+other.$real.value,self.$imag.value+other.$imag.value)}
 if(_b_.isinstance(other,_b_.int)){other=_b_.int.numerator(other)
-return make_complex($B.add(self.$real.value,other.valueOf()),self.$imag.value)}
+return make_complex(
+$B.rich_op('__add__',self.$real.value,other.valueOf()),self.$imag.value)}
 if(_b_.isinstance(other,_b_.float)){return make_complex(self.$real.value+other.value,self.$imag.value)}
 return _b_.NotImplemented}
 complex.__bool__=function(self){return(self.$real !=0 ||self.$imag !=0)}

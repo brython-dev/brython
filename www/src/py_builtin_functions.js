@@ -2535,7 +2535,7 @@ var sum = _b_.sum = function(iterable, start){
     while(1){
         try{
             var _item = next(iterable)
-            res = $B.add(res, _item)
+            res = $B.rich_op('__add__', res, _item)
         }catch(err){
            if(err.__class__ === _b_.StopIteration){
                break

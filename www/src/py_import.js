@@ -242,8 +242,6 @@ function run_py(module_contents, path, module, compiled) {
             console.log(err.stack)
         }
         throw err
-    }finally{
-        $B.clear_ns(module.__name__)
     }
 
     try{

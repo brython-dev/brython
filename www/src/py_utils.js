@@ -549,65 +549,12 @@ $B.unpacker = function(obj, nb_targets, has_starred){
     return t
 }
 
-$B.rest_iter = function(next_func){
-    // Read the rest of an iterable
-    // Used in assignment to a starred item
-    var res = []
-    while(true){
-        try{
-            res.push(next_func())
-        }catch(err){
-            if($B.is_exc(err, [_b_.StopIteration])){
-                return $B.fast_tuple(res)
-            }
-            throw err
-        }
-    }
-}
-
 $B.set_lineno = function(frame, lineno){
     frame.$lineno = lineno
     if(frame.$f_trace !== _b_.None){
         $B.trace_line()
     }
     return true
-}
-
-$B.handle_annotation = function(annotation_string){
-    // Evaluate the annotation string or not, depending on whether postponed
-    // evaluation is set (PEP 463)
-    if($B.imported.__future__ &&
-            $B.frames_stack.length > 0 &&
-            $B.last($B.frames_stack)[3].annotations ===
-                $B.imported.__future__.annotations){
-        // don't evaluate
-        return annotation_string
-    }else{
-        return _b_.eval(annotation_string)
-    }
-}
-
-$B.copy_namespace = function(){
-    var ns = {}
-    for(const frame of $B.frames_stack){
-        for(const kv of [frame[1], frame[3]]){
-            for(var key in kv){
-                if(! key.startsWith('$')){
-                    ns[key] = kv[key]
-                }
-            }
-        }
-    }
-    return ns
-}
-
-$B.clear_ns = function(name){
-    // Remove name from __BRYTHON__.modules, and all the keys that start with name
-    if(name.startsWith("__ge")){console.log("clear ns", name)}
-    var len = name.length
-
-    var alt_name = name.replace(/\./g, "_")
-    if(alt_name != name){$B.clear_ns(alt_name)}
 }
 
 $B.get_method_class = function(ns, qualname, refs){
@@ -965,38 +912,6 @@ $B.augm_assign = function(left, op, right){
     }
 }
 
-$B.extend = function(fname, arg){
-    // Called if a function call has **kw arguments
-    // arg is a dictionary with the keyword arguments entered with the
-    // syntax key = value
-    // The next arguments of $B.extend are the mappings to unpack
-    for(var i = 2; i < arguments.length; i++){
-        var mapping = arguments[i]
-        var it = _b_.iter(mapping),
-            getter = $B.$getattr(mapping, "__getitem__")
-        while (true){
-            try{
-                var key = _b_.next(it)
-                if(typeof key !== "string"){
-                    throw _b_.TypeError.$factory(fname +
-                        "() keywords must be strings")
-                }
-                if(arg[key] !== undefined){
-                    throw _b_.TypeError.$factory(fname +
-                        "() got multiple values for argument '" + key + "'")
-                }
-                arg[key] = getter(key)
-            }catch(err){
-                if(_b_.isinstance(err, [_b_.StopIteration])){
-                    break
-                }
-                throw err
-            }
-        }
-    }
-    return arg
-}
-
 $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
@@ -1123,12 +1038,6 @@ $B.$call1 = function(callable){
     }
 }
 
-function $err(op, klass, other){
-    var msg = "unsupported operand type(s) for " + op + ": '" +
-        klass.__name__ + "' and '" + $B.class_name(other) + "'"
-    throw _b_.TypeError.$factory(msg)
-}
-
 // Code to add support of "reflected" methods to built-in types
 // If a type doesn't support __add__, try method __radd__ of operand
 
@@ -1241,33 +1150,6 @@ $B.int_or_bool = function(v){
         default:
             throw _b_.TypeError.$factory("'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")
-    }
-}
-
-$B.set_local_trace_func = function(frame){
-    if(frame[4] === $B.tracefunc ||
-            ($B.tracefunc.$infos && frame[4] &&
-             frame[4] === $B.tracefunc.$infos.__func__)){
-        // to avoid recursion, don't run the trace function inside itself
-        $B.tracefunc.$frame_id = frame[0]
-        return _b_.None
-    }else{
-        // also to avoid recursion, don't run the trace function in the
-        // frame "below" it (ie in functions that the trace function
-        // calls)
-        for(var i = $B.frames_stack.length - 1; i >= 0; i--){
-            if($B.frames_stack[i][0] == $B.tracefunc.$frame_id){
-                return _b_.None
-            }
-        }
-        try{
-            return $B.tracefunc($B.last($B.frames_stack), 'call', _b_.None)
-        }catch(err){
-            $B.set_exc(err, frame)
-            $B.frames_stack.pop()
-            err.$in_trace_func = true
-            throw err
-        }
     }
 }
 
@@ -1388,33 +1270,6 @@ $B.leave_frame = function(arg){
     return _b_.None
 }
 
-var min_int = Math.pow(-2, 53),
-    max_int = Math.pow(2, 53) - 1
-
-$B.is_safe_int = function(arg){
-    return typeof arg == "number" &&
-           Number.isSafeInteger(arg)
-}
-
-$B.add = function(x, y){
-    return $B.rich_op('__add__', x, y)
-}
-
-$B.mul = function(x, y){
-    return $B.rich_op('__mul__', x, y)
-}
-
-$B.sub = function(x, y){
-    return $B.rich_op('__sub__', x, y)
-}
-
-$B.eq = function(x, y){
-    if(Number.isSafeInteger(x) && Number.isSafeInteger(y)){
-        return x == y
-    }
-    return $B.long_int.__eq__($B.long_int.$factory(x), $B.long_int.$factory(y))
-}
-
 $B.floordiv = function(x, y){
     var z = x / y
     if(Number.isSafeInteger(x) &&
@@ -1425,24 +1280,6 @@ $B.floordiv = function(x, y){
         return $B.long_int.__floordiv__($B.long_int.$factory(x),
             $B.long_int.$factory(y))
     }
-}
-
-// greater or equal
-$B.ge = function(x, y){
-    if(typeof x == "number" && typeof y == "number"){return x >= y}
-    // a safe int is >= to a long int if the long int is negative
-    else if(typeof x == "number" && typeof y != "number"){return ! y.pos}
-    else if(typeof x != "number" && typeof y == "number"){
-        return x.pos === true
-    }else{return $B.long_int.__ge__(x, y)}
-}
-$B.gt = function(x, y){
-    if(typeof x == "number" && typeof y == "number"){return x > y}
-    // a safe int is >= to a long int if the long int is negative
-    else if(typeof x == "number" && typeof y != "number"){return ! y.pos}
-    else if(typeof x != "number" && typeof y == "number"){
-        return x.pos === true
-    }else{return $B.long_int.__gt__(x, y)}
 }
 
 var reversed_op = {"__lt__": "__gt__", "__le__":"__ge__",

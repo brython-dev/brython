@@ -8690,7 +8690,6 @@ var brython = $B.parser.brython = function(options){
             // Run resulting Javascript
             eval(js)
 
-            $B.clear_ns(module_name)
             root = null
             js = null
 

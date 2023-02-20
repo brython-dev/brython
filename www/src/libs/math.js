@@ -1641,7 +1641,7 @@ function lcm(){
             return 0
         }
         gcd = gcd2(a, b)
-        product = $B.mul(a, b)
+        product = $B.rich_op('__mul__', a, b)
         a = $B.$getattr(product, "__floordiv__")(gcd)
     }
     return a
@@ -1948,7 +1948,7 @@ function prod(){
             if(x == 0){
                 return 0
             }
-            res = $B.mul(res, x)
+            res = $B.rich_op('__mul__', res, x)
         }catch(err){
             if(err.__class__ === _b_.StopIteration){
                 return res

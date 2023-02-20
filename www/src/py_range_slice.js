@@ -60,26 +60,37 @@ range.__delattr__ = function(self, attr, value){
 range.__eq__ = function(self, other){
     if(_b_.isinstance(other, range)){
         var len = range.__len__(self)
-        if(! $B.eq(len,range.__len__(other))){return false}
-        if(len == 0){return true}
-        if(! $B.eq(self.start,other.start)){return false}
-        if(len == 1){return true}
-        return $B.eq(self.step, other.step)
+        if(! $B.rich_comp('__eq__', len, range.__len__(other))){
+            return false
+        }
+        if(len == 0){
+            return true
+        }
+        if(! $B.rich_comp('__eq__', self.start,other.start)){
+            return false
+        }
+        if(len == 1){
+            return true
+        }
+        return $B.rich_comp('__eq__', self.step, other.step)
     }
     return false
 }
 
 function compute_item(r, i){
     var len = range.__len__(r)
-    if(len == 0){return r.start}
-    else if(i > len){return r.stop}
-    return $B.add(r.start, $B.mul(r.step, i))
+    if(len == 0){
+        return r.start
+    }else if(i > len){
+        return r.stop
+    }
+    return $B.rich_op('__add__', r.start, $B.rich_op('__mul__', r.step, i))
 }
 
 range.__getitem__ = function(self, rank){
     if(_b_.isinstance(rank, _b_.slice)){
         var norm = _b_.slice.$conv_for_seq(rank, range.__len__(self)),
-            substep = $B.mul(self.step, norm.step),
+            substep = $B.rich_op('__mul__', self.step, norm.step),
             substart = compute_item(self, norm.start),
             substop = compute_item(self, norm.stop)
         return range.$factory(substart, substop, substep)
@@ -87,12 +98,16 @@ range.__getitem__ = function(self, rank){
     if(typeof rank != "number"){
       rank = $B.$GetInt(rank)
     }
-    if($B.gt(0, rank)){rank = $B.add(rank, range.__len__(self))}
-    var res = $B.add(self.start, $B.mul(rank, self.step))
-    if(($B.gt(self.step, 0) &&
-            ($B.ge(res, self.stop) || $B.gt(self.start, res))) ||
-            ($B.gt(0, self.step) &&
-                ($B.ge(self.stop, res) || $B.gt(res, self.start)))){
+    if($B.rich_comp('__gt__', 0, rank)){
+        rank = $B.rich_op('__add__', rank, range.__len__(self))
+    }
+    var res = $B.rich_op('__add__', self.start, $B.rich_op('__mul__', rank, self.step))
+    if(($B.rich_comp('__gt__', self.step, 0) &&
+            ($B.rich_comp('__ge__', res, self.stop) ||
+             $B.rich_comp('__gt__', self.start, res))) ||
+            ($B.rich_comp('__gt__', 0, self.step) &&
+                ($B.rich_comp('__ge__', self.stop, res) ||
+                $B.rich_comp('__gt__', res, self.start)))){
             throw _b_.IndexError.$factory("range object index out of range")
     }
     return res
@@ -100,8 +115,12 @@ range.__getitem__ = function(self, rank){
 
 range.__hash__ = function(self){
     var len = range.__len__(self)
-    if(len == 0){return _b_.hash(_b_.tuple.$factory([0, None, None]))}
-    if(len == 1){return _b_.hash(_b_.tuple.$factory([1, self.start, None]))}
+    if(len == 0){
+        return _b_.hash(_b_.tuple.$factory([0, None, None]))
+    }
+    if(len == 1){
+        return _b_.hash(_b_.tuple.$factory([1, self.start, None]))
+    }
     return _b_.hash(_b_.tuple.$factory([len, self.start, self.step]))
 }
 
@@ -131,7 +150,7 @@ range.__iter__ = function(self){
     if(self.$safe){
         res.$counter = self.start - self.step
     }else{
-        res.$counter = $B.sub(self.start, self.step)
+        res.$counter = $B.rich_op('__sub__', self.start, self.step)
     }
     return RangeIterator.$factory(res)
 }
@@ -164,9 +183,9 @@ range.__next__ = function(self){
                 throw _b_.StopIteration.$factory("")
         }
     }else{
-        self.$counter = $B.add(self.$counter, self.step)
-        if(($B.gt(self.step, 0) && $B.ge(self.$counter, self.stop))
-                || ($B.gt(0, self.step) && $B.ge(self.stop, self.$counter))){
+        self.$counter = $B.rich_op('__add__', self.$counter, self.step)
+        if(($B.rich_comp('__gt__', self.step, 0) && $B.rich_comp('__ge__', self.$counter, self.stop))
+                || ($B.rich_comp('__gt__', 0, self.step) && $B.rich_comp('__ge__', self.stop, self.$counter))){
             throw _b_.StopIteration.$factory("")
         }
     }
@@ -174,10 +193,10 @@ range.__next__ = function(self){
 }
 
 range.__reversed__ = function(self){
-    var n = $B.sub(range.__len__(self), 1)
-    return range.$factory($B.add(self.start, $B.mul(n, self.step)),
-        $B.sub(self.start, self.step),
-        $B.mul(-1, self.step))
+    var n = $B.rich_op('__sub__', range.__len__(self), 1)
+    return range.$factory($B.rich_op('__add__', self.start, $B.rich_op('__mul__', n, self.step)),
+        $B.rich_op('__sub__', self.start, self.step),
+        $B.rich_op('__mul__', -1, self.step))
 }
 
 range.__repr__ = function(self){
@@ -243,14 +262,16 @@ range.index = function(self, other){
             }
         }
     }
-    var sub = $B.sub(other, self.start),
-        fl = $B.floordiv(sub, self.step),
-        res = $B.mul(self.step, fl)
-    if($B.eq(res, sub)){
-        if(($B.gt(self.stop, self.start) && $B.ge(other, self.start)
-                && $B.gt(self.stop, other)) ||
-                ($B.ge(self.start, self.stop) && $B.ge(self.start, other)
-                && $B.gt(other, self.stop))){
+    var sub = $B.rich_op('__sub__', other, self.start),
+        fl = $B.rich_op('__floordiv__', sub, self.step),
+        res = $B.rich_op('__mul__', self.step, fl)
+    if($B.rich_comp('__eq__', res, sub)){
+        if(($B.rich_comp('__gt__', self.stop, self.start) &&
+                $B.rich_comp('__ge__', other, self.start) &&
+                $B.rich_comp('__gt__', self.stop, other)) ||
+                ($B.rich_comp('__ge__', self.start, self.stop) &&
+                $B.rich_comp('__ge__', self.start, other)
+                && $B.rich_comp('__gt__', other, self.stop))){
             return fl
         }else{throw _b_.ValueError.$factory(_b_.str.$factory(other) +
             ' not in range')}
@@ -358,8 +379,8 @@ slice.$conv_for_seq = function(self, len){
     // Internal method, uses the integer len to set
     // start, stop, step to integers
     var step = self.step === None ? 1 : $B.PyNumber_Index(self.step),
-        step_is_neg = $B.gt(0, step),
-        len_1 = $B.sub(len, 1)
+        step_is_neg = $B.rich_comp('__gt__', 0, step),
+        len_1 = $B.rich_op('__sub__', len, 1)
     if(step == 0){
         throw _b_.ValueError.$factory('slice step cannot be zero')
     }
@@ -368,20 +389,20 @@ slice.$conv_for_seq = function(self, len){
         start = step_is_neg ? len_1 : 0
     }else{
         start = $B.PyNumber_Index(self.start)
-        if($B.gt(0, start)){
-            start = $B.add(start, len)
-            if($B.gt(0, start)){
+        if($B.rich_comp('__gt__', 0, start)){
+            start = $B.rich_op('__add__', start, len)
+            if($B.rich_comp('__gt__', 0, start)){
                 start = 0
             }
         }
-        if($B.ge(start, len)){start = step < 0 ? len_1 : len}
+        if($B.rich_comp('__ge__', start, len)){start = step < 0 ? len_1 : len}
     }
     if(self.stop === None){
         stop = step_is_neg ? -1 : len
     }else{
         stop = $B.PyNumber_Index(self.stop)
-        if($B.gt(0, stop)){stop = $B.add(stop, len)}
-        if($B.ge(stop, len)){stop = step_is_neg ? len_1 : len}
+        if($B.rich_comp('__gt__', 0, stop)){stop = $B.rich_op('__add__', stop, len)}
+        if($B.rich_comp('__ge__', stop, len)){stop = step_is_neg ? len_1 : len}
     }
     return {start: start, stop: stop, step: step}
 }

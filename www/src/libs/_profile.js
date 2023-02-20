@@ -149,9 +149,7 @@ var $module=(function($B) {
 
                  delete __BRYTHON__.modules[globals_id]
                  delete __BRYTHON__.modules[locals_id]
-                 $B.clear_ns(globals_id)
-                 $B.clear_ns(locals_id)
-
+                 
                  if(!is_exec && leave_frame){
                      // For eval(), the finally clause with "leave_frame" was removed
                      // so we must execute it here

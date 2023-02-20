@@ -44,8 +44,9 @@ complex.__add__ = function(self, other){
     }
     if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
-        return make_complex($B.add(self.$real.value, other.valueOf()),
-                            self.$imag.value)
+        return make_complex(
+            $B.rich_op('__add__', self.$real.value, other.valueOf()),
+            self.$imag.value)
     }
     if(_b_.isinstance(other, _b_.float)){
         return make_complex(self.$real.value + other.value, self.$imag.value)
