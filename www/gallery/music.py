@@ -73,14 +73,4 @@ def create_major_scale(base, octave=3):
                 change_octave = True
             scale.append((octave, notes[i_note]))
     return scale
-    
-def make_chord_notes(octave, note):
-    chord_notes = [(octave, note)]
-    i_note = scale.index((octave, note))
-    for _ in range(2):
-        i_note += 2
-        if i_note > 7:
-            i_note -= 7
-        chord_notes.append(scale[i_note])
-    return chord_notes
 

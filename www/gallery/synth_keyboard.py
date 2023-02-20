@@ -385,13 +385,6 @@ def chord_notes(chord_num):
     ranks = [chord_num - 1, (chord_num + 1) % 7, (chord_num + 3) % 7]
     return ranks
 
-def check_record_start(octave, note, key=None):
-    if record is not None:
-        if key is not None:
-            record.key2note[key] = octave, note
-        record.notes.setdefault((octave, note), [])
-        record.notes[(octave, note)].append([audioContext.currentTime])
-
 def note_from_key(key):
     """index = keys.index(key)
     keyElement = keyElements[index]
