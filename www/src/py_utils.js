@@ -6,22 +6,7 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-$B.args1 = function(func, argcount, args){
-    var func_arg_names = func.$infos.arg_names
-    return $B.args(func.$infos.__name__,
-                   argcount,
-                   func.$infos.slots,
-                   func.$infos.arg_names.slice(),
-                   args,
-                   func.$defaults,
-                   func.$infos.vararg,
-                   func.$infos.kwarg,
-                   func.$infos.__code__.co_posonlyargcount)
-
-}
-
 $B.args0 = function(func, argcount, slots, args){
-    var func_arg_names = func.$infos.arg_names
     return $B.args(func.$infos.__name__,
                    argcount,
                    slots,
@@ -31,7 +16,6 @@ $B.args0 = function(func, argcount, slots, args){
                    func.$infos.vararg,
                    func.$infos.kwarg,
                    func.$infos.__code__.co_posonlyargcount)
-
 }
 
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,
@@ -48,9 +32,6 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     //     extra_pos_args = 'args'
     //     extra_kw_args = 'kw'
     //     kwonlyargcount = 2
-    if(fname.startsWith("lambda_" + $B.lambda_magic)){
-        fname = "<lambda>"
-    }
     var has_kw_args = false,
         nb_pos = args.length,
         filled = 0,
@@ -86,8 +67,6 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
         return slots
     }
 
-    // If the function definition indicates the end of positional arguments,
-    // store the position and remove "/" from variable names
     if(nb_posonly !== undefined){
         only_positional = var_names.slice(0, nb_posonly)
     }
@@ -265,6 +244,8 @@ $B.parse_kwargs = function(kw_args, fname){
                 }
             }
         }else{
+            // For arguments passed as **kw, kw is just expected to have keys()
+            // and __getitem__()
             var cls = $B.get_class(kw_arg)
             try{
                 var keys_method = $B.$call1($B.$getattr(cls, 'keys'))

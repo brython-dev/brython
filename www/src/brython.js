@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-20 10:44:23.534659"
-__BRYTHON__.timestamp=1676886263534
+__BRYTHON__.compiled_date="2023-02-20 17:27:45.344416"
+__BRYTHON__.timestamp=1676910465344
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4792,12 +4792,8 @@ return imports}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
-$B.args1=function(func,argcount,args){var func_arg_names=func.$infos.arg_names
-return $B.args(func.$infos.__name__,argcount,func.$infos.slots,func.$infos.arg_names.slice(),args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
-$B.args0=function(func,argcount,slots,args){var func_arg_names=func.$infos.arg_names
-return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names,args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
+$B.args0=function(func,argcount,slots,args){return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names,args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
-if(fname.startsWith("lambda_"+$B.lambda_magic)){fname="<lambda>"}
 var has_kw_args=false,nb_pos=args.length,filled=0,nb_posonly=nb_posonly ||0,extra_kw,only_positional
 if(extra_pos_args){slots[extra_pos_args]=[]
 slots[extra_pos_args].__class__=_b_.tuple}
@@ -4876,7 +4872,8 @@ if(kw_arg.__class__===_b_.dict){for(var entry of _b_.dict.$iter_items_with_hash(
 if(typeof key !=='string'){throw _b_.TypeError.$factory(fname+
 "() keywords must be strings")}else if(kwa[key]!==undefined){throw _b_.TypeError.$factory(fname+
 "() got multiple values for argument '"+
-key+"'")}else{kwa[key]=entry.value}}}else{var cls=$B.get_class(kw_arg)
+key+"'")}else{kwa[key]=entry.value}}}else{
+var cls=$B.get_class(kw_arg)
 try{var keys_method=$B.$call1($B.$getattr(cls,'keys'))}catch(err){throw _b_.TypeError.$factory(`${fname} argument `+
 `after ** must be a mapping, not ${$B.class_name(kw_arg)}`)}
 var keys_iter=$B.make_js_iterator(keys_method(kw_arg)),getitem
@@ -7691,7 +7688,7 @@ for(const frame of stack){console.log(frame[2],frame[0],frame.$lineno)}}
 var be_factory=`
     var _b_ = __BRYTHON__.builtins
     var err = Error()
-    err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
+    err.args = $B.fast_tuple(Array.from(arguments))
     err.__class__ = _b_.BaseException
     err.__traceback__ = _b_.None
     err.$py_error = true
@@ -15188,8 +15185,8 @@ if(in_class){js+=`${name2}.$is_method = true\n`}
 if(is_async){js+=`${name2}.$is_async = true\n`}
 js+=`${name2}.$infos = {\n`+
 `__module__: "${gname}",\n`+
-`__name__: "${this.name}",\n`+
-`__qualname__: "${qualname}",\n`+
+`__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n`+
+`__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n`+
 `__defaults__: ${defaults},\n`+
 `__kwdefaults__: ${kw_defaults},\n`+
 `__doc__: ${docstring},\n`+
@@ -15200,7 +15197,7 @@ js+=`${name2}.$infos = {\n`+
 `co_flags: ${flags},\n`+
 `co_freevars: $B.fast_tuple([${free_vars}]),\n`+
 `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n`+
-`co_name: '${this.name}',\n`+
+`co_name: '${this.$is_lambda ? '<lambda>': this.name}',\n`+
 `co_nlocals: ${varnames.length},\n`+
 `co_posonlyargcount: ${this.args.posonlyargs.length},\n`+
 `co_varnames: $B.fast_tuple([${varnames}])\n`+

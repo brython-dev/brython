@@ -376,7 +376,7 @@ var show_stack = $B.show_stack = function(stack){
 var be_factory = `
     var _b_ = __BRYTHON__.builtins
     var err = Error()
-    err.args = $B.fast_tuple(Array.prototype.slice.call(arguments))
+    err.args = $B.fast_tuple(Array.from(arguments))
     err.__class__ = _b_.BaseException
     err.__traceback__ = _b_.None
     err.$py_error = true
@@ -683,6 +683,7 @@ function substitution_cost(a, b){
     }
     return MOVE_COST
 }
+
 function calculate_suggestions(dir, name){
     if(dir.length >= MAX_CANDIDATE_ITEMS) {
         return null

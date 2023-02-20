@@ -1762,7 +1762,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     parse_args.push('{' + slots.join(', ') + '} , ' +
         `arguments`)
 
-    
+
     var args_vararg = this.args.vararg === undefined ? 'null' :
                       "'" + this.args.vararg.arg + "'",
         args_kwarg = this.args.kwarg === undefined ? 'null':
@@ -1883,8 +1883,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     // Set admin infos
     js += `${name2}.$infos = {\n` +
         `__module__: "${gname}",\n` +
-        `__name__: "${this.name}",\n` +
-        `__qualname__: "${qualname}",\n` +
+        `__name__: "${this.$is_lambda ? '<lambda>' : this.name}",\n` +
+        `__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n` +
         `__defaults__: ${defaults},\n` +
         `__kwdefaults__: ${kw_defaults},\n` +
         `__doc__: ${docstring},\n` +
@@ -1895,7 +1895,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `co_flags: ${flags},\n` +
         `co_freevars: $B.fast_tuple([${free_vars}]),\n` +
         `co_kwonlyargcount: ${this.args.kwonlyargs.length},\n` +
-        `co_name: '${this.name}',\n` +
+        `co_name: '${this.$is_lambda ? '<lambda>': this.name}',\n` +
         `co_nlocals: ${varnames.length},\n` +
         `co_posonlyargcount: ${this.args.posonlyargs.length},\n` +
         `co_varnames: $B.fast_tuple([${varnames}])\n` +
