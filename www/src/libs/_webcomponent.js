@@ -15,7 +15,7 @@ function define(tag_name, cls){
         throw _b_.ValueError.$factory("custom tag name must " +
             "contain a hyphen (-)")
     }
-    if(!$B.$isinstance(cls, _b_.type)){
+    if(!_b_.isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("second argument of define() " +
             "must be a class, not '" + $B.class_name(tag_name) + "'")
     }

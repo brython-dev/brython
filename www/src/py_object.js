@@ -23,7 +23,7 @@ var opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
 var opsigns = ["+", "-", "*", "/", "//", "%", "**", "<<", ">>", "&", "^", "|"]
 
 object.__delattr__ = function(self, attr){
-    if(self.__dict__ && $B.$isinstance(self.__dict__, _b_.dict) &&
+    if(self.__dict__ && _b_.isinstance(self.__dict__, _b_.dict) &&
             _b_.dict.$contains_string(self.__dict__, attr)){
         _b_.dict.$delete_string(self.__dict__, attr)
         return _b_.None

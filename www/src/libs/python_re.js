@@ -171,7 +171,7 @@ Flag.__or__ = function(self, other){
 }
 
 Flag.__rand__ = function(self, other){
-    if(typeof other == "number" || $B.$isinstance(other, _b_.int)){
+    if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
         if(other == 0){
             return false // Flag.$factory(self.value)
         }
@@ -181,7 +181,7 @@ Flag.__rand__ = function(self, other){
 }
 
 Flag.__ror__ = function(self, other){
-    if(typeof other == "number" || $B.$isinstance(other, _b_.int)){
+    if(typeof other == "number" || _b_.isinstance(other, _b_.int)){
         if(other == 0){
             return self.value
         }
@@ -2535,7 +2535,7 @@ function* tokenize(pattern, type, _verbose){
 
 function to_codepoint_list(s){
     var items = []
-    if(typeof s == "string" || $B.$isinstance(s, _b_.str)){
+    if(typeof s == "string" || _b_.isinstance(s, _b_.str)){
         if(typeof s != "string"){
             s = s.valueOf()
         }
@@ -2543,8 +2543,8 @@ function to_codepoint_list(s){
             items.push(char.codePointAt(0))
         }
         items.type = "unicode"
-    }else if($B.$isinstance(s, bytes_like)){
-        if($B.$isinstance(s, _b_.memoryview)){
+    }else if(_b_.isinstance(s, bytes_like)){
+        if(_b_.isinstance(s, _b_.memoryview)){
             items = s.obj.source
         }else{
             items = s.source
@@ -2802,15 +2802,15 @@ function StringObj(obj){
         this.string = obj.string
         this.codepoints = obj.codepoints
         this.index_map = obj.index_map
-    }else if($B.$isinstance(obj, _b_.str)){ // str subclass
+    }else if(_b_.isinstance(obj, _b_.str)){ // str subclass
         var so = new StringObj(obj.valueOf())
         this.string = so.string
         this.codepoints = so.codepoints
-    }else if($B.$isinstance(obj, [_b_.bytes, _b_.bytearray])){
+    }else if(_b_.isinstance(obj, [_b_.bytes, _b_.bytearray])){
         this.string = _b_.bytes.decode(obj, 'latin1')
         this.codepoints = obj.source
         this.type = "bytes"
-    }else if($B.$isinstance(obj, _b_.memoryview)){
+    }else if(_b_.isinstance(obj, _b_.memoryview)){
         this.string = _b_.bytes.decode(obj.obj, 'latin1')
         this.codepoints = obj.obj.source
         this.type = "bytes"
@@ -3626,7 +3626,7 @@ var $module = {
                 pattern = $.pattern,
                 string = $.string,
                 flags = $.flags
-        if($B.$isinstance(string, [_b_.bytearray, _b_.memoryview])){
+        if(_b_.isinstance(string, [_b_.bytearray, _b_.memoryview])){
             string.in_iteration = true
         }
         var original_string = string,

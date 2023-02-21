@@ -38,17 +38,17 @@ complex.__abs__ = function(self){
 }
 
 complex.__add__ = function(self, other){
-    if($B.$isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         return make_complex(self.$real.value + other.$real.value,
                             self.$imag.value + other.$imag.value)
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
         return make_complex(
             $B.rich_op('__add__', self.$real.value, other.valueOf()),
             self.$imag.value)
     }
-    if($B.$isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return make_complex(self.$real.value + other.value, self.$imag.value)
     }
     return _b_.NotImplemented
@@ -63,15 +63,15 @@ complex.__complex__ = function(self){
 }
 
 complex.__eq__ = function(self, other){
-    if($B.$isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         return self.$real.value == other.$real.value &&
             self.$imag.value == other.$imag.value
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(self.$imag.value != 0){return false}
         return self.$real.value == other.valueOf()
     }
-    if($B.$isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         if(self.$imag.value != 0){
             return false
         }
@@ -175,18 +175,18 @@ complex.__invert__ = function(self){return ~self}
 complex.__mro__ = [_b_.object]
 
 complex.__mul__ = function(self, other){
-    if($B.$isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         return make_complex(self.$real.value * other.$real.value -
                             self.$imag.value * other.$imag.value,
                             self.$imag.value * other.$real.value +
                             self.$real.value * other.$imag.value)
-    }else if($B.$isinstance(other, _b_.int)){
+    }else if(_b_.isinstance(other, _b_.int)){
         return make_complex(self.$real.value * other.valueOf(),
                             self.$imag.value * other.valueOf())
-    }else if($B.$isinstance(other, _b_.float)){
+    }else if(_b_.isinstance(other, _b_.float)){
         return make_complex(self.$real.value * other.value,
                             self.$imag.value * other.value)
-    }else if($B.$isinstance(other, _b_.bool)){
+    }else if(_b_.isinstance(other, _b_.bool)){
         if(other.valueOf()){return self}
         return make_complex(0, 0)
     }
@@ -274,8 +274,8 @@ complex.__new__ = function(cls){
         return $real
     }
 
-    if($B.$isinstance($real, [_b_.float, _b_.int]) &&
-            $B.$isinstance($imag, [_b_.float, _b_.int])){
+    if(_b_.isinstance($real, [_b_.float, _b_.int]) &&
+            _b_.isinstance($imag, [_b_.float, _b_.int])){
         res = make_complex($real, $imag)
         return res
     }
@@ -288,16 +288,16 @@ complex.__new__ = function(cls){
     }
     $real = real_to_num
     $imag = _convert($imag)
-    if(! $B.$isinstance($real, _b_.float) && ! $B.$isinstance($real, _b_.int) &&
-            ! $B.$isinstance($real, _b_.complex)){
+    if(! _b_.isinstance($real, _b_.float) && ! _b_.isinstance($real, _b_.int) &&
+            ! _b_.isinstance($real, _b_.complex)){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
     if(typeof $imag == "string"){
         throw _b_.TypeError.$factory("complex() second arg can't be a string")
     }
-    if(! $B.$isinstance($imag, _b_.float) && ! $B.$isinstance($imag, _b_.int) &&
-            ! $B.$isinstance($imag, _b_.complex) && $imag !== missing){
+    if(! _b_.isinstance($imag, _b_.float) && ! _b_.isinstance($imag, _b_.int) &&
+            ! _b_.isinstance($imag, _b_.complex) && $imag !== missing){
         throw _b_.TypeError.$factory("complex() argument must be a string " +
             "or a number")
     }
@@ -401,23 +401,23 @@ complex.__pow__ = function(self, other){
 
     // Check whether the exponent has a small integer value, and if so use
     // a faster and more accurate algorithm.
-    if ($B.$isinstance(other, _b_.int) && _b_.abs(other) < 100){
+    if (_b_.isinstance(other, _b_.int) && _b_.abs(other) < 100){
         return c_powi(self, other)
     }
-    if($B.$isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         other = _b_.float.$to_js_number(other)
     }
     var exp = complex2expo(self),
         angle = exp.angle,
         res = Math.pow(exp.norm, other)
 
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         return make_complex(res * Math.cos(angle * other),
             res * Math.sin(angle * other))
-    }else if($B.$isinstance(other, _b_.float)){
+    }else if(_b_.isinstance(other, _b_.float)){
         return make_complex(res * Math.cos(angle * other.value),
             res * Math.sin(angle * other.value))
-    }else if($B.$isinstance(other, complex)){
+    }else if(_b_.isinstance(other, complex)){
         // (r*e**Ai)**(x+iy) = (e**iAx)*(e**-Ay)
         var x = other.$real.value,
             y = other.$imag.value
@@ -432,12 +432,12 @@ complex.__pow__ = function(self, other){
 }
 
 complex.__radd__ = function(self, other){
-    if($B.$isinstance(other, _b_.bool)){
+    if(_b_.isinstance(other, _b_.bool)){
         other = other ? 1 : 0
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         return make_complex(other + self.$real.value, self.$imag.value)
-    }else if($B.$isinstance(other, _b_.float)){
+    }else if(_b_.isinstance(other, _b_.float)){
         return make_complex(other.value + self.$real.value, self.$imag.value)
     }
     return _b_.NotImplemented
@@ -482,12 +482,12 @@ complex.__repr__ = function(self){
 }
 
 complex.__rmul__ = function(self, other){
-    if($B.$isinstance(other, _b_.bool)){
+    if(_b_.isinstance(other, _b_.bool)){
         other = other ? 1 : 0
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         return make_complex(other * self.$real.value, other * self.$imag.value)
-    }else if($B.$isinstance(other, _b_.float)){
+    }else if(_b_.isinstance(other, _b_.float)){
         return make_complex(other.value * self.$real.value,
                             other.value * self.$imag.value)
     }
@@ -507,23 +507,23 @@ complex.__sqrt__ = function(self) {
 }
 
 complex.__sub__ = function(self, other){
-    if($B.$isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         return make_complex(self.$real.value - other.$real.value,
                             self.$imag.value - other.$imag.value)
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
         return make_complex(self.$real.value - other.valueOf(),
                             self.$imag.value)
     }
-    if($B.$isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return make_complex(self.$real.value - other.value, self.$imag.value)
     }
     return _b_.NotImplemented
 }
 
 complex.__truediv__ = function(self, other){
-    if($B.$isinstance(other, complex)){
+    if(_b_.isinstance(other, complex)){
         if(other.$real.value == 0 && other.$imag.value == 0){
            throw _b_.ZeroDivisionError.$factory("division by zero")
         }
@@ -537,13 +537,13 @@ complex.__truediv__ = function(self, other){
 
         return make_complex(_num / _div, _num2 / _div)
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(! other.valueOf()){
             throw _b_.ZeroDivisionError.$factory('division by zero')
         }
         return complex.__truediv__(self, complex.$factory(other.valueOf()))
     }
-    if($B.$isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         if(! other.value){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
@@ -567,13 +567,13 @@ for(var r_opname of r_opnames){
             complex['__' + r_opname + '__']){
         complex["__r" + r_opname + "__"] = (function(name){
             return function(self, other){
-                if($B.$isinstance(other, _b_.int)){
+                if(_b_.isinstance(other, _b_.int)){
                     other = make_complex(other, 0)
                     return complex["__" + name + "__"](other, self)
-                }else if($B.$isinstance(other, _b_.float)){
+                }else if(_b_.isinstance(other, _b_.float)){
                     other = make_complex(other.value, 0)
                     return complex["__" + name + "__"](other, self)
-                }else if($B.$isinstance(other, complex)){
+                }else if(_b_.isinstance(other, complex)){
                     return complex["__" + name + "__"](other, self)
                 }
                 return _b_.NotImplemented

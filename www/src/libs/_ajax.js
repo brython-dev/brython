@@ -6,7 +6,7 @@ var $N = $B.builtins.None,
     _b_ = $B.builtins
 
 var add_to_res = function(res, key, val) {
-    if($B.$isinstance(val, _b_.list)){
+    if(_b_.isinstance(val, _b_.list)){
         for (j = 0; j < val.length; j++) {
             add_to_res(res, key, val[j])
         }
@@ -103,7 +103,7 @@ function handle_kwargs(self, kw, method){
             encoding = _b_.dict.$getitem_string(kw, key)
         }else if(key == "headers"){
             var value = _b_.dict.$getitem_string(kw, key)
-            if(! $B.$isinstance(value, _b_.dict)){
+            if(! _b_.isinstance(value, _b_.dict)){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
             }
@@ -247,9 +247,9 @@ ajax.send = function(self, params){
         self.js.send()
         return _b_.None
     }
-    if($B.$isinstance(params, _b_.str)){
+    if(_b_.isinstance(params, _b_.str)){
         res = params
-    }else if($B.$isinstance(params, _b_.dict)){
+    }else if(_b_.isinstance(params, _b_.dict)){
         if(content_type == 'multipart/form-data'){
             // The FormData object serializes the data in the 'multipart/form-data'
             // content-type so we may as well override that header if it was set
@@ -269,7 +269,7 @@ ajax.send = function(self, params){
             var items = _b_.list.$factory(_b_.dict.items(params))
             for(var i = 0, len = items.length; i < len; i++){
                 var key = encodeURIComponent(_b_.str.$factory(items[i][0]));
-                if($B.$isinstance(items[i][1], _b_.list)){
+                if(_b_.isinstance(items[i][1], _b_.list)){
                     for (j = 0; j < items[i][1].length; j++) {
                         res += key +'=' +
                             encodeURIComponent(_b_.str.$factory(items[i][1][j])) + '&'
@@ -401,7 +401,7 @@ function _request_with_body(method){
     var items = handle_kwargs(self, kw, method),
         data = items.data,
         timeout = items.timeout
-    if($B.$isinstance(data, _b_.dict)){
+    if(_b_.isinstance(data, _b_.dict)){
         data = stringify(data)
     }
 
@@ -516,7 +516,7 @@ function file_upload(){
             for(var d of items.data){
                 formdata.append(d[0], d[1])
             }
-        }else if($B.$isinstance(items.data, _b_.dict)){
+        }else if(_b_.isinstance(items.data, _b_.dict)){
             for(var d of _b_.list.$factory(_b_.dict.items(items.data))){
                 formdata.append(d[0], d[1])
             }

@@ -97,7 +97,7 @@ float.as_integer_ratio = function(self){
 }
 
 function check_self_is_float(x, method){
-    if(x.__class__ === _b_.float || $B.$isinstance(x, _b_.float)){
+    if(x.__class__ === _b_.float || _b_.isinstance(x, _b_.float)){
         return true
     }
     throw _b_.TypeError.$factory(`descriptor '${method}' requires a ` +
@@ -126,7 +126,7 @@ float.__ceil__ = function(self){
 
 float.__divmod__ = function(self, other){
     check_self_is_float(self, '__divmod__')
-    if(! $B.$isinstance(other, [_b_.int, float])){
+    if(! _b_.isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
     return $B.fast_tuple([float.__floordiv__(self, other),
@@ -136,16 +136,16 @@ float.__divmod__ = function(self, other){
 float.__eq__ = function(self, other){
     check_self_is_float(self, '__eq__')
     if(isNaN(self.value) &&
-            ($B.$isinstance(other, float) && isNaN(other.value))){
+            (_b_.isinstance(other, float) && isNaN(other.value))){
         return false
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         return self.value == other
     }
-    if($B.$isinstance(other, float)) {
+    if(_b_.isinstance(other, float)) {
         return self.value == other.value
     }
-    if($B.$isinstance(other, _b_.complex)){
+    if(_b_.isinstance(other, _b_.complex)){
         if(other.$imag != 0){
             return false
         }
@@ -166,13 +166,13 @@ float.__floor__ = function(self){
 
 float.__floordiv__ = function(self, other){
     check_self_is_float(self, '__floordiv__')
-    if($B.$isinstance(other, float)){
+    if(_b_.isinstance(other, float)){
         if(other.value == 0){
             throw _b_.ZeroDivisionError.$factory('division by zero')
         }
         return fast_float(Math.floor(self.value / other.value))
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
             throw _b_.ZeroDivisionError.$factory('division by zero')
         }
@@ -676,13 +676,13 @@ function fabs(x){
 function frexp(x){
     // x is Python int or float
     var x1 = x
-    if($B.$isinstance(x, float)){
+    if(_b_.isinstance(x, float)){
         // special case
         if(isnan(x) || isinf(x)){
             return [x, 0]
         }
         x1 = float_value(x).value
-    }else if($B.$isinstance(x, $B.long_int)){
+    }else if(_b_.isinstance(x, $B.long_int)){
         var exp = x.value.toString(2).length,
             power = 2n ** BigInt(exp)
         return[$B.fast_float(Number(x.value) / Number(power)), exp]
@@ -722,7 +722,7 @@ function ldexp(mantissa, exponent) {
     }else if(isinf(mantissa)){
         return INF
     }
-    if($B.$isinstance(mantissa, _b_.float)){
+    if(_b_.isinstance(mantissa, _b_.float)){
         mantissa = mantissa.value
     }
     if(mantissa == 0){
@@ -730,7 +730,7 @@ function ldexp(mantissa, exponent) {
     }else if(isNaN(mantissa)){
         return NAN
     }
-    if($B.$isinstance(exponent, $B.long_int)){
+    if(_b_.isinstance(exponent, $B.long_int)){
         if(exponent.value < 0){
             return ZERO
         }else{
@@ -817,12 +817,12 @@ float.__mod__ = function(self, other) {
     if(other == 0){
         throw _b_.ZeroDivisionError.$factory("float modulo")
     }
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         other = _b_.int.numerator(other)
         return fast_float((self.value % other + other) % other)
     }
 
-    if($B.$isinstance(other, float)){
+    if(_b_.isinstance(other, float)){
         // use truncated division
         // cf https://en.wikipedia.org/wiki/Modulo_operation
         var q = Math.floor(self.value / other.value),
@@ -838,14 +838,14 @@ float.__mod__ = function(self, other) {
 float.__mro__ = [object]
 
 float.__mul__ = function(self, other){
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(other.__class__ == $B.long_int){
             return fast_float(self.value * parseFloat(other.value))
         }
         other = _b_.int.numerator(other)
         return fast_float(self.value * other)
     }
-    if($B.$isinstance(other, float)){
+    if(_b_.isinstance(other, float)){
         return fast_float(self.value * other.value)
     }
     return _b_.NotImplemented
@@ -863,7 +863,7 @@ float.__neg__ = function(self){
 float.__new__ = function(cls, value){
     if(cls === undefined){
         throw _b_.TypeError.$factory("float.__new__(): not enough arguments")
-    }else if(! $B.$isinstance(cls, _b_.type)){
+    }else if(! _b_.isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("float.__new__(X): X is not a type object")
     }
     return {
@@ -877,8 +877,8 @@ float.__pos__ = function(self){
 }
 
 float.__pow__ = function(self, other){
-    var other_int = $B.$isinstance(other, _b_.int)
-    if(other_int || $B.$isinstance(other, float)){
+    var other_int = _b_.isinstance(other, _b_.int)
+    if(other_int || _b_.isinstance(other, float)){
         if(! other_int){
             other = other.value
         }
@@ -1156,14 +1156,14 @@ float.__setattr__ = function(self, attr, value){
 }
 
 float.__truediv__ = function(self, other){
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
             throw _b_.ZeroDivisionError.$factory("division by zero")
-        }else if($B.$isinstance(other, $B.long_int)){
+        }else if(_b_.isinstance(other, $B.long_int)){
             return float.$factory(self.value / Number(other.value))
         }
         return float.$factory(self.value / other)
-    }else if($B.$isinstance(other, float)){
+    }else if(_b_.isinstance(other, float)){
         if(other.value == 0){
             throw _b_.ZeroDivisionError.$factory("division by zero")
         }
@@ -1176,7 +1176,7 @@ float.__truediv__ = function(self, other){
 var op_func_body =
     `var $B = __BRYTHON__,
         _b_ = __BRYTHON__.builtins
-    if($B.$isinstance(other, _b_.int)){
+    if(_b_.isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value - 1) : self
         }else if(other.__class__ === $B.long_int){
@@ -1185,7 +1185,7 @@ var op_func_body =
             return $B.fast_float(self.value - other)
         }
     }
-    if($B.$isinstance(other, _b_.float)){
+    if(_b_.isinstance(other, _b_.float)){
         return $B.fast_float(self.value - other.value)
     }
     return _b_.NotImplemented`
@@ -1200,17 +1200,17 @@ for(var op in ops){
 var comp_func_body = `
 var $B = __BRYTHON__,
     _b_ = $B.builtins
-if($B.$isinstance(other, _b_.int)){
+if(_b_.isinstance(other, _b_.int)){
     if(other.__class__ === $B.long_int){
         return self.value > parseInt(other.value)
     }
     return self.value > other.valueOf()
 }
-if($B.$isinstance(other, _b_.float)){
+if(_b_.isinstance(other, _b_.float)){
     return self.value > other.value
 }
 
-if($B.$isinstance(other, _b_.bool)) {
+if(_b_.isinstance(other, _b_.bool)) {
     return self.value > _b_.bool.__hash__(other)
 }
 if(_b_.hasattr(other, "__int__") || _b_.hasattr(other, "__index__")) {
@@ -1305,11 +1305,11 @@ float.$factory = function(value){
         return value
     }
 
-    if($B.$isinstance(value, _b_.memoryview)){
+    if(_b_.isinstance(value, _b_.memoryview)){
         value = _b_.memoryview.tobytes(value)
     }
 
-    if($B.$isinstance(value, _b_.bytes)){
+    if(_b_.isinstance(value, _b_.bytes)){
         try{
             value = $B.$getattr(value, "decode")("utf-8")
         }catch(err){

@@ -56,7 +56,7 @@ var $module = (function($B){
         if ($B.$options.re == 'jsre'){return true}   //force use of brythons re module
         // FIXME: Improve
 
-        if(! $B.$isinstance(pattern, _b_.str)){
+        if(! _b_.isinstance(pattern, _b_.str)){
            // this is probably a SRE_PATTERN, so return false, and let
            // python's re module handle this.
            return false

@@ -18,7 +18,7 @@ function makeTagDict(tagName){
             args = $ns['args']
         if(args.length == 1){
             var first = args[0]
-            if($B.$isinstance(first, [_b_.str, _b_.int, _b_.float])){
+            if(_b_.isinstance(first, [_b_.str, _b_.int, _b_.float])){
                 self.appendChild(document.createTextNode(_b_.str.$factory(first)))
             }else if(first.__class__ === TagSum){
                 for(var i = 0, len = first.children.length; i < len; i++){

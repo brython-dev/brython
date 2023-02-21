@@ -87,9 +87,9 @@ var module = {
                 ['s', 'strict_mode'],
                 arguments, {strict_mode: false}, null, null)
         var bytes
-        if($B.$isinstance($.s, _b_.str)){
+        if(_b_.isinstance($.s, _b_.str)){
             bytes = _b_.str.encode($.s, 'ascii')
-        }else if($B.$isinstance($.s, [_b_.bytes, _b_.bytearray])){
+        }else if(_b_.isinstance($.s, [_b_.bytes, _b_.bytearray])){
             bytes = $.s
         }else{
             throw _b_.TypeError.$factory('wrong type: ' + $B.class_name($.s))
@@ -100,7 +100,7 @@ var module = {
         var $ = $B.args("a2b_hex", 1, {s: null}, ['s'],
                 arguments, {}, null, null),
             s = $.s
-        if($B.$isinstance(s, _b_.bytes)){
+        if(_b_.isinstance(s, _b_.bytes)){
             s = _b_.bytes.decode(s, 'ascii')
         }
         if(typeof s !== "string"){

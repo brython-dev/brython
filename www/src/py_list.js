@@ -3,7 +3,7 @@
 var _b_ = $B.builtins,
     object = _b_.object,
     getattr = $B.$getattr,
-    isinstance = $B.$isinstance
+    isinstance = _b_.isinstance
 
 function check_not_tuple(self, attr){
     if(self.__class__ === tuple){
@@ -221,7 +221,7 @@ list.$getitem = function(self, key){
 
 list.__ge__ = function(self, other){
     // self >= other is the same as other <= self
-    if(! $B.$isinstance(other, list)){
+    if(! _b_.isinstance(other, list)){
         return _b_.NotImplemented
     }
     var res = list.__le__(other, self)
@@ -233,7 +233,7 @@ list.__ge__ = function(self, other){
 
 list.__gt__ = function(self, other){
     // self > other is the same as other < self
-    if(! $B.$isinstance(other, list)){
+    if(! _b_.isinstance(other, list)){
         return _b_.NotImplemented
     }
     var res = list.__lt__(other, self)
@@ -401,7 +401,7 @@ list.__mul__ = function(self, other){
             res.__brython__ = self.__brython__
         }
         return res
-    }else if($B.$isinstance(other, $B.long_int)){
+    }else if(_b_.isinstance(other, $B.long_int)){
         throw _b_.OverflowError.$factory(`cannot fit ` +
         `'${$B.class_name(other)}' into an index-sized integer`)
     }
@@ -454,7 +454,7 @@ function list_repr(self){
         _r.push(_b_.repr(self[i]))
     }
 
-    if($B.$isinstance(self, tuple)){
+    if(_b_.isinstance(self, tuple)){
         if(self.length == 1){
             res = "(" + _r[0] + ",)"
         }else{

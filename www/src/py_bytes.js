@@ -10,7 +10,7 @@ var from_unicode = {},
 // Make the function an attribute of $B, it is used in libs/_binascii.js
 $B.to_bytes = function(obj){
     var res
-    if($B.$isinstance(obj, [bytes, bytearray])){
+    if(_b_.isinstance(obj, [bytes, bytearray])){
         res = obj.source
     }else{
         var ga = $B.$getattr(obj, "tobytes", null)
@@ -30,7 +30,7 @@ function _strip(self, cars, lr){
         for(var i = 0, len = ws.length; i < len; i++){
             cars.push(ws.charCodeAt(i))
         }
-    }else if($B.$isinstance(cars, bytes)){
+    }else if(_b_.isinstance(cars, bytes)){
         cars = cars.source
     }else{
         throw _b_.TypeError.$factory("Type str doesn't support the buffer API")
@@ -48,7 +48,7 @@ function _strip(self, cars, lr){
 }
 
 function invalid(other){
-    return ! $B.$isinstance(other, [bytes, bytearray])
+    return ! _b_.isinstance(other, [bytes, bytearray])
 }
 
 //bytearray() (built in class)
@@ -89,8 +89,8 @@ bytearray.__repr__ = bytearray.__str__ = function(self){
 }
 
 bytearray.__setitem__ = function(self, arg, value){
-    if($B.$isinstance(arg, _b_.int)){
-        if(! $B.$isinstance(value, _b_.int)){
+    if(_b_.isinstance(arg, _b_.int)){
+        if(! _b_.isinstance(value, _b_.int)){
             throw _b_.TypeError.$factory('an integer is required')
         }else if(value > 255){
             throw _b_.ValueError.$factory("byte must be in range(0, 256)")
@@ -99,7 +99,7 @@ bytearray.__setitem__ = function(self, arg, value){
         if(arg < 0){pos = self.source.length + pos}
         if(pos >= 0 && pos < self.source.length){self.source[pos] = value}
         else{throw _b_.IndexError.$factory('list index out of range')}
-    }else if($B.$isinstance(arg, _b_.slice)){
+    }else if(_b_.isinstance(arg, _b_.slice)){
         var start = arg.start === _b_.None ? 0 : arg.start
         var stop = arg.stop === _b_.None ? self.source.length : arg.stop
 
@@ -113,7 +113,7 @@ bytearray.__setitem__ = function(self, arg, value){
         try{
             var $temp = _b_.list.$factory(value)
             for(var i = $temp.length - 1; i >= 0; i--){
-                if(! $B.$isinstance($temp[i], _b_.int)){
+                if(! _b_.isinstance($temp[i], _b_.int)){
                     throw _b_.TypeError.$factory('an integer is required')
                 }else if($temp[i] > 255){
                     throw _b_.ValueError.$factory("byte must be in range(0, 256)")
@@ -134,7 +134,7 @@ bytearray.append = function(self, b){
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
     }
-    if(! $B.$isinstance(b, _b_.int)){
+    if(! _b_.isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
     if(b > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
@@ -170,7 +170,7 @@ bytearray.insert = function(self, pos, b){
         "insert takes exactly 2 arguments (" + (arguments.length - 1) +
         " given)")
     }
-    if(! $B.$isinstance(b, _b_.int)){
+    if(! _b_.isinstance(b, _b_.int)){
         throw _b_.TypeError.$factory("an integer is required")
     }
     if(b > 255){throw _b_.ValueError.$factory("byte must be in range(0, 256)")}
@@ -196,9 +196,9 @@ var bytes = {
 
 bytes.__add__ = function(self, other){
     var other_bytes
-    if($B.$isinstance(other, [bytes, bytearray])){
+    if(_b_.isinstance(other, [bytes, bytearray])){
         other_bytes = other.source
-    }else if($B.$isinstance(other, _b_.memoryview)){
+    }else if(_b_.isinstance(other, _b_.memoryview)){
         other_bytes = _b_.memoryview.tobytes(other).source
     }
     if(other_bytes !== undefined){
@@ -254,7 +254,7 @@ bytes.__ge__ = function(self, other){
 // borrowed from py_string.js.
 bytes.__getitem__ = function(self, arg){
     var i
-    if($B.$isinstance(arg, _b_.int)){
+    if(_b_.isinstance(arg, _b_.int)){
         var pos = arg
         if(arg < 0){
             pos = self.source.length + pos
@@ -263,7 +263,7 @@ bytes.__getitem__ = function(self, arg){
             return self.source[pos]
         }
         throw _b_.IndexError.$factory("index out of range")
-    }else if($B.$isinstance(arg, _b_.slice)){
+    }else if(_b_.isinstance(arg, _b_.slice)){
         var s = _b_.slice.$conv_for_seq(arg, self.source.length),
             start = s.start,
             stop = s.stop,
@@ -289,7 +289,7 @@ bytes.__getitem__ = function(self, arg){
             }
         }
         return bytes.$factory(res)
-    }else if($B.$isinstance(arg, _b_.bool)){
+    }else if(_b_.isinstance(arg, _b_.bool)){
         return self.source.__getitem__(_b_.int.$factory(arg))
     }
 }
@@ -371,13 +371,13 @@ bytes.__new__ = function(cls, source, encoding, errors){
             __class__: $.cls,
             source: []
         }
-    }else if(typeof $.source == "string" || $B.$isinstance($.source, _b_.str)){
+    }else if(typeof $.source == "string" || _b_.isinstance($.source, _b_.str)){
         if($.encoding === missing){
             throw _b_.TypeError.$factory('string argument without an encoding')
         }
         $.errors = $.errors === missing ? 'strict' : $.errors
         var res = encode($.source, $.encoding, $.errors)
-        if(! $B.$isinstance(res, bytes)){
+        if(! _b_.isinstance(res, bytes)){
             throw _b_.TypeError.$factory(`'${$.encoding}' codec returns ` +
                 `${$B.class_name(res)}, not bytes`)
         }
@@ -388,15 +388,15 @@ bytes.__new__ = function(cls, source, encoding, errors){
     if($.encoding !== missing){
         throw _b_.TypeError.$factory("encoding without a string argument")
     }
-    if(typeof $.source == "number" || $B.$isinstance($.source, _b_.int)){
+    if(typeof $.source == "number" || _b_.isinstance($.source, _b_.int)){
         var size = $B.PyNumber_Index($.source)
         source = []
         for(var i = 0; i < size; i++){
             source[i] = 0
         }
-    }else if($B.$isinstance($.source, [_b_.bytes, _b_.bytearray])){
+    }else if(_b_.isinstance($.source, [_b_.bytes, _b_.bytearray])){
         source = $.source.source
-    }else if($B.$isinstance($.source, _b_.memoryview)){
+    }else if(_b_.isinstance($.source, _b_.memoryview)){
         source = $.source.obj.source
     }else{
         if(Array.isArray($.source)){
@@ -411,7 +411,7 @@ bytes.__new__ = function(cls, source, encoding, errors){
                         `'${$B.class_name(source)}' object to bytes`)
                 }
                 var res = $B.$call(bytes_method)()
-                if(! $B.$isinstance(res, _b_.bytes)){
+                if(! _b_.isinstance(res, _b_.bytes)){
                     throw _b_.TypeError.$factory(`__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
                 }
@@ -443,11 +443,11 @@ bytes.$new = function(cls, source, encoding, errors){
         pos = 0
     if(source === undefined){
         // empty list
-    }else if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
+    }else if(typeof source == "number" || _b_.isinstance(source, _b_.int)){
         var i = source
         while(i--){int_list[pos++] = 0}
     }else{
-        if(typeof source == "string" || $B.$isinstance(source, _b_.str)){
+        if(typeof source == "string" || _b_.isinstance(source, _b_.str)){
             if(encoding === undefined){
                 throw _b_.TypeError.$factory("string argument without an encoding")
             }
@@ -470,7 +470,7 @@ bytes.$new = function(cls, source, encoding, errors){
                             `'${$B.class_name(source)}' object to bytes`)
                     }
                     var res = $B.$call(bytes_method)()
-                    if(! $B.$isinstance(res, _b_.bytes)){
+                    if(! _b_.isinstance(res, _b_.bytes)){
                         throw _b_.TypeError.$factory(`__bytes__ returned ` +
                             `non-bytes (type ${$B.class_name(res)})`)
                     }
@@ -608,7 +608,7 @@ bytes.endswith = function() {
             {self: null, suffix: null, start: null, end: null},
             ['self', 'suffix', 'start', 'end'], arguments,
             {start: -1, end: -1}, null, null)
-    if($B.$isinstance($.suffix, bytes)){
+    if(_b_.isinstance($.suffix, bytes)){
         var start = $.start == -1 ?
             $.self.source.length - $.suffix.source.length :
             Math.min($.self.source.length - $.suffix.source.length, $.start)
@@ -619,9 +619,9 @@ bytes.endswith = function() {
             res = $.self.source[end - len + i] == $.suffix.source[i]
         }
         return res
-    }else if ($B.$isinstance($.suffix, _b_.tuple)){
+    }else if (_b_.isinstance($.suffix, _b_.tuple)){
         for(var i = 0; i < $.suffix.length; ++i){
-            if($B.$isinstance($.suffix[i], bytes)){
+            if(_b_.isinstance($.suffix[i], bytes)){
                 if(bytes.endswith($.self, $.suffix[i], $.start, $.end)){
                     return true
                 }
@@ -925,7 +925,7 @@ bytes.join = function(){
             }
             res = bytes.__add__(res, item)
         }catch(err){
-            if($B.$isinstance(err, _b_.StopIteration)){
+            if(_b_.isinstance(err, _b_.StopIteration)){
                 break
             }
             throw err
@@ -1016,7 +1016,7 @@ bytes.partition = function() {
 bytes.removeprefix = function(){
     var $ = $B.args("removeprefix", 2, {self: null, prefix: null},
                     ["self", "prefix"], arguments, {}, null, null)
-    if(!$B.$isinstance($.prefix, [bytes, bytearray])){
+    if(!_b_.isinstance($.prefix, [bytes, bytearray])){
         throw _b_.ValueError.$factory("prefix should be bytes, not " +
             `'${$B.class_name($.prefix)}'`)
     }
@@ -1030,7 +1030,7 @@ bytes.removeprefix = function(){
 bytes.removesuffix = function(){
     var $ = $B.args("removesuffix", 2, {self: null, suffix: null},
                     ["self", "suffix"], arguments, {}, null, null)
-    if(!$B.$isinstance($.suffix, [bytes, bytearray])){
+    if(!_b_.isinstance($.suffix, [bytes, bytearray])){
         throw _b_.ValueError.$factory("suffix should be bytes, not " +
             `'${$B.class_name($.suffix)}'`)
     }
@@ -1229,7 +1229,7 @@ bytes.splitlines = function(self) {
     var $ = $B.args('splitlines', 2, {self: null, keepends: null},
                     ['self', 'keepends'], arguments, {keepends: false},
                     null, null)
-    if(!$B.$isinstance($.keepends,[_b_.bool, _b_.int])){
+    if(!_b_.isinstance($.keepends,[_b_.bool, _b_.int])){
         throw _b_.TypeError('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
@@ -1262,16 +1262,16 @@ bytes.startswith = function(){
     var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
         ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
         start = $.start
-    if($B.$isinstance($.prefix, bytes)){
+    if(_b_.isinstance($.prefix, bytes)){
         var res = true
         for(var i = 0; i < $.prefix.source.length && res; i++){
             res = $.self.source[start + i] == $.prefix.source[i]
         }
         return res
-    }else if($B.$isinstance($.prefix, _b_.tuple)){
+    }else if(_b_.isinstance($.prefix, _b_.tuple)){
         var items = []
         for(var i = 0; i < $.prefix.length; i++){
-            if($B.$isinstance($.prefix[i], bytes)){
+            if(_b_.isinstance($.prefix[i], bytes)){
                 items = items.concat($.prefix[i].source)
             }else{
                 throw _b_.TypeError.$factory("startswith first arg must be " +
@@ -1339,7 +1339,7 @@ bytes.title = function(self) {
 bytes.translate = function(self, table, _delete) {
     if(_delete === undefined){
         _delete = []
-    }else if($B.$isinstance(_delete, bytes)){
+    }else if(_b_.isinstance(_delete, bytes)){
         _delete = _delete.source
     }else{
         throw _b_.TypeError.$factory("Type " +
@@ -1347,7 +1347,7 @@ bytes.translate = function(self, table, _delete) {
     }
     var res = [],
         pos = 0
-    if($B.$isinstance(table, bytes) && table.source.length == 256){
+    if(_b_.isinstance(table, bytes) && table.source.length == 256){
        for(var i = 0, len = self.source.length; i < len; i++){
            if(_delete.indexOf(self.source[i]) > -1){continue}
            res[pos++] = table.source[self.source[i]]

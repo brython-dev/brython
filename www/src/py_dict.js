@@ -335,7 +335,7 @@ dict.__eq__ = function(){
         self = $.self,
         other = $.other
 
-    if(! $B.$isinstance(other, dict)){
+    if(! _b_.isinstance(other, dict)){
         return _b_.NotImplemented
     }
 
@@ -616,7 +616,7 @@ dict.__new__ = function(cls){
 
 dict.__or__ = function(self, other){
     // PEP 584
-    if(! $B.$isinstance(other, dict)){
+    if(! _b_.isinstance(other, dict)){
         return _b_.NotImplemented
     }
     var res = dict.copy(self)
@@ -739,7 +739,7 @@ dict.__reversed__ = function(self){
 
 dict.__ror__ = function(self, other){
     // PEP 584
-    if(! $B.$isinstance(other, dict)){
+    if(! _b_.isinstance(other, dict)){
         return _b_.NotImplemented
     }
     var res = dict.copy(other)
@@ -884,7 +884,7 @@ dict.get = function(){
         // call $getitem with ignore_missign set to true
         return dict.$getitem($.self, $.key, true)
     }catch(err){
-        if($B.$isinstance(err, _b_.KeyError)){return $._default}
+        if(_b_.isinstance(err, _b_.KeyError)){return $._default}
         else{throw err}
     }
 }
@@ -1106,7 +1106,7 @@ dict.update = function(self){
         kw = $.kw
     if(args.length > 0){
         var o = args[0]
-        if($B.$isinstance(o, dict)){
+        if(_b_.isinstance(o, dict)){
             if(o.$jsobj){
                 o = jsobj2dict(o.$jsobj)
             }
@@ -1267,7 +1267,7 @@ dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
     function(obj){
-        if($B.$isinstance(obj, dict)){
+        if(_b_.isinstance(obj, dict)){
             // obj is a dictionary, with string_dict table such that
             // obj.string_dict[key] = [value, rank]
             // Transform it into an object with attribute $jsobj such that
