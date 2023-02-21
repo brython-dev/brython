@@ -43,7 +43,7 @@ var array = $B.make_class("array",
         if(initializer !== missing){
             if(Array.isArray(initializer)){
                 array.fromlist(res, initializer)
-            }else if(_b_.isinstance(initializer, _b_.bytes)){
+            }else if($B.$isinstance(initializer, _b_.bytes)){
                 array.frombytes(res, initializer)
             }else{
                 array.extend(res, initializer)
@@ -73,7 +73,7 @@ array.__len__ = function(self){
 }
 
 array.__mul__ = function(self, nb){
-    if(typeof nb == "number" || _b_.isinstance(nb, _b_.int)){
+    if(typeof nb == "number" || $B.$isinstance(nb, _b_.int)){
         var t = [],
             copy = self.obj.slice()
         for(var i = 0; i < nb; i++){
@@ -169,7 +169,7 @@ array.extend = function(self, iterable){
 array.frombytes = function(self, s){
     $B.args("frombytes", 2, {self: null, s: null},
         ["self", "s"], arguments, {}, null, null)
-    if(! _b_.isinstance(s, _b_.bytes)){
+    if(! $B.$isinstance(s, _b_.bytes)){
         throw _b_.TypeError.$factory("a bytes-like object is required, " +
             "not '" + $B.class_name(s) + "'")
     }

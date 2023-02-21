@@ -110,7 +110,7 @@ StringIO.truncate = function(self, size){
 StringIO.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
-    if(! _b_.isinstance($.data, _b_.str)){
+    if(! $B.$isinstance($.data, _b_.str)){
         throw _b_.TypeError.$factory('string argument expected, got ' +
             `'${$B.class_name($.data)}'`)
     }

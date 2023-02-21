@@ -58,7 +58,7 @@ range.__delattr__ = function(self, attr, value){
 }
 
 range.__eq__ = function(self, other){
-    if(_b_.isinstance(other, range)){
+    if($B.$isinstance(other, range)){
         var len = range.__len__(self)
         if(! $B.rich_comp('__eq__', len, range.__len__(other))){
             return false
@@ -88,7 +88,7 @@ function compute_item(r, i){
 }
 
 range.__getitem__ = function(self, rank){
-    if(_b_.isinstance(rank, _b_.slice)){
+    if($B.$isinstance(rank, _b_.slice)){
         var norm = _b_.slice.$conv_for_seq(rank, range.__len__(self)),
             substep = $B.rich_op('__mul__', self.step, norm.step),
             substart = compute_item(self, norm.start),
@@ -217,7 +217,7 @@ range.step = function(self){return self.step},
 range.stop = function(self){return self.stop}
 
 range.count = function(self, ob){
-    if(_b_.isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
+    if($B.$isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
         return _b_.int.$factory(range.__contains__(self, ob))
     }else{
         var comp = function(other){return $B.rich_comp("__eq__", ob, other)},
@@ -228,7 +228,7 @@ range.count = function(self, ob){
             try{
                 if(comp(_next(it))){nb++}
             }catch(err){
-                if(_b_.isinstance(err, _b_.StopIteration)){
+                if($B.$isinstance(err, _b_.StopIteration)){
                     return nb
                 }
                 throw err
@@ -254,7 +254,7 @@ range.index = function(self, other){
                 if(comp(_next(it))){return nb}
                 nb++
             }catch(err){
-                if(_b_.isinstance(err, _b_.StopIteration)){
+                if($B.$isinstance(err, _b_.StopIteration)){
                     throw _b_.ValueError.$factory(_b_.str.$factory(other) +
                         " not in range")
                 }

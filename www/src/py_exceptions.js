@@ -47,7 +47,7 @@ $B.$raise = function(arg, cause){
         }
         throw _b_.RuntimeError.$factory("No active exception to reraise")
     }else{
-        if(_b_.isinstance(arg, BaseException)){
+        if($B.$isinstance(arg, BaseException)){
             if(arg.__class__ === _b_.StopIteration &&
                     $B.last($B.frames_stack)[1].$is_generator){
                 // PEP 479
@@ -105,7 +105,7 @@ $B.last_frame = function(){
 var traceback = $B.traceback = $B.make_class("traceback",
     function(exc){
         var stack = exc.$stack || $B.frames_stack.slice()
-        if(_b_.isinstance(exc, _b_.SyntaxError)){
+        if($B.$isinstance(exc, _b_.SyntaxError)){
             stack.pop()
         }
         if(stack.length == 0){
@@ -310,7 +310,7 @@ BaseException.__getattr__ = function(self, attr){
 
 BaseException.add_note = function(self, note){
     // PEP 678
-    if(! _b_.isinstance(note, _b_.str)){
+    if(! $B.$isinstance(note, _b_.str)){
         throw _b_.TypeError.$factory('note must be a str, not ' +
             `'${$B.class_name(note)}'`)
     }
@@ -757,7 +757,7 @@ js += `if(err.exceptions !== _b_.None){
     var exc_list = _b_.list.$factory(err.exceptions)
     var all_exceptions = true
     for(var exc of exc_list){
-        if(! _b_.isinstance(exc, _b_.Exception)){
+        if(! $B.$isinstance(exc, _b_.Exception)){
             all_exceptions = false
             break
         }
@@ -781,7 +781,7 @@ _b_.BaseExceptionGroup.split = function(self, condition){
     var matching_excs = [],
         non_matching_excs = []
     for(var exc of self.exceptions){
-        if(_b_.isinstance(exc, _b_.BaseExceptionGroup)){
+        if($B.$isinstance(exc, _b_.BaseExceptionGroup)){
             var subsplit = _b_.BaseExceptionGroup.split(exc, condition),
                 matching = subsplit[0],
                 non_matching = subsplit[1]
@@ -835,7 +835,7 @@ exceptions is not an Exception instance
 js += `if(err.exceptions !== _b_.None){
     var exc_list = _b_.list.$factory(err.exceptions)
     for(var exc of exc_list){
-        if(! _b_.isinstance(exc, _b_.Exception)){
+        if(! $B.$isinstance(exc, _b_.Exception)){
             throw _b_.TypeError.$factory(
                 'Cannot nest BaseExceptions in an ExceptionGroup')
         }

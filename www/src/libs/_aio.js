@@ -29,7 +29,7 @@ function handle_kwargs(kw, method){
             var params = _b_.dict.$getitem_string(kw, key)
             if(typeof params == "string"){
                 data = params
-            }else if(_b_.isinstance(params, _b_.bytes)){
+            }else if($B.$isinstance(params, _b_.bytes)){
                 data = new ArrayBuffer(params.source.length)
                 var array = new Int8Array(data)
                 for(var i = 0, len = params.source.length; i < len; i++){

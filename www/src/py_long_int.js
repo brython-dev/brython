@@ -110,7 +110,7 @@ long_int.__add__ = function(self, other){
         return int_or_long(self.value + other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value + (other ? 1n : 0n))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return long_int.__add__(self, other.$brython_value)
     }
     return _b_.NotImplemented
@@ -134,7 +134,7 @@ long_int.__eq__ = function(self, other){
         return self.value == other.value
     }else if(typeof other == "number" || typeof other == "boolean"){
         return false
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return long_int.__eq__(self, other.$brython_value)
     }
     return _b_.NotImplemented
@@ -154,7 +154,7 @@ long_int.__floordiv__ = function(self, other){
         return int_or_long(self.value / other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value / (other ? 1n : 0n))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return int_or_long(self.value / other.$brython_value)
     }
     return _b_.NotImplemented
@@ -167,7 +167,7 @@ long_int.__ge__ = function(self, other){
         return self.value >= other.value
     }else if(typeof other == "boolean"){
         return self.value >= (other ? 1 : 0)
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return self.value >= other.$brython_value
     }
     return _b_.NotImplemented
@@ -201,7 +201,7 @@ long_int.__le__ = function(self, other){
         return self.value <= other.value
     }else if(typeof other == "boolean"){
         return self.value <= (other ? 1 : 0)
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return self.value <= other.$brython_value
     }
     return _b_.NotImplemented
@@ -219,7 +219,7 @@ long_int.__lshift__ = function(self, other){
         return int_or_long(self.value << other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value << (other ? 1n : 0n))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return long_int.__lshift__(self, other.$brython_value)
     }
     return _b_.NotImplemented
@@ -234,7 +234,7 @@ long_int.__mod__ = function(self, other){
         return int_or_long(((n % m) + m) % m)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value % (other ? 1n : 0n))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return long_int.__mod__(self, other.$brython_value)
     }
     return _b_.NotImplemented
@@ -249,7 +249,7 @@ long_int.__mul__ = function(self, other){
         return int_or_long(self.value * (other ? 1n : 0n))
     }else if(other.__class__ === $B.long_int){
         return int_or_long(self.value * other.value)
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         // int subclass
         return long_int.__mul__(self, other.$brython_value)
     }
@@ -277,7 +277,7 @@ long_int.__pow__ = function(self, power, z){
         return int_or_long(self.value ** power ? 1n : 0n)
     }else if(power.__class__ === $B.long_int){
         return int_or_long(self.value ** power.value)
-    }else if(_b_.isinstance(power, _b_.int)){
+    }else if($B.$isinstance(power, _b_.int)){
         // int subclass
         return long_int.__pow__(self, power.$brython_value)
     }
@@ -291,7 +291,7 @@ long_int.__rshift__ = function(self, other){
         return int_or_long(self.value >> other.value)
     }else if(typeof other == "boolean"){
         return int_or_long(self.value >> (other ? 1n : 0n))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return long_int.__rshift__(self, other.$brython_value)
     }
     return _b_.NotImplemented
@@ -314,7 +314,7 @@ long_int.__sub__ = function(self, other){
         return int_or_long(self.value - (other ? 1n : 0n))
     }else if(other.__class__ === $B.long_int){
         return int_or_long(self.value - other.value)
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         // int subclass
         return long_int.__sub__(self, other.$brython_value)
     }
@@ -328,7 +328,7 @@ long_int.__truediv__ = function(self, other){
         return $B.fast_float(Number(self.value) * (other ? 1 : 0))
     }else if(other.__class__ === $B.long_int){
         return $B.fast_float(Number(self.value) / Number(other.value))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         // int subclass
         return long_int.__truediv__(self, other.$brython_value)
     }
@@ -397,7 +397,7 @@ if(typeof other == "number"){
     return _b_.int.$int_or_long(self.value & (other ? 1n : 0n))
 }else if(other.__class__ === $B.long_int){
     return _b_.int.$int_or_long(self.value & other.value)
-}else if(_b_.isinstance(other, _b_.int)){
+}else if($B.$isinstance(other, _b_.int)){
     // int subclass
     return $B.long_int.__and__(self, other.$brython_value)
 }

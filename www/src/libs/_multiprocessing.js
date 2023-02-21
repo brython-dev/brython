@@ -9,7 +9,7 @@ var $convert_args=function(args) {
     var _list=[]
     for(var i=0, _len_i = args.length; i < _len_i; i++) {
       var _a=args[i]
-      if(_b_.isinstance(_a, _b_.str)){_list.push("'"+_a+"'")} else {_list.push(_a)}
+      if($B.$isinstance(_a, _b_.str)){_list.push("'"+_a+"'")} else {_list.push(_a)}
     }
 
     return _list.join(',')

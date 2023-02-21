@@ -761,7 +761,7 @@ $B.set_list_slice_step = function(obj, start, stop, step, value){
 $B.$setitem = function(obj, item, value){
     if(Array.isArray(obj) && obj.__class__ === undefined &&
             typeof item == "number" &&
-            !_b_.isinstance(obj, _b_.tuple)){
+            !$B.$isinstance(obj, _b_.tuple)){
         if(item < 0){item += obj.length}
         if(obj[item] === undefined){
             throw _b_.IndexError.$factory("list assignment index out of range")
@@ -787,7 +787,7 @@ $B.$setitem = function(obj, item, value){
 $B.$delitem = function(obj, item){
     if(Array.isArray(obj) && obj.__class__ === _b_.list &&
             typeof item == "number" &&
-            !_b_.isinstance(obj, _b_.tuple)){
+            !$B.$isinstance(obj, _b_.tuple)){
         if(item < 0){item += obj.length}
         if(obj[item] === undefined){
             throw _b_.IndexError.$factory("list deletion index out of range")
@@ -1048,8 +1048,8 @@ $B.$GetInt = function(value) {
   // convert value to an integer
   if(typeof value == "number" || value.constructor === Number){return value}
   else if(typeof value === "boolean"){return value ? 1 : 0}
-  else if(_b_.isinstance(value, _b_.int)){return value}
-  else if(_b_.isinstance(value, _b_.float)){return value.valueOf()}
+  else if($B.$isinstance(value, _b_.int)){return value}
+  else if($B.$isinstance(value, _b_.float)){return value.valueOf()}
   if(! value.$is_class){
       try{var v = $B.$getattr(value, "__int__")(); return v}catch(e){}
       try{var v = $B.$getattr(value, "__index__")(); return v}catch(e){}
@@ -1074,7 +1074,7 @@ $B.to_num = function(obj, methods){
             method = $B.$getattr(klass, methods[i], missing)
         if(method !== missing){
             var res = method(obj)
-            if(!_b_.isinstance(res, expected_class[methods[i]])){
+            if(!$B.$isinstance(res, expected_class[methods[i]])){
                 console.log(res, methods[i], expected_class[methods[i]])
                 throw _b_.TypeError.$factory(methods[i] + "returned non-" +
                     expected_class[methods[i]].$infos.__name__ +
@@ -1097,7 +1097,7 @@ $B.PyNumber_Index = function(item){
             if(item.__class__ === $B.long_int){
                 return item
             }
-            if(_b_.isinstance(item, _b_.int)){
+            if($B.$isinstance(item, _b_.int)){
                 // int subclass
                 return item.$brython_value
             }
@@ -1486,7 +1486,7 @@ $B.rich_op1 = function(op, x, y){
     }
     if((op == '__add__' || op == '__mul__') &&
             (Array.isArray(x) || typeof x == 'string' ||
-            _b_.isinstance(x, [_b_.str, _b_.bytes,
+            $B.$isinstance(x, [_b_.str, _b_.bytes,
                           _b_.bytearray, _b_.memoryview]))){
         // Special case for addition and repetition of sequences:
         // if type(x).__add__(y) raises an exception, use type(y).__radd__(x),

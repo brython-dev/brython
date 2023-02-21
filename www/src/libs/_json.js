@@ -11,7 +11,7 @@ function simple(obj){
     }
     if(obj instanceof Number ||
             Array.isArray(obj) ||
-            _b_.isinstance(obj, [_b_.list, _b_.tuple, _b_.dict])){
+            $B.$isinstance(obj, [_b_.list, _b_.tuple, _b_.dict])){
         return true
     }
     return false
@@ -129,7 +129,7 @@ function to_json(obj, level){
         return '"' + res.replace(new RegExp('"', "g"), '\\"') + '"'
     }
 
-    if(_b_.isinstance(obj, _b_.list)){
+    if($B.$isinstance(obj, _b_.list)){
         var res = []
         var sep = item_separator,
             first = '[',
@@ -144,13 +144,13 @@ function to_json(obj, level){
             res.push(to_json(obj[i], level, kwarg))
         }
         return first + res.join(sep) + last
-    }else if(_b_.isinstance(obj, _b_.float)){
+    }else if($B.$isinstance(obj, _b_.float)){
         return obj.value
     }else if(obj.__class__ === $B.long_int){
         return obj.value.toString()
     }else if(obj === _b_.None){
         return "null"
-    }else if(_b_.isinstance(obj, _b_.dict)){
+    }else if($B.$isinstance(obj, _b_.dict)){
         var res = [],
             items = Array.from($B.make_js_iterator(_b_.dict.items(obj)))
         if(sort_keys){

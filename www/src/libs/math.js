@@ -22,15 +22,15 @@ var float_check = function(x) {
 }
 
 function check_int(x){
-    if(! _b_.isinstance(x, _b_.int)){
+    if(! $B.$isinstance(x, _b_.int)){
         throw _b_.TypeError.$factory("'" + $B.class_name(x) +
             "' object cannot be interpreted as an integer")
     }
 }
 
 function check_int_or_round_float(x){
-    return (_b_.isinstance(x, _b_.float) && Number.isInteger(x.value)) ||
-            _b_.isinstance(x, _b_.int)
+    return ($B.$isinstance(x, _b_.float) && Number.isInteger(x.value)) ||
+            $B.$isinstance(x, _b_.int)
 }
 
 var isWholeNumber = function(x){return (x * 10) % 10 == 0}
@@ -64,7 +64,7 @@ function nextUp(x){
         }
         return _mod.inf
     }
-    if(_b_.isinstance(x, $B.long_int)){
+    if($B.$isinstance(x, $B.long_int)){
         x = Number(x.value)
     }
 
@@ -408,7 +408,7 @@ function ceil(x){
 
     var res
 
-    if(_b_.isinstance(x, _b_.float)){
+    if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
             throw _b_.OverflowError.$factory(
                 "cannot convert float infinity to integer")
@@ -1202,7 +1202,7 @@ function floor(x){
 
 function fmod(x, y){
     $B.check_nb_args_no_kw('fmod', 2, arguments)
-    if(_b_.isinstance(x, _b_.float)){
+    if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
             throw _b_.ValueError.$factory('math domain error')
         }
@@ -1253,7 +1253,7 @@ function fsum(x){
             }
             partials = partials.slice(0, i).concat([x])
         }catch(err){
-            if(_b_.isinstance(err, _b_.StopIteration)){break}
+            if($B.$isinstance(err, _b_.StopIteration)){break}
             throw err
         }
     }
@@ -1274,9 +1274,9 @@ function gamma(x){
         sqrtpow
 
     /* special cases */
-    if(_b_.isinstance(x, _b_.float)){
+    if($B.$isinstance(x, _b_.float)){
         x_as_number = x.value
-    }else if(! _b_.isinstance(x, _b_.int)){
+    }else if(! $B.$isinstance(x, _b_.int)){
         throw _b_.TypeError.$factory("must be real number, not " +
             $B.class_name(x))
     }
@@ -1689,13 +1689,13 @@ function log(x, base){
         return log2(x)
     }
     var log
-    if(_b_.isinstance(x, $B.long_int)){
+    if($B.$isinstance(x, $B.long_int)){
         if(x.value <= 0){
             throw _b_.ValueError.$factory('math domain error')
         }
         var mant_exp = longint_mant_exp(x)
         log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
-    }else if(_b_.isinstance(x, _b_.int)){
+    }else if($B.$isinstance(x, _b_.int)){
         x = _b_.int.$int_value(x)
         if(x <= 0){
             throw _b_.ValueError.$factory('math domain error')
@@ -1720,7 +1720,7 @@ function log(x, base){
 function log1p(x){
     $B.check_nb_args('log1p', 1, arguments)
     $B.check_no_kw('log1p', x)
-    if(_b_.isinstance(x, $B.long_int)){
+    if($B.$isinstance(x, $B.long_int)){
         if($B.long_int.bit_length(x) > 1024){
             throw _b_.OverflowError.$factory(
                 "int too large to convert to float")
@@ -1739,7 +1739,7 @@ function log2(x){
     $B.check_nb_args('log2', 1, arguments)
     $B.check_no_kw('log2', x)
     var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
-    if(_b_.isinstance(x, $B.long_int)){
+    if($B.$isinstance(x, $B.long_int)){
         if(x.value <= 0){
             throw _b_.ValueError.$factory('math domain error')
         }
@@ -1765,7 +1765,7 @@ function log2(x){
 function log10(x){
     $B.check_nb_args('log10', 1, arguments)
     $B.check_no_kw('log10', x)
-    if(_b_.isinstance(x, $B.long_int)){
+    if($B.$isinstance(x, $B.long_int)){
         return $B.fast_float($B.long_int.$log10(x).value)
     }
     x = float_check(x)
@@ -1968,8 +1968,8 @@ function radians(x){
 function is_finite(x){
     return typeof x == "number" ||
                (x.__class__ === _b_.floar && isFinite(x.value)) ||
-               _b_.isinstance(x, _b_.int) ||
-               (_b_.isinstance(x, _b_.float) && isFinite(x.value))
+               $B.$isinstance(x, _b_.int) ||
+               ($B.$isinstance(x, _b_.float) && isFinite(x.value))
 }
 
 function remainder(x, y){
@@ -2097,7 +2097,7 @@ function trunc(x) {
 function ulp(){
     var $ = $B.args("ulp", 1, {x: null}, ['x'], arguments, {}, null, null),
         x = $.x
-    if(_b_.isinstance(x, _b_.float)){
+    if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
             return _mod.inf
         }else if(_b_.float.$funcs.isnan(x)){
@@ -2107,7 +2107,7 @@ function ulp(){
     if(typeof x == "number"){
         return x >= 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
-    }else if(_b_.isinstance(x, $B.long_int)){
+    }else if($B.$isinstance(x, $B.long_int)){
         x = Number(_b_.int.$to_bigint(x))
         return x > 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))

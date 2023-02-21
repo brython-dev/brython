@@ -27,7 +27,7 @@ function bigint_value(obj){
         return BigInt(obj)
     }else if(obj.__class__ === $B.long_int){
         return obj.value
-    }else if(_b_.isinstance(obj, _b_.int)){
+    }else if($B.$isinstance(obj, _b_.int)){
         return bigint_value(obj.$brython_value)
     }
 }
@@ -60,7 +60,7 @@ int.$to_js_number = function(obj){
         return obj
     }else if(obj.__class__ === $B.long_int){
         return Number(obj.value)
-    }else if(_b_.isinstance(obj, _b_.int)){
+    }else if($B.$isinstance(obj, _b_.int)){
         return int.$to_js_value(obj.$brython_value)
     }
     return null
@@ -85,7 +85,7 @@ int.from_bytes = function() {
         byteorder = $.byteorder,
         signed = $.signed,
         _bytes, _len
-    if(_b_.isinstance(x, [_b_.bytes, _b_.bytearray])){
+    if($B.$isinstance(x, [_b_.bytes, _b_.bytearray])){
         _bytes = x.source
         _len = x.source.length
     }else{
@@ -129,7 +129,7 @@ int.to_bytes = function(){
         len = $.len,
         byteorder = $.byteorder,
         signed = $.signed
-    if(! _b_.isinstance(len, _b_.int)){
+    if(! $B.$isinstance(len, _b_.int)){
         throw _b_.TypeError.$factory("integer argument expected, got " +
             $B.class_name(len))
     }
@@ -138,7 +138,7 @@ int.to_bytes = function(){
             "byteorder must be either 'little' or 'big'")
     }
 
-    if(_b_.isinstance(self, $B.long_int)){
+    if($B.$isinstance(self, $B.long_int)){
         return $B.long_int.to_bytes(self, len, byteorder, signed)
     }
 
@@ -186,7 +186,7 @@ if(typeof other == "number"){
     return _b_.int.$int_or_long(BigInt(self) + other.value)
 }else if(typeof other == "boolean"){
     return _b_.int.$int_or_long(BigInt(self) + (other ? 1n : 0n))
-}else if(_b_.isinstance(other, _b_.int)){
+}else if($B.$isinstance(other, _b_.int)){
     return _b_.int.__add__(self, other.$brython_value)
 }
 return _b_.NotImplemented
@@ -203,7 +203,7 @@ int.__ceil__ = function(self){
 }
 
 int.__divmod__ = function(self, other){
-    if(! _b_.isinstance(other, int)){
+    if(! $B.$isinstance(other, int)){
         return _b_.NotImplemented
     }
     return $B.fast_tuple([int.__floordiv__(self, other),
@@ -215,7 +215,7 @@ int.__eq__ = function(self, other){
     if(self_as_int.__class__ === $B.long_int){
         return $B.long_int.__eq__(self_as_int, other)
     }
-    if(_b_.isinstance(other, int)){
+    if($B.$isinstance(other, int)){
         return int_value(self) == int_value(other)
     }
     return _b_.NotImplemented
@@ -301,7 +301,7 @@ int.__floordiv__ = function(self, other){
         return self
     }else if(other.__class__ === $B.long_int){
         return Math.floor(self / Number(other.value))
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return int.__floordiv__(self, other.$brython_value)
     }
     return _b_.NotImplemented
@@ -340,7 +340,7 @@ int.__invert__ = function(self){
 
 int.__mod__ = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
-    if(_b_.isinstance(other,_b_.tuple) && other.length == 1){
+    if($B.$isinstance(other,_b_.tuple) && other.length == 1){
         other = other[0]
     }
     if(other.__class__ === $B.long_int){
@@ -352,7 +352,7 @@ int.__mod__ = function(self, other) {
         }
         return int_or_long((self % other + other) % other)
     }
-    if(_b_.isinstance(other, int)){
+    if($B.$isinstance(other, int)){
         other = int_value(other)
         if(other === false){other = 0}
         else if(other === true){other = 1}
@@ -382,7 +382,7 @@ int.__neg__ = function(self){
 int.__new__ = function(cls, value, base){
     if(cls === undefined){
         throw _b_.TypeError.$factory("int.__new__(): not enough arguments")
-    }else if(! _b_.isinstance(cls, _b_.type)){
+    }else if(! $B.$isinstance(cls, _b_.type)){
         throw _b_.TypeError.$factory("int.__new__(X): X is not a type object")
     }
     if(cls === int){
@@ -416,13 +416,13 @@ function extended_euclidean(a, b){
 
 
 int.__pow__ = function(self, other, z){
-    if(! _b_.isinstance(other, int)){
+    if(! $B.$isinstance(other, int)){
         return _b_.NotImplemented
     }
     if(typeof other == "boolean"){
         other = other ? 1 : 0
     }
-    if(typeof other == "number"  || _b_.isinstance(other, int)){
+    if(typeof other == "number"  || $B.$isinstance(other, int)){
         if(z !== undefined && z !== _b_.None){
             // If z is provided, the algorithm is faster than computing
             // self ** other then applying the modulo z
@@ -467,13 +467,13 @@ int.__pow__ = function(self, other, z){
                 }else{
                     return $B.fast_float(Math.pow(self, other))
                 }
-            }else if(_b_.isinstance(other, _b_.int)){
+            }else if($B.$isinstance(other, _b_.int)){
                 return int_or_long(int.__pow__(self, other.$brython_value))
             }
             return _b_.NotImplemented
         }
     }
-    if(_b_.isinstance(other, _b_.float)) {
+    if($B.$isinstance(other, _b_.float)) {
         other = _b_.float.numerator(other)
         if(self >= 0){
             return $B.fast_float(Math.pow(self, other))
@@ -481,7 +481,7 @@ int.__pow__ = function(self, other, z){
             // use complex power
             return _b_.complex.__pow__($B.make_complex(self, 0), other)
         }
-    }else if(_b_.isinstance(other, _b_.complex)){
+    }else if($B.$isinstance(other, _b_.complex)){
         var preal = Math.pow(self, other.$real),
             ln = Math.log(self)
         return $B.make_complex(preal * Math.cos(ln), preal * Math.sin(ln))
@@ -545,7 +545,7 @@ int.__sub__ = Function('self', 'other',
      op_model.replace(/\+/g, '-').replace(/__add__/g, '__sub__'))
 
 int.__truediv__ = function(self, other){
-    if(_b_.isinstance(other, int)){
+    if($B.$isinstance(other, int)){
         other = int_value(other)
         if(other == 0){
             throw _b_.ZeroDivisionError.$factory("division by zero")
@@ -608,7 +608,7 @@ if(typeof other == "number"){
     return self & (other ? 1 : 0)
 }else if(other.__class__ === $B.long_int){
     return _b_.int.$int_or_long(BigInt(self) & other.value)
-}else if(_b_.isinstance(other, _b_.int)){
+}else if($B.$isinstance(other, _b_.int)){
     // int subclass
     return _b_.int.__and__(self, other.$brython_value)
 }
@@ -632,7 +632,7 @@ int.__ge__ = function(self, other){
         return self >= other.value
     }else if(typeof other == "boolean"){
         return self >= other ? 1 : 0
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return self >= other.$brython_value
     }
     return _b_.NotImplemented
@@ -651,7 +651,7 @@ int.__le__ = function(self, other){
         return self <= other.value
     }else if(typeof other == "boolean"){
         return self <= other ? 1 : 0
-    }else if(_b_.isinstance(other, _b_.int)){
+    }else if($B.$isinstance(other, _b_.int)){
         return self <= other.$brython_value
     }
     return _b_.NotImplemented
@@ -671,7 +671,7 @@ for(var r_opname of r_opnames){
             int['__' + r_opname + '__']){
         int["__r" + r_opname + "__"] = (function(name){
             return function(self, other){
-                if(_b_.isinstance(other, int)){
+                if($B.$isinstance(other, int)){
                     other = int_value(other)
                     return int["__" + name + "__"](other, self)
                 }
@@ -712,17 +712,17 @@ int.$factory = function(value, base){
         return 0
     }
 
-    if(_b_.isinstance(value, [_b_.bytes, _b_.bytearray])){
+    if($B.$isinstance(value, [_b_.bytes, _b_.bytearray])){
         // transform to string
         value = $B.$getattr(value, 'decode')('latin-1')
-    }else if(explicit_base && ! _b_.isinstance(value, _b_.str)){
+    }else if(explicit_base && ! $B.$isinstance(value, _b_.str)){
         throw _b_.TypeError.$factory(
             "int() can't convert non-string with explicit base")
-    }else if(_b_.isinstance(value, _b_.memoryview)){
+    }else if($B.$isinstance(value, _b_.memoryview)){
         value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
     }
 
-    if(! _b_.isinstance(value, _b_.str)){
+    if(! $B.$isinstance(value, _b_.str)){
         if(base !== missing){
             throw _b_.TypeError.$factory(
                 "int() can't convert non-string with explicit base")
@@ -743,7 +743,7 @@ int.$factory = function(value, base){
                         }
                         res = $B.$call(index_method)()
                     }
-                    if(_b_.isinstance(res, _b_.int)){
+                    if($B.$isinstance(res, _b_.int)){
                         if(typeof res !== "number" &&
                                 res.__class__ !== $B.long_int){
                             $B.warn(_b_.DeprecationWarning, special_method +
@@ -956,9 +956,9 @@ var bool = {
 }
 
 bool.__and__ = function(self, other){
-    if(_b_.isinstance(other, bool)){
+    if($B.$isinstance(other, bool)){
         return self && other
-    }else if(_b_.isinstance(other, int)){
+    }else if($B.$isinstance(other, int)){
         return int.__and__(bool.__index__(self), int.__index__(other))
     }
     return _b_.NotImplemented
@@ -976,9 +976,9 @@ bool.__hash__ = bool.__index__ = bool.__int__ = function(self){
 bool.__neg__ = function(self){return -$B.int_or_bool(self)}
 
 bool.__or__ = function(self, other){
-    if(_b_.isinstance(other, bool)){
+    if($B.$isinstance(other, bool)){
         return self || other
-    }else if(_b_.isinstance(other, int)){
+    }else if($B.$isinstance(other, int)){
         return int.__or__(bool.__index__(self), int.__index__(other))
     }
     return _b_.NotImplemented
@@ -992,9 +992,9 @@ bool.__repr__ = function(self){
 }
 
 bool.__xor__ = function(self, other) {
-    if(_b_.isinstance(other, bool)){
+    if($B.$isinstance(other, bool)){
         return self ^ other ? true : false
-    }else if(_b_.isinstance(other, int)){
+    }else if($B.$isinstance(other, int)){
         return int.__xor__(bool.__index__(self), int.__index__(other))
     }
     return _b_.NotImplemented

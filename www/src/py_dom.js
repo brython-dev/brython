@@ -6,9 +6,9 @@ var _b_ = $B.builtins,
 
 // Conversion of immutable types between Javascript and Python
 var py_immutable_to_js = $B.py_immutable_to_js = function (pyobj){
-    if(_b_.isinstance(pyobj, _b_.float)){
+    if($B.$isinstance(pyobj, _b_.float)){
         return pyobj.value
-    }else if(_b_.isinstance(pyobj, $B.long_int)){
+    }else if($B.$isinstance(pyobj, $B.long_int)){
         return $B.long_int.$to_js_number(pyobj)
     }
     return pyobj
@@ -433,7 +433,7 @@ function $EventsList(elt, evt, arg){
     // removes the event listener
     this.elt = elt
     this.evt = evt
-    if(_b_.isinstance(arg, _b_.list)){this.callbacks = arg}
+    if($B.$isinstance(arg, _b_.list)){this.callbacks = arg}
     else{this.callbacks = [arg]}
     this.remove = function(callback){
         var found = false
@@ -509,13 +509,13 @@ DOMNode.__add__ = function(self, other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()
     res.children = [self], pos = 1
-    if(_b_.isinstance(other, TagSum)){
+    if($B.$isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
-    }else if(_b_.isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
+    }else if($B.$isinstance(other,[_b_.str, _b_.int, _b_.float, _b_.list,
                                 _b_.dict, _b_.set, _b_.tuple])){
         res.children[pos++] = DOMNode.$factory(
             document.createTextNode(_b_.str.$factory(other)))
-    }else if(_b_.isinstance(other, DOMNode)){
+    }else if($B.$isinstance(other, DOMNode)){
         res.children[pos++] = other
     }else{
         // If other is iterable, add all items
@@ -894,7 +894,7 @@ DOMNode.__le__ = function(self, other){
     if(self.nodeType == 9){
         self = self.body
     }
-    if(_b_.isinstance(other, TagSum)){
+    if($B.$isinstance(other, TagSum)){
         for(var i = 0; i < other.children.length; i++){
             self.appendChild(other.children[i])
         }
@@ -923,7 +923,7 @@ DOMNode.__len__ = function(self){
 }
 
 DOMNode.__mul__ = function(self,other){
-    if(_b_.isinstance(other, _b_.int) && other.valueOf() > 0){
+    if($B.$isinstance(other, _b_.int) && other.valueOf() > 0){
         var res = TagSum.$factory()
         var pos = res.children.length
         for(var i = 0; i < other.valueOf(); i++){
@@ -998,7 +998,7 @@ DOMNode.__setattr__ = function(self, attr, value){
             case "top":
             case "width":
             case "height":
-                if(_b_.isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
+                if($B.$isinstance(value, [_b_.int, _b_.float]) && self.nodeType == 1){
                     self.style[attr] = value + "px"
                     return _b_.None
                 }else{
@@ -1434,7 +1434,7 @@ DOMNode.set_style = function(self, style){ // style is a dict
     if(typeof style === 'string'){
         self.style = style
         return
-    }else if(!_b_.isinstance(style, _b_.dict)){
+    }else if(!$B.$isinstance(style, _b_.dict)){
         throw _b_.TypeError.$factory("style must be str or dict, not " +
             $B.class_name(style))
     }
@@ -1452,7 +1452,7 @@ DOMNode.set_style = function(self, style){ // style is a dict
                 case "width":
                 case "height":
                 case "borderWidth":
-                    if(_b_.isinstance(value,_b_.int)){value = value + "px"}
+                    if($B.$isinstance(value,_b_.int)){value = value + "px"}
             }
             self.style[key] = value
         }
@@ -1659,7 +1659,7 @@ TagSum.appendChild = function(self, child){
 TagSum.__add__ = function(self, other){
     if($B.get_class(other) === TagSum){
         self.children = self.children.concat(other.children)
-    }else if(_b_.isinstance(other, [_b_.str, _b_.int, _b_.float,
+    }else if($B.$isinstance(other, [_b_.str, _b_.int, _b_.float,
                                _b_.dict, _b_.set, _b_.list])){
         self.children = self.children.concat(
             DOMNode.$factory(document.createTextNode(other)))
@@ -1702,7 +1702,7 @@ $B.TagSum = TagSum // used in _html.js and _svg.js
 var win = $B.JSObj.$factory(_window)
 
 win.get_postMessage = function(msg,targetOrigin){
-    if(_b_.isinstance(msg, dict)){
+    if($B.$isinstance(msg, dict)){
         var temp = {__class__:"dict"},
             items = _b_.list.$factory(_b_.dict.items(msg))
         items.forEach(function(item){

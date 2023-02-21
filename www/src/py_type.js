@@ -117,7 +117,7 @@ $B.get_metaclass = function(class_name, module, bases, kw_meta){
     if(kw_meta === undefined && bases.length == 0){
         return _b_.type
     }else if(kw_meta){
-        if(! _b_.isinstance(kw_meta, _b_.type)){
+        if(! $B.$isinstance(kw_meta, _b_.type)){
             return kw_meta
         }
         metaclass = kw_meta
@@ -229,7 +229,7 @@ $B.resolve_mro_entries = function(bases){
     var new_bases = [],
         has_mro_entries = false
     for(var base of bases){
-        if(! _b_.isinstance(base, _b_.type)){
+        if(! $B.$isinstance(base, _b_.type)){
             var mro_entries = $B.$getattr(base, "__mro_entries__",
                 _b_.None)
             if(mro_entries !== _b_.None){
@@ -789,7 +789,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         extra_kwargs
 
     // Create the class dictionary
-    if(! _b_.isinstance(cl_dict, _b_.dict)){
+    if(! $B.$isinstance(cl_dict, _b_.dict)){
         console.log('bizarre', meta, name, bases, cl_dict)
         alert()
     }
@@ -887,7 +887,7 @@ type.__or__ = function(){
                 arguments, {}, null, null),
         cls = $.cls,
         other = $.other
-    if(other !== _b_.None && ! _b_.isinstance(other, [type, $B.GenericAlias])){
+    if(other !== _b_.None && ! $B.$isinstance(other, [type, $B.GenericAlias])){
         return _b_.NotImplemented
     }
     return $B.UnionType.$factory([cls, other])
@@ -1443,7 +1443,7 @@ $B.GenericAlias.__call__ = function(self, ...args){
 }
 
 $B.GenericAlias.__eq__ = function(self, other){
-    if(! _b_.isinstance(other, $B.GenericAlias)){
+    if(! $B.$isinstance(other, $B.GenericAlias)){
         return false
     }
     return $B.rich_comp("__eq__", self.origin_class, other.origin_class) &&
@@ -1523,7 +1523,7 @@ $B.UnionType.__args__ = _b_.property.$factory(
 )
 
 $B.UnionType.__eq__ = function(self, other){
-    if(! _b_.isinstance(other, $B.UnionType)){
+    if(! $B.$isinstance(other, $B.UnionType)){
         return _b_.NotImplemented
     }
     return _b_.list.__eq__(self.items, other.items)

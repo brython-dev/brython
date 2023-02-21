@@ -150,7 +150,7 @@ $B.generator.throw = function(self, type, value, traceback){
                 "instance of BaseException")
         }else if(value === undefined || value === _b_.None){
             exc = $B.$call(exc)()
-        }else if(_b_.isinstance(value, type)){
+        }else if($B.$isinstance(value, type)){
             exc = value
         }
     }else{
