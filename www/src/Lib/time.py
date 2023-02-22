@@ -220,7 +220,7 @@ def monotonic():
     return now() / 1000.
 
 def perf_counter():
-    return now() / 1000.
+    return window.performance.now() / 1000.
 
 def process_time():
     return now() / 1000.
