@@ -16,29 +16,57 @@ $B.has_surrogate = function(s){
     return false
 }
 
-$B.String = function(s){
+var escape2cp = {b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'}
+
+$B.surrogates = function(s){
+    var s1 = '',
+        escaped = false
+    for(var char of s){
+        if(escaped){
+            var echar = escape2cp[char]
+            if(echar !== undefined){
+                s1 += echar
+            }else{
+                s1 += '\\' + char
+            }
+            escaped = false
+        }else if(char == '\\'){
+            escaped = true
+        }else{
+            s1 += char
+        }
+    }
+    
     var codepoints = [],
         surrogates = [],
         j = 0
 
-
-    for(var i = 0, len = s.length; i < len; i++){
-        var cp = s.codePointAt(i)
+    for(var i = 0, len = s1.length; i < len; i++){
+        var cp = s1.codePointAt(i)
         if(cp >= 0x10000){
             surrogates.push(j)
             i++
         }
         j++
     }
+    return surrogates
+}
 
-    if(surrogates.length == 0){
-        return s
+$B.String = function(s){
+    var srg = $B.surrogates(s)
+    return srg.length == 0 ? s : $B.make_String(s, srg)
+}
+
+$B.make_String = function(s, surrogates){
+    if(! Array.isArray(surrogates)){
+        throw Error('not list')
     }
     var res = new String(s)
     res.__class__ = str
     res.surrogates = surrogates
     return res
 }
+
 
 function pypos2jspos(s, pypos){
     // convert Python position to JS position

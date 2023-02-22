@@ -1440,8 +1440,12 @@ $B.ast.Constant.prototype.to_js = function(scopes){
     }else if(this.value === _b_.None){
         return '_b_.None'
     }else if(typeof this.value == "string"){
-        var s = this.value
-        return `$B.String('${s}')`
+        var s = this.value,
+            srg = $B.surrogates(s) // in py_string.js
+        if(srg.length == 0){
+            return `'${s}'`
+        }
+        return `$B.make_String('${s}', [${srg}])`
     }else if(this.value.__class__ === _b_.bytes){
         return `_b_.bytes.$factory([${this.value.source}])`
     }else if(typeof this.value == "number"){
@@ -1759,7 +1763,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                locals\n`
 
 
-    parse_args.push('{' + slots.join(', ') + '} , ' +
+    parse_args.push('{' + slots.join(', ') + '}, ' +
         `arguments`)
 
 
@@ -1768,8 +1772,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         args_kwarg = this.args.kwarg === undefined ? 'null':
                      "'" + this.args.kwarg.arg + "'"
 
-
-    js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
+    if(positional.length == 0 && slots.length == 0 &&
+            this.args.vararg === undefined &&
+            this.args.kwarg === undefined){
+        js += `${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`
+    }else{
+        js += `${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
+    }
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]

@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-20 18:04:57.695870"
-__BRYTHON__.timestamp=1676912697695
+__BRYTHON__.compiled_date="2023-02-22 10:15:23.671220"
+__BRYTHON__.timestamp=1677057323671
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5146,6 +5146,8 @@ return function(){var res=callable(...arguments)
 return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
+$B.$call2=function(callable,args,keywords){console.log('call',callable)
+return callable.apply(null,args)}
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
 var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
 $B.make_rmethods=function(klass){for(var r_opname of r_opnames){if(klass["__r"+r_opname+"__"]===undefined &&
@@ -6551,7 +6553,7 @@ return true}catch(err){return false}}
 var hash=_b_.hash=function(obj){check_nb_args_no_kw('hash',1,arguments)
 return $B.$hash(obj)}
 $B.$hash=function(obj){if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
-if(isinstance(obj,_b_.bool)){return _b_.int.$factory(obj)}
+if(typeof obj==="boolean"){return obj ? 1 :0}
 if(obj.$is_class ||
 obj.__class__===_b_.type ||
 obj.__class__===$B.function){return obj.__hashvalue__=$B.$py_next_hash--}
@@ -6607,11 +6609,12 @@ var ps1=$B.imported["sys"].ps1,ps2=$B.imported["sys"].ps2
 if(msg==ps1 ||msg==ps2){console.log(msg,res)}}
 return res}
 var isinstance=_b_.isinstance=function(obj,cls){check_nb_args_no_kw('isinstance',2,arguments)
-if(obj===null){return cls===None}
+return $B.$isinstance(obj,cls)}
+$B.$isinstance=function(obj,cls){if(obj===null){return cls===None}
 if(obj===undefined){return false}
-if(Array.isArray(cls)){for(var kls of cls){if(isinstance(obj,kls)){return true}}
+if(Array.isArray(cls)){for(var kls of cls){if($B.$isinstance(obj,kls)){return true}}
 return false}
-if(cls.__class__===$B.UnionType){for(var kls of cls.items){if(isinstance(obj,kls)){return true}}
+if(cls.__class__===$B.UnionType){for(var kls of cls.items){if($B.$isinstance(obj,kls)){return true}}
 return false}
 if(cls.__class__===$B.GenericAlias){
 throw _b_.TypeError.$factory(
@@ -6630,12 +6633,9 @@ if(klass==undefined){if(typeof obj=='string'){if(cls==_b_.str){return true}
 else if($B.builtin_classes.indexOf(cls)>-1){return false}}else if(typeof obj=='number' && Number.isFinite(obj)){if(Number.isFinite(obj)&& cls==_b_.int){return true}}
 klass=$B.get_class(obj)}
 if(klass===undefined){return false}
-function check(kl,cls){if(kl===cls){return true}
-else if(cls===_b_.str && kl===$B.StringSubclass){return true}
-else if(cls===_b_.int && kl===$B.IntSubclass){return true}}
-if(check(klass,cls)){return true}
+if(klass===cls){return true}
 var mro=klass.__mro__
-for(var i=0;i < mro.length;i++){if(check(mro[i],cls)){return true}}
+for(var i=0;i < mro.length;i++){if(mro[i]===cls){return true}}
 var instancecheck=$B.$getattr(cls.__class__ ||$B.get_class(cls),'__instancecheck__',_b_.None)
 if(instancecheck !==_b_.None){return instancecheck(cls,obj)}
 return false}
@@ -9908,12 +9908,20 @@ $B.has_surrogate=function(s){
 for(var i=0;i < s.length;i++){code=s.charCodeAt(i)
 if(code >=0xD800 && code <=0xDBFF){return true}}
 return false}
-$B.String=function(s){var codepoints=[],surrogates=[],j=0
-for(var i=0,len=s.length;i < len;i++){var cp=s.codePointAt(i)
+var escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
+$B.surrogates=function(s){var s1='',escaped=false
+for(var char of s){if(escaped){var echar=escape2cp[char]
+if(echar !==undefined){s1+=echar}else{s1+='\\'+char}
+escaped=false}else if(char=='\\'){escaped=true}else{s1+=char}}
+var codepoints=[],surrogates=[],j=0
+for(var i=0,len=s1.length;i < len;i++){var cp=s1.codePointAt(i)
 if(cp >=0x10000){surrogates.push(j)
 i++}
 j++}
-if(surrogates.length==0){return s}
+return surrogates}
+$B.String=function(s){var srg=$B.surrogates(s)
+return srg.length==0 ? s :$B.make_String(s,srg)}
+$B.make_String=function(s,surrogates){if(! Array.isArray(surrogates)){throw Error('not list')}
 var res=new String(s)
 res.__class__=str
 res.surrogates=surrogates
@@ -15001,8 +15009,9 @@ copy_position(assign,this.target)
 js+=assign.to_js(scopes)+' // assign to target\n'
 for(var _if of this.ifs){js+=`if($B.$bool(${$B.js_from_ast(_if, scopes)})){\n`}
 return js}
-$B.ast.Constant.prototype.to_js=function(scopes){if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){var s=this.value
-return `$B.String('${s}')`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){return this.value}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
+$B.ast.Constant.prototype.to_js=function(scopes){if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){var s=this.value,srg=$B.surrogates(s)
+if(srg.length==0){return `'${s}'`}
+return `$B.make_String('${s}', [${srg}])`}else if(this.value.__class__===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){return this.value}else if(this.value.__class__===$B.long_int){return `$B.fast_long_int(${this.value.value}n)`}else if(this.value.__class__===_b_.float){return `({__class__: _b_.float, value: ${this.value.value}})`}else if(this.value.__class__===_b_.complex){return `$B.make_complex(${this.value.$real.value}, ${this.value.$imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
 throw SyntaxError('bad value',this.value)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
 return 'continue'}
@@ -15123,12 +15132,14 @@ js+=`function ${name2}(){\n`
 var locals_name=make_scope_name(scopes,func_scope),gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 js+=`var ${locals_name},
                locals\n`
-parse_args.push('{'+slots.join(', ')+'} , '+
+parse_args.push('{'+slots.join(', ')+'}, '+
 `arguments`)
 var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.vararg.arg+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
 "'"+this.args.kwarg.arg+"'"
-js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`
+if(positional.length==0 && slots.length==0 &&
+this.args.vararg===undefined &&
+this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
