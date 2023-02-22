@@ -1341,8 +1341,8 @@ $B.$hash = function(obj){
     if(obj.__hashvalue__ !== undefined){
         return obj.__hashvalue__
     }
-    if(isinstance(obj, _b_.bool)){
-        return _b_.int.$factory(obj)
+    if(typeof obj === "boolean"){
+        return obj ? 1 : 0
     }
 
     if(obj.$is_class ||
@@ -1527,7 +1527,10 @@ var input = _b_.input = function(msg) {
 
 var isinstance = _b_.isinstance = function(obj, cls){
     check_nb_args_no_kw('isinstance', 2, arguments)
+    return $B.$isinstance(obj, cls)
+}
 
+$B.$isinstance = function(obj, cls){
     if(obj === null){
         return cls === None
     }
@@ -1536,7 +1539,7 @@ var isinstance = _b_.isinstance = function(obj, cls){
     }
     if(Array.isArray(cls)){
         for(var kls of cls){
-            if(isinstance(obj, kls)){
+            if($B.$isinstance(obj, kls)){
                 return true
             }
         }
@@ -1544,7 +1547,7 @@ var isinstance = _b_.isinstance = function(obj, cls){
     }
     if(cls.__class__ === $B.UnionType){
         for(var kls of cls.items){
-            if(isinstance(obj, kls)){
+            if($B.$isinstance(obj, kls)){
                 return true
             }
         }
@@ -1590,19 +1593,12 @@ var isinstance = _b_.isinstance = function(obj, cls){
     }
     if(klass === undefined){return false}
 
-    // Return true if one of the parents of obj class is cls
-    // If one of the parents is the class used to inherit from str, obj is an
-    // instance of str ; same for list
-
-    function check(kl, cls){
-        if(kl === cls){return true}
-        else if(cls === _b_.str && kl === $B.StringSubclass){return true}
-        else if(cls === _b_.int && kl === $B.IntSubclass){return true}
+    if(klass ===  cls){
+        return true
     }
-    if(check(klass, cls)){return true}
     var mro = klass.__mro__
     for(var i = 0; i < mro.length; i++){
-       if(check(mro[i], cls)){
+       if(mro[i] === cls){
            return true
        }
     }
