@@ -290,8 +290,8 @@ var type = $B.make_class("type",
             kw = $.kw
 
         var kwarg = Object.create(null)
-        for(var key of _b_.dict.$keys_string(kw)){
-            kwarg[key] = _b_.dict.$getitem_string(kw, key)
+        for(var key in kw.obj){
+            kwarg[key] = kw.obj[key]
         }
         var kwargs = {$kw: [kwarg]}
         if(cl_dict === missing){
@@ -739,19 +739,16 @@ type.__init_subclass__ = function(){
     // Default implementation only checks that no keyword arguments were passed
     // Defined as classmethod after set_func_names is called
     var $ = $B.args("__init_subclass__", 1, {cls: null}, ['cls'],
-        arguments, {}, "args", "kwargs")
+            arguments, {}, "args", "kwargs")
     if($.args.length > 0){
         throw _b_.TypeError.$factory(
             `${$.cls.__qualname__}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
     }
-    if($.kwargs !== undefined){
-        if($.kwargs.__class__ !== _b_.dict ||
-                _b_.dict.$keys_string($.kwargs).length > 0){
-            throw _b_.TypeError.$factory(
-                `${$.cls.__qualname__}.__init_subclass__() ` +
-                `takes no keyword arguments`)
-        }
+    for(var key in $.kwargs.obj){
+        throw _b_.TypeError.$factory(
+            `${$.cls.__qualname__}.__init_subclass__() ` +
+            `takes no keyword arguments`)
     }
     return _b_.None
 }

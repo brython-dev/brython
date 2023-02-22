@@ -19,14 +19,15 @@ var responseType = {
 }
 
 function handle_kwargs(kw, method){
+    // kw is a wrapper around its attribute .obj
     var data,
         cache = false,
         format = "text",
         headers = {},
         timeout = {}
-    for(var key of _b_.dict.$keys_string(kw)){
+    for(var key in kw.obj){
         if(key == "data"){
-            var params = _b_.dict.$getitem_string(kw, key)
+            var params = kw.obj[key]
             if(typeof params == "string"){
                 data = params
             }else if(_b_.isinstance(params, _b_.bytes)){
@@ -50,20 +51,20 @@ function handle_kwargs(kw, method){
                 data = items.join("&")
             }
         }else if(key == "headers"){
-            headers = _b_.dict.$to_obj(_b_.dict.$getitem_string(kw, key))
+            headers = kw.obj[key]
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = _b_.dict.$getitem_string(kw, key)
+                timeout.func = kw.obj[key]
             }else{
-                ajax.bind(self, event, _b_.dict.getitem_string(kw, key))
+                ajax.bind(self, event, kw.obj[key])
             }
         }else if(key == "timeout"){
-            timeout.seconds = _b_.dict.$getitem_string(kw, key)
+            timeout.seconds = kw.obj[key]
         }else if(key == "cache"){
-            cache = _b_.dict.$getitem_string(kw, key)
+            cache = kw.obj[key]
         }else if(key == "format"){
-            format = _b_.dict.$getitem_string(kw, key)
+            format = kw.obj[key]
         }
     }
     if(method == "post"){

@@ -498,7 +498,8 @@ var dir = _b_.dir = function(obj){
     }catch (err){
         // ignore, default
         //console.log(err)
-        console.log('error in dir', err.message)
+        console.log('error in dir', obj, $B.$getattr(obj, '__dir__'), err.message)
+        throw err
     }
 
     var res = [],
@@ -1848,13 +1849,13 @@ function $extreme(args, op){ // used by min() and max()
 
     var has_default = false,
         func = false
-    for(var attr of _b_.dict.$keys_string($.kw)){
+    for(var attr in $.kw.obj){
         switch(attr){
             case 'key':
-                func = _b_.dict.$getitem_string($.kw, attr)
+                func = $.kw.obj[attr]
                 break
             case 'default':
-                var default_value = _b_.dict.$getitem_string($.kw, attr)
+                var default_value = $.kw.obj[attr]
                 has_default = true
                 break
             default:
@@ -2148,15 +2149,12 @@ var pow = _b_.pow = function() {
 
 var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
-        {}, 'args', 'kw')
+              {}, 'args', 'kw')
     var kw = $ns['kw'],
-        end = _b_.dict.$get_string(kw, 'end'),
-        sep = _b_.dict.$get_string(kw, 'sep'),
-        file = _b_.dict.$get_string(kw, 'file')
-    var end = (end === undefined || end === None) ? '\n' : end,
-        sep = (sep === undefined || sep === None) ? ' ' : sep,
-        file = file === undefined ? $B.get_stdout() : file,
-        args = $ns['args'],
+        end = $B.is_none(kw.obj.end) ? '\n' : kw.obj.end,
+        sep = $B.is_none(kw.obj.sep) ? ' ' : kw.obj.sep,
+        file = $B.is_none(kw.obj.file) ? $B.get_stdout() : kw.obj.file
+    var args = $ns['args'],
         writer = $B.$getattr(file, 'write')
     var items = []
     for(var i = 0, len = args.length; i < len; i++){
@@ -3039,7 +3037,6 @@ var $url_open = _b_.open = function(){
         res.__class__ = is_binary ? $BufferedReader : $TextIOWrapper
         $B.file_cache[file] = res.$content
         return res
-        // throw _b_.IOError.$factory("Browsers cannot write on disk")
     }else if(['r', 'rb'].indexOf(mode) == -1){
         throw _b_.ValueError.$factory("Invalid mode '" + mode + "'")
     }
@@ -3159,7 +3156,7 @@ var zip = _b_.zip = $B.make_class("zip",
         }
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
         var _args = $ns['args'],
-            strict = $B.$bool(_b_.dict.$get_string($ns.kw, 'strict'))
+            strict = $B.$bool($ns.kw.obj.strict || false)
         var nexts = [],
             only_lists = true,
             min_len

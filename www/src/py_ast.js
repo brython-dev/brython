@@ -158,8 +158,8 @@ $B.create_python_ast_classes = function(){
                 }
                 for(var key in $){
                     if(key == 'kw'){
-                        for(var key of _b_.dict.$keys_string($.kw)){
-                            res[key] = _b_.dict.$getitem_string($.kw, key)
+                        for(var key in $.kw.obj){
+                            res[key] = $.kw.obj[key]
                         }
                     }else{
                         res[key] = $[key]

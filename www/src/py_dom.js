@@ -1245,11 +1245,7 @@ DOMNode.get = function(self){
     var args = []
     for(var i = 1; i < arguments.length; i++){args.push(arguments[i])}
     var $ns = $B.args("get", 0, {}, [], args, {}, null, "kw"),
-        $dict = {},
-        items = _b_.list.$factory(_b_.dict.items($ns["kw"]))
-    items.forEach(function(item){
-        $dict[item[0]] = item[1]
-    })
+        $dict = $ns.kw.obj
 
     if($dict["name"] !== undefined){
         if(self.getElementsByName === undefined){

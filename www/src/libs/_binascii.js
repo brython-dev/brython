@@ -123,8 +123,8 @@ var module = {
         var $ = $B.args("b2a_base64", 1, {data: null}, ['data'],
                 arguments, {}, null, "kw")
         var newline = false
-        if($.kw && _b_.dict.$contains_string($.kw, 'newline')){
-            newline = _b_.dict.$getitem_string($.kw, 'newline')
+        if($.kw && $.kw.obj.hasOwnProperty('newline')){
+            newline = $.kw.obj.newline
         }
 
         var string = $B.to_bytes($.data),

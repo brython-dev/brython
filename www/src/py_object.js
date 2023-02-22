@@ -77,7 +77,7 @@ object.__dir__ = function(self) {
 
     // add object's own attributes
     if(self.__dict__){
-        for(var attr of _b_.dict.$keys_string(self.__dict__)){
+        for(var attr of $B.make_js_iterator(self.__dict__)){
             if(attr.charAt(0) != "$"){
                 res.push(attr)
             }

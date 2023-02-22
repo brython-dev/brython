@@ -75,15 +75,17 @@ function stringify(d){
 }
 
 function handle_kwargs(self, kw, method){
+    // kw is an instance of $B.jsobj_as_pydict
     var data,
         encoding,
         headers={},
         cache,
         mode = "text",
         timeout = {}
-    for(var key of _b_.dict.$keys_string(kw)){
+    
+    for(var key in kw.obj){
         if(key == "data"){
-            var params = _b_.dict.$getitem_string(kw, key)
+            var params = kw.obj[key]
             if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
@@ -100,9 +102,9 @@ function handle_kwargs(self, kw, method){
                     $B.class_name(params))
             }
         }else if(key == "encoding"){
-            encoding = _b_.dict.$getitem_string(kw, key)
+            encoding = kw.obj[key]
         }else if(key == "headers"){
-            var value = _b_.dict.$getitem_string(kw, key)
+            var value = kw.obj[key]
             if(! _b_.isinstance(value, _b_.dict)){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
@@ -114,17 +116,17 @@ function handle_kwargs(self, kw, method){
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = _b_.dict.$getitem_string(kw, key)
+                timeout.func = kw.obj[key]
             }else{
-                var f = _b_.dict.$getitem_string(kw, key)
+                var f = kw.obj[key]
                 ajax.bind(self, event, f)
             }
         }else if(key == "mode"){
-            var mode = _b_.dict.$getitem_string(kw, key)
+            var mode = kw.obj[key]
         }else if(key == "timeout"){
-            timeout.seconds = _b_.dict.$getitem_string(kw, key)
+            timeout.seconds = kw.obj[key]
         }else if(key == "cache"){
-            cache = _b_.dict.$getitem_string(kw, key)
+            cache = kw.obj[key]
         }
     }
     if(encoding && mode != "text"){
@@ -499,12 +501,12 @@ function file_upload(){
     }
     set_timeout(self, timeout)
 
-    if(_b_.dict.$contains_string(kw, 'method')){
-        method = _b_.dict.$getitem_string(kw, 'method')
+    if(kw.obj.hasOwnProperty('method')){
+        method = kw.obj.method
     }
 
-    if(_b_.dict.$contains_string(kw, 'field_name')){
-        field_name = _b_.dict.$getitem_string(kw, 'field_name')
+    if(kw.obj.hasOwnProperty('field_name')){
+        field_name = kw.obj.field_name
     }
 
     var formdata = new FormData()
@@ -529,10 +531,9 @@ function file_upload(){
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(var key of _b_.dict.$keys_string(kw)){
+    for(var key in kw.obj){
         if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2),
-                _b_.dict.$getitem_string(kw, key))
+            ajax.bind(self, key.substr(2), kw.obj[key])
         }
     }
 }

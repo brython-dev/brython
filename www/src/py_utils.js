@@ -45,7 +45,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     }
 
     if(extra_kw_args){
-        slots[extra_kw_args] = extra_kw = $B.empty_dict()
+        slots[extra_kw_args] = extra_kw = $B.jsobj_as_pydict.$factory()
     }
 
     // simple case : no named parameters, no arguments
@@ -145,7 +145,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
-                    _b_.dict.$setitem_string(extra_kw, key, value)
+                    extra_kw.obj[key] = value
                 }else{
                     throw _b_.TypeError.$factory(fname +
                         "() got an unexpected keyword argument '" + key + "'")
@@ -286,8 +286,8 @@ $B.check_nb_args = function(name, expected, args){
         last = args[len - 1]
     if(last && last.$kw){
         var kw = last.$kw
-        if(kw[1] && kw[1].__class__ === _b_.dict){
-            if(_b_.dict.$keys_string(kw[1]).length == 0){
+        if(kw[1]){
+            if(_b_.len(kw[1]) == 0){
                 len--
             }
         }

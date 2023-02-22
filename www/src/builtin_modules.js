@@ -182,7 +182,7 @@
                 }
 
                 dict.__init__ = function(){
-                    var $ns = $B.args('pow', 1, {self: null}, ['self'],
+                    var $ns = $B.args('__init__', 1, {self: null}, ['self'],
                         arguments, {}, 'args', 'kw'),
                         self = $ns['self'],
                         args = $ns['args']
@@ -219,10 +219,9 @@
                     }
 
                     // attributes
-                    for(var entry of $B.make_js_iterator(_b_.dict.items($ns.kw))){
+                    for(var arg in $ns.kw.obj){
                         // keyword arguments
-                        var arg = entry[0],
-                            value = entry[1]
+                        var value = $ns.kw.obj[arg]
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects

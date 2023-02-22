@@ -197,6 +197,10 @@ dict.$iter_items_with_hash = function*(d){
         for(var key in d.$jsobj){
             yield {key, value: d.$jsobj[key]}
         }
+    }else if(d.__class__ === $B.jsobj_as_pydict){
+        for(var key in d.obj){
+            yield {key, value: d.obj[key]}
+        }
     }else{
         var version = d.$version
         for(var i = 0, len = d._keys.length; i < len; i++){
@@ -451,6 +455,8 @@ dict.$getitem = function(self, key, ignore_missing){
             throw _b_.KeyError.$factory(key)
         }
         return self.$jsobj[key]
+    }else if(self.__class__ === $B.jsobj_as_pydict){
+        return self.__class__.__getitem__(self, key)
     }
 
     var lookup = dict.$lookup_by_key(self, key)
@@ -559,8 +565,8 @@ dict.__init__ = function(self, first, second){
         }
     }
 
-    for(var entry of dict.$iter_items_with_hash($.second)){
-        dict.$setitem(self, entry.key, entry.value, entry.hash)
+    for(var key in $.second.obj){
+        dict.$setitem(self, key, $.second.obj[key])
     }
     return _b_.None
 }
@@ -1354,11 +1360,10 @@ $B.obj_dict = function(obj, exclude){
 // Supports adding new keys.
 
 var jsobj_as_pydict = $B.jsobj_as_pydict = $B.make_class('jsobj_as_pydict',
-    function(jsobj, exclude){
+    function(jsobj){
         return {
             __class__: jsobj_as_pydict,
-            obj: jsobj,
-            exclude: exclude ? exclude : function(){return false},
+            obj: jsobj || {},
             new_keys: [],
             $version: 0
         }
@@ -1369,7 +1374,7 @@ jsobj_as_pydict.__contains__ = function(self, key){
     if(self.new_keys.indexOf(key) > -1){
         return true
     }
-    return ! (self.exclude(key) || self.obj[key] === undefined)
+    return self.obj[key] !== undefined
 }
 
 jsobj_as_pydict.__delitem__ = function(self, key){
@@ -1382,22 +1387,29 @@ jsobj_as_pydict.__delitem__ = function(self, key){
 }
 
 jsobj_as_pydict.__eq__ = function(self, other){
-    if(other.__class__ !== jsobj_as_pydict){
+    if(other.__class__ !== jsobj_as_pydict &&
+            ! $B.$isinstance(other, _b_.dict)){
         return _b_.NotImplemented
     }
+
     // create true Python dicts with the items in self and other
     var self1 = $B.empty_dict()
         other1 = $B.empty_dict()
 
     dict.__init__(self1, jsobj_as_pydict.items(self))
-    dict.__init__(other1, jsobj_as_pydict.items(other))
+    dict.__init__(other1, $B.get_class(other).items(other))
 
     // Compare true Python dicts
     return dict.__eq__(self1, other1)
 }
 
+jsobj_as_pydict.__ne__ = function(self, other){
+    var eq = jsobj_as_pydict.__eq__(self, other)
+    return eq === _b_.NotImplemented ? eq : ! eq
+}
+
 jsobj_as_pydict.__getitem__ = function(self, key){
-    if(jsobj_as_pydict.__contains__(self, key)){
+    if(self.obj.hasOwnProperty(key)){
         return self.obj[key]
     }
     throw _b_.KeyError.$factory(key)
@@ -1410,11 +1422,19 @@ jsobj_as_pydict.__iter__ = function(self){
 jsobj_as_pydict.__len__ = function(self){
     var len = 0
     for(var key in self.obj){
-        if(! self.exclude(key)){
-            len++
-        }
+        len++
     }
     return len + self.new_keys.length
+}
+
+jsobj_as_pydict.__or__ = function(self, other){
+    // PEP 584
+    if(! _b_.isinstance(other, [dict, jsobj_as_pydict])){
+        return _b_.NotImplemented
+    }
+    var res = jsobj_as_pydict.copy(self)
+    jsobj_as_pydict.update(res, other)
+    return res
 }
 
 jsobj_as_pydict.__repr__ = function(self){
@@ -1431,15 +1451,25 @@ jsobj_as_pydict.__repr__ = function(self){
 }
 
 jsobj_as_pydict.__setitem__ = function(self, key, value){
-    if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
-        self.new_keys.push(key)
-    }
     self.obj[key] = value
+}
+
+jsobj_as_pydict.clear = function(self){
+    self.obj = {}
+    return _b_.None
+}
+
+jsobj_as_pydict.copy = function(self){
+    var copy = jsobj_as_pydict.$factory()
+    for(var key in self.obj){
+        copy.obj[key] = self.obj[key]
+    }
+    return copy
 }
 
 jsobj_as_pydict.get = function(self, key, _default){
     _default = _default === undefined ? _b_.None : _default
-    if(self.exclude(key) || self.obj[key] === undefined){
+    if(! self.obj.hasOwnProperty(key)){
         return _default
     }
     return self.obj[key]
@@ -1447,9 +1477,6 @@ jsobj_as_pydict.get = function(self, key, _default){
 
 jsobj_as_pydict.$iter_items = function*(self){
     for(var key in self.obj){
-        if(self.exclude(key) && self.new_keys.indexOf(key) == -1){
-            continue
-        }
         yield $B.fast_tuple([key, self.obj[key]])
     }
 }
@@ -1463,6 +1490,50 @@ jsobj_as_pydict.keys = function(self){
     var items = Array.from(jsobj_as_pydict.$iter_items(self)),
         keys = items.map(x => x[0])
     return _b_.iter(keys)
+}
+
+jsobj_as_pydict.pop = function(){
+    var missing = {},
+        $ = $B.args("pop", 3, {self: null, key: null, _default: null},
+        ["self", "key", "_default"], arguments, {_default: missing}, null, null),
+        self = $.self,
+        key = $.key,
+        _default = $._default
+
+    if(self.obj.hasOwnProperty(key)){
+        var res = self.obj[key]
+        delete self.obj[key]
+        return res
+    }else{
+        if(_default !== missing){
+            return _default
+        }
+        throw _b_.KeyError.$factory(key)
+    }
+}
+
+jsobj_as_pydict.popitem = function(self){
+    $B.check_nb_args_no_kw('popitem', 1, arguments)
+    for(var key in self.obj){
+        var res = $B.fast_tuple([key, self.obj[key]])
+        delete self.obj[key]
+        return res
+    }
+    throw _b_.KeyError.$factory("'popitem(): dictionary is empty'")
+}
+
+
+jsobj_as_pydict.update = function(self, other){
+    var klass = $B.get_class(other),
+        keys = $B.$call($B.$getattr(klass, 'keys')),
+        getitem
+    for(var key of $B.make_js_iterator(keys(other))){
+        if(! getitem){
+            getitem = $B.$call($B.$getattr(klass, '__getitem__'))
+        }
+        self.obj[key] = getitem(other, key)
+    }
+    return _b_.None
 }
 
 jsobj_as_pydict.values = function(self){

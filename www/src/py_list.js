@@ -744,14 +744,13 @@ list.sort = function(self){
     check_not_tuple(self, "sort")
     var func = _b_.None,
         reverse = false,
-        kw_args = $.kw,
-        keys = _b_.dict.$keys_string(kw_args)
+        kw_args = $.kw
 
-    for(var key of keys){
+    for(var key in kw_args.obj){
         if(key == "key"){
-            func = _b_.dict.$getitem_string(kw_args, key)
+            func = kw_args.obj[key]
         }else if(key == "reverse"){
-            reverse = _b_.dict.$getitem_string(kw_args, key)
+            reverse = kw_args.obj[key]
         }else{
             throw _b_.TypeError.$factory("'" + key +
                 "' is an invalid keyword argument for this function")
