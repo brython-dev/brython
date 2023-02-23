@@ -1655,7 +1655,7 @@ function transform_args(scopes){
         }else{
             var v = $B.js_from_ast(this.args.kw_defaults[ix], scopes)
             _defaults.push(`${arg.arg}: ` + v)
-            kw_defaults.push(`['${arg.arg}', ${v}]`)
+            kw_defaults.push(`${arg.arg}: ${v}`)
         }
     }
     var kw_default_names = []
@@ -1702,7 +1702,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,
         kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
-            `_b_.dict.$factory([${kw_defaults}])`
+            `$B.jsobj_as_pydict.$factory({${kw_defaults.join(', ')}})`
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
 

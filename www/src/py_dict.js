@@ -778,6 +778,8 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
             self.$jsobj[key] = value
         }
         return $N
+    }else if(self.__class__ === $B.jsobj_as_pydict){
+        return $B.jsobj_as_pydict.__setitem__(self, key, value)
     }
     if(key instanceof String){
         key = key.valueOf()

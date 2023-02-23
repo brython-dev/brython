@@ -51,7 +51,7 @@ $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
     }
 
     // Keyword arguments passed to the class
-    var extra_kwargs = Object.create(null)
+    var extra_kwargs = {}
     if(kwargs){
         for(var  i = 0; i < kwargs.length; i++){
             var key = kwargs[i][0],

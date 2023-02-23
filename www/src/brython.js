@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-22 18:52:46.621602"
-__BRYTHON__.timestamp=1677088366621
+__BRYTHON__.compiled_date="2023-02-23 14:22:36.346547"
+__BRYTHON__.timestamp=1677158556346
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4792,6 +4792,62 @@ return imports}})(__BRYTHON__)
 ;(function($B){var _b_=$B.builtins,_window=self,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
+function missing_required_kwonly(f,args){var plural=args.length==1 ? '' :'s',arg_list
+args=args.map(x=> `'${x}'`)
+if(args.length==1){arg_list=args[0]}else if(args.length==2){arg_list=args[0]+' and '+args[1]}else{arg_list=args.slice(0,args.length-1).join(', ')+', and '+
+args[args.length-1]}
+throw _b_.TypeError.$factory(f.$infos.__name__+'() '+
+`missing ${args.length} required keyword-only argument${plural}: `+
+arg_list)}
+function missing_required_pos(f,args){var plural=args.length==1 ? '' :'s',arg_list
+args=args.map(x=> `'${x}'`)
+if(args.length==1){arg_list=args[0]}else if(args.length==2){arg_list=args[0]+' and '+args[1]}else{arg_list=args.slice(0,args.length-1).join(', ')+', and '+
+args[args.length-1]}
+throw _b_.TypeError.$factory(f.$infos.__name__+'() '+
+`missing ${args.length} required positional argument${plural}: `+
+arg_list)}
+function multiple_values(f,arg){throw _b_.TypeError.$factory(f.$infos.__name__+'() '+
+`got multiple values for argument '${arg}'`)}
+function pos_only_passed_as_keyword(f,arg){return _b_.TypeError.$factory(f.$infos.__name__+
+`() got some positional-only arguments passed as keyword arguments:`+
+` '${arg}'`)}
+function too_many_pos_args(f,nb_pos){var arg_names=f.$infos.arg_names,nb_kwonly=f.$infos.__code__.co_kwonlyargcount,expected_pos=arg_names-nb_kwonly,nb_def=f.$infos.__defaults__.length
+var expected=arg_names.length-nb_kwonly,plural=expected==1 ? '' :'s'
+if(nb_def){expected=`from ${expected - nb_def} to ${expected}`
+plural='s'}
+var verb=nb_pos==1 ? 'was' :'were'
+return _b_.TypeError.$factory(f.$infos.__name__+'() takes '+
+`${expected} positional argument${plural} but ${nb_pos} ${verb} given`)}
+function unexpected_keyword(f,k){return _b_.TypeError.$factory(f.$infos.__name__+
+`() got an unexpected keyword argument '${k}'`)}
+$B.args10=function(f,argcount,slots,args){var test=false 
+var nb_pos=args.length,last=args[args.length-1],kwarg=f.$infos.kwarg,vararg=f.$infos.vararg,varargs=[],arg_names=f.$infos.arg_names,nb_args=arg_names.length,code=f.$infos.__code__,nb_posonly=code.co_posonlyargcount,nb_kwonly=code.co_kwonlyargcount,nb_pos_or_kw=nb_args-nb_kwonly,extra_kw={},defaults=f.$infos.__defaults__,nb_def=defaults.length,kwdefaults=f.$infos.__kwdefaults__,nb_kwdef=kwdefaults.length,filled=0,kw
+if(test){console.log(f,args)}
+if(nb_pos && last.$kw){nb_pos--
+kw=$B.parse_kwargs(last.$kw)
+if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){throw unexpected_keyword(f,k)}}}
+if(test){console.log('kw',kw)}
+if(nb_posonly){for(var i=0;i < nb_posonly;i++){if(kw.hasOwnProperty(arg_names[i])){throw pos_only_passed_as_keyword(f,arg_names[i])}}}}
+for(var i=0;i < nb_pos;i++){var arg=args[i],arg_name=arg_names[i]
+if(arg_name !==undefined){if(i >=nb_pos_or_kw){if(vararg){varargs.push(arg)}else{throw too_many_pos_args(f,nb_pos)}}else{slots[arg_name]=arg
+filled++}}else if(vararg){varargs.push(arg)}else{throw too_many_pos_args(f,nb_pos)}}
+for(var k in kw){if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==null){throw multiple_values(f,k)}else{slots[k]=kw[k]
+filled++}}
+if(filled !=nb_args){var missing_pos=[]
+for(var i=0;i < nb_pos_or_kw;i++){var arg_name=arg_names[i]
+if(i < nb_posonly && kw && kw[arg_name]!==undefined){throw _b_.TypeError.$factory('posonly passed as kw: '+arg_name)}
+if(slots[arg_name]===null){var def_value=defaults[i-(nb_pos_or_kw-nb_def)]
+if(def_value===undefined){missing_pos.push(arg_names[i])}else{slots[arg_name]=def_value}}}
+if(missing_pos.length > 0){throw missing_required_pos(f,missing_pos)}
+var missing_kwonly=[]
+for(var i=nb_pos_or_kw;i < nb_args;i++){var arg_name=arg_names[i]
+if(slots[arg_name]===null){if(kwdefaults.__class__===$B.jsobj_as_pydict){if(! kwdefaults.obj.hasOwnProperty(arg_name)){missing_kwonly.push(arg_names[i])}else{slots[arg_name]=kwdefaults.obj[arg_name]}}else{try{slots[arg_name]=$B.$getitem(kwdefaults,arg_name)}catch(err){missing_kwonly.push(arg_names[i])}}}}
+if(missing_kwonly.length > 0){throw missing_required_kwonly(f,missing_kwonly)}}
+if(kwarg){slots[kwarg]=$B.jsobj_as_pydict.$factory(extra_kw)
+$B.nbkw++}
+if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
+if(test){console.log('slots',slots)}
+return slots}
 $B.args0=function(func,argcount,slots,args){return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names,args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
 var has_kw_args=false,nb_pos=args.length,filled=0,nb_posonly=nb_posonly ||0,extra_kw,only_positional
@@ -5555,7 +5611,7 @@ var dict=class_obj_proxy.$target,module=class_obj_proxy.__module__
 for(var base of bases){if(base.__flags__ !==undefined &&
 !(base.__flags__ & TPFLAGS.BASETYPE)){throw _b_.TypeError.$factory(
 "type 'bool' is not an acceptable base type")}}
-var extra_kwargs=Object.create(null)
+var extra_kwargs={}
 if(kwargs){for(var i=0;i < kwargs.length;i++){var key=kwargs[i][0],val=kwargs[i][1]
 if(key !="metaclass"){
 extra_kwargs[key]=val}}}
@@ -6312,11 +6368,12 @@ exec_locals=$B.clone(frame[1])
 for(var attr in frame[3]){exec_locals[attr]=frame[3][attr]}
 exec_globals=exec_locals}else{
 exec_locals=frame[1]
-exec_globals=frame[3]}}}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
+exec_globals=frame[3]}}}else{if(_globals.__class__ !==_b_.dict &&
+_globals.__class__ !=$B.jsobj_as_pydict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
 "a dict, not "+$B.class_name(_globals))}
 exec_globals={}
 if(_globals.$jsobj){
-exec_globals=_globals.$jsobj}else{
+exec_globals=_globals.$jsobj}else if(_globals.__class__===$B.jsobj_as_pydict){exec_globals=_globals.obj}else{
 if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jsobj={}}
 for(var key of _b_.dict.$keys_string(_globals)){_globals.$jsobj[key]=_b_.dict.$getitem_string(_globals,key)
 if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
@@ -12597,7 +12654,7 @@ value=$B.pyobj2jsobj(value)}
 if(self.$jsobj.__class__===_b_.type){self.$jsobj[key]=value
 if(key=="__init__" ||key=="__new__"){
 self.$jsobj.$factory=$B.$instance_creator(self.$jsobj)}}else{self.$jsobj[key]=value}
-return $N}
+return $N}else if(self.__class__===$B.jsobj_as_pydict){return $B.jsobj_as_pydict.__setitem__(self,key,value)}
 if(key instanceof String){key=key.valueOf()}
 var hash=$hash !==undefined ? $hash :$B.$hash(key)
 var index
@@ -15115,7 +15172,7 @@ for(var arg of this.args.kwonlyargs){ix++
 if(this.args.kw_defaults[ix]===_b_.None){continue}
 if(this.args.kw_defaults[ix]===undefined){_defaults.push(`${arg.arg}: _b_.None`)}else{var v=$B.js_from_ast(this.args.kw_defaults[ix],scopes)
 _defaults.push(`${arg.arg}: `+v)
-kw_defaults.push(`['${arg.arg}', ${v}]`)}}
+kw_defaults.push(`${arg.arg}: ${v}`)}}
 var kw_default_names=[]
 for(var kw of this.args.kwonlyargs){kw_default_names.push(`'${kw.arg}'`)}
 return{default_names,_defaults,positional,has_posonlyargs,kw_defaults,kw_default_names,annotations}}
@@ -15131,7 +15188,7 @@ decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
 var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
 var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,kw_defaults=kw_default_names.length==0 ? '_b_.None' :
-`_b_.dict.$factory([${kw_defaults}])`
+`$B.jsobj_as_pydict.$factory({${kw_defaults.join(', ')}})`
 var func_scope=new Scope(this.name,'def',this)
 scopes.push(func_scope)
 var args=positional.concat(this.args.kwonlyargs),slots=[],arg_names=[]
@@ -15161,7 +15218,7 @@ var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.kwarg.arg+"'"
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
+this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args10(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args10(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'
