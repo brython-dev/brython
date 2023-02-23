@@ -256,12 +256,14 @@ class Template:
         try:
             exec(self.python, ns)
         except Exception as exc:
+            print('template 259, exc', exc)
             msg = traceback.format_exc()
             if isinstance(exc, SyntaxError):
                 line_no = exc.args[2]
             else:
-                tb = exc.traceback
+                tb = exc.__traceback__
                 while tb is not None:
+                    print('template 265, tb', tb, tb.tb_frame, tb.tb_lineno)
                     line_no = tb.tb_lineno
                     tb = tb.tb_next
             elt = self.line_mapping[line_no]
