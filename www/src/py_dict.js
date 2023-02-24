@@ -395,14 +395,8 @@ dict.__getitem__ = function(){
 
 dict.$contains_string = function(self, key){
     // Test if string "key" is in a dict where all keys are string
-    if(self.$jsobj){
-        if(self.$jsobj.hasOwnProperty){
-            if(self.$jsobj.hasOwnProperty(key)){
-                return true
-            }
-        }else if(self.$jsobj[key] !== undefined){
-            return true
-        }
+    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
+        return true
     }
     if(self.table && self.table[_b_.hash(key)] !== undefined){
         return true
@@ -415,25 +409,26 @@ dict.$delete_string = function(self, key){
     delete self.table[_b_.hash(key)]
 }
 
+dict.$missing = {}
+
 dict.$get_string = function(self, key){
     // Used for dicts where all keys are strings
-    var indices = self.table[_b_.hash(key)]
-    if(indices !== undefined){
-        return self._values[indices[0]]
+    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
+        return self.$jsobj[key]
     }
+    if(self.table){
+        var indices = self.table[_b_.hash(key)]
+        if(indices !== undefined){
+            return self._values[indices[0]]
+        }
+    }
+    return _b_.dict.$missing
 }
 
 dict.$getitem_string = function(self, key){
     // Used for dicts where all keys are strings
-    if(self.$jsobj){
-        var res = self.$jsobj[key]
-        if(self.$jsobj.hasOwnProperty){
-            if(self.$jsobj.hasOwnProperty(key)){
-                return res
-            }
-        }else if(res !== undefined){
-            return res
-        }
+    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
+        return self.$jsobj[key]
     }
     if(self.table){
         var indices = self.table[_b_.hash(key)]
@@ -478,13 +473,8 @@ dict.$getitem = function(self, key, ignore_missing){
         if(self.$exclude && self.$exclude(key)){
             throw _b_.KeyError.$factory(key)
         }
-        var res = self.$jsobj[key]
-        if(self.$jsobj.hasOwnProperty){
-            if(self.$jsobj.hasOwnProperty(key)){
-                return res
-            }
-        }else if(res !== undefined){
-            return res
+        if(self.$jsobj.hasOwnProperty(key)){
+            return self.$jsobj[key]
         }
         if(! self.table){
             throw _b_.KeyError.$factory(key)

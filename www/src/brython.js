@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-24 11:41:55.404817"
-__BRYTHON__.timestamp=1677235315404
+__BRYTHON__.compiled_date="2023-02-24 12:29:09.576834"
+__BRYTHON__.timestamp=1677238149576
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -5447,6 +5447,7 @@ if($.spec !==""){throw _b_.TypeError.$factory(
 "non-empty format string passed to object.__format__")}
 return _b_.getattr($.self,"__str__")()}
 object.__ge__=function(){return _b_.NotImplemented}
+$B.nb_from_dict=0
 object.__getattribute__=function(obj,attr){var klass=obj.__class__ ||$B.get_class(obj),is_own_class_instance_method=false
 var $test=false 
 if($test){console.log("object.__getattribute__, attr",attr,"de",obj,"klass",klass)}
@@ -5458,8 +5459,8 @@ if(Array.isArray(obj)&& Array.prototype[attr]!==undefined){
 res=undefined}
 if(res===undefined && obj.__dict__){var dict=obj.__dict__
 if(dict.__class__===$B.getset_descriptor){return dict.cls[attr]}
-if(_b_.dict.$contains_string(dict,attr)){if($test){console.log("__dict__ hasOwnProperty",attr)}
-return _b_.dict.$getitem_string(dict,attr)}}
+var in_dict=_b_.dict.$get_string(dict,attr)
+if(in_dict !==_b_.dict.$missing){return in_dict}}
 if(res===undefined){
 function check(obj,kl,attr){var v=kl[attr]
 if(v !==undefined){return v}}
@@ -5849,11 +5850,12 @@ extra_kwargs
 if(! _b_.isinstance(cl_dict,_b_.dict)){console.log('bizarre',meta,name,bases,cl_dict)
 alert()}
 var module=_b_.dict.$get_string(cl_dict,'__module__')
-if(module===undefined){module=$B.last($B.frames_stack)[2]}
-var qualname=_b_.dict.$get_string(cl_dict,'__qualname__')||name
+if(module===_b_.dict.$missing){module=$B.last($B.frames_stack)[2]}
+var qualname=_b_.dict.$get_string(cl_dict,'__qualname__')
+if(qualname===_b_.dict.$missing){qualname=name}
 var class_dict={__class__ :meta,__bases__ :bases.length==0 ?[_b_.object]:bases,__dict__ :cl_dict,__qualname__:qualname,__module__:module,__name__:name,$is_class:true}
 try{var slots=_b_.dict.$get_string(cl_dict,'__slots__')
-if(slots !==undefined){for(var name of $B.make_js_iterator(slots)){class_dict[name]=member_descriptor.$factory(name,class_dict)}}}catch(err){}
+if(slots !==_b_.dict.$missing){for(var name of $B.make_js_iterator(slots)){class_dict[name]=member_descriptor.$factory(name,class_dict)}}}catch(err){}
 class_dict.__mro__=type.mro(class_dict).slice(1)
 for(var entry of _b_.dict.$iter_items_with_hash(cl_dict)){var key=entry.key,v=entry.value
 if(['__module__','__class__','__name__','__qualname__'].
@@ -9418,12 +9420,8 @@ $B.set_func_names($B.JSMeta,"builtins")})(__BRYTHON__)
 ;
 
 ;(function($B){var _b_=$B.builtins,_window=self
-var Module=$B.module=$B.make_class("module",function(name,doc,$package){var obj=Object.create(null)
-obj.__class__=Module
-obj.__name__=name
-obj.__doc__=doc ||_b_.None
-obj. __package__=$package ||_b_.None
-return obj}
+var Module=$B.module=$B.make_class("module",function(name,doc,$package){return{
+__class__:Module,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
 )
 Module.__new__=function(cls,name,doc,$package){return{
 __class__:cls,__name__:name,__doc__:doc ||_b_.None,__package__:$package ||_b_.None}}
@@ -12521,17 +12519,19 @@ return true}
 dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self:null,arg:null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 return dict.$getitem(self,arg)}
 dict.$contains_string=function(self,key){
-if(self.$jsobj){if(self.$jsobj.hasOwnProperty){if(self.$jsobj.hasOwnProperty(key)){return true}}else if(self.$jsobj[key]!==undefined){return true}}
+if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return true}
 if(self.table && self.table[_b_.hash(key)]!==undefined){return true}
 return false}
 dict.$delete_string=function(self,key){
 delete self.table[_b_.hash(key)]}
+dict.$missing={}
 dict.$get_string=function(self,key){
-var indices=self.table[_b_.hash(key)]
+if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return self.$jsobj[key]}
+if(self.table){var indices=self.table[_b_.hash(key)]
 if(indices !==undefined){return self._values[indices[0]]}}
+return _b_.dict.$missing}
 dict.$getitem_string=function(self,key){
-if(self.$jsobj){var res=self.$jsobj[key]
-if(self.$jsobj.hasOwnProperty){if(self.$jsobj.hasOwnProperty(key)){return res}}else if(res !==undefined){return res}}
+if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return self.$jsobj[key]}
 if(self.table){var indices=self.table[_b_.hash(key)]
 if(indices !==undefined){return self._values[indices[0]]}}
 throw _b_.KeyError.$factory(key)}
@@ -12550,8 +12550,7 @@ self.$version++}
 return _b_.None}
 dict.$getitem=function(self,key,ignore_missing){
 if(self.$jsobj){if(self.$exclude && self.$exclude(key)){throw _b_.KeyError.$factory(key)}
-var res=self.$jsobj[key]
-if(self.$jsobj.hasOwnProperty){if(self.$jsobj.hasOwnProperty(key)){return res}}else if(res !==undefined){return res}
+if(self.$jsobj.hasOwnProperty(key)){return self.$jsobj[key]}
 if(! self.table){throw _b_.KeyError.$factory(key)}}else if(self.__class__===$B.jsobj_as_pydict){return self.__class__.__getitem__(self,key)}
 var lookup=dict.$lookup_by_key(self,key)
 if(lookup.found){return lookup.value}
@@ -16097,7 +16096,7 @@ if(!v_new){return 0;}
 _b_.dict.$setitem_string(symbols,name,v_new)}
 v_free=FREE << SCOPE_OFFSET
 for(var name of free){v=_b_.dict.$get_string(symbols,name)
-if(v){
+if(v !==_b_.dict.$missing){
 if(classflag &&
 v &(DEF_BOUND |DEF_GLOBAL)){var flags=v |DEF_FREE_CLASS;
 v_new=flags;

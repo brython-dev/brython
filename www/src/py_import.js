@@ -8,12 +8,12 @@ var _b_ = $B.builtins,
 // Class for modules
 var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
-        var obj = Object.create(null)
-        obj.__class__ = Module
-        obj.__name__ = name
-        obj.__doc__ = doc || _b_.None
-        obj. __package__ = $package || _b_.None
-        return obj
+        return {
+            __class__: Module,
+            __name__: name,
+            __doc__: doc || _b_.None,
+            __package__: $package || _b_.None
+        }
     }
 )
 

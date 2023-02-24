@@ -791,11 +791,14 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
         alert()
     }
     var module = _b_.dict.$get_string(cl_dict, '__module__')
-    if(module === undefined){
+    if(module === _b_.dict.$missing){
         module = $B.last($B.frames_stack)[2]
     }
-    var qualname = _b_.dict.$get_string(cl_dict, '__qualname__') || name
-
+    var qualname = _b_.dict.$get_string(cl_dict, '__qualname__')
+    if(qualname === _b_.dict.$missing){
+        qualname = name
+    }
+    
     var class_dict = {
         __class__ : meta,
         __bases__ : bases.length == 0 ? [_b_.object] : bases,
@@ -808,7 +811,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
 
     try{
         var slots = _b_.dict.$get_string(cl_dict, '__slots__')
-        if(slots !== undefined){
+        if(slots !== _b_.dict.$missing){
             for(var name of $B.make_js_iterator(slots)){
                 class_dict[name] = member_descriptor.$factory(name, class_dict)
             }

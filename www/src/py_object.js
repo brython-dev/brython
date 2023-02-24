@@ -106,6 +106,8 @@ object.__format__ = function(){
 
 object.__ge__ = function(){return _b_.NotImplemented}
 
+$B.nb_from_dict = 0
+
 object.__getattribute__ = function(obj, attr){
 
     var klass = obj.__class__ || $B.get_class(obj),
@@ -138,11 +140,9 @@ object.__getattribute__ = function(obj, attr){
         if(dict.__class__ === $B.getset_descriptor){
             return dict.cls[attr]
         }
-        if(_b_.dict.$contains_string(dict, attr)){
-            if($test){
-                console.log("__dict__ hasOwnProperty", attr)
-            }
-            return _b_.dict.$getitem_string(dict, attr)
+        var in_dict = _b_.dict.$get_string(dict, attr)
+        if(in_dict !== _b_.dict.$missing){
+            return in_dict
         }
     }
 

@@ -511,7 +511,7 @@ function update_symbols(symbols, scopes, bound, free, classflag){
         v = _b_.dict.$get_string(symbols, name)
 
         /* Handle symbol that already exists in this scope */
-        if (v) {
+        if (v !== _b_.dict.$missing) {
             /* Handle a free variable in a method of
                the class that has the same name as a local
                or global in the class scope.
