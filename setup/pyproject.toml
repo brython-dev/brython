@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "brython"
+version = "3.11.3"
+authors = [
+  { name="Pierre Quentel", email="pierre.quentel@gmail.com" },
+]
+description = "Brython is an implementation of Python 3 running in the browser"
+readme = "long_description.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://brython.info"
+"Source" = "https://github.com/brython-dev/brython"
+"Bug Tracker" = "https://github.com/brython-dev/brython/issues"
+
+[project.scripts]
+brython-cli = "brython.__main__:main"
