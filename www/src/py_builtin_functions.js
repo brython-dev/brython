@@ -1852,13 +1852,13 @@ function $extreme(args, op){ // used by min() and max()
 
     var has_default = false,
         func = false
-    for(var attr in $.kw.obj){
+    for(var attr in $.kw.$jsobj){
         switch(attr){
             case 'key':
-                func = $.kw.obj[attr]
+                func = $.kw.$jsobj[attr]
                 break
             case 'default':
-                var default_value = $.kw.obj[attr]
+                var default_value = $.kw.$jsobj[attr]
                 has_default = true
                 break
             default:
@@ -2154,9 +2154,9 @@ var $print = _b_.print = function(){
     var $ns = $B.args('print', 0, {}, [], arguments,
               {}, 'args', 'kw')
     var kw = $ns['kw'],
-        end = $B.is_none(kw.obj.end) ? '\n' : kw.obj.end,
-        sep = $B.is_none(kw.obj.sep) ? ' ' : kw.obj.sep,
-        file = $B.is_none(kw.obj.file) ? $B.get_stdout() : kw.obj.file
+        end = $B.is_none(kw.$jsobj.end) ? '\n' : kw.$jsobj.end,
+        sep = $B.is_none(kw.$jsobj.sep) ? ' ' : kw.$jsobj.sep,
+        file = $B.is_none(kw.$jsobj.file) ? $B.get_stdout() : kw.$jsobj.file
     var args = $ns['args'],
         writer = $B.$getattr(file, 'write')
     var items = []
@@ -3159,7 +3159,7 @@ var zip = _b_.zip = $B.make_class("zip",
         }
         var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
         var _args = $ns['args'],
-            strict = $B.$bool($ns.kw.obj.strict || false)
+            strict = $B.$bool($ns.kw.$jsobj.strict || false)
         var nexts = [],
             only_lists = true,
             min_len

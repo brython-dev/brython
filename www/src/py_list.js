@@ -746,11 +746,11 @@ list.sort = function(self){
         reverse = false,
         kw_args = $.kw
 
-    for(var key in kw_args.obj){
+    for(var key in kw_args.$jsobj){
         if(key == "key"){
-            func = kw_args.obj[key]
+            func = kw_args.$jsobj[key]
         }else if(key == "reverse"){
-            reverse = kw_args.obj[key]
+            reverse = kw_args.$jsobj[key]
         }else{
             throw _b_.TypeError.$factory("'" + key +
                 "' is an invalid keyword argument for this function")

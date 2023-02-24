@@ -406,7 +406,12 @@ dict.$contains_string = function(self, key){
 
 dict.$delete_string = function(self, key){
     // Used for dicts where all keys are strings
-    delete self.table[_b_.hash(key)]
+    if(self.$jsobj){
+        delete self.$jsobj[key]
+    }
+    if(self.table){
+        delete self.table[_b_.hash(key)]
+    }
 }
 
 dict.$missing = {}
@@ -589,8 +594,8 @@ dict.__init__ = function(self, first, second){
         }
     }
 
-    for(var key in $.second.obj){
-        dict.$setitem(self, key, $.second.obj[key])
+    for(var key in $.second.$jsobj){
+        dict.$setitem(self, key, $.second.$jsobj[key])
     }
     return _b_.None
 }
@@ -1377,9 +1382,11 @@ $B.obj_dict = function(obj, exclude){
     if(klass !== undefined && klass.$native){
         throw $B.attr_error("__dict__", obj)
     }
-    var res = $B.empty_dict()
-    res.$jsobj = obj
-    res.$exclude = exclude || function(){return false}
+    var res = {
+        __class__: dict,
+        $jsobj: obj,
+        $exclude: exclude || function(){return false}
+    }
     return res
 }
 

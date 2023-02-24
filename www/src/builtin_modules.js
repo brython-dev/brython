@@ -219,9 +219,9 @@
                     }
 
                     // attributes
-                    for(var arg in $ns.kw.obj){
+                    for(var arg in $ns.kw.$jsobj){
                         // keyword arguments
-                        var value = $ns.kw.obj[arg]
+                        var value = $ns.kw.$jsobj[arg]
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
                             // Better use method bind of DOMNode objects

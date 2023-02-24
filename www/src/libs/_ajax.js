@@ -75,7 +75,7 @@ function stringify(d){
 }
 
 function handle_kwargs(self, kw, method){
-    // kw is an instance of $B.jsobj_as_pydict
+    // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
     var data,
         encoding,
         headers={},
@@ -83,9 +83,9 @@ function handle_kwargs(self, kw, method){
         mode = "text",
         timeout = {}
     
-    for(var key in kw.obj){
+    for(var key in kw.$jsobj){
         if(key == "data"){
-            var params = kw.obj[key]
+            var params = kw.$jsobj[key]
             if(typeof params == "string" || params instanceof FormData){
                 data = params
             }else if(params.__class__ === _b_.dict){
@@ -102,9 +102,9 @@ function handle_kwargs(self, kw, method){
                     $B.class_name(params))
             }
         }else if(key == "encoding"){
-            encoding = kw.obj[key]
+            encoding = kw.$jsobj[key]
         }else if(key == "headers"){
-            var value = kw.obj[key]
+            var value = kw.$jsobj[key]
             if(! _b_.isinstance(value, _b_.dict)){
                 throw _b_.ValueError.$factory(
                     "headers must be a dict, not " + $B.class_name(value))
@@ -116,17 +116,17 @@ function handle_kwargs(self, kw, method){
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.obj[key]
+                timeout.func = kw.$jsobj[key]
             }else{
-                var f = kw.obj[key]
+                var f = kw.$jsobj[key]
                 ajax.bind(self, event, f)
             }
         }else if(key == "mode"){
-            var mode = kw.obj[key]
+            var mode = kw.$jsobj[key]
         }else if(key == "timeout"){
-            timeout.seconds = kw.obj[key]
+            timeout.seconds = kw.$jsobj[key]
         }else if(key == "cache"){
-            cache = kw.obj[key]
+            cache = kw.$jsobj[key]
         }
     }
     if(encoding && mode != "text"){
@@ -501,12 +501,12 @@ function file_upload(){
     }
     set_timeout(self, timeout)
 
-    if(kw.obj.hasOwnProperty('method')){
-        method = kw.obj.method
+    if(kw.$jsobj.hasOwnProperty('method')){
+        method = kw.$jsobj.method
     }
 
-    if(kw.obj.hasOwnProperty('field_name')){
-        field_name = kw.obj.field_name
+    if(kw.$jsobj.hasOwnProperty('field_name')){
+        field_name = kw.$jsobj.field_name
     }
 
     var formdata = new FormData()
@@ -531,9 +531,9 @@ function file_upload(){
     self.js.open(method, url, _b_.True)
     self.js.send(formdata)
 
-    for(var key in kw.obj){
+    for(var key in kw.$jsobj){
         if(key.startsWith("on")){
-            ajax.bind(self, key.substr(2), kw.obj[key])
+            ajax.bind(self, key.substr(2), kw.$jsobj[key])
         }
     }
 }

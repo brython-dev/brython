@@ -25,9 +25,9 @@ function handle_kwargs(kw, method){
         format = "text",
         headers = {},
         timeout = {}
-    for(var key in kw.obj){
+    for(var key in kw.$jsobj){
         if(key == "data"){
-            var params = kw.obj[key]
+            var params = kw.$jsobj[key]
             if(typeof params == "string"){
                 data = params
             }else if(_b_.isinstance(params, _b_.bytes)){
@@ -51,20 +51,20 @@ function handle_kwargs(kw, method){
                 data = items.join("&")
             }
         }else if(key == "headers"){
-            headers = kw.obj[key]
+            headers = kw.$jsobj[key]
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
-                timeout.func = kw.obj[key]
+                timeout.func = kw.$jsobj[key]
             }else{
-                ajax.bind(self, event, kw.obj[key])
+                ajax.bind(self, event, kw.$jsobj[key])
             }
         }else if(key == "timeout"){
-            timeout.seconds = kw.obj[key]
+            timeout.seconds = kw.$jsobj[key]
         }else if(key == "cache"){
-            cache = kw.obj[key]
+            cache = kw.$jsobj[key]
         }else if(key == "format"){
-            format = kw.obj[key]
+            format = kw.$jsobj[key]
         }
     }
     if(method == "post"){

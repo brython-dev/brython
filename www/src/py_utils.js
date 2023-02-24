@@ -180,18 +180,10 @@ $B.args0 = function(f, argcount, slots, args){
         for(var i = nb_pos_or_kw; i < nb_args; i++){
             var arg_name = arg_names[i]
             if(slots[arg_name] === null){
-                if(kwdefaults.__class__ === $B.jsobj_as_pydict){
-                    if(! kwdefaults.obj.hasOwnProperty(arg_name)){
-                        missing_kwonly.push(arg_names[i])
-                    }else{
-                        slots[arg_name] = kwdefaults.obj[arg_name]
-                    }
-                }else{
-                    try{
-                        slots[arg_name] = $B.$getitem(kwdefaults, arg_name)
-                    }catch(err){
-                        missing_kwonly.push(arg_names[i])
-                    }
+                try{
+                    slots[arg_name] = $B.$getitem(kwdefaults, arg_name)
+                }catch(err){
+                    missing_kwonly.push(arg_names[i])
                 }
             }
         }
@@ -201,7 +193,7 @@ $B.args0 = function(f, argcount, slots, args){
     }
 
     if(kwarg){
-        slots[kwarg] = $B.jsobj_as_pydict.$factory(extra_kw)
+        slots[kwarg] = $B.obj_dict(extra_kw)
         $B.nbkw++
     }
     if(vararg){
@@ -241,7 +233,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     }
 
     if(extra_kw_args){
-        slots[extra_kw_args] = extra_kw = $B.jsobj_as_pydict.$factory()
+        slots[extra_kw_args] = extra_kw = $B.obj_dict({})
     }
 
     // simple case : no named parameters, no arguments
@@ -341,7 +333,7 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
                 // formal parameters
                 if(extra_kw_args){
                     // If there is a place to store extra keyword arguments
-                    extra_kw.obj[key] = value
+                    extra_kw.$jsobj[key] = value
                 }else{
                     throw _b_.TypeError.$factory(fname +
                         "() got an unexpected keyword argument '" + key + "'")

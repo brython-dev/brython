@@ -1702,7 +1702,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     var defaults = `$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,
         kw_defaults = kw_default_names.length == 0 ? '_b_.None' :
-            `$B.jsobj_as_pydict.$factory({${kw_defaults.join(', ')}})`
+            `$B.obj_dict({${kw_defaults.join(', ')}})`
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
 

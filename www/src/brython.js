@@ -100,7 +100,8 @@ var vfs_timestamp=scripts.$timestamp
 if(vfs_timestamp !==undefined){delete scripts.$timestamp}
 for(var script in scripts){if($B.VFS.hasOwnProperty(script)){console.warn("Virtual File System: duplicate entry "+script)}
 $B.VFS[script]=scripts[script]
-$B.VFS[script].timestamp=vfs_timestamp}}
+$B.VFS[script].timestamp=vfs_timestamp}
+$B.stdlib_module_names=Object.keys($B.VFS)}
 $B.add_files=function(files){
 $B.files=$B.files ||{}
 for(var file in files){$B.files[file]=files[file]}}
@@ -133,10 +134,10 @@ $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 $B.unicode_identifiers={"XID_Start":[95,[65,26],[97,26],170,181,186,[192,23],[216,31],[248,458],[710,12],[736,5],748,750,[880,5],[886,2],[891,3],895,902,[904,3],908,[910,20],[931,83],[1015,139],[1162,166],[1329,38],1369,[1376,41],[1488,27],[1519,4],[1568,43],[1646,2],[1649,99],1749,[1765,2],[1774,2],[1786,3],1791,1808,[1810,30],[1869,89],1969,[1994,33],[2036,2],2042,[2048,22],2074,2084,2088,[2112,25],[2144,11],[2160,24],[2185,6],[2208,42],[2308,54],2365,2384,[2392,10],2417,[2418,15],[2437,8],[2447,2],[2451,22],[2474,7],2482,[2486,4],2493,2510,[2524,2],[2527,3],[2544,2],2556,[2565,6],[2575,2],[2579,22],[2602,7],[2610,2],[2613,2],[2616,2],[2649,4],2654,[2674,3],[2693,9],[2703,3],[2707,22],[2730,7],[2738,2],[2741,5],2749,2768,[2784,2],2809,[2821,8],[2831,2],[2835,22],[2858,7],[2866,2],[2869,5],2877,[2908,2],[2911,3],2929,2947,[2949,6],[2958,3],[2962,4],[2969,2],2972,[2974,2],[2979,2],[2984,3],[2990,12],3024,[3077,8],[3086,3],[3090,23],[3114,16],3133,[3160,3],3165,[3168,2],3200,[3205,8],[3214,3],[3218,23],[3242,10],[3253,5],3261,[3293,2],[3296,2],[3313,2],[3332,9],[3342,3],[3346,41],3389,3406,[3412,3],[3423,3],[3450,6],[3461,18],[3482,24],[3507,9],3517,[3520,7],[3585,48],3634,[3648,7],[3713,2],3716,[3718,5],[3724,24],3749,[3751,10],3762,3773,[3776,5],3782,[3804,4],3840,[3904,8],[3913,36],[3976,5],[4096,43],4159,[4176,6],[4186,4],4193,[4197,2],[4206,3],[4213,13],4238,[4256,38],4295,4301,[4304,43],4348,[4349,332],[4682,4],[4688,7],4696,[4698,4],[4704,41],[4746,4],[4752,33],[4786,4],[4792,7],4800,[4802,4],[4808,15],[4824,57],[4882,4],[4888,67],[4992,16],[5024,86],[5112,6],[5121,620],[5743,17],[5761,26],[5792,75],[5870,11],[5888,18],[5919,19],[5952,18],[5984,13],[5998,3],[6016,52],6103,6108,[6176,89],[6272,41],6314,[6320,70],[6400,31],[6480,30],[6512,5],[6528,44],[6576,26],[6656,23],[6688,53],6823,[6917,47],[6981,8],[7043,30],[7086,2],[7098,44],[7168,36],[7245,3],[7258,36],[7296,9],[7312,43],[7357,3],[7401,4],[7406,6],[7413,2],7418,[7424,192],[7680,278],[7960,6],[7968,38],[8008,6],[8016,8],8025,8027,8029,[8031,31],[8064,53],[8118,7],8126,[8130,3],[8134,7],[8144,4],[8150,6],[8160,13],[8178,3],[8182,7],8305,8319,[8336,13],8450,8455,[8458,10],8469,8472,[8473,5],8484,8486,8488,[8490,16],[8508,4],[8517,5],8526,[8544,41],[11264,229],[11499,4],[11506,2],[11520,38],11559,11565,[11568,56],11631,[11648,23],[11680,7],[11688,7],[11696,7],[11704,7],[11712,7],[11720,7],[11728,7],[11736,7],12293,12294,12295,[12321,9],[12337,5],[12344,5],[12353,86],[12445,3],[12449,90],[12540,4],[12549,43],[12593,94],[12704,32],[12784,16],[13312,6592],[19968,22157],[42192,46],[42240,269],[42512,16],[42538,2],[42560,47],42623,[42624,30],[42656,80],[42775,9],[42786,103],[42891,64],[42960,2],42963,[42965,5],[42994,16],[43011,3],[43015,4],[43020,23],[43072,52],[43138,50],[43250,6],43259,[43261,2],[43274,28],[43312,23],[43360,29],[43396,47],43471,[43488,5],43494,[43495,9],[43514,5],[43520,41],[43584,3],[43588,8],[43616,23],43642,[43646,50],43697,[43701,2],[43705,5],43712,43714,[43739,3],[43744,11],43762,[43763,2],[43777,6],[43785,6],[43793,6],[43808,7],[43816,7],[43824,43],[43868,14],[43888,115],[44032,11172],[55216,23],[55243,49],[63744,366],[64112,106],[64256,7],[64275,5],64285,[64287,10],[64298,13],[64312,5],64318,[64320,2],[64323,2],[64326,108],[64467,139],[64612,218],[64848,64],[64914,54],[65008,10],65137,65139,65143,65145,65147,65149,[65151,126],[65313,26],[65345,26],[65382,56],[65440,31],[65474,6],[65482,6],[65490,6],[65498,3],[65536,12],[65549,26],[65576,19],[65596,2],[65599,15],[65616,14],[65664,123],[65856,53],[66176,29],[66208,49],[66304,32],[66349,30],[66384,38],[66432,30],[66464,36],[66504,8],[66513,5],[66560,158],[66736,36],[66776,36],[66816,40],[66864,52],[66928,11],[66940,15],[66956,7],[66964,2],[66967,11],[66979,15],[66995,7],[67003,2],[67072,311],[67392,22],[67424,8],[67456,6],[67463,42],[67506,9],[67584,6],67592,[67594,44],[67639,2],67644,[67647,23],[67680,23],[67712,31],[67808,19],[67828,2],[67840,22],[67872,26],[67968,56],[68030,2],68096,[68112,4],[68117,3],[68121,29],[68192,29],[68224,29],[68288,8],[68297,28],[68352,54],[68416,22],[68448,19],[68480,18],[68608,73],[68736,51],[68800,51],[68864,36],[69248,42],[69296,2],[69376,29],69415,[69424,22],[69488,18],[69552,21],[69600,23],[69635,53],[69745,2],69749,[69763,45],[69840,25],[69891,36],69956,69959,[69968,35],70006,[70019,48],[70081,4],70106,70108,[70144,18],[70163,25],[70207,2],[70272,7],70280,[70282,4],[70287,15],[70303,10],[70320,47],[70405,8],[70415,2],[70419,22],[70442,7],[70450,2],[70453,5],70461,70480,[70493,5],[70656,53],[70727,4],[70751,3],[70784,48],[70852,2],70855,[71040,47],[71128,4],[71168,48],71236,[71296,43],71352,[71424,27],[71488,7],[71680,44],[71840,64],[71935,8],71945,[71948,8],[71957,2],[71960,24],71999,72001,[72096,8],[72106,39],72161,72163,72192,[72203,40],72250,72272,[72284,46],72349,[72368,73],[72704,9],[72714,37],72768,[72818,30],[72960,7],[72968,2],[72971,38],73030,[73056,6],[73063,2],[73066,32],73112,[73440,19],73474,[73476,13],[73490,34],73648,[73728,922],[74752,111],[74880,196],[77712,97],[77824,1072],[78913,6],[82944,583],[92160,569],[92736,31],[92784,79],[92880,30],[92928,48],[92992,4],[93027,21],[93053,19],[93760,64],[93952,75],94032,[94099,13],[94176,2],94179,[94208,6136],[100352,1238],[101632,9],[110576,4],[110581,7],[110589,2],[110592,291],110898,[110928,3],110933,[110948,4],[110960,396],[113664,107],[113776,13],[113792,9],[113808,10],[119808,85],[119894,71],[119966,2],119970,[119973,2],[119977,4],[119982,12],119995,[119997,7],[120005,65],[120071,4],[120077,8],[120086,7],[120094,28],[120123,4],[120128,5],120134,[120138,7],[120146,340],[120488,25],[120514,25],[120540,31],[120572,25],[120598,31],[120630,25],[120656,31],[120688,25],[120714,31],[120746,25],[120772,8],[122624,31],[122661,6],[122928,62],[123136,45],[123191,7],123214,[123536,30],[123584,44],[124112,28],[124896,7],[124904,4],[124909,2],[124912,15],[124928,197],[125184,68],125259,[126464,4],[126469,27],[126497,2],126500,126503,[126505,10],[126516,4],126521,126523,126530,126535,126537,126539,[126541,3],[126545,2],126548,126551,126553,126555,126557,126559,[126561,2],126564,[126567,4],[126572,7],[126580,4],[126585,4],126590,[126592,10],[126603,17],[126625,3],[126629,5],[126635,17],[131072,42720],[173824,4154],[177984,222],[178208,5762],[183984,7473],[194560,542],[196608,4939],[201552,4192]],"XID_Continue":[[48,10],[65,26],95,[97,26],170,181,183,186,[192,23],[216,31],[248,458],[710,12],[736,5],748,750,[768,117],[886,2],[891,3],895,902,903,[904,3],908,[910,20],[931,83],[1015,139],[1155,5],[1162,166],[1329,38],1369,[1376,41],[1425,45],1471,[1473,2],[1476,2],1479,[1488,27],[1519,4],[1552,11],[1568,74],[1646,102],1749,[1750,7],[1759,10],[1770,19],1791,1808,1809,[1810,57],[1869,101],[1984,54],2042,2045,[2048,46],[2112,28],[2144,11],[2160,24],[2185,6],[2200,74],[2275,129],[2406,10],2417,[2418,18],[2437,8],[2447,2],[2451,22],[2474,7],2482,[2486,4],2492,2493,[2494,7],[2503,2],[2507,4],2519,[2524,2],[2527,5],[2534,12],2556,2558,[2561,3],[2565,6],[2575,2],[2579,22],[2602,7],[2610,2],[2613,2],[2616,2],2620,[2622,5],[2631,2],[2635,3],2641,[2649,4],2654,[2662,16],[2689,3],[2693,9],[2703,3],[2707,22],[2730,7],[2738,2],[2741,5],2748,2749,[2750,8],[2759,3],[2763,3],2768,[2784,4],[2790,10],2809,[2810,6],2817,[2818,2],[2821,8],[2831,2],[2835,22],[2858,7],[2866,2],[2869,5],2876,2877,2878,2879,2880,[2881,4],[2887,2],[2891,3],[2901,3],[2908,2],[2911,5],[2918,10],2929,2946,2947,[2949,6],[2958,3],[2962,4],[2969,2],2972,[2974,2],[2979,2],[2984,3],[2990,12],[3006,5],[3014,3],[3018,4],3024,3031,[3046,10],3072,[3073,12],[3086,3],[3090,23],[3114,16],3132,3133,[3134,7],[3142,3],[3146,4],[3157,2],[3160,3],3165,[3168,4],[3174,10],3200,3201,[3202,2],[3205,8],[3214,3],[3218,23],[3242,10],[3253,5],3260,3261,3262,3263,[3264,5],3270,[3271,2],[3274,4],[3285,2],[3293,2],[3296,4],[3302,10],[3313,3],[3328,13],[3342,3],[3346,51],[3398,3],[3402,5],[3412,4],[3423,5],[3430,10],[3450,6],3457,[3458,2],[3461,18],[3482,24],[3507,9],3517,[3520,7],3530,[3535,6],3542,[3544,8],[3558,10],[3570,2],[3585,58],[3648,15],[3664,10],[3713,2],3716,[3718,5],[3724,24],3749,[3751,23],[3776,5],3782,[3784,7],[3792,10],[3804,4],3840,[3864,2],[3872,10],3893,3895,3897,[3902,10],[3913,36],[3953,20],[3974,18],[3993,36],4038,[4096,74],[4176,78],[4256,38],4295,4301,[4304,43],4348,[4349,332],[4682,4],[4688,7],4696,[4698,4],[4704,41],[4746,4],[4752,33],[4786,4],[4792,7],4800,[4802,4],[4808,15],[4824,57],[4882,4],[4888,67],[4957,3],[4969,9],[4992,16],[5024,86],[5112,6],[5121,620],[5743,17],[5761,26],[5792,75],[5870,11],[5888,22],[5919,22],[5952,20],[5984,13],[5998,3],[6002,2],[6016,84],6103,6108,6109,[6112,10],[6155,3],6159,[6160,10],[6176,89],[6272,43],[6320,70],[6400,31],[6432,12],[6448,12],[6470,40],[6512,5],[6528,44],[6576,26],[6608,11],[6656,28],[6688,63],6752,6753,6754,[6755,26],6783,[6784,10],[6800,10],6823,[6832,14],[6847,16],[6912,77],[6992,10],[7019,9],[7040,116],[7168,56],[7232,10],[7245,49],[7296,9],[7312,43],[7357,3],[7376,3],[7380,39],[7424,534],[7960,6],[7968,38],[8008,6],[8016,8],8025,8027,8029,[8031,31],[8064,53],[8118,7],8126,[8130,3],[8134,7],[8144,4],[8150,6],[8160,13],[8178,3],[8182,7],[8255,2],8276,8305,8319,[8336,13],[8400,13],8417,[8421,12],8450,8455,[8458,10],8469,8472,[8473,5],8484,8486,8488,[8490,16],[8508,4],[8517,5],8526,[8544,41],[11264,229],[11499,9],[11520,38],11559,11565,[11568,56],11631,11647,[11648,23],[11680,7],[11688,7],[11696,7],[11704,7],[11712,7],[11720,7],[11728,7],[11736,7],[11744,32],12293,12294,12295,[12321,15],[12337,5],[12344,5],[12353,86],[12441,2],[12445,3],[12449,90],[12540,4],[12549,43],[12593,94],[12704,32],[12784,16],[13312,6592],[19968,22157],[42192,46],[42240,269],[42512,28],[42560,48],[42612,10],42623,[42624,114],[42775,9],[42786,103],[42891,64],[42960,2],42963,[42965,5],[42994,54],43052,[43072,52],[43136,70],[43216,10],[43232,24],43259,[43261,49],[43312,36],[43360,29],[43392,65],43471,[43472,10],[43488,31],[43520,55],[43584,14],[43600,10],[43616,23],43642,43643,43644,43645,[43646,69],[43739,3],[43744,16],43762,[43763,4],[43777,6],[43785,6],[43793,6],[43808,7],[43816,7],[43824,43],[43868,14],[43888,123],44012,44013,[44016,10],[44032,11172],[55216,23],[55243,49],[63744,366],[64112,106],[64256,7],[64275,5],64285,64286,[64287,10],[64298,13],[64312,5],64318,[64320,2],[64323,2],[64326,108],[64467,139],[64612,218],[64848,64],[64914,54],[65008,10],[65024,16],[65056,16],[65075,2],[65101,3],65137,65139,65143,65145,65147,65149,[65151,126],[65296,10],[65313,26],65343,[65345,26],[65382,89],[65474,6],[65482,6],[65490,6],[65498,3],[65536,12],[65549,26],[65576,19],[65596,2],[65599,15],[65616,14],[65664,123],[65856,53],66045,[66176,29],[66208,49],66272,[66304,32],[66349,30],[66384,43],[66432,30],[66464,36],[66504,8],[66513,5],[66560,158],[66720,10],[66736,36],[66776,36],[66816,40],[66864,52],[66928,11],[66940,15],[66956,7],[66964,2],[66967,11],[66979,15],[66995,7],[67003,2],[67072,311],[67392,22],[67424,8],[67456,6],[67463,42],[67506,9],[67584,6],67592,[67594,44],[67639,2],67644,[67647,23],[67680,23],[67712,31],[67808,19],[67828,2],[67840,22],[67872,26],[67968,56],[68030,2],68096,[68097,3],[68101,2],[68108,8],[68117,3],[68121,29],[68152,3],68159,[68192,29],[68224,29],[68288,8],[68297,30],[68352,54],[68416,22],[68448,19],[68480,18],[68608,73],[68736,51],[68800,51],[68864,40],[68912,10],[69248,42],[69291,2],[69296,2],[69373,32],69415,[69424,33],[69488,22],[69552,21],[69600,23],69632,69633,69634,[69635,68],[69734,16],[69759,60],69826,[69840,25],[69872,10],[69888,53],[69942,10],69956,[69957,3],[69968,36],70006,[70016,69],[70089,4],70094,70095,[70096,11],70108,[70144,18],[70163,37],70206,[70207,3],[70272,7],70280,[70282,4],[70287,15],[70303,10],[70320,59],[70384,10],[70400,4],[70405,8],[70415,2],[70419,22],[70442,7],[70450,2],[70453,5],[70459,10],[70471,2],[70475,3],70480,70487,[70493,7],[70502,7],[70512,5],[70656,75],[70736,10],70750,[70751,3],[70784,70],70855,[70864,10],[71040,54],[71096,9],[71128,6],[71168,65],71236,[71248,10],[71296,57],[71360,10],[71424,27],[71453,15],[71472,10],[71488,7],[71680,59],[71840,74],[71935,8],71945,[71948,8],[71957,2],[71960,30],[71991,2],[71995,9],[72016,10],[72096,8],[72106,46],[72154,8],72163,72164,72192,[72193,62],72263,72272,[72273,73],72349,[72368,73],[72704,9],[72714,45],[72760,9],[72784,10],[72818,30],[72850,22],72873,[72874,13],[72960,7],[72968,2],[72971,44],73018,[73020,2],[73023,9],[73040,10],[73056,6],[73063,2],[73066,37],[73104,2],[73107,6],[73120,10],[73440,23],[73472,17],[73490,41],[73534,5],[73552,10],73648,[73728,922],[74752,111],[74880,196],[77712,97],[77824,1072],78912,[78913,21],[82944,583],[92160,569],[92736,31],[92768,10],[92784,79],[92864,10],[92880,30],[92912,5],[92928,55],[92992,4],[93008,10],[93027,21],[93053,19],[93760,64],[93952,75],94031,94032,[94033,55],[94095,17],[94176,2],94179,94180,[94192,2],[94208,6136],[100352,1238],[101632,9],[110576,4],[110581,7],[110589,2],[110592,291],110898,[110928,3],110933,[110948,4],[110960,396],[113664,107],[113776,13],[113792,9],[113808,10],[113821,2],[118528,46],[118576,23],[119141,5],[119149,6],[119163,8],[119173,7],[119210,4],[119362,3],[119808,85],[119894,71],[119966,2],119970,[119973,2],[119977,4],[119982,12],119995,[119997,7],[120005,65],[120071,4],[120077,8],[120086,7],[120094,28],[120123,4],[120128,5],120134,[120138,7],[120146,340],[120488,25],[120514,25],[120540,31],[120572,25],[120598,31],[120630,25],[120656,31],[120688,25],[120714,31],[120746,25],[120772,8],[120782,50],[121344,55],[121403,50],121461,121476,[121499,5],[121505,15],[122624,31],[122661,6],[122880,7],[122888,17],[122907,7],[122915,2],[122918,5],[122928,62],123023,[123136,45],[123184,14],[123200,10],123214,[123536,31],[123584,58],[124112,42],[124896,7],[124904,4],[124909,2],[124912,15],[124928,197],[125136,7],[125184,76],[125264,10],[126464,4],[126469,27],[126497,2],126500,126503,[126505,10],[126516,4],126521,126523,126530,126535,126537,126539,[126541,3],[126545,2],126548,126551,126553,126555,126557,126559,[126561,2],126564,[126567,4],[126572,7],[126580,4],[126585,4],126590,[126592,10],[126603,17],[126625,3],[126629,5],[126635,17],[130032,10],[131072,42720],[173824,4154],[177984,222],[178208,5762],[183984,7473],[194560,542],[196608,4939],[201552,4192],[917760,240]]}
 $B.unicode_tables={}
-for(var gc in $B.unicode){$B.unicode_tables[gc]={}
+for(const gc in $B.unicode){$B.unicode_tables[gc]={}
 $B.unicode[gc].forEach(function(item){if(Array.isArray(item)){var step=item[2]||1
 for(var i=0,nb=item[1];i < nb;i+=1){$B.unicode_tables[gc][item[0]+i*step]=true}}else{$B.unicode_tables[gc][item]=true}})}
-for(var key in $B.unicode_identifiers){$B.unicode_tables[key]={}
+for(const key in $B.unicode_identifiers){$B.unicode_tables[key]={}
 for(const item of $B.unicode_identifiers[key]){if(Array.isArray(item)){for(var i=0;i < item[1];i++){$B.unicode_tables[key][item[0]+i]=true}}else{$B.unicode_tables[key][item]=true}}}
 $B.is_unicode_cn=function(i){
 var cn=$B.unicode.Cn
@@ -155,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-24 12:29:09.576834"
-__BRYTHON__.timestamp=1677238149576
+__BRYTHON__.compiled_date="2023-02-24 18:54:44.159182"
+__BRYTHON__.timestamp=1677261284159
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -509,7 +510,7 @@ slots[f]=null
 if(rf.endsWith('*')){$defaults[f]=[]}else if(rf.endsWith('?')){$defaults[f]=_b_.None}}}
 cls.$factory=function(){var $=$B.args(klass,nb_args,$B.clone(slots),Object.keys(slots),arguments,$B.clone($defaults),null,'kw')
 var res={__class__:cls,_attributes:$B.fast_tuple([])}
-for(var key in $){if(key=='kw'){for(var key in $.kw.obj){res[key]=$.kw.obj[key]}}else{res[key]=$[key]}}
+for(var key in $){if(key=='kw'){for(var key in $.kw.$jsobj){res[key]=$.kw.$jsobj[key]}}else{res[key]=$[key]}}
 if(klass=="Constant"){res.value=$B.AST.$convert($.value)}
 return res}
 if(_fields){cls._fields=_fields}
@@ -4841,9 +4842,9 @@ if(def_value===undefined){missing_pos.push(arg_names[i])}else{slots[arg_name]=de
 if(missing_pos.length > 0){throw missing_required_pos(f,missing_pos)}
 var missing_kwonly=[]
 for(var i=nb_pos_or_kw;i < nb_args;i++){var arg_name=arg_names[i]
-if(slots[arg_name]===null){if(kwdefaults.__class__===$B.jsobj_as_pydict){if(! kwdefaults.obj.hasOwnProperty(arg_name)){missing_kwonly.push(arg_names[i])}else{slots[arg_name]=kwdefaults.obj[arg_name]}}else{try{slots[arg_name]=$B.$getitem(kwdefaults,arg_name)}catch(err){missing_kwonly.push(arg_names[i])}}}}
+if(slots[arg_name]===null){try{slots[arg_name]=$B.$getitem(kwdefaults,arg_name)}catch(err){missing_kwonly.push(arg_names[i])}}}
 if(missing_kwonly.length > 0){throw missing_required_kwonly(f,missing_kwonly)}}
-if(kwarg){slots[kwarg]=$B.jsobj_as_pydict.$factory(extra_kw)
+if(kwarg){slots[kwarg]=$B.obj_dict(extra_kw)
 $B.nbkw++}
 if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 if(test){console.log('slots',slots)}
@@ -4852,7 +4853,7 @@ $B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_
 var has_kw_args=false,nb_pos=args.length,filled=0,nb_posonly=nb_posonly ||0,extra_kw,only_positional
 if(extra_pos_args){slots[extra_pos_args]=[]
 slots[extra_pos_args].__class__=_b_.tuple}
-if(extra_kw_args){slots[extra_kw_args]=extra_kw=$B.jsobj_as_pydict.$factory()}
+if(extra_kw_args){slots[extra_kw_args]=extra_kw=$B.obj_dict({})}
 if(nb_pos==0 && var_names.length==0){return slots}
 var last_is_kw=nb_pos > 0 && args[nb_pos-1]&&
 args[nb_pos-1].$kw
@@ -4892,7 +4893,7 @@ if(filled==argcount && argcount===var_names.length &&
 if(has_kw_args){for(var key in kw_args){var value=kw_args[key]
 if(slots[key]===undefined){
 if(extra_kw_args){
-extra_kw.obj[key]=value}else{throw _b_.TypeError.$factory(fname+
+extra_kw.$jsobj[key]=value}else{throw _b_.TypeError.$factory(fname+
 "() got an unexpected keyword argument '"+key+"'")}}else if(slots.hasOwnProperty(key)&& slots[key]!==null){
 if(key==extra_pos_args){throw _b_.TypeError.$factory(
 `${fname}() got an unexpected `+
@@ -5677,7 +5678,7 @@ A.$factory=factory
 return A}
 var type=$B.make_class("type",function(kls,bases,cl_dict){var missing={},$=$B.args('type',3,{kls:null,bases:null,cl_dict:null},['kls','bases','cl_dict'],arguments,{bases:missing,cl_dict:missing},null,'kw'),kls=$.kls,bases=$.bases,cl_dict=$.cl_dict,kw=$.kw
 var kwarg=Object.create(null)
-for(var key in kw.obj){kwarg[key]=kw.obj[key]}
+for(var key in kw.$jsobj){kwarg[key]=kw.$jsobj[key]}
 var kwargs={$kw:[kwarg]}
 if(cl_dict===missing){if(bases !==missing){throw _b_.TypeError.$factory('type() takes 1 or 3 arguments')}
 return kls.__class__ ||$B.get_class(kls)}else{var module=$B.last($B.frames_stack)[2],resolved_bases=$B.resolve_mro_entries(bases),metaclass=$B.get_metaclass(kls,module,resolved_bases)
@@ -5833,7 +5834,7 @@ var $=$B.args("__init_subclass__",1,{cls:null},['cls'],arguments,{},"args","kwar
 if($.args.length > 0){throw _b_.TypeError.$factory(
 `${$.cls.__qualname__}.__init_subclass__ takes no arguments `+
 `(${$.args.length} given)`)}
-for(var key in $.kwargs.obj){throw _b_.TypeError.$factory(
+for(var key in $.kwargs.$jsobj){throw _b_.TypeError.$factory(
 `${$.cls.__qualname__}.__init_subclass__() `+
 `takes no keyword arguments`)}
 return _b_.None}
@@ -6782,11 +6783,11 @@ var $op_name='min'
 if(op==='__gt__'){$op_name="max"}
 var $=$B.args($op_name,0,{},[],args,{},'args','kw')
 var has_default=false,func=false
-for(var attr in $.kw.obj){switch(attr){case 'key':
-func=$.kw.obj[attr]
+for(var attr in $.kw.$jsobj){switch(attr){case 'key':
+func=$.kw.$jsobj[attr]
 break
 case 'default':
-var default_value=$.kw.obj[attr]
+var default_value=$.kw.$jsobj[attr]
 has_default=true
 break
 default:
@@ -6894,7 +6895,7 @@ if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if(x !=_b_.int.$factory(x
 "unless all arguments are integers")}
 return _b_.int.__pow__(x,y,z)}}
 var $print=_b_.print=function(){var $ns=$B.args('print',0,{},[],arguments,{},'args','kw')
-var kw=$ns['kw'],end=$B.is_none(kw.obj.end)? '\n' :kw.obj.end,sep=$B.is_none(kw.obj.sep)? ' ' :kw.obj.sep,file=$B.is_none(kw.obj.file)? $B.get_stdout():kw.obj.file
+var kw=$ns['kw'],end=$B.is_none(kw.$jsobj.end)? '\n' :kw.$jsobj.end,sep=$B.is_none(kw.$jsobj.sep)? ' ' :kw.$jsobj.sep,file=$B.is_none(kw.$jsobj.file)? $B.get_stdout():kw.$jsobj.file
 var args=$ns['args'],writer=$B.$getattr(file,'write')
 var items=[]
 for(var i=0,len=args.length;i < len;i++){var arg=_b_.str.$factory(args[i])
@@ -7217,7 +7218,7 @@ return t}
 var zip=_b_.zip=$B.make_class("zip",function(){var res={__class__:zip,items:[]}
 if(arguments.length==0){return res}
 var $ns=$B.args('zip',0,{},[],arguments,{},'args','kw')
-var _args=$ns['args'],strict=$B.$bool($ns.kw.obj.strict ||false)
+var _args=$ns['args'],strict=$B.$bool($ns.kw.$jsobj.strict ||false)
 var nexts=[],only_lists=true,min_len
 var iters=[]
 for(var arg of _args){iters.push($B.make_js_iterator(arg))}
@@ -12523,7 +12524,8 @@ if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return true}
 if(self.table && self.table[_b_.hash(key)]!==undefined){return true}
 return false}
 dict.$delete_string=function(self,key){
-delete self.table[_b_.hash(key)]}
+if(self.$jsobj){delete self.$jsobj[key]}
+if(self.table){delete self.table[_b_.hash(key)]}}
 dict.$missing={}
 dict.$get_string=function(self,key){
 if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){return self.$jsobj[key]}
@@ -12585,7 +12587,7 @@ throw err}}
 return $N}}
 if(! Array.isArray(args)){args=_b_.list.$factory(args)}
 init_from_list(self,args)}}
-for(var key in $.second.obj){dict.$setitem(self,key,$.second.obj[key])}
+for(var key in $.second.$jsobj){dict.$setitem(self,key,$.second.$jsobj[key])}
 return _b_.None}
 dict.__iter__=function(self){return _b_.iter(dict.keys(self))}
 dict.__ior__=function(self,other){
@@ -12854,9 +12856,7 @@ for(var attr in x){if(attr.charAt(0)!="$" && ! exclude(attr)){if(x[attr]===null)
 return d}
 $B.obj_dict=function(obj,exclude){var klass=obj.__class__ ||$B.get_class(obj)
 if(klass !==undefined && klass.$native){throw $B.attr_error("__dict__",obj)}
-var res=$B.empty_dict()
-res.$jsobj=obj
-res.$exclude=exclude ||function(){return false}
+var res={__class__:dict,$jsobj:obj,$exclude:exclude ||function(){return false}}
 return res}
 var jsobj_as_pydict=$B.jsobj_as_pydict=$B.make_class('jsobj_as_pydict',function(jsobj){return{
 __class__:jsobj_as_pydict,obj:jsobj ||{},new_keys:[],$version:0}}
@@ -13196,7 +13196,7 @@ return cl}
 list.sort=function(self){var $=$B.args("sort",1,{self:null},["self"],arguments,{},null,"kw")
 check_not_tuple(self,"sort")
 var func=_b_.None,reverse=false,kw_args=$.kw
-for(var key in kw_args.obj){if(key=="key"){func=kw_args.obj[key]}else if(key=="reverse"){reverse=kw_args.obj[key]}else{throw _b_.TypeError.$factory("'"+key+
+for(var key in kw_args.$jsobj){if(key=="key"){func=kw_args.$jsobj[key]}else if(key=="reverse"){reverse=kw_args.$jsobj[key]}else{throw _b_.TypeError.$factory("'"+key+
 "' is an invalid keyword argument for this function")}}
 if(self.length==0){return _b_.None}
 if(func !==_b_.None){func=$B.$call(func)}
@@ -14211,7 +14211,7 @@ $B.promise=function(obj){if(obj.__class__===coroutine){return coroutine.send(obj
 if(typeof obj=="function"){return obj()}
 return obj}})(__BRYTHON__)
 ;
-(function($B){$B.builtin_class_flags={builtins:{1073763584:['ConnectionAbortedError','InterruptedError','MemoryError','IndexError','StopIteration','UnicodeTranslateError','BrokenPipeError','IndentationError','ZeroDivisionError','SyntaxWarning','IOError','ArithmeticError','EOFError','KeyboardInterrupt','ChildProcessError','ReferenceError','UserWarning','WindowsError','TimeoutError','RuntimeWarning','FileExistsError','ConnectionRefusedError','NotImplementedError','RecursionError','UnboundLocalError','ImportWarning','AssertionError','KeyError','DeprecationWarning','BlockingIOError','UnicodeDecodeError','UnicodeWarning','LookupError','Warning','PermissionError','FloatingPointError','TabError','EnvironmentError','BaseExceptionGroup','EncodingWarning','ConnectionError','BufferError','PendingDeprecationWarning','OverflowError','ConnectionResetError','FutureWarning','OSError','SystemError','ValueError','UnicodeError','UnicodeEncodeError','GeneratorExit','NotADirectoryError','ProcessLookupError','RuntimeError','IsADirectoryError','FileNotFoundError','SyntaxError','SystemExit','ResourceWarning','StopAsyncIteration','BytesWarning'],1074287872:['Exception','TypeError','ModuleNotFoundError','NameError','AttributeError','BaseException','ImportError'],1073763840:['ExceptionGroup'],21500160:['bool'],4723968:['float','bytearray'],138941696:['bytes'],546048:['property','staticmethod','classmethod','map'],5376:['complex'],541611328:['dict'],21760:['enumerate','filter','reversed','super','zip'],4740352:['frozenset','set'],21501184:['int'],38294816:['list'],545056:['memoryview'],529664:['object'],528672:['range'],20736:['slice'],273159424:['str'],71849248:['tuple'],2148031744:['type'],},types:{20864:['classmethod_descriptor','async_generator','method-wrapper'],547200:['builtin_function_or_method'],20736:['cell'],4352:['code'],545152:['coroutine','generator','member_descriptor','getset_descriptor','frame'],528640:['NotImplementedType','ellipsis','NoneType'],678144:['function'],545088:['mappingproxy'],153984:['method_descriptor'],22784:['method'],546048:['module'],545024:['traceback'],676224:['wrapper_descriptor'],}}})(__BRYTHON__)
+(function($B){$B.builtin_class_flags={builtins:{1073763584:['PendingDeprecationWarning','PermissionError','SyntaxError','ConnectionError','ZeroDivisionError','GeneratorExit','AssertionError','WindowsError','UnicodeEncodeError','FloatingPointError','IndentationError','FileExistsError','BytesWarning','InterruptedError','BaseExceptionGroup','ValueError','BrokenPipeError','KeyError','OverflowError','UserWarning','RecursionError','TabError','BufferError','OSError','ConnectionAbortedError','ProcessLookupError','ReferenceError','ConnectionResetError','ArithmeticError','UnicodeTranslateError','NotImplementedError','RuntimeWarning','IOError','ResourceWarning','SystemExit','NotADirectoryError','UnicodeError','EnvironmentError','ImportWarning','IndexError','UnicodeWarning','FileNotFoundError','StopIteration','DeprecationWarning','TimeoutError','RuntimeError','BlockingIOError','EncodingWarning','SyntaxWarning','UnicodeDecodeError','EOFError','Warning','LookupError','StopAsyncIteration','IsADirectoryError','KeyboardInterrupt','FutureWarning','ConnectionRefusedError','MemoryError','ChildProcessError','SystemError','UnboundLocalError'],1074287872:['AttributeError','BaseException','ModuleNotFoundError','NameError','ImportError','Exception','TypeError'],1073763840:['ExceptionGroup'],21500160:['bool'],4723968:['bytearray','float'],138941696:['bytes'],546048:['classmethod','map','staticmethod','property'],5376:['complex'],541611328:['dict'],21760:['super','zip','filter','enumerate','reversed'],4740352:['frozenset','set'],21501184:['int'],38294816:['list'],545056:['memoryview'],529664:['object'],528672:['range'],20736:['slice'],273159424:['str'],71849248:['tuple'],2148031744:['type'],},types:{20864:['method-wrapper','classmethod_descriptor','async_generator'],547200:['builtin_function_or_method'],20736:['cell'],4352:['code'],545152:['getset_descriptor','member_descriptor','frame','coroutine','generator'],528640:['ellipsis','NotImplementedType','NoneType'],678144:['function'],545088:['mappingproxy'],153984:['method_descriptor'],22784:['method'],546048:['module'],545024:['traceback'],676224:['wrapper_descriptor'],}}})(__BRYTHON__)
 ;
  ;(function($B){var _b_=$B.builtins
 var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
@@ -14277,8 +14277,8 @@ items.forEach(function(item){$B.DOMNode.__le__(self,item)})}catch(err){if($B.deb
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}
-for(var arg in $ns.kw.obj){
-var value=$ns.kw.obj[arg]
+for(var arg in $ns.kw.$jsobj){
+var value=$ns.kw.$jsobj[arg]
 if(arg.toLowerCase().substr(0,2)=="on"){
 $B.DOMNode.bind(self,arg.toLowerCase().substr(2),value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.set_style(self,value)}else{if(value !==false){
 try{
@@ -15191,7 +15191,7 @@ decs+=`var ${dec_id} = ${$B.js_from_ast(dec, scopes)} // decorator\n`}
 var docstring=extract_docstring(this,scopes)
 var parsed_args=transform_args.bind(this)(scopes),default_names=parsed_args.default_names,_defaults=parsed_args._defaults,positional=parsed_args.positional,has_posonlyargs=parsed_args.has_posonlyargs,kw_defaults=parsed_args.kw_defaults,kw_default_names=parsed_args.kw_default_names
 var defaults=`$B.fast_tuple([${this.args.defaults.map(x => x.to_js(scopes))}])`,kw_defaults=kw_default_names.length==0 ? '_b_.None' :
-`$B.jsobj_as_pydict.$factory({${kw_defaults.join(', ')}})`
+`$B.obj_dict({${kw_defaults.join(', ')}})`
 var func_scope=new Scope(this.name,'def',this)
 scopes.push(func_scope)
 var args=positional.concat(this.args.kwonlyargs),slots=[],arg_names=[]
