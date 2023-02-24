@@ -76,12 +76,15 @@ FALSE = 0
 
 def main(loops=LOOPS):
     benchtime, stones = pystones(loops)
-    from browser import document
-    from browser.template import Template
-    Template("result").render(version=__version__,
-        loops=loops, benchtime=benchtime, stones=stones)
-    document["result"].style.visibility = "visible"
-
+    try:
+        from browser import document
+        from browser.template import Template
+        Template("result").render(version=__version__,
+            loops=loops, benchtime=benchtime, stones=stones)
+        document["result"].style.visibility = "visible"
+    except ImportError:
+        print('benchtime', benchtime, 'stones/second', stones)
+        
 def pystones(loops=LOOPS):
     return Proc0(loops)
 
