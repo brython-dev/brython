@@ -102,6 +102,9 @@ content = re.sub('^implementation = "(.*)?"$',
 with open(br_script, 'w', encoding="utf-8") as out:
     out.write(content)
 
+# copy files in /setup
+import make_setup
+
 # copy files in folder /npm
 print("Udpate npm folder...")
 npmdir = os.path.join(pdir, 'npm')
