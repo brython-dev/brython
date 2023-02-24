@@ -96,7 +96,7 @@ def change_volume(ev):
                                     audioContext.currentTime,
                                     0.2)
 
-waveforms = dict(SINE='sine', SQUA='square', SAWT='sawtooth', TRIA='triangle')
+waveforms = dict(SAWT='sawtooth', SINE='sine', SQUA='square', TRIA='triangle')
 
 wave_buttons = [html.BUTTON(waveform, value=value, Class="waveform")
                 for waveform, value in waveforms.items()]
@@ -189,9 +189,7 @@ record_play <= rec_start_button
 rec_play_button = widgets.Play(w, 'black')
 rec_play_button.style.marginLeft = '1em'
 record_play <= rec_play_button
-rec_pause_button = widgets.Pause(w, 'black')
-rec_pause_button.style.marginLeft = '0.2em'
-record_play <= rec_pause_button
+
 
 record_seq = []
 last_hit = {}
