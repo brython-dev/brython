@@ -384,7 +384,7 @@ object.__new__ = function(cls, ...args){
     var res = Object.create(null)
     $B.update_obj(res, {
         __class__ : cls,
-        __dict__: $B.empty_dict()
+        __dict__: $B.obj_dict({})
         })
     return res
 }

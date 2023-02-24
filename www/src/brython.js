@@ -155,8 +155,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-23 14:22:36.346547"
-__BRYTHON__.timestamp=1677158556346
+__BRYTHON__.compiled_date="2023-02-24 11:41:55.404817"
+__BRYTHON__.timestamp=1677235315404
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4820,7 +4820,7 @@ return _b_.TypeError.$factory(f.$infos.__name__+'() takes '+
 `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)}
 function unexpected_keyword(f,k){return _b_.TypeError.$factory(f.$infos.__name__+
 `() got an unexpected keyword argument '${k}'`)}
-$B.args10=function(f,argcount,slots,args){var test=false 
+$B.args0=function(f,argcount,slots,args){var test=false 
 var nb_pos=args.length,last=args[args.length-1],kwarg=f.$infos.kwarg,vararg=f.$infos.vararg,varargs=[],arg_names=f.$infos.arg_names,nb_args=arg_names.length,code=f.$infos.__code__,nb_posonly=code.co_posonlyargcount,nb_kwonly=code.co_kwonlyargcount,nb_pos_or_kw=nb_args-nb_kwonly,extra_kw={},defaults=f.$infos.__defaults__,nb_def=defaults.length,kwdefaults=f.$infos.__kwdefaults__,nb_kwdef=kwdefaults.length,filled=0,kw
 if(test){console.log(f,args)}
 if(nb_pos && last.$kw){nb_pos--
@@ -4848,7 +4848,6 @@ $B.nbkw++}
 if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 if(test){console.log('slots',slots)}
 return slots}
-$B.args0=function(func,argcount,slots,args){return $B.args(func.$infos.__name__,argcount,slots,func.$infos.arg_names,args,func.$defaults,func.$infos.vararg,func.$infos.kwarg,func.$infos.__code__.co_posonlyargcount)}
 $B.args=function(fname,argcount,slots,var_names,args,$dobj,extra_pos_args,extra_kw_args,nb_posonly){
 var has_kw_args=false,nb_pos=args.length,filled=0,nb_posonly=nb_posonly ||0,extra_kw,only_positional
 if(extra_pos_args){slots[extra_pos_args]=[]
@@ -5535,7 +5534,7 @@ object.__new__=function(cls,...args){if(cls===undefined){throw _b_.TypeError.$fa
 var init_func=$B.$getattr(cls,"__init__")
 if(init_func===object.__init__){if(args.length > 0){throw _b_.TypeError.$factory("object() takes no parameters")}}
 var res=Object.create(null)
-$B.update_obj(res,{__class__ :cls,__dict__:$B.empty_dict()})
+$B.update_obj(res,{__class__ :cls,__dict__:$B.obj_dict({})})
 return res}
 object.__ne__=function(self,other){
 if(self===other){return false}
@@ -5988,12 +5987,12 @@ var kls=klass.__new__.bind(null,klass).
 apply(null,arguments)
 klass.__init__.bind(null,kls).apply(null,arguments)
 return kls}}else{factory=function(){return klass.__new__.bind(null,klass).
-apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var kls={__class__:klass,__dict__:$B.empty_dict()}
+apply(null,arguments)}}}else if(klass.hasOwnProperty("__init__")){factory=function(){var kls={__class__:klass,__dict__:$B.obj_dict({})}
 klass.__init__.bind(null,kls).apply(null,arguments)
 return kls}}else{factory=function(){if(arguments.length > 0){if(arguments.length==1 && arguments[0].$kw &&
 Object.keys(arguments[0].$kw).length==0){}else{throw _b_.TypeError.$factory("object() takes no parameters")}}
 var res=Object.create(null)
-$B.update_obj(res,{__class__:klass,__dict__:$B.empty_dict()})
+$B.update_obj(res,{__class__:klass,__dict__:$B.obj_dict({})})
 return res}}}else if(metaclass===_b_.type){var new_func=type.__getattribute__(klass,'__new__'),init_func=type.__getattribute__(klass,'__init__')
 factory=type.$call(klass,new_func,init_func)}else{call_func=_b_.type.__getattribute__(metaclass,"__call__")
 if(call_func.$is_class){factory=$B.$call(call_func)}else{factory=call_func.bind(null,klass)}}
@@ -12522,18 +12521,25 @@ return true}
 dict.__getitem__=function(){var $=$B.args("__getitem__",2,{self:null,arg:null},["self","arg"],arguments,{},null,null),self=$.self,arg=$.arg
 return dict.$getitem(self,arg)}
 dict.$contains_string=function(self,key){
-return self.table[_b_.hash(key)]!==undefined}
+if(self.$jsobj){if(self.$jsobj.hasOwnProperty){if(self.$jsobj.hasOwnProperty(key)){return true}}else if(self.$jsobj[key]!==undefined){return true}}
+if(self.table && self.table[_b_.hash(key)]!==undefined){return true}
+return false}
 dict.$delete_string=function(self,key){
 delete self.table[_b_.hash(key)]}
 dict.$get_string=function(self,key){
 var indices=self.table[_b_.hash(key)]
 if(indices !==undefined){return self._values[indices[0]]}}
 dict.$getitem_string=function(self,key){
-var indices=self.table[_b_.hash(key)]
-if(indices !==undefined){return self._values[indices[0]]}
+if(self.$jsobj){var res=self.$jsobj[key]
+if(self.$jsobj.hasOwnProperty){if(self.$jsobj.hasOwnProperty(key)){return res}}else if(res !==undefined){return res}}
+if(self.table){var indices=self.table[_b_.hash(key)]
+if(indices !==undefined){return self._values[indices[0]]}}
 throw _b_.KeyError.$factory(key)}
 dict.$keys_string=function(self){
-return self._keys.filter((x)=> x !==undefined)}
+var res=[]
+if(self.$jsobj){res=res.concat(Object.keys(self.$jsobj))}
+if(self.table){res=res.concat(self._keys.filter((x)=> x !==undefined))}
+return res}
 dict.$setitem_string=function(self,key,value){
 var h=_b_.hash(key),indices=self.table[h]
 if(indices !==undefined){self._values[indices[0]]=value}else{var index=self._keys.length
@@ -12544,10 +12550,9 @@ self.$version++}
 return _b_.None}
 dict.$getitem=function(self,key,ignore_missing){
 if(self.$jsobj){if(self.$exclude && self.$exclude(key)){throw _b_.KeyError.$factory(key)}
-if(self.$jsobj[key]===undefined){if(self.$jsobj.hasOwnProperty &&
-self.$jsobj.hasOwnProperty(key)){return $B.Undefined}
-throw _b_.KeyError.$factory(key)}
-return self.$jsobj[key]}else if(self.__class__===$B.jsobj_as_pydict){return self.__class__.__getitem__(self,key)}
+var res=self.$jsobj[key]
+if(self.$jsobj.hasOwnProperty){if(self.$jsobj.hasOwnProperty(key)){return res}}else if(res !==undefined){return res}
+if(! self.table){throw _b_.KeyError.$factory(key)}}else if(self.__class__===$B.jsobj_as_pydict){return self.__class__.__getitem__(self,key)}
 var lookup=dict.$lookup_by_key(self,key)
 if(lookup.found){return lookup.value}
 if(! ignore_missing){if(self.__class__ !==dict && ! ignore_missing){try{var missing_method=$B.$getattr(self.__class__,"__missing__",_b_.None)}catch(err){console.log(err)}
@@ -12695,8 +12700,7 @@ setitem(res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return 
 throw err}}}
 dict.get=function(){var $=$B.args("get",3,{self:null,key:null,_default:null},["self","key","_default"],arguments,{_default:$N},null,null)
 try{
-return dict.$getitem($.self,$.key,true)}catch(err){if(_b_.isinstance(err,_b_.KeyError)){return $._default}
-else{throw err}}}
+return dict.$getitem($.self,$.key,true)}catch(err){if(_b_.isinstance(err,_b_.KeyError)){return $._default}else{throw err}}}
 var dict_items=$B.make_class("dict_items",function(d){return{
 __class__:dict_items,dict:d,make_iter:function*(){for(var entry of dict.$iter_items_with_hash(d)){yield $B.fast_tuple([entry.key,entry.value])}}}}
 )
@@ -15218,7 +15222,7 @@ var args_vararg=this.args.vararg===undefined ? 'null' :
 "'"+this.args.kwarg.arg+"'"
 if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args10(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args10(${parse_args.join(', ')})\n`}
+this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
     frame.__file__ = '${scopes.filename}'

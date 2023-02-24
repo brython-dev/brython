@@ -1168,7 +1168,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
             factory = function(){
                 var kls = {
                     __class__: klass,
-                    __dict__: $B.empty_dict()
+                    __dict__: $B.obj_dict({})
                 }
                 klass.__init__.bind(null, kls).apply(null, arguments)
                 return kls
@@ -1184,7 +1184,7 @@ var $instance_creator = $B.$instance_creator = function(klass){
                 }
                 var res = Object.create(null)
                 $B.update_obj(res, {__class__: klass,
-                                    __dict__: $B.empty_dict()})
+                                    __dict__: $B.obj_dict({})})
                 return res
             }
         }
