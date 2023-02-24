@@ -279,6 +279,7 @@ $B.update_VFS = function(scripts){
         $B.VFS[script] = scripts[script]
         $B.VFS[script].timestamp = vfs_timestamp
     }
+    $B.stdlib_module_names = Object.keys($B.VFS)
 }
 
 $B.add_files = function(files){
