@@ -510,6 +510,8 @@ def setup():
 
 setup()
 
+document["manual"].style.display = "block"
+
 document.bind('keydown', notePressed)
 document.bind('keyup', noteReleased)
 
