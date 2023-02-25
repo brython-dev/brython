@@ -472,7 +472,7 @@ $B.resolve_local = function(name, position){
 }
 
 $B.resolve_in_scopes = function(name, namespaces, position){
-    if(name === 'az'){
+    if(name === 'a'){
         console.log('resolve in scopes', name, namespaces)
     }
     for(var ns of namespaces){

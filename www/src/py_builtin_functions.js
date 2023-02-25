@@ -556,8 +556,17 @@ enumerate.__next__ = function(self){
 $B.set_func_names(enumerate, "builtins")
 
 $B.dict_proxy = function(d){
-    if(d.$is_dict_proxy || ! $B.$isinstance(d, _b_.dict)){
+    if(d.$is_dict_proxy){
         return d
+    }
+    var klass = $B.get_class(d)
+    var is_mapping = $B.$isinstance(d, _b_.dict) ||
+                     ($B.$getattr(klass, '__getitem__', null) !== null &&
+                     $B.$getattr(klass, '__setitem__', null) !== null &&
+                     $B.$getattr(klass, '__delitem__', null) !== null)
+    if(! is_mapping){
+        console.log('locals', d)
+        throw _b_.TypeError.$factory('locals() is not a mapping')
     }
     return new Proxy(d,
         {
@@ -566,37 +575,26 @@ $B.dict_proxy = function(d){
                     return true
                 }else if(prop == '$target'){
                     return target
-                }else if(prop == Symbol.iterator){
-                    console.log('make iterator, keys', target._keys)
-                    return function*(){
-                        for(var entry in _b_.dict.$iter_items_with_hash(target)){
-                            yield entry.key
-                        }
-                    }
                 }
+                console.log('get', target, prop)
                 try{
-                    return _b_.dict.$getitem(target, prop)
+                    return $B.$getitem(target, prop)
                 }catch(err){
                     return undefined
                 }
             },
             set: function(target, prop, value){
-                return _b_.dict.$setitem(target, prop, value)
+                return $B.$setitem(target, prop, value)
             },
             deleteProperty: function(target, prop){
                 try{
-                    return _b_.dict.__delitem__(target, prop)
+                    return $B.$call($B.$getattr($B.get_class(target), '__delitem__'))(target, prop)
                 }catch(err){
                     return _b_.None
                 }
             }
         }
     )
-}
-
-$B.make_exec_globals = function(globs){
-    // create an object wrapping the "globals" argument in exec(s, globals, locals)
-    return dict_proxy(globs)
 }
 
 //eval() (built in function)
@@ -704,6 +702,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 global_name += '_globals'
                 exec_locals = exec_globals
             }else{
+                console.log('make dict proxy from locals', _locals)
                 exec_locals = $B.dict_proxy(_locals)
                 /*
                  if(_locals.$jsobj){
