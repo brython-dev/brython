@@ -1143,7 +1143,7 @@ $B.member_func = function(obj){
                             return true
                         }
                     }catch(err){
-                        if($B.$is_exc(err, [_b_.StopIteration])){
+                        if($B.is_exc(err, [_b_.StopIteration])){
                             return false
                         }
                         throw err

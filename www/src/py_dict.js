@@ -478,6 +478,9 @@ dict.$getitem = function(self, key, ignore_missing){
         if(self.$exclude && self.$exclude(key)){
             throw _b_.KeyError.$factory(key)
         }
+        if(! self.$jsobj.hasOwnProperty){
+            console.log('bizarre pas hasOwnProp', self)
+        }
         if(self.$jsobj.hasOwnProperty(key)){
             return self.$jsobj[key]
         }
@@ -531,7 +534,10 @@ dict.__init__ = function(self, first, second){
         return _b_.None
     }
     if(second === undefined){
-        if((! first.$kw) && $B.get_class(first) === $B.JSObj){
+        if(first.$is_dict_proxy){
+            $copy_dict(self, first.$target)
+            return _b_.None
+        }else if((! first.$kw) && $B.get_class(first) === $B.JSObj){
             for(var key in first){
                 dict.$setitem(self, key, first[key])
             }
@@ -1378,8 +1384,12 @@ function jsobj2dict(x, exclude){
 }
 
 $B.obj_dict = function(obj, exclude){
+    if(obj.$is_dict_proxy){
+        return obj
+    }
     var klass = obj.__class__ || $B.get_class(obj)
     if(klass !== undefined && klass.$native){
+        console.log('error obj dict', obj)
         throw $B.attr_error("__dict__", obj)
     }
     var res = {

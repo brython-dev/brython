@@ -605,6 +605,7 @@ $B.JSObj.__len__ = function(_self){
 }
 
 $B.JSObj.__repr__ = $B.JSObj.__str__ = function(_self){
+    console.log('jsobj str', _self)
     return '<Javascript ' + _self.constructor.name + ' object: ' +
         _self.toString() + '>'
 }

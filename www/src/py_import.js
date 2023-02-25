@@ -1252,7 +1252,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1],
         _globals = current_frame[3],
         __import__ = _globals["__import__"],
-        globals = $B.obj_dict(_globals)
+        globals = $B.dict_proxy(_globals)
     if(__import__ === undefined){
         // [Import spec] Fall back to
         __import__ = $B.$__import__

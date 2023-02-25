@@ -386,7 +386,7 @@ function name_scope(name, scopes){
 
 
 function resolve_in_namespace(name, ns){
-    if(ns.$proxy){
+    if(ns.$is_dict_proxy){
         // namespace is a proxy around the locals argument of exec()
         return ns[name] === undefined ? {found: false} :
                             {found: true, value: ns[name]}
@@ -472,6 +472,9 @@ $B.resolve_local = function(name, position){
 }
 
 $B.resolve_in_scopes = function(name, namespaces, position){
+    if(name === 'az'){
+        console.log('resolve in scopes', name, namespaces)
+    }
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top

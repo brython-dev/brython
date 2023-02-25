@@ -555,6 +555,50 @@ enumerate.__next__ = function(self){
 
 $B.set_func_names(enumerate, "builtins")
 
+$B.dict_proxy = function(d){
+    if(d.$is_dict_proxy || ! $B.$isinstance(d, _b_.dict)){
+        return d
+    }
+    return new Proxy(d,
+        {
+            get: function(target, prop){
+                if(prop == '$is_dict_proxy'){
+                    return true
+                }else if(prop == '$target'){
+                    return target
+                }else if(prop == Symbol.iterator){
+                    console.log('make iterator, keys', target._keys)
+                    return function*(){
+                        for(var entry in _b_.dict.$iter_items_with_hash(target)){
+                            yield entry.key
+                        }
+                    }
+                }
+                try{
+                    return _b_.dict.$getitem(target, prop)
+                }catch(err){
+                    return undefined
+                }
+            },
+            set: function(target, prop, value){
+                return _b_.dict.$setitem(target, prop, value)
+            },
+            deleteProperty: function(target, prop){
+                try{
+                    return _b_.dict.__delitem__(target, prop)
+                }catch(err){
+                    return _b_.None
+                }
+            }
+        }
+    )
+}
+
+$B.make_exec_globals = function(globs){
+    // create an object wrapping the "globals" argument in exec(s, globals, locals)
+    return dict_proxy(globs)
+}
+
 //eval() (built in function)
 var $$eval = _b_.eval = function(src, _globals, _locals){
     var $ = $B.args("eval", 4,
@@ -631,10 +675,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 // be attempted: this is why exec_locals is a clone of current
                 // locals
                 exec_locals = $B.clone(frame[1])
-                for(var attr in frame[3]){
-                    exec_locals[attr] = frame[3][attr]
-                }
-                exec_globals = exec_locals
+                exec_globals = frame[3]
             }else{
                 // for eval() : If both dictionaries are omitted, the
                 // expression is executed with the globals and locals in the
@@ -650,26 +691,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 "a dict, not " + $B.class_name(_globals))
         }
         // _globals is used for both globals and locals
-        exec_globals = {}
-        if(_globals.$jsobj){ // eg globals()
-            exec_globals = _globals.$jsobj
-        }else if(_globals.__class__ === $B.jsobj_as_pydict){
-            exec_globals = _globals.obj
-        }else{
-            // The globals object must be the same across calls to exec()
-            // with the same dictionary (cf. issue 690)
-            if(_globals.$jsobj){
-                exec_globals = _globals.$jsobj
-            }else{
-                exec_globals = _globals.$jsobj = {}
-            }
-            for(var key of _b_.dict.$keys_string(_globals)){
-                _globals.$jsobj[key] = _b_.dict.$getitem_string(_globals, key)
-                if(key == '__name__'){
-                    __name__ = _globals.$jsobj[key]
-                }
-            }
-        }
+        exec_globals = $B.dict_proxy(_globals)
         if(exec_globals.__builtins__ === undefined){
             exec_globals.__builtins__ = _b_.__builtins__
         }
@@ -681,7 +703,10 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 // running exec at module level
                 global_name += '_globals'
                 exec_locals = exec_globals
-            }else if(_locals.$jsobj){
+            }else{
+                exec_locals = $B.dict_proxy(_locals)
+                /*
+                 if(_locals.$jsobj){
                 for(var key in _locals.$jsobj){
                     exec_globals[key] = _locals.$jsobj[key]
                 }
@@ -708,6 +733,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                         }
                     })
                 }
+                */
             }
         }
     }
@@ -716,7 +742,8 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
 
     var _ast
 
-    var frame = [__name__, exec_locals, __name__, exec_globals]
+    var frame = [__name__, exec_locals,
+                 __name__, exec_globals]
     frame.is_exec_top = true
     frame.__file__ = filename
     frame.$f_trace = $B.enter_frame(frame)
@@ -794,6 +821,8 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         throw err
     }
 
+    console.log('exec func\n', $B.format_indent(exec_func + '', 0))
+
     try{
         var res = exec_func($B, _b_,
                             exec_locals, exec_globals, frame, _frames)
@@ -818,11 +847,14 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         throw err
     }
     if(_globals !== _b_.None){
+        /*
+        console.log('exec globals on exit', exec_globals)
         for(var key in exec_globals){
             if(! key.startsWith('$')){
                 _b_.dict.$setitem(_globals, key, exec_globals[key])
             }
         }
+        */
     }
     $B.frames_stack = save_frames_stack
     return res
@@ -1320,8 +1352,12 @@ var globals = _b_.globals = function(){
     // The last item in __BRYTHON__.frames_stack is
     // [locals_name, locals_obj, globals_name, globals_obj]
     check_nb_args_no_kw('globals', 0, arguments)
-    var res = $B.obj_dict($B.last($B.frames_stack)[3])
-    res.$jsobj.__BRYTHON__ = $B.JSObj.$factory($B) // issue 1181
+    var globals_obj = $B.last($B.frames_stack)[3]
+    var res = $B.obj_dict(globals_obj)
+    if(globals_obj.$is_dict_proxy){
+        res = globals_obj.$target
+    }
+    _b_.dict.$setitem(res, '__BRYTHON__', $B.JSObj.$factory($B)) // issue 1181
     res.$is_namespace = true
     return res
 }
