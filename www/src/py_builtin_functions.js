@@ -556,7 +556,7 @@ enumerate.__next__ = function(self){
 $B.set_func_names(enumerate, "builtins")
 
 $B.dict_proxy = function(d){
-    if(d.$is_dict_proxy){
+    if(d.$is_dict_proxy || d.__class__ === $B.module){
         return d
     }
     var klass = $B.get_class(d)
@@ -565,7 +565,6 @@ $B.dict_proxy = function(d){
                      $B.$getattr(klass, '__setitem__', null) !== null &&
                      $B.$getattr(klass, '__delitem__', null) !== null)
     if(! is_mapping){
-        console.log('locals', d)
         throw _b_.TypeError.$factory('locals() is not a mapping')
     }
     return new Proxy(d,

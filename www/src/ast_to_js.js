@@ -2462,6 +2462,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
         if(name){
             js += `,\nlocals_${name} = locals`
         }
+        js += "\nconsole.log('exec locals', locals, 'globals', globals)"
     }
     js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
