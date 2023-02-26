@@ -542,7 +542,7 @@
     javascript.NullType.__module__ = 'javascript'
     javascript.UndefinedType.__module__ = 'javascript'
     modules.javascript.__dict__.$jsobj = javascript
-    
+
     var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
         "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
         "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
@@ -645,6 +645,7 @@
         },
         modules: _b_.property.$factory(
             function(){
+                console.log('get sys modules', $B.imported)
                 return $B.obj_dict($B.imported)
             },
             function(self, value){

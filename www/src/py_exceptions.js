@@ -1023,16 +1023,16 @@ $B.error_trace = function(err){
 
 $B.get_stderr = function(){
     if($B.imported.sys){
-        return $B.imported.sys.stderr
+        return $B.$getattr($B.imported.sys, 'stderr')
     }
-    return $B.imported._sys.stderr
+    return $B.$getattr($B.imported._sys, 'stderr')
 }
 
 $B.get_stdout = function(){
     if($B.imported.sys){
-        return $B.imported.sys.stdout
+        return $B.$getattr($B.imported.sys, 'stdout')
     }
-    return $B.imported._sys.stdout
+    return $B.$getattr($B.imported._sys, 'stdout')
 }
 
 $B.show_error = function(err){

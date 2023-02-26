@@ -142,7 +142,7 @@ function run_js(module_contents, path, _module){
             $module[attr].$in_js_module = true
         }
     }
-    
+
     if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
@@ -1167,7 +1167,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // mod_name == "_frozen_importlib_external"
+    var test = false // mod_name == "_sys"
     if(test){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()

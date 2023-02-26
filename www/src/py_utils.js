@@ -531,10 +531,10 @@ $B.get_class = function(obj){
     // don't have this attribute so we must return it
 
     if(obj === null){
-        return $B.imported.javascript.NullType // in builtin_modules.js
+        return $B.$getattr($B.imported.javascript, 'NullType') // in builtin_modules.js
     }
     if(obj === undefined){
-        return $B.imported.javascript.UndefinedType // idem
+        return $B.$getattr($B.imported.javascript, 'UndefinedType') // idem
     }
     var klass = obj.__class__
     if(klass === undefined){
@@ -562,7 +562,7 @@ $B.get_class = function(obj){
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
                         && obj instanceof Node){
                     if(obj.tagName){
-                        return $B.imported['browser.html'][obj.tagName] ||
+                        return $B.$getattr($B.imported['browser.html'], obj.tagName) ||
                                    $B.DOMNode
                     }
                     return $B.DOMNode
@@ -965,6 +965,7 @@ $B.$setitem = function(obj, item, value){
     var si = $B.$getattr(obj.__class__ || $B.get_class(obj), "__setitem__",
         null)
     if(si === null || typeof si != 'function'){
+        console.log('obj', obj, 'item', item, 'value', value)
         throw _b_.TypeError.$factory("'" + $B.class_name(obj) +
             "' object does not support item assignment")
     }
