@@ -575,7 +575,6 @@ $B.dict_proxy = function(d){
                 }else if(prop == '$target'){
                     return target
                 }
-                console.log('get', target, prop)
                 try{
                     return $B.$getitem(target, prop)
                 }catch(err){
@@ -701,7 +700,6 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 global_name += '_globals'
                 exec_locals = exec_globals
             }else{
-                console.log('make dict proxy from locals', _locals)
                 exec_locals = $B.dict_proxy(_locals)
                 /*
                  if(_locals.$jsobj){
@@ -2586,10 +2584,11 @@ $B.missing_super2 = function(obj){
 
 var $$super = _b_.super = $B.make_class("super",
     function (_type, object_or_type){
+        console.log('make super', _type, object_or_type)
         var no_object_or_type = object_or_type === undefined
         if(_type === undefined && object_or_type === undefined){
             var frame = $B.last($B.frames_stack),
-                pyframe = $B.imported["_sys"].Getframe(),
+                pyframe = $B.$getattr($B.imported["_sys"], 'Getframe')(),
                 code = $B.frame.f_code.__get__(pyframe),
                 co_varnames = code.co_varnames
             if(co_varnames.length > 0){
@@ -2644,6 +2643,7 @@ $$super.__getattribute__ = function(self, attr){
         }
     }
     // Determine method resolution order from object_or_type
+    console.log('super __ga__', self)
     var object_or_type = self.__self_class__,
         mro = self.$arg2 == 'type' ? object_or_type.__mro__ :
                                      $B.get_class(object_or_type).__mro__

@@ -352,7 +352,8 @@
         })(__BRYTHON__)
     }
 
-    modules['browser'] = browser
+    modules.browser = $B.module.$factory('browser')
+    modules.browser.__dict__.$jsobj = browser
 
     // Class for Javascript "undefined"
     $B.UndefinedType = $B.make_class("UndefinedType",
@@ -409,7 +410,8 @@
 
     $B.set_func_names(super_class, "javascript")
 
-    modules['javascript'] = {
+    modules.javascript = $B.module.$factory('javascript')
+    var javascript = {
         "this": function(){
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
@@ -537,9 +539,10 @@
         UndefinedType: $B.UndefinedType
     }
 
-    modules.javascript.NullType.__module__ = 'javascript'
-    modules.javascript.UndefinedType.__module__ = 'javascript'
-
+    javascript.NullType.__module__ = 'javascript'
+    javascript.UndefinedType.__module__ = 'javascript'
+    modules.javascript.__dict__.$jsobj = javascript
+    
     var arraybuffers = ["Int8Array", "Uint8Array", "Uint8ClampedArray",
         "Int16Array", "Uint16Array", "Int32Array", "Uint32Array",
         "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"]
@@ -585,7 +588,9 @@
     // see https://github.com/brython-dev/brython/issues/189
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     var _b_ = $B.builtins
-    modules['_sys'] = {
+    modules._sys = $B.module.$factory('_sys')
+
+    modules._sys.__dict__.$jsobj = {
         // Called "Getframe" because "_getframe" wouldn't be imported in
         // sys.py with "from _sys import *"
         Getframe : function(){
@@ -720,7 +725,8 @@
         )
     }
 
-    modules._sys.__breakpointhook__ = modules._sys.breakpointhook
+    modules._sys.__dict__.$jsobj.__breakpointhook__ =
+        modules._sys.__dict__.$jsobj.breakpointhook
 
     var WarningMessage = $B.make_class("WarningMessage",
         function(){
@@ -746,7 +752,8 @@
         }
     )
     // _warnings provides basic warning filtering support.
-    modules._warnings = {
+    modules._warnings = $B.module.$factory('_warnings')
+    modules._warnings.__dict__.$jsobj = {
         _defaultaction: "default",
         _filters_mutated: function(){
         },

@@ -242,7 +242,7 @@ function local_scope(name, scope){
 
 function name_scope(name, scopes){
     // return the scope where name is bound, or undefined
-    var test = false // name == 'x'
+    var test = false // name == '__class__'
     if(test){
         console.log('name scope', name, scopes.slice())
         alert()
@@ -277,11 +277,19 @@ function name_scope(name, scopes){
         is_local = [LOCAL, CELL].indexOf(__scope) > -1
     if(test){
         console.log('block', block, 'is local', is_local)
+        console.log('flags', flags, '__scope', __scope)
     }
     if(up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name){
         return {found: false, resolve: 'own_class_name'}
     }
-    // special case
+    // special cases
+    if(name == '__class__' && up_scope.type == 'def'){
+        var ix = scopes.indexOf(up_scope)
+        if(scopes[ix - 1].type == "class"){
+            // __class__ is local in methods
+            is_local = true
+        }
+    }
     if(name == '__annotations__'){
         if(block.type == TYPE_CLASS && up_scope.has_annotation){
             is_local = true
@@ -294,12 +302,19 @@ function name_scope(name, scopes){
         // If scope is a "subscope", look in its parents
         var l_scope = local_scope(name, scope)
         if(! l_scope.found){
+            if(test){
+                console.log(name, 'is local but not found in local scope')
+                console.log('block type', block.type)
+            }
             if(block.type == TYPE_CLASS){
                 // In class definition, unbound local variables are looked up
                 // in the global namespace (Language Reference 4.2.2)
                 scope.needs_frames = true
                 return {found: false, resolve: 'global'}
             }else if(block.type == TYPE_MODULE){
+                if(scope.is_exec_scope){
+                    return {found: false, resolve: 'all'}
+                }
                 scope.needs_frames = true
                 return {found: false, resolve: 'global'}
             }
@@ -472,9 +487,6 @@ $B.resolve_local = function(name, position){
 }
 
 $B.resolve_in_scopes = function(name, namespaces, position){
-    if(name === 'a'){
-        console.log('resolve in scopes', name, namespaces)
-    }
     for(var ns of namespaces){
         if(ns === $B.exec_scope){
             var exec_top
@@ -495,6 +507,9 @@ $B.resolve_in_scopes = function(name, namespaces, position){
         }else{
             var v = resolve_in_namespace(name, ns)
             if(v.found){
+                if(name == '__class__'){
+                    console.log(name, 'found in ns', ns)
+                }
                 return v.value
             }
         }
@@ -507,6 +522,10 @@ $B.resolve_in_scopes = function(name, namespaces, position){
 }
 
 $B.resolve_global = function(name, _frames){
+    if(name == 'B'){
+        console.log('resolve global', name, _frames)
+    }
+
     // Resolve in globals or builtins
     for(var frame of _frames.slice().reverse()){
         var v = resolve_in_namespace(name, frame[3])
@@ -1732,6 +1751,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         bind(this.args.kwarg.arg, scopes)
     }
 
+    if(in_class){
+        bind("__class__", scopes)
+    }
+
     // process body first to detect possible "yield"s
     if(this.$is_lambda){
         var _return = new $B.ast.Return(this.body)
@@ -1818,7 +1841,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         var scope_ref = make_scope_name(scopes, parent),
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
-        bind("__class__", scopes)
         js += `locals.__class__ = ` +
                   `$B.get_method_class(${scope_ref}, "${class_ref}", [${refs}])\n`
     }
@@ -2452,7 +2474,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
     var js = `// Javascript code generated from ast\n` +
              `var $B = __BRYTHON__,\n_b_ = $B.builtins,\n`
     if(! namespaces){
-        js += `${global_name} = $B.imported["${mod_name}"],\n` +
+        js += `${global_name} = $B.imported["${mod_name}"].__dict__.$jsobj,\n` +
               `locals = ${global_name},\n` +
               `frame = ["${module_id}", locals, "${module_id}", locals]`
     }else{
@@ -2462,9 +2484,8 @@ $B.ast.Module.prototype.to_js = function(scopes){
         if(name){
             js += `,\nlocals_${name} = locals`
         }
-        js += "\nconsole.log('exec locals', locals, 'globals', globals)"
     }
-    js += `\nframe.__file__ = '${scopes.filename || "<string>"}'\n` +
+    js += `\nframe.__file__ = locals.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 

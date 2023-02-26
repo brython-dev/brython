@@ -10,6 +10,7 @@ var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
         return {
             __class__: Module,
+            __dict__: $B.obj_dict({}),
             __name__: name,
             __doc__: doc || _b_.None,
             __package__: $package || _b_.None
@@ -141,12 +142,12 @@ function run_js(module_contents, path, _module){
             $module[attr].$in_js_module = true
         }
     }
-
+    
     if(_module !== undefined){
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
         for(var attr in $module){
-            _module[attr] = $module[attr]
+            _module.__dict__.$jsobj[attr] = $module[attr]
         }
         $module = _module
         $module.__class__ = Module // in case $module has __class__ (issue #838)
@@ -247,7 +248,7 @@ function run_py(module_contents, path, module, compiled) {
     try{
         // Apply side-effects upon input module object
         for(var attr in mod){
-            module[attr] = mod[attr]
+            module.__dict__.$jsobj[attr] = mod[attr]
         }
         module.__initializing__ = false
         // $B.imported[mod.__name__] must be the module object, so that
@@ -1252,7 +1253,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     var current_frame = $B.frames_stack[$B.frames_stack.length - 1],
         _globals = current_frame[3],
         __import__ = _globals["__import__"],
-        globals = $B.dict_proxy(_globals)
+        globals = _globals // $B.dict_proxy(_globals)
     if(__import__ === undefined){
         // [Import spec] Fall back to
         __import__ = $B.$__import__
@@ -1301,9 +1302,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         }
         if(__all__ === thunk){
             // from mod_name import * ... when __all__ is not defined
-            for(var attr in modobj){
+            for(var attr in modobj.__dict__.$jsobj){
                 if(attr[0] !== "_"){
-                    locals[attr] = modobj[attr]
+                    locals[attr] = modobj.__dict__.$jsobj[attr]
                 }
             }
         }else{
