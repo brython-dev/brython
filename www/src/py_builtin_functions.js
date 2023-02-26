@@ -2630,10 +2630,12 @@ var $$super = _b_.super = $B.make_class("super",
 
 $$super.__get__ = function(self, instance, klass){
     // https://www.artima.com/weblogs/viewpost.jsp?thread=236278
+    console.log('super __get__', self, instance, klass)
     return $$super.$factory(self.__thisclass__, instance)
 }
 
 $$super.__getattribute__ = function(self, attr){
+    console.log('super __ga__', self, 'attr', attr)
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -2644,15 +2646,19 @@ $$super.__getattribute__ = function(self, attr){
     }
     // Determine method resolution order from object_or_type
     console.log('super __ga__', self)
-    var object_or_type = self.__self_class__,
-        mro = self.$arg2 == 'type' ? object_or_type.__mro__ :
-                                     $B.get_class(object_or_type).__mro__
-
+    var object_or_type = self.__self_class__
+    if(self.$arg2 == 'type'){
+        var mro = object_or_type.__mro__
+    }else{
+        console.log('call $get_class', object_or_type)
+        var mro = $B.get_class(object_or_type).__mro__
+    }
+    console.log('ok', attr)
     // Search of method attr starts in mro after self.__thisclass__
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__init_subclass__" && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = attr == "__get__" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }
@@ -2668,7 +2674,7 @@ $$super.__getattribute__ = function(self, attr){
             break
         }
     }
-
+    console.log('f', f)
     if(f === undefined){
         if($$super[attr] !== undefined){
             return (function(x){
