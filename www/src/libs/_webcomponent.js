@@ -64,7 +64,7 @@ function define(tag_name, cls){
                     "Setting observedAttributes as a method " +
                     "is deprecated. Set it as a class attribute.")
                 // module _warning is in builtin_modules.js
-                $B.imported._warnings.warn(warning)
+                $B.$getattr($B.imported._warnings, 'warn')(warning)
                 return $B.$call(obs_attr)(this)
             }else if(Array.isArray(obs_attr)){
                 return obs_attr

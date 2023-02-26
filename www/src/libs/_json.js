@@ -273,7 +273,7 @@ var escapes = {'n': '\n',
                }
 
 function string_at(s, i){
-    var error = $B.$call($B.imported["json"].JSONDecodeError)
+    var error = $B.$call($B.$getattr($B.imported.json, 'JSONDecodeError'))
 
     var j = i + 1,
         escaped = false,
@@ -535,7 +535,7 @@ function parse(s){
           if(err.__class__){
               throw err
           }else{
-              var error = $B.$call($B.imported["json"].JSONDecodeError)
+              var error = $B.$call($B.$getattr($B.imported.json, 'JSONDecodeError'))
               throw error(err.message, s, item[1])
           }
       }

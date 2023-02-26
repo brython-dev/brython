@@ -85,7 +85,7 @@ var $module = (function($B){
                                 // Only value supported for the moment : Z
                                 // (UTC)
                                 var dt_module = $B.imported[cls.__module__]
-                                dt.tzinfo = dt_module.timezone.utc
+                                dt.tzinfo = $B.$getattr(dt_module, 'timezone').utc
                             }
                             pos_fmt += 2
                             pos_s += res[0].length

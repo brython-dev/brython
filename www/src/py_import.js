@@ -39,7 +39,7 @@ Module.__setattr__ = function(self, attr, value){
         // set a Python builtin
         $B.builtins[attr] = value
     }else{
-        self[attr] = value
+        self.__dict__.$jsobj[attr] = value
     }
 }
 
@@ -250,6 +250,7 @@ function run_py(module_contents, path, module, compiled) {
         for(var attr in mod){
             module.__dict__.$jsobj[attr] = mod[attr]
         }
+        module.__doc__ = root.docstring
         module.__initializing__ = false
         // $B.imported[mod.__name__] must be the module object, so that
         // setting attributes in a program affects the module namespace
@@ -997,7 +998,7 @@ function import_error(mod_name){
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
-    var $test = false // mod_name == "tatsu.utils._command"
+    var $test = false // mod_name == "foobar.Bar"
     if($test){console.log("__import__", mod_name, 'fromlist', fromlist);alert()}
     // Main entry point for __import__
     //
@@ -1055,7 +1056,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
             if($test){
                 console.log("iter", i, _mod_name, "\nmodobj", modobj,
                     "\n__path__", __path__, Array.isArray(__path__))
-                alert()
             }
             if(modobj == _b_.None){
                 // [Import spec] Stop loading loop right away
@@ -1115,7 +1115,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         if($B.imported[parsed_name[0]] &&
                 parsed_name.length == 2){
             try{
-                if($B.imported[parsed_name[0]][parsed_name[1]] === undefined){
+                if($B.imported[parsed_name[0]].__dict__.$jsobj[parsed_name[1]] === undefined){
                     $B.$setattr($B.imported[parsed_name[0]], parsed_name[1],
                         modobj)
                 }
@@ -1128,6 +1128,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
 
     if(fromlist.length > 0){
         // Return module object matching requested module name
+        if($test){
+            console.log(mod_name, $B.imported[mod_name])
+            console.log('--- Foo in foobar', $B.imported.foobar.__dict__.$jsobj.Foo)
+        }
         return $B.imported[mod_name]
     }else{
         // Return module object for top-level package
@@ -1143,7 +1147,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
                 mod_name = module
             }
         }
-        return $B.imported[package]
+        if($test){
+            console.log(mod_name, $B.imported[mod_name])
+        }
+        return $B.imported[mod_name]
     }
 }
 
@@ -1167,7 +1174,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     locals: local namespace import bindings will be applied upon
     level: number of leading '.' in "from . import a" or "from .mod import a"
     */
-    var test = false // mod_name == "_sys"
+    var test = false // mod_name == 'collections.abc'
     if(test){
         console.log('mod name', mod_name, 'fromlist', fromlist)
         alert()
@@ -1183,14 +1190,14 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                0, locals);
         // set attribute _bootstrap_external of importlib._bootstrap
         // and _frozen_importlib
-        var _bootstrap = $B.imported.importlib._bootstrap,
-            _bootstrap_external = $B.imported.importlib['_bootstrap_external']
-        _bootstrap_external._set_bootstrap_module(_bootstrap)
-        _bootstrap._bootstap_external = _bootstrap_external
+        var _bootstrap = $B.imported.importlib.__dict__.$jsobj._bootstrap,
+            _bootstrap_external = $B.imported.importlib.__dict__.$jsobj['_bootstrap_external']
+        _bootstrap_external.__dict__.$jsobj._set_bootstrap_module(_bootstrap)
+        _bootstrap.__dict__.$jsobj._bootstap_external = _bootstrap_external
 
         var _frozen_importlib = $B.imported._frozen_importlib
         if(_frozen_importlib){
-            _frozen_importlib._bootstrap_external = _bootstrap_external
+            _frozen_importlib.__dict__.$jsobj._bootstrap_external = _bootstrap_external
         }
         return
     }
@@ -1215,7 +1222,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
     }
     var parts = mod_name.split(".")
     // For . , .. and so on , remove one relative step
-    if(mod_name[mod_name.length - 1] == "."){parts.pop()}
+    if(mod_name[mod_name.length - 1] == "."){
+        parts.pop()
+    }
     var norm_parts = [],
         prefix = true
     for(var i = 0, len = parts.length; i < len; i++){
@@ -1266,6 +1275,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
         alert()
     }
+    
     var modobj = importer(mod_name, globals, undefined, fromlist, 0)
 
     if(test){
@@ -1282,7 +1292,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         if(alias){
             locals[alias] = $B.imported[mod_name]
         }else{
-            locals[norm_parts[0]] = modobj
+            locals[norm_parts[0]] = $B.imported[norm_parts[0]]
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
     }else{
@@ -1302,8 +1312,15 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         }
         if(__all__ === thunk){
             // from mod_name import * ... when __all__ is not defined
-            for(var attr in modobj.__dict__.$jsobj){
+            if(test){
+                console.log('own properties')
+                console.log(Object.getOwnPropertyDescriptors(modobj.__dict__.$jsobj))
+            }
+            for(var attr in Object.getOwnPropertyDescriptors(modobj.__dict__.$jsobj)){
                 if(attr[0] !== "_"){
+                    if(test){
+                        console.log('set attr', attr)
+                    }
                     locals[attr] = modobj.__dict__.$jsobj[attr]
                 }
             }
@@ -1403,9 +1420,10 @@ $B.$import_from = function(module, names, aliases, level, locals){
         }else{
             for(var name of names){
                 var alias = aliases[name] || name
-                if(current_module[name] !== undefined){
+                var value = current_module.__dict__.$jsobj[name]
+                if(value !== undefined){
                     // name is defined in the package module (__init__.py)
-                    locals[alias] = current_module[name]
+                    locals[alias] = value
                 }else{
                     // try to import module in the package
                     var sub_module = current_module.__name__ + '.' + name
@@ -1457,7 +1475,7 @@ var Loader = {__class__:$B.$type,
     __name__ : "Loader"
 }
 
-var _importlib_module = {
+$B._importlib_module = {
     __class__ : Module,
     __name__ : "_importlib",
     Loader: Loader,
@@ -1467,9 +1485,9 @@ var _importlib_module = {
     UrlPathFinder: url_hook,
     optimize_import_for_path : optimize_import_for_path
 }
-_importlib_module.__repr__ = _importlib_module.__str__ = function(){
-return "<module '_importlib' (built-in)>"
+$B._importlib_module.__repr__ = function(){
+    return "<module '_importlib' (built-in)>"
 }
-$B.imported["_importlib"] = _importlib_module
+
 
 })(__BRYTHON__)

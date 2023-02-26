@@ -5016,7 +5016,7 @@ NumberCtx.prototype.transition = function(token, value){
         }
     }else if(token == 'op'){
         if(["and", "in", "is", "or"].indexOf(value) > -1 &&
-                num_type == 'hexadecimal' && 
+                num_type == 'hexadecimal' &&
                 this.value[1].length % 2 == 1){
             $B.warn(_b_.SyntaxWarning,
                     `invalid hexadecimal literal`,
@@ -8400,6 +8400,7 @@ $B.py2js = function(src, module, locals_id, parent_scope){
 
     return {
         _ast,
+        docstring: js_obj.docstring,
         imports: js_obj.imports,
         to_js: function(){return js_from_ast}
     }
@@ -8539,7 +8540,7 @@ $B.parse_options = function(options){
             if(path.slice(-7).toLowerCase() == '.vfs.js' &&
                     (prefetch === undefined || prefetch === true)){
                 $B.path_importer_cache[path + '/'] =
-                    $B.imported['_importlib'].VFSPathFinder(path)
+                    $B.imported['_importlib'].__dict__.$jsobj.VFSPathFinder(path)
             }
             if(lang){
                 _importlib.optimize_import_for_path(path, lang)
@@ -8561,7 +8562,7 @@ $B.parse_options = function(options){
             var filetype = e.hreflang
             if(filetype){
                 if(filetype.slice(0,2) == 'x-'){filetype = filetype.slice(2)}
-                _importlib.optimize_import_for_path(e.href, filetype)
+                $B.$getattr(_importlib, 'optimize_import_for_path')(e.href, filetype)
             }
         }
     }

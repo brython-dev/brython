@@ -643,15 +643,6 @@
         gettrace: function(){
             return $B.tracefunc || _b_.None
         },
-        modules: _b_.property.$factory(
-            function(){
-                console.log('get sys modules', $B.imported)
-                return $B.obj_dict($B.imported)
-            },
-            function(self, value){
-                 throw _b_.TypeError.$factory("Read only property 'sys.modules'")
-            }
-        ),
         path: _b_.property.$factory(
             function(){
                 return $B.path
@@ -729,6 +720,17 @@
     modules._sys.__dict__.$jsobj.__breakpointhook__ =
         modules._sys.__dict__.$jsobj.breakpointhook
 
+    Object.defineProperty(modules._sys.__dict__.$jsobj, 'modules',
+        {
+            get(){
+                return $B.obj_dict($B.imported)
+            },
+            set(){
+                throw _b_.TypeError.$factory('sys.modules is read-only')
+            }
+        }
+    )
+
     var WarningMessage = $B.make_class("WarningMessage",
         function(){
             var $ = $B.make_args("WarningMessage", 8,
@@ -770,9 +772,9 @@
             // Issue a warning, or maybe ignore it or raise an exception.
             var filters
             if($B.imported.warnings){
-                filters = $B.imported.warnings.filters
+                filters = $B.imported.warnings.__dict__.$jsobj.filters
             }else{
-                filters = modules._warnings.filters
+                filters = modules._warnings.__dict__.$jsobj.filters
             }
             if(filters[0][0] == 'error'){
                 var syntax_error = _b_.SyntaxError.$factory(message.args[0])
@@ -802,7 +804,7 @@
                     _category_name: category.__name__
                 }
             }else{
-                var frame = $B.imported._sys.Getframe(),
+                var frame = $B.imported._sys.__dict__.$jsobj.Getframe(),
                     file = frame.__file__,
                     f_code = $B._frame.f_code.__get__(frame),
                     lineno = frame.$lineno,
@@ -821,7 +823,7 @@
                 }
             }
             if($B.imported.warnings){
-                $B.imported.warnings._showwarnmsg_impl(warning_message)
+                $B.imported.warnings.__dict__.$jsobj._showwarnmsg_impl(warning_message)
             }else{
                 var trace = ''
                 if(file && lineno){
@@ -844,6 +846,9 @@
             console.log("warn_explicit", arguments)
         }
     }
+
+    $B.imported._importlib = $B.module.$factory('_importlib')
+    $B.imported._importlib.__dict__.$jsobj = $B._importlib_module
 
     function load(name, module_obj){
         // add class and __str__

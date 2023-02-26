@@ -1525,10 +1525,10 @@ function normalise(encoding){
 function load_decoder(enc){
     // load table from Lib/encodings/<enc>.py
     if(to_unicode[enc] === undefined){
-        var mod = _b_.__import__("encodings." + enc)
-        if(mod[enc].getregentry){
-            to_unicode[enc] = $B.$getattr(mod[enc].getregentry(),
-                "decode")
+        var mod = _b_.__import__("encodings." + enc),
+            regentry = $B.$getattr(mod, 'getregentry', null)
+        if(regentry !== null){
+            to_unicode[enc] = $B.$getattr(regentry(), "decode")
         }
     }
 }
@@ -1536,10 +1536,10 @@ function load_decoder(enc){
 function load_encoder(enc){
     // load table from encodings/<enc>.py
     if(from_unicode[enc] === undefined){
-        var mod = _b_.__import__("encodings." + enc)
-        if(mod[enc].getregentry){
-            from_unicode[enc] = $B.$getattr(mod[enc].getregentry(),
-                "encode")
+        var mod = _b_.__import__("encodings." + enc),
+            regentry = $B.$getattr(mod, 'getregentry', null)
+        if(regentry !== null){
+            from_unicode[enc] = $B.$getattr(regentry(), "encode")
         }
     }
 }

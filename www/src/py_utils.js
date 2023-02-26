@@ -773,7 +773,7 @@ $B.warn = function(klass, message, filename, token){
                                          warning.end_lineno,
                                          warning.end_offset])
     }
-    $B.imported._warnings.warn(warning)
+    $B.$getattr($B.imported._warnings, 'warn')(warning)
 }
 
 // get item

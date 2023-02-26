@@ -36,7 +36,6 @@ var None = _b_.None = {
     __class__: NoneType
 }
 
-None.__doc__ = None
 NoneType.__doc__ = None
 
 for(var $op in $B.$comps){ // None is not orderable with any type
@@ -701,35 +700,6 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                 exec_locals = exec_globals
             }else{
                 exec_locals = $B.dict_proxy(_locals)
-                /*
-                 if(_locals.$jsobj){
-                for(var key in _locals.$jsobj){
-                    exec_globals[key] = _locals.$jsobj[key]
-                }
-            }else{
-                if(_locals.$jsobj){
-                    exec_locals = _locals.$jsobj
-                }else{
-                    var klass = $B.get_class(_locals),
-                        getitem = $B.$call($B.$getattr(klass, '__getitem__')),
-                        setitem = $B.$call($B.$getattr(klass, '__setitem__'))
-                    exec_locals = new Proxy(_locals, {
-                        get(target, prop){
-                            if(prop == '$target'){
-                                return target
-                            }
-                            try{
-                                return getitem(target, prop)
-                            }catch(err){
-                                return undefined
-                            }
-                        },
-                        set(target, prop, value){
-                            return setitem(target, prop, value)
-                        }
-                    })
-                }
-                */
             }
         }
     }
@@ -817,7 +787,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         throw err
     }
 
-    console.log('exec func\n', $B.format_indent(exec_func + '', 0))
+    // console.log('exec func\n', $B.format_indent(exec_func + '', 0))
 
     try{
         var res = exec_func($B, _b_,
@@ -1300,7 +1270,7 @@ $B.$getattr = function(obj, attr, _default){
         var getattr
         if(klass === $B.module){
             // try __getattr__ at module level (PEP 562)
-            getattr = obj.__getattr__
+            getattr = obj.__dict__.$jsobj.__getattr__
             if(getattr){
                 try{
                     return getattr(attr)
@@ -1549,11 +1519,11 @@ var __import__ = _b_.__import__ = function(mod_name, globals, locals, fromlist, 
 // not a direct alias of prompt: input has no default value
 var input = _b_.input = function(msg) {
     var res = prompt(msg || '') || ''
-    if($B.imported["sys"] && $B.imported["sys"].ps1){
+    if($B.imported.sys && $B.$getattr($B.imported.sys, 'ps1')){
         // Interactive mode : echo the prompt + input
         // cf. issue #853
-        var ps1 = $B.imported["sys"].ps1,
-            ps2 = $B.imported["sys"].ps2
+        var ps1 = $B.$getattr($B.imported.sys, 'ps1'),
+            ps2 = $B.$getattr($B.imported.sys, 'ps2')
         if(msg == ps1 || msg == ps2){
             console.log(msg, res)
         }
@@ -2666,7 +2636,7 @@ $$super.__getattribute__ = function(self, attr){
             break
         }
     }
-    
+
     if(f === undefined){
         if($$super[attr] !== undefined){
             return (function(x){

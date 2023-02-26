@@ -113,7 +113,7 @@ object.__getattribute__ = function(obj, attr){
     var klass = obj.__class__ || $B.get_class(obj),
         is_own_class_instance_method = false
 
-    var $test = false // attr == 'show' // false // attr == "__args__"
+    var $test = false // attr == 'modules' // false // attr == "__args__"
     if($test){
         console.log("object.__getattribute__, attr", attr, "de", obj, "klass", klass)
     }
@@ -136,6 +136,9 @@ object.__getattribute__ = function(obj, attr){
     }
 
     if(res === undefined && obj.__dict__){
+        if($test){
+            console.log('search', attr, 'in __dict__', obj.__dict__)
+        }
         var dict = obj.__dict__
         if(dict.__class__ === $B.getset_descriptor){
             return dict.cls[attr]

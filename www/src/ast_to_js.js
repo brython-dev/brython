@@ -605,7 +605,8 @@ function extract_docstring(ast_obj, scopes){
     The result is a Javascript "template string" to preserve multi-line
     docstrings.
     */
-    var js = '_b_.None' // default
+    var js = '_b_.None', // default
+        value = _b_.None
     if(ast_obj.body.length &&
             ast_obj.body[0] instanceof $B.ast.Expr &&
             ast_obj.body[0].value instanceof $B.ast.Constant){
@@ -616,7 +617,7 @@ function extract_docstring(ast_obj, scopes){
             ast_obj.body.shift()
         }
     }
-    return js
+    return {value, js}
 }
 
 function init_comprehension(comp, scopes){
@@ -1347,7 +1348,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
 
     js += `locals = ${locals_name}\n` +
           `if(resolved_bases !== bases){\nlocals.__orig_bases__ = bases}\n` +
-          `locals.__doc__ = ${docstring}\n` +
+          `locals.__doc__ = ${docstring.js}\n` +
           `var frame = [name, locals, module, ${globals_name}]\n` +
           `frame.__file__ = '${scopes.filename}'\n` +
           `frame.$lineno = ${this.lineno}\n` +
@@ -1922,7 +1923,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `__qualname__: "${this.$is_lambda ? '<lambda>' : qualname}",\n` +
         `__defaults__: ${defaults},\n` +
         `__kwdefaults__: ${kw_defaults},\n` +
-        `__doc__: ${docstring},\n` +
+        `__doc__: ${docstring.js},\n` +
         `__code__:{\n` +
         `co_argcount: ${positional.length},\n ` +
         `co_filename: '${scopes.filename}',\n` +
@@ -2487,7 +2488,7 @@ $B.ast.Module.prototype.to_js = function(scopes){
     }
     js += `\nframe.__file__ = locals.__file__ = '${scopes.filename || "<string>"}'\n` +
           `locals.__name__ = '${name}'\n` +
-          `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
+          `locals.__doc__ = ${extract_docstring(this, scopes).js}\n`
 
     if(! scopes.imported){
           js += `locals.__annotations__ = locals.__annotations__ || $B.empty_dict()\n`
@@ -3144,7 +3145,7 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
                             throw _e
                         }else if($B.is_exc(_e, [_b_.BaseException])){
                             var sys_module = $B.imported._sys,
-                                _x${n} = sys_module.exc_info()
+                                _x${n} = sys_module.__dict__.$jsobj.exc_info()
                             var failed3${n} = false
                             try{
                                 var _m${n} = $B.$getattr(_i${n}, "throw")
@@ -3197,6 +3198,7 @@ $B.js_from_root = function(arg){
         namespaces = arg.namespaces,
         imported = arg.imported
 
+    var docstring = extract_docstring(arg.ast).value
     if($B.show_ast_dump){
         console.log($B.ast_dump(ast_root))
     }
@@ -3211,7 +3213,7 @@ $B.js_from_root = function(arg){
     scopes.imported = imported
     scopes.imports = {}
     var js = ast_root.to_js(scopes)
-    return {js, imports: scopes.imports}
+    return {js, imports: scopes.imports, docstring}
 }
 
 $B.js_from_ast = function(ast, scopes){

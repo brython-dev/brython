@@ -478,7 +478,7 @@ var loop = $B.loop = function(){
             var module = new Function(script.js + `\nreturn locals`)()
             for(var key in module){
                 if(! key.startsWith('$')){
-                    $B.imported[script_id][key] = module[key]
+                    $B.imported[script_id].__dict__.$jsobj[key] = module[key]
                 }
             }
         }catch(err){

@@ -25,11 +25,11 @@ $B.pattern_match = function(subject, pattern){
         }
         var Sequence
         if($B.imported['collections.abc']){
-            Sequence = $B.imported['collections.abc'].Sequence
+            Sequence = $B.$getattr($B.imported['collections.abc'], 'Sequence')
         }
         var deque
         if($B.imported['collections']){
-            deque = $B.imported['collections'].deque
+            deque = $B.$getattr($B.imported['collections'], 'deque')
         }
         var supported = false
         var klass = subject.__class__ || $B.get_class(subject)
@@ -152,7 +152,7 @@ $B.pattern_match = function(subject, pattern){
         var supported = false
         var Mapping
         if($B.imported['collections.abc']){
-            Mapping = $B.imported['collections.abc'].Mapping
+            Mapping = $B.$getattr($B.imported['collections.abc'], 'Mapping')
         }
         var klass = subject.__class__ || $B.get_class(subject)
         for(var base of [klass].concat(klass.__bases__ || [])){
