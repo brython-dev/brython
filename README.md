@@ -103,8 +103,12 @@ or the latest of the 3.x.y versions:
 If you want to use the latest development version, you can load these scripts
 instead:
 ```html
-<script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
-<script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
+<script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"
+        crossorigin="anonymous">
+</script>
+<script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"
+        crossorigin="anonymous">
+</script>
 ```
 
 Local install
