@@ -810,7 +810,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         $B.frames_stack = save_frames_stack
         throw err
     }
-    if(_globals !== _b_.None){
+    if(_globals !== _b_.None && ! _globals.$jsobj){
         for(var key in exec_globals){
             if(! key.startsWith('$')){
                 _b_.dict.$setitem(_globals, key, exec_globals[key])
