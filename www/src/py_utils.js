@@ -579,6 +579,9 @@ $B.get_class = function(obj){
 $B.class_name = function(obj){
     var klass = $B.get_class(obj)
     if(klass === $B.JSObj){
+        if(obj.$is_dict_proxy){
+            return 'dict'
+        }
         return 'Javascript ' + obj.constructor.name
     }else{
         return klass.__name__

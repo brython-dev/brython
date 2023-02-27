@@ -8,23 +8,36 @@ var _b_ = $B.builtins,
 // Class for modules
 var Module = $B.module = $B.make_class("module",
     function(name, doc, $package){
-        return {
-            __class__: Module,
-            __dict__: $B.obj_dict({}),
-            __name__: name,
-            __doc__: doc || _b_.None,
-            __package__: $package || _b_.None
-        }
+        return Module.__new__(Module, name, doc, $package)
     }
 )
 
 Module.__new__ = function(cls, name, doc, $package){
-    return {
+    var res = {
         __class__: cls,
-        __name__: name,
-        __doc__: doc || _b_.None,
-        __package__: $package || _b_.None
+        __dict__: $B.obj_dict({
+                    __name__: name,
+                    __doc__: doc || _b_.None,
+                    __package__: $package || _b_.None
+                    })
     }
+    for(var attr of ['__name__', '__doc__', '__package__', '__file__',
+                     '__loader__', '__spec__']){
+        // allows using internally "module.__doc__ = ..." instead of
+        // "Module.__setattr__(module, '__doc__', ...)"
+        (function(x){
+        Object.defineProperty(res, x,
+            {
+                get() {
+                    return this.__dict__.$jsobj[x]
+                },
+                set(value){
+                    this.__dict__.$jsobj[x] = value
+                }
+            }
+        )})(attr)
+    }
+    return res
 }
 
 Module.__repr__ = Module.__str__ = function(self){
@@ -41,6 +54,19 @@ Module.__setattr__ = function(self, attr, value){
     }else{
         self.__dict__.$jsobj[attr] = value
     }
+}
+
+// shortcuts
+$B.mod_get = function(module, attr){
+    return module.__dict__.$jsobj[attr]
+}
+
+$B.mod_set = function(module, attr, value){
+    if(attr == '$is_package'){
+        console.log('set $is_package ?')
+        alert()
+    }
+    module.__dict__.$jsobj[attr] = value
 }
 
 $B.set_func_names(Module, "builtins")
@@ -147,7 +173,7 @@ function run_js(module_contents, path, _module){
         // FIXME : This might not be efficient . Refactor js modules instead.
         // Overwrite original module object . Needed e.g. for reload()
         for(var attr in $module){
-            _module.__dict__.$jsobj[attr] = $module[attr]
+            $B.mod_set(_module, attr, $module[attr])
         }
         $module = _module
         $module.__class__ = Module // in case $module has __class__ (issue #838)
@@ -248,7 +274,7 @@ function run_py(module_contents, path, module, compiled) {
     try{
         // Apply side-effects upon input module object
         for(var attr in mod){
-            module.__dict__.$jsobj[attr] = mod[attr]
+            $B.mod_set(module, attr, mod[attr])
         }
         module.__doc__ = root.docstring
         module.__initializing__ = false
@@ -1115,8 +1141,8 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         if($B.imported[parsed_name[0]] &&
                 parsed_name.length == 2){
             try{
-                if($B.imported[parsed_name[0]].__dict__.$jsobj[parsed_name[1]] === undefined){
-                    $B.$setattr($B.imported[parsed_name[0]], parsed_name[1],
+                if($B.mod_get($B.imported[parsed_name[0]], parsed_name[1]) === undefined){
+                    $B.mod_set($B.imported[parsed_name[0]], parsed_name[1],
                         modobj)
                 }
             }catch(err){
@@ -1130,7 +1156,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist, level){
         // Return module object matching requested module name
         if($test){
             console.log(mod_name, $B.imported[mod_name])
-            console.log('--- Foo in foobar', $B.imported.foobar.__dict__.$jsobj.Foo)
         }
         return $B.imported[mod_name]
     }else{
@@ -1190,14 +1215,14 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                                0, locals);
         // set attribute _bootstrap_external of importlib._bootstrap
         // and _frozen_importlib
-        var _bootstrap = $B.imported.importlib.__dict__.$jsobj._bootstrap,
-            _bootstrap_external = $B.imported.importlib.__dict__.$jsobj['_bootstrap_external']
-        _bootstrap_external.__dict__.$jsobj._set_bootstrap_module(_bootstrap)
-        _bootstrap.__dict__.$jsobj._bootstap_external = _bootstrap_external
+        var _bootstrap = $B.mod_get($B.imported.importlib, '_bootstrap'),
+            _bootstrap_external = $B.mod_get($B.imported.importlib, '_bootstrap_external')
+        $B.mod_get(_bootstrap_external, '_set_bootstrap_module')(_bootstrap)
+        $B.mod_set(_bootstrap, '_bootstap_external', _bootstrap_external)
 
         var _frozen_importlib = $B.imported._frozen_importlib
         if(_frozen_importlib){
-            _frozen_importlib.__dict__.$jsobj._bootstrap_external = _bootstrap_external
+            $B.mod_set(_frozen_importlib, '_bootstrap_external', _bootstrap_external)
         }
         return
     }
@@ -1275,7 +1300,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
         console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
         alert()
     }
-    
+
     var modobj = importer(mod_name, globals, undefined, fromlist, 0)
 
     if(test){
@@ -1321,7 +1346,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals){
                     if(test){
                         console.log('set attr', attr)
                     }
-                    locals[attr] = modobj.__dict__.$jsobj[attr]
+                    locals[attr] = $B.mod_get(modobj, attr)
                 }
             }
         }else{
@@ -1395,6 +1420,8 @@ $B.$import_from = function(module, names, aliases, level, locals){
         }
         while(level > 0){
             var current_module = $B.imported[parts.join('.')]
+            console.log('import from', module, names, level, locals)
+            console.log('current module', current_module)
             if(! current_module.$is_package){
                 throw _b_.ImportError.$factory(
                     'attempted relative import with no known parent package')
@@ -1420,7 +1447,7 @@ $B.$import_from = function(module, names, aliases, level, locals){
         }else{
             for(var name of names){
                 var alias = aliases[name] || name
-                var value = current_module.__dict__.$jsobj[name]
+                var value = $B.mod_get(current_module, name)
                 if(value !== undefined){
                     // name is defined in the package module (__init__.py)
                     locals[alias] = value

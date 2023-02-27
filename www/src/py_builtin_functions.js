@@ -311,7 +311,7 @@ var compile = _b_.compile = function() {
 
     if($.source.__class__ && $.source.__class__.__module__ == 'ast'){
         // compile an ast instance
-        $B.imported._ast._validate($.source)
+        $B.mod_get($B.imported._ast, '_validate')($.source)
         $._ast = $.source
         delete $.source
         return $

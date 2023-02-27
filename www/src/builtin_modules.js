@@ -8,9 +8,6 @@
     var _window = self;
     var modules = {}
     var browser = {
-        $package: true,
-        $is_package: true,
-        __initialized__: true,
         __package__: 'browser',
         __file__: $B.brython_path.replace(/\/*$/g,'') +
             '/Lib/browser/__init__.py',
@@ -167,7 +164,7 @@
         })
 
         // creation of an HTML element
-        modules['browser.html'] = (function($B){
+        var browser_html = (function($B){
 
             var _b_ = $B.builtins
             var TagSum = $B.TagSum
@@ -235,8 +232,8 @@
                                 // option.selected = false sets it to true :-)
                                 try{
                                     // Call attribute mapper (cf. issue#1187)
-                                    arg = $B.imported["browser.html"].
-                                        attribute_mapper(arg)
+                                    arg = $B.mod_get($B.imported["browser.html"],
+                                              'attribute_mapper')(arg)
                                     self.setAttribute(arg, $B.pyobj2jsobj(value))
                                 }catch(err){
                                     throw _b_.ValueError.$factory(
@@ -350,10 +347,15 @@
 
             return html
         })(__BRYTHON__)
+        modules['browser.html'] = $B.module.$factory('browser.html')
+        modules['browser.html'].__dict__.$jsobj = browser_html
     }
 
     modules.browser = $B.module.$factory('browser')
     modules.browser.__dict__.$jsobj = browser
+    modules.browser.$is_package = true
+    modules.browser.__initialized__ = true
+    $B.mod_set(modules.browser, 'html', modules['browser.html'])
 
     // Class for Javascript "undefined"
     $B.UndefinedType = $B.make_class("UndefinedType",
