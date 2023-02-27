@@ -644,8 +644,7 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
             }
         }
     }else{
-        if(_globals.__class__ !== _b_.dict &&
-                _globals.__class__ != $B.jsobj_as_pydict){
+        if(_globals.__class__ !== _b_.dict){
             throw _b_.TypeError.$factory(`${mode}() globals must be ` +
                 "a dict, not " + $B.class_name(_globals))
         }
@@ -653,16 +652,10 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
         exec_globals = {}
         if(_globals.$jsobj){ // eg globals()
             exec_globals = _globals.$jsobj
-        }else if(_globals.__class__ === $B.jsobj_as_pydict){
-            exec_globals = _globals.obj
         }else{
             // The globals object must be the same across calls to exec()
             // with the same dictionary (cf. issue 690)
-            if(_globals.$jsobj){
-                exec_globals = _globals.$jsobj
-            }else{
-                exec_globals = _globals.$jsobj = {}
-            }
+            exec_globals = _globals.$jsobj = {}
             for(var key of _b_.dict.$keys_string(_globals)){
                 _globals.$jsobj[key] = _b_.dict.$getitem_string(_globals, key)
                 if(key == '__name__'){

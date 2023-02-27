@@ -1,13 +1,12 @@
 __BRYTHON__.implementation = [3, 11, 1, 'dev', 0]
 __BRYTHON__.version_info = [3, 11, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2023-02-24 21:37:42.517033"
-__BRYTHON__.timestamp = 1677271062517
+__BRYTHON__.compiled_date = "2023-02-27 12:21:23.670707"
+__BRYTHON__.timestamp = 1677496883670
 __BRYTHON__.builtin_module_names = ["_aio",
     "_ajax",
     "_ast",
     "_base64",
     "_binascii",
-    "_cmath",
     "_io_classes",
     "_json",
     "_jsre",
@@ -17,7 +16,6 @@ __BRYTHON__.builtin_module_names = ["_aio",
     "_profile",
     "_random",
     "_sre",
-    "_sre1",
     "_sre_utils",
     "_string",
     "_strptime",
@@ -34,10 +32,7 @@ __BRYTHON__.builtin_module_names = ["_aio",
     "html_parser",
     "marshal",
     "math",
-    "module1",
     "modulefinder",
     "posix",
     "python_re",
-    "python_re1",
-    "python_re2",
     "unicodedata"]
