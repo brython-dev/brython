@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-02-27 12:21:23.670707"
-__BRYTHON__.timestamp=1677496883670
+__BRYTHON__.compiled_date="2023-02-27 18:59:16.959147"
+__BRYTHON__.timestamp=1677520756959
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6417,7 +6417,7 @@ try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frames)}catch(err){
 'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
-if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
+if(_globals !==_b_.None && ! _globals.$jsobj){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
 $B.frames_stack=save_frames_stack
 return res}
 $$eval.$is_func=true
@@ -9248,10 +9248,11 @@ var res=[]
 pyobj.forEach(function(item){res.push(pyobj2jsobj(item))})
 return res}else if(klass===_b_.dict ||_b_.issubclass(klass,_b_.dict)){
 var jsobj={}
-var items=_b_.list.$factory(_b_.dict.items(pyobj))
-items.forEach(function(item){if(typeof item[1]=='function'){
-item[1].bind(jsobj)}
-jsobj[item[0]]=pyobj2jsobj(item[1])})
+for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){if(typeof entry.key !="string"){throw _b_.TypeError.$factory("dictionaries with non-string "+
+"keys cannot be converted to Javascript objects")}
+if(typeof entry.value=='function'){
+entry.value.bind(jsobj)}
+jsobj[entry.key]=pyobj2jsobj(entry.value)}
 return jsobj}else if(klass===_b_.str){
 return pyobj.valueOf()}else if(klass===_b_.float){return pyobj.value}else if(klass===$B.function ||klass===$B.method){
 if(pyobj.prototype &&

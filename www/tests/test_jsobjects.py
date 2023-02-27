@@ -236,4 +236,11 @@ assert jslist.test() == 'Array test'
 window.del_array_proto() # deletes Array.prototype.test
 assert_raises(AttributeError, getattr, jslist, 'test')
 
+# issue 2165
+def send(*args, **kwargs):
+    # checks that kwargs is a dictionary
+    window.call(args, kwargs)
+
+send(1, 2, a="b", c="d")
+
 print("all tests ok...")
