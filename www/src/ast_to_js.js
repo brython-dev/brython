@@ -1791,7 +1791,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     if(func_scope.needs_frames || is_async){
-        js += `    var _frames = $B.frames_stack.slice()\n`
+        js += `var _frames = $B.frames_stack.slice(),\n` +
+                  `_linenos = $B.frames_stack.map(x => x.$lineno)\n`
     }
 
     if(is_async){
@@ -1832,8 +1833,15 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     js += `}catch(err){
-    $B.set_exc(err, frame)
-    if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
+    $B.set_exc(err, frame)\n`
+
+    if(func_scope.needs_frames || is_async){
+        // set exception $stack and $linenos
+        js += `err.$stack = _frames\n` +
+              `_linenos[_linenos.length - 1] = frame.$lineno\n` +
+              `err.$linenos = _linenos\n`
+    }
+    js += `if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
     frame.$f_trace = $B.trace_exception()
     }
     $B.leave_frame();throw err

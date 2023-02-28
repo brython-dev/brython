@@ -209,12 +209,7 @@ function run(coro){
     var handle_success = function(){
             $B.leave_frame()
         },
-        handle_error = function(err){
-            // coro.$stack is a snapshot of the frames stack when the async
-            // function was called. Restore it to get the correct call tree
-            err.$stack = coro.$stack.concat([$B.last(err.$stack)])
-            $B.handle_error(err)
-        }
+        handle_error = $B.show_error
 
     var $ = $B.args("run", 3, {coro: null, onsuccess: null, onerror: null},
             ["coro", "onsuccess", "onerror"], arguments,
@@ -226,7 +221,6 @@ function run(coro){
 
     if(onerror !== handle_error){
         function error_func(exc){
-            exc.$stack = coro.$stack.concat([$B.last(exc.$stack)])
             try{
                 onerror(exc)
             }catch(err){
