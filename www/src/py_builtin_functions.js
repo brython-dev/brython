@@ -2653,6 +2653,8 @@ $$super.__getattribute__ = function(self, attr){
         return f
     }else if(f.__class__ === _b_.classmethod){
         return f.__func__.bind(null, object_or_type)
+    }else if(f.$is_property){
+        return f.fget(object_or_type)
     }else if(typeof f != "function"){
         return f
     }else{
