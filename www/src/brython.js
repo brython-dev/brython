@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,1,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-01 23:27:18.805790"
-__BRYTHON__.timestamp=1677709638805
+__BRYTHON__.compiled_date="2023-03-01 23:31:52.106835"
+__BRYTHON__.timestamp=1677709912106
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_cmath","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre1","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","module1","modulefinder","posix","python_re","python_re1","python_re2","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6370,13 +6370,12 @@ exec_locals=$B.clone(frame[1])
 for(var attr in frame[3]){exec_locals[attr]=frame[3][attr]}
 exec_globals=exec_locals}else{
 exec_locals=frame[1]
-exec_globals=frame[3]}}}else{if(_globals.__class__ !==_b_.dict &&
-_globals.__class__ !=$B.jsobj_as_pydict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
+exec_globals=frame[3]}}}else{if(_globals.__class__ !==_b_.dict){throw _b_.TypeError.$factory(`${mode}() globals must be `+
 "a dict, not "+$B.class_name(_globals))}
 exec_globals={}
 if(_globals.$jsobj){
-exec_globals=_globals.$jsobj}else if(_globals.__class__===$B.jsobj_as_pydict){exec_globals=_globals.obj}else{
-if(_globals.$jsobj){exec_globals=_globals.$jsobj}else{exec_globals=_globals.$jsobj={}}
+exec_globals=_globals.$jsobj}else{
+exec_globals=_globals.$jsobj={}
 for(var key of _b_.dict.$keys_string(_globals)){_globals.$jsobj[key]=_b_.dict.$getitem_string(_globals,key)
 if(key=='__name__'){__name__=_globals.$jsobj[key]}}}
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
@@ -6418,7 +6417,7 @@ try{var res=exec_func($B,_b_,exec_locals,exec_globals,frame,_frames)}catch(err){
 'Python code\n',src,'\ninitial stack before exec',save_frames_stack.slice(),'\nstack',$B.frames_stack.slice(),'\nexec func',$B.format_indent(exec_func+'',0),'\n    filename',filename,'\n    name from filename',$B.url2name[filename],'\n    local_name',local_name,'\n    exec_locals',exec_locals,'\n    global_name',global_name,'\n    exec_globals',exec_globals,'\n    frame',frame,'\n    _ast',_ast,'\n    js',js)}
 $B.frames_stack=save_frames_stack
 throw err}
-if(_globals !==_b_.None){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
+if(_globals !==_b_.None && ! _globals.$jsobj){for(var key in exec_globals){if(! key.startsWith('$')){_b_.dict.$setitem(_globals,key,exec_globals[key])}}}
 $B.frames_stack=save_frames_stack
 return res}
 $$eval.$is_func=true
@@ -7057,7 +7056,7 @@ return $$super[attr].apply(null,args)}})(self)}
 if($test){console.log("no attr",attr,self,"mro",mro)}
 throw $B.attr_error(attr,self)}
 if($test){console.log("super",attr,self,"mro",mro,"found in mro[0]",mro[0],f,f+'')}
-if(f.$type=="staticmethod" ||attr=="__new__"){return f}else if(f.__class__===_b_.classmethod){return f.__func__.bind(null,object_or_type)}else if(typeof f !="function"){return f}else{if(f.__class__===$B.method){
+if(f.$type=="staticmethod" ||attr=="__new__"){return f}else if(f.__class__===_b_.classmethod){return f.__func__.bind(null,object_or_type)}else if(f.$is_property){return f.fget(object_or_type)}else if(typeof f !="function"){return f}else{if(f.__class__===$B.method){
 f=f.$infos.__func__}
 var callable=$B.$call(f)
 var method=function(){var res=callable(self.__self_class__,...arguments)
@@ -8000,8 +7999,7 @@ for(var i=0;i < 2;i++){if(src){trace.push(trace[len-2])
 trace.push(trace[len-1])}else{trace.push(trace[len-1])}}
 trace.push(`[Previous line repeated ${count_repeats - 2} more times]`)}
 return trace.join('\n')+'\n'}
-$B.error_trace=function(err){console.log('error trace, stack',err.$stack)
-if($B.debug > 1){console.log("handle error",err.__class__,err.args)
+$B.error_trace=function(err){if($B.debug > 1){console.log("handle error",err.__class__,err.args)
 console.log('stack',err.$stack)
 console.log(err.stack)}
 var trace=''
@@ -9249,10 +9247,11 @@ var res=[]
 pyobj.forEach(function(item){res.push(pyobj2jsobj(item))})
 return res}else if(klass===_b_.dict ||_b_.issubclass(klass,_b_.dict)){
 var jsobj={}
-var items=_b_.list.$factory(_b_.dict.items(pyobj))
-items.forEach(function(item){if(typeof item[1]=='function'){
-item[1].bind(jsobj)}
-jsobj[item[0]]=pyobj2jsobj(item[1])})
+for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){if(typeof entry.key !="string"){throw _b_.TypeError.$factory("dictionaries with non-string "+
+"keys cannot be converted to Javascript objects")}
+if(typeof entry.value=='function'){
+entry.value.bind(jsobj)}
+jsobj[entry.key]=pyobj2jsobj(entry.value)}
 return jsobj}else if(klass===_b_.str){
 return pyobj.valueOf()}else if(klass===_b_.float){return pyobj.value}else if(klass===$B.function ||klass===$B.method){
 if(pyobj.prototype &&
@@ -15233,7 +15232,8 @@ js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`
 if(func_scope.needs_stack_length){js+=`var stack_length = $B.frames_stack.length\n`}
-if(func_scope.needs_frames ||is_async){js+=`    var _frames = $B.frames_stack.slice()\n`}
+if(func_scope.needs_frames ||is_async){js+=`var _frames = $B.frames_stack.slice(),\n`+
+`_linenos = $B.frames_stack.map(x => x.$lineno)\n`}
 if(is_async){js+='frame.$async = true\n'}
 if(is_generator){js+=`locals.$is_generator = true\n`
 if(is_async){js+=`var gen_${id} = $B.async_generator.$factory(async function*(){\n`}else{js+=`var gen_${id} = $B.generator.$factory(function*(){\n`}}
@@ -15253,8 +15253,12 @@ js+='var result = _b_.None\n'+
 '$B.leave_frame()\n'+
 'return result\n'}
 js+=`}catch(err){
-    $B.set_exc(err, frame)
-    if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
+    $B.set_exc(err, frame)\n`
+if(func_scope.needs_frames ||is_async){
+js+=`err.$stack = _frames\n`+
+`_linenos[_linenos.length - 1] = frame.$lineno\n`+
+`err.$linenos = _linenos\n`}
+js+=`if((! err.$in_trace_func) && frame.$f_trace !== _b_.None){
     frame.$f_trace = $B.trace_exception()
     }
     $B.leave_frame();throw err
