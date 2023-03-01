@@ -238,15 +238,20 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
 
         // Python dictionaries are transformed into a Javascript object
         // whose attributes are the dictionary keys
+        // Only dictionaries with string keys are allowed to avoid confusing
+        // bugs with Python dicts such as {"1": 'a', 1: "b"}
         var jsobj = {}
-        var items = _b_.list.$factory(_b_.dict.items(pyobj))
-        items.forEach(function(item){
-            if(typeof item[1] == 'function'){
-                // set "this" to jsobj
-                item[1].bind(jsobj)
+        for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
+            if(typeof entry.key != "string"){
+                throw _b_.TypeError.$factory("dictionaries with non-string " +
+                    "keys cannot be converted to Javascript objects")
             }
-            jsobj[item[0]] = pyobj2jsobj(item[1])
-        })
+            if(typeof entry.value == 'function'){
+                // set "this" to jsobj
+                entry.value.bind(jsobj)
+            }
+            jsobj[entry.key] = pyobj2jsobj(entry.value)
+        }
         return jsobj
 
     }else if(klass === _b_.str){

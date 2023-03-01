@@ -101,7 +101,9 @@ py_obj = window.js_obj.to_dict()
 
 Si l'objet est une fonction, les arguments passés à la fonction Python sont
 convertis dans l'appel de la fonction Javascript en utilisant le tableau
-inverse de celui ci-dessus.
+inverse de celui ci-dessus. Si l'argument est un dictionnaire Python, il est
+converti en objet Javascript; le dictionnaire ne doit comporter que des clés
+de type `str`.
 
 Attention, une fonction Javascript ne peut pas être appelée avec des
 arguments par mots-clés, cela déclenche une exception `TypeError` : si la

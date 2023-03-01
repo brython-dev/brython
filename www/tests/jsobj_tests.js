@@ -97,3 +97,10 @@ window.set_array_proto = function(){
 window.del_array_proto = function(){
     delete Array.prototype.test
 }
+
+// issue 2165
+function call(args, kwargs) {
+  console.debug(args, kwargs)
+  a = JSON.stringify(args)
+  b = JSON.stringify(kwargs)
+}

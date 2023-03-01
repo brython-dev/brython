@@ -1039,5 +1039,19 @@ assert_raises(TypeError, type, 'D', (), {'x': 1}, metaclass=Meta)
 D = type('D', (), {'x': 1})
 assert D.__class__ is type
 
+# issue 2159
+class A:
+  @property
+  def m(self):
+    return 1
+
+assert A().m == 1
+
+class B(A):
+ @property
+ def m(self):
+   return super().m + 1
+
+assert B().m == 2
 
 print('passed all tests..')
