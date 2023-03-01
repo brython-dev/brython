@@ -19,7 +19,7 @@ var responseType = {
 }
 
 function handle_kwargs(kw, method){
-    // kw is a wrapper around its attribute .obj
+    // kw was created with $B.obj_dict(), its keys/values are in kw.$jsobj
     var data,
         cache = false,
         format = "text",
@@ -51,7 +51,14 @@ function handle_kwargs(kw, method){
                 data = items.join("&")
             }
         }else if(key == "headers"){
-            headers = kw.$jsobj[key]
+            var value = kw.$jsobj[key]
+            if(! _b_.isinstance(value, _b_.dict)){
+                throw _b_.ValueError.$factory(
+                    "headers must be a dict, not " + $B.class_name(value))
+            }
+            for(var key of _b_.dict.$keys_string(value)){
+                headers[key.toLowerCase()] = _b_.dict.$getitem_string(value, key)
+            }
         }else if(key.startsWith("on")){
             var event = key.substr(2)
             if(event == "timeout"){
@@ -75,10 +82,10 @@ function handle_kwargs(kw, method){
     }
     return {
         body: data,
-        cache: cache,
-        format: format,
-        timeout: timeout,
-        headers: headers
+        cache,
+        format,
+        timeout,
+        headers
     }
 }
 

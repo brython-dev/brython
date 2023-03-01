@@ -82,7 +82,7 @@ function handle_kwargs(self, kw, method){
         cache,
         mode = "text",
         timeout = {}
-    
+
     for(var key in kw.$jsobj){
         if(key == "data"){
             var params = kw.$jsobj[key]
@@ -110,8 +110,7 @@ function handle_kwargs(self, kw, method){
                     "headers must be a dict, not " + $B.class_name(value))
             }
             for(var key of _b_.dict.$keys_string(value)){
-                headers[key.toLowerCase()] = [key,
-                    _b_.dict.$getitem_string(value, key)]
+                headers[key.toLowerCase()] = _b_.dict.$getitem_string(value, key)
             }
         }else if(key.startsWith("on")){
             var event = key.substr(2)
@@ -138,6 +137,7 @@ function handle_kwargs(self, kw, method){
         self.js.setRequestHeader("Content-type",
                                  "application/x-www-form-urlencoded")
     }
+
     return {cache, data, encoding, headers, mode, timeout}
 }
 
@@ -231,10 +231,10 @@ ajax.send = function(self, params){
     // params can be Python dictionary or string
     var content_type
     for(var key in self.headers){
-        var header = self.headers[key]
-        self.js.setRequestHeader(header[0], header[1])
+        var value = self.headers[key]
+        self.js.setRequestHeader(key, value)
         if(key == 'content-type'){
-            content_type = header[1]
+            content_type = value
         }
     }
     if((self.encoding || self.blocking) && ! self.hasMimeType){
@@ -295,7 +295,7 @@ ajax.send = function(self, params){
 }
 
 ajax.set_header = function(self, key, value){
-    self.headers[key.toLowerCase()] = [key, value]
+    self.headers[key.toLowerCase()] = value
 }
 
 ajax.set_timeout = function(self, seconds, func){
@@ -382,8 +382,7 @@ function _request_without_body(method){
         self.charset_user_defined = true
     }
     for(var key in items.headers){
-        var header = items.headers[key]
-        self.js.setRequestHeader(header[0], header[1])
+        self.js.setRequestHeader(key, items.headers[key])
     }
     // Add function read() to return str or bytes according to mode
     self.js.send()
@@ -409,10 +408,10 @@ function _request_with_body(method){
 
     set_timeout(self, timeout)
     for(var key in items.headers){
-        var header = items.headers[key]
-        self.js.setRequestHeader(header[0], header[1])
+        var value = items.headers[key]
+        self.js.setRequestHeader(key, value)
         if(key == 'content-type'){
-            content_type = header[1]
+            content_type = value
         }
     }
     if(method.toUpperCase() == 'POST' && !content_type){
@@ -493,10 +492,10 @@ function file_upload(){
         timeout = items.timeout
 
     for(var key in items.headers){
-        var header = items.headers[key]
-        self.js.setRequestHeader(header[0], header[1])
+        var value = items.headers[key]
+        self.js.setRequestHeader(key, value)
         if(key == 'content-type'){
-            content_type = header[1]
+            content_type = value
         }
     }
     set_timeout(self, timeout)
