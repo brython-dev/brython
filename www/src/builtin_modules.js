@@ -495,6 +495,25 @@
                 frame[1][alias] = result
             }
         },
+        import_modules: function(refs, callback, loaded){
+            // loads the Javascript modules referenced by module_refs, then
+            // calls callback with arguments = the module objects
+            if(loaded === undefined){
+                loaded = []
+            }
+            if(refs.length > 1){
+                var ref = refs.shift()
+                import(ref).then(function(module){
+                    loaded.push(module)
+                    $B.imported.javascript.import_modules(refs, callback, loaded)
+                }).catch($B.show_error)
+            }else{
+                import(refs[0]).then(function(module){
+                    loaded.push(module)
+                    return $B.$call(callback).apply(null, loaded)
+                }).catch($B.show_error)
+            }
+        },        
         JSObject: $B.JSObj,
         JSON: {
             __class__: $B.make_class("JSON"),
