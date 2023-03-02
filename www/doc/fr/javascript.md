@@ -35,6 +35,40 @@ assert js_module.x == 1
 ```
 </blockquote>
 
+**javascript**.`import_modules(`_refs, callback_`)`
+> importe les [modules Javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+> dont les urls sont dans la liste `refs`. Quand ils ont tous été importés,
+> la fonction `callback` est appelée avec comme arguments les modules
+> correspondants aux urls. `callback()` prend donc autant d'arguments
+> qu'il y a d'urls dans `refs`
+
+> Par exemple si le module **`exporter.js`** contient
+
+<blockquote>
+```
+const x = 1
+
+export {x}
+```
+</blockquote>
+
+> on peut l'utiliser dans un script Python avec
+
+<blockquote>
+```python
+import javascript
+
+def main(module):
+    assert module.x == 1
+
+javascript.import_modules(
+    ['/path/to/exporter.js'],
+    main)
+```
+</blockquote>
+
+> Voir [dans la galerie](/gallery/three_webgl_interactive_cubes.html) un exemple d'utilisation avec les modules de three.js.
+
 **javascript**.`py2js(`_src_`)`
 > Renvoie le code Javascript généré à partir du code source Python _src_.
 
