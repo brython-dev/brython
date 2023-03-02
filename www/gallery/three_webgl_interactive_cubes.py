@@ -10,10 +10,10 @@ import javascript
 
 class Main:
 
-    def __init__(self, THREE, module):
+    def __init__(self, THREE, stats_module):
 
         self.THREE = THREE
-        self.Stats = module['default']
+        self.Stats = stats_module['default']
 
         self.theta = 0
         self.pointer = THREE.Vector2.new()
@@ -25,22 +25,22 @@ class Main:
         self.INTERSECTED = None
         self.stats = None
 
+        self.ratio = 0.8
+
         self.init()
         self.animate()
 
-    def onWindowResize(self, ev):
+    def set_size(self):
+        self.renderer.setSize(self.ratio * window.innerWidth, 
+                              self.ratio * window.innerHeight)
 
+    def onWindowResize(self, ev):
         self.camera.aspect = window.innerWidth / window.innerHeight;
         self.camera.updateProjectionMatrix();
 
-        self.renderer.setSize( window.innerWidth, window.innerHeight );
-
-
     def onPointerMove(self, event):
-
-        self.pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        self.pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
+        self.pointer.x = ( event.clientX / window.innerWidth ) * 2 - 1
+        self.pointer.y = - ( event.clientY / window.innerHeight ) * 2 + 1
 
     def init(self):
         THREE = self.THREE
@@ -77,34 +77,30 @@ class Main:
             self.scene.add(obj)
 
         self.raycaster = THREE.Raycaster.new()
-
         self.renderer = THREE.WebGLRenderer.new()
         self.renderer.setPixelRatio(window.devicePixelRatio)
-        self.renderer.setSize(window.innerWidth, window.innerHeight)
-        container.appendChild(self.renderer.domElement)
+        self.set_size()
+        container <= self.renderer.domElement
 
         self.stats = self.Stats.new()
-        container.appendChild(self.stats.dom)
+        container <= self.stats.dom
 
-        document.addEventListener('mousemove', self.onPointerMove)
-
-        window.addEventListener('resize', self.onWindowResize)
+        document.bind('mousemove', self.onPointerMove)
+        window.bind('resize', self.onWindowResize)
 
     def animate(self, *args):
         window.requestAnimationFrame(self.animate)
-
         self.render()
         self.stats.update()
 
     def render(self):
-        THREE = self.THREE
+        degToRad = self.THREE.MathUtils.degToRad
         radius = self.radius
-
         self.theta += 0.1
 
-        self.camera.position.x = radius * math.sin(THREE.MathUtils.degToRad(self.theta))
-        self.camera.position.y = radius * math.sin(THREE.MathUtils.degToRad(self.theta))
-        self.camera.position.z = radius * math.cos(THREE.MathUtils.degToRad(self.theta))
+        self.camera.position.x = radius * math.sin(degToRad(self.theta))
+        self.camera.position.y = radius * math.sin(degToRad(self.theta))
+        self.camera.position.z = radius * math.cos(degToRad(self.theta))
         self.camera.lookAt(self.scene.position)
 
         self.camera.updateMatrixWorld()
@@ -115,10 +111,10 @@ class Main:
         intersects = self.raycaster.intersectObjects(self.scene.children, False)
 
         if intersects.length:
-            if self.INTERSECTED != intersects[ 0 ].object:
+            if self.INTERSECTED != intersects[0].object:
                 if self.INTERSECTED:
                     self.INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex)
-                self.INTERSECTED = intersects[ 0 ].object
+                self.INTERSECTED = intersects[0].object
                 self.INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex()
                 self.INTERSECTED.material.emissive.setHex(0xff0000)
         else:
@@ -128,7 +124,7 @@ class Main:
 
         self.renderer.render(self.scene, self.camera)
 
-
+# import three.js modules
 mods = ['https://threejs.org/build/three.module.js',
         'https://threejs.org/examples/jsm/libs/stats.module.js']
 
