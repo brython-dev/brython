@@ -610,8 +610,8 @@ $B.JSObj.__len__ = function(_self){
 }
 
 $B.JSObj.__repr__ = $B.JSObj.__str__ = function(_self){
-    return '<Javascript ' + _self.constructor.name + ' object: ' +
-        _self.toString() + '>'
+    var js_repr = Object.prototype.toString.call(_self)
+    return `<Javascript object: ${js_repr}>`
 }
 
 $B.JSObj.bind = function(_self, evt, func){
