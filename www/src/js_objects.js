@@ -242,15 +242,15 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         // bugs with Python dicts such as {"1": 'a', 1: "b"}
         var jsobj = {}
         for(var entry of _b_.dict.$iter_items_with_hash(pyobj)){
-            if(typeof entry.key != "string"){
-                throw _b_.TypeError.$factory("dictionaries with non-string " +
-                    "keys cannot be converted to Javascript objects")
+            var key = entry.key
+            if(typeof key != "string"){
+                key = _b_.str.$factory(key)
             }
             if(typeof entry.value == 'function'){
                 // set "this" to jsobj
                 entry.value.bind(jsobj)
             }
-            jsobj[entry.key] = pyobj2jsobj(entry.value)
+            jsobj[key] = pyobj2jsobj(entry.value)
         }
         return jsobj
 

@@ -98,7 +98,8 @@ py_obj = window.js_obj.to_dict()
 If the Javascript object is a function, the arguments passed to the Python
 function are converted into Javascript objects, using the reverse of the
 above table. If the argument is a Python dictionary, it is converted into a
-Javascript object; the dictionary must only have keys of type `str`.
+Javascript object; keys in the Python dictionary are converted to strings in
+the Javascript object.
 
 Take care, a Javascript function can't be called with keyword arguments, this
 raises a `TypeError` exception : if the function is defined by
