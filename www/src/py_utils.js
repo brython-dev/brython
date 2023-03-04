@@ -51,7 +51,21 @@ function pos_only_passed_as_keyword(f, arg){
         ` '${arg}'`)
 }
 
-function too_many_pos_args(f, nb_pos){
+function too_many_pos_args(f, args, slots){
+    var nb_pos = args.length,
+        last = $B.last(args)
+    if(last.$kw){
+        // Unexpected keyword args take precedence
+        if(! f.$infos.kwarg){
+            var kw = $B.parse_kwargs(last.$kw, f.$infos.__name__)
+            for(var k in kw){
+                if(! slots.hasOwnProperty(k)){
+                    throw unexpected_keyword(f, k)
+                }
+            }
+        }
+        nb_pos--
+    }
     var arg_names = f.$infos.arg_names,
         nb_kwonly = f.$infos.__code__.co_kwonlyargcount,
         expected_pos = arg_names - nb_kwonly,
@@ -75,17 +89,17 @@ function unexpected_keyword(f, k){
 $B.args0 = function(f, argcount, slots, args){
     var test = false // f.$infos.__name__ == 'pos_only_arg'
 
-    var nb_pos = args.length,
+    var nb_passed = args.length,
         last = args[args.length - 1],
         kwarg = f.$infos.kwarg,
         vararg = f.$infos.vararg,
         varargs = [],
         arg_names = f.$infos.arg_names,
-        nb_args = arg_names.length,
+        nb_expected = arg_names.length,
         code = f.$infos.__code__,
         nb_posonly = code.co_posonlyargcount,
         nb_kwonly = code.co_kwonlyargcount,
-        nb_pos_or_kw = nb_args - nb_kwonly,
+        nb_pos_or_kw = nb_expected - nb_kwonly,
         extra_kw = {},
         defaults = f.$infos.__defaults__,
         nb_def = defaults.length,
@@ -97,66 +111,126 @@ $B.args0 = function(f, argcount, slots, args){
     if(test){
         console.log(f, args)
     }
-    // handle keyword arguments
-    if(nb_pos && last.$kw){
-        nb_pos--
-        kw = $B.parse_kwargs(last.$kw)
-        if(! kwarg){
-            for(var k in kw){
-                if(! slots.hasOwnProperty(k)){
-                    throw unexpected_keyword(f, k)
+
+    var nb_passed_pos = nb_passed,
+        used_kw = {},
+        posonly_set = {}
+
+    // Handle arguments passed to the function
+    for(var i = 0; i < nb_passed; i++){
+        var arg = args[i]
+        if(arg && arg.$kw){
+            // function was called with keyword arguments
+            nb_passed_pos--
+            kw = $B.parse_kwargs(last.$kw, f.$infos.__name__)
+        }else{
+            var arg_name = arg_names[i]
+            if(arg_name !== undefined){
+                if(i >= nb_pos_or_kw){
+                    if(vararg){
+                        varargs.push(arg)
+                    }else{
+                        throw too_many_pos_args(f, args, slots)
+                    }
+                }else{
+                    if(i < nb_posonly){
+                        posonly_set[arg_name] = true
+                    }
+                    slots[arg_name] = arg
+                    filled++
                 }
-            }
-        }
-        if(test){
-            console.log('kw', kw)
-        }
-        if(nb_posonly){
-            for(var i = 0; i < nb_posonly; i++){
-                if(kw.hasOwnProperty(arg_names[i])){
-                    throw pos_only_passed_as_keyword(f, arg_names[i])
-                }
+            }else if(vararg){
+                varargs.push(arg)
+            }else{
+                throw too_many_pos_args(f, args, slots)
             }
         }
     }
 
-    // handle positional arguments
-    for(var i = 0; i < nb_pos; i++){
-        var arg = args[i],
-            arg_name = arg_names[i]
-        if(arg_name !== undefined){
-            if(i >= nb_pos_or_kw){
-                if(vararg){
-                    varargs.push(arg)
-                }else{
-                    throw too_many_pos_args(f, nb_pos)
+    // Remaining expected positional or keyword parameters
+    for(var j = nb_passed_pos; j < nb_pos_or_kw; j++){
+        // positional or keyword arg not set: does it have a default
+        // passed as keyword or a default value ?
+        var arg_name = arg_names[j]
+        if(kw && kw.hasOwnProperty(arg_name)){
+            // value passed in keywords
+            if(j < nb_posonly){
+                // positional-only argument name is found in keyword
+                // args; it might have a default value; in this case,
+                // if there is a **kwargs, the keyword arg is put in
+                // kwargs
+                // example :
+                //     def f(x='a', /, **kwargs):
+                //         assert x == 'a'
+                //         assert kwargs['x'] == 'b'
+                //
+                //     f(x='b')
+                //
+                if(! kwarg){
+                    throw pos_only_passed_as_keyword(f, arg_name)
                 }
             }else{
-                slots[arg_name] = arg
+                slots[arg_name] = kw[arg_name]
                 filled++
+                kw[arg_name] = null
             }
-        }else if(vararg){
-            varargs.push(arg)
-        }else{
-            throw too_many_pos_args(f, nb_pos)
+        }
+        if(slots[arg_name] === null){
+            // search in defaults
+            def_value = defaults[j - (nb_pos_or_kw - nb_def)]
+            if(def_value !== undefined){
+                slots[arg_name] = def_value
+                filled++
+                if(j < nb_posonly){
+                    // Cf. comment above
+                    if(kw && kw.hasOwnProperty(arg_name) && kwarg){
+                        extra_kw[arg_name] = kw[arg_name]
+                        kw[arg_name] = null
+                    }
+                }
+            }else{
+                var missing_pos = arg_names.slice(j, nb_expected - nb_kwonly)
+                throw missing_required_pos(f, missing_pos)
+            }
+        }
+    }
+    if(! kwarg){
+        for(var k in kw){
+            if(! slots.hasOwnProperty(k)){
+                throw unexpected_keyword(f, k)
+            }
         }
     }
 
-    // inject keyword arguments not handled in first step
+    if(test){
+        console.log('kw', kw)
+    }
+
+    // keyword arguments not handled in previous steps
     for(var k in kw){
+        if(kw[k] === null){
+            continue
+        }
         if(! slots.hasOwnProperty(k)){
             if(kwarg){
                 extra_kw[k] = kw[k]
             }
         }else if(slots[k] !== null){
-            throw multiple_values(f, k)
+            if(posonly_set[k] && kwarg){
+                // a keyword arg has the same name as a posonly arg and
+                // function has **kwarg: put key/value in kwarg
+                // Cf. issue 2167
+                extra_kw[k] = kw[k]
+            }else{
+                throw multiple_values(f, k)
+            }
         }else{
             slots[k] = kw[k]
             filled++
         }
     }
 
-    if(filled != nb_args){
+    if(filled != nb_expected){
         var missing_pos = []
         for(var i = 0; i < nb_pos_or_kw; i++){
             var arg_name = arg_names[i]
@@ -177,7 +251,7 @@ $B.args0 = function(f, argcount, slots, args){
         }
 
         var missing_kwonly = []
-        for(var i = nb_pos_or_kw; i < nb_args; i++){
+        for(var i = nb_pos_or_kw; i < nb_expected; i++){
             var arg_name = arg_names[i]
             if(slots[arg_name] === null){
                 try{
@@ -194,7 +268,6 @@ $B.args0 = function(f, argcount, slots, args){
 
     if(kwarg){
         slots[kwarg] = $B.obj_dict(extra_kw)
-        $B.nbkw++
     }
     if(vararg){
         slots[vararg] = $B.fast_tuple(varargs)

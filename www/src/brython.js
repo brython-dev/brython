@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-03 18:39:53.484212"
-__BRYTHON__.timestamp=1677865193480
+__BRYTHON__.compiled_date="2023-03-04 19:30:43.707083"
+__BRYTHON__.timestamp=1677954643707
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4812,7 +4812,12 @@ function multiple_values(f,arg){throw _b_.TypeError.$factory(f.$infos.__name__+'
 function pos_only_passed_as_keyword(f,arg){return _b_.TypeError.$factory(f.$infos.__name__+
 `() got some positional-only arguments passed as keyword arguments:`+
 ` '${arg}'`)}
-function too_many_pos_args(f,nb_pos){var arg_names=f.$infos.arg_names,nb_kwonly=f.$infos.__code__.co_kwonlyargcount,expected_pos=arg_names-nb_kwonly,nb_def=f.$infos.__defaults__.length
+function too_many_pos_args(f,args,slots){var nb_pos=args.length,last=$B.last(args)
+if(last.$kw){
+if(! f.$infos.kwarg){var kw=$B.parse_kwargs(last.$kw,f.$infos.__name__)
+for(var k in kw){if(! slots.hasOwnProperty(k)){throw unexpected_keyword(f,k)}}}
+nb_pos--}
+var arg_names=f.$infos.arg_names,nb_kwonly=f.$infos.__code__.co_kwonlyargcount,expected_pos=arg_names-nb_kwonly,nb_def=f.$infos.__defaults__.length
 var expected=arg_names.length-nb_kwonly,plural=expected==1 ? '' :'s'
 if(nb_def){expected=`from ${expected - nb_def} to ${expected}`
 plural='s'}
@@ -4822,30 +4827,48 @@ return _b_.TypeError.$factory(f.$infos.__name__+'() takes '+
 function unexpected_keyword(f,k){return _b_.TypeError.$factory(f.$infos.__name__+
 `() got an unexpected keyword argument '${k}'`)}
 $B.args0=function(f,argcount,slots,args){var test=false 
-var nb_pos=args.length,last=args[args.length-1],kwarg=f.$infos.kwarg,vararg=f.$infos.vararg,varargs=[],arg_names=f.$infos.arg_names,nb_args=arg_names.length,code=f.$infos.__code__,nb_posonly=code.co_posonlyargcount,nb_kwonly=code.co_kwonlyargcount,nb_pos_or_kw=nb_args-nb_kwonly,extra_kw={},defaults=f.$infos.__defaults__,nb_def=defaults.length,kwdefaults=f.$infos.__kwdefaults__,nb_kwdef=kwdefaults.length,filled=0,kw
+var nb_passed=args.length,last=args[args.length-1],kwarg=f.$infos.kwarg,vararg=f.$infos.vararg,varargs=[],arg_names=f.$infos.arg_names,nb_expected=arg_names.length,code=f.$infos.__code__,nb_posonly=code.co_posonlyargcount,nb_kwonly=code.co_kwonlyargcount,nb_pos_or_kw=nb_expected-nb_kwonly,extra_kw={},defaults=f.$infos.__defaults__,nb_def=defaults.length,kwdefaults=f.$infos.__kwdefaults__,nb_kwdef=kwdefaults.length,filled=0,kw
 if(test){console.log(f,args)}
-if(nb_pos && last.$kw){nb_pos--
-kw=$B.parse_kwargs(last.$kw)
+var nb_passed_pos=nb_passed,used_kw={},posonly_set={}
+for(var i=0;i < nb_passed;i++){var arg=args[i]
+if(arg && arg.$kw){
+nb_passed_pos--
+kw=$B.parse_kwargs(last.$kw,f.$infos.__name__)}else{var arg_name=arg_names[i]
+if(arg_name !==undefined){if(i >=nb_pos_or_kw){if(vararg){varargs.push(arg)}else{throw too_many_pos_args(f,args,slots)}}else{if(i < nb_posonly){posonly_set[arg_name]=true}
+slots[arg_name]=arg
+filled++}}else if(vararg){varargs.push(arg)}else{throw too_many_pos_args(f,args,slots)}}}
+for(var j=nb_passed_pos;j < nb_pos_or_kw;j++){
+var arg_name=arg_names[j]
+if(kw && kw.hasOwnProperty(arg_name)){
+if(j < nb_posonly){
+if(! kwarg){throw pos_only_passed_as_keyword(f,arg_name)}}else{slots[arg_name]=kw[arg_name]
+filled++
+kw[arg_name]=null}}
+if(slots[arg_name]===null){
+def_value=defaults[j-(nb_pos_or_kw-nb_def)]
+if(def_value !==undefined){slots[arg_name]=def_value
+filled++
+if(j < nb_posonly){
+if(kw && kw.hasOwnProperty(arg_name)&& kwarg){extra_kw[arg_name]=kw[arg_name]
+kw[arg_name]=null}}}else{var missing_pos=arg_names.slice(j,nb_expected-nb_kwonly)
+throw missing_required_pos(f,missing_pos)}}}
 if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){throw unexpected_keyword(f,k)}}}
 if(test){console.log('kw',kw)}
-if(nb_posonly){for(var i=0;i < nb_posonly;i++){if(kw.hasOwnProperty(arg_names[i])){throw pos_only_passed_as_keyword(f,arg_names[i])}}}}
-for(var i=0;i < nb_pos;i++){var arg=args[i],arg_name=arg_names[i]
-if(arg_name !==undefined){if(i >=nb_pos_or_kw){if(vararg){varargs.push(arg)}else{throw too_many_pos_args(f,nb_pos)}}else{slots[arg_name]=arg
-filled++}}else if(vararg){varargs.push(arg)}else{throw too_many_pos_args(f,nb_pos)}}
-for(var k in kw){if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==null){throw multiple_values(f,k)}else{slots[k]=kw[k]
+for(var k in kw){if(kw[k]===null){continue}
+if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==null){if(posonly_set[k]&& kwarg){
+extra_kw[k]=kw[k]}else{throw multiple_values(f,k)}}else{slots[k]=kw[k]
 filled++}}
-if(filled !=nb_args){var missing_pos=[]
+if(filled !=nb_expected){var missing_pos=[]
 for(var i=0;i < nb_pos_or_kw;i++){var arg_name=arg_names[i]
 if(i < nb_posonly && kw && kw[arg_name]!==undefined){throw _b_.TypeError.$factory('posonly passed as kw: '+arg_name)}
 if(slots[arg_name]===null){var def_value=defaults[i-(nb_pos_or_kw-nb_def)]
 if(def_value===undefined){missing_pos.push(arg_names[i])}else{slots[arg_name]=def_value}}}
 if(missing_pos.length > 0){throw missing_required_pos(f,missing_pos)}
 var missing_kwonly=[]
-for(var i=nb_pos_or_kw;i < nb_args;i++){var arg_name=arg_names[i]
+for(var i=nb_pos_or_kw;i < nb_expected;i++){var arg_name=arg_names[i]
 if(slots[arg_name]===null){try{slots[arg_name]=$B.$getitem(kwdefaults,arg_name)}catch(err){missing_kwonly.push(arg_names[i])}}}
 if(missing_kwonly.length > 0){throw missing_required_kwonly(f,missing_kwonly)}}
-if(kwarg){slots[kwarg]=$B.obj_dict(extra_kw)
-$B.nbkw++}
+if(kwarg){slots[kwarg]=$B.obj_dict(extra_kw)}
 if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 if(test){console.log('slots',slots)}
 return slots}
@@ -10404,7 +10427,7 @@ var comps={">":"gt",">=":"ge","<":"lt","<=":"le"}
 for(var op in comps){str[`__${comps[op]}__`]=Function('_self','other',body.replace(/>/gm,op))}
 str.capitalize=function(){var $=$B.args("capitalize",1,{self},["self"],arguments,{},null,null),_self=to_string($.self)
 if(_self.length==0){return ""}
-return _self.charAt(0).toUpperCase()+_self.substr(1)}
+return _self.charAt(0).toUpperCase()+_self.substr(1).toLowerCase()}
 str.casefold=function(){var $=$B.args("casefold",1,{self},["self"],arguments,{},null,null),res="",char,cf,_self=to_string($.self),chars=to_chars(_self)
 for(var i=0,len=chars.length;i < len;i++){char=chars[i]
 cf=$B.unicode_casefold[char]

@@ -1322,7 +1322,7 @@ str.capitalize = function(){
     if(_self.length == 0){
         return ""
     }
-    return _self.charAt(0).toUpperCase() + _self.substr(1)
+    return _self.charAt(0).toUpperCase() + _self.substr(1).toLowerCase()
 }
 
 str.casefold = function(){

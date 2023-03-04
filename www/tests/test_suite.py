@@ -1034,5 +1034,24 @@ while True:
 else:
     raise AssertionError('"while" loop had a break')
 
+# issue 2167
+class F:
+    def format(self, /, **kwargs):
+      assert kwargs['self'] == 'test'
+
+fmt = F()
+fmt.format(self='test')
+
+def f2167(self='a', /, **kwargs):
+    assert self == 'a'
+    assert kwargs['self'] == 'test'
+
+f2167(self='test')
+
+def f2167_2(self='a', /):
+  print(self)
+
+assert_raises(TypeError, f2167_2, self='test',
+    msg="f2167_2() got some positional-only arguments passed as keyword arguments: 'self'")
 
 print('passed all tests...')
