@@ -6,7 +6,7 @@ var _b_ = $B.builtins,
             ("function" === typeof importScripts) &&
             (navigator instanceof WorkerNavigator)
 
-function missing_required_kwonly(f, args){
+function missing_required_kwonly(fname, args){
     var plural = args.length == 1 ? '' : 's',
         arg_list
     args = args.map(x => `'${x}'`)
@@ -18,12 +18,12 @@ function missing_required_kwonly(f, args){
         arg_list = args.slice(0, args.length - 1).join(', ') + ', and ' +
             args[args.length - 1]
     }
-    throw _b_.TypeError.$factory(f.$infos.__name__ + '() ' +
+    throw _b_.TypeError.$factory(fname + '() ' +
         `missing ${args.length} required keyword-only argument${plural}: ` +
         arg_list)
 }
 
-function missing_required_pos(f, args){
+function missing_required_pos(fname, args){
     var plural = args.length == 1 ? '' : 's',
         arg_list
     args = args.map(x => `'${x}'`)
@@ -35,41 +35,38 @@ function missing_required_pos(f, args){
         arg_list = args.slice(0, args.length - 1).join(', ') + ', and ' +
             args[args.length - 1]
     }
-    throw _b_.TypeError.$factory(f.$infos.__name__ + '() ' +
+    throw _b_.TypeError.$factory(fname + '() ' +
         `missing ${args.length} required positional argument${plural}: ` +
         arg_list)
 }
 
-function multiple_values(f, arg){
-    throw _b_.TypeError.$factory(f.$infos.__name__ + '() ' +
+function multiple_values(fname, arg){
+    throw _b_.TypeError.$factory(fname + '() ' +
         `got multiple values for argument '${arg}'`)
 }
 
-function pos_only_passed_as_keyword(f, arg){
-    return _b_.TypeError.$factory(f.$infos.__name__ +
+function pos_only_passed_as_keyword(fname, arg){
+    return _b_.TypeError.$factory(fname +
         `() got some positional-only arguments passed as keyword arguments:` +
         ` '${arg}'`)
 }
 
-function too_many_pos_args(f, args, slots){
+function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, slots){
     var nb_pos = args.length,
         last = $B.last(args)
     if(last.$kw){
         // Unexpected keyword args take precedence
-        if(! f.$infos.kwarg){
-            var kw = $B.parse_kwargs(last.$kw, f.$infos.__name__)
+        if(! kwarg){
+            var kw = $B.parse_kwargs(last.$kw, fname)
             for(var k in kw){
                 if(! slots.hasOwnProperty(k)){
-                    throw unexpected_keyword(f, k)
+                    throw unexpected_keyword(fname, k)
                 }
             }
         }
         nb_pos--
     }
-    var arg_names = f.$infos.arg_names,
-        nb_kwonly = f.$infos.__code__.co_kwonlyargcount,
-        expected_pos = arg_names - nb_kwonly,
-        nb_def = f.$infos.__defaults__.length
+    var nb_def = defaults.length
     var expected = arg_names.length - nb_kwonly,
         plural = expected == 1 ? '' : 's'
     if(nb_def){
@@ -77,44 +74,51 @@ function too_many_pos_args(f, args, slots){
         plural = 's'
     }
     var verb = nb_pos == 1 ? 'was' : 'were'
-    return _b_.TypeError.$factory(f.$infos.__name__ + '() takes ' +
+    return _b_.TypeError.$factory(fname + '() takes ' +
         `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)
 }
 
-function unexpected_keyword(f, k){
-    return _b_.TypeError.$factory(f.$infos.__name__ +
+function unexpected_keyword(fname, k){
+    return _b_.TypeError.$factory(fname +
         `() got an unexpected keyword argument '${k}'`)
 }
 
-$B.args0 = function(f, argcount, slots, args){
-    var test = false // f.$infos.__name__ == 'pos_only_arg'
+var empty = {}
 
-    var nb_passed = args.length,
-        last = args[args.length - 1],
-        kwarg = f.$infos.kwarg,
+$B.args0 = function(f, args){
+    var kwarg = f.$infos.kwarg,
         vararg = f.$infos.vararg,
-        varargs = [],
+        fname = f.$infos.__name__,
         arg_names = f.$infos.arg_names,
         nb_expected = arg_names.length,
         code = f.$infos.__code__,
+        argcount = code.co_argcount,
         nb_posonly = code.co_posonlyargcount,
         nb_kwonly = code.co_kwonlyargcount,
-        nb_pos_or_kw = nb_expected - nb_kwonly,
-        extra_kw = {},
         defaults = f.$infos.__defaults__,
-        nb_def = defaults.length,
-        kwdefaults = f.$infos.__kwdefaults__,
-        nb_kwdef = kwdefaults.length,
-        filled = 0,
-        kw
+        kwdefaults = f.$infos.__kwdefaults__
 
-    if(test){
-        console.log(f, args)
+    var slots = {}
+    for(var arg_name of arg_names){
+        slots[arg_name] = empty
     }
 
-    var nb_passed_pos = nb_passed,
-        used_kw = {},
-        posonly_set = {}
+    return $B.args1(fname, argcount, slots, arg_names, args, defaults,
+                    kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly)
+}
+
+$B.args1 = function(fname, argcount, slots, arg_names, args, defaults,
+                    kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly){
+
+    var nb_passed = args.length,
+        nb_passed_pos = nb_passed,
+        nb_expected = arg_names.length,
+        nb_pos_or_kw = nb_expected - nb_kwonly,
+        posonly_set = {},
+        nb_def = defaults.length,
+        varargs = [],
+        extra_kw = {},
+        kw
 
     // Handle arguments passed to the function
     for(var i = 0; i < nb_passed; i++){
@@ -122,7 +126,7 @@ $B.args0 = function(f, argcount, slots, args){
         if(arg && arg.$kw){
             // function was called with keyword arguments
             nb_passed_pos--
-            kw = $B.parse_kwargs(last.$kw, f.$infos.__name__)
+            kw = $B.parse_kwargs(arg.$kw, fname)
         }else{
             var arg_name = arg_names[i]
             if(arg_name !== undefined){
@@ -130,139 +134,121 @@ $B.args0 = function(f, argcount, slots, args){
                     if(vararg){
                         varargs.push(arg)
                     }else{
-                        throw too_many_pos_args(f, args, slots)
+                        throw too_many_pos_args(
+                            fname, kwarg, arg_names, nb_kwonly, defaults, args, slots)
                     }
                 }else{
                     if(i < nb_posonly){
                         posonly_set[arg_name] = true
                     }
                     slots[arg_name] = arg
-                    filled++
                 }
             }else if(vararg){
                 varargs.push(arg)
             }else{
-                throw too_many_pos_args(f, args, slots)
+                throw too_many_pos_args(
+                    fname, kwarg, arg_names, nb_kwonly, defaults, args, slots)
             }
         }
     }
 
-    // Remaining expected positional or keyword parameters
+    // Remaining expected positional or keyword parameters: are they passed in
+    // keywords, or do they have a default value ?
     for(var j = nb_passed_pos; j < nb_pos_or_kw; j++){
-        // positional or keyword arg not set: does it have a default
-        // passed as keyword or a default value ?
         var arg_name = arg_names[j]
         if(kw && kw.hasOwnProperty(arg_name)){
             // value passed in keywords
             if(j < nb_posonly){
-                // positional-only argument name is found in keyword
-                // args; it might have a default value; in this case,
-                // if there is a **kwargs, the keyword arg is put in
-                // kwargs
-                // example :
+                // positional-only argument name is found in keyword args; it
+                // might have a default value; in this case, (A) if there is a
+                // **kwargs, the keyword arg is put in kwargs (B) otherwise an
+                // exception is raised.
+                //
+                // Example :
                 //     def f(x='a', /, **kwargs):
                 //         assert x == 'a'
                 //         assert kwargs['x'] == 'b'
                 //
                 //     f(x='b')
                 //
+                // Case (B) is handled here, case (A) later in the code, after
+                // looking for a default value
                 if(! kwarg){
-                    throw pos_only_passed_as_keyword(f, arg_name)
+                    throw pos_only_passed_as_keyword(fname, arg_name)
                 }
             }else{
                 slots[arg_name] = kw[arg_name]
-                filled++
-                kw[arg_name] = null
+                kw[arg_name] = empty
             }
         }
-        if(slots[arg_name] === null){
+        if(slots[arg_name] === empty){
             // search in defaults
             def_value = defaults[j - (nb_pos_or_kw - nb_def)]
             if(def_value !== undefined){
                 slots[arg_name] = def_value
-                filled++
                 if(j < nb_posonly){
-                    // Cf. comment above
+                    // Cf. comment above, case (A)
                     if(kw && kw.hasOwnProperty(arg_name) && kwarg){
                         extra_kw[arg_name] = kw[arg_name]
-                        kw[arg_name] = null
+                        kw[arg_name] = empty
                     }
                 }
             }else{
                 var missing_pos = arg_names.slice(j, nb_expected - nb_kwonly)
-                throw missing_required_pos(f, missing_pos)
-            }
-        }
-    }
-    if(! kwarg){
-        for(var k in kw){
-            if(! slots.hasOwnProperty(k)){
-                throw unexpected_keyword(f, k)
+                throw missing_required_pos(fname, missing_pos)
             }
         }
     }
 
-    if(test){
-        console.log('kw', kw)
+    // expected kw-only parameters
+    var missing_kwonly = []
+    for(var i = nb_pos_or_kw; i < nb_expected; i++){
+        var arg_name = arg_names[i]
+        if(kw && kw.hasOwnProperty(arg_name)){
+            slots[arg_name] = kw[arg_name]
+            kw[arg_name] = empty
+        }else{
+            var kw_def = _b_.dict.$get_string(kwdefaults, arg_name)
+            if(kw_def !== _b_.dict.$missing){
+                slots[arg_name] = kw_def
+            }else{
+                missing_kwonly.push(arg_name)
+            }
+        }
+    }
+
+    if(missing_kwonly.length > 0){
+        throw missing_required_kwonly(fname, missing_kwonly)
+    }
+
+    if(! kwarg){
+        for(var k in kw){
+            if(! slots.hasOwnProperty(k)){
+                throw unexpected_keyword(fname, k)
+            }
+        }
     }
 
     // keyword arguments not handled in previous steps
     for(var k in kw){
-        if(kw[k] === null){
+        if(kw[k] === empty){
             continue
         }
         if(! slots.hasOwnProperty(k)){
             if(kwarg){
                 extra_kw[k] = kw[k]
             }
-        }else if(slots[k] !== null){
+        }else if(slots[k] !== empty){
             if(posonly_set[k] && kwarg){
                 // a keyword arg has the same name as a posonly arg and
                 // function has **kwarg: put key/value in kwarg
                 // Cf. issue 2167
                 extra_kw[k] = kw[k]
             }else{
-                throw multiple_values(f, k)
+                throw multiple_values(fname, k)
             }
         }else{
             slots[k] = kw[k]
-            filled++
-        }
-    }
-
-    if(filled != nb_expected){
-        var missing_pos = []
-        for(var i = 0; i < nb_pos_or_kw; i++){
-            var arg_name = arg_names[i]
-            if(i < nb_posonly && kw && kw[arg_name] !== undefined){
-                throw _b_.TypeError.$factory('posonly passed as kw: ' + arg_name)
-            }
-            if(slots[arg_name] === null){
-                var def_value = defaults[i - (nb_pos_or_kw - nb_def)]
-                if(def_value === undefined){
-                    missing_pos.push(arg_names[i])
-                }else{
-                    slots[arg_name] = def_value
-                }
-            }
-        }
-        if(missing_pos.length > 0){
-            throw missing_required_pos(f, missing_pos)
-        }
-
-        var missing_kwonly = []
-        for(var i = nb_pos_or_kw; i < nb_expected; i++){
-            var arg_name = arg_names[i]
-            if(slots[arg_name] === null){
-                try{
-                    slots[arg_name] = $B.$getitem(kwdefaults, arg_name)
-                }catch(err){
-                    missing_kwonly.push(arg_names[i])
-                }
-            }
-        }
-        if(missing_kwonly.length > 0){
-            throw missing_required_kwonly(f, missing_kwonly)
         }
     }
 
@@ -272,15 +258,12 @@ $B.args0 = function(f, argcount, slots, args){
     if(vararg){
         slots[vararg] = $B.fast_tuple(varargs)
     }
-    if(test){
-        console.log('slots', slots)
-    }
+
     return slots
 }
 
-
 $B.args = function(fname, argcount, slots, var_names, args, $dobj,
-    extra_pos_args, extra_kw_args, nb_posonly){
+                   vararg, kwarg, nb_posonly){
     // builds a namespace from the arguments provided in $args
     // in a function defined as
     //     foo(x, y, z=1, *args, u, v, **kw)
@@ -293,195 +276,26 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     //     extra_pos_args = 'args'
     //     extra_kw_args = 'kw'
     //     kwonlyargcount = 2
-    var has_kw_args = false,
-        nb_pos = args.length,
-        filled = 0,
-        nb_posonly = nb_posonly || 0,
-        extra_kw,
-        only_positional
-
-    if(extra_pos_args){
-        slots[extra_pos_args] = []
-        slots[extra_pos_args].__class__ = _b_.tuple
-    }
-
-    if(extra_kw_args){
-        slots[extra_kw_args] = extra_kw = $B.obj_dict({})
-    }
-
-    // simple case : no named parameters, no arguments
-    if(nb_pos == 0 && var_names.length == 0){
-        return slots
-    }
-
-    var last_is_kw = nb_pos > 0 && args[nb_pos - 1] &&
-            args[nb_pos - 1].$kw
-
-    // simple case: no keyword argument passed and the number of positional
-    // arguments passed is equal to the number of expected named arguments
-    if((! last_is_kw) &&
-            nb_pos == var_names.length && nb_pos == argcount){
-        for(var arg of args){
-            slots[var_names[filled]] = arg
-            filled++
-        }
-        return slots
-    }
-
-    if(nb_posonly !== undefined){
-        only_positional = var_names.slice(0, nb_posonly)
-    }
-
-    // If the function call had keywords arguments, they are in the last
-    // element of args
-    if(last_is_kw){
-        nb_pos--
-        var kw_args = $B.parse_kwargs(args[nb_pos].$kw, fname)
-        var nb_kw_args = 0
-        for(var k in kw_args){
-            has_kw_args = true
-            nb_kw_args++
-            if(slots[k] === undefined){
-                if(! extra_kw_args){
-                    throw _b_.TypeError.$factory(
-                        `${fname}() got an unexpected keyword argument '${k}'`)
-                }
-            }
-        }
-    }
-
-    if(nb_pos > argcount){
-        // More positional arguments than formal parameters
-        if(extra_pos_args === null || extra_pos_args == "*"){
-            // No parameter to store extra positional arguments :
-            // thow an exception
-            // count required positional arguments that take default values
-            var min_argcount = argcount
-            for(var i = 0; i < argcount; i++){
-                if($dobj[var_names[i]] !== undefined){
-                    min_argcount--
-                }
-            }
-            var kw_msg = ''
-            if(has_kw_args){
-                var kw_msg = `(and ${nb_kw_args} keyword-only argument` +
-                             (nb_kw_args != 1 ? 's' : '') + ')'
-            }
-            msg = fname + "() takes " +
-                  (min_argcount == argcount ? argcount :
-                      `from ${min_argcount} to ${argcount}`) + " positional argument" +
-                  (min_argcount != argcount || argcount != 1 ? "s" : "") +
-                  ` but ${nb_pos}` +
-                  (has_kw_args ? ` positional arguments` + kw_msg : "") +
-                  (nb_pos == 1 ? ' was' : ' were') + ' given'
-            throw _b_.TypeError.$factory(msg)
-        }else{
-            // Store extra positional arguments
-            for(var i = argcount; i < nb_pos; i++){
-                slots[extra_pos_args].push(args[i])
-            }
-            // For the next step of the algorithm, only use the arguments
-            // before these extra arguments
-            nb_pos = argcount
-        }
-    }
-
-    // Fill slots with positional (non-extra) arguments
-    for(var i = 0; i < nb_pos; i++){
-        slots[var_names[i]] = args[i]
-        filled++
-    }
-
-    if(filled == argcount && argcount === var_names.length &&
-            ! has_kw_args){
-        return slots
-    }
-
-    // Then fill slots with keyword arguments, if any
-    if(has_kw_args){
-        for(var key in kw_args){
-            var value = kw_args[key]
-            if(slots[key] === undefined){
-                // The name of the keyword argument doesn't match any of the
-                // formal parameters
-                if(extra_kw_args){
-                    // If there is a place to store extra keyword arguments
-                    extra_kw.$jsobj[key] = value
-                }else{
-                    throw _b_.TypeError.$factory(fname +
-                        "() got an unexpected keyword argument '" + key + "'")
-                }
-            }else if(slots.hasOwnProperty(key) && slots[key] !== null){
-                // The slot is already filled
-                if(key == extra_pos_args){
-                    throw _b_.TypeError.$factory(
-                        `${fname}() got an unexpected ` +
-                        `keyword argument '${key}'`)
-                }
-                throw _b_.TypeError.$factory(fname +
-                    "() got multiple values for argument '" + key + "'")
-            }else if(only_positional && only_positional.indexOf(key) > -1){
-                throw _b_.TypeError.$factory(`${fname}() got some ` +
-                    `positional-only arguments passed as keyword ` +
-                    `arguments: '${key}'`)
+    var nb_posonly = nb_posonly || 0,
+        nb_kwonly = var_names.length - argcount,
+        defaults  = [],
+        kwdefaults = {$jsobj: {}}
+    for(var i = 0, len = var_names.length; i < len; i++){
+        var var_name = var_names[i]
+        if($dobj.hasOwnProperty(var_name)){
+            if(i < argcount){
+                defaults.push($dobj[var_name])
             }else{
-                // Fill the slot with the key/value pair
-                slots[key] = value
+                kwdefaults.$jsobj[var_name] = $dobj[var_name]
             }
         }
     }
-
-    // If there are unfilled slots, see if there are default values
-    var missing = []
-    for(var attr in slots){
-        if(slots[attr] === null){
-            if($dobj[attr] !== undefined){
-                slots[attr] = $dobj[attr]
-            }else{
-                missing.push(attr)
-            }
-        }
+    for(var k in slots){
+        slots[k] = empty
     }
 
-    if(missing.length > 0){
-        if(missing.length == 1){
-            var arg_type = 'positional'
-            if(var_names.indexOf(missing[0]) >= argcount){
-                arg_type = 'keyword-only'
-            }
-            throw _b_.TypeError.$factory(fname +
-                `() missing 1 required ${arg_type} argument: '${missing[0]}'`)
-        }else{
-            var missing_positional = missing.filter(arg =>
-                    var_names.indexOf(arg) < argcount),
-                missing_kwonly = missing.filter(arg =>
-                    var_names.indexOf(arg) >= argcount)
-
-            function format_missing(m, type){
-                var msg = m.length +
-                       ` required ${type} argument` +
-                       (m.length > 1 ? 's' : '')
-                m = m.map(x => `'${x}'`)
-                if(m.length > 1){
-                    m[m.length - 1] = ' and ' + m[m.length - 1]
-                    for(var i = 0; i < m.length - 2; i++){
-                        m[i] = m[i] + ', '
-                    }
-                }
-                return msg + ': ' + m.join('')
-            }
-
-            var msg = fname + " missing "
-            if(missing_positional.length > 0){
-                msg += format_missing(missing_positional, 'positional')
-            }else{
-                msg += format_missing(missing_kwonly, 'keyword-only')
-            }
-            throw _b_.TypeError.$factory(msg)
-        }
-
-    }
-    return slots
+    return $B.args1(fname, argcount, slots, var_names, args, defaults,
+                    kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly)
 }
 
 $B.parse_kwargs = function(kw_args, fname){

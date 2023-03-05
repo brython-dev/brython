@@ -123,7 +123,7 @@ int.from_bytes = function() {
 int.to_bytes = function(){
     var $ = $B.args("to_bytes", 3,
         {self: null, len: null, byteorder: null, signed: null},
-        ["self", "len", "byteorder", "*", "signed"],
+        ["self", "len", "byteorder", "signed"],
         arguments, {len: 1, byteorder: 'big', signed: false}, null, null),
         self = $.self,
         len = $.len,

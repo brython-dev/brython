@@ -1054,4 +1054,10 @@ def f2167_2(self='a', /):
 assert_raises(TypeError, f2167_2, self='test',
     msg="f2167_2() got some positional-only arguments passed as keyword arguments: 'self'")
 
+def f2167_3(x='a', /, **kwargs):
+  assert x == 'A'
+  assert kwargs['x'] == 'b'
+
+f2167_3('A', x='b')
+
 print('passed all tests...')

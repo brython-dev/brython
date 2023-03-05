@@ -421,7 +421,7 @@ dict.$get_string = function(self, key){
     if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
         return self.$jsobj[key]
     }
-    if(self.table){
+    if(self.table && dict.__len__(self)){
         var indices = self.table[_b_.hash(key)]
         if(indices !== undefined){
             return self._values[indices[0]]

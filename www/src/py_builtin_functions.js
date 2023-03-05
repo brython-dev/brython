@@ -241,7 +241,7 @@ $B.set_func_names(code, "builtins")
 
 //compile() (built in function)
 var compile = _b_.compile = function() {
-    var $ = $B.args('compile', 6,
+    var $ = $B.args('compile', 7,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
          optimize:null, _feature_version:null},
          ['source', 'filename', 'mode', 'flags', 'dont_inherit', 'optimize',

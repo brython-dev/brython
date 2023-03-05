@@ -541,7 +541,7 @@ $make_exc(["EnvironmentError", "IOError", "VMSError", "WindowsError"],
     _b_.OSError)
 
 // AttributeError supports keyword-only "name" and "obj" parameters
-var js = '\nvar $ = $B.args("AttributeError", 1, {"msg": null, "name":null, "obj":null}, ' +
+var js = '\nvar $ = $B.args("AttributeError", 3, {"msg": null, "name":null, "obj":null}, ' +
     '["msg", "name", "obj"], arguments, ' +
     '{msg: _b_.None, name: _b_.None, obj: _b_.None}, "*", null);\n' +
     'err.args = $B.fast_tuple($.msg === _b_.None ? [] : [$.msg])\n;' +
@@ -567,7 +567,7 @@ $B.attr_error = function(name, obj){
 }
 
 // NameError supports keyword-only "name" parameter
-var js = '\nvar $ = $B.args("NameError", 1, {"message":null, "name": null}, ' +
+var js = '\nvar $ = $B.args("NameError", 2, {"message":null, "name": null}, ' +
     '["message", "name"], arguments, ' +
     '{message: _b_.None, name: _b_.None}, "*", null, 1);\n' +
     'err.args = $B.fast_tuple($.message === _b_.None ? [] : [$.message])\n' +

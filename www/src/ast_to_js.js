@@ -1745,7 +1745,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         name1 = this.name + '$' + id,
         name2 = this.name + id
 
-    var parse_args = [name2, positional.length]
+    var parse_args = [name2]
 
     var js = decs +
              `$B.set_lineno(frame, ${this.lineno})\n`
@@ -1762,10 +1762,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     js += `var ${locals_name},
                locals\n`
 
-
-    parse_args.push('{' + slots.join(', ') + '}, ' +
-        `arguments`)
-
+    parse_args.push('arguments')
 
     var args_vararg = this.args.vararg === undefined ? 'null' :
                       "'" + this.args.vararg.arg + "'",
@@ -1927,7 +1924,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += `${name2} = $B.make_async(${name2})\n`
     }
 
-    js += `$B.make_function_defaults(${name2}) // makes ${name2}.$defaults\n`
+    js += `$B.make_function_defaults(${name2})\n`
 
     var mangled = mangle(scopes, func_name_scope, this.name),
         func_ref = `${make_scope_name(scopes, func_name_scope)}.${mangled}`

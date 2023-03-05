@@ -275,9 +275,6 @@ $B.make_class = function(qualname, factory){
     return A
 }
 
-
-
-
 var type = $B.make_class("type",
     function(kls, bases, cl_dict){
         var missing = {},
@@ -289,7 +286,7 @@ var type = $B.make_class("type",
             cl_dict = $.cl_dict,
             kw = $.kw
 
-        var kwarg = Object.create(null)
+        var kwarg = {}
         for(var key in kw.$jsobj){
             kwarg[key] = kw.$jsobj[key]
         }
