@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-05 17:08:13.150379"
-__BRYTHON__.timestamp=1678032493150
+__BRYTHON__.compiled_date="2023-03-06 18:10:33.188298"
+__BRYTHON__.timestamp=1678122633188
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4827,12 +4827,21 @@ return _b_.TypeError.$factory(fname+'() takes '+
 function unexpected_keyword(fname,k){return _b_.TypeError.$factory(fname+
 `() got an unexpected keyword argument '${k}'`)}
 var empty={}
-$B.args0=function(f,args){var kwarg=f.$infos.kwarg,vararg=f.$infos.vararg,fname=f.$infos.__name__,arg_names=f.$infos.arg_names,nb_expected=arg_names.length,code=f.$infos.__code__,argcount=code.co_argcount,nb_posonly=code.co_posonlyargcount,nb_kwonly=code.co_kwonlyargcount,defaults=f.$infos.__defaults__,kwdefaults=f.$infos.__kwdefaults__
-var slots={}
+$B.args0=function(f,args){
+var arg_names=f.$infos.arg_names,code=f.$infos.__code__,slots={}
 for(var arg_name of arg_names){slots[arg_name]=empty}
-return $B.args1(fname,argcount,slots,arg_names,args,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly)}
-$B.args1=function(fname,argcount,slots,arg_names,args,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly){var nb_passed=args.length,nb_passed_pos=nb_passed,nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set={},nb_def=defaults.length,varargs=[],extra_kw={},kw
+return $B.parse_args(
+args,f.$infos.__name__,code.co_argcount,slots,arg_names,f.$infos.__defaults__,f.$infos.__kwdefaults__,f.$infos.vararg,f.$infos.kwarg,code.co_posonlyargcount,code.co_kwonlyargcount)}
+$B.args=function(fname,argcount,slots,var_names,args,$dobj,vararg,kwarg,nb_posonly){
+var nb_posonly=nb_posonly ||0,nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults={$jsobj:{}}
+for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
+if($dobj.hasOwnProperty(var_name)){if(i < argcount){defaults.push($dobj[var_name])}else{kwdefaults.$jsobj[var_name]=$dobj[var_name]}}}
+for(var k in slots){slots[k]=empty}
+return $B.parse_args(args,fname,argcount,slots,var_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly)}
+$B.parse_args=function(args,fname,argcount,slots,arg_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly){
+var nb_passed=args.length,nb_passed_pos=nb_passed,nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set={},nb_def=defaults.length,varargs=[],extra_kw={},kw
 for(var i=0;i < nb_passed;i++){var arg=args[i]
+if(arg && arg.__class__===$B.generator){slots.$has_generators=true}
 if(arg && arg.$kw){
 nb_passed_pos--
 kw=$B.parse_kwargs(arg.$kw,fname)}else{var arg_name=arg_names[i]
@@ -4865,12 +4874,6 @@ extra_kw[k]=kw[k]}else{throw multiple_values(fname,k)}}else{slots[k]=kw[k]}}
 if(kwarg){slots[kwarg]=$B.obj_dict(extra_kw)}
 if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 return slots}
-$B.args=function(fname,argcount,slots,var_names,args,$dobj,vararg,kwarg,nb_posonly){
-var nb_posonly=nb_posonly ||0,nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults={$jsobj:{}}
-for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
-if($dobj.hasOwnProperty(var_name)){if(i < argcount){defaults.push($dobj[var_name])}else{kwdefaults.$jsobj[var_name]=$dobj[var_name]}}}
-for(var k in slots){slots[k]=empty}
-return $B.args1(fname,argcount,slots,var_names,args,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly)}
 $B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
 for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i],key,value
 if(kw_arg.__class__===_b_.dict){for(var entry of _b_.dict.$iter_items_with_hash(kw_arg)){key=entry.key
@@ -5148,7 +5151,9 @@ $B.$call1=function(callable){if(callable.__class__===$B.method){return callable}
 return callable.$factory=$B.$instance_creator(callable)}else if(callable.$is_js_class){
 return callable.$factory=function(){return new callable(...arguments)}}else if(callable.$in_js_module){
 return function(){var res=callable(...arguments)
-return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){return callable}
+return res===undefined ? _b_.None :res}}else if(callable.$is_func ||typeof callable=="function"){if(callable.$infos && callable.$infos.__code__ &&
+(callable.$infos.__code__.co_flags & 32)){$B.last($B.frames_stack).$has_generators=true}
+return callable}
 try{return $B.$getattr(callable,"__call__")}catch(err){throw _b_.TypeError.$factory("'"+$B.class_name(callable)+
 "' object is not callable")}}
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
@@ -5239,11 +5244,11 @@ return}
 if(arg && arg.value !==undefined && $B.tracefunc){if($B.last($B.frames_stack).$f_trace===undefined){$B.last($B.frames_stack).$f_trace=$B.tracefunc}
 if($B.last($B.frames_stack).$f_trace !==_b_.None){$B.trace_return(arg.value)}}
 var frame=$B.frames_stack.pop()
-for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
+if(frame.$has_generators){for(var key in frame[1]){if(frame[1][key]&& frame[1][key].__class__===$B.generator){var gen=frame[1][key]
 if(gen.$frame===undefined){continue}
 var ctx_managers=gen.$frame[1].$context_managers
 if(ctx_managers){for(var cm of ctx_managers){$B.$call($B.$getattr(cm,'__exit__'))(
-_b_.None,_b_.None,_b_.None)}}}}
+_b_.None,_b_.None,_b_.None)}}}}}
 delete frame[1].$current_exception
 return _b_.None}
 $B.floordiv=function(x,y){var z=x/y
@@ -11269,7 +11274,7 @@ return digits}
 var digits="0123456789"
 for(var i=10;i < base;i++){digits+=String.fromCharCode(i+55)}
 return digits}
-int.$factory=function(value,base){var missing={missing:1},$=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{x:missing,base:missing},null,null,1),value=$.x,base=$.base===undefined ? missing :$.base,initial_value=value,explicit_base=base !==missing
+int.$factory=function(value,base){var missing={},$=$B.args("int",2,{x:null,base:null},["x","base"],arguments,{x:missing,base:missing},null,null,1),value=$.x,base=$.base===undefined ? missing :$.base,initial_value=value,explicit_base=base !==missing
 if(value===missing ||value===undefined){if(base !==missing){throw _b_.TypeError.$factory("int() missing string argument")}
 return 0}
 if(_b_.isinstance(value,[_b_.bytes,_b_.bytearray])){
@@ -14693,8 +14698,10 @@ var comp_id=comp.type+'_'+comp.id,varnames=Object.keys(comp.varnames ||{}).map(x
 return `var ${comp.locals_name} = {},\n`+
 `locals = ${comp.locals_name}\n`+
 `locals['.0'] = expr\n`+
+`$B.last($B.frames_stack).$has_generators = true\n`+
 `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
 `"${comp.module_name}", ${comp.globals_name}]\n`+
+`frame.$has_generators = true\n`+
 `frame.__file__ = '${scopes.filename}'\n`+
 `frame.$lineno = ${comp.ast.lineno}\n`+
 `frame.f_code = {\n`+
@@ -15176,6 +15183,9 @@ this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=`${locals_name} = locals = arguments.length == 0 ? {} : $B.args0(${parse_args.join(', ')})\n`}else{js+=`${locals_name} = locals = $B.args0(${parse_args.join(', ')})\n`}
 js+=`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]
+    if(locals.$has_generators){
+        frame.$has_generators = true
+    }
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`

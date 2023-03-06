@@ -604,8 +604,10 @@ function init_comprehension(comp, scopes){
     return `var ${comp.locals_name} = {},\n` +
                `locals = ${comp.locals_name}\n` +
            `locals['.0'] = expr\n` +
+           `$B.last($B.frames_stack).$has_generators = true\n` +
            `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
            `"${comp.module_name}", ${comp.globals_name}]\n` +
+           `frame.$has_generators = true\n` +
            `frame.__file__ = '${scopes.filename}'\n` +
            `frame.$lineno = ${comp.ast.lineno}\n` +
            `frame.f_code = {\n` +
@@ -1779,6 +1781,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
 
     js += `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]
+    if(locals.$has_generators){
+        frame.$has_generators = true
+    }
     frame.__file__ = '${scopes.filename}'
     frame.$lineno = ${this.lineno}
     frame.$f_trace = $B.enter_frame(frame)\n`

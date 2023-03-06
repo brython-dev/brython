@@ -86,30 +86,54 @@ function unexpected_keyword(fname, k){
 var empty = {}
 
 $B.args0 = function(f, args){
-    var kwarg = f.$infos.kwarg,
-        vararg = f.$infos.vararg,
-        fname = f.$infos.__name__,
-        arg_names = f.$infos.arg_names,
-        nb_expected = arg_names.length,
+    // Called by user-defined functions / methods
+    var arg_names = f.$infos.arg_names,
         code = f.$infos.__code__,
-        argcount = code.co_argcount,
-        nb_posonly = code.co_posonlyargcount,
-        nb_kwonly = code.co_kwonlyargcount,
-        defaults = f.$infos.__defaults__,
-        kwdefaults = f.$infos.__kwdefaults__
-
-    var slots = {}
+        slots = {}
     for(var arg_name of arg_names){
         slots[arg_name] = empty
     }
 
-    return $B.args1(fname, argcount, slots, arg_names, args, defaults,
+    return $B.parse_args(
+        args, f.$infos.__name__, code.co_argcount, slots,
+        arg_names, f.$infos.__defaults__, f.$infos.__kwdefaults__,
+        f.$infos.vararg, f.$infos.kwarg,
+        code.co_posonlyargcount, code.co_kwonlyargcount)
+}
+
+$B.args = function(fname, argcount, slots, var_names, args, $dobj,
+                   vararg, kwarg, nb_posonly){
+    // Called by built-in functions / methods
+    var nb_posonly = nb_posonly || 0,
+        nb_kwonly = var_names.length - argcount,
+        defaults  = [],
+        kwdefaults = {$jsobj: {}}
+    for(var i = 0, len = var_names.length; i < len; i++){
+        var var_name = var_names[i]
+        if($dobj.hasOwnProperty(var_name)){
+            if(i < argcount){
+                defaults.push($dobj[var_name])
+            }else{
+                kwdefaults.$jsobj[var_name] = $dobj[var_name]
+            }
+        }
+    }
+    for(var k in slots){
+        slots[k] = empty
+    }
+    return $B.parse_args(args, fname, argcount, slots, var_names, defaults,
                     kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly)
 }
 
-$B.args1 = function(fname, argcount, slots, arg_names, args, defaults,
+$B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
                     kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly){
-
+    // Algorithm to parse the arguments ("args") for the function with the
+    // specified name, argcount etc.
+    // "slots" is a JS object initialized with keys = function named
+    // parameters, values set to the object `empty` (argument values could be
+    // Javascript `undefined` or `null`)
+    // Returns "slots" filled with the arguments passed to the function +
+    // tuple if vararg is set + dict if kwarg is set
     var nb_passed = args.length,
         nb_passed_pos = nb_passed,
         nb_expected = arg_names.length,
@@ -123,6 +147,9 @@ $B.args1 = function(fname, argcount, slots, arg_names, args, defaults,
     // Handle arguments passed to the function
     for(var i = 0; i < nb_passed; i++){
         var arg = args[i]
+        if(arg && arg.__class__ === $B.generator){
+            slots.$has_generators = true
+        }
         if(arg && arg.$kw){
             // function was called with keyword arguments
             nb_passed_pos--
@@ -135,7 +162,8 @@ $B.args1 = function(fname, argcount, slots, arg_names, args, defaults,
                         varargs.push(arg)
                     }else{
                         throw too_many_pos_args(
-                            fname, kwarg, arg_names, nb_kwonly, defaults, args, slots)
+                            fname, kwarg, arg_names, nb_kwonly, defaults,
+                            args, slots)
                     }
                 }else{
                     if(i < nb_posonly){
@@ -262,41 +290,7 @@ $B.args1 = function(fname, argcount, slots, arg_names, args, defaults,
     return slots
 }
 
-$B.args = function(fname, argcount, slots, var_names, args, $dobj,
-                   vararg, kwarg, nb_posonly){
-    // builds a namespace from the arguments provided in $args
-    // in a function defined as
-    //     foo(x, y, z=1, *args, u, v, **kw)
-    // the parameters are
-    //     fname = "f"
-    //     argcount = 3 (for x, y , z)
-    //     slots = {x:null, y:null, z:null, u:null, v:null}
-    //     var_names = ['x', 'y', 'z', 'u', 'v']
-    //     $dobj = {'z':1}
-    //     extra_pos_args = 'args'
-    //     extra_kw_args = 'kw'
-    //     kwonlyargcount = 2
-    var nb_posonly = nb_posonly || 0,
-        nb_kwonly = var_names.length - argcount,
-        defaults  = [],
-        kwdefaults = {$jsobj: {}}
-    for(var i = 0, len = var_names.length; i < len; i++){
-        var var_name = var_names[i]
-        if($dobj.hasOwnProperty(var_name)){
-            if(i < argcount){
-                defaults.push($dobj[var_name])
-            }else{
-                kwdefaults.$jsobj[var_name] = $dobj[var_name]
-            }
-        }
-    }
-    for(var k in slots){
-        slots[k] = empty
-    }
 
-    return $B.args1(fname, argcount, slots, var_names, args, defaults,
-                    kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly)
-}
 
 $B.parse_kwargs = function(kw_args, fname){
     var kwa = kw_args[0]
@@ -1084,6 +1078,10 @@ $B.$call1 = function(callable){
             return res === undefined ? _b_.None : res
         }
     }else if(callable.$is_func || typeof callable == "function"){
+        if(callable.$infos && callable.$infos.__code__ &&
+                (callable.$infos.__code__.co_flags & 32)){
+            $B.last($B.frames_stack).$has_generators = true
+        }
         return callable
     }
     try{
@@ -1307,17 +1305,21 @@ $B.leave_frame = function(arg){
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
     // generator is garbage-collected.
-    for(var key in frame[1]){
-        if(frame[1][key] && frame[1][key].__class__ === $B.generator){
-            var gen = frame[1][key]
-            if(gen.$frame === undefined){
-                continue
-            }
-            var ctx_managers = gen.$frame[1].$context_managers
-            if(ctx_managers){
-                for(var cm of ctx_managers){
-                    $B.$call($B.$getattr(cm, '__exit__'))(
-                        _b_.None, _b_.None, _b_.None)
+    // Frames that are liable to have generators are marked with attribute
+    // $has_generators
+    if(frame.$has_generators){
+        for(var key in frame[1]){
+            if(frame[1][key] && frame[1][key].__class__ === $B.generator){
+                var gen = frame[1][key]
+                if(gen.$frame === undefined){
+                    continue
+                }
+                var ctx_managers = gen.$frame[1].$context_managers
+                if(ctx_managers){
+                    for(var cm of ctx_managers){
+                        $B.$call($B.$getattr(cm, '__exit__'))(
+                            _b_.None, _b_.None, _b_.None)
+                    }
                 }
             }
         }
