@@ -1001,7 +1001,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var klass = obj.__class__
 
-    var $test = false // attr == "__str__" // && obj === _b_.list // "Point"
+    var $test = false // attr == "Rectangle" // && obj === _b_.list // "Point"
 
     if($test){
         console.log("attr", attr, "of", obj, "class", klass,
@@ -1303,7 +1303,7 @@ $B.$getattr = function(obj, attr, _default){
 
     var cname = klass.__name__
     if(is_class){cname = obj.__name__}
-
+    console.log('obj', obj, 'has no attr', attr)
     attr_error(rawname, is_class ? obj : klass)
 }
 
@@ -2594,6 +2594,7 @@ $$super.__get__ = function(self, instance, klass){
 }
 
 $$super.__getattribute__ = function(self, attr){
+    
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
@@ -2611,7 +2612,7 @@ $$super.__getattribute__ = function(self, attr){
     var search_start = mro.indexOf(self.__thisclass__) + 1,
         search_classes = mro.slice(search_start)
 
-    var $test = false // attr == "__init_subclass__" && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = attr == "new" // && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
     }

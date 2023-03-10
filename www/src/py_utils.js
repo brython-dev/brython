@@ -607,13 +607,16 @@ $B.set_lineno = function(frame, lineno){
     return true
 }
 
-$B.get_method_class = function(ns, qualname, refs){
+$B.get_method_class = function(method, ns, qualname, refs){
     // Used to set the cell __class__ in a method. ns is the namespace
     // and qualname is the qualified name of the class
     // Generally, for qualname = "A.B", the result is just ns.A.B
     // In some cases, ns.A might not yet be defined (cf. issue #1740).
     // In this case, a fake class is returned with the same qualname.
     var klass = ns
+    if(method.$infos && method.$infos.$class){
+        return method.$infos.$class
+    }
     for(var ref of refs){
         if(klass[ref] === undefined){
             var fake_class = $B.make_class(qualname)

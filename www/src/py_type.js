@@ -795,7 +795,7 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     if(qualname === _b_.dict.$missing){
         qualname = name
     }
-    
+
     var class_dict = {
         __class__ : meta,
         __bases__ : bases.length == 0 ? [_b_.object] : bases,
@@ -860,22 +860,6 @@ type.__new__ = function(meta, name, bases, cl_dict, extra_kwargs){
     var sup = _b_.super.$factory(class_dict, class_dict)
     var init_subclass = _b_.super.__getattribute__(sup, "__init_subclass__")
     init_subclass(extra_kwargs)
-    /*
-    return new Proxy(class_dict, {
-        get: function(target, attr){
-            console.log('get attr', attr, 'of class', name)
-            try{
-                return $B.$getattr(target, attr)
-            }catch(err){
-                return undefined
-            }
-        },
-        set: function(target, attr, value){
-            console.log('set attr', attr, 'of class', name, 'to', value)
-            return $B.$setattr(target, attr, value)
-        }
-    })
-    */
     return class_dict
 }
 
@@ -1122,15 +1106,19 @@ type.__call__.__class__ = wrapper_descriptor
 
 
 var $instance_creator = $B.$instance_creator = function(klass){
-    var test = false // klass.$infos && klass.$infos.__name__ == 'auto'
+    var test = false // klass.$infos && klass.$infos.__name__ == 'Square2'
     if(test){
         console.log('instance creator of', klass)
     }
     // return the function to initalise a class instance
     if(klass.prototype && klass.prototype.constructor == klass){
         // JS constructor
+        console.log('js contructor')
         return function(){
-            return new klass(...arguments)
+            console.log('call js constructor', klass)
+            var res = new klass(...arguments)
+            console.log('result of jscontructor', res)
+            return res
         }
     }
 

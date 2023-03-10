@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-06 18:10:33.188298"
-__BRYTHON__.timestamp=1678122633188
+__BRYTHON__.compiled_date="2023-03-10 15:46:18.158738"
+__BRYTHON__.timestamp=1678459578158
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -4991,8 +4991,9 @@ return t}
 $B.set_lineno=function(frame,lineno){frame.$lineno=lineno
 if(frame.$f_trace !==_b_.None){$B.trace_line()}
 return true}
-$B.get_method_class=function(ns,qualname,refs){
+$B.get_method_class=function(method,ns,qualname,refs){
 var klass=ns
+if(method.$infos && method.$infos.$class){return method.$infos.$class}
 for(var ref of refs){if(klass[ref]===undefined){var fake_class=$B.make_class(qualname)
 return fake_class}
 klass=klass[ref]}
@@ -5931,7 +5932,11 @@ type.__call__.__class__=wrapper_descriptor
 var $instance_creator=$B.$instance_creator=function(klass){var test=false 
 if(test){console.log('instance creator of',klass)}
 if(klass.prototype && klass.prototype.constructor==klass){
-return function(){return new klass(...arguments)}}
+console.log('js contructor')
+return function(){console.log('call js constructor',klass)
+var res=new klass(...arguments)
+console.log('result of jscontructor',res)
+return res}}
 if(klass.__abstractmethods__ && $B.$bool(klass.__abstractmethods__)){return function(){var ams=Array.from($B.make_js_iterator(klass.__abstractmethods__))
 ams.sort()
 var msg=(ams.length > 1 ? 's ' :' ')+ams.join(', ')
@@ -6550,6 +6555,7 @@ if(res !==undefined){return res}
 if(_default !==undefined){return _default}
 var cname=klass.__name__
 if(is_class){cname=obj.__name__}
+console.log('obj',obj,'has no attr',attr)
 attr_error(rawname,is_class ? obj :klass)}
 var globals=_b_.globals=function(){
 check_nb_args_no_kw('globals',0,arguments)
@@ -6997,7 +7003,7 @@ return function(){mro[0].$js_func.call(self.__self_class__,...arguments)}}}
 var object_or_type=self.__self_class__,mro=self.$arg2=='type' ? object_or_type.__mro__ :
 $B.get_class(object_or_type).__mro__
 var search_start=mro.indexOf(self.__thisclass__)+1,search_classes=mro.slice(search_start)
-var $test=false 
+var $test=attr=="new" 
 if($test){console.log('super.__ga__, self',self,'search classes',search_classes)}
 var f
 for(var klass of search_classes){if(klass===undefined){console.log('klass undef in super',self)
@@ -9271,6 +9277,25 @@ for(var key in _self){if(! $B.JSObj.__eq__(_self[key],other[key])){return false}
 default:
 return _self===other}}
 $B.JSObj.__ne__=function(_self,other){return ! $B.JSObj.__eq__(_self,other)}
+function jsclass2pyclass(js_class){
+var proto=js_class.prototype,klass=$B.make_class(js_class.name)
+klass.__init__=function(self){var args=pyargs2jsargs(Array.from(arguments).slice(1))
+var js_obj=new proto.constructor(...args)
+for(var attr in js_obj){_b_.dict.$setitem(self.__dict__,attr,$B.jsobj2pyobj(js_obj[attr]))}
+return _b_.None}
+klass.new=function(){var args=pyargs2jsargs(arguments)
+return $B.JSObj.$factory(new proto.constructor(...args))}
+var key,value
+for([key,value]of Object.entries(Object.getOwnPropertyDescriptors(proto))){if(key=='constructor'){continue}
+if(value.get){var getter=(function(v){return function(self){return v.get.call(self.__dict__.$jsobj)}})(value),setter=(function(v){return function(self,x){v.set.call(self.__dict__.$jsobj,x)}})(value)
+klass[key]=_b_.property.$factory(getter,setter)}else{klass[key]=(function(m){return function(self){var args=Array.from(arguments).slice(1)
+return proto[m].apply(self.__dict__.$jsobj,args)}})(key)}}
+var js_parent=Object.getPrototypeOf(proto).constructor
+if(js_parent.toString().startsWith('class ')){var py_parent=jsclass2pyclass(js_parent)
+klass.__mro__=[py_parent].concat(klass.__mro__)}
+var frame=$B.last($B.frames_stack)
+if(frame){$B.set_func_names(klass,frame[2])}
+return klass}
 $B.JSObj.__getattribute__=function(_self,attr){var test=false 
 if(test){console.log("__ga__",_self,attr)}
 if(attr=="new" && typeof _self=="function"){
@@ -9279,6 +9304,7 @@ return $B.JSObj.$factory(new _self.$js_func(...args))}}else{return function(){va
 return $B.JSObj.$factory(new _self(...args))}}}
 var js_attr=_self[attr]
 if(js_attr==undefined && typeof _self=="function" && _self.$js_func){js_attr=_self.$js_func[attr]}
+if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr.toString().startsWith('class '))}
 if(js_attr===undefined){if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
 if(res !==undefined){return $B.JSObj.$factory(res)}}
 var klass=$B.get_class(_self)
@@ -9288,7 +9314,8 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $B.JSObj.$factory(class_attr.apply(null,args))}}else{return class_attr}}
 if(attr=="bind" && typeof _self.addEventListener=="function"){return function(event,callback){return _self.addEventListener(event,callback)}}
 throw $B.attr_error(attr,_self)}
-if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
+if(js_attr.toString().startsWith('class ')){
+return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){var res=function(){var args=pyargs2jsargs(arguments),target=_self.$js_func ||_self
 try{var result=js_attr.apply(target,args)}catch(err){console.log("error",err)
 console.log("attribute",attr,"of _self",_self,js_attr,args,arguments)
 throw err}
@@ -14170,7 +14197,7 @@ return obj}})(__BRYTHON__)
 var update=$B.update_obj=function(mod,data){for(attr in data){mod[attr]=data[attr]}}
 var _window=self;
 var modules={}
-var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(/\/*$/g,'')+
+var browser={$package:true,$is_package:true,__initialized__:true,__package__:'browser',__file__:$B.brython_path.replace(new RegExp("/*$","g"),'')+
 '/Lib/browser/__init__.py',bind:function(){
 var $=$B.args("bind",3,{elt:null,evt:null,options:null},["elt","evt","options"],arguments,{options:_b_.None},null,null)
 var options=$.options
@@ -14282,30 +14309,27 @@ $B.UndefinedType.__str__=$B.UndefinedType.__repr__;
 $B.Undefined={__class__:$B.UndefinedType}
 $B.set_func_names($B.UndefinedType,"javascript")
 var super_class=$B.make_class("JavascriptSuper",function(){
-var b_super=_b_.super.$factory(),b_self=b_super.__self_class__,proto=Object.getPrototypeOf(b_self),parent=proto.constructor.$parent
-var factory=function(){var p=parent.bind(b_self),res
-if(parent.toString().startsWith("class")){res=new p(...arguments)}else{res=p(...arguments)}
-for(var key in res){b_self[key]=res[key]}
-return res}
-return{
-__class__:super_class,__init__:factory,__self_class__:b_self}}
+var res=_b_.super.$factory()
+var js_constr=res.__thisclass__.__bases__[0]
+return function(){var obj=new js_constr.$js_func(...arguments)
+console.log('obj from js constr',obj)
+for(var attr in obj){console.log('attr',attr)
+res.__self_class__.__dict__[attr]=$B.jsobj2pyobj(obj[attr])}
+return obj}}
 )
 super_class.__getattribute__=function(self,attr){if(attr=="__init__" ||attr=="__call__"){return self.__init__}
 return $B.$getattr(self.__self_class__,attr)}
 $B.set_func_names(super_class,"javascript")
 modules['javascript']={"this":function(){
 if($B.js_this===undefined){return $B.builtins.None}
-return $B.JSObj.$factory($B.js_this)},"Date":self.Date && $B.JSObj.$factory(self.Date),"extends":function(js_constr){return function(obj){if(obj.$is_class){var factory=function(){var init=$B.$getattr(obj,"__init__",_b_.None)
-if(init !==_b_.None){init.bind(this,this).apply(this,arguments)}
-return this}
-factory.prototype=Object.create(js_constr.prototype)
-factory.prototype.constructor=factory
-factory.$parent=js_constr.$js_func
-factory.$is_class=true 
-factory.$infos=obj.$infos
-for(var key in obj){if(typeof obj[key]=="function"){factory.prototype[key]=(function(x){return function(){
-return obj[x].bind(this,this).apply(this,arguments)}})(key)}}
-return factory}}},import_js:function(url,name){
+return $B.JSObj.$factory($B.js_this)},"Date":self.Date && $B.JSObj.$factory(self.Date),"extends":function(js_constr){if((!js_constr.$js_func)||
+! js_constr.$js_func.toString().startsWith('class ')){console.log(js_constr)
+throw _b_.TypeError.$factory(
+'argument of extend must be a Javascript class')}
+js_constr.__class__=_b_.type
+return function(obj){obj.__bases__.splice(0,0,js_constr)
+obj.__mro__.splice(0,0,js_constr)
+return obj}},import_js:function(url,name){
 var $=$B.args('import_js',2,{url:null,alias:null},['url','alias'],arguments,{alias:_b_.None},null,null),url=$.url
 alias=$.alias
 var xhr=new XMLHttpRequest(),result
@@ -15201,8 +15225,8 @@ var ix=scopes.indexOf(class_scope),parent=scopes[ix-1]
 var scope_ref=make_scope_name(scopes,parent),class_ref=class_scope.name,
 refs=class_ref.split('.').map(x=> `'${x}'`)
 bind("__class__",scopes)
-js+=`locals.__class__ = `+
-`$B.get_method_class(${scope_ref}, "${class_ref}", [${refs}])\n`}
+js+=`locals.__class__ =  `+
+`$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`}
 js+=function_body+'\n'
 if((! this.$is_lambda)&& !($B.last(this.body)instanceof $B.ast.Return)){
 js+='var result = _b_.None\n'+

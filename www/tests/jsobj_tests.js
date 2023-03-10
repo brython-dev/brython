@@ -45,15 +45,47 @@ var root = {
 }
 
 // Class: used to test how a Python class can inherit from a JS class
-class Rectangle {
+// Class: used to test how a Python class can inherit from a JS class
+class Polygon {
+    nb_sides(){
+        return 'sides'
+    }
+}
+class Rectangle extends Polygon{
     constructor(height, width) {
+        super()
         this.height = height;
         this.width = width;
     }
     surface(){
         return this.height * this.width
     }
+    get area(){
+        return this.height * this.width
+    }
+    set area(x){
+        console.log('set area to', x, this.height, this.width)
+        var s = this.height * this.width,
+            ratio = Math.sqrt(x / s)
+        this.height *= ratio
+        this.width *= ratio
+    }
+    *getSides() {
+      yield this.height;
+      yield this.width;
+      yield this.height;
+      yield this.width;
+    }
+
+  static displayName = "Rectangle";
+  static distance(a, b) {
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    return Math.hypot(dx, dy);
+  }
 }
+
 window.Rectangle = Rectangle // required !
 
 // Constructor: used to test how a Python class can inherit from a

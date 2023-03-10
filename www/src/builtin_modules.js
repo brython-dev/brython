@@ -12,7 +12,7 @@
         $is_package: true,
         __initialized__: true,
         __package__: 'browser',
-        __file__: $B.brython_path.replace(/\/*$/g,'') +
+        __file__: $B.brython_path.replace(new RegExp("/*$", "g"),'') +
             '/Lib/browser/__init__.py',
 
         bind:function(){
@@ -375,8 +375,20 @@
     var super_class = $B.make_class("JavascriptSuper",
         function(){
             // Use Brython's super() to get a reference to self
-            var b_super = _b_.super.$factory(),
-                b_self = b_super.__self_class__,
+            var res = _b_.super.$factory()
+            var js_constr = res.__thisclass__.__bases__[0]
+            return function(){
+                var obj = new js_constr.$js_func(...arguments)
+                console.log('obj from js constr', obj)
+                for(var attr in obj){
+                    console.log('attr', attr)
+                    res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
+                }
+                return obj
+            }
+            /*
+            console.log('b_super', b_super)
+            var b_self = b_super.__self_class__,
                 proto = Object.getPrototypeOf(b_self),
                 parent = proto.constructor.$parent
             var factory = function(){
@@ -397,6 +409,7 @@
                 __init__: factory,
                 __self_class__: b_self
             }
+            */
         }
     )
 
@@ -418,33 +431,17 @@
         },
         "Date": self.Date && $B.JSObj.$factory(self.Date),
         "extends": function(js_constr){
+            if((!js_constr.$js_func) ||
+                    ! js_constr.$js_func.toString().startsWith('class ')){
+                console.log(js_constr)
+                throw _b_.TypeError.$factory(
+                    'argument of extend must be a Javascript class')
+            }
+            js_constr.__class__ = _b_.type
             return function(obj){
-                if(obj.$is_class){
-                    var factory = function(){
-                        var init = $B.$getattr(obj, "__init__", _b_.None)
-                        if(init !== _b_.None){
-                            init.bind(this, this).apply(this, arguments)
-                        }
-                        return this
-                    }
-                    factory.prototype = Object.create(js_constr.prototype)
-                    factory.prototype.constructor = factory
-                    factory.$parent = js_constr.$js_func
-                    factory.$is_class = true // for $B.$call
-                    factory.$infos = obj.$infos
-                    for(var key in obj){
-                        if(typeof obj[key] == "function"){
-                            factory.prototype[key] = (function(x){
-                                return function(){
-                                    // Add "this" as first argument of method
-                                    return obj[x].bind(this, this).apply(this,
-                                        arguments)
-                                }
-                            })(key)
-                        }
-                    }
-                    return factory
-                }
+                obj.__bases__.splice(0, 0, js_constr)
+                obj.__mro__.splice(0, 0, js_constr)
+                return obj
             }
         },
         import_js: function(url, name){
@@ -513,7 +510,7 @@
                     return $B.$call(callback).apply(null, loaded)
                 }).catch($B.show_error)
             }
-        },        
+        },
         JSObject: $B.JSObj,
         JSON: {
             __class__: $B.make_class("JSON"),

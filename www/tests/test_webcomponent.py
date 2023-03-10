@@ -132,3 +132,58 @@ class DemoComponent(BaseComponent):
 
 webcomponent.define("demo-component2082", DemoComponent)
 assert class2082 == ['DemoComponent']
+
+# issue 2169
+t2169 = []
+
+def un_camel2169(word: str) -> str:
+    upper_chars: str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    last_char: str = word[0]
+    output: list = [last_char.lower()]
+    for c in word[1:]:
+        if c in upper_chars:
+            if last_char not in upper_chars:
+                output.append('-')
+            output.append(c.lower())
+        else:
+            output.append(c)
+        last_char = c
+    return "".join(output)
+
+
+class UIPLugin2169:
+    @classmethod
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        tag_name = "ui-" + un_camel2169(cls.__name__)
+        webcomponent.define(tag_name, cls)
+
+class SBaseComponent2169:
+    _initialized: bool = False
+    def connectedCallback(self):
+        pass
+
+
+class BaseComponent2169(SBaseComponent2169):
+    def connectedCallback(self):
+        if not self._initialized:
+            super().connectedCallback()
+            if hasattr(self, "__bind_events__"):
+                self.__bind_events__()
+            self._initialized = True
+
+
+class DemoComponent2169(UIPLugin2169, BaseComponent2169):
+    def connectedCallback(self):
+        if not self._initialized:
+            t2169.append('init2169')
+            s = super()
+            s.connectedCallback()
+            BaseComponent2169.connectedCallback(self)
+
+
+demo_comp = DemoComponent2169()
+assert t2169 == ['init2169']
+
+
+print('all tests passed...')

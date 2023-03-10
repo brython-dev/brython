@@ -158,20 +158,27 @@ for num in [1, 4.7]:
     except TypeError:
         pass
 
-# javascript.extends() and javascript.super()
-@javascript.extends(window.Rectangle)
-class Square2:
+# inheriting a Javascript class
+class Square2(window.Rectangle):
 
     def __init__(self, length):
-        javascript.super()(length, length)
+        super().__init__(length, length)
         self.name = 'Square2'
 
     def f(self):
-        return javascript.super().surface()
+        return self.surface()
 
 assert Square2(10).name == "Square2"
 assert Square2(25).surface() == 625
 assert Square2(20).f() == 400
+
+sq = Square2(6)
+assert list(sq.getSides()) == [6, 6, 6, 6]
+assert sq.area == 36
+sq.area = 25
+assert sq.width == 5
+
+assert sq.nb_sides() == 'sides'
 
 # issue 1696
 window.jsFunction1696('asdf'.isupper)

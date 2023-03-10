@@ -459,8 +459,62 @@ $B.JSObj.__ne__ = function(_self, other){
     return ! $B.JSObj.__eq__(_self, other)
 }
 
+function jsclass2pyclass(js_class){
+    // Create a Python class based on a Javascript class
+    var proto = js_class.prototype,
+        klass = $B.make_class(js_class.name)
+    klass.__init__ = function(self){
+        var args = pyargs2jsargs(Array.from(arguments).slice(1))
+        var js_obj = new proto.constructor(...args)
+        for(var attr in js_obj){
+            _b_.dict.$setitem(self.__dict__, attr, $B.jsobj2pyobj(js_obj[attr]))
+        }
+        return _b_.None
+    }
+    klass.new = function(){
+        var args = pyargs2jsargs(arguments)
+        return $B.JSObj.$factory(new proto.constructor(...args))
+    }
+    var key, value
+    for([key, value] of Object.entries(Object.getOwnPropertyDescriptors(proto))){
+        if(key == 'constructor'){
+            continue
+        }
+        if(value.get){
+            var getter = (function(v){
+                    return function(self){
+                        return v.get.call(self.__dict__.$jsobj)
+                    }
+                })(value),
+                setter = (function(v){
+                    return function(self, x){
+                        v.set.call(self.__dict__.$jsobj, x)
+                    }
+                })(value)
+            klass[key] = _b_.property.$factory(getter, setter)
+        }else{
+            klass[key] = (function(m){
+                return function(self){
+                    var args = Array.from(arguments).slice(1)
+                    return proto[m].apply(self.__dict__.$jsobj, args)
+                }
+            })(key)
+        }
+    }
+    var js_parent = Object.getPrototypeOf(proto).constructor
+    if(js_parent.toString().startsWith('class ')){
+        var py_parent = jsclass2pyclass(js_parent)
+        klass.__mro__ = [py_parent].concat(klass.__mro__)
+    }
+    var frame = $B.last($B.frames_stack)
+    if(frame){
+        $B.set_func_names(klass, frame[2])
+    }
+    return klass
+}
+
 $B.JSObj.__getattribute__ = function(_self, attr){
-    var test = false // attr == "f"
+    var test = false // attr == "Rectangle"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -481,6 +535,10 @@ $B.JSObj.__getattribute__ = function(_self, attr){
     var js_attr = _self[attr]
     if(js_attr == undefined && typeof _self == "function" && _self.$js_func){
         js_attr = _self.$js_func[attr]
+    }
+    if(test){
+        console.log('js_attr', js_attr, typeof js_attr,
+            '\n is JS class ?', js_attr.toString().startsWith('class '))
     }
     if(js_attr === undefined){
         if(typeof _self.getNamedItem == 'function'){
@@ -511,7 +569,10 @@ $B.JSObj.__getattribute__ = function(_self, attr){
         }
         throw $B.attr_error(attr, _self)
     }
-    if(typeof js_attr === 'function'){
+    if(js_attr.toString().startsWith('class ')){
+        // Javascript class
+        return jsclass2pyclass(js_attr)
+    }else if(typeof js_attr === 'function'){
         var res = function(){
             var args = pyargs2jsargs(arguments),
                 target = _self.$js_func || _self
