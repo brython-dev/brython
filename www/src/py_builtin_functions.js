@@ -1303,7 +1303,6 @@ $B.$getattr = function(obj, attr, _default){
 
     var cname = klass.__name__
     if(is_class){cname = obj.__name__}
-    console.log('obj', obj, 'has no attr', attr)
     attr_error(rawname, is_class ? obj : klass)
 }
 
