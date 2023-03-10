@@ -1714,7 +1714,11 @@ function log(x, base){
     if(base === _b_.None){
         return $B.fast_float(log)
     }
-    return $B.fast_float(log / Math.log(float_check(base)))
+    var denom = _mod.log(base).value
+    if(denom == 0){
+        throw _b_.ZeroDivisionError.$factory('float division by zero')
+    }
+    return $B.fast_float(log / denom)
 }
 
 function log1p(x){
@@ -1757,7 +1761,7 @@ function log2(x){
         return _b_.float.$factory('nan')
     }
     if(x < 0.0){
-        throw _b_.ValueError.$factory('')
+        throw _b_.ValueError.$factory('math domain error')
     }
     return $B.fast_float(log2_func(x))
 }

@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-10 15:46:18.158738"
-__BRYTHON__.timestamp=1678459578158
+__BRYTHON__.compiled_date="2023-03-10 16:41:18.295258"
+__BRYTHON__.timestamp=1678462878295
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -6555,7 +6555,6 @@ if(res !==undefined){return res}
 if(_default !==undefined){return _default}
 var cname=klass.__name__
 if(is_class){cname=obj.__name__}
-console.log('obj',obj,'has no attr',attr)
 attr_error(rawname,is_class ? obj :klass)}
 var globals=_b_.globals=function(){
 check_nb_args_no_kw('globals',0,arguments)
@@ -7948,9 +7947,9 @@ position[3]))){var indent=line.length-line.trimLeft().length
 var paddings=[position[0]-indent,position[1]-position[0],position[2]-position[1]]
 for(var padding in paddings){if(padding < 0){console.log('wrong values, position',position,'indent',indent)
 paddings[paddings.indexOf(padding)]=0}}
-trace_line+='    '+' '.repeat(padding[0])+
-'~'.repeat(padding[1])+
-'^'.repeat(padding[2])
+trace_line+='    '+' '.repeat(paddings[0])+
+'~'.repeat(paddings[1])+
+'^'.repeat(paddings[2])
 if(position[3]!==undefined){trace_line+='~'.repeat(position[3]-position[2])}
 trace.push(trace_line)}}}else{console.log('no src for filename',filename)
 console.log('in file_cache',Object.keys($B.file_cache).join('\n'))}}
@@ -14960,7 +14959,7 @@ scope.ast instanceof $B.ast.While){js+=`no_break_${scope.id} = false\n`
 break}}
 js+=`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),js='$B.$call1('+func+
+$B.ast.Call.prototype.to_js=function(scopes){var func=$B.js_from_ast(this.func,scopes),js='$B.$call('+func+
 `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
 var args=make_args.bind(this)(scopes)
 return js+')'+(args.has_starred ? `.apply(null, ${args.js})` :

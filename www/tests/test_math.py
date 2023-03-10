@@ -300,4 +300,11 @@ assert math.hypot(1, 1) == 1.4142135623730951
 assert math.hypot(1.0, 1) == 1.4142135623730951
 assert math.hypot(1, 1.0) == 1.4142135623730951
 
+# issue 2168
+assert_raises(ValueError, math.log2, -10, msg='math domain error')
+assert_raises(ValueError, math.log, 10, -1, msg='math domain error')
+assert_raises(ValueError, math.log, 10, 0, msg='math domain error')
+
+assert_raises(ZeroDivisionError, math.log, 10, 1)
+
 print("passed all tests..")
