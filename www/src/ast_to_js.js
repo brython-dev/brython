@@ -1166,7 +1166,7 @@ $B.ast.Break.prototype.to_js = function(scopes){
 
 $B.ast.Call.prototype.to_js = function(scopes){
     var func =  $B.js_from_ast(this.func, scopes),
-        js = '$B.$call1(' + func +
+        js = '$B.$call(' + func +
              `, [${this.col_offset}, ${this.col_offset}, ${this.end_col_offset}]`
 
     var args = make_args.bind(this)(scopes)

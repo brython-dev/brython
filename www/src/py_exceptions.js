@@ -922,9 +922,9 @@ function trace_from_stack(err){
                             paddings[paddings.indexOf(padding)] = 0
                         }
                     }
-                    trace_line += '    ' + ' '.repeat(padding[0]) +
-                        '~'.repeat(padding[1]) +
-                        '^'.repeat(padding[2])
+                    trace_line += '    ' + ' '.repeat(paddings[0]) +
+                        '~'.repeat(paddings[1]) +
+                        '^'.repeat(paddings[2])
                     if(position[3] !== undefined){
                         trace_line += '~'.repeat(position[3] - position[2])
                     }
