@@ -113,13 +113,13 @@ class Main:
         if intersects.length:
             if self.INTERSECTED != intersects[0].object:
                 if self.INTERSECTED:
-                    self.INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex)
+                    self.INTERSECTED.material.emissive.setHex(self.INTERSECTED.currentHex)
                 self.INTERSECTED = intersects[0].object
-                self.INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex()
+                self.INTERSECTED.currentHex = self.INTERSECTED.material.emissive.getHex()
                 self.INTERSECTED.material.emissive.setHex(0xff0000)
         else:
             if self.INTERSECTED:
-                self.INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex)
+                self.INTERSECTED.material.emissive.setHex(self.INTERSECTED.currentHex)
             self.INTERSECTED = None
 
         self.renderer.render(self.scene, self.camera)
