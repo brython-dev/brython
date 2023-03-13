@@ -44,7 +44,7 @@ class Main:
 
     def init(self):
         THREE = self.THREE
-        document <= container := html.DIV()
+        document <= (container := html.DIV())
         self.camera = THREE.PerspectiveCamera.new(
                         70, window.innerWidth / window.innerHeight, 1, 10000)
 

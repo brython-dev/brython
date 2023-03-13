@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import sys
 
 this_dir = os.getcwd()
 root_dir = os.path.dirname(this_dir)
