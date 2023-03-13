@@ -433,6 +433,10 @@ for(var js_op in js_ops){
     $B.JSObj[js_op] = js_ops[js_op]
 }
 
+$B.JSObj.__dir__ = function(_self){
+    return Object.keys(_self)
+}
+
 $B.JSObj.__eq__ = function(_self, other){
     switch(typeof _self){
         case "object":
