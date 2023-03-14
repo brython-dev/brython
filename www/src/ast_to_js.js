@@ -2959,8 +2959,7 @@ $B.ast.With.prototype.to_js = function(scopes){
                       // split word 'context', replaced by "C" in brython.js...
                       `text manager protocol")\n` +
               `}\n` +
-              `var value_${id} = $B.$call($B.$getattr(klass, ` +
-                  `'__enter__'))(mgr_${id}),\n` +
+              `var value_${id} = $B.$call(enter_${id})(mgr_${id}),\n` +
               `exc_${id} = true\n`
         if(in_generator){
             // add/update attribute used to close context managers in

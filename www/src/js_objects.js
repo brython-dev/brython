@@ -371,6 +371,9 @@ js_list.__getattribute__ = function(_self, attr){
             // pass _self as `this` if res is a function
             return jsobj2pyobj(res, _self)
         }
+        if(_self.hasOwnProperty(attr)){ // issue 2172
+            return $B.JSObj.$factory(_self[attr])
+        }
         throw _b_.AttributeError.$factory(attr)
     }
     return function(){

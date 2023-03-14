@@ -250,4 +250,8 @@ def send(*args, **kwargs):
 
 send(1, 2, a="b", c="d")
 
+# issue 2172
+window.demo_array.test2172()
+window.demo_array.demo_array2.test2172()
+
 print("all tests ok...")

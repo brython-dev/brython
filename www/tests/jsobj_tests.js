@@ -136,3 +136,13 @@ function call(args, kwargs) {
   a = JSON.stringify(args)
   b = JSON.stringify(kwargs)
 }
+
+// issue 2172
+Array.prototype.test2172 = function () {
+    console.debug("does work!")
+}
+
+demo_array  = []
+demo_array.test2172()
+demo_array.demo_array2 = []
+demo_array.demo_array2.test2172()
