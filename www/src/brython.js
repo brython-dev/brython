@@ -156,8 +156,8 @@ $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__)
 ;
 __BRYTHON__.implementation=[3,11,2,'dev',0]
 __BRYTHON__.version_info=[3,11,0,'final',0]
-__BRYTHON__.compiled_date="2023-03-14 08:01:52.925891"
-__BRYTHON__.timestamp=1678777312925
+__BRYTHON__.compiled_date="2023-03-14 08:19:21.031215"
+__BRYTHON__.timestamp=1678778361031
 __BRYTHON__.builtin_module_names=["_aio","_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_strptime","_svg","_symtable","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","hashlib","html_parser","marshal","math","modulefinder","posix","python_re","unicodedata"]
 ;
 ;(function($B){var _b_=$B.builtins
@@ -7854,6 +7854,7 @@ if(!suggestion ||current_distance < suggestion_distance){suggestion=item
 suggestion_distance=current_distance}}
 return suggestion}
 function offer_suggestions_for_attribute_error(exc){var name=exc.name,obj=exc.obj
+console.log('offer suggestions',name,obj)
 var dir=_b_.dir(obj),suggestions=calculate_suggestions(dir,name)
 return suggestions}
 function offer_suggestions_for_name_error(exc){var name=exc.name,frame=$B.last(exc.$stack)
@@ -9252,7 +9253,7 @@ if(res !==undefined){
 return jsobj2pyobj(res,_self)}
 if(_self.hasOwnProperty(attr)){
 return $B.JSObj.$factory(_self[attr])}
-throw _b_.AttributeError.$factory(attr)}
+throw $B.attr_error(attr,_self)}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
 return _b_.list[attr].call(null,_self,...args)}}
 $B.set_func_names(js_list,'builtins')
