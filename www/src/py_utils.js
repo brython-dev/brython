@@ -440,6 +440,8 @@ $B.get_class = function(obj){
                         obj.__class__ = _b_.list
                         return _b_.list
                     }
+                }else if(obj instanceof $B.str_dict){
+                    return _b_.dict
                 }else if(typeof Node !== "undefined" // undefined in Web Workers
                         && obj instanceof Node){
                     if(obj.tagName){
@@ -1236,7 +1238,13 @@ $B.enter_frame = function(frame){
                 }
             }
             try{
-                return $B.tracefunc($B.last($B.frames_stack), 'call', _b_.None)
+                var res = $B.tracefunc(frame, 'call', _b_.None)
+                for(var i = $B.frames_stack.length - 1; i >= 0; i--){
+                    if($B.frames_stack[i][4] == res){
+                        return _b_.None
+                    }
+                }
+                return res
             }catch(err){
                 $B.set_exc(err, frame)
                 $B.frames_stack.pop()

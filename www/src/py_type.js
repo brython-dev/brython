@@ -36,10 +36,14 @@ var TPFLAGS = {
 $B.$class_constructor = function(class_name, class_obj_proxy, metaclass,
                                  resolved_bases, bases,
                                  kwargs){
-    // class_obj_proxy is a Javascript proxy around the Python dict(-like)
-    // class namespace object
-    var dict = class_obj_proxy.$target,
-        module = class_obj_proxy.__module__
+    var dict
+    if(class_obj_proxy instanceof $B.str_dict){
+        dict = $B.empty_dict()
+        dict.$strings = class_obj_proxy
+    }else{
+        dict = class_obj_proxy.$target
+    }
+    var module = class_obj_proxy.__module__
 
     // bool is not a valid base
     for(var base of bases){
@@ -167,6 +171,7 @@ function set_attr_if_absent(dict, attr, value){
     }
 }
 
+
 $B.make_class_namespace = function(metaclass, class_name, module, qualname,
                                    bases){
     // Use __prepare__ (PEP 3115)
@@ -184,6 +189,9 @@ $B.make_class_namespace = function(metaclass, class_name, module, qualname,
     }
 
     if(class_dict.__class__ === _b_.dict){
+        if(class_dict.$all_str){
+            return class_dict.$strings
+        }
         return new Proxy(class_dict, {
             get: function(target, prop){
                 if(prop == '__class__'){
@@ -1113,12 +1121,8 @@ var $instance_creator = $B.$instance_creator = function(klass){
     // return the function to initalise a class instance
     if(klass.prototype && klass.prototype.constructor == klass){
         // JS constructor
-        console.log('js contructor')
         return function(){
-            console.log('call js constructor', klass)
-            var res = new klass(...arguments)
-            console.log('result of jscontructor', res)
-            return res
+            return new klass(...arguments)
         }
     }
 

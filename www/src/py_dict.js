@@ -131,6 +131,8 @@ function make_view_comparison_methods(klass){
     }
 }
 
+$B.str_dict = function(){}
+
 var mappingproxy = $B.make_class("mappingproxy")
 
 var mappingproxy_handler = {
@@ -193,6 +195,13 @@ dict.$set_like = function(self){
 }
 
 dict.$iter_items_with_hash = function*(d){
+    if(d.$all_str){
+        for(var key in d.$strings){
+            if(key != '$dict_strings'){
+                yield {key, value: d.$strings[key]}
+            }
+        }
+    }
     if(d.$jsobj){
         for(var key in d.$jsobj){
             yield {key, value: d.$jsobj[key]}
@@ -296,6 +305,17 @@ dict.__contains__ = function(){
         self = $.self,
         key = $.key
 
+    if(self.$all_str){
+        if(typeof key == 'string'){
+            return self.$strings.hasOwnProperty(key)
+        }
+        var hash = $B.$getattr($B.get_class(key), '__hash__')
+        if(hash === _b_.object.__hash__){
+            return false
+        }
+        convert_all_str(self)
+    }
+
     if(self.$jsobj){
         return self.$jsobj[key] !== undefined
     }
@@ -310,6 +330,19 @@ dict.__delitem__ = function(){
         self = $.self,
         key = $.key
 
+    if(self.$all_str){
+        if(typeof key == 'string'){
+            if(self.$strings.hasOwnProperty(key)){
+                dict.$delete_string(self, key)
+                return _b_.None
+            }else{
+                throw _b_.KeyError.$factory(key)
+            }
+        }
+        if(! dict.__contains__(self, key)){
+            throw _b_.KeyError.$factory(_b_.str.$factory(key))
+        }
+    }
     if(self.$jsobj){
         if(self.$jsobj[key] === undefined){
             throw _b_.KeyError.$factory(key)
@@ -338,17 +371,62 @@ dict.__eq__ = function(){
         ["self", "other"], arguments, {}, null, null),
         self = $.self,
         other = $.other
+    return dict.$eq(self, other)
+}
 
+dict.$eq = function(self, other){
     if(! _b_.isinstance(other, dict)){
         return _b_.NotImplemented
     }
 
+    if(self.$all_str && other.$all_str){
+        if(dict.__len__(self) !== dict.__len__(other)){
+            return false
+        }
+        for(var k in self.$strings){
+            if(! other.$strings.hasOwnProperty(k)){
+                return false
+            }
+            if(! $B.is_or_equals(self.$strings[k], other.$strings[k])){
+                return false
+            }
+        }
+        return true
+    }
+
+    if(self.$jsobj && other.$jsobj){
+        if(dict.__len__(self) !== dict.__len__(other)){
+            return false
+        }
+        for(var k in self.$jsobj){
+            if(! other.$jsobj.hasOwnProperty(k)){
+                return false
+            }
+            if(! $B.is_or_equals(self.$jsobj[k], other.$jsobj[k])){
+                return false
+            }
+        }
+        return true
+    }
+
+    if(self.$all_str){
+        var d = dict.copy(self)
+        convert_all_str(d)
+        return dict.$eq(d, other)
+    }
+    if(other.$all_str){
+        var d = dict.copy(other)
+        convert_all_str(d)
+        return dict.$eq(self, d)
+    }
+
     if(self.$jsobj){
-        self = jsobj2dict(self.$jsobj)
+        return dict.$eq(jsobj2dict(self.$jsobj), other)
     }
     if(other.$jsobj){
-        other = jsobj2dict(other.$jsobj)
+        return dict.$eq(self, jsobj2dict(other.$jsobj))
     }
+
     if(dict.__len__(self) != dict.__len__(other)){
         return false
     }
@@ -395,6 +473,9 @@ dict.__getitem__ = function(){
 
 dict.$contains_string = function(self, key){
     // Test if string "key" is in a dict where all keys are string
+    if(self.$all_str){
+        return self.$strings.hasOwnProperty(key)
+    }
     if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
         return true
     }
@@ -406,6 +487,12 @@ dict.$contains_string = function(self, key){
 
 dict.$delete_string = function(self, key){
     // Used for dicts where all keys are strings
+    if(self.$all_str){
+        var ix = self.$strings[key]
+        if(ix !== undefined){
+            delete self.$strings[key]
+        }
+    }
     if(self.$jsobj){
         delete self.$jsobj[key]
     }
@@ -418,6 +505,9 @@ dict.$missing = {}
 
 dict.$get_string = function(self, key){
     // Used for dicts where all keys are strings
+    if(self.$all_str && self.$strings.hasOwnProperty(key)){
+        return self.$strings[key]
+    }
     if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
         return self.$jsobj[key]
     }
@@ -432,6 +522,9 @@ dict.$get_string = function(self, key){
 
 dict.$getitem_string = function(self, key){
     // Used for dicts where all keys are strings
+    if(self.$all_str && self.$strings.hasOwnProperty(key)){
+        return self.$strings[key]
+    }
     if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
         return self.$jsobj[key]
     }
@@ -447,6 +540,9 @@ dict.$getitem_string = function(self, key){
 dict.$keys_string = function(self){
     // return the list of keys in a dict where are keys are strings
     var res = []
+    if(self.$all_str){
+        return Object.keys(self.$strings)
+    }
     if(self.$jsobj){
         res = res.concat(Object.keys(self.$jsobj))
     }
@@ -458,23 +554,43 @@ dict.$keys_string = function(self){
 
 dict.$setitem_string = function(self, key, value){
     // Used for dicts where all keys are strings
-    var h = _b_.hash(key),
-        indices = self.table[h]
-    if(indices !== undefined){
-        self._values[indices[0]] = value
+    if(self.$all_str){
+        self.$strings[key] = value
+        return _b_.None
     }else{
-        var index = self._keys.length
-        self.table[h] = [index]
-        self._keys.push(key)
-        self._values.push(value)
-        self.$version++
+        var h = _b_.hash(key),
+            indices = self.table[h]
+        if(indices !== undefined){
+            self._values[indices[0]] = value
+            return _b_.None
+        }
     }
+    var index = self._keys.length
+    self.$strings[key] = index
+    self._keys.push(key)
+    self._values.push(value)
+    self.$version++
     return _b_.None
 }
 
 dict.$getitem = function(self, key, ignore_missing){
     // ignore_missing is set in dict.get and dict.setdefault
-    if(self.$jsobj){
+    if(self.$all_str){
+        if(typeof key == 'string'){
+            if(self.$strings.hasOwnProperty(key)){
+                return self.$strings[key]
+            }
+        }else{
+            var hash_method = $B.$getattr($B.get_class(key), '__hash__')
+            if(hash_method !== _b_.object.__hash__){
+                convert_all_str(self)
+                var lookup = dict.$lookup_by_key(self, key)
+                if(lookup.found){
+                    return lookup.value
+                }
+            }
+        }
+    }else if(self.$jsobj){
         if(self.$exclude && self.$exclude(key)){
             throw _b_.KeyError.$factory(key)
         }
@@ -484,15 +600,12 @@ dict.$getitem = function(self, key, ignore_missing){
         if(! self.table){
             throw _b_.KeyError.$factory(key)
         }
-    }else if(self.__class__ === $B.jsobj_as_pydict){
-        return self.__class__.__getitem__(self, key)
+    }else{
+        var lookup = dict.$lookup_by_key(self, key)
+        if(lookup.found){
+            return lookup.value
+        }
     }
-
-    var lookup = dict.$lookup_by_key(self, key)
-    if(lookup.found){
-        return lookup.value
-    }
-
     if(! ignore_missing){
         if(self.__class__ !== dict && ! ignore_missing){
             try{
@@ -541,6 +654,7 @@ dict.__init__ = function(self, first, second){
             for(var attr in first.$jsobj){
                 self.$jsobj[attr] = first.$jsobj[attr]
             }
+            self.$all_str = false
             return $N
         }else if(Array.isArray(first)){
             init_from_list(self, first)
@@ -613,6 +727,9 @@ dict.__ior__ = function(self, other){
 dict.__len__ = function(self) {
     var _count = 0
 
+    if(self.$all_str){
+        return Object.keys(self.$strings).length
+    }
     if(self.$jsobj){
         for(var attr in self.$jsobj){
             if(attr.charAt(0) != "$" &&
@@ -788,9 +905,24 @@ dict.__setitem__ = function(self, key, value){
     return dict.$setitem($.self, $.key, $.value)
 }
 
+function convert_all_str(d){
+    // convert dict with only str keys to regular dict
+    d.$all_str = false
+    for(var key in d.$strings){
+        dict.$setitem(d, key, d.$strings[key])
+    }
+}
+
 dict.$setitem = function(self, key, value, $hash, from_setdefault){
     // Set a dictionary item mapping key and value.
-    //
+    if(self.$all_str){
+        if(typeof key == 'string'){
+            self.$strings[key] = value
+            return _b_.None
+        }else{
+            convert_all_str(self)
+        }
+    }
     if(self.$jsobj){
         if(self.$from_js){
             // dictionary created by method to_dict of JSObj instances
@@ -858,6 +990,8 @@ dict.clear = function(){
 
     self._keys = []
     self._values = []
+    self.$all_str = true
+    self.$strings = new $B.str_dict()
 
     if(self.$jsobj){
         for(var attr in self.$jsobj){
@@ -876,6 +1010,7 @@ dict.copy = function(self){
         null, null),
         self = $.self,
         res = $B.empty_dict()
+
     if(self.__class__ === _b_.dict){
         $copy_dict(res, self)
         return res
@@ -1295,8 +1430,10 @@ $B.empty_dict = function(){
         _keys: [],
         _values: [],
         _hashes: [],
+        $strings: new $B.str_dict(),
         $version: 0,
-        $order: 0
+        $order: 0,
+        $all_str: true
     }
 }
 
@@ -1362,7 +1499,6 @@ function jsobj2dict(x, exclude){
     var d = $B.empty_dict()
     for(var attr in x){
         if(attr.charAt(0) != "$" && ! exclude(attr)){
-
             if(x[attr] === null){
                 dict.$setitem(d, attr, _b_.None)
             }else if(x[attr] === undefined){

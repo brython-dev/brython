@@ -662,7 +662,9 @@ var $$eval = _b_.eval = function(src, _globals, _locals){
                     __name__ = _globals.$jsobj[key]
                 }
             }
+            _globals.$all_str = false
         }
+
         if(exec_globals.__builtins__ === undefined){
             exec_globals.__builtins__ = _b_.__builtins__
         }
@@ -2593,7 +2595,7 @@ $$super.__get__ = function(self, instance, klass){
 }
 
 $$super.__getattribute__ = function(self, attr){
-    
+
     if(self.__thisclass__.$is_js_class){
         if(attr == "__init__"){
             // use call on parent
